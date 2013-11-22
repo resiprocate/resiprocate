@@ -1,0 +1,368 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="repro">
+      <UniqueIdentifier>{692b2a85-cf7b-4b8e-8b1a-6698c7617312}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ActionBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AsciiGraphic.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Box.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CheckContacts.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CheckFetchedContacts.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CheckPrivacy.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="repro\CommandLineParser.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CountDown.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CppTestSelector.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CPTestProgressListener.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DialogSet.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DnsUtils.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EndPoint.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Expect.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExpectAction.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExpectActionEvent.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="predicates\ExpectUtils.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="predicates\NotifyContents.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="repro\ReproFixture.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Resolver.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RouteGuard.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RtpEvent.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sequence.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SequenceSet.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SequenceSetThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SipEvent.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SipRawMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StunEndPoint.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StunEvent.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StunServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="predicates\SubscribeExpired.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="predicates\SubscribeExpires.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TelnetClient.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestEndPoint.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestException.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestProxy.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="repro\TestRepro.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="repro\TestReproUser.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestRtp.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestSipEndPoint.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestUser.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TfmDns.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TfmHelper.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransportDriver.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\repro\BerkeleyDb.cxx">
+      <Filter>repro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\repro\HttpBase.cxx">
+      <Filter>repro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\repro\HttpConnection.cxx">
+      <Filter>repro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\repro\MySqlDb.cxx">
+      <Filter>repro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\repro\WebAdmin.cxx">
+      <Filter>repro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\repro\WebAdminThread.cxx">
+      <Filter>repro</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ActionBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsciiGraphic.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Box.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckContacts.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckFetchedContacts.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckPrivacy.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="repro\CommandLineParser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CountDown.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CppTestSelector.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPTextTestProgressListener.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogSet.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DnsUtils.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EndPoint.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Expect.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExpectAction.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExpectActionEvent.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExpectFunctorDefs.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="predicates\ExpectUtils.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="predicates\NotifyContents.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PortAllocator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="repro\ReproFixture.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resolver.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RouteGuard.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RtpEvent.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqDecls.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SeqDefns.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sequence.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceClassConstructorDecls.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceClassConstructorDefns.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceSet.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceSetDecls.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceSetDefns.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SequenceSetThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SipEvent.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SipRawMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StunEndPoint.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StunEvent.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StunServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SubDecls.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SubDefns.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="predicates\SubscribeExpired.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="predicates\SubscribeExpires.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TelnetClient.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestEndPoint.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestException.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestProxy.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="repro\TestRepro.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="repro\TestReproUser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestRtp.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestSipEndPoint.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestUser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TfmDns.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TfmHelper.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransportDriver.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\repro\BerkeleyDb.hxx">
+      <Filter>repro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\repro\HttpBase.hxx">
+      <Filter>repro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\repro\HttpConnection.hxx">
+      <Filter>repro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\repro\MySqlDb.hxx">
+      <Filter>repro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\repro\WebAdmin.hxx">
+      <Filter>repro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\repro\WebAdminThread.hxx">
+      <Filter>repro</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

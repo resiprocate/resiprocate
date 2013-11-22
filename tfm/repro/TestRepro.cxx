@@ -48,8 +48,8 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueMsBetweenForkGroups", "5000");
    insertConfigValue("QValueMsBeforeCancel", "5000");
 
-   insertConfigValue("ForceRecordRouting", "false");
-   insertConfigValue("RecordRouteUri", resip::Data::from(args.mRecordRoute));
+   insertConfigValue("ForceRecordRouting", "true");
+   //insertConfigValue("RecordRouteUri", "sip:127.0.0.1:5060");  // Set below per transport
 }
 
 static ProcessorChain&  
@@ -179,7 +179,7 @@ TestRepro::TestRepro(const resip::Data& name,
    
    try
    {
-      mStack.addTransport(UDP, 
+      Transport *t = mStack.addTransport(UDP, 
                            5060, 
                            V4,
                            StunDisabled,
@@ -188,13 +188,17 @@ TestRepro::TestRepro(const resip::Data& name,
                            resip::Data::Empty,
                            resip::SecurityTypes::TLSv1,
                            0);
+      NameAddr rr;
+      rr.uri().host() = "127.0.0.1";
+      rr.uri().port() = 5060;
+      t->setRecordRoute(rr);
    }
    catch(...)
    {}
 
    try
    {
-      mStack.addTransport(TCP, 
+      Transport *t = mStack.addTransport(TCP, 
                            5060, 
                            V4,
                            StunDisabled,
@@ -203,6 +207,11 @@ TestRepro::TestRepro(const resip::Data& name,
                            resip::Data::Empty,
                            resip::SecurityTypes::TLSv1,
                            0);
+      NameAddr rr;
+      rr.uri().host() = "127.0.0.1";
+      rr.uri().port() = 5060;
+      rr.uri().param(resip::p_transport)="tcp";
+      t->setRecordRoute(rr);
    }
    catch(...)
    {}
@@ -210,7 +219,7 @@ TestRepro::TestRepro(const resip::Data& name,
 #ifdef RESIP_USE_SCTP
    try
    {
-      mStack.addTransport(SCTP, 
+      Transport *t = mStack.addTransport(SCTP, 
                            5060, 
                            V4,
                            StunDisabled,
@@ -219,6 +228,11 @@ TestRepro::TestRepro(const resip::Data& name,
                            resip::Data::Empty,
                            resip::SecurityTypes::TLSv1,
                            0);
+      NameAddr rr;
+      rr.uri().host() = "127.0.0.1";
+      rr.uri().port() = 5060;
+      rr.uri().param(resip::p_transport)="sctp";
+      t->setRecordRoute(rr);
    }
    catch(...)
    {}
@@ -230,7 +244,7 @@ TestRepro::TestRepro(const resip::Data& name,
    
    try
    {
-      mStack.addTransport(TLS, 
+      Transport *t = mStack.addTransport(TLS, 
                            5061, 
                            V4, 
                            StunDisabled, 
@@ -239,6 +253,11 @@ TestRepro::TestRepro(const resip::Data& name,
                            resip::Data::Empty,
                            resip::SecurityTypes::TLSv1,
                            0);
+      NameAddr rr;
+      rr.uri().host() = "localhost";
+      rr.uri().port() = 5061;
+      rr.uri().param(resip::p_transport)="tls";
+      t->setRecordRoute(rr);
    }
    catch(...)
    {}
@@ -353,8 +372,26 @@ TestRepro::deleteRoute(const resip::Data& matchingPattern,
 }
 
 bool
-TestRepro::addTrustedHost(const resip::Data& host, resip::TransportType transport, short port)
+TestRepro::addTrustedHost(const resip::Data& host, resip::TransportType transport, short port, short mask, short family)
 {
-   return mConfig.getDataStore()->mAclStore.addAcl(host, port, static_cast<const short&>(transport));
+   return mConfig.getDataStore()->mAclStore.addAcl(
+       transport == TLS ? host : Data::Empty,
+       transport == TLS ? Data::Empty : host, 
+       mask,
+       port,
+       family,
+       static_cast<const short&>(transport));
+}
+
+void 
+TestRepro::deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port, short mask, short family)
+{
+   mConfig.getDataStore()->mAclStore.eraseAcl(
+       transport == TLS ? host : Data::Empty,
+       transport == TLS ? Data::Empty : host, 
+       mask,
+       port,
+       family,
+       static_cast<const short&>(transport));
 }
 

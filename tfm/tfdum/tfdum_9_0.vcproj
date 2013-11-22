@@ -42,8 +42,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES;USE_IPV6"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib libpopt.lib winmm.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib winmm.lib &quot;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib&quot;"
 				AdditionalLibraryDirectories="..\..\contrib\popt\win32\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/tfdum.pdb"
@@ -118,9 +118,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\sdk\contrib\sipfoundry\main\tfm\contrib\cppunit\include;..\;..\..\..\sdk\contrib\sipfoundry\main;..\..\..\sdk\external\boost;..\..\..\sdk\contrib\sipfoundry\main\contrib\pcre;..\..\;..\..\..\sdk\source;..\..\..\sdk\source\ccm"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_IPV6"
+				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -138,7 +138,157 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib resiprocate.lib ares.lib ssleay32.lib libeay32.lib tfm.lib repro.lib dum.lib libpopt.lib libdb43s.lib natnav.lib tfcommon.lib cppunit.lib pcre.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib winmm.lib &quot;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalLibraryDirectories="..\..\..\sdk\contrib\sipfoundry\Projects\resiprocate\Win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\ares\Win32\Release;&quot;..\..\..\sdk\external\OpenSSL\openssl-0.9.7g\libs&quot;;..\..\..\sdk\contrib\sipfoundry\Projects\tfm\win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\repro\Win32\Release;.\Release;..\..\..\sdk\contrib\sipfoundry\Projects\dum\Win32\Release;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32\lib;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32;..\..\..\sdk\contrib\sipfoundry\main\contrib\db\build_win32\Release_static;..\..\natnav\Release;..\tfmprojects\tfdum\Release;..\tfcommon\Release;..\..\..\sdk\contrib\sipfoundry\Projects\pcre\Win32\Release;..\..\..\sdk\cpsi\lib\release;..\..\..\sdk\source\ccm\natnav\release;..\..\..\sdk\contrib\sipfoundry\Projects\cppunit\Win32\Release"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="SSL-Debug|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre;..\..\contrib\OpenSSL\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				RuntimeTypeInfo="true"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib winmm.lib &quot;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib&quot;"
+				AdditionalLibraryDirectories="..\..\contrib\popt\win32\lib"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)/tfdum.pdb"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="copy ..\..\contrib\popt\win32\*.dll .\"
+			/>
+		</Configuration>
+		<Configuration
+			Name="SSL-Release|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre;..\..\contrib\OpenSSL\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="true"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib winmm.lib &quot;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib&quot;"
 				AdditionalLibraryDirectories="..\..\..\sdk\contrib\sipfoundry\Projects\resiprocate\Win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\ares\Win32\Release;&quot;..\..\..\sdk\external\OpenSSL\openssl-0.9.7g\libs&quot;;..\..\..\sdk\contrib\sipfoundry\Projects\tfm\win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\repro\Win32\Release;.\Release;..\..\..\sdk\contrib\sipfoundry\Projects\dum\Win32\Release;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32\lib;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32;..\..\..\sdk\contrib\sipfoundry\main\contrib\db\build_win32\Release_static;..\..\natnav\Release;..\tfmprojects\tfdum\Release;..\tfcommon\Release;..\..\..\sdk\contrib\sipfoundry\Projects\pcre\Win32\Release;..\..\..\sdk\cpsi\lib\release;..\..\..\sdk\source\ccm\natnav\release;..\..\..\sdk\contrib\sipfoundry\Projects\cppunit\Win32\Release"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -167,6 +317,42 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{31B0654F-E08E-405F-909F-80F86CB14B9E}"
+			RelativePathToProject="..\repro\reprolib_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{D23D6465-7EA9-45FD-9784-54DBF8A1A5CE}"
+			RelativePathToProject="..\contrib\cppunit\src\cppunit\cppunit_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{FD7075B0-7C44-4631-B356-39B42D7908CC}"
+			RelativePathToProject="..\contrib\db\build_windows\db_static_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{12720B4D-F4FC-4502-8FA9-589BF5166216}"
+			RelativePathToProject="..\resip\dum\dum_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{38594885-CF9C-4C5F-B3F0-E4969D7E3F58}"
+			RelativePathToProject="..\contrib\pcre\pcre_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+			RelativePathToProject="..\resip\stack\resiprocate_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
+			RelativePathToProject="..\rutil\rutil_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{DBFE5A68-5C53-40F8-BA7E-26EF7CDE9686}"
+			RelativePathToProject=".\tfm_9_0.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{96CD935E-1951-43B8-AF75-F1C06B3778C1}"
+			RelativePathToProject="..\rutil\dns\ares\ares_9_0.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -174,14 +360,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath="..\tfcommon\CppTestSelector.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\tfcommon\CPTestProgressListener.cxx"
-				>
-			</File>
 			<File
 				RelativePath=".\DialogEventExpect.cxx"
 				>

@@ -6,6 +6,8 @@
 #include "tfm/Sequence.hxx"
 #include "tfm/SequenceSet.hxx"
 
+#include <boost/version.hpp>
+
 using namespace resip;
 using namespace std;
 using namespace boost;
@@ -190,7 +192,11 @@ SequenceClass::prettyPrint(EncodeStream& str, bool& previousActive, int ind) con
 bool
 SequenceClass::isMatch(boost::shared_ptr<Event> event) const
 {
+#if BOOST_VERSION >= 103500
+   boost::shared_ptr<OptionalTimeoutEvent> to = dynamic_pointer_cast<OptionalTimeoutEvent>(event);
+#else
    boost::shared_ptr<OptionalTimeoutEvent> to = shared_dynamic_cast<OptionalTimeoutEvent>(event);
+#endif
    for (std::list<TestEndPoint::ExpectBase*>::const_iterator i = mExpects.begin();
         i != mExpects.end(); i++)
    {
@@ -232,7 +238,11 @@ SequenceClass::handleEvent(boost::shared_ptr<Event> event)
       mUsedExpects.push_back(mExpects.front());
       mExpects.pop_front();
 
+#if BOOST_VERSION >= 103500
+      boost::shared_ptr<OptionalTimeoutEvent> ot = dynamic_pointer_cast<OptionalTimeoutEvent>(event);
+#else
       boost::shared_ptr<OptionalTimeoutEvent> ot = shared_dynamic_cast<OptionalTimeoutEvent>(event);
+#endif
       if (ot && ot->getExpect() == expect)
       {
          mTimerId=-7;
