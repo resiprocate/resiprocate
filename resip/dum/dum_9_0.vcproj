@@ -628,6 +628,10 @@
 				RelativePath=".\UserProfile.cxx"
 				>
 			</File>
+			<File
+				RelativePath=".\WsCookieAuthManager.cxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1020,6 +1024,10 @@
 			</File>
 			<File
 				RelativePath=".\UserProfile.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsCookieAuthManager.hxx"
 				>
 			</File>
 		</Filter>

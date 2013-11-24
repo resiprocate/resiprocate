@@ -355,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Cookie.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\CpimContents.cxx"
 				>
 			</File>
@@ -879,11 +883,31 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\WsBaseTransport.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsConnection.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsConnectionBase.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsCookieContext.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\WsDecorator.cxx"
 				>
 			</File>
 			<File
 				RelativePath=".\WsFrameExtractor.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ssl\WssConnection.cxx"
 				>
 			</File>
 			<File
@@ -973,6 +997,10 @@
 			</File>
 			<File
 				RelativePath=".\ContentsFactoryBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Cookie.hxx"
 				>
 			</File>
 			<File
@@ -1500,11 +1528,35 @@
 				>
 			</File>
 			<File
+				RelativePath=".\WsBaseTransport.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsConnection.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsConnectionBase.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsConnectionValidator.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\WsCookieContext.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\WsDecorator.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\WsFrameExtractor.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ssl\WssConnection.hxx"
 				>
 			</File>
 			<File

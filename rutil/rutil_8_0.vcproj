@@ -557,6 +557,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dns\AresCompat.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\AresDns.hxx"
 				>
 			</File>
