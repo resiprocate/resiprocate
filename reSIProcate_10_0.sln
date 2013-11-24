@@ -17,9 +17,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcre", "contrib\pcre\pcre_10_0.vcxproj", "{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "repro", "repro\repro_10_0.vcxproj", "{9D8D2649-213F-49D3-A8B0-C1849C611654}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AD07B52E-85B4-0EDF-F68C-43089397658D} = {AD07B52E-85B4-0EDF-F68C-43089397658D}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resip_test", "resip\stack\test\test_10_0.vcxproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
 EndProject
