@@ -1621,7 +1621,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                   DebugLog (<< "Failed required options validation " << *sipMsg);
                   return;
                }
-               if( !validate100RelSuport(*sipMsg) )
+               if( !validate100RelSupport(*sipMsg) )
                {
                   DebugLog (<< "Remote party does not support 100rel " << *sipMsg);
                   return;
@@ -1792,7 +1792,7 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
 
 
 bool
-DialogUsageManager::validate100RelSuport(const SipMessage& request)
+DialogUsageManager::validate100RelSupport(const SipMessage& request)
 {
    if(request.header(h_RequestLine).getMethod() == INVITE)
    {
@@ -1807,7 +1807,9 @@ DialogUsageManager::validate100RelSuport(const SipMessage& request)
             sendResponse(failure);
       
             if(mRequestValidationHandler)
+            {
                mRequestValidationHandler->on100RelNotSupportedByRemote(request);
+            }
 
             return false;
          }
