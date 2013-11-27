@@ -422,10 +422,10 @@ ReproRunner::createSipStack()
       resip::Timer::resetT1(overrideT1);
    }
 
-   unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("MessageSizeLimit", 0);
+   unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("StreamMessageSizeLimit", 0);
    if(messageSizeLimit > 0)
    {
-      DebugLog(<< "Using maximum message size "<< messageSizeLimit);
+      DebugLog(<< "Using maximum message size "<< messageSizeLimit << " on stream-based transports");
       ConnectionBase::setMessageSizeMax(messageSizeLimit);
    }
 
