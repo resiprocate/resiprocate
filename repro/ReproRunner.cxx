@@ -422,6 +422,13 @@ ReproRunner::createSipStack()
       resip::Timer::resetT1(overrideT1);
    }
 
+   unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("MessageSizeLimit", 0);
+   if(messageSizeLimit > 0)
+   {
+      DebugLog(<< "Using maximum message size "<< messageSizeLimit);
+      ConnectionBase::setMessageSizeMax(messageSizeLimit);
+   }
+
    // Create Security (TLS / Certificates) and Compression (SigComp) objects if
    // pre-precessor defines are enabled
    Security* security = 0;
