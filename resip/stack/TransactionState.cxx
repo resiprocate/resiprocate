@@ -2477,13 +2477,13 @@ TransactionState::sendCurrentToWire()
    else if(mNextTransmission) // initial transmission; need to determine target
    {
       SipMessage* sip=mNextTransmission;
-      bool transmitted=false;
+      TransportSelector::TransmitState transmitState = TransportSelector::Unsent;
 
       if(isClient())
       {
          if(mTarget.getType() != UNKNOWN_TRANSPORT) // mTarget is set, so just send.
          {
-            transmitted=mController.mTransportSelector.transmit(
+            transmitState=mController.mTransportSelector.transmit(
                         sip, 
                         mTarget,
                         mIsReliable ? 0 : &mMsgToRetransmit);
@@ -2500,7 +2500,7 @@ TransactionState::sendCurrentToWire()
                DebugLog(<< "Sending to tuple: " << sip->getDestination());
                mTarget = sip->getDestination();
                processReliability(mTarget.getType());
-               transmitted=mController.mTransportSelector.transmit(
+               transmitState=mController.mTransportSelector.transmit(
                            sip, 
                            mTarget,
                            mIsReliable ? 0 : &mMsgToRetransmit);
@@ -2548,7 +2548,7 @@ TransactionState::sendCurrentToWire()
             // mResponseTarget here? I don't think this has been thought out properly.
             Tuple target = simpleTupleForUri(sip->getForceTarget());
             StackLog(<<"!ah! response with force target going to : "<<target);
-            transmitted=mController.mTransportSelector.transmit(
+            transmitState=mController.mTransportSelector.transmit(
                         sip, 
                         mTarget,
                         mIsReliable ? 0 : &mMsgToRetransmit);
@@ -2566,7 +2566,7 @@ TransactionState::sendCurrentToWire()
             }
    
             StackLog(<< "tid=" << sip->getTransactionId() << " sending to : " << mResponseTarget);
-            transmitted=mController.mTransportSelector.transmit(
+            transmitState=mController.mTransportSelector.transmit(
                         sip, 
                         mResponseTarget,
                         mIsReliable ? 0 : &mMsgToRetransmit);
@@ -2576,7 +2576,7 @@ TransactionState::sendCurrentToWire()
       // !bwc! If we don't have DNS results yet, or TransportSelector::transmit
       // fails, we hang on to the full original SipMessage, in the hope that 
       // next time it works.
-      if (transmitted)
+      if (transmitState == TransportSelector::Sent)
       {
          if(mController.mStack.statisticsManagerEnabled())
          {

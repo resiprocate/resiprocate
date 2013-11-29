@@ -99,7 +99,12 @@ class TransportSelector
        kick off dns resolution or to pick the next tuple and will cause the
        message to be encoded and via updated
 	  */
-      bool transmit( SipMessage* msg, Tuple& target, SendData* sendData=0 );
+      typedef enum
+      {
+         Unsent,
+         Sent
+      } TransmitState;
+      TransmitState transmit( SipMessage* msg, Tuple& target, SendData* sendData=0 );
 
       /// Resend to the same transport as last time
       void retransmit(const SendData& msg);

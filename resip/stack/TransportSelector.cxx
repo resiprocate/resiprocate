@@ -772,7 +772,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.
-bool
+TransportSelector::TransmitState
 TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 {
    assert(msg);
@@ -1184,13 +1184,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          }
 
          transport->send(send);
-         return true;
+         return Sent;
       }
       else
       {
          InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
          mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), transportFailureReason));
-         return false;
+         return Unsent;
       }
 
    }
@@ -1198,7 +1198,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
    {
       InfoLog (<< "tid=" << msg->getTransactionId() << " no route to target: " << target);
       mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), TransportFailure::NoRoute));
-      return false;
+      return Unsent;
    }
 }
 
