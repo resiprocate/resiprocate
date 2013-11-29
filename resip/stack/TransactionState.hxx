@@ -109,6 +109,7 @@ class TransactionState : public DnsHandler
       void sendToTU(TransactionMessage* msg);
       static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
       void sendCurrentToWire();
+      void onSendSuccess();
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
       void terminateServerTransaction(const Data& tid); 

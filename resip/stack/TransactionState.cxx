@@ -2578,30 +2578,38 @@ TransactionState::sendCurrentToWire()
       // next time it works.
       if (transmitState == TransportSelector::Sent)
       {
-         if(mController.mStack.statisticsManagerEnabled())
-         {
-            mController.mStatsManager.sent(sip);
-         }
-
-         mCurrentMethodType = sip->method();
-         if(sip->isResponse())
-         {
-            mCurrentResponseCode = sip->const_header(h_StatusLine).statusCode();
-         }
-
-         // !bwc! If mNextTransmission is a non-ACK request, we need to save the
-         // initial request in case we need to send a simulated 408 or a 503 to 
-         // the TU (at least, until we get a response back)
-         if(!mNextTransmission->isRequest() || mNextTransmission->method()==ACK)
-         {
-            delete mNextTransmission;
-            mNextTransmission=0;
-         }
+         onSendSuccess();
       }
    }
    else
    {
       assert(0);
+   }
+}
+
+void
+TransactionState::onSendSuccess()
+{
+   SipMessage* sip=mNextTransmission;
+
+   if(mController.mStack.statisticsManagerEnabled())
+   {
+      mController.mStatsManager.sent(sip);
+   }
+
+   mCurrentMethodType = sip->method();
+   if(sip->isResponse())
+   {
+      mCurrentResponseCode = sip->const_header(h_StatusLine).statusCode();
+   }
+
+   // !bwc! If mNextTransmission is a non-ACK request, we need to save the
+   // initial request in case we need to send a simulated 408 or a 503 to
+   // the TU (at least, until we get a response back)
+   if(!mNextTransmission->isRequest() || mNextTransmission->method()==ACK)
+   {
+      delete mNextTransmission;
+      mNextTransmission=0;
    }
 }
 
