@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/Contents.hxx"
+#include "resip/stack/DecorationContext.hxx"
 #include "resip/stack/Embedded.hxx"
 #include "resip/stack/OctetContents.hxx"
 #include "resip/stack/HeaderFieldValueList.hxx"
@@ -1705,24 +1706,34 @@ SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec)
    mSecurityAttributes = sec;
 }
 
-void
-SipMessage::callOutboundDecorators(const Tuple &src, 
-                                    const Tuple &dest,
-                                    const Data& sigcompId)
+DecorationContext*
+SipMessage::createDecorationContext(Transport* transport,
+      const Tuple &src,
+      const Tuple &dest,
+      const Data& sigcompId,
+      TransportSelector& transportSelector,
+      SendData* sendData)
 {
    if(mIsDecorated)
    {
       rollbackOutboundDecorators();
    }
 
-  std::vector<MessageDecorator*>::iterator i;
-  for (i = mOutboundDecorators.begin();
-       i != mOutboundDecorators.end(); i++)
-  {
-    (*i)->decorateMessage(*this, src, dest, sigcompId);
-  }
-  mIsDecorated = true;
+   DecorationContext *dc = new DecorationContext(getTransactionId(),
+                                                 isClientTransaction(),
+                                                 *this,
+                                                 transport,
+                                                 src,
+                                                 dest,
+                                                 sigcompId,
+                                                 mOutboundDecorators,
+                                                 mIsDecorated,
+                                                 transportSelector,
+                                                 sendData);
+
+   return dc;
 }
+
 
 void 
 SipMessage::clearOutboundDecorators()

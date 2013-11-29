@@ -12,6 +12,7 @@
 namespace resip
 {
 
+class DecorationContext;
 class DnsResult;
 class TransactionMessage;
 class TimerMessage;
@@ -62,7 +63,8 @@ class TransactionState : public DnsHandler
       typedef enum
       {
          None,
-         Dns
+         Dns,
+         Decoration
       } PendingOperation;
 
       TransactionState(TransactionController& controller, 
@@ -77,6 +79,8 @@ class TransactionState : public DnsHandler
       void handle(DnsResult*);
       void handleSync(DnsResult*);
       
+      void handleDecoration(DecorationContext*);
+
       void processStateless(TransactionMessage* msg);
       void processClientNonInvite(TransactionMessage* msg);
       void processClientInvite(TransactionMessage* msg);

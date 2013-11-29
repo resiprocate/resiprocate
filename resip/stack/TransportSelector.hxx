@@ -102,9 +102,18 @@ class TransportSelector
       typedef enum
       {
          Unsent,
-         Sent
+         Sent,
+         Decorating
       } TransmitState;
       TransmitState transmit( SipMessage* msg, Tuple& target, SendData* sendData=0 );
+
+      /* Does the final encoding to a byte array and gives the bytes to the transport */
+      void encodeAndSend(SipMessage* msg,
+            Transport* transport,
+            Tuple& source,
+            Tuple& target,
+            Data& remoteSigcompId,
+            SendData* sendData);
 
       /// Resend to the same transport as last time
       void retransmit(const SendData& msg);

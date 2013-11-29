@@ -16,6 +16,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Uri.hxx"
 
+#include "resip/stack/DecorationContext.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -1153,37 +1154,18 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          target.transport=transport;
 
          // Call back anyone who wants to perform outbound decoration
-         msg->callOutboundDecorators(source, target,remoteSigcompId);
+         DecorationContext *dc = msg->createDecorationContext(transport, source, target, remoteSigcompId, *this, sendData);
 
-         std::auto_ptr<SendData> send(new SendData(target, 
-                                                   resip::Data::Empty, 
-                                                   msg->getTransactionId(),
-                                                   remoteSigcompId));
-
-         send->data.reserve(mAvgBufferSize + mAvgBufferSize/4);
-
-         DataStream str(send->data);
-         msg->encode(str);
-         str.flush();
-
-         // !bwc! Moving average of message size. (Used to intelligently
-         // predict how much space to reserve in the buffer, to minimize
-         // dynamic resizing.)
-         mAvgBufferSize = (255*mAvgBufferSize + send->data.size()+128)/256;
-
-         assert(!send->data.empty());
-         DebugLog (<< "Transmitting to " << target
-                   << " tlsDomain=" << msg->getTlsDomain()
-                   << " via " << source
-                   << std::endl << std::endl << send->data.escaped()
-                   << "sigcomp id=" << remoteSigcompId);
-
-         if(sendData)
+         if(!dc->callOutboundDecorators())
          {
-            *sendData = *send;
+            // decoration is taking place asynchronously
+            return Decorating;
          }
 
-         transport->send(send);
+         delete dc;
+
+         encodeAndSend(msg, transport, source, target, remoteSigcompId, sendData);
+
          return Sent;
       }
       else
@@ -1200,6 +1182,46 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
       mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), TransportFailure::NoRoute));
       return Unsent;
    }
+}
+
+void
+TransportSelector::encodeAndSend(SipMessage* msg,
+      Transport* transport,
+      Tuple& source,
+      Tuple& target,
+      Data& remoteSigcompId,
+      SendData* sendData)
+{
+   std::auto_ptr<SendData> send(new SendData(target,
+                                             resip::Data::Empty,
+                                             msg->getTransactionId(),
+                                             remoteSigcompId));
+
+   send->data.reserve(mAvgBufferSize + mAvgBufferSize/4);
+
+   DataStream str(send->data);
+   msg->encode(str);
+   str.flush();
+
+   // !bwc! Moving average of message size. (Used to intelligently
+   // predict how much space to reserve in the buffer, to minimize
+   // dynamic resizing.)
+   mAvgBufferSize = (255*mAvgBufferSize + send->data.size()+128)/256;
+
+   assert(!send->data.empty());
+   DebugLog (<< "Transmitting to " << target
+             << " tlsDomain=" << msg->getTlsDomain()
+             << " via " << source
+             << std::endl << std::endl << send->data.escaped()
+             << "sigcomp id=" << remoteSigcompId);
+
+   if(sendData)
+   {
+      *sendData = *send;
+   }
+
+   transport->send(send);
+
 }
 
 void

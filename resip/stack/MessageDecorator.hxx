@@ -5,6 +5,7 @@
 namespace resip
 {
 class Data;
+class DecorationContext;
 class SipMessage;
 class Tuple;
 
@@ -16,6 +17,23 @@ class MessageDecorator
                                   const Tuple &source,
                                   const Tuple &destination,
                                   const Data& sigcompId) = 0;
+
+      /* Decorate the message.  May operate asynchronously.  A default implementation
+       * is provided that calls the legacy decorateMessage method above for backwards
+       * compatibility.
+       * @return true if processing done,
+       *         false if processing asynchronously,
+       *               calling decorationContext::decoratorFinished() when async completed.
+       */
+      virtual bool decorateMessage(SipMessage &msg,
+                                  const Tuple &source,
+                                  const Tuple &destination,
+                                  const Data& sigcompId,
+                                  DecorationContext& decorationContext)
+      {
+         decorateMessage(msg, source, destination, sigcompId);
+         return true;
+      }
       virtual void rollbackMessage(SipMessage& msg) = 0;
       virtual MessageDecorator* clone() const = 0;
 

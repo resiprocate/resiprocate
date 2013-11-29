@@ -30,9 +30,12 @@ namespace resip
 {
 
 class Contents;
+class DecorationContext;
 class ExtensionHeader;
 class SecurityAttributes;
+class SendData;
 class Transport;
+class TransportSelector;
 
 /**
    @ingroup resip_crit
@@ -538,9 +541,12 @@ class SipMessage : public TransactionMessage
       /// sent to the transport
       void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
       void clearOutboundDecorators();
-      void callOutboundDecorators(const Tuple &src, 
-                                    const Tuple &dest,
-                                    const Data& sigcompId);
+      DecorationContext* createDecorationContext(Transport* transport,
+            const Tuple &src,
+            const Tuple &dest,
+            const Data& sigcompId,
+            TransportSelector& transportSelector,
+            SendData* sendData);
       void rollbackOutboundDecorators();
       void copyOutboundDecoratorsToStackCancel(SipMessage& cancel);
       void copyOutboundDecoratorsToStackFailureAck(SipMessage& ack);

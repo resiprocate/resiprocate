@@ -4,6 +4,7 @@
 
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
+#include "resip/stack/DecorationContext.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
@@ -928,6 +929,10 @@ TransactionState::processStateless(TransactionMessage* message)
       handleSync(mDnsResult);
       delete message;
    }
+   else if(dynamic_cast<DecorationContext*>(message))
+   {
+      handleDecoration((DecorationContext*)message);
+   }
    else if (isAbandonServerTransaction(message))
    {
       // ?
@@ -1130,6 +1135,10 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
    {
       handleSync(mDnsResult);
       delete msg;
+   }
+   else if(dynamic_cast<DecorationContext*>(msg))
+   {
+      handleDecoration((DecorationContext*)msg);
    }
    else if (isAbandonServerTransaction(msg))
    {
@@ -1443,6 +1452,10 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       handleSync(mDnsResult);
       delete msg;
    }
+   else if(dynamic_cast<DecorationContext*>(msg))
+   {
+      handleDecoration((DecorationContext*)msg);
+   }
    else
    {
       //StackLog ( << "TransactionState::processClientInvite: message unhandled");
@@ -1629,6 +1642,10 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
    {
       handleSync(mDnsResult);
       delete msg;
+   }
+   else if(dynamic_cast<DecorationContext*>(msg))
+   {
+      handleDecoration((DecorationContext*)msg);
    }
    else
    {
@@ -1948,6 +1965,10 @@ TransactionState::processServerInvite(TransactionMessage* msg)
       handleSync(mDnsResult);
       delete msg;
    }
+   else if(dynamic_cast<DecorationContext*>(msg))
+   {
+      handleDecoration((DecorationContext*)msg);
+   }
    else
    {
       //StackLog (<< "TransactionState::processServerInvite: message unhandled");
@@ -1991,6 +2012,10 @@ TransactionState::processClientStale(TransactionMessage* msg)
    {
       handleSync(mDnsResult);
       delete msg;
+   }
+   else if(dynamic_cast<DecorationContext*>(msg))
+   {
+      handleDecoration((DecorationContext*)msg);
    }
    else if (isAbandonServerTransaction(msg))
    {
@@ -2064,6 +2089,10 @@ TransactionState::processServerStale(TransactionMessage* msg)
    {
       handleSync(mDnsResult);
       delete msg;
+   }
+   else if(dynamic_cast<DecorationContext*>(msg))
+   {
+      handleDecoration((DecorationContext*)msg);
    }
    else if (isAbandonServerTransaction(msg))
    {
@@ -2384,6 +2413,26 @@ TransactionState::handleSync(DnsResult* result)
 }
 
 void
+TransactionState::handleDecoration(DecorationContext* dc)
+{
+   //StackLog (<< *this << " continuing with DecorationContext: " << *dc);
+   StackLog (<< *this << " continuing with DecorationContext");
+
+   assert(mPendingOperation == Decoration);
+
+   if(!dc->callOutboundDecorators())
+   {
+      // decoration is taking place asynchronously
+      return;
+   }
+
+   mPendingOperation = None;
+   dc->encodeAndSend();
+   delete dc;
+   onSendSuccess();
+}
+
+void
 TransactionState::processReliability(TransportType type)
 {
    switch (type)
@@ -2579,6 +2628,10 @@ TransactionState::sendCurrentToWire()
       if (transmitState == TransportSelector::Sent)
       {
          onSendSuccess();
+      }
+      else if(transmitState == TransportSelector::Decorating)
+      {
+         mPendingOperation = Decoration;
       }
    }
    else

@@ -70,6 +70,7 @@ libresip_la_SOURCES = \
 	ContentsFactoryBase.cxx \
 	CpimContents.cxx \
 	DataParameter.cxx \
+	DecorationContext.cxx \
 	DeprecatedDialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
@@ -219,6 +220,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	CSeqCategory.hxx \
 	DataParameter.hxx \
 	DateCategory.hxx \
+	DecorationContext.hxx \
 	DeprecatedDialog.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
