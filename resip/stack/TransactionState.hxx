@@ -59,6 +59,12 @@ class TransactionState : public DnsHandler
          Bogus
       } State;
 
+      typedef enum
+      {
+         None,
+         Dns
+      } PendingOperation;
+
       TransactionState(TransactionController& controller, 
                        Machine m, 
                        State s, 
@@ -174,7 +180,7 @@ class TransactionState : public DnsHandler
       unsigned int mCurrentResponseCode;
 
       bool mAckIsValid;
-      bool mWaitingForDnsResult;
+      PendingOperation mPendingOperation;
       TransactionUser* mTransactionUser;
       TransportFailure::FailureReason mFailureReason;      
       int mFailureSubCode;

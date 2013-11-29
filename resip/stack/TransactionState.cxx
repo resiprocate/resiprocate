@@ -60,7 +60,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mCurrentMethodType(UNKNOWN),
    mCurrentResponseCode(0),
    mAckIsValid(false),
-   mWaitingForDnsResult(false),
+   mPendingOperation(None),
    mTransactionUser(tu),
    mFailureReason(TransportFailure::None),
    mFailureSubCode(0)
@@ -1035,7 +1035,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
             {
                mDnsResult->destroy();
                mDnsResult=0;
-               mWaitingForDnsResult=false;
+               mPendingOperation=None;
             }
             resetNextTransmission(0);
          }
@@ -1091,7 +1091,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
                // !bwc! We hold onto this until we get a response from the wire
                // in client transactions, for this contingency.
                assert(mNextTransmission);
-               if(mWaitingForDnsResult)
+               if(mPendingOperation == Dns)
                {
                   WarningLog(<< "Transaction timed out while waiting for DNS "
                               "result uri=" << 
@@ -1242,7 +1242,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                {
                   mDnsResult->destroy();
                   mDnsResult=0;
-                  mWaitingForDnsResult=false;
+                  mPendingOperation=None;
                }
                StackLog (<< "Received 2xx on client invite transaction");
                StackLog (<< *this);
@@ -1293,7 +1293,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      {
                         mDnsResult->destroy();
                         mDnsResult=0;
-                        mWaitingForDnsResult=false;
+                        mPendingOperation=None;
                      }
                      sendToTU(sip); // don't delete msg
                   }
@@ -1363,7 +1363,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             {
                assert(mNextTransmission && mNextTransmission->isRequest() &&
                         mNextTransmission->method()==INVITE);
-               if(mWaitingForDnsResult)
+               if(mPendingOperation == Dns)
                {
                   WarningLog(<< "Transaction timed out while waiting for DNS "
                               "result uri=" << 
@@ -1394,7 +1394,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                         mNextTransmission->method() == INVITE);
                StackLog (<< "Timer::TimerCleanUp: " << *this << std::endl << *mNextTransmission);
                InfoLog(<<"Making 408 for canceled invite that received no response: "<< mNextTransmission->brief());
-               if(mWaitingForDnsResult)
+               if(mPendingOperation == Dns)
                {
                   WarningLog(<< "Transaction timed out while waiting for DNS "
                               "result uri=" << 
@@ -2290,7 +2290,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
             
             case DnsResult::Pending:
                InfoLog(<< "We have a DNS query pending.");
-               mWaitingForDnsResult=true;
+               mPendingOperation=Dns;
                restoreOriginalContactAndVia();
                mMsgToRetransmit.clear();
                break;
@@ -2351,13 +2351,13 @@ TransactionState::handleSync(DnsResult* result)
    StackLog (<< *this << " got DNS result: " << *result);
    
    // .bwc. Were we expecting something from mDnsResult?
-   if (mWaitingForDnsResult) 
+   if (mPendingOperation == Dns)
    {
       assert(mDnsResult);
       switch (mDnsResult->available())
       {
          case DnsResult::Available:
-            mWaitingForDnsResult=false;
+            mPendingOperation=None;
             mTarget = mDnsResult->next();
             assert( mTarget.transport==0 );
             // below allows TU to which transport we send on
@@ -2368,7 +2368,7 @@ TransactionState::handleSync(DnsResult* result)
             break;
             
          case DnsResult::Finished:
-            mWaitingForDnsResult=false;
+            mPendingOperation=None;
             processNoDnsResults();
             break;
 
@@ -2513,7 +2513,7 @@ TransactionState::sendCurrentToWire()
                   assert(sip->isRequest());
                   assert(mMethod!=CANCEL); // .bwc. mTarget should be set in this case.
                   mDnsResult = mController.mTransportSelector.createDnsResult(this);
-                  mWaitingForDnsResult=true;
+                  mPendingOperation=Dns;
                   mController.mTransportSelector.dnsResolve(mDnsResult, sip);
                }
                else // ... but our DNS query isn't done yet.
