@@ -593,9 +593,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_NoOfferReliable:
       case UAS_OfferReliable: 
       case UAS_OfferReliableProvidedAnswer:
-      case UAS_ReceivedUpdate:
+      case UAS_ReceivedUpdate:   // Note:  This rejects the entire InviteSession - there is no way right now to reject only the Offer that was received via an Update
+      case UAS_ReceivedUpdateWaitingAnswer:  // yes it's wrong to call reject after accept - however we can get here from end() as well.  We haven't sent our 200/Inv on the wire yet, so we can just reject the Invite session to end it
       case UAS_SentUpdate:
       case UAS_SentUpdateGlare:
+      case UAS_SentUpdateAccepted:  // yes it's wrong to call reject after accept - however we can get here from end() as well.  We haven't sent our 200/Inv on the wire yet, so we can just reject the Invite session to end it
       {
          // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
          // an offer/answer exchange with PRACK. 
@@ -618,8 +620,6 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_Accepted:
       case UAS_WaitingToOffer:
       case UAS_WaitingToRequestOffer:
-      case UAS_ReceivedUpdateWaitingAnswer:
-      case UAS_SentUpdateAccepted:
       case UAS_Start:
       case UAS_WaitingToHangup:
          assert(0);
@@ -1624,6 +1624,7 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
          break;
 
      case OnUpdateRejected:
+     case OnGeneralFailure:  // handle 481 or 408 responses
          transition(UAS_NegotiatedReliable);
          mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1704,6 +1705,7 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
          break;
 
       case OnUpdateRejected:
+      case OnGeneralFailure:   // handle 481 or 408 responses
          transition(UAS_Accepted);
          mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
