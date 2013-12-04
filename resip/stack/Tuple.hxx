@@ -5,6 +5,7 @@
 #include "config.h"
 #endif
 
+#include <memory>
 
 #include "rutil/Socket.hxx"
 #include "rutil/compat.hxx"
@@ -107,6 +108,9 @@ class Tuple
       ///  @brief Retrieve the binary representation of the socket address for
       /// this tuple.
       sockaddr& getMutableSockaddr() { return mSockaddr; }
+      ///  @brief Get a copy of the socket address including the interface and
+      /// not the port number
+      void copySockaddrAnyPort(sockaddr *sa);
 
       ///  @brief Set the internal binary representation of the socket address
       /// from the GenericIPAddress.

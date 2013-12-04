@@ -27,6 +27,7 @@
 #include "resip/stack/Transport.hxx"
 
 
+using std::auto_ptr;
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DNS
@@ -204,6 +205,27 @@ Tuple::Tuple(const struct sockaddr& addr,
    else if (addr.sa_family == AF_INET6)
    {
       m_anonv6 = (sockaddr_in6&)(addr);
+   }
+#endif
+   else
+   {
+      assert(0);
+   }
+}
+
+void
+Tuple::copySockaddrAnyPort(sockaddr *sa)
+{
+   memcpy(sa, &mSockaddr, length());
+   // zero the port number
+   if (sa->sa_family == AF_INET)
+   {
+      ((sockaddr_in*)sa)->sin_port = 0;
+   }
+#ifdef USE_IPV6
+   else if (sa->sa_family == AF_INET6)
+   {
+      ((sockaddr_in6*)sa)->sin6_port = 0;
    }
 #endif
    else
