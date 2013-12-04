@@ -215,6 +215,17 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    assert(sock != INVALID_SOCKET);
 
    DebugLog (<<"Opening new connection to " << dest);
+   socklen_t len = mTuple.length();
+   char _sa[len];
+   sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
+   mTuple.copySockaddrAnyPort(sa);
+   if(::bind(sock, sa, len) != 0)
+   {
+      WarningLog( << "Error in binding to source interface address. " << strerror(errno));
+      failReason = TransportFailure::Failure;
+      failSubCode = errno;
+      return NULL;
+   }
    makeSocketNonBlocking(sock);
    if (mSocketFunc)
    {
