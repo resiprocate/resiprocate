@@ -292,7 +292,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       //       within the realm of the REALM attribute of the request
       if (!getConfig().isUserNameValid(*request.mUsername, *request.mRealm))
       {
-         WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 401. Sender=" << request.mRemoteTuple);
+         WarningLog(<< "Invalid username '" << *request.mUsername << "' or realm '" << *request.mRealm << "' (username unknown or potential AuthorizationRealm mismatch). Sending 401. Sender=" << request.mRemoteTuple);
          buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationRealm.c_str());
          return false;
       }
