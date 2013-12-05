@@ -218,7 +218,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    char _sa[RESIP_MAX_SOCKADDR_SIZE];
    sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
    mTuple.copySockaddrAnyPort(sa);
-   if(::bind(sock, sa, RESIP_MAX_SOCKADDR_SIZE) != 0)
+   if(::bind(sock, sa, mTuple.length()) != 0)
    {
       WarningLog( << "Error in binding to source interface address. " << strerror(errno));
       failReason = TransportFailure::Failure;
