@@ -85,6 +85,8 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 
 #endif
 
+#define RESIP_MAX_SOCKADDR_SIZE 28
+
 #if defined(__APPLE__)
    // .amr. If you get linker or type conflicts around UInt32, then use this define
 #  if defined(RESIP_APPLE_USE_SYSTEM_TYPES)

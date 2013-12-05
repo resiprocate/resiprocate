@@ -260,7 +260,7 @@ private:
             // ?bwc? Is there a more standard preprocessor macro for this?
             sockaddr_in6 m_anonv6;
 #endif
-            char pad[28]; //< this make union same size if v6 is in or out
+            char pad[RESIP_MAX_SOCKADDR_SIZE]; //< this make union same size if v6 is in or out
       };
       TransportType mTransportType;
       Data mTargetDomain; 
