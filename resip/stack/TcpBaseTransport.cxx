@@ -215,11 +215,10 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    assert(sock != INVALID_SOCKET);
 
    DebugLog (<<"Opening new connection to " << dest);
-   socklen_t len = mTuple.length();
-   char _sa[len];
+   char _sa[RESIP_MAX_SOCKADDR_SIZE];
    sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
    mTuple.copySockaddrAnyPort(sa);
-   if(::bind(sock, sa, len) != 0)
+   if(::bind(sock, sa, RESIP_MAX_SOCKADDR_SIZE) != 0)
    {
       WarningLog( << "Error in binding to source interface address. " << strerror(errno));
       failReason = TransportFailure::Failure;
