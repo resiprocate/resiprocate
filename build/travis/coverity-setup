@@ -18,7 +18,8 @@ case `uname -m` in
   ;;
 esac
 
-SCAN_TOOL=https://scan.coverity.com/build_tool/cov-analysis-linux${BITS}-${COV_VERSION}.tar.gz
+#SCAN_TOOL=https://scan.coverity.com/build_tool/cov-analysis-linux${BITS}-${COV_VERSION}.tar.gz
+SCAN_TOOL=https://scan.coverity.com/download/linux-${BITS}
 
 echo "Using tool $SCAN_TOOL"
 
@@ -32,7 +33,9 @@ fi
 mkdir -p $TOOL_BASE
 
 cd $TOOL_BASE
-wget -O coverity_tool.tgz $SCAN_TOOL
+wget -O coverity_tool.tgz $SCAN_TOOL \
+   --post-data "token=-OmW1wnKp9CVC7iGPDUlqw&project=reSIProcate"
+
 tar xzf coverity_tool.tgz
 
 TOOL_DIR=`find $TOOL_BASE -type d -name 'cov-analysis*'`
