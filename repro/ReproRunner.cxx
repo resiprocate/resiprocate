@@ -1414,8 +1414,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (dtlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain);
-            if (mUseV6) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, Data::Empty, tlsDomain);
+            if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey);
+            if (mUseV6) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey);
          }
       }
    }

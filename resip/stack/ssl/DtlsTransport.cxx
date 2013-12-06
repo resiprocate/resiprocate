@@ -80,7 +80,8 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              Security& security,
                              const Data& sipDomain,
                              AfterSocketCreationFuncPtr socketFunc,
-                             Compression& compression)
+                             Compression& compression,
+                             const Data& certificateFilename, const Data& privateKeyFilename)
  : UdpTransport( fifo, portNum, version, StunDisabled, interfaceObj, socketFunc, compression ),
    mTimer( mHandshakePending ),
    mSecurity( &security ),
@@ -100,8 +101,8 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 
    mTuple.setType( DTLS );
 
-   mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty) ;
-   mServerCtx = mSecurity->createDomainCtx(DTLSv1_server_method(), sipDomain) ;
+   mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty, certificateFilename, privateKeyFilename) ;
+   mServerCtx = mSecurity->createDomainCtx(DTLSv1_server_method(), sipDomain, certificateFilename, privateKeyFilename) ;
    assert( mClientCtx ) ;
    assert( mServerCtx ) ;
 

@@ -124,7 +124,8 @@ class DtlsTransport : public UdpTransport
                     Security& security,
                     const Data& sipDomain,
                     AfterSocketCreationFuncPtr socketFunc = 0,
-                    Compression &compression = Compression::Disabled);
+                    Compression &compression = Compression::Disabled,
+                    const Data& certificateFilename = "", const Data& privateKeyFilename = "");
       virtual  ~DtlsTransport();
 
       void process(FdSet& fdset);

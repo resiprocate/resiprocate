@@ -374,7 +374,8 @@ SipStack::addTransport( TransportType protocol,
                                           *mSecurity,
                                           sipDomainname,
                                           mSocketFunc,
-                                          *mCompression);
+                                          *mCompression,
+                                          certificateFilename, privateKeyFilename);
 #else
             CritLog (<< "DTLS not supported in this stack.");
             assert(0);
