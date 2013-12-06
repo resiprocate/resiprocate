@@ -6,6 +6,7 @@ set -e
   --with-ssl \
   --with-mysql \
   --with-apps \
+  --enable-dtls \
   --enable-ipv6 \
   --with-radius \
   --with-repro \
