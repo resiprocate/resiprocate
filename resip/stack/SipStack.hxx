@@ -314,6 +314,7 @@ class SipStack : public FdSetIOObserver
                          const Data& privateKeyPassPhrase = Data::Empty,
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
                          unsigned transportFlags = 0,
+                         const Data& certificateFilename = "", const Data& privateKeyFilename = "",
                          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                          bool useEmailAsSIP = false,
                          SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());

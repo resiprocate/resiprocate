@@ -31,8 +31,9 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            Compression &compression,
                            unsigned transportFlags,
                            SecurityTypes::TlsClientVerificationMode cvm,
-                           bool useEmailAsSIP):
-   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, TLS, socketFunc, compression, transportFlags, cvm, useEmailAsSIP)
+                           bool useEmailAsSIP,
+                           const Data& certificateFilename, const Data& privateKeyFilename):
+   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, TLS, socketFunc, compression, transportFlags, cvm, useEmailAsSIP, certificateFilename, privateKeyFilename)
 {
    InfoLog (<< "Creating TLS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 

@@ -36,7 +36,8 @@ class TlsBaseTransport : public TcpBaseTransport
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
-                   bool useEmailAsSIP = false);
+                   bool useEmailAsSIP = false,
+                   const Data& certificateFilename = "", const Data& privateKeyFilename = "");
       virtual  ~TlsBaseTransport();
 
       SSL_CTX* getCtx() const;

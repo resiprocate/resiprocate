@@ -261,7 +261,7 @@ Security::preload()
 }
 
 SSL_CTX* 
-Security::createDomainCtx(const SSL_METHOD* method, const Data& domain)
+Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename)
 {
 #if (OPENSSL_VERSION_NUMBER >= 0x1000000fL )
    SSL_CTX* ctx = SSL_CTX_new(method);
@@ -284,14 +284,14 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain)
    // Load domain cert chain and private key
    if(!domain.empty())
    {
-      Data certFilename(mPath + pemTypePrefixes(DomainCert) + domain + PEM);
+      Data certFilename(certificateFilename.empty() ? mPath + pemTypePrefixes(DomainCert) + domain + PEM : certificateFilename);
       if(SSL_CTX_use_certificate_chain_file(ctx, certFilename.c_str()) != 1)
       {
          ErrLog (<< "Error reading domain chain file " << certFilename);
          SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Failed opening PEM chain file", __FILE__,__LINE__);
       }
-      Data keyFilename(mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM);
+      Data keyFilename(privateKeyFilename.empty() ? mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM : privateKeyFilename);
       if(SSL_CTX_use_PrivateKey_file(ctx, keyFilename.c_str(), SSL_FILETYPE_PEM) != 1)
       {
          ErrLog (<< "Error reading domain private key file " << keyFilename);

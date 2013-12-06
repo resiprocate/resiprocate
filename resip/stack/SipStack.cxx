@@ -301,6 +301,7 @@ SipStack::addTransport( TransportType protocol,
                         const Data& privateKeyPassPhrase,
                         SecurityTypes::SSLType sslType,
                         unsigned transportFlags,
+                        const Data& certificateFilename, const Data& privateKeyFilename,
                         SecurityTypes::TlsClientVerificationMode cvm,
                         bool useEmailAsSIP,
                         SharedPtr<WsConnectionValidator> wsConnectionValidator)
@@ -357,7 +358,8 @@ SipStack::addTransport( TransportType protocol,
                                          *mCompression,
                                          transportFlags,
                                          cvm,
-                                         useEmailAsSIP);
+                                         useEmailAsSIP,
+                                         certificateFilename, privateKeyFilename);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
             assert(0);
@@ -408,7 +410,8 @@ SipStack::addTransport( TransportType protocol,
                   transportFlags,
                   cvm,
                   useEmailAsSIP,
-                  wsConnectionValidator);
+                  wsConnectionValidator,
+                  certificateFilename, privateKeyFilename);
 #else
             CritLog (<< "WSS not supported in this stack. You don't have openssl");
             assert(0);

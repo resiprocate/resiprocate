@@ -32,7 +32,8 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
                            Compression &compression,
                            unsigned transportFlags,
                            SecurityTypes::TlsClientVerificationMode cvm,
-                           bool useEmailAsSIP) :
+                           bool useEmailAsSIP,
+                           const Data& certificateFilename, const Data& privateKeyFilename) :
    TcpBaseTransport(fifo, portNum, version, interfaceObj, socketFunc, compression, transportFlags),
    mSecurity(&security),
    mSslType(sslType),
@@ -51,11 +52,11 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    {
       if (sslType == SecurityTypes::SSLv23)
       {
-         mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain);
+         mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain, certificateFilename, privateKeyFilename);
       }
       else
       {
-         mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain);
+         mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename);
       }
    }
 }

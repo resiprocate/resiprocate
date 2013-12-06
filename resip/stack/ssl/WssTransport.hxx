@@ -39,7 +39,8 @@ class WssTransport : public TlsBaseTransport, public WsBaseTransport
                    unsigned transportFlags = 0,
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false,
-                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
+                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
+                   const Data& certificateFilename = "", const Data& privateKeyFilename = "");
       virtual  ~WssTransport();
 
       bool isUseEmailAsSIP()
