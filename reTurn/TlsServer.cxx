@@ -1,5 +1,6 @@
 #include "TlsServer.hxx"
 #include <boost/bind.hpp>
+#include <rutil/Data.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
@@ -32,10 +33,15 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    }
 
    // Use a private key from a file.
-   mContext.use_private_key_file(mRequestHandler.getConfig().mTlsServerCertificateFilename.c_str(), asio::ssl::context::pem, ec);
+   resip::Data keyFilename = mRequestHandler.getConfig().mTlsServerPrivateKeyFilename;
+   if(keyFilename.empty())
+   {
+      keyFilename = mRequestHandler.getConfig().mTlsServerCertificateFilename;
+   }
+   mContext.use_private_key_file(keyFilename.c_str(), asio::ssl::context::pem, ec);
    if(ec)
    {
-      ErrLog(<< "Unable to load server private key file: " << mRequestHandler.getConfig().mTlsServerCertificateFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
+      ErrLog(<< "Unable to load server private key file: " << keyFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
       throw asio::system_error(ec);
    }
 

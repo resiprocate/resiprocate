@@ -63,6 +63,7 @@ public:
    unsigned long mMaxAllocationsPerUser;  // TODO - enforcement needs to be implemented
 
    resip::Data mTlsServerCertificateFilename;
+   resip::Data mTlsServerPrivateKeyFilename;
    resip::Data mTlsTempDhFilename;
    resip::Data mTlsPrivateKeyPassword;
 

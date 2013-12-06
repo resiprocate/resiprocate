@@ -31,6 +31,7 @@ ReTurnConfig::ReTurnConfig() :
    mMaxAllocationLifetime(3600),    // 1 hour
    mMaxAllocationsPerUser(0),       // 0 - no max
    mTlsServerCertificateFilename("server.pem"),
+   mTlsServerPrivateKeyFilename(""),
    mTlsTempDhFilename("dh512.pem"),
    mTlsPrivateKeyPassword(""),
    mLoggingType("cout"),
@@ -62,6 +63,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mMaxAllocationLifetime = getConfigUnsignedLong("MaxAllocationLifetime", mMaxAllocationLifetime);
    mMaxAllocationsPerUser = getConfigUnsignedLong("MaxAllocationsPerUser", mMaxAllocationsPerUser);
    mTlsServerCertificateFilename = getConfigData("TlsServerCertificateFilename", mTlsServerCertificateFilename);
+   mTlsServerPrivateKeyFilename = getConfigData("TlsServerPrivateKeyFilename", mTlsServerPrivateKeyFilename);
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
    mLoggingType = getConfigData("LoggingType", mLoggingType);
@@ -93,6 +95,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
 
    AddBasePathIfRequired(mLoggingFilename);
    AddBasePathIfRequired(mTlsServerCertificateFilename);
+   AddBasePathIfRequired(mTlsServerPrivateKeyFilename);
    AddBasePathIfRequired(mTlsTempDhFilename);
    AddBasePathIfRequired(usersDatabase);
    
