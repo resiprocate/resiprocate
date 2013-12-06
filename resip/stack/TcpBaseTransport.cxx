@@ -217,6 +217,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    DebugLog (<<"Opening new connection to " << dest);
    char _sa[RESIP_MAX_SOCKADDR_SIZE];
    sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
+   assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
    mTuple.copySockaddrAnyPort(sa);
    if(::bind(sock, sa, mTuple.length()) != 0)
    {
