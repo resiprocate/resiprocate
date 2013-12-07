@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <memory>
+
 #include "rutil/Logger.hxx"
 #include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/WsConnectionBase.hxx"
@@ -611,18 +613,26 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
    {
       WsConnectionBase* wsConnectionBase = dynamic_cast<WsConnectionBase*>(this);
       CookieList cookieList;
-      WsCookieContext wsCookieContext;
       if(wsConnectionBase)
       {
+         std::auto_ptr<WsCookieContext> wsCookieContext(0);
          if (mMessage->exists(h_Cookies))
          {
-            wsParseCookies(cookieList, mMessage);
-            wsCookieContext = WsCookieContext(cookieList);
-            wsConnectionBase->setCookies(cookieList);
-            wsConnectionBase->setWsCookieContext(wsCookieContext);
+            try
+            {
+               wsParseCookies(cookieList, mMessage);
+               wsCookieContext.reset(new WsCookieContext(cookieList));
+               wsConnectionBase->setCookies(cookieList);
+               wsConnectionBase->setWsCookieContext(*(wsCookieContext.get()));
+            }
+            catch(ParseException& ex)
+            {
+               WarningLog(<<"Failed to parse cookies into WsCookieContext");
+            }
          }
          SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
-         if(wsConnectionValidator && !wsConnectionValidator->validateConnection(wsCookieContext))
+         if(wsConnectionValidator &&
+            (!wsCookieContext.get() || !wsConnectionValidator->validateConnection(*(wsCookieContext.get()))))
          {
             ErrLog(<<"WebSocket cookie validation failed, dropping connection");
             // FIXME: should send back a HTTP error code:
