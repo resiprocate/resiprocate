@@ -6,6 +6,8 @@
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include <memory>
 
+#include "repro/Plugin.hxx"
+
 namespace resip
 {
    class TransactionUser;
@@ -52,6 +54,7 @@ public:
 protected:
    virtual void cleanupObjects();
 
+   virtual bool loadPlugins();
    virtual bool createSipStack();
    virtual bool createDatastore();
    virtual bool createProxy();
@@ -109,6 +112,7 @@ protected:
    CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
    resip::CommonNameMappings mCommonNameMappings;
+   std::vector<Plugin*> mPlugins;
 };
 
 }

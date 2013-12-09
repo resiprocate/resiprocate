@@ -10,6 +10,7 @@ set -e
   --enable-ipv6 \
   --with-radius \
   --with-repro \
+  --enable-repro-plugins \
   --with-rend \
   --with-c-ares
 

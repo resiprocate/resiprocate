@@ -229,6 +229,13 @@ AC_ARG_WITH(repro,
  [AC_DEFINE_UNQUOTED(BUILD_REPRO, , BUILD_REPRO)
  AM_CONDITIONAL(BUILD_REPRO, true)], )
 
+AC_ARG_ENABLE(repro-plugins,
+[  --enable-repro-plugins  Enable support for DSO plugins in repro],
+ AC_DEFINE_UNQUOTED(REPRO_DSO_PLUGINS, , REPRO_DSO_PLUGINS), )
+
+AC_SUBST([reproplugindir])
+reproplugindir='${pkglibdir}/repro/plugins'
+
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
 [  --with-rend             Build rend],
@@ -291,6 +298,8 @@ AC_OUTPUT(Makefile \
 	repro/accountingconsumers/Makefile \
 	repro/reprocmd/Makefile \
 	repro/test/Makefile \
+	repro/plugins/Makefile \
+	repro/plugins/example/Makefile \
 	tfm/Makefile \
 	tfm/repro/Makefile \
 	tfm/tfdum/Makefile \

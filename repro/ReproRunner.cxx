@@ -6,6 +6,20 @@
 #include <fstream>
 #include <stdexcept>
 
+#ifdef REPRO_DSO_PLUGINS
+
+// in an autotools build, this is defined using pkglibdir
+#ifndef REPRO_DSO_PLUGIN_DIR_DEFAULT
+#define REPRO_DSO_PLUGIN_DIR_DEFAULT ""
+#endif
+
+// This is the UNIX way of doing DSO, an alternative implementation
+// for Windows needs to include the relevant Windows headers here
+// and implement the loader code further below
+#include <dlfcn.h>
+
+#endif
+
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -191,6 +205,12 @@ ReproRunner::run(int argc, char** argv)
                    isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0); // if logging to file then write WARNINGS, and Errors to console still
 
    InfoLog( << "Starting repro version " << VersionUtils::instance().releaseVersion() << "...");
+
+   // Load the plugins
+   if(!loadPlugins())
+   {
+      return false;
+   }
 
    // Create SipStack and associated objects
    if(!createSipStack())
@@ -408,6 +428,76 @@ ReproRunner::cleanupObjects()
    delete mAsyncProcessHandler; mAsyncProcessHandler = 0;
    delete mFdPollGrp; mFdPollGrp = 0;
    delete mProxyConfig; mProxyConfig = 0;
+}
+
+bool
+ReproRunner::loadPlugins()
+{
+   const Data& pluginDirectory = mProxyConfig->getConfigData("PluginDirectory", REPRO_DSO_PLUGIN_DIR_DEFAULT, true);
+   std::vector<Data> pluginNames;
+   mProxyConfig->getConfigValue("LoadPlugins", pluginNames);
+
+#ifdef REPRO_DSO_PLUGINS
+   if(pluginNames.empty())
+   {
+      DebugLog(<<"LoadPlugins not specified, not attempting to load any plugins");
+      return true;
+   }
+   if(pluginDirectory.empty())
+   {
+      ErrLog(<<"LoadPlugins specified but PluginDirectory not specified, can't load plugins");
+      return false;
+   }
+   for(std::vector<Data>::iterator it = pluginNames.begin(); it != pluginNames.end(); it++)
+   {
+      void *dlib;
+      // FIXME:
+      // - not all platforms use the .so extension
+      // - detect and use correct directory separator charactor
+      // - do we need to support relative paths here?
+      // - should we use the filename prefix 'lib', 'mod' or something else?
+      Data name = pluginDirectory + '/' + "lib" + *it + ".so";
+      dlib = dlopen(name.c_str(), RTLD_NOW);
+      if(!dlib)
+      {
+         ErrLog(<< "Failed to load plugin " << *it << " (" << name << "): " << dlerror());
+         return false;
+      }
+      ReproPluginDescriptor* desc = (ReproPluginDescriptor*)dlsym(dlib, "reproPluginDesc");
+      if(!desc)
+      {
+         ErrLog(<< "Failed to find reproPluginDesc in plugin " << *it << " (" << name << "): " << dlerror());
+         return false;
+      }
+      if(!(desc->mPluginApiVersion == REPRO_DSO_PLUGIN_API_VERSION))
+      {
+         ErrLog(<< "Failed to load plugin " << *it << " (" << name << "): found version " << desc->mPluginApiVersion << ", expecting version " << REPRO_DSO_PLUGIN_API_VERSION);
+      }
+      DebugLog(<<"Trying to instantiate plugin " << *it);
+      // Instantiate the plugin object and add it to our runtime environment
+      Plugin* plugin = desc->creationFunc();
+      if(!plugin)
+      {
+         ErrLog(<< "Failed to instantiate plugin " << *it << " (" << name << ")");
+         return false;
+      }
+      if(!plugin->init(mProxyConfig))
+      {
+         ErrLog(<< "Failed to initialize plugin " << *it << " (" << name << ")");
+         return false;
+      }
+      mPlugins.push_back(plugin);
+   }
+   return true;
+#else
+   if(!pluginNames.empty())
+   {
+      ErrLog(<<"LoadPlugins specified but repro not compiled with plugin DSO support");
+      return false;
+   }
+   DebugLog(<<"Not compiled with plugin DSO support");
+   return true;
+#endif
 }
 
 bool
@@ -828,6 +918,8 @@ ReproRunner::createProxy()
                                                  numAsyncProcessorWorkerThreads);
    }
 
+   std::vector<Plugin*>::iterator it;
+
    // Create proxy processor chains
    /* Explanation:  "Monkeys" are processors which operate on incoming requests
                     "Lemurs"  are processors which operate on incoming responses
@@ -838,18 +930,30 @@ ReproRunner::createProxy()
    mMonkeys = new ProcessorChain(Processor::REQUEST_CHAIN);
    makeRequestProcessorChain(*mMonkeys);
    InfoLog(<< *mMonkeys);
+   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   {
+      (*it)->onRequestProcessorChainPopulated(*mMonkeys);
+   }
 
    // Make Lemurs
    assert(!mLemurs);
    mLemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
    makeResponseProcessorChain(*mLemurs);
    InfoLog(<< *mLemurs);
+   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   {
+      (*it)->onResponseProcessorChainPopulated(*mLemurs);
+   }
 
    // Make Baboons
    assert(!mBaboons);
    mBaboons = new ProcessorChain(Processor::TARGET_CHAIN);
    makeTargetProcessorChain(*mBaboons);
    InfoLog(<< *mBaboons);
+   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   {
+      (*it)->onTargetProcessorChainPopulated(*mBaboons);
+   }
 
    // Create main Proxy class
    assert(!mProxy);

@@ -18,6 +18,9 @@ EXTRA_DIST += create_mysql_reprodb.sql
 EXTRA_DIST += genUsers.cxx
 
 SUBDIRS = . test reprocmd accountingconsumers
+if REPRO_DSO_PLUGINS
+SUBDIRS += plugins
+endif
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
@@ -35,6 +38,9 @@ repro_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 lib_LTLIBRARIES = librepro.la
 
+if REPRO_DSO_PLUGINS
+librepro_la_CXXFLAGS = -DREPRO_DSO_PLUGIN_DIR_DEFAULT='"@reproplugindir@"'
+endif
 librepro_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 librepro_la_LIBADD = -ldb_cxx
 librepro_la_LIBADD += ../resip/dum/libdum.la
@@ -142,6 +148,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	MySqlDb.hxx \
 	OutboundTarget.hxx \
 	PersistentMessageQueue.hxx \
+	Plugin.hxx \
 	ProcessorChain.hxx \
 	Processor.hxx \
 	ProcessorMessage.hxx \
