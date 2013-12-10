@@ -29,7 +29,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-char* srtp_error_string(err_status_t error)
+const char* srtp_error_string(err_status_t error)
 {
    switch(error)
    {
@@ -829,7 +829,7 @@ Flow::changeFlowState(FlowState newState)
    mFlowState = newState;
 }
 
-char*
+const char*
 Flow::flowStateToString(FlowState state)
 {
    switch(state)

@@ -144,7 +144,7 @@ private:
 
    volatile FlowState mFlowState;
    void changeFlowState(FlowState newState);
-   char* flowStateToString(FlowState state);
+   const char* flowStateToString(FlowState state);
 
    class ReceivedData
    {
