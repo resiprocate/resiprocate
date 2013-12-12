@@ -17,8 +17,8 @@ CheckFetchedContacts::CheckFetchedContacts(std::set<resip::NameAddr> contacts)
 bool 
 CheckFetchedContacts::compareContacts(const NameAddr & s1, const NameAddr & s2)
 {
-   float q1 = s1.exists(p_q) ? s1.param(p_q) : 1.0;
-   float q2 = s2.exists(p_q) ? s2.param(p_q) : 1.0;
+   float q1 = (float)(s1.exists(p_q) ? s1.param(p_q) : 1.0);
+   float q2 = (float)(s2.exists(p_q) ? s2.param(p_q) : 1.0);
    return (s1.uri().getAor() == s2.uri().getAor() && q1 == q2);
 }      
 

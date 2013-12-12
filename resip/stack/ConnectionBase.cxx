@@ -627,7 +627,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
             }
             catch(ParseException& ex)
             {
-               WarningLog(<<"Failed to parse cookies into WsCookieContext");
+               WarningLog(<<"Failed to parse cookies into WsCookieContext: " << ex);
             }
          }
          SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();

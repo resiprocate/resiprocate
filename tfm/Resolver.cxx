@@ -211,11 +211,9 @@ void
 Resolver::lookupAandAAAARecords()
 {
    int ret=0;
-   struct addrinfo* result;
-   
 
 #if defined(__linux__) || defined(__APPLE__)   
-
+   struct addrinfo* result;
    bool ignoreV6=false;
 
    if(mHost=="localhost")

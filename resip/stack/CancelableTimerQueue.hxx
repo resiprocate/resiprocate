@@ -56,6 +56,7 @@ class CancelableTimerQueue
          //cerr << "TimerMap state: " << Inserter(mTimerMap) << endl;
          assert(mIdToTimer.size() == mTimerMap.size());
          assert(0);
+         return false;
       }
 
       //get the number of milliseconds until the next event, returns -1 if no
@@ -68,13 +69,14 @@ class CancelableTimerQueue
          }
          else
          {
-            if (mTimerMap.begin()->first - resip::Timer::getTimeMs() < 0)
+            int timeout = (int)(mTimerMap.begin()->first - resip::Timer::getTimeMs());
+            if (timeout < 0)
             {
                return 0;
             }
             else
             {
-               return mTimerMap.begin()->first - resip::Timer::getTimeMs();
+               return timeout;
             }
          }
       }
