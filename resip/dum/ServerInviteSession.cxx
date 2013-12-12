@@ -269,7 +269,6 @@ ServerInviteSession::provideOffer(const Contents& offer,
                                   bool sendOfferAtAccept)
 {
    InfoLog (<< toData(mState) << ": provideOffer");
-   mAnswerSentReliably = false;
    switch (mState)
    {
       case UAS_NoOffer:
@@ -315,9 +314,14 @@ ServerInviteSession::provideOffer(const Contents& offer,
          InviteSession::provideOffer(offer, level, alternative);
          break;
 
+      case UAS_FirstSentAnswerReliable:
+          // Queue up offer to be sent after PRACK arrives
+         mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(offer);
+         mProposedEncryptionLevel = level;
+         break;
+
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
-      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_Offer:
       case UAS_EarlyOffer:
@@ -1491,6 +1495,13 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
          {
             if(offerAnswer.get())  // New offer
             {
+               // If we have an offer in the prack and the dum user also tried to provide a new offer, then
+               // reject the dum api offer and pass the one from the wire to the application
+               if(mProposedLocalOfferAnswer.get())
+               {
+                   //!slg! -- should this be onIllegalNegotiation?
+                   handler->onOfferRejected(getSessionHandle(), 0); 
+               }
                // dispatch offer here and respond with 200OK in provideAnswer
                transition(UAS_NegotiatedReliable);
                mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
@@ -1507,9 +1518,19 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
                SharedPtr<SipMessage> p200(new SipMessage);
                mDialog.makeResponse(*p200, msg, 200);
                send(p200);
-               transition(UAS_NegotiatedReliable);
-               handler->onPrack(getHandle(), msg);
-               prackCheckQueue();
+               // check if we have a queued up offer then sent it - if not check prack queue
+               if(mProposedLocalOfferAnswer.get())
+               {
+                  transition(UAS_SentUpdate);
+                  handler->onPrack(getHandle(), msg);
+                  sendUpdate(*mProposedLocalOfferAnswer.get());
+               }
+               else
+               {
+                  transition(UAS_NegotiatedReliable);
+                  handler->onPrack(getHandle(), msg);
+                  prackCheckQueue();
+               }
             }
          }
          break;
@@ -1621,6 +1642,7 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             handler->onAnswer(getSessionHandle(), msg, *offerAnswer);
          }
+         prackCheckQueue();  // needed for when provideOffer then accept are both called in FirstSentAnswerReliable
          break;
 
      case OnUpdateRejected:
@@ -1628,6 +1650,7 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
          transition(UAS_NegotiatedReliable);
          mProposedLocalOfferAnswer.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
+         prackCheckQueue();  // needed for when provideOffer then accept are both called in FirstSentAnswerReliable
          break;
 
       case On491Update:
