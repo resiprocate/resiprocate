@@ -27,6 +27,8 @@ autoreconf --install && \
               --with-mysql \
               --with-radius \
               --with-repro \
+              --enable-repro-plugins \
+              --with-python \
               --with-tfm \
               --with-apps \
               --with-ichat-gw \

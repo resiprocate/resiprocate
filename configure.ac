@@ -274,6 +274,14 @@ AC_ARG_WITH(p2p,
  [AC_DEFINE_UNQUOTED(BUILD_P2P, , BUILD_P2P)
  AM_CONDITIONAL(BUILD_P2P, true)], )
 
+AM_CONDITIONAL(BUILD_PYTHON, false)
+AC_ARG_WITH(python,
+[  --with-python           Build components requiring Python],
+ [AC_DEFINE_UNQUOTED(BUILD_PYTHON, , BUILD_PYTHON)
+ AM_CONDITIONAL(BUILD_PYTHON, true)
+ PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 2.7])
+], )
+
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
@@ -302,6 +310,7 @@ AC_OUTPUT(Makefile \
 	repro/test/Makefile \
 	repro/plugins/Makefile \
 	repro/plugins/example/Makefile \
+	repro/plugins/pyroute/Makefile \
 	tfm/Makefile \
 	tfm/repro/Makefile \
 	tfm/tfdum/Makefile \
