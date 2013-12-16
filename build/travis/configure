@@ -11,6 +11,9 @@ set -e
   --with-radius \
   --with-repro \
   --enable-repro-plugins \
+  DEPS_PYTHON_CFLAGS=-I/usr/include/python2.7 \
+  DEPS_PYTHON_LIBS=-lpython2.7 \
+  --with-python \
   --with-rend \
   --with-c-ares
 
