@@ -1,4 +1,5 @@
 
+#include <memory>
 
 /* Using the PyCXX API for C++ Python integration
  * It is extremely convenient and avoids the need to write boilerplate
@@ -8,6 +9,7 @@
 #include <CXX/Objects.hxx>
 
 #include "rutil/Logger.hxx"
+#include "resip/stack/Helper.hxx"
 #include "repro/Plugin.hxx"
 #include "repro/Processor.hxx"
 #include "repro/RequestContext.hxx"
@@ -68,7 +70,17 @@ class PyRoutePlugin : public Plugin, public Processor
 
          if(mPyModule->getDict().hasKey("on_load"))
          {
-            mPyModule->callMemberFunction("on_load");
+            StackLog(<< "found on_load method, trying to invoke it...");
+            try
+            {
+               mPyModule->callMemberFunction("on_load");
+            }
+            catch (const Py::Exception& ex)
+            {
+               DebugLog(<< "call to on_load method failed: " << Py::value(ex));
+               StackLog(<< Py::trace(ex));
+               return false;
+            }
          } 
 
          mAction = mPyModule->getAttr("provide_route");
@@ -123,6 +135,9 @@ class PyRoutePlugin : public Plugin, public Processor
          {
             DebugLog(<< Py::value(ex));
             StackLog(<< Py::trace(ex));
+            context.sendResponse(*std::auto_ptr<SipMessage>
+               (Helper::makeResponse(msg, 500, "Server Internal Error")));
+            return SkipAllChains;
          }
          DebugLog(<< "got " << routes.size() << " result(s).");
          for(
