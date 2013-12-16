@@ -60,6 +60,7 @@ protected:
    virtual bool createProxy();
    virtual void populateRegistrations();
    virtual bool createWebAdmin();
+   virtual void createAuthRequestDespatcher();
    virtual void createDialogUsageManager();
    virtual void createRegSync();
    virtual void createCommandServer();

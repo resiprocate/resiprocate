@@ -233,6 +233,9 @@ ReproRunner::run(int argc, char** argv)
       return false;
    }
 
+   // Create worker threads for user authentication (if required)
+   createAuthRequestDespatcher();
+
    // Create DialogUsageManager that handles ServerRegistration,
    // and potentially certificate subscription server
    createDialogUsageManager();
@@ -779,6 +782,24 @@ ReproRunner::createDatastore()
 }
 
 void
+ReproRunner::createAuthRequestDespatcher()
+{
+   mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
+   if (!mSipAuthDisabled)
+   {
+      // Create UserAuthGrabber Worker Thread Pool if auth is enabled
+      assert(!mAuthRequestDispatcher);
+      int numAuthGrabberWorkerThreads = mProxyConfig->getConfigInt("NumAuthGrabberWorkerThreads", 2);
+      if(numAuthGrabberWorkerThreads < 1)
+      {
+         numAuthGrabberWorkerThreads = 1; // must have at least one thread
+      }
+      std::auto_ptr<Worker> grabber(new UserAuthGrabber(mProxyConfig->getDataStore()->mUserStore));
+      mAuthRequestDispatcher = new Dispatcher(grabber, mSipStack, numAuthGrabberWorkerThreads);
+   }
+}
+
+void
 ReproRunner::createDialogUsageManager()
 {
    // Create Profile settings for DUM Instance that handles ServerRegistration,
@@ -852,8 +873,6 @@ ReproRunner::createDialogUsageManager()
 #endif
    }
 
-   mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
-
    if (mDum)
    {
       bool enableCertAuth = mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false);
@@ -881,13 +900,7 @@ ReproRunner::createDialogUsageManager()
       // If Authentication is enabled, then configure DUM to authenticate requests
       if (!mSipAuthDisabled)
       {
-         // Create UserAuthGrabber Worker Thread Pool if auth is enabled
-         assert(!mAuthRequestDispatcher);
-         int numAuthGrabberWorkerThreads = mProxyConfig->getConfigInt("NumAuthGrabberWorkerThreads", 2);
-         if(numAuthGrabberWorkerThreads < 1) numAuthGrabberWorkerThreads = 1; // must have at least one thread
-         std::auto_ptr<Worker> grabber(new UserAuthGrabber(mProxyConfig->getDataStore()->mUserStore));
-         mAuthRequestDispatcher = new Dispatcher(grabber, mSipStack, numAuthGrabberWorkerThreads);
-
+         assert(mAuthRequestDispatcher);
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*mDum,
                                                 mAuthRequestDispatcher,
