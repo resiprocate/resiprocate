@@ -506,6 +506,7 @@ class SipMessage : public TransactionMessage
       Tuple& getDestination() { return mDestination; }
 
       void addBuffer(char* buf);
+      char * getBuffer();
 
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
 

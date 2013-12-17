@@ -112,7 +112,9 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mDumShutdownHandler(0),
    mShutdownState(Running),
    mThreadDebugKey(0),
-   mHiddenThreadDebugKey(0)
+   mHiddenThreadDebugKey(0),
+   mHAMode(false),
+   mDialogSetPersistenceManager(0)
 {
    //TODO -- create default features
    mStack.registerTransactionUser(*this);
@@ -1371,6 +1373,10 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          //DebugLog(<< "Destroying usage" );
          destroyUsage->destroy();
+         if (mHAMode == true){
+            mDialogSetPersistenceManager->syncDialogSetToPersistence(mDialogSetChangeInfoManager->getChanges());
+            mDialogSetChangeInfoManager->reset();
+         }
          return;
       }
    }
@@ -1645,13 +1651,25 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                   return;
                }
             }
+            if (mHAMode == true){
+               mDialogSetPersistenceManager->updateDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
+            }
             processRequest(*sipMsg);
          }
          else
          {
+            if (mHAMode == true){
+               mDialogSetPersistenceManager->updateDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
+            }
             processResponse(*sipMsg);
          }
+
+         if (mHAMode == true){
+            mDialogSetPersistenceManager->syncDialogSetToPersistence(mDialogSetChangeInfoManager->getChanges());
+            mDialogSetChangeInfoManager->reset();
+         }
       }
+
    }
    catch(BaseException& e)
    {
@@ -2070,7 +2088,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             {
                DialogSetId id(request);
                //cryptographically dangerous
-               if(mDialogSetMap.find(id) != mDialogSetMap.end()) 
+               if(mDialogSetMap.find(id) != mDialogSetMap.end())
                {
                   // this can only happen if someone sends us a request with the same callid and from tag as one 
                   // that is in the process of destroying - since this is bad endpoint behaviour - we will 
@@ -2092,19 +2110,10 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             try
             {
-               DialogSet* dset =  new DialogSet(request, *this);
-
-               StackLog ( << "*********** Calling AppDialogSetFactory *************: " << dset->getId());
-               AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
-               appDs->mDialogSet = dset;
-               dset->setUserProfile(appDs->selectUASUserProfile(request));
-               dset->mAppDialogSet = appDs;
-
-               StackLog ( << "************* Adding DialogSet ***************: " << dset->getId());
-               //StackLog ( << "Before: " << Inserter(mDialogSetMap) );
-               mDialogSetMap[dset->getId()] = dset;
-               StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
-
+               DialogSet *dset = makeDialogSetFromRequest(request);
+               if (mHAMode == true){
+                  mDialogSetChangeInfoManager->DialogSetAdded(dset,const_cast<SipMessage&>(request));
+               }
                dset->dispatch(request);
             }
             catch (BaseException& e)
@@ -2301,8 +2310,44 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
    {
       mRedirectManager->removeDialogSet(dsId);
    }
+   if (mHAMode == true){
+	   mDialogSetChangeInfoManager->DialogSetRemoved(dsId);
+   }
 }
 
+DialogSet * DialogUsageManager::makeDialogSetFromRequest(const SipMessage &request){
+   DialogSet* dset =  new DialogSet(request, *this);
+
+   StackLog ( << "*********** Calling AppDialogSetFactory *************: " << dset->getId());
+   AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
+   appDs->mDialogSet = dset;
+   dset->setUserProfile(appDs->selectUASUserProfile(request));
+   dset->mAppDialogSet = appDs;
+
+   StackLog ( << "************* Adding DialogSet ***************: " << dset->getId());
+   StackLog ( << "Before: " << Inserter(mDialogSetMap) );
+   mDialogSetMap[dset->getId()] = dset;
+   StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
+   return dset;
+
+}
+/*
+DialogSet * DialogUsageManager::makeDialogSetFromDialogSetData(const DialogSetData & data){
+
+   DialogSet *dset = new DialogSet(data, *this);
+   StackLog ( << "*********** Calling AppDialogSetFactory *************: " << dset->getId());
+   AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
+   appDs->mDialogSet = dset;
+   dset->setUserProfile(appDs->selectUASUserProfile(request));
+   dset->mAppDialogSet = appDs;
+
+   StackLog ( << "************* Adding DialogSet ***************: " << dset->getId());
+   StackLog ( << "Before: " << Inserter(mDialogSetMap) );
+   mDialogSetMap[dset->getId()] = dset;
+   StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
+   return dset;
+}
+*/
 ClientSubscriptionHandler*
 DialogUsageManager::getClientSubscriptionHandler(const Data& eventType)
 {
@@ -2504,6 +2549,19 @@ DialogUsageManager::setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserPro
    {
       msg.header(h_Supporteds) = getMasterProfile()->getSupportedOptionTags();
    }
+}
+
+void
+DialogUsageManager::setHAMode()
+{
+	mHAMode = true;
+	mDialogSetChangeInfoManager = new DialogSetChangeInfoManager();
+}
+void
+
+DialogUsageManager::setDialogSetPersistenceManager(DialogSetPersistenceManager *manager)
+{
+	mDialogSetPersistenceManager = manager;
 }
 
 /* ====================================================================

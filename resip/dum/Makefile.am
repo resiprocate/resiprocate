@@ -97,7 +97,9 @@ libdum_la_SOURCES =   \
 	HttpProvider.cxx \
 	HttpGetMessage.cxx \
 	DumHelper.cxx \
-	MergedRequestRemovalCommand.cxx
+	MergedRequestRemovalCommand.cxx \
+	DialogSetPersistenceManager.cxx \
+	DialogSetChangeInfoManager.cxx
 
 if USE_SSL
 libdum_la_SOURCES += \

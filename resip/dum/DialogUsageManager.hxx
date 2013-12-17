@@ -26,6 +26,9 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/ClientSubscriptionFunctor.hxx"
 #include "resip/dum/ServerSubscriptionFunctor.hxx"
+#include "resip/dum/DialogSetPersistenceManager.hxx"
+#include "resip/dum/DialogSetChangeInfoManager.hxx"
+
 
 namespace resip 
 {
@@ -356,6 +359,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       void setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserProfile> userProfile);
 
+      //set HA mode
+      void setHAMode();
+
+      void setDialogSetPersistenceManager(DialogSetPersistenceManager *manager);
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
@@ -394,6 +402,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       friend class MergedRequestRemovalCommand;
       friend class TargetCommand::Target;
+      friend class DialogSetPersistenceManager;
 
       class IncomingTarget : public TargetCommand::Target
       {
@@ -421,6 +430,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             }
       };
 
+      DialogSet* makeDialogSetFromRequest(const SipMessage& msg);
+//      DialogSet* makeDialogSetFromDialogSetData(const DialogSetData & data);
       DialogSet* makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs);
       SharedPtr<SipMessage> makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
 
@@ -491,7 +502,133 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             
       typedef std::map<Data, DialogSet*> CancelMap;
       CancelMap mCancelMap;
-      
+
+#ifdef ZERO
+      class MyDialogSetPointer{
+      	  private:
+    	  	  DialogSet * &ds_;
+      	  public:
+    	  	  MyDialogSetPointer(DialogSet* &ds) : ds_(ds) {}
+
+    	  	  MyDialogSetPointer & operator=(DialogSet*& v1) {
+    	  		  ds_ = v1;
+    	  		  return *this;
+  		}
+      };
+
+      class MyDialogSetMap
+      {
+      public:
+
+    	  typedef std::map<DialogSetId, DialogSet*>::const_iterator const_iterator;
+    	  typedef typename std::map<DialogSetId, DialogSet*>::iterator iterator;
+    	  typedef typename std::pair<const DialogSetId, DialogSet*> value_type;
+    	  //MyDialogSetPointer & operator[](const DialogSetId & key)=0;
+    	  virtual bool insert (const value_type& value )=0;
+    	  virtual int size() const =0;
+    	  virtual int erase(const DialogSetId & id)=0;
+    	  virtual int empty() =0;
+    	  virtual const_iterator find(const DialogSetId &id ) const = 0;
+    	  virtual iterator begin() =0;
+    	  virtual iterator end() =0;
+    	  virtual const_iterator begin() const =0;
+    	  virtual const_iterator end() const =0;
+
+      };
+
+
+
+      class DialogSetMap : public MyDialogSetMap
+      {
+
+  	    MyDialogSetPointer * dsp;
+
+         private:
+    	  	  std::map<DialogSetId, DialogSet*> internalMap;
+      	  public:
+    	  	  /*
+    	  	//const DialogSet* operator[](DialogSetId & id){ return internalMap[id]; }
+    	  	MyDialogSetPointer & operator[](const DialogSetId & id){
+    	  		MyDialogSetPointer dsp_1(internalMap[id]);
+    	  		dsp = internalMap[id];
+    	  		return dsp;
+    	  	}
+    	  	*/
+    	  	bool insert (const value_type& value ){internalMap.insert(value); return true;}
+    	  	int size() const {return internalMap.size();}
+    	  	int erase(const DialogSetId & id) {return internalMap.erase(id); }
+    	  	int empty() {return internalMap.empty();}
+    	  	const_iterator find (const DialogSetId & id) const {return internalMap.find(id);}
+    	  	iterator begin() {return internalMap.begin();}
+    	  	iterator end() {return internalMap.end();}
+    	  	const_iterator begin() const {return internalMap.begin();}
+    	  	const_iterator end() const {return internalMap.end();}
+
+      };
+#endif
+
+
+#ifdef ZERO
+      class HADialogSetMap: public MyDialogSetMap
+      {
+         private:
+    	    std::map <DialogSetId, DialogSet*> map;
+    	    DialogSetChangeInfo mDialogSetChangeInfo;
+    	    bool synced;
+    	    DialogSet* temp_DS;
+    	    DialogUsageManager* dum;
+
+    	  //  HADialogSetPointer dsp;
+
+         public:
+    	    HADialogSetMap(){}
+        	typedef typename std::map<DialogSetId, DialogSet*>::const_iterator const_iterator;
+        	typedef typename std::map<DialogSetId, DialogSet*>::iterator iterator;
+    	  //	MyDialogSetPointer & operator[](const DialogSetId & id){
+
+    	  	//	dsp = map[id];
+    	  //		return dsp;
+    	  		//return temp;
+  /*  	  		if (temp_DS == 0x0){
+    	  			mDialogSetChangeInfo.currentDSID = temp_DS;
+    	  			mDialogSetChangeInfo.flags &= DS_DIALOG_ADDED;
+    	  		}
+    	  		else {
+    	  			mDialogSetChangeInfo.currentDSID = temp_DS;
+    	  			mDialogSetChangeInfo.flags &= DS_DIALOG_CHANGED;
+    	  		}
+*/
+    	 // 	}
+    	  	bool insert (const value_type& value ){map.insert(value); return true;}
+    	  	int size() const {
+    	  		return dum->mDialogSetPersistenceManager->getDialogSetSize();
+    	  	}
+    	  	int erase(const DialogSetId & id) {
+    	  		mDialogSetChangeInfo.flags &=  DS_REMOVED;
+    	  		return map.erase(id);
+    	  	}
+    	  	int empty() {
+    	  		return dum->mDialogSetPersistenceManager->isDialogSetEmpty();
+    	  	}
+    	  	const_iterator find (const DialogSetId & id) const {
+    	  		dum->mDialogSetPersistenceManager->updateDialogSet(id);
+    	  		return map.find(id);
+    	  	}
+    	  	iterator begin() {
+    	  		return map.begin();
+    	  	}
+    	  	iterator end() {
+    	  		return map.end();
+    	  	}
+    	  	const_iterator begin() const {
+    	  		return map.begin();
+    	  	}
+    	  	const_iterator end() const {
+    	  		return map.end();
+    	  	}
+
+      };
+#endif
       typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
       DialogSetMap mDialogSetMap;
 
@@ -558,6 +695,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ThreadIf::TlsKey mHiddenThreadDebugKey;
 
       EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
+
+      bool mHAMode;
+      DialogSetPersistenceManager * mDialogSetPersistenceManager;
+
+      DialogSetChangeInfoManager *mDialogSetChangeInfoManager;
 };
 
 }

@@ -844,6 +844,12 @@ SipMessage::addBuffer(char* buf)
    mBufferList.push_back(buf);
 }
 
+char *
+SipMessage::getBuffer(){
+
+   return mBufferList[0];
+}
+
 void 
 SipMessage::setStartLine(const char* st, int len)
 {

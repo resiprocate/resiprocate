@@ -10,6 +10,7 @@
 #include "resip/dum/Handles.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/SharedPtr.hxx"
+//#include "resip/dum/DialogSetPersistenceManager.hxx"
 
 namespace resip
 {
@@ -20,6 +21,8 @@ class DialogUsageManager;
 class AppDialogSet;
 class ClientOutOfDialogReq;
 class UserProfile;
+class DialogSetData;
+//class DialogSetPersistenceManager;
 
 class DialogSet
 {
@@ -27,7 +30,6 @@ class DialogSet
       DialogSet(BaseCreator* creator, DialogUsageManager& dum);
       DialogSet(const SipMessage& request, DialogUsageManager& dum);
       virtual ~DialogSet();
-      
       DialogSetId getId() const;
       void addDialog(Dialog*);
       bool empty() const;
@@ -61,6 +63,8 @@ class DialogSet
       friend class RedirectManager;
       friend class ClientPagerMessage;
       friend class ServerPagerMessage;
+      friend class DialogSetPersistenceManager;
+      friend class DialogSetData;
       
       typedef enum
       {

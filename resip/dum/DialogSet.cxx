@@ -50,6 +50,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    setUserProfile(creator->getUserProfile());
    assert(!creator->getLastRequest()->isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
+
 }
 
 // UAS 
@@ -82,6 +83,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
       mDum.mCancelMap[mCancelKey] = this;
    }
    DebugLog ( << " ************* Created DialogSet(UAS) *************: " << mId);
+
+
 }
 
 DialogSet::~DialogSet()
@@ -163,6 +166,9 @@ void
 DialogSet::addDialog(Dialog *dialog)
 {
    mDialogs[dialog->getId()] = dialog;
+   if (mDum.mHAMode == true){
+	   mDum.mDialogSetChangeInfoManager->DialogAdded(this, dialog);
+   }
 }
 
 BaseCreator*
@@ -810,7 +816,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-            ErrLog(<< "Can’t create a dialog, on a UAS response.");
+            ErrLog(<< "Canï¿½t create a dialog, on a UAS response.");
             return;
          }
 
