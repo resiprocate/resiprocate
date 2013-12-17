@@ -102,7 +102,7 @@ LocationServer::process(RequestContext& context)
       
       if(!batch.empty())
       {
-         // Note: some elements of list are already in a sorted order (see outbound bactch sorting
+         // Note: some elements of list are already in a sorted order (see outbound batch sorting
          // above), however list::sort is stable, so it's safe to sort twice, as relative order 
          // of equal elements is preserved
 #ifdef __SUNPRO_CC
