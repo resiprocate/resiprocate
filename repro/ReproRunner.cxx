@@ -484,7 +484,7 @@ ReproRunner::loadPlugins()
          ErrLog(<< "Failed to instantiate plugin " << *it << " (" << name << ")");
          return false;
       }
-      if(!plugin->init(mProxyConfig))
+      if(!plugin->init(*mSipStack, mProxyConfig))
       {
          ErrLog(<< "Failed to initialize plugin " << *it << " (" << name << ")");
          return false;

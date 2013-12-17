@@ -3,6 +3,7 @@
 
 #include <cassert>
 
+#include "resip/stack/SipStack.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/ProxyConfig.hxx"
 
@@ -47,7 +48,7 @@ class Plugin
       /* Initialize the plugin, called shortly after loading and
          before repro drops privileges.
          @returns true if successful */
-      virtual bool init(ProxyConfig *proxyConfig) = 0;
+      virtual bool init(resip::SipStack& sipStack, ProxyConfig *proxyConfig) = 0;
 
       /* called after the request processor chain has been populated */
       virtual void onRequestProcessorChainPopulated(ProcessorChain& chain) = 0;

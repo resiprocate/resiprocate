@@ -1,56 +1,64 @@
+#ifndef PYROUTE_WORKER_HXX
+#define PYROUTE_WORKER_HXX
+
+#include <memory>
+
+/* Using the PyCXX API for C++ Python integration
+ * It is extremely convenient and avoids the need to write boilerplate
+ * code for handling the Python reference counts.
+ * It is licensed under BSD terms compatible with reSIProcate */
+#include <Python.h>
+#include <CXX/Objects.hxx>
 
 #include "rutil/Logger.hxx"
+#include "resip/stack/Helper.hxx"
 #include "repro/Plugin.hxx"
+#include "repro/Processor.hxx"
+#include "repro/ProcessorMessage.hxx"
+#include "repro/RequestContext.hxx"
+#include "repro/Worker.hxx"
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+namespace repro
+{
 
-using namespace resip;
-using namespace repro;
-
-class ExamplePlugin : public Plugin
+class PyRouteWork : public ProcessorMessage
 {
    public:
-      ExamplePlugin(){};
-      ~ExamplePlugin(){};
+      PyRouteWork(Processor& proc,
+                  const resip::Data& tid,
+                  resip::TransactionUser* passedtu,
+                  resip::SipMessage& message);
 
-      virtual bool init(SipStack& sipStack, ProxyConfig *proxyConfig)
-      {
-          DebugLog(<<"ExamplePlugin: init called");
-          return true;
-      }
+      virtual ~PyRouteWork();
 
-      virtual void onRequestProcessorChainPopulated(ProcessorChain& chain)
-      {
-         DebugLog(<<"ExamplePlugin: onRequestProcessorChainPopulated called");
-      }
+      resip::SipMessage& mMessage;
+      std::vector<resip::Data> mTargets;
 
-      virtual void onResponseProcessorChainPopulated(ProcessorChain& chain)
-      {
-         DebugLog(<<"ExamplePlugin: onResponseProcessorChainPopulated called");
-      }
+      virtual PyRouteWork* clone() const;
 
-      virtual void onTargetProcessorChainPopulated(ProcessorChain& chain)
-      {
-         DebugLog(<<"ExamplePlugin: onTargetProcessorChainPopulated called");
-      }
+      virtual EncodeStream& encode(EncodeStream& ostr) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const;
 };
 
-
-extern "C" {
-
-static
-Plugin* instantiate()
+class PyRouteWorker : public Worker
 {
-   return new ExamplePlugin();
+   public:
+      PyRouteWorker(Py::Callable action, resip::Data& routeScript);
+      virtual ~PyRouteWorker();
+
+      virtual PyRouteWorker* clone() const;
+
+      virtual bool process(resip::ApplicationMessage* msg);
+
+   protected:
+      Py::Callable& mAction;
+      resip::Data mRouteScript;
+};
+
 }
 
-ReproPluginDescriptor reproPluginDesc =
-{
-   REPRO_DSO_PLUGIN_API_VERSION,
-   &instantiate
-};
 
-};
+#endif
 
 /* ====================================================================
  *

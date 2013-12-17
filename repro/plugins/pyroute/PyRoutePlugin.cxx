@@ -10,9 +10,13 @@
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/Helper.hxx"
+#include "repro/Dispatcher.hxx"
 #include "repro/Plugin.hxx"
 #include "repro/Processor.hxx"
+#include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
+
+#include "PyRouteWorker.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -26,10 +30,16 @@ static PyMethodDef PyRouteMethods[] = {
 class PyRoutePlugin : public Plugin, public Processor
 {
    public:
-      PyRoutePlugin() : Processor("PyRoute") {};
-      ~PyRoutePlugin(){};
+      PyRoutePlugin() : Processor("PyRoute"), mDispatcher(0) {};
+      ~PyRoutePlugin()
+      {
+         if(mDispatcher)
+         {
+            delete mDispatcher;
+         }
+      };
 
-      virtual bool init(ProxyConfig *proxyConfig)
+      virtual bool init(SipStack& sipStack, ProxyConfig *proxyConfig)
       {
          DebugLog(<<"PyRoutePlugin: init called");
 
@@ -59,6 +69,7 @@ class PyRoutePlugin : public Plugin, public Processor
          PyObject *addpath = PyString_FromString(pyPath.c_str());
          PyList_Append(sys_path, addpath);
          PyEval_InitThreads();
+         PyThreadState* py_tstate = PyGILState_GetThisThreadState();
 
          PyObject *pyModule = PyImport_ImportModule(routeScript.c_str());
          if(!pyModule)
@@ -70,9 +81,10 @@ class PyRoutePlugin : public Plugin, public Processor
 
          if(mPyModule->getDict().hasKey("on_load"))
          {
-            StackLog(<< "found on_load method, trying to invoke it...");
+            DebugLog(<< "found on_load method, trying to invoke it...");
             try
             {
+               StackLog(<< "invoking on_load");
                mPyModule->callMemberFunction("on_load");
             }
             catch (const Py::Exception& ex)
@@ -84,6 +96,12 @@ class PyRoutePlugin : public Plugin, public Processor
          } 
 
          mAction = mPyModule->getAttr("provide_route");
+
+         PyEval_ReleaseThread(py_tstate);
+
+         int numPyRouteWorkerThreads = proxyConfig->getConfigInt("PyRouteNumWorkerThreads", 2);
+         std::auto_ptr<Worker> worker(new PyRouteWorker(mAction, routeScript));
+         mDispatcher = new Dispatcher(worker, &sipStack, numPyRouteWorkerThreads);
 
          return true;
       }
@@ -117,46 +135,37 @@ class PyRoutePlugin : public Plugin, public Processor
       {
          DebugLog(<< "Monkey handling request: PyRoute");
 
+         // Has the work been done already?
+         PyRouteWork* work = dynamic_cast<PyRouteWork*>(context.getCurrentEvent());
+         if(work)
+         {
+            for(
+               std::vector<Data>::iterator i = work->mTargets.begin();
+               i != work->mTargets.end();
+               i++)
+            {
+               context.getResponseContext().addTarget(NameAddr(*i));
+            }
+            return Processor::Continue;
+         }
+
          SipMessage& msg = context.getOriginalRequest();
          if(msg.method() != INVITE && msg.method() != MESSAGE)
          {
             // We only route INVITE and MESSAGE, otherwise we ignore
             return Processor::Continue;
          }
-         Py::String reqUri(msg.header(h_RequestLine).uri().toString().c_str());
-         Py::Tuple args(1);
-         args[0] = reqUri;
-         Py::List routes;
-         try
-         {
-            routes = mAction.apply(args);
-         }
-         catch (const Py::Exception& ex)
-         {
-            DebugLog(<< Py::value(ex));
-            StackLog(<< Py::trace(ex));
-            context.sendResponse(*std::auto_ptr<SipMessage>
-               (Helper::makeResponse(msg, 500, "Server Internal Error")));
-            return SkipAllChains;
-         }
-         DebugLog(<< "got " << routes.size() << " result(s).");
-         for(
-            Py::Sequence::iterator i = routes.begin();
-            i != routes.end();
-            i++)
-         {
-            Py::String target(*i);
-            Data target_s(target.as_std_string());
-            DebugLog(<< "processing result: " << target_s);
-            context.getResponseContext().addTarget(NameAddr(target_s));
-         }
-         
-         return Processor::Continue;
+         work = new PyRouteWork(*this, context.getTransactionId(), &(context.getProxy()), msg);
+         std::auto_ptr<ApplicationMessage> app(work);
+         mDispatcher->post(app);
+
+         return Processor::WaitingForEvent;
       }
 
    private:
       std::auto_ptr<Py::Module> mPyModule;
       Py::Callable mAction;
+      Dispatcher* mDispatcher;
 };
 
 
