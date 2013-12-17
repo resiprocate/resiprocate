@@ -280,6 +280,13 @@ AC_ARG_WITH(python,
  [AC_DEFINE_UNQUOTED(BUILD_PYTHON, , BUILD_PYTHON)
  AM_CONDITIONAL(BUILD_PYTHON, true)
  PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 2.7])
+ AC_SUBST(PYCXX_SRCDIR)
+ if [ ! test -e "${PYCXX_SRCDIR}/cxx_extensions.cxx" ];
+ then
+  echo "Can't find \${PYCXX_SRCDIR}/cxx_extensions.cxx"
+  echo "Please check PYCXX_SRCDIR is defined correctly (current value: ${PYCXX_SRCDIR})"
+  exit 1
+ fi
 ], )
 
 AC_SEARCH_LIBS(gethostbyname, nsl)

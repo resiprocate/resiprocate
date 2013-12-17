@@ -1,8 +1,6 @@
 
 AM_CXXFLAGS = -I $(top_srcdir)
 
-PYCXX_SRCDIR = /usr/share/python2.7/CXX/Python2
-
 reproplugin_LTLIBRARIES = libpyroute.la
 libpyroute_la_SOURCES = PyRoutePlugin.cxx
 libpyroute_la_SOURCES += $(PYCXX_SRCDIR)/cxxextensions.c
