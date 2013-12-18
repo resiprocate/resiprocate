@@ -55,20 +55,34 @@ PyRouteWork::encodeBrief(EncodeStream& ostr) const
    return encode(ostr);
 }
 
-PyRouteWorker::PyRouteWorker(Py::Callable action, resip::Data& routeScript)
-    : mAction(action),
-      mRouteScript(routeScript)
+PyRouteWorker::PyRouteWorker(PyInterpreterState* interpreterState, Py::Callable& action)
+    : mInterpreterState(interpreterState),
+      mPyUser(0),
+      mAction(action)
 {
 }
 
 PyRouteWorker::~PyRouteWorker()
 {
+   if(mPyUser)
+   {
+      delete mPyUser;
+   }
 }
 
 PyRouteWorker*
 PyRouteWorker::clone() const
 {
-   return new PyRouteWorker(*this);
+   PyRouteWorker* worker = new PyRouteWorker(*this);
+   worker->mPyUser = 0;
+   return worker;
+}
+
+void
+PyRouteWorker::onStart()
+{
+   DebugLog(<< "creating new PyThreadState");
+   mPyUser = new PyExternalUser(mInterpreterState);
 }
 
 bool
@@ -84,10 +98,10 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    DebugLog(<<"handling a message");
 
    resip::SipMessage& message = work->mMessage;
+   // Get the Global Interpreter Lock
    StackLog(<< "getting lock...");
-   // should we call this here?
-   PyEval_InitThreads();
-   PyThreadSupport pyThread();
+   assert(mPyUser);
+   PyExternalUser::Use use(*mPyUser);
    Py::String reqUri(message.header(resip::h_RequestLine).uri().toString().c_str());
    Py::Tuple args(1);
    args[0] = reqUri;
@@ -96,15 +110,6 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    {
       StackLog(<< "invoking mAction");
       routes = mAction.apply(args);
-      /* PyObject *_pyModule = PyImport_ImportModule(mRouteScript.c_str());
-      if(!_pyModule)
-         {
-            ErrLog(<<"Failed to load module "<< mRouteScript);
-            return false;
-         }
-      Py::Module pyModule(_pyModule);
-      Py::Callable action(pyModule.getAttr("provide_route"));
-      routes = action.apply(args); */
    }
    catch (const Py::Exception& ex)
    {

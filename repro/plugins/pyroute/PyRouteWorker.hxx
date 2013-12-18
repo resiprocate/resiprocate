@@ -18,6 +18,8 @@
 #include "repro/RequestContext.hxx"
 #include "repro/Worker.hxx"
 
+#include "PyThreadSupport.hxx"
+
 namespace repro
 {
 
@@ -43,16 +45,18 @@ class PyRouteWork : public ProcessorMessage
 class PyRouteWorker : public Worker
 {
    public:
-      PyRouteWorker(Py::Callable action, resip::Data& routeScript);
+      PyRouteWorker(PyInterpreterState* interpreterState, Py::Callable& action);
       virtual ~PyRouteWorker();
 
       virtual PyRouteWorker* clone() const;
 
+      virtual void onStart();
       virtual bool process(resip::ApplicationMessage* msg);
 
    protected:
+      PyInterpreterState* mInterpreterState;
+      PyExternalUser* mPyUser;
       Py::Callable& mAction;
-      resip::Data mRouteScript;
 };
 
 }

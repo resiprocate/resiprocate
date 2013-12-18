@@ -17,6 +17,7 @@
 #include "repro/RequestContext.hxx"
 
 #include "PyRouteWorker.hxx"
+#include "PyThreadSupport.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -30,12 +31,21 @@ static PyMethodDef PyRouteMethods[] = {
 class PyRoutePlugin : public Plugin, public Processor
 {
    public:
-      PyRoutePlugin() : Processor("PyRoute"), mDispatcher(0) {};
+      PyRoutePlugin() : Processor("PyRoute"), mThreadState(0), mDispatcher(0) {};
       ~PyRoutePlugin()
       {
          if(mDispatcher)
          {
+            DebugLog(<<"Deleting dispatcher for worker threads");
             delete mDispatcher;
+         }
+         if(mThreadState)
+         {
+            PyEval_RestoreThread(mThreadState);
+            // this can take time as it de-initializes all Python state
+            DebugLog(<<"Calling Py_Finalize");
+            Py_Finalize();
+            DebugLog(<<"Py_Finalize is done");
          }
       };
 
@@ -64,12 +74,12 @@ class PyRoutePlugin : public Plugin, public Processor
 
          // FIXME: what if there are other Python modules?
          Py_Initialize();
+         PyEval_InitThreads();
          Py_InitModule("pyroute", PyRouteMethods);
          PyObject *sys_path = PySys_GetObject("path");
          PyObject *addpath = PyString_FromString(pyPath.c_str());
          PyList_Append(sys_path, addpath);
-         PyEval_InitThreads();
-         PyThreadState* py_tstate = PyGILState_GetThisThreadState();
+         mThreadState = PyGILState_GetThisThreadState();
 
          PyObject *pyModule = PyImport_ImportModule(routeScript.c_str());
          if(!pyModule)
@@ -97,10 +107,11 @@ class PyRoutePlugin : public Plugin, public Processor
 
          mAction = mPyModule->getAttr("provide_route");
 
-         PyEval_ReleaseThread(py_tstate);
+         PyInterpreterState* interpreterState = mThreadState->interp;
+         PyEval_ReleaseThread(mThreadState);
 
          int numPyRouteWorkerThreads = proxyConfig->getConfigInt("PyRouteNumWorkerThreads", 2);
-         std::auto_ptr<Worker> worker(new PyRouteWorker(mAction, routeScript));
+         std::auto_ptr<Worker> worker(new PyRouteWorker(interpreterState, mAction));
          mDispatcher = new Dispatcher(worker, &sipStack, numPyRouteWorkerThreads);
 
          return true;
@@ -163,6 +174,7 @@ class PyRoutePlugin : public Plugin, public Processor
       }
 
    private:
+      PyThreadState* mThreadState;
       std::auto_ptr<Py::Module> mPyModule;
       Py::Callable mAction;
       Dispatcher* mDispatcher;
