@@ -1,4 +1,13 @@
 
+// Define this to force the use of dlopen with RTLD_GLOBAL
+// to load libpython - necessary when working with incorrectly
+// linked modules that exist throughout the system
+#undef REPRO_PYROUTE_DLOPEN_PYTHON "libpython2.7.so"
+
+#ifdef REPRO_PYROUTE_DLOPEN_PYTHON
+#include <dlfcn.h>
+#endif
+
 #include <memory>
 
 /* Using the PyCXX API for C++ Python integration
@@ -72,6 +81,9 @@ class PyRoutePlugin : public Plugin, public Processor
             return false;
          }
 
+#ifdef REPRO_PYROUTE_DLOPEN_PYTHON
+         dlopen(REPRO_PYROUTE_DLOPEN_PYTHON, RTLD_LAZY | RTLD_GLOBAL);
+#endif
          // FIXME: what if there are other Python modules?
          Py_Initialize();
          PyEval_InitThreads();
@@ -85,6 +97,10 @@ class PyRoutePlugin : public Plugin, public Processor
          if(!pyModule)
          {
             ErrLog(<<"Failed to load module "<< routeScript);
+            if (PyErr_Occurred()) {
+               Py::Exception ex;
+               ErrLog(<< "Python exception: " << Py::value(ex));
+            }
             return false;
          }
          mPyModule.reset(new Py::Module(pyModule));
