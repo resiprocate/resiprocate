@@ -206,14 +206,14 @@ ReproRunner::run(int argc, char** argv)
 
    InfoLog( << "Starting repro version " << VersionUtils::instance().releaseVersion() << "...");
 
-   // Load the plugins
-   if(!loadPlugins())
+   // Create SipStack and associated objects
+   if(!createSipStack())
    {
       return false;
    }
 
-   // Create SipStack and associated objects
-   if(!createSipStack())
+   // Load the plugins after creating the stack, as they may need it
+   if(!loadPlugins())
    {
       return false;
    }
