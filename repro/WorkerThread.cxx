@@ -29,22 +29,26 @@ WorkerThread::thread()
 {
    resip::ApplicationMessage* msg;
    bool queueToStack;
-   while(mWorker && !isShutdown())
+   if(mWorker && !isShutdown())
    {
-      if( (msg=mFifo.getNext(100)) != 0 )
+      mWorker->onStart();
+      while(mWorker && !isShutdown())
       {
-         queueToStack = mWorker->process(msg);
+         if( (msg=mFifo.getNext(100)) != 0 )
+         {
+            queueToStack = mWorker->process(msg);
 
-         if(queueToStack && mStack)
-         {
-            // Post to stack instead of directly to TU, since stack does
-            // some safety checks to ensure the TU still exists before posting
-            mStack->post(std::auto_ptr<resip::ApplicationMessage>(msg));
-         }
-         else
-         {
-            //ErrLog(<<"Stack pointer not set!");
-            delete msg;
+            if(queueToStack && mStack)
+            {
+               // Post to stack instead of directly to TU, since stack does
+               // some safety checks to ensure the TU still exists before posting
+               mStack->post(std::auto_ptr<resip::ApplicationMessage>(msg));
+            }
+            else
+            {
+               //ErrLog(<<"Stack pointer not set!");
+               delete msg;
+            }
          }
       }
    }
