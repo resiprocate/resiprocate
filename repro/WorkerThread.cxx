@@ -40,13 +40,18 @@ WorkerThread::thread()
 
             if(queueToStack && mStack)
             {
+               StackLog(<<"async work done, posting to stack");
                // Post to stack instead of directly to TU, since stack does
                // some safety checks to ensure the TU still exists before posting
                mStack->post(std::auto_ptr<resip::ApplicationMessage>(msg));
             }
             else
             {
-               //ErrLog(<<"Stack pointer not set!");
+               StackLog(<<"discarding a message");
+               if(!mStack)
+               {
+                  WarningLog(<<"mStack == 0");
+               }
                delete msg;
             }
          }
