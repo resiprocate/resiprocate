@@ -460,7 +460,7 @@ ReproRunner::loadPlugins()
       // - do we need to support relative paths here?
       // - should we use the filename prefix 'lib', 'mod' or something else?
       Data name = pluginDirectory + '/' + "lib" + *it + ".so";
-      dlib = dlopen(name.c_str(), RTLD_NOW);
+      dlib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
       if(!dlib)
       {
          ErrLog(<< "Failed to load plugin " << *it << " (" << name << "): " << dlerror());
