@@ -4,7 +4,7 @@ def on_load():
     print 'example: on_load invoked'
 
 def provide_route(request_uri):
-    '''Process a request URI and return the new request URI'''
+    '''Process a request URI and return the target URI(s)'''
     print 'example: request_uri = ' + request_uri
     routes = list()
     routes.append('sip:bob@example.org')
