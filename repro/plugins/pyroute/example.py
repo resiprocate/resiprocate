@@ -3,9 +3,12 @@ def on_load():
     '''Do initialisation when module loads'''
     print 'example: on_load invoked'
 
-def provide_route(request_uri):
+def provide_route(method, request_uri, headers):
     '''Process a request URI and return the target URI(s)'''
+    print 'example: method = ' + method
     print 'example: request_uri = ' + request_uri
+    print 'example: From = ' + headers["From"]
+    print 'example: To = ' + headers["To"]
     routes = list()
     routes.append('sip:bob@example.org')
     routes.append('sip:alice@example.org')

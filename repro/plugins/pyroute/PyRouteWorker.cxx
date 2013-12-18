@@ -102,9 +102,15 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    StackLog(<< "getting lock...");
    assert(mPyUser);
    PyExternalUser::Use use(*mPyUser);
+   Py::String reqMethod(getMethodName(message.header(resip::h_RequestLine).method()).c_str());
    Py::String reqUri(message.header(resip::h_RequestLine).uri().toString().c_str());
-   Py::Tuple args(1);
-   args[0] = reqUri;
+   Py::Dict headers;
+   headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
+   headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
+   Py::Tuple args(3);
+   args[0] = reqMethod;
+   args[1] = reqUri;
+   args[2] = headers;
    Py::List routes;
    try
    {

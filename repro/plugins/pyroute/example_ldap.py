@@ -19,7 +19,7 @@ def on_load():
     '''Do initialisation when module loads'''
     #print 'ldap router: on_load invoked'
 
-def provide_route(request_uri):
+def provide_route(method, request_uri, headers):
     '''Process a request URI and return the target URI(s)'''
     #print 'ldap router: request_uri = ' + request_uri
 
