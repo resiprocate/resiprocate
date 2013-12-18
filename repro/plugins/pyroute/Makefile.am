@@ -14,6 +14,7 @@ libpyroute_la_LDFLAGS += $(DEPS_PYTHON_LIBS)
 
 EXTRA_DIST = example.py
 EXTRA_DIST += example_ldap.py
+EXTRA_DIST += README.txt
 
 noinst_HEADERS = PyRouteWorker.hxx
 noinst_HEADERS += PyThreadSupport.hxx
