@@ -44,14 +44,16 @@ class DialogSetData{
 		  typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
 		  DialogSetPersistenceManager(DialogUsageManager &dum);
 		  virtual ~DialogSetPersistenceManager();
-		  bool updateDialogSet(DialogSetId id, DialogSetMap & dsmap); //internally updates changes from DialogSet
-		  virtual bool syncDialogSetToPersistence(DialogSetChangeInfoManager::DialogSetChangesMap &changes)=0; // saves changes from ds to persistent layer
+		  bool syncDialogSet(DialogSetId id, DialogSetMap & dsmap); //internally updates changes from DialogSet
+		  bool saveDialogSetChangesToPersistence(DialogSetChangeInfoManager::DialogSetChangesMap &changes); // saves changes from ds to persistent layer
 
 	   private:
-
 		  DialogUsageManager & mDum;
 		  virtual bool checkIfUpdateNeeded()=0;
 		  virtual bool readDialogSetFromDB(DialogSetId id, DialogSetData & dsdata)=0;
+		  virtual bool addDialogSet(DialogSetChangeInfo & dsChange)=0;
+		  virtual bool updateDialogSet(DialogSetChangeInfo & dsChange)=0;
+		  virtual bool removeDialogSet(const DialogSetId &id)=0;
 	};
 }
 #endif /* DIALOGSETPERSISTENCEMANAGER_HXX_ */

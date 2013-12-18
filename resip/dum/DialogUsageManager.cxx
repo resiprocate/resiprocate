@@ -1374,7 +1374,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          //DebugLog(<< "Destroying usage" );
          destroyUsage->destroy();
          if (mHAMode == true){
-            mDialogSetPersistenceManager->syncDialogSetToPersistence(mDialogSetChangeInfoManager->getChanges());
+            mDialogSetPersistenceManager->saveDialogSetChangesToPersistence(mDialogSetChangeInfoManager->getChanges());
             mDialogSetChangeInfoManager->reset();
          }
          return;
@@ -1652,20 +1652,20 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                }
             }
             if (mHAMode == true){
-               mDialogSetPersistenceManager->updateDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
+               mDialogSetPersistenceManager->syncDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
             }
             processRequest(*sipMsg);
          }
          else
          {
             if (mHAMode == true){
-               mDialogSetPersistenceManager->updateDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
+               mDialogSetPersistenceManager->syncDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
             }
             processResponse(*sipMsg);
          }
 
          if (mHAMode == true){
-            mDialogSetPersistenceManager->syncDialogSetToPersistence(mDialogSetChangeInfoManager->getChanges());
+            mDialogSetPersistenceManager->saveDialogSetChangesToPersistence(mDialogSetChangeInfoManager->getChanges());
             mDialogSetChangeInfoManager->reset();
          }
       }

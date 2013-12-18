@@ -80,7 +80,7 @@ Data DialogSetData::DialogSetIdToData(const DialogSetId &id){
 
 DialogSetPersistenceManager::DialogSetPersistenceManager(DialogUsageManager & dum): mDum(dum){}
 DialogSetPersistenceManager::~DialogSetPersistenceManager(){}
-bool DialogSetPersistenceManager::updateDialogSet(DialogSetId id, DialogSetMap & map){
+bool DialogSetPersistenceManager::syncDialogSet(DialogSetId id, DialogSetMap & map){
 	//InfoLog(<< "here");
 
    if (checkIfUpdateNeeded())
@@ -127,4 +127,36 @@ bool DialogSetPersistenceManager::updateDialogSet(DialogSetId id, DialogSetMap &
 
    return true;
    }
+}
+
+bool DialogSetPersistenceManager::saveDialogSetChangesToPersistence(DialogSetChangeInfoManager::DialogSetChangesMap &changes){
+
+   DialogSetChangeInfoManager::DialogSetChangesMap::iterator it;
+   bool ret = false;
+
+   for (it = changes.begin(); it != changes.end(); it ++){
+      DialogSetChangeInfo dsChange = it->second;
+      if (dsChange.getFlags() & DS_REMOVED){
+         if (!removeDialogSet(dsChange.getDialogSetId())){
+            return false;
+         }
+      }
+      else if (dsChange.getFlags() & DS_NEW){
+         if (!addDialogSet(dsChange)){
+            return false;
+         }
+      }
+      else if (dsChange.getFlags() & DS_CHANGED){
+         if (!updateDialogSet(dsChange)){
+            return false;
+         }
+      }
+      else {
+         DebugLog ( << "unrecognized set of flags");
+         return false;
+      }
+   }
+
+   return true;
+
 }
