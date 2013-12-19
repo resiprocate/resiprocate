@@ -27,3 +27,8 @@ PyRoutePath = /usr/lib/resiprocate/repro/pyroute
 # use the example_ldap.py like this:
 PyRouteScript = example_ldap
 
+# How many worker threads to create for running the Python script
+# (default: 2)
+# If the provide_route method is not thread-safe then set this to 1
+#PyRouteNumWorkerThreads = 2
+
