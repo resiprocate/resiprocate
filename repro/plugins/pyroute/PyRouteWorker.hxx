@@ -34,12 +34,16 @@ class PyRouteWork : public ProcessorMessage
       virtual ~PyRouteWork();
 
       resip::SipMessage& mMessage;
+      int mResponseCode;
+      resip::Data mResponseMessage;
       std::vector<resip::Data> mTargets;
 
       virtual PyRouteWork* clone() const;
 
       virtual EncodeStream& encode(EncodeStream& ostr) const;
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const;
+
+      bool hasResponse() { return mResponseCode >= 0; };
 };
 
 class PyRouteWorker : public Worker

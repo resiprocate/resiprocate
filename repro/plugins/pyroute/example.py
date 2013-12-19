@@ -7,10 +7,16 @@ def on_load():
 
 def provide_route(method, request_uri, headers):
     '''Process a request URI and return the target URI(s)'''
+
     resip.log_debug('example: method = ' + method)
     resip.log_debug('example: request_uri = ' + request_uri)
     resip.log_debug('example: From = ' + headers["From"])
     resip.log_debug('example: To = ' + headers["To"])
+
+    # This is how we can signal an error to the caller:
+    if method == 'MESSAGE':
+        return (500, 'No MESSAGE for me')
+
     routes = list()
     routes.append('sip:bob@example.org')
     routes.append('sip:alice@example.org')

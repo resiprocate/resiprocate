@@ -220,6 +220,20 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
          PyRouteWork* work = dynamic_cast<PyRouteWork*>(context.getCurrentEvent());
          if(work)
          {
+            if(work->hasResponse())
+            {
+               resip::SipMessage response;
+               if(work->mResponseMessage.size() == 0)
+               {
+                  Helper::makeResponse(response, context.getOriginalRequest(), work->mResponseCode);
+               }
+               else
+               {
+                  Helper::makeResponse(response, context.getOriginalRequest(), work->mResponseCode, work->mResponseMessage);
+               }
+               context.sendResponse(response);
+               return Processor::SkipThisChain;
+            }
             for(
                std::vector<Data>::iterator i = work->mTargets.begin();
                i != work->mTargets.end();

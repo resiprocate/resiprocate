@@ -28,7 +28,8 @@ PyRouteWork::PyRouteWork(Processor& proc,
                   resip::TransactionUser* passedtu,
                   resip::SipMessage& message)
     : ProcessorMessage(proc,tid,passedtu),
-      mMessage(message)
+      mMessage(message),
+      mResponseCode(-1)
 {
 }
 
@@ -111,18 +112,80 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    args[0] = reqMethod;
    args[1] = reqUri;
    args[2] = headers;
-   Py::List routes;
+   Py::Object response;
    try
    {
       StackLog(<< "invoking mAction");
-      routes = mAction.apply(args);
+      response = mAction.apply(args);
    }
    catch (const Py::Exception& ex)
    {
       WarningLog(<< "PyRoute mAction failed: " << Py::value(ex));
       WarningLog(<< Py::trace(ex));
-      return false;
+      work->mResponseCode = 500;
+      return true;
    }
+
+   // Did the script return a single numeric value?
+   // If so, it is a SIP response code, the default SIP error string
+   // will be selected by the stack
+   if(response.isNumeric())
+   {
+      Py::Int responseCode(response);
+      work->mResponseCode = responseCode;
+      work->mResponseMessage = "";
+      return true;
+   }
+
+   // Did the script return a tuple?
+   // If so, it is a SIP response code and optionally a response string
+   // to be used in the SIP response message
+   // If no response string is present in the tuple, the default SIP
+   // error string will be selected by the stack
+   if(response.isTuple())
+   {
+      // Error response
+      Py::Tuple err(response);
+      if(err.size() < 1)
+      {
+         ErrLog(<<"Incomplete response object from PyRoute script");
+         work->mResponseCode = 500;
+         return true;
+      }
+      if(err.size() > 2)
+      {
+         WarningLog(<<"Excessive values in response from PyRoute script");
+      }
+      if(!err[0].isNumeric())
+      {
+         ErrLog(<<"First value in response tuple must be numeric");
+         work->mResponseCode = 500;
+         return true;
+      }
+      Py::Int responseCode(err[0]);
+      Py::String responseMessage;
+      if(err.size() > 1)
+      {
+         if(!err[1].isString())
+         {
+            ErrLog(<<"Second value in response tuple must be a string, ignoring it");
+         }
+         responseMessage = err[1];
+      }
+      work->mResponseCode = responseCode;
+      work->mResponseMessage = resip::Data(responseMessage.as_std_string());
+      return true;
+   }
+
+   // If we get this far, the response should be a list of target URIs
+   if(!response.isList())
+   {
+      ErrLog(<<"Unexpected response object from PyRoute script");
+      work->mResponseCode = 500;
+      return true;
+   }
+
+   Py::List routes(response);
    DebugLog(<< "got " << routes.size() << " result(s).");
    for(
       Py::Sequence::iterator i = routes.begin();

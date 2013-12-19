@@ -11,6 +11,18 @@ To use a Python routing script:
   in the example script.  It must return a list of zero or more SIP
   URIs, these will be used to deliver the SIP request.
 
+- the provide_route method can also generate an error response back
+  to the client.  In this case, it should either return a numeric
+  error code or a tuple containing an error code and a response string.
+  If no response string is provided, the default response string
+  corresponding to the SIP error code will be selected by the stack.
+  For example, any of the following methods can be used to signal
+  an error response:
+
+      return (500)
+      return (500,)
+      return (500, 'Script not happy')
+
 - the script will only be read at startup.  If you change the script,
   you must restart the repro proxy.  A runtime reload facility may
   be added in future.

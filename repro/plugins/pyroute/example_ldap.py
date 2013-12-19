@@ -69,6 +69,7 @@ def provide_route(method, request_uri, headers):
 
     except ldap.LDAPError, error_message:
         resip.log_err("Couldn't Connect. %s " % error_message)
+        return (500)
 
     return routes
 
