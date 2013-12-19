@@ -16,6 +16,7 @@
  * It is licensed under BSD terms compatible with reSIProcate */
 #include <Python.h>
 #include <CXX/Objects.hxx>
+#include <CXX/Extensions.hxx>
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/Helper.hxx"
@@ -33,14 +34,13 @@
 using namespace resip;
 using namespace repro;
 
-static PyMethodDef PyRouteMethods[] = {
-  {NULL, NULL, 0, NULL}
-};
-
-class PyRoutePlugin : public Plugin, public Processor
+class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModule<PyRoutePlugin>
 {
    public:
-      PyRoutePlugin() : Processor("PyRoute"), mThreadState(0), mDispatcher(0) {};
+      PyRoutePlugin() : Processor("PyRoute"), ExtensionModule<PyRoutePlugin>("resip"), mThreadState(0), mDispatcher(0)
+      {
+      };
+
       ~PyRoutePlugin()
       {
          if(mDispatcher)
@@ -56,6 +56,54 @@ class PyRoutePlugin : public Plugin, public Processor
             Py_Finalize();
             DebugLog(<<"Py_Finalize is done");
          }
+      };
+
+      Py::Object logDebug(const Py::Tuple &args)
+      {
+         if(args.size() < 1)
+         {
+            ErrLog(<<"log_debug called with insufficient arguments");
+            return Py::None();
+         }
+         if(args.size() > 1)
+         {
+            ErrLog(<<"log_debug called with excess arguments, only using first argument");
+         }
+         const Py::String& text(args[0]);
+         DebugLog(<< text);
+         return Py::None();
+      };
+
+      Py::Object logWarning(const Py::Tuple &args)
+      {
+         if(args.size() < 1)
+         {
+            ErrLog(<<"log_warning called with insufficient arguments");
+            return Py::None();
+         }
+         if(args.size() > 1)
+         {
+            ErrLog(<<"log_warning called with excess arguments, only using first argument");
+         }
+         const Py::String& text(args[0]);
+         WarningLog(<< text);
+         return Py::None();
+      };
+
+      Py::Object logErr(const Py::Tuple &args)
+      {
+         if(args.size() < 1)
+         {
+            ErrLog(<<"log_err called with insufficient arguments");
+            return Py::None();
+         }
+         if(args.size() > 1)
+         {
+            ErrLog(<<"log_err called with excess arguments, only using first argument");
+         }
+         const Py::String& text(args[0]);
+         ErrLog(<< text);
+         return Py::None();
       };
 
       virtual bool init(SipStack& sipStack, ProxyConfig *proxyConfig)
@@ -87,7 +135,13 @@ class PyRoutePlugin : public Plugin, public Processor
          // FIXME: what if there are other Python modules?
          Py_Initialize();
          PyEval_InitThreads();
-         Py_InitModule("pyroute", PyRouteMethods);
+
+         // Initialize the ExtensionModule superclass
+         add_varargs_method("log_debug", &PyRoutePlugin::logDebug, "log_debug(arglist) = log a debug message");
+         add_varargs_method("log_warning", &PyRoutePlugin::logWarning, "log_warning(arglist) = log a warning message");
+         add_varargs_method("log_err", &PyRoutePlugin::logErr, "log_err(arglist) = log a debug message");
+         initialize("reSIProcate SIP stack API callbacks");
+
          PyObject *sys_path = PySys_GetObject("path");
          PyObject *addpath = PyString_FromString(pyPath.c_str());
          PyList_Append(sys_path, addpath);

@@ -12,16 +12,17 @@
 # the REPRO_PYROUTE_DLOPEN_PYTHON hack is enabled in PyRoutePlugin.cxx
 # at compile time
 
+import resip
 import ldap
 from urlparse import urlparse
 
 def on_load():
     '''Do initialisation when module loads'''
-    #print 'ldap router: on_load invoked'
+    resip.log_debug('ldap router: on_load invoked')
 
 def provide_route(method, request_uri, headers):
     '''Process a request URI and return the target URI(s)'''
-    #print 'ldap router: request_uri = ' + request_uri
+    resip.log_debug('ldap router: request_uri = ' + request_uri)
 
     _request_uri = urlparse(request_uri)
 
@@ -39,7 +40,7 @@ def provide_route(method, request_uri, headers):
     # the user@host portion is in the 'path' element:
     filter = "(&(objectClass=inetOrgPerson)(mail=%s))" % _request_uri.path
 
-    #print "Using filter: %s" % filter
+    resip.log_debug("Using filter: %s" % filter)
 
     try:
         con = ldap.initialize(server_uri)
@@ -58,7 +59,7 @@ def provide_route(method, request_uri, headers):
                     result_set.append(result_data)
 
         if len(result_set) == 0:
-            #print "No Results."
+            resip.log_debug("No Results.")
             return routes
         for i in range(len(result_set)):
             for entry in result_set[i]:
@@ -67,7 +68,7 @@ def provide_route(method, request_uri, headers):
                     routes.append('sip:' + phone + '@' + phone_domain)
 
     except ldap.LDAPError, error_message:
-        print "Couldn't Connect. %s " % error_message
+        resip.log_err("Couldn't Connect. %s " % error_message)
 
     return routes
 
