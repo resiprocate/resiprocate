@@ -20,7 +20,7 @@ def on_load():
     '''Do initialisation when module loads'''
     resip.log_debug('ldap router: on_load invoked')
 
-def provide_route(method, request_uri, headers, cookies):
+def provide_route(method, request_uri, headers, transport_type, body, cookies):
     '''Process a request URI and return the target URI(s)'''
     resip.log_debug('ldap router: request_uri = ' + request_uri)
 

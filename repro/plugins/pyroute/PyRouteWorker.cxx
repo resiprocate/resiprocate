@@ -117,7 +117,24 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
    headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
 
-   // arg 4: cookies (if the message was received over a WebSocket transport)
+   // arg 4: transport type
+   Py::String transportType("");
+   if(message.getReceivedTransport())
+   {
+      transportType = getTransportNameFromType(message.getReceivedTransport()->transport());
+   }
+
+   // arg 5: body
+   Py::String body("");
+   if(message.getContents())
+   {
+      // FIXME: do we always need to copy the whole body?
+      // could we give Python a read-only pointer to the body data?
+      const resip::Data& bodyData = message.getContents()->getBodyData();
+      body = Py::String(bodyData.data(), bodyData.size(), "utf8");
+   }
+
+   // arg 6: cookies (if the message was received over a WebSocket transport)
    const resip::CookieList& _cookies = message.getWsCookies();
    Py::Dict cookies;
    for(
@@ -129,11 +146,13 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
       cookies[Py::String(it->name().c_str())] = Py::String(it->value().c_str());
    }
 
-   Py::Tuple args(4);
+   Py::Tuple args(6);
    args[0] = reqMethod;
    args[1] = reqUri;
    args[2] = headers;
-   args[3] = cookies;
+   args[3] = transportType;
+   args[4] = body;
+   args[5] = cookies;
    Py::Object response;
    try
    {
