@@ -621,8 +621,8 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
             try
             {
                wsParseCookies(cookieList, mMessage);
-               wsCookieContext.reset(new WsCookieContext(cookieList));
                wsConnectionBase->setCookies(cookieList);
+               wsCookieContext.reset(new WsCookieContext(cookieList));
                wsConnectionBase->setWsCookieContext(*(wsCookieContext.get()));
             }
             catch(ParseException& ex)
