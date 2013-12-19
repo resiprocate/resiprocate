@@ -5,13 +5,16 @@ def on_load():
     '''Do initialisation when module loads'''
     resip.log_debug('example: on_load invoked')
 
-def provide_route(method, request_uri, headers):
+def provide_route(method, request_uri, headers, cookies):
     '''Process a request URI and return the target URI(s)'''
 
     resip.log_debug('example: method = ' + method)
     resip.log_debug('example: request_uri = ' + request_uri)
     resip.log_debug('example: From = ' + headers["From"])
     resip.log_debug('example: To = ' + headers["To"])
+    resip.log_debug('example: len(cookies) = %d' % len(cookies))
+    if 'WSSessionInfo' in cookies:
+        resip.log_debug('example: found cookie WSSessionInfo = ' + cookies['WSSessionInfo'])
 
     # This is how we can signal an error to the caller:
     if method == 'MESSAGE':

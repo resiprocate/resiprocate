@@ -9,6 +9,7 @@
 #include <CXX/Objects.hxx>
 
 #include "rutil/Logger.hxx"
+#include "resip/stack/Cookie.hxx"
 #include "resip/stack/Helper.hxx"
 #include "repro/Plugin.hxx"
 #include "repro/Processor.hxx"
@@ -99,19 +100,40 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    DebugLog(<<"handling a message");
 
    resip::SipMessage& message = work->mMessage;
+
    // Get the Global Interpreter Lock
    StackLog(<< "getting lock...");
    assert(mPyUser);
    PyExternalUser::Use use(*mPyUser);
+
+   // arg 1: SIP method
    Py::String reqMethod(getMethodName(message.header(resip::h_RequestLine).method()).c_str());
+
+   // arg 2: request URI
    Py::String reqUri(message.header(resip::h_RequestLine).uri().toString().c_str());
+
+   // arg 3: a subset of the SIP headers
    Py::Dict headers;
    headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
    headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
-   Py::Tuple args(3);
+
+   // arg 4: cookies (if the message was received over a WebSocket transport)
+   const resip::CookieList& _cookies = message.getWsCookies();
+   Py::Dict cookies;
+   for(
+      resip::CookieList::const_iterator it = _cookies.begin();
+      it != _cookies.end();
+      it++)
+   {
+      ErrLog(<<"adding cookie: " << it->name());
+      cookies[Py::String(it->name().c_str())] = Py::String(it->value().c_str());
+   }
+
+   Py::Tuple args(4);
    args[0] = reqMethod;
    args[1] = reqUri;
    args[2] = headers;
+   args[3] = cookies;
    Py::Object response;
    try
    {
