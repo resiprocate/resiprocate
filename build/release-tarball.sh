@@ -29,6 +29,9 @@ autoreconf --install && \
               --with-repro \
               --enable-repro-plugins \
               --with-python \
+                DEPS_PYTHON_CFLAGS="`/usr/bin/python2.7-config --cflags`" \
+                DEPS_PYTHON_LIBS="`/usr/bin/python2.7-config --ldflags`" \
+                PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
               --with-tfm \
               --with-apps \
               --with-ichat-gw \
