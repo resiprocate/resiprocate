@@ -112,7 +112,10 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 
    snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
-      ErrLog(<< "Error when verifying server's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
+   {
+      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
+      DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
+   }
  
    return iInCode;
 }

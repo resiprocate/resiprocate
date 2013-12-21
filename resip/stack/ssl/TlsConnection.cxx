@@ -215,16 +215,59 @@ TlsConnection::checkState()
                }
                ErrLog( << "socket error " << e);
                Transport::error(e);
+               if(e == 0)
+               {
+                  TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(transport());
+                  assert(t);
+                  if(mServer && t->getClientVerificationMode() != SecurityTypes::None)
+                  {
+                     DebugLog(<<"client may have disconnected to prompt for user certificate, because it can't supply a certificate (verification mode == " << (t->getClientVerificationMode() == SecurityTypes::Mandatory?"Mandatory":"Optional") << " for this transport) or because it does not support using client certificates over WebSockets");
+                  }
+               }
             }
             else if (err == SSL_ERROR_SSL)
             {
                mFailureReason = TransportFailure::CertValidationFailure;
+               WarningLog(<<"SSL cipher or certificate failure SSL_ERROR_SSL");
+               if(SSL_get_peer_certificate(mSsl))
+               {
+                  DebugLog(<<"a certificate was received from the peer");
+                  int verifyErrorCode = SSL_get_verify_result(mSsl);
+                  switch(verifyErrorCode)
+                  {
+                     case X509_V_OK:
+                        DebugLog(<<"peer supplied a ceritifcate, but it has not been checked or it was checked successfully");
+                        break;
+                     default:
+                        ErrLog(<<"peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode));
+                        DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
+                        break;
+                  }
+               }
+               else
+               {
+                  DebugLog(<<"protocol did not reach certificate exchange phase, peer does not have a certificate or the certificate was not accepted");
+                  if(mServer)
+                  {
+                     TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(transport());
+                     assert(t);
+                     if(t->getClientVerificationMode() == SecurityTypes::Mandatory)
+                     {
+                        ErrLog(<<"Mandatory client certificate verification required, protocol failed, client did not send a certificate or it was not valid");
+                     }
+                  }
+                  else
+                  {
+                     ErrLog(<<"Server did not present any certificiate to us, certificate invalid or protocol did not reach certificate exchange");
+                  }
+               }
             }
             else
             {
                DebugLog(<<"unrecognised/unhandled SSL_get_error result: " << err);
             }
             ErrLog( << "TLS handshake failed ");
+            bool hadReason = false;
             while (true)
             {
                const char* file;
@@ -241,6 +284,11 @@ TlsConnection::checkState()
                ErrLog( << buf  );
                ErrLog( << "Error code = "
                         << code << " file=" << file << " line=" << line );
+               hadReason = true;
+            }
+            if(!hadReason)
+            {
+               WarningLog(<<"no reason found with ERR_get_error_line");
             }
             mBio = NULL;
             mTlsState = Broken;
