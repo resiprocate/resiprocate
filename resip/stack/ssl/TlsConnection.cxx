@@ -174,8 +174,8 @@ TlsConnection::checkState()
          case SSL_ERROR_WANT_READ:
             StackLog( << "TLS handshake want read" );
             mHandShakeWantsRead = true;
-
             return mTlsState;
+
          case SSL_ERROR_WANT_WRITE:
             StackLog( << "TLS handshake want write" );
             ensureWritable();
@@ -196,8 +196,9 @@ TlsConnection::checkState()
 #endif
 
          case SSL_ERROR_WANT_X509_LOOKUP:
-            StackLog( << "Try later");
+            DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP");
             return mTlsState;
+
          default:
             if(err == SSL_ERROR_SYSCALL)
             {
@@ -218,6 +219,10 @@ TlsConnection::checkState()
             else if (err == SSL_ERROR_SSL)
             {
                mFailureReason = TransportFailure::CertValidationFailure;
+            }
+            else
+            {
+               DebugLog(<<"unrecognised/unhandled SSL_get_error result: " << err);
             }
             ErrLog( << "TLS handshake failed ");
             while (true)
