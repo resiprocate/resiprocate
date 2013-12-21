@@ -1280,11 +1280,10 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    try
    {
       // Check if advanced transport settings are provided
-      unsigned int transportNum = 1;
-      Data settingKeyBase("Transport" + Data(transportNum));
-      Data interfaceSettingKey(settingKeyBase + "Interface");
-      Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, "", true);
-      if(!interfaceSettings.empty())
+      std::set<Data> interfaceKeys;
+      mProxyConfig->getConfigIndexKeys("Transport", interfaceKeys);
+      DebugLog(<<"Found " << interfaceKeys.size() << " interface(s) defined in the advanced format");
+      if(!interfaceKeys.empty())
       {
          // Sample config file format for advanced transport settings
          // Transport1Interface = 192.168.1.106:5061
@@ -1299,8 +1298,14 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          allTransportsSpecifyRecordRoute = true;
 
          const char *anchor;
-         while(!interfaceSettings.empty())
+         for(std::set<Data>::iterator it = interfaceKeys.begin();
+            it != interfaceKeys.end();
+            it++)
          {
+            const Data& settingKeyBase = *it;
+            DebugLog(<< "checking values for transport: " << settingKeyBase);
+            Data interfaceSettingKey(settingKeyBase + "Interface");
+            Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, "", true);
             Data typeSettingKey(settingKeyBase + "Type");
             Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
             Data tlsCertificateSettingKey(settingKeyBase + "TlsCertificate");
@@ -1449,12 +1454,6 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                CritLog(<< "Port not specified in " << interfaceSettingKey << " setting: expected format is <IPAddress>:<Port>");
                return false;
             }
-
-            // Check if there is another transport
-            transportNum++;
-            settingKeyBase = Data("Transport" + Data(transportNum));
-            interfaceSettingKey = Data(settingKeyBase + "Interface");
-            interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, "", true);
          }
       }
       else

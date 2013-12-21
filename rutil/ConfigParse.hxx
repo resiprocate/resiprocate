@@ -1,6 +1,7 @@
 #if !defined(ConfigParse_hxx)
 #define ConfigParse_hxx
 
+#include <set>
 #include <vector>
 #include "rutil/BaseException.hxx"
 #include "rutil/HashMap.hxx"
@@ -34,6 +35,8 @@ public:
    virtual void parseConfigFile(const resip::Data& filename);
 
    virtual void printHelpText(int argc, char **argv) = 0;
+
+   void getConfigIndexKeys(const resip::Data& indexName, std::set<resip::Data>& keys);
 
    bool getConfigValue(const resip::Data& name, resip::Data &value);
    resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);

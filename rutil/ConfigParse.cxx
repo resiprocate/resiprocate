@@ -172,6 +172,33 @@ ConfigParse::parseConfigFile(const Data& filename)
    }
 }
 
+void
+ConfigParse::getConfigIndexKeys(const resip::Data& indexName, std::set<Data>& keys)
+{
+   int numPos = indexName.size();
+   Data indexNameLower(indexName);
+   indexNameLower.lowercase();
+   ConfigValuesMap::iterator it = mConfigValues.begin();
+   for(; it != mConfigValues.end(); it++)
+   {
+      const Data& keyName = it->first;
+      if(keyName.prefix(indexNameLower) && keyName.size() > numPos
+         && isdigit(keyName[numPos]))
+      {
+         int i = numPos + 1;
+         while(i < keyName.size() && isdigit(keyName[i]))
+         {
+            i++;
+         }
+         Data indexFullName = keyName.substr(0, i);
+         if(keys.find(indexFullName) == keys.end())
+         {
+            keys.insert(indexFullName);
+         }
+      }
+   }
+}
+
 bool 
 ConfigParse::getConfigValue(const resip::Data& name, resip::Data &value)
 {
