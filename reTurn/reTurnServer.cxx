@@ -163,6 +163,9 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
          dropPrivileges(reTurnConfig.mRunAsUser, reTurnConfig.mRunAsGroup);
       }
 
+      ReTurnUserFileScanner userFileScanner(ioService, reTurnConfig);
+      userFileScanner.start();
+
 #ifdef _WIN32
       // Set console control handler to allow server to be stopped.
       console_ctrl_function = boost::bind(&asio::io_service::stop, &ioService);

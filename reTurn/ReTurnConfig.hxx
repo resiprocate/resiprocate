@@ -7,6 +7,8 @@
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/BaseException.hxx>
+#include <rutil/RWMutex.hxx>
+#include <rutil/Lock.hxx>
 
 #include <reTurn/UserAuthData.hxx>
 
@@ -52,6 +54,8 @@ public:
    asio::ip::address mAltStunAddress;
 
    resip::Data mAuthenticationRealm;
+   int mUserDatabaseCheckInterval;
+   mutable resip::RWMutex mUserDataMutex;
    std::map<resip::Data,RealmUsers> mUsers;
    std::map<RealmUserPair, resip::Data> mRealmUsersAuthenticaionCredentials;
    unsigned long mNonceLifetime;
@@ -67,6 +71,8 @@ public:
    resip::Data mTlsTempDhFilename;
    resip::Data mTlsPrivateKeyPassword;
 
+   resip::Data mUsersDatabaseFilename;
+
    resip::Data mLoggingType;
    resip::Data mLoggingLevel;
    resip::Data mLoggingFilename;
@@ -77,10 +83,24 @@ public:
    resip::Data mRunAsGroup;
 
    bool isUserNameValid(const resip::Data& username,  const resip::Data& realm) const;
-   const resip::Data& getPasswordForUsername(const resip::Data& username, const resip::Data& realm) const;
-   const UserAuthData* getUser(const resip::Data& userName, const resip::Data& realm) const;
+   resip::Data getPasswordForUsername(const resip::Data& username, const resip::Data& realm) const;
+   std::auto_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
    void addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm);
    void authParse(const resip::Data& accountDatabaseFilename);
+};
+
+class ReTurnUserFileScanner
+{
+   public:
+      ReTurnUserFileScanner(asio::io_service& ioService, ReTurnConfig& reTurnConfig);
+      void start();
+
+   private:
+      time_t mLoadedTime;
+      asio::deadline_timer mTimer;
+      ReTurnConfig& mReTurnConfig;
+
+      void timeout(const asio::error_code& e);
 };
 
 } // namespace
