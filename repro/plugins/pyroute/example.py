@@ -3,20 +3,20 @@ import resip
 
 def on_load():
     '''Do initialisation when module loads'''
-    resip.log_debug('example: on_load invoked')
+    resip.log_debug('on_load invoked')
 
 def provide_route(method, request_uri, headers, transport_type, body, cookies):
     '''Process a request URI and return the target URI(s)'''
 
-    resip.log_debug('example: method = ' + method)
-    resip.log_debug('example: request_uri = ' + request_uri)
-    resip.log_debug('example: From = ' + headers["From"])
-    resip.log_debug('example: To = ' + headers["To"])
-    resip.log_debug('example: transport_type = ' + transport_type)
-    resip.log_debug('example: body = ' + body)
-    resip.log_debug('example: len(cookies) = %d' % len(cookies))
+    resip.log_debug('method = ' + method)
+    resip.log_debug('request_uri = ' + request_uri)
+    resip.log_debug('From = ' + headers["From"])
+    resip.log_debug('To = ' + headers["To"])
+    resip.log_debug('transport_type = ' + transport_type)
+    resip.log_debug('body = ' + body)
+    resip.log_debug('len(cookies) = %d' % len(cookies))
     if 'WSSessionInfo' in cookies:
-        resip.log_debug('example: found cookie WSSessionInfo = ' + cookies['WSSessionInfo'])
+        resip.log_debug('found cookie WSSessionInfo = ' + cookies['WSSessionInfo'])
 
     # This is how we can signal an error to the caller:
     if method == 'MESSAGE':

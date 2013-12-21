@@ -70,7 +70,7 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
             ErrLog(<<"log_debug called with excess arguments, only using first argument");
          }
          const Py::String& text(args[0]);
-         DebugLog(<< text);
+         DebugLog(<< '[' << mRouteScript << "] " << text);
          return Py::None();
       };
 
@@ -86,7 +86,7 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
             ErrLog(<<"log_warning called with excess arguments, only using first argument");
          }
          const Py::String& text(args[0]);
-         WarningLog(<< text);
+         WarningLog(<< '[' << mRouteScript << "] " << text);
          return Py::None();
       };
 
@@ -102,7 +102,7 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
             ErrLog(<<"log_err called with excess arguments, only using first argument");
          }
          const Py::String& text(args[0]);
-         ErrLog(<< text);
+         ErrLog(<< '[' << mRouteScript << "] " << text);
          return Py::None();
       };
 
@@ -117,13 +117,13 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
          }
 
          Data pyPath(proxyConfig->getConfigData("PyRoutePath", "", true));
-         Data routeScript(proxyConfig->getConfigData("PyRouteScript", "", true));
+         mRouteScript = proxyConfig->getConfigData("PyRouteScript", "", true);
          if(pyPath.empty())
          {
             ErrLog(<<"PyRoutePath not specified in config, aborting");
             return false;
          }
-         if(routeScript.empty())
+         if(mRouteScript.empty())
          {
             ErrLog(<<"PyRouteScript not specified in config, aborting");
             return false;
@@ -147,10 +147,10 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
          PyList_Append(sys_path, addpath);
          mThreadState = PyGILState_GetThisThreadState();
 
-         PyObject *pyModule = PyImport_ImportModule(routeScript.c_str());
+         PyObject *pyModule = PyImport_ImportModule(mRouteScript.c_str());
          if(!pyModule)
          {
-            ErrLog(<<"Failed to load module "<< routeScript);
+            ErrLog(<<"Failed to load module "<< mRouteScript);
             if (PyErr_Occurred()) {
                Py::Exception ex;
                ErrLog(<< "Python exception: " << Py::value(ex));
@@ -259,6 +259,7 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
 
    private:
       PyThreadState* mThreadState;
+      Data mRouteScript;
       std::auto_ptr<Py::Module> mPyModule;
       Py::Callable mAction;
       Dispatcher* mDispatcher;
