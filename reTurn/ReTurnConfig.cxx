@@ -121,7 +121,7 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
 {
    std::ifstream accountDatabaseFile(accountDatabaseFilename.c_str());
    std::string sline;
-   int lineNbr = 0;
+   int lineNbr = 0, userCount = 0;
    if(!accountDatabaseFile)
    {
       throw ReTurnConfig::Exception("Error opening/reading user database file!", __FILE__, __LINE__);
@@ -146,6 +146,12 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
       }
 
       pb.skipWhitespace();
+      if(!pb.eof() && *pb.position() == '#')
+      {
+         // Line is commented out, skip it
+         continue;
+      }
+
       const char * anchor = pb.position();
 
       pb.skipToOneOf(" :");
@@ -237,8 +243,10 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
       {
          addUser(username, password, realm);
       }
+      userCount++;
    }
 
+   InfoLog(<< "Processed " << userCount << " user(s) from " << lineNbr << " line(s) in " << accountDatabaseFilename);
    accountDatabaseFile.close();
 }
 

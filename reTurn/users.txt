@@ -1,1 +1,21 @@
+#
+# reTurnServer user database file
+#
+# The format of each line is:
+#
+#    login:password:realm:state
+#
+# Typically, the realm field must match the value of AuthenticationRealm
+# defined in reTurnServer.config
+#
+# The state field (not case sensitive) can be one of:
+#
+#   authorized   (user authorized)
+#   refused      (user denied access)
+#   restricted   (for when bandwidth limiting is implemented)
+#
+# This file format is interchangeable with TurnServer.org's user database
+#
+# Comments can be inserted by starting a line with #
+#
 test:1234:reTurn:authorized
