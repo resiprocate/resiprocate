@@ -31,15 +31,6 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT c_user_domain UNIQUE INDEX idx_user_domain (`user`, `domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Upgrade from version 2 schema to version 3
-ALTER TABLE `users` 
-   ADD COLUMN `id` INT NULL AUTO_INCREMENT  FIRST , 
-   ADD COLUMN `passwordHashAlt` VARCHAR(32) NULL DEFAULT NULL  AFTER `passwordHash` , 
-   CHANGE COLUMN `domain` `domain` VARCHAR(253) NULL DEFAULT NULL  
-, DROP PRIMARY KEY 
-, ADD PRIMARY KEY (`id`) 
-, ADD UNIQUE INDEX `idx_user_domain` (`user` ASC, `domain` ASC) ;
-
 --
 -- Table structure for table `routesavp`
 --
