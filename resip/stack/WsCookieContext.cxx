@@ -1,7 +1,10 @@
 #include "resip/stack/WsCookieContext.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 WsCookieContext::WsCookieContext()
 {
@@ -51,7 +54,18 @@ WsCookieContext:: WsCookieContext(const CookieList& cookieList, const Data& info
    }
 
    ParseBuffer pb(mWsSessionInfo);
+   StackLog(<<"Checking Cookie scheme version");
+   int contextVersion = pb.uInt32();
+   if(contextVersion != RESIP_WS_COOKIE_CONTEXT_VERSION)
+   {
+      // Cookie created for another version of the code
+      ErrLog(<<"Expecting cookie version " << RESIP_WS_COOKIE_CONTEXT_VERSION << " but found " << contextVersion);
+      throw ParseException("Cookie version mismatch", pb.getContext(), __FILE__, __LINE__);
+   }
    pb.skipToChar(':');
+   pb.skipChar(':');
+
+   pb.skipToChar(':');  // skip the creation time
    pb.skipChar(':');
    mExpiresTime = (time_t) pb.uInt64();
 

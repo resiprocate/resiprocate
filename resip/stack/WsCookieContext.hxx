@@ -5,6 +5,8 @@
 #include "rutil/Data.hxx"
 #include "Uri.hxx"
 
+#define RESIP_WS_COOKIE_CONTEXT_VERSION 1
+
 namespace resip
 {
 

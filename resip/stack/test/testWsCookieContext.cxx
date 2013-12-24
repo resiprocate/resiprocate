@@ -18,7 +18,7 @@ using namespace std;
 
 int main()
 {
-   Cookie info("WSSessionInfo", "1387814798:1987814798:bob@example.org:alice@example.org");
+   Cookie info("WSSessionInfo", "1:1387814798:1987814798:bob@example.org:alice@example.org");
    Cookie extra("WSSessionExtra", "custom");
    Cookie mac("WSSessionMac", "abcdabcdabcdabcdabcdabcdabcdabcd");
 
