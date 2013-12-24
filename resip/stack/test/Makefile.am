@@ -61,7 +61,8 @@ TESTS = \
 	testTime \
 	testTimer \
 	testTuple \
-	testUri
+	testUri \
+	testWsCookieContext
 
 check_PROGRAMS = \
 	UAS \
@@ -108,7 +109,8 @@ check_PROGRAMS = \
 	testTuple \
 	testTypedef \
 	testUdp \
-	testUri
+	testUri \
+	testWsCookieContext
 
 if USE_SSL
 TESTS += testSocketFunc
@@ -161,6 +163,7 @@ testTuple_SOURCES = testTuple.cxx
 testTypedef_SOURCES = testTypedef.cxx
 testUdp_SOURCES = testUdp.cxx
 testUri_SOURCES = testUri.cxx TestSupport.cxx
+testWsCookieContext_SOURCES = testWsCookieContext.cxx
 
 noinst_HEADERS = digcalc.hxx \
 	InviteClient.hxx \
