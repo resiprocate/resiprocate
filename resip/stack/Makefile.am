@@ -358,6 +358,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	WsConnectionBase.hxx \
 	WsConnectionValidator.hxx \
 	WsCookieContext.hxx \
+	WsCookieContextFactory.hxx \
 	X509Contents.hxx \
 	ZeroOutStatistics.hxx
 

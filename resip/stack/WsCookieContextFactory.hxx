@@ -1,34 +1,48 @@
-#ifndef RESIP_WsConnectionBase_hxx
-#define RESIP_WsConnectionBase_hxx
+#ifndef RESIP_WsCookieContextFactory_hxx
+#define RESIP_WsCookieContextFactory_hxx
 
-#include <resip/stack/WsConnectionValidator.hxx>
-#include <resip/stack/Cookie.hxx>
-#include <resip/stack/WsCookieContext.hxx>
-#include "rutil/Data.hxx"
 #include "rutil/SharedPtr.hxx"
 
-#include <vector>
+#include "Cookie.hxx"
+#include "rutil/Data.hxx"
+#include "Uri.hxx"
+#include "WsCookieContext.hxx"
 
 namespace resip
 {
 
-class WsConnectionBase
+class WsCookieContextFactory
+{
+   protected:
+      WsCookieContextFactory() {};
+      virtual ~WsCookieContextFactory() {};
+
+   public:
+      virtual SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList) = 0;
+};
+
+class BasicWsCookieContextFactory : public WsCookieContextFactory
 {
    public:
-      WsConnectionBase();
-      WsConnectionBase(SharedPtr<WsConnectionValidator> mWsConnectionValidator);
-      virtual ~WsConnectionBase();
+      BasicWsCookieContextFactory(const Data& infoCookieName = "", const Data& extraCookieName = "", const Data& macCookieName = "")
+       : mInfoCookieName(infoCookieName.empty() ? "WSSessionInfo" : infoCookieName),
+         mExtraCookieName(extraCookieName.empty() ? "WSSessionExtra": extraCookieName),
+         macCookieName(macCookieName.empty() ? "WSSessionMAC" : macCookieName)
+      {
+      };
 
-      void setCookies(CookieList& cookies) { mCookies = cookies; };
-      const CookieList& getCookies() const { return mCookies; };
-      SharedPtr<WsCookieContext> getWsCookieContext() const { return mWsCookieContext; }
-      void setWsCookieContext(SharedPtr<WsCookieContext> wsCookieContext) { mWsCookieContext = wsCookieContext; }
-      SharedPtr<WsConnectionValidator> connectionValidator() const;
+      virtual ~BasicWsCookieContextFactory() {};
+
+      SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList)
+      {
+         SharedPtr<WsCookieContext> ctx(new WsCookieContext(cookieList, mInfoCookieName, mExtraCookieName, macCookieName));
+         return ctx;
+      };
 
    private:
-      CookieList mCookies;
-      SharedPtr<WsCookieContext> mWsCookieContext;
-      SharedPtr<WsConnectionValidator> mWsConnectionValidator;
+      Data mInfoCookieName;
+      Data mExtraCookieName;
+      Data macCookieName;
 };
 
 }
@@ -38,7 +52,7 @@ class WsConnectionBase
 /* ====================================================================
  * BSD License
  *
- * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
+ * Copyright (c) 2013 Daniel Pocock http://danielpocock.com All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -71,4 +85,3 @@ class WsConnectionBase
  * ====================================================================
  *
  */
-

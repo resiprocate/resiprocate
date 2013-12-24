@@ -123,7 +123,7 @@ WsCookieAuthManager::handle(SipMessage* sipMessage)
    }
 
    const CookieList &cookieList = sipMessage->getWsCookies();
-   const WsCookieContext &wsCookieContext = sipMessage->getWsCookieContext();
+   const WsCookieContext &wsCookieContext = *(sipMessage->getWsCookieContext());
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
       if (requiresAuthorization(*sipMessage))

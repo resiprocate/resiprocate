@@ -19,6 +19,7 @@
 #include "resip/stack/StatisticsManager.hxx"
 #include "resip/stack/TuSelector.hxx"
 #include "resip/stack/WsConnectionValidator.hxx"
+#include "resip/stack/WsCookieContextFactory.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/SharedPtr.hxx"
 
@@ -317,7 +318,8 @@ class SipStack : public FdSetIOObserver
                          const Data& certificateFilename = "", const Data& privateKeyFilename = "",
                          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                          bool useEmailAsSIP = false,
-                         SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
+                         SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
+                         SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>());
 
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport

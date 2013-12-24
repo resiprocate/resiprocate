@@ -32,6 +32,7 @@
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/WsCookieContextFactory.hxx"
 
 #include "resip/dum/InMemorySyncRegDb.hxx"
 #include "resip/dum/MasterProfile.hxx"
@@ -1272,9 +1273,15 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
    SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
+   SharedPtr<WsCookieContextFactory> wsCookieContextFactory;
    if(!wsCookieAuthSharedSecret.empty())
    {
       basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
+      Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", "");
+      Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", "");
+      Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", "");
+
+      wsCookieContextFactory.reset(new BasicWsCookieContextFactory(infoCookieName, extraCookieName, macCookieName));
    }
 
    try
@@ -1392,7 +1399,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                                  tlsCertificate, tlsPrivateKey,
                                  cvm,          // tls client verification mode
                                  useEmailAsSIP,
-                                 basicWsConnectionValidator);
+                                 basicWsConnectionValidator, wsCookieContextFactory);
 
                if (t && rcvBufLen>0 )
                {
@@ -1520,13 +1527,13 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (wsPort)
          {
-            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator);
-            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator);
+            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
          }
          if (wssPort)
          {
-            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator);
-            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator);
+            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
          }
          if (dtlsPort)
          {

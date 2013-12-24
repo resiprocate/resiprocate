@@ -16,8 +16,9 @@
 using namespace std;
 using namespace resip;
 
-WsBaseTransport::WsBaseTransport(SharedPtr<WsConnectionValidator> connectionValidator)
-: mConnectionValidator(connectionValidator)
+WsBaseTransport::WsBaseTransport(SharedPtr<WsConnectionValidator> connectionValidator, SharedPtr<WsCookieContextFactory> cookieContextFactory)
+ : mConnectionValidator(connectionValidator),
+   mCookieContextFactory(cookieContextFactory)
 {
 }
 

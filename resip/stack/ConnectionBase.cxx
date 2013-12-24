@@ -10,7 +10,9 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/WsDecorator.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/WsBaseTransport.hxx"
 #include "resip/stack/WsCookieContext.hxx"
+#include "resip/stack/WsCookieContextFactory.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/SharedPtr.hxx"
 
@@ -615,15 +617,17 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       CookieList cookieList;
       if(wsConnectionBase)
       {
-         std::auto_ptr<WsCookieContext> wsCookieContext(0);
+         SharedPtr<WsCookieContext> wsCookieContext((WsCookieContext*)0);
          if (mMessage->exists(h_Cookies))
          {
+            WsBaseTransport* wst = dynamic_cast<WsBaseTransport*>(mTransport);
+            assert(wst);
             try
             {
                wsParseCookies(cookieList, mMessage);
                wsConnectionBase->setCookies(cookieList);
-               wsCookieContext.reset(new WsCookieContext(cookieList));
-               wsConnectionBase->setWsCookieContext(*(wsCookieContext.get()));
+               wsCookieContext = wst->cookieContextFactory()->makeCookieContext(cookieList);
+               wsConnectionBase->setWsCookieContext(wsCookieContext);
             }
             catch(ParseException& ex)
             {
@@ -632,7 +636,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
          }
          SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
          if(wsConnectionValidator &&
-            (!wsCookieContext.get() || !wsConnectionValidator->validateConnection(*(wsCookieContext.get()))))
+            (!wsCookieContext.get() || !wsConnectionValidator->validateConnection(*wsCookieContext)))
          {
             ErrLog(<<"WebSocket cookie validation failed, dropping connection");
             // FIXME: should send back a HTTP error code:

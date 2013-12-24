@@ -32,19 +32,19 @@ WsCookieContext& WsCookieContext::operator=(const WsCookieContext& rhs)
    return *this;
 }
 
-WsCookieContext:: WsCookieContext(const CookieList& cookieList)
+WsCookieContext:: WsCookieContext(const CookieList& cookieList, const Data& infoCookieName, const Data& extraCookieName, const Data& macCookieName)
 {
    for (CookieList::const_iterator it = cookieList.begin(); it != cookieList.end(); ++it)
    {
-      if ((*it).name() == "WSSessionInfo")
+      if ((*it).name() == infoCookieName)
       {
          mWsSessionInfo = (*it).value();
       }
-      else if ((*it).name() == "WSSessionExtra")
+      else if ((*it).name() == extraCookieName)
       {
          mWsSessionExtra = (*it).value();
       }
-      else if ((*it).name() == "WSSessionMAC")
+      else if ((*it).name() == macCookieName)
       {
          mWsSessionMAC = (*it).value();
       }

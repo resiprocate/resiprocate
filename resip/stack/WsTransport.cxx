@@ -21,9 +21,10 @@ WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
       AfterSocketCreationFuncPtr socketFunc,
       Compression &compression,
       unsigned transportFlags,
-      SharedPtr<WsConnectionValidator> connectionValidator)
+      SharedPtr<WsConnectionValidator> connectionValidator,
+      SharedPtr<WsCookieContextFactory> cookieContextFactory)
 : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
-  WsBaseTransport(connectionValidator)
+  WsBaseTransport(connectionValidator, cookieContextFactory)
 {
    mTuple.setType(WS);
 

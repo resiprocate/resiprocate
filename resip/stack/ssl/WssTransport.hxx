@@ -7,6 +7,7 @@
 
 #include "resip/stack/WsBaseTransport.hxx"
 #include "resip/stack/WsConnectionValidator.hxx"
+#include "resip/stack/WsCookieContextFactory.hxx"
 #include "resip/stack/ssl/TlsBaseTransport.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/SecurityTypes.hxx"
@@ -40,6 +41,7 @@ class WssTransport : public TlsBaseTransport, public WsBaseTransport
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false,
                    SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
+                   SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(new BasicWsCookieContextFactory()),
                    const Data& certificateFilename = "", const Data& privateKeyFilename = "");
       virtual  ~WssTransport();
 

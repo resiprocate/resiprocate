@@ -3,6 +3,7 @@
 
 #include "resip/stack/WsBaseTransport.hxx"
 #include "resip/stack/WsConnectionValidator.hxx"
+#include "resip/stack/WsCookieContextFactory.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/Compression.hxx"
 #include "rutil/SharedPtr.hxx"
@@ -25,7 +26,8 @@ class WsTransport : public TcpBaseTransport, public WsBaseTransport
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
                    unsigned transportFlags = 0,
-                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
+                   SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
+                   SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(new BasicWsCookieContextFactory()));
       virtual  ~WsTransport();
 
    protected:

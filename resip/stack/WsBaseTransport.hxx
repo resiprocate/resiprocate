@@ -2,6 +2,7 @@
 #define RESIP_WSBASETRANSPORT_HXX
 
 #include "resip/stack/WsConnectionValidator.hxx"
+#include "resip/stack/WsCookieContextFactory.hxx"
 #include "rutil/SharedPtr.hxx"
 
 namespace resip
@@ -11,11 +12,14 @@ class WsBaseTransport
 {
    public:
       RESIP_HeapCount(WsBaseTransport);
-      WsBaseTransport(SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>());
+      WsBaseTransport(SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(), SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(new BasicWsCookieContextFactory()));
       virtual  ~WsBaseTransport();
+
+      SharedPtr<WsCookieContextFactory> cookieContextFactory() { return mCookieContextFactory; };
 
    protected:
       SharedPtr<WsConnectionValidator> mConnectionValidator;
+      SharedPtr<WsCookieContextFactory> mCookieContextFactory;
 };
 
 }
