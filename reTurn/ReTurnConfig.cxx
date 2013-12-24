@@ -39,6 +39,8 @@ ReTurnConfig::ReTurnConfig() :
    mTlsServerPrivateKeyFilename(""),
    mTlsTempDhFilename("dh512.pem"),
    mTlsPrivateKeyPassword(""),
+   mUsersDatabaseFilename(""),
+   mRunWithoutValidUsers(false),
    mLoggingType("cout"),
    mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
@@ -72,6 +74,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsServerPrivateKeyFilename = getConfigData("TlsServerPrivateKeyFilename", mTlsServerPrivateKeyFilename);
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
+   mRunWithoutValidUsers = getConfigBool("RunWithoutValidUsers", mRunWithoutValidUsers);
    mLoggingType = getConfigData("LoggingType", mLoggingType);
    mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
    mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
@@ -254,6 +257,23 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
 
    InfoLog(<< "Processed " << userCount << " user(s) from " << lineNbr << " line(s) in " << accountDatabaseFilename);
    accountDatabaseFile.close();
+
+   if(mUsers.find(mAuthenticationRealm) == mUsers.end())
+   {
+      if(userCount > 0)
+      {
+         WarningLog(<<"AuthenticationRealm = " << mAuthenticationRealm << " but no users defined for this realm in " << accountDatabaseFilename);
+      }
+      else
+      {
+         WarningLog(<<"No valid users found");
+      }
+      if(!mRunWithoutValidUsers)
+      {
+         ErrLog(<<"No valid users found, please check AuthenticationRealm matches the realm in " << accountDatabaseFilename << " or set RunWithoutValidUsers if you only need to support STUN clients");
+         throw ConfigParse::Exception("No valid users found, please fix or set RunWithoutValidUsers if you only need to support STUN clients", __FILE__, __LINE__);
+      }
+   }
 }
 
 void

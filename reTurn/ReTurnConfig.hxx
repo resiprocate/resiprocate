@@ -72,6 +72,7 @@ public:
    resip::Data mTlsPrivateKeyPassword;
 
    resip::Data mUsersDatabaseFilename;
+   bool mRunWithoutValidUsers;
 
    resip::Data mLoggingType;
    resip::Data mLoggingLevel;
