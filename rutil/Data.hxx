@@ -643,6 +643,11 @@ class Data
       Data hex() const;
 
       /**
+        Returns the binary form of the hexadecimal string in this Data
+      */
+      Data fromHex() const;
+
+      /**
         Returns a representation of the contents of the data
         with any non-printable characters escaped.
 

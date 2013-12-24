@@ -56,6 +56,27 @@ const bool DataHelper::isCharHex[256] =
 //must be lowercase for MD5
 static const char hexmap[] = "0123456789abcdef";
 
+static const char inversehexmap[] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,     // 0 - 
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,             //   - 47
+
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9,         // 48 ...
+
+                                     -1, -1,    // 58 -
+    -1, -1, -1, -1, -1,                         //  -64
+
+          10, 11, 12, 13, 14, 15,               // 65 ...
+
+        -1, -1, -1, -1, -1, -1, -1, -1, -1,     // 71 ...
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1,                 //   - 96
+
+          10, 11, 12, 13, 14, 15                // 97 ...
+};
+
 int 
 hexpair2int(char high, char low)
 {
@@ -1483,6 +1504,42 @@ Data::hex() const
    }
    *r = 0;
    ret.mSize = 2*mSize;
+   return ret;
+}
+
+Data
+Data::fromHex() const
+{
+   bool oddSize = mSize & 1;
+   size_type resultSize = (mSize + (mSize & 1)) / 2;
+   Data ret(resultSize, Data::Preallocate);
+
+   const char* p = mBuf;
+   char* r = ret.mBuf;
+   size_type i = 0;
+   if(oddSize)
+   {
+      if(!isHex(*p))
+      {
+         throw DataException("Encountered non-hex digit",
+                                    __FILE__,__LINE__);
+      }
+      *r++ = inversehexmap[*p++];
+      i++;
+   }
+   for ( ; i < mSize; i+=2)
+   {
+      const char high = *p++;
+      const char low = *p++;
+      if(!isHex(high) || !isHex(low))
+      {
+         throw DataException("Encountered non-hex digit",
+                                    __FILE__,__LINE__);
+      }
+
+      *r++ = (inversehexmap[high] << 4) + inversehexmap[low];
+   }
+   ret.mSize = resultSize;
    return ret;
 }
 

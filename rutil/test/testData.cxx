@@ -1046,6 +1046,30 @@ class TestData
                assert(result == working);
             }
          }
+
+         {
+            Data d("f");
+            Data raw = d.fromHex();
+            assert(raw.size() == 1);
+            assert((unsigned char)(raw[0]) == 0xf);
+
+            d = "Ff";
+            raw = d.fromHex();
+            assert(raw.size() == 1);
+            assert((unsigned char)(raw[0]) == 0xff);
+
+            d = "Fff";
+            raw = d.fromHex();
+            assert(raw.size() == 2);
+            assert((unsigned char)(raw[0]) == 0xf);
+            assert((unsigned char)(raw[1]) == 0xff);
+
+            d = "d3b07384d113edec49eaa6238ad5ff00";
+            raw = d.fromHex();
+            assert(raw.size() == 16);
+            assert((unsigned char)raw[0] == 0xd3);
+            assert((unsigned char)raw[15] == 0x00);
+         }
          
          {
             Data d("012345");
