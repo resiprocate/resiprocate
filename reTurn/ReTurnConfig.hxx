@@ -56,8 +56,6 @@ public:
    resip::Data mAuthenticationRealm;
    int mUserDatabaseCheckInterval;
    mutable resip::RWMutex mUserDataMutex;
-   std::map<resip::Data,RealmUsers> mUsers;
-   std::map<RealmUserPair, resip::Data> mRealmUsersAuthenticaionCredentials;
    unsigned long mNonceLifetime;
 
    unsigned short mAllocationPortRangeMin;
@@ -72,6 +70,7 @@ public:
    resip::Data mTlsPrivateKeyPassword;
 
    resip::Data mUsersDatabaseFilename;
+   bool mUserDatabaseHashedPasswords;
    bool mRunWithoutValidUsers;
 
    resip::Data mLoggingType;
@@ -84,10 +83,16 @@ public:
    resip::Data mRunAsGroup;
 
    bool isUserNameValid(const resip::Data& username,  const resip::Data& realm) const;
-   resip::Data getPasswordForUsername(const resip::Data& username, const resip::Data& realm) const;
+   resip::Data getHa1ForUsername(const resip::Data& username, const resip::Data& realm) const;
    std::auto_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
    void addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm);
    void authParse(const resip::Data& accountDatabaseFilename);
+
+private:
+   std::map<resip::Data,RealmUsers> mUsers;
+   std::map<RealmUserPair, resip::Data> mRealmUsersAuthenticaionCredentials;
+
+   friend class ReTurnUserFileScanner;
 };
 
 class ReTurnUserFileScanner

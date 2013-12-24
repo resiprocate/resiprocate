@@ -40,6 +40,7 @@ ReTurnConfig::ReTurnConfig() :
    mTlsTempDhFilename("dh512.pem"),
    mTlsPrivateKeyPassword(""),
    mUsersDatabaseFilename(""),
+   mUserDatabaseHashedPasswords(false),
    mRunWithoutValidUsers(false),
    mLoggingType("cout"),
    mLoggingLevel("INFO"),
@@ -74,6 +75,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsServerPrivateKeyFilename = getConfigData("TlsServerPrivateKeyFilename", mTlsServerPrivateKeyFilename);
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
+   mUserDatabaseHashedPasswords = getConfigBool("UserDatabaseHashedPasswords", mUserDatabaseHashedPasswords);
    mRunWithoutValidUsers = getConfigBool("RunWithoutValidUsers", mRunWithoutValidUsers);
    mLoggingType = getConfigData("LoggingType", mLoggingType);
    mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
@@ -118,10 +120,13 @@ ReTurnConfig::~ReTurnConfig()
 void
 ReTurnConfig::addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm)
 {
-   mRealmUsersAuthenticaionCredentials[std::make_pair(username, realm)] = password;
+   UserAuthData newUser(
+      mUserDatabaseHashedPasswords ?
+         UserAuthData::createFromHex(username, realm, password)
+       : UserAuthData::createFromPassword(username, realm, password)
+      );
+   mRealmUsersAuthenticaionCredentials[std::make_pair(username, realm)] = newUser.getHa1();
    RealmUsers& realmUsers(mUsers[realm]);
-
-   UserAuthData newUser(UserAuthData::createFromPassword(username, realm, password));
    realmUsers.insert(pair<resip::Data,UserAuthData>(username, newUser));
 }
 
@@ -293,7 +298,7 @@ ReTurnConfig::isUserNameValid(const resip::Data& username, const resip::Data& re
 }
 
 Data
-ReTurnConfig::getPasswordForUsername(const Data& username, const resip::Data& realm) const
+ReTurnConfig::getHa1ForUsername(const Data& username, const resip::Data& realm) const
 {
    ReadLock lock(mUserDataMutex);
    std::map<RealmUserPair, resip::Data>::const_iterator it = mRealmUsersAuthenticaionCredentials.find(std::make_pair(username, realm));

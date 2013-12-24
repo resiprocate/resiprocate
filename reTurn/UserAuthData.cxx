@@ -1,5 +1,6 @@
 #include "UserAuthData.hxx"
 
+#include <rutil/ConfigParse.hxx>
 #include <rutil/MD5Stream.hxx>
 
 #include "ReTurnSubsystem.hxx"
@@ -29,6 +30,16 @@ UserAuthData::createFromPassword(const resip::Data& userName, const resip::Data&
    r << userName << ":" << realm << ":" << password; 
    Data ha1(r.getBin());
    return UserAuthData(userName, realm, ha1);
+}
+
+UserAuthData
+UserAuthData::createFromHex(const resip::Data& userName, const resip::Data& realm, const resip::Data& ha1Hex)
+{
+   if(ha1Hex.size() != 32)
+   {
+      throw ConfigParse::Exception("H(A1) password field must contain 32 character hex string", __FILE__, __LINE__);
+   }
+   return UserAuthData(userName, realm, ha1Hex.fromHex());
 }
 
 } // namespace

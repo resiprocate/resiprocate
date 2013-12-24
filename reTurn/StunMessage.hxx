@@ -60,6 +60,7 @@ public:
    void generateShortTermPasswordForUsername(resip::Data& password);  // Ensure username is set first
    void getTupleFromUsername(StunTuple& tuple);   // note: does not set transport type
    void calculateHmacKey(resip::Data& hmacKey, const resip::Data& longtermAuthenticationPassword);
+   void calculateHmacKeyForHa1(resip::Data& hmacKey, const resip::Data& ha1);
    void calculateHmacKey(resip::Data& hmacKey, const resip::Data& username, const resip::Data& realm, const resip::Data& longtermAuthenticationPassword);
    bool checkMessageIntegrity(const resip::Data& hmacKey);
    bool checkFingerprint();

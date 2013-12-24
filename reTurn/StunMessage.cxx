@@ -1809,6 +1809,21 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationP
 }
 
 void
+StunMessage::calculateHmacKeyForHa1(Data& hmacKey, const Data& ha1)
+{
+   assert(mHasUsername);
+
+   if(mHasRealm)  // Longterm authenicationmode
+   {
+      hmacKey = ha1;
+   }
+   else
+   {
+      generateShortTermPasswordForUsername(hmacKey);
+   }
+}
+
+void
 StunMessage::calculateHmacKey(Data& hmacKey, const Data& username, const Data& realm, const Data& longtermAuthenticationPassword)
 {
    MD5Stream r;

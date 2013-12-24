@@ -4,6 +4,8 @@
 #include <string>
 #include <asio.hpp>
 
+#include <rutil/MD5Stream.hxx>
+
 #include "../StunTuple.hxx"
 #include "../StunMessage.hxx"
 #include <rutil/Logger.hxx>
@@ -155,6 +157,12 @@ int main(int argc, char* argv[])
    assert(reqltcMessage.mHasMessageIntegrity);
    resip::Data hmacKey;
    reqltcMessage.calculateHmacKey(hmacKey, password);
+   assert(reqltcMessage.checkMessageIntegrity(hmacKey));
+
+   resip::MD5Stream r;
+   r << username << ":example.org:" << password;
+   resip::Data password_ha1 = r.getBin();
+   reqltcMessage.calculateHmacKeyForHa1(hmacKey, password_ha1);
    assert(reqltcMessage.checkMessageIntegrity(hmacKey));  
 
    InfoLog(<< "All tests passed!");

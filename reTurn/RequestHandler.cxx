@@ -304,7 +304,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       Data hmacKey;
       assert(request.mHasUsername);  // Note:  This is checked above
 
-      request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername, *request.mRealm));
+      request.calculateHmacKeyForHa1(hmacKey, getConfig().getHa1ForUsername(*request.mUsername, *request.mRealm));
 
       if(!request.checkMessageIntegrity(hmacKey))
       {

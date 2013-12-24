@@ -13,6 +13,7 @@ public:
    virtual ~UserAuthData();
 
    static UserAuthData createFromPassword(const resip::Data& userName, const resip::Data& realm, const resip::Data& password);
+   static UserAuthData createFromHex(const resip::Data& userName, const resip::Data& realm, const resip::Data& ha1Hex);
 
    resip::Data getUserName() { return mUserName; };
    resip::Data getRealm() { return mRealm; };
