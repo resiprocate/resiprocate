@@ -626,8 +626,13 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
             {
                wsParseCookies(cookieList, mMessage);
                wsConnectionBase->setCookies(cookieList);
-               wsCookieContext = wst->cookieContextFactory()->makeCookieContext(cookieList);
-               wsConnectionBase->setWsCookieContext(wsCookieContext);
+               // Use of resip WsCookieContext capabilities is not mandatory,
+               // only try to use it if cookieContextFactory is available
+               if(wst->cookieContextFactory().get())
+               {
+                  wsCookieContext = wst->cookieContextFactory()->makeCookieContext(cookieList);
+                  wsConnectionBase->setWsCookieContext(wsCookieContext);
+               }
             }
             catch(ParseException& ex)
             {
