@@ -89,7 +89,7 @@ ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
          isEqualNoCase(argData, "/?"))
       {
          printHelpText(argc, argv);
-         exit(1);
+         throw Exception("Help text requested - process stopping", __FILE__, __LINE__);
       }
       else if(argData.at(0) == '-' || argData.at(0) == '/')
       {
@@ -117,21 +117,21 @@ ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
             {
                cerr << "Invalid command line parameters:"  << endl;
                cerr << " Name/Value pairs must contain an = or a : between the name and the value" << endl;
-               exit(-1);  // todo - should convert this stuff to exceptions and let user decide to exit or not
+               throw Exception("Name/Value pairs must contain an = or a : between the name and the value", __FILE__, __LINE__);
             }
          }
          catch(BaseException& ex)
          {
             cerr << "Invalid command line parameters:"  << endl;
             cerr << " Exception parsing Name/Value pairs: " << ex << endl;
-            exit(-1); // todo - should convert this stuff to exceptions and let user decide to exit or not
+            throw;
          }
       }
       else
       {
          cerr << "Invalid command line parameters:"  << endl;
          cerr << " Name/Value pairs must be prefixed with either a -, --, or a /" << endl;
-         exit(-1); // todo - should convert this stuff to exceptions and let user decide to exit or not
+         throw Exception("Name/Value pairs must be prefixed with either a -, --, or a /",  __FILE__, __LINE__);
       }
    }
 }
