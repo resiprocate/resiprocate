@@ -5,6 +5,9 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#ifndef WIN32
+#include <syslog.h>
+#endif
 
 #ifdef REPRO_DSO_PLUGINS
 
@@ -183,6 +186,9 @@ ReproRunner::run(int argc, char** argv)
    catch(BaseException& ex)
    {
       std::cerr << "Error parsing configuration: " << ex << std::endl;
+#ifndef WIN32
+      syslog(LOG_DAEMON | LOG_CRIT, ex.getMessage().c_str());
+#endif
       return false;
    }
 
