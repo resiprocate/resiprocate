@@ -59,9 +59,12 @@ public:
    bool AddBasePathIfRequired(Data& filename);
 
 protected:
-   void insertConfigValue(const resip::Data& name, const resip::Data& value);
-
    typedef HashMultiMap<resip::Data, resip::Data> ConfigValuesMap;
+
+   void insertConfigValue(ConfigValuesMap& configValues, const resip::Data& name, const resip::Data& value);
+
+   ConfigValuesMap mCmdLineConfigValues;
+   ConfigValuesMap mFileConfigValues;
    ConfigValuesMap mConfigValues;
 
    resip::Data removePath(const resip::Data& fileAndPath);

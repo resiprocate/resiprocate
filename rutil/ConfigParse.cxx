@@ -44,6 +44,20 @@ ConfigParse::parseConfig(int argc, char** argv, const resip::Data& defaultConfig
    {
       parseConfigFile(mCmdLineConfigFilename);
    }
+   mConfigValues = mFileConfigValues;
+   // Overlay the command line config options on top of the config options from the file
+   // The command line config options take precedence / override anything in the file
+   for(
+      ConfigValuesMap::iterator it = mCmdLineConfigValues.begin();
+      it != mCmdLineConfigValues.end();
+      it++)
+   {
+      if(mConfigValues.find(it->first) != mConfigValues.end())
+      {
+         mConfigValues.erase(it->first);
+      }
+      mConfigValues.insert(ConfigValuesMap::value_type(it->first, it->second));
+   } 
 }
 
 void 
@@ -96,7 +110,7 @@ ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
                pb.data(value, anchor);
 
                //cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
-               insertConfigValue(name, value);
+               insertConfigValue(mCmdLineConfigValues, name, value);
             }
             else
             {
@@ -168,7 +182,7 @@ ConfigParse::parseConfigFile(const Data& filename)
          pb.data(value, anchor);
       }
       //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-      insertConfigValue(name, value);
+      insertConfigValue(mFileConfigValues, name, value);
    }
 }
 
@@ -387,11 +401,11 @@ ConfigParse::getConfigValue(const resip::Data& name, std::set<resip::Data> &valu
 }
 
 void 
-ConfigParse::insertConfigValue(const resip::Data& name, const resip::Data& value)
+ConfigParse::insertConfigValue(ConfigValuesMap& configValues, const resip::Data& name, const resip::Data& value)
 {
    resip::Data lowerName(name);
    lowerName.lowercase();
-   mConfigValues.insert(ConfigValuesMap::value_type(lowerName, value));
+   configValues.insert(ConfigValuesMap::value_type(lowerName, value));
 }
 
 resip::Data
