@@ -54,6 +54,7 @@ public:
    unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue);
 
    bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
+   bool getConfigValue(const resip::Data& name, std::set<resip::Data> &value);
 
    bool AddBasePathIfRequired(Data& filename);
 

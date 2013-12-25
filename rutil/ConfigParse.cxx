@@ -358,6 +358,34 @@ ConfigParse::getConfigValue(const resip::Data& name, std::vector<resip::Data> &v
    return found;
 }
 
+bool
+ConfigParse::getConfigValue(const resip::Data& name, std::set<resip::Data> &value)
+{
+   Data lowerName(name);  lowerName.lowercase();
+   std::pair<ConfigValuesMap::iterator,ConfigValuesMap::iterator> valuesIts = mConfigValues.equal_range(lowerName);
+   bool found = false;
+   for (ConfigValuesMap::iterator it=valuesIts.first; it!=valuesIts.second; ++it)
+   {
+      found = true;
+      ParseBuffer pb(it->second);
+      Data item;
+      while(!it->second.empty() && !pb.eof())
+      {
+         pb.skipWhitespace();
+         const char *start = pb.position();
+         pb.skipToOneOf(ParseBuffer::Whitespace, ",");  // allow white space
+         pb.data(item, start);
+         value.insert(item);
+         if(!pb.eof())
+         {
+            pb.skipChar();
+         }
+      }
+   }
+
+   return found;
+}
+
 void 
 ConfigParse::insertConfigValue(const resip::Data& name, const resip::Data& value)
 {
