@@ -53,6 +53,7 @@
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
 #include "repro/Registrar.hxx"
+#include "repro/ReproAuthenticatorFactory.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/RegSyncClient.hxx"
 #include "repro/RegSyncServer.hxx"
@@ -121,7 +122,6 @@ ReproRunner::ReproRunner()
    : mRunning(false)
    , mRestarting(false)
    , mThreadedStack(false)
-   , mSipAuthDisabled(false)
    , mUseV4(true)
    , mUseV6 (false)
    , mRegSyncPort(0)
@@ -133,7 +133,7 @@ ReproRunner::ReproRunner()
    , mAbstractDb(0)
    , mRuntimeAbstractDb(0)
    , mRegistrationPersistenceManager(0)
-   , mAuthRequestDispatcher(0)
+   , mAuthFactory(0)
    , mAsyncProcessorDispatcher(0)
    , mMonkeys(0)
    , mLemurs(0)
@@ -234,8 +234,8 @@ ReproRunner::run(int argc, char** argv)
       return false;
    }
 
-   // Create worker threads for user authentication (if required)
-   createAuthRequestDespatcher();
+   // Create authentication mechanism
+   createAuthenticatorFactory();
 
    // Create DialogUsageManager that handles ServerRegistration,
    // and potentially certificate subscription server
@@ -341,12 +341,13 @@ ReproRunner::shutdown()
    {
       mDumThread->join();
    }
-   if(mAuthRequestDispatcher)
+   if(mAuthFactory)
    {
       // Both proxy and dum threads are down at this point, we can 
-      // destroy the authRequest dispatcher and associated threads now
-      delete mAuthRequestDispatcher;
-      mAuthRequestDispatcher = 0;
+      // destroy the authFactory and its authRequest dispatcher
+      // and associated threads now
+      delete mAuthFactory;
+      mAuthFactory = 0;
    }
    if(mAsyncProcessorDispatcher)
    {
@@ -418,7 +419,7 @@ ReproRunner::cleanupObjects()
    delete mBaboons; mBaboons = 0;
    delete mLemurs; mLemurs = 0;
    delete mMonkeys; mMonkeys = 0;
-   delete mAuthRequestDispatcher; mAuthRequestDispatcher = 0;
+   delete mAuthFactory; mAuthFactory = 0;
    delete mAsyncProcessorDispatcher; mAsyncProcessorDispatcher = 0;
    if(!mRestarting) 
    {
@@ -783,21 +784,11 @@ ReproRunner::createDatastore()
 }
 
 void
-ReproRunner::createAuthRequestDespatcher()
+ReproRunner::createAuthenticatorFactory()
 {
-   mSipAuthDisabled = mProxyConfig->getConfigBool("DisableAuth", false);
-   if (!mSipAuthDisabled)
-   {
-      // Create UserAuthGrabber Worker Thread Pool if auth is enabled
-      assert(!mAuthRequestDispatcher);
-      int numAuthGrabberWorkerThreads = mProxyConfig->getConfigInt("NumAuthGrabberWorkerThreads", 2);
-      if(numAuthGrabberWorkerThreads < 1)
-      {
-         numAuthGrabberWorkerThreads = 1; // must have at least one thread
-      }
-      std::auto_ptr<Worker> grabber(new UserAuthGrabber(mProxyConfig->getDataStore()->mUserStore));
-      mAuthRequestDispatcher = new Dispatcher(grabber, mSipStack, numAuthGrabberWorkerThreads);
-   }
+   // TODO: let a plugin supply an instance of AuthenticatorFactory
+   // instead of our builtin ReproAuthenticatorFactory
+   mAuthFactory = new ReproAuthenticatorFactory(*mProxyConfig, *mSipStack, mDum);
 }
 
 void
@@ -876,40 +867,28 @@ ReproRunner::createDialogUsageManager()
 
    if (mDum)
    {
-      bool enableCertAuth = mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false);
-      // Maintains existing behavior for non-TLS cert auth users
-      bool digestChallengeThirdParties = !enableCertAuth;
+      assert(mAuthFactory);
+      mAuthFactory->setDum(mDum);
 
-      if(enableCertAuth)
+      if(mAuthFactory->certificateAuthEnabled())
       {
          // TODO: perhaps this should be initialised from the trusted node
          // monkey?  Or should the list of trusted TLS peers be independent
          // from the trusted node list?
-         std::set<Data> trustedPeers;
-         loadCommonNameMappings();
-         SharedPtr<TlsPeerAuthManager> certAuth(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), trustedPeers, true, mCommonNameMappings));
-         mDum->addIncomingFeature(certAuth);
+         mDum->addIncomingFeature(mAuthFactory->getCertificateAuthManager());
       }
 
       Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
-      if(mSipAuthDisabled && !wsCookieAuthSharedSecret.empty())
+      if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
       {
          SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
          mDum->addIncomingFeature(cookieAuth);
       }
 
       // If Authentication is enabled, then configure DUM to authenticate requests
-      if (!mSipAuthDisabled)
+      if (mAuthFactory->digestAuthEnabled())
       {
-         assert(mAuthRequestDispatcher);
-         SharedPtr<ServerAuthManager> 
-            uasAuth( new ReproServerAuthManager(*mDum,
-                                                mAuthRequestDispatcher,
-                                                mProxyConfig->getDataStore()->mAclStore,
-                                                !mProxyConfig->getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
-                                                mProxyConfig->getConfigBool("RejectBadNonces", false),
-                                                digestChallengeThirdParties));
-         mDum->setServerAuthManager(uasAuth);
+         mDum->setServerAuthManager(mAuthFactory->getServerAuthManager());
       }
 
       // Set the MessageFilterRuleList on DUM and create a thread to run DUM in
@@ -1557,67 +1536,6 @@ ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor>
    chain.addProcessor(processor);
 }
 
-void
-ReproRunner::loadCommonNameMappings()
-{
-   // Already loaded?
-   if(!mCommonNameMappings.empty())
-      return;
-
-   Data mappingsFileName = mProxyConfig->getConfigData("CommonNameMappings", "");
-   if(mappingsFileName.empty())
-      return;
-
-   InfoLog(<< "trying to load common name mappings from file: " << mappingsFileName);
-
-   ifstream mappingsFile(mappingsFileName.c_str());
-   if(!mappingsFile)
-   {
-      ErrLog(<< "failed to open mappings file: " << mappingsFileName << ", aborting");
-      throw std::runtime_error("Error opening/reading mappings file");
-   }
-
-   string sline;
-   while(getline(mappingsFile, sline))
-   {
-      Data line(sline);
-      Data cn;
-      PermittedFromAddresses permitted;
-      ParseBuffer pb(line);
-
-      pb.skipWhitespace();
-      const char * anchor = pb.position();
-      if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
-
-      // Look for end of name
-      pb.skipToOneOf("\t");
-      pb.data(cn, anchor);
-      pb.skipChar('\t');
-
-      while(!pb.eof())
-      {
-         pb.skipWhitespace();
-         if(pb.eof())
-            continue;
-
-         Data value;
-         anchor = pb.position();
-         pb.skipToOneOf(",\r\n ");
-         pb.data(value, anchor);
-         if(!value.empty())
-         {
-            StackLog(<< "Loading CN '" << cn << "', found mapping '" << value << "'");
-            permitted.insert(value);
-         }
-         if(!pb.eof())
-            pb.skipChar();
-      }
-
-      DebugLog(<< "Loaded mapping for CN '" << cn << "', " << permitted.size() << " mapping(s)");
-      mCommonNameMappings[cn] = permitted;
-   }
-}
-
 void  // Monkeys
 ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 {
@@ -1631,29 +1549,29 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
-   if(mProxyConfig->getConfigBool("EnableCertificateAuthenticator", false))
+   assert(mAuthFactory);
+   if(mAuthFactory->certificateAuthEnabled())
    {
       // TODO: perhaps this should be initialised from the trusted node
       // monkey?  Or should the list of trusted TLS peers be independent
       // from the trusted node list?
       // Should we used the same trustedPeers object that was
       // passed to TlsPeerAuthManager perhaps?
-      std::set<Data> trustedPeers;
-      loadCommonNameMappings();
-      addProcessor(chain, std::auto_ptr<Processor>(new CertificateAuthenticator(*mProxyConfig, mSipStack, trustedPeers, true, mCommonNameMappings)));
+      addProcessor(chain, std::auto_ptr<Processor>(mAuthFactory->getCertificateAuthenticator().get()));
+      mAuthFactory->getCertificateAuthenticator().reset();
    }
 
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
-   if(mSipAuthDisabled && !wsCookieAuthSharedSecret.empty())
+   if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
    {
       addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, mSipStack)));
    }
 
    // Add digest authenticator monkey - if required
-   if (!mSipAuthDisabled)
+   if (mAuthFactory->digestAuthEnabled())
    {
-      assert(mAuthRequestDispatcher);
-      DigestAuthenticator* da = new DigestAuthenticator(*mProxyConfig, mAuthRequestDispatcher);
+      Processor* da = mAuthFactory->getDigestAuthenticator().get();
+      mAuthFactory->getDigestAuthenticator().reset();
 
       addProcessor(chain, std::auto_ptr<Processor>(da)); 
    }
@@ -1693,7 +1611,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    // Add location server monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthRequestDispatcher)));
+   addProcessor(chain, std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthFactory->getDispatcher())));
 
    // Add message silo monkey
    if(mProxyConfig->getConfigBool("MessageSiloEnabled", false))

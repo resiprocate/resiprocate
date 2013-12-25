@@ -6,6 +6,7 @@
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include <memory>
 
+#include "repro/AuthenticatorFactory.hxx"
 #include "repro/Plugin.hxx"
 
 namespace resip
@@ -60,7 +61,7 @@ protected:
    virtual bool createProxy();
    virtual void populateRegistrations();
    virtual bool createWebAdmin();
-   virtual void createAuthRequestDespatcher();
+   virtual void createAuthenticatorFactory();
    virtual void createDialogUsageManager();
    virtual void createRegSync();
    virtual void createCommandServer();
@@ -73,15 +74,12 @@ protected:
    virtual void makeResponseProcessorChain(repro::ProcessorChain& chain);
    virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
 
-   virtual void loadCommonNameMappings();
-
    bool mRunning;
    bool mRestarting;
    int mArgc;
    char** mArgv;
    bool mThreadedStack;
    resip::Data mHttpRealm;
-   bool mSipAuthDisabled;
    bool mUseV4;
    bool mUseV6;
    int mRegSyncPort;
@@ -93,7 +91,7 @@ protected:
    AbstractDb* mAbstractDb;
    AbstractDb* mRuntimeAbstractDb;
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
-   Dispatcher* mAuthRequestDispatcher;
+   AuthenticatorFactory* mAuthFactory;
    Dispatcher* mAsyncProcessorDispatcher;
    ProcessorChain* mMonkeys;
    ProcessorChain* mLemurs;
@@ -112,7 +110,6 @@ protected:
    std::list<CommandServer*>* mCommandServerList;
    CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
-   resip::CommonNameMappings mCommonNameMappings;
    std::vector<Plugin*> mPlugins;
 };
 

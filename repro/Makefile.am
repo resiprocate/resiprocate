@@ -76,6 +76,7 @@ librepro_la_SOURCES = \
 	RegSyncServer.cxx \
 	RegSyncServerThread.cxx \
 	ReproRunner.cxx \
+	ReproAuthenticatorFactory.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
@@ -117,6 +118,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
         AsyncProcessor.hxx \
         AsyncProcessorMessage.hxx \
         AsyncProcessorWorker.hxx \
+	AuthenticatorFactory.hxx \
 	BerkeleyDb.hxx \
 	BasicWsConnectionValidator.hxx \
 	CommandServer.hxx \
@@ -160,6 +162,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	RegSyncServer.hxx \
 	RegSyncServerThread.hxx \
 	reproInfo.hxx \
+	ReproAuthenticatorFactory.hxx \
 	ReproServerAuthManager.hxx \
 	ReproRunner.hxx \
 	ReproVersion.hxx \
