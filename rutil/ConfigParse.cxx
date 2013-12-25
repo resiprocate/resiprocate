@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
+#include <sstream>
 #include <map>
 
 #include "rutil/ConfigParse.hxx"
@@ -110,7 +111,7 @@ ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
                pb.data(value, anchor);
 
                //cout << "Command line Name='" << name << "' value='" << value << "'" << endl;
-               insertConfigValue(mCmdLineConfigValues, name, value);
+               insertConfigValue("command line", mCmdLineConfigValues, name, value);
             }
             else
             {
@@ -182,7 +183,7 @@ ConfigParse::parseConfigFile(const Data& filename)
          pb.data(value, anchor);
       }
       //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-      insertConfigValue(mFileConfigValues, name, value);
+      insertConfigValue("config file", mFileConfigValues, name, value);
    }
 }
 
@@ -401,10 +402,17 @@ ConfigParse::getConfigValue(const resip::Data& name, std::set<resip::Data> &valu
 }
 
 void 
-ConfigParse::insertConfigValue(ConfigValuesMap& configValues, const resip::Data& name, const resip::Data& value)
+ConfigParse::insertConfigValue(const Data& source, ConfigValuesMap& configValues, const resip::Data& name, const resip::Data& value)
 {
    resip::Data lowerName(name);
    lowerName.lowercase();
+   if(configValues.find(lowerName) != configValues.end())
+   {
+      stringstream err_text;
+      err_text << "Duplicate configuration key " << name << " while parsing " << source;
+      Data err_data(err_text.str());
+      throw Exception(err_data, __FILE__, __LINE__);
+   }
    configValues.insert(ConfigValuesMap::value_type(lowerName, value));
 }
 
