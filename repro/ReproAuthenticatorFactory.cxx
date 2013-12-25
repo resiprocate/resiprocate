@@ -54,6 +54,11 @@ ReproAuthenticatorFactory::init()
 
    // TODO: should be implemented using AbstractDb
    loadCommonNameMappings();
+
+   if(mTrustedPeers.empty())
+   {
+      mProxyConfig.getConfigValue("TlsTrustedPeers", mTrustedPeers);
+   }
 }
 
 void
