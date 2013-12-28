@@ -444,7 +444,6 @@ ReproRunner::cleanupObjects()
 bool
 ReproRunner::loadPlugins()
 {
-   const Data& pluginDirectory = mProxyConfig->getConfigData("PluginDirectory", REPRO_DSO_PLUGIN_DIR_DEFAULT, true);
    std::vector<Data> pluginNames;
    mProxyConfig->getConfigValue("LoadPlugins", pluginNames);
 
@@ -454,6 +453,8 @@ ReproRunner::loadPlugins()
       DebugLog(<<"LoadPlugins not specified, not attempting to load any plugins");
       return true;
    }
+
+   const Data& pluginDirectory = mProxyConfig->getConfigData("PluginDirectory", REPRO_DSO_PLUGIN_DIR_DEFAULT, true);
    if(pluginDirectory.empty())
    {
       ErrLog(<<"LoadPlugins specified but PluginDirectory not specified, can't load plugins");
