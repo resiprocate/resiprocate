@@ -46,6 +46,9 @@ public:
       REFUSED 
    } AccountState;
 
+   resip::Data mSoftwareName;
+   bool mPadSoftwareName;
+
    unsigned short mTurnPort;
    unsigned short mTlsTurnPort;
    unsigned short mAltStunPort;  

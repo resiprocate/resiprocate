@@ -21,7 +21,6 @@ using namespace resip;
 namespace reTurn {
 
 // !slg! TODO these need to be made into settings
-#define SOFTWARE_STRING "reTURNServer 0.5 (RFC5389)  "  // Note padding size to a multiple of 4, to help compatibility with older clients
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
 RequestHandler::RequestHandler(TurnManager& turnManager,
@@ -142,9 +141,9 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationMa
       // Copy over TransactionId
       response.mHeader.magicCookieAndTid = request.mHeader.magicCookieAndTid;
 
-      if (1) // add Software name - could be a setting in the future
+      if (!getConfig().mSoftwareName.empty())
       {
-         response.setSoftware(SOFTWARE_STRING);
+         response.setSoftware(getConfig().mSoftwareName.c_str());
       }
 
       // If fingerprint is used in request, then use fingerprint in response

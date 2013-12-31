@@ -15,12 +15,20 @@
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
+#ifdef PACKAGE_VERSION
+#define SOFTWARE_STRING "reTURNServer " PACKAGE_VERSION " (RFC5389)"
+#else
+#define SOFTWARE_STRING "reTURNServer (RFC5389)"
+#endif
+
 using namespace std;
 using namespace resip;
 
 namespace reTurn {
 
 ReTurnConfig::ReTurnConfig() :
+   mSoftwareName(SOFTWARE_STRING),
+   mPadSoftwareName(true),
    mTurnPort(3478),
    mTlsTurnPort(5349),
    mAltStunPort(0), // Note:  The default is to disable RFC3489 binding support
@@ -57,6 +65,8 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
 {
    resip::ConfigParse::parseConfig(argc, argv, defaultConfigFilename);
 
+   mSoftwareName = getConfigData("SoftwareName", SOFTWARE_STRING);
+   mPadSoftwareName = getConfigBool("PadSoftwareName", true);
    mTurnPort = getConfigUnsignedShort("TurnPort", mTurnPort);
    mTlsTurnPort = getConfigUnsignedShort("TlsTurnPort", mTlsTurnPort);
    mAltStunPort = getConfigUnsignedShort("AltStunPort", mAltStunPort);
@@ -85,6 +95,15 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mPidFile = getConfigData("PidFile", mPidFile);
    mRunAsUser = getConfigData("RunAsUser", mRunAsUser);
    mRunAsGroup = getConfigData("RunAsGroup", mRunAsGroup);
+
+   if(mPadSoftwareName)
+   {
+      // padding size to a multiple of 4, to help compatibility with older clients
+      while(mSoftwareName.size() % 4)
+      {
+         mSoftwareName += ' ';
+      }
+   }
 
    // fork is not possible on Windows
 #ifdef WIN32
