@@ -647,6 +647,7 @@ ReproRunner::createSipStack()
    {
       InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionPrivateToPublicOnly);
    }
+   ConnectionManager::MinimumGcHeadroom = mProxyConfig->getConfigUnsignedLong("TCPMinimumGCHeadroom", 0);
    unsigned long tcpConnectionGCAge = mProxyConfig->getConfigUnsignedLong("TCPConnectionGCAge", 0);
    if(tcpConnectionGCAge > 0)
    {
