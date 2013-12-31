@@ -818,6 +818,15 @@ ReproRunner::createDialogUsageManager()
    {
        profile->allowBadRegistrationEnabled() = true;
    }
+#ifdef PACKAGE_VERSION
+   Data serverText(mProxyConfig->getConfigData("ServerText", "repro " PACKAGE_VERSION));
+#else
+   Data serverText(mProxyConfig->getConfigData("ServerText", ""));
+#endif
+   if(!serverText.empty())
+   {
+      profile->setUserAgent(serverText);
+   }
    
    // Create DialogeUsageManager if Registrar or Certificate Server are enabled
    assert(!mRegistrar);

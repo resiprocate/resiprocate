@@ -83,7 +83,11 @@ Proxy::Proxy(SipStack& stack,
      mRecordRouteForced(config.getConfigBool("ForceRecordRouting", false)),
      mAssumePath(config.getConfigBool("AssumePath", false)),
      mPAssertedIdentityProcessing(config.getConfigBool("EnablePAssertedIdentityProcessing", false)),
+#ifdef PACKAGE_VERSION
+     mServerText(config.getConfigData("ServerText", "repro " PACKAGE_VERSION)),
+#else
      mServerText(config.getConfigData("ServerText", "")),
+#endif
      mTimerC(config.getConfigInt("TimerC", 180)),
      mKeyValueStore(*Proxy::getGlobalKeyValueStoreKeyAllocator()),
      mRequestProcessorChain(requestP), 
