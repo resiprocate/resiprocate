@@ -198,7 +198,10 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       int err = getErrno();
       InfoLog (<< "Failed to create a socket " << strerror(err));
       error(err);
-      mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1); // free one up
+      if(mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1) == 0)
+      {
+         mConnectionManager.gcWithTarget(1); // free one up
+      }
 
       sock = InternalTransport::socket( TCP, ipVersion());
       if ( sock == INVALID_SOCKET )

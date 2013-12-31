@@ -2,6 +2,9 @@
 #include "config.h"
 #endif
 
+#include <sys/time.h>
+#include <sys/resource.h>
+
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
@@ -15,6 +18,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 UInt64 ConnectionManager::MinimumGcAge = 1;  // in milliseconds
+UInt64 ConnectionManager::MinimumGcHeadroom = 0;
 bool ConnectionManager::EnableAgressiveGc = false;
 
 ConnectionManager::ConnectionManager() : 
@@ -237,7 +241,7 @@ ConnectionManager::removeConnection(Connection* connection)
 }
 
 // release excessively old connections (free up file descriptors)
-void
+unsigned int
 ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
 {
    UInt64 curTimeMs = Timer::getTimeMs();
@@ -289,6 +293,78 @@ ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
          }
       }
    }
+
+   if(MinimumGcHeadroom > 0)
+   {
+#ifdef WIN32
+      DebugLog(<<"MinimumGcHeadroom not yet implemented on Windows (requires getrlimit())");
+#else
+      struct rlimit rlim;
+      if(getrlimit(RLIMIT_NOFILE, &rlim) != 0)
+      {
+         ErrLog(<<"Call to getrlimit() for RLIMIT_NOFILE failed: " << strerror(errno));
+      }
+      else
+      {
+         rlim_t& soft_limit = rlim.rlim_cur;
+         AddrMap::size_type conn_count = mAddrMap.size();
+         AddrMap::size_type headroom = soft_limit - conn_count;
+         DebugLog(<< "GC headroom check: soft_limit = " << soft_limit << ", managed connection count = " << conn_count << ", headroom = " << headroom << ", minimum headroom = " << MinimumGcHeadroom);
+         if(headroom < MinimumGcHeadroom)
+         {
+            WarningLog(<< "actual headroom = " << headroom << ", MinimumGcHeadroom = " << MinimumGcHeadroom << ", garbage collector making extra effort to reclaim file descriptors");
+            AddrMap::size_type mustRemove = MinimumGcHeadroom - headroom;
+            unsigned int remainder = gcWithTarget(mustRemove);
+            numRemoved += (mustRemove - remainder);
+            if(remainder > 0)
+            {
+               ErrLog(<< "No more stream connections to close, something else must be eating file descriptors, limit too low or MinimumGcHeadroom too high");
+            }
+         }
+      }
+#endif
+   }
+   return numRemoved;
+}
+
+unsigned int
+ConnectionManager::gcWithTarget(unsigned int target)
+{
+   ConnectionLruList::iterator i = mLRUHead->begin();
+   FlowTimerLruList::iterator i2 = mFlowTimerLRUHead->begin();
+   while(target > 0)
+   {
+      Connection* discard = 0;
+      if(i == mLRUHead->end())
+      {
+         if(i2 == mFlowTimerLRUHead->end())
+         {
+            WarningLog(<< "No more stream connections to close, remaining target = " << target);
+            return target;
+         }
+         discard = *i2;
+         ++i2;
+      }
+      else
+      {
+         if(i2 == mFlowTimerLRUHead->end() ||
+            (*i)->whenLastUsed() < (*i2)->whenLastUsed())
+         {
+                  discard = *i;
+                  ++i;
+         }
+         else
+         {
+                  discard = *i2;
+                  ++i2;
+         }
+      }
+      assert(discard);
+      WarningLog(<< "recycling LRU connection: " << discard << " " << discard->getSocket());
+      delete discard;
+      target--;
+   }
+   return target;
 }
 
 // move to youngest
