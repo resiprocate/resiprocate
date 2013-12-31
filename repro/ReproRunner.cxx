@@ -647,11 +647,21 @@ ReproRunner::createSipStack()
    {
       InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionPrivateToPublicOnly);
    }
+   unsigned long tcpConnectionGCAge = mProxyConfig->getConfigUnsignedLong("TCPConnectionGCAge", 0);
+   if(tcpConnectionGCAge > 0)
+   {
+      ConnectionManager::MinimumGcAge = tcpConnectionGCAge * 1000;
+      ConnectionManager::EnableAgressiveGc = true;
+   }
    unsigned long outboundFlowTimer = mProxyConfig->getConfigUnsignedLong("FlowTimer", 0);
    if(outboundFlowTimer > 0)
    {
       InteropHelper::setFlowTimerSeconds(outboundFlowTimer);
-      ConnectionManager::MinimumGcAge = 7200000; // Timeout connections not related to a flow timer after 2 hours - TODO make configurable
+      if(tcpConnectionGCAge == 0)
+      {
+         // This should be set too when using outboundFlowTimer
+         ConnectionManager::MinimumGcAge = 7200000;
+      }
       ConnectionManager::EnableAgressiveGc = true;
    }
 
