@@ -4,14 +4,20 @@
 #include <memory>
 #include <stdexcept>
 
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include "rutil/Logger.hxx"
 
 #include "ReproAuthenticatorFactory.hxx"
+#include "ReproRADIUSServerAuthManager.hxx"
 #include "ReproServerAuthManager.hxx"
 #include "UserAuthGrabber.hxx"
 #include "Worker.hxx"
 #include "monkeys/CertificateAuthenticator.hxx"
 #include "monkeys/DigestAuthenticator.hxx"
+#include "monkeys/RADIUSAuthenticator.hxx"
 
 using namespace std;
 using namespace resip;
@@ -25,6 +31,8 @@ ReproAuthenticatorFactory::ReproAuthenticatorFactory(ProxyConfig& proxyConfig, S
       mDum(dum),
       mEnableCertAuth(mProxyConfig.getConfigBool("EnableCertificateAuthenticator", false)),
       mEnableDigestAuth(!mProxyConfig.getConfigBool("DisableAuth", false)),
+      mEnableRADIUS(mProxyConfig.getConfigBool("EnableRADIUS", false)),
+      mRADIUSConfiguration(mProxyConfig.getConfigData("RADIUSConfiguration", "")),
       mDigestChallengeThirdParties(!mEnableCertAuth),
       mAuthRequestDispatcher(0),
       mCertificateAuthManager((DumFeature*)0),
@@ -150,12 +158,28 @@ ReproAuthenticatorFactory::getServerAuthManager()
    init();
    if(!mServerAuthManager.get())
    {
-      mServerAuthManager.reset(new ReproServerAuthManager(*mDum,
-                               getDispatcher(),
-                               mProxyConfig.getDataStore()->mAclStore,
-                               !mProxyConfig.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
-                               mProxyConfig.getConfigBool("RejectBadNonces", false),
-                               mDigestChallengeThirdParties));
+      if(mEnableRADIUS)
+      {
+#ifdef USE_RADIUS_CLIENT
+         mServerAuthManager.reset(new ReproRADIUSServerAuthManager(*mDum,
+                                  mProxyConfig.getDataStore()->mAclStore,
+                                  !mProxyConfig.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
+                                  mProxyConfig.getConfigBool("RejectBadNonces", false),
+                                  mRADIUSConfiguration,
+                                  mDigestChallengeThirdParties));
+#else
+         ErrLog(<<"can't create ReproRADIUSServerAuthManager, not compiled with RADIUS support");
+#endif
+      }
+      else
+      {
+         mServerAuthManager.reset(new ReproServerAuthManager(*mDum,
+                                  getDispatcher(),
+                                  mProxyConfig.getDataStore()->mAclStore,
+                                  !mProxyConfig.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
+                                  mProxyConfig.getConfigBool("RejectBadNonces", false),
+                                  mDigestChallengeThirdParties));
+      }
    }
    return mServerAuthManager;
 }
@@ -166,7 +190,18 @@ ReproAuthenticatorFactory::getDigestAuthenticator()
    init();
    if(!mDigestAuthenticator.get())
    {
-      mDigestAuthenticator.reset(new DigestAuthenticator(mProxyConfig, getDispatcher()));
+      if(mEnableRADIUS)
+      {
+#ifdef USE_RADIUS_CLIENT
+         mDigestAuthenticator.reset(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration));
+#else
+         ErrLog(<<"can't create RADIUSAuthenticator, not compiled with RADIUS support");
+#endif
+      }
+      else
+      {
+         mDigestAuthenticator.reset(new DigestAuthenticator(mProxyConfig, getDispatcher()));
+      }
    }
    return mDigestAuthenticator;
 }

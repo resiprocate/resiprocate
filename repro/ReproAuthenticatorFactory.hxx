@@ -4,6 +4,7 @@
 #include <memory>
 #include <set>
 
+#include "rutil/Data.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
@@ -43,6 +44,9 @@ private:
 
    bool mEnableCertAuth;
    bool mEnableDigestAuth;
+   bool mEnableRADIUS;
+
+   resip::Data mRADIUSConfiguration;
 
    // Maintains existing behavior for non-TLS cert auth users
    bool mDigestChallengeThirdParties;

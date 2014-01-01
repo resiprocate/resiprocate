@@ -77,6 +77,7 @@ librepro_la_SOURCES = \
 	RegSyncServerThread.cxx \
 	ReproRunner.cxx \
 	ReproAuthenticatorFactory.cxx \
+	ReproRADIUSServerAuthManager.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
@@ -101,6 +102,7 @@ librepro_la_SOURCES = \
 	monkeys/ConstantLocationMonkey.cxx \
 	monkeys/LocationServer.cxx \
 	monkeys/OutboundTargetHandler.cxx \
+	monkeys/RADIUSAuthenticator.cxx \
 	monkeys/RecursiveRedirect.cxx \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
@@ -139,6 +141,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	monkeys/LocationServer.hxx \
 	monkeys/OutboundTargetHandler.hxx \
 	monkeys/QValueTargetHandler.hxx \
+	monkeys/RADIUSAuthenticator.hxx \
 	monkeys/RecursiveRedirect.hxx \
 	monkeys/SimpleStaticRoute.hxx \
 	monkeys/SimpleTargetHandler.hxx \
@@ -163,6 +166,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	RegSyncServerThread.hxx \
 	reproInfo.hxx \
 	ReproAuthenticatorFactory.hxx \
+	ReproRADIUSServerAuthManager.hxx \
 	ReproServerAuthManager.hxx \
 	ReproRunner.hxx \
 	ReproVersion.hxx \
