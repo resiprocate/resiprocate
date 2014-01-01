@@ -22,8 +22,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-RADIUSServerAuthManager::RADIUSServerAuthManager(resip::DialogUsageManager& dum) :
-   ServerAuthManager(dum, dum.dumIncomingTarget()),
+RADIUSServerAuthManager::RADIUSServerAuthManager(
+                            resip::DialogUsageManager& dum,
+                            TargetCommand::Target& target,
+                            bool challengeThirdParties) :
+   ServerAuthManager(dum, target, challengeThirdParties),
    dum(dum)
 {
    RADIUSDigestAuthenticator::init(NULL);

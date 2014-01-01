@@ -20,7 +20,9 @@ class RADIUSServerAuthManager : public resip::ServerAuthManager
       resip::DialogUsageManager& dum;
 
    public:
-      RADIUSServerAuthManager(resip::DialogUsageManager& dum);
+      RADIUSServerAuthManager(resip::DialogUsageManager& dum,
+                              TargetCommand::Target& target,
+                              bool challengeThirdParties = true);
       virtual ~RADIUSServerAuthManager();
 
    protected:
