@@ -52,7 +52,7 @@ RADIUSServerAuthManager::requestCredential(
    try
    {
       radiusListener = new MyRADIUSDigestAuthListener(user, realm, dum, transactionId);
-      Data radiusUser(user + "@" + realm);
+      Data radiusUser = user;
       DebugLog(<< "radiusUser = " << radiusUser.c_str() << ", " << "user = " << user.c_str());
       Data reqUri("");
       Data reqMethod("");
