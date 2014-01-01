@@ -30,18 +30,6 @@ RADIUSServerAuthManager::RADIUSServerAuthManager(resip::DialogUsageManager& dum)
 RADIUSServerAuthManager::~RADIUSServerAuthManager() {
 }
 
-ServerAuthManager::AsyncBool RADIUSServerAuthManager::requiresChallenge(const SipMessage& msg) {
-
-  ostringstream s;
-  s << msg.header(h_RequestLine).uri(); 
-  DebugLog(<<"RADIUSServerAuthManager::requiresChallenge, uri = " << s.str().c_str());
-
-  // default behaviour is to challenge
-  ChallengeInfo *cmsg = new ChallengeInfo(false, true, msg.getTransactionId());
-  dum.post(cmsg);
-  return Async;
-}
-
 void RADIUSServerAuthManager::requestCredential(const resip::Data& user, const resip::Data& realm, const resip::SipMessage& msg, const resip::Auth& auth, const resip::Data& transactionId) {
 
   ostringstream s;
@@ -88,12 +76,6 @@ void RADIUSServerAuthManager::requestCredential(const resip::Data& user, const r
 }
 
 bool RADIUSServerAuthManager::useAuthInt() const {
-  return true;
-}
-
-bool RADIUSServerAuthManager::authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri) {
-  // Always returns true: in other words, any user can send any from URI
-  // or forge any CLI
   return true;
 }
 
