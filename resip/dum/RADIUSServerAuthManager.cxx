@@ -54,13 +54,11 @@ RADIUSServerAuthManager::requestCredential(
       radiusListener = new MyRADIUSDigestAuthListener(user, realm, dum, transactionId);
       Data radiusUser = user;
       DebugLog(<< "radiusUser = " << radiusUser.c_str() << ", " << "user = " << user.c_str());
-      Data reqUri("");
-      Data reqMethod("");
-      if(msg.isRequest())
-      {
-         reqUri = auth.param(p_uri);
-         reqMethod = Data(resip::getMethodName(msg.header(h_RequestLine).getMethod()));
-      }
+
+      assert(msg.isRequest());
+      Data reqUri = auth.param(p_uri);
+      Data reqMethod = Data(resip::getMethodName(msg.header(h_RequestLine).getMethod()));
+
       RADIUSDigestAuthenticator *radius = NULL;
       if(auth.exists(p_qop))
       {
