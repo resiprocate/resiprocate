@@ -4,6 +4,7 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "repro/Proxy.hxx"
 #include "repro/monkeys/CertificateAuthenticator.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
@@ -22,7 +23,7 @@ using namespace std;
 StaticRoute::StaticRoute(ProxyConfig& config) :
    Processor("StaticRoute"),
    mRouteStore(config.getDataStore()->mRouteStore),
-   mNoChallenge(config.getConfigBool("DisableAuth", false)),
+   mNoChallenge(config.getConfigBool("DisableAuth", false) || !config.getConfigBool("ChallengeThirdPartiesCallingLocalDomains", true)),
    mParallelForkStaticRoutes(config.getConfigBool("ParallelForkStaticRoutes", false)),
    mContinueProcessingAfterRoutesFound(config.getConfigBool("ContinueProcessingAfterRoutesFound", false)),
    mUseAuthInt(!config.getConfigBool("DisableAuthInt", false))
@@ -36,6 +37,7 @@ StaticRoute::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
+   Proxy &proxy = context.getProxy();
    
    SipMessage& msg = context.getOriginalRequest();
    
@@ -51,23 +53,36 @@ StaticRoute::process(RequestContext& context)
                                                     method,
                                                     event));
    bool requireAuth = false;
+   bool externalTarget = false;
    if(!context.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey) && 
       msg.method() != ACK &&  // Don't challenge ACK and BYE requests
       msg.method() != BYE)
    {
       requireAuth = !mNoChallenge;
-      //for ( RouteStore::UriList::const_iterator i = targets.begin();
-      //      i != targets.end(); i++ )
-      //{      
-         // !rwm! TODO would be useful to check if these targets require authentication
-         // but for know we will just fail safe and assume that all routes require auth
-         // if the sender is not trusted
-      //   requireAuth |= !mNoChallenge;
-      //}
+      for ( RouteStore::UriList::const_iterator i = targets.begin();
+            i != targets.end(); i++ )
+      {
+         const Data& targetDomain = i->host(); 
+         if(!proxy.isMyDomain(targetDomain))
+         {
+            DebugLog(<<"target domain " << targetDomain << " is not local");
+            externalTarget = true;
+            requireAuth |= !mNoChallenge;
+         }
+      }
    }
 
-   if (requireAuth && context.getDigestIdentity().empty() &&
-      !context.getKeyValueStore().getBoolValue(CertificateAuthenticator::mCertificateVerifiedKey))
+   // Allow third-parties verified by their domain certificate, just as long
+   // as they don't try to use us as a relay to external targets
+   // not in our local domain list
+   if(context.getKeyValueStore().getBoolValue(CertificateAuthenticator::mCertificateVerifiedKey)
+      && !externalTarget && requireAuth)
+   {
+      DebugLog(<< "overriding requireAuth because certificate validation succeeded and no targets are external");
+      requireAuth = false;
+   }
+
+   if (requireAuth && context.getDigestIdentity().empty())
    {
       // !rwm! TODO do we need anything more sophisticated to figure out the realm?
       Data realm = msg.header(h_RequestLine).uri().host();
