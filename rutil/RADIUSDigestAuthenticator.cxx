@@ -56,7 +56,10 @@ RADIUSDigestAuthListener::~RADIUSDigestAuthListener() {
 void RADIUSDigestAuthenticator::init(const char *radiusConfigFile)
 {
    if(attrs != NULL)
-      throw; // may only be called once
+   {
+      WarningLog(<<"invoked more than once, ignoring");
+      return;
+   }
 
    if((attrs = (struct attr *)malloc(sizeof(struct attr) * A_MAX)) == NULL)
    {
