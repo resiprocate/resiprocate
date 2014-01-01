@@ -25,11 +25,13 @@ using namespace std;
 RADIUSServerAuthManager::RADIUSServerAuthManager(
                             resip::DialogUsageManager& dum,
                             TargetCommand::Target& target,
+                            const Data& configurationFile,
                             bool challengeThirdParties) :
    ServerAuthManager(dum, target, challengeThirdParties),
    dum(dum)
 {
-   RADIUSDigestAuthenticator::init(NULL);
+   RADIUSDigestAuthenticator::init(
+      configurationFile.empty() ? 0 : configurationFile.c_str());
 }
 
 RADIUSServerAuthManager::~RADIUSServerAuthManager()
