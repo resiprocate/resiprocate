@@ -22,10 +22,10 @@ namespace repro
       virtual processor_action_t process(RequestContext &);
 
     protected:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      resip::NameAddr getDefaultIdentity(const resip::Data &user, const resip::Data &realm, resip::NameAddr &from);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
+      virtual bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
+      virtual resip::NameAddr getDefaultIdentity(const resip::Data &user, const resip::Data &realm, resip::NameAddr &from);
+      virtual void challengeRequest(RequestContext &, bool stale = false);
+      virtual processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
       virtual resip::Data getRealm(RequestContext &);
       
     private:
