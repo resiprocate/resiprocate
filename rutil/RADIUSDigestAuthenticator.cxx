@@ -248,9 +248,13 @@ void RADIUSDigestAuthenticator::thread()
       rc_avpair_free(vp_s_start);
       rc_avpair_free(vp_r_start);
       if(i == REJECT_RC)
-      listener->onAccessDenied();
+      {
+         listener->onAccessDenied();
+      }
       else
-      listener->onError();
+      {
+         listener->onError();
+      }
    }
    delete listener;
    DebugLog(<<"RADIUSDigestAuthenticator::thread() exiting");
@@ -356,9 +360,13 @@ void TestRADIUSDigestAuthListener::onSuccess(const resip::Data& rpid)
 {
    DebugLog(<<"TestRADIUSDigestAuthListener::onSuccess");
    if(!rpid.empty())
-   DebugLog(<<"TestRADIUSDigestAuthListener::onSuccess rpid = " << rpid);
+   {
+      DebugLog(<<"TestRADIUSDigestAuthListener::onSuccess rpid = " << rpid);
+   }
    else
-   DebugLog(<<"TestRADIUSDigestAuthListener::onSuccess, no rpid");
+   {
+      DebugLog(<<"TestRADIUSDigestAuthListener::onSuccess, no rpid");
+   }
 }
 
 void TestRADIUSDigestAuthListener::onAccessDenied()
