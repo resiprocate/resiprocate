@@ -243,7 +243,8 @@ void RADIUSDigestAuthenticator::thread()
    }
    else
    {
-      DebugLog(<<"rc_auth failure for " << username.c_str());
+      DebugLog(<<"rc_auth failure for " << username.c_str()
+               <<", code = " << i);
       rc_avpair_free(vp_s_start);
       rc_avpair_free(vp_r_start);
       if(i == BADRESP_RC)
