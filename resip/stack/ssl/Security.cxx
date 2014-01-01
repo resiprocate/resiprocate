@@ -1117,7 +1117,7 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 void
 BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
 {
-   addCertPEM(DomainCert, domainName, certPEM, true);
+   addCertPEM(DomainCert, domainName, certPEM, false);
 }
 
 
