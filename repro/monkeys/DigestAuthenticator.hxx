@@ -21,13 +21,14 @@ namespace repro
 
       virtual processor_action_t process(RequestContext &);
 
-    private:
+    protected:
       bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
       resip::NameAddr getDefaultIdentity(const resip::Data &user, const resip::Data &realm, resip::NameAddr &from);
       void challengeRequest(RequestContext &, bool stale = false);
       processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
       virtual resip::Data getRealm(RequestContext &);
       
+    private:
       Dispatcher* mAuthRequestDispatcher;
       bool mNoIdentityHeaders;
       resip::Data mHttpHostname;  // Used in identity headers
