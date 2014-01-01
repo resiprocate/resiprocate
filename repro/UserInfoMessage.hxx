@@ -1,6 +1,7 @@
 #ifndef USER_INFO_MESSAGE_HXX
 #define USER_INFO_MESSAGE_HXX 1
 
+#include "resip/dum/UserAuthInfo.hxx"
 #include "repro/ProcessorMessage.hxx"
 #include "repro/AbstractDb.hxx"
 
@@ -13,7 +14,8 @@ class UserInfoMessage : public ProcessorMessage
       UserInfoMessage(Processor& proc,
                      const resip::Data& tid,
                      resip::TransactionUser* passedtu):
-         ProcessorMessage(proc,tid,passedtu)
+         ProcessorMessage(proc,tid,passedtu),
+         mMode(resip::UserAuthInfo::Error)
       {
       }
       
@@ -34,6 +36,9 @@ class UserInfoMessage : public ProcessorMessage
       
       const resip::Data& A1() const{return mRec.passwordHash;}
       resip::Data& A1(){return mRec.passwordHash;}
+
+      resip::UserAuthInfo::InfoMode getMode() const { return mMode; }
+      void setMode(const resip::UserAuthInfo::InfoMode m) { mMode = m; }
       
       virtual UserInfoMessage* clone() const {return new UserInfoMessage(*this);};
 
@@ -41,6 +46,7 @@ class UserInfoMessage : public ProcessorMessage
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
       
       AbstractDb::UserRecord mRec;
+      resip::UserAuthInfo::InfoMode mMode;
 };
 
 }

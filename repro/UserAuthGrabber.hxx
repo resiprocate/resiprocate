@@ -30,6 +30,7 @@ class UserAuthGrabber : public Worker
          if(uinf)
          {
             uinf->mRec.passwordHash = mUserStore.getUserAuthInfo(uinf->user(), uinf->realm());
+            uinf->setMode(resip::UserAuthInfo::RetrievedA1);
             DebugLog(<<"Grabbed user info for " 
                            << uinf->user() <<"@"<<uinf->realm()
                            << " : " << uinf->A1());

@@ -107,16 +107,51 @@ DigestAuthenticator::process(repro::RequestContext &rc)
    {
       // Handle response from user authentication database
       sipMessage = &rc.getOriginalRequest();
-      const Data& a1 = userInfo->A1();
       const Data& realm = userInfo->realm();
       const Data& user = userInfo->user();
-      InfoLog (<< "Received user auth info for " << user << " at realm " << realm 
-               <<  " a1 is " << a1);
+      InfoLog (<< "Received user auth info for " << user << " at realm " << realm);
+      Helper::AuthResult authResult = Helper::Failed;
+      switch(userInfo->getMode())
+      {
+         case UserAuthInfo::UserUnknown:
+            authResult = Helper::Failed;
+            break;
 
-      pair<Helper::AuthResult,Data> result =
-         Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
+         case UserAuthInfo::RetrievedA1:
+            {
+               const Data& a1 = userInfo->A1();
+               StackLog (<< "Received user auth info for " << user << " at realm " << realm 
+                         <<  " a1 is " << a1);
 
-      switch (result.first)
+               pair<Helper::AuthResult,Data> result =
+                  Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
+               authResult = result.first;
+            }
+            break;
+
+         case UserAuthInfo::Stale:
+            authResult = Helper::Expired;
+            break;
+
+         case UserAuthInfo::DigestAccepted:
+            authResult = Helper::Authenticated;
+            break;
+
+         case UserAuthInfo::DigestNotAccepted:
+            authResult = Helper::Failed;
+            break;
+
+         case UserAuthInfo::Error:
+            authResult = Helper::Failed;
+            WarningLog(<<"UserInfoMessage mode == ERROR");
+            break;
+
+         default:
+            authResult = Helper::Failed;
+            ErrLog(<<"Unrecognised UserInfoMessage mode value: " << userInfo->getMode());
+      }
+
+      switch (authResult)
       {
          case Helper::Failed:
             InfoLog (<< "Authentication failed for " << user << " at realm " << realm << ". Sending 403");
