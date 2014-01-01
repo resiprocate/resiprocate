@@ -44,9 +44,7 @@ RADIUSServerAuthManager::requestCredential(
    const resip::Auth& auth,
    const resip::Data& transactionId)
 {
-   ostringstream s;
-   s << msg.header(h_RequestLine).uri();
-   DebugLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << s << " authUser = " << user);
+   DebugLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << msg.header(h_RequestLine).uri() << " authUser = " << user);
 
    MyRADIUSDigestAuthListener *radiusListener = NULL;
    try
@@ -95,12 +93,12 @@ RADIUSServerAuthManager::requestCredential(
       int result = radius->doRADIUSCheck(); 
       if(result < 0)
       {
-         ErrLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << s <<" failed to start thread, error = " << result);
+         ErrLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << msg.header(h_RequestLine).uri() <<" failed to start thread, error = " << result);
       }
    }
    catch(...)
    {
-      WarningLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << s <<" exception");
+      WarningLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << msg.header(h_RequestLine).uri() <<" exception");
       delete radiusListener;
    }
 }
