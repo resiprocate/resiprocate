@@ -247,7 +247,7 @@ void RADIUSDigestAuthenticator::thread()
                <<", code = " << i);
       rc_avpair_free(vp_s_start);
       rc_avpair_free(vp_r_start);
-      if(i == BADRESP_RC)
+      if(i == REJECT_RC)
       listener->onAccessDenied();
       else
       listener->onError();
