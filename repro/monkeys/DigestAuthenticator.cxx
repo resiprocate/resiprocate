@@ -397,15 +397,22 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
       {
          async->domain()=realm;
       }
-      std::auto_ptr<ApplicationMessage> app(async);
-      mAuthRequestDispatcher->post(app);
-      return WaitingForEvent;
+      Auth& auth = *i;
+      return requestUserAuthInfo(rc, auth, async);
    }
    else
    {
       challengeRequest(rc, false);
       return SkipAllChains;
    }
+}
+
+Processor::processor_action_t
+DigestAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, UserInfoMessage *userInfo)
+{
+   std::auto_ptr<ApplicationMessage> app(userInfo);
+   mAuthRequestDispatcher->post(app);
+   return WaitingForEvent;
 }
 
 resip::Data

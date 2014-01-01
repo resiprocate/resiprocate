@@ -2,9 +2,11 @@
 #define RESIP_DIGEST_AUTHENTICATOR_HXX 
 
 #include "rutil/Data.hxx"
+#include "resip/stack/Auth.hxx"
 #include "repro/Processor.hxx"
 #include "repro/Dispatcher.hxx"
 #include "repro/ProxyConfig.hxx"
+#include "repro/UserInfoMessage.hxx"
 
 namespace resip
 {
@@ -26,6 +28,7 @@ namespace repro
       virtual resip::NameAddr getDefaultIdentity(const resip::Data &user, const resip::Data &realm, resip::NameAddr &from);
       virtual void challengeRequest(RequestContext &, bool stale = false);
       virtual processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
+      virtual processor_action_t requestUserAuthInfo(RequestContext &, const resip::Auth& auth, UserInfoMessage *userInfo);
       virtual resip::Data getRealm(RequestContext &);
       
     private:
