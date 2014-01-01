@@ -14,36 +14,39 @@
 namespace resip
 {
 
-class RADIUSServerAuthManager : public resip::ServerAuthManager {
+class RADIUSServerAuthManager : public resip::ServerAuthManager
+{
+   private:
+      resip::DialogUsageManager& dum;
 
-private:
-  resip::DialogUsageManager& dum;
+   public:
+      RADIUSServerAuthManager(resip::DialogUsageManager& dum);
+      virtual ~RADIUSServerAuthManager();
 
-public:
-  RADIUSServerAuthManager(resip::DialogUsageManager& dum);
-  virtual ~RADIUSServerAuthManager();
+   protected:
+      void requestCredential(const resip::Data& user, const resip::Data& realm,
+         const resip::SipMessage& msg, const resip::Auth& auth,
+         const resip::Data& transactionId);
+      bool useAuthInt() const;
 
-protected:
-  void requestCredential(const resip::Data& user, const resip::Data& realm, const resip::SipMessage& msg, const resip::Auth& auth, const resip::Data& transactionId);
-  bool useAuthInt() const;
-
-  void onAuthSuccess(const resip::SipMessage& msg);
-  void onAuthFailure(resip::ServerAuthManager::AuthFailureReason reason, const resip::SipMessage& msg);
-
+      void onAuthSuccess(const resip::SipMessage& msg);
+      void onAuthFailure(resip::ServerAuthManager::AuthFailureReason reason, const resip::SipMessage& msg);
 };
 
-class MyRADIUSDigestAuthListener : public RADIUSDigestAuthListener {
-private:
-  resip::Data user;
-  resip::Data realm;
-  resip::TransactionUser& tu;
-  resip::Data transactionId;
-public:
-  MyRADIUSDigestAuthListener(const resip::Data& user, const resip::Data& realm, resip::TransactionUser& tu, const resip::Data& transactionId);
-  virtual ~MyRADIUSDigestAuthListener();
-  void onSuccess(const resip::Data& rpid);
-  void onAccessDenied();
-  void onError();
+class MyRADIUSDigestAuthListener : public RADIUSDigestAuthListener
+{
+   private:
+      resip::Data user;
+      resip::Data realm;
+      resip::TransactionUser& tu;
+      resip::Data transactionId;
+   public:
+      MyRADIUSDigestAuthListener(const resip::Data& user, const resip::Data& realm,
+         resip::TransactionUser& tu, const resip::Data& transactionId);
+      virtual ~MyRADIUSDigestAuthListener();
+      void onSuccess(const resip::Data& rpid);
+      void onAccessDenied();
+      void onError();
 };
 
 }
