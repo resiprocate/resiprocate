@@ -521,6 +521,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ReproAuthenticatorFactory.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ReproServerAuthManager.cxx"
 				>
 			</File>
@@ -628,6 +632,10 @@
 			</File>
 			<File
 				RelativePath=".\AsyncProcessorWorker.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AuthenticatorFactory.hxx"
 				>
 			</File>
 			<File
@@ -760,6 +768,10 @@
 			</File>
 			<File
 				RelativePath=".\RegSyncServerThread.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ReproAuthenticatorFactory.hxx"
 				>
 			</File>
 			<File
