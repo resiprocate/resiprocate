@@ -175,14 +175,15 @@ DtlsTransport::_read( FdSet& fdset )
    if (len == 0 || len == SOCKET_ERROR)
    {
       delete [] buffer ;
-      buffer = 0 ;
+      delete [] pt;
       return ;
    }
 
    if ( len + 1 >= UdpTransport::MaxBufferSize )
    {
       InfoLog (<<"Datagram exceeded max length "<<UdpTransport::MaxBufferSize ) ;
-      delete [] buffer ; buffer = 0 ;
+      delete [] buffer ; 
+      delete [] pt;
       return ;
    }
 
@@ -287,10 +288,14 @@ DtlsTransport::_read( FdSet& fdset )
    }
 
    if ( len <= 0 )
+   {
        return ;
+   }
 
    if ( SSL_in_init( ssl ) )
+   {
       mTimer.add( ssl, DtlsReceiveTimeout ) ;
+   }
 
 #ifdef USE_SIGCOMP
    osc::StateChanges *sc = 0;
