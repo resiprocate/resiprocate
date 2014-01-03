@@ -656,6 +656,7 @@
     <ClInclude Include="WsConnectionBase.hxx" />
     <ClInclude Include="WsConnectionValidator.hxx" />
     <ClInclude Include="WsCookieContext.hxx" />
+    <ClInclude Include="WsCookieContextFactory.hxx" />
     <ClInclude Include="WsDecorator.hxx" />
     <ClInclude Include="WsFrameExtractor.hxx" />
     <ClInclude Include="WsTransport.hxx" />

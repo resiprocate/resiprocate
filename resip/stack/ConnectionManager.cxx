@@ -2,8 +2,10 @@
 #include "config.h"
 #endif
 
+#ifndef WIN32
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/stack/InteropHelper.hxx"

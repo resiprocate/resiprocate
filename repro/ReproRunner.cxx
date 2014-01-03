@@ -1264,7 +1264,9 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
    tu.addDomain("127.0.0.1"); */
 
    if( realm.empty() )
+   {
       realm = "Unconfigured";
+   }
 
    return realm;
 }
