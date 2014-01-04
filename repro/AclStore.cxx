@@ -541,11 +541,7 @@ AclStore::isRequestTrusted(const SipMessage& request)
 #ifdef USE_SSL
    if(isSecure(receivedTransport))
    {
-      const std::list<Data>& tlsPeerNames = request.getTlsPeerNames();
-      if(!tlsPeerNames.empty() && isTlsPeerNameTrusted(tlsPeerNames))
-      {
-         trusted = true;
-      }
+      StackLog(<<"Not checking the TLS peer certificate names, that is now done by CertificateAuthenticator if enabled");
    }
 #endif
 

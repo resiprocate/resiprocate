@@ -10,6 +10,7 @@
 
 #include "rutil/Logger.hxx"
 
+#include "AclStore.hxx"
 #include "ReproAuthenticatorFactory.hxx"
 #include "ReproRADIUSServerAuthManager.hxx"
 #include "ReproServerAuthManager.hxx"
@@ -65,7 +66,25 @@ ReproAuthenticatorFactory::init()
 
    if(mTrustedPeers.empty())
    {
+      // First we read any trusted peers defined in repro.config
       mProxyConfig.getConfigValue("TlsTrustedPeers", mTrustedPeers);
+
+      // Then we add any from the ACL store
+      // We could modify CertificateAuthenticator to look these
+      // up at runtime using the AclStore API, but
+      // that is not possible for the dum/TlsPeerAuthManager as
+      // AclStore is only in repro.
+      // For realtime lookups, we would need to subclass dum/TlsPeerAuthManager
+      // or extend the API in dum
+      Store *db = mProxyConfig.getDataStore();
+      assert(db);
+      AclStore& aclStore = db->mAclStore;
+      AclStore::Key k = aclStore.getFirstTlsPeerNameKey();
+      while(!k.empty())
+      {
+         mTrustedPeers.insert(aclStore.getTlsPeerName(k));
+         k = aclStore.getNextTlsPeerNameKey(k);
+      }
    }
 }
 

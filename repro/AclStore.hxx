@@ -4,6 +4,7 @@
 #include <list>
 #include "rutil/Data.hxx"
 #include "rutil/RWMutex.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "repro/AbstractDb.hxx"
 
