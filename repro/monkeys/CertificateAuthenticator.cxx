@@ -160,6 +160,8 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
       if(mTrustedPeers.find(i) != mTrustedPeers.end())
       {
          DebugLog(<< "Matched certificate name " << i << " is a trusted peer, not checking against From URI");
+         // Simulate the behavior of IsTrustedNode monkey:
+         context.getKeyValueStore().setBoolValue(IsTrustedNode::mFromTrustedNodeKey, true);
          return true;
       }
       if(i == aor)
