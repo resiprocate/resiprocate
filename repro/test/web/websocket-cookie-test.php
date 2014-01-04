@@ -25,7 +25,7 @@
     $sip_to = $_POST['sip_to'];
     $hmac_key = $_POST['hmac_key'];
     $time_limit = $_POST['time_limit'];
-    $cookie_value = time() . ':' . $time_limit . ':' . $sip_from . ':' . $sip_to;
+    $cookie_value = '1:' . time() . ':' . $time_limit . ':' . $sip_from . ':' . $sip_to;
     $digest_input = $cookie_value . ':';
     $cookie_mac = hash_hmac ( 'sha1', $digest_input, $hmac_key);
     $cookie_suffix = '; Domain='.$proxy_domain.'; Path=/';
