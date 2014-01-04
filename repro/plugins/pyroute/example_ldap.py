@@ -8,10 +8,6 @@
 
 # Debian users: please install the package python-ldap
 
-# Please note that the Python LDAP module may not load unless
-# the REPRO_PYROUTE_DLOPEN_PYTHON hack is enabled in PyRoutePlugin.cxx
-# at compile time
-
 import resip
 import ldap
 from urlparse import urlparse
