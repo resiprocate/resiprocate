@@ -28,7 +28,6 @@
     $cookie_value = '1:' . time() . ':' . $time_limit . ':' . $sip_from . ':' . $sip_to;
     $digest_input = $cookie_value . ':';
     $cookie_mac = hash_hmac ( 'sha1', $digest_input, $hmac_key);
-    $cookie_suffix = '; Domain='.$proxy_domain.'; Path=/';
     // not sure why setcookie didn't work, we use setrawcookie instead:
     setrawcookie("WSSessionInfo", urlencode($cookie_value), $time_limit, '/', $proxy_domain);
     setrawcookie("WSSessionMAC", $cookie_mac, $time_limit, '/', $proxy_domain);
