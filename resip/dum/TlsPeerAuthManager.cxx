@@ -14,14 +14,14 @@
 using namespace resip;
 using namespace std;
 
-TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate) :
+TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, const std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate) :
    DumFeature(dum, target),
    mTrustedPeers(trustedPeers),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate)
 {
 }
 
-TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate, CommonNameMappings& commonNameMappings) :
+TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, const std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate, CommonNameMappings& commonNameMappings) :
    DumFeature(dum, target),
    mTrustedPeers(trustedPeers),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
