@@ -30,7 +30,7 @@ namespace repro
       virtual void dump(EncodeStream &os) const;
 
     private:
-      bool authorizedForThisIdentity(const std::list<resip::Data>& peerNames, resip::Uri &fromUri);
+      bool authorizedForThisIdentity(RequestContext& context, const std::list<resip::Data>& peerNames, resip::Uri &fromUri);
 
       std::set<resip::Data> mTrustedPeers;
       bool mThirdPartyRequiresCertificate;
