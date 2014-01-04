@@ -528,6 +528,10 @@
 				RelativePath=".\ReproServerAuthManager.cxx"
 				>
 			</File>
+                        <File
+                                RelativePath=".\ReproTlsPeerAuthManager.cxx"
+                                >
+                        </File>
 			<File
 				RelativePath=".\RequestContext.cxx"
 				>
@@ -786,6 +790,10 @@
 				RelativePath=".\ReproServerAuthManager.hxx"
 				>
 			</File>
+                        <File
+                                RelativePath=".\ReproTlsPeerAuthManager.hxx"
+                                >
+                        </File>
 			<File
 				RelativePath=".\RequestContext.hxx"
 				>
