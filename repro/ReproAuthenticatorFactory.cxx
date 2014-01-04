@@ -14,6 +14,7 @@
 #include "ReproAuthenticatorFactory.hxx"
 #include "ReproRADIUSServerAuthManager.hxx"
 #include "ReproServerAuthManager.hxx"
+#include "ReproTlsPeerAuthManager.hxx"
 #include "UserAuthGrabber.hxx"
 #include "Worker.hxx"
 #include "monkeys/CertificateAuthenticator.hxx"
@@ -63,29 +64,6 @@ ReproAuthenticatorFactory::init()
 
    // TODO: should be implemented using AbstractDb
    loadCommonNameMappings();
-
-   if(mTrustedPeers.empty())
-   {
-      // First we read any trusted peers defined in repro.config
-      mProxyConfig.getConfigValue("TlsTrustedPeers", mTrustedPeers);
-
-      // Then we add any from the ACL store
-      // We could modify CertificateAuthenticator to look these
-      // up at runtime using the AclStore API, but
-      // that is not possible for the dum/TlsPeerAuthManager as
-      // AclStore is only in repro.
-      // For realtime lookups, we would need to subclass dum/TlsPeerAuthManager
-      // or extend the API in dum
-      Store *db = mProxyConfig.getDataStore();
-      assert(db);
-      AclStore& aclStore = db->mAclStore;
-      AclStore::Key k = aclStore.getFirstTlsPeerNameKey();
-      while(!k.empty())
-      {
-         mTrustedPeers.insert(aclStore.getTlsPeerName(k));
-         k = aclStore.getNextTlsPeerNameKey(k);
-      }
-   }
 }
 
 void
@@ -155,7 +133,10 @@ ReproAuthenticatorFactory::getCertificateAuthManager()
    init();
    if(!mCertificateAuthManager.get())
    {
-      mCertificateAuthManager.reset(new TlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), mTrustedPeers, true, mCommonNameMappings));
+      Store *db = mProxyConfig.getDataStore();
+      assert(db);
+      AclStore& aclStore = db->mAclStore;
+      mCertificateAuthManager.reset(new ReproTlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), aclStore, true, mCommonNameMappings));
    }
    return mCertificateAuthManager;
 }
@@ -166,7 +147,10 @@ ReproAuthenticatorFactory::getCertificateAuthenticator()
    init();
    if(!mCertificateAuthenticator.get())
    {
-      mCertificateAuthenticator.reset(new CertificateAuthenticator(mProxyConfig, &mSipStack, mTrustedPeers, true, mCommonNameMappings));
+      Store *db = mProxyConfig.getDataStore();
+      assert(db);
+      AclStore& aclStore = db->mAclStore;
+      mCertificateAuthenticator.reset(new CertificateAuthenticator(mProxyConfig, &mSipStack, aclStore, true, mCommonNameMappings));
    }
    return mCertificateAuthenticator;
 }

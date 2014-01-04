@@ -79,6 +79,7 @@ librepro_la_SOURCES = \
 	ReproAuthenticatorFactory.cxx \
 	ReproRADIUSServerAuthManager.cxx \
 	ReproServerAuthManager.cxx \
+	ReproTlsPeerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
 	RRDecorator.cxx \
@@ -168,6 +169,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	ReproAuthenticatorFactory.hxx \
 	ReproRADIUSServerAuthManager.hxx \
 	ReproServerAuthManager.hxx \
+	ReproTlsPeerAuthManager.hxx \
 	ReproRunner.hxx \
 	ReproVersion.hxx \
 	RequestContext.hxx \

@@ -32,21 +32,21 @@ KeyValueStore::Key CertificateAuthenticator::mCertificateVerifiedKey = Proxy::al
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
                                                    resip::SipStack* stack,
-                                                   std::set<Data>& trustedPeers,
+                                                   AclStore& aclStore,
                                                    bool thirdPartyRequiresCertificate) :
    Processor("CertificateAuthenticator"),
-   mTrustedPeers(trustedPeers),
+   mAclStore(aclStore),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate)
 {
 }
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
                                                    resip::SipStack* stack,
-                                                   std::set<Data>& trustedPeers,
+                                                   AclStore& aclStore,
                                                    bool thirdPartyRequiresCertificate,
                                                    CommonNameMappings& commonNameMappings) :
    Processor("CertificateAuthenticator"),
-   mTrustedPeers(trustedPeers),
+   mAclStore(aclStore),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
    mCommonNameMappings(commonNameMappings)
 {
@@ -153,17 +153,18 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
    Data aor = fromUri.getAorNoPort();
    Data domain = fromUri.host();
 
+   if(mAclStore.isTlsPeerNameTrusted(peerNames))
+   {
+      DebugLog(<< "Matched trusted peer by certificate in ACL, not checking against From URI");
+      // Simulate the behavior of IsTrustedNode monkey:
+      context.getKeyValueStore().setBoolValue(IsTrustedNode::mFromTrustedNodeKey, true);
+      return true;
+   }
+
    std::list<Data>::const_iterator it = peerNames.begin();
    for(; it != peerNames.end(); ++it)
    {
       const Data& i = *it;
-      if(mTrustedPeers.find(i) != mTrustedPeers.end())
-      {
-         DebugLog(<< "Matched certificate name " << i << " is a trusted peer, not checking against From URI");
-         // Simulate the behavior of IsTrustedNode monkey:
-         context.getKeyValueStore().setBoolValue(IsTrustedNode::mFromTrustedNodeKey, true);
-         return true;
-      }
       if(i == aor)
       {
          DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor);

@@ -51,7 +51,6 @@ private:
    // Maintains existing behavior for non-TLS cert auth users
    bool mDigestChallengeThirdParties;
 
-   std::set<resip::Data> mTrustedPeers;
    resip::CommonNameMappings mCommonNameMappings;
 
    std::auto_ptr<Dispatcher> mAuthRequestDispatcher;
