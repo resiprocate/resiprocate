@@ -138,6 +138,7 @@ protected:
    InterruptableStackThread* mStackThread;
    DialogUsageManager* mDum;
    volatile bool mDumShutdownRequested;
+   bool mShuttingdown;
    bool mDumShutdown;
    ClientRegistrationHandle mRegHandle;
    ClientSubscriptionHandle mClientSubscriptionHandle;

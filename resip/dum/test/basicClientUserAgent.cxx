@@ -123,6 +123,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mStackThread(new InterruptableStackThread(*mStack, *mSelectInterruptor)),
    mDum(new DialogUsageManager(*mStack)),
    mDumShutdownRequested(false),
+   mShuttingdown(false),
    mDumShutdown(false),
    mRegistrationRetryDelayTime(0),
    mCurrentNotifyTimerId(0)
@@ -308,6 +309,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 
 BasicClientUserAgent::~BasicClientUserAgent()
 {
+   mStack->shutdownAndJoinThreads();
    mStackThread->shutdown();
    mStackThread->join();
 
@@ -321,6 +323,7 @@ BasicClientUserAgent::~BasicClientUserAgent()
 void
 BasicClientUserAgent::startup()
 {
+   mStack->run();
    mStackThread->run(); 
 
    if (mRegisterDuration)
@@ -354,6 +357,7 @@ BasicClientUserAgent::shutdown()
 {
    assert(mDum);
    mDumShutdownRequested = true; // Set flag so that shutdown operations can be run in dum process thread
+   mShuttingdown = true;  // This flag stays on during the shutdown process where as mDumShutdownRequested will get toggled back to false
 }
 
 bool
@@ -521,6 +525,11 @@ void
 BasicClientUserAgent::onSuccess(ClientRegistrationHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onSuccess(ClientRegistrationHandle): msg=" << msg.brief());
+   if(mShuttingdown)
+   {
+       h->end();
+       return;
+   }
    if(mRegHandle.getId() == 0)  // Note: reg handle id will only be 0 on first successful registration
    {
       // Check if we should try to form a test subscription
@@ -546,6 +555,10 @@ BasicClientUserAgent::onFailure(ClientRegistrationHandle h, const SipMessage& ms
 {
    InfoLog(<< "onFailure(ClientRegistrationHandle): msg=" << msg.brief());
    mRegHandle = h;
+   if(mShuttingdown)
+   {
+       h->end();
+   }
 }
 
 void
@@ -559,6 +572,10 @@ int
 BasicClientUserAgent::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg)
 {
    mRegHandle = h;
+   if(mShuttingdown)
+   {
+       return -1;
+   }
 
    if(mRegistrationRetryDelayTime == 0)
    {
