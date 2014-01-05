@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 
     SipStack clientStack;
 	DialogUsageManager clientDum(clientStack);
-	clientDum.addTransport(UDP, port);
+	clientStack.addTransport(UDP, port);
 	clientDum.setMasterProfile(profile);
 
 	clientDum.setClientRegistrationHandler(&client);

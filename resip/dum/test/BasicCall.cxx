@@ -598,8 +598,8 @@ main (int argc, char** argv)
    //set up UAC
    SipStack stackUac;
    DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
-   dumUac->addTransport(UDP, 12005);
-   dumUac->addTransport(TCP, 12005);
+   stackUac.addTransport(UDP, 12005);
+   stackUac.addTransport(TCP, 12005);
 
    SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
    auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
@@ -634,8 +634,8 @@ main (int argc, char** argv)
    //set up UAS
    SipStack stackUas;
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
-   dumUas->addTransport(UDP, 12010);
-   dumUas->addTransport(TCP, 12010);
+   stackUas.addTransport(UDP, 12010);
+   stackUas.addTransport(TCP, 12010);
    
    SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
    std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
