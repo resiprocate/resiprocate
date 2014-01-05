@@ -183,6 +183,9 @@
     <ClCompile Include="ReproAuthenticatorFactory.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ReproTlsPeerAuthManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDb.hxx">
@@ -384,6 +387,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AuthenticatorFactory.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReproTlsPeerAuthManager.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

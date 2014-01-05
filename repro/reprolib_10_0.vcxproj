@@ -305,6 +305,7 @@
     <ClCompile Include="PersistentMessageQueue.cxx" />
     <ClCompile Include="ProxyConfig.cxx" />
     <ClCompile Include="ReproAuthenticatorFactory.cxx" />
+    <ClCompile Include="ReproTlsPeerAuthManager.cxx" />
     <ClCompile Include="SiloStore.cxx" />
     <ClCompile Include="stateAgents\CertPublicationHandler.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -394,6 +395,7 @@
     <ClInclude Include="PersistentMessageQueue.hxx" />
     <ClInclude Include="ProxyConfig.hxx" />
     <ClInclude Include="ReproAuthenticatorFactory.hxx" />
+    <ClInclude Include="ReproTlsPeerAuthManager.hxx" />
     <ClInclude Include="SiloStore.hxx" />
     <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\CertServer.hxx" />
