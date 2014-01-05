@@ -21,10 +21,9 @@ ReproTlsPeerAuthManager::~ReproTlsPeerAuthManager()
 }
 
 bool
-ReproTlsPeerAuthManager::authorizedForThisIdentity(
-   const std::list<resip::Data> &peerNames,
-   resip::Uri &fromUri)
+ReproTlsPeerAuthManager::isTrustedSource(const SipMessage& msg)
 {
+   const std::list<resip::Data> &peerNames = msg.getTlsPeerNames();
    if(mAclStore.isTlsPeerNameTrusted(peerNames))
    {
       DebugLog(<< "Matched trusted peer by certificate in ACL, not checking against From URI");
@@ -33,7 +32,7 @@ ReproTlsPeerAuthManager::authorizedForThisIdentity(
       return true;
    }
 
-   return TlsPeerAuthManager::authorizedForThisIdentity(peerNames, fromUri);
+   return TlsPeerAuthManager::isTrustedSource(msg);
 }
 
 /* ====================================================================

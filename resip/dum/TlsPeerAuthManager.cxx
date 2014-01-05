@@ -72,11 +72,6 @@ TlsPeerAuthManager::authorizedForThisIdentity(
    for(; it != peerNames.end(); ++it)
    {
       const Data& i = *it;
-      if(mTrustedPeers.find(i) != mTrustedPeers.end())
-      {
-         DebugLog(<< "Matched certificate name " << i << " is a trusted peer, not checking against From URI");
-         return true;
-      }
       if(i == aor)
       {
          DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor);
@@ -141,6 +136,11 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
       return Skipped;
    }
 
+   if(isTrustedSource(*sipMessage))
+   {
+      return Authorized;
+   }
+
    const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
    if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
@@ -192,6 +192,26 @@ TlsPeerAuthManager::requiresAuthorization(const SipMessage& msg)
    // everything must be authorized, over-ride this method
    // to implement some other policy
    return true;
+}
+
+bool
+TlsPeerAuthManager::isTrustedSource(const SipMessage& msg)
+{
+   // over-ride this method to implement some other policy
+
+   const std::list<resip::Data> &peerNames = msg.getTlsPeerNames();
+   std::list<Data>::const_iterator it = peerNames.begin();
+   for(; it != peerNames.end(); ++it)
+   {
+      const Data& i = *it;
+      if(mTrustedPeers.find(i) != mTrustedPeers.end())
+      {
+         DebugLog(<< "Matched certificate name " << i << " is a trusted peer");
+         return true;
+      }
+   }
+
+   return false;
 }
 
 /* ====================================================================

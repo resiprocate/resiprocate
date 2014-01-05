@@ -97,6 +97,16 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       }
       
       const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
+
+      if(isTrustedSource(peerNames))
+      {
+         DebugLog(<< "Matched trusted peer by certificate in ACL");
+         rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+         // Simulate the behavior of IsTrustedNode monkey:
+         rc.getKeyValueStore().setBoolValue(IsTrustedNode::mFromTrustedNodeKey, true);
+         return Continue;
+      }
+
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
          if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
@@ -147,19 +157,17 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
 }
 
 bool
+CertificateAuthenticator::isTrustedSource(const std::list<Data>& peerNames)
+{
+   return mAclStore.isTlsPeerNameTrusted(peerNames);
+}
+
+bool
 CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, const std::list<Data>& peerNames,
                                                 resip::Uri &fromUri)
 {
    Data aor = fromUri.getAorNoPort();
    Data domain = fromUri.host();
-
-   if(mAclStore.isTlsPeerNameTrusted(peerNames))
-   {
-      DebugLog(<< "Matched trusted peer by certificate in ACL, not checking against From URI");
-      // Simulate the behavior of IsTrustedNode monkey:
-      context.getKeyValueStore().setBoolValue(IsTrustedNode::mFromTrustedNodeKey, true);
-      return true;
-   }
 
    std::list<Data>::const_iterator it = peerNames.begin();
    for(; it != peerNames.end(); ++it)

@@ -19,9 +19,7 @@ class ReproTlsPeerAuthManager : public resip::TlsPeerAuthManager
    protected:
       AclStore& mAclStore;
 
-      /// should return true if the passed in user is authorized for the provided uri
-      virtual bool authorizedForThisIdentity(const std::list<resip::Data> &peerNames,
-                                             resip::Uri &fromUri);
+      virtual bool isTrustedSource(const resip::SipMessage& msg);
 };
 
 }

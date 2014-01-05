@@ -31,6 +31,7 @@ namespace repro
       virtual void dump(EncodeStream &os) const;
 
     private:
+      bool isTrustedSource(const std::list<resip::Data>& peerNames);
       bool authorizedForThisIdentity(RequestContext& context, const std::list<resip::Data>& peerNames, resip::Uri &fromUri);
 
       AclStore& mAclStore;
