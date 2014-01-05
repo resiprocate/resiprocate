@@ -897,6 +897,16 @@ class SipStack : public FdSetIOObserver
          mTransactionController->setFixBadCSeqNumbers(pFixBadCSeqNumbers);
       }
 
+      bool setUdpOnlyOnNumeric(bool value)
+      {
+         return mTransactionController->transportSelector().setUdpOnlyOnNumeric(value);
+      }
+
+      bool getUdpOnlyOnNumeric() const
+      {
+         return mTransactionController->transportSelector().getUdpOnlyOnNumeric();
+      }
+
       /**
          @todo should this be fixed to work with other applicable transports? []
          @brief Used to enable/disable content-length checking on datagram-based 

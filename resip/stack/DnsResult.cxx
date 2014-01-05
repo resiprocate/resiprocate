@@ -436,22 +436,25 @@ DnsResult::lookupInternal(const Uri& uri)
                   mark=mInterface.getMarkManager().getMarkType(tuple);
                }
                
-               if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TCP, V4) ||
-                                    mInterface.isSupported(TCP, V6)))
+               if (!mInterface.getUdpOnlyOnNumeric())
                {
-                  mTransport=TCP;
-                  mPort = getDefaultPort(mTransport,uri.port());
-                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  mark=mInterface.getMarkManager().getMarkType(tuple);
-               }
-               
-               if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TLS, V4) ||
-                                    mInterface.isSupported(TLS, V6)))
-               {
-                  mTransport=TLS;
-                  mPort = getDefaultPort(mTransport,uri.port());
-                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  mark=mInterface.getMarkManager().getMarkType(tuple);
+                  if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TCP, V4) ||
+                           mInterface.isSupported(TCP, V6)))
+                  {
+                     mTransport=TCP;
+                     mPort = getDefaultPort(mTransport,uri.port());
+                     tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+                     mark=mInterface.getMarkManager().getMarkType(tuple);
+                  }
+
+                  if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TLS, V4) ||
+                           mInterface.isSupported(TLS, V6)))
+                  {
+                     mTransport=TLS;
+                     mPort = getDefaultPort(mTransport,uri.port());
+                     tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+                     mark=mInterface.getMarkManager().getMarkType(tuple);
+                  }
                }
             }
             
@@ -1479,3 +1482,5 @@ resip::operator<<(EncodeStream& strm, const resip::DnsResult::SRV& srv)
  * <http://www.vovida.org/>.
  *
  */
+
+// vim: softtabstop=3:shiftwidth=3:expandtab

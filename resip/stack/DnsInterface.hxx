@@ -79,6 +79,17 @@ class DnsInterface
       //virtual void handleDnsRaw(ExternalDnsRawResult);
       TupleMarkManager& getMarkManager(){return mMarkManager;}
 
+      bool setUdpOnlyOnNumeric(bool value)
+      {
+         mUdpOnlyOnNumeric = value;
+         return mUdpOnlyOnNumeric;
+      }
+
+      bool getUdpOnlyOnNumeric() const
+      {
+         return mUdpOnlyOnNumeric;
+      }
+
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
@@ -88,6 +99,9 @@ class DnsInterface
       typedef std::vector<std::pair<TransportType, IpVersion> > TransportMap;
       TransportMap mSupportedTransports;
       //std::set<TransportType> mSupportedTransportTypes;
+      // Whether transport failover should be disabled on URIs with only a numeric
+      // IP address (only UDP will ever be attempted).
+      bool mUdpOnlyOnNumeric;
 
       //ExternalDns* mDnsProvider;
 
@@ -150,4 +164,5 @@ class DnsInterface
  *
  */
 
+// vim: softtabstop=3:shiftwidth=3:expandtab
 

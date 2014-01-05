@@ -124,6 +124,16 @@ class TransportSelector
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
+      bool setUdpOnlyOnNumeric(bool value)
+      {
+         return mDns.setUdpOnlyOnNumeric(value);
+      }
+
+      bool getUdpOnlyOnNumeric() const
+      {
+         return mDns.getUdpOnlyOnNumeric();
+      }
+
       void setCongestionManager(CongestionManager* manager)
       {
          for(TransportList::iterator i=mSharedProcessTransports.begin();
@@ -308,5 +318,6 @@ class TransportSelector
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- * vi: set shiftwidth=3 expandtab:
  */
+
+// vim: softtabstop=3:shiftwidth=3:expandtab
