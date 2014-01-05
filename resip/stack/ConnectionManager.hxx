@@ -18,7 +18,8 @@ class FdPollGrp;
  */
 class ConnectionManager
 {
-      friend class Connection;
+   friend class Connection;
+
    public:
       /** connection must have no inbound traffic for greater than this 
           time (in ms) before it is garbage collected */

@@ -700,7 +700,9 @@ main(int argc, char* argv[])
 
    int senderPort = portBase;
    if ( senderPort==0 )
+   {
       senderPort = numPorts==1 ? 25060+(rand()&0x0fff) : 11000;
+   }
    int registrarPort = senderPort + numPorts;
 
    int idx;

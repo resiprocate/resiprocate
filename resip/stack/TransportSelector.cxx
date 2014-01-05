@@ -1066,7 +1066,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                      contact.uri().remove(p_addTransport);
                   }
                }
-
             }
          }
 

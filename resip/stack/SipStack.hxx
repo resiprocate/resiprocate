@@ -731,7 +731,6 @@ class SipStack : public FdSetIOObserver
       */
       virtual void processTimers();
 
-
       /**
          @brief Sets the interval that determines the time between Statistics messages
          @ingroup resip_config

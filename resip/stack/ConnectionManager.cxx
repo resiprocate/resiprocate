@@ -60,7 +60,7 @@ ConnectionManager::findConnection(const Tuple& addr)
       IdMap::iterator i = mIdMap.find(addr.mFlowKey);
       if (i != mIdMap.end())
       {
-         if(i->second->who()==addr)
+         if(i->second->who() == addr)
          {
             DebugLog(<<"Found fd " << addr.mFlowKey);
             return i->second;
@@ -90,7 +90,6 @@ ConnectionManager::findConnection(const Tuple& addr)
       return i->second;
    }
 
-   
    DebugLog(<<"Could not find a connection for " << addr);
    return 0;
 }
@@ -128,7 +127,6 @@ ConnectionManager::findConnection(const Tuple& addr) const
       return i->second;
    }
 
-   
    DebugLog(<<"Could not find a connection for " << addr);
    return 0;
 }

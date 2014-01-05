@@ -484,12 +484,10 @@ SipStack::addAlias(const Data& domain, int port)
    assert(!mShuttingDown);
    mDomains.insert(domain + ":" + Data(portToUse));
 
-
    if(mUri.host().empty())
    {
       mUri.host()=*mDomains.begin();
    }
-
 }
 
 Data

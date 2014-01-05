@@ -1384,7 +1384,6 @@ DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
    }
 
    onNaptrResult(result);
-  
 }
 
 void DnsResult::onDnsResult(const DNSResult<DnsCnameRecord>& result)
