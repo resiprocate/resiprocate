@@ -2141,7 +2141,7 @@ DialogUsageManager::processResponse(const SipMessage& response)
          DebugLog ( << "DialogUsageManager::processResponse: " << std::endl << std::endl << response.brief());
          ds->dispatch(response);
       }
-      else
+       else
       {
 		 InfoLog (<< "Throwing away stray response: " << std::endl << std::endl << response.brief());
       }
