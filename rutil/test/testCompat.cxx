@@ -24,26 +24,35 @@ main()
    UInt64 data2 = hton64(data);
    assert(tmp[7] == 1);
 
+
+   long long i1 = 5223372036854775807,i2 = 9223372036854775807;
+   double d1 = 5223372036854775807.9965443,d2 = 9223372036854775807.1265443;
+   long long i11 = -5223372036854775807, i22 = -9223372036854775807;
+   double d11 = -5223372036854775807.99, d22 = -9223372036854775807.12;
+   
 //test for resipMax
    {
 	   //for postive integer
 	   assert(resipMax(3,2) == 3);
 	   cerr << "max(3,2 ): " << resipMax(3,2)<<endl;
+	   //reverse of above combination
+	   assert(resipMax(2,3) == 3);
+	   cerr << "max(2,3 ): " << resipMax(2,3)<<endl;
 	   //for negative integers
 	   assert(resipMax(-3,-2) == -2);
 	   cerr << "max(-3,-2):" << resipMax(-3,-2)<< endl;
 	   //for large integers
-	   assert(resipMax(5223372036854775807,9223372036854775807) == 9223372036854775807);
-	   cerr<< "max(5223372036854775807,9223372036854775807): "<< resipMax(5223372036854775807,9223372036854775807)<< endl;
+	   assert(resipMax(i1,i2) == i2);
+	   cerr<< "max(5223372036854775807,9223372036854775807): "<< resipMax(i1,i2)<< endl;
 	   //for large floating point numbers
-	   assert(((resipMax(5223372036854775807.9965443,9223372036854775807.1265443) - 9223372036854775807.1265443)/9223372036854775807.1265443) <  0.00000000001) ;
-	   cerr<< "max(5223372036854775807.9965443,5223372036854775807.1265443 ): "<< resipMax(5223372036854775807.9965443,9223372036854775807.1265443)<< endl;
+	   assert(resipMax(d1,d2) == d2) ;
+	   cerr<< "max(5223372036854775807.9965443,5223372036854775807.1265443 ): "<< resipMax(d1,d2)<< endl;
 	   //for large negative numbers
-	   assert(resipMax(-5223372036854775807,-9223372036854775807) == -5223372036854775807);
-	   cerr<< "max(-5223372036854775807,9223372036854775807): "<< resipMax(-5223372036854775807,-9223372036854775807)<<endl;
+	   assert(resipMax(i11,i22) == i11);
+	   cerr<< "max(-5223372036854775807,-9223372036854775807): "<< resipMax(i11,i22)<<endl;
 	   //for large negative floating point numbers
-	   assert(((resipMax(-5223372036854775807.99,-9223372036854775807.12) - -5223372036854775807.99)/5223372036854775807.99) < 0.00000000001);
-	   cerr<< "max(-5223372036854775807.99,-9223372036854775807.12): "<< resipMax(-5223372036854775807.99,-25223372036854775807.12)<< endl;
+	   assert(resipMax(d11,d22) == d11);
+	   cerr<< "max(-5223372036854775807.99,-9223372036854775807.12): "<< resipMax(d11,d22)<< endl;
 	   //for same numbers
 	   assert(resipMax(3,3) == 3);
 	   cerr << "max(3,3 ): " << resipMax(3,3)<<endl;
@@ -53,27 +62,33 @@ main()
 	   //test for string type arguements
 	   assert(resipMax("hello","jello") == "jello");
 	   cerr<<"max('hello','jello'): "<<resipMax("hello","jello")<<endl;
-   	}
+	   //reverse of above combination
+	   assert(resipMax("jello","hello") == "jello");
+	   cerr<<"max('jello','hello'): "<<resipMax("jello","hello")<<endl;
+   } 
 	//test for resipMin
    {
 	   //for postive integer
 	   assert(resipMin(3,2) == 2);
 	   cerr << "min(3,2 ): " << resipMin(3,2)<< endl;
+	   //reverse of above combination
+	   assert(resipMin(2,3) == 2);
+	   cerr << "min(2,3 ): " << resipMin(2,3)<<endl;
 	   //for negative integers
 	   assert(resipMin(-3,-2) == -3);
 	   cerr << "min(-3,-2): " << resipMin(-3,-2)<< endl;
 	   //for large integers
-	   assert(resipMin(5223372036854775807,9223372036854775807) == 5223372036854775807);
-	   cerr<< "min(5223372036854775807,9223372036854775807): "<< resipMin(5223372036854775807,9223372036854775807)<< endl;
+	   assert(resipMin(i1,i2) == i1);
+	   cerr<< "min(5223372036854775807,9223372036854775807): "<< resipMin(i1,i2)<< endl;
 	   //for large floating point numbers
-           assert(((resipMin(5223372036854775807.9965443,9223372036854775807.1265443) - 5223372036854775807.9965443)/5223372036854775807.9965443) <  0.00000000001) ;
-	   cerr<< "min(5223372036854775807.9965443,5223372036854775807.1265443 ): "<< resipMin(5223372036854775807.9965443,9223372036854775807.1265443)<< endl;
+       assert(resipMin(d1,d2) == d1) ;
+	   cerr<< "min(5223372036854775807.9965443,5223372036854775807.1265443 ): "<< resipMin(d1,d2)<< endl;
 	   //for large negative numbers
-	   assert(resipMin(-5223372036854775807,-9223372036854775807) == -9223372036854775807);
-	   cerr<< "min(-5223372036854775807,-9223372036854775807): "<< resipMin(-5223372036854775807,-9223372036854775807)<< endl;
+	   assert(resipMin(i11,i22) == i22);
+	   cerr<< "min(-5223372036854775807,-9223372036854775807): "<< resipMin(i11,i22)<< endl;
 	   //for large negative floating point numbers
-           assert(((resipMin(-5223372036854775807.99,-9223372036854775807.12) - -9223372036854775807.12)/9223372036854775807.12) < 0.0000000000001);
-	   cerr<< "min(-5223372036854775807.99,-9223372036854775807.12): "<< resipMin(-5223372036854775807.99,-9223372036854775807.12)<< endl;
+       assert(resipMin(d11,d22) == d22);
+	   cerr<< "min(-5223372036854775807.99,-9223372036854775807.12): "<< resipMin(d11,d22)<< endl;
 	   //for same numbers
 	   assert(resipMin(3,3) == 3);
 	   cerr << "min(3,3 ): " << resipMin(3,3)<< endl;
@@ -83,6 +98,9 @@ main()
 	   //test for string type arguements
 	   assert(resipMin("hello","jello") == "hello");
 	   cerr<<"min('hello','jello'): "<<resipMin("hello","jello")<<endl;
+	   //reverse of above combination
+	   assert(resipMin("jello","hello") == "hello");
+	   cerr<<"min('jello','hello'): "<<resipMin("jello","hello")<<endl;
 	}
    //test for strncasecmp
    {
@@ -122,22 +140,23 @@ main()
 	    cx = snprintf( buffers, 50, "I have %f$ and I am %s.There are %d apples and %d banana on that stand",35.50,c,6,7);
 	    assert(cx > 0);
 	    //for n being less than string lenth
-	    cx = snprintf( buffers, 5, "testing the snprintf function");
-	    assert(cx > 0 );
+		cx = snprintf( buffers, 5, "testing the snprintf function");
+	    assert(cx == 29);
 	    //for n being greater than sting length
 	    cx = snprintf( buffers, 15, "hello there");
-	    assert(cx > 0);
+	    assert(cx == 11);
 	    //for large string
 	    char buffer1 [250];
 	    cx = snprintf( buffer1, 250, "Once there lived in a forest a hair and a tortoise. The hare was very proud of his speed. He made fun of the tortoise for his slow speed. The tortoise challenged the hare to have a race with him. The hare accepted the challenge.");
 	    assert(cx > 0);
 	    char buffer2 [11];
-	    //value of n and size of buffer exactly of same lengths as of string
+	    //value of n and size of buffer exactly of same lengths 
 	    cx = snprintf( buffer2, 11, "hellothere");
-	    assert(cx > 0);
-	    // value of n and size of buffer  smaller tha length of string
+		assert(cx == 10);
+	    // value of n and size of buffer  smaller than length of string
 	    cx = snprintf( buffer2, 11, "hello!,someone there ?");
-	    assert(cx > 0);
+	    assert(cx == 22);
+	    
    	}
    cerr << "All OK" << endl;
    return 0;
