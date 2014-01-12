@@ -20,16 +20,17 @@
 
 #include "PyRouteWorker.hxx"
 #include "PyThreadSupport.hxx"
+#include "PyRouteProcessor.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
 
-class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModule<PyRoutePlugin>
+class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
 {
    public:
-      PyRoutePlugin() : Processor("PyRoute"), ExtensionModule<PyRoutePlugin>("resip"), mThreadState(0), mDispatcher(0)
+      PyRoutePlugin() : ExtensionModule<PyRoutePlugin>("resip"), mThreadState(0), mDispatcher(0)
       {
       };
 
@@ -184,7 +185,8 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
          // any monkey instance here
 
          // Add the pyroute monkey to the chain ahead of LocationServer
-         chain.insertProcessor<LocationServer>(std::auto_ptr<Processor>(this));
+         std::auto_ptr<Processor> proc(new PyRouteProcessor(*mDispatcher));
+         chain.insertProcessor<LocationServer>(proc);
       }
 
       virtual void onResponseProcessorChainPopulated(ProcessorChain& chain)
@@ -195,59 +197,6 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
       virtual void onTargetProcessorChainPopulated(ProcessorChain& chain)
       {
          DebugLog(<<"PyRoutePlugin: onTargetProcessorChainPopulated called");
-      }
-
-      /*
-       * Now we implemented the Processor API from repro/Processor.hxx
-       */
-
-      virtual processor_action_t process(RequestContext &context)
-      {
-         DebugLog(<< "Monkey handling request: PyRoute");
-
-         // Has the work been done already?
-         PyRouteWork* work = dynamic_cast<PyRouteWork*>(context.getCurrentEvent());
-         if(work)
-         {
-            if(work->hasResponse())
-            {
-               resip::SipMessage response;
-               if(work->mResponseMessage.size() == 0)
-               {
-                  Helper::makeResponse(response, context.getOriginalRequest(), work->mResponseCode);
-               }
-               else
-               {
-                  Helper::makeResponse(response, context.getOriginalRequest(), work->mResponseCode, work->mResponseMessage);
-               }
-               context.sendResponse(response);
-               return Processor::SkipThisChain;
-            }
-            for(
-               std::vector<Data>::iterator i = work->mTargets.begin();
-               i != work->mTargets.end();
-               i++)
-            {
-               context.getResponseContext().addTarget(NameAddr(*i));
-            }
-            if(work->mTargets.size() > 0)
-            {
-               return Processor::SkipThisChain;
-            }
-            return Processor::Continue;
-         }
-
-         SipMessage& msg = context.getOriginalRequest();
-         if(msg.method() != INVITE && msg.method() != MESSAGE)
-         {
-            // We only route INVITE and MESSAGE, otherwise we ignore
-            return Processor::Continue;
-         }
-         work = new PyRouteWork(*this, context.getTransactionId(), &(context.getProxy()), msg);
-         std::auto_ptr<ApplicationMessage> app(work);
-         mDispatcher->post(app);
-
-         return Processor::WaitingForEvent;
       }
 
    private:
