@@ -16,6 +16,7 @@
 #include "repro/Processor.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/monkeys/LocationServer.hxx"
 
 #include "PyRouteWorker.hxx"
 #include "PyThreadSupport.hxx"
@@ -182,8 +183,8 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
          // The module class is also the monkey class, no need to create
          // any monkey instance here
 
-         // Add the pyroute monkey to the chain
-         chain.addProcessor(std::auto_ptr<Processor>(this));
+         // Add the pyroute monkey to the chain ahead of LocationServer
+         chain.insertProcessor<LocationServer>(std::auto_ptr<Processor>(this));
       }
 
       virtual void onResponseProcessorChainPopulated(ProcessorChain& chain)
@@ -228,6 +229,10 @@ class PyRoutePlugin : public Plugin, public Processor, public Py::ExtensionModul
                i++)
             {
                context.getResponseContext().addTarget(NameAddr(*i));
+            }
+            if(work->mTargets.size() > 0)
+            {
+               return Processor::SkipThisChain;
             }
             return Processor::Continue;
          }
