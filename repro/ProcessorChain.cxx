@@ -20,7 +20,8 @@ using namespace std;
 
 
 ProcessorChain::ProcessorChain(Processor::ChainType type) : 
-   Processor(Data::Empty, type)
+   Processor(Data::Empty, type),
+   mChainReady(false)
 {
    switch(type)
    {
@@ -56,6 +57,7 @@ void
 repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
 {
    DebugLog(<< "Adding new " << mName << " to chain: " << *(rp.get()));
+   assert(!mChainReady);
    rp->pushAddress((short)mChain.size());
    rp->pushAddress(mAddress);
    rp->setChainType(mType);
@@ -66,6 +68,12 @@ repro::Processor::processor_action_t
 repro::ProcessorChain::process(RequestContext &rc)
 {
    //DebugLog(<< mName << " handling request: " << *this << "; reqcontext = " << rc);
+
+   if(!mChainReady)
+   {
+      onChainComplete();
+      assert(mChainReady);
+   }
 
    processor_action_t action;
    unsigned int position=0;
@@ -141,6 +149,19 @@ ProcessorChain::setChainType(ChainType type)
    {
       (*i)->setChainType(type);
    }
+}
+
+void
+ProcessorChain::onChainComplete()
+{
+   short i = 0;
+   for(Chain::iterator it = mChain.begin() ; it != mChain.end(); it++)
+   {
+      (*it)->mAddress.clear();
+      (*it)->pushAddress(i++);
+      (*it)->pushAddress(mAddress);
+   }
+   mChainReady = true;
 }
 
 EncodeStream &
