@@ -26,8 +26,9 @@ RADIUSServerAuthManager::RADIUSServerAuthManager(
                             resip::DialogUsageManager& dum,
                             TargetCommand::Target& target,
                             const Data& configurationFile,
-                            bool challengeThirdParties) :
-   ServerAuthManager(dum, target, challengeThirdParties),
+                            bool challengeThirdParties,
+                            const Data& staticRealm) :
+   ServerAuthManager(dum, target, challengeThirdParties, staticRealm),
    dum(dum)
 {
    RADIUSDigestAuthenticator::init(

@@ -26,7 +26,7 @@ class ServerAuthManager : public DumFeature
          Rejected
       };
 
-      ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties = true);
+      ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties = true, const resip::Data& staticRealm = "");
       virtual ~ServerAuthManager();
 
       virtual ProcessingResult process(Message* msg);      
@@ -102,6 +102,7 @@ class ServerAuthManager : public DumFeature
 
    private:
       bool mChallengeThirdParties;
+      resip::Data mStaticRealm;
 };
 
  

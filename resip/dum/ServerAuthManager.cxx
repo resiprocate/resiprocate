@@ -16,9 +16,10 @@
 using namespace resip;
 using namespace std;
 
-ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties) :
+ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, bool challengeThirdParties, const Data& staticRealm) :
    DumFeature(dum, target),
-   mChallengeThirdParties(challengeThirdParties)
+   mChallengeThirdParties(challengeThirdParties),
+   mStaticRealm(staticRealm)
 {
 }
 
@@ -300,7 +301,7 @@ ServerAuthManager::authorizedForThisIdentity(const resip::Data &user,
    // header is the full fromUri, e.g.
    //    Proxy-Authorization: Digest username="user@domain" ...
    //
-   if ((fromUri.getAorNoPort() == user) && (fromUri.host() == realm))
+   if (fromUri.getAorNoPort() == user)
       return true;
 
    // catch-all: access denied
@@ -311,6 +312,10 @@ ServerAuthManager::authorizedForThisIdentity(const resip::Data &user,
 const Data& 
 ServerAuthManager::getChallengeRealm(const SipMessage& msg)
 {
+   if(!mStaticRealm.empty())
+   {
+      return mStaticRealm;
+   }
    return msg.header(h_RequestLine).uri().host();
 }
 
@@ -318,6 +323,10 @@ ServerAuthManager::getChallengeRealm(const SipMessage& msg)
 bool
 ServerAuthManager::isMyRealm(const Data& realm)
 {
+   if(!mStaticRealm.empty())
+   {
+      return mStaticRealm == realm;
+   }
    return mDum.isMyDomain(realm);
 }
 
