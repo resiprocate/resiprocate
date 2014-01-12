@@ -33,7 +33,8 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
                              bool useAuthInt,
                              bool rejectBadNonces,
                              const resip::Data& configurationFile,
-                             bool challengeThirdParties);
+                             bool challengeThirdParties,
+                             const resip::Data& staticRealm);
       
       ~ReproRADIUSServerAuthManager();
       

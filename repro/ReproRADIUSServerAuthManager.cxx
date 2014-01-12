@@ -24,8 +24,9 @@ ReproRADIUSServerAuthManager::ReproRADIUSServerAuthManager(DialogUsageManager& d
                                                bool useAuthInt,
                                                bool rejectBadNonces,
                                                const resip::Data& configurationFile,
-                                               bool challengeThirdParties):
-   RADIUSServerAuthManager(dum, dum.dumIncomingTarget(), configurationFile, challengeThirdParties),
+                                               bool challengeThirdParties,
+                                               const Data& staticRealm):
+   RADIUSServerAuthManager(dum, dum.dumIncomingTarget(), configurationFile, challengeThirdParties, staticRealm),
    mDum(dum),
    mAclDb(aclDb),
    mUseAuthInt(useAuthInt),

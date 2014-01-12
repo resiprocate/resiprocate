@@ -18,7 +18,7 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher);
+      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, const resip::Data& staticRealm);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -33,6 +33,7 @@ namespace repro
       
     private:
       Dispatcher* mAuthRequestDispatcher;
+      resip::Data mStaticRealm;
       bool mNoIdentityHeaders;
       resip::Data mHttpHostname;  // Used in identity headers
       int  mHttpPort;

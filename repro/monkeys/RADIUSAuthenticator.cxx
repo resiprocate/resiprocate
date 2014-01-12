@@ -28,8 +28,8 @@ using namespace std;
 
 #ifdef USE_RADIUS_CLIENT
 
-RADIUSAuthenticator::RADIUSAuthenticator(ProxyConfig& config, const resip::Data& configurationFile) :
-   DigestAuthenticator(config, 0)
+RADIUSAuthenticator::RADIUSAuthenticator(ProxyConfig& config, const resip::Data& configurationFile, const Data& staticRealm) :
+   DigestAuthenticator(config, 0, staticRealm)
 {
    RADIUSDigestAuthenticator::init(
       configurationFile.empty() ? 0 : configurationFile.c_str());

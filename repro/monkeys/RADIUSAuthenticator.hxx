@@ -25,7 +25,7 @@ namespace repro
 class RADIUSAuthenticator : public DigestAuthenticator
 {
    public:
-      RADIUSAuthenticator(ProxyConfig& config, const resip::Data& configurationFile);
+      RADIUSAuthenticator(ProxyConfig& config, const resip::Data& configurationFile, const resip::Data& staticRealm);
       ~RADIUSAuthenticator();
 
    protected:

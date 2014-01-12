@@ -28,9 +28,11 @@ using namespace repro;
 using namespace std;
 
 DigestAuthenticator::DigestAuthenticator(ProxyConfig& config,
-                                         Dispatcher* authRequestDispatcher) :
+                                         Dispatcher* authRequestDispatcher,
+                                         const Data& staticRealm) :
    Processor("DigestAuthenticator"),
    mAuthRequestDispatcher(authRequestDispatcher),
+   mStaticRealm(staticRealm),
    mNoIdentityHeaders(config.getConfigBool("DisableIdentity", false)),
    mHttpHostname(config.getConfigData("HttpHostname", "")),
    mHttpPort(config.getConfigInt("HttpPort", 5080)),
@@ -318,12 +320,14 @@ DigestAuthenticator::authorizedForThisIdentity(const resip::Data &user, const re
    {
       if ((fromUri.user() == user) || (fromUri.user() == "anonymous"))
          return true;
+   }
 
-      // Now try the form where the username parameter in the auth
-      // header is the full fromUri, e.g.
-      //    Proxy-Authorization: Digest username="user@domain" ...
-      //
-      if (fromUri.getAorNoPort() == user)
+   // Now try the form where the username parameter in the auth
+   // header is the full fromUri, e.g.
+   //    Proxy-Authorization: Digest username="user@domain" ...
+   //
+   if (fromUri.getAorNoPort() == user)
+   {
          return true;
    }
 
@@ -418,6 +422,10 @@ DigestAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, U
 resip::Data
 DigestAuthenticator::getRealm(RequestContext &rc)
 {
+   if(!mStaticRealm.empty())
+   {
+      return mStaticRealm;
+   }
    return rc.getDigestRealm();
 }
 

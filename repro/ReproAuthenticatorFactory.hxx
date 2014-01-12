@@ -48,6 +48,8 @@ private:
 
    resip::Data mRADIUSConfiguration;
 
+   resip::Data mStaticRealm;
+
    // Maintains existing behavior for non-TLS cert auth users
    bool mDigestChallengeThirdParties;
 

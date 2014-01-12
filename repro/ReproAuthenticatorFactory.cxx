@@ -35,6 +35,7 @@ ReproAuthenticatorFactory::ReproAuthenticatorFactory(ProxyConfig& proxyConfig, S
       mEnableDigestAuth(!mProxyConfig.getConfigBool("DisableAuth", false)),
       mEnableRADIUS(mProxyConfig.getConfigBool("EnableRADIUS", false)),
       mRADIUSConfiguration(mProxyConfig.getConfigData("RADIUSConfiguration", "")),
+      mStaticRealm(mProxyConfig.getConfigData("StaticRealm", "")),
       mDigestChallengeThirdParties(!mEnableCertAuth),
       mAuthRequestDispatcher(0),
       mCertificateAuthManager((DumFeature*)0),
@@ -169,7 +170,8 @@ ReproAuthenticatorFactory::getServerAuthManager()
                                   !mProxyConfig.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
                                   mProxyConfig.getConfigBool("RejectBadNonces", false),
                                   mRADIUSConfiguration,
-                                  mDigestChallengeThirdParties));
+                                  mDigestChallengeThirdParties,
+                                  mStaticRealm));
 #else
          ErrLog(<<"can't create ReproRADIUSServerAuthManager, not compiled with RADIUS support");
 #endif
@@ -181,7 +183,8 @@ ReproAuthenticatorFactory::getServerAuthManager()
                                   mProxyConfig.getDataStore()->mAclStore,
                                   !mProxyConfig.getConfigBool("DisableAuthInt", false) /*useAuthInt*/,
                                   mProxyConfig.getConfigBool("RejectBadNonces", false),
-                                  mDigestChallengeThirdParties));
+                                  mDigestChallengeThirdParties,
+                                  mStaticRealm));
       }
    }
    return mServerAuthManager;
@@ -196,14 +199,14 @@ ReproAuthenticatorFactory::getDigestAuthenticator()
       if(mEnableRADIUS)
       {
 #ifdef USE_RADIUS_CLIENT
-         mDigestAuthenticator.reset(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration));
+         mDigestAuthenticator.reset(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration, mStaticRealm));
 #else
          ErrLog(<<"can't create RADIUSAuthenticator, not compiled with RADIUS support");
 #endif
       }
       else
       {
-         mDigestAuthenticator.reset(new DigestAuthenticator(mProxyConfig, getDispatcher()));
+         mDigestAuthenticator.reset(new DigestAuthenticator(mProxyConfig, getDispatcher(), mStaticRealm));
       }
    }
    return mDigestAuthenticator;
