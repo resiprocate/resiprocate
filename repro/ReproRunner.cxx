@@ -187,7 +187,7 @@ ReproRunner::run(int argc, char** argv)
    {
       std::cerr << "Error parsing configuration: " << ex << std::endl;
 #ifndef WIN32
-      syslog(LOG_DAEMON | LOG_CRIT, ex.getMessage().c_str());
+      syslog(LOG_DAEMON | LOG_CRIT, "%s", ex.getMessage().c_str());
 #endif
       return false;
    }
