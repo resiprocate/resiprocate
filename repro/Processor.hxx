@@ -52,7 +52,7 @@ class Processor
       ChainType mType;
       resip::Data mName;
 
-   friend ProcessorChain;
+   friend class ProcessorChain;
 };
 
 EncodeStream &operator<<(EncodeStream &os, const repro::Processor &rp);
