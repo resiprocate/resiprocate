@@ -10,6 +10,8 @@
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/ExtensionHeader.hxx"
+#include "resip/stack/Headers.hxx"
 #include "resip/stack/Helper.hxx"
 #include "repro/Plugin.hxx"
 #include "repro/Processor.hxx"
@@ -146,13 +148,17 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
       cookies[Py::String(it->name().c_str())] = Py::String(it->value().c_str());
    }
 
-   Py::Tuple args(6);
+   // arg 7: For new headers that come back from the script
+   Py::Dict newHeaders;
+
+   Py::Tuple args(7);
    args[0] = reqMethod;
    args[1] = reqUri;
    args[2] = headers;
    args[3] = transportType;
    args[4] = body;
    args[5] = cookies;
+   args[6] = newHeaders;
    Py::Object response;
    try
    {
@@ -237,6 +243,34 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
       resip::Data target_s(target.as_std_string());
       DebugLog(<< "processing result: " << target_s);
       work->mTargets.push_back(target_s);
+   }
+
+   int newHeaderCount = newHeaders.size();
+   DebugLog(<<"got " << newHeaderCount << " new/changed header(s)");
+   for(Py::Dict::iterator it = newHeaders.begin();
+      it != newHeaders.end();
+      it++)
+   {
+      const Py::Dict::value_type vt(*it);
+      resip::Data headerName(vt.first.str());
+      resip::Data value(vt.second.str());
+      DebugLog(<<"processing a header: " << headerName << ": " << value);
+      resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
+      if(hType == resip::Headers::UNKNOWN)
+      {
+         resip::ExtensionHeader h_Tmp(headerName.c_str());
+         resip::ParserContainer<resip::StringCategory>& pc = message.header(h_Tmp);
+         while(pc.begin() != pc.end())
+         {
+            pc.erase(pc.begin());
+         }
+         resip::StringCategory sc(value);
+         pc.push_back(sc);
+      }
+      else
+      {
+         WarningLog(<<"Discarding header '"<<headerName<<"' from pyroute script, only extension headers permitted");
+      }
    }
    
    return true;

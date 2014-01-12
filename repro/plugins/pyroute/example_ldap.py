@@ -16,7 +16,7 @@ def on_load():
     '''Do initialisation when module loads'''
     resip.log_debug('on_load invoked')
 
-def provide_route(method, request_uri, headers, transport_type, body, cookies):
+def provide_route(method, request_uri, headers, transport_type, body, cookies, new_headers):
     '''Process a request URI and return the target URI(s)'''
     resip.log_debug('request_uri = ' + request_uri)
 

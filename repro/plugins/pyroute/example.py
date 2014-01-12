@@ -5,7 +5,7 @@ def on_load():
     '''Do initialisation when module loads'''
     resip.log_debug('on_load invoked')
 
-def provide_route(method, request_uri, headers, transport_type, body, cookies):
+def provide_route(method, request_uri, headers, transport_type, body, cookies, new_headers):
     '''Process a request URI and return the target URI(s)'''
 
     resip.log_debug('method = ' + method)
@@ -25,6 +25,10 @@ def provide_route(method, request_uri, headers, transport_type, body, cookies):
     routes = list()
     routes.append('sip:bob@example.org')
     routes.append('sip:alice@example.org')
+
+    new_headers['To'] = 'sip:eve@example.org';
+    new_headers['X-Foo'] = 'Bar';
+
     return routes
 
 
