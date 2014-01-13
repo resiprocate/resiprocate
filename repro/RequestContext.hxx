@@ -99,9 +99,9 @@ class RequestContext
       resip::NameAddr mTopRoute;
       ResponseContext mResponseContext;
       int mTCSerial;
-      resip::KeyValueStore mKeyValueStore;
       bool mSessionCreatedEventSent;
       bool mSessionEstablishedEventSent;
+      resip::KeyValueStore mKeyValueStore;
 
       typedef std::vector<ProcessorChain::Chain::iterator>
 
