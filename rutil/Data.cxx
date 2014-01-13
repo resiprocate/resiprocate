@@ -1514,7 +1514,7 @@ Data::fromHex() const
    size_type resultSize = (mSize + (mSize & 1)) / 2;
    Data ret(resultSize, Data::Preallocate);
 
-   const char* p = mBuf;
+   const unsigned char* p = (unsigned char*)mBuf;
    char* r = ret.mBuf;
    size_type i = 0;
    if(oddSize)
@@ -1529,8 +1529,8 @@ Data::fromHex() const
    }
    for ( ; i < mSize; i+=2)
    {
-      const char high = *p++;
-      const char low = *p++;
+      const unsigned char high = *p++;
+      const unsigned char low = *p++;
       if(!isHex(high) || !isHex(low))
       {
          throw DataException("Encountered non-hex digit",
