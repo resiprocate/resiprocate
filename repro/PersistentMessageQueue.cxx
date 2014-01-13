@@ -19,6 +19,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
+
 struct Transaction 
 {     
    Transaction() : mDbTxn(0) 
@@ -102,10 +104,13 @@ struct Cursor
    
    Dbc* mDbc;
 };
+#endif
 
 PersistentMessageQueue::PersistentMessageQueue(const Data& baseDir) : 
+#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
    DbEnv(0), 
    mDb(0), 
+#endif
    mBaseDir(baseDir),
    mRecoveryNeeded(false)
 {
@@ -113,6 +118,7 @@ PersistentMessageQueue::PersistentMessageQueue(const Data& baseDir) :
 
 PersistentMessageQueue::~PersistentMessageQueue()
 {
+#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
    if(mDb)
    {
       try
@@ -132,11 +138,13 @@ PersistentMessageQueue::~PersistentMessageQueue()
    catch(DbException&) {}
    catch(std::exception&) {}
    catch(...) {}
+#endif
 }
 
 bool 
 PersistentMessageQueue::init(bool sync, const resip::Data& queueName)
 {
+#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
    try
    {
       // For Berkeley DB Concurrent Data Store applications, perform locking on an environment-wide basis rather than per-database.
@@ -211,7 +219,7 @@ PersistentMessageQueue::init(bool sync, const resip::Data& queueName)
    {
       WarningLog( << "PersistentMessageQueue::init - unknown exception");
    }
-
+#endif
    return false;
 }
 
@@ -224,6 +232,7 @@ PersistentMessageQueue::isRecoveryNeeded()
 bool 
 PersistentMessageEnqueue::push(const resip::Data& data)
 {
+#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
    int res;
 
    try 
@@ -267,6 +276,7 @@ PersistentMessageEnqueue::push(const resip::Data& data)
    {
       WarningLog( << "PersistentMessageEnqueue::push - unknown exception");
    }
+#endif
    return false;
 }
 
@@ -275,6 +285,7 @@ PersistentMessageEnqueue::push(const resip::Data& data)
 bool 
 PersistentMessageDequeue::pop(size_t numRecords, std::vector<resip::Data>& records, bool autoCommit)  
 {
+#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
    if(mNumRecords != 0) // TODO, warning previous pop wasn't committed
    {
       abort();
@@ -333,23 +344,24 @@ PersistentMessageDequeue::pop(size_t numRecords, std::vector<resip::Data>& recor
       }
       WarningLog( << "PersistentMessageDequeue::pop - DBException: " << e.what());
       abort();
-      return false;
    } 
    catch(std::exception& e)
    {
       WarningLog( << "PersistentMessageDequeue::pop - std::exception: " << e.what());
       abort();
-      return false;
    }
    catch(...) 
    {
       WarningLog( << "PersistentMessageDequeue::pop - unknown exception");
    }
+#endif
+   return false;
 }
 
 bool 
 PersistentMessageDequeue::commit()
 {
+#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
    if(mNumRecords == 0)
    {
       return true;
@@ -403,6 +415,7 @@ PersistentMessageDequeue::commit()
    {
       WarningLog( << "PersistentMessageDequeue::commit - unknown exception");
    }
+#endif
    return false;
 }
 
