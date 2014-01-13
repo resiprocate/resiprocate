@@ -2,7 +2,7 @@
 #define RESIP_PERSISTENTMESSAGEQUEUE_HXX 
 
 // Note: Using this define will remove the dependency on BerkeleyDB, however it will render the AccountingCollector useless
-#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
+#ifndef DISABLE_BERKELEYDB_USE
 
 #ifdef WIN32
 #include <db_cxx.h>
@@ -120,7 +120,7 @@
 
 namespace repro
 {
-#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
+#ifndef DISABLE_BERKELEYDB_USE
 class PersistentMessageQueue : public DbEnv 
 #else
 class PersistentMessageQueue
@@ -134,7 +134,7 @@ public:
    bool isRecoveryNeeded();
 
 protected:
-#ifndef DISABLE_PERSISTENT_MESSAGE_QUEUE
+#ifndef DISABLE_BERKELEYDB_USE
    Db* mDb;
 #endif
    resip::Data mBaseDir;
