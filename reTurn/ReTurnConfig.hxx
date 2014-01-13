@@ -105,10 +105,16 @@ class ReTurnUserFileScanner
 
    private:
       time_t mLoadedTime;
-      asio::deadline_timer mTimer;
       ReTurnConfig& mReTurnConfig;
+      static bool mHup;
+      int mLoopInterval;
+      time_t mNextFileCheck;
+      asio::deadline_timer mTimer;
 
+      bool hasUserFileChanged();
       void timeout(const asio::error_code& e);
+
+      static void onSignal(int signum);
 };
 
 } // namespace

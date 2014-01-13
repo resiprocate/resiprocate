@@ -3,6 +3,10 @@
 #include <string>
 #include <sstream>
 
+#ifndef WIN32
+#include <csignal>
+#endif
+
 #include <sys/stat.h>
 
 #include <boost/bind.hpp>
@@ -334,29 +338,38 @@ ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) con
    return std::auto_ptr<UserAuthData>(new UserAuthData(it2->second));
 }
 
+bool ReTurnUserFileScanner::mHup = false;
+
 ReTurnUserFileScanner::ReTurnUserFileScanner(asio::io_service& ioService, ReTurnConfig& reTurnConfig)
  : mLoadedTime(time(0)),
-   mTimer(ioService, boost::posix_time::seconds(reTurnConfig.mUserDatabaseCheckInterval)),
-   mReTurnConfig(reTurnConfig)
+   mReTurnConfig(reTurnConfig),
+   mLoopInterval(3),
+   mNextFileCheck(mLoadedTime + reTurnConfig.mUserDatabaseCheckInterval),
+   mTimer(ioService, boost::posix_time::seconds(mLoopInterval))
 {
+   mHup = false;
+#ifndef WIN32
+   // After all parsing is done, we can set up the signal handler
+   // For the moment, HUP will re-read the users file.
+   // It won't re-read the whole config
+   signal(SIGHUP, onSignal);
+#endif
 }
 
 void
 ReTurnUserFileScanner::start()
 {
-   if(mReTurnConfig.mUserDatabaseCheckInterval > 0)
+   int timerInterval = mLoopInterval;
+
+   if(timerInterval > 0)
    {
-      mTimer.expires_from_now(boost::posix_time::seconds(mReTurnConfig.mUserDatabaseCheckInterval));
+      mTimer.expires_from_now(boost::posix_time::seconds(timerInterval));
       mTimer.async_wait(boost::bind(&ReTurnUserFileScanner::timeout, this, asio::placeholders::error));
-   }
-   else
-   {
-      InfoLog(<<"UserDatabaseCheckInterval = 0, not checking for updates to user database " << mReTurnConfig.mUsersDatabaseFilename);
    }
 }
 
-void
-ReTurnUserFileScanner::timeout(const asio::error_code& e)
+bool
+ReTurnUserFileScanner::hasUserFileChanged()
 {
    StackLog(<<"checking user database freshness");
 
@@ -376,7 +389,25 @@ ReTurnUserFileScanner::timeout(const asio::error_code& e)
    }
 #endif
 
-   if(latestFileTS > mLoadedTime)
+   return latestFileTS > mLoadedTime;
+}
+
+void
+ReTurnUserFileScanner::timeout(const asio::error_code& e)
+{
+   bool mustReload = mHup;
+
+   if(!mustReload && mReTurnConfig.mUserDatabaseCheckInterval > 0)
+   {
+      time_t now = time(0);
+      if(now >= mNextFileCheck)
+      {
+         mustReload = hasUserFileChanged();
+         mNextFileCheck = now + mReTurnConfig.mUserDatabaseCheckInterval;
+      }
+   }
+
+   if(mustReload)
    {
       InfoLog(<<"change in user database detected, reloading...");
       WriteLock lock(mReTurnConfig.mUserDataMutex);
@@ -385,9 +416,30 @@ ReTurnUserFileScanner::timeout(const asio::error_code& e)
       mReTurnConfig.authParse(mReTurnConfig.mUsersDatabaseFilename);
       InfoLog(<<"user database reload completed");
       mLoadedTime = time(0);
+      mNextFileCheck = mLoadedTime + mReTurnConfig.mUserDatabaseCheckInterval;
    }
+
+   // clear any signal
+   mHup = false;
+
    // set the timer again:
    start();
+}
+
+void
+ReTurnUserFileScanner::onSignal(int signum)
+{
+#ifndef WIN32
+   if(signum == SIGHUP)
+   {
+      InfoLog(<<"HUP signal received, scheduling a users.txt reload");
+      mHup = true;
+   }
+   else
+   {
+      WarningLog(<<"received unexpected signal number " << signum);
+   }
+#endif
 }
 
 } // namespace
