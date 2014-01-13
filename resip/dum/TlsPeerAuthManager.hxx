@@ -49,8 +49,8 @@ class TlsPeerAuthManager : public DumFeature
 
    private:
       std::set<Data> mTrustedPeers;
-      CommonNameMappings mCommonNameMappings;
       bool mThirdPartyRequiresCertificate;
+      CommonNameMappings mCommonNameMappings;
 };
 
  
