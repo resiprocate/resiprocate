@@ -17,7 +17,7 @@ struct attr *RADIUSDigestAuthenticator::attrs = NULL;
 struct val *RADIUSDigestAuthenticator::vals = NULL;
 rc_handle *RADIUSDigestAuthenticator::rh = NULL;
 
-inline void init_av(rc_handle *rh, struct attr *at, struct val *vl, char *fn)
+inline void init_av(rc_handle *rh, struct attr *at, struct val *vl, const char *fn)
 {
    int i;
    DICT_ATTR *da;
@@ -98,6 +98,9 @@ void RADIUSDigestAuthenticator::init(const char *radiusConfigFile)
    {
       myRADIUSConfigFile = radiusConfigFile;
    }
+   // FIXME: this should not use a cast, freeradius-client.h to be fixed
+   // pull request submitted via github
+   // https://github.com/FreeRADIUS/freeradius-client/pull/8
    if((rh = rc_read_config((char *)myRADIUSConfigFile)) == NULL)
    {
       ErrLog(<< "radius: Error opening configuration file \n");
