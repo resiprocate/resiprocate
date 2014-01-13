@@ -74,7 +74,6 @@ public:
 
    resip::Data mUsersDatabaseFilename;
    bool mUserDatabaseHashedPasswords;
-   bool mRunWithoutValidUsers;
 
    resip::Data mLoggingType;
    resip::Data mLoggingLevel;
