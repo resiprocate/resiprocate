@@ -755,6 +755,19 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
    return str;
 }
 
+
+Data
+SipMessage::toString() const
+{
+   Data out;
+   {
+      oDataStream dataStream(out);
+      this->encode(dataStream);
+   }
+   out += Data('\0');
+   return out;
+}
+
 EncodeStream&
 SipMessage::encodeSingleHeader(Headers::Type type, EncodeStream& str) const
 {
@@ -845,9 +858,16 @@ SipMessage::addBuffer(char* buf)
 }
 
 char *
-SipMessage::getBuffer(){
-
-   return mBufferList[0];
+SipMessage::getBuffer() const
+{
+   if (!mBufferList.empty())
+   {
+      return mBufferList[0];
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 void 

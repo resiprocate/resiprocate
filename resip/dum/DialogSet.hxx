@@ -29,8 +29,10 @@ class DialogSet
    public:
       DialogSet(BaseCreator* creator, DialogUsageManager& dum);
       DialogSet(const SipMessage& request, DialogUsageManager& dum);
+      DialogSet(const DialogSetData & data, DialogUsageManager & dum);//used by DialogSetPersistenceManager
       virtual ~DialogSet();
       DialogSetId getId() const;
+      Data getCancelKey() const;
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
@@ -92,6 +94,8 @@ class DialogSet
 
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
+
+      void createAppDialog (Dialog* dialog, const SipMessage& msg);
 
       ClientOutOfDialogReq* findMatchingClientOutOfDialogReq(const SipMessage& msg);
 

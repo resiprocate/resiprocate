@@ -274,6 +274,62 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
    DebugLog ( <<"Dialog::Dialog " << mId);
 }
 
+Dialog::Dialog(DialogUsageManager& dum, const DialogData & dialogData, DialogSet& ds)
+: mDum(dum),
+  mDialogSet(ds),
+  mId(ds.getId(),dialogData.getRemoteTag()),
+  mClientSubscriptions(),
+  mServerSubscriptions(),
+  mInviteSession(0),
+  mType(Fake),
+  mRouteSet(),
+  mLocalContact(dialogData.getLocalContact()),
+  mLocalCSeq(dialogData.getLocalCSeq()),
+  mRemoteCSeq(dialogData.getRemoteCSeq()),
+  mRemoteTarget(dialogData.getRemoteTarget()),
+  mLocalNameAddr(dialogData.getLocalNameAddr()),
+  mRemoteNameAddr(dialogData.getRemoteNameAddr()),
+  mCallId(dialogData.getCallId()),
+  mDefaultSubExpiration(0),
+  mAppDialog(0),
+  mDestroying(false),
+  mReUseDialogSet(false)
+{
+
+   const Data& dialogType = dialogData.getType();
+
+   if (dialogType == "Invitation")
+   {
+      mType = Invitation;
+   }
+   else if (dialogType == "Subscription")
+   {
+      mType = Subscription;
+   }
+   else
+   {
+      mType = Fake;
+   }
+
+   mNetworkAssociation.setDum(&dum);
+
+   const std::vector<Data> & routes  = dialogData.getRoutes();
+
+   for (unsigned int i = 0; i < routes.size(); i++ )
+   {
+      mRouteSet.push_back(NameAddr(routes[i]));
+   }
+
+   DebugLog ( << "************** Created Dialog from DialogData **************" );
+   DebugLog ( << "mRemoteNameAddr: " << mRemoteNameAddr );
+   DebugLog ( << "mLocalNameAddr: " << mLocalNameAddr );
+   DebugLog ( << "mLocalContact: " << mLocalContact );
+   DebugLog ( << "mRemoteTarget: " << mRemoteTarget );
+
+   mDialogSet.addDialog(this);
+   DebugLog ( <<"Dialog::Dialog " << mId);
+}
+
 Dialog::~Dialog()
 {
    DebugLog ( <<"Dialog::~Dialog() ");
@@ -335,6 +391,24 @@ Dialog::getRouteSet() const
    return mRouteSet;
 }
 
+unsigned int
+Dialog::getLocalCSeq() const
+{
+   return mLocalCSeq;
+}
+
+unsigned int
+Dialog::getRemoteCSeq() const
+{
+   return mRemoteCSeq;
+}
+
+const CallID&
+Dialog::getCallId() const
+{
+   return mCallId;
+}
+
 void
 Dialog::cancel()
 {
@@ -389,6 +463,11 @@ Dialog::handleTargetRefresh(const SipMessage& msg)
             {
                //.dcm. replace or check then replace
                mRemoteTarget = msg.header(h_Contacts).front();
+               //flagging that the Dialog data has changed
+               if (mDum.mHAMode)
+               {
+                  mDum.mDialogSetChangeInfoManager->DialogSetChanged(mDialogSet.getId());
+               }
             }
          }
          break;
@@ -656,6 +735,10 @@ Dialog::dispatch(const SipMessage& msg)
                assert (r->second->isRequest());
 
                mLocalCSeq++;
+               if (mDum.mHAMode)
+               {
+                  mDum.mDialogSetChangeInfoManager->DialogSetChanged(mDialogSet.getId());
+               }
                send(r->second);
                handledByAuth = true;
             }
@@ -1033,6 +1116,10 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    if (method != ACK && method != CANCEL)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
+      if (mDum.mHAMode)
+      {
+         mDum.mDialogSetChangeInfoManager->DialogSetChanged(mDialogSet.getId());
+      }
    }
    else
    {

@@ -36,6 +36,16 @@ CallID::CallID(const CallID& rhs,
      mValue(rhs.mValue)
 {}
 
+CallID::CallID(const Data& unparsed)
+   : ParserCategory()
+{
+   HeaderFieldValue hfv(unparsed.data(), unparsed.size());
+   // must copy because parse creates overlays
+   CallID tmp(hfv, Headers::UNKNOWN);
+   tmp.checkParsed();
+   *this = tmp;
+}
+
 CallID&
 CallID::operator=(const CallID& rhs)
 {
@@ -102,6 +112,19 @@ CallID::encodeParsed(EncodeStream& str) const
    str << mValue;
    encodeParameters(str);
    return str;
+}
+
+Data
+CallID::toString() const
+{
+   Data out;
+   {
+      oDataStream dataStream(out);
+      this->encodeParsed(dataStream);
+   }
+   out += Data('\0');
+
+   return out;
 }
 
 ParameterTypes::Factory CallID::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};

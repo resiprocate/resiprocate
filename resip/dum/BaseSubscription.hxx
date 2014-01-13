@@ -9,6 +9,7 @@ namespace resip
 {
 
 class DialogUsageManager;
+class BaseSubscriptionData;
 
 //!dcm! -- update contact in dialog if required
 
@@ -22,6 +23,7 @@ class BaseSubscription: public DialogUsage
 
    protected:
       friend class Dialog;
+      friend class DialogSetPersistenceManager;
 
       enum SubDlgState
       {
@@ -36,6 +38,8 @@ class BaseSubscription: public DialogUsage
       SubDlgState mSubDlgState;
 
       BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
+
+      BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const BaseSubscriptionData& data);
 
       SubscriptionState getSubscriptionState();      
 

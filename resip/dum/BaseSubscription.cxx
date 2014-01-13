@@ -3,6 +3,7 @@
 #include "resip/dum/Dialog.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "resip/dum/DialogSetPersistenceManager.hxx"
 
 using namespace resip;
 
@@ -31,6 +32,53 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    {
       mEventType = "refer";
       mLastRequest->header(h_Event).value() = mEventType;      
+   }
+}
+
+BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const BaseSubscriptionData& data) :
+   DialogUsage(dum, dialog),
+   mSubDlgState(SubDlgInitial),
+   //mLastRequest(SipMessage::make(data.getLastRequest(), true)),
+   //mLastResponse(SipMessage::make(data.getLastRequest(), true)),
+   mLastRequest(new SipMessage()),
+   mLastResponse(new SipMessage()),
+   mDocumentKey(data.getDocumentKey()),
+   mEventType(data.getEventType()),
+   mSubscriptionId(data.getSubscriptionId()),
+   mTimerSeq(0),
+   mSubscriptionState(Invalid)
+{
+
+   //!! seems there is no need to recreate mLastRequest and mLastResponse from DB
+
+   Data subscriptionState = data.getSubscriptionState();
+   if (subscriptionState == "invalid")
+   {
+      mSubscriptionState = Invalid;
+   }
+   else if (subscriptionState == "init")
+   {
+      mSubscriptionState = Init;
+   }
+   else if (subscriptionState == "pending")
+   {
+      mSubscriptionState = Pending;
+   }
+   else if (subscriptionState == "active")
+   {
+      mSubscriptionState = Active;
+   }
+   else if (subscriptionState == "waiting")
+   {
+      mSubscriptionState = Waiting;
+   }
+   else if (subscriptionState == "terminated")
+   {
+      mSubscriptionState = Terminated;
+   }
+   else if (subscriptionState == "unknown")
+   {
+      mSubscriptionState = Unknown;
    }
 }
 

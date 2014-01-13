@@ -84,7 +84,36 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    }
    DebugLog ( << " ************* Created DialogSet(UAS) *************: " << mId);
 
+}
 
+//UAS from DialogSetPersistenceManager
+DialogSet::DialogSet(const DialogSetData & data, DialogUsageManager& dum) :
+   mMergeKey(data.getRequestUri(),
+         data.getCSeq(),
+         data.getTag(),
+         data.getCallId(),
+         dum.getMasterProfile()->checkReqUriInMergeDetectionEnabled()),
+   mCancelKey(data.getCancelKey()),
+   mDialogs(),
+   mCreator(0),
+   mId(DialogSetId(data.getCallId(), data.getTag())),
+   mDum(dum),
+   mAppDialogSet(0),
+   mState(Established),
+   mClientRegistration(0),
+   mServerRegistration(0),
+   mClientPublication(0),
+   mClientOutOfDialogRequests(),
+   mServerOutOfDialogRequest(0),
+   mClientPagerMessage(0),
+   mServerPagerMessage(0)
+{
+   mDum.mMergedRequests.insert(mMergeKey);
+   if (!mCancelKey.empty())
+   {
+      mDum.mCancelMap[mCancelKey] = this;
+   }
+   DebugLog ( << " ************* Created DialogSet(UAS) *************: " << mId);
 }
 
 DialogSet::~DialogSet()
@@ -162,13 +191,17 @@ DialogSet::getId() const
    return mId;
 }
 
+Data
+DialogSet::getCancelKey() const
+{
+   return mCancelKey;
+}
+
 void
 DialogSet::addDialog(Dialog *dialog)
 {
    mDialogs[dialog->getId()] = dialog;
-   if (mDum.mHAMode == true){
-	   mDum.mDialogSetChangeInfoManager->DialogAdded(this, dialog);
-   }
+
 }
 
 BaseCreator*
@@ -892,16 +925,24 @@ DialogSet::dispatch(const SipMessage& msg)
       }
 
       assert(mState != WaitingToEnd);
-      DebugLog ( << "### Calling CreateAppDialog ###: " << std::endl << std::endl <<msg);
-      AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
-      dialog->mAppDialog = appDialog;
-      appDialog->mDialog = dialog;
+      createAppDialog(dialog, msg);
       dialog->dispatch(msg);
+
    }
    else
    {     
       dialog->dispatch(msg);
    }
+}
+
+void
+DialogSet::createAppDialog (Dialog*  dialog, const SipMessage& msg)
+{
+   DebugLog ( << "### Calling CreateAppDialog ###: " << std::endl << std::endl <<msg);
+   AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
+   dialog->mAppDialog = appDialog;
+   appDialog->mDialog = dialog;
+
 }
 
 

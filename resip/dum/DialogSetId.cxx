@@ -109,11 +109,20 @@ size_t DialogSetId::hash() const
 }
 
 
+Data
+DialogSetId::toString() const
+{
+   Data dsid (getCallId() + Data("-") + getLocalTag());
+   return dsid;
+}
+
 EncodeStream&
 resip::operator<<(EncodeStream& os, const DialogSetId& id)
 {
     return os << id.mCallId << '-' << id.mTag ;
 }
+
+
 
 HashValueImp(resip::DialogSetId, data.hash());
 

@@ -66,6 +66,7 @@
 #include "rutil/Lockable.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Timer.hxx"
+#include "resip/dum/DialogSetPersistenceManager.hxx"
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
@@ -1373,7 +1374,8 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          //DebugLog(<< "Destroying usage" );
          destroyUsage->destroy();
-         if (mHAMode == true){
+         if (mHAMode == true)
+         {
             mDialogSetPersistenceManager->saveDialogSetChangesToPersistence(mDialogSetChangeInfoManager->getChanges());
             mDialogSetChangeInfoManager->reset();
          }
@@ -1651,20 +1653,28 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                   return;
                }
             }
-            if (mHAMode == true){
+            if (mHAMode == true)
+            {
+               //update the memory DialogSetMap with latest changes from the persistent layer
                mDialogSetPersistenceManager->syncDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
             }
             processRequest(*sipMsg);
          }
          else
          {
-            if (mHAMode == true){
+            /*
+            if (mHAMode == true)
+            {
+               //update the memory DialogSetMap with latest changes from the persistent layer
                mDialogSetPersistenceManager->syncDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
             }
+            */
             processResponse(*sipMsg);
          }
 
-         if (mHAMode == true){
+         if (mHAMode == true)
+         {
+            //update the flagged DialogSets to persistent layer
             mDialogSetPersistenceManager->saveDialogSetChangesToPersistence(mDialogSetChangeInfoManager->getChanges());
             mDialogSetChangeInfoManager->reset();
          }
@@ -2110,9 +2120,13 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             try
             {
-               DialogSet *dset = makeDialogSetFromRequest(request);
-               if (mHAMode == true){
-                  mDialogSetChangeInfoManager->DialogSetAdded(dset,const_cast<SipMessage&>(request));
+               DialogSet *dset = makeUASDialogSet(request);
+               if (mHAMode == true)
+               {
+                  if (!mDialogSetChangeInfoManager->DialogSetAdded(dset->getId()))
+                  {
+                     ErrLog( << "unable to mark DialogSet with id " << dset->getId() << " for addition in DialogSetChangeInfoManager");
+                  }
                }
                dset->dispatch(request);
             }
@@ -2266,6 +2280,10 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
    threadCheck();
    StackLog ( << "Looking for dialogSet: " << id << " in map:");
    StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
+
+   for (DialogSetMap::const_iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++ ){
+      DebugLog( << " DS with " << it->second->getId());
+   }
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
 
    if (it == mDialogSetMap.end())
@@ -2310,12 +2328,16 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
    {
       mRedirectManager->removeDialogSet(dsId);
    }
-   if (mHAMode == true){
-	   mDialogSetChangeInfoManager->DialogSetRemoved(dsId);
+   if (mHAMode == true)
+   {
+	   if (!mDialogSetChangeInfoManager->DialogSetRemoved(dsId))
+	   {
+	      ErrLog( << "unable to mark DialogSet with id " <<dsId << "for removal in DialogSetChangeInfoManager");
+	   }
    }
 }
 
-DialogSet * DialogUsageManager::makeDialogSetFromRequest(const SipMessage &request){
+DialogSet * DialogUsageManager::makeUASDialogSet(const SipMessage &request){
    DialogSet* dset =  new DialogSet(request, *this);
 
    StackLog ( << "*********** Calling AppDialogSetFactory *************: " << dset->getId());
@@ -2331,23 +2353,35 @@ DialogSet * DialogUsageManager::makeDialogSetFromRequest(const SipMessage &reque
    return dset;
 
 }
-/*
-DialogSet * DialogUsageManager::makeDialogSetFromDialogSetData(const DialogSetData & data){
 
-   DialogSet *dset = new DialogSet(data, *this);
+
+DialogSet *
+DialogUsageManager::makeUASDialogSetFromDialogSetData(const DialogSetData &data)
+{
+   DebugLog ( << "Creating DialogSet with id " << data.getId());
+   DialogSet* dset =  new DialogSet(data, *this);
+   //dset->mId = DialogSetId(data.getCallId(), data.getTag());
+
+   //Data requestMsgBuff = data.getRequest();
+   //SipMessage *request = SipMessage::make(requestMsgBuff, true);
+   SipMessage* request = new SipMessage();
+
    StackLog ( << "*********** Calling AppDialogSetFactory *************: " << dset->getId());
-   AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
+   AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, *request);
    appDs->mDialogSet = dset;
-   dset->setUserProfile(appDs->selectUASUserProfile(request));
+   dset->setUserProfile(appDs->selectUASUserProfile(*request));
    dset->mAppDialogSet = appDs;
 
    StackLog ( << "************* Adding DialogSet ***************: " << dset->getId());
    StackLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap[dset->getId()] = dset;
    StackLog ( << "DialogSetMap: " << InserterP(mDialogSetMap) );
+
    return dset;
+
 }
-*/
+
+
 ClientSubscriptionHandler*
 DialogUsageManager::getClientSubscriptionHandler(const Data& eventType)
 {
@@ -2556,6 +2590,7 @@ DialogUsageManager::setHAMode()
 {
 	mHAMode = true;
 	mDialogSetChangeInfoManager = new DialogSetChangeInfoManager();
+	InfoLog( << "working in HA mode. Multiple DUM server nodes can be used in parallel");
 }
 void
 

@@ -1621,8 +1621,10 @@ Helper::processStrictRoute(SipMessage& request)
       // The next hop is a strict router.  Move the next hop into the
       // Request-URI and move the ultimate destination to the end of the
       // route list.  Force the message target to be the next hop router.
+      Uri frontRouteUri = request.const_header(h_Routes).front().uri();
       request.header(h_Routes).push_back(NameAddr(request.const_header(h_RequestLine).uri()));
-      request.header(h_RequestLine).uri() = request.const_header(h_Routes).front().uri();
+      //request.header(h_RequestLine).uri() = request.const_header(h_Routes).front().uri();
+      request.header(h_RequestLine).uri() = frontRouteUri;
       request.header(h_Routes).pop_front(); // !jf!
       assert(!request.hasForceTarget());
       request.setForceTarget(request.const_header(h_RequestLine).uri());

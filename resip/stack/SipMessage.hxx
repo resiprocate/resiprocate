@@ -246,6 +246,8 @@ class SipMessage : public TransactionMessage
       @return string representation of a SIP message.
       */
       virtual EncodeStream& encode(EncodeStream& str) const;      
+      //creates a Data structure which encodes the SipMessage contents (uses encode)
+      Data toString() const;
       //sipfrags will not output Content Length if there is no body--introduce
       //friendship to hide this?
       virtual EncodeStream& encodeSipFrag(EncodeStream& str) const;
@@ -506,7 +508,7 @@ class SipMessage : public TransactionMessage
       Tuple& getDestination() { return mDestination; }
 
       void addBuffer(char* buf);
-      char * getBuffer();
+      char * getBuffer() const;
 
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
 

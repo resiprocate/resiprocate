@@ -22,6 +22,7 @@ class SipMessage;
 class DialogUsageManager;
 class DialogSet;
 class AppDialog;
+class DialogData;
 
 //!dcm! -- kill typedef std::list<DialogId> DialogIdSet;
 
@@ -38,6 +39,7 @@ class Dialog
       // different behavior from request vs. response
       // (request creates to tag)
       Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
+      Dialog(DialogUsageManager& dum, const DialogData & dialogData, DialogSet& ds);
 
       const DialogId& getId() const;
       const NameAddr& getLocalNameAddr() const;
@@ -46,6 +48,10 @@ class Dialog
       const NameAddr& getRemoteTarget() const;
       const NameAddrs& getRouteSet() const;
       
+      unsigned int getLocalCSeq() const;
+      unsigned int getRemoteCSeq() const;
+      const CallID& getCallId() const;
+
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests
       void send(SharedPtr<SipMessage> msg);
@@ -98,6 +104,10 @@ class Dialog
       friend class ServerOutOfDialogReq;
 
       friend class AppDialog;
+
+      friend class DialogData;
+      friend class DialogSetPersistenceManager;
+
       void possiblyDie();
 
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);

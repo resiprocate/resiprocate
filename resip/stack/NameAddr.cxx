@@ -321,6 +321,18 @@ NameAddr::encodeParsed(EncodeStream& str) const
 }
 
 
+Data
+NameAddr::toString() const
+{
+   Data out;
+   {
+      oDataStream dataStream(out);
+      this->encode(dataStream);
+   }
+   out += Data('\0');
+   return out;
+}
+
 bool 
 NameAddr::mustQuoteDisplayName() const
 {

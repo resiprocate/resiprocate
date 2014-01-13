@@ -46,6 +46,8 @@ class NameAddr : public ParserCategory
       virtual ParserCategory* clone(void* location) const;
       virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
+      void data(Data & data) const;
+      Data toString() const;
 
       bool operator<(const NameAddr& other) const;
 

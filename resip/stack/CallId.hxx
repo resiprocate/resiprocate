@@ -25,6 +25,7 @@ class CallID : public ParserCategory
                PoolBase* pool=0);
       CallID(const CallID& orig,
                PoolBase* pool=0);
+      CallID(const Data& unparsed);
       CallID& operator=(const CallID&);
       bool operator==(const CallID&) const;
       
@@ -36,6 +37,7 @@ class CallID : public ParserCategory
       virtual ParserCategory* clone(void* location) const;
       virtual ParserCategory* clone(PoolBase* pool) const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
+      Data toString() const;
 
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.

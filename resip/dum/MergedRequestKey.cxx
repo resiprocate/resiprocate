@@ -20,6 +20,15 @@ MergedRequestKey::MergedRequestKey(const SipMessage& req, bool checkRequestUri) 
 {
 }
 
+MergedRequestKey::MergedRequestKey(const Data& requestUri, const Data& cSeq, const Data& tag, const Data& callId, bool checkRequestUri ) :
+   mRequestUri(requestUri),
+   mCSeq(cSeq),
+   mTag(tag),
+   mCallId(callId),
+   mCheckRequestUri(checkRequestUri)
+{
+}
+
 bool
 MergedRequestKey::operator==(const MergedRequestKey& other) const
 {
@@ -85,6 +94,10 @@ const Data& MergedRequestKey::cseq() const
     return mCSeq;
 }
 
+const Data& MergedRequestKey::requestUri() const
+{
+    return mRequestUri;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

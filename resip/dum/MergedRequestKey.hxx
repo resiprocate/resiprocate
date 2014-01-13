@@ -12,12 +12,14 @@ class MergedRequestKey
    public:
       MergedRequestKey();
       MergedRequestKey(const SipMessage& request, bool checkRequestUri);
+      MergedRequestKey(const Data& requestUri, const Data& cSeq, const Data& tag, const Data& callId, bool checkRequestUri);
       bool operator==(const MergedRequestKey& other) const;
       bool operator!=(const MergedRequestKey& other) const;
       bool operator<(const MergedRequestKey& other) const;
 
       Data& cseq();
       const Data& cseq() const;
+      const Data& requestUri() const;
       static const MergedRequestKey Empty;
 
    private:

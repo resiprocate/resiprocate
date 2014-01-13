@@ -26,6 +26,8 @@ class DialogSetId
       
       const Data& getCallId() const { return mCallId; }
       const Data& getLocalTag() const { return mTag; }
+      Data toString() const;
+
    private:
       DialogSetId();
       

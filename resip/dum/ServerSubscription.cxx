@@ -6,6 +6,7 @@
 #include "resip/dum/UsageUseException.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
+//#include "resip/dum/DialogSetPersistenceManager.hxx"
 
 #include <time.h>
 
@@ -33,6 +34,21 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
       mSubscriptionId = Data(req.header(h_CSeq).sequence());
    }   
    Data key = getEventType() + getDocumentKey();
+   mDum.mServerSubscriptions.insert(DialogUsageManager::ServerSubscriptions::value_type(key, this));
+}
+
+ServerSubscription::ServerSubscription(DialogUsageManager& dum,
+                                       Dialog& dialog,
+                                       const ServerSubscriptionData& data)
+   : BaseSubscription(dum, dialog, data),
+     mSubscriber(data.getSubscriber()),
+     //mLastSubscribe(*SipMessage::make(data.getLastSubscribeBuff(), true)),
+     mExpires(60),
+     mAbsoluteExpiry(data.getAbsoluteExpiry())
+{
+   mSubscriptionId = data.getSubscriptionId();
+   Data key = getEventType() + getDocumentKey();
+
    mDum.mServerSubscriptions.insert(DialogUsageManager::ServerSubscriptions::value_type(key, this));
 }
 
@@ -224,7 +240,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
 
          if (errorResponseCode == 423 && handler->hasMinExpires())
          {
-            response->header(h_MinExpires).value() = handler->getMinExpires();		   
+            response->header(h_MinExpires).value() = handler->getMinExpires();
          }
          send(response);
          return;
