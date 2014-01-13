@@ -33,8 +33,8 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 DnsInterface::DnsInterface(DnsStub& dnsStub) : 
-   mDnsStub(dnsStub),
-   mUdpOnlyOnNumeric(false)
+   mUdpOnlyOnNumeric(false),
+   mDnsStub(dnsStub)
 {
 
 #ifdef USE_DNS_VIP
