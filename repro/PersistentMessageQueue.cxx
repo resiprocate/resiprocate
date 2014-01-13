@@ -353,6 +353,7 @@ PersistentMessageDequeue::pop(size_t numRecords, std::vector<resip::Data>& recor
    catch(...) 
    {
       WarningLog( << "PersistentMessageDequeue::pop - unknown exception");
+      return false;
    }
 #endif
    return false;
