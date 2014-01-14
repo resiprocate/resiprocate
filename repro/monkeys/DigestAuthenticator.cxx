@@ -431,6 +431,10 @@ DigestAuthenticator::getRealm(RequestContext &rc)
 bool
 DigestAuthenticator::isMyRealm(RequestContext &rc, const resip::Data& realm)
 {
+   if(!mStaticRealm.empty())
+   {
+      return mStaticRealm == realm;
+   }
    Proxy &proxy = rc.getProxy();
    return proxy.isMyDomain(realm);
 }
