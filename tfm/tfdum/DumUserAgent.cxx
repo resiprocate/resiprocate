@@ -156,12 +156,36 @@ void
 DumUserAgent::init()
 {
    mIp = PortAllocator::getNextLocalIpAddress();
-   mPort = PortAllocator::getNextPort();
-   if( !mNatNavigator )
+
+   // try setting port in a loop to skip busy ports
+   // because other applications may use some of these ports
+   bool error = false;
+   int retries = 0;
+   const int portRetriesMax = 50;
+
+   do
    {
-      mDum.addTransport(resip::UDP, mPort, resip::V4, mIp);
+      error = false;
+
+      try
+      {
+         mPort = PortAllocator::getNextPort();
+
+         if( !mNatNavigator )
+         {
+            mDum.addTransport(resip::UDP, mPort, resip::V4, mIp);
+         }
+         mDum.addTransport(resip::TCP, mPort, resip::V4, mIp);
+      }
+      catch (...)
+      {
+         InfoLog(<< "init: port " << mPort << "is busy");
+
+         retries++;
+         error = true;
+      }
    }
-   mDum.addTransport(resip::TCP, mPort, resip::V4, mIp);
+   while (error || retries > portRetriesMax);
 
    mProfile->setFixedTransportInterface(mIp);
 
