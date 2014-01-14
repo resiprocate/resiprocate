@@ -73,8 +73,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
          // asynchronously fetch the relevant userAuthInfo from the database
          for (Auths::iterator i = authHeaders.begin() ; i != authHeaders.end() ; ++i)
          {
-            // !rwm!  TODO sometime we need to have a separate isMyRealm() function
-            if (proxy.isMyDomain(i->param(p_realm)))
+            if (isMyRealm(rc, i->param(p_realm)))
             {
                return requestUserAuthInfo(rc, i->param(p_realm));
             }
@@ -427,6 +426,13 @@ DigestAuthenticator::getRealm(RequestContext &rc)
       return mStaticRealm;
    }
    return rc.getDigestRealm();
+}
+
+bool
+DigestAuthenticator::isMyRealm(RequestContext &rc, const resip::Data& realm)
+{
+   Proxy &proxy = rc.getProxy();
+   return proxy.isMyDomain(realm);
 }
 
 

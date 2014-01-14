@@ -30,6 +30,7 @@ namespace repro
       virtual processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
       virtual processor_action_t requestUserAuthInfo(RequestContext &, const resip::Auth& auth, UserInfoMessage *userInfo);
       virtual resip::Data getRealm(RequestContext &);
+      virtual bool isMyRealm(RequestContext &, const resip::Data& realm);
       
     private:
       Dispatcher* mAuthRequestDispatcher;
