@@ -34,6 +34,20 @@ dumTests_LDADD += @LIBPTHREAD_LIBADD@
 
 dumTests_SOURCES = dumTests.cxx $(SHARED_SRC)
 
+lib_LTLIBRARIES = libtfmdum.la
+
+libtfmdum_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
+libtfmdum_la_LIBADD = ../repro/libtfmrepro.la
+libtfmdum_la_LIBADD += ../../resip/dum/libdum.la
+libtfmdum_la_LIBADD += ../../resip/stack/libresip.la
+libtfmdum_la_LIBADD += ../../rutil/librutil.la
+libtfmdum_la_LIBADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@ -ldb_cxx -lcppunit -lNetxx
+libtfmdum_la_LIBADD += ../repro/libtfmrepro.la
+libtfmdum_la_LIBADD += ../libtfm.la
+libtfmdum_la_LIBADD += -lpopt
+
+libtfmdum_la_SOURCES = $(SHARED_SRC)
+
 SHARED_SRC = DumUserAgent.cxx \
         TestDialogEvent.cxx \
         DialogEventExpect.cxx \
