@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <list>
 
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "rutil/Mutex.hxx"
@@ -45,7 +46,8 @@ class InMemorySyncRegDb : public RegistrationPersistenceManager
       InMemorySyncRegDb(unsigned int removeLingerSecs = 0);
       virtual ~InMemorySyncRegDb();
       
-      virtual void setHandler(InMemorySyncRegDbHandler* handler) { mHandler = handler; }
+      virtual void addHandler(InMemorySyncRegDbHandler* handler);
+      virtual void removeHandler(InMemorySyncRegDbHandler* handler);
       virtual void initialSync(unsigned int connectionId);
 
       virtual void addAor(const Uri& aor, const ContactList& contacts);
@@ -75,8 +77,12 @@ class InMemorySyncRegDb : public RegistrationPersistenceManager
       Mutex mLockedRecordsMutex;
       Condition mRecordUnlocked;
 
+      void invokeOnAorModified(const resip::Uri& aor, const ContactList& contacts);
+      void invokeOnInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const ContactList& contacts);
       unsigned int mRemoveLingerSecs;
-      InMemorySyncRegDbHandler* mHandler;      
+      typedef std::list<InMemorySyncRegDbHandler*> HandlerList;
+      HandlerList mHandlers;  // use list over set to preserve add order
+      Mutex mHandlerMutex;
 };
 
 }

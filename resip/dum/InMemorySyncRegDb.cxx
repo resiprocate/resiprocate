@@ -54,8 +54,7 @@ contactsRemoveIfRequired(ContactList& contacts, UInt64& now,
 }
 
 InMemorySyncRegDb::InMemorySyncRegDb(unsigned int removeLingerSecs) : 
-   mRemoveLingerSecs(removeLingerSecs),
-   mHandler(0)
+   mRemoveLingerSecs(removeLingerSecs)
 {
 }
 
@@ -67,6 +66,47 @@ InMemorySyncRegDb::~InMemorySyncRegDb()
       delete it->second;
    }
    mDatabase.clear();
+}
+
+void 
+InMemorySyncRegDb::addHandler(InMemorySyncRegDbHandler* handler) 
+{ 
+   Lock lock(mHandlerMutex);
+   mHandlers.push_back(handler); 
+}
+
+void 
+InMemorySyncRegDb::removeHandler(InMemorySyncRegDbHandler* handler) 
+{ 
+   Lock lock(mHandlerMutex);
+   for(HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)
+   {
+       if(*it == handler)
+       {
+           mHandlers.erase(it);
+           break;
+       }
+   }
+}
+
+void 
+InMemorySyncRegDb::invokeOnAorModified(const resip::Uri& aor, const ContactList& contacts)
+{
+   Lock lock(mHandlerMutex);
+   for(HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)
+   {
+       (*it)->onAorModified(aor, contacts);
+   }
+}
+
+void
+InMemorySyncRegDb::invokeOnInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const ContactList& contacts)
+{
+   Lock lock(mHandlerMutex);
+   for(HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)
+   {
+       (*it)->onInitialSyncAor(connectionId, aor, contacts);
+   }
 }
 
 void 
@@ -83,7 +123,7 @@ InMemorySyncRegDb::initialSync(unsigned int connectionId)
          {
             contactsRemoveIfRequired(contacts, now, mRemoveLingerSecs);
          }
-         if(mHandler) mHandler->onInitialSyncAor(connectionId, it->first, contacts);        
+         invokeOnInitialSyncAor(connectionId, it->first, contacts);
       }
    }
 }
@@ -109,7 +149,7 @@ InMemorySyncRegDb::addAor(const Uri& aor,
    {
        mDatabase[aor] = new ContactList(contacts);
    }
-   if(mHandler) mHandler->onAorModified(aor, contacts);
+   invokeOnAorModified(aor, contacts);
 }
 
 void 
@@ -134,7 +174,7 @@ InMemorySyncRegDb::removeAor(const Uri& aor)
               it->mRegExpires = 0;
               it->mLastUpdated = now;
            }
-           if(mHandler) mHandler->onAorModified(aor, contacts);
+           invokeOnAorModified(aor, contacts);
         }
         else
         {
@@ -142,7 +182,7 @@ InMemorySyncRegDb::removeAor(const Uri& aor)
            // Setting this to 0 causes it to be removed when we unlock the AOR.
            i->second = 0;
            ContactList emptyList;
-           if(mHandler) mHandler->onAorModified(aor, emptyList);
+           invokeOnAorModified(aor, emptyList);
         }
      }
   }
@@ -274,14 +314,14 @@ InMemorySyncRegDb::updateContact(const resip::Uri& aor,
             status = CONTACT_CREATED;
          }
          *j=rec;
-         if(mHandler && !rec.mSyncContact) mHandler->onAorModified(aor, *contactList);
+         if(!rec.mSyncContact) invokeOnAorModified(aor, *contactList);
          return status;
       }
    }
 
    // This is a new contact, so we add it to the list.
    contactList->push_back(rec);
-   if(mHandler && !rec.mSyncContact) mHandler->onAorModified(aor, *contactList);
+   if(!rec.mSyncContact) invokeOnAorModified(aor, *contactList);
    return CONTACT_CREATED;
 }
 
@@ -314,7 +354,7 @@ InMemorySyncRegDb::removeContact(const Uri& aor,
          {
             j->mRegExpires = 0;
             j->mLastUpdated = Timer::getTimeSecs();
-            if(mHandler && !rec.mSyncContact) mHandler->onAorModified(aor, *contactList);
+            if(!rec.mSyncContact) invokeOnAorModified(aor, *contactList);
          }
          else
          {
@@ -325,7 +365,7 @@ InMemorySyncRegDb::removeContact(const Uri& aor,
             }
             else
             {
-               if(mHandler && !rec.mSyncContact) mHandler->onAorModified(aor, *contactList);
+               if(!rec.mSyncContact) invokeOnAorModified(aor, *contactList);
             }
          }
          return;

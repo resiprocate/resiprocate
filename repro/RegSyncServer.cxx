@@ -29,12 +29,12 @@ RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
    mRegDb(regDb)
 {
    assert(mRegDb);
-   mRegDb->setHandler(this);
+   mRegDb->addHandler(this);
 }
 
 RegSyncServer::~RegSyncServer()
 {
-   mRegDb->setHandler(0);
+   mRegDb->removeHandler(this);
 }
 
 void 
