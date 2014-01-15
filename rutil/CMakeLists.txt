@@ -1,7 +1,95 @@
+# Used for installation
+SET(INCLUDES
+   AbstractFifo.hxx
+   AndroidLogger.hxx
+   AsyncID.hxx
+   AsyncProcessHandler.hxx
+   BaseException.hxx
+   CircularBuffer.hxx
+   Coders.hxx
+   Condition.hxx
+   ConfigParse.hxx
+   CongestionManager.hxx
+   ConsumerFifoBuffer.hxx
+   CountStream.hxx
+   Data.hxx
+   DataException.hxx
+   DinkyPool.hxx
+   DnsUtil.hxx
+   FdPoll.hxx
+   FdSetIOObserver.hxx
+   Fifo.hxx
+   FileSystem.hxx
+   FiniteFifo.hxx
+   GeneralCongestionManager.hxx
+   GenericIPAddress.hxx
+   GenericTimerQueue.hxx
+   HashMap.hxx
+   HeapInstanceCounter.hxx
+   Inserter.hxx
+   IntrusiveListElement.hxx
+   KeyValueStore.hxx
+   Lock.hxx
+   Lockable.hxx
+   Log.hxx
+   Logger.hxx
+   MD5Stream.hxx
+   Mutex.hxx
+   ParseBuffer.hxx
+   ParseException.hxx
+   Poll.hxx
+   PoolBase.hxx
+   ProducerFifoBuffer.hxx
+   RADIUSDigestAuthenticator.hxx
+   RWMutex.hxx
+   Random.hxx
+   RecursiveMutex.hxx
+   SelectInterruptor.hxx
+   ServerProcess.hxx
+   SharedCount.hxx
+   SharedPtr.hxx
+   Socket.hxx
+   StlPoolAllocator.hxx
+   Subsystem.hxx
+   SysLogBuf.hxx
+   SysLogStream.hxx
+   ThreadIf.hxx
+   Time.hxx
+   TimeLimitFifo.hxx
+   Timer.hxx
+   TransportType.hxx
+   XMLCursor.hxx
+   compat.hxx
+   resipfaststreams.hxx
+   vmd5.hxx
+   vthread.hxx
+)
 
-########### next target ###############
+SET(INCLUDES_WIN
+   WinCompat.hxx
+   WinLeakCheck.hxx
+)
 
-SET(rutil_LIB_SRCS
+SET(INCLUDES_SSL
+   DigestStream.hxx
+)
+
+# Special case because some SSL files are under "ssl"
+SET(INCLUDES_SSL_FOLDER
+   ssl/OpenSSLInit.hxx
+   ssl/SHA1Stream.hxx
+)
+
+# Special case because some stun files are under "stun"
+# TODO: Protect these using conditional compile? How does the autotools build
+# manage it?
+SET(INCLUDES_STUN_FOLDER
+   stun/Stun.hxx
+   stun/Udp.hxx
+)
+
+# Used for compilation
+SET(SOURCES
    AbstractFifo.cxx
    AndroidLogger.cxx
    BaseException.cxx
@@ -9,10 +97,26 @@ SET(rutil_LIB_SRCS
    Condition.cxx
    ConfigParse.cxx
    CountStream.cxx
-   ServerProcess.cxx
    Data.cxx
    DataStream.cxx
+   dns/AresDns.cxx
+   dns/DnsAAAARecord.cxx
+   dns/DnsCnameRecord.cxx
+   dns/DnsHostRecord.cxx
+   dns/DnsNaptrRecord.cxx
+   dns/DnsResourceRecord.cxx
+   dns/DnsSrvRecord.cxx
+   dns/DnsStub.cxx
+   dns/DnsThread.cxx
+   dns/ExternalDnsFactory.cxx
+   dns/LocalDns.cxx
+   dns/QueryTypes.cxx
+   dns/RRCache.cxx
+   dns/RRList.cxx
+   dns/RROverlay.cxx
+   dns/RRVip.cxx
    DnsUtil.cxx
+   FdPoll.cxx
    FileSystem.cxx
    GeneralCongestionManager.cxx
    HeapInstanceCounter.cxx
@@ -25,14 +129,16 @@ SET(rutil_LIB_SRCS
    ParseException.cxx
    Poll.cxx
    PoolBase.cxx
-   FdPoll.cxx
    RADIUSDigestAuthenticator.cxx
-   RWMutex.cxx
    Random.cxx
    RecursiveMutex.cxx
    resipfaststreams.cxx
+   RWMutex.cxx
    SelectInterruptor.cxx
+   ServerProcess.cxx
    Socket.cxx
+   stun/Stun.cxx
+   stun/Udp.cxx
    Subsystem.cxx
    SysLogBuf.cxx
    SysLogStream.cxx
@@ -42,307 +148,79 @@ SET(rutil_LIB_SRCS
    TransportType.cxx
    vmd5.cxx
    XMLCursor.cxx
-   dns/AresDns.cxx
-   dns/DnsCnameRecord.cxx
-   dns/DnsAAAARecord.cxx
-   dns/DnsHostRecord.cxx
-   dns/DnsNaptrRecord.cxx
-   dns/DnsResourceRecord.cxx
-   dns/DnsThread.hxx
-   dns/DnsSrvRecord.cxx
-   dns/DnsStub.cxx
-   dns/DnsThread.cxx
-   dns/ExternalDnsFactory.cxx
-   dns/RRCache.cxx
-   dns/RRList.cxx
-   dns/RRVip.cxx
-   dns/QueryTypes.cxx
-   dns/RROverlay.cxx
-   stun/Stun.cxx
-   stun/Udp.cxx
 )
 
-if (USE_ARES)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dns/ares)
-  # TODO Wire in external ares build here
-  SET(CARES_LIBRARY ares)
-else (USE_ARES)
-  find_path(CARES_INCLUDE_DIR ares.h)
-  find_library(CARES_LIBRARY cares)
-  if (CARES_INCLUDE_DIR AND CARES_LIBRARY)
-    include_directories(${CARES_INCLUDE_DIR})
-  else (CARES_INCLUDE_DIR AND CARES_LIBRARY)
-    message(ERROR "Could not find c-ares; either set USE_ARES, or install c-ares")
-  endif (CARES_INCLUDE_DIR AND CARES_LIBRARY)
-  add_definitions(-DUSE_CARES)
-endif (USE_ARES)
+# TODO: Add WceCompat.cxx on WinCE
+SET(SOURCES_WIN
+   #wince/WceCompat.cxx
+   WinCompat.cxx
+)
 
-if (USE_SSL)
-  list(APPEND rutil_LIB_SRCS
-    ssl/OpenSSLInit.cxx
-    ssl/SHA1Stream.cxx)
-  SET(OPENSSL_LIBS ssl crypto)
-endif (USE_SSL)
+SET(SOURCES_SSL
+# TODO DigestStream.cxx doesn't seem to work on Windows... fix it or remove
+# file if not used at all?
+#   DigestStream.cxx
+   ssl/OpenSSLInit.cxx
+   ssl/SHA1Stream.cxx
+)
 
-add_library(rutil SHARED ${rutil_LIB_SRCS})
+# If compiling with OpenSSL support, add extra SSL related source and header
+# files
+IF(${OPENSSL_FOUND})
+   LIST(APPEND SOURCES ${SOURCES_SSL}) 
+   LIST(APPEND INCLUDES ${INCLUDES_SSL})
+   LIST(APPEND INCLUDES ${INCLUDES_SSL_FOLDER})
 
-target_link_libraries(rutil ${CARES_LIBRARY} ${OPENSSL_LIBS})
+   # Since some ssl files are under the ssl folder they require their own
+   # INSTALL command
+   INSTALL(FILES ${INCLUDES_SSL_FOLDER} DESTINATION include/rutil/ssl)
+ENDIF()
 
-set_target_properties(rutil PROPERTIES VERSION 4.2.0 SOVERSION 4)
-install(TARGETS rutil DESTINATION lib)
+LIST(APPEND INCLUDES ${INCLUDES_STUN_FOLDER})
 
+# TODO: Remove Windows .hxx header files from INSTALL if not Windows
 
-########### install files ###############
+# TODO: Use SOURCE_GROUP to properly represent the subfolders in MS Visual
+# Studio. For example stun/Stun.?xx is shown under VS in the root of the source
+# tree, omitting the stun subfolder.
 
-install(FILES  compat.hxx  	FileSystem.hxx  	HashMap.hxx  	wince/WceCompat.hxx  	SysLogStream.hxx  	AsyncID.hxx  	ConfigParse.hxx  	CongestionManager.hxx  	GeneralCongestionManager.hxx  	HeapInstanceCounter.hxx  	KeyValueStore.hxx  	SharedCount.hxx  	FdSetIOObserver.hxx  	Fifo.hxx  	CircularBuffer.hxx  	FiniteFifo.hxx  	ParseBuffer.hxx  	Log.hxx  	ThreadIf.hxx  	WinLeakCheck.hxx  	Random.hxx  	RecursiveMutex.hxx  	AsyncProcessHandler.hxx  	RADIUSDigestAuthenticator.hxx  	RWMutex.hxx  	Subsystem.hxx  	Logger.hxx  	MD5Stream.hxx  	DnsUtil.hxx  	Timer.hxx  	DigestStream.hxx  	TransportType.hxx  	resipfaststreams.hxx  	Coders.hxx  	SharedPtr.hxx  	SelectInterruptor.hxx  	Socket.hxx  	dns/ExternalDnsFactory.hxx  	dns/DnsStub.hxx  	dns/DnsHostRecord.hxx  	dns/QueryTypes.hxx  	dns/RROverlay.hxx  	dns/AresCompat.hxx  	dns/ExternalDns.hxx  	dns/DnsNaptrRecord.hxx  	dns/RRList.hxx  	dns/LocalDns.hxx  	dns/RRFactory.hxx  	dns/DnsSrvRecord.hxx  	dns/DnsCnameRecord.hxx  	dns/AresDns.hxx  	dns/RRCache.hxx  	dns/DnsHandler.hxx  	dns/RRVip.hxx  	dns/DnsAAAARecord.hxx  	dns/DnsResourceRecord.hxx  	Condition.hxx  	WinCompat.hxx  	vthread.hxx  	ServerProcess.hxx  	Data.hxx  	Lock.hxx  	TimeLimitFifo.hxx  	Mutex.hxx  	GenericTimerQueue.hxx  	IntrusiveListElement.hxx  	ssl/SHA1Stream.hxx  	ssl/OpenSSLInit.hxx  	CountStream.hxx  	vmd5.hxx  	XMLCursor.hxx  	PoolBase.hxx  	FdPoll.hxx  	Time.hxx  	Lockable.hxx  	stun/Udp.hxx  	stun/Stun.hxx  	SysLogBuf.hxx  	Inserter.hxx  	DataStream.hxx  	GenericIPAddress.hxx  	AbstractFifo.hxx  	AndroidLogger.hxx  	ParseException.hxx  	BaseException.hxx  	DataException.hxx  	Poll.hxx  	StlPoolAllocator.hxx  	ProducerFifoBuffer.hxx  	DinkyPool.hxx  	ConsumerFifoBuffer.hxx DESTINATION include/rutil)
+INCLUDE_DIRECTORIES(..)
 
-add_subdirectory(test)
+# Whether or not to build resip-ares
+IF(NOT ${WITH_C_ARES})
+   ADD_SUBDIRECTORY(dns/ares)
+ENDIF()
 
-#original Makefile.am contents follow:
+# OPENSSL_LIBRARIES will be empty if SSL is not used
+SET(TARGET_LIBS ${OPENSSL_LIBRARIES} ares)
 
-## $Id$
-#
-#if USE_ARES
-#SUBDIRS = dns/ares
-#else
-#SUBDIRS = 
-#endif
-#
-#SUBDIRS += . test
-#
-#EXTRA_DIST = fixupGperf
-#EXTRA_DIST += mainpage.doc
-#EXTRA_DIST += rutil_10_0.vcxproj rutil_10_0.vcxproj.filters
-#EXTRA_DIST += *.vcproj
-#EXTRA_DIST += WinCompat.cxx
-#EXTRA_DIST += msvc/*.h
-#EXTRA_DIST += dns/LocalDns.cxx
-#
-##AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
-#AM_CXXFLAGS = -I $(top_srcdir) 
-#if USE_ARES
-#AM_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
-#endif
-#
-#lib_LTLIBRARIES = librutil.la
-#
-#librutil_la_LIBADD = $(LIBSSL_LIBADD)
-#librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
-#librutil_la_LIBADD += $(LIBARES_LIBADD)
-#librutil_la_LIBADD += @LIBSTL_LIBADD@
-#librutil_la_LIBADD += @LIBLOG_LIBADD@
-##librutil_la_LIBADD += -lrt
-#librutil_la_LIBADD += @LIBPTHREAD_LIBADD@
-#librutil_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
-#
-#librutil_la_SOURCES = \
-#	AbstractFifo.cxx \
-#	AndroidLogger.cxx \
-#	BaseException.cxx \
-#	Coders.cxx \
-#	Condition.cxx \
-#	ConfigParse.cxx \
-#	CountStream.cxx \
-#	ServerProcess.cxx \
-#	Data.cxx \
-#	DataStream.cxx \
-#	DnsUtil.cxx \
-#	FileSystem.cxx \
-#	GeneralCongestionManager.cxx \
-#	HeapInstanceCounter.cxx \
-#	KeyValueStore.cxx \
-#	Lock.cxx \
-#	Log.cxx \
-#	MD5Stream.cxx \
-#	Mutex.cxx \
-#	ParseBuffer.cxx \
-#	ParseException.cxx \
-#	Poll.cxx \
-#	PoolBase.cxx \
-#	FdPoll.cxx \
-#	RADIUSDigestAuthenticator.cxx \
-#	RWMutex.cxx \
-#	Random.cxx \
-#	RecursiveMutex.cxx \
-#	resipfaststreams.cxx \
-#	SelectInterruptor.cxx \
-#	Socket.cxx \
-#	Subsystem.cxx \
-#	SysLogBuf.cxx \
-#	SysLogStream.cxx \
-#	ThreadIf.cxx \
-#	Time.cxx \
-#	Timer.cxx \
-#	TransportType.cxx \
-#	vmd5.cxx \
-#	XMLCursor.cxx \
-#	\
-#	dns/AresDns.cxx \
-#	dns/DnsCnameRecord.cxx \
-#	dns/DnsAAAARecord.cxx \
-#	dns/DnsHostRecord.cxx \
-#	dns/DnsNaptrRecord.cxx \
-#	dns/DnsResourceRecord.cxx \
-#	dns/DnsThread.hxx \
-#	dns/DnsSrvRecord.cxx \
-#	dns/DnsStub.cxx \
-#	dns/DnsThread.cxx \
-#	dns/ExternalDnsFactory.cxx \
-#	dns/RRCache.cxx \
-#	dns/RRList.cxx \
-#	dns/RRVip.cxx \
-#	dns/QueryTypes.cxx \
-#	dns/RROverlay.cxx \
-#	\
-#	stun/Stun.cxx \
-#	stun/Udp.cxx
-#
-#if USE_SSL
-#librutil_la_SOURCES += \
-#	ssl/OpenSSLInit.cxx \
-#	ssl/SHA1Stream.cxx
-#endif
-#
-#rutilincludedir = $(includedir)/rutil
-#nobase_rutilinclude_HEADERS = compat.hxx \
-#	FileSystem.hxx \
-#	HashMap.hxx \
-#	wince/WceCompat.hxx \
-#	SysLogStream.hxx \
-#	AsyncID.hxx \
-#	ConfigParse.hxx \
-#	CongestionManager.hxx \
-#	GeneralCongestionManager.hxx \
-#	HeapInstanceCounter.hxx \
-#	KeyValueStore.hxx \
-#	SharedCount.hxx \
-#	FdSetIOObserver.hxx \
-#	Fifo.hxx \
-#	CircularBuffer.hxx \
-#	FiniteFifo.hxx \
-#	ParseBuffer.hxx \
-#	Log.hxx \
-#	ThreadIf.hxx \
-#	WinLeakCheck.hxx \
-#	Random.hxx \
-#	RecursiveMutex.hxx \
-#	AsyncProcessHandler.hxx \
-#	RADIUSDigestAuthenticator.hxx \
-#	RWMutex.hxx \
-#	Subsystem.hxx \
-#	Logger.hxx \
-#	MD5Stream.hxx \
-#	DnsUtil.hxx \
-#	Timer.hxx \
-#	DigestStream.hxx \
-#	TransportType.hxx \
-#	resipfaststreams.hxx \
-#	Coders.hxx \
-#	SharedPtr.hxx \
-#	SelectInterruptor.hxx \
-#	Socket.hxx \
-#	dns/ExternalDnsFactory.hxx \
-#	dns/DnsStub.hxx \
-#	dns/DnsHostRecord.hxx \
-#	dns/QueryTypes.hxx \
-#	dns/RROverlay.hxx \
-#	dns/AresCompat.hxx \
-#	dns/ExternalDns.hxx \
-#	dns/DnsNaptrRecord.hxx \
-#	dns/RRList.hxx \
-#	dns/LocalDns.hxx \
-#	dns/RRFactory.hxx \
-#	dns/DnsSrvRecord.hxx \
-#	dns/DnsCnameRecord.hxx \
-#	dns/AresDns.hxx \
-#	dns/RRCache.hxx \
-#	dns/DnsHandler.hxx \
-#	dns/RRVip.hxx \
-#	dns/DnsAAAARecord.hxx \
-#	dns/DnsResourceRecord.hxx \
-#	Condition.hxx \
-#	WinCompat.hxx \
-#	vthread.hxx \
-#	ServerProcess.hxx \
-#	Data.hxx \
-#	Lock.hxx \
-#	TimeLimitFifo.hxx \
-#	Mutex.hxx \
-#	GenericTimerQueue.hxx \
-#	IntrusiveListElement.hxx \
-#	ssl/SHA1Stream.hxx \
-#	ssl/OpenSSLInit.hxx \
-#	CountStream.hxx \
-#	vmd5.hxx \
-#	XMLCursor.hxx \
-#	PoolBase.hxx \
-#	FdPoll.hxx \
-#	Time.hxx \
-#	Lockable.hxx \
-#	stun/Udp.hxx \
-#	stun/Stun.hxx \
-#	SysLogBuf.hxx \
-#	Inserter.hxx \
-#	DataStream.hxx \
-#	GenericIPAddress.hxx \
-#	AbstractFifo.hxx \
-#	AndroidLogger.hxx \
-#	ParseException.hxx \
-#	BaseException.hxx \
-#	DataException.hxx \
-#	Poll.hxx \
-#	StlPoolAllocator.hxx \
-#	ProducerFifoBuffer.hxx \
-#	DinkyPool.hxx \
-#	ConsumerFifoBuffer.hxx
-#
-#
-###############################################################################
-## 
-## The Vovida Software License, Version 1.0 
-## Copyright (c) 2000-2007 Vovida Networks, Inc.  All rights reserved.
-## 
-## Redistribution and use in source and binary forms, with or without
-## modification, are permitted provided that the following conditions
-## are met:
-## 
-## 1. Redistributions of source code must retain the above copyright
-##    notice, this list of conditions and the following disclaimer.
-## 
-## 2. Redistributions in binary form must reproduce the above copyright
-##    notice, this list of conditions and the following disclaimer in
-##    the documentation and/or other materials provided with the
-##    distribution.
-## 
-## 3. The names "VOCAL", "Vovida Open Communication Application Library",
-##    and "Vovida Open Communication Application Library (VOCAL)" must
-##    not be used to endorse or promote products derived from this
-##    software without prior written permission. For written
-##    permission, please contact vocal@vovida.org.
-## 
-## 4. Products derived from this software may not be called "VOCAL", nor
-##    may "VOCAL" appear in their name, without prior written
-##    permission of Vovida Networks, Inc.
-## 
-## THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
-## WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-## OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
-## NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
-## NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
-## IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
-## EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-## PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-## PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-## OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-## USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
-## DAMAGE.
-## 
-## ====================================================================
-## 
-## This software consists of voluntary contributions made by Vovida
-## Networks, Inc. and many individuals on behalf of Vovida Networks,
-## Inc.  For more information on Vovida Networks, Inc., please see
-## <http://www.vovida.org/>.
-## 
-###############################################################################
+IF(CMAKE_HOST_WIN32)
+   # Static library on Windows
+   SET(TARGET_TYPE "")
+
+   # Also add Windows-related source and header files
+   LIST(APPEND SOURCES ${SOURCES_WIN})
+   LIST(APPEND INCLUDES ${INCLUDES_WIN})
+
+   LIST(APPEND TARGET_LIBS winmm)
+ELSE()
+   # Shared library on Unix
+   SET(TARGET_TYPE SHARED)
+   
+   IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+      LIST(APPEND TARGET_LIBS rt)
+   ENDIF()
+ENDIF()
+
+ADD_LIBRARY(rutil ${TARGET_TYPE} ${SOURCES} ${INCLUDES})
+TARGET_LINK_LIBRARIES(rutil ${TARGET_LIBS})
+SET_TARGET_PROPERTIES(rutil PROPERTIES FOLDER rutil)
+
+INSTALL(TARGETS rutil DESTINATION lib)
+INSTALL(FILES ${INCLUDES} DESTINATION include/rutil)
+
+# Since some stun files are under the stun folder they require their own
+# INSTALL command
+INSTALL(FILES ${INCLUDES_STUN_FOLDER} DESTINATION include/rutil/stun)
+
+ADD_SUBDIRECTORY(test)

@@ -1,113 +1,55 @@
-cmake_minimum_required(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.9) 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+PROJECT(reSIProcate)
 
-# TODO wire these up.
-option(BUILD_APPS "BUILD_APPS" OFF)
-option(BUILD_ICHAT_GW "BUILD_ICHAT_GW" OFF)
-option(BUILD_P2P "BUILD_P2P" OFF)
-option(BUILD_PYTHON "BUILD_PYTHON" OFF)
-option(BUILD_RECON "BUILD_RECON" OFF)
-option(BUILD_REND "BUILD_REND" OFF)
-option(BUILD_REPRO "BUILD_REPRO" OFF)
-option(BUILD_TFM "BUILD_TFM" OFF)
+ENABLE_TESTING()
 
+# Top-level user-settable variables (with defaults)
+# Those can be queried from the command line using "cmake -LH" and can be
+# specified on the command line, using cmake-gui or ccmake.
+SET(WITH_SSL true CACHE BOOL "Link against SSL libraries")
+SET(WITH_C_ARES false CACHE BOOL "Link against libc-ares (rather than rutil/dns/ares)")
+SET(OPENSSL_ROOT_DIR "" CACHE STRING "Root installation of OpenSSL (to specify a given version)")
 
-option(HAVE_CLOCK_GETTIME_MONOTONIC "HAVE_CLOCK_GETTIME_MONOTONIC" OFF)
-option(HAVE_DLFCN_H "HAVE_DLFCN_H" OFF)
-option(HAVE_EPOLL "HAVE_EPOLL" OFF)
-option(HAVE_POPT_H "HAVE_POPT_H" OFF)
-option(PEDANTIC_STACK "PEDANTIC_STACK" OFF)
-option(RESIP_BIG_ENDIAN "RESIP_BIG_ENDIAN" OFF)
-option(RESIP_HAVE_FREERADIUS_CLIENT "RESIP_HAVE_FREERADIUS_CLIENT" OFF)
-option(USE_ARES "USE_ARES" OFF)
-option(USE_CARES "USE_CARES" OFF)
-option(USE_DTLS "USE_DTLS" OFF)
-option(USE_IPV6 "USE_IPV6" OFF)
-option(USE_MAXMIND_GEOIP "USE_MAXMIND_GEOIP" OFF)
-option(USE_MYSQL "USE_MYSQL" OFF)
-option(USE_RADIUS_CLIENT "USE_RADIUS_CLIENT" OFF)
-option(USE_SIGCOMP "USE_SIGCOMP" OFF)
-option(USE_SSL "USE_SSL" OFF)
+### OpenSSL
+IF(${WITH_SSL})
+   # Use the built-in CMake macro to find OpenSSL
+   INCLUDE(FindOpenSSL)
+   ADD_DEFINITIONS(-DUSE_SSL)
+   IF(${OPENSSL_FOUND})
+      INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIR})
+   ELSE()
+      MESSAGE(FATAL_ERROR "Could not find OpenSSL")
+   ENDIF()
+ENDIF()
 
-#cmakedefine RESIP_SIP_MSG_MAX_BYTES
-#cmakedefine DB_HEADER
-#cmakedefine OS_MAJOR_VER
-#cmakedefine OS_MINOR_VER
-#cmakedefine OS_PATCH_VER
-#cmakedefine OS_POINT_VER
-#cmakedefine PACKAGE
-#cmakedefine PACKAGE_BUGREPORT
-#cmakedefine PACKAGE_NAME
-#cmakedefine PACKAGE_STRING
-#cmakedefine PACKAGE_TARNAME
-#cmakedefine PACKAGE_URL
-#cmakedefine PACKAGE_VERSION
-#cmakedefine REPRO_BUILD_HOST
-#cmakedefine REPRO_BUILD_REV
-#cmakedefine REPRO_DSO_PLUGINS
-#cmakedefine REPRO_RELEASE_VERSION
-#cmakedefine VERSION
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+### ares
+IF(NOT ${WITH_C_ARES})
+   ADD_DEFINITIONS(-DUSE_ARES)
 
-add_definitions(-DHAVE_CONFIG_H)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+   # Put the resip ares include dir before the system ones to not conflict with
+   # c-ares if also present.
+   INCLUDE_DIRECTORIES(BEFORE rutil/dns/ares)
+ELSE()
+   # TODO: Use FIND_LIBRARY to find c-ares if not installed under obvious
+   # places. Otherwise it will try to find it in the system's default paths
+   # (e.g. /usr/lib, ...).
+   ADD_DEFINITIONS(-DUSE_CARES)
+ENDIF()
 
-add_subdirectory(rutil)
-add_subdirectory(resip)
+### Python
+INCLUDE(FindPythonLibs)
 
-if (BUILD_REPRO)
-  add_subdirectory(repro)
-endif (BUILD_REPRO)
+### popt
+#FIND_PACKAGE(popt)
 
+# This helper is used by the unit tests
+FUNCTION(TEST_BASE)
+   ADD_EXECUTABLE(${ARGV0} ${ARGV1} ${ARGV2} ${ARGV3} ${ARGV4})
+   ADD_TEST(${ARGV0} ${ARGV0})
+ENDFUNCTION(TEST_BASE)
 
-########### install files ###############
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
-
-
-
-#original Makefile.am contents follow:
-
-#
-#
-#AUTOMAKE_OPTIONS = foreign dist-tarZ
-#ACLOCAL_AMFLAGS = -I m4
-#
-#SUBDIRS = rutil
-#SUBDIRS += resip
-#if BUILD_REPRO
-#SUBDIRS += repro
-#endif
-#if BUILD_TFM
-#SUBDIRS += tfm
-#endif
-#
-#if BUILD_APPS
-#SUBDIRS += apps
-#endif
-#
-## The Makefiles for these don't separate SSL stuff yet...
-#if USE_SSL
-#SUBDIRS += reTurn
-#if BUILD_RECON
-#SUBDIRS += reflow
-#SUBDIRS += resip/recon
-#endif
-#SUBDIRS += presSvr
-#if BUILD_P2P
-#SUBDIRS += p2p/s2c/s2c p2p
-#endif
-#endif
-#
-##EXTRA_DIST = build-contrib.sh
-#
-#EXTRA_DIST = reSIProcate_10_0.sln
-##EXTRA_DIST += reSIProcate_7_1.sln
-#EXTRA_DIST += reSIProcate_8_0.sln
-#EXTRA_DIST += reSIProcate_9_0.sln
-#
-#EXTRA_DIST += resiprocate.spec
-#
-#EXTRA_DIST += RELEASE-PROCESS.txt
-#EXTRA_DIST += build/configure-android.sh
-#
+ADD_SUBDIRECTORY(rutil)
+ADD_SUBDIRECTORY(resip)
