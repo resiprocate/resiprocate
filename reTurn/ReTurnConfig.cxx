@@ -276,7 +276,11 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
 
       if(accountState != REFUSED) 
       {
-         addUser(username, password, realm);
+         try {
+            addUser(username, password, realm);
+         } catch (ConfigParse::Exception& ex) {
+            ErrLog(<< "Exception adding user: " << username << ", cause: " << ex << ", skipping record");
+         }
       }
       userCount++;
    }
