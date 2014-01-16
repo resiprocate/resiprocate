@@ -793,7 +793,19 @@ DialogSet::dispatch(const SipMessage& msg)
    {
       if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
       {
-         dispatchToAllDialogs(msg);
+         if(!mDialogs.empty())
+         {
+            dispatchToAllDialogs(msg);
+         }
+         else
+         {
+            DebugLog ( << "In DialogSet::dispatch, CANCEL received but no dialogs to dispatch to - respond with 481, msg: " << msg );
+            // Race condition - Dialogset is still around, but dialog is gone (potentially BYE'd).
+            // Need to respond to CANCEL in order for transaction in stack to go away
+            SharedPtr<SipMessage> response(new SipMessage);         
+            mDum.makeResponse(*response, msg, 481);
+            mDum.send(response);
+         }
          return;
       }
 

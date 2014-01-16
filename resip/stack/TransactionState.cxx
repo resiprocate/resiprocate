@@ -2083,7 +2083,6 @@ TransactionState::processServerStale(TransactionMessage* msg)
    }
 }
 
-
 void
 TransactionState::processNoDnsResults()
 {
@@ -2346,7 +2345,7 @@ TransactionState::handle(DnsResult* result)
 }
 
 void
-TransactionState::handleSync(DnsResult* result)
+TransactionState::handleSync(DnsResult* result)  // !slg! it is strange that we pass the result in here, then more or less ignore it in the method
 {
    StackLog (<< *this << " got DNS result: " << *result);
    

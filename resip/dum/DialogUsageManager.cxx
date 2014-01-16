@@ -1564,8 +1564,16 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
          }
          else
          {
-            assert(dynamic_cast<SipMessage*>(msg.get()));
-            it = mIncomingFeatureChainMap.insert(lb, FeatureChainMap::value_type(tid, new DumFeatureChain(*this, mIncomingFeatureList, *mIncomingTarget)));
+            if(dynamic_cast<SipMessage*>(msg.get()))
+            {
+               it = mIncomingFeatureChainMap.insert(lb, FeatureChainMap::value_type(tid, new DumFeatureChain(*this, mIncomingFeatureList, *mIncomingTarget)));
+            }
+            else
+            {
+               // Certain messages from the wire (ie: CANCEL) can end a feature, however there may still be some 
+               // pending Async requests (non-SipMessages) that are coming in - just drop them if so
+               return;
+            }
          }
       }
       
@@ -2041,7 +2049,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             else
             {
-               InfoLog (<< "Received a CANCEL on a non-existent transaction ");
+               InfoLog (<< "Received a CANCEL on a non-existent transaction: tid=" << request.getTransactionId());
                SipMessage failure;
                makeResponse(failure, request, 481);
                sendResponse(failure);

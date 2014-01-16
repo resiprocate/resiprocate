@@ -336,58 +336,93 @@ ServerAuthManager::Result
 ServerAuthManager::handle(SipMessage* sipMsg)
 {
    //InfoLog( << "trying to do auth" );
-   if (sipMsg->isRequest() && 
-       sipMsg->header(h_RequestLine).method() != ACK && 
-       sipMsg->header(h_RequestLine).method() != CANCEL)  // Do not challenge ACKs or CANCELs
+   if (sipMsg->isRequest())
    {
-      ParserContainer<Auth>* auths;
-      if (proxyAuthenticationMode())
+      if(sipMsg->method() == CANCEL)
       {
-         if(!sipMsg->exists(h_ProxyAuthorizations))
+         // If we receive a cancel - check to see if we have the matching INVITE in our message map.
+         // If we do, then we haven't created a DUM dialog for it yet, since we are still waiting
+         // for the credential information to arrive.  We need to properly respond to the CANCEL here
+         // since it won't be handled externally.
+         MessageMap::iterator it = mMessages.find(sipMsg->getTransactionId());
+         if(it != mMessages.end())
          {
-            return issueChallengeIfRequired(sipMsg);
-         }
-         auths = &sipMsg->header(h_ProxyAuthorizations);
-      }
-      else
-      {
-         if(!sipMsg->exists(h_Authorizations))
-         {
-            return issueChallengeIfRequired(sipMsg);
-         }
-         auths = &sipMsg->header(h_Authorizations);
-      }
- 
-      try
-      {
-         for(Auths::iterator it = auths->begin(); it != auths->end(); it++)
-         {
-            if (isMyRealm(it->param(p_realm)))
+            // Ensure message is an INVITE - if not then something fishy is going on.  Either
+            // someone has cancelled a non-INVITE transaction or we have a tid collision.
+            if(it->second->isRequest() && it->second->method() == INVITE)
             {
-               InfoLog (<< "Requesting credential for " 
-                        << it->param(p_username) << " @ " << it->param(p_realm));
-               
-               requestCredential(it->param(p_username),
-                                 it->param(p_realm), 
-                                 *sipMsg,
-                                  *it,
-                                 sipMsg->getTransactionId());
-               mMessages[sipMsg->getTransactionId()] = sipMsg;
-               return RequestedCredentials;
+               std::auto_ptr<SipMessage> inviteMsg(it->second);
+               mMessages.erase(it);  // Remove the INVITE from the message map and respond to it
+
+               InfoLog (<< "Received a CANCEL for an INVITE request that we are still waiting on auth "
+                        << "info for, responding appropriately, tid=" 
+                        << sipMsg->getTransactionId());
+
+               // Send 487/Inv
+               SharedPtr<SipMessage> inviteResponse(new SipMessage);
+               Helper::makeResponse(*inviteResponse, *inviteMsg, 487);  // Request Cancelled
+               mDum.send(inviteResponse);
+
+               // Send 200/Cancel
+               SharedPtr<SipMessage> cancelResponse(new SipMessage);
+               Helper::makeResponse(*cancelResponse, *sipMsg, 200);  
+               mDum.send(cancelResponse);
+
+               return Rejected; // Use rejected since handling is what we want - stop DUM from processing the cancel any further
             }
          }
-
-         InfoLog (<< "Didn't find matching realm ");
-         return issueChallengeIfRequired(sipMsg);
       }
-      catch(BaseException& e)
+      else if(sipMsg->method() != ACK)  // Do not challenge ACKs or CANCELs (picked off above)
       {
-         InfoLog (<< "Invalid auth header provided " << e);
-         SharedPtr<SipMessage> response(new SipMessage);
-         Helper::makeResponse(*response, *sipMsg, 400, "Invalid auth header");
-         mDum.send(response);
-         onAuthFailure(InvalidRequest, *sipMsg);
-         return Rejected;
+         ParserContainer<Auth>* auths;
+         if (proxyAuthenticationMode())
+         {
+            if(!sipMsg->exists(h_ProxyAuthorizations))
+            {
+               return issueChallengeIfRequired(sipMsg);
+            }
+            auths = &sipMsg->header(h_ProxyAuthorizations);
+         }
+         else
+         {
+            if(!sipMsg->exists(h_Authorizations))
+            {
+               return issueChallengeIfRequired(sipMsg);
+            }
+            auths = &sipMsg->header(h_Authorizations);
+         }
+ 
+         try
+         {
+            for(Auths::iterator it = auths->begin(); it != auths->end(); it++)
+            {
+               if (isMyRealm(it->param(p_realm)))
+               {
+                  InfoLog (<< "Requesting credential for " 
+                           << it->param(p_username) << " @ " << it->param(p_realm));
+               
+                  requestCredential(it->param(p_username),
+                                    it->param(p_realm), 
+                                    *sipMsg,
+                                     *it,
+                                    sipMsg->getTransactionId());
+                  mMessages[sipMsg->getTransactionId()] = sipMsg;
+                  return RequestedCredentials;
+               }
+            }
+
+            InfoLog (<< "Didn't find matching realm ");
+            return issueChallengeIfRequired(sipMsg);
+         }
+         catch(BaseException& e)
+         {
+            InfoLog (<< "Invalid auth header provided " << e);
+            SharedPtr<SipMessage> response(new SipMessage);
+            Helper::makeResponse(*response, *sipMsg, 400, "Invalid auth header");
+            mDum.send(response);
+            onAuthFailure(InvalidRequest, *sipMsg);
+            return Rejected;
+         }
       }
    }
    return Skipped;
