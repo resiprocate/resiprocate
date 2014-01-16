@@ -3,6 +3,7 @@
 set -e
 
 ./configure \
+  --with-popt \
   --with-ssl \
   --with-mysql \
   --with-apps \
