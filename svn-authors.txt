@@ -33,6 +33,7 @@ Dpocock = Daniel Pocock <daniel@pocock.com.au>
 dragos = Dragos Liciu <dragos@counterpath.com>
 Dstuart = David Stuart <dstuart@counterpath.com>
 dsuh = David Suh <dsuhpublic@gmail.com>
+dtacalau = Daniel Tacalau <dtacalau@ezuce.com>
 duanestorey = Duane Storey <duanestorey@gmail.com>
 dworley = Dale Worley <dworley@pingtel.com>
 ekr = Eric Rescorla <ekr@rtfm.com>
