@@ -246,15 +246,11 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
    int i;
    for (i = 0, AI = pAdapterAddresses; AI != NULL; AI = AI->Next, i++) 
    {
-      PIP_ADAPTER_UNICAST_ADDRESS defaultAdaptorAddress = 0;
       for (PIP_ADAPTER_UNICAST_ADDRESS unicast = AI->FirstUnicastAddress;
            unicast; unicast = unicast->Next)
       {
          if (unicast->Address.lpSockaddr->sa_family != family)
             continue;
-
-         // Store first address of matching family as the Adaptors default address
-         if(!defaultAdaptorAddress) defaultAdaptorAddress = unicast;
 
          if (family == AF_INET && 
              reinterpret_cast<const struct sockaddr_in*>(unicast->Address.lpSockaddr)->sin_addr.S_un.S_addr == 
@@ -263,9 +259,18 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
             // Return default address for NIC.  Note:  We could also just return the destination, 
             // however returning the default address for NIC is beneficial in cases where the
             // co-located registrar supports redundancy via a Virtual IP address.
-            GenericIPAddress ipaddress(*defaultAdaptorAddress->Address.lpSockaddr);
-            LocalFree(pAdapterAddresses);
-            return(ipaddress);
+            for (PIP_ADAPTER_UNICAST_ADDRESS unicastRet = AI->FirstUnicastAddress;
+                 unicastRet; unicastRet = unicastRet->Next)
+            {
+#if defined(AVOID_TRANSIENT_SOURCE_ADDRESSES)
+               if (unicastRet->Flags & IP_ADAPTER_ADDRESS_TRANSIENT)
+                  continue;
+#endif
+
+               GenericIPAddress ipaddress(*unicastRet->Address.lpSockaddr);
+               LocalFree(pAdapterAddresses);
+               return(ipaddress);
+            }
          }
 #ifdef USE_IPV6
          else if (family == AF_INET6 && 
@@ -273,16 +278,25 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
                          &(reinterpret_cast<const struct sockaddr_in6*>(&destination.address)->sin6_addr), 
                          sizeof(IN6_ADDR)) == 0)
          {
-            // explicitly cast to sockaddr_in6, to use that version of GenericIPAddress' ctor. If we don't, then compiler
-            // defaults to ctor for sockaddr_in (at least under Win32), which will truncate the lower-bits of the IPv6 address.
-            const struct sockaddr_in6* psa = reinterpret_cast<const struct sockaddr_in6*>(defaultAdaptorAddress->Address.lpSockaddr);
+            for (PIP_ADAPTER_UNICAST_ADDRESS unicastRet = AI->FirstUnicastAddress;
+                 unicastRet; unicastRet = unicastRet->Next)
+            {
+#if defined(AVOID_TRANSIENT_SOURCE_ADDRESSES)
+               if (unicastRet->Flags & IP_ADAPTER_ADDRESS_TRANSIENT)
+                  continue;
+#endif
 
-            // Return default address for NIC.  Note:  We could also just return the destination, 
-            // however returning the default address for NIC is beneficial in cases where the
-            // co-located registrar supports redundancy via a Virtual IP address.
-            GenericIPAddress ipaddress(*psa);
-            LocalFree(pAdapterAddresses);
-            return(ipaddress);
+               // explicitly cast to sockaddr_in6, to use that version of GenericIPAddress' ctor. If we don't, then compiler
+               // defaults to ctor for sockaddr_in (at least under Win32), which will truncate the lower-bits of the IPv6 address.
+               const struct sockaddr_in6* psa = reinterpret_cast<const struct sockaddr_in6*>(unicastRet->Address.lpSockaddr);
+
+               // Return default address for NIC.  Note:  We could also just return the destination, 
+               // however returning the default address for NIC is beneficial in cases where the
+               // co-located registrar supports redundancy via a Virtual IP address.
+               GenericIPAddress ipaddress(*psa);
+               LocalFree(pAdapterAddresses);
+               return(ipaddress);
+            }
          }
 #endif
       } 
@@ -304,6 +318,12 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
        {
           if (unicast->Address.lpSockaddr->sa_family != saddr->sa_family)
              continue;
+
+#if defined(AVOID_TRANSIENT_SOURCE_ADDRESSES)
+         if (unicast->Flags & IP_ADAPTER_ADDRESS_TRANSIENT)
+            continue;
+#endif
+
           if (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex)
           {
              GenericIPAddress ipaddress(*unicast->Address.lpSockaddr);
@@ -384,6 +404,11 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
          DWORD dwNicIndex = pIpAddrTable->table[i].dwIndex;
          for(DWORD j = 0; j <pIpAddrTable->dwNumEntries; j++)
          {
+#if defined(AVOID_TRANSIENT_SOURCE_ADDRESSES)
+            if (pIpAddrTable->table[j].wType & MIB_IPADDR_TRANSIENT)
+               continue;
+#endif
+
             if(pIpAddrTable->table[j].dwIndex == dwNicIndex)  // Default address is first address found for NIC
             {
                DebugLog(<< "Routing to a local address - returning default address for NIC");
@@ -417,6 +442,12 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
       
       ULONG addr = pIpAddrTable->table[i].dwAddr;
       ULONG gw = bestRoute.dwForwardNextHop;
+
+#if defined(AVOID_TRANSIENT_SOURCE_ADDRESSES)
+      if (entry.wType & MIB_IPADDR_TRANSIENT)
+         continue;
+#endif
+
       if(entry.dwIndex == bestRoute.dwForwardIfIndex)    // Note: there MAY be > 1 entry with the same index, see AddIPAddress.
       {
          if( (entry.dwAddr & entry.dwMask) == (bestRoute.dwForwardNextHop & entry.dwMask) )
@@ -460,6 +491,7 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
          nicMask.s_addr = entry.dwMask;
          DebugLog(<<"IP Table entry " <<i+1 <<'/' <<pIpAddrTable->dwNumEntries <<" if-index=" <<entry.dwIndex
                   <<" NIC IP=" <<DnsUtil::inet_ntop(nicIP)
+                  << (entry.wType & MIB_IPADDR_TRANSIENT ? " (Transient)" : "")
                   <<" NIC Mask=" <<DnsUtil::inet_ntop(nicMask) );
       }
    }
