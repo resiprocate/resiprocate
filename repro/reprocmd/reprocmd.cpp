@@ -26,35 +26,41 @@ main (int argc, char** argv)
    struct sockaddr_in localAddr, servAddr;
    struct hostent *h;
 
-   if(argc != 2 && argc != 4) 
+   const char* host;
+   short port;
+   int cmdIndex;
+
+   // Look for forward slash in args 1 or 3
+   if(argc >= 2 && argv[1][0] == '/')
    {
-      cerr << "usage: " << argv[0] <<" [<server> <port>] <command> [<parm>=<value>]" << endl;
-      cerr << "  Valid Commands are:" << endl;
-      cerr << "  GetStackInfo - retrieves low level information about the stack state" << endl;
-      cerr << "  GetStackStats - retrieves a dump of the stack statistics" << endl;
-      cerr << "  ResetStackStats - resets all cumulative stack statistics to zero" << endl;
-      cerr << "  LogDnsCache - causes the DNS cache contents to be written to the resip logs" << endl;
-      cerr << "  ClearDnsCache - empties the stacks DNS cache" << endl;
-      cerr << "  GetDnsCache - retrieves the DNS cache contents" << endl;
-      cerr << "  GetCongestionStats - retrieves the stacks congestion manager stats and state" << endl;
-      cerr << "  SetCongestionTolerance metric=<SIZE|WAIT_TIME|TIME_DEPTH> maxTolerance=<value>" << endl;
-      cerr << "                         [fifoDescription=<desc>] - sets congestion tolerances" << endl;
-      cerr << "  Shutdown - signal the proxy to shut down." << endl;
-      cerr << "  Restart - signal the proxy to restart - leaving active registrations in place." << endl;
-      cerr << "  GetProxyConfig - retrieves the all of configuration file settings currently" << endl;
-      cerr << "                   being used by the proxy" << endl;
-      exit(1);
+       host = "127.0.0.1";
+       port = 5081;
+       cmdIndex=1;
    }
-
-   const char* host = "127.0.0.1";
-   short port = 5081;
-   int cmdIndex=1;
-
-   if(argc == 4)
+   else if(argc >= 4 && argv[3][0] == '/')
    {
       host = argv[1];
       port = (short)atoi(argv[2]);
       cmdIndex = 3;
+   }
+   else
+   {
+      cerr << "usage: " << argv[0] <<" [<server> <port>] /<command> [<parm>=<value>]" << endl;
+      cerr << "  Valid Commands are:" << endl;
+      cerr << "  /GetStackInfo - retrieves low level information about the stack state" << endl;
+      cerr << "  /GetStackStats - retrieves a dump of the stack statistics" << endl;
+      cerr << "  /ResetStackStats - resets all cumulative stack statistics to zero" << endl;
+      cerr << "  /LogDnsCache - causes the DNS cache contents to be written to the resip logs" << endl;
+      cerr << "  /ClearDnsCache - empties the stacks DNS cache" << endl;
+      cerr << "  /GetDnsCache - retrieves the DNS cache contents" << endl;
+      cerr << "  /GetCongestionStats - retrieves the stacks congestion manager stats and state" << endl;
+      cerr << "  /SetCongestionTolerance metric=<SIZE|WAIT_TIME|TIME_DEPTH> maxTolerance=<value>" << endl;
+      cerr << "                          [fifoDescription=<desc>] - sets congestion tolerances" << endl;
+      cerr << "  /Shutdown - signal the proxy to shut down." << endl;
+      cerr << "  /Restart - signal the proxy to restart - leaving active registrations in place." << endl;
+      cerr << "  /GetProxyConfig - retrieves the all of configuration file settings currently" << endl;
+      cerr << "                    being used by the proxy" << endl;
+      exit(1);
    }
 
    h = gethostbyname(host);
@@ -101,9 +107,10 @@ main (int argc, char** argv)
       exit(1);
    }
 
+   Data command(&argv[cmdIndex][1]); // [1] skips leading slash
    Data request(1024, Data::Preallocate);
    request += "<";
-   request += argv[cmdIndex];
+   request += command;
    request += ">\r\n  <Request>\r\n";
    for(int i = cmdIndex+1; i < argc; i++)
    {
@@ -131,7 +138,7 @@ main (int argc, char** argv)
    }
    request += "  </Request>\r\n";
    request += "</";
-   request += argv[cmdIndex];
+   request += command;
    request += ">\r\n";
 
    //cout << "Sending:\r\n" << request << endl;
