@@ -39,9 +39,7 @@ ReproAuthenticatorFactory::ReproAuthenticatorFactory(ProxyConfig& proxyConfig, S
       mDigestChallengeThirdParties(!mEnableCertAuth),
       mAuthRequestDispatcher(0),
       mCertificateAuthManager((DumFeature*)0),
-      mCertificateAuthenticator((Processor*)0),
-      mServerAuthManager((ServerAuthManager*)0),
-      mDigestAuthenticator((Processor*)0)
+      mServerAuthManager((ServerAuthManager*)0)
 {
 }
 
@@ -142,18 +140,14 @@ ReproAuthenticatorFactory::getCertificateAuthManager()
    return mCertificateAuthManager;
 }
 
-SharedPtr<Processor>
+std::auto_ptr<Processor>
 ReproAuthenticatorFactory::getCertificateAuthenticator()
 {
    init();
-   if(!mCertificateAuthenticator.get())
-   {
-      Store *db = mProxyConfig.getDataStore();
-      assert(db);
-      AclStore& aclStore = db->mAclStore;
-      mCertificateAuthenticator.reset(new CertificateAuthenticator(mProxyConfig, &mSipStack, aclStore, true, mCommonNameMappings));
-   }
-   return mCertificateAuthenticator;
+   Store *db = mProxyConfig.getDataStore();
+   assert(db);
+   AclStore& aclStore = db->mAclStore;
+   return std::auto_ptr<Processor>(new CertificateAuthenticator(mProxyConfig, &mSipStack, aclStore, true, mCommonNameMappings));
 }
 
 SharedPtr<ServerAuthManager>
@@ -190,26 +184,23 @@ ReproAuthenticatorFactory::getServerAuthManager()
    return mServerAuthManager;
 }
 
-SharedPtr<Processor>
+std::auto_ptr<Processor>
 ReproAuthenticatorFactory::getDigestAuthenticator()
 {
    init();
-   if(!mDigestAuthenticator.get())
+   if(mEnableRADIUS)
    {
-      if(mEnableRADIUS)
-      {
 #ifdef USE_RADIUS_CLIENT
-         mDigestAuthenticator.reset(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration, mStaticRealm));
+         return std::auto_ptr<Processor>(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration, mStaticRealm));
 #else
          ErrLog(<<"can't create RADIUSAuthenticator, not compiled with RADIUS support");
+         return std::auto_ptr<Processor>(0);
 #endif
-      }
-      else
-      {
-         mDigestAuthenticator.reset(new DigestAuthenticator(mProxyConfig, getDispatcher(), mStaticRealm));
-      }
    }
-   return mDigestAuthenticator;
+   else
+   {
+      return std::auto_ptr<Processor>(new DigestAuthenticator(mProxyConfig, getDispatcher(), mStaticRealm));
+   }
 }
 
 Dispatcher*

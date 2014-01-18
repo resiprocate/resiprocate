@@ -25,12 +25,12 @@ public:
    virtual bool certificateAuthEnabled() { return mEnableCertAuth; };
 
    virtual resip::SharedPtr<resip::DumFeature> getCertificateAuthManager();
-   virtual resip::SharedPtr<Processor> getCertificateAuthenticator();
+   virtual std::auto_ptr<Processor> getCertificateAuthenticator();
 
    virtual bool digestAuthEnabled() { return mEnableDigestAuth; };
 
    virtual resip::SharedPtr<resip::ServerAuthManager> getServerAuthManager();
-   virtual resip::SharedPtr<Processor> getDigestAuthenticator();
+   virtual std::auto_ptr<Processor> getDigestAuthenticator();
 
    virtual Dispatcher* getDispatcher();
 
@@ -58,10 +58,7 @@ private:
    std::auto_ptr<Dispatcher> mAuthRequestDispatcher;
 
    resip::SharedPtr<resip::DumFeature> mCertificateAuthManager;
-   resip::SharedPtr<Processor> mCertificateAuthenticator;
-   
    resip::SharedPtr<resip::ServerAuthManager> mServerAuthManager;
-   resip::SharedPtr<Processor> mDigestAuthenticator;
 };
 
 }

@@ -1586,8 +1586,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       // from the trusted node list?
       // Should we used the same trustedPeers object that was
       // passed to TlsPeerAuthManager perhaps?
-      addProcessor(chain, std::auto_ptr<Processor>(mAuthFactory->getCertificateAuthenticator().get()));
-      mAuthFactory->getCertificateAuthenticator().reset();
+      addProcessor(chain, mAuthFactory->getCertificateAuthenticator());
    }
 
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
@@ -1599,10 +1598,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    // Add digest authenticator monkey - if required
    if (mAuthFactory->digestAuthEnabled())
    {
-      Processor* da = mAuthFactory->getDigestAuthenticator().get();
-      mAuthFactory->getDigestAuthenticator().reset();
-
-      addProcessor(chain, std::auto_ptr<Processor>(da)); 
+      addProcessor(chain, mAuthFactory->getDigestAuthenticator()); 
    }
 
    // Add am I responsible monkey
