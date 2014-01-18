@@ -6,6 +6,7 @@
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/MD5Stream.hxx>
+#include "rutil/FdPoll.hxx"
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/PlainContents.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
@@ -118,9 +119,10 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 #else
    mSecurity(0),
 #endif
-   mSelectInterruptor(new SelectInterruptor),
-   mStack(new SipStack(mSecurity, DnsStub::EmptyNameserverList, mSelectInterruptor)),
-   mStackThread(new InterruptableStackThread(*mStack, *mSelectInterruptor)),
+   mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
+   mInterruptor(new EventThreadInterruptor(*mPollGrp)),
+   mStack(new SipStack(mSecurity, DnsStub::EmptyNameserverList, mInterruptor)),
+   mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mDum(new DialogUsageManager(*mStack)),
    mDumShutdownRequested(false),
    mShuttingdown(false),
@@ -316,7 +318,8 @@ BasicClientUserAgent::~BasicClientUserAgent()
    delete mDum;
    delete mStack;
    delete mStackThread;
-   delete mSelectInterruptor;
+   delete mInterruptor;
+   delete mPollGrp;
    // Note:  mStack descructor will delete mSecurity
 }
 

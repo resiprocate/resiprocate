@@ -4,8 +4,7 @@
 #include <set>
 #include "basicClientCmdLineParser.hxx"
 
-#include "resip/stack/InterruptableStackThread.hxx"
-#include "rutil/SelectInterruptor.hxx"
+#include "resip/stack/EventStackThread.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
@@ -20,6 +19,7 @@
 namespace resip
 {
 class BasicClientCall;
+class FdPollGrp;
 
 class BasicClientUserAgent : public BasicClientCmdLineParser, 
                              public Postable,
@@ -133,9 +133,10 @@ protected:
    SharedPtr<MasterProfile> mProfile;
    // Using pointers for the following classes so that we can control object descruction order
    Security* mSecurity;
-   SelectInterruptor* mSelectInterruptor;
+   FdPollGrp* mPollGrp;
+   EventThreadInterruptor* mInterruptor;
    SipStack* mStack;
-   InterruptableStackThread* mStackThread;
+   EventStackThread* mStackThread;
    DialogUsageManager* mDum;
    volatile bool mDumShutdownRequested;
    bool mShuttingdown;
