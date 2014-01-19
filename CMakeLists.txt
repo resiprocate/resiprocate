@@ -60,7 +60,19 @@ INCLUDE(FindPythonLibs)
 
 # This helper is used by the unit tests
 FUNCTION(TEST_BASE)
-   ADD_EXECUTABLE(${ARGV0} ${ARGV1} ${ARGV2} ${ARGV3} ${ARGV4})
+   ADD_EXECUTABLE(
+      ${ARGV0}
+      ${ARGV1}
+      ${ARGV2}
+      ${ARGV3}
+      ${ARGV4}
+      ${ARGV5}
+      ${ARGV6}
+      ${ARGV7}
+      ${ARGV8}
+      ${ARGV9}
+      ${ARGV10}
+   )
    ADD_TEST(${ARGV0} ${ARGV0})
 ENDFUNCTION(TEST_BASE)
 

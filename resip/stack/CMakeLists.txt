@@ -350,7 +350,7 @@ ENDIF()
 
 INCLUDE_DIRECTORIES(../..)
 
-SET(TARGET_LIBS ${OPENSSL_LIBRARIES} rutil ares)
+SET(TARGET_LIBS ${OPENSSL_LIBRARIES} rutil ${ARES_LIBRARIES})
 
 IF(CMAKE_HOST_WIN32)
    # For whatever historical reason, on Windows the name of the library is not
