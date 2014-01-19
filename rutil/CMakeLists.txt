@@ -88,6 +88,9 @@ SET(INCLUDES_STUN_FOLDER
    stun/Udp.hxx
 )
 
+# TODO: Have a special check for Android and don't include AndroidLogger
+# everywhere...
+
 # Used for compilation
 SET(SOURCES
    AbstractFifo.cxx
@@ -192,7 +195,7 @@ IF(NOT ${WITH_C_ARES})
 ENDIF()
 
 # OPENSSL_LIBRARIES will be empty if SSL is not used
-SET(TARGET_LIBS ${OPENSSL_LIBRARIES} ares)
+SET(TARGET_LIBS ${OPENSSL_LIBRARIES} ${ARES_LIBRARIES})
 
 IF(CMAKE_HOST_WIN32)
    # Static library on Windows

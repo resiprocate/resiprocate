@@ -4,6 +4,11 @@ PROJECT(reSIProcate)
 
 ENABLE_TESTING()
 
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake_modules/")
+
+# TODO: Add support for config.h as present in current resip autoconf build -
+# if needed
+
 # Top-level user-settable variables (with defaults)
 # Those can be queried from the command line using "cmake -LH" and can be
 # specified on the command line, using cmake-gui or ccmake.
@@ -11,10 +16,12 @@ SET(WITH_SSL true CACHE BOOL "Link against SSL libraries")
 SET(WITH_C_ARES false CACHE BOOL "Link against libc-ares (rather than rutil/dns/ares)")
 SET(OPENSSL_ROOT_DIR "" CACHE STRING "Root installation of OpenSSL (to specify a given version)")
 
-### OpenSSL
+### Dependencies ###
+
+# OpenSSL
 IF(${WITH_SSL})
-   # Use the built-in CMake macro to find OpenSSL
-   INCLUDE(FindOpenSSL)
+   # SSL support is requested, so make it mandatory when calling FIND_PACKAGE
+   FIND_PACKAGE(OpenSSL REQUIRED)
    ADD_DEFINITIONS(-DUSE_SSL)
    IF(${OPENSSL_FOUND})
       INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIR})
@@ -23,25 +30,33 @@ IF(${WITH_SSL})
    ENDIF()
 ENDIF()
 
-### ares
-IF(NOT ${WITH_C_ARES})
+# ares
+IF(${WITH_C_ARES})
+   # Don't use built-in ares
+   FIND_PACKAGE(cares REQUIRED)
+   ADD_DEFINITIONS(-DUSE_CARES)
+
+   SET(ARES_LIBRARIES ${CARES_LIBRARIES})
+ELSE()
+   # Use built-in ares
    ADD_DEFINITIONS(-DUSE_ARES)
 
    # Put the resip ares include dir before the system ones to not conflict with
    # c-ares if also present.
    INCLUDE_DIRECTORIES(BEFORE rutil/dns/ares)
-ELSE()
-   # TODO: Use FIND_LIBRARY to find c-ares if not installed under obvious
-   # places. Otherwise it will try to find it in the system's default paths
-   # (e.g. /usr/lib, ...).
-   ADD_DEFINITIONS(-DUSE_CARES)
+   
+   SET(ARES_LIBRARIES ares)
 ENDIF()
 
-### Python
-INCLUDE(FindPythonLibs)
+# popt
+FIND_PACKAGE(popt)
 
-### popt
-#FIND_PACKAGE(popt)
+IF(${POPT_FOUND})
+   ADD_DEFINITIONS(-DHAVE_POPT_H)
+ENDIF()
+
+# Python
+INCLUDE(FindPythonLibs)
 
 # This helper is used by the unit tests
 FUNCTION(TEST_BASE)
