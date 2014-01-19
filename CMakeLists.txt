@@ -50,9 +50,10 @@ ENDIF()
 
 # popt
 FIND_PACKAGE(popt)
-
 IF(${POPT_FOUND})
    ADD_DEFINITIONS(-DHAVE_POPT_H)
+ELSE()
+   SET(POPT_LIBRARIES "")
 ENDIF()
 
 # Python
