@@ -1,0 +1,10 @@
+INCLUDE_DIRECTORIES(../..)
+
+FUNCTION(TEST)
+   TEST_BASE(${ARGV})
+   SET_TARGET_PROPERTIES(${ARGV0} PROPERTIES FOLDER reTurn/Tests)
+   TARGET_LINK_LIBRARIES(${ARGV0} rutil reTurnClient)
+ENDFUNCTION()
+
+
+TEST(stunTestVectors stunTestVectors.cxx)

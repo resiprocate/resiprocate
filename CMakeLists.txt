@@ -28,6 +28,11 @@ IF(${WITH_SSL})
    ELSE()
       MESSAGE(FATAL_ERROR "Could not find OpenSSL")
    ENDIF()
+ELSE()
+   # Explicitly set OPENSSL_FOUND to false since we didn't even run
+   # FIND_PACKAGE on it. It needs to be set to false for other CMake scripts to
+   # no it is not being used.
+   SET(OPENSSL_FOUND "FALSE")
 ENDIF()
 
 # ares
@@ -56,8 +61,16 @@ ELSE()
    SET(POPT_LIBRARIES "")
 ENDIF()
 
+# Boost.Asio
+# TODO: Is using Boost's asio OK? Or should it use the old/independant asio
+# libs?
+FIND_PACKAGE(Boost)
+
+# SRTP
+FIND_PACKAGE(srtp)
+
 # Python
-INCLUDE(FindPythonLibs)
+#INCLUDE(FindPythonLibs)
 
 # This helper is used by the unit tests
 FUNCTION(TEST_BASE)
@@ -81,3 +94,11 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ADD_SUBDIRECTORY(rutil)
 ADD_SUBDIRECTORY(resip)
+
+IF(${OPENSSL_FOUND} AND ${Boost_FOUND} AND ${SRTP_FOUND})
+   ADD_SUBDIRECTORY(reTurn)
+   ADD_SUBDIRECTORY(reflow)
+ELSE()
+   MESSAGE("-- Missing libraries, will not build reTurn")
+   MESSAGE("-- Missing libraries, will not build reFlow")
+ENDIF()
