@@ -75,6 +75,7 @@ class Symbols
       
       static const char * const MagicCookie;
       static const char * const resipCookie;
+      static const char * const WebsocketMagicGUID;
 
       static const int DefaultSipPort;
       static const int SipTlsPort;

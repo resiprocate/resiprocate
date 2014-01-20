@@ -13,8 +13,10 @@
 #include "resip/stack/WsBaseTransport.hxx"
 #include "resip/stack/WsCookieContext.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/SharedPtr.hxx"
+#include "rutil/Sha1.hxx"
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
@@ -727,15 +729,19 @@ ConnectionBase::makeWsHandshakeResponse()
          "Upgrade: WebSocket\r\n"
          "Connection: Upgrade\r\n"
          "Sec-WebSocket-Protocol: sip\r\n"));
+
+      // Assuming that OpenSSL implementation of SHA1 is more effient than our internal one
 #ifdef USE_SSL
       SHA1Stream wsSha1Stream;
-      wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Data("258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
+      wsSha1Stream << (mMessage->const_header(h_SecWebSocketKey).value() + Symbols::WebsocketMagicGUID);
       Data wsAcceptKey = wsSha1Stream.getBin(160).base64encode();
-      *responsePtr += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
 #else
-      ErrLog(<<"WebSocket transports don't work when reSIProcate compiled without SSL support");
-      responsePtr.reset(0);
+      SHA1 sha1;
+      sha1.update(mMessage->const_header(h_SecWebSocketKey).value().c_str());
+      sha1.update(Symbols::WebsocketMagicGUID);
+      Data wsAcceptKey = sha1.finalBin().base64encode();
 #endif
+      *responsePtr += "Sec-WebSocket-Accept: " + wsAcceptKey + "\r\n\r\n";
    }
    else if(isUsingDeprecatedSecWebSocketKeys())
    {

@@ -74,6 +74,7 @@ const char* Symbols::Basic = "Basic";
 
 const char * const Symbols::MagicCookie = "z9hG4bK";
 const char * const Symbols::resipCookie= "-524287-";
+const char * const Symbols::WebsocketMagicGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;

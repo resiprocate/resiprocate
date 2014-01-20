@@ -1680,6 +1680,7 @@ StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
 void
 StunMessage::computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
+   // !slg! TODO - use newly added rutil/SHA1.hxx class  - will need to add new method to it to support this
    strncpy(hmac,"hmac-not-implemented",20);
 }
 #else

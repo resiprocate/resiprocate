@@ -384,7 +384,6 @@ SipStack::addTransport( TransportType protocol,
             break;
 
          case WS:
-#if defined( USE_SSL )
             transport = new WsTransport(stateMacFifo, 
                   port,
                   version,
@@ -394,11 +393,8 @@ SipStack::addTransport( TransportType protocol,
                   transportFlags,
                   wsConnectionValidator,
                   wsCookieContextFactory);
-#else
-            CritLog (<< "WebSockets not supported in this stack. You don't have openssl");
-            assert(0);
-#endif
             break;
+
          case WSS:
 #if defined( USE_SSL )
             transport = new WssTransport(stateMacFifo,
