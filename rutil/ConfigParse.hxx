@@ -62,6 +62,7 @@ protected:
    typedef HashMultiMap<resip::Data, resip::Data> ConfigValuesMap;
 
    void insertConfigValue(const Data& source, ConfigValuesMap& configValues, const resip::Data& name, const resip::Data& value);
+   void insertConfigValue(const resip::Data& name, const resip::Data& value);
 
    ConfigValuesMap mCmdLineConfigValues;
    ConfigValuesMap mFileConfigValues;

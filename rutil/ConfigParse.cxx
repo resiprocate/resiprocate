@@ -416,6 +416,12 @@ ConfigParse::insertConfigValue(const Data& source, ConfigValuesMap& configValues
    configValues.insert(ConfigValuesMap::value_type(lowerName, value));
 }
 
+void 
+ConfigParse::insertConfigValue(const resip::Data& name, const resip::Data& value)
+{
+    insertConfigValue("manually added setting", mConfigValues, name, value);
+}
+
 resip::Data
 ConfigParse::removePath(const resip::Data& fileAndPath)
 {
