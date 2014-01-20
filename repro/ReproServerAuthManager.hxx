@@ -28,7 +28,7 @@ class ReproServerAuthManager: public resip::ServerAuthManager
                              bool useAuthInt,
                              bool rejectBadNonces,
                              bool challengeThirdParties,
-                             const resip::Data& staticRealm);
+                             const resip::Data& staticRealm = resip::Data::Empty);
       
       ~ReproServerAuthManager();
       

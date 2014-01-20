@@ -18,7 +18,7 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, const resip::Data& staticRealm);
+      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, const resip::Data& staticRealm = resip::Data::Empty);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
