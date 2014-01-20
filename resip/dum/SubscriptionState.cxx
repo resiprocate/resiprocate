@@ -46,6 +46,39 @@ resip::getTerminateReasonString(TerminateReason state)
    return TerminateReasons[state];
 }
 
+SubscriptionState
+resip::getSubscriptionStateEnum( const Data& subscriptionStateString)
+{
+   if (subscriptionStateString == "invalid")
+   {
+      return Invalid;
+   }
+   else if (subscriptionStateString == "init")
+   {
+      return Init;
+   }
+   else if (subscriptionStateString == "pending")
+   {
+      return Pending;
+   }
+   else if (subscriptionStateString == "active")
+   {
+      return Active;
+   }
+   else if (subscriptionStateString == "waiting")
+   {
+      return Waiting;
+   }
+   else if (subscriptionStateString == "terminated")
+   {
+      return Terminated;
+   }
+   else
+   {
+      return Unknown;
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

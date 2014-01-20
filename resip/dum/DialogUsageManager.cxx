@@ -1655,8 +1655,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
             }
             if (mHAMode == true)
             {
-               //update the memory DialogSetMap with latest changes from the persistent layer
-               mDialogSetPersistenceManager->syncDialogSet(DialogSetId(*sipMsg), mDialogSetMap);
+               updateFromPersistentLayer(*sipMsg);
             }
             processRequest(*sipMsg);
          }
@@ -2592,6 +2591,29 @@ DialogUsageManager::setHAMode()
 	mDialogSetChangeInfoManager = new DialogSetChangeInfoManager();
 	InfoLog( << "working in HA mode. Multiple DUM server nodes can be used in parallel");
 }
+
+bool
+DialogUsageManager::isHAMode()
+{
+   return mHAMode;
+}
+
+void
+DialogUsageManager::updateFromPersistentLayer (const DialogUsage& usage)
+{
+   assert (mHAMode);
+   //update the memory DialogSetMap with latest changes from the persistent layer
+   mDialogSetPersistenceManager->syncDialogSet(usage.mDialog.mDialogSet.getId(), mDialogSetMap);
+}
+
+void
+DialogUsageManager::updateFromPersistentLayer (const SipMessage& msg)
+{
+   assert (mHAMode);
+   //update the memory DialogSetMap with latest changes from the persistent layer
+   mDialogSetPersistenceManager->syncDialogSet(DialogSetId(msg), mDialogSetMap);
+}
+
 void
 
 DialogUsageManager::setDialogSetPersistenceManager(DialogSetPersistenceManager *manager)

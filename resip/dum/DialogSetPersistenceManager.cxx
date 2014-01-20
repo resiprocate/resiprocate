@@ -23,43 +23,6 @@ DialogSetData::DialogSetData()
 {
 }
 
-/*
-DialogSetData::DialogSetData(const DialogSet &ds, const SipMessage & req)
-
-{
-   DialogSet::State state = ds.mState;
-
-   //UAC DialogSets won't use all of these states ..
-   switch(state){
-      case (DialogSet::Initial):
-         mDSState ="Initial";
-         break;
-      case (DialogSet::WaitingToEnd):
-         mDSState="WaitingToEnd";
-         break;
-      case (DialogSet::ReceivedProvisional):
-         mDSState="ReceivedProvisional";
-         break;
-      case (DialogSet::Established):
-         mDSState="Established";
-         break;
-      case (DialogSet::Terminating):
-         mDSState="Terminating";
-         break;
-      case (DialogSet::Cancelling):
-         mDSState="Cancelling";
-         break;
-      case (DialogSet::Destroying):
-         mDSState="Destroying";
-         break;
-
-   }
-   mDialogSetId = DialogSetData::dialogSetIdToData(ds.getId());
-   mDSRequest = Data(req.getBuffer());
-}
-
-*/
-
 const Data &
 DialogSetData::getId() const
 {
@@ -271,22 +234,19 @@ DialogData::getCallId() const
 Data
 DialogData::dialogTypeData(const Dialog& dlg)
 {
-   Data ret;
    Dialog::DialogType type =dlg.mType;
    if (type == Dialog::Invitation)
    {
-      ret  = Data("Invitation");
+      return Data("Invitation");
    }
    else if (type == Dialog::Subscription)
    {
-      ret = Data("Subscription");
+      return Data("Subscription");
    }
    else
    {
-      ret = Data("Fake");
+      return Data("Fake");
    }
-
-   return ret;
 }
 
 const std::list<ServerSubscriptionData *> &
@@ -302,11 +262,10 @@ DialogData::addServerSubscription (ServerSubscriptionData * serverSubs)
 }
 
 
-ServerSubscriptionData::ServerSubscriptionData (const Data& lastRequest, const Data & lastResponse, const Data& documentKey, const Data & eventType, const Data& subscriptionId,
-      const Data & mSubscriptionState, const Data& subscriber,const Data& lastSubscribeBuff, UInt64 absoluteExpiry)
-   : BaseSubscriptionData(lastRequest, lastResponse, documentKey, eventType, subscriptionId, mSubscriptionState),
+ServerSubscriptionData::ServerSubscriptionData (const Data& documentKey, const Data & eventType, const Data& subscriptionId,
+      const Data & mSubscriptionState, const Data& subscriber, UInt64 absoluteExpiry)
+   : BaseSubscriptionData(documentKey, eventType, subscriptionId, mSubscriptionState),
      mSubscriber(subscriber),
-     mLastSubscribeBuff(lastSubscribeBuff),
      mAbsoluteExpiry(absoluteExpiry)
 {
 }
@@ -317,41 +276,20 @@ ServerSubscriptionData::getSubscriber() const
    return mSubscriber;
 }
 
-const Data&
-ServerSubscriptionData::getLastSubscribeBuff() const
-{
-   return mLastSubscribeBuff;
-}
-
 UInt64
 ServerSubscriptionData::getAbsoluteExpiry() const
 {
    return mAbsoluteExpiry;
 }
 
-BaseSubscriptionData::BaseSubscriptionData (const Data& lastRequest, const Data& lastResponse, const Data& documentKey, const Data & eventType,
+BaseSubscriptionData::BaseSubscriptionData (const Data& documentKey, const Data & eventType,
       const Data& subscriptionId, const Data& subscriptionState)
-   : mLastRequest(lastRequest),
-     mLastResponse(lastResponse),
-     mDocumentKey(documentKey),
+   : mDocumentKey(documentKey),
      mEventType(eventType),
      mSubscriptionId(subscriptionId),
      mSubscriptionState(subscriptionState)
 {
 }
-
-const Data&
-BaseSubscriptionData::getLastRequest() const
-{
-   return mLastRequest;
-}
-
-const Data&
-BaseSubscriptionData::getLastResponse() const
-{
-   return mLastResponse;
-}
-
 
 const Data&
 BaseSubscriptionData::getDocumentKey() const
@@ -438,7 +376,10 @@ DialogSetPersistenceManager::syncDialogSet(DialogSetId id, DialogSetMap & map)
 
 }
 
-
+/*
+ * TODO (perhaps) - cases when a Dialog or ServerSubscription is found in DB but not in memory -> create it in memory
+ *                - cases when a Dialog or ServerSubscription doesn't exist in DB but exists in memory -> delete it from memory
+ */
 bool
 DialogSetPersistenceManager::internalUpdateDialogSet (DialogSet & ds, const DialogSetData& data)
 {
@@ -447,7 +388,7 @@ DialogSetPersistenceManager::internalUpdateDialogSet (DialogSet & ds, const Dial
    {
       WarningLog( << "the DialogSet retrieved from persistent layer has no Dialogs.");
    }
-   for (std::list<DialogData>::const_iterator it = dialogs.begin(); it!=dialogs.end(); it++)
+   for (std::list<DialogData>::const_iterator it = dialogs.begin(); it!=dialogs.end(); ++it)
    {
       DebugLog( << "internally updating Dialog with id " << (*it).getRemoteTag() << " from DialogData");
       //Dialog * dialog = new Dialog(*this, *it, *dset);
@@ -463,17 +404,30 @@ DialogSetPersistenceManager::internalUpdateDialogSet (DialogSet & ds, const Dial
       NameAddr remoteTarget ((*it).getRemoteTarget());
       dialog->mRemoteTarget = remoteTarget;
 
+      //now update ServerSubscription data
       const std::list<ServerSubscriptionData *> serverSubscriptions = (*it).getServerSubscriptions();
 
       for (std::list<ServerSubscriptionData *>::const_iterator serverSubsIt = serverSubscriptions.begin();
             serverSubsIt !=serverSubscriptions.end(); ++serverSubsIt)
       {
+         ServerSubscription * sub = dialog->findMatchingServerSub((*serverSubsIt)->getEventType(), (*serverSubsIt)->getSubscriptionId());
 
+         //if the expiry has been updated in the DB by another node, it means that the subscription timeout on this instance is invalidated;
+         // so make sure we don't trigger a termination NOTIFY, by setting mTimerSeq to 0
+         UInt64 expiry = (*serverSubsIt)->getAbsoluteExpiry();
+         if (sub->mAbsoluteExpiry != expiry)
+         {
+            sub->mTimerSeq = 0;
+            sub->mAbsoluteExpiry = expiry;
+         }
+         //now set the state from DB
+         sub->mSubscriptionState = getSubscriptionStateEnum( (*serverSubsIt)->getSubscriptionState());
       }
-
    }
    return true;
 }
+
+
 DialogSet *
 DialogSetPersistenceManager::internalCreateDialogSet(const DialogSetData &data)
 {
@@ -491,6 +445,7 @@ DialogSetPersistenceManager::internalCreateDialogSet(const DialogSetData &data)
       DebugLog( << "creating new Dialog from DialogData with remote tag " << (*it).getRemoteTag());
       Dialog * dialog = new Dialog(mDum, *it, *dset);
 
+      //custom appdialog not supported
       SipMessage dummy;
       dset->createAppDialog(dialog, dummy);
 
@@ -611,7 +566,6 @@ DialogSetPersistenceManager::createDialogSetDataFromDialogSet (const DialogSet &
       Data dialogCallId = it->second->getCallId().toString().data();
 
 
-
       DialogData dialogData (
             dialogRemoteTag,
             dialogType,
@@ -631,26 +585,23 @@ DialogSetPersistenceManager::createDialogSetDataFromDialogSet (const DialogSet &
       for (std::list<ServerSubscription*>::iterator i=serverSubscriptions.begin();
            i != serverSubscriptions.end(); ++i)
       {
-         Data lastRequest = (*i)->mLastRequest.get()->toString();
-         Data lastResponse = (*i)->mLastResponse.get()->toString();
+         //Data lastRequest = (*i)->mLastRequest.get()->toString();
+         //Data lastResponse = (*i)->mLastResponse.get()->toString();
          Data documentKey = (*i)->mDocumentKey;
          Data eventType = (*i)->mEventType;
          Data subscriptionId = (*i)->mSubscriptionId;
          const Data& subscriptionState = getSubscriptionStateString((*i)->mSubscriptionState);
          Data subscriber =  (*i)->mSubscriber;
-         Data lastSubscribeBuff = (*i)->mLastSubscribe.toString();
+         //Data lastSubscribeBuff = (*i)->mLastSubscribe.toString();
 
          UInt32 absoluteExpiry = (*i)->mAbsoluteExpiry;
 
          ServerSubscriptionData * serverSubscriptionData = new ServerSubscriptionData(
-                     lastRequest,
-                     lastResponse,
                      documentKey,
                      eventType,
                      subscriptionId,
                      subscriptionState,
                      subscriber,
-                     lastSubscribeBuff,
                      absoluteExpiry
                      );
          dialogData.addServerSubscription(serverSubscriptionData);

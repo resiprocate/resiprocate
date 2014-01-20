@@ -968,6 +968,20 @@ Dialog::findMatchingServerSub(const SipMessage& msg)
    return 0;
 }
 
+ServerSubscription*
+Dialog::findMatchingServerSub(const Data& eventType, const Data& subscriptionId)
+{
+   for (std::list<ServerSubscription*>::iterator i=mServerSubscriptions.begin();
+        i != mServerSubscriptions.end(); ++i)
+   {
+      if ((*i)->matches(eventType, subscriptionId))
+      {
+         return *i;
+      }
+   }
+   return 0;
+}
+
 ClientSubscription*
 Dialog::findMatchingClientSub(const SipMessage& msg)
 {

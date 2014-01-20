@@ -399,7 +399,13 @@ ServerSubscription::end()
 void
 ServerSubscription::dispatch(const DumTimeout& timeout)
 {
+
    assert(timeout.type() == DumTimeout::Subscription);
+   //here we have to check if timeout is still valid in multi DUM HA mode; if the expiry was modified in the DB, the timerSeq will be 0 so we won't send notify
+   if (mDum.isHAMode())
+   {
+      mDum.updateFromPersistentLayer (*this);
+   }
    if (timeout.seq() == mTimerSeq)
    {
       ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);

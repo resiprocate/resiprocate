@@ -112,6 +112,7 @@ class Dialog
 
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);
       ServerSubscription* findMatchingServerSub(const SipMessage& msg);
+      ServerSubscription* findMatchingServerSub(const Data& eventType, const Data& subscriptionId);
 
       void addUsage(BaseUsage* usage);
       ClientInviteSession* makeClientInviteSession(const SipMessage& msg);

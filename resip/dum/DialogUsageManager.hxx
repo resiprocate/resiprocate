@@ -362,6 +362,12 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //work in High Availability and scalable mode. multiple DUM server nodes can work in the same cluster, by saving and retrieving Dialog state
       void setHAMode();
 
+      bool isHAMode();
+
+      //updates necessary data from Persistent Layer (only in HA mode)
+      void updateFromPersistentLayer (const DialogUsage& usage);
+      void updateFromPersistentLayer (const SipMessage& msg);
+
       void setDialogSetPersistenceManager(DialogSetPersistenceManager *manager);
 
    protected:

@@ -35,7 +35,8 @@ getSubscriptionStateString(SubscriptionState state);
 const Data&
 getTerminateReasonString(TerminateReason state);
 
-
+SubscriptionState
+getSubscriptionStateEnum( const Data& subscriptionStateString);
 }
 
 #endif

@@ -38,8 +38,6 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const BaseSubscriptionData& data) :
    DialogUsage(dum, dialog),
    mSubDlgState(SubDlgInitial),
-   //mLastRequest(SipMessage::make(data.getLastRequest(), true)),
-   //mLastResponse(SipMessage::make(data.getLastRequest(), true)),
    mLastRequest(new SipMessage()),
    mLastResponse(new SipMessage()),
    mDocumentKey(data.getDocumentKey()),
@@ -52,34 +50,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    //!! seems there is no need to recreate mLastRequest and mLastResponse from DB
 
    Data subscriptionState = data.getSubscriptionState();
-   if (subscriptionState == "invalid")
-   {
-      mSubscriptionState = Invalid;
-   }
-   else if (subscriptionState == "init")
-   {
-      mSubscriptionState = Init;
-   }
-   else if (subscriptionState == "pending")
-   {
-      mSubscriptionState = Pending;
-   }
-   else if (subscriptionState == "active")
-   {
-      mSubscriptionState = Active;
-   }
-   else if (subscriptionState == "waiting")
-   {
-      mSubscriptionState = Waiting;
-   }
-   else if (subscriptionState == "terminated")
-   {
-      mSubscriptionState = Terminated;
-   }
-   else if (subscriptionState == "unknown")
-   {
-      mSubscriptionState = Unknown;
-   }
+   mSubscriptionState = getSubscriptionStateEnum(subscriptionState);
 }
 
 bool
@@ -104,6 +75,13 @@ BaseSubscription::matches(const SipMessage& msg)
                  Data(msg.header(h_CSeq).sequence()) == mSubscriptionId);      
       }
    }
+}
+
+bool
+BaseSubscription::matches(const Data& eventType, const Data& subscriptionId)
+{
+   return eventType == mEventType
+         && (subscriptionId == Data::Empty)? true : (subscriptionId == mSubscriptionId);
 }
 
 

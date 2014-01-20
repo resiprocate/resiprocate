@@ -30,11 +30,8 @@ class BaseSubscriptionData
       const Data& getEventType() const;
       const Data& getSubscriptionId() const;
       const Data& getSubscriptionState() const;
-      BaseSubscriptionData (const Data& lastRequest, const Data& lastResponse, const Data& documentKey, const Data & eventType,
-            const Data& subscriptionId, const Data& subscriptionState );
+      BaseSubscriptionData ( const Data& documentKey, const Data & eventType, const Data& subscriptionId, const Data& subscriptionState );
    private:
-      Data mLastRequest;
-      Data mLastResponse;
       Data mDocumentKey;
       Data mEventType;
       Data mSubscriptionId;
@@ -47,11 +44,10 @@ class ServerSubscriptionData : public BaseSubscriptionData
       const Data& getSubscriber () const;
       const Data& getLastSubscribeBuff() const;
       UInt64 getAbsoluteExpiry() const;
-      ServerSubscriptionData (const Data& lastRequest, const Data& lastResponse, const Data& documentKey, const Data & eventType, const Data& subscriptionId, const Data& subscriptionState,
-            const Data& subscriber,const Data& lastSubscribeBuff, UInt64 mAbsoluteExpiry);
+      ServerSubscriptionData (const Data& documentKey, const Data & eventType, const Data& subscriptionId, const Data& subscriptionState,
+            const Data& subscriber, UInt64 mAbsoluteExpiry);
    private:
       Data mSubscriber;
-      Data mLastSubscribeBuff;
       UInt64 mAbsoluteExpiry;
 };
 
