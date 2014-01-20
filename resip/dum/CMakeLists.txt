@@ -215,11 +215,17 @@ IF(CMAKE_HOST_WIN32)
    # Static library on Windows
    SET(TARGET_TYPE "")
 
+   LIST(APPEND TARGET_LIBS resiprocate)
+
+   # TODO Is this really needed?
    LIST(APPEND TARGET_LIBS winmm)
 ELSE()
    # Shared library on Unix
    SET(TARGET_TYPE SHARED)
-   
+
+   LIST(APPEND TARGET_LIBS resip)   
+
+   # TODO Is this really needed?
    IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
       LIST(APPEND TARGET_LIBS rt)
    ENDIF()
