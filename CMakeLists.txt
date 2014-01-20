@@ -6,6 +6,8 @@ ENABLE_TESTING()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake_modules/")
 
+# TODO: Add doxygen support
+
 # TODO: Add support for config.h as present in current resip autoconf build -
 # if needed
 
@@ -42,6 +44,7 @@ IF(${WITH_C_ARES})
    ADD_DEFINITIONS(-DUSE_CARES)
 
    SET(ARES_LIBRARIES ${CARES_LIBRARIES})
+   INCLUDE_DIRECTORIES(${CARES_INCLUDE_DIRS})
 ELSE()
    # Use built-in ares
    ADD_DEFINITIONS(-DUSE_ARES)
@@ -57,6 +60,7 @@ ENDIF()
 FIND_PACKAGE(popt)
 IF(${POPT_FOUND})
    ADD_DEFINITIONS(-DHAVE_POPT_H)
+   INCLUDE_DIRECTORIES(${POPT_INCLUDE_DIRS})
 ELSE()
    SET(POPT_LIBRARIES "")
 ENDIF()
@@ -65,12 +69,25 @@ ENDIF()
 # TODO: Is using Boost's asio OK? Or should it use the old/independant asio
 # libs?
 FIND_PACKAGE(Boost)
+IF(${Boost_FOUND})
+   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+ENDIF()
 
 # SRTP
 FIND_PACKAGE(srtp)
+IF(${SRTP_FOUND})
+   INCLUDE_DIRECTORIES(${SRTP_INCLUDE_DIRS})
+ENDIF()
 
 # Python
 #INCLUDE(FindPythonLibs)
+
+# Cajun - Note: this one (Findcajun.cmake) always look for cajun under contrib.
+# It is also able to find it in default locations, but that hasn't been tested.
+FIND_PACKAGE(cajun)
+IF(${CAJUN_FOUND})
+   INCLUDE_DIRECTORIES(${CAJUN_INCLUDE_DIRS})
+ENDIF()
 
 # This helper is used by the unit tests
 FUNCTION(TEST_BASE)
@@ -94,6 +111,13 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ADD_SUBDIRECTORY(rutil)
 ADD_SUBDIRECTORY(resip)
+
+# CMake repro support is still in the works...
+IF(${CAJUN_FOUND})
+#   ADD_SUBDIRECTORY(repro)
+ELSE()
+   MESSAGE("-- Missing cajun, will not build repro")
+ENDIF()
 
 IF(${OPENSSL_FOUND} AND ${Boost_FOUND} AND ${SRTP_FOUND})
    ADD_SUBDIRECTORY(reTurn)

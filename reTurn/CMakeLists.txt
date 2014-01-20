@@ -1,6 +1,3 @@
-# TODO - What does this always require SSL? If yes, then it should be disabled
-# if SSL is not found.
-
 # TODO - Do we need to actually install these files since reTurn is not a
 # library?
 SET(INCLUDES
