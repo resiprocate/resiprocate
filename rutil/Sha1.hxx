@@ -17,23 +17,29 @@
         -- Volker Grabsch <vog@notjusthosting.com>
 */
 
+/* Note:  This class was brought in to facilitate simple SHA1 hashing for those that don't want to include
+          OpenSSL in their project.  It is assumed that the OpenSSL implementaiton is more efficient and should be
+          used in favor of this class whenever possible */
+
 #ifndef RESIP_SHA1_HXX
 #define RESIP_SHA1_HXX
 
 
 #include <iostream>
 #include <string>
+#include "Data.hxx"
 
 namespace resip
 {
 
-class SHA1
+class SHA1  // Produces a 160bit hash (20 hexidecimal digits, 40 characters when converted to a hex string)
 {
 public:
     SHA1();
     void update(const std::string &s);
     void update(std::istream &is);
     std::string final();
+    resip::Data finalBin();
     static std::string from_file(const std::string &filename);
 
 private:
@@ -49,6 +55,7 @@ private:
     uint64 transforms;
 
     void reset();
+    void createDigest();
     void transform(uint32 block[BLOCK_BYTES]);
 
     static void buffer_to_block(const std::string &buffer, uint32 block[BLOCK_BYTES]);

@@ -189,6 +189,9 @@
     <ClCompile Include="ServerProcess.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Sha1.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractFifo.hxx">
@@ -447,6 +450,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ServerProcess.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sha1.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

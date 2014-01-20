@@ -4,19 +4,54 @@
 
 #include <assert.h>
 
+#include "rutil/Sha1.hxx"
+
 #ifdef USE_SSL
 #include "rutil/ssl/SHA1Stream.hxx"
+#endif
 
 using namespace resip;
 using namespace std;
-#endif
-
 
 int
 main(void)
 {
-#ifdef USE_SSL
+    // Test Sha1 class that does not use OpenSSL first
+   {
+      resip::SHA1 sha1test;
+      sha1test.update("");
+      assert(sha1test.final() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");      
+   }
+   {
+      resip::SHA1 sha1test;
+      sha1test.update("");
+      Data result = sha1test.finalBin();
+      assert(result.hex() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");      
+   }
+   {
+      Data input("sip:alice@atlanta.example.com"
+                 ":a84b4c76e66710"
+                 ":314159 INVITE"
+                 ":Thu, 21 Feb 2002 13:02:03 GMT"
+                 ":sip:alice@pc33.atlanta.example.com"
+                 ":v=0\r\n"
+                 "o=UserA 2890844526 2890844526 IN IP4 pc33.atlanta.example.com\r\n"
+                 "s=Session SDP\r\n"
+                 "c=IN IP4 pc33.atlanta.example.com\r\n"
+                 "t=0 0\r\n"
+                 "m=audio 49172 RTP/AVP 0\r\n"
+                 "a=rtpmap:0 PCMU/8000\r\n");
+      {
+         
+         resip::SHA1 sha1test;
+         sha1test.update(input.c_str());
 
+         assert(sha1test.final() == "f2eec616bd43c75fd1cd300691e57301b52b3ad3");
+      }
+   }
+
+#ifdef USE_SSL
+   // Test Sha1Stream class that uses OpenSSL
    {
       SHA1Stream str;
       assert(str.getHex() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");
@@ -75,14 +110,6 @@ main(void)
       
       assert(memcmp(a.c_str(), b.c_str()+12, 4) == 0);
    }
-
-
-
-
-
-
-
-
 
 
    cerr << "All OK" << endl;

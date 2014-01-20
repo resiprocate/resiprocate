@@ -64,6 +64,7 @@ librutil_la_SOURCES = \
 	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
 	SelectInterruptor.cxx \
+	Sha1.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
 	SysLogBuf.cxx \
@@ -136,6 +137,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	TransportType.hxx \
 	resipfaststreams.hxx \
 	Coders.hxx \
+	Sha1.hxx \
 	SharedPtr.hxx \
 	SelectInterruptor.hxx \
 	Socket.hxx \

@@ -480,6 +480,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Sha1.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ssl\SHA1Stream.cxx"
 				>
 				<FileConfiguration
@@ -819,6 +823,10 @@
 			</File>
 			<File
 				RelativePath=".\ServerProcess.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Sha1.hxx"
 				>
 			</File>
 			<File

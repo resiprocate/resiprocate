@@ -59,6 +59,43 @@ void SHA1::update(std::istream &is)
 
 std::string SHA1::final()
 {
+    /* Use input and create digest */
+    createDigest();
+
+    /* Hex std::string */
+    std::ostringstream result;
+    for (unsigned int i = 0; i < DIGEST_INTS; i++)
+    {
+        result << std::hex << std::setfill('0') << std::setw(8);
+        result << (digest[i] & 0xffffffff);
+    }
+
+    /* Reset for next run */
+    reset();
+
+    return result.str();
+}
+
+resip::Data SHA1::finalBin()
+{
+    /* Use input and create digest */
+    createDigest();
+
+    resip::Data result(21, Data::Preallocate);  // Data likes a NULL at the end use 21 instead of 20
+    for (unsigned int i = 0; i < DIGEST_INTS; i++)
+    {
+        uint32 digesttemp = htonl(digest[i]);
+        result.append((const char*)&digesttemp, sizeof(digest[0]));
+    }
+
+    /* Reset for next run */
+    reset();
+
+    return result;
+}
+
+void SHA1::createDigest()
+{
     /* Total number of hashed bits */
     uint64 total_bits = (transforms*BLOCK_BYTES + buffer.size()) * 8;
 
@@ -86,21 +123,7 @@ std::string SHA1::final()
     block[BLOCK_INTS - 1] = (uint32)total_bits;
     block[BLOCK_INTS - 2] = (total_bits >> 32);
     transform(block);
-
-    /* Hex std::string */
-    std::ostringstream result;
-    for (unsigned int i = 0; i < DIGEST_INTS; i++)
-    {
-        result << std::hex << std::setfill('0') << std::setw(8);
-        result << (digest[i] & 0xffffffff);
-    }
-
-    /* Reset for next run */
-    reset();
-
-    return result.str();
 }
-
 
 std::string SHA1::from_file(const std::string &filename)
 {
