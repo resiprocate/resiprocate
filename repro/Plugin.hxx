@@ -1,5 +1,5 @@
 #ifndef PLUGIN_HXX
-#define PLUGIN_HXX 1
+#define PLUGIN_HXX
 
 #include <cassert>
 
@@ -34,7 +34,7 @@
  */
 
 // If the API changes, this number changes too:
-#define REPRO_DSO_PLUGIN_API_VERSION 1
+#define REPRO_DSO_PLUGIN_API_VERSION 2
 
 namespace repro
 {
