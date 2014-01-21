@@ -43,6 +43,7 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
    uid_t cur_uid;
    gid_t cur_gid;
    gid_t new_gid;
+   const char *username;
    struct passwd *pw;
    struct group *gr;
 
@@ -51,7 +52,8 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
       ErrLog(<<"Unable to drop privileges, username not specified");
       throw std::runtime_error("Unable to drop privileges, username not specified");
    }
-   pw = getpwnam(runAsUser.c_str());
+   username = runAsUser.c_str();
+   pw = getpwnam(username);
    if (pw == NULL)
    {
       ErrLog(<<"Unable to drop privileges, user not found");
@@ -86,9 +88,15 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
       rval = setgid(new_gid);
       if (rval < 0)
       {
-         ErrLog(<<"Unable to drop privileges, operation failed");
+         ErrLog(<<"Unable to drop privileges, operation failed (setgid)");
          throw std::runtime_error("Unable to drop privileges, operation failed");
       }
+   }
+
+   if(initgroups(username, new_gid) < 0)
+   {
+      ErrLog(<<"Unable to drop privileges, operation failed (initgroups)");
+      throw std::runtime_error("Unable to drop privileges, operation failed");
    }
 
    cur_uid = getuid();
@@ -103,7 +111,7 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
       rval = setuid(pw->pw_uid);
       if (rval < 0)
       {
-         ErrLog(<<"Unable to drop privileges, operation failed");
+         ErrLog(<<"Unable to drop privileges, operation failed (setuid)");
          throw std::runtime_error("Unable to drop privileges, operation failed");
       }
    }
