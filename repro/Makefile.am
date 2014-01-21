@@ -16,6 +16,7 @@ EXTRA_DIST += WinSetup WinSetupx64
 EXTRA_DIST += repro.config
 EXTRA_DIST += create_mysql_reprodb.sql
 EXTRA_DIST += genUsers.cxx
+EXTRA_DIST += users.txt
 
 SUBDIRS = . test reprocmd accountingconsumers
 if BUILD_REPRO_DSO_PLUGINS
