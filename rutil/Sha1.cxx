@@ -17,7 +17,7 @@
         -- Volker Grabsch <vog@notjusthosting.com>
 */
 
-#include "sha1.hxx"
+#include "Sha1.hxx"
 #include <sstream>
 #include <iomanip>
 #include <fstream>
