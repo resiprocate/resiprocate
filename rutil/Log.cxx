@@ -819,8 +819,7 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
                remove(oldLogFileName.c_str());
                rename(logFileName.c_str(), oldLogFileName.c_str());
             }
-            // Append to log if we have a line count or byte count limit - otherwise truncate
-            mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | ((maxLineCount() > 0 || maxByteCount() > 0) ? std::ios_base::app : std::ios_base::trunc));
+            mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | std::ios_base::app);
             mLineCount = 0;
          }
          mLineCount++;
