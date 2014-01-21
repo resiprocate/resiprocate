@@ -159,6 +159,7 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("registrations.html") ) &&  
       ( pageName != Data("settings.html") ) &&  
       ( pageName != Data("restart.html") ) &&  
+      ( pageName != Data("logLevel.html") ) &&
       ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
@@ -355,6 +356,7 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
       if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
       if ( pageName == Data("restart.html"))     buildRestartSubPage(s);
+      if ( pageName == Data("logLevel.html"))    buildLogLevelSubPage(s);
       
       s << mPageOutlinePost;
       s.flush();
@@ -1826,6 +1828,19 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
      << "  <br><input type=\"submit\" name=\"action\" value=\"Clear DNS Cache\"/>" << endl
      << "</form>" << endl;
 
+   s << "<form id=\"logLevel\" method=\"get\" action=\"logLevel.html\" name=\"logLevel\">" << endl
+     << "  <br>Change log level to: <select name=\"level\">" << endl
+     << "        <option value=\"NONE\">NONE" << (Log::level() == Log::None ? " *" : "") << "</option>" << endl
+     << "        <option value=\"CRIT\">CRIT" << (Log::level() == Log::Crit ? " *" : "") << "</option>" << endl
+     << "        <option value=\"ERR\">ERR" << (Log::level() == Log::Err ? " *" : "") << "</option>" << endl
+     << "        <option value=\"WARNING\">WARNING" << (Log::level() == Log::Warning ? " *" : "") << "</option>" << endl
+     << "        <option value=\"INFO\">INFO" << (Log::level() == Log::Info ? " *" : "") << "</option>" << endl
+     << "        <option value=\"DEBUG\">DEBUG" << (Log::level() == Log::Debug ? " *" : "") << "</option>" << endl
+     << "        <option value=\"STACK\">STACK" << (Log::level() == Log::Stack ? " *" : "") << "</option>" << endl
+     << "       </select>" << endl
+     << "  <input type=\"submit\" name=\"action\" value=\"Set level\"/>" << endl
+     << "</form>" << endl;
+
    if(mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0) != 0)
    {
       s << "<form id=\"restartProxy\" method=\"get\" action=\"restart.html\" name=\"restart\">" << endl
@@ -1905,6 +1920,30 @@ WebAdmin::buildRestartSubPage(DataStream& s)
    else
    {
       s << "CommandServer must be running to use restart feature." << endl;
+   }
+}
+
+void
+WebAdmin::buildLogLevelSubPage(resip::DataStream& s)
+{
+   Dictionary::iterator pos;
+   Data newLevel;
+
+   pos = mHttpParams.find("level");
+   if (pos != mHttpParams.end()) // found user key
+   {
+      newLevel = pos->second;
+      InfoLog(<<"new log level requested: " << newLevel);
+
+      Log::Level l = Log::toLevel(newLevel);
+      Log::setLevel(l);
+
+      s << "Log level changed." << endl;
+   }
+   else
+   {
+      WarningLog(<<"no log level specified");
+      s << "ERROR: No level specified." << endl;
    }
 }
 

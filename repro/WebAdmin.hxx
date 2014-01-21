@@ -68,6 +68,7 @@ class WebAdmin : public HttpBase,
       void buildRegistrationsSubPage(resip::DataStream& s);
       void buildSettingsSubPage(resip::DataStream& s);
       void buildRestartSubPage(resip::DataStream& s);
+      void buildLogLevelSubPage(resip::DataStream& s);
 
       resip::Data buildCertPage(const resip::Data& domain);
 
