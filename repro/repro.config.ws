@@ -25,11 +25,20 @@ LogFileMaxBytes = 5242880
 # Instance name to be shown in logs, very useful when multiple instances
 # logging to syslog concurrently
 # If unspecified, defaults to argv[0] (name of the executable)
-#LoggingInstanceName repro-dev
+#LoggingInstanceName = repro-dev
 
 ########################################################
 # Transport settings
 ########################################################
+
+# Set an upper limit on the maximum size of a SIP message payload
+# that the stack will accept.  If a payload received over a
+# connection-oriented transport exceeds this size, the
+# connection will be dropped.
+# This applies to TCP, TLS and WebSocket transports.
+# UDP payload sizes are limited by the maximum datagram size
+# and any fragmentation constraints.
+#StreamMessageSizeLimit = 65536
 
 # Local IP Address to bind SIP transports to. If left blank
 # repro will bind to all adapters.
@@ -50,13 +59,23 @@ TLSPort = 0
 WSPort = 80
  
 # Local port to listen on for SIP messages over WSS (WebSocket TLS) - 0 to disable
-WSSPort = 443
+WSSPort = 0
 
 # Local port to listen on for SIP messages over DTLS - 0 to disable
 DTLSPort = 0
 
 # TLS domain name for this server (note: domain cert for this domain must be present)
 TLSDomainName =
+
+# PEM-encoded X.509 certificate for TLS
+# Must contain any intermediate certificates from the CA
+# The TLSCertificate and TLSPrivateKey parameters are optional.  The stack
+# will also try to automatically detect any suitable certificates
+# in the directory specified by CertificatePath
+TLSCertificate = 
+
+# PEM-encoded private key for TLS
+TLSPrivateKey = 
 
 # Whether or not we ask for (Optional) or expect (Mandatory) TLS
 # clients to present a client certificate
@@ -86,7 +105,9 @@ TLSUseEmailAsSIP = false
 #                                                IP Address and Port - square bracket notation
 #                                                is not used.
 # Transport<Num>Type = <'TCP'|'UDP'|'TLS'|'DTLS'|'WS'|'WSS'> - default is UDP if missing
-# Transport<Num>TlsDomain = <TLSDomain> - only required if transport is TLS or DTLS
+# Transport<Num>TlsDomain = <TLSDomain> - only required if transport is TLS, DTLS or WSS
+# Transport<Num>TlsCertificate = <TLSCertificate> - only for TLS, DTLS or WSS
+# Transport<Num>TlsPrivateKey = <TLSPrivateKey> - only for TLS, DTLS or WSS
 # Transport<Num>TlsClientVerification = <'None'|'Optional'|'Mandatory'> - default is None
 # Transport<Num>RecordRouteUri = <'auto'|URI> - if set to auto then record route URI
 #                                               is automatically generated from the other
@@ -112,6 +133,8 @@ TLSUseEmailAsSIP = false
 # Transport3Interface = 192.168.1.106:5061
 # Transport3Type = TLS
 # Transport3TlsDomain = sipdomain.com
+# Transport3TlsCertificate = /etc/ssl/crt/sipdomain.com.crt
+# Transport3TlsPrivateKey = /etc/ssl/private/sipdomain.com.key
 # Transport3TlsClientVerification = Mandatory
 # Transport3RecordRouteUri = sip:h1.sipdomain.com;transport=TLS
 #
@@ -119,30 +142,29 @@ TLSUseEmailAsSIP = false
 # Transport4Type = UDP
 # Transport4RecordRouteUri = auto
 
-Transport1Interface = 192.168.1.2:5062
-Transport1Type = WS
-Transport1RecordRouteUri = auto
+# Transport5Interface = 192.168.1.106:5062
+# Transport5Type = WS
+# Transport5RecordRouteUri = auto
 
-Transport2Interface = 192.168.1.2:5060
-Transport2Type = TCP
-Transport2RecordRouteUri = auto
-
-Transport3Interface = 192.168.1.2:5063
-Transport3Type = WSS
-Transport3RecordRouteUri = auto
-Transport3TlsDomain = sipdomain.com
-Transport3TlsClientVerification = None
-Transport3RecordRouteUri = sip:sipdomain.com;transport=WS
+# Transport6Interface = 192.168.1.106:5063
+# Transport6Type = WSS
+# Transport6TlsDomain = sipdomain.com
+# Transport6TlsClientVerification = None
+# Transport6RecordRouteUri = sip:h1.sipdomain.com;transport=WS
 
 # Comma separated list of DNS servers, overrides default OS detected list (leave blank 
 # for default)
 DNSServers =
 
 # Enable IPv6
-EnableIPv6 = false
+EnableIPv6 = true
 
 # Enable IPv4
 DisableIPv4 = false
+
+# Comma separated list of IP addresses used for binding the HTTP configuration interface
+# and/or certificate server. If left blank it will bind to all adapters.
+HttpBindAddress =
 
 # Port on which to run the HTTP configuration interface and/or certificate server 
 # 0 to disable (default: 5080)
@@ -151,8 +173,15 @@ HttpPort = 5080
 # disable HTTP challenges for web based configuration GUI
 DisableHttpAuth = false
 
-# Web administrator password
-HttpAdminPassword = admin
+# Realm to use for HTTP admin interface digest authentication
+HttpAdminRealm = repro
+
+# File containing user/password details
+HttpAdminUserFile = users.txt
+
+# Comma separated list of IP addresses used for binding the Command Server listeners.
+# If left blank it will bind to all adapters.
+CommandBindAddress =
 
 # Port on which to listen for and send XML RPC messaging used in command processing 
 # 0 to disable (default: 5081)
@@ -166,10 +195,44 @@ RegSyncPort = 0
 # (note xmlrpcport must also be specified)
 RegSyncPeer =
 
+# Non-outbound connections over this age (expressed in seconds) are
+# considered eligible for garbage collection.
+# If not set but FlowTimer is set, then this value defaults to 7200 seconds
+# Otherwise, there is no garbage collection at all unless an error occurs
+# when making an outgoing connection.
+#TCPConnectionGCAge =
+
+# File descriptor headroom threshold for emergency garbage collection
+# If the difference between the number of permitted FDs
+# (reported by periodic calls to getrlimit()) and the number
+# of active stream connections falls below this threshold,
+# the garbage collector will overlook TCPConnectionGCAge and
+# FlowTimer settings and more aggressively close connections
+# By default, this feature is not enabled
+# Remember that the value must be high enough to allow file descriptors
+# for each shared library that is open, each database connection,
+# each listening socket and any sockets/files accessed by plugins
+#TCPMinimumGCHeadroom =
 
 ########################################################
 # Misc settings
 ########################################################
+
+# Directory where plugins are located
+# The default is determined at build time depending upon the
+# target environment and the installation prefix passed to
+# the configure script
+#PluginDirectory /usr/lib/repro/plugins
+
+# List of plugins to load (comma-separated list)
+# These are the names of the plugins and not the full filenames
+# Order is important: the plugins will always be loaded and
+# initialized in the order specified here
+# Plugins are not supported on all platforms and plugin support is an
+# optional feature that must be enabled at compile time.
+#
+# For example, to load  the plugin named "example", which is in libexample.so:
+#LoadPlugins = example
 
 # Drop privileges and run as some other user and group
 # If RunAsUser is specified and RunAsGroup is not specified,
@@ -187,14 +250,24 @@ Daemonize = false
 # if unspecified, no attempt will be made to create a PID file
 #PidFile = /var/run/repro/repro.pid
 
-# Path to load certificates from (default:  "$(HOME)/.sipCerts on *nix, and c:\sipCerts 
-# on windows)
-# Note that repro loads ALL root certificates found by the settings
-# CertificatePath, CADirectory and CAFile.  Setting one option does
-# not disable the other options.
+# Path to load certificates from (optional, there is no default)
+# Note that repro loads ALL root certificates found by any of the settings
+#
+#    CertificatePath
+#    CADirectory
+#    CAFile
+#
+# Setting one option does not disable the other options.
+#
 # Certificates in this location have to match one of the filename
 # patterns expected by the legacy reSIProcate SSL code:
+#
 #   domain_cert_NAME.pem, root_cert_NAME.pem, ...
+#
+# For domain certificates, it is recommended to use the options
+# for individual transports, such as TransportXTlsCertificate and
+# TransportXTlsPrivateKey and not set CertificatePath at all.
+#
 CertificatePath =
 
 # Path to load root certificates from
@@ -356,8 +429,13 @@ RegistrationAccountingLogRefreshes = false
 # Run a Certificate Server - Allows PUBLISH and SUBSCRIBE for certificates
 EnableCertServer = false
 
-# Value of server header for local UAS responses
-ServerText =
+# Value of server and user agent headers for local UAS and registration
+# server responses
+#
+# Default value is "repro PACKAGE_VERSION" if PACKAGE_VERSION is defined
+# during compilation and no header is generated at all otherwise
+#
+#ServerText =
 
 # Enables Congestion Management
 CongestionManagement = true
@@ -546,7 +624,33 @@ EnableCertificateAuthenticator = false
 ########################################################
 
 # Disable DIGEST challenges - disables this monkey
-DisableAuth = true
+DisableAuth = false
+
+# Always use a specified realm name to challenge
+# Default behavior (if StaticRealm not specified) is to challenge
+# using the hostname from the request URI as the realm
+StaticRealm =
+
+# Enable RADIUS lookups (only works if DIGEST enabled)
+# Default: false
+#EnableRADIUS = true
+
+# Specify the configuration file the RADIUS client should use
+# This is the file that specifies the name of the RADIUS server to
+# use and other essential parameters.
+# If different processes each have different RADIUS parameters,
+# they can copy the radiusclient.conf file to a non-standard location
+# and modify it as required.
+#
+# Note the following:
+# - the seqfile specified in the RADIUS configuration file
+#   must be writeable by the user the repro process runs as.
+#   It is a good idea to locate that file in a directory such as /var/run/repro
+#   owned by repro
+# - the dictionary must include various elements such as Sip-Session,
+#   copy these from the sample dictionary.sip file
+# Default: /etc/radiusclient/radiusclient.conf
+#RADIUSConfiguration = 
 
 # Http hostname for this server (used in Identity headers)
 HttpHostname =
@@ -567,6 +671,24 @@ RejectBadNonces = false
 # allow To tag in registrations
 AllowBadReg = false
 
+########################################################
+# Cookie Authentication Settings
+########################################################
+
+# Shared secret for cookie HMAC validation. If there is no WSCookieAuthSharedSecret
+# there will be no cookie validation.
+#
+# See
+#  http://www.resiprocate.org/SIP_Over_WebSocket_Cookies
+# for details of the cookie authentication scheme
+#
+# WSCookieAuthSharedSecret =
+
+# Names of the cookies to use for the cookie authentication protocol
+# These are the default values:
+#WSCookieNameInfo = WSSessionInfo
+#WSCookieNameExtra = WSSessionExtra
+#WSCookieNameMAC = WSSessionMAC
 
 ########################################################
 # RequestFilter Monkey Settings
@@ -623,6 +745,14 @@ ParallelForkStaticRoutes = false
 # StaticRoutes become fallback targets, processed only after all location server 
 # targets fail.
 ContinueProcessingAfterRoutesFound = false
+
+# Challenge calls from third-party domains to local domains
+# If certificate authentication is enabled and a
+# request arrives over TLS, they will still not be
+# challenged anyway if their domain certificate
+# validates their message.
+# Default: true if DIGEST challenge is enabled
+ChallengeThirdPartiesCallingLocalDomains = true
 
 
 ########################################################
