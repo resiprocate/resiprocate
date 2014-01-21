@@ -162,6 +162,9 @@ ReTurnConfig::authParse(const resip::Data& accountDatabaseFilename)
       throw ReTurnConfig::Exception("Error opening/reading user database file!", __FILE__, __LINE__);
    }
 
+   mUsers.clear();
+   mRealmUsersAuthenticaionCredentials.clear();
+
    while(std::getline(accountDatabaseFile, sline))
    {
       AccountState accountState;
@@ -415,12 +418,18 @@ ReTurnUserFileScanner::timeout(const asio::error_code& e)
    {
       InfoLog(<<"change in user database detected, reloading...");
       WriteLock lock(mReTurnConfig.mUserDataMutex);
-      mReTurnConfig.mUsers.clear();
-      mReTurnConfig.mRealmUsersAuthenticaionCredentials.clear();
-      mReTurnConfig.authParse(mReTurnConfig.mUsersDatabaseFilename);
-      InfoLog(<<"user database reload completed");
-      mLoadedTime = time(0);
-      mNextFileCheck = mLoadedTime + mReTurnConfig.mUserDatabaseCheckInterval;
+      try
+      {
+         mReTurnConfig.authParse(mReTurnConfig.mUsersDatabaseFilename);
+         InfoLog(<<"user database reload completed");
+         mLoadedTime = time(0);
+         mNextFileCheck = mLoadedTime + mReTurnConfig.mUserDatabaseCheckInterval;
+      }
+      catch (ReTurnConfig::Exception& ex)
+      {
+         WarningLog(<<"user reload failed, will check again in " << mReTurnConfig.mUserDatabaseCheckInterval << " second(s).");
+         mNextFileCheck = time(0) + mReTurnConfig.mUserDatabaseCheckInterval;
+      }
    }
 
    // clear any signal
