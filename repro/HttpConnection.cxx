@@ -144,6 +144,12 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
       }
       break;
 
+      case 500:
+      {
+         mTxBuffer += "HTTP/1.0 500 Server failure" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
+
       default:
       {
          assert(0);  

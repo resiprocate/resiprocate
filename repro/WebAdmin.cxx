@@ -431,7 +431,16 @@ WebAdmin::buildPage( const Data& uri,
       // user only pages 
       if ( pageName == Data("user.html") ) page=buildUserPage(); 
       //if ( pageName == Data("input") ) page=buildUserPage();
-  }
+
+      if(page.empty())
+      {
+         DataStream s(page);
+         s << "Invalid page request";
+         s.flush();
+         setPage(page, pageNumber, 500);
+         return;
+      }
+   }
    
    assert( !authenticatedUser.empty() );
    assert( !page.empty() );
