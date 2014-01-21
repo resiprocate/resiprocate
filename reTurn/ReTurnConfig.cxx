@@ -438,6 +438,8 @@ ReTurnUserFileScanner::onSignal(int signum)
    {
       InfoLog(<<"HUP signal received, scheduling a users.txt reload");
       mHup = true;
+      // also rotate the log file
+      Log::reset();
    }
    else
    {
