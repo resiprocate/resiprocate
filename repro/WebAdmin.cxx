@@ -1896,13 +1896,13 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
 
    s << "<form id=\"logLevel\" method=\"get\" action=\"logLevel.html\" name=\"logLevel\">" << endl
      << "  <br>Change log level to: <select name=\"level\">" << endl
-     << "        <option value=\"NONE\">NONE" << (Log::level() == Log::None ? " *" : "") << "</option>" << endl
-     << "        <option value=\"CRIT\">CRIT" << (Log::level() == Log::Crit ? " *" : "") << "</option>" << endl
-     << "        <option value=\"ERR\">ERR" << (Log::level() == Log::Err ? " *" : "") << "</option>" << endl
-     << "        <option value=\"WARNING\">WARNING" << (Log::level() == Log::Warning ? " *" : "") << "</option>" << endl
-     << "        <option value=\"INFO\">INFO" << (Log::level() == Log::Info ? " *" : "") << "</option>" << endl
-     << "        <option value=\"DEBUG\">DEBUG" << (Log::level() == Log::Debug ? " *" : "") << "</option>" << endl
-     << "        <option value=\"STACK\">STACK" << (Log::level() == Log::Stack ? " *" : "") << "</option>" << endl
+     << "        <option value=\"NONE\"" << (Log::level() == Log::None ? " selected" : "") << ">NONE" << (Log::level() == Log::None ? " *" : "") << "</option>" << endl
+     << "        <option value=\"CRIT\"" << (Log::level() == Log::Crit ? " selected" : "") << ">CRIT" << (Log::level() == Log::Crit ? " *" : "") << "</option>" << endl
+     << "        <option value=\"ERR\"" << (Log::level() == Log::Err ? " selected" : "") << ">ERR" << (Log::level() == Log::Err ? " *" : "") << "</option>" << endl
+     << "        <option value=\"WARNING\"" << (Log::level() == Log::Warning ? " selected" : "") << ">WARNING" << (Log::level() == Log::Warning ? " *" : "") << "</option>" << endl
+     << "        <option value=\"INFO\"" << (Log::level() == Log::Info ? " selected" : "") << ">INFO" << (Log::level() == Log::Info ? " *" : "") << "</option>" << endl
+     << "        <option value=\"DEBUG\"" << (Log::level() == Log::Debug ? " selected" : "") << ">DEBUG" << (Log::level() == Log::Debug ? " *" : "") << "</option>" << endl
+     << "        <option value=\"STACK\"" << (Log::level() == Log::Stack ? " selected" : "") << ">STACK" << (Log::level() == Log::Stack ? " *" : "") << "</option>" << endl
      << "       </select>" << endl
      << "  <input type=\"submit\" name=\"action\" value=\"Set level\"/>" << endl
      << "</form>" << endl;
