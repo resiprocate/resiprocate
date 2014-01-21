@@ -22,6 +22,12 @@ static bool finished = false;
 static void
 signalHandler(int signo)
 {
+   if(signo == SIGHUP)
+   {
+      InfoLog(<<"Received HUP signal, logger reset");
+      Log::reset();
+      return;
+   }
    std::cerr << "Shutting down" << endl;
    finished = true;
 }
@@ -112,6 +118,12 @@ main(int argc, char** argv)
    if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
    {
       cerr << "Couldn't install signal handler for SIGTERM" << endl;
+      exit( -1 );
+   }
+
+   if ( signal( SIGHUP, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGHUP" << endl;
       exit( -1 );
    }
 
