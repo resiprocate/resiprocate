@@ -127,7 +127,7 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
       case 301:
       {
          mTxBuffer += "HTTP/1.0 301 Moved Permanently"; mTxBuffer += Symbols::CRLF;
-         mTxBuffer += "Location: http:/index.html"; mTxBuffer += Symbols::CRLF;
+         mTxBuffer += "Location: /index.html"; mTxBuffer += Symbols::CRLF;
          
          page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
                  "<html><head>"
