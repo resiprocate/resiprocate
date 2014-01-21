@@ -982,7 +982,8 @@ ReproRunner::createProxy()
                       *mMonkeys, 
                       *mLemurs, 
                       *mBaboons);
-   mHttpRealm = addDomains(*mProxy, true);
+   Data defaultRealm = addDomains(*mProxy, true);
+   mHttpRealm = mProxyConfig->getConfigData("HttpAdminRealm", defaultRealm);
 
    // Register the Proxy class a stack transaction user
    // Note:  This is done after creating the DialogUsageManager so that it acts 

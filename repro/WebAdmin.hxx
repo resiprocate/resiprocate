@@ -30,12 +30,26 @@ class WebAdmin : public HttpBase,
                  public resip::GetDnsCacheDumpHandler
 {
    public:
+      class ConfigException : public resip::BaseException
+      {
+         public:
+            ConfigException(const resip::Data& msg,
+                      const resip::Data& file,
+                      const int line)
+               : BaseException(msg, file, line) {}
+         protected:
+            virtual const char* name() const { return "WebAdmin::ConfigException"; }
+      };
+
       WebAdmin(Proxy& proxy,
                resip::RegistrationPersistenceManager& regDb,
                const resip::Data& realm, // this realm is used for http challenges
                int port=5080,
                resip::IpVersion version=resip::V4,
                const resip::Data& ipAddr = resip::Data::Empty);
+
+      // (Re)load the users.txt file
+      void parseUserFile();
       
    protected:
       virtual void buildPage( const resip::Data& uri, 
@@ -97,6 +111,9 @@ class WebAdmin : public HttpBase,
 
       resip::Data mPageOutlinePre;
       resip::Data mPageOutlinePost;
+
+      resip::Data mUserFile;
+      std::map<resip::Data,resip::Data> mUsers;
 };
 
 
