@@ -77,6 +77,7 @@ DialogSetChangeInfoManager::reset()
       delete it->second;
    }
    mChanges.clear();
+   return true;
 }
 
 bool

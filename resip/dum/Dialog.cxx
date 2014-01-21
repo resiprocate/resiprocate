@@ -464,7 +464,7 @@ Dialog::handleTargetRefresh(const SipMessage& msg)
                //.dcm. replace or check then replace
                mRemoteTarget = msg.header(h_Contacts).front();
                //flagging that the Dialog data has changed
-               if (mDum.mHAMode)
+               if (mDum.isHAMode())
                {
                   mDum.mDialogSetChangeInfoManager->DialogSetChanged(mDialogSet.getId());
                }
@@ -735,7 +735,7 @@ Dialog::dispatch(const SipMessage& msg)
                assert (r->second->isRequest());
 
                mLocalCSeq++;
-               if (mDum.mHAMode)
+               if (mDum.isHAMode())
                {
                   mDum.mDialogSetChangeInfoManager->DialogSetChanged(mDialogSet.getId());
                }
@@ -1130,7 +1130,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    if (method != ACK && method != CANCEL)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
-      if (mDum.mHAMode)
+      if (mDum.isHAMode())
       {
          mDum.mDialogSetChangeInfoManager->DialogSetChanged(mDialogSet.getId());
       }

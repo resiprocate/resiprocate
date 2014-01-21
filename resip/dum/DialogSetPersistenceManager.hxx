@@ -132,24 +132,32 @@ operator<<(EncodeStream& strm, const DialogSetData& data);
    class DialogSetPersistenceManager
    {
       public:
-      enum ReadResult{
+      enum ReadResult
+      {
          Found,
          NotFound,
          Error
       };
+
       typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
       DialogSetPersistenceManager(DialogUsageManager &dum);
       virtual ~DialogSetPersistenceManager();
-      bool syncDialogSet(DialogSetId id, DialogSetMap & dsmap); //internally updates changes from DialogSet
+      //updates the DialogSet from the map to the state found in persistent layer
+      bool syncDialogSet(DialogSetId id, DialogSetMap & dsmap);
+      //updates the whole DialogSetMap to the state found in persistent layer
+      bool syncAllDialogSets (DialogSetMap& map);
       bool internalUpdateDialogSet (DialogSet & ds, const DialogSetData& data);
       DialogSet * internalCreateDialogSet(const DialogSetData &data);
-      bool saveDialogSetChangesToPersistence(DialogSetChangeInfoManager::DialogSetChangesMap &changes); // saves changes from ds to persistent layer
+      // saves changes from ds to persistent layer
+      bool saveDialogSetChangesToPersistence(DialogSetChangeInfoManager::DialogSetChangesMap &changes);
       bool createDialogSetDataFromDialogSet (const DialogSet & dialogSet, DialogSetData & data);
 
       private:
       DialogUsageManager & mDum;
       virtual bool checkIfUpdateNeeded()=0;
       virtual ReadResult readDialogSet(const DialogSetId & id, DialogSetData & dsdata)=0;
+
+      virtual bool readAllDialogSets(std::list<DialogSetData *>& dialogs)=0;
       virtual bool addDialogSet(const DialogSetData & data)=0;
       virtual bool updateDialogSet(const DialogSetData & data)=0;
       virtual bool removeDialogSet(const DialogSetId &id)=0;

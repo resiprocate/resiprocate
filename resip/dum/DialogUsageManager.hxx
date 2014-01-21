@@ -359,15 +359,23 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       void setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserProfile> userProfile);
 
-      //work in High Availability and scalable mode. multiple DUM server nodes can work in the same cluster, by saving and retrieving Dialog state
+      //work in Persistence On Restart Mode, where DUM will save all Dialog data on shutdown
+      //and recreate it on startup, so current dialogs won't be lost on restart(check PersistenceMode)
+      void setPersistenceOnRestartMode();
+      //work in High Availability and scalable mode. multiple DUM server nodes can work
+      //in the same cluster, by saving and retrieving Dialog state (check PersistenceMode)
       void setHAMode();
 
+      bool isPersistenceOnRestartMode();
       bool isHAMode();
 
       //updates necessary data from Persistent Layer (only in HA mode)
       void updateFromPersistentLayer (const DialogUsage& usage);
       void updateFromPersistentLayer (const SipMessage& msg);
 
+      bool restorePersistentDialogSets();
+
+      bool saveAllDialogSetsToPersistentLayer();
       void setDialogSetPersistenceManager(DialogSetPersistenceManager *manager);
 
    protected:
@@ -576,7 +584,19 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 
-      bool mHAMode;
+      //DUM can work with a persistent layer in two modes:
+      //PersistenceOnRestart - means that DUM will persist Dialog state only when shutting down and recreate the Dialog data on startup
+      //HAMode - means that DUM will continuously save and read data from persistent layer, which allows multiple DUM nodes to work in parallel
+      //         and also if one fails, another node will still be able to continue the dialog. This load balancing and/or failover can be done by
+      //         DNS SRV
+      typedef enum
+      {
+         NoPersistence = 0,
+         PersistenceOnRestart = 1,
+         HAMode = 2
+      }PersistenceMode;
+
+      PersistenceMode mPersistenceMode;
       DialogSetPersistenceManager * mDialogSetPersistenceManager;
 
       DialogSetChangeInfoManager *mDialogSetChangeInfoManager;

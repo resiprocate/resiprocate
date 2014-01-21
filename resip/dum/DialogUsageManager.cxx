@@ -114,7 +114,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mShutdownState(Running),
    mThreadDebugKey(0),
    mHiddenThreadDebugKey(0),
-   mHAMode(false),
+   mPersistenceMode(NoPersistence),
    mDialogSetPersistenceManager(0)
 {
    //TODO -- create default features
@@ -1374,7 +1374,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          //DebugLog(<< "Destroying usage" );
          destroyUsage->destroy();
-         if (mHAMode == true)
+         if (isHAMode())
          {
             mDialogSetPersistenceManager->saveDialogSetChangesToPersistence(mDialogSetChangeInfoManager->getChanges());
             mDialogSetChangeInfoManager->reset();
@@ -1653,7 +1653,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                   return;
                }
             }
-            if (mHAMode == true)
+            if (isHAMode())
             {
                updateFromPersistentLayer(*sipMsg);
             }
@@ -1671,7 +1671,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
             processResponse(*sipMsg);
          }
 
-         if (mHAMode == true)
+         if (isHAMode())
          {
             //update the flagged DialogSets to persistent layer
             mDialogSetPersistenceManager->saveDialogSetChangesToPersistence(mDialogSetChangeInfoManager->getChanges());
@@ -2120,7 +2120,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             try
             {
                DialogSet *dset = makeUASDialogSet(request);
-               if (mHAMode == true)
+               if (isHAMode())
                {
                   if (!mDialogSetChangeInfoManager->DialogSetAdded(dset->getId()))
                   {
@@ -2327,7 +2327,7 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
    {
       mRedirectManager->removeDialogSet(dsId);
    }
-   if (mHAMode == true)
+   if (isHAMode())
    {
 	   if (!mDialogSetChangeInfoManager->DialogSetRemoved(dsId))
 	   {
@@ -2585,23 +2585,47 @@ DialogUsageManager::setAdvertisedCapabilities(SipMessage& msg, SharedPtr<UserPro
 }
 
 void
+DialogUsageManager::setPersistenceOnRestartMode()
+{
+   if (!mDialogSetPersistenceManager)
+   {
+      ErrLog ( << "DialogSetPersistenceManager is not added to DUM. Add it with DialogUsageManager::setDialogSetPersistenceManager" );
+      assert (false);
+   }
+   mPersistenceMode = PersistenceOnRestart;
+   InfoLog( << "working in Persistence On Restart mode. A DUM instance will save Dialog state and reconstruct Dialogs on restart");
+}
+
+void
 DialogUsageManager::setHAMode()
 {
-	mHAMode = true;
+   if (!mDialogSetPersistenceManager)
+   {
+      ErrLog ( << "DialogSetPersistenceManager is not added to DUM. Add it with DialogUsageManager::setDialogSetPersistenceManager" );
+      assert (false);
+   }
+	mPersistenceMode = HAMode;
 	mDialogSetChangeInfoManager = new DialogSetChangeInfoManager();
 	InfoLog( << "working in HA mode. Multiple DUM server nodes can be used in parallel");
 }
 
 bool
+DialogUsageManager::isPersistenceOnRestartMode()
+{
+   return mPersistenceMode == PersistenceOnRestart;
+}
+
+bool
 DialogUsageManager::isHAMode()
 {
-   return mHAMode;
+   return mPersistenceMode == HAMode;
 }
 
 void
 DialogUsageManager::updateFromPersistentLayer (const DialogUsage& usage)
 {
-   assert (mHAMode);
+   assert (mPersistenceMode == HAMode);
+   assert (mDialogSetPersistenceManager);
    //update the memory DialogSetMap with latest changes from the persistent layer
    mDialogSetPersistenceManager->syncDialogSet(usage.mDialog.mDialogSet.getId(), mDialogSetMap);
 }
@@ -2609,9 +2633,39 @@ DialogUsageManager::updateFromPersistentLayer (const DialogUsage& usage)
 void
 DialogUsageManager::updateFromPersistentLayer (const SipMessage& msg)
 {
-   assert (mHAMode);
+   assert (mPersistenceMode == HAMode);
+   assert (mDialogSetPersistenceManager);
    //update the memory DialogSetMap with latest changes from the persistent layer
    mDialogSetPersistenceManager->syncDialogSet(DialogSetId(msg), mDialogSetMap);
+}
+
+bool
+DialogUsageManager::restorePersistentDialogSets()
+{
+   assert (mDialogSetPersistenceManager);
+   return mDialogSetPersistenceManager->syncAllDialogSets(mDialogSetMap);
+}
+
+bool
+DialogUsageManager::saveAllDialogSetsToPersistentLayer()
+{
+
+   DebugLog ( << "saving all dialog sets to persistent layer");
+   assert (mDialogSetPersistenceManager);
+   //we create a DialogSetChangeInfoManager and add all the dialogs with NEW flag; this means saving all dialogs in persistent layer
+   mDialogSetChangeInfoManager = new DialogSetChangeInfoManager();
+   DialogSetMap::const_iterator ds = mDialogSetMap.begin();
+   for(; ds != mDialogSetMap.end(); ++ds)
+   {
+      mDialogSetChangeInfoManager->DialogSetAdded((ds->second)->getId());
+   }
+   if (!mDialogSetPersistenceManager->saveDialogSetChangesToPersistence(mDialogSetChangeInfoManager->getChanges()))
+   {
+      ErrLog ( << "saving to persistent layer failed");
+      return false;
+   }
+   mDialogSetChangeInfoManager->reset();
+   return true;
 }
 
 void

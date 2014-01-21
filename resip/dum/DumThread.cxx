@@ -14,6 +14,12 @@ DumThread::DumThread(DialogUsageManager& dum)
 void
 DumThread::thread()
 {
+   //if DUM works in PersistenceOnRestart mode, we restore Dialog data from persistent layer first (on startup)
+   if (mDum.isPersistenceOnRestartMode())
+   {
+      mDum.restorePersistentDialogSets();
+   }
+
    while (!isShutdown())
    {
       try
@@ -28,6 +34,12 @@ DumThread::thread()
       {
          WarningLog (<< "Unhandled exception: " << e);
       }
+   }
+
+   //if DUM works in PersistenceOnRestart mode, we save all Dialog data to persistent layer  (on shutdown)
+   if (mDum.isPersistenceOnRestartMode())
+   {
+      mDum.saveAllDialogSetsToPersistentLayer();
    }
 }
 

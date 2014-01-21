@@ -324,8 +324,51 @@ DialogSetPersistenceManager::~DialogSetPersistenceManager()
 }
 
 bool
+DialogSetPersistenceManager::syncAllDialogSets (DialogSetMap & map)
+{
+   DebugLog ( << "getting all DialogSets from persistent layer and sync-ing them in memory");
+   assert (map.empty());
+   std::list<DialogSetData *> dialogs;
+
+   bool res = readAllDialogSets (dialogs);
+   if (res == false)
+   {
+      ErrLog(<< "Error reading DialogSet from persistent layer");
+      return false;
+   }
+
+   else if (dialogs.empty())
+   {
+      InfoLog ( << "no dialogs  found in persistent layer");
+      return true;
+   }
+
+   DebugLog ( << "Found " << dialogs.size() << " dialogs in persistent layer" );
+
+   for (std::list<DialogSetData *>::const_iterator it  = dialogs.begin();
+         it != dialogs.end(); ++it)
+   {
+      if (!internalCreateDialogSet(**it))
+      {
+         ErrLog ( << "creation of new DialogSet from DialogSetData failed");
+         return false;
+      }
+   }
+
+   //no longer need the DialogSetData; delete
+   for (std::list<DialogSetData *>::const_iterator it  = dialogs.begin();
+         it != dialogs.end(); ++it)
+   {
+      delete (*it);
+   }
+
+}
+
+bool
 DialogSetPersistenceManager::syncDialogSet(DialogSetId id, DialogSetMap & map)
 {
+
+   assert (id != DialogSetId::Empty);
 
    if (!checkIfUpdateNeeded())
    {
@@ -498,7 +541,8 @@ DialogSetPersistenceManager::saveDialogSetChangesToPersistence(DialogSetChangeIn
          }
          DialogSetData data;
          createDialogSetDataFromDialogSet (*dset, data);
-         if (!addDialogSet(data)){
+         if (!addDialogSet(data))
+         {
             return false;
          }
       }
@@ -513,7 +557,8 @@ DialogSetPersistenceManager::saveDialogSetChangesToPersistence(DialogSetChangeIn
          }
          DialogSetData data;
          createDialogSetDataFromDialogSet (*dset, data);
-         if (!updateDialogSet(data)){
+         if (!updateDialogSet(data))
+         {
             return false;
          }
       }
