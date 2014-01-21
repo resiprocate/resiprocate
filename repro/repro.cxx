@@ -18,6 +18,7 @@ using namespace resip;
 using namespace std;
 
 static bool finished = false;
+static bool receivedHUP = false;
 
 static void
 signalHandler(int signo)
@@ -27,6 +28,7 @@ signalHandler(int signo)
    {
       InfoLog(<<"Received HUP signal, logger reset");
       Log::reset();
+      receivedHUP = true;
       return;
    }
 #endif
@@ -150,6 +152,11 @@ main(int argc, char** argv)
 #else
    usleep(100000);
 #endif
+      if(receivedHUP)
+      {
+         repro.onHUP();
+         receivedHUP = false;
+      }
    }
 
    repro.shutdown();

@@ -392,6 +392,17 @@ ReproRunner::restart()
 }
 
 void
+ReproRunner::onHUP()
+{
+   // Let the plugins know
+   std::vector<Plugin*>::iterator it;
+   for(it = mPlugins.begin(); it != mPlugins.end(); it++)
+   {
+      (*it)->onReload();
+   }
+}
+
+void
 ReproRunner::cleanupObjects()
 {
    delete mCongestionManager; mCongestionManager = 0;

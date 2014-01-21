@@ -33,6 +33,12 @@ class ExamplePlugin : public Plugin
       {
          DebugLog(<<"ExamplePlugin: onTargetProcessorChainPopulated called");
       }
+
+      virtual void onReload()
+      {
+         DebugLog(<<"ExamplePlugin: onReload called");
+      }
+
 };
 
 

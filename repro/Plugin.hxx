@@ -59,6 +59,9 @@ class Plugin
       /* called after the target processor chain has been populated */
       virtual void onTargetProcessorChainPopulated(ProcessorChain& chain) = 0;
 
+      /* called when a reload signal (HUP) is received */
+      virtual void onReload() = 0;
+
 };
 }
 

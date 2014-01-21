@@ -199,6 +199,11 @@ class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
          DebugLog(<<"PyRoutePlugin: onTargetProcessorChainPopulated called");
       }
 
+      virtual void onReload() 
+      {
+         DebugLog(<<"PyRoutePlugin: onReload called");
+      }
+
    private:
       PyThreadState* mThreadState;
       Data mRouteScript;

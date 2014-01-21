@@ -49,6 +49,7 @@ public:
    virtual bool run(int argc, char** argv);
    virtual void shutdown();
    virtual void restart();  // brings everydown and then backup again - leaves InMemoryRegistrationDb intact
+   virtual void onHUP();
 
    virtual Proxy* getProxy() { return mProxy; }
 
