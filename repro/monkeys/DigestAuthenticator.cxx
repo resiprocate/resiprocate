@@ -99,8 +99,8 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       {
          if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
-               challengeRequest(rc, false);
-               return SkipAllChains;
+            challengeRequest(rc, false);
+            return SkipAllChains;
          }
       }
    }
@@ -318,7 +318,9 @@ DigestAuthenticator::authorizedForThisIdentity(const resip::Data &user, const re
    if (fromUri.host() == realm)
    {
       if ((fromUri.user() == user) || (fromUri.user() == "anonymous"))
+      {
          return true;
+      }
    }
 
    // Now try the form where the username parameter in the auth
@@ -327,7 +329,7 @@ DigestAuthenticator::authorizedForThisIdentity(const resip::Data &user, const re
    //
    if (fromUri.getAorNoPort() == user)
    {
-         return true;
+      return true;
    }
 
    // catch-all: access denied
@@ -346,8 +348,7 @@ DigestAuthenticator::getDefaultIdentity(const resip::Data &user, const resip::Da
 }
 
 void
-DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
-                                      bool stale)
+DigestAuthenticator::challengeRequest(repro::RequestContext &rc, bool stale)
 {
    SipMessage &sipMessage = rc.getOriginalRequest();
    Data realm = getRealm(rc);
@@ -358,7 +359,6 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
    delete challenge;
 }
 
-
 repro::Processor::processor_action_t
 DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data &realm)
 {
@@ -366,18 +366,16 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    assert(sipMessage);
 
-
    // Extract the user from the appropriate Proxy-Authorization header
    Auths &authorizationHeaders = sipMessage->header(h_ProxyAuthorizations); 
    Auths::iterator i;
    Data user;
 
-   for (i = authorizationHeaders.begin();
-        i != authorizationHeaders.end(); i++)
+   for (i = authorizationHeaders.begin(); i != authorizationHeaders.end(); i++)
    {
-      if (    i->exists(p_realm) && 
-              i->param(p_realm) == realm
-              &&  i->exists(p_username))
+      if (i->exists(p_realm) && 
+          i->param(p_realm) == realm
+          &&  i->exists(p_username))
       {
          user = i->param(p_username);
 

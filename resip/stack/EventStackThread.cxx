@@ -148,12 +148,14 @@ EventStackSimpleMgr::createStack(SipStackOptions& options)
 }
 
 void
-EventStackSimpleMgr::release() {
+EventStackSimpleMgr::release() 
+{
    if ( mThread )
    {
       delete mThread; mThread = NULL;
    }
-   if ( mStack ) {
+   if ( mStack ) 
+   {
       // we only delete the stack if we created, not if externally created
       delete mStack; mStack = NULL;
    }
