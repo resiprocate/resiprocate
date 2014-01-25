@@ -107,6 +107,11 @@ CHECK_INCLUDE_FILES(sys/epoll.h HAVE_EPOLL)
 
 # monotonic clock
 INCLUDE(CheckCSourceRuns)
+
+IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+   SET(CMAKE_REQUIRED_LIBRARIES rt)
+ENDIF()
+
 CHECK_C_SOURCE_RUNS("
    #include <time.h>
    int main() {
