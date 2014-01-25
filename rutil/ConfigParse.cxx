@@ -440,14 +440,17 @@ ConfigParse::removePath(const resip::Data& fileAndPath)
 bool 
 ConfigParse::AddBasePathIfRequired(Data& filename)
 {
-   // If filename already has a path specified, then don't touch it
-   ParseBuffer pb(filename);
-   pb.skipToOneOf("/\\");
-   if(pb.eof())
+   if(!filename.empty())
    {
-       // No slashes in filename, so no path present
-       filename = mConfigBasePath + filename;
-       return true;
+      // If filename already has a path specified, then don't touch it
+      ParseBuffer pb(filename);
+      pb.skipToOneOf("/\\");
+      if(pb.eof())
+      {
+         // No slashes in filename, so no path present
+         filename = mConfigBasePath + filename;
+         return true;
+      }
    }
    return false;
 }
