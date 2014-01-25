@@ -28,7 +28,6 @@ SET(SRTP_INCLUDE_DIRS ${SRTP_INCLUDE_DIR})
 
 INCLUDE(FindPackageHandleStandardArgs)
 
-# This will end up setting the variables listed at the top
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(srtp  DEFAULT_MSG
                                   SRTP_LIBRARY SRTP_INCLUDE_DIR)
 

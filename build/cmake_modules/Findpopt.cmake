@@ -28,7 +28,6 @@ SET(POPT_INCLUDE_DIRS ${POPT_INCLUDE_DIR})
 
 INCLUDE(FindPackageHandleStandardArgs)
 
-# This will end up setting the variables listed at the top
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(popt  DEFAULT_MSG
                                   POPT_LIBRARY POPT_INCLUDE_DIR)
 

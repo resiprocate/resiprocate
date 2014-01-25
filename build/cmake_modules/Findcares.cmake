@@ -28,7 +28,6 @@ SET(CARES_INCLUDE_DIRS ${CARES_INCLUDE_DIR})
 
 INCLUDE(FindPackageHandleStandardArgs)
 
-# This will end up setting the variables listed at the top
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(cares  DEFAULT_MSG
                                   CARES_LIBRARY CARES_INCLUDE_DIR)
 

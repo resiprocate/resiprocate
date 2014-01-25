@@ -10,7 +10,7 @@
 #  CAJUN_INCLUDE_DIRS - The cajun include directories
 
 FIND_PATH(CAJUN_INCLUDE_DIR cajun/json/reader.h
-          PATHS ${CMAKE_SOURCE_DIR}/contrib/cajun/include PATH_SUFFIX cajun/json)
+          PATHS PATH_SUFFIX cajun/json)
 
 SET(CAJUN_INCLUDE_DIRS ${CAJUN_INCLUDE_DIR})
 
