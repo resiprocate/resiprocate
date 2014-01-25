@@ -165,7 +165,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    //mProfile->addSupportedMethod(PRACK);     
    //mProfile->addSupportedOptionTag(Token(Symbols::C100rel));  // Automatically added when using setUacReliableProvisionalMode
    mProfile->setUacReliableProvisionalMode(MasterProfile::Supported);
-   //mProfile->setUasReliableProvisionalMode(MasterProfile::Supported);  // TODO - needs support in DUM, currently unimplemented
+   mProfile->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);  
 
    // Support Languages
    mProfile->clearSupportedLanguages();
