@@ -8,8 +8,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake_modu
 
 # TODO: Add doxygen support
 
-# TODO: Add support for config.h as present in current resip autoconf build -
-# if needed
+# TODO: Add version numbers to generated targets (e.g. libresip-1.9.so)
 
 # Top-level user-settable variables (with defaults)
 # Those can be queried from the command line using "cmake -LH" and can be
@@ -18,14 +17,17 @@ SET(WITH_SSL true CACHE BOOL "Link against SSL libraries")
 SET(WITH_C_ARES false CACHE BOOL "Link against libc-ares (rather than rutil/dns/ares)")
 SET(OPENSSL_ROOT_DIR "" CACHE STRING "Root installation of OpenSSL (to specify a given version)")
 
+####################
 ### Dependencies ###
+####################
 
 # OpenSSL
 IF(${WITH_SSL})
    # SSL support is requested, so make it mandatory when calling FIND_PACKAGE
    FIND_PACKAGE(OpenSSL REQUIRED)
-   ADD_DEFINITIONS(-DUSE_SSL)
    IF(${OPENSSL_FOUND})
+      SET(USE_SSL true)
+      ADD_DEFINITIONS(-DUSE_SSL)
       INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIR})
    ELSE()
       MESSAGE(FATAL_ERROR "Could not find OpenSSL")
@@ -41,12 +43,15 @@ ENDIF()
 IF(${WITH_C_ARES})
    # Don't use built-in ares
    FIND_PACKAGE(cares REQUIRED)
+
+   SET(USE_CARES true)
    ADD_DEFINITIONS(-DUSE_CARES)
 
    SET(ARES_LIBRARIES ${CARES_LIBRARIES})
    INCLUDE_DIRECTORIES(${CARES_INCLUDE_DIRS})
 ELSE()
    # Use built-in ares
+   SET(USE_ARES true)
    ADD_DEFINITIONS(-DUSE_ARES)
 
    # Put the resip ares include dir before the system ones to not conflict with
@@ -59,6 +64,7 @@ ENDIF()
 # popt
 FIND_PACKAGE(popt)
 IF(${POPT_FOUND})
+   SET(HAVE_POPT_H true)
    ADD_DEFINITIONS(-DHAVE_POPT_H)
    INCLUDE_DIRECTORIES(${POPT_INCLUDE_DIRS})
 ELSE()
@@ -82,12 +88,44 @@ ENDIF()
 # Python
 #INCLUDE(FindPythonLibs)
 
-# Cajun - Note: this one (Findcajun.cmake) always look for cajun under contrib.
-# It is also able to find it in default locations, but that hasn't been tested.
+# Cajun
 FIND_PACKAGE(cajun)
 IF(${CAJUN_FOUND})
    INCLUDE_DIRECTORIES(${CAJUN_INCLUDE_DIRS})
 ENDIF()
+
+# BerkeleyDb
+FIND_PACKAGE(BerkeleyDb)
+IF(${BERKELEYDB_FOUND})
+   INCLUDE_DIRECTORIES(${BERKELEYDB_INCLUDE_DIRS})
+   SET(DB_HEADER "db_cxx.h")
+ENDIF()
+
+# epoll
+INCLUDE(CheckIncludeFiles)
+CHECK_INCLUDE_FILES(sys/epoll.h HAVE_EPOLL)
+
+# monotonic clock
+INCLUDE(CheckCSourceRuns)
+CHECK_C_SOURCE_RUNS("
+   #include <time.h>
+   int main() {
+      struct timespec ts;
+      clock_gettime(CLOCK_MONOTONIC, &ts);
+      return 0;
+   }" HAVE_CLOCK_GETTIME_MONOTONIC)
+
+IF(${HAVE_CLOCK_GETTIME_MONOTONIC})
+   ADD_DEFINITIONS(-DHAVE_CLOCK_GETTIME_MONOTONIC)
+ENDIF()
+
+##############################
+### Generation of config.h ###
+##############################
+# TODO - Bring more values from autotools
+ADD_DEFINITIONS(-DHAVE_CONFIG_H)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 # This helper is used by the unit tests
 FUNCTION(TEST_BASE)
@@ -107,6 +145,7 @@ FUNCTION(TEST_BASE)
    ADD_TEST(${ARGV0} ${ARGV0})
 ENDFUNCTION(TEST_BASE)
 
+# Used to group targets together when CMake generates projects for IDEs
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ADD_SUBDIRECTORY(rutil)
@@ -114,6 +153,7 @@ ADD_SUBDIRECTORY(resip)
 
 # CMake repro support is still in the works...
 IF(${CAJUN_FOUND})
+# TODO: repro
 #   ADD_SUBDIRECTORY(repro)
 ELSE()
    MESSAGE("-- Missing cajun, will not build repro")
