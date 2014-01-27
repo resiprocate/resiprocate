@@ -121,6 +121,11 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    Py::Dict headers;
    headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
    headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
+   if(message.exists(resip::h_ContentType))
+   {
+      const resip::HeaderFieldValue hfv = message.header(resip::h_ContentType).getHeaderField();
+      headers["Content-Type"] = Py::String(hfv.getBuffer(), hfv.getLength(), "utf8");
+   }
    const resip::SipMessage::UnknownHeaders& unknowns = message.getRawUnknownHeaders();
    resip::SipMessage::UnknownHeaders::const_iterator it = unknowns.begin();
    for( ; it != unknowns.end(); it++)
@@ -149,12 +154,12 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
 
    // arg 5: body
    Py::String body("");
-   if(message.getContents())
+   const resip::HeaderFieldValue& bodyHfv = message.getRawBody();
+   if(bodyHfv.getLength() > 0)
    {
       // FIXME: do we always need to copy the whole body?
       // could we give Python a read-only pointer to the body data?
-      const resip::Data& bodyData = message.getContents()->getBodyData();
-      body = Py::String(bodyData.data(), bodyData.size(), "utf8");
+      body = Py::String(bodyHfv.getBuffer(), bodyHfv.getLength(), "utf8");
    }
 
    // arg 6: cookies (if the message was received over a WebSocket transport)
