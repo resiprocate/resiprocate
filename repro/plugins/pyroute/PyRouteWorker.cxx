@@ -12,7 +12,10 @@
 #include "resip/stack/Cookie.hxx"
 #include "resip/stack/ExtensionHeader.hxx"
 #include "resip/stack/Headers.hxx"
+#include "resip/stack/HeaderFieldValueList.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/UnknownHeaderType.hxx"
 #include "repro/Plugin.hxx"
 #include "repro/Processor.hxx"
 #include "repro/ProcessorMessage.hxx"
@@ -118,6 +121,24 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    Py::Dict headers;
    headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
    headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
+   const resip::SipMessage::UnknownHeaders& unknowns = message.getRawUnknownHeaders();
+   resip::SipMessage::UnknownHeaders::const_iterator it = unknowns.begin();
+   for( ; it != unknowns.end(); it++)
+   {
+      const resip::Data& name = it->first;
+      StackLog(<<"found unknown header: " << name);
+      resip::HeaderFieldValueList* hfvl = it->second;
+      if(!hfvl->empty())
+      {
+         resip::HeaderFieldValue* hfv = hfvl->front();
+         headers[name.c_str()] = Py::String(hfv->getBuffer(), hfv->getLength(), "utf8");
+      }
+      if(hfvl->size() > 1)
+      {
+         // TODO - if multiple values exist, put them in a Py::List
+         WarningLog(<<"ignoring additional values for header " << name);
+      }
+   }
 
    // arg 4: transport type
    Py::String transportType("");
