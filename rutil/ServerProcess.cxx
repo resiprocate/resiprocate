@@ -42,6 +42,7 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
    int rval;
    uid_t cur_uid;
    gid_t cur_gid;
+   uid_t new_uid;
    gid_t new_gid;
    const char *username;
    struct passwd *pw;
@@ -59,6 +60,7 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
       ErrLog(<<"Unable to drop privileges, user not found");
       throw std::runtime_error("Unable to drop privileges, user not found");
    }
+   new_uid = pw->pw_uid;
 
    if(!runAsGroup.empty())
    {
@@ -100,7 +102,7 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
    }
 
    cur_uid = getuid();
-   if (cur_uid != pw->pw_uid)
+   if (cur_uid != new_uid)
    {
       if (cur_uid != 0)
       {
@@ -108,7 +110,18 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
          throw std::runtime_error("Unable to drop privileges, not root!");
       }
 
-      rval = setuid(pw->pw_uid);
+      // If logging to file, the file ownership may be root and needs to
+      // be changed
+      Log::droppingPrivileges(new_uid, new_gid);
+      if(mPidFile.size() > 0)
+      {
+         if(chown(mPidFile.c_str(), new_uid, new_gid) < 0)
+         {
+            ErrLog(<<"Failed to change ownership of PID file");
+         }
+      }
+
+      rval = setuid(new_uid);
       if (rval < 0)
       {
          ErrLog(<<"Unable to drop privileges, operation failed (setuid)");

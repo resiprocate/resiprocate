@@ -253,6 +253,9 @@ class Log
       static bool isLogging(Log::Level level, const Subsystem&);
       static void OutputToWin32DebugWindow(const Data& result);      
       static void reset(); ///< Frees logger stream
+#ifndef WIN32
+      static void droppingPrivileges(uid_t uid, pid_t pid);
+#endif
 
    public:
       static unsigned int MaxLineCount; 
@@ -306,6 +309,9 @@ class Log
 
             std::ostream& Instance(unsigned int bytesToWrite); ///< Return logger stream instance, creating it if needed.
             void reset(); ///< Frees logger stream
+#ifndef WIN32
+            void droppingPrivileges(uid_t uid, pid_t pid);
+#endif
 
             volatile Level mLevel;
             volatile unsigned int mMaxLineCount;

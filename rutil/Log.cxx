@@ -607,6 +607,14 @@ Log::reset()
    getLoggerData().reset();
 }
 
+#ifndef WIN32
+void
+Log::droppingPrivileges(uid_t uid, pid_t pid)
+{
+   getLoggerData().droppingPrivileges(uid, pid);
+}
+#endif
+
 bool
 Log::isLogging(Log::Level level, const resip::Subsystem& sub)
 {
@@ -836,6 +844,22 @@ Log::ThreadData::reset()
    delete mLogger;
    mLogger = NULL;
 }
+
+#ifndef WIN32
+void
+Log::ThreadData::droppingPrivileges(uid_t uid, pid_t pid)
+{
+   if(mType == Log::File)
+   {
+      Data logFileName(mLogFileName != "" ? mLogFileName : "resiprocate.log");
+      if(chown(logFileName.c_str(), uid, pid) < 0)
+      {
+         // Some error occurred
+         std::cerr << "ERROR: chown failed on " << logFileName << std::endl;
+      }
+   }
+}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
