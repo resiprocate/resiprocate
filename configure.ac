@@ -16,6 +16,8 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
+m4_pattern_forbid([^PKG_])
+
 AC_CANONICAL_HOST
 AM_CONFIG_HEADER(config.h)
 
