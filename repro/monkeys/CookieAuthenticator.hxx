@@ -4,6 +4,7 @@
 #include "rutil/Data.hxx"
 #include "repro/Processor.hxx"
 #include "resip/stack/Cookie.hxx"
+#include "resip/stack/ExtensionHeader.hxx"
 #include "resip/stack/WsCookieContext.hxx"
 #include "resip/stack/SipStack.hxx"
 
@@ -15,13 +16,15 @@ namespace repro
   {
     public:
 
-      CookieAuthenticator(const Data& wsCookieAuthSharedSecret, resip::SipStack* stack);
+      CookieAuthenticator(const Data& wsCookieAuthSharedSecret, const Data& wsCookieExtraHeaderName, resip::SipStack* stack);
       ~CookieAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
       virtual void dump(EncodeStream &os) const;
 
     private:
+      std::auto_ptr<resip::ExtensionHeader> mWsCookieExtraHeader;
+
       bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
       bool authorizedForThisIdentity(const MethodTypes method, const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
   };

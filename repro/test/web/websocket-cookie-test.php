@@ -26,10 +26,12 @@
     $hmac_key = $_POST['hmac_key'];
     $time_limit = $_POST['time_limit'];
     $cookie_value = '1:' . time() . ':' . $time_limit . ':' . $sip_from . ':' . $sip_to;
-    $digest_input = $cookie_value . ':';
+    $extra_value = $_POST['extra_value'];
+    $digest_input = $cookie_value . ':' . $extra_value;
     $cookie_mac = hash_hmac ( 'sha1', $digest_input, $hmac_key);
     // not sure why setcookie didn't work, we use setrawcookie instead:
     setrawcookie("WSSessionInfo", urlencode($cookie_value), $time_limit, '/', $proxy_domain);
+    setrawcookie("WSSessionExtra", urlencode($extra_value), $time_limit, '/', $proxy_domain);
     setrawcookie("WSSessionMAC", $cookie_mac, $time_limit, '/', $proxy_domain);
   }
 
@@ -44,6 +46,7 @@
   To: <input type="text" name="sip_to" value=""/><br/>
   HMAC key (must match repro.config WSCookieAuthSharedSecret): <input type="text" name="hmac_key" value=""/><br/>
   Timeout (default now + 1000s): <input type="text" name="time_limit" value="<? echo (time()+1000); ?>"/><br/>
+  Extra header value: <input type="text" name="extra_value" value=""/><br/>
   <input type="submit" /><br/>
   <p>Note: for from and to URIs, you may use "*" to replace the user, host or both, e.g. *@example.org would allow calls to anybody in example.org</p>
   </form>

@@ -704,6 +704,10 @@ AllowBadReg = false
 #WSCookieNameExtra = WSSessionExtra
 #WSCookieNameMAC = WSSessionMAC
 
+# Name of the extension header that must match the content of
+# the authenticated WSSessionExtra cookie
+#WSCookieExtraHeaderName = X-WS-Session-Extra
+
 ########################################################
 # RequestFilter Monkey Settings
 ########################################################

@@ -1602,9 +1602,10 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   Data wsCookieExtraHeaderName = mProxyConfig->getConfigData("WSCookieExtraHeaderName", "X-WS-Session-Extra");
    if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
    {
-      addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, mSipStack)));
+      addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, wsCookieExtraHeaderName, mSipStack)));
    }
 
    // Add digest authenticator monkey - if required

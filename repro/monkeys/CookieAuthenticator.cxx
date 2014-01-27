@@ -33,8 +33,10 @@ using namespace std;
 
 
 CookieAuthenticator::CookieAuthenticator(const Data& wsCookieAuthSharedSecret,
+                                         const Data& wsCookieExtraHeaderName,
                                          resip::SipStack* stack) :
-   Processor("CookieAuthenticator")
+   Processor("CookieAuthenticator"),
+   mWsCookieExtraHeader(wsCookieExtraHeaderName.empty() ? 0 : new resip::ExtensionHeader(wsCookieExtraHeaderName))
 {
 }
 
@@ -80,7 +82,23 @@ CookieAuthenticator::process(repro::RequestContext &rc)
       {
          if(authorizedForThisIdentity(sipMessage->header(h_RequestLine).method(), wsCookieContext, sipMessage->header(h_From).uri(), sipMessage->header(h_To).uri()))
          {
-            return Continue;
+            if(mWsCookieExtraHeader.get() && sipMessage->exists(*mWsCookieExtraHeader))
+            {
+               ParserContainer<StringCategory>& extra = sipMessage->header(*mWsCookieExtraHeader);
+               StringCategory& sc = extra.front();
+               if(sc.value() == wsCookieContext.getWsSessionExtra())
+               {
+                  return Continue;
+               }
+               else
+               {
+                  WarningLog(<<"mWsCookieExtraHeader does not match wsCookieContext value");
+               }
+            }
+            else
+            {
+               return Continue;
+            }
          }
          rc.sendResponse(*auto_ptr<SipMessage>
                            (Helper::makeResponse(*sipMessage, 403, "Authentication against cookie failed")));
