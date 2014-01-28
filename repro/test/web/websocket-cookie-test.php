@@ -3,20 +3,6 @@
   // This code demonstrates how to set a cookie that can be
   // checked by the WebSocket cookie authentication scheme
 
-  // Using it:
-  // - enable a WS transport and WSCookieAuthSharedSecret in repro.config
-  // - browse to this PHP page
-  // - set proxy_domain to exactly match the domain used by the WS transport
-  //   NOTE: proxy_domain must also match the domain where this page is
-  //         hosted otherwise the browser doesn't seem to accept the cookie
-  //         You can strip the host portion of the domain, e.g.
-  //         host the page on www.example.org, proxy ws://sip.example.org
-  //              => use proxy_domain = example.org to serve both
-  // - set sip_from and sip_to to restrict the callee can caller URIs
-  //   that repro should permit
-  // - set the HMAC key
-  // - make sure you connect within the specified time_limit
-
   if( isset($_POST['softphone_link']))
   {
     $softphone_link = $_POST['softphone_link'];
@@ -50,5 +36,23 @@
   <input type="submit" /><br/>
   <p>Note: for from and to URIs, you may use "*" to replace the user, host or both, e.g. *@example.org would allow calls to anybody in example.org</p>
   </form>
+  <h3>Usage notes</h3>
+  <ul>
+    <li>enable a WS transport and WSCookieAuthSharedSecret in repro.config</li>
+    <li>browse to this PHP page</li>
+    <li>set proxy_domain to exactly match the domain used by the WS transport</li>
+    <li>NOTE: proxy_domain must also match the domain where this page is hosted otherwise the browser doesn't seem to accept the cookie.
+      <ul>
+        <li>You can strip the host portion of the domain, </li>
+        <li>host the page on www.example.org,</li>
+        <li>proxy ws://sip.example.org</li>
+        <li>use proxy_domain = example.org to serve both</li>
+      </ul>
+    </li>
+    <li>set sip_from and sip_to to restrict the callee can caller URIs, or just use wildcards like *@*</li>
+    <li>set the HMAC key to match the key in repro.config</li>
+    <li>make sure you connect within the specified time_limit</li>
+  </ul>
+  <p>For a full overview, <a href="http://www.resiprocate.org/SIP_Over_WebSocket_Cookies">see the cookie page on the reSIProcate wiki</a></p>
 </body>
 </html>
