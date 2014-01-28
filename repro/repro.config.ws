@@ -236,7 +236,7 @@ RegSyncPeer =
 # The default is determined at build time depending upon the
 # target environment and the installation prefix passed to
 # the configure script
-#PluginDirectory /usr/lib/repro/plugins
+#PluginDirectory = /usr/lib/repro/plugins
 
 # List of plugins to load (comma-separated list)
 # These are the names of the plugins and not the full filenames
