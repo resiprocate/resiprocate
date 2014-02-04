@@ -284,8 +284,8 @@ fi
 %{_sbindir}/reprocmd
 %{_sbindir}/queuetostream
 %{_mandir}/man8/repro*.8*
-%dir %{_libdir}/@NAME@/repro/plugins
-%{_libdir}/@NAME@/repro/plugins/*.so
+%dir %{_libdir}/@PACKAGE@/repro/plugins
+%{_libdir}/@PACKAGE@/repro/plugins/*.so
 
 %files turn-server
 %config(noreplace) %{_sysconfdir}/reTurnServer.config
