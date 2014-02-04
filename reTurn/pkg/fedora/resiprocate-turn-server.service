@@ -4,9 +4,8 @@ After=syslog.target
 After=network.target
 
 [Service]
-User=return
-Group=return
-ExecStart=/usr/sbin/reTurnServer /etc/reTurnServer.config
+ExecStart=/usr/sbin/reTurnServer /etc/reTurn/reTurnServer.config --Daemonize=false
+ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
 WantedBy=multi-user.target

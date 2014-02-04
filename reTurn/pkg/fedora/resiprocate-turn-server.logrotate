@@ -1,0 +1,9 @@
+/var/log/reTurnServer/reTurnServer.log {
+	rotate 14
+	daily
+	compress
+	missingok
+	postrotate
+		service resiprocate-turn-server reload
+	endscript
+}

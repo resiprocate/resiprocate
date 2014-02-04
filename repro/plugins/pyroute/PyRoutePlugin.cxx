@@ -1,5 +1,6 @@
 
-#include <memory>
+// NOTE: Python.h must be included before any standard headers
+// See: https://bugzilla.redhat.com/show_bug.cgi?id=518385
 
 /* Using the PyCXX API for C++ Python integration
  * It is extremely convenient and avoids the need to write boilerplate
@@ -8,6 +9,8 @@
 #include <Python.h>
 #include <CXX/Objects.hxx>
 #include <CXX/Extensions.hxx>
+
+#include <memory>
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/Helper.hxx"
@@ -30,7 +33,7 @@ using namespace repro;
 class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
 {
    public:
-      PyRoutePlugin() : ExtensionModule<PyRoutePlugin>("resip"), mThreadState(0), mDispatcher(0)
+      PyRoutePlugin() : Py::ExtensionModule<PyRoutePlugin>("resip"), mThreadState(0), mDispatcher(0)
       {
       };
 

@@ -4,9 +4,8 @@ After=syslog.target
 After=network.target
 
 [Service]
-User=repro
-Group=repro
-ExecStart=/usr/sbin/repro /etc/repro/repro.config
+ExecStart=/usr/sbin/repro /etc/repro/repro.config --Daemonize=false
+ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
 WantedBy=multi-user.target

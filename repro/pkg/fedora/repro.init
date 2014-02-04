@@ -34,8 +34,7 @@ start() {
     [ -d $piddir ] || mkdir -p $piddir && chown ${proguser}:${proggrp} $piddir
     echo -n $"Starting $prog: "
     # if not running, start it up here, usually something like "daemon $exec"
-    daemon --user $proguser $exec $config \
-        --Daemonize=true --LoggingType=syslog --PidFile=$pidfile
+    daemon $exec $config --Daemonize=true --PidFile=$pidfile
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -58,7 +57,7 @@ restart() {
 }
 
 reload() {
-    restart
+    killproc $prog -HUP
 }
 
 force_reload() {

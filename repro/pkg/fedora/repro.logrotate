@@ -1,0 +1,9 @@
+/var/log/repro/repro.log {
+	rotate 14
+	daily
+	compress
+	missingok
+	postrotate
+		service repro reload
+	endscript
+}
