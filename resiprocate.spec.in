@@ -140,10 +140,40 @@ install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service %{buildroo
 install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
 install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
 %endif
+install -p -D -m644 repro/pkg/fedora/repro.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/repro
+install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/resiprocate-turn-server
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
-install -p -D -m644 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
-sed -i -e 's!^DatabasePath = ./$!DatabasePath = %{_localstatedir}/lib/repro!' %{buildroot}%{_sysconfdir}/repro/repro.config
-install -p -D -m644 reTurn/reTurnServer.config %{buildroot}%{_sysconfdir}/reTurnServer.config
+install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
+install -p -D -m640 repro/users.txt %{buildroot}%{_sysconfdir}/repro/users.txt
+sed -i \
+ -e 's!^LoggingType = cout$!LoggingType = file!' \
+ -e 's!^LogLevel = INFO$!LogLevel = WARNING!' \
+ -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
+ -e 's!^LogFileMaxBytes = 5242880!LogFileMaxBytes = 0!' \
+ -e 's!^HttpAdminUserFile = users.txt$!HttpAdminUserFile = %{_sysconfdir}/repro/users.txt!' \
+ -e 's!^#PluginDirectory = /usr/lib/repro/plugins$!PluginDirectory = %{_libdir}/resiprocate/repro/plugins!' \
+ -e 's!^#RunAsUser = repro$!RunAsUser = repro!' \
+ -e 's!^#RunAsGroup = repro$!RunAsGroup = repro!' \
+ -e 's!^Daemonize = false$!Daemonize = true!' \
+ -e 's!^#CAFile = /etc/ssl/certs/cacert.org.pem$!CAFile = %{_sysconfdir}/ssl/certs/ca-bundle.crt!' \
+ -e 's!^DatabasePath = ./$!DatabasePath = %{_localstatedir}/lib/repro!' \
+ -e 's!^ChallengeThirdPartiesCallingLocalDomains = true$!ChallengeThirdPartiesCallingLocalDomains = false!' \
+            %{buildroot}%{_sysconfdir}/repro/repro.config
+install -p -D -m640 reTurn/reTurnServer.config %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
+install -p -D -m640 reTurn/users.txt %{buildroot}%{_sysconfdir}/reTurn/users.txt
+sed -i -e 's/1234/6078a36f89704d83763c9e174b3e87a4/' %{buildroot}%{_sysconfdir}/reTurn/users.txt
+sed -i \
+ -e 's!^TlsTurnPort = 5349!TlsTurnPort = 0!' \
+ -e 's!^LoggingLevel = DEBUG!LoggingLevel = WARNING!' \
+ -e 's!^LogFilename = reTurnServer.log!LogFilename = %{_localstatedir}/log/reTurnServer/reTurnServer.log!' \
+ -e 's!^LogFileMaxLines = 50000!LogFileMaxLines = 0!' \
+ -e 's!^Daemonize = false!Daemonize = true!' \
+ -e 's!^#RunAsUser = return!RunAsUser = return!' \
+ -e 's!^#RunAsGroup = return!RunAsGroup = return!' \
+ -e 's!^UserDatabaseFile = users.txt!UserDatabaseFile = %{_sysconfdir}/reTurn/users.txt!' \
+ -e 's!^UserDatabaseHashedPasswords = false!UserDatabaseHashedPasswords = true!' \
+ -e 's!^TlsTempDhFilename = dh512.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh512.pem!' \
+            %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
 install -m 0755 -d %{buildroot}%{_localstatedir}/lib/repro
 rm -f %{buildroot}%{_libdir}/lib*.a
 rm -f %{buildroot}%{_libdir}/lib*.la
@@ -152,6 +182,10 @@ rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.la
 install -m 0755 -d %{buildroot}/%{_docdir}/repro/examples/pyroute
 install -p -D -m644 repro/plugins/pyroute/*.py %{buildroot}/%{_docdir}/repro/examples/pyroute
 install -p -D -m644 repro/plugins/pyroute/README.txt %{buildroot}/%{_docdir}/repro/examples/pyroute
+install -m 0750 -d %{buildroot}%{_localstatedir}/log/repro
+touch %{buildroot}%{_localstatedir}/log/repro/repro.log
+install -m 0750 -d %{buildroot}%{_localstatedir}/log/reTurnServer
+touch %{buildroot}%{_localstatedir}/log/reTurnServer/reTurnServer.log
 
 %pre repro
 getent group repro >/dev/null || groupadd -r repro
@@ -239,6 +273,9 @@ if [ $1 -ge 1 ] ; then
 %endif
 fi
 
+%clean
+rm -rf $RPM_BUILD_ROOT
+
 %files libs
 %doc COPYING
 %{_libdir}/libdum-*.so
@@ -286,8 +323,12 @@ fi
 %{_libdir}/libsipdial.so
 
 %files repro
-%attr(0755,repro,repro) %dir %{_localstatedir}/lib/repro
-%config(noreplace) %{_sysconfdir}/repro/repro.config
+%attr(0750,repro,repro) %dir %{_localstatedir}/lib/repro
+%attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/repro.config
+%attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/users.txt
+%config(noreplace) %{_sysconfdir}/logrotate.d/repro
+%attr(0750,repro,repro) %dir %{_localstatedir}/log/repro
+%config %ghost %{_localstatedir}/log/repro/repro.log
 %if 0%{?fedora} >= 17
 %{_unitdir}/repro.service
 %else
@@ -302,7 +343,11 @@ fi
 %{_docdir}/repro
 
 %files turn-server
-%config(noreplace) %{_sysconfdir}/reTurnServer.config
+%attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/reTurnServer.config
+%attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/users.txt
+%config(noreplace) %{_sysconfdir}/logrotate.d/resiprocate-turn-server
+%attr(0750,return,return) %dir %{_localstatedir}/log/reTurnServer
+%config %ghost %{_localstatedir}/log/reTurnServer/reTurnServer.log
 %if 0%{?fedora} >= 17
 %{_unitdir}/resiprocate-turn-server.service
 %else
