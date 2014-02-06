@@ -14,6 +14,7 @@ BuildRequires: cppunit-devel
 BuildRequires: gperf
 %if 0%{?fedora} >= 18
 BuildRequires: db4-cxx-devel
+BuildRequires: systemd
 %endif
 BuildRequires: db4-devel
 BuildRequires: openssl-devel >= 0.9.8
@@ -29,6 +30,10 @@ Requires: openssl >= 0.9.8
 Requires: chkconfig
 %if 0%{?fedora} < 17
 Requires(preun): initscripts
+%else
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 %endif
 
 %description
@@ -156,7 +161,7 @@ sed -i \
  -e 's!^#RunAsGroup = repro$!RunAsGroup = repro!' \
  -e 's!^Daemonize = false$!Daemonize = true!' \
  -e 's!^#CAFile = /etc/ssl/certs/cacert.org.pem$!CAFile = %{_sysconfdir}/ssl/certs/ca-bundle.crt!' \
- -e 's!^DatabasePath = ./$!DatabasePath = %{_localstatedir}/lib/repro!' \
+ -e 's!^DatabasePath = ./$!DatabasePath = %{_sharedstatedir}/repro!' \
  -e 's!^ChallengeThirdPartiesCallingLocalDomains = true$!ChallengeThirdPartiesCallingLocalDomains = false!' \
             %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 reTurn/reTurnServer.config %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
@@ -174,7 +179,7 @@ sed -i \
  -e 's!^UserDatabaseHashedPasswords = false!UserDatabaseHashedPasswords = true!' \
  -e 's!^TlsTempDhFilename = dh512.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh512.pem!' \
             %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
-install -m 0755 -d %{buildroot}%{_localstatedir}/lib/repro
+install -m 0755 -d %{buildroot}%{_sharedstatedir}/repro
 rm -f %{buildroot}%{_libdir}/lib*.a
 rm -f %{buildroot}%{_libdir}/lib*.la
 rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.a
@@ -190,7 +195,7 @@ touch %{buildroot}%{_localstatedir}/log/reTurnServer/reTurnServer.log
 %pre repro
 getent group repro >/dev/null || groupadd -r repro
 getent passwd repro >/dev/null || \
-    useradd -r -g repro -d %{_localstatedir}/lib/repro -s /sbin/nologin \
+    useradd -r -g repro -d %{_sharedstatedir}/repro -s /sbin/nologin \
     -c "repro SIP proxy" repro
 
 %pre turn-server
@@ -203,75 +208,71 @@ getent passwd return >/dev/null || \
 
 %post repro
 /sbin/ldconfig
+%if 0%{?fedora} >= 18
+%systemd_post repro.service
+%else
 if [ $1 -eq 1 ] ; then
     # Initial installation
-%if 0%{?fedora} >= 17
-    /bin/systemctl enable repro.service >/dev/null 2>&1 || :
-%else
     /sbin/chkconfig --add repro
-%endif
 fi
+%endif
 
 %post turn-server
+%if 0%{?fedora} >= 18
+%systemd_post resiprocate-turn-server.service
+%else
 if [ $1 -eq 1 ] ; then
     # Initial installation
-%if 0%{?fedora} >= 17
-    /bin/systemctl enable resiprocate-turn-server.service >/dev/null 2>&1 || :
-%else
     /sbin/chkconfig --add resiprocate-turn-server
-%endif
 fi
+%endif
 
 %preun repro
+%if 0%{?fedora} >= 18
+%systemd_preun repro.service
+%else
 if [ "$1" = 0 ]
 then
    # Package removal, not upgrade
-%if 0%{?fedora} >= 17
-   /bin/systemctl --no-reload disable repro.service > /dev/null 2>&1 || :
-   /bin/systemctl stop repro.service > /dev/null 2>&1 || :
-%else
    /sbin/service repro stop
    /sbin/chkconfig --del repro
-%endif
 fi
+%endif
 
 %preun turn-server
+%if 0%{?fedora} >= 18
+%systemd_preun resiprocate-turn-server.service
+%else
 if [ "$1" = 0 ]
 then
    # Package removal, not upgrade
-%if 0%{?fedora} >= 17
-   /bin/systemctl --no-reload disable resiprocate-turn-server.service > /dev/null 2>&1 || :
-   /bin/systemctl stop resiprocate-turn-server.service > /dev/null 2>&1 || :
-%else
    /sbin/service resiprocate-turn-server stop
    /sbin/chkconfig --del resiprocate-turn-server
-%endif
 fi
+%endif
 
 %postun libs -p /sbin/ldconfig
 
 %postun repro
 /sbin/ldconfig
-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%if 0%{?fedora} >= 18
+%systemd_postun_with_restart repro.service
+%else
 if [ $1 -ge 1 ] ; then
     # Package upgrade, not uninstall
-%if 0%{?fedora} >= 17
-    /bin/systemctl try-restart repro.service >/dev/null 2>&1 || :
-%else
     /sbin/service repro try-restart
-%endif
 fi
+%endif
 
 %postun turn-server
-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%if 0%{?fedora} >= 18
+%systemd_postun_with_restart resiprocate-turn-server.service
+%else
 if [ $1 -ge 1 ] ; then
     # Package upgrade, not uninstall
-%if 0%{?fedora} >= 17
-    /bin/systemctl try-restart resiprocate-turn-server.service >/dev/null 2>&1 || :
-%else
     /sbin/service resiprocate-turn-server try-restart
-%endif
 fi
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -323,7 +324,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libsipdial.so
 
 %files repro
-%attr(0750,repro,repro) %dir %{_localstatedir}/lib/repro
+%attr(0750,repro,repro) %dir %{_sharedstatedir}/repro
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/repro.config
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/users.txt
 %config(noreplace) %{_sysconfdir}/logrotate.d/repro
