@@ -23,9 +23,9 @@
 **Added a new file VisualStudioReadme.htm with some information about the Visual Studio build
 **reTurn: Changed boost include folder from ./contrib/boost_1_34_0 to ./contrib/boost
 *add 64-bit VS2010 project settings for reTurn
-*added configure-android.sh
+*added configure-android.sh for building with Android NDK
 *rend: added autotools support
-*rpm: various fixes for RHEL6 builds
+*rpm: various fixes for RHEL6 and Fedora builds
 
 
 ==rutil==
@@ -39,17 +39,16 @@
 *Data - improve buffer size allocation in base64encode
 *add FileSystem::Exception, check stat() return value
 *FileSystem: check results of readdir calls
-*Add support for FreeRADIUS client
+*Add support for FreeRADIUS client (radiusclient-ng is deprecated but still supported for now)
 *Tuple: provide method for copying out sockaddr
 *Data: add fromHex method
 *ConfigParse: add support for reading sets
 *ConfigParse: give precedence to options on command line
 *ConfigParse: reject duplicate values from any given config source
 *ConfigParse: throw exceptions rather than immediately exiting on error
-*RADIUS: allow multiple calls to init()
 *added preprocessor conditional compile option for Windows source interface selection to avoid using adapter addresses tagged as Transient.  Transient addresses include those that are used for Virtual IP addresses and tagged with SkipAsSource (also used in Windows Clustering solutions)
 *added Sha1 implementation for when OpenSSL is not available
-*change log and PID file ownership when dropping privileges
+*ServerProcess: change logfile and PID file ownership when dropping privileges
 
 ===Bug fixes===
 *WIN32 - WinCompat::determineSourceInterfaceWithoutIPv6: throw transport exception if new fails or if second call to GetIpAddrTable fails
@@ -72,6 +71,7 @@
 ***was exhibiting a MS bug that could cause 0 DNS servers to be returned if many ares instances where init'd at the same time (ie: could happen when creating many SipStack instances at the same time)
 **more efficient lookup when ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3 ares option is used - no need to lookup the physical address of each DNS server separately 
 *RADIUS: correctly distinguish access denied from server error
+*RADIUS: don't behave badly if multiple calls to init() are made
 
 
 ==stack==
@@ -117,7 +117,7 @@
 *Profile: allow AllowEvents to be an advertised capability
 *remove randomized addition of time to stale call timer - not sure why this was there in the first place
 *RADIUSServerAuthManager: allow RADIUS client configuration file to be specified
-*Deprecated addTransport on DialogUsageManaager object:  SipStack has the exact same interface
+*Deprecated addTransport on DialogUsageManager object:  SipStack has the exact same interface
 *dum/test/basicClient - use stack in multi-threaded mode
 *dum/test/basicClient - use EventStackThread instead of InterruptableStackThread - enables Epoll support on platforms that support it
 *dum/test/basicClient - enabled UAS PRACK
@@ -172,7 +172,7 @@
 *CertificateAuthenticator: add support for statically configured mappings of TLS common names to permitted From: addresses
 **add CommonNameMappings config option to load CN mappings from a text file
 *Added options to disable DIGEST challenge of third parties in DUM auth when mutual TLS in use
-*added WS (WebSocket) and WSS (Secure WebSocket) trasnport support for WebRTC compatibility 
+*added WS (WebSocket) and WSS (Secure WebSocket) transport support for WebRTC compatibility 
 *added support for WebAdmin and CommandServer binding to specific IP addresses
 *enable IPv6 by default
 *allow specification of arbitrary domain cert/key PEM files
@@ -188,15 +188,15 @@
 *add RADIUS support
 *add config option ChallengeThirdPartiesCallingLocalDomains
 *add StaticRealm config option to always challenge using a specified realm value
-*reset logger when HUP received
+*reset logger / rotate log files when HUP received
 *added ability to change log level from web admin
 *take HttpAdminPassword out of repro.config, use a htdigest file
+*rpm: configure repro and reTurn not to fork under systemd in Fedora
 
 ===Bug fixes===
 *move TLS client auth feature/monkey after DIGEST, so that TLS client auth can know if the peer passed DIGEST
 *CertificateAuthenticator: explicitly skip authorization logic if TLS mode is optional or transport is not TLS
 *fixed CommandServer being created even though listener bind failed
-*rpm: configure repro and reTurn not to fork under systemd in Fedora
 *fix bug that causes assert if you try to configure repro registrar and authentication disabled 
 *don't strip authorization headers if the request is going to spiral / loop back to us, only strip if routing outside our domain 
 *if we receive a response that has messed with the vias and we don't have a stored bestResponse then send a 500 
