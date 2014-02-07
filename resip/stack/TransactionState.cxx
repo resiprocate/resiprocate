@@ -594,7 +594,8 @@ TransactionState::process(TransactionController& controller,
                // Overwrite tag.
                if(from.exists(p_tag))
                {
-                  if(sip->const_header(h_From).param(p_tag) != from.param(p_tag))
+                  if(!sip->const_header(h_From).exists(p_tag) ||
+                     sip->const_header(h_From).param(p_tag) != from.param(p_tag))
                   {
                      InfoLog(<<"Other end modified our local tag... correcting.");
                      sip->header(h_From).param(p_tag) = from.param(p_tag);
@@ -602,11 +603,8 @@ TransactionState::process(TransactionController& controller,
                }
                else if(sip->const_header(h_From).exists(p_tag))
                {
-                  if(sip->const_header(h_From).exists(p_tag))
-                  {
-                     InfoLog(<<"Other end added a local tag for us... removing.");
-                     sip->header(h_From).remove(p_tag);
-                  }
+                  InfoLog(<<"Other end added a local tag for us... removing.");
+                  sip->header(h_From).remove(p_tag);
                }
             }
             else
@@ -622,7 +620,8 @@ TransactionState::process(TransactionController& controller,
                // Overwrite tag.
                if(to.exists(p_tag))
                {
-                  if(sip->const_header(h_To).param(p_tag) != to.param(p_tag))
+                  if(!sip->const_header(h_To).exists(p_tag) ||
+                     sip->const_header(h_To).param(p_tag) != to.param(p_tag))
                   {
                      InfoLog(<<"Other end modified the (existing) remote tag... "
                                  "correcting.");
