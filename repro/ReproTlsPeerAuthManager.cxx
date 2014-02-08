@@ -27,8 +27,6 @@ ReproTlsPeerAuthManager::isTrustedSource(const SipMessage& msg)
    if(mAclStore.isTlsPeerNameTrusted(peerNames))
    {
       DebugLog(<< "Matched trusted peer by certificate in ACL, not checking against From URI");
-      // Simulate the behavior of IsTrustedNode monkey:
-      //context.getKeyValueStore().setBoolValue(IsTrustedNode::mFromTrustedNodeKey, true);
       return true;
    }
 
