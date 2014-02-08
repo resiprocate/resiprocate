@@ -40,9 +40,13 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
 InternalTransport::~InternalTransport()
 {
    if (mPollItemHandle)
+   {
       mPollGrp->delPollItem(mPollItemHandle);
+   }
    if (mInterruptorHandle)
+   {
       mPollGrp->delPollItem(mInterruptorHandle);
+   }
 
    if  (mFd != INVALID_SOCKET)
    {
@@ -54,6 +58,7 @@ InternalTransport::~InternalTransport()
    {
       WarningLog(<< "TX Fifo non-empty in ~InternalTransport! Has " << mTxFifo.size() << " messages.");
    }
+   setCongestionManager(0);  // Clear out congestion manager
 }
 
 bool
