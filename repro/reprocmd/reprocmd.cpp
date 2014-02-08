@@ -60,6 +60,12 @@ main (int argc, char** argv)
       cerr << "  /Restart - signal the proxy to restart - leaving active registrations in place." << endl;
       cerr << "  /GetProxyConfig - retrieves the all of configuration file settings currently" << endl;
       cerr << "                    being used by the proxy" << endl;
+      cerr << "  /AddTransport type=<UDP|TCP|etc.> port=<value> [ipVersion=<V4|V6>]" << endl; 
+      cerr << "                [interface=<ipaddress>] [rruri=<AUTO|sip:host:port>]" << endl;
+      cerr << "                [udprcvbuflen=<value>] [stun=<YES|NO>] [flags=<uint>]" << endl;
+      cerr << "                [domain=<tlsdomainname>] [ssltype=<SSLv23|TLSv1>]  [cert=<filename>]" << endl;
+      cerr << "                [key=<filename>] [tlscvm=<NONE|OPT|MAN>] [tlsuseemail=<YES|NO>" << endl;
+      cerr << "                - adds a new transport to the stack." << endl;
       exit(1);
    }
 
@@ -185,7 +191,7 @@ main (int argc, char** argv)
                   }
                   if(xml.firstChild())
                   {
-                     text = xml.getValue();
+                     text = xml.getValue().xmlCharDataDecode();
                      xml.parent();
                   }
                   if(code >= 200 && code < 300)

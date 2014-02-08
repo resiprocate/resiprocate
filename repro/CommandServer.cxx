@@ -33,7 +33,6 @@ CommandServer::CommandServer(ReproRunner& reproRunner,
    XmlRpcServerBase(port, version, ipAddr),
    mReproRunner(reproRunner)
 {
-   reproRunner.getProxy()->getStack().setExternalStatsHandler(this);
 }
 
 CommandServer::~CommandServer()
@@ -53,7 +52,7 @@ CommandServer::sendResponse(unsigned int connectionId,
    if(!responseData.empty())
    { 
       ss << "    <Data>" << Symbols::CRLF;
-      ss << responseData;
+      ss << responseData.xmlCharDataEncode();
       ss << "    </Data>" << Symbols::CRLF;
    }
    XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
@@ -119,6 +118,10 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       {
          handleRestartRequest(connectionId, requestId, xml);
       }
+      else if(isEqualNoCase(xml.getTag(), "AddTransport"))
+      {
+         handleAddTransportRequest(connectionId, requestId, xml);
+      }
       else 
       {
          WarningLog(<< "CommandServer::handleRequest: Received XML message with unknown method: " << xml.getTag());
@@ -159,8 +162,8 @@ CommandServer::handleGetStackStatsRequest(unsigned int connectionId, unsigned in
    }
 }
 
-bool 
-CommandServer::operator()(resip::StatisticsMessage &statsMessage)
+void 
+CommandServer::handleStatisticsMessage(resip::StatisticsMessage &statsMessage)
 {
    Lock lock(mStatisticsWaitersMutex);
    if(mStatisticsWaiters.size() > 0)
@@ -177,7 +180,6 @@ CommandServer::operator()(resip::StatisticsMessage &statsMessage)
          sendResponse(it->first, it->second, buffer, 200, "Stack stats retrieved.");
       }
    }
-   return true;
 }
 
 void 
@@ -375,12 +377,315 @@ CommandServer::handleRestartRequest(unsigned int connectionId, unsigned int requ
    mReproRunner.restart();
    if(mReproRunner.getProxy())
    {
-      mReproRunner.getProxy()->getStack().setExternalStatsHandler(this);
       sendResponse(connectionId, requestId, Data::Empty, 200, "Restart completed.");
    }
    else
    {
       sendResponse(connectionId, requestId, Data::Empty, 200, "Restart failed.");
+   }
+}
+
+void 
+CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml)
+{
+   InfoLog(<< "CommandServer::handleAddTransportRequest");
+
+   TransportType type = UDP;
+   int port = 0;
+   IpVersion ipVersion=V4;
+   Data ipInterface;
+   Data recordRouteUri;
+   UInt32 rcvBufLen = 0;
+   bool stunEnabled = false;
+   Data sipDomainname;
+   SecurityTypes::SSLType sslType = SecurityTypes::TLSv1;
+   UInt32 transportFlags = 0;
+   Data certificateFilename;
+   Data privateKeyFilename;
+   SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+   bool useEmailAsSIP = false;
+
+   // Check for Parameters
+   if(xml.firstChild())
+   {
+      if(isEqualNoCase(xml.getTag(), "request"))
+      {
+         if(xml.firstChild())
+         {
+            while(true)
+            {
+               if(isEqualNoCase(xml.getTag(), "type"))
+               {
+                  if(xml.firstChild())
+                  {
+                     type = toTransportType(xml.getValue());
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "port"))
+               {
+                  if(xml.firstChild())
+                  {
+                     port = xml.getValue().convertInt();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "ipversion"))
+               {
+                  if(xml.firstChild())
+                  {
+                     if(isEqualNoCase(xml.getValue(), "v6") || xml.getValue() == "6")  // be a little leanient with this, allow just a 6
+                     {
+                         ipVersion = V6;
+                     }
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "interface"))
+               {
+                  if(xml.firstChild())
+                  {
+                     ipInterface = xml.getValue();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "rruri"))
+               {
+                  if(xml.firstChild())
+                  {
+                     recordRouteUri = xml.getValue();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "udprcvbuflen"))
+               {
+                  if(xml.firstChild())
+                  {
+                     rcvBufLen = xml.getValue().convertUnsignedLong();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "stun"))
+               {
+                  if(xml.firstChild())
+                  {
+                     if(isEqualNoCase(xml.getValue(), "yes"))
+                     {
+                         stunEnabled = true;
+                     }
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "flags"))
+               {
+                  if(xml.firstChild())
+                  {
+                     transportFlags = xml.getValue().convertUnsignedLong();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "domain"))
+               {
+                  if(xml.firstChild())
+                  {
+                     sipDomainname = xml.getValue();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "ssltype"))
+               {
+                  if(xml.firstChild())
+                  {
+                     if(isEqualNoCase(xml.getValue(), "SSLv23"))
+                     {
+                         sslType = SecurityTypes::SSLv23;
+                     }
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "cert"))
+               {
+                  if(xml.firstChild())
+                  {
+                     certificateFilename = xml.getValue();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "key"))
+               {
+                  if(xml.firstChild())
+                  {
+                     privateKeyFilename = xml.getValue();
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "tlscvm"))
+               {
+                  if(xml.firstChild())
+                  {
+                     if(isEqualNoCase(xml.getValue(), "opt"))
+                     {
+                         cvm = SecurityTypes::Optional;
+                     }
+                     else if(isEqualNoCase(xml.getValue(), "man"))
+                     {
+                         cvm = SecurityTypes::Mandatory;
+                     }
+                     xml.parent();
+                  }
+               }
+               else if(isEqualNoCase(xml.getTag(), "tlsuseemail"))
+               {
+                  if(xml.firstChild())
+                  {
+                     if(isEqualNoCase(xml.getValue(), "yes"))
+                     {
+                         useEmailAsSIP = true;
+                     }
+                     xml.parent();
+                  }
+               }
+
+               if(!xml.nextSibling())
+               {
+                  // break on no more sibilings
+                  break;
+               }
+            }
+            xml.parent();
+         }
+      }
+      xml.parent();
+   }
+
+   // We need at least port and transport type to be valid to add
+   if(port == 0)
+   {
+      sendResponse(connectionId, requestId, Data::Empty, 400, "Invalid port specified: must be non-zero.");
+      return;
+   }
+      
+   if(type == UNKNOWN_TRANSPORT)
+   {
+      Data errorString("Invalid transport specified: must one of UDP, TCP");
+#if defined( USE_SSL )
+      errorString += ", TLS, WS, WSS";
+#endif
+#if defined( USE_DTLS )
+      errorString += ", DTLS";
+#endif
+      sendResponse(connectionId, requestId, Data::Empty, 400, errorString);
+      return;
+   }
+
+   // Build RecordRoute URI if needed
+   NameAddr rr;
+   if(!recordRouteUri.empty())
+   {
+      try
+      {
+         if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
+         {
+            if(isSecure(type))
+            {
+               rr.uri().host()=sipDomainname;
+               rr.uri().port()=port;
+               rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(type);
+               InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+            }
+            else
+            {
+               rr.uri().host()=ipInterface;
+               rr.uri().port()=port;
+               rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(type);
+               InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+            }
+         }
+         else
+         {
+            NameAddr rrtemp(recordRouteUri);
+            rr = rrtemp;
+            InfoLog (<< "Transport specific record-route enabled: " << rr);
+         }
+      }
+      catch(BaseException& e)
+      {
+         ErrLog (<< "Invalid uri provided in rruri setting (ignoring): " << e);
+      }
+   }
+
+   // Build transport info text for response message
+   Data transportInfoText("type=");
+   transportInfoText += getTransportNameFromType(type).c_str();
+   transportInfoText += ", port=" + Data(port);
+   transportInfoText += ", ipversion=" + Data((ipVersion == V4 ? "V4" : "V6"));
+   if(!ipInterface.empty())
+   {
+      transportInfoText += ", interface=" + ipInterface;
+   }
+   if(!recordRouteUri.empty())
+   {
+      transportInfoText += ", rruri=" + Data::from(rr);
+   }
+   transportInfoText += ", stun=" + Data((stunEnabled ? "YES" : "NO"));
+   transportInfoText += ", flags=" + Data((UInt32)transportFlags);
+   if(rcvBufLen)
+   {
+      transportInfoText += ", udprcvbuflen=" + Data((UInt32)rcvBufLen);
+   }
+   if(isSecure(type))
+   {
+      if(!sipDomainname.empty())
+      {
+         transportInfoText += ", domain=" + sipDomainname;
+      }
+      transportInfoText += ", ssltype=" + Data((sslType == SecurityTypes::TLSv1 ? "TLSv1" : "SSLv23"));
+      if(!certificateFilename.empty())
+      {
+         transportInfoText += ", cert=" + certificateFilename;
+      }
+      if(!privateKeyFilename.empty())
+      {
+         transportInfoText += ", key=" + privateKeyFilename;
+      }
+      transportInfoText += ", tlscvm=" + Data((cvm == SecurityTypes::None ? "NONE" : (cvm == SecurityTypes::Optional ? "OPT" : "MAN")));
+      transportInfoText += ", tlsuseemail=" + Data((stunEnabled ? "YES" : "NO"));
+   }
+
+   try
+   {
+      Transport* transport = mReproRunner.getProxy()->getStack().addTransport(
+          type, port, ipVersion, stunEnabled ? StunEnabled : StunDisabled, ipInterface, 
+          sipDomainname, Data::Empty, sslType, transportFlags, certificateFilename, 
+          privateKeyFilename, cvm, useEmailAsSIP);
+
+      if(transport)
+      {
+         if(!rr.uri().host().empty())
+         {
+            transport->setRecordRoute(rr);
+         }
+         if(rcvBufLen)
+         {
+            transport->setRcvBufLen(rcvBufLen);
+         }
+         Data text("Transport added: ");
+         text += transportInfoText;
+         sendResponse(connectionId, requestId, Data::Empty, 200, text);
+      }
+      else
+      {
+         Data text("Unknown error adding transport: ");
+         text += transportInfoText;
+         sendResponse(connectionId, requestId, Data::Empty, 500, text);
+      }
+   }
+   catch(BaseException& e) 
+   {
+      Data text("Exception adding transport: ");
+      text += transportInfoText;
+      text += " - " + e.getMessage();
+      sendResponse(connectionId, requestId, Data::Empty, 500, text);
    }
 }
 
