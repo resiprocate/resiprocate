@@ -161,6 +161,18 @@ DnsStub::processTimers()
    mDnsProvider->processTimers();
 }
 
+void 
+DnsStub::queueCommand(Command* command)
+{
+   mCommandFifo.add(command);
+
+   // Wake up fifo reader
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification();
+   }
+}
+
 void
 DnsStub::cache(const Data& key,
                in_addr addr)
@@ -776,12 +788,7 @@ void
 DnsStub::setEnumSuffixes(const std::vector<Data>& suffixes)
 {
    SetEnumSuffixesCommand* command = new SetEnumSuffixesCommand(*this, suffixes);
-   mCommandFifo.add(command);
-
-   if (mAsyncProcessHandler)
-   {
-      mAsyncProcessHandler->handleProcessNotification();
-   }
+   queueCommand(command);
 }
 
 const std::vector<Data>&
@@ -800,12 +807,7 @@ void
 DnsStub::setEnumDomains(const std::map<Data,Data>& domains)
 {
    SetEnumDomainsCommand* command = new SetEnumDomainsCommand(*this, domains);
-   mCommandFifo.add(command);
-
-   if (mAsyncProcessHandler)
-   {
-      mAsyncProcessHandler->handleProcessNotification();
-   }
+   queueCommand(command);
 }
 
 const std::map<Data,Data>&
@@ -824,12 +826,7 @@ void
 DnsStub::clearDnsCache()
 {
    ClearDnsCacheCommand* command = new ClearDnsCacheCommand(*this);
-   mCommandFifo.add(command);
-
-   if (mAsyncProcessHandler)
-   {
-      mAsyncProcessHandler->handleProcessNotification();
-   }
+   queueCommand(command);
 }
 
 void
@@ -842,12 +839,7 @@ void
 DnsStub::logDnsCache()
 {
    LogDnsCacheCommand* command = new LogDnsCacheCommand(*this);
-   mCommandFifo.add(command);
-
-   if (mAsyncProcessHandler)
-   {
-      mAsyncProcessHandler->handleProcessNotification();
-   }
+   queueCommand(command);
 }
 
 void
@@ -860,12 +852,7 @@ void
 DnsStub::getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler)
 {
    GetDnsCacheDumpCommand* command = new GetDnsCacheDumpCommand(*this, key, handler);
-   mCommandFifo.add(command);
-
-   if (mAsyncProcessHandler)
-   {
-      mAsyncProcessHandler->handleProcessNotification();
-   }
+   queueCommand(command);
 }
 
 void 
