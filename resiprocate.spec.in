@@ -160,7 +160,6 @@ sed -i \
  -e 's!^#RunAsUser = repro$!RunAsUser = repro!' \
  -e 's!^#RunAsGroup = repro$!RunAsGroup = repro!' \
  -e 's!^Daemonize = false$!Daemonize = true!' \
- -e 's!^#CAFile = /etc/ssl/certs/cacert.org.pem$!CAFile = %{_sysconfdir}/ssl/certs/ca-bundle.crt!' \
  -e 's!^DatabasePath = ./$!DatabasePath = %{_sharedstatedir}/repro!' \
  -e 's!^ChallengeThirdPartiesCallingLocalDomains = true$!ChallengeThirdPartiesCallingLocalDomains = false!' \
             %{buildroot}%{_sysconfdir}/repro/repro.config
