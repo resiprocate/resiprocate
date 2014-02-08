@@ -1,6 +1,7 @@
 #include "rutil/GeneralCongestionManager.hxx"
 
 #include "rutil/AbstractFifo.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::STATS
@@ -26,6 +27,7 @@ GeneralCongestionManager::registerFifo(resip::FifoStatsInterface* fifo,
                                        MetricType metric,
                                        UInt32 maxTolerance)
 {
+   Lock lock(mFifosMutex);
    FifoInfo info;
    info.fifo=fifo;
    info.metric=metric;
@@ -37,6 +39,7 @@ GeneralCongestionManager::registerFifo(resip::FifoStatsInterface* fifo,
 void 
 GeneralCongestionManager::unregisterFifo(resip::FifoStatsInterface* fifo)
 {
+   Lock lock(mFifosMutex);
    if(fifo->getRole() < mFifos.size())
    {
       mFifos[fifo->getRole()].fifo=0;
@@ -49,9 +52,11 @@ GeneralCongestionManager::updateFifoTolerances(
                                           MetricType metric,
                                           UInt32 maxTolerance )
 {
+   Lock lock(mFifosMutex);
    for(std::vector<FifoInfo>::iterator i=mFifos.begin(); i!=mFifos.end(); ++i)
    {
-      if(fifoDescription.empty() || isEqualNoCase(i->fifo->getDescription(), fifoDescription))
+      if(i->fifo && // ensure fifo isn't 0'd out from unregister call
+         (fifoDescription.empty() || isEqualNoCase(i->fifo->getDescription(), fifoDescription)))
       {
          i->maxTolerance=UINT_MAX;  // Set temporarily to UINT_MAX, so that we don't inadvertantly reject a request while the metric and tolerance are being changed.
          i->metric=metric;
@@ -65,6 +70,8 @@ GeneralCongestionManager::updateFifoTolerances(
 CongestionManager::RejectionBehavior 
 GeneralCongestionManager::getRejectionBehavior(const FifoStatsInterface *fifo) const
 {
+   Lock lock(mFifosMutex);
+
    // !bwc! We need to also keep an eye on memory usage, and push back if it 
    // looks like we're going to start hitting swap sometime soon.
 
@@ -88,6 +95,7 @@ GeneralCongestionManager::getRejectionBehavior(const FifoStatsInterface *fifo) c
 void 
 GeneralCongestionManager::logCurrentState() const
 {
+   Lock lock(mFifosMutex);
    WarningLog(<<"FIFO STATISTICS");
    for(std::vector<FifoInfo>::const_iterator i=mFifos.begin();
          i!=mFifos.end();++i)
@@ -106,6 +114,7 @@ GeneralCongestionManager::logCurrentState() const
 EncodeStream& 
 GeneralCongestionManager::encodeCurrentState(EncodeStream& strm) const
 {
+   Lock lock(mFifosMutex);
    for(std::vector<FifoInfo>::const_iterator i=mFifos.begin();
          i!=mFifos.end();++i)
    {

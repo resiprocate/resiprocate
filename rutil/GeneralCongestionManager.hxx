@@ -2,6 +2,7 @@
 #define GENERAL_CONGESTION_MANAGER_HXX
 
 #include "rutil/CongestionManager.hxx"
+#include "rutil/Mutex.hxx"
 
 #include <vector>
 
@@ -152,6 +153,11 @@ class GeneralCongestionManager : public CongestionManager
       } FifoInfo; // !bwc! TODO pick a better name
 
       std::vector<FifoInfo> mFifos;
+      // !slg! would love to get rid of the following mutex - but we need to protect  
+      //       threads querying the congestion stats and make sure runtime transport 
+      //       additions are safe (ie: registerFifo and unregisterFifo being called 
+      //       when the fifos are in full motion.
+      mutable Mutex mFifosMutex;
       UInt16 mRejectionThresholds[REJECTING_NON_ESSENTIAL+1];
       MetricType mDefaultMetric;
       UInt32 mDefaultMaxTolerance;
