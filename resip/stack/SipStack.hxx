@@ -1069,17 +1069,21 @@ class SipStack : public FdSetIOObserver
 
       TransactionControllerThread* mTransactionControllerThread;
       TransportSelectorThread* mTransportSelectorThread;
-      bool mRunning;
+      bool mInternalThreadsRunning;
+      bool mProcessingHasStarted; 
+
       /** @brief store all domains that this stack is responsible for.
           @note Controlled by addAlias and addTransport interface
           and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
+      Uri mUri;
+      mutable Mutex mDomainsMutex;  // Protects both mDomains and mUri, since they are related
 
       /** store all ports that this stack is lisenting on.  Controlled by addTransport
           and checks can be made with isMyPort() */
       std::set<int> mPorts;
+      mutable Mutex mPortsMutex;
 
-      Uri mUri;
       bool mShuttingDown;
       mutable Mutex mShutdownMutex;
       volatile bool mStatisticsManagerEnabled;

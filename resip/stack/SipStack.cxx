@@ -93,7 +93,8 @@ SipStack::SipStack(Security* pSecurity,
    mTransactionController(new TransactionController(*this, mAsyncProcessHandler)),
    mTransactionControllerThread(0),
    mTransportSelectorThread(0),
-   mRunning(false),
+   mInternalThreadsRunning(false),
+   mProcessingHasStarted(false),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
    mSocketFunc(socketFunc)
@@ -187,7 +188,8 @@ SipStack::init(const SipStackOptions& options)
    mTransactionControllerThread = 0;
    mTransportSelectorThread = 0;
 
-   mRunning = false;
+   mInternalThreadsRunning = false;
+   mProcessingHasStarted = false;
    mShuttingDown = false;
    mStatisticsManagerEnabled = true;
    mSocketFunc = options.mSocketFunc;
@@ -235,12 +237,12 @@ SipStack::~SipStack()
 void 
 SipStack::run()
 {
-   if(mRunning)
+   if(mInternalThreadsRunning)
    {
       return;
    }
 
-   mRunning=true;
+   mInternalThreadsRunning=true;
    delete mDnsThread;
    mDnsThread=new DnsThread(*mDnsStub);
    mDnsThread->run();
@@ -288,7 +290,7 @@ SipStack::shutdownAndJoinThreads()
       mTransportSelectorThread->shutdown();
       mTransportSelectorThread->join();
    }
-   mRunning=false;
+   mInternalThreadsRunning=false;
 }
 
 Transport*
@@ -362,8 +364,8 @@ SipStack::addTransport( TransportType protocol,
                                          useEmailAsSIP,
                                          certificateFilename, privateKeyFilename);
 #else
-            CritLog (<< "TLS not supported in this stack. You don't have openssl");
-            assert(0);
+            CritLog (<< "Can't add TLS transport: TLS not supported in this stack. You don't have openssl.");
+            throw Transport::Exception("Can't add TLS transport: TLS not supported in this stack. You don't have openssl.", __FILE__,__LINE__);
 #endif
             break;
          case DTLS:
@@ -378,8 +380,8 @@ SipStack::addTransport( TransportType protocol,
                                           *mCompression,
                                           certificateFilename, privateKeyFilename);
 #else
-            CritLog (<< "DTLS not supported in this stack.");
-            assert(0);
+            CritLog (<< "Can't add DTLS transport: DTLS not supported in this stack.");
+            throw Transport::Exception("Can't add DTLS transport: DTLS not supported in this stack.", __FILE__,__LINE__);
 #endif
             break;
 
@@ -413,12 +415,13 @@ SipStack::addTransport( TransportType protocol,
                   wsCookieContextFactory,
                   certificateFilename, privateKeyFilename);
 #else
-            CritLog (<< "WSS not supported in this stack. You don't have openssl");
-            assert(0);
+            CritLog (<< "Can't add WSS transport: Secure Websockets not supported in this stack. You don't have openssl.");
+            throw Transport::Exception("Can't add WSS transport: Secure Websockets not supported in this stack. You don't have openssl.", __FILE__,__LINE__);
 #endif
             break;
          default:
-            assert(0);
+            CritLog (<< "Can't add unknown transport.");
+            throw Transport::Exception("Can't add unknown transport.", __FILE__,__LINE__);
             break;
       }
    }
@@ -461,8 +464,19 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
          ipIfs.pop_back();
       }
    }
-   mPorts.insert(transport->port());
-   mTransactionController->transportSelector().addTransport(transport,true);
+   { 
+      Lock lock(mPortsMutex);
+      mPorts.insert(transport->port());
+   }
+
+   // Add to CongestionManager if required
+   if(mCongestionManager)
+   {
+       transport->setCongestionManager(mCongestionManager);
+   }
+
+   // Last flag is addImmediately - pass as true only if processing hasn't started yet
+   mTransactionController->transportSelector().addTransport(transport, mProcessingHasStarted ? false : true); 
 }
 
 Fifo<TransactionMessage>&
@@ -478,6 +492,9 @@ SipStack::addAlias(const Data& domain, int port)
 
    DebugLog (<< "Adding domain alias: " << domain << ":" << portToUse);
    assert(!mShuttingDown);
+
+   Lock lock(mDomainsMutex);
+
    mDomains.insert(domain + ":" + Data(portToUse));
 
    if(mUri.host().empty())
@@ -566,6 +583,7 @@ SipStack::getHostAddress()
 bool
 SipStack::isMyDomain(const Data& domain, int port) const
 {
+   Lock lock(mDomainsMutex);
    return (mDomains.count(domain + ":" +
                           Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
@@ -573,12 +591,14 @@ SipStack::isMyDomain(const Data& domain, int port) const
 bool
 SipStack::isMyPort(int port) const
 {
+   Lock lock(mPortsMutex);
    return mPorts.count(port) != 0;
 }
 
 const Uri&
 SipStack::getUri() const
 {
+   Lock lock(mDomainsMutex);
    if(mUri.host().empty())
    {
       CritLog(<< "There are no associated transports");
@@ -869,6 +889,7 @@ unsigned int
 SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
+   mProcessingHasStarted = true;
 
    unsigned int dnsNextProcess = (mDnsThread ? 
                            INT_MAX : mDnsStub->getTimeTillNextProcessMS());
@@ -1004,24 +1025,28 @@ SipStack::statisticsManagerEnabled() const
 EncodeStream&
 SipStack::dump(EncodeStream& strm)  const
 {
-   Lock lock(mAppTimerMutex);
-   strm << "SipStack: " << (this->mSecurity ? "with security " : "without security ")
-        << std::endl
-        << "domains: " << Inserter(this->mDomains)
-        << std::endl
-        << " TUFifo size=" << this->mTUFifo.size() << std::endl
-        << " Timers size=" << this->mTransactionController->mTimers.size() << std::endl
-        << " AppTimers size=" << this->mAppTimers.size() << std::endl
-        << " ServerTransactionMap size=" << this->mTransactionController->mServerTransactionMap.size() << std::endl
+   strm << "SipStack: " << (this->mSecurity ? "with security " : "without security ") << std::endl;
+   {
+      Lock lock(mDomainsMutex);
+      strm << "domains: " << Inserter(this->mDomains) << std::endl;
+   }
+   strm << " TUFifo size=" << this->mTUFifo.size() << std::endl
+        << " Timers size=" << this->mTransactionController->mTimers.size() << std::endl;
+   {
+      Lock lock(mAppTimerMutex);
+      strm << " AppTimers size=" << this->mAppTimers.size() << std::endl;
+   }
+   strm << " ServerTransactionMap size=" << this->mTransactionController->mServerTransactionMap.size() << std::endl
         << " ClientTransactionMap size=" << this->mTransactionController->mClientTransactionMap.size() << std::endl
+        // !slg! TODO - There is technically a threading concern with the following three lines and the runtime addTransport call
         << " Exact Transports=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
-        << " Any Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl;
+        << " Any Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl
+        << " TLS Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl;
    return strm;
 }
 
 EncodeStream&
-resip::operator<<(EncodeStream& strm,
-const SipStack& stack)
+resip::operator<<(EncodeStream& strm, const SipStack& stack)
 {
    return stack.dump(strm);
 }

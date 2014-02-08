@@ -181,7 +181,6 @@ void
 TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
 {
    Transport* transport = autoTransport.release();
-   mDns.addTransportType(transport->transport(), transport->ipVersion());
 
    // !bwc! This is a multimap from TransportType/IpVersion to Transport*.
    // Make _extra_ sure that no garbage goes in here.
@@ -224,42 +223,55 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
 
    Tuple tuple(transport->interfaceName(), transport->port(),
                transport->ipVersion(), transport->transport());
-   mTypeToTransportMap.insert(TypeToTransportMap::value_type(tuple,transport));
 
    switch (transport->transport())
    {
       case UDP:
       case TCP:
       case WS:
-      {
-         assert(mExactTransports.find(tuple) == mExactTransports.end() &&
-                mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end());
-
-         DebugLog (<< "Adding transport: " << tuple);
-
-         // Store the transport in the ANY interface maps if the tuple specifies ANY
-         // interface. Store the transport in the specific interface maps if the tuple
-         // specifies an interface. See TransportSelector::findTransport.
-         if (transport->interfaceName().empty() ||
-             transport->getTuple().isAnyInterface() ||
-             transport->hasSpecificContact() )
+         if(mExactTransports.find(tuple) == mExactTransports.end() &&
+            mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end())
          {
-            mAnyInterfaceTransports[tuple] = transport;
-            mAnyPortAnyInterfaceTransports[tuple] = transport;
+            DebugLog (<< "Adding transport: " << tuple);
+
+            // Store the transport in the ANY interface maps if the tuple specifies ANY
+            // interface. Store the transport in the specific interface maps if the tuple
+            // specifies an interface. See TransportSelector::findTransport.
+            if (transport->interfaceName().empty() ||
+                transport->getTuple().isAnyInterface() ||
+                transport->hasSpecificContact() )
+            {
+               mAnyInterfaceTransports[tuple] = transport;
+               mAnyPortAnyInterfaceTransports[tuple] = transport;
+            }
+            else
+            {
+               mExactTransports[tuple] = transport;
+               mAnyPortTransports[tuple] = transport;
+            }
          }
          else
          {
-            mExactTransports[tuple] = transport;
-            mAnyPortTransports[tuple] = transport;
+            WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
+            delete transport;
+            return;
          }
-      }
       break;
       case TLS:
       case DTLS:
       case WSS:
       {
          TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
-         mTlsTransports[key]=transport;
+         if(mTlsTransports.find(key) == mTlsTransports.end())
+         {
+            mTlsTransports[key]=transport;
+         }
+         else
+         {
+            WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
+            delete transport;
+            return;
+         }
       }
       break;
       default:
@@ -281,6 +293,8 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
       mHasOwnProcessTransports.back()->startOwnProcessing();
    }
 
+   mTypeToTransportMap.insert(TypeToTransportMap::value_type(tuple,transport));
+   mDns.addTransportType(transport->transport(), transport->ipVersion());
    mTransports.push_back(transport);
    transport->setKey((unsigned int)mTransports.size());
 }
@@ -388,7 +402,7 @@ TransportSelector::checkTransportAddQueue()
    while(t.get())
    {
       addTransportInternal(t);
-      t.reset(mTransportsToAdd.getNext(0));
+      t.reset(mTransportsToAdd.getNext(-1));
    }
 }
 
