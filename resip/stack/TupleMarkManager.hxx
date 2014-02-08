@@ -50,9 +50,7 @@ class TupleMarkManager
       };
       
       typedef std::map<ListEntry,MarkType> TupleList;
-
       TupleList mList;
-      resip::Mutex mListMutex;
             
       typedef std::set<MarkListener*> Listeners;
       Listeners mListeners;

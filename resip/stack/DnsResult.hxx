@@ -16,6 +16,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/TupleMarkManager.hxx"
 #include "rutil/Condition.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "rutil/dns/RRVip.hxx"
@@ -32,12 +33,12 @@ namespace resip
 class DnsInterface;
 class DnsAAAARecord;
 class DnsHandler;
+class WhiteListLastCommand;
 
 class EnumResultSink
 {
    public:
-      virtual void onEnumResult(const DNSResult<DnsNaptrRecord>& result,
-         int order) = 0;
+      virtual void onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order) = 0;
 };
 
 class EnumResult : public DnsResultSink
@@ -48,11 +49,7 @@ class EnumResult : public DnsResultSink
 
       // DnsResultSink
       void onDnsResult(const DNSResult<DnsHostRecord>&);
-
-//#ifdef USE_IPV6
       void onDnsResult(const DNSResult<DnsAAAARecord>&);
-//#endif
-
       void onDnsResult(const DNSResult<DnsSrvRecord>&);
       void onDnsResult(const DNSResult<DnsNaptrRecord>&);
       void onDnsResult(const DNSResult<DnsCnameRecord>&);
@@ -84,23 +81,18 @@ class DnsResult : public DnsResultSink, public EnumResultSink
 
       typedef std::vector<Data> DataVector;
 
-      
       /*! Starts a lookup.  Has the rules for determining the transport
          from a uri as per rfc3263 and then does a NAPTR lookup or an A
-         lookup depending on the uri.
+         lookup depending on the uri.  Also does ENUM lookups if
+         domain matches a configured enum domain.  This call is threadsafe.
          
          @param uri The uri to resolve.
-         @param enumSuffixes If the uri is enum searchable, this is the list of
-                  enum suffixes (for example "e164.arpa") that will be used in
-                  the attempt to resolve this uri.
-         @param enumDomains The ENUM possibility is only considered if
-                the URI domain part is one of these domains
       */
-      void lookup(const Uri& uri, const std::vector<Data> &enumSuffixes,
-         const std::map<Data,Data> &enumDomains);
+      void lookup(const Uri& uri);
 
       /*!
-         Blacklist the last returned result until the specified time (ms)
+         Blacklist the last returned result until the specified time (ms).
+         This call is threadsafe.
          
          @param expiry The absolute expiry, in ms, of this blacklist.
          @return true iff the last result could be blacklisted
@@ -112,6 +104,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
          Greylist the last returned result until the specified time (ms)
          Greylisting a tuple effectively de-prioritizes it, so it will not be
          tried if there are any non-grey or blacklisted tuples left to try.
+         This call is threadsafe.
          
          @param expiry The absolute expiry, in ms, of this blacklist.
          @return true iff the last result could be greylisted
@@ -122,6 +115,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
       /*!
          Tries to load the next tuple. If Available is returned, the tuple may
          be accessed using current(). 
+         Safe to call after DnsHandler::handle callback has been called.
          
          @return Available if there is a result ready, Pending if it needs to
                   follow an SRV (more results might come in later), or Finished
@@ -132,6 +126,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
       
       /*!
          Return the next tuple available for this query. 
+         Safe to call after DnsHandler::handle callback has been called.
          
          @return The next Tuple available for this query.
          @note ALWAYS call available() and verify the return is Available
@@ -148,6 +143,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
          match, even if the order/preference changes in the DNS, and this 
          A/AAAA record will be favored above all others that match, even if new
          ones are added.)
+         This call is threadsafe.
          
          @note It can be argued that using this is harmful, since the load-
                leveling capabilities of DNS are ignored from here on.
@@ -157,6 +153,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
       void whitelistLast();
 
       // return the target of associated query
+      // Safe to call after DnsHandler::handle callback has been called.
       Data target() const { return mTarget; }
       unsigned int getSRVResultsSize() const {return (unsigned int)mSRVResults.size();}
 
@@ -200,6 +197,28 @@ class DnsResult : public DnsResultSink, public EnumResultSink
       };
 
    private:
+
+      /*
+         The following command is used to ensure that all DnsInterface mRRVip and 
+         mTupleMarkManager, and enum setting accesses are done from the DnsThread.  
+         This gets the initial call * lookupInternalWithEnum to occur on the 
+         DnsThread (using the DnsStub command fifo).
+       */
+      class LookupCommand : public DnsStub::Command
+      {
+      public:
+          LookupCommand(DnsResult& dnsResult, const Uri& uri) : mDnsResult(dnsResult), mUri(uri) {}
+          virtual ~LookupCommand() {}
+          virtual void execute()
+          {
+              mDnsResult.lookupInternalWithEnum(mUri);
+          }
+      private:
+          DnsResult& mDnsResult;
+          Uri mUri;
+      };
+      friend class LookupCommand;
+      void lookupInternalWithEnum(const Uri& uri);
       void lookupInternal(const Uri& uri);
 
       // Given a transport and port from uri, return the default port to use
@@ -220,7 +239,7 @@ class DnsResult : public DnsResultSink, public EnumResultSink
       
    private:
       DnsInterface& mInterface;
-      DnsStub& mDns;
+      DnsStub& mDnsStub;
       RRVip& mVip;
       DnsHandler* mHandler;
       int mSRVCount;
@@ -283,18 +302,13 @@ class DnsResult : public DnsResultSink, public EnumResultSink
 
       // DnsResultSink
       void onDnsResult(const DNSResult<DnsHostRecord>&);
-
-//#ifdef USE_IPV6
       void onDnsResult(const DNSResult<DnsAAAARecord>&);
-//#endif
-
       void onDnsResult(const DNSResult<DnsSrvRecord>&);
       void onDnsResult(const DNSResult<DnsNaptrRecord>&);
       void onDnsResult(const DNSResult<DnsCnameRecord>&);
 
       void onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order);
       void onNaptrResult(const DNSResult<DnsNaptrRecord>& result);
-      
 
       typedef struct
       {
@@ -319,12 +333,41 @@ class DnsResult : public DnsResultSink, public EnumResultSink
          This exists solely to allow mLastReturnedPath to be defined.
       */
       std::vector<Item> mCurrentPath;
-      
       bool mHaveReturnedResults;
-
       void clearCurrPath();
-      
       Tuple mLastResult;
+
+      /*
+         The following two commands are to ensure that all DnsInterface mVip 
+         and mTupleMarkManager calls are done from the DnsThread (using the 
+         DnsStub command fifo).
+      */
+      class WhitelistCommand : public DnsStub::Command
+      {
+      public:
+         WhitelistCommand(RRVip& vip, std::vector<Item>& path) : mVip(vip), mPath(path) {}
+         virtual ~WhitelistCommand() {}
+         virtual void execute();
+      private:
+         RRVip& mVip;
+         std::vector<Item> mPath;
+      };
+
+      class GreyOrBlacklistCommand : public DnsStub::Command
+      {
+      public:
+         GreyOrBlacklistCommand(RRVip& vip, TupleMarkManager& markManager, Item& pathTop, Tuple& result, UInt64 expiry, TupleMarkManager::MarkType markType) : 
+            mVip(vip), mMarkManager(markManager), mPathTop(pathTop), mResult(result), mExpiry(expiry), mMarkType(markType) {}
+         virtual ~GreyOrBlacklistCommand() {}
+         virtual void execute();
+      private:
+         RRVip& mVip;
+         TupleMarkManager& mMarkManager;
+         Item mPathTop;
+         Tuple mResult;
+         UInt64 mExpiry;
+         TupleMarkManager::MarkType mMarkType;
+      };
 };
 
 EncodeStream& operator<<(EncodeStream& strm, const DnsResult&);
@@ -334,6 +377,7 @@ EncodeStream& operator<<(EncodeStream& strm, const DnsResult::NAPTR&);
 }
 
 #endif
+
 //  Copyright (c) 2003, Jason Fischl 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

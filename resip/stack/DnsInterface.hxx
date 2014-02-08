@@ -19,7 +19,6 @@ class DnsResultSink;
 class DnsResult;
 class Uri;
 class Via;
-//class ExternalDns;
 class DnsRawSink;
 
 class DnsInterface
@@ -72,11 +71,6 @@ class DnsInterface
       DnsResult* createDnsResult(DnsHandler* handler=0);
       void lookup(DnsResult* res, const Uri& uri);
 
-      //DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
-      //DnsResult* lookup(const Via& via, DnsHandler* handler=0);
-
-      //void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
-      //virtual void handleDnsRaw(ExternalDnsRawResult);
       TupleMarkManager& getMarkManager(){return mMarkManager;}
 
       bool setUdpOnlyOnNumeric(bool value)
@@ -90,24 +84,23 @@ class DnsInterface
          return mUdpOnlyOnNumeric;
       }
 
+
+
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
       friend class DnsResult;
-      // DnsHandler* mHandler;		// .kw. not used anymore?
+      Mutex mSupportedMutex; // Protects mSupportedNaptrs and mSupportTransports
       std::set<Data> mSupportedNaptrs;
       typedef std::vector<std::pair<TransportType, IpVersion> > TransportMap;
       TransportMap mSupportedTransports;
-      //std::set<TransportType> mSupportedTransportTypes;
       // Whether transport failover should be disabled on URIs with only a numeric
       // IP address (only UDP will ever be attempted).
       bool mUdpOnlyOnNumeric;
 
-      //ExternalDns* mDnsProvider;
-
-      DnsStub& mDnsStub;
-      RRVip mVip;
-      TupleMarkManager mMarkManager;
+      DnsStub& mDnsStub;  
+      RRVip mVip;                      // Ensure all access is from DnsThread/DnsStub fifo for thread safety
+      TupleMarkManager mMarkManager;   // Ensure all access is from DnsThread/DnsStub fifo for thread safety
 };
 
 }

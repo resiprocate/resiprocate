@@ -36,7 +36,6 @@ DnsInterface::DnsInterface(DnsStub& dnsStub) :
    mUdpOnlyOnNumeric(false),
    mDnsStub(dnsStub)
 {
-
 #ifdef USE_DNS_VIP
    mDnsStub.setResultTransform(&mVip);
 #endif
@@ -55,6 +54,7 @@ static Data WssNAPTRType("SIPS+D2W");
 void 
 DnsInterface::addTransportType(TransportType type, IpVersion version)
 {
+   Lock lock(mSupportedMutex);
    mSupportedTransports.push_back(std::make_pair(type, version));
    switch (type)
    {
@@ -85,18 +85,21 @@ DnsInterface::addTransportType(TransportType type, IpVersion version)
 bool
 DnsInterface::isSupported(const Data& service)
 {
+   Lock lock(mSupportedMutex);
    return mSupportedNaptrs.count(service) != 0;
 }
 
 bool
 DnsInterface::isSupported(TransportType t, IpVersion version)
 {
+   Lock lock(mSupportedMutex);
    return std::find(mSupportedTransports.begin(), mSupportedTransports.end(), std::make_pair(t, version)) != mSupportedTransports.end();
 }
 
 bool
 DnsInterface::isSupportedProtocol(TransportType t)
 {
+   Lock lock(mSupportedMutex);
    for (TransportMap::const_iterator i=mSupportedTransports.begin(); i != mSupportedTransports.end(); ++i)
    {
       if (i->first == t)
@@ -109,9 +112,9 @@ DnsInterface::isSupportedProtocol(TransportType t)
 
 int DnsInterface::supportedProtocols()
 {
+   Lock lock(mSupportedMutex);
    return (int)mSupportedTransports.size();
 }
-
 
 DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
@@ -123,38 +126,14 @@ DnsInterface::createDnsResult(DnsHandler* handler)
 void 
 DnsInterface::lookup(DnsResult* res, const Uri& uri)
 {
-   res->lookup(uri, mDnsStub.getEnumSuffixes(),
-      mDnsStub.getEnumDomains());
+   res->lookup(uri);
 }
-
-// DnsResult* 
-// DnsInterface::lookup(const Via& via, DnsHandler* handler)
-// {
-//    assert(0);
-
-//    //DnsResult* result = new DnsResult(*this);
-//    return NULL;
-// }
 
 //?dcm? -- why is this here?
 DnsHandler::~DnsHandler()
 {
 }
 
-/* moved to DnsStub.
-void 
-DnsInterface::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
-{
-   mDnsProvider->lookup(target.c_str(), type, this, sink);
-}
-
-void 
-DnsInterface::handleDnsRaw(ExternalDnsRawResult res)
-{
-   reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
-   mDnsProvider->freeResult(res);
-}
-*/
 
 //  Copyright (c) 2003, Jason Fischl 
 /* ====================================================================

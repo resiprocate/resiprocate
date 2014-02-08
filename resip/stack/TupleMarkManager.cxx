@@ -11,7 +11,6 @@ TupleMarkManager::MarkType
 TupleMarkManager::getMarkType(const Tuple& tuple)
 {
    ListEntry entry(tuple,0);
-   resip::Lock g(mListMutex);
    TupleList::iterator i=mList.find(entry);
    
    if(i!=mList.end())
@@ -39,7 +38,6 @@ void TupleMarkManager::mark(const Tuple& tuple,UInt64 expiry,MarkType mark)
    // .amr. Notify listeners first so they can change the entry if they want
    notifyListeners(tuple,expiry,mark);
    ListEntry entry(tuple,expiry);
-   resip::Lock g(mListMutex);
    mList[entry]=mark;
 }
 
