@@ -156,6 +156,7 @@
 ==repro==
 ===New features===
 *added WS (WebSocket) and WSS (Secure WebSocket) transport support for WebRTC compatibility 
+**add specific support for authenticating users based on HTTP cookies authenticated by a shared secret/HMAC scheme
 *Add registration and call/session accounting
 **configured/enabled via configuration file
 **Session Accounting - When enabled resiprocate will push a JSON formatted events for sip session related messaging that the proxy receives, to a persistent message queue that uses berkeleydb backed storage.
