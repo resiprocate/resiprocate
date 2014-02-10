@@ -2,6 +2,17 @@
 
 ==1.9.1 Changes==
 *Placeholder
+
+==Highlights==
+*Session/registration accounting
+*SIP over WebSocket support for WebRTC, with cookie authentication option
+*Python scripting for repro routes
+*repro dynamically-loaded routing plugins
+*UAS PRACK
+*Improvements to daemon processes for UNIX/Linux users
+*Android support
+*Multiple users in reTurn
+*Many stability/bug fixes
  
 ==General Changes==
 ===New features===
