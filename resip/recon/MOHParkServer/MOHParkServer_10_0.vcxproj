@@ -113,7 +113,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\pcre\Debug\pcre.lib;$(ProjectDir)..\..\..\contrib\srtp\Debug\libSRTP.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Debug\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Debug\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Debug\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Debug\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Debug\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Debug\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Debug\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Debug\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)MOHParkServer.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)MOHParkServer.pdb</ProgramDatabaseFile>
@@ -148,7 +148,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\pcre\Release\pcre.lib;$(ProjectDir)..\..\..\contrib\srtp\Release\libSRTP.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Release\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Release\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Release\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Release\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Release\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Release\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Release\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Release\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)MOHParkServer.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)MOHParkServer.pdb</ProgramDatabaseFile>
@@ -182,7 +182,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;$(ProjectDir)..\..\..\contrib\pcre\Debug\pcre.lib;$(ProjectDir)..\..\..\contrib\srtp\Debug\libSRTP.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Debug\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Debug\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Debug\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Debug\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Debug\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Debug\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Debug\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Debug\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)MOHParkServer.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)MOHParkServer.pdb</ProgramDatabaseFile>
@@ -217,7 +217,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;$(ProjectDir)..\..\..\contrib\pcre\Release\pcre.lib;$(ProjectDir)..\..\..\contrib\srtp\Release\libSRTP.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Release\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Release\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Release\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Release\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;winmm.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXportLib\Release\sipxportlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXsdpLib\Release\sipxsdplib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\Release\sipxmedialib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaAdapterLib\Release\sipxmediaadapterlib.lib;$(ProjectDir)..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\lib\libspeex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)MOHParkServer.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)MOHParkServer.pdb</ProgramDatabaseFile>
@@ -292,6 +292,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\sipXtapi\sipXsdpLib\sipXsdpLib-msvc8.vcxproj">
       <Project>{e1d81ea9-4ac3-4cf5-b600-090fd822b1f6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\contrib\pcre\pcre_10_0.vcxproj">
+      <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\contrib\srtp\srtp10.vcxproj">
       <Project>{eef031cb-fed8-451e-a471-91ec8d4f6750}</Project>
