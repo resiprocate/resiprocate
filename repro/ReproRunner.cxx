@@ -142,7 +142,6 @@ ReproRunner::ReproRunner()
    , mLemurs(0)
    , mBaboons(0)
    , mProxy(0)
-   , mWebAdminList(0)
    , mWebAdminThread(0)
    , mRegistrar(0)
    , mDum(0)
@@ -152,7 +151,6 @@ ReproRunner::ReproRunner()
    , mRegSyncServerV4(0)
    , mRegSyncServerV6(0)
    , mRegSyncServerThread(0)
-   , mCommandServerList(0)
    , mCommandServerThread(0)
    , mCongestionManager(0)
 {
@@ -410,11 +408,11 @@ ReproRunner::cleanupObjects()
    {
       // We leave command server running during restart
       delete mCommandServerThread; mCommandServerThread = 0;
-      for(std::list<CommandServer*>::iterator it = mCommandServerList->begin(); it != mCommandServerList->end(); it++)
+      for(std::list<CommandServer*>::iterator it = mCommandServerList.begin(); it != mCommandServerList.end(); it++)
       {
          delete (*it);
       }
-      delete mCommandServerList; mCommandServerList = 0;
+      mCommandServerList.clear();
    }
    delete mRegSyncServerThread; mRegSyncServerThread = 0;
    delete mRegSyncServerV6; mRegSyncServerV6 = 0;
@@ -427,11 +425,11 @@ ReproRunner::cleanupObjects()
    delete mDum; mDum = 0;
    delete mRegistrar; mRegistrar = 0;
    delete mWebAdminThread; mWebAdminThread = 0;
-   for(std::list<WebAdmin*>::iterator it = mWebAdminList->begin(); it != mWebAdminList->end(); it++)
+   for(std::list<WebAdmin*>::iterator it = mWebAdminList.begin(); it != mWebAdminList.end(); it++)
    {
       delete (*it);
    }
-   delete mWebAdminList; mWebAdminList = 0;
+   mWebAdminList.clear();
    delete mProxy; mProxy = 0;
    delete mBaboons; mBaboons = 0;
    delete mLemurs; mLemurs = 0;
@@ -1057,14 +1055,13 @@ ReproRunner::populateRegistrations()
 bool
 ReproRunner::createWebAdmin()
 {
-   assert(!mWebAdminList);
+   assert(mWebAdminList.empty());
    assert(!mWebAdminThread);
 
    std::vector<resip::Data> httpServerBindAddresses;
    mProxyConfig->getConfigValue("HttpBindAddress", httpServerBindAddresses);
    int httpPort = mProxyConfig->getConfigInt("HttpPort", 5080);
 
-   mWebAdminList = new std::list<WebAdmin*>;
    if(httpPort)
    {
       if(httpServerBindAddresses.empty())
@@ -1098,7 +1095,7 @@ ReproRunner::createWebAdmin()
                return false;
             }
 
-            mWebAdminList->push_back(webAdminV4);
+            mWebAdminList.push_back(webAdminV4);
          }
 
          if(mUseV6 && DnsUtil::isIpV6Address(*it)) 
@@ -1118,15 +1115,15 @@ ReproRunner::createWebAdmin()
                return false;
             }
 
-            mWebAdminList->push_back(webAdminV6);
+            mWebAdminList.push_back(webAdminV6);
          }
       }
 
       // This shouldn't happen because it would return false before
       // it reached this point
-      if(!mWebAdminList->empty())
+      if(!mWebAdminList.empty())
       {
-         mWebAdminThread = new WebAdminThread(*mWebAdminList);
+         mWebAdminThread = new WebAdminThread(mWebAdminList);
          return true;
       }
    }
@@ -1170,14 +1167,13 @@ ReproRunner::createRegSync()
 void
 ReproRunner::createCommandServer()
 {
-   assert(!mCommandServerList);
+   assert(mCommandServerList.empty());
    assert(!mCommandServerThread);
 
    std::vector<resip::Data> commandServerBindAddresses;
    mProxyConfig->getConfigValue("CommandBindAddress", commandServerBindAddresses);
    int commandPort = mProxyConfig->getConfigInt("CommandPort", 5081);
 
-   mCommandServerList = new std::list<CommandServer*>;
    if(commandPort != 0)
    {
       if(commandServerBindAddresses.empty())
@@ -1200,7 +1196,7 @@ ReproRunner::createCommandServer()
 
             if(pCommandServerV4->isSane())
             {
-               mCommandServerList->push_back(pCommandServerV4);
+               mCommandServerList.push_back(pCommandServerV4);
             }
             else
             {
@@ -1215,7 +1211,7 @@ ReproRunner::createCommandServer()
 
             if(pCommandServerV6->isSane())
             {
-               mCommandServerList->push_back(pCommandServerV6);
+               mCommandServerList.push_back(pCommandServerV6);
             }
             else
             {
@@ -1225,9 +1221,9 @@ ReproRunner::createCommandServer()
          }
       }
 
-      if(!mCommandServerList->empty())
+      if(!mCommandServerList.empty())
       {
-         mCommandServerThread = new CommandServerThread(*mCommandServerList);
+         mCommandServerThread = new CommandServerThread(mCommandServerList);
       }
    }
 }
@@ -1727,7 +1723,7 @@ bool
 ReproRunner::operator()(resip::StatisticsMessage &statsMessage)
 {
    // Dispatch to each command server
-   for(std::list<CommandServer*>::iterator it = mCommandServerList->begin(); it != mCommandServerList->end(); it++)
+   for(std::list<CommandServer*>::iterator it = mCommandServerList.begin(); it != mCommandServerList.end(); it++)
    {
        (*it)->handleStatisticsMessage(statsMessage);
    }

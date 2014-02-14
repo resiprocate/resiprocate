@@ -18,7 +18,7 @@ protected:
 
 private:
    virtual void thread();
-   std::list<CommandServer*> mCommandServerList;
+   const std::list<CommandServer*>& mCommandServerList;
 };
 
 }

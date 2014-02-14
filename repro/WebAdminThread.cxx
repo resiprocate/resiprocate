@@ -12,11 +12,10 @@ using namespace repro;
 using namespace std;
 
 
-WebAdminThread::WebAdminThread(const std::list<WebAdmin*>& WebAdminList)
-   : mWebAdminList(WebAdminList)
+WebAdminThread::WebAdminThread(const std::list<WebAdmin*>& webAdminList)
+   : mWebAdminList(webAdminList)
 {
 }
-
 
 void
 WebAdminThread::thread()
@@ -27,7 +26,7 @@ WebAdminThread::thread()
       {
            FdSet fdset;
            
-           std::list<WebAdmin*>::iterator it = mWebAdminList.begin();
+           std::list<WebAdmin*>::const_iterator it = mWebAdminList.begin();
            for(;it!=mWebAdminList.end();it++)
            {
               (*it)->buildFdSet(fdset);
