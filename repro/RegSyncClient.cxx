@@ -163,17 +163,17 @@ RegSyncClient::thread()
             rc = ::recv(mSocketDesc, (char*)&mRxBuffer, sizeof(mRxBuffer), 0);
             if(rc < 0) 
             {
-                int e = getErrno();
-                if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving, err=" << e);
-                closeSocket(mSocketDesc);
-                mSocketDesc = 0;
-                break;
+               int e = getErrno();
+               if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving, err=" << e);
+               closeSocket(mSocketDesc);
+               mSocketDesc = 0;
+               break;
             }
             
             if(rc > 0)
             {
-                mRxDataBuffer += Data(Data::Borrow, (const char*)&mRxBuffer, rc);   
-                while(tryParse());
+               mRxDataBuffer += Data(Data::Borrow, (const char*)&mRxBuffer, rc);   
+               while(tryParse());
             }
          }
          else if(rc == 0) // timeout - send keepalive
@@ -423,22 +423,22 @@ RegSyncClient::processModify(const resip::Uri& aor, ContactList& syncContacts)
    bool found;
    for(; itSync != syncContacts.end(); itSync++)
    {
-       InfoLog(<< "  RegSyncClient::processModify: contact=" << itSync->mContact << ", instance=" << itSync->mInstance << ", regid=" << itSync->mRegId);
+      InfoLog(<< "  RegSyncClient::processModify: contact=" << itSync->mContact << ", instance=" << itSync->mInstance << ", regid=" << itSync->mRegId);
 
-       // See if contact already exists in currentContacts       
-       found = false;
-       for(itCurrent = currentContacts.begin(); itCurrent != currentContacts.end(); itCurrent++)
-       {
-           if(*itSync == *itCurrent)
-           {
-               found = true;
-               // We found a match - check if sycnContacts LastUpdated time is newer
-               if(itSync->mLastUpdated > itCurrent->mLastUpdated)
-               {
-                   // Replace current contact with Sync contact
-                   mRegDb->updateContact(aor, *itSync);
-               }
-           }
+      // See if contact already exists in currentContacts       
+      found = false;
+      for(itCurrent = currentContacts.begin(); itCurrent != currentContacts.end(); itCurrent++)
+      {
+          if(*itSync == *itCurrent)
+          {
+              found = true;
+              // We found a match - check if sycnContacts LastUpdated time is newer
+              if(itSync->mLastUpdated > itCurrent->mLastUpdated)
+              {
+                  // Replace current contact with Sync contact
+                  mRegDb->updateContact(aor, *itSync);
+              }
+          }
        }
        if(!found)
        {
