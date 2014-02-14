@@ -1,8 +1,6 @@
 #ifndef FM_ERRORCODE_HXX
 #define FM_ERRORCODE_HXX
 
-#include <asio/error_code.hpp>
-
 namespace flowmanager {
 
 typedef int ErrorType;

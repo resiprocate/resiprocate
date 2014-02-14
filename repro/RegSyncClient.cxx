@@ -93,7 +93,8 @@ RegSyncClient::thread()
       mSocketDesc = (int)socket(servAddr.ipVersion() == V6 ? PF_INET6 : PF_INET , SOCK_STREAM, 0);
       if(mSocketDesc < 0) 
       {
-         ErrLog(<< "RegSyncClient: cannot open socket");
+         int e = getErrno();
+         ErrLog(<< "RegSyncClient: cannot open socket, err=" << e);
          mSocketDesc = 0;
          return;
       }
@@ -102,7 +103,8 @@ RegSyncClient::thread()
       rc = ::bind(mSocketDesc, &localAddr.getMutableSockaddr(), localAddr.length());
       if(rc < 0) 
       {
-         ErrLog(<<"RegSyncClient: error binding locally");
+         int e = getErrno();
+         ErrLog(<<"RegSyncClient: error binding locally, err=" << e);
          closeSocket(mSocketDesc);
          mSocketDesc = 0;
          return;
@@ -112,7 +114,8 @@ RegSyncClient::thread()
       rc = ::connect(mSocketDesc, &servAddr.getMutableSockaddr(), servAddr.length());
       if(rc < 0) 
       {
-         if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort);
+         int e = getErrno();
+         if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort << ", err=" << e);
          closeSocket(mSocketDesc);
          mSocketDesc = 0;
          delaySeconds(30);
@@ -128,7 +131,19 @@ RegSyncClient::thread()
       rc = ::send(mSocketDesc, request.c_str(), (int)request.size(), 0);
       if(rc < 0) 
       {
-         if(!mShutdown) ErrLog(<< "RegSyncClient: error sending");
+         int e = getErrno();
+         if(!mShutdown) ErrLog(<< "RegSyncClient: error sending, err=" << e);
+         closeSocket(mSocketDesc);
+         mSocketDesc = 0;
+         continue;
+      }
+
+      // Make socket non blocking
+      bool ok = makeSocketNonBlocking(mSocketDesc);
+      if (!ok)
+      {
+         int e = getErrno();
+         ErrLog(<< "RegSyncClient: Could not make HTTP socket non-blocking, err=" << e);
          closeSocket(mSocketDesc);
          mSocketDesc = 0;
          continue;
@@ -136,19 +151,58 @@ RegSyncClient::thread()
 
       while(rc > 0)
       {
-         rc = ::recv(mSocketDesc, (char*)&mRxBuffer, sizeof(mRxBuffer), 0);
-         if(rc < 0) 
-         {
-            if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving");
-            closeSocket(mSocketDesc);
-            mSocketDesc = 0;
-            break;
-         }
-
+         FdSet fdset;
+         fdset.setRead(mSocketDesc);
+         fdset.setExcept(mSocketDesc);
+         timeval tm;
+         tm.tv_sec = 30; // TODO - make a setting?
+         tm.tv_usec = 0;
+         rc = fdset.select(tm);
          if(rc > 0)
          {
-            mRxDataBuffer += Data(Data::Borrow, (const char*)&mRxBuffer, rc);   
-            while(tryParse());
+            rc = ::recv(mSocketDesc, (char*)&mRxBuffer, sizeof(mRxBuffer), 0);
+            if(rc < 0) 
+            {
+                int e = getErrno();
+                if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving, err=" << e);
+                closeSocket(mSocketDesc);
+                mSocketDesc = 0;
+                break;
+            }
+            
+            if(rc > 0)
+            {
+                mRxDataBuffer += Data(Data::Borrow, (const char*)&mRxBuffer, rc);   
+                while(tryParse());
+            }
+         }
+         else if(rc == 0) // timeout - send keepalive
+         {
+            rc = ::send(mSocketDesc, Symbols::CRLFCRLF, (int)request.size(), 0);
+            if(rc < 0) 
+            {
+               int e = getErrno();
+               // If send is blocking then we must have pending send data - so just ignore error - no need to keepalive
+               if ( e != EAGAIN && e != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
+               {
+                  if(!mShutdown) ErrLog(<< "RegSyncClient: error sending keepalive, err=" << e);
+                  closeSocket(mSocketDesc);
+                  mSocketDesc = 0;
+                  continue;
+               }
+            }
+            //else
+            //{
+            //    InfoLog( << "RegSyncClient: keepalive sent!");
+            //}
+         }
+         else
+         {
+             int e = getErrno();
+             if(!mShutdown) ErrLog(<< "RegSyncClient: error calling select, err=" << e);
+             closeSocket(mSocketDesc);
+             mSocketDesc = 0;
+             break;
          }
       }
    } // end while
@@ -369,6 +423,8 @@ RegSyncClient::processModify(const resip::Uri& aor, ContactList& syncContacts)
    bool found;
    for(; itSync != syncContacts.end(); itSync++)
    {
+       InfoLog(<< "  RegSyncClient::processModify: contact=" << itSync->mContact << ", instance=" << itSync->mInstance << ", regid=" << itSync->mRegId);
+
        // See if contact already exists in currentContacts       
        found = false;
        for(itCurrent = currentContacts.begin(); itCurrent != currentContacts.end(); itCurrent++)
