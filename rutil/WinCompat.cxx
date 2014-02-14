@@ -497,6 +497,10 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    }
    
    delete [] (char *) pIpAddrTable;
+   if(sourceIP.sin_addr.s_addr == 0)
+   {
+      throw Exception("Can't find source address for destination", __FILE__,__LINE__);
+   }
    return GenericIPAddress(sourceIP);
 }
 #endif // !defined(NO_IPHLPAPI)
