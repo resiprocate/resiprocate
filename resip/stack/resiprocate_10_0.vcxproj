@@ -498,6 +498,7 @@
     <ClCompile Include="X509Contents.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AddTransport.hxx" />
     <ClInclude Include="Aor.hxx" />
     <ClInclude Include="ApiCheck.hxx" />
     <ClInclude Include="ApiCheckList.hxx" />

@@ -164,21 +164,7 @@ TransportSelector::isFinished() const
 }
 
 void
-TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport,
-                                 bool immediate)
-{
-   if(immediate)
-   {
-      addTransportInternal(autoTransport);
-   }
-   else
-   {
-      mTransportsToAdd.add(autoTransport.release());
-   }
-}
-
-void
-TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
+TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
 {
    Transport* transport = autoTransport.release();
 
@@ -256,7 +242,7 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
             delete transport;
             return;
          }
-      break;
+         break;
       case TLS:
       case DTLS:
       case WSS:
@@ -285,7 +271,7 @@ TransportSelector::addTransportInternal(std::auto_ptr<Transport> autoTransport)
       {
          transport->setPollGrp(mPollGrp);
       }
-      mSharedProcessTransports.push_back(transport);
+      mTransportsToAdd.add(transport); // Need to add to mSharedProcessTransports from within TransportSelectorThread
    }
    else
    {
@@ -398,11 +384,13 @@ TransportSelector::process()
 void
 TransportSelector::checkTransportAddQueue()
 {
-   std::auto_ptr<Transport> t(mTransportsToAdd.getNext(-1));
-   while(t.get())
+   Transport* t(mTransportsToAdd.getNext(-1));
+   while(t)
    {
-      addTransportInternal(t);
-      t.reset(mTransportsToAdd.getNext(-1));
+      // This ensures we add to the mSharedProcessTransports list from the TransportSelectorThread
+      mSharedProcessTransports.push_back(t);
+
+      t = mTransportsToAdd.getNext(-1);
    }
 }
 
@@ -422,7 +410,7 @@ TransportSelector::poke()
       }
    }
 
-   if(mSelectInterruptor.get() && hasDataToSend())
+   if(mSelectInterruptor.get() /* && hasDataToSend() */)  // removed hasDataToSend call since it is not thread safe
    {
       mSelectInterruptor->handleProcessNotification();
    }
@@ -1160,7 +1148,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 #endif
          }
 
-         target.transportKey=transport->getKey();
+         target.transportKey = transport->getKey();
 
          // !bwc! Deprecated. Stop doing this eventually.
          target.transport=transport;
@@ -1532,6 +1520,31 @@ void TransportSelector::unregisterMarkListener(MarkListener* listener)
    mDns.getMarkManager().unregisterMarkListener(listener);
 }
 
+EncodeStream&
+resip::operator<<(EncodeStream& ostrm, const TransportSelector::TlsTransportKey& tlsTransportKey)
+{
+   if(tlsTransportKey.mVersion == V4)
+   {
+       ostrm << "[ V4 ";
+   }
+   else
+   {
+       ostrm << "[ V6 ";
+   }
+   ostrm << Tuple::toData(tlsTransportKey.mType);
+   ostrm << " domain=";
+   if (tlsTransportKey.mDomain.empty())
+   {
+       ostrm << "<none>";
+   }
+   else 
+   {
+       ostrm << tlsTransportKey.mDomain;
+   }   
+   ostrm << " ]";
+   
+   return ostrm;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

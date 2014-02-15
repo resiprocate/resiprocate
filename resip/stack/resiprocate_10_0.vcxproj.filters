@@ -913,6 +913,9 @@
     <ClInclude Include="WsCookieContextFactory.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AddTransport.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">

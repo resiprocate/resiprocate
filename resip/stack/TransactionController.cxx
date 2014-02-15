@@ -6,6 +6,7 @@
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/AddTransport.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
@@ -109,6 +110,13 @@ TransactionController::process(int timeout)
       {
          // *sigh*
          timeout=-1;
+      }
+
+      // Check if Statistics Manager needs to be polled - note:  all statistic manager polls should happen from the 
+      // TransactionController thread / process loop
+      if(mStack.mStatisticsManagerEnabled)
+      {
+         mStatsManager.process();
       }
 
       // If non-zero is passed for timeout, we understand that the caller is ok
@@ -251,6 +259,12 @@ void
 TransactionController::cancelClientInviteTransaction(const Data& tid)
 {
    mStateMacFifo.add(new CancelClientInviteTransaction(tid));
+}
+
+void 
+TransactionController::addTransport(std::auto_ptr<Transport> transport)
+{
+   mStateMacFifo.add(new AddTransport(transport));
 }
 
 void

@@ -48,21 +48,27 @@ Transport in the FdSet processing loop.  If the Transport returns false for
 shareStackProcessAndSelect(), TransportSelector will call startOwnProcessing
 on Transport add.
 
+Thread Safey Notes - the majority of the access to this class is expected to be from
+the TransactionController Thread.  The TransportSelectorThread itself is used 
+to provide cycles to the actual transports for sending data in their Fifo's and
+receiving data from the wire.  The mSharedProcessTransports list is one member that
+is expected to be accessed from TransportSelector processing loop only , all other 
+members are accessed from the TransactionController processing loop.
 */
 class TransportSelector
 {
    public:
       TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
       virtual ~TransportSelector();
-      /**
-	    @retval true	Some transport in the transport list has data to send
-	    @retval false	No transport in the transport list has data to send
-	  */
-      bool hasDataToSend() const;
 
       /**
-		Shuts down all transports.
-	  */
+        @retval true	Some transport in the transport list has data to send
+        @retval false	No transport in the transport list has data to send
+        Should only be called from TransportSelector processing loop.
+      */
+      bool hasDataToSend() const;
+
+      /// Shuts down all transports.
       void shutdown();
 
       /// Returns true if all Transports have their buffers cleared, false otherwise.
@@ -88,7 +94,7 @@ class TransportSelector
       /// Causes transport process loops to be interrupted if there is stuff in
       /// their transmit fifos.
       void poke();
-      void addTransport( std::auto_ptr<Transport> transport, bool immediate);
+      void addTransport(std::auto_ptr<Transport> transport);
 
       DnsResult* createDnsResult(DnsHandler* handler);
 
@@ -136,55 +142,15 @@ class TransportSelector
 
       void setCongestionManager(CongestionManager* manager)
       {
-         for(TransportList::iterator i=mSharedProcessTransports.begin();
-               i!=mSharedProcessTransports.end();++i)
-         {
-            (*i)->setCongestionManager(manager);
-         }
-
-         for(TransportList::iterator i=mHasOwnProcessTransports.begin();
-               i!=mHasOwnProcessTransports.end();++i)
+         for(TransportList::iterator i=mTransports.begin();
+               i!=mTransports.end();++i)
          {
             (*i)->setCongestionManager(manager);
          }
       }
 
-   private:
-      void addTransportInternal( std::auto_ptr<Transport> transport);
-      void checkTransportAddQueue();
-      Connection* findConnection(const Tuple& dest) const;
-      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
-      Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
-      Transport* findTransportByDest(const Tuple& dest);
-      Transport* findTransportByVia(SipMessage* msg, const Tuple& dest,
-        Tuple& src) const;
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
-      Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
-
-      DnsInterface mDns;
-      Fifo<TransactionMessage>& mStateMacFifo;
-      Security* mSecurity;// for computing identity header
-
-      // specific port and interface
-      typedef std::map<Tuple, Transport*> ExactTupleMap;
-      ExactTupleMap mExactTransports;
-
-      // specific port, ANY interface
-      typedef std::map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
-      AnyInterfaceTupleMap mAnyInterfaceTransports;
-
-      // ANY port, specific interface
-      typedef std::map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
-      AnyPortTupleMap mAnyPortTransports;
-
-      // ANY port, ANY interface
-      typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
-      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
-
-      std::vector<Transport*> mTransports; // owns all Transports
-
       /**
-         @internal
+         @internal - public only for stream operator access
       */
       class TlsTransportKey
       {
@@ -230,13 +196,44 @@ class TransportSelector
          private:
             TlsTransportKey();
       };
-      
-      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
-      
-      TlsTransportMap mTlsTransports;
+
+   private:
+      void checkTransportAddQueue();
+      Connection* findConnection(const Tuple& dest) const;
+      Transport* findTransportBySource(Tuple& src, const SipMessage* msg) const;
+      Transport* findLoopbackTransportBySource(bool ignorePort, Tuple& src) const;
+      Transport* findTransportByDest(const Tuple& dest);
+      Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
+      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
+      Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+
+      DnsInterface mDns;
+      Fifo<TransactionMessage>& mStateMacFifo;
+      Security* mSecurity;// for computing identity header
+
+      // specific port and interface
+      typedef std::map<Tuple, Transport*> ExactTupleMap;
+      ExactTupleMap mExactTransports;
+
+      // specific port, ANY interface
+      typedef std::map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
+      AnyInterfaceTupleMap mAnyInterfaceTransports;
+
+      // ANY port, specific interface
+      typedef std::map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
+      AnyPortTupleMap mAnyPortTransports;
+
+      // ANY port, ANY interface
+      typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
+      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
       typedef std::vector<Transport*> TransportList;
-      TransportList mSharedProcessTransports;
+      TransportList mTransports; // owns all Transports
+
+      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
+      TlsTransportMap mTlsTransports;
+
+      TransportList mSharedProcessTransports;  // Warning - only access this from the TransportSelector process loop / thread
       TransportList mHasOwnProcessTransports;
 
       typedef std::multimap<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> TypeToTransportMap;
@@ -265,6 +262,9 @@ class TransportSelector
       friend class TestTransportSelector;
       friend class SipStack; // for debug only
 };
+
+EncodeStream&
+operator<<(EncodeStream& ostrm, const TransportSelector::TlsTransportKey& tlsTransportKey);
 
 }
 

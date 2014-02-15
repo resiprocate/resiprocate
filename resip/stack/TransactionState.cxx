@@ -4,6 +4,7 @@
 
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
+#include "resip/stack/AddTransport.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
@@ -416,7 +417,7 @@ TransactionState::process(TransactionController& controller,
          return;
       }
 
-      // TODO - add a message for closing a connection
+      // TODO - add a message for closing a connection - .slg. not really needed terminateFlow does the same thing
       //CloseConnection* closeConnection = dynamic_cast<CloseConnection*>(message);
       //if(closeConnection)
       //{
@@ -430,6 +431,14 @@ TransactionState::process(TransactionController& controller,
       {
          controller.mTuSelector.add(pong);
          delete pong;
+         return;
+      }
+
+      AddTransport* addTransport = dynamic_cast<AddTransport*>(message);
+      if(addTransport)
+      {
+         controller.mTransportSelector.addTransport(addTransport->getTransport());
+         delete addTransport;
          return;
       }
 

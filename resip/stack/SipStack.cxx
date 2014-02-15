@@ -475,8 +475,16 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
        transport->setCongestionManager(mCongestionManager);
    }
 
-   // Last flag is addImmediately - pass as true only if processing hasn't started yet
-   mTransactionController->transportSelector().addTransport(transport, mProcessingHasStarted ? false : true); 
+   if(mProcessingHasStarted)
+   {
+       // Stack is running.  Need to queue add request for TransactionController Thread
+       mTransactionController->addTransport(transport);
+   }
+   else
+   {
+       // Stack isn't running yet - just add transport directly on transport selection from this thread
+       mTransactionController->transportSelector().addTransport(transport); 
+   }
 }
 
 Fifo<TransactionMessage>&
@@ -840,11 +848,6 @@ SipStack::setFallbackPostNotify(AsyncProcessHandler *handler)
 void
 SipStack::processTimers()
 {
-   if(!mShuttingDown && mStatisticsManagerEnabled)
-   {
-      mStatsManager.process();
-   }
-
    if(!mTransactionControllerThread)
    {
       mTransactionController->process();
@@ -1041,7 +1044,7 @@ SipStack::dump(EncodeStream& strm)  const
         // !slg! TODO - There is technically a threading concern with the following three lines and the runtime addTransport call
         << " Exact Transports=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
         << " Any Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl
-        << " TLS Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl;
+        << " TLS Transports=" << Inserter(this->mTransactionController->mTransportSelector.mTlsTransports) << std::endl;
    return strm;
 }
 

@@ -97,6 +97,7 @@ class TransactionController
 
       void abandonServerTransaction(const Data& tid);
       void cancelClientInviteTransaction(const Data& tid);
+      void addTransport(std::auto_ptr<Transport> transport);
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
