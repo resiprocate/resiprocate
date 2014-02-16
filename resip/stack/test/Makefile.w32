@@ -1,7 +1,7 @@
 # This makefile can be called by VS.NET 2003 nmake, after all of the resiprocate libraries (SSL-Debug) have already been compiled via the GUI 
 
 CFLAGS=/Od /I "../../" /I "../../../" /I "../../../contrib/OpenSSL/include" /I "../../../contrib/openssl/inc32" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "USE_IPV6" /D "USE_SSL" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Wp64 /Zi /TP
-RESIPLIBS=..\..\..\rutil\SSL-Debug\rutil.lib ..\SSL-Debug\resiprocate.lib ..\..\..\contrib\ares\Debug\ares.lib
+RESIPLIBS=..\..\..\Win32\SSL-Debug\rutil.lib ..\..\..\Win32\SSL-Debug\resiprocate.lib ..\..\..\Win32\SSL-Debug\ares.lib
 LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib winmm.lib Iphlpapi.lib Dnsapi.lib crypt32.lib "..\..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib" "..\..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
 #LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib winmm.lib Iphlpapi.lib Dnsapi.lib crypt32.lib "..\..\..\contrib\openssl\out32.dbg\libeay32.lib" "..\..\..\contrib\openssl\out32.dbg\ssleay32.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
 
