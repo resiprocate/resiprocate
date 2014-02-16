@@ -1,7 +1,7 @@
 # This makefile can be called by VS.NET 2003 nmake, after all of the resiprocate libraries have already been compiled via the GUI
 
 CFLAGS=/Od /I "../../" /I "../../../" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Wp64 /Zi /TP
-RESIPLIBS=..\Debug\rutil.lib 
+RESIPLIBS=..\..\Win32\Debug\rutil.lib 
 LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
 
 all: \
