@@ -22,8 +22,6 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
                        unsigned transportFlags = 0);
       virtual  ~TcpBaseTransport();
 
-
-
       virtual void processPollEvent(FdPollEventMask mask);
       virtual void process(FdSet& fdset);
       virtual void buildFdSet( FdSet& fdset);

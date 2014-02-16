@@ -84,9 +84,10 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
    DebugLog (<< "No compression library available: " << this);
 #endif
 
-   // deprecated; stop doing this eventually
-   mWho.transport=mTransport;
-   mWho.transportKey=mTransport ? mTransport->getKey() : 0;
+   if(mTransport) 
+   {
+      mWho.mTransportKey = mTransport->getKey();
+   }
 }
 
 ConnectionBase::~ConnectionBase()
@@ -177,7 +178,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          }
 
          assert(mTransport);
-         mMessage = new SipMessage(mTransport);
+         mMessage = new SipMessage(&mTransport->getTuple());
          
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
@@ -212,7 +213,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
-            mConnState=NewMessage;
+            mConnState = NewMessage;
             return false;
          }
 
@@ -223,7 +224,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
-            mConnState=NewMessage;
+            mConnState = NewMessage;
             return false;
          }
 
@@ -239,7 +240,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
-            mConnState=NewMessage;
+            mConnState = NewMessage;
             return false;
          }
 
@@ -603,13 +604,15 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       return false;
    }
 
-   mMessage = new SipMessage(mWho.transport);
+   assert(mTransport);
+   mMessage = new SipMessage(&mTransport->getTuple());
    assert(mMessage);
 
-   mMessage->setSource(mWho);
-   mMessage->setTlsDomain(mWho.transport->tlsDomain());
+   mMessage->setSource(mWho);   
+   mMessage->setTlsDomain(mTransport->tlsDomain());
 
-   if (!scanMsgHeader(bytesRead)) {
+   if (!scanMsgHeader(bytesRead)) 
+   {
       return false;
    }
 
@@ -788,10 +791,11 @@ ConnectionBase::wsProcessData(int bytesRead)
          continue;
       }
 
-      mMessage = new SipMessage(mWho.transport);
+      assert(mTransport);
+      mMessage = new SipMessage(&mTransport->getTuple());
 
       mMessage->setSource(mWho);
-      mMessage->setTlsDomain(mWho.transport->tlsDomain());
+      mMessage->setTlsDomain(mTransport->tlsDomain());
 
 #ifdef USE_SSL
       // Set TlsPeerName if message is from TlsConnection

@@ -24,7 +24,6 @@
 #include "rutil/HashMap.hxx"
 #include "rutil/MD5Stream.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/stack/Transport.hxx"
 
 
 using std::auto_ptr;
@@ -34,8 +33,7 @@ using namespace resip;
 
 Tuple::Tuple() : 
    mFlowKey(0),
-   transportKey(0),
-   transport(0),
+   mTransportKey(0),
    onlyUseExistingConnection(false),
    mTransportType(UNKNOWN_TRANSPORT)
 {
@@ -47,8 +45,7 @@ Tuple::Tuple() :
 Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type, 
              const Data& targetDomain) : 
    mFlowKey(0),
-   transportKey(0),
-   transport(0),
+   mTransportKey(0),
    onlyUseExistingConnection(false),
    mTransportType(type),
    mTargetDomain(targetDomain)
@@ -63,8 +60,7 @@ Tuple::Tuple(const Data& printableAddr,
              TransportType type,
              const Data& targetDomain) :
    mFlowKey(0),
-   transportKey(0),
-   transport(0),
+   mTransportKey(0),
    onlyUseExistingConnection(false),
    mTransportType(type),
    mTargetDomain(targetDomain)
@@ -115,8 +111,7 @@ Tuple::Tuple(const Data& printableAddr,
              TransportType ptype,
              const Data& targetDomain) : 
    mFlowKey(0),
-   transportKey(0),
-   transport(0),
+   mTransportKey(0),
    onlyUseExistingConnection(false),
    mTransportType(ptype),
    mTargetDomain(targetDomain)
@@ -155,8 +150,7 @@ Tuple::Tuple(const in_addr& ipv4,
              TransportType ptype,
              const Data& targetDomain)
      :mFlowKey(0),
-     transportKey(0),
-     transport(0),
+     mTransportKey(0),
      onlyUseExistingConnection(false),
      mTransportType(ptype),
      mTargetDomain(targetDomain)
@@ -173,8 +167,7 @@ Tuple::Tuple(const in6_addr& ipv6,
              TransportType ptype,
              const Data& targetDomaina)
      :mFlowKey(0),
-     transportKey(0),
-     transport(0),
+     mTransportKey(0),
      onlyUseExistingConnection(false),
      mTransportType(ptype),
      mTargetDomain(targetDomaina)
@@ -190,8 +183,7 @@ Tuple::Tuple(const struct sockaddr& addr,
              TransportType ptype,
              const Data& targetDomain) : 
    mFlowKey(0),
-   transportKey(0),
-   transport(0),
+   mTransportKey(0),
    onlyUseExistingConnection(false),
    mSockaddr(addr),
    mTransportType(ptype),
@@ -266,7 +258,7 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
 
    rawToken[0] = tuple.mFlowKey;
 
-   rawToken[1] = tuple.transportKey;
+   rawToken[1] = tuple.mTransportKey;
 
    // 0xXXXX0000
    rawToken[2] += (tuple.getPort() << 16);
@@ -380,7 +372,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
       Tuple result(resip::Data::Empty, port, type);
 #endif
       result.mFlowKey=(FlowKey)mFlowKey;
-      result.transportKey = (TransportKey)transportKey;
+      result.mTransportKey = (TransportKey)transportKey;
       result.onlyUseExistingConnection=isRealFlow;
       return result;
    }
@@ -390,7 +382,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    memcpy(&address,&rawToken[3],4);
    Tuple result(address,port,type);
    result.mFlowKey=(FlowKey)mFlowKey;
-   result.transportKey = (TransportKey)transportKey;
+   result.mTransportKey = (TransportKey)transportKey;
    result.onlyUseExistingConnection=isRealFlow;
    return result;
 }
@@ -696,8 +688,14 @@ resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
 
    ostrm << " " << Tuple::toData(tuple.mTransportType);
    ostrm << " target domain=";
-   if (tuple.mTargetDomain.empty()) ostrm << "unspecified";
-   else ostrm << tuple.mTargetDomain;
+   if (tuple.mTargetDomain.empty())
+   {
+       ostrm << "<none>";
+   }
+   else 
+   {
+       ostrm << tuple.mTargetDomain;
+   }
    
    ostrm << " mFlowKey=" << tuple.mFlowKey
          << " ]";

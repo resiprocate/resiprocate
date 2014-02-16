@@ -877,12 +877,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             }
          }
 
-         target.transportKey=transport ? transport->getKey() : 0;
+         target.mTransportKey = transport ? transport->getKey() : 0;
 
          // .bwc. Topmost Via is only filled out in the request case. Also, if
          // we don't have a transport at this point, we're going to fail,
          // so don't bother doing the work.
-         if(target.transportKey)
+         if(target.mTransportKey)
          {
             Via& topVia(msg->header(h_Vias).front());
             topVia.remove(p_maddr); // !jf! why do this?
@@ -1052,8 +1052,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                      if (!contact.exists(p_Instance) &&
                          !contact.uri().exists(p_sigcompId))
                      {
-                        contact.uri().param(p_sigcompId)
-                          = mCompression.getSigcompId();
+                        contact.uri().param(p_sigcompId) = mCompression.getSigcompId();
                      }
                   }
                }
@@ -1148,10 +1147,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 #endif
          }
 
-         target.transportKey = transport->getKey();
-
-         // !bwc! Deprecated. Stop doing this eventually.
-         target.transport=transport;
+         assert(target.mTransportKey == transport->getKey());
 
          // Call back anyone who wants to perform outbound decoration
          msg->callOutboundDecorators(source, target,remoteSigcompId);
@@ -1206,7 +1202,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 void
 TransportSelector::retransmit(const SendData& data)
 {
-   assert(data.destination.transportKey);
+   assert(data.destination.mTransportKey);
    Transport* transport = findTransportByDest(data.destination);
 
    // !jf! The previous call to transmit may have blocked or failed (It seems to
@@ -1304,11 +1300,11 @@ TransportSelector::enableFlowTimer(const resip::Tuple& flow)
 Transport*
 TransportSelector::findTransportByDest(const Tuple& target)
 {
-   if(target.transportKey)
+   if(target.mTransportKey)
    {
-      if(target.transportKey <= mTransports.size())
+      if(target.mTransportKey <= mTransports.size())
       {
-         return mTransports[target.transportKey-1];
+         return mTransports[target.mTransportKey-1];
       }
    }
    else

@@ -27,24 +27,26 @@ using namespace std;
 
 bool SipMessage::checkContentLength=true;
 
-SipMessage::SipMessage(const Transport* fromWire)
+SipMessage::SipMessage(const Tuple *receivedTransportTuple)
    : mIsDecorated(false),
      mIsBadAck200(false),     
-     mIsExternal(fromWire != 0),
+     mIsExternal(receivedTransportTuple != 0),  // may be modified later by setFromTU or setFromExternal
      mHeaders(StlPoolAllocator<HeaderFieldValueList*, PoolBase >(&mPool)),
 #ifndef __SUNPRO_CC
      mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList*>, PoolBase >(&mPool)),
 #else
      mUnknownHeaders(),
 #endif
-     mTransport(fromWire),
-     mRFC2543TransactionId(),
      mRequest(false),
      mResponse(false),
      mInvalid(false),
      mCreatedTime(Timer::getTimeMicroSec()),
      mTlsDomain(Data::Empty)
 {
+   if(receivedTransportTuple)
+   {
+       mReceivedTransportTuple = *receivedTransportTuple;
+   }
    // !bwc! TODO make this tunable
    mHeaders.reserve(16);
    clear();
@@ -114,7 +116,7 @@ SipMessage::init(const SipMessage& rhs)
    mIsDecorated = rhs.mIsDecorated;
    mIsBadAck200 = rhs.mIsBadAck200;
    mIsExternal = rhs.mIsExternal;
-   mTransport = rhs.mTransport;
+   mReceivedTransportTuple = rhs.mReceivedTransportTuple;
    mSource = rhs.mSource;
    mDestination = rhs.mDestination;
    mRFC2543TransactionId = rhs.mRFC2543TransactionId;
@@ -247,10 +249,11 @@ SipMessage::freeMem(bool leaveResponseStuff)
 }
 
 SipMessage*
-SipMessage::make(const Data& data,  bool isExternal)
+SipMessage::make(const Data& data, bool isExternal)
 {
-   Transport* external = (Transport*)(0xFFFF);
-   SipMessage* msg = new SipMessage(isExternal ? external : 0);
+   Tuple fakeWireTuple;
+   fakeWireTuple.setType(UDP);
+   SipMessage* msg = new SipMessage(isExternal ? &fakeWireTuple : 0);
 
    size_t len = data.size();
    char *buffer = new char[len + 5];

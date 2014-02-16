@@ -14,6 +14,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "rutil/Random.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -599,14 +600,28 @@ Proxy::isMyUri(const Uri& uri) const
    return ret;
 }
 
-const resip::NameAddr& 
-Proxy::getRecordRoute(const Transport* transport) const
+void 
+Proxy::addTransportRecordRoute(unsigned int transportKey, const resip::NameAddr& recordRoute)
 {
-   assert(transport);
-   if(transport->hasRecordRoute())
+   Lock lock(mTransportRecordRouteMutex);
+   mTransportRecordRoutes[transportKey] = recordRoute;
+}
+
+void Proxy::removeTransportRecordRoute(unsigned int transportKey)
+{
+   Lock lock(mTransportRecordRouteMutex);
+   mTransportRecordRoutes.erase(transportKey);
+}
+
+const resip::NameAddr& 
+Proxy::getRecordRoute(unsigned int transportKey) const
+{
+   Lock lock(mTransportRecordRouteMutex);
+   TransportRecordRouteMap::const_iterator it = mTransportRecordRoutes.find(transportKey);
+   if(it != mTransportRecordRoutes.end())
    {
       // Transport specific record-route found
-      return transport->getRecordRoute();
+      return it->second;
    }
    return mRecordRoute;
 }

@@ -425,7 +425,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          }
       }
 
-      if(msg.isExternal())
+      if(msg.isFromWire())
       {
          resip::TransportType receivedTransport = toTransportType(
             msg.header(h_Vias).front().transport());
@@ -623,7 +623,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   return;
                }
             }
-            else if (code == 408 || (code == 503 && msg.getReceivedTransport() == 0))
+            else if (code == 408 || (code == 503 && !msg.isFromWire()))
             {
                int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
             

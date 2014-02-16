@@ -431,6 +431,8 @@ Helper::makeResponse(SipMessage& response,
    }
    else
    {
+       // This makes a response to an internally generated request look like it's 
+       // external even though it isn't
        response.setFromExternal();
    }
 

@@ -33,7 +33,6 @@ namespace resip
 class Contents;
 class ExtensionHeader;
 class SecurityAttributes;
-class Transport;
 
 /**
    @ingroup resip_crit
@@ -162,7 +161,7 @@ class SipMessage : public TransactionMessage
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 #endif
 
-      explicit SipMessage(const Transport* fromWire = 0);
+      explicit SipMessage(const Tuple *receivedTransport = 0);
       /// @todo .dlb. public, allows pass by value to compile.
       SipMessage(const SipMessage& message);
 
@@ -228,13 +227,31 @@ class SipMessage : public TransactionMessage
          mIsExternal = true;
       }
       
-      /** @brief Check if SipMessage came off the wire.
-      
-      @return true if the message came from an IP interface, false otherwise.
+      /** 
+         @brief Check if SipMessage is to be treated as it came off the wire.
+
+         @return true if the message came from an IP interface or if it was 
+                 an internally generated response to an internally generated 
+                 request (ie: 408), false otherwise.
       */
       inline bool isExternal() const
       {
          return mIsExternal;
+      }
+
+      /** 
+         @brief Check if SipMessage came off the wire.
+      
+         @note differs from isExternal(), since isExternal() also returns true 
+               for internally generated responses to internally generate requests 
+               (ie: 408, etc.).  isFromWire only ever returns true if the message
+               actually came off the wire.
+
+         @return true if the message came from an IP interface, false otherwise.
+      */
+      inline bool isFromWire() const
+      {
+         return mReceivedTransportTuple.getType() != UNKNOWN_TRANSPORT;
       }
       
       /// @brief Check if SipMessage is a client transaction
@@ -490,10 +507,11 @@ class SipMessage : public TransactionMessage
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
-      /// @brief Interface used to determine which Transport was used to receive a
-      /// particular SipMessage. If the SipMessage was not received from the
-      /// wire, getReceivedTransport() returns 0. Set in constructor
-      const Transport* getReceivedTransport() const { return mTransport; }
+      // Returns the source tuple for the transport that the message was received from
+      // only makes sense for messages received from the wire.  Differs from Source
+      // since it contains the transport bind address instead of the actual source 
+      // address.
+      const Tuple& getReceivedTransportTuple() const { return mReceivedTransportTuple; }
 
       // Returns the source tuple that the message was received from
       // only makes sense for messages received from the wire
@@ -628,7 +646,9 @@ class SipMessage : public TransactionMessage
          return new (ptr) ParserContainer<T>(hfvs, type, mPool);
       }
 
-      // indicates this message came from the wire, set by the Transport
+      // indicates this message came from the wire or we want it to look like it 
+      // came from the wire (ie. internally generated responses to an internally 
+      // generated request), set by the Transport and setFromTu and setFromExternal APIs
       bool mIsExternal;
 
       // !bwc! Would be nice to tweak this to automatically make SipMessage 4KB,
@@ -646,9 +666,10 @@ class SipMessage : public TransactionMessage
 
       // raw text corresponding to each unknown header
       UnknownHeaders mUnknownHeaders;
-  
-      // !jf!
-      const Transport* mTransport;
+
+      // For messages received from the wire, this indicates information about 
+      // the transport the message was received on
+      Tuple mReceivedTransportTuple;
 
       // For messages received from the wire, this indicates where it came
       // from. Can be used to get to the Transport and/or reliable Connection

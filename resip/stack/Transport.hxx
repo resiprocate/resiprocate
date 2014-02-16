@@ -73,8 +73,7 @@ class Transport : public FdSetIOObserver
 {
    public:
 
-  
-      /**
+       /**
          @brief General exception class for Transport.
 
          This would be thrown if there was an attempt to bind to a port
@@ -347,22 +346,13 @@ class Transport : public FdSetIOObserver
       // set the receive buffer length (SO_RCVBUF)
       virtual void setRcvBufLen(int buflen) { };	// make pure?
 
-      // Storing and retrieving transport specific record-route header
-      virtual void setRecordRoute(const NameAddr& recordRoute) { mRecordRoute = recordRoute; mHasRecordRoute = true; }
-      virtual bool hasRecordRoute() const { return mHasRecordRoute; }
-      virtual const NameAddr& getRecordRoute() const { assert(mHasRecordRoute); return mRecordRoute; }
-
-      inline unsigned int getKey() const {return mKey;} 
+      inline unsigned int getKey() const {return mTuple.mTransportKey;} 
+      inline void setKey(unsigned int pKey) { mTuple.mTransportKey = pKey;} // should only be called once after creation
 
    protected:
-      friend class TransportSelector;
-      inline void setKey(unsigned int pKey) { mKey = pKey;}
 
       Data mInterface;
       Tuple mTuple;
-      NameAddr mRecordRoute;
-      bool mHasRecordRoute;
-      unsigned int mKey;
 
       CongestionManager* mCongestionManager;
       ProducerFifoBuffer<TransactionMessage> mStateMachineFifo; // passed in

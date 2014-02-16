@@ -523,7 +523,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    // stuff.
 
    // only add record route if configured to do so
-   if(!mRequestContext.mProxy.getRecordRoute(orig.getReceivedTransport()).uri().host().empty())
+   const NameAddr& receivedTransportRecordRoute = mRequestContext.mProxy.getRecordRoute(orig.getSource().mTransportKey);
+   if(!receivedTransportRecordRoute.uri().host().empty())
    {
       if (!inDialog &&  // only for dialog-creating request
           (request.method() == INVITE ||
@@ -531,13 +532,15 @@ ResponseContext::beginClientTransaction(repro::Target* target)
            request.method() == REFER))
       {
          insertRecordRoute(request,
-                           orig.getReceivedTransport(),
+                           orig.getReceivedTransportTuple(),
+                           receivedTransportRecordRoute,
                            target);
       }
       else if(request.method()==REGISTER)
       {
          insertRecordRoute(request,
-                           orig.getReceivedTransport(),
+                           orig.getReceivedTransportTuple(),
+                           receivedTransportRecordRoute,
                            target,
                            true /* do Path instead */);
       }
@@ -591,7 +594,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
 void
 ResponseContext::insertRecordRoute(SipMessage& outgoing,
-                                   const Transport* receivedTransport,
+                                   const resip::Tuple& receivedTransportTuple,
+                                   const resip::NameAddr& receivedTransportRecordRoute, 
                                    Target* target,
                                    bool doPathInstead)
 {
@@ -607,31 +611,31 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
       resip::NameAddr rt;
       if(inboundFlowToken.empty())
       {
-         rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
+         rt = receivedTransportRecordRoute;
       }
       else
       {
-         if(isSecure(receivedTransport->getTuple().getType()))
+         if(isSecure(receivedTransportTuple.getType()))
          {
             // .bwc. Debatable. Should we be willing to reuse a TLS connection
             // at the behest of a Route header with no hostname in it?
-            rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
+            rt = receivedTransportRecordRoute;
             rt.uri().scheme() = "sips";
          }
          else
          {
-            if(receivedTransport->getTuple().isAnyInterface())
+            if(receivedTransportTuple.isAnyInterface())
             {
-               rt=mRequestContext.mProxy.getRecordRoute(receivedTransport);
+               rt = receivedTransportRecordRoute;
             }
             else
             {
-               rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport->getTuple());
+               rt.uri().host()=resip::Tuple::inet_ntop(receivedTransportTuple);
             }
-            rt.uri().port()=receivedTransport->getTuple().getPort();
-            rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(receivedTransport->getTuple().getType());
+            rt.uri().port() = receivedTransportTuple.getPort();
+            rt.uri().param(resip::p_transport) = resip::Tuple::toDataLower(receivedTransportTuple.getType());
          }
-         rt.uri().user()=inboundFlowToken;
+         rt.uri().user() = inboundFlowToken;
       }
       Helper::massageRoute(outgoing,rt);
 
@@ -678,7 +682,8 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
    {
       std::auto_ptr<resip::MessageDecorator> rrDecorator(
                                  new RRDecorator(mRequestContext.mProxy,
-                                                receivedTransport,
+                                                receivedTransportTuple,
+                                                receivedTransportRecordRoute,
                                                 recordRouted,
                                                 !inboundFlowToken.empty(),
                                                 mRequestContext.mProxy.getRecordRouteForced(),

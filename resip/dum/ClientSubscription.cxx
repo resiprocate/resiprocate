@@ -183,7 +183,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
    }
    else if (!mEnded &&
             (statusCode == 408 ||
-             (statusCode == 503 && msg.getReceivedTransport() == 0) ||
+             (statusCode == 503 && !msg.isFromWire()) ||
              ((statusCode == 413 ||
                statusCode == 480 ||
                statusCode == 486 ||

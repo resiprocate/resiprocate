@@ -2366,10 +2366,9 @@ TransactionState::handleSync(DnsResult* result)  // !slg! it is strange that we 
          case DnsResult::Available:
             mPendingOperation=None;
             mTarget = mDnsResult->next();
-            assert( mTarget.transport==0 );
-            // below allows TU to which transport we send on
+            // below allows TU to know which transport we send on
             // (The Via mechanism for setting transport doesn't work for TLS)
-            mTarget.transport = mNextTransmission->getDestination().transport;
+            mTarget.mTransportKey = mNextTransmission->getDestination().mTransportKey;
             processReliability(mTarget.getType());
             sendCurrentToWire();
             break;
@@ -2646,8 +2645,7 @@ TransactionState::sendToTU(TransactionMessage* msg)
             
             break;
          case 408:
-            if(sipMsg->getReceivedTransport() == 0 && 
-                  (mState == Trying || mState==Calling))  // only greylist if internally generated and we haven't received any responses yet
+            if(!sipMsg->isFromWire() && (mState == Trying || mState==Calling))  // only greylist if internally generated and we haven't received any responses yet
             {
                // greylist last target.
                // ?bwc? How long do we greylist this for? Probably should make

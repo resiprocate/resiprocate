@@ -25,13 +25,12 @@ namespace resip
 {
 
 struct GenericIPAddress;
-class Transport;
 
 // WARNING!!
 // When you change this structure, make sure to update the hash function,
-// operator== and operator< to be consistent with the new structure. For
-// instance, the Connection* and Transport* change value in the Tuple over
-// its lifetime so they must not be included in the hash or comparisons. 
+// operator== and operator< to be consistent with the new structure. Be
+// careful not to include members that change value in the Tuple over
+// its lifetime (they must not be included in the hash or comparisons). 
 
 typedef unsigned long FlowKey;
 typedef unsigned long TransportKey;
@@ -53,8 +52,6 @@ typedef unsigned long TransportKey;
 
    Also included are some comparator classes that can be used for
    containers of Tuple.
-
-
 */
 class Tuple
 {
@@ -117,10 +114,10 @@ class Tuple
       void setSockaddr(const GenericIPAddress &);
 
       TransportType getType() const { return mTransportType; }
-      void setType(TransportType type) { mTransportType = type ;}
+      void setType(TransportType type) { mTransportType = type; }
       void setPort(int port);
       int getPort() const;
-      inline FlowKey getFlowKey() const { return mFlowKey;} 
+      inline FlowKey getFlowKey() const { return mFlowKey; } 
 
       /// @deprecated use ipVersion()
       /// @todo !dcm! -- should deprecate asap
@@ -179,10 +176,8 @@ class Tuple
       /// (It is highly recommended that these ids are unique across all
       /// instances of a transport type)
       FlowKey mFlowKey;
-      TransportKey transportKey;
+      TransportKey mTransportKey;
 
-      // deprecate
-      Transport* transport;
       bool onlyUseExistingConnection;
 
       ///  @brief compares this tuple with the one passed in for family, port

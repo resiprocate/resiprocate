@@ -30,7 +30,8 @@ using resip::p_comp;
 namespace repro
 {
 RRDecorator::RRDecorator(const Proxy& proxy,
-                         const resip::Transport* receivedTransport,
+                         const resip::Tuple& receivedTransportTuple,
+                         const resip::NameAddr &receivedTransportRecordRoute,
                          bool alreadySingleRecordRouted,
                          bool hasInboundFlowToken,
                          bool forceRecordRouteEnabled,
@@ -43,7 +44,8 @@ RRDecorator::RRDecorator(const Proxy& proxy,
    mForceRecordRouteEnabled(forceRecordRouteEnabled),
    mDoPath(doPath),
    mIsOriginalSenderBehindNAT(isOriginalSenderBehindNAT),
-   mReceivedTransport(receivedTransport)
+   mReceivedTransportTuple(receivedTransportTuple),
+   mReceivedTransportRecordRoute(receivedTransportRecordRoute)
 {}
 
 RRDecorator::~RRDecorator()
@@ -123,7 +125,7 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
    {
       if(isSecure(destination.getType()))
       {
-         rt = mProxy.getRecordRoute(destination.transport);
+         rt = mProxy.getRecordRoute(destination.mTransportKey);
          rt.uri().scheme()="sips";
       }
       else
@@ -138,14 +140,14 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
       // token in a Record-Route.
       resip::Helper::massageRoute(request,rt);
       resip::Data binaryFlowToken;
-      resip::Tuple::writeBinaryToken(destination,binaryFlowToken, Proxy::FlowTokenSalt);
+      resip::Tuple::writeBinaryToken(destination, binaryFlowToken, Proxy::FlowTokenSalt);
       
       rt.uri().user()=binaryFlowToken.base64encode();
    }
    else
    {
       // No need for a flow-token; just use an ordinary record-route.
-      rt = mProxy.getRecordRoute(destination.transport);
+      rt = mProxy.getRecordRoute(destination.mTransportKey);
       resip::Helper::massageRoute(request,rt);
    }
 
@@ -186,7 +188,7 @@ RRDecorator::doubleRecordRoute(resip::SipMessage& request,
    // We only use this on transport switch when we have not yet Record-Routed.
    // If we needed a flow-token in the inbound Record-Route, it would have been 
    // added already.
-   resip::NameAddr rt(mProxy.getRecordRoute(mReceivedTransport));
+   resip::NameAddr rt(mReceivedTransportRecordRoute);
    resip::Helper::massageRoute(request,rt);
    if(mDoPath)
    {
@@ -206,15 +208,15 @@ RRDecorator::isTransportSwitch(const resip::Tuple& sendingFrom)
    if(mForceRecordRouteEnabled)
    {
       // If we are forcing record routes to be added, then DRR on any transport switch
-      return mReceivedTransport != sendingFrom.transport;
+      return mReceivedTransportTuple.mTransportKey != sendingFrom.mTransportKey;
    }
    else
    {
       // If record routing is not forced then only DRR if we are switching transport types or
       // protocol versions, since the interfaces themselves may all be equally reachable
       // !slg! - could make this behavior more configurable
-      return sendingFrom.getType() != mReceivedTransport->getTuple().getType() ||
-             sendingFrom.ipVersion() != mReceivedTransport->getTuple().ipVersion();
+      return sendingFrom.getType() != mReceivedTransportTuple.getType() ||
+             sendingFrom.ipVersion() != mReceivedTransportTuple.ipVersion();
    }
 }
 

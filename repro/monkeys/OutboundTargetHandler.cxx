@@ -53,7 +53,7 @@ OutboundTargetHandler::process(RequestContext & rc)
             flowDeadCode=410;
          }
          if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode ||  // Remote or locally(stack) generate 430
-            (sip->getReceivedTransport() == 0 &&
+            (!sip->isFromWire() &&
              (sip->header(resip::h_StatusLine).responseCode()==408 ||         // Locally (stack) generated 408 or 503
               sip->header(resip::h_StatusLine).responseCode()==503)))
          {

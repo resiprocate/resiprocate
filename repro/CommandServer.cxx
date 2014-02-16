@@ -663,7 +663,7 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
       {
          if(!rr.uri().host().empty())
          {
-            transport->setRecordRoute(rr);
+            mReproRunner.getProxy()->addTransportRecordRoute(transport->getKey(), rr);
          }
          if(rcvBufLen)
          {

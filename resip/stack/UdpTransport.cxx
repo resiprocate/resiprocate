@@ -379,7 +379,7 @@ UdpTransport::processRxRecv(char*& buffer, Tuple& sender)
       if ( len == SOCKET_ERROR )
       {
          int err = getErrno();
-         if ( err != EWOULDBLOCK  )
+         if ( err != EAGAIN && err != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
          {
             error( err );
          }
@@ -557,7 +557,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
    //DebugLog ( << "UDP Rcv : " << len << " b" );
    //DebugLog ( << Data(buffer, len).escaped().c_str());
 
-   SipMessage* message = new SipMessage(this);
+   SipMessage* message = new SipMessage(&mTuple);
 
    // set the received from information into the received= parameter in the
    // via
@@ -565,11 +565,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
    // It is presumed that UDP Datagrams are arriving atomically and that
    // each one is a unique SIP message
 
-
    // Save all the info where this message came from
-   sender.transport = this;
-   sender.transportKey = getKey();
-   sender.mFlowKey=mTuple.mFlowKey;
    message->setSource(sender);
    //DebugLog (<< "Received from: " << sender);
 

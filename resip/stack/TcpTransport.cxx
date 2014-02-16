@@ -42,7 +42,7 @@ Connection*
 TcpTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    assert(this);
-   Connection* conn = new TcpConnection(this,who, fd, mCompression);
+   Connection* conn = new TcpConnection(this, who, fd, mCompression);
    return conn;
 }
 

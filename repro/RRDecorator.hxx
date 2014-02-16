@@ -3,12 +3,7 @@
 
 #include "resip/stack/MessageDecorator.hxx"
 #include "resip/stack/Tuple.hxx"
-
-
-namespace resip
-{
-class Transport;
-}
+#include "resip/stack/NameAddr.hxx"
 
 namespace repro
 {
@@ -18,7 +13,8 @@ class RRDecorator : public resip::MessageDecorator
 {
    public:
       RRDecorator(const Proxy& proxy,
-                  const resip::Transport* receivedTransport,
+                  const resip::Tuple& receivedTransportTuple,
+                  const resip::NameAddr &receivedTransportRecordRoute,
                   bool alreadySingleRecordRouted,
                   bool hasInboundFlowToken,
                   bool forceRecordRouteEnabled,
@@ -56,7 +52,8 @@ class RRDecorator : public resip::MessageDecorator
       bool mForceRecordRouteEnabled;
       bool mDoPath;
       const bool mIsOriginalSenderBehindNAT;
-      const resip::Transport* mReceivedTransport;
+      resip::Tuple mReceivedTransportTuple;
+      resip::NameAddr mReceivedTransportRecordRoute;
 
       //disabled
       RRDecorator();

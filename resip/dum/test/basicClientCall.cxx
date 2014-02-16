@@ -214,7 +214,7 @@ BasicClientCall::onFailure(ClientInviteSessionHandle h, const SipMessage& msg)
       {
          case 408:
          case 503:
-            if(msg.getReceivedTransport() == 0)
+            if(!msg.isFromWire())
             {
                // Try another flow? 
             }

@@ -240,7 +240,8 @@ class ResponseContext
       //a branch is very simple. The guts can be found in the API functions.
       
       void insertRecordRoute(resip::SipMessage& outgoing,
-                             const resip::Transport* receivedTransport,
+                             const resip::Tuple& receivedTransportTuple,
+                             const resip::NameAddr& receivedTransportRecordRoute, 
                              Target* target,
                              bool doPathInstead=false);
       resip::Data getInboundFlowToken(bool doPathInstead);

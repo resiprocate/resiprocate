@@ -404,7 +404,7 @@ Dialog::dispatch(const SipMessage& msg)
 
    DebugLog ( << "Dialog::dispatch: " << msg.brief());
 
-   if(msg.isExternal())
+   if(msg.isFromWire())
    {
       TransportType receivedTransport = toTransportType(
          msg.header(h_Vias).front().transport());

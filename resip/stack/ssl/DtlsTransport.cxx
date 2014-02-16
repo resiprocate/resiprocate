@@ -166,7 +166,7 @@ DtlsTransport::_read( FdSet& fdset )
    if ( len == SOCKET_ERROR )
    {
       int err = getErrno() ;
-      if ( err != EWOULDBLOCK  )
+      if ( err != EAGAIN && err != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
       {
          error( err ) ;
       }
@@ -340,7 +340,7 @@ DtlsTransport::_read( FdSet& fdset )
 #endif
    }
 
-   SipMessage* message = new SipMessage(this);
+   SipMessage* message = new SipMessage(&mTuple);
 
    // set the received from information into the received= parameter in the
    // via
@@ -349,7 +349,6 @@ DtlsTransport::_read( FdSet& fdset )
    // each one is a unique SIP message
 
    // Save all the info where this message came from
-   tuple.transport = this ;
    message->setSource( tuple ) ;
    //DebugLog (<< "Received from: " << tuple);
 

@@ -119,6 +119,8 @@ protected:
    CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
    std::vector<Plugin*> mPlugins;
+   typedef std::map<unsigned int, resip::NameAddr> TransportRecordRouteMap;
+   TransportRecordRouteMap mStartupTransportRecordRoutes;
 };
 
 }

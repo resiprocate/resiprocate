@@ -1013,10 +1013,19 @@ ReproRunner::createProxy()
    // like a catchall and will handle all requests the DUM does not
    mSipStack->registerTransactionUser(*mProxy);
 
+   // Map the Registrar to the Proxy
    if(mRegistrar)
    {
       mRegistrar->setProxy(mProxy);
    }
+
+   // Add the transport specific RecordRoutes that were stored in addTransports to the Proxy
+   for(TransportRecordRouteMap::iterator it = mStartupTransportRecordRoutes.begin(); 
+       it != mStartupTransportRecordRoutes.end(); it++)
+   {
+       mProxy->addTransportRecordRoute(it->first, it->second);
+   }
+
    return true;
 }
 
@@ -1302,9 +1311,11 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 {
    assert(mProxyConfig);
    assert(mSipStack);
-   allTransportsSpecifyRecordRoute=false;
-   bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
 
+   allTransportsSpecifyRecordRoute=false;
+   mStartupTransportRecordRoutes.clear();
+
+   bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
    SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
    SharedPtr<WsCookieContextFactory> wsCookieContextFactory;
@@ -1459,7 +1470,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                            rr.uri().host()=tlsDomain;
                            rr.uri().port()=port;
                            rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                           t->setRecordRoute(rr);
+                           mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
                            InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                         }
                         else
@@ -1468,14 +1479,14 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                            rr.uri().host()=ipAddr;
                            rr.uri().port()=port;
                            rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                           t->setRecordRoute(rr);
+                           mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
                            InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                         }
                      }
                      else
                      {
                         NameAddr rr(recordRouteUri);
-                        t->setRecordRoute(rr);
+                        mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
                         InfoLog (<< "Transport specific record-route enabled: " << rr);
                      }
                   }

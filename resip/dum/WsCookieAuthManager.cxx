@@ -99,7 +99,7 @@ WsCookieAuthManager::Result
 WsCookieAuthManager::handle(SipMessage* sipMessage)
 {
    // Only check message coming over WebSockets
-   if(!isWebSocket(sipMessage->getReceivedTransport()->transport()))
+   if(!isWebSocket(sipMessage->getReceivedTransportTuple().getType()))
    {
       return Skipped;
    }

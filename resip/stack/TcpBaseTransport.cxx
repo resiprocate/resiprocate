@@ -301,8 +301,7 @@ TcpBaseTransport::processAllWriteRequests()
             return;	// .kw. WHY? What about messages left in queue?
          }
          assert(conn->getSocket() != INVALID_SOCKET);
-         // .kw. why do below? We already have the conn, who uses key?
-         data->destination.mFlowKey = conn->getSocket(); // !jf!
+         data->destination.mFlowKey = conn->getSocket();
       }
 
       if (conn == 0)

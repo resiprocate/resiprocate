@@ -2,10 +2,12 @@
 #define RESIP_PROXY_HXX 
 
 #include <memory>
+#include <map>
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "rutil/HashMap.hxx"
+#include "rutil/Mutex.hxx"
 #include "rutil/ThreadIf.hxx"
 #include "rutil/KeyValueStore.hxx"
 #include "repro/AccountingCollector.hxx"
@@ -72,7 +74,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual void thread();
       
       bool isMyUri(const resip::Uri& uri) const;
-      const resip::NameAddr& getRecordRoute(const resip::Transport* transport) const;
+      void addTransportRecordRoute(unsigned int transportKey, const resip::NameAddr& recordRoute);
+      void removeTransportRecordRoute(unsigned int transportKey);
+      const resip::NameAddr& getRecordRoute(unsigned int transportKey) const;
       bool getRecordRouteForced() const;
 
       void setAssumePath(bool f) { mAssumePath = f; }
@@ -111,6 +115,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       resip::SipStack& mStack;
       ProxyConfig& mConfig;
       resip::NameAddr mRecordRoute;
+      typedef std::map<unsigned int, resip::NameAddr> TransportRecordRouteMap;
+      TransportRecordRouteMap mTransportRecordRoutes;
+      mutable resip::Mutex mTransportRecordRouteMutex;
+
       bool mRecordRouteForced;
       bool mAssumePath;
       bool mPAssertedIdentityProcessing;
