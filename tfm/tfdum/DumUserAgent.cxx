@@ -159,9 +159,9 @@ DumUserAgent::init()
    mPort = PortAllocator::getNextPort();
    if( !mNatNavigator )
    {
-      mDum.addTransport(resip::UDP, mPort, resip::V4, mIp);
+      mStack.addTransport(resip::UDP, mPort, resip::V4, StunDisabled, mIp);
    }
-   mDum.addTransport(resip::TCP, mPort, resip::V4, mIp);
+   mStack.addTransport(resip::TCP, mPort, resip::V4, StunDisabled, mIp);
 
    mProfile->setFixedTransportInterface(mIp);
 

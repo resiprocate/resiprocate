@@ -191,7 +191,7 @@ TestRepro::TestRepro(const resip::Data& name,
       NameAddr rr;
       rr.uri().host() = "127.0.0.1";
       rr.uri().port() = 5060;
-      t->setRecordRoute(rr);
+      mProxy.addTransportRecordRoute(t->getKey(), rr);
    }
    catch(...)
    {}
@@ -211,7 +211,7 @@ TestRepro::TestRepro(const resip::Data& name,
       rr.uri().host() = "127.0.0.1";
       rr.uri().port() = 5060;
       rr.uri().param(resip::p_transport)="tcp";
-      t->setRecordRoute(rr);
+      mProxy.addTransportRecordRoute(t->getKey(), rr);
    }
    catch(...)
    {}
@@ -232,7 +232,7 @@ TestRepro::TestRepro(const resip::Data& name,
       rr.uri().host() = "127.0.0.1";
       rr.uri().port() = 5060;
       rr.uri().param(resip::p_transport)="sctp";
-      t->setRecordRoute(rr);
+      mProxy.addTransportRecordRoute(t->getKey(), rr);
    }
    catch(...)
    {}
@@ -257,7 +257,7 @@ TestRepro::TestRepro(const resip::Data& name,
       rr.uri().host() = "localhost";
       rr.uri().port() = 5061;
       rr.uri().param(resip::p_transport)="tls";
-      t->setRecordRoute(rr);
+      mProxy.addTransportRecordRoute(t->getKey(), rr);
    }
    catch(...)
    {}

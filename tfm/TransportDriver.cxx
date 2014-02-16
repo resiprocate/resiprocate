@@ -1,3 +1,4 @@
+#include "resip/stack/Transport.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Mutex.hxx"
@@ -30,7 +31,8 @@ TransportDriver& TransportDriver::instance()
 }
    
 
-TransportDriver::TransportDriver()
+TransportDriver::TransportDriver() : 
+   mNextTransportKey(1)
 {
    run();
 }
@@ -48,7 +50,6 @@ TransportDriver::Client::~Client()
 void 
 TransportDriver::Client::registerWithTransportDriver()
 {
-   
    TransportDriver::instance().addClient(this);
 }
 
@@ -64,6 +65,13 @@ TransportDriver::addClient(Client* client)
    Lock lock(mMutex);
    if (find(mClients.begin(), mClients.end(), client) == mClients.end())
    {
+      unsigned int transportKey = mNextTransportKey++;
+      Transport* transport = client->getTransport();
+      if(transport)
+      {
+         transport->setKey(transportKey);
+         mTransports[transportKey] = transport;
+      }
       mClients.push_back(client);
    }
 }
@@ -72,7 +80,24 @@ void
 TransportDriver::removeClient(Client* client)
 {
    Lock lock(mMutex);
+   Transport* transport = client->getTransport();
+   if(transport)
+   {
+      mTransports.erase(transport->getKey());
+   }
    mClients.erase(remove(mClients.begin(), mClients.end(), client), mClients.end());    
+}
+
+resip::Transport* 
+TransportDriver::getClientTransport(unsigned int transportKey)
+{
+   Lock lock(mMutex);
+   TransportMap::iterator it = mTransports.find(transportKey);
+   if(it != mTransports.end())
+   {
+       return it->second;
+   }
+   return 0;
 }
 
 void
@@ -99,9 +124,7 @@ void
 TransportDriver::process()
 {
    FdSet fdset;
-   {
-      buildFdSet(fdset); 
-   }
+   buildFdSet(fdset); 
    fdset.selectMilliSeconds(25); //5 ms granularity
    
    Lock lock(mMutex);

@@ -14,6 +14,10 @@
 //#include <sys/select.h> // posix
 //#endif
 
+namespace resip
+{
+    class Transport;
+}
 
 class TransportDriver : public resip::ThreadIf
 {
@@ -26,10 +30,12 @@ class TransportDriver : public resip::ThreadIf
             virtual void registerWithTransportDriver();
             virtual void unregisterFromTransportDriver();
             virtual void buildFdSet(resip::FdSet& fdset) = 0;
+            virtual resip::Transport* getTransport() { return 0; }
       };
       
       void addClient(Client* client);
       void removeClient(Client* client);
+      resip::Transport* getClientTransport(unsigned int transportKey);
       static TransportDriver& instance();
 
    protected:
@@ -47,7 +53,10 @@ class TransportDriver : public resip::ThreadIf
       void process();
       bool processTransports();
 
+      unsigned int mNextTransportKey;
       std::vector<Client*> mClients;
+      typedef std::map<unsigned int, resip::Transport*> TransportMap;
+      TransportMap mTransports;
       resip::Mutex mMutex;
 
       //Singleton

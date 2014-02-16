@@ -362,8 +362,11 @@ TestSipEndPoint::send(boost::shared_ptr<SipMessage>& msg, RawConditionerFn func)
    
    if (useTuple)
    {
-      std::auto_ptr<SendData> toSend(useTuple->transport->makeSendData(*useTuple, toWrite, "bogus"));
-      useTuple->transport->send(toSend);
+      // Find Transport via TransportDriver
+      Transport* transport = TransportDriver::instance().getClientTransport(useTuple->mTransportKey);
+      assert(transport);
+      std::auto_ptr<SendData> toSend(transport->makeSendData(*useTuple, toWrite, "bogus"));
+      transport->send(toSend);
    }
    else
    {
@@ -4297,7 +4300,6 @@ from(TestProxy& testProxy)
 {
    return new TestSipEndPoint::From(testProxy);
 }
-
 
 TestSipEndPoint::From*
 from(const Uri& contact)

@@ -56,6 +56,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       virtual ~TestSipEndPoint();
       virtual void clean();
       void setTransport(resip::Transport*);
+      virtual resip::Transport* getTransport() { return mTransport; }
 
       class SipEndPointAction : public Action
       {
