@@ -5,14 +5,6 @@
 #include "rutil/FdPoll.hxx"
 #include "rutil/Socket.hxx"
 
-#if 0
-#if defined(WIN32)
-#include <Ws2tcpip.h>
-#else
-#include <netinet/in.h>
-#endif
-#endif
-
 namespace resip
 {
 

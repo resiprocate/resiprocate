@@ -84,8 +84,6 @@ class DnsInterface
          return mUdpOnlyOnNumeric;
       }
 
-
-
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0

@@ -73,7 +73,7 @@ class Transport : public FdSetIOObserver
 {
    public:
 
-       /**
+      /**
          @brief General exception class for Transport.
 
          This would be thrown if there was an attempt to bind to a port

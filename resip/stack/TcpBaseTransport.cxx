@@ -287,18 +287,41 @@ TcpBaseTransport::processAllWriteRequests()
 
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
 
+#ifdef WIN32
+      if(conn && mPollGrp && mPollGrp->getImplType() == FdPollGrp::PollImpl)
+      {
+         // Workaround for bug in WSAPoll implementation: see 
+         // http://daniel.haxx.se/blog/2012/10/10/wsapoll-is-broken/
+         // http://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/18769abd-fca0-4d3c-9884-1a38ce27ae90/wsapoll-and-nonblocking-connects-to-nonexistent-ports?forum=wsk
+         // Note:  This is not an ideal solution - since we won't cleanup the connection until 
+         //        after the connect has timedout and someone else tries to write to the same 
+         //        destination.  However the only impact to users is that requests will take the 
+         //        full 32 seconds transaction timeout to get an error vs the 21s connect timeout
+         //        observered when using the select implemention (vs Poll).  This does save us from
+         //        having to use some form of timer to periodically check the connect state though.
+         if(conn->checkConnectionTimedout())
+         {
+            // If checkConnectionTimedout returns true, then connection is no longer available.
+            // Clear conn so that we create a new connection below.
+            conn = 0;
+         }
+      }
+#endif
+
       // There is no connection yet, so make a client connection
       if (conn == 0 && 
-            !data->destination.onlyUseExistingConnection &&
-            data->command == 0)  // SendData commands (ie. close connection and enable flow timers) shouldn't cause new connections to form
+          !data->destination.onlyUseExistingConnection &&
+          data->command == 0)  // SendData commands (ie. close connection and enable flow timers) shouldn't cause new connections to form
       {
          TransportFailure::FailureReason failCode = TransportFailure::Failure;
          int subCode = 0;
-         if((conn=makeOutgoingConnection(data->destination, failCode, subCode)) == NULL)
+         if((conn = makeOutgoingConnection(data->destination, failCode, subCode)) == 0)
          {
+            DebugLog (<< "Failed to create connection: " << data->destination);
             fail(data->transactionId, failCode, subCode);
             delete data;
-            return;	// .kw. WHY? What about messages left in queue?
+            // NOTE: We fail this one but don't give up on others in queue
+            return;
          }
          assert(conn->getSocket() != INVALID_SOCKET);
          data->destination.mFlowKey = conn->getSocket();
@@ -306,7 +329,7 @@ TcpBaseTransport::processAllWriteRequests()
 
       if (conn == 0)
       {
-         DebugLog (<< "Failed to create/get connection: " << data->destination);
+         DebugLog (<< "Failed to find connection: " << data->destination);
          fail(data->transactionId, TransportFailure::TransportNoExistConn, 0);
          delete data;
          // NOTE: We fail this one but don't give up on others in queue

@@ -15,6 +15,10 @@
 #include "resip/stack/ssl/Security.hxx"
 #endif
 
+#ifdef WIN32
+#include <Mswsock.h>
+#endif
+
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
 #include <osc/SigcompMessage.h>
@@ -155,17 +159,20 @@ Connection::performWrite()
       uBuffer = (UInt8*)dataWs->data.data();
 
       uBuffer[0] = 0x82;
-      if(lSize <= 0x7D){
+      if(lSize <= 0x7D)
+      {
          uBuffer[1] = (UInt8)lSize;
          uBuffer = &uBuffer[2];
       }
-      else if(lSize <= 0xFFFF){
+      else if(lSize <= 0xFFFF)
+      {
          uBuffer[1] = 0x7E;
          uBuffer[2] = (UInt8)((lSize >> 8) & 0xFF);
          uBuffer[3] = (UInt8)(lSize & 0xFF);
          uBuffer = &uBuffer[4];
       }
-      else{
+      else
+      {
          uBuffer[1] = 0x7F;
          uBuffer[2] = (UInt8)((lSize >> 56) & 0xFF);
          uBuffer[3] = (UInt8)((lSize >> 48) & 0xFF);
@@ -213,7 +220,7 @@ Connection::performWrite()
 
    if(mEnablePostConnectSocketFuncCall && mRequestPostConnectSocketFuncCall)
    {
-       // Note:  The first time the socket is available for write, is when the TCP connect call is completed
+      // Note:  The first time the socket is available for write, is when the TCP connect call is completed
       mRequestPostConnectSocketFuncCall = false;
       mTransport->callSocketFunc(getSocket());
    }
@@ -232,9 +239,9 @@ Connection::performWrite()
    }
    else if (nBytes == 0)
    {
-       // Nothing was written - likely socket buffers are backed up and EWOULDBLOCK was returned
-       // no need to do calculations in else statement
-       return 0;
+      // Nothing was written - likely socket buffers are backed up and EWOULDBLOCK was returned
+      // no need to do calculations in else statement
+      return 0;
    }
    else
    {
@@ -437,6 +444,24 @@ bool
 Connection::isGood()
 {
    return true;
+}
+
+bool 
+Connection::checkConnectionTimedout()
+{
+   int errNum = 0;
+   int errNumSize = sizeof(errNum);
+   if(getsockopt(mWho.mFlowKey, SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize) == 0)
+   {
+       if(errNum == ETIMEDOUT)
+       {
+           InfoLog(<< "Exception on socket " << mWho.mFlowKey << " code: " << errNum << "; closing connection");
+           setFailureReason(TransportFailure::ConnectionException, errNum);
+           delete this;
+           return true;
+       }
+   }
+   return false;
 }
 
 bool 

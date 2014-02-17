@@ -221,7 +221,8 @@ SipStackAndThread::SipStackAndThread(const char *tType,
    }
    else if ( strcmp(tType,"event")==0
           || strcmp(tType,"epoll")==0
-          || strcmp(tType,"fdset")==0 )
+          || strcmp(tType,"fdset")==0
+          || strcmp(tType,"poll")==0 )
    {
       mPollGrp = FdPollGrp::create(tType);
       mEventIntr = new EventThreadInterruptor(*mPollGrp);
@@ -346,7 +347,8 @@ struct StackThreadPair
 };
 
 bool
-StackThreadPair::wait(int& thisseltime) {
+StackThreadPair::wait(int& thisseltime) 
+{
    if(mReceiver.getStack().hasMessage() || mSender.getStack().hasMessage())
    {
       return false;
@@ -435,7 +437,9 @@ performTest(int verbose, int runs, int window, int invite,
          sent++;
 #ifndef WIN32
          if (sendSleepUs>0)
+         {
             usleep(sendSleepUs);
+         }
 #endif
       }
 

@@ -191,10 +191,10 @@ ReproAuthenticatorFactory::getDigestAuthenticator()
    if(mEnableRADIUS)
    {
 #ifdef USE_RADIUS_CLIENT
-         return std::auto_ptr<Processor>(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration, mStaticRealm));
+      return std::auto_ptr<Processor>(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration, mStaticRealm));
 #else
-         ErrLog(<<"can't create RADIUSAuthenticator, not compiled with RADIUS support");
-         return std::auto_ptr<Processor>(0);
+      ErrLog(<<"can't create RADIUSAuthenticator, not compiled with RADIUS support");
+      return std::auto_ptr<Processor>(0);
 #endif
    }
    else

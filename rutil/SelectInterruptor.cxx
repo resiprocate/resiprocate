@@ -65,7 +65,7 @@ void
 SelectInterruptor::buildFdSet(FdSet& fdset)
 {
 #ifdef WIN32
-	fdset.setRead(mSocket);
+   fdset.setRead(mSocket);
 #else
    fdset.setRead(mPipe[0]);
 #endif
@@ -75,20 +75,16 @@ void
 SelectInterruptor::processCleanup()
 {
 #ifdef WIN32
-   {
-      char rdBuf[16];
-      recv(mSocket, rdBuf, sizeof(rdBuf), 0);
-   }
+  char rdBuf[16];
+  recv(mSocket, rdBuf, sizeof(rdBuf), 0);
 #else
-   {
-      char rdBuf[16];
-      int x;
-      while ( (x=read(mPipe[0], rdBuf, sizeof(rdBuf))) == sizeof(rdBuf) )
-         ;
-      // WATCHOUT: EWOULDBLOCK *will* happen above when the pending
-      // number of bytes is exactly size of rdBuf
-      // XXX: should check for certain errors (like fd closed) and die?
-   }
+  char rdBuf[16];
+  int x;
+  while ( (x=read(mPipe[0], rdBuf, sizeof(rdBuf))) == sizeof(rdBuf) )
+     ;
+  // WATCHOUT: EWOULDBLOCK *will* happen above when the pending
+  // number of bytes is exactly size of rdBuf
+  // XXX: should check for certain errors (like fd closed) and die?
 #endif
 }
 
@@ -96,7 +92,9 @@ void
 SelectInterruptor::process(FdSet& fdset)
 {
    if (fdset.readyToRead(mReadThing))
+   {
       processCleanup();
+   }
 }
 
 void 
@@ -114,8 +112,14 @@ SelectInterruptor::interrupt()
 {
    static char wakeUp[] = "w";
 #ifdef WIN32
-   int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
-   assert(count == sizeof(wakeUp));
+   u_long readSize = 0;
+   ioctlsocket(mSocket, FIONREAD, &readSize);
+   // Only bother signalling socket if there is no data on it already
+   if(readSize == 0)  
+   {
+      int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
+      assert(count == sizeof(wakeUp));
+   }
 #else
    ssize_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
 

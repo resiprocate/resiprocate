@@ -184,8 +184,7 @@ ConnectionManager::addConnection(Connection* connection)
 {
    assert(mAddrMap.find(connection->who())==mAddrMap.end());
 
-   //DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.mFlowKey  << ":" << connection->mSocket);
-   
+   DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.mFlowKey  << ":" << connection->who() << ", totalConnections=" << mIdMap.size());
    
    mAddrMap[connection->who()] = connection;
    mIdMap[connection->who().mFlowKey] = connection;

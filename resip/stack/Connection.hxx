@@ -58,7 +58,8 @@ class Connection : public ConnectionBase,
       /// always true -- always add to fdset as read ready
       virtual bool hasDataToRead();
       /// has valid connection
-      virtual bool isGood(); 
+      virtual bool isGood();
+      virtual bool checkConnectionTimedout();
       virtual bool isWritable();
       virtual bool transportWrite(){return false;}
 

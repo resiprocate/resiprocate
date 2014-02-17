@@ -14,7 +14,11 @@
  */
 
 #if defined(HAVE_EPOLL)
-#define RESIP_POLL_IMPL_EPOLL  // Only one currently implemented
+#define RESIP_POLL_IMPL_EPOLL
+#endif
+
+#if defined(HAVE_POLL) || (_WIN32_WINNT >= 0x0600)
+#define RESIP_POLL_IMPL_POLL
 #endif
 
 namespace resip {
@@ -71,6 +75,8 @@ class FdPollGrp
       FdPollGrp();
       virtual ~FdPollGrp();
 
+      typedef enum {FdSetImpl = 0, PollImpl, EPollImpl } ImplType;
+
       /// factory
       static FdPollGrp* create(const char *implName=NULL);
       /// Return candidate impl names with vertical bar (|) between them
@@ -78,6 +84,7 @@ class FdPollGrp
       static const char* getImplList();
 
       virtual const char* getImplName() const = 0;
+      virtual ImplType getImplType() const = 0;
 
       virtual FdPollItemHandle addPollItem(Socket sock, FdPollEventMask newMask, FdPollItemIf *item) = 0;
       virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask) = 0;
@@ -97,8 +104,9 @@ class FdPollGrp
       /// get the epoll-fd (epoll_create())
       /// This is fd (type int), not Socket. It may be -1 if epoll
       /// is not enabled.
-      virtual int       getEPollFd() const;
+      virtual int getEPollFd() const;
 
+      // Legacy API's (deprecated) - use waitAndProcess instead
       virtual void buildFdSet(FdSet& fdSet)=0;
       virtual bool processFdSet(FdSet& fdset)=0;
 
