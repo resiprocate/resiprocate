@@ -6,6 +6,7 @@ before_install:
  - ./build/travis/coverity-setup
 compiler:
   - gcc
+  - clang
 script:
   - ./build/travis/bootstrap
   - ./build/travis/configure
