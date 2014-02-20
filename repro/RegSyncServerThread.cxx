@@ -2,7 +2,6 @@
 #include <rutil/Logger.hxx>
 
 #include "repro/RegSyncServer.hxx"
-#include "repro/RegSyncClient.hxx"
 #include "repro/RegSyncServerThread.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO

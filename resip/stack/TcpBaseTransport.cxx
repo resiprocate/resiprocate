@@ -153,7 +153,10 @@ TcpBaseTransport::processListen()
          int e = getErrno();
          switch (e)
          {
-            case EWOULDBLOCK:
+            case EAGAIN:
+#if EAGAIN != EWOULDBLOCK
+            case EWOULDBLOCK:  // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
+#endif
                // !jf! this can not be ready in some cases
                // !kw! this will happen every epoll cycle
                return 0;
@@ -245,7 +248,10 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       switch (err)
       {
          case EINPROGRESS:
-         case EWOULDBLOCK:
+         case EAGAIN:
+#if EAGAIN != EWOULDBLOCK
+         case EWOULDBLOCK:  // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
+#endif
             break;
          default:
          {

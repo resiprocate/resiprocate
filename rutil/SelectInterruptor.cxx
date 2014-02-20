@@ -118,13 +118,16 @@ SelectInterruptor::interrupt()
    assert(count == sizeof(wakeUp));
 #else
    ssize_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
-   if ( res == -1 && errno==EAGAIN )
+
+   if ( res == -1 && (errno == EAGAIN || errno == EWOULDBLOCK) )   // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
    {
       ; // this can happen when SipStack thread gets behind.
       // no need to block since our only purpose is to wake up the thread
       // also, this write can occur within the SipStack thread, in which
       // case we get dead-lock if this blocks
-   } else {
+   } 
+   else 
+   {
       assert(res == sizeof(wakeUp));
    }
 #endif

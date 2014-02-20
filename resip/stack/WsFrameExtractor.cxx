@@ -1,6 +1,7 @@
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/WsFrameExtractor.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 
