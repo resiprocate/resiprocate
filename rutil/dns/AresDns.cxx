@@ -9,6 +9,7 @@
 
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
+#include "rutil/Timer.hxx"
 
 #include "AresCompat.hxx"
 #if !defined(USE_CARES)
@@ -602,6 +603,9 @@ unsigned int
 AresDns::getTimeTillNextProcessMS()
 {
    struct timeval tv;
+   unsigned maxSystemTime = resip::Timer::getMaxSystemTimeWaitMs();
+   tv.tv_sec = maxSystemTime / 1000;
+   tv.tv_usec = 1000 * (maxSystemTime % 1000);
    ares_timeout(mChannel, NULL, &tv);
    return tv.tv_sec*1000 + tv.tv_usec / 1000;
 }
