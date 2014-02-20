@@ -1124,7 +1124,7 @@ BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
 void
 BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 {
-   addCertDER(DomainCert, domainName, certDER, true);
+   addCertDER(DomainCert, domainName, certDER, false);
 }
 
 
@@ -1152,7 +1152,7 @@ BaseSecurity::getDomainCertDER(const Data& domainName) const
 void
 BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM)
 {
-   addPrivateKeyPEM(DomainPrivateKey, domainName, privateKeyPEM, true);
+   addPrivateKeyPEM(DomainPrivateKey, domainName, privateKeyPEM, false);
 }
 
 
@@ -1180,14 +1180,14 @@ BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
 void
 BaseSecurity::addUserCertPEM(const Data& aor, const Data& certPEM)
 {
-   addCertPEM(UserCert, aor, certPEM, true);
+   addCertPEM(UserCert, aor, certPEM, false);
 }
 
 
 void
 BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 {
-   addCertDER(UserCert, aor, certDER, true);
+   addCertDER(UserCert, aor, certDER, false);
 }
 
 
@@ -1275,14 +1275,14 @@ BaseSecurity::getUserPassPhrase(const Data& aor) const
 void
 BaseSecurity::addUserPrivateKeyPEM(const Data& aor, const Data& cert)
 {
-   addPrivateKeyPEM(UserPrivateKey, aor, cert, true);
+   addPrivateKeyPEM(UserPrivateKey, aor, cert, false);
 }
 
 
 void
 BaseSecurity::addUserPrivateKeyDER(const Data& aor, const Data& cert)
 {
-   addPrivateKeyDER(UserPrivateKey, aor, cert, true);
+   addPrivateKeyDER(UserPrivateKey, aor, cert, false);
 }
 
 
