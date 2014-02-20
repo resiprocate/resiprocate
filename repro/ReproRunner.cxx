@@ -1080,14 +1080,21 @@ ReproRunner::createWebAdmin()
       {
          if(mUseV4 && DnsUtil::isIpV4Address(*it)) 
          {
-            WebAdmin* webAdminV4 = new WebAdmin(*mProxy,
+            WebAdmin* webAdminV4 = 0;
+
+            try {
+               webAdminV4 = new WebAdmin(*mProxy,
                                                 *mRegistrationPersistenceManager, 
                                                 mHttpRealm, 
                                                 httpPort,
                                                 V4,
                                                 *it);
+            } catch(WebAdmin::ConfigException& ex) {
+               ErrLog(<<"Exception when starting WebAdmin: " << ex.getMessage());
+               webAdminV4 = 0;
+            }
 
-            if (!webAdminV4->isSane())
+            if (!webAdminV4 || !webAdminV4->isSane())
             {
                CritLog(<<"Failed to start WebAdminV4");
                delete webAdminV4;
@@ -1100,14 +1107,21 @@ ReproRunner::createWebAdmin()
 
          if(mUseV6 && DnsUtil::isIpV6Address(*it)) 
          {
-            WebAdmin* webAdminV6 = new WebAdmin(*mProxy,
+            WebAdmin* webAdminV6 = 0;
+
+            try {
+               webAdminV6 = new WebAdmin(*mProxy,
                                                 *mRegistrationPersistenceManager, 
                                                 mHttpRealm, 
                                                 httpPort,
                                                 V6,
                                                 *it);
+            } catch(WebAdmin::ConfigException& ex) {
+               ErrLog(<<"Exception when starting WebAdmin: " << ex.getMessage());
+               webAdminV6 = 0;
+            }
 
-            if (!webAdminV6->isSane())
+            if (!webAdminV6 || !webAdminV6->isSane())
             {
                CritLog(<<"Failed to start WebAdminV6");
                delete webAdminV6;
