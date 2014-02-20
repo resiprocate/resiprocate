@@ -1180,29 +1180,31 @@ ReproRunner::createCommandServer()
       {
          if(mUseV4 && DnsUtil::isIpV4Address(*it))
          {
-            CommandServer* CommandServerV4 = new CommandServer(*this, *it, commandPort, V4);
+            CommandServer* pCommandServerV4 = new CommandServer(*this, *it, commandPort, V4);
 
-            if(CommandServerV4->isSane())
+            if(pCommandServerV4->isSane())
             {
-               mCommandServerList->push_back(CommandServerV4);
+               mCommandServerList->push_back(pCommandServerV4);
             }
             else
             {
                CritLog(<<"Failed to start CommandServerV4");
+               delete pCommandServerV4;
             }
          }
 
          if(mUseV6 && DnsUtil::isIpV6Address(*it))
          {
-            CommandServer* CommandServerV6 = new CommandServer(*this, *it, commandPort, V6);
+            CommandServer* pCommandServerV6 = new CommandServer(*this, *it, commandPort, V6);
 
-            if(CommandServerV6->isSane())
+            if(pCommandServerV6->isSane())
             {
-               mCommandServerList->push_back(CommandServerV6);
+               mCommandServerList->push_back(pCommandServerV6);
             }
             else
             {
                CritLog(<<"Failed to start CommandServerV6");
+               delete pCommandServerV6;
             }
          }
       }
