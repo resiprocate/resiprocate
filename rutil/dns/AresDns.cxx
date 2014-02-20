@@ -55,7 +55,10 @@ class AresDnsPollItem : public FdPollItemBase
    virtual void	processPollEvent(FdPollEventMask mask);
    void resetPollGrp(FdPollGrp *grp)
    {
-      mPollGrp->delPollItem(mPollHandle);
+      if(mPollGrp)
+      {
+         mPollGrp->delPollItem(mPollHandle);
+      }
       mPollHandle = 0;
       mPollGrp = grp;
       if(mPollGrp)
