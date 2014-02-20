@@ -413,6 +413,7 @@ Log::timestamp(Data& res)
    GetLocalTime(&systemTime);
    tv.tv_usec = systemTime.wMilliseconds * 1000; 
 #else 
+   struct tm localTimeResult;
    struct timeval tv; 
    int result = gettimeofday (&tv, NULL);
 #endif   
@@ -434,7 +435,11 @@ Log::timestamp(Data& res)
                 datebufSize,
                 "%Y%m%d-%H%M%S", /* guaranteed to fit in 256 chars,
                                     hence don't check return code */
-                localtime (&timeInSeconds));
+#ifdef WIN32
+                localtime (&timeInSeconds));  // Thread safe call on Windows
+#else
+                localtime_r (&timeInSeconds, &localTimeResult));  // Thread safe version of localtime on linux
+#endif
    }
    
    char msbuf[5];
