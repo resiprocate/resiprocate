@@ -573,7 +573,7 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       if(remotePeer.getPeerTuple().getAddress().is_v6())
       {
          ind.mTurnXorPeerAddress[0].family = StunMessage::IPv6Family;
-         memcpy(&ind.mTurnXorPeerAddress[0].addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(ind.mTurnXorPeerAddress[0].addr.ipv6));
+         memcpy(&ind.mTurnXorPeerAddress[0].addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().data(), sizeof(ind.mTurnXorPeerAddress[0].addr.ipv6));
       }
       else
       {

@@ -5,7 +5,7 @@
 
 namespace reTurn {
 
-typedef asio::error_code::value_type ErrorType;
+typedef int ErrorType;
 
 static const ErrorType Success                               = 0;
 static const ErrorType GeneralError                          = -1;

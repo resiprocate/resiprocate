@@ -337,7 +337,7 @@ StunMessage::setStunAtrAddressFromTuple(StunAtrAddress& address, const StunTuple
    {
       // Note:  addr.ipv6 is stored in network byte order
       address.family = StunMessage::IPv6Family;  
-      memcpy(&address.addr.ipv6, tuple.getAddress().to_v6().to_bytes().c_array(), sizeof(address.addr.ipv6));
+      memcpy(&address.addr.ipv6, tuple.getAddress().to_v6().to_bytes().data(), sizeof(address.addr.ipv6));
    }
    else
    {
@@ -355,7 +355,7 @@ StunMessage::setTupleFromStunAtrAddress(StunTuple& tuple, const StunAtrAddress& 
    {
       // Note:  addr.ipv6 is stored in network byte order
       asio::ip::address_v6::bytes_type bytes;
-      memcpy(bytes.c_array(), &address.addr.ipv6, bytes.size());
+      memcpy(bytes.data(), &address.addr.ipv6, bytes.size());
       asio::ip::address_v6 addr(bytes);
       tuple.setAddress(addr);
    }
@@ -1188,7 +1188,7 @@ operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
    if(addr.family == StunMessage::IPv6Family)
    {
       asio::ip::address_v6::bytes_type bytes;
-      memcpy(bytes.c_array(), &addr.addr.ipv6, bytes.size());
+      memcpy(bytes.data(), &addr.addr.ipv6, bytes.size());
       asio::ip::address_v6 addrv6(bytes);
 
       strm << "[" << addrv6.to_string() << "]:" << addr.port;
@@ -1715,11 +1715,11 @@ StunMessage::createUsernameAndPassword()
 
    if(mRemoteTuple.getAddress().is_v6())
    {
-      *mUsername = Data(mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), mRemoteTuple.getAddress().to_v6().to_bytes().size()).base64encode() + ":";
+      *mUsername = Data(mRemoteTuple.getAddress().to_v6().to_bytes().data(), mRemoteTuple.getAddress().to_v6().to_bytes().size()).base64encode() + ":";
    }
    else
    {
-      *mUsername = Data(mRemoteTuple.getAddress().to_v4().to_bytes().c_array(), mRemoteTuple.getAddress().to_v4().to_bytes().size()).base64encode() + ":";
+      *mUsername = Data(mRemoteTuple.getAddress().to_v4().to_bytes().data(), mRemoteTuple.getAddress().to_v4().to_bytes().size()).base64encode() + ":";
    }
    unsigned int port = mRemoteTuple.getPort();
    *mUsername += Data((char*)&port, sizeof(unsigned int)).base64encode() + ":"; 
@@ -1767,7 +1767,7 @@ StunMessage::getTupleFromUsername(StunTuple& tuple)
       Data addressPart(Data::Share, mUsername->data(), 24); 
       addressPart = addressPart.base64decode();
       asio::ip::address_v6::bytes_type bytes;
-      memcpy(bytes.c_array(), addressPart.data(), bytes.size());
+      memcpy(bytes.data(), addressPart.data(), bytes.size());
       asio::ip::address_v6 addressv6(bytes);
       tuple.setAddress(addressv6);
 
@@ -1782,7 +1782,7 @@ StunMessage::getTupleFromUsername(StunTuple& tuple)
       Data addressPart(Data::Share, mUsername->data(), 8);  
       addressPart = addressPart.base64decode();
       asio::ip::address_v4::bytes_type bytes;
-      memcpy(bytes.c_array(), addressPart.data(), bytes.size());
+      memcpy(bytes.data(), addressPart.data(), bytes.size());
       asio::ip::address_v4 addressv4(bytes);
       tuple.setAddress(addressv4);
 
