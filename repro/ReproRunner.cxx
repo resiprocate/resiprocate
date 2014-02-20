@@ -1082,14 +1082,17 @@ ReproRunner::createWebAdmin()
          {
             WebAdmin* webAdminV4 = 0;
 
-            try {
+            try 
+            {
                webAdminV4 = new WebAdmin(*mProxy,
-                                                *mRegistrationPersistenceManager, 
-                                                mHttpRealm, 
-                                                httpPort,
-                                                V4,
-                                                *it);
-            } catch(WebAdmin::ConfigException& ex) {
+                                         *mRegistrationPersistenceManager, 
+                                         mHttpRealm, 
+                                         httpPort,
+                                         V4,
+                                         *it);
+            } 
+            catch(WebAdmin::ConfigException& ex) 
+            {
                ErrLog(<<"Exception when starting WebAdmin: " << ex.getMessage());
                webAdminV4 = 0;
             }
@@ -1109,14 +1112,17 @@ ReproRunner::createWebAdmin()
          {
             WebAdmin* webAdminV6 = 0;
 
-            try {
+            try 
+            {
                webAdminV6 = new WebAdmin(*mProxy,
-                                                *mRegistrationPersistenceManager, 
-                                                mHttpRealm, 
-                                                httpPort,
-                                                V6,
-                                                *it);
-            } catch(WebAdmin::ConfigException& ex) {
+                                         *mRegistrationPersistenceManager, 
+                                         mHttpRealm, 
+                                         httpPort,
+                                         V6,
+                                         *it);
+            } 
+            catch(WebAdmin::ConfigException& ex) 
+            {
                ErrLog(<<"Exception when starting WebAdmin: " << ex.getMessage());
                webAdminV6 = 0;
             }
