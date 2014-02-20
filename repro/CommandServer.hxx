@@ -5,7 +5,6 @@
 #include <rutil/dns/DnsStub.hxx>
 #include <rutil/TransportType.hxx>
 #include <rutil/XMLCursor.hxx>
-#include <resip/stack/StatisticsHandler.hxx>
 #include <resip/stack/StatisticsMessage.hxx>
 #include <resip/dum/InMemorySyncRegDb.hxx>
 #include "repro/XmlRpcServerBase.hxx"
@@ -21,8 +20,7 @@ namespace repro
 class ReproRunner;
 
 class CommandServer: public XmlRpcServerBase,
-                     public resip::GetDnsCacheDumpHandler,
-                     public resip::ExternalStatsHandler
+                     public resip::GetDnsCacheDumpHandler
 {
 public:
    CommandServer(ReproRunner& reproRunner,
@@ -38,6 +36,8 @@ public:
                              unsigned int resultCode, 
                              const resip::Data& resultText);
 
+   virtual void handleStatisticsMessage(resip::StatisticsMessage &statsMessage);
+
 protected:
    virtual void handleRequest(unsigned int connectionId, 
                               unsigned int requestId, 
@@ -45,7 +45,6 @@ protected:
 
    // Handlers
    virtual void onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, const resip::Data& dnsEntryStrings);
-   virtual bool operator()(resip::StatisticsMessage &statsMessage);
 
 private: 
    void handleGetStackInfoRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);

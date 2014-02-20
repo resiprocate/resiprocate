@@ -33,7 +33,6 @@ CommandServer::CommandServer(ReproRunner& reproRunner,
    XmlRpcServerBase(port, version, ipAddr),
    mReproRunner(reproRunner)
 {
-   reproRunner.getProxy()->getStack().setExternalStatsHandler(this);
 }
 
 CommandServer::~CommandServer()
@@ -53,7 +52,7 @@ CommandServer::sendResponse(unsigned int connectionId,
    if(!responseData.empty())
    { 
       ss << "    <Data>" << Symbols::CRLF;
-      ss << responseData;
+      ss << responseData.xmlCharDataEncode();
       ss << "    </Data>" << Symbols::CRLF;
    }
    XmlRpcServerBase::sendResponse(connectionId, requestId, ss.str().c_str(), resultCode >= 200 /* isFinal */);
@@ -159,8 +158,8 @@ CommandServer::handleGetStackStatsRequest(unsigned int connectionId, unsigned in
    }
 }
 
-bool 
-CommandServer::operator()(resip::StatisticsMessage &statsMessage)
+void 
+CommandServer::handleStatisticsMessage(resip::StatisticsMessage &statsMessage)
 {
    Lock lock(mStatisticsWaitersMutex);
    if(mStatisticsWaiters.size() > 0)
@@ -177,7 +176,6 @@ CommandServer::operator()(resip::StatisticsMessage &statsMessage)
          sendResponse(it->first, it->second, buffer, 200, "Stack stats retrieved.");
       }
    }
-   return true;
 }
 
 void 
@@ -375,7 +373,6 @@ CommandServer::handleRestartRequest(unsigned int connectionId, unsigned int requ
    mReproRunner.restart();
    if(mReproRunner.getProxy())
    {
-      mReproRunner.getProxy()->getStack().setExternalStatsHandler(this);
       sendResponse(connectionId, requestId, Data::Empty, 200, "Restart completed.");
    }
    else

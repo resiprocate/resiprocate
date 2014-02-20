@@ -636,6 +636,9 @@ ReproRunner::createSipStack()
       mSipStack->setEnumDomains(enumDomains);
    }
 
+   // Add External Stats handler
+   mSipStack->setExternalStatsHandler(this);
+
    // Add stack transports
    bool allTransportsSpecifyRecordRoute=false;
    if(!addTransports(allTransportsSpecifyRecordRoute))
@@ -996,6 +999,17 @@ ReproRunner::createProxy()
    Data defaultRealm = addDomains(*mProxy, true);
    mHttpRealm = mProxyConfig->getConfigData("HttpAdminRealm", defaultRealm);
 
+   // Set Server Text
+#ifdef PACKAGE_VERSION
+   Data serverText(mProxyConfig->getConfigData("ServerText", "repro " PACKAGE_VERSION));
+#else
+   Data serverText(mProxyConfig->getConfigData("ServerText", ""));
+#endif
+   if(!serverText.empty())
+   {
+      mProxy->setServerText(serverText);
+   }
+
    // Register the Proxy class a stack transaction user
    // Note:  This is done after creating the DialogUsageManager so that it acts 
    // like a catchall and will handle all requests the DUM does not
@@ -1069,40 +1083,42 @@ ReproRunner::createWebAdmin()
       {
          if(mUseV4 && DnsUtil::isIpV4Address(*it)) 
          {
-            WebAdmin* WebAdminV4 = new WebAdmin(*mProxy,
+            WebAdmin* webAdminV4 = new WebAdmin(*mProxy,
                                                 *mRegistrationPersistenceManager, 
                                                 mHttpRealm, 
                                                 httpPort,
                                                 V4,
                                                 *it);
 
-            if (!WebAdminV4->isSane())
+            if (!webAdminV4->isSane())
             {
                CritLog(<<"Failed to start WebAdminV4");
+               delete webAdminV4;
                cleanupObjects();
                return false;
             }
 
-            mWebAdminList->push_back(WebAdminV4);
+            mWebAdminList->push_back(webAdminV4);
          }
 
          if(mUseV6 && DnsUtil::isIpV6Address(*it)) 
          {
-            WebAdmin* WebAdminV6 = new WebAdmin(*mProxy,
+            WebAdmin* webAdminV6 = new WebAdmin(*mProxy,
                                                 *mRegistrationPersistenceManager, 
                                                 mHttpRealm, 
                                                 httpPort,
                                                 V6,
                                                 *it);
 
-            if (!WebAdminV6->isSane())
+            if (!webAdminV6->isSane())
             {
                CritLog(<<"Failed to start WebAdminV6");
+               delete webAdminV6;
                cleanupObjects();
                return false;
             }
 
-            mWebAdminList->push_back(WebAdminV6);
+            mWebAdminList->push_back(webAdminV6);
          }
       }
 
@@ -1707,6 +1723,16 @@ ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
    addProcessor(chain, std::auto_ptr<Processor>(new SimpleTargetHandler)); 
 }
 
+bool 
+ReproRunner::operator()(resip::StatisticsMessage &statsMessage)
+{
+   // Dispatch to each command server
+   for(std::list<CommandServer*>::iterator it = mCommandServerList->begin(); it != mCommandServerList->end(); it++)
+   {
+       (*it)->handleStatisticsMessage(statsMessage);
+   }
+   return true;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -4,10 +4,12 @@
 #include "rutil/Data.hxx"
 #include "rutil/ServerProcess.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
+#include "resip/stack/StatisticsHandler.hxx"
 #include <memory>
 
 #include "repro/AuthenticatorFactory.hxx"
 #include "repro/Plugin.hxx"
+
 
 namespace resip
 {
@@ -40,7 +42,9 @@ class CommandServer;
 class CommandServerThread;
 class Processor;
 
-class ReproRunner : public resip::ServerProcess
+class ReproRunner : public resip::ServerProcess,
+                    public resip::ExternalStatsHandler
+
 {
 public:
    ReproRunner();
@@ -52,6 +56,9 @@ public:
    virtual void onHUP();
 
    virtual Proxy* getProxy() { return mProxy; }
+
+   // External Stats handler
+   virtual bool operator()(resip::StatisticsMessage &statsMessage);
 
 protected:
    virtual void cleanupObjects();

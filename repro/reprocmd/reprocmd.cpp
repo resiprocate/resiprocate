@@ -185,7 +185,7 @@ main (int argc, char** argv)
                   }
                   if(xml.firstChild())
                   {
-                     text = xml.getValue();
+                     text = xml.getValue().xmlCharDataDecode();
                      xml.parent();
                   }
                   if(code >= 200 && code < 300)
