@@ -21,7 +21,7 @@ class WebAdminThread : public resip::ThreadIf
       //  virtual unsigned int getTimeTillNextProcessMS() const;
 
    private:
-      std::list<WebAdmin*> mWebAdminList;
+      const std::list<WebAdmin*>& mWebAdminList;
 };
 
 }

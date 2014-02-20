@@ -24,7 +24,7 @@ CommandServerThread::thread()
       {
            FdSet fdset; 
      
-           std::list<CommandServer*>::iterator it = mCommandServerList.begin();
+           std::list<CommandServer*>::const_iterator it = mCommandServerList.begin();
            for(;it!=mCommandServerList.end();it++)
            {
               (*it)->buildFdSet(fdset);

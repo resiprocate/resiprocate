@@ -105,7 +105,7 @@ protected:
    ProcessorChain* mLemurs;
    ProcessorChain* mBaboons;
    Proxy* mProxy;
-   std::list<WebAdmin*>* mWebAdminList;
+   std::list<WebAdmin*> mWebAdminList;
    WebAdminThread* mWebAdminThread;
    Registrar* mRegistrar;
    resip::DialogUsageManager* mDum;
@@ -115,7 +115,7 @@ protected:
    RegSyncServer* mRegSyncServerV4;
    RegSyncServer* mRegSyncServerV6;
    RegSyncServerThread* mRegSyncServerThread;
-   std::list<CommandServer*>* mCommandServerList;
+   std::list<CommandServer*> mCommandServerList;
    CommandServerThread* mCommandServerThread;
    resip::CongestionManager* mCongestionManager;
    std::vector<Plugin*> mPlugins;
