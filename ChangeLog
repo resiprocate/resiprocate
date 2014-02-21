@@ -1,8 +1,21 @@
 = Release Notes v 1.9 =
 
 ==1.9.1 Changes==
-*Placeholder
+*adapt to work with asio v1.10.1 (still works with v1.4.x too)
+*fix for spinning in DnsThread
+*ensure mPollGrp is set before accessing it in AresDnsPollItem::resetPollGrp
+*fix RegSyncClient so that it detects breaks in the socket connection to the server - by using keepalives
+*made EGAIN and EWOULDBLOCK processing the same in a few additional spots
+*add WinLeakCheck header to some new Websocket class files to aid in leak detection on windows
+*stop trying to write cert files in various places
+*repro:
+**WebAdmin: catch and log exceptions when starting
+**fix issue with CommandServerList being deleted when not newed if startup fails due to transport exception
+**fixed up StackStatistics handling for when multiple command servers are running (ie: v4 and v6 CommandServers)
+**ensure we use the ServerText config setting to set the server text headers in requests that traverse repro
+*use threadsafe variant of localtime (localtime_r) on non-windows based platforms
 
+==1.9.0 Changes since 1.8.0==
 ==Highlights==
 *Session/registration accounting
 *SIP over WebSocket support for WebRTC, with cookie authentication option
