@@ -132,8 +132,7 @@ int resip::getSocketError(Socket fd)
 {
    int errNum = 0;
    int errNumSize = sizeof(errNum);
-   getsockopt(fd, SOL_SOCKET, SO_ERROR,
-     (char *)&errNum, (socklen_t *)&errNumSize);
+   getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
    /// XXX: should check return code of getsockopt
    return errNum;
 }
