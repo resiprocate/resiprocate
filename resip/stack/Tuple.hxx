@@ -125,7 +125,6 @@ class Tuple
 
       /// Returns V4 or V6 as appropriate.
       IpVersion ipVersion() const;
-      void setIpVersion(IpVersion version);
 
       ///  @brief TRUE if this address is equal to the "INADDR_ANY" value for
       /// this address family.  

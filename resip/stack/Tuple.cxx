@@ -687,18 +687,23 @@ resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
    }
 
    ostrm << " " << Tuple::toData(tuple.mTransportType);
-   ostrm << " target domain=";
-   if (tuple.mTargetDomain.empty())
+
+   if (!tuple.mTargetDomain.empty())
    {
-       ostrm << "<none>";
-   }
-   else 
-   {
-       ostrm << tuple.mTargetDomain;
+       ostrm << " targetDomain=" << tuple.mTargetDomain;
    }
    
-   ostrm << " mFlowKey=" << tuple.mFlowKey
-         << " ]";
+   if(tuple.mFlowKey != 0)
+   {
+      ostrm << " flowKey=" << tuple.mFlowKey;
+   }
+
+   if(tuple.mTransportKey != 0)
+   {
+      ostrm << " transportKey=" << tuple.mTransportKey;
+   }
+
+   ostrm << " ]";
    
    return ostrm;
 }
