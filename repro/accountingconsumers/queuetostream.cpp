@@ -4,6 +4,7 @@
 #include "rutil/compat.hxx"
 
 #include "repro/PersistentMessageQueue.hxx"
+#include <rutil/Time.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
@@ -18,15 +19,6 @@ signalHandler(int signo)
 {
    std::cerr << "Shutting down" << endl;
    finished = true;
-}
-
-void sleepSeconds(unsigned int seconds)
-{
-#ifdef WIN32
-   Sleep(seconds*1000);
-#else
-   sleep(seconds);
-#endif
 }
 
 int 
@@ -78,7 +70,7 @@ main (int argc, char** argv)
             }
             else
             {
-               sleepSeconds(1);
+               resip::sleepSeconds(1);
             }
          }
          else 

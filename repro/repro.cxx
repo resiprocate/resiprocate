@@ -147,11 +147,7 @@ main(int argc, char** argv)
    // Main program thread, just waits here for a signal to shutdown
    while (!finished)
    {
-#ifdef WIN32
-   Sleep(1000);
-#else
-   usleep(100000);
-#endif
+      sleepMs(1000);
       if(receivedHUP)
       {
          repro.onHUP();

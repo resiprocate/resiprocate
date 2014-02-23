@@ -8,6 +8,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
+#include "rutil/Time.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Subsystem.hxx"
@@ -37,11 +38,7 @@ class ClientHandler : public ClientRegistrationHandler
 
          resipCerr << "Pausing before unregister" << endl;
          
-#ifdef WIN32
-         Sleep(2000);
-#else
-         sleep(5);
-#endif
+         sleepMs(2000);
          h->removeAll();
       }
 

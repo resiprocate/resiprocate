@@ -16,6 +16,24 @@
 
 using namespace resip;
 
+void resip::sleepMs(unsigned int ms)
+{
+#ifdef WIN32
+   Sleep(ms);
+#else
+   usleep(ms*1000);
+#endif
+}
+
+void resip::sleepSeconds(unsigned int seconds)
+{
+#ifdef WIN32
+   Sleep(seconds*1000);
+#else
+   sleep(seconds);
+#endif
+}
+
 ResipClock::ResipClock(void)
 {
 }

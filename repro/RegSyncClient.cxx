@@ -37,11 +37,7 @@ RegSyncClient::delaySeconds(unsigned int seconds)
    // Delay for requested number of seconds - but check every second if we are shutdown or not
    for(unsigned int i = 0; i < seconds && !mShutdown; i++)
    {
-#ifdef WIN32
-      Sleep(1000);
-#else
-      sleep(1);
-#endif
+      sleepMs(1000);
    }
 }
 

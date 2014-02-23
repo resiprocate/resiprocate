@@ -67,7 +67,7 @@ class Timestamped
       assert(tlf.size() == 1);
       assert(tlf.timeDepth() == 0);
 
-      sleepMS(2000);
+      sleepMs(2000);
 
       // still not empty
       assert(!tlf.empty());

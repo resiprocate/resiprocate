@@ -8,6 +8,9 @@
 namespace resip
 {
 
+void sleepMs(unsigned int ms);
+void sleepSeconds(unsigned int seconds);
+
 /** Clock used for timing in the Timer class and possibly other areas.  Depending on the OS and compile settings this clock
     may not be monotonic.  Define _RESIP_MONOTONIC_CLOCK to enable monotonic timers.
     The precision of this clock is available in microseconds, but the accuracy depends on other factors such as the OS and hardware.
