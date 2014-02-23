@@ -40,11 +40,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "repro", "repro", "{1293EE21
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "queuetostream", "repro\accountingconsumers\queuetostream_10_0.vcxproj", "{02C11EC5-9AB9-44F1-9B60-B719C1728356}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F0CD9FE8-E9E5-4A24-8F99-243B4BD384A7}"
-	ProjectSection(SolutionItems) = preProject
-		VisualStudioReadme.htm = VisualStudioReadme.htm
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

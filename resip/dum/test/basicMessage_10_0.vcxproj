@@ -402,9 +402,6 @@
     <ClCompile Include="basicMessage.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\rutil\rutil_10_0.vcxproj">
       <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

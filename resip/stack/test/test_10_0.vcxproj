@@ -405,9 +405,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\contrib\popt\popt_10_0.vcxproj">
       <Project>{bd9b6dda-3acc-a361-1fa3-12fb51b48952}</Project>
     </ProjectReference>

@@ -530,6 +530,7 @@
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
+    <ClInclude Include="RemoveTransport.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
     <ClInclude Include="Embedded.hxx" />
     <ClInclude Include="EventStackThread.hxx" />
