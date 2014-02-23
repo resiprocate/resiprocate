@@ -376,7 +376,7 @@ static void
 performTest(int verbose, int runs, int window, int invite,
       Data& bindIfAddr,
       int numPorts, int senderPort, int registrarPort, const char *proto,
-      int sendSleepUs,
+      int sendSleepMs,
       StackThreadPair& pair)
 {
    NameAddr target;
@@ -435,12 +435,10 @@ performTest(int verbose, int runs, int window, int invite,
          next = 0; // DON'T delete next; consumed by send above
          outstanding++;
          sent++;
-#ifndef WIN32
-         if (sendSleepUs>0)
+         if (sendSleepMs>0)
          {
-            usleep(sendSleepUs);
+            sleepMs(sendSleepMs);
          }
-#endif
       }
 
       int thisseltime = 0;
@@ -593,7 +591,7 @@ main(int argc, char* argv[])
    int portBase = 0;
    const char* threadType = "event";
    int tpFlags = 0;
-   int sendSleepUs = 0;
+   int sendSleepMs = 0;
    int cManager=0;
    int statisticsInterval=60;
 
@@ -619,7 +617,7 @@ main(int argc, char* argv[])
       {"numports",    'n', POPT_ARG_INT,    &numPorts,  0, "number of parallel sessions(ports)", 0},
       {"thread-type", 't', POPT_ARG_STRING, &threadType,0, "stack thread type", threadTypeDesc},
       {"tf",          0,   POPT_ARG_INT,    &tpFlags,   0, "bit encoding of transportFlags", 0},
-      {"sleep",       0,   POPT_ARG_INT,    &sendSleepUs,0, "time (us) to sleep after each sent request", 0},
+      {"sleep",       0,   POPT_ARG_INT,    &sendSleepMs,0, "time (ms) to sleep after each sent request", 0},
       {"use-congestion-manager",0, POPT_ARG_NONE, &cManager ,   0, "use a CongestionManager", 0},
       {"statistics-interval",       0,   POPT_ARG_INT,    &statisticsInterval,0, "time in seconds between statistics logging", 0},
       POPT_AUTOHELP
@@ -792,7 +790,7 @@ main(int argc, char* argv[])
 
    performTest(verbose, runs, window, invite,
       bindIfAddr, numPorts, senderPort, registrarPort, proto,
-      sendSleepUs, pair);
+      sendSleepMs, pair);
 
    sender.shutdown();
    receiver.shutdown();

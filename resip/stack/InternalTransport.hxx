@@ -57,7 +57,7 @@ class InternalTransport : public Transport
       static Socket socket(TransportType type, IpVersion ipVer);
       void bind();
 
-      //used for epoll
+      //used for event loop
       virtual void setPollGrp(FdPollGrp *grp);
 
       // used for statistics
