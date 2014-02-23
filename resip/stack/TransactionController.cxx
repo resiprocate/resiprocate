@@ -7,6 +7,7 @@
 #include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/AddTransport.hxx"
+#include "resip/stack/RemoveTransport.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
@@ -265,6 +266,12 @@ void
 TransactionController::addTransport(std::auto_ptr<Transport> transport)
 {
    mStateMacFifo.add(new AddTransport(transport));
+}
+
+void 
+TransactionController::removeTransport(unsigned int transportKey)
+{
+   mStateMacFifo.add(new RemoveTransport(transportKey));
 }
 
 void

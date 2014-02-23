@@ -5,6 +5,7 @@
 #include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/AddTransport.hxx"
+#include "resip/stack/RemoveTransport.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
@@ -399,6 +400,8 @@ void
 TransactionState::process(TransactionController& controller, 
                            TransactionMessage* message)
 {
+   SipMessage* sip = dynamic_cast<SipMessage*>(message);
+   if(!sip)
    {
       KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
       if (keepAlive)
@@ -409,23 +412,6 @@ TransactionState::process(TransactionController& controller,
          return;      
       }
 
-      ConnectionTerminated* term = dynamic_cast<ConnectionTerminated*>(message);
-      if (term)
-      {
-         controller.mTuSelector.add(term);
-         delete term;
-         return;
-      }
-
-      // TODO - add a message for closing a connection - .slg. not really needed terminateFlow does the same thing
-      //CloseConnection* closeConnection = dynamic_cast<CloseConnection*>(message);
-      //if(closeConnection)
-      //{
-      //   controller.mTransportSelector.closeConnection(closeConnection->getFlow());
-      //   delete closeConnection;
-      //   return;
-      //}
-
       KeepAlivePong* pong = dynamic_cast<KeepAlivePong*>(message);
       if (pong)
       {
@@ -434,11 +420,11 @@ TransactionState::process(TransactionController& controller,
          return;
       }
 
-      AddTransport* addTransport = dynamic_cast<AddTransport*>(message);
-      if(addTransport)
+      ConnectionTerminated* term = dynamic_cast<ConnectionTerminated*>(message);
+      if (term)
       {
-         controller.mTransportSelector.addTransport(addTransport->getTransport());
-         delete addTransport;
+         controller.mTuSelector.add(term);
+         delete term;
          return;
       }
 
@@ -473,6 +459,22 @@ TransactionState::process(TransactionController& controller,
          delete pollStatistics;
          return;
       }
+
+      AddTransport* addTransport = dynamic_cast<AddTransport*>(message);
+      if(addTransport)
+      {
+         controller.mTransportSelector.addTransport(addTransport->getTransport(), true /* isStackRunning */);
+         delete addTransport;
+         return;
+      }
+
+      RemoveTransport* removeTransport = dynamic_cast<RemoveTransport*>(message);
+      if(removeTransport)
+      {
+         controller.mTransportSelector.removeTransport(removeTransport->getTransportKey());
+         delete removeTransport;
+         return;
+      }
    }
    
    // .bwc. We can't do anything without a tid here. Check this first.
@@ -489,7 +491,6 @@ TransactionState::process(TransactionController& controller,
       return;
    }
    
-   SipMessage* sip = dynamic_cast<SipMessage*>(message);
    MethodTypes method = UNKNOWN;
 
    if(sip)
@@ -1599,8 +1600,11 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
    }
    else if (isTransportError(msg))
    {
-      processTransportFailure(msg);
+      // Failed to send response - transport has likely been removed
+      WarningLog (<< "Failed to send response to server transaction (transport was likely removed)." << *this);
       delete msg;
+      terminateServerTransaction(mId);
+      delete this;
    }
    else if (isAbandonServerTransaction(msg))
    {
@@ -1905,8 +1909,11 @@ TransactionState::processServerInvite(TransactionMessage* msg)
    }
    else if (isTransportError(msg))
    {
-      processTransportFailure(msg);
+      // Failed to send response - transport has likely been removed
+      WarningLog (<< "Failed to send response to server transaction (transport was likely removed)." << *this);
       delete msg;
+      terminateServerTransaction(mId);
+      delete this;
    }
    else if (isAbandonServerTransaction(msg))
    {

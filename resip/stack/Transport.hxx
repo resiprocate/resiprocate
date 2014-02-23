@@ -311,6 +311,7 @@ class Transport : public FdSetIOObserver
          // !jf! should use the fifo to pass this in
          mShuttingDown = true;
       }
+      virtual bool isShuttingDown() { return mShuttingDown; }
 
       // also used by the TransportSelector.
       // requires that the two transports be

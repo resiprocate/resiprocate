@@ -304,22 +304,20 @@ class SipStack : public FdSetIOObserver
                                       sip: certificates.  For reasons of standards compliance, it
                                       is disabled by default.
       */
-      Transport* addTransport( TransportType protocol,
-                         int port,
-                         IpVersion version=V4,
-                         StunSetting stun=StunDisabled,
-                         const Data& ipInterface = Data::Empty,
-                         const Data& sipDomainname = Data::Empty, // only used
-                                                                  // for TLS
-                                                                  // based stuff
-                         const Data& privateKeyPassPhrase = Data::Empty,
-                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
-                         unsigned transportFlags = 0,
-                         const Data& certificateFilename = "", const Data& privateKeyFilename = "",
-                         SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
-                         bool useEmailAsSIP = false,
-                         SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
-                         SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>());
+      Transport* addTransport(TransportType protocol,
+                              int port,
+                              IpVersion version=V4,
+                              StunSetting stun=StunDisabled,
+                              const Data& ipInterface = Data::Empty,
+                              const Data& sipDomainname = Data::Empty, // only used for TLS based stuff
+                              const Data& privateKeyPassPhrase = Data::Empty,
+                              SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+                              unsigned transportFlags = 0,
+                              const Data& certificateFilename = "", const Data& privateKeyFilename = "",
+                              SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
+                              bool useEmailAsSIP = false,
+                              SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
+                              SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>());
 
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport
@@ -328,7 +326,15 @@ class SipStack : public FdSetIOObserver
           @param transport Pointer to an externally created transport.  SipStack
                            assumes ownership.
       */
-      void addTransport( std::auto_ptr<Transport> transport);
+      void addTransport(std::auto_ptr<Transport> transport);
+
+      /**
+          Used to remove a previously added transport.
+
+          @param transportKey The key for the transpor to remove.  Use Transport::getKey 
+                 to get the key of a transport after it is added to the stack.
+      */      
+      void removeTransport(unsigned int transportKey);
 
       /**
           Returns the fifo that subclasses of Transport should use for the rxFifo

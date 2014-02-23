@@ -195,6 +195,7 @@ MethodHash.cxx: MethodHash.gperf
 
 resipincludedir = $(includedir)/resip/stack
 nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
+	AddTransport.hxx \
 	Aor.hxx \
 	ApiCheck.hxx \
 	ApiCheckList.hxx \
@@ -285,6 +286,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	QValue.hxx \
 	QValueParameter.hxx \
 	RAckCategory.hxx \
+	RemoveTransport.hxx \
 	RequestLine.hxx \
 	Rlmi.hxx \
 	RportParameter.hxx \

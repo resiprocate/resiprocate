@@ -456,8 +456,7 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
       }
       while(!ipIfs.empty())
       {
-         if(DnsUtil::isIpV4Address(ipIfs.back().second)==
-                                             (transport->ipVersion()==V4))
+         if(DnsUtil::isIpV4Address(ipIfs.back().second) == (transport->ipVersion()==V4))
          {
             addAlias(ipIfs.back().second, transport->port());
          }
@@ -482,8 +481,27 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    }
    else
    {
-       // Stack isn't running yet - just add transport directly on transport selection from this thread
-       mTransactionController->transportSelector().addTransport(transport); 
+       // Stack isn't running yet - just add transport directly on transport selector from this thread
+       mTransactionController->transportSelector().addTransport(transport, false /* isStackRunning */); 
+   }
+}
+
+void 
+SipStack::removeTransport(unsigned int transportKey)
+{
+   // TODO undo other stuff - not easy
+   // addAlias(transport->interfaceName(), transport->port());
+   // mPorts.insert(transport->port());
+   
+   if(mProcessingHasStarted)
+   {
+       // Stack is running.  Need to queue remove request for TransactionController Thread
+       mTransactionController->removeTransport(transportKey);
+   }
+   else
+   {
+       // Stack isn't running yet - just remove transport directly on transport selector from this thread
+       mTransactionController->transportSelector().removeTransport(transportKey); 
    }
 }
 
