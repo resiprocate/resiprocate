@@ -25,7 +25,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-
 CommandServer::CommandServer(ReproRunner& reproRunner,
                              Data ipAddr,
                              int port, 
@@ -121,6 +120,10 @@ CommandServer::handleRequest(unsigned int connectionId, unsigned int requestId, 
       else if(isEqualNoCase(xml.getTag(), "AddTransport"))
       {
          handleAddTransportRequest(connectionId, requestId, xml);
+      }
+      else if(isEqualNoCase(xml.getTag(), "RemoveTransport"))
+      {
+         handleRemoveTransportRequest(connectionId, requestId, xml);
       }
       else 
       {
@@ -503,7 +506,7 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
                      xml.parent();
                   }
                }
-               else if(isEqualNoCase(xml.getTag(), "cert"))
+               else if(isEqualNoCase(xml.getTag(), "certfile"))
                {
                   if(xml.firstChild())
                   {
@@ -511,7 +514,7 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
                      xml.parent();
                   }
                }
-               else if(isEqualNoCase(xml.getTag(), "key"))
+               else if(isEqualNoCase(xml.getTag(), "keyfile"))
                {
                   if(xml.firstChild())
                   {
@@ -669,7 +672,15 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
          {
             transport->setRcvBufLen(rcvBufLen);
          }
-         Data text("Transport added: ");
+
+         // Transport is added asynchronously and transport key is assigned in another thread.  
+         // Use an artificial delay before retrieving the key.  Also we can't
+         // know if the add actually failed and the transport got deleted.  TODO - Need to make all this better.
+         sleepMs(500);
+
+         transportInfoText += ", transportKey=" + Data(transport->getKey());
+
+         Data text("Transport add requested: ");
          text += transportInfoText;
          sendResponse(connectionId, requestId, Data::Empty, 200, text);
       }
@@ -688,6 +699,55 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
       sendResponse(connectionId, requestId, Data::Empty, 500, text);
    }
 }
+
+void 
+CommandServer::handleRemoveTransportRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml)
+{
+   unsigned int transportKey = 0;
+
+   InfoLog(<< "CommandServer::handleRemoveTransportRequest");
+
+   // Check for Parameters
+   if(xml.firstChild())
+   {
+      if(isEqualNoCase(xml.getTag(), "request"))
+      {
+         if(xml.firstChild())
+         {
+            while(true)
+            {
+               if(isEqualNoCase(xml.getTag(), "key"))
+               {
+                  if(xml.firstChild())
+                  {
+                     transportKey = xml.getValue().convertUnsignedLong();
+                     xml.parent();
+                  }
+               }
+               if(!xml.nextSibling())
+               {
+                  // break on no more sibilings
+                  break;
+               }
+            }
+            xml.parent();
+         }
+      }
+      xml.parent();
+   }
+
+   // We need transport key to remove
+   if(transportKey == 0)
+   {
+      sendResponse(connectionId, requestId, Data::Empty, 400, "Invalid transport key specified: must be non-zero.");
+      return;
+   }
+   mReproRunner.getProxy()->getStack().removeTransport(transportKey);
+   Data text("Transport remove requested: transportKey=");
+   text += Data(transportKey);
+   sendResponse(connectionId, requestId, Data::Empty, 200, text);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

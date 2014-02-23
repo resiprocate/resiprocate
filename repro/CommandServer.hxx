@@ -59,6 +59,7 @@ private:
    void handleGetProxyConfigRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleRestartRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
    void handleAddTransportRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
+   void handleRemoveTransportRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);
 
    ReproRunner& mReproRunner;
    resip::Mutex mStatisticsWaitersMutex;

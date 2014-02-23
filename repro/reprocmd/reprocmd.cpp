@@ -6,15 +6,6 @@
 using namespace resip;
 using namespace std;
 
-void sleepSeconds(unsigned int seconds)
-{
-#ifdef WIN32
-   Sleep(seconds*1000);
-#else
-   sleep(seconds);
-#endif
-}
-
 int 
 main (int argc, char** argv)
 {
@@ -63,9 +54,11 @@ main (int argc, char** argv)
       cerr << "  /AddTransport type=<UDP|TCP|etc.> port=<value> [ipVersion=<V4|V6>]" << endl; 
       cerr << "                [interface=<ipaddress>] [rruri=<AUTO|sip:host:port>]" << endl;
       cerr << "                [udprcvbuflen=<value>] [stun=<YES|NO>] [flags=<uint>]" << endl;
-      cerr << "                [domain=<tlsdomainname>] [ssltype=<SSLv23|TLSv1>]  [cert=<filename>]" << endl;
-      cerr << "                [key=<filename>] [tlscvm=<NONE|OPT|MAN>] [tlsuseemail=<YES|NO>" << endl;
+      cerr << "                [domain=<tlsdomainname>] [ssltype=<SSLv23|TLSv1>]" << endl;
+      cerr << "                [certfile=<filename>] [keyfile=<filename>]" << endl;
+      cerr << "                [tlscvm=<NONE|OPT|MAN>] [tlsuseemail=<YES|NO>]" << endl;
       cerr << "                - adds a new transport to the stack." << endl;
+      cerr << "  /RemoveTransport key=<transportKey> - removes the requested transport" << endl; 
       exit(1);
    }
 
