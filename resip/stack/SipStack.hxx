@@ -1096,6 +1096,8 @@ class SipStack : public FdSetIOObserver
 
       AfterSocketCreationFuncPtr mSocketFunc;
 
+      unsigned int mNextTransportKey;
+
       friend class Executive;
       friend class StatelessHandler;
       friend class StatisticsManager;

@@ -73,7 +73,6 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mCompression(compression),
    mSigcompStack (0),
    mPollGrp(0),
-   mNextTransportKey(1),
    mAvgBufferSize(1024),
    mInterruptorHandle(0)
 {
@@ -199,7 +198,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
 
    Tuple tuple(transport->interfaceName(), transport->port(),
                transport->ipVersion(), transport->transport());
-   tuple.mTransportKey = mNextTransportKey;
+   tuple.mTransportKey = transport->getKey();
 
    if(!isSecure(transport->transport()))
    {
@@ -273,9 +272,6 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
       mHasOwnProcessTransports.push_back(transport);
       mHasOwnProcessTransports.back()->startOwnProcessing();
    }
-
-   // Assign next key to tranpsort and increment next key for next add
-   transport->setKey(mNextTransportKey++);
 
    mTypeToTransportMap.insert(TypeToTransportMap::value_type(tuple,transport));
    mDns.addTransportType(transport->transport(), transport->ipVersion());

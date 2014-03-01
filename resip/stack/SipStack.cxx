@@ -57,7 +57,8 @@ SipStack::SipStack(const SipStackOptions& options) :
                 TransactionController::MaxTUFifoSize),
         mTuSelector(mTUFifo),
         mAppTimers(mTuSelector),
-        mStatsManager(*this)
+        mStatsManager(*this),
+        mNextTransportKey(1)
 {
    // WARNING - don't forget to add new member initialization to the init() method
    init(options);
@@ -97,7 +98,8 @@ SipStack::SipStack(Security* pSecurity,
    mProcessingHasStarted(false),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
-   mSocketFunc(socketFunc)
+   mSocketFunc(socketFunc),
+   mNextTransportKey(1)
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
@@ -231,7 +233,6 @@ SipStack::~SipStack()
       delete mAsyncProcessHandler;
       mAsyncProcessHandler=0;
    }
-
 }
 
 void 
@@ -473,6 +474,9 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    {
        transport->setCongestionManager(mCongestionManager);
    }
+
+   // Assign a transportKey to the transport
+   transport->setKey(mNextTransportKey++);
 
    if(mProcessingHasStarted)
    {

@@ -250,7 +250,6 @@ class TransportSelector
       FdPollGrp* mPollGrp;
 
       int mAvgBufferSize;
-      unsigned int mNextTransportKey;
       Fifo<Transport> mTransportsToAddRemove;
       std::auto_ptr<SelectInterruptor> mSelectInterruptor;
       FdPollItemHandle mInterruptorHandle;

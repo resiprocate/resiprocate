@@ -673,11 +673,6 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
             transport->setRcvBufLen(rcvBufLen);
          }
 
-         // Transport is added asynchronously and transport key is assigned in another thread.  
-         // Use an artificial delay before retrieving the key.  Also we can't
-         // know if the add actually failed and the transport got deleted.  TODO - Need to make all this better.
-         sleepMs(500);
-
          transportInfoText += ", transportKey=" + Data(transport->getKey());
 
          Data text("Transport add requested: ");
