@@ -592,6 +592,7 @@ static int init_by_defaults_windows_nameservers_getadaptersaddresses(ares_channe
       {
          PIP_ADAPTER_DNS_SERVER_ADDRESS dnsServers = AI->FirstDnsServerAddress;
 
+         //printf("ARES Interface:  Name=%s(%S), Type=%d, Status=%d\n",  AI->AdapterName, AI->FriendlyName, AI->IfType, AI->OperStatus);  
          if(AI->IfType == IF_TYPE_TUNNEL || AI->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
          {
             // Don't process TUNNEL or LOOPBACK adapters
@@ -621,7 +622,7 @@ static int init_by_defaults_windows_nameservers_getadaptersaddresses(ares_channe
                      // add v4 server if it doesn't exist already
                      if (find_server(channel->servers, channel->nservers, sa4->sin_addr) == -1)
                      {
-                        // printf( "ARES: %s\n", inet_ntop(sa4->sin_addr) );
+                        //printf( "  ARES: %d.%d.%d.%d\n", sa4->sin_addr.S_un.S_un_b.s_b1, sa4->sin_addr.S_un.S_un_b.s_b2, sa4->sin_addr.S_un.S_un_b.s_b3, sa4->sin_addr.S_un.S_un_b.s_b4 );
 #ifdef USE_IPV6
                         channel->servers[ channel->nservers ].family = AF_INET;
 #endif
@@ -642,7 +643,23 @@ static int init_by_defaults_windows_nameservers_getadaptersaddresses(ares_channe
             else if(dnsServers->Address.lpSockaddr->sa_family == AF_INET6)
             {
                struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)dnsServers->Address.lpSockaddr;
-               if (memcmp(&sa6->sin6_addr, &in6addr_any, sizeof(sa6->sin6_addr)) != 0)
+
+               // Source: http://comments.gmane.org/gmane.network.dns.c-ares/1090
+               // Windows implements a draft RFC from 2001
+               // (http://tools.ietf.org/id/draft-ietf-ipngwg-dns-discovery-03.txt) that
+               // suggests that DNS resolvers try a couple of fixed "site-local" IPv6
+               // addresses (fec0:0:0:ffff::1, fec0:0:0:ffff::2 and fec0:0:0:ffff::3), which
+               // would allow the networking stack to find DNS servers without any
+               // configuration. 
+
+               // The whole concept of site-local addresses is now considered problematic and
+               // the use of the fec0::/10 address range has been officially deprecated in RFC
+               // 3879 (http://www.ietf.org/rfc/rfc3879.txt) so it seems unlikely that this
+               // way of setting up DNS on a network will become popular in the future.
+
+               // Skip v6 address if inaddr_any or if site local (see above)
+               if (memcmp(&sa6->sin6_addr, &in6addr_any, sizeof(sa6->sin6_addr)) != 0 &&
+                   ntohs(sa6->sin6_addr.u.Word[0]) != 0xfec0)  // Addresses starting with 0xfec0 are site local addresses
                {
                   if(loopnum == 1)
                   {
@@ -653,7 +670,9 @@ static int init_by_defaults_windows_nameservers_getadaptersaddresses(ares_channe
                      // add v6 server if it doesn't exist already
                      if (find_server6(channel->servers, channel->nservers, sa6->sin6_addr) == -1)
                      {
-                        // printf( "ARES: %s\n", inet_ntop6(sa6->sin6_addr) );
+                        //printf( "  ARES: %.4x:%.4x:%.4x:%.4x:%.4x:%.4x:%.4x:%.4x:\n", 
+                        //    ntohs(sa6->sin6_addr.u.Word[0]), ntohs(sa6->sin6_addr.u.Word[1]), ntohs(sa6->sin6_addr.u.Word[2]), ntohs(sa6->sin6_addr.u.Word[3]),
+                        //    ntohs(sa6->sin6_addr.u.Word[4]), ntohs(sa6->sin6_addr.u.Word[5]), ntohs(sa6->sin6_addr.u.Word[6]), ntohs(sa6->sin6_addr.u.Word[7]));
                         channel->servers[ channel->nservers ].family = AF_INET6;
                         memcpy(&channel->servers[channel->nservers].addr6, &sa6->sin6_addr, sizeof(channel->servers[channel->nservers].addr6));
 
