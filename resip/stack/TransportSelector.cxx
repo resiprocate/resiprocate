@@ -226,14 +226,14 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
       else
       {
          WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
-         delete transport;
+         assert(false); // should never get here - checked in SipStack first
          return;
       }
    }
    else
    {
-      TlsTransportKey key(tuple);
       tuple.setTargetDomain(transport->tlsDomain());
+      TlsTransportKey key(tuple);
       if(mTlsTransports.find(key) == mTlsTransports.end())
       {
          mTlsTransports[key] = transport;
@@ -241,7 +241,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
       else
       {
          WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
-         delete transport;
+         assert(false); // should never get here - checked in SipStack first
          return;
       }
    }

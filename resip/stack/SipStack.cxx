@@ -442,7 +442,48 @@ SipStack::addTransport( TransportType protocol,
 void
 SipStack::addTransport(std::auto_ptr<Transport> transport)
 {
-   //.dcm. once addTransport starts throwing, need to back out alias
+   // Ensure we will be able to add the transport in the transport selector by ensure we
+   // don't have any transport collisions.  Note:  We store two set's here in order to 
+   // avoid needing to ask the TransportSelector under some form of locking.
+   Tuple tuple(transport->interfaceName(), transport->port(),
+               transport->ipVersion(), transport->transport());
+   if(!isSecure(transport->transport()))
+   {
+      if(mNonSecureTransports.count(tuple) == 0)
+      {
+         // All is good - assign key to transport then add to mNonSecureTransports list
+         transport->setKey(mNextTransportKey++);
+         tuple.mTransportKey = transport->getKey();
+         mNonSecureTransports[tuple] = transport.get();
+      }
+      else
+      {
+         // Nonsecure transport collision with existing transport
+         ErrLog(<< "Failed to add non-secure transport, transport with similar properties already exists: " << tuple);
+         throw Transport::Exception("Failed to add non-secure transport, transport with similar properties already exists.", __FILE__,__LINE__);
+         return;
+      }
+   }
+   else
+   {
+      tuple.setTargetDomain(transport->tlsDomain());
+      TransportSelector::TlsTransportKey tlsKey(tuple);
+      if(mSecureTransports.count(tlsKey) == 0)
+      {
+         // All is good - assign key to transport then add to mNonSecureTransports list
+         transport->setKey(mNextTransportKey++);
+         tlsKey.mTuple.mTransportKey = transport->getKey();
+         mSecureTransports[tlsKey] = transport.get();
+      }
+      else
+      {
+         // Secure transport collision with existing transport
+         ErrLog(<< "Failed to add secure transport, transport with similar properties already exists: " << tuple);
+         throw Transport::Exception("Failed to add secure transport, transport with similar properties already exists.", __FILE__,__LINE__);
+         return;
+      }
+   }
+
    if (!transport->interfaceName().empty())
    {
       addAlias(transport->interfaceName(), transport->port());
@@ -466,7 +507,7 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    }
    { 
       Lock lock(mPortsMutex);
-      mPorts.insert(transport->port());
+      mPorts[transport->port()]++;  // add port / increment reference count
    }
 
    // Add to CongestionManager if required
@@ -474,9 +515,6 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    {
        transport->setCongestionManager(mCongestionManager);
    }
-
-   // Assign a transportKey to the transport
-   transport->setKey(mNextTransportKey++);
 
    if(mProcessingHasStarted)
    {
@@ -493,10 +531,87 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
 void 
 SipStack::removeTransport(unsigned int transportKey)
 {
-   // TODO undo other stuff - not easy
-   // addAlias(transport->interfaceName(), transport->port());
-   // mPorts.insert(transport->port());
+   Tuple removeTuple;
+   Transport* transportToRemove = 0;
+
+   // Find transport using Key in SipStack lists(sets)
+   for(NonSecureTransportMap::iterator itNS = mNonSecureTransports.begin(); itNS != mNonSecureTransports.end(); itNS++)
+   {
+      if(itNS->first.mTransportKey == transportKey)
+      {
+         removeTuple = itNS->first;
+         transportToRemove = itNS->second;
+         mNonSecureTransports.erase(itNS);
+         break;
+      }
+   }
+   // If not found look in Secure list(set)
+   if(!transportToRemove)
+   {
+      for(SecureTransportMap::iterator itS = mSecureTransports.begin(); itS != mSecureTransports.end(); itS++)
+      {
+         if(itS->first.mTuple.mTransportKey == transportKey)
+         {
+            removeTuple = itS->first.mTuple;
+            transportToRemove = itS->second;
+            mSecureTransports.erase(itS);
+            break;
+         }
+      }
+   }
+   if(!transportToRemove)
+   {
+      WarningLog (<< "removeTransport: could not find transport specified by transportKey=" << transportKey);
+      return;
+   }
+
+   if(mSecureTransports.size() == 0 && mNonSecureTransports.size() == 0)
+   {
+      // If we have no more transports we can just clear out the mDomains map and mUri
+      Lock lock(mDomainsMutex);
+      mDomains.clear();
+      mUri.host().clear();
+      mUri.port() = 0;
+   }
+   else if(!transportToRemove->interfaceName().empty())
+   {
+      removeAlias(transportToRemove->interfaceName(), transportToRemove->port());
+   }
+   else
+   {
+      // Warning:  This removal could produce unexpected results if the querying of the 
+      // current interface addresses yields a different result then when we added the 
+      // transport.
+      // Using INADDR_ANY, get all IP interfaces
+      std::list<std::pair<Data, Data> > ipIfs(DnsUtil::getInterfaces());
+      if(transportToRemove->ipVersion()==V4)
+      {
+         ipIfs.push_back(std::make_pair<Data,Data>("lo0","127.0.0.1"));
+      }
+      while(!ipIfs.empty())
+      {
+         if(DnsUtil::isIpV4Address(ipIfs.back().second) == (transportToRemove->ipVersion()==V4))
+         {
+            removeAlias(ipIfs.back().second, transportToRemove->port());
+         }
+         ipIfs.pop_back();
+      }
+   }
    
+   // Remove from port map if reference count is 0
+   {
+      Lock lock(mPortsMutex);
+      std::map<int, unsigned int>::iterator itP = mPorts.find(transportToRemove->port());
+      if(itP != mPorts.end())
+      {
+         // Decrement reference count and erase if 0
+         if(--itP->second == 0)
+         {
+            mPorts.erase(itP);
+         }
+      }
+   }
+
    if(mProcessingHasStarted)
    {
        // Stack is running.  Need to queue remove request for TransactionController Thread
@@ -524,13 +639,36 @@ SipStack::addAlias(const Data& domain, int port)
    assert(!mShuttingDown);
 
    Lock lock(mDomainsMutex);
-
-   mDomains.insert(domain + ":" + Data(portToUse));
+   mDomains[domain + ":" + Data(portToUse)]++;
 
    if(mUri.host().empty())
    {
-      mUri.host()=*mDomains.begin();
+      mUri.host() = domain;
+      mUri.port() = portToUse;
    }
+}
+
+void
+SipStack::removeAlias(const Data& domain, int port)
+{
+   int portToUse = (port == 0) ? Symbols::DefaultSipPort : port;
+
+   DebugLog (<< "Removing domain alias: " << domain << ":" << portToUse);
+   assert(!mShuttingDown);
+
+   Lock lock(mDomainsMutex);
+   DomainsMap::iterator it = mDomains.find(domain + ":" + Data(portToUse));
+   if(it != mDomains.end())
+   {
+      if(--it->second == 0)
+      {
+         mDomains.erase(it);
+      }
+   }
+
+   // TODO - could reset mUri to be first item in Domain map - would need
+   // to seperate domain name and port though.  Not sure who is using mUri
+   // anyway.
 }
 
 Data

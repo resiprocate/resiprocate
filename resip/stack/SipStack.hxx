@@ -15,6 +15,7 @@
 #include "rutil/TransportType.hxx"
 #include "rutil/BaseException.hxx"
 #include "resip/stack/TransactionController.hxx"
+#include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/SecurityTypes.hxx"
 #include "resip/stack/StatisticsManager.hxx"
 #include "resip/stack/TuSelector.hxx"
@@ -348,7 +349,7 @@ class SipStack : public FdSetIOObserver
           @brief add an alias for this sip element
           
           @details Used to add an alias for this sip element. e.g. foobar.com and boo.com
-          are both handled by this stack.  Not threadsafe.  Alias is added 
+          are both handled by this stack.  Alias is added 
           to internal list of Domains and can be checked with isMyDomain.
 
           @param domain   Domain name that this stack is responsible for.
@@ -357,6 +358,19 @@ class SipStack : public FdSetIOObserver
           @ingroup resip_config
       */
       void addAlias(const Data& domain, int port);
+
+      /**
+          @brief removes an alias from this sip element
+          
+          @details Used to remove an existing alias from this sip element.
+          Only removed if reference count hits 0.
+
+          @param domain   Domain name that this stack is responsible for.
+
+          @param port     Port for domain that this stack is responsible for.
+          @ingroup resip_config
+      */
+      void removeAlias(const Data& domain, int port);
 
       /**
           Returns true if domain is handled by this stack.  Convenience for
@@ -1081,14 +1095,24 @@ class SipStack : public FdSetIOObserver
       /** @brief store all domains that this stack is responsible for.
           @note Controlled by addAlias and addTransport interface
           and checks can be made with isMyDomain() */
-      std::set<Data> mDomains;
+      typedef std::map<Data, unsigned int> DomainsMap;
+      DomainsMap mDomains;  // Second item (unsigned int) is for reference counting
       Uri mUri;
       mutable Mutex mDomainsMutex;  // Protects both mDomains and mUri, since they are related
 
       /** store all ports that this stack is lisenting on.  Controlled by addTransport
           and checks can be made with isMyPort() */
-      std::set<int> mPorts;
+      std::map<int, unsigned int> mPorts;  // Second item (unsigned int) is for reference counting
       mutable Mutex mPortsMutex;
+
+      // Used to ensure new Transport additions will always succeed without needing to ask 
+      // TransportSelector if add will be valid and introduce locking
+      // Note:  We could add a Mutex here and add thread safe accesor methods to transport pointers 
+      //        as a convience to API users
+      typedef std::map<Tuple, Transport*> NonSecureTransportMap;
+      NonSecureTransportMap mNonSecureTransports;
+      typedef std::map<TransportSelector::TlsTransportKey, Transport*> SecureTransportMap;
+      SecureTransportMap mSecureTransports;
 
       bool mShuttingDown;
       mutable Mutex mShutdownMutex;
