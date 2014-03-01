@@ -317,8 +317,8 @@ TransportSelector::removeTransport(unsigned int transportKey)
 
       mTypeToTransportMap.erase(transportToRemove->getTuple());
 
-      // TODO we can't remove from Dns TransportType unless we reference count the items
-      //mDns.removeTransportType(transport->transport(), transport->ipVersion());  
+      // Remove transport types from Dns list of supported protocols
+      mDns.removeTransportType(transportToRemove->transport(), transportToRemove->ipVersion());
 
       if (transportToRemove->shareStackProcessAndSelect())
       {

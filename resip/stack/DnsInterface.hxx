@@ -44,7 +44,8 @@ class DnsInterface
 
       // set the supported set of types that a UAC wishes to use
       void addTransportType(TransportType type, IpVersion version);
-      
+      void removeTransportType(TransportType type, IpVersion version);
+
       // return if the client supports the specified service (e.g. SIP+D2T)
       bool isSupported(const Data& service);
       bool isSupported(TransportType t, IpVersion version);
@@ -85,12 +86,16 @@ class DnsInterface
       }
 
    protected: 
+      const Data* getSupportedNaptrType(TransportType type);
+      void logSupportedTransports();
+
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
       friend class DnsResult;
       Mutex mSupportedMutex; // Protects mSupportedNaptrs and mSupportTransports
-      std::set<Data> mSupportedNaptrs;
-      typedef std::vector<std::pair<TransportType, IpVersion> > TransportMap;
+      typedef std::map<Data, unsigned int> SupportedNaptrMap; // second is for RefCount
+      SupportedNaptrMap mSupportedNaptrs;  
+      typedef std::map<std::pair<TransportType, IpVersion>, unsigned int> TransportMap; // second is for RefCount
       TransportMap mSupportedTransports;
       // Whether transport failover should be disabled on URIs with only a numeric
       // IP address (only UDP will ever be attempted).
