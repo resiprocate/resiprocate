@@ -1,4 +1,6 @@
 = Release Notes v 1.9 =
+==1.9.2 Changes==
+*rutil/dns: fix for Windows DNS Server use.  Ignore Link Local DNS Server entries.
 
 ==1.9.1 Changes==
 *adapt to work with asio v1.10.1 (still works with v1.4.x too)
