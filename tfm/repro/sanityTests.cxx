@@ -62,15 +62,6 @@ static const int sRunTestsKnownToFail =
 const Data transport("udp");
 static NameAddr localhost;
 
-void sleepSeconds(unsigned int seconds)
-{
-#ifdef WIN32
-   Sleep(seconds*1000);
-#else
-   sleep(seconds);
-#endif
-}
-
 class DisableDigestAuthGuard 
 {
    public:

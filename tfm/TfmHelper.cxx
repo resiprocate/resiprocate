@@ -1,5 +1,6 @@
 #include "TfmHelper.hxx"
 
+/* No longer needed - provided by rutil\time.hxx now
 #ifdef WIN32
 #  include <windows.h>
 #else
@@ -13,4 +14,4 @@ void sleepSeconds(unsigned int seconds)
 #else
    sleep(seconds);
 #endif
-}
+}*/

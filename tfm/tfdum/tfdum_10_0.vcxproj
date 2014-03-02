@@ -417,9 +417,6 @@
     <ClInclude Include="TfdTcpTransport.hxx" />
     <ClInclude Include="TfdTestSipEndPoint.hxx" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="ReadMe.txt" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

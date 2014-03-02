@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
+#include <map>
 #include <memory>
 
 //#ifndef WIN32
