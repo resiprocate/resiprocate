@@ -28,7 +28,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    const char* dtlsPorts = 0;
    int noV4 = 0;
    int noV6 = 0;
-   int threadedStack = 0;
+   int disableThreadedStack = 0;
    int useCongestionManager = 0;
    const char* certPath = 0;
    int noChallenge = 0;
@@ -78,7 +78,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"dtls",           0,  POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,    &dtlsPorts, 0, "add DTLS transport on specified port/s", "none (dtls disabled)"},
       {"disable-v6",   0,   POPT_ARG_NONE, &noV6, 0, "disable IPV6", 0},
       {"disable-v4",   0,   POPT_ARG_NONE, &noV4, 0, "disable IPV4", 0},
-      {"threaded-stack",   0,   POPT_ARG_NONE, &threadedStack, 0, "enable multithreaded stack", 0},
+      {"disable-threaded-stack",   0,   POPT_ARG_NONE, &disableThreadedStack, 0, "disable multithreaded stack", 0},
       {"use-congestion-manager",   0,   POPT_ARG_NONE, &useCongestionManager, 0, "enable congestion manager", 0},
       {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
       {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
@@ -146,14 +146,14 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mDtlsPorts = toIntSet(dtlsPorts, "dtls ports");
    mNoV4 = noV4 != 0;
    mNoV6 = noV6 != 0;
-   mThreadedStack = threadedStack != 0;
+   mThreadedStack = disableThreadedStack == 0;
    mUseCongestionManager = useCongestionManager != 0;
    if (certPath) mCertPath = certPath;
    else mCertPath = basePath + "/.sipCerts";
    mNoChallenge = noChallenge != 0;
    mNoWebChallenge = noWebChallenge != 0;
    mNoRegistrar = noRegistrar != 0 ;
-   mCertServer = noCertServer==0 ;
+   mCertServer = noCertServer == 0 ;
    mRequestProcessorChainName=reqChainName;
 
    if (enumSuffix) mEnumSuffix = enumSuffix;

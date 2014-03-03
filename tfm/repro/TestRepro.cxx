@@ -133,34 +133,36 @@ TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& nwInterface,
                      Security* security) : 
    TestProxy(name, host, args.mUdpPorts, args.mTcpPorts, args.mTlsPorts, args.mDtlsPorts, nwInterface),
+   mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
+   mInterruptor(new EventThreadInterruptor(*mPollGrp)),
 #ifdef USE_SIGCOMP
-   mStack(security,
-            DnsStub::EmptyNameserverList,
-            0,
-            false,
-            0,
-            new Compression(Compression::DEFLATE)),
+   mStack(new SipStack(security,
+          DnsStub::EmptyNameserverList,
+          mInterruptor,
+          false,
+          0,
+          new Compression(Compression::DEFLATE))),
 #else
-   mStack(security),
+   mStack(new SipStack(security, DnsStub::EmptyNameserverList, mInterruptor)),
 #endif
-   mStackThread(mStack),
+   mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mRegistrar(),
    mProfile(new MasterProfile),
    mDb(new BerkeleyDb),
    mConfig(mDb, args),
-   mAuthRequestDispatcher(new Dispatcher(std::auto_ptr<Worker>(new UserAuthGrabber(mConfig.getDataStore()->mUserStore)),
-                                         &mStack, 2)),
+   mAuthRequestDispatcher(new Dispatcher(std::auto_ptr<Worker>(new UserAuthGrabber(mConfig.getDataStore()->mUserStore)), 
+                                         mStack, 2)),
    mRequestProcessors(Processor::REQUEST_CHAIN),
    mResponseProcessors(Processor::RESPONSE_CHAIN),
    mTargetProcessors(Processor::TARGET_CHAIN),
    mRegData(),
-   mProxy(mStack, 
+   mProxy(*mStack, 
           mConfig,
-          makeRequestProcessorChain(mRequestProcessors, mConfig, mAuthRequestDispatcher, mRegData,&mStack),
-          makeResponseProcessorChain(mResponseProcessors,mRegData),
-          makeTargetProcessorChain(mTargetProcessors,mConfig)),
-   mDum(mStack),
-   mDumThread(mDum)
+          makeRequestProcessorChain(mRequestProcessors, mConfig, mAuthRequestDispatcher, mRegData, mStack),
+          makeResponseProcessorChain(mResponseProcessors, mRegData),
+          makeTargetProcessorChain(mTargetProcessors, mConfig)),
+   mDum(new DialogUsageManager(*mStack)),
+   mDumThread(new DumThread(*mDum))
 {
    resip::InteropHelper::setRRTokenHackEnabled(args.mEnableFlowTokenHack);
    resip::InteropHelper::setOutboundSupported(true);
@@ -170,8 +172,8 @@ TestRepro::TestRepro(const resip::Data& name,
 
    // !bwc! TODO Once we have something we _do_ support, put that here.
    mProxy.addSupportedOption("p-fakeoption");
-   mStack.addAlias("localhost",5060);
-   mStack.addAlias("localhost",5061);
+   mStack->addAlias("localhost",5060);
+   mStack->addAlias("localhost",5061);
 
    std::list<resip::Data> domains;
    domains.push_back("127.0.0.1");
@@ -179,7 +181,7 @@ TestRepro::TestRepro(const resip::Data& name,
    
    try
    {
-      Transport *t = mStack.addTransport(UDP, 
+      Transport *t = mStack->addTransport(UDP, 
                            5060, 
                            V4,
                            StunDisabled,
@@ -198,7 +200,7 @@ TestRepro::TestRepro(const resip::Data& name,
 
    try
    {
-      Transport *t = mStack.addTransport(TCP, 
+      Transport *t = mStack->addTransport(TCP, 
                            5060, 
                            V4,
                            StunDisabled,
@@ -219,7 +221,7 @@ TestRepro::TestRepro(const resip::Data& name,
 #ifdef RESIP_USE_SCTP
    try
    {
-      Transport *t = mStack.addTransport(SCTP, 
+      Transport *t = mStack->addTransport(SCTP, 
                            5060, 
                            V4,
                            StunDisabled,
@@ -244,7 +246,7 @@ TestRepro::TestRepro(const resip::Data& name,
    
    try
    {
-      Transport *t = mStack.addTransport(TLS, 
+      Transport *t = mStack->addTransport(TLS, 
                            5061, 
                            V4, 
                            StunDisabled, 
@@ -266,7 +268,7 @@ TestRepro::TestRepro(const resip::Data& name,
    
    std::vector<Data> enumSuffixes;
    enumSuffixes.push_back(args.mEnumSuffix);
-   mStack.setEnumSuffixes(enumSuffixes);
+   mStack->setEnumSuffixes(enumSuffixes);
 
    mProxy.addSupportedOption("outbound");
    mProxy.addSupportedOption("p-fakeoption");
@@ -275,10 +277,10 @@ TestRepro::TestRepro(const resip::Data& name,
    mProfile->addSupportedMethod(resip::REGISTER);
    mProfile->addSupportedScheme(Symbols::Sips);
 
-   mDum.setMasterProfile(mProfile);
-   mDum.setServerRegistrationHandler(&mRegistrar);
-   mDum.setRegistrationPersistenceManager(&mRegData);
-   mDum.addDomain(host);
+   mDum->setMasterProfile(mProfile);
+   mDum->setServerRegistrationHandler(&mRegistrar);
+   mDum->setRegistrationPersistenceManager(&mRegData);
+   mDum->addDomain(host);
    
    // Install rules so that the registrar only gets REGISTERs
    resip::MessageFilterRule::MethodList methodList;
@@ -288,45 +290,54 @@ TestRepro::TestRepro(const resip::Data& name,
    ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                         resip::MessageFilterRule::Any,
                                         methodList) );
-   mDum.setMessageFilterRuleList(ruleList);
+   mDum->setMessageFilterRuleList(ruleList);
     
-   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, 
+   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(*mDum, 
                                                                    mAuthRequestDispatcher,
                                                                    mConfig.getDataStore()->mAclStore, 
                                                                    true, 
                                                                    false,
                                                                    true));
-   mDum.setServerAuthManager(authMgr);    
+   mDum->setServerAuthManager(authMgr);    
 
-   mStack.registerTransactionUser(mProxy);
+   mStack->registerTransactionUser(mProxy);
 
    if(args.mUseCongestionManager)
    {
       mCongestionManager.reset(new GeneralCongestionManager(
                                           GeneralCongestionManager::WAIT_TIME, 
                                           200));
-      mStack.setCongestionManager(mCongestionManager.get());
+      mStack->setCongestionManager(mCongestionManager.get());
    }
 
    if(args.mThreadedStack)
    {
-      mStack.run();
+      mStack->run();
    }
 
-   mStackThread.run();
+   mStackThread->run();
    mProxy.run();
-   mDumThread.run();
+   mDumThread->run();
 }
 
 TestRepro::~TestRepro()
 {
-   mDumThread.shutdown();
-   mDumThread.join();
+   mDumThread->shutdown();
+   mDumThread->join();
    delete mAuthRequestDispatcher;
-   mStackThread.shutdown();
-   mStackThread.join();
-   mStack.shutdownAndJoinThreads();
-   mStack.setCongestionManager(0);
+   mStack->shutdownAndJoinThreads();
+   mStackThread->shutdown();
+   mStackThread->join();
+   mStack->setCongestionManager(0);
+
+   delete mDum;
+   delete mDumThread;
+   delete mStack;
+   delete mStackThread;
+   delete mInterruptor;
+   delete mPollGrp;
+   // Note:  mStack descructor will delete mSecurity
+  
    delete mDb;
 }
 

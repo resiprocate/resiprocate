@@ -1,6 +1,7 @@
 #if !defined(DumUserAgent_hxx)
 #define DumUserAgent_hxx
 
+#include "resip/stack/EventStackThread.hxx"
 #include "resip/dum/DialogEventHandler.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
@@ -481,7 +482,7 @@ class DumUserAgent : public EndPoint,
       //resip::ClientOutOfDialogReqHandle mClientOutOfDialogReq;
       //resip::ServerOutOfDialogReqHandle mServerOutOfDialogReq;
 
-      resip::DialogUsageManager& getDum() { return mDum; }
+      resip::DialogUsageManager& getDum() { return *mDum; }
       const resip::Data& getIp() const { return mIp; }
       int getPort() const { return mPort; }
 
@@ -591,8 +592,12 @@ class DumUserAgent : public EndPoint,
 
       resip::SharedPtr<resip::MasterProfile> mProfile;
       resip::Security* mSecurity;
-      resip::SipStack mStack;
-      resip::DialogUsageManager mDum;
+      resip::FdPollGrp* mPollGrp;
+      resip::EventThreadInterruptor* mInterruptor;
+      resip::SipStack* mStack;
+      resip::EventStackThread* mStackThread;
+      resip::DialogUsageManager* mDum;
+
       TestProxy* mTestProxy;
       resip::Data mIp;
       int mPort;

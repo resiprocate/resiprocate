@@ -3929,6 +3929,9 @@ class TestHolder : public ReproFixture
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(),
                                                                         derek->digestRespond())),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+          // Note:  Under windows when using WSAPoll - there is a bug in WSAPoll where it won't properly notify of
+          //        TCP connection errors.  The implemented work around is to check the socket on the next send.
+          //        This means that this test case will fail.
           derek->expect(INVITE/480, from(proxy), WaitForResponseSpiral, derek->ack()),  // Give more time than just WaitForResponse - TCP connection failure detection can take some time
           WaitForEndOfTest);
       ExecuteSequences();  
@@ -7606,14 +7609,14 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek,MESSAGE)),
-         jason->expect(MESSAGE/480,from(proxy),WaitForResponse,jason->noAction()),
-         jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->reflect(*derek,MESSAGE)),
+                 jason->expect(MESSAGE/480,from(proxy),WaitForResponse,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
          And
          (
             Sub
@@ -11012,6 +11015,9 @@ class MyTestCase
 
          // .bwc. This needs to come last, since it tears down one of the test-
          // user's transports.
+         // Note:  Under windows when using WSAPoll - there is a bug in WSAPoll where it won't properly notify of
+         //        TCP connection errors.  The implemented work around is to check the socket on the next send.
+         //        This means that this test case will fail.
          TEST(testInviteTransportFailure);
 
          return suiteOfTests;

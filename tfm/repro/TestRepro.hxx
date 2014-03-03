@@ -13,7 +13,8 @@
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/SipStack.hxx"
-#include "resip/stack/StackThread.hxx"
+#include "resip/stack/EventStackThread.hxx"
+#include "rutil/FdPoll.hxx"
 #include "rutil/CongestionManager.hxx"
 #include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
@@ -53,8 +54,10 @@ class TestRepro : public TestProxy
       virtual void deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0, short mask = 0, short family=resip::V4);
 
    private:
-      resip::SipStack mStack;
-      resip::StackThread mStackThread;
+      resip::FdPollGrp* mPollGrp;
+      resip::EventThreadInterruptor* mInterruptor;
+      resip::SipStack* mStack;
+      resip::EventStackThread* mStackThread;
       
       repro::Registrar mRegistrar;
       resip::SharedPtr<resip::MasterProfile> mProfile;
@@ -66,8 +69,8 @@ class TestRepro : public TestProxy
       repro::ProcessorChain mTargetProcessors;
       resip::InMemoryRegistrationDatabase mRegData;
       repro::Proxy mProxy;
-      resip::DialogUsageManager mDum;
-      resip::DumThread mDumThread;
+      resip::DialogUsageManager* mDum;
+      resip::DumThread* mDumThread;
       std::auto_ptr<resip::CongestionManager> mCongestionManager;
 };
 
