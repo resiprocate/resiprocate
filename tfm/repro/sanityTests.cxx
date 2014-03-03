@@ -8073,8 +8073,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()))),
          And
          (
             Sub
@@ -8103,8 +8103,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()))),
          And
          (
             Sub
@@ -8132,8 +8132,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
          jason->expect(ACK,contact(derek),WaitForCommand, condition(makeInvite,jason->send200())),
          WaitForEndOfTest
@@ -8152,8 +8152,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
          jason->expect(ACK,contact(derek),WaitForCommand, condition(makeInfo,jason->send200())),
          WaitForEndOfTest
@@ -8172,8 +8172,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()))),
          And
          (
             Sub
@@ -8201,8 +8201,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()))),
          And
          (
             Sub
@@ -8233,8 +8233,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,condition(fiddleBranchCase,jason->ok())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(fiddleBranchCase,jason->ok())))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
          jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
          WaitForEndOfTest
@@ -8271,8 +8271,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send600(),jason->ok())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send600(),jason->ok())))),
          And
          (
             Sub
@@ -8300,8 +8300,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ok(),jason->send600())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ok(),jason->send600())))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
          jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
          WaitForEndOfTest
@@ -8323,8 +8323,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,condition(removeProxyVias,jason->ok())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(removeProxyVias,jason->ok())))),
          derek->expect(INVITE/500,from(proxy),WaitForResponse,derek->ack()),
          WaitForEndOfTest
       );
@@ -8342,8 +8342,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,condition(addProxyVia,jason->ok())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(addProxyVia,jason->ok())))),
          derek->expect(INVITE/500,from(proxy),WaitForResponse,derek->ack()),
          WaitForEndOfTest
       );
@@ -8361,8 +8361,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,condition(corruptProxyBranch,jason->ok())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(corruptProxyBranch,jason->ok())))),
          derek->expect(INVITE/500,from(proxy),WaitForResponse,derek->ack()),
          WaitForEndOfTest
       );
@@ -8380,8 +8380,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ok(),jason->ring())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ok(),jason->ring())))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
          jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
          WaitForEndOfTest
@@ -8400,8 +8400,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send400(),jason->ring())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send400(),jason->ring())))),
          And
          (
             Sub
@@ -8429,8 +8429,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ok(),jason->send400())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ok(),jason->send400())))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
          jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
          WaitForEndOfTest
@@ -8449,8 +8449,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send400(),jason->ok())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send400(),jason->ok())))),
          And
          (
             Sub
@@ -8478,8 +8478,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send400(),jason->send487(),jason->send400())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->send400(),jason->send487(),jason->send400())))),
          And
          (
             Sub
@@ -8509,13 +8509,13 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,condition(removeTo,jason->ring())),
-         jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,condition(removeTo,jason->ring())),
+                 jason->expect(INVITE,contact(derek),resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),2*resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),4*resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),8*resip::Timer::T1+100,jason->noAction()),
+                 jason->expect(INVITE,contact(derek),16*resip::Timer::T1+100,jason->noAction()))),
          And
          (
             Sub
@@ -8543,8 +8543,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
          jason->expect(ACK,contact(derek),WaitForCommand,jason->send200()),
          WaitForEndOfTest
@@ -8563,8 +8563,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->send487()))),
          And
          (
             Sub
