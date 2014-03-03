@@ -3709,8 +3709,8 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(derek->ack(),derek->digestRespond())),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ring(),jason->answer())),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ring(),jason->answer())))),
          derek->expect(INVITE/180,contact(jason),WaitForResponse,derek->noAction()),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,chain(ack <= derek->ack(),derek->pause(200),derek->retransmit(ack),derek->pause(200),derek->retransmit(ack),derek->pause(200),derek->retransmit(ack))),
          // pauses above are required or we may trigger the following code block in TransactionState:
@@ -3815,8 +3815,8 @@ class TestHolder : public ReproFixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(derek->ack(),derek->digestRespond())),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,from(proxy),WaitForCommand,error <= jason->send503()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,from(proxy),WaitForCommand,error <= jason->send503()))),
          
          And
          (
