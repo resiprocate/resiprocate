@@ -4355,8 +4355,8 @@ class TestHolder : public ReproFixture
       Seq
       (
          derek->invite(*jason),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()),
+         And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+             Sub(jason->expect(INVITE,contact(derek),WaitForCommand,jason->ok()))),
          derek->expect(INVITE/200,contact(jason),WaitForResponse,condition(missingTid,derek->ack())),
          jason->expect(ACK,contact(derek),WaitForCommand, jason->noAction()),
          WaitForEndOfTest
