@@ -487,12 +487,12 @@ RendDlg::latchEstablish(RendTimeUs now, const resip::SipMessage *rsp,
    mRemoteTarget = rsp->getSource();
    // check incoming Transport against outgoing. If different,
    // then something went very wrong.
-   assert( mRemoteTarget.transport );
-   if ( mRemoteTarget.transport != mTransport ) 
+   assert( mRemoteTarget.mTransportKey != 0 );
+   if ( mRemoteTarget.mTransportKey != mTransport->getKey() ) 
    {
       CritLog(<<"Response from different transport than request:"
-         <<" req-tp=["<<*mTransport<<"]"
-         <<" rsp-tp=["<<*mRemoteTarget.transport<<"]");
+         << " req-tp=[" << mTransport->getKey() << "]"
+         << " rsp-tp=["<< mRemoteTarget.mTransportKey << "]");
       assert(0);
    }
    if ( mTu.mOutboundMode ) 
@@ -867,7 +867,7 @@ RendTu::sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg)
 {
    if ( msg->isRequest() ) 
    {
-      if ( dlg && dlg->mRemoteTarget.transport ) 
+      if ( dlg && dlg->mRemoteTarget.mTransportKey != 0 ) 
       {
          // this handles outbound flow routing
          msg->setDestination(dlg->mRemoteTarget);
@@ -888,16 +888,16 @@ RendTu::sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg)
 
       if ( dlg!=NULL && dlg->mTransport ) 
       {
-         if ( msg->getDestination().transport ) 
+         if ( msg->getDestination().mTransportKey != 0 ) 
          {
-            assert( msg->getDestination().transport == dlg->mTransport );
+            assert( msg->getDestination().mTransportKey == dlg->mTransport->getKey() );
          } 
          else 
          {
             // below make use of "mistake" in SipMessage that
             // getDestination returns non-const reference so
             // we can use to tweak the private member mDestination
-            msg->getDestination().transport = dlg->mTransport;
+            msg->getDestination().mTransportKey = dlg->mTransport->getKey();
          }
          // Strictly, this isn't always require (if we have
          // set a flow above)

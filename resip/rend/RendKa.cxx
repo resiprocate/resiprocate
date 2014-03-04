@@ -52,20 +52,21 @@ bool operator<(const RendKaAssoc& a, const RendKaAssoc& b)
       return a.mTarget.mFlowKey < b.mTarget.mFlowKey;
    }
 
-   if ( a.mTarget.transport!=b.mTarget.transport ) 
+   if ( a.mTarget.mTransportKey != b.mTarget.mTransportKey ) 
    {
-      if ( a.mTarget.transport==NULL )
+      if ( a.mTarget.mTransportKey == 0 )
+      {
          return true;
+      }
       // directly compare pointers, not content! Hope this works!
-      return a.mTarget.transport < b.mTarget.transport;
+      return a.mTarget.mTransportKey < b.mTarget.mTransportKey;
    }
-   return a.mTarget < b.mTarget;	// compares just proto&ipaddr
+   return a.mTarget < b.mTarget; // compares just proto&ipaddr
 }
 
 struct RendKaConn 
 {
-   bool operator() (const RendKaAssocPtr& a, 
-      const RendKaAssocPtr& b) 
+   bool operator() (const RendKaAssocPtr& a, const RendKaAssocPtr& b) 
    {
       return *a < *b;
    }
@@ -283,7 +284,7 @@ RendKaMgr::sendKaMsg(RendKaAssoc *kanet)
       resip::Via via;
       mKaMsg->header(resip::h_Vias).push_back(via);
    }
-   assert( kanet->mTarget.transport != 0 );
+   assert( kanet->mTarget.mTransportKey != 0 );
    assert( kanet->mTarget.mFlowKey != 0 );
    // below makes clone of message
    mStack.sendTo(*mKaMsg, kanet->mTarget);
