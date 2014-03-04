@@ -40,6 +40,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "repro", "repro", "{1293EE21
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "queuetostream", "repro\accountingconsumers\queuetostream_10_0.vcxproj", "{02C11EC5-9AB9-44F1-9B60-B719C1728356}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rend", "resip\rend\rend_10_0.vcxproj", "{16CD976A-5D3B-4329-88BA-A32560CDFDD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -348,6 +350,18 @@ Global
 		{02C11EC5-9AB9-44F1-9B60-B719C1728356}.SSL-Release|Win32.Build.0 = SSL-Release|Win32
 		{02C11EC5-9AB9-44F1-9B60-B719C1728356}.SSL-Release|x64.ActiveCfg = SSL-Release|x64
 		{02C11EC5-9AB9-44F1-9B60-B719C1728356}.SSL-Release|x64.Build.0 = SSL-Release|x64
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.Debug|Win32.Build.0 = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.Debug|x64.ActiveCfg = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.Release|Win32.ActiveCfg = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.Release|Win32.Build.0 = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.Release|x64.ActiveCfg = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.SSL-Debug|Win32.ActiveCfg = SSL-Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.SSL-Debug|Win32.Build.0 = SSL-Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.SSL-Debug|x64.ActiveCfg = SSL-Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.SSL-Release|Win32.ActiveCfg = SSL-Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.SSL-Release|Win32.Build.0 = SSL-Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFDD6}.SSL-Release|x64.ActiveCfg = SSL-Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
