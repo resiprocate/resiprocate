@@ -19,15 +19,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::MOHPARKSERVER
 
-void sleepSeconds(unsigned int seconds)
-{
-#ifdef WIN32
-   Sleep(seconds*1000);
-#else
-   sleep(seconds);
-#endif
-}
-
 static bool finished = false;
 
 static void
