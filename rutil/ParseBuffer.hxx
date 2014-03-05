@@ -113,6 +113,7 @@ class ParseBuffer
       Pointer start() const { return Pointer(*this, mBuff, eof()); }
       CurrentPosition position() const { return CurrentPosition(*this); }
       Pointer end() const { return Pointer(*this, mEnd, true); }
+      size_t lengthRemaining() { return mEnd - mPosition; }
 
       CurrentPosition skipChar()
       {

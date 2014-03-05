@@ -35,18 +35,21 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       pb.skipWhitespace();
       pb.skipChar(Symbols::EQUALS[0]);
       pb.skipWhitespace();
-      if(memcmp(pb.position(), Symbols::MagicCookie, 7) == 0)
+      if (pb.lengthRemaining() >= 7)
       {
-         mHasMagicCookie=true;
-         pb.skipN(7);
-      }
-      // !bwc! This no-case comparison is expensive; only do it if the case-
-      // sensitive comparison fails.
-      else if(strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
-      {
-         mHasMagicCookie=true;
-         mInteropMagicCookie = new Data(pb.position(), 7);
-         pb.skipN(7);
+         if(memcmp(pb.position(), Symbols::MagicCookie, 7) == 0)
+         {
+            mHasMagicCookie=true;
+            pb.skipN(7);
+         }
+         // !bwc! This no-case comparison is expensive; only do it if the case-
+         // sensitive comparison fails.
+         else if(strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
+         {
+            mHasMagicCookie=true;
+            mInteropMagicCookie = new Data(pb.position(), 7);
+            pb.skipN(7);
+         }
       }
       
       const char* start = pb.position();
