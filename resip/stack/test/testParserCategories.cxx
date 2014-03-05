@@ -54,6 +54,62 @@ class TR
       ~TR() { end();}
 };
 
+bool failed = false;
+#define ASSERT_EQ(lhs, rhs, desc) \
+{ \
+   if (!((lhs) == (rhs))) \
+   { \
+      std::cerr << __FILE__ << ":" << __LINE__ << " - " << (desc) << " " \
+                << "\"" << (lhs) << "\" ( " << #lhs << " ) != " \
+                << "\"" << (rhs) << "\" ( " << #rhs << " ) " << std::endl; \
+      failed = true; \
+   } \
+}
+
+resip::Data
+toData(const resip::ParserCategory& p)
+{
+   resip::Data result;
+   resip::oDataStream str(result);
+   str << p;
+   return result;
+}
+
+template <class T>
+void testParseAndWrite(const resip::Data& rawInput,
+                       const resip::Data& parsedOutput)
+{
+   TR _tr("Test " + rawInput + " <-> " + parsedOutput);
+
+   HeaderFieldValue hfv(rawInput.data(), rawInput.size());
+   T raw(hfv, Headers::UNKNOWN);
+   T rawCopy(raw);
+
+   ASSERT_EQ(toData(raw), rawInput, "pre-parse");
+   ASSERT_EQ(toData(rawCopy), rawInput, "pre-parse");
+
+   raw.isWellFormed();
+   T parsedCopy(raw);
+
+   ASSERT_EQ(toData(raw), rawInput, "post-parse");
+   ASSERT_EQ(toData(parsedCopy), rawInput, "post-parse");
+
+   raw.markDirty();
+   T dirtyCopy(raw);
+
+   ASSERT_EQ(toData(raw), parsedOutput, "dirty");
+   ASSERT_EQ(toData(dirtyCopy), parsedOutput, "dirty");
+
+   raw = rawCopy;
+   ASSERT_EQ(toData(raw), rawInput, "restored to raw");
+
+   rawCopy.isWellFormed();
+   ASSERT_EQ(toData(rawCopy), rawInput, "post-parse");
+   rawCopy.markDirty();
+   ASSERT_EQ(toData(rawCopy), parsedOutput, "dirty");
+}
+
+
 int
 main(int arc, char** argv)
 {
@@ -2215,13 +2271,46 @@ main(int arc, char** argv)
       test.value().pop_back();
    }
 
+   testParseAndWrite<NameAddr>("*", "*");
+   testParseAndWrite<NameAddr>(" *", "*");
+   testParseAndWrite<NameAddr>("* ", "*");
+   testParseAndWrite<NameAddr>("* ;foo", "*;foo");
+   testParseAndWrite<NameAddr>("*bob*<sip:bob@foo>", "\"*bob*\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("\"bob\"<sip:bob@foo>", "\"bob\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("bob<sip:bob@foo> ", "\"bob\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("*bob* <sip:bob@foo>", "\"*bob*\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("\"bob\" <sip:bob@foo>", "\"bob\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("bob <sip:bob@foo> ", "\"bob\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("bob < sip:bob@foo> ", "\"bob\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>(" bob<sip:bob@foo>", "\"bob\"<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("sip:bob@foo", "<sip:bob@foo>");
+   testParseAndWrite<NameAddr>("sip:bob@foo;foo", "<sip:bob@foo>;foo");
+   testParseAndWrite<NameAddr>("sip:bob@foo; foo", "<sip:bob@foo>;foo");
+   testParseAndWrite<NameAddr>("sip:bob@foo;foo ", "<sip:bob@foo>;foo");
+
+#ifdef USE_IPV6
+   testParseAndWrite<Via>("SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]", "SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]");
+   testParseAndWrite<Via>("SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5];branch=first", "SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5];branch=first");
+   testParseAndWrite<Via>("SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]:5060;branch=first", "SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]:5060;branch=first");
+   testParseAndWrite<Via>("SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]:5060;branch=z9hG4bK", "SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]:5060;branch=z9hG4bK");
+   testParseAndWrite<Via>("SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]:5060;branch=Z9Hg4Bk", "SIP/2.0/UDP [fe80::5626:96ff:fed5:c1f5]:5060;branch=Z9Hg4Bk");
+#endif
+   testParseAndWrite<Via>("SIP/2.0/UDP biloxi.com", "SIP/2.0/UDP biloxi.com");
+   testParseAndWrite<Via>("SIP/2.0/UDP biloxi.com;branch=first", "SIP/2.0/UDP biloxi.com;branch=first");
+   testParseAndWrite<Via>("sip/2.0/udp biloxi.com:5060;branch=first", "sip/2.0/udp biloxi.com:5060;branch=first");
+   testParseAndWrite<Via>("SIP/2.0/UDP biloxi.com:5060;branch=z9hG4bK", "SIP/2.0/UDP biloxi.com:5060;branch=z9hG4bK");
+   testParseAndWrite<Via>("SIP/2.0/UDP biloxi.com:5060;branch=Z9Hg4Bk", "SIP/2.0/UDP biloxi.com:5060;branch=Z9Hg4Bk");
+   testParseAndWrite<Via>("SIP/2.0/UDP biloxi.com:5060;branch=Z9Hg4Bk-999999-", "SIP/2.0/UDP biloxi.com:5060;branch=Z9Hg4Bk-999999-");
+   testParseAndWrite<Via>("SIP/2.0/UDP biloxi.com:5060;branch=Z9Hg4Bk-524287-11-feedbeef-beefdead-uhoh", "SIP/2.0/UDP biloxi.com:5060;branch=Z9Hg4Bk-524287-11-feedbeef-beefdead-uhoh");
+
    // Performance tests
+   // !bwc! Add command-line flag to enable/disable this.
 
    {
       resip::Data test("Raw header-field-value creation/deletion");
       cout << endl << test << endl;
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          HeaderFieldValue hfv(test.data(), test.size());
 //         (hfv, Headers::UNKNOWN);
@@ -2235,7 +2324,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Auth auth(hfv, Headers::UNKNOWN);
       }
@@ -2247,7 +2336,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Auth auth(hfv, Headers::UNKNOWN);
          auth.checkParsed();
@@ -2259,7 +2348,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2273,7 +2362,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Auth auth(hfv, Headers::UNKNOWN);
          auth.checkParsed();
@@ -2285,7 +2374,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2300,7 +2389,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          CSeqCategory cseq(hfv, Headers::UNKNOWN);
       }
@@ -2312,7 +2401,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          CSeqCategory cseq(hfv, Headers::UNKNOWN);
          cseq.checkParsed();
@@ -2324,7 +2413,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2338,7 +2427,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          CSeqCategory cseq(hfv, Headers::UNKNOWN);
          cseq.checkParsed();
@@ -2350,7 +2439,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2366,7 +2455,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          CallId callid(hfv, Headers::UNKNOWN);
       }
@@ -2378,7 +2467,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          CallId callid(hfv, Headers::UNKNOWN);
          callid.checkParsed();
@@ -2390,7 +2479,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2406,7 +2495,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          DateCategory date(hfv, Headers::UNKNOWN);
       }
@@ -2418,7 +2507,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          DateCategory date(hfv, Headers::UNKNOWN);
          date.checkParsed();
@@ -2430,7 +2519,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2446,7 +2535,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          ExpiresCategory pc(hfv, Headers::UNKNOWN);
       }
@@ -2458,7 +2547,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          ExpiresCategory pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2470,7 +2559,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2486,7 +2575,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Mime pc(hfv, Headers::UNKNOWN);
       }
@@ -2498,7 +2587,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Mime pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2510,7 +2599,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2524,7 +2613,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Mime pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2536,7 +2625,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2552,7 +2641,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
       }
@@ -2564,7 +2653,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2576,7 +2665,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2590,7 +2679,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2602,7 +2691,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2616,7 +2705,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2628,7 +2717,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2644,7 +2733,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2656,7 +2745,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2670,7 +2759,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2682,7 +2771,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2696,7 +2785,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2708,7 +2797,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2722,7 +2811,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2734,7 +2823,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2750,7 +2839,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          RequestLine pc(hfv);
       }
@@ -2762,7 +2851,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          RequestLine pc(hfv);
          pc.checkParsed();
@@ -2774,7 +2863,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2788,7 +2877,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          RequestLine pc(hfv);
          pc.checkParsed();
@@ -2800,7 +2889,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2816,7 +2905,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
       }
@@ -2828,7 +2917,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
          pc.checkParsed();
@@ -2840,7 +2929,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2854,7 +2943,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
          pc.checkParsed();
@@ -2866,7 +2955,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2880,7 +2969,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
          pc.checkParsed();
@@ -2892,7 +2981,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2908,7 +2997,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Via pc(hfv, Headers::UNKNOWN);
       }
@@ -2920,7 +3009,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Via pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2932,7 +3021,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2947,7 +3036,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Token pc(hfv, Headers::UNKNOWN);
       }
@@ -2959,7 +3048,7 @@ main(int arc, char** argv)
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
       UInt64 now(Timer::getTimeMicroSec());
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          Token pc(hfv, Headers::UNKNOWN);
          pc.checkParsed();
@@ -2971,7 +3060,7 @@ main(int arc, char** argv)
       Data buffer;
       oDataStream str(buffer);
       now=Timer::getTimeMicroSec();
-      for(int i=0; i<10000000; ++i)
+      for(int i=0; i<1000; ++i)
       {
          pc.encode(str);
          str.flush();
@@ -2980,6 +3069,8 @@ main(int arc, char** argv)
       cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
    }
 
+
+   assert(!failed);
    resipCerr << "\nTEST OK" << endl;
 
    return 0;
@@ -3037,4 +3128,5 @@ main(int arc, char** argv)
 
 /* Local Variables: */
 /* c-file-style: "ellemtel" */
+// vim: softtabstop=3 shiftwidth=3 expandtab
 /* End: */
