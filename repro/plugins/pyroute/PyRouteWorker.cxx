@@ -146,11 +146,8 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    }
 
    // arg 4: transport type
-   Py::String transportType("");
-   if(message.getReceivedTransport())
-   {
-      transportType = getTransportNameFromType(message.getReceivedTransport()->transport());
-   }
+   Py::String transportType(
+      getTransportNameFromType(message.getReceivedTransportTuple().getType()));
 
    // arg 5: body
    Py::String body("");
