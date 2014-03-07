@@ -5,6 +5,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
+#include <rutil/Time.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/BaseException.hxx>
 #include <resip/stack/NameAddr.hxx>
@@ -15,15 +16,6 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::CLICKTOCALL
-
-void sleepSeconds(unsigned int seconds)
-{
-#ifdef WIN32
-   Sleep(seconds*1000);
-#else
-   sleep(seconds);
-#endif
-}
 
 static bool finished = false;
 
