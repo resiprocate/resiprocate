@@ -22,6 +22,14 @@ ParseBuffer::ParseBuffer(const char* buff, size_t len,
      mErrorContext(errorContext)
 {}
 
+ParseBuffer::ParseBuffer(const char* buff, 
+                         const Data& errorContext)
+   : mBuff(buff),
+     mPosition(buff),
+     mEnd(buff+strlen(buff)),
+     mErrorContext(errorContext)
+{}
+
 ParseBuffer::ParseBuffer(const Data& data,
             const Data& errorContext)
    : mBuff(data.data()),
