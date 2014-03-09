@@ -719,7 +719,7 @@ bool
 resip::operator==(const Data& lhs, const char* rhs)
 {
    assert(rhs); // .dlb. not consistent with constructor
-   if (memcmp(lhs.mBuf, rhs, lhs.mSize) != 0)
+   if (strncmp(lhs.mBuf, rhs, lhs.mSize) != 0)
    {
       return false;
    }
