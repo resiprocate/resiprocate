@@ -553,10 +553,6 @@ endlocal
       <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\contrib\popt\popt_10_0.vcxproj">
-      <Project>{b204bd08-3991-731b-60a3-a5bd16f2b208}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\resip\dum\dum_10_0.vcxproj">
       <Project>{31b0654f-e08e-405f-909f-80f86cb14b9d}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
