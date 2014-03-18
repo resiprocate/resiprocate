@@ -3,6 +3,6 @@
 set -e
 
 ./configure \
-  CPPFLAGS="-I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_TOOLCHAIN_GNU -DUSE_CARES -DUSE_SSL -DUSE_IPV6" \
+  CPPFLAGS="-I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
   CXXFLAGS="-fpermissive"
 
