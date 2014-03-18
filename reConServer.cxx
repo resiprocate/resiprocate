@@ -1026,6 +1026,12 @@ ReConServerProcess::main (int argc, char** argv)
 
    Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
    bool daemonize = reConServerConfig.getConfigBool("Daemonize", false);
+   bool keyboardInput = reConServerConfig.getConfigBool("KeyboardInput", !daemonize);
+   if(daemonize && keyboardInput)
+   {
+      ErrLog(<< "Ignoring KeyboardInput=true setting as we are running as a daemon");
+      keyboardInput = false;
+   }
    setPidFile(pidFile);
    // Daemonize if necessary
    if(daemonize)
@@ -1114,6 +1120,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
    InfoLog( << "  Daemonize = " << (daemonize ? "true" : "false"));
+   InfoLog( << "  KeyboardInput = " << (keyboardInput ? "true" : "false"));
    InfoLog( << "  PidFile = " << pidFile);
    InfoLog( << "  Run as user = " << runAsUser);
    InfoLog( << "  Run as group = " << runAsGroup);
@@ -1374,17 +1381,20 @@ ReConServerProcess::main (int argc, char** argv)
       while(true)
       {
          ua.process(50);
-         while(_kbhit() != 0)
+         if(keyboardInput)
          {
+            while(_kbhit() != 0)
+            {
 #ifdef WIN32
-            input = _getch();
-            processKeyboard(input, myConversationManager, ua);
+               input = _getch();
+               processKeyboard(input, myConversationManager, ua);
 #else
-            input = fgetc(stdin);
-            fflush(stdin);
-            //cout << "input: " << input << endl;
-            processKeyboard(input, myConversationManager, ua);
+               input = fgetc(stdin);
+               fflush(stdin);
+               //cout << "input: " << input << endl;
+               processKeyboard(input, myConversationManager, ua);
 #endif
+            }
          }
          if(finished) break;
       }
