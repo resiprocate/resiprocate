@@ -1218,6 +1218,7 @@ ReConServerProcess::main (int argc, char** argv)
    profile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));  
    profile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));  
    profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
+   profile->addSupportedMimeType(INFO, Mime("application", "dtmf-relay"));
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(INVITE);
@@ -1230,7 +1231,7 @@ ReConServerProcess::main (int argc, char** argv)
    profile->addSupportedMethod(SUBSCRIBE); 
    profile->addSupportedMethod(UPDATE);    
    profile->addSupportedMethod(PRACK);     
-   //profile->addSupportedMethod(INFO);    
+   profile->addSupportedMethod(INFO);    
    //profile->addSupportedMethod(MESSAGE);
 
    profile->clearSupportedOptionTags();
