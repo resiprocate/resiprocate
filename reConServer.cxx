@@ -811,7 +811,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
    if(isEqualNoCase(command, "natserver") || isEqualNoCase(command, "ns"))
    {
       Data natTraversalServerHostname;
-      unsigned short natTraversalServerPort = 8777;
+      unsigned short natTraversalServerPort = 3478;
       // Read server and port
       ParseBuffer pb(arg[0]);
       pb.skipWhitespace();
@@ -1049,7 +1049,7 @@ ReConServerProcess::main (int argc, char** argv)
    bool secureMediaRequired = reConServerConfig.isSecureMediaModeRequired();
    ConversationProfile::NatTraversalMode natTraversalMode = reConServerConfig.getConfigNatTraversalMode("NatTraversalMode", ConversationProfile::NoNatTraversal);
    Data natTraversalServerHostname = reConServerConfig.getConfigData("NatTraversalServerHostname", "", true);
-   unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 8777);
+   unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 3478);
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
    Data stunPassword = reConServerConfig.getConfigData("StunPassword", "", true);
    unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPort", 5062);
