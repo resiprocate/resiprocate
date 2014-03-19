@@ -9,6 +9,12 @@
 namespace resip
 {
 
+/* Provides a way to handle the application/dtmf-relay
+   content-type from SIP INFO messages.
+   Attempts to adhere to the IETF draft
+     draft-kaplan-dispatch-info-dtmf-package-00
+*/
+
 class DtmfPayloadContents : public Contents
 {
 
