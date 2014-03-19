@@ -33,7 +33,8 @@ static const Data fmtp("fmtp");
 // RFC2327 6. page 9
 // "parsers should be tolerant and accept records terminated with a single
 // newline character"
-void skipEol(ParseBuffer& pb)
+void
+resip::skipEol(ParseBuffer& pb)
 {
    while(!pb.eof() && (*pb.position() == Symbols::SPACE[0] ||
                        *pb.position() == Symbols::TAB[0]))

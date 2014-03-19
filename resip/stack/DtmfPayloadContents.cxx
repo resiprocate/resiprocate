@@ -9,6 +9,7 @@
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "resip/stack/SdpContents.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 
@@ -16,33 +17,6 @@ using namespace resip;
 using namespace std;
 
 //const DtmfPayloadContents DtmfPayloadContents::Empty;
-
-// RFC2327 6. page 9
-// "parsers should be tolerant and accept records terminated with a single
-// newline character"
-inline void skipEol(ParseBuffer& pb)
-{
-   while(!pb.eof() && (*pb.position() == Symbols::SPACE[0] ||
-                       *pb.position() == Symbols::TAB[0]))
-   {
-      pb.skipChar();
-   }
-
-   if (*pb.position() == Symbols::LF[0])
-   {
-      pb.skipChar();
-   }
-   else
-   {
-      // allow extra 0x0d bytes.
-      while(*pb.position() == Symbols::CR[0])
-      {
-         pb.skipChar();
-      }
-      pb.skipChar(Symbols::LF[0]);
-   }
-
-}
 
 bool
 DtmfPayloadContents::init()
