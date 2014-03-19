@@ -23,23 +23,41 @@ class DtmfPayloadContents : public Contents
       class DtmfPayload
       {
          public:
-            DtmfPayload(int signal, int duration);
+            DtmfPayload(char button, int duration);
 
-            DtmfPayload() : mSignal(0), mDuration(0) {}
+            DtmfPayload() : mButton(0), mDuration(0) {}
             DtmfPayload(const DtmfPayload& rhs);
             DtmfPayload& operator=(const DtmfPayload& rhs);
 
             void parse(ParseBuffer& pb);
             EncodeStream& encode(EncodeStream&) const;
 
-            int getSignal() const { return mSignal; }
+            /** @brief obtain representation of the button as a character
+              *
+              * @return the ASCII symbol for the button pressed
+              **/
+            char getButton() const { return mButton; }
+
+            /** @brief obtain representation of the button as event code
+              *
+              *   RFC 4733 provides a list of integer event codes for DTMF
+              *   symbols.
+              *
+              * @return the event code corresponding to the button pressed
+              **/
+            unsigned short getEventCode() const;
+
+            /** @brief obtain duration in milliseconds
+              *
+              * @return the number of milliseconds the button was pressed
+              **/
             int getDuration() const { return mDuration; }
 
          private:
-            int mSignal;
-            int mDuration;
+            char mButton;    // ASCII representation of the DTMF button
+            int mDuration;   // milliseconds
 
-            static bool isValidSignal(const char c);
+            static bool isValidButton(const char c);
 
          friend class DtmfPayloadContents;
       };

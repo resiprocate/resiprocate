@@ -2255,7 +2255,7 @@ RemoteParticipant::onInfo(InviteSessionHandle, const SipMessage& msg)
       if(contents)
       {
          DtmfPayloadContents::DtmfPayload& payload = contents->dtmfPayload();
-         mConversationManager.onDtmfEvent(mHandle, payload.getSignal(), payload.getDuration(), true);
+         mConversationManager.onDtmfEvent(mHandle, payload.getEventCode(), payload.getDuration(), true);
       }
       else
       {

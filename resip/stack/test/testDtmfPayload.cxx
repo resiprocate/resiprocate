@@ -44,7 +44,8 @@ main(int argc, char* argv[])
       Mime type("application", "dtmf-relay");
       DtmfPayloadContents payload(hfv, type);
       
-      assert(payload.dtmfPayload().getSignal() == '5');
+      assert(payload.dtmfPayload().getButton() == '5');
+      assert(payload.dtmfPayload().getEventCode() == 5);
       assert(payload.dtmfPayload().getDuration() == 100);
    }
 
@@ -55,7 +56,8 @@ main(int argc, char* argv[])
       Mime type("application", "dtmf-relay");
       DtmfPayloadContents payload(hfv, type);
 
-      assert(payload.dtmfPayload().getSignal() == 'A');
+      assert(payload.dtmfPayload().getButton() == 'A');
+      assert(payload.dtmfPayload().getEventCode() == 12);
       assert(payload.dtmfPayload().getDuration() == 150);
    }
 
@@ -67,7 +69,7 @@ main(int argc, char* argv[])
       try
       {
          DtmfPayloadContents payload(hfv, type);
-         payload.dtmfPayload().getSignal();
+         char button = payload.dtmfPayload().getButton();
          ErrLog(<<"Failed to detect a bad DTMF signal");
          assert(0);
       }

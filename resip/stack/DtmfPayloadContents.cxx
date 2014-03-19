@@ -102,8 +102,8 @@ DtmfPayloadContents::getStaticType()
    return type;
 }
 
-DtmfPayloadContents::DtmfPayload::DtmfPayload(int signal, int duration)
-   : mSignal(signal),
+DtmfPayloadContents::DtmfPayload::DtmfPayload(char button, int duration)
+   : mButton(button),
      mDuration(duration)
 {}
 
@@ -117,14 +117,14 @@ DtmfPayloadContents::DtmfPayload::operator=(const DtmfPayload& rhs)
 {
    if (this != &rhs)
    {
-      mSignal = rhs.mSignal;
+      mButton = rhs.mButton;
       mDuration = rhs.mDuration;
    }
    return *this;
 }
 
 bool
-DtmfPayloadContents::DtmfPayload::isValidSignal(const char c)
+DtmfPayloadContents::DtmfPayload::isValidButton(const char c)
 {
    static const char* permittedChars = "ABCD*#";
    if(isdigit(c))
@@ -135,7 +135,7 @@ DtmfPayloadContents::DtmfPayload::isValidSignal(const char c)
    {
       return true;
    }
-   WarningLog(<<"Not a valid DTMF signal: " << c);
+   WarningLog(<<"Not a valid DTMF button: " << c);
    return false;
 }
 
@@ -151,14 +151,14 @@ DtmfPayloadContents::DtmfPayload::parse(ParseBuffer& pb)
    if(val.size() != 1)
    {
       ErrLog(<<"signal string [" << val << "], size = " << val.size());
-      throw ParseException("Exactly one signal character expected in SIP INFO", pb.getContext(), __FILE__, __LINE__);
+      throw ParseException("Exactly one button character expected in SIP INFO", pb.getContext(), __FILE__, __LINE__);
    }
-   const char& _signal = val[0];
-   if(!isValidSignal(_signal))
+   const char& _button = val[0];
+   if(!isValidButton(_button))
    {
-      throw ParseException("Invalid DTMF signal character found", pb.getContext(), __FILE__, __LINE__);
+      throw ParseException("Invalid DTMF button character found", pb.getContext(), __FILE__, __LINE__);
    }
-   StackLog(<< "Signal = " << _signal);
+   StackLog(<< "Button=" << _button);
 
    skipEol(pb);
 
@@ -169,13 +169,42 @@ DtmfPayloadContents::DtmfPayload::parse(ParseBuffer& pb)
 
    StackLog(<< "Duration = " << mDuration);
 
-   mSignal = _signal;
+   mButton = _button;
+}
+
+unsigned short
+DtmfPayloadContents::DtmfPayload::getEventCode() const
+{
+   assert(mButton);
+   unsigned short eventCode;
+   if(isdigit(mButton))
+   {
+      eventCode = mButton - '0';
+   }
+   else if(mButton == '*')
+   {      
+      eventCode = 10;
+   }      
+   else if(mButton == '#')
+   {      
+      eventCode = 11;
+   }
+   else if(mButton >= 'A' && mButton <= 'D')
+   {
+      eventCode = 12 + mButton - 'A';
+   }
+   else
+   {
+      assert(0);  // unexpected button, should have been caught by the parser
+   }
+
+   return eventCode;
 }
 
 EncodeStream&
 DtmfPayloadContents::DtmfPayload::encode(EncodeStream& s) const
 {
-   s << "Signal=" << mSignal << Symbols::CRLF;
+   s << "Signal=" << mButton << Symbols::CRLF;
    s << "Duration=" << mDuration << Symbols::CRLF;
    return s;
 }
