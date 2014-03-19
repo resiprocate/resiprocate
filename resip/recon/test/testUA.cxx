@@ -51,6 +51,7 @@ int _kbhit() {
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/BaseException.hxx>
+#include <rutil/Time.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
 using namespace recon;
@@ -58,15 +59,6 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
-
-void sleepSeconds(unsigned int seconds)
-{
-#ifdef WIN32
-   Sleep(seconds*1000);
-#else
-   sleep(seconds);
-#endif
-}
 
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
