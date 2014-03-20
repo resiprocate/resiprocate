@@ -124,7 +124,11 @@ ReConServerConfig::getConfigValue(const resip::Data& name, ConversationProfile::
    ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
    if(it != mConfigValues.end())
    {
-      if(isEqualNoCase(it->second, "Bind"))
+      if(isEqualNoCase(it->second, "None"))
+      {
+         value = ConversationProfile::NoNatTraversal;
+      }
+      else if(isEqualNoCase(it->second, "Bind"))
       {
          value = ConversationProfile::StunBindDiscovery;
       }
