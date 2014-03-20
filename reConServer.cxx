@@ -110,8 +110,8 @@ class MyConversationManager : public ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled)
-      : ConversationManager(localAudioEnabled),
+   MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode)
+      : ConversationManager(localAudioEnabled, mediaInterfaceMode),
         mLocalAudioEnabled(localAudioEnabled)
    { 
    };
@@ -1067,6 +1067,8 @@ ReConServerProcess::main (int argc, char** argv)
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
+   ConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
+      ? ConversationManager::sipXGlobalMediaInterfaceMode : ConversationManager::sipXConversationMediaInterfaceMode;
 
 
    unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
@@ -1117,6 +1119,8 @@ ReConServerProcess::main (int argc, char** argv)
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
+   InfoLog( << "  Global Media Interface = " <<
+      ((mediaInterfaceMode == ConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
    InfoLog( << "  Log Type = " << loggingType);
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
@@ -1365,7 +1369,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager(localAudioEnabled);
+      MyConversationManager myConversationManager(localAudioEnabled, mediaInterfaceMode);
       MyUserAgent ua(&myConversationManager, profile);
       myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
