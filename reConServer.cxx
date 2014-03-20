@@ -49,6 +49,7 @@ int _kbhit() {
 
 #include "reConServerConfig.hxx"
 #include "reConServer.hxx"
+#include "MyMessageDecorator.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -1274,6 +1275,14 @@ ReConServerProcess::main (int argc, char** argv)
    profile->setUserAgent("ConversationManager/reConServer");
    profile->rtpPortRangeMin() = mediaPortStart;
    profile->rtpPortRangeMax() = mediaPortStart + 101; // Allows 100 media streams
+
+   if(natTraversalMode == ConversationProfile::NoNatTraversal)
+   {
+      StackLog(<<"NAT traversal features not enabled, "
+         "adding message decorator for SDP connection address");
+      SharedPtr<MessageDecorator> md(new MyMessageDecorator());
+      profile->setOutboundDecorator(md);
+   }
 
    //////////////////////////////////////////////////////////////////////////////
    // Setup ConversationProfile

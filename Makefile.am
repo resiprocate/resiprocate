@@ -11,6 +11,8 @@ reConServer_SOURCES = reConServer.cxx
 reConServer_SOURCES += reConServer.hxx
 reConServer_SOURCES += reConServerConfig.cxx
 reConServer_SOURCES += reConServerConfig.hxx
+reConServer_SOURCES += MyMessageDecorator.cxx
+reConServer_SOURCES += MyMessageDecorator.hxx
 reConServer_SOURCES += playback_prompt.h
 reConServer_SOURCES += record_prompt.h
 
