@@ -109,6 +109,7 @@ public:
    } MediaInterfaceMode;
 
    ConversationManager(bool localAudioEnabled=true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode);
+   ConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate);
    virtual ~ConversationManager();
 
    typedef enum 
@@ -564,6 +565,8 @@ protected:
    UserAgent* getUserAgent() { return mUserAgent; }
 
 private:
+   void init(int defaultSampleRate = 0, int maxSampleRate = 0);
+
    friend class DefaultDialogSet;
    friend class Subscription;
 

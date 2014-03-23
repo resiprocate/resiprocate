@@ -52,6 +52,25 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
   mBridgeMixer(0),
   mSipXTOSValue(0)
 {
+   init();
+}
+
+ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate)
+: mUserAgent(0),
+  mCurrentConversationHandle(1),
+  mCurrentParticipantHandle(1),
+  mLocalAudioEnabled(localAudioEnabled),
+  mMediaInterfaceMode(mediaInterfaceMode),
+  mMediaFactory(0),
+  mBridgeMixer(0),
+  mSipXTOSValue(0)
+{
+   init(defaultSampleRate, maxSampleRate);
+}
+
+void
+ConversationManager::init(int defaultSampleRate, int maxSampleRate)
+{
 #ifdef _DEBUG
    UtlString codecPaths[] = {".", "../../../../sipXtapi/sipXmediaLib/bin"};
 #else
@@ -65,11 +84,11 @@ ConversationManager::ConversationManager(bool localAudioEnabled, MediaInterfaceM
    {
       OsConfigDb sipXconfig;
       sipXconfig.set("PHONESET_MAX_ACTIVE_CALLS_ALLOWED",300);  // This controls the maximum number of flowgraphs allowed - default is 16
-      mMediaFactory = sipXmediaFactoryFactory(&sipXconfig, 0, 0, 0, mLocalAudioEnabled);
+      mMediaFactory = sipXmediaFactoryFactory(&sipXconfig, 0, defaultSampleRate, maxSampleRate, mLocalAudioEnabled);
    }
    else
    {
-      mMediaFactory = sipXmediaFactoryFactory(NULL, 0, 0, 0, mLocalAudioEnabled);
+      mMediaFactory = sipXmediaFactoryFactory(NULL, 0, defaultSampleRate, maxSampleRate, mLocalAudioEnabled);
    }
 
    // Create MediaInterface
