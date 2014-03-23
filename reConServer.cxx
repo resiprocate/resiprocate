@@ -110,8 +110,8 @@ class MyConversationManager : public ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode)
-      : ConversationManager(localAudioEnabled, mediaInterfaceMode),
+   MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate)
+      : ConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate),
         mLocalAudioEnabled(localAudioEnabled)
    { 
    };
@@ -1069,6 +1069,8 @@ ReConServerProcess::main (int argc, char** argv)
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
    ConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
       ? ConversationManager::sipXGlobalMediaInterfaceMode : ConversationManager::sipXConversationMediaInterfaceMode;
+   unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
+   unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
 
 
    unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
@@ -1121,6 +1123,8 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
    InfoLog( << "  Global Media Interface = " <<
       ((mediaInterfaceMode == ConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
+   InfoLog( << "  Default sample rate = " << defaultSampleRate);
+   InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Log Type = " << loggingType);
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
@@ -1369,7 +1373,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager(localAudioEnabled, mediaInterfaceMode);
+      MyConversationManager myConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate);
       MyUserAgent ua(&myConversationManager, profile);
       myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
