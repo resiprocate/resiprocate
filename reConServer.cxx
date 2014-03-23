@@ -1071,21 +1071,27 @@ ReConServerProcess::main (int argc, char** argv)
       ? ConversationManager::sipXGlobalMediaInterfaceMode : ConversationManager::sipXConversationMediaInterfaceMode;
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
+   bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
 
 
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
-                               SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
-                               SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
-                               SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
-                               SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
-                               SdpCodec::SDP_CODEC_L16_44100_MONO /* PCM 16 bit/sample 44100 samples/sec. */, 
-                               SdpCodec::SDP_CODEC_ILBC /* 108 - iLBC */,
-                               SdpCodec::SDP_CODEC_ILBC_20MS /* 109 - Internet Low Bit Rate Codec, 20ms (RFC3951) */, 
-                               SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
-                               SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
-                               //SdpCodec::SDP_CODEC_G722 /* 9 - G.722 */,
-                               SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
+   std::vector<unsigned int> _codecIds;
+   _codecIds.push_back(SdpCodec::SDP_CODEC_PCMU);           // 0 - pcmu
+   _codecIds.push_back(SdpCodec::SDP_CODEC_PCMA);           // 8 - pcma
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX);          // 96 - speex NB 8,000bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_15);       // 98 - speex NB 15,000bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_24);       // 99 - speex NB 24,600bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_L16_44100_MONO); // PCM 16 bit/sample 44100 samples/sec.
+   _codecIds.push_back(SdpCodec::SDP_CODEC_ILBC);           // 108 - iLBC
+   _codecIds.push_back(SdpCodec::SDP_CODEC_ILBC_20MS);      // 109 - Internet Low Bit Rate Codec, 20ms (RFC3951)
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_5);        // 97 - speex NB 5,950bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_GSM);            // 3 - GSM
+   if(enableG722)
+   {
+      _codecIds.push_back(SdpCodec::SDP_CODEC_G722);        // 9 - G.722
+   }
+   _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
+   unsigned int *codecIds = &_codecIds[0];
+   unsigned int numCodecIds = _codecIds.size();
 
    //enableConsoleOutput(TRUE);  // Allow sipX console output
    OsSysLog::initialize(0, "reConServer");
@@ -1125,6 +1131,7 @@ ReConServerProcess::main (int argc, char** argv)
       ((mediaInterfaceMode == ConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
    InfoLog( << "  Default sample rate = " << defaultSampleRate);
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
+   InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
    InfoLog( << "  Log Type = " << loggingType);
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
@@ -1321,17 +1328,12 @@ ReConServerProcess::main (int argc, char** argv)
 
    // Build Codecs and media offering
    SdpContents::Session::Medium medium("audio", port, 1, "RTP/AVP");
-   // For G.722, it is necessary to patch sipXmediaLib/src/mp/codecs/plgg722/plgg722.c
-   // #define USE_8K_SAMPLES G722_SAMPLE_RATE_8000
-   // and change sample rate from 16000 to 8000
-   // (tested against a Polycom device configured for G.722 8000)
-   // http://www.mail-archive.com/sipxtapi-dev@list.sipfoundry.org/msg02522.html
-   // A more generic solution is needed long term, as G.722 is peculiar and
-   // implementations are not consistent:
-   //  https://lists.cs.columbia.edu/pipermail/sip-implementors/2007-August/017292.html
-   //SdpContents::Session::Codec g722codec("G722", 8000);
-   //g722codec.payloadType() = 9;  /* RFC3551 */ ;
-   //medium.addCodec(g722codec);
+   if(enableG722)
+   {
+      SdpContents::Session::Codec g722codec("G722", 8000);
+      g722codec.payloadType() = 9;  /* RFC3551 */ ;
+      medium.addCodec(g722codec);
+   }
    SdpContents::Session::Codec g711ucodec("PCMU", 8000);
    g711ucodec.payloadType() = 0;  /* RFC3551 */ ;
    medium.addCodec(g711ucodec);
