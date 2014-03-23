@@ -138,7 +138,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::ma
       &offer, 
       &mDialogSet);
 
-   std::map<resip::Data,resip::Data>::const_iterator it = headers.begin();
+   std::map<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
    for( ; it != headers.end(); it++)
    {
       resip::Data headerName(it->first);
