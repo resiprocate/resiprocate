@@ -164,6 +164,40 @@ ReConServerConfig::getConfigNatTraversalMode(const resip::Data& name, const Conv
    return ret;
 }
 
+bool
+ReConServerConfig::getConfigValue(const resip::Data& name, ReConServerConfig::Application& value)
+{
+   Data lowerName(name);
+   lowerName.lowercase();
+
+   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
+   if(it != mConfigValues.end())
+   {
+      if(isEqualNoCase(it->second, "None"))
+      {
+         value = None;
+      }
+      else if(isEqualNoCase(it->second, "B2BUA"))
+      {
+         value = B2BUA;
+      }
+      else
+      {
+         cerr << "Invalid Application: " << it->second << endl;
+         exit(-1);
+      }
+   }
+   // Not found
+   return false;
+}
+
+ReConServerConfig::Application
+ReConServerConfig::getConfigApplication(const resip::Data& name, const ReConServerConfig::Application defaultValue)
+{
+   ReConServerConfig::Application ret = defaultValue;
+   getConfigValue(name, ret);
+   return ret;
+}
 
 void
 ReConServerConfig::printHelpText(int argc, char **argv)

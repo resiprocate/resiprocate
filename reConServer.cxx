@@ -47,6 +47,7 @@ int _kbhit() {
 #include "reConServer.hxx"
 #include "MyMessageDecorator.hxx"
 #include "MyConversationManager.hxx"
+#include "B2BCallManager.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -856,6 +857,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
+   ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
 
 
    std::vector<unsigned int> _codecIds;
@@ -1159,9 +1161,20 @@ ReConServerProcess::main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled);
-      MyUserAgent ua(&myConversationManager, profile);
-      myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      std::auto_ptr<MyConversationManager> myConversationManager;
+      switch(application)
+      {
+         case ReConServerConfig::None:
+            myConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+            break;
+         case ReConServerConfig::B2BUA:
+            myConversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig));
+            break;
+         default:
+            assert(0);
+      }
+      MyUserAgent ua(myConversationManager.get(), profile);
+      myConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
 
       //////////////////////////////////////////////////////////////////////////////
@@ -1169,7 +1182,7 @@ ReConServerProcess::main (int argc, char** argv)
       //////////////////////////////////////////////////////////////////////////////
 
       ua.startup();
-      myConversationManager.startup();
+      myConversationManager->startup();
 
       //ua.createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
 
@@ -1190,12 +1203,12 @@ ReConServerProcess::main (int argc, char** argv)
             {
 #ifdef WIN32
                input = _getch();
-               processKeyboard(input, myConversationManager, ua);
+               processKeyboard(input, *myConversationManager, ua);
 #else
                input = fgetc(stdin);
                fflush(stdin);
                //cout << "input: " << input << endl;
-               processKeyboard(input, myConversationManager, ua);
+               processKeyboard(input, *myConversationManager, ua);
 #endif
             }
          }

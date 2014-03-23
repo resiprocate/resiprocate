@@ -1,64 +1,59 @@
-#if !defined(RECON_CONFIG_HXX)
-#define RECON_CONFIG_HXX 
+#ifndef B2BCALLMANAGER_HXX
+#define B2BCALLMANAGER_HXX
 
-#include <sys/ioctl.h>
-#include <stdio.h>
+#include <os/OsIntTypes.h>
 
-#include <map>
-#include <asio.hpp>
-#include <rutil/ConfigParse.hxx>
+#if defined(HAVE_CONFIG_H)
+  #include "config.h"
+#endif
+
 #include <rutil/Data.hxx>
-#include <rutil/Log.hxx>
-#include <rutil/BaseException.hxx>
-#include <recon/UserAgent.hxx>
+#include <recon/ConversationManager.hxx>
 
-namespace recon {
+#include "reConServerConfig.hxx"
+#include "MyConversationManager.hxx"
 
-class ReConServerConfig : public resip::ConfigParse
+using namespace resip;
+
+
+namespace recon
+{
+
+class B2BCallManager : public MyConversationManager
 {
 public:
 
-   typedef enum
+   B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config);
+
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up);
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode);
+   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg);
+   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg);
+   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg);
+
+protected:
+   struct B2BCall
    {
-      None,
-      B2BUA
-   } Application;
+      ConversationHandle conv;
+      ParticipantHandle a;
+      ParticipantHandle b;
+   };
 
-   ReConServerConfig();
-   virtual ~ReConServerConfig();
-
-   void printHelpText(int argc, char **argv);
-   using resip::ConfigParse::getConfigValue;
-
-   bool getConfigValue(const resip::Data& name, resip::NameAddr &value);
-   resip::NameAddr getConfigNameAddr(const resip::Data& name, const resip::NameAddr defaultValue, bool useDefaultIfEmpty=false);
-
-   bool getConfigValue(const resip::Data& name, ConversationProfile::SecureMediaMode &value);
-   ConversationProfile::SecureMediaMode getConfigSecureMediaMode(const resip::Data& name, const ConversationProfile::SecureMediaMode defaultValue);
-   bool isSecureMediaModeRequired();
-
-   bool getConfigValue(const resip::Data& name, ConversationProfile::NatTraversalMode &value);
-   ConversationProfile::NatTraversalMode getConfigNatTraversalMode(const resip::Data& name, const ConversationProfile::NatTraversalMode defaultValue);
-
-   bool getConfigValue(const resip::Data& name, Application& defaultValue);
-   Application getConfigApplication(const resip::Data& name, const Application defaultValue);
-
-
-   
-private:
-
-   bool mSecureMediaRequired;
-
+   Data mB2BUANextHop;
+   std::vector<B2BCall> mCalls;
+   std::map<ConversationHandle,B2BCall*> mCallsByConversation;
+   std::map<ParticipantHandle,B2BCall*> mCallsByParticipant;
 };
 
-} // namespace
+}
 
 #endif
 
 
 /* ====================================================================
  *
- * Copyright 2013 Catalin Constantin Usurelu.  All rights reserved.
+ * Copyright 2014 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
