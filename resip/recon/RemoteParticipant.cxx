@@ -2290,8 +2290,14 @@ RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
       }
       else
       {
-         WarningLog(<<"INFO message without dtmf-relay payload, ignoring");
+         WarningLog(<<"INFO message without dtmf-relay payload, rejecting");
+         session->rejectNIT();
       }
+   }
+   else
+   {
+      WarningLog(<<"INFO message received, but mHandle not set, rejecting");
+      session->rejectNIT();
    }
 }
 
