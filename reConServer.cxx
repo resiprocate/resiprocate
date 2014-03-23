@@ -204,7 +204,7 @@ public:
          {
             ConversationHandle convHandle = createConversation();
             // ensure a local participant is in the conversation - create one if one doesn't exist
-            if(mLocalParticipantHandles.empty())
+            if(mLocalAudioEnabled && mLocalParticipantHandles.empty())
             {
                createLocalParticipant();
             }
