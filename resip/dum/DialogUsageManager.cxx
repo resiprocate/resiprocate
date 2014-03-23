@@ -2253,6 +2253,10 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
    {
       SharedPtr<SipMessage> response(new SipMessage);
       makeResponse(*response, request, failureCode);
+      if(failureCode == 489)
+      {
+         response->header(h_AllowEvents) = getMasterProfile()->getAllowedEvents();
+      }
       send(response);
       return false;
    }
