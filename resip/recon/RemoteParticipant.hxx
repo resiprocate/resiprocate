@@ -1,6 +1,8 @@
 #if !defined(RemoteParticipant_hxx)
 #define RemoteParticipant_hxx
 
+#include <map>
+
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 #include "RemoteParticipantDialogSet.hxx"
@@ -55,6 +57,7 @@ public:
    virtual bool isHolding() { return mLocalHold; }
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
+   virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::map<resip::Data,resip::Data>& extraHeaders);
    virtual int getConnectionPortOnBridge();
    virtual int getMediaConnectionId();
    virtual void destroyParticipant();

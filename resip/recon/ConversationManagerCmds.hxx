@@ -126,12 +126,14 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
                                  ParticipantHandle partHandle,
                                  ConversationHandle convHandle,
                                  const resip::NameAddr& destination,
-                                 ConversationManager::ParticipantForkSelectMode forkSelectMode) 
+                                 ConversationManager::ParticipantForkSelectMode forkSelectMode,
+                                 const std::map<resip::Data,resip::Data>& extraHeaders = std::map<resip::Data,resip::Data>())
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
            mDestination(destination),
-           mForkSelectMode(forkSelectMode) {}
+           mForkSelectMode(forkSelectMode),
+           mExtraHeaders(extraHeaders) {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
@@ -142,7 +144,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
             if(participant)
             {
                conversation->addParticipant(participant);
-               participant->initiateRemoteCall(mDestination);
+               participant->initiateRemoteCall(mDestination, mExtraHeaders);
             }
             else
             {
@@ -165,6 +167,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
       ConversationHandle mConvHandle;
       resip::NameAddr mDestination;
       ConversationManager::ParticipantForkSelectMode mForkSelectMode;
+      std::map<resip::Data,resip::Data> mExtraHeaders;
 };
 
 class CreateMediaResourceParticipantCmd  : public resip::DumCommand
