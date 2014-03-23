@@ -2188,6 +2188,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
          mDialog.makeResponse(*response, msg, 500);
          response->header(h_RetryAfter).value() = Random::getRandom() % 10;
          send(response);
+         WarningLog(<<"an INFO message was received before the application called acceptNIT() for the previous INFO message");
       }
       else
       {
