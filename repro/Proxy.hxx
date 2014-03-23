@@ -73,7 +73,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual bool isShutDown() const ;
       virtual void thread();
       
-      bool isMyUri(const resip::Uri& uri) const;
+      virtual bool isMyUri(const resip::Uri& uri) const;
       void addTransportRecordRoute(unsigned int transportKey, const resip::NameAddr& recordRoute);
       void removeTransportRecordRoute(unsigned int transportKey);
       const resip::NameAddr& getRecordRoute(unsigned int transportKey) const;

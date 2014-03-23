@@ -111,8 +111,8 @@ class RequestContext
       ChainIteratorStack;
       ChainIteratorStack mChainIteratorStack;
       
-      void fixStrictRouterDamage();
-      void removeTopRouteIfSelf();
+      virtual void fixStrictRouterDamage();
+      virtual void removeTopRouteIfSelf();
       
       friend class ResponseContext;
       friend EncodeStream& operator<<(EncodeStream& strm, const repro::RequestContext& rc);

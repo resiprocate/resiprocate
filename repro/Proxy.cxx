@@ -249,8 +249,8 @@ Proxy::thread()
                   {
                      if (sip->header(h_RequestLine).method() != OPTIONS)
                      {
-                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
-                     mStack.send(*response, this);
+                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                        mStack.send(*response, this);
                      }
                      else  // If the request is an OPTIONS, send an appropriate response
                      {
