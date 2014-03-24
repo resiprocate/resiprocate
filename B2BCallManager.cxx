@@ -70,7 +70,12 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    const Uri& reqUri = msg.header(h_RequestLine).uri();
    NameAddr newDest("sip:" + reqUri.user() + '@' + mB2BUANextHop);
    std::map<Data,Data> extraHeaders;
-   call.b = ConversationManager::createRemoteParticipant(call.conv, newDest, ForkSelectAutomatic, extraHeaders);
+   SharedPtr<UserProfile> profile(new UserProfile(conversationProfile));
+   NameAddr outgoingCaller = conversationProfile.getDefaultFrom();
+   outgoingCaller.uri().user() = msg.header(h_From).uri().user();
+   outgoingCaller.displayName() = msg.header(h_From).displayName();
+   profile->setDefaultFrom(outgoingCaller);
+   call.b = ConversationManager::createRemoteParticipant(call.conv, newDest, ForkSelectAutomatic, profile, extraHeaders);
    mCalls.push_back(call);
    B2BCall& _call = mCalls.back();
    mCallsByConversation[call.conv] = &_call;
