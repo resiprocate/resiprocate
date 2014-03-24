@@ -1053,6 +1053,15 @@ TurnAsyncSocket::doSendFramed(boost::shared_ptr<DataBuffer>& data)
    {
       sendToRemotePeer(*mActiveDestination, data);
    }
+   else if(mAsyncSocketBase.isConnected())
+   {
+      DebugLog(<<"Sending to connected peer");
+      sendToUnframed(mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort(), data);
+   }
+   else
+   {
+      DebugLog(<<"no allocation, can't send!");
+   }
 }
 
 void 
