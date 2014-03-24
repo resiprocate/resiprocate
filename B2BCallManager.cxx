@@ -23,6 +23,27 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
       ErrLog(<<"Please specify B2BUANextHop");
       exit(1);
    }
+
+   std::set<Data> replicatedHeaderNames;
+   if(config.getConfigValue("B2BUAReplicateHeaders", replicatedHeaderNames))
+   {
+      std::set<Data>::const_iterator it = replicatedHeaderNames.begin();
+      for( ; it != replicatedHeaderNames.end(); it++)
+      {
+         const resip::Data& headerName(*it);
+         resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
+         if(hType == resip::Headers::UNKNOWN)
+         {
+            std::auto_ptr<ExtensionHeader> h(new ExtensionHeader(headerName.c_str()));
+            mReplicatedHeaders.push_back(h);
+            InfoLog(<<"Will replicate header '"<<headerName<<"'");
+         }
+         else
+         {
+            WarningLog(<<"Will not replicate header '"<<headerName<<"', only extension headers permitted");
+         }
+      }
+   }
 }
 
 void
@@ -69,7 +90,22 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    addParticipant(call.conv, call.a);
    const Uri& reqUri = msg.header(h_RequestLine).uri();
    NameAddr newDest("sip:" + reqUri.user() + '@' + mB2BUANextHop);
-   std::map<Data,Data> extraHeaders;
+   std::multimap<Data,Data> extraHeaders;
+   std::vector<std::auto_ptr<resip::ExtensionHeader> >::const_iterator it = mReplicatedHeaders.begin();
+   for( ; it != mReplicatedHeaders.end(); it++)
+   {
+      ExtensionHeader& h = **it;
+      if(msg.exists(h))
+      {
+         // Replicate the header and value into the outgoing INVITE
+         const ParserContainer<StringCategory>& pc = msg.header(h);
+         ParserContainer<StringCategory>::const_iterator v = pc.begin();
+         for( ; v != pc.end(); v++)
+         {
+            extraHeaders.insert(std::pair<Data,Data>(h.getName(), v->value()));
+         }
+      }
+   }
    SharedPtr<UserProfile> profile(new UserProfile(conversationProfile));
    NameAddr outgoingCaller = conversationProfile.getDefaultFrom();
    outgoingCaller.uri().user() = msg.header(h_From).uri().user();

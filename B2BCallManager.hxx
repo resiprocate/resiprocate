@@ -7,6 +7,9 @@
   #include "config.h"
 #endif
 
+#include <memory>
+
+#include <resip/stack/ExtensionHeader.hxx>
 #include <rutil/Data.hxx>
 #include <recon/ConversationManager.hxx>
 
@@ -41,6 +44,8 @@ protected:
    };
 
    Data mB2BUANextHop;
+   std::vector<std::auto_ptr<resip::ExtensionHeader> > mReplicatedHeaders;
+
    std::vector<B2BCall> mCalls;
    std::map<ConversationHandle,B2BCall*> mCallsByConversation;
    std::map<ParticipantHandle,B2BCall*> mCallsByParticipant;
