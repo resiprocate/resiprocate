@@ -126,6 +126,14 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
       B2BCall *call = mCallsByParticipant[partHandle];
+      if(partHandle == call->b)
+      {
+         rejectParticipant(call->a, statusCode);
+      }
+      else
+      {
+         rejectParticipant(call->b, statusCode);
+      }
       destroyConversation(call->conv);
       mCallsByParticipant.erase(call->a);
       mCallsByParticipant.erase(call->b);
