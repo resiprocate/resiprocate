@@ -1,4 +1,13 @@
 = Release Notes v 1.9 =
+==1.9.3 Changes==
+*reTurn: TurnAsyncSocket: fix for sending when not using TURN
+*resip/stack: added allowed events to 489 errors
+*resip/stack: Support for dtmf-relay content parsing for SIP INFO messages
+*resip/recon: call onDtmfEvent when SIP INFO received, just as for RFC2833 DTMF
+*resip/recon: call acceptNIT()/rejectNIT() after handling INFO message
+*resip/recon: support for changing internal sample rate of sipXtapi
+*resip/recon: allow UserProfile and extension headers to be specified when creating a new remote participant
+
 ==1.9.2 Changes==
 *rutil/dns: fix for Windows DNS Server use.  Ignore Link Local DNS Server entries.
 *rutil: add extra ParseBuffer constructor for const char*
