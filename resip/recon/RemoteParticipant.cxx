@@ -124,11 +124,11 @@ void
 RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 {
    SharedPtr<UserProfile> profile;
-   initiateRemoteCall(destination, profile, std::map<resip::Data,resip::Data>());
+   initiateRemoteCall(destination, profile, std::multimap<resip::Data,resip::Data>());
 }
 
 void
-RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<UserProfile>& callingProfile, const std::map<resip::Data,resip::Data>& extraHeaders)
+RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    SdpContents offer;
    SharedPtr<UserProfile> profile = callingProfile;
@@ -143,7 +143,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<Use
       &offer, 
       &mDialogSet);
 
-   std::map<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
+   std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
    for( ; it != extraHeaders.end(); it++)
    {
       resip::Data headerName(it->first);
@@ -154,10 +154,6 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<Use
       {
          resip::ExtensionHeader h_Tmp(headerName.c_str());
          resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
-         while(pc.begin() != pc.end())
-         {
-            pc.erase(pc.begin());
-         }
          resip::StringCategory sc(value);
          pc.push_back(sc);
       }

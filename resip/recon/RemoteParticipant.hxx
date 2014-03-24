@@ -58,7 +58,7 @@ public:
    virtual bool isHolding() { return mLocalHold; }
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
-   virtual void initiateRemoteCall(const resip::NameAddr& destination, resip::SharedPtr<resip::UserProfile>& callingProfile, const std::map<resip::Data,resip::Data>& extraHeaders);
+   virtual void initiateRemoteCall(const resip::NameAddr& destination, resip::SharedPtr<resip::UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
    virtual int getConnectionPortOnBridge();
    virtual int getMediaConnectionId();
    virtual void destroyParticipant();

@@ -206,11 +206,11 @@ ParticipantHandle
 ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
    SharedPtr<UserProfile> profile;
-   return createRemoteParticipant(convHandle, destination, forkSelectMode, profile, std::map<resip::Data,resip::Data>());
+   return createRemoteParticipant(convHandle, destination, forkSelectMode, profile, std::multimap<resip::Data,resip::Data>());
 }
 
 ParticipantHandle
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, SharedPtr<UserProfile>& callerProfile, const std::map<resip::Data,resip::Data>& extraHeaders)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, SharedPtr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
 
