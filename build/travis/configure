@@ -18,7 +18,7 @@ set -e
   --with-python \
   --with-rend \
   --with-recon \
-  CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
-  CXXFLAGS="-g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive" \
+  CPPFLAGS="-I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
+  CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
   --with-c-ares
 
