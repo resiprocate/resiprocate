@@ -123,14 +123,45 @@ RemoteParticipant::getLocalRTPPort()
 void 
 RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 {
+   SharedPtr<UserProfile> profile;
+   initiateRemoteCall(destination, profile, std::multimap<resip::Data,resip::Data>());
+}
+
+void
+RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+{
    SdpContents offer;
-   SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
+   SharedPtr<UserProfile> profile = callingProfile;
+   if(!profile)
+   {
+      profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
+   }
    buildSdpOffer(mLocalHold, offer);
    SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
       destination, 
       profile,
       &offer, 
       &mDialogSet);
+
+   std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
+   for( ; it != extraHeaders.end(); it++)
+   {
+      resip::Data headerName(it->first);
+      resip::Data value(it->second);
+      StackLog(<<"processing an extension header: " << headerName << ": " << value);
+      resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
+      if(hType == resip::Headers::UNKNOWN)
+      {
+         resip::ExtensionHeader h_Tmp(headerName.c_str());
+         resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
+         resip::StringCategory sc(value);
+         pc.push_back(sc);
+      }
+      else
+      {
+         WarningLog(<<"Discarding header '"<<headerName<<"', only extension headers permitted");
+      }
+   }
 
    mDialogSet.sendInvite(invitemsg);
 
