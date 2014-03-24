@@ -2277,7 +2277,7 @@ RemoteParticipant::onRemoteSdpChanged(InviteSessionHandle h, const SipMessage& m
 }
 
 void
-RemoteParticipant::onInfo(InviteSessionHandle, const SipMessage& msg)
+RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
 {
    InfoLog(<< "onInfo: handle=" << mHandle << ", " << msg.brief());
    if(mHandle)
@@ -2287,11 +2287,18 @@ RemoteParticipant::onInfo(InviteSessionHandle, const SipMessage& msg)
       {
          DtmfPayloadContents::DtmfPayload& payload = contents->dtmfPayload();
          mConversationManager.onDtmfEvent(mHandle, payload.getEventCode(), payload.getDuration(), true);
+         session->acceptNIT();
       }
       else
       {
-         WarningLog(<<"INFO message without dtmf-relay payload, ignoring");
+         WarningLog(<<"INFO message without dtmf-relay payload, rejecting");
+         session->rejectNIT();
       }
+   }
+   else
+   {
+      WarningLog(<<"INFO message received, but mHandle not set, rejecting");
+      session->rejectNIT();
    }
 }
 
