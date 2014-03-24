@@ -144,6 +144,8 @@ class InviteSessionHandler
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage* msg)=0;
       
       /// called when INFO message is received 
+      /// the application must call acceptNIT() or rejectNIT()
+      /// once it is ready for another message.
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)=0;
 
       /// called when response to INFO message is received 
