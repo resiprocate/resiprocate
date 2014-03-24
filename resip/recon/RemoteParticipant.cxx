@@ -19,6 +19,7 @@
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Random.hxx>
+#include <resip/stack/DtmfPayloadContents.hxx>
 #include <resip/stack/SipFrag.hxx>
 #include <resip/stack/ExtensionHeader.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
@@ -2248,7 +2249,19 @@ void
 RemoteParticipant::onInfo(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onInfo: handle=" << mHandle << ", " << msg.brief());
-   //assert(0);
+   if(mHandle)
+   {
+      DtmfPayloadContents* contents = dynamic_cast<DtmfPayloadContents*>(msg.getContents());
+      if(contents)
+      {
+         DtmfPayloadContents::DtmfPayload& payload = contents->dtmfPayload();
+         mConversationManager.onDtmfEvent(mHandle, payload.getEventCode(), payload.getDuration(), true);
+      }
+      else
+      {
+         WarningLog(<<"INFO message without dtmf-relay payload, ignoring");
+      }
+   }
 }
 
 void

@@ -51,6 +51,7 @@ TESTS = \
 	testPksc7 \
 	testPlainContents \
 	testRlmi \
+	testDtmfPayload \
 	testSdp \
 	testSelectInterruptor \
 	testSipFrag \
@@ -92,6 +93,7 @@ check_PROGRAMS = \
 	testPlainContents \
 	testResponses \
 	testRlmi \
+	testDtmfPayload \
 	testSdp \
 	testSelect \
 	testSelectInterruptor \
@@ -129,6 +131,7 @@ testConnectionBase_SOURCES = testConnectionBase.cxx TestSupport.cxx
 testCorruption_SOURCES = testCorruption.cxx
 testDigestAuthentication_SOURCES = testDigestAuthentication.cxx TestSupport.cxx
 testDtlsTransport_SOURCES = testDtlsTransport.cxx
+testDtmfPayload_SOURCES = testDtmfPayload.cxx
 testDns_SOURCES = testDns.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx TestSupport.cxx

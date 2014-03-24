@@ -1050,6 +1050,8 @@ bool operator==(const SdpContents::Session::Codec& lhs,
 
 EncodeStream& operator<<(EncodeStream& str, const SdpContents::Session::Codec& codec);
 
+void skipEol(ParseBuffer& pb);
+
 }
 
 #endif

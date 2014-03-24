@@ -43,6 +43,7 @@ libresip_la_SOURCES = \
 	CallId.cxx \
 	Cookie.cxx \
 	DateCategory.cxx \
+	DtmfPayloadContents.cxx \
 	ExpiresCategory.cxx \
 	GenericUri.cxx \
 	IntegerCategory.cxx \
@@ -224,6 +225,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	DnsResult.hxx \
 	DnsResultMessage.hxx \
 	DtlsMessage.hxx \
+	DtmfPayloadContents.hxx \
 	Embedded.hxx \
 	EnableFlowTimer.hxx \
 	EventStackThread.hxx \
