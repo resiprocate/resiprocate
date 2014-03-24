@@ -127,7 +127,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
                                  ConversationHandle convHandle,
                                  const resip::NameAddr& destination,
                                  ConversationManager::ParticipantForkSelectMode forkSelectMode,
-                                 const std::map<resip::Data,resip::Data>& extraHeaders = std::map<resip::Data,resip::Data>())
+                                 const std::map<resip::Data,resip::Data>& extraHeaders = (std::map<resip::Data,resip::Data>()))
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
