@@ -1219,7 +1219,7 @@ ReConServerProcess::main (int argc, char** argv)
    }
    InfoLog(<< "reConServer is shutdown.");
    OsSysLog::shutdown();
-   sleepSeconds(2);
+   ::sleepSeconds(2);
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
 } // end FML scope
