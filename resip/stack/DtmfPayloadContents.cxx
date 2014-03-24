@@ -116,11 +116,18 @@ DtmfPayloadContents::DtmfPayload::isValidButton(const char c)
 void
 DtmfPayloadContents::DtmfPayload::parse(ParseBuffer& pb)
 {
-   pb.skipToChars(Symbols::EQUALS);
-   pb.skipChar();
    const char* anchor = pb.skipWhitespace();
-   pb.skipToOneOf(Symbols::CRLF);
    Data val;
+   pb.skipToChars(Symbols::EQUALS);
+   pb.data(val, anchor);
+   if(!isEqualNoCase(val, "Signal"))
+   {
+      ErrLog(<<"first key must be Signal, found: " << val);
+      throw ParseException("first key must be Signal", pb.getContext(), __FILE__, __LINE__);
+   }
+   pb.skipChar();
+   anchor = pb.skipWhitespace();
+   pb.skipToOneOf(Symbols::CRLF);
    pb.data(val, anchor);
    if(val.size() != 1)
    {
@@ -135,15 +142,27 @@ DtmfPayloadContents::DtmfPayload::parse(ParseBuffer& pb)
    StackLog(<< "Button=" << _button);
 
    skipEol(pb);
-
+   anchor = pb.skipWhitespace();
    pb.skipToChars(Symbols::EQUALS);
+   pb.data(val, anchor);
+   if(!isEqualNoCase(val, "Duration"))
+   {
+      ErrLog(<<"second key must be Duration, found: " << val);
+      throw ParseException("second key must be Duration", pb.getContext(), __FILE__, __LINE__);
+   }
    pb.skipChar();
    pb.skipWhitespace();
-   mDuration = pb.integer();
+   int _duration = pb.integer();
 
-   StackLog(<< "Duration = " << mDuration);
+   StackLog(<< "Duration = " << _duration);
+   if(_duration < 20 || _duration > 5000)
+   {
+      ErrLog(<<"Invalid duration: " << _duration);
+      throw ParseException("Invalid duration", pb.getContext(), __FILE__, __LINE__);
+   }
 
    mButton = _button;
+   mDuration = _duration;
 }
 
 unsigned short
