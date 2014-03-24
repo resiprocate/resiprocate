@@ -61,7 +61,7 @@ B2BCallManager::onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration
 
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      B2BCall *call = mCallsByParticipant[partHandle];
+      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
       if(dtmf > 15)
       {
          WarningLog(<< "Unhandled DTMF code: " << dtmf);
@@ -84,10 +84,10 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    InfoLog(<< "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
    mRemoteParticipantHandles.push_back(partHandle);
    // Create a new conversation for each new participant
-   B2BCall call;
-   call.a = partHandle;
-   call.conv = createConversation();
-   addParticipant(call.conv, call.a);
+   SharedPtr<B2BCall> call(new B2BCall);
+   call->a = partHandle;
+   call->conv = createConversation();
+   addParticipant(call->conv, call->a);
    const Uri& reqUri = msg.header(h_RequestLine).uri();
    NameAddr newDest("sip:" + reqUri.user() + '@' + mB2BUANextHop);
    std::multimap<Data,Data> extraHeaders;
@@ -111,12 +111,10 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    outgoingCaller.uri().user() = msg.header(h_From).uri().user();
    outgoingCaller.displayName() = msg.header(h_From).displayName();
    profile->setDefaultFrom(outgoingCaller);
-   call.b = ConversationManager::createRemoteParticipant(call.conv, newDest, ForkSelectAutomatic, profile, extraHeaders);
-   mCalls.push_back(call);
-   B2BCall& _call = mCalls.back();
-   mCallsByConversation[call.conv] = &_call;
-   mCallsByParticipant[call.a] = &_call;
-   mCallsByParticipant[call.b] = &_call;
+   call->b = ConversationManager::createRemoteParticipant(call->conv, newDest, ForkSelectAutomatic, profile, extraHeaders);
+   mCallsByConversation[call->conv] = call;
+   mCallsByParticipant[call->a] = call;
+   mCallsByParticipant[call->b] = call;
 }
 
 void
@@ -125,7 +123,7 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      B2BCall *call = mCallsByParticipant[partHandle];
+      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
       if(partHandle == call->b)
       {
          rejectParticipant(call->a, statusCode);
@@ -138,7 +136,6 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
       mCallsByParticipant.erase(call->a);
       mCallsByParticipant.erase(call->b);
       mCallsByConversation.erase(call->conv);
-      // FIXME: erase from mCalls too
    }
    else
    {
@@ -158,7 +155,7 @@ B2BCallManager::onParticipantAlerting(ParticipantHandle partHandle, const SipMes
    InfoLog(<< "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      B2BCall *call = mCallsByParticipant[partHandle];
+      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
       if(call->b == partHandle)
       {
          alertParticipant(call->a, false);
@@ -180,7 +177,7 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
    InfoLog(<< "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      B2BCall *call = mCallsByParticipant[partHandle];
+      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
       if(call->b == partHandle)
       {
          answerParticipant(call->a);

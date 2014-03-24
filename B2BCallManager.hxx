@@ -46,9 +46,8 @@ protected:
    Data mB2BUANextHop;
    std::vector<std::auto_ptr<resip::ExtensionHeader> > mReplicatedHeaders;
 
-   std::vector<B2BCall> mCalls;
-   std::map<ConversationHandle,B2BCall*> mCallsByConversation;
-   std::map<ParticipantHandle,B2BCall*> mCallsByParticipant;
+   std::map<ConversationHandle,SharedPtr<B2BCall> > mCallsByConversation;
+   std::map<ParticipantHandle,SharedPtr<B2BCall> > mCallsByParticipant;
 };
 
 }
