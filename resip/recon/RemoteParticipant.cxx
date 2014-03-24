@@ -123,14 +123,19 @@ RemoteParticipant::getLocalRTPPort()
 void 
 RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 {
-   initiateRemoteCall(destination, std::map<resip::Data,resip::Data>());
+   SharedPtr<UserProfile> profile;
+   initiateRemoteCall(destination, profile, std::map<resip::Data,resip::Data>());
 }
 
 void
-RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::map<resip::Data,resip::Data>& extraHeaders)
+RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<UserProfile>& callingProfile, const std::map<resip::Data,resip::Data>& extraHeaders)
 {
    SdpContents offer;
-   SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
+   SharedPtr<UserProfile> profile = callingProfile;
+   if(!profile)
+   {
+      profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
+   }
    buildSdpOffer(mLocalHold, offer);
    SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
       destination, 

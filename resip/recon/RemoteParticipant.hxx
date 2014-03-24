@@ -7,6 +7,7 @@
 #include "Participant.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 
+#include <rutil/SharedPtr.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
@@ -57,7 +58,7 @@ public:
    virtual bool isHolding() { return mLocalHold; }
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
-   virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::map<resip::Data,resip::Data>& extraHeaders);
+   virtual void initiateRemoteCall(const resip::NameAddr& destination, resip::SharedPtr<resip::UserProfile>& callingProfile, const std::map<resip::Data,resip::Data>& extraHeaders);
    virtual int getConnectionPortOnBridge();
    virtual int getMediaConnectionId();
    virtual void destroyParticipant();

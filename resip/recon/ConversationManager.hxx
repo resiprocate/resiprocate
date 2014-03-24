@@ -177,7 +177,7 @@ public:
    */   
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::map<resip::Data,resip::Data>& extraHeaders);
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, resip::SharedPtr<resip::UserProfile>& callerProfile, const std::map<resip::Data,resip::Data>& extraHeaders);
 
    /**
      Creates a new media resource participant in the specified conversation.  
