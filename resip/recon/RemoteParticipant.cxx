@@ -895,7 +895,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       // Add any codecs from our capabilities that may not be in current local sdp - since endpoint may have changed and may now be capable 
       // of handling codecs that it previously could not (common when endpoint is a B2BUA).
 
-      SdpContents& sessionCaps = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get())->sessionCaps();
+      SdpContents& sessionCaps = profile->sessionCaps();
       int highPayloadId = 96;  // Note:  static payload id's are in range of 0-96
       // Iterate through codecs in session caps and check if already in offer
       for (std::list<SdpContents::Session::Codec>::iterator codecsIt = sessionCaps.session().media().front().codecs().begin();
