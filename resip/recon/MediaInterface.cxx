@@ -74,9 +74,13 @@ MediaInterface::post(const OsMsg& msg)
             MiDtmfNotf* pDtmfNotfMsg = (MiDtmfNotf*)&msg;
 
             int duration = pDtmfNotfMsg->getDuration();  // in RTP timestamp units
-            int rtpClockRate = 8000;   // FIXME - should use actual RTP clock rate of the flow graph?
-            int durationMS = (duration * 1000) / rtpClockRate;   //  convert from RTP timestamp units to milliseconds
-            StackLog(<< "RTP clock rate = " << rtpClockRate << "Hz, duration (timestamp units) = " << duration << " = " << durationMS << "ms");
+            int durationMS = duration;
+            if(duration >= 0) // negative durations indicate start of tone in sipXtapi
+            {
+               int rtpClockRate = 8000;   // FIXME - should use actual RTP clock rate of the flow graph?
+               durationMS = (duration * 1000) / rtpClockRate;   //  convert from RTP timestamp units to milliseconds
+               StackLog(<< "RTP clock rate = " << rtpClockRate << "Hz, duration (timestamp units) = " << duration << " = " << durationMS << "ms");
+            }
 
             // Get event into dum queue, so that callback is on dum thread
             DtmfEvent* devent = new DtmfEvent(mConversationManager, mOwnerConversationHandle, pNotfMsg->getConnectionId(), pDtmfNotfMsg->getKeyCode(), durationMS, pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
