@@ -18,6 +18,7 @@ librecon_la_LIBADD += ../../reTurn/client/libreTurnClient.la
 librecon_la_LIBADD += ../dum/libdum.la
 librecon_la_LIBADD += ../stack/libresip.la
 librecon_la_LIBADD += ../../rutil/librutil.la
+librecon_la_LIBADD += -lsipXmediaProcessing
 librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
 librecon_la_LIBADD += @LIBPTHREAD_LIBADD@
 librecon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
