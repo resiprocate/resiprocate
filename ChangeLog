@@ -1,4 +1,10 @@
 = Release Notes v 1.9 =
+==1.9.4 Changes==
+*resip/recon: ensure libraries link with sipXtapi libs
+*resip/recon: fix for case where DialogSet Profile is not an instance of ConversationProfile
+*resip/recon: per-participant tone support
+*resip/recon: clarify DTMF API: tones represented by event code, API-user durations in milliseconds
+
 ==1.9.3 Changes==
 *reTurn: TurnAsyncSocket: fix for sending when not using TURN
 *resip/stack: added allowed events to 489 errors
