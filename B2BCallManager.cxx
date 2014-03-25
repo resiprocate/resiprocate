@@ -67,7 +67,16 @@ B2BCallManager::onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration
          WarningLog(<< "Unhandled DTMF code: " << dtmf);
          return;
       }
-      Data tone(Data("tone:") + buttons[dtmf] + Data(";duration=") + Data(duration));
+      int target = 0;
+      if(partHandle == call->a)
+      {
+         target = call->b;
+      }
+      else if(partHandle == call->b)
+      {
+         target = call->a;
+      }
+      Data tone(Data("tone:") + buttons[dtmf] + Data(";duration=") + Data(duration) + Data(";participant-only=") + Data(target));
       Uri _tone(tone);
       StackLog(<< "sending tone to conversation: " << _tone);
       ConversationManager::createMediaResourceParticipant(call->conv, _tone);
