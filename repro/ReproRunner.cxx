@@ -194,6 +194,16 @@ ReproRunner::run(int argc, char** argv)
    if(!mRestarting)
    {
       setPidFile(mProxyConfig->getConfigData("PidFile", "", true));
+
+      if(isAlreadyRunning())
+      {
+         std::cerr << "Already running, will not start two instances.  Please stop existing process and/or delete PID file.";
+#ifndef WIN32
+         syslog(LOG_DAEMON | LOG_CRIT, "Already running, will not start two instances.  Please stop existing process and/or delete PID file.");
+#endif
+         return false;
+      }
+
       if(mProxyConfig->getConfigBool("Daemonize", false))
       {
          daemonize();

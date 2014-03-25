@@ -19,6 +19,10 @@ protected:
       if and when it wants to drop root privileges */
    void dropPrivileges(const Data& runAsUser, const Data& runAsGroup);
 
+   /* If the PID file is specified, checks if we are already running
+      an instance of this binary */
+   bool isAlreadyRunning();
+
    /* The main subclass can call daemonize() if and
       when it wants to become a daemon */
    void daemonize();

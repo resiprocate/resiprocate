@@ -74,6 +74,15 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    }
 
    setPidFile(reTurnConfig.mPidFile);
+   if(isAlreadyRunning())
+   {
+      std::cerr << "Already running, will not start two instances.  Please stop existing process and/or delete PID file.";
+#ifndef WIN32
+      syslog(LOG_DAEMON | LOG_CRIT, "Already running, will not start two instances.  Please stop existing process and/or delete PID file.");
+#endif
+      return false;
+   }
+
    // Daemonize if necessary
    if(reTurnConfig.mDaemonize)
    {

@@ -131,6 +131,61 @@ ServerProcess::dropPrivileges(const Data& runAsUser, const Data& runAsGroup)
 #endif
 }
 
+bool
+ServerProcess::isAlreadyRunning()
+{
+#ifndef __linux__
+   WarningLog(<<"can't check if process already running on this platform (not implemented yet)");
+   return false;
+#else
+   if(mPidFile.size() == 0)
+   {
+      // if no PID file specified, we do not make any check
+      return false;
+   }
+
+   pid_t running_pid;
+   std::ifstream _pid(mPidFile.c_str(), std::ios_base::in);
+   if(!_pid.good())
+   {
+      // if the file doesn't exist or can't be opened, just ignore
+      return false;
+   }
+   _pid >> running_pid;
+   _pid.close();
+
+   StackLog(<< mPidFile << " contains PID " << running_pid);
+
+   Data ourProc = Data("/proc/self/exe");
+   Data otherProc = Data("/proc/") + Data(running_pid) + Data("/exe");
+   char our_exe[513], other_exe[513];
+   int buf_size;
+
+   buf_size = readlink(ourProc.c_str(), our_exe, 512);
+   if(buf_size < 0 || buf_size == 512)
+   {
+      // if readlink fails, just ignore
+      return false;
+   }
+   our_exe[buf_size] = 0;
+
+   buf_size = readlink(otherProc.c_str(), other_exe, 512);
+   if(buf_size < 0 || buf_size == 512)
+   {
+      // if readlink fails, just ignore
+      return false;
+   }
+   other_exe[buf_size] = 0;
+
+   if(strcmp(our_exe, other_exe) == 0)
+   {
+      ErrLog(<<"already running PID: " << running_pid);
+      return true;
+   }
+   return false;
+#endif
+}
+
 void
 ServerProcess::daemonize()
 {
