@@ -54,6 +54,16 @@ public:
    ConversationHandle getHandle() { return mHandle; }
 
    void notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType);
+
+   /**
+     Notifies a Conversation when an RFC2833 DTMF event is received from a
+     particular remote participant.
+
+     @param mediaConnectionId sipX media connectionId for the participant who sent the signal
+     @param dtmf Integer representation of the DTMF tone received (from RFC2833 event codes)
+     @param duration Duration (in milliseconds) of the DTMF tone received
+     @param up Set to true if the DTMF key is up (otherwise down)
+   */
    void notifyDtmfEvent(int mediaConnectionId, int dtmf, int duration, bool up);
 
 protected:
