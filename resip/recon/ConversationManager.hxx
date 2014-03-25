@@ -480,8 +480,8 @@ public:
      particular remote participant.
 
      @param partHandle Handle of the participant that received the digit
-     @param dtmf Integer representation of the DTMF tone received
-     @param duration Duration of the DTMF tone received
+     @param dtmf Integer representation of the DTMF tone received (from RFC2833 event codes)
+     @param duration Duration (in milliseconds) of the DTMF tone received
      @param up Set to true if the DTMF key is up (otherwise down)
    */
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) = 0;
@@ -593,6 +593,17 @@ private:
    friend class DtmfEvent;
    friend class MediaEvent;
    void notifyMediaEvent(ConversationHandle conversationHandle, int mediaConnectionId, MediaEvent::MediaEventType eventType);
+
+   /**
+     Notifies ConversationManager when an RFC2833 DTMF event is received from a
+     particular remote participant.
+
+     @param conversationHandle Handle of the conversation that received the digit
+     @param mediaConnectionId sipX media connectionId for the participant who sent the signal
+     @param dtmf Integer representation of the DTMF tone received (from RFC2833 event codes)
+     @param duration Duration (in milliseconds) of the DTMF tone received
+     @param up Set to true if the DTMF key is up (otherwise down)
+   */
    void notifyDtmfEvent(ConversationHandle conversationHandle, int connectionId, int dtmf, int duration, bool up);
 
    friend class RemoteParticipantDialogSet;
