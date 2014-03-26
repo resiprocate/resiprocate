@@ -858,9 +858,12 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 {
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
+   std::auto_ptr<SdpContents> _sessionCaps;
    if(!profile) // This can happen for UAC calls
    {
       profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
+      // if using the default profile, we need a copy of the session caps that we can modify
+      _sessionCaps.reset(new SdpContents(profile->sessionCaps()));
    }
 
    // If we already have a local sdp for this sesion, then use this to form the next offer - doing so will ensure
@@ -895,11 +898,15 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       // Add any codecs from our capabilities that may not be in current local sdp - since endpoint may have changed and may now be capable 
       // of handling codecs that it previously could not (common when endpoint is a B2BUA).
 
-      SdpContents& sessionCaps = profile->sessionCaps();
+      SdpContents* sessionCaps = _sessionCaps.get();
+      if(!sessionCaps)
+      {
+         sessionCaps = &(profile->sessionCaps());
+      }
       int highPayloadId = 96;  // Note:  static payload id's are in range of 0-96
       // Iterate through codecs in session caps and check if already in offer
-      for (std::list<SdpContents::Session::Codec>::iterator codecsIt = sessionCaps.session().media().front().codecs().begin();
-           codecsIt != sessionCaps.session().media().front().codecs().end(); codecsIt++)
+      for (std::list<SdpContents::Session::Codec>::iterator codecsIt = sessionCaps->session().media().front().codecs().begin();
+           codecsIt != sessionCaps->session().media().front().codecs().end(); codecsIt++)
       {		
          bool found=false;
          bool payloadIdCollision=false;
