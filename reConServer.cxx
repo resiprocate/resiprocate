@@ -40,6 +40,7 @@ int _kbhit() {
 
 #include "recon/UserAgent.hxx"
 #include "recon/ReconSubsystem.hxx"
+#include <recon/SipXHelper.hxx>
 
 #include <os/OsSysLog.h>
 
@@ -879,13 +880,12 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
 
-   //enableConsoleOutput(TRUE);  // Allow sipX console output
-   OsSysLog::initialize(0, "reConServer");
-   OsSysLog::setOutputFile(0, "sipXtapilog.txt") ;
-   //OsSysLog::enableConsoleOutput(true);
-   //OsSysLog::setLoggingPriority(PRI_DEBUG);
    Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str());
    GenericLogImpl::MaxLineCount = loggingFileMaxLineCount;
+
+   // Setup logging for the sipX media stack
+   // It is bridged to the reSIProcate logger
+   SipXHelper::setupLoggingBridge("reConServer");
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
 
