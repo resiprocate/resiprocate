@@ -215,9 +215,10 @@ MediaResourceParticipant::startPlay()
             if(participant)
             {
                StackLog(<<"sending tone to sipX connection: " << participant->getMediaConnectionId());
-               status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
-               // FIXME: this is for newer sipXtapi API, option to suppress inband tones:
-               //status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */, !isDtmf /* inband */, true /* RFC 4733 */);
+               // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
+               //status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
+               // this is for newer sipXtapi API, option to suppress inband tones:
+               status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */, !isDtmf /* inband */, true /* RFC 4733 */);
             }
             else
             {
@@ -419,9 +420,10 @@ MediaResourceParticipant::destroyParticipant()
                RemoteParticipant* participant = dynamic_cast<RemoteParticipant*>(mConversationManager.getParticipant(partHandle));
                if(participant)
                {
-                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
-                  // FIXME: this is for newer sipXtapi API, option to suppress inband tones:
-                  //status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
+                  // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
+                  //status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
+                  // this is for newer sipXtapi API, option to suppress inband tones:
+                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
                }
                else
                {
