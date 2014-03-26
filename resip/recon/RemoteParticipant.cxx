@@ -1286,7 +1286,12 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
    try
    {
       // copy over session capabilities
-      answer = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get())->sessionCaps();
+      ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
+      if(!profile)
+      {
+         profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
+      }
+      answer = profile->sessionCaps();
 
       // Set sessionid and version for this answer
       UInt64 currentTime = Timer::getTimeMicroSec();
@@ -1296,7 +1301,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       // Set local port in answer
       // for now we only allow 1 audio media
       assert(answer.session().media().size() == 1);
-      SdpContents::Session::Medium& mediaSessionCaps = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get())->sessionCaps().session().media().front();
+      SdpContents::Session::Medium& mediaSessionCaps = profile->sessionCaps().session().media().front();
       assert(mediaSessionCaps.name() == "audio");
       assert(mediaSessionCaps.codecs().size() > 0);
 
@@ -2010,18 +2015,24 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
    // Check for Auto-Answer indication - support draft-ietf-answer-mode-01 
    // and Answer-After parameter of Call-Info header
    ConversationProfile* profile = dynamic_cast<ConversationProfile*>(h->getUserProfile().get());
-   assert(profile);
-   bool autoAnswerRequired;
-   bool autoAnswer = profile->shouldAutoAnswer(msg, &autoAnswerRequired);
-   if(!autoAnswer && autoAnswerRequired)  // If we can't autoAnswer but it was required, we must reject the call
+   if(profile)
    {
-      WarningCategory warning;
-      warning.hostname() = DnsUtil::getLocalHostName();
-      warning.code() = 399; /* Misc. */
-      warning.text() = "automatic answer forbidden";
-      setHandle(0); // Don't generate any callbacks for this rejected invite
-      h->reject(403 /* Forbidden */, &warning);
-      return;
+      bool autoAnswerRequired;
+      bool autoAnswer = profile->shouldAutoAnswer(msg, &autoAnswerRequired);
+      if(!autoAnswer && autoAnswerRequired)  // If we can't autoAnswer but it was required, we must reject the call
+      {
+         WarningCategory warning;
+         warning.hostname() = DnsUtil::getLocalHostName();
+         warning.code() = 399; /* Misc. */
+         warning.text() = "automatic answer forbidden";
+         setHandle(0); // Don't generate any callbacks for this rejected invite
+         h->reject(403 /* Forbidden */, &warning);
+         return;
+      }
+   }
+   else
+   {
+      WarningLog(<<"bypassing logic for Auto-Answer");
    }
   
    // notify of new participant

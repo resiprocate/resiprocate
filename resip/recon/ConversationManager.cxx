@@ -1025,8 +1025,15 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
 
          // Notify application
          ConversationProfile* profile = dynamic_cast<ConversationProfile*>(ss->getUserProfile().get());
-         assert(profile);
-         onRequestOutgoingParticipant(participant->getParticipantHandle(), msg, *profile);
+         if(profile)
+         {
+            onRequestOutgoingParticipant(participant->getParticipantHandle(), msg, *profile);
+         }
+         else
+         {
+            // FIXME - could we do something else here?
+            WarningLog(<<"not an instance of ConversationProfile, not calling onRequestOutgoingParticipant");
+         }
       }
       else
       {
@@ -1164,7 +1171,15 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             // Notify application
             ConversationProfile* profile = dynamic_cast<ConversationProfile*>(ood->getUserProfile().get());
             assert(profile);
-            onRequestOutgoingParticipant(participant->getParticipantHandle(), msg, *profile);
+            if(profile)
+            {
+               onRequestOutgoingParticipant(participant->getParticipantHandle(), msg, *profile);
+            }
+            else
+            {
+               // FIXME - could we do something else here?
+               WarningLog(<<"not an instance of ConversationProfile, not calling onRequestOutgoingParticipant");
+            }
          }
          else
          {
