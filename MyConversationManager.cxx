@@ -38,6 +38,8 @@ MyConversationManager::startup()
    else
    {
       // If no local audio - just create a starter conversation
+      // FIXME - do we really need an empty conversation on startup?
+      // If in B2BUA mode, this will never be used
       createConversation();
    }
 
