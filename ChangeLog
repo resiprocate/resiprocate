@@ -1,4 +1,10 @@
 = Release Notes v 1.9 =
+==1.9.5 Changes==
+*resip/recon: do not send DTMF as inband audio, can be troublesome as sipXtapi echoes it back to caller (note: requires latest sipXtapi code with startChannelTone patch)
+*resip/recon: SipXHelper: map log entries from sipXtapi to reSIProcate logger
+*resip/recon: safety checks when using dynamic_cast with ConversationProfile
+*resip/recon: avoid changing payload IDs in the default ConversationProfile
+
 ==1.9.4 Changes==
 *resip/recon: ensure libraries link with sipXtapi libs
 *resip/recon: fix for case where DialogSet Profile is not an instance of ConversationProfile
