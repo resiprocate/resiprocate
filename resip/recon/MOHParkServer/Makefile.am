@@ -20,6 +20,7 @@ LDADD += ../../../reTurn/client/libreTurnClient.la
 LDADD += ../../../resip/dum/libdum.la
 LDADD += ../../../resip/stack/libresip.la
 LDADD += ../../../rutil/librutil.la
+LDADD += -lsipXport
 LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
 sbin_PROGRAMS = MOHParkServer
