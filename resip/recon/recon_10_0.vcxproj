@@ -112,6 +112,7 @@
     <ClCompile Include="RelatedConversationSet.cxx" />
     <ClCompile Include="RemoteParticipant.cxx" />
     <ClCompile Include="RemoteParticipantDialogSet.cxx" />
+    <ClCompile Include="SipXHelper.cxx" />
     <ClCompile Include="sdp\Sdp.cxx" />
     <ClCompile Include="sdp\SdpCandidate.cxx" />
     <ClCompile Include="sdp\SdpCandidatePair.cxx" />
@@ -146,6 +147,7 @@
     <ClInclude Include="RelatedConversationSet.hxx" />
     <ClInclude Include="RemoteParticipant.hxx" />
     <ClInclude Include="RemoteParticipantDialogSet.hxx" />
+    <ClInclude Include="SipXHelper.hxx" />
     <ClInclude Include="sdp\Sdp.hxx" />
     <ClInclude Include="sdp\SdpCandidate.hxx" />
     <ClInclude Include="sdp\SdpCandidatePair.hxx" />

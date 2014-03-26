@@ -349,6 +349,7 @@
     <ClCompile Include="DnsInterface.cxx" />
     <ClCompile Include="DnsResult.cxx" />
     <ClCompile Include="DtlsMessage.cxx" />
+    <ClCompile Include="DtmfPayloadContents.cxx" />
     <ClCompile Include="ssl\DtlsTransport.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -527,6 +528,7 @@
     <ClInclude Include="DnsResult.hxx" />
     <ClInclude Include="DnsResultMessage.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
+    <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
