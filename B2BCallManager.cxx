@@ -115,7 +115,7 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
          }
       }
    }
-   SharedPtr<UserProfile> profile(new UserProfile(conversationProfile));
+   SharedPtr<UserProfile> profile(new ConversationProfile(conversationProfile));
    NameAddr outgoingCaller = conversationProfile.getDefaultFrom();
    outgoingCaller.uri().user() = msg.header(h_From).uri().user();
    outgoingCaller.displayName() = msg.header(h_From).displayName();
