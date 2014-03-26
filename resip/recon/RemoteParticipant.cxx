@@ -2015,10 +2015,11 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
    // Check for Auto-Answer indication - support draft-ietf-answer-mode-01 
    // and Answer-After parameter of Call-Info header
    ConversationProfile* profile = dynamic_cast<ConversationProfile*>(h->getUserProfile().get());
+   bool autoAnswer = false;
    if(profile)
    {
       bool autoAnswerRequired;
-      bool autoAnswer = profile->shouldAutoAnswer(msg, &autoAnswerRequired);
+      autoAnswer = profile->shouldAutoAnswer(msg, &autoAnswerRequired);
       if(!autoAnswer && autoAnswerRequired)  // If we can't autoAnswer but it was required, we must reject the call
       {
          WarningCategory warning;
