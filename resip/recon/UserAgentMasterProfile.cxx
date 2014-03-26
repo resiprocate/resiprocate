@@ -18,7 +18,11 @@ UserAgentMasterProfile::UserAgentMasterProfile()
 #ifdef WIN32
    mCertPath = ".";
 #else
-   mCertPath = getenv("HOME");
+   const char* home_dir = getenv("HOME");
+   if(home_dir)
+   {
+      mCertPath = home_dir;
+   }
    mCertPath += "/.sipCerts/";
 #endif
 }
