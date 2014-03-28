@@ -71,7 +71,12 @@ CongestionManager::RejectionBehavior
 GeneralCongestionManager::getRejectionBehavior(const FifoStatsInterface *fifo) const
 {
    Lock lock(mFifosMutex);
+   return getRejectionBehaviorInternal(fifo);
+}
 
+CongestionManager::RejectionBehavior 
+GeneralCongestionManager::getRejectionBehaviorInternal(const FifoStatsInterface *fifo) const
+{
    // !bwc! We need to also keep an eye on memory usage, and push back if it 
    // looks like we're going to start hitting swap sometime soon.
 
@@ -158,7 +163,7 @@ GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) c
 EncodeStream&
 GeneralCongestionManager::encodeFifoStats(const FifoStatsInterface& fifoStats, EncodeStream& strm) const
 {
-   CongestionManager::RejectionBehavior behavior = getRejectionBehavior(&fifoStats);
+   CongestionManager::RejectionBehavior behavior = getRejectionBehaviorInternal(&fifoStats);
    const FifoInfo& info = mFifos[fifoStats.getRole()];
    strm <<fifoStats.getDescription()
       << ": Size=" << fifoStats.getCountDepth()

@@ -142,6 +142,7 @@ class GeneralCongestionManager : public CongestionManager
          @brief Returns the percent of maximum tolerances that this queue is at.
       */
       virtual UInt16 getCongestionPercent(const FifoStatsInterface* fifo) const;
+      virtual RejectionBehavior getRejectionBehaviorInternal(const FifoStatsInterface *fifo) const;
 
       virtual EncodeStream& encodeFifoStats(const FifoStatsInterface& fifoStats, EncodeStream& strm) const;
 
