@@ -95,7 +95,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost_1_46_1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -125,7 +125,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost_1_46_1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_ARES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -153,7 +153,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost_1_46_1;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -183,7 +183,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost_1_46_1;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_ARES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
