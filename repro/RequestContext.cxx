@@ -271,17 +271,9 @@ RequestContext::processRequestInviteTransaction(SipMessage* msg, bool original)
             InfoLog(<<"Got an ACK within an INVITE transaction, but our "
                      "response was a 2xx. Someone didn't change their tid "
                      "like they were supposed to...");
-            if(
-               (
-                  msg->exists(h_Routes) && 
-                  !msg->header(h_Routes).empty()
-               ) 
-               ||
-               (
-                  !getProxy().isMyUri(msg->header(h_RequestLine).uri()) && 
-                  (msg->header(h_From).isWellFormed() && getProxy().isMyUri(msg->header(h_From).uri())) 
-               )
-               )
+            if((msg->exists(h_Routes) && !msg->header(h_Routes).empty()) ||   // If ACK/200 has a Route header   OR
+               (!getProxy().isMyUri(msg->header(h_RequestLine).uri()) &&      // RequestUri is not us and From Uri is our domain
+                (msg->header(h_From).isWellFormed() && getProxy().isMyUri(msg->header(h_From).uri()))))
             {
                forwardAck200(*msg);
             }

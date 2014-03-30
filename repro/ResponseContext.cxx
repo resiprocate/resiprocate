@@ -905,11 +905,9 @@ ResponseContext::sendRequest(resip::SipMessage& request)
       if (request.exists(h_ProxyAuthorizations))
       {
          Auths &authHeaders = request.header(h_ProxyAuthorizations);
-         Data realm = mRequestContext.getDigestRealm();
-
          for (Auths::iterator i = authHeaders.begin(); i != authHeaders.end(); )
          {
-            if(i->exists(p_realm) && isEqualNoCase(i->param(p_realm), realm))
+            if(i->exists(p_realm) && mRequestContext.getProxy().isMyDomain(i->param(p_realm)))
             {
                i = authHeaders.erase(i);
             }
