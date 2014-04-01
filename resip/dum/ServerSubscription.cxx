@@ -26,7 +26,8 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
    : BaseSubscription(dum, dialog, req),
      mSubscriber(req.header(h_From).uri().getAor()),
      mExpires(60),
-     mAbsoluteExpiry(0)
+     mAbsoluteExpiry(0),
+     mDeleteSubscription(true)
 {
    if (req.header(h_RequestLine).method() == REFER && req.header(h_To).exists(p_tag))
    {
@@ -90,6 +91,15 @@ ServerSubscription::reject(int statusCode)
    return mLastResponse;
 }
 
+void ServerSubscription::terminateSubscription(ServerSubscriptionHandler* handler)
+{
+  if (mDeleteSubscription)
+  {
+    handler->onTerminated(getHandle());
+    delete this;
+  }
+}
+
 
 void 
 ServerSubscription::send(SharedPtr<SipMessage> msg)
@@ -120,8 +130,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
       else if (code < 400)
       {
          DialogUsage::send(msg);
-         handler->onTerminated(getHandle());
-         delete this;
+         terminateSubscription(handler);
          return;
       }
       else
@@ -129,8 +138,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
          if (shouldDestroyAfterSendingFailure(*msg))
          {
             DialogUsage::send(msg);
-            handler->onTerminated(getHandle());
-            delete this;
+            terminateSubscription(handler);
             return;
          }
          else
@@ -144,8 +152,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
       DialogUsage::send(msg);
       if (mSubscriptionState == Terminated)
       {
-         handler->onTerminated(getHandle());
-         delete this;
+        terminateSubscription(handler);
       }
    }
 }
@@ -246,6 +253,8 @@ ServerSubscription::dispatch(const SipMessage& msg)
          if (mSubscriptionState == Invalid)
          {
             mSubscriptionState = Terminated;
+            mDeleteSubscription = false;
+
             if (mEventType != "refer" )
             {
                handler->onNewSubscription(getHandle(), msg);
@@ -254,11 +263,19 @@ ServerSubscription::dispatch(const SipMessage& msg)
             {
                handler->onNewSubscriptionFromRefer(getHandle(), msg);
             }
+
+            mDeleteSubscription = true;
+
+            if (mLastResponse->header(h_StatusLine).statusCode() >= 300)
+            {
+              send(mLastResponse);
+              return;
+            }
          }
 
          makeNotifyExpires();
          handler->onExpiredByClient(getHandle(), msg, *mLastRequest);
-         
+
          mDialog.makeResponse(*mLastResponse, mLastSubscribe, 200);
          mLastResponse->header(h_Expires).value() = mExpires;
          send(mLastResponse);
@@ -306,8 +323,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
       {
          //in dialog NOTIFY got redirected? Bizarre...
          handler->onError(getHandle(), msg);
-         handler->onTerminated(getHandle());
-         delete this;         
+         terminateSubscription(handler);
       }
       else
       {
@@ -326,8 +342,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
             case Helper::DialogTermination:
                DebugLog( << "ServerSubscription::UsageTermination: " << msg.brief());
                handler->onError(getHandle(), msg);
-               handler->onTerminated(getHandle());
-               delete this;
+               terminateSubscription(handler);
                break;
          }
       }
@@ -423,8 +438,7 @@ ServerSubscription::dialogDestroyed(const SipMessage& msg)
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    assert(handler);   
    handler->onError(getHandle(), msg);
-   handler->onTerminated(getHandle());
-   delete this;
+   terminateSubscription(handler);
 }
 
 void 

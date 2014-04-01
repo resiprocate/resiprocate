@@ -8,6 +8,7 @@ namespace resip
 {
 
 class DialogUsageManager;
+class ServerSubscriptionHandler;
 
 //!dcm! -- no Subscription State expires parameter generation yet. 
 class ServerSubscription : public BaseSubscription 
@@ -64,6 +65,8 @@ class ServerSubscription : public BaseSubscription
       
       bool shouldDestroyAfterSendingFailure(const SipMessage& msg);      
 
+      void terminateSubscription(ServerSubscriptionHandler* handler);
+
       Data mSubscriber;
 
 //      const Contents* mCurrentEventDocument;
@@ -75,6 +78,8 @@ class ServerSubscription : public BaseSubscription
       ServerSubscription(const ServerSubscription&);
       ServerSubscription& operator=(const ServerSubscription&);
       UInt64 mAbsoluteExpiry;      
+
+      bool mDeleteSubscription;
 };
  
 }
