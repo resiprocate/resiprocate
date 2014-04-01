@@ -117,7 +117,6 @@ Proxy::Proxy(SipStack& stack,
    }
 }
 
-
 Proxy::~Proxy()
 {
    shutdown();
@@ -144,13 +143,11 @@ Proxy::isShutDown() const
   return false;
 }
 
-
 UserStore&
 Proxy::getUserStore()
 {
    return mUserStore;
 }
-
 
 void
 Proxy::thread()
@@ -249,8 +246,8 @@ Proxy::thread()
                   {
                      if (sip->header(h_RequestLine).method() != OPTIONS)
                      {
-                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
-                        mStack.send(*response, this);
+                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                     mStack.send(*response, this);
                      }
                      else  // If the request is an OPTIONS, send an appropriate response
                      {
@@ -558,13 +555,11 @@ Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
    }
 }
 
-
 void
 Proxy::postMS(std::auto_ptr<resip::ApplicationMessage> msg, int msec)
 {
    mStack.postMS(*msg,msec,this);
 }
-
 
 const Data& 
 Proxy::name() const
@@ -624,12 +619,6 @@ Proxy::getRecordRoute(unsigned int transportKey) const
       return it->second;
    }
    return mRecordRoute;
-}
-
-bool
-Proxy::getRecordRouteForced() const
-{
-   return mRecordRouteForced;
 }
 
 bool 
