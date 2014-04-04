@@ -513,6 +513,9 @@ class SipMessage : public TransactionMessage
       // address.
       const Tuple& getReceivedTransportTuple() const { return mReceivedTransportTuple; }
 
+      /// Set Tuple for transport from whence this message came
+      void setReceivedTransportTuple(const Tuple& transportTuple) { mReceivedTransportTuple = transportTuple;}
+
       // Returns the source tuple that the message was received from
       // only makes sense for messages received from the wire
       void setSource(const Tuple& tuple) { mSource = tuple; }
