@@ -596,8 +596,11 @@ ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsi
             sdpcodec->getEncodingName(mimeSubType);
             //mimeSubType.toUpper();
             
-            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getSampleRate());
-            codec.payloadType() = sdpcodec->getCodecPayloadFormat();
+            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getCodecPayloadFormat(), sdpcodec->getSampleRate());
+            if(sdpcodec->getNumChannels() > 1)
+            {
+               codec.encodingParameters() = Data(sdpcodec->getNumChannels());
+            }
 
             // Check for telephone-event and add fmtp manually
             if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
