@@ -14,7 +14,6 @@ reprocmd_LDADD += ../../resip/stack/libresip.la
 reprocmd_LDADD += ../../rutil/librutil.la
 #reprocmd_LDADD += ../contrib/ares/libares.a
 #reprocmd_LDADD += -L../contrib/ares -lares
-reprocmd_LDADD += @LIBRADIUS_LIBADD@
 reprocmd_LDADD += @LIBPTHREAD_LIBADD@
 
 ##############################################################################
