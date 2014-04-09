@@ -858,6 +858,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
+   bool enableOpus = reConServerConfig.getConfigBool("EnableOpus", false);
    ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
 
 
@@ -875,6 +876,10 @@ ReConServerProcess::main (int argc, char** argv)
    if(enableG722)
    {
       _codecIds.push_back(SdpCodec::SDP_CODEC_G722);        // 9 - G.722
+   }
+   if(enableOpus)
+   {
+      _codecIds.push_back(SdpCodec::SDP_CODEC_OPUS);        // Opus
    }
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
    unsigned int *codecIds = &_codecIds[0];
@@ -918,6 +923,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Default sample rate = " << defaultSampleRate);
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
+   InfoLog( << "  Enable Opus codec = " << (enableOpus ? "true" : "false"));
    InfoLog( << "  Log Type = " << loggingType);
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
@@ -1119,6 +1125,16 @@ ReConServerProcess::main (int argc, char** argv)
       SdpContents::Session::Codec g722codec("G722", 8000);
       g722codec.payloadType() = 9;  /* RFC3551 */ ;
       medium.addCodec(g722codec);
+   }
+   if(enableOpus)
+   {
+      // Note: the other constructors (e.g. g722 above) are
+      // invoked incorrectly, payload format should be the second
+      // argument or the rate is used as the payload format and
+      // the desired rate is not used at all
+      SdpContents::Session::Codec opuscodec("OPUS", 96, 48000);
+      opuscodec.encodingParameters() = Data("2");
+      medium.addCodec(opuscodec);
    }
    SdpContents::Session::Codec g711ucodec("PCMU", 8000);
    g711ucodec.payloadType() = 0;  /* RFC3551 */ ;
