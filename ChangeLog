@@ -1,4 +1,8 @@
 = Release Notes v 1.9 =
+==1.9.6 Changes==
+*resip/recon: fixes a bug that makes it impossible to use codecs with RTP clock rates other than 8000, makes Opus support possible
+*autotools: minor tweaks to reduce warnings during build/linking
+
 ==1.9.5 Changes==
 *resip/recon: do not send DTMF as inband audio, can be troublesome as sipXtapi echoes it back to caller (note: requires latest sipXtapi code with startChannelTone patch)
 *resip/recon: SipXHelper: map log entries from sipXtapi to reSIProcate logger
