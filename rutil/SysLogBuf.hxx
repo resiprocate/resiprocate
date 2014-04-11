@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "rutil/Log.hxx"
+
 namespace resip
 {
 
@@ -20,9 +22,13 @@ class SysLogBuf : public std::streambuf
       //inline streamsize xsputn (char* text, streamsize n);
 
    private:
+      friend std::ostream& operator<< (std::ostream& os, const resip::Log::Level& level);
       enum { Size=4095 }; 
       char buffer[Size+1];
+      Log::Level mLevel;
 };
+
+std::ostream& operator<< (std::ostream& os, const resip::Log::Level& level);
  
 }
 

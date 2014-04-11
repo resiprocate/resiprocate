@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cassert>
 #include "rutil/SysLogBuf.hxx"
+#include "rutil/Log.hxx"
 
 #ifndef EOF
 # define EOF (-1)
@@ -13,6 +14,7 @@
 using resip::SysLogBuf;
 
 SysLogBuf::SysLogBuf ()
+ : mLevel(Log::Debug)
 {
 #if !defined(WIN32)
    setp(buffer,buffer+Size);
@@ -28,8 +30,41 @@ int
 SysLogBuf::sync()
 {
 #if !defined(WIN32)
+   // Default to debug level for Stack, Debug and unrecognised values
+   int _level = LOG_DEBUG;
+   // For efficiency, we check mLevel in decreasing order of frequency,
+   // anticipating that Stack is the most common and Crit is the least
+   // common.
+   switch(mLevel)
+   {
+      case Log::Stack:
+      case Log::Debug:
+         // This is just here to avoid traversing the rest
+         // of the switch block for every Stack or Debug message.
+         // They will just be logged with the default LOG_DEBUG
+         // specified above.
+         break;
+      case Log::Info:
+         _level = LOG_INFO;
+         break;
+      case Log::Warning:
+         _level = LOG_WARNING;
+         break;
+      case Log::Err:
+         _level = LOG_ERR;
+         break;
+      case Log::Crit:
+         _level = LOG_CRIT;
+         break;
+      default:
+         // just let it use the default value defined above
+         break;
+   }
    *(pptr()) = 0;
-   syslog (LOG_LOCAL6 | LOG_DEBUG, "%s", pbase());
+   syslog (LOG_LOCAL6 | _level, "%s", pbase());
+   // Set mLevel back to the default level for the next log entry
+   // in case it is not explicitly specified next time.
+   mLevel = Log::Debug;
    setp(buffer, buffer+Size);
 #else
    assert(0);
@@ -47,6 +82,16 @@ SysLogBuf::overflow (int c)
       pbump(1);
    }
    return c;
+}
+
+std::ostream& resip::operator<< (std::ostream& os, const resip::Log::Level& level)
+{
+   // FIXME - we should probably find a more precise way to make sure
+   // that this can never be done for the wrong type of stream.
+   // For now, we rely on Log.cxx checking if mLogger is of type Syslog
+   // and not sending Level to the stream otherwise.
+   static_cast<SysLogBuf *>(os.rdbuf())->mLevel = level;
+   return os;
 }
 
 /* ====================================================================

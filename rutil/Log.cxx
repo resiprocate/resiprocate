@@ -792,7 +792,12 @@ Log::Guard::~Guard()
    else 
    {
       // endl is magic in syslog -- so put it here
-      Instance((int)mData.size()+2) << mData << std::endl;  
+      std::ostream& _instance = Instance((int)mData.size()+2);
+      if (logType == resip::Log::Syslog)
+      {
+         _instance << mLevel;
+      }
+      _instance << mData << std::endl;  
    }
 }
 
