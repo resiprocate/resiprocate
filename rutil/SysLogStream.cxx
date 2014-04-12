@@ -14,6 +14,12 @@ SysLogStream::SysLogStream() :
 {
 }
 
+SysLogStream::SysLogStream(const Data& ident, int facility) :
+   SysLogBuf(ident, facility),
+   std::ostream (this)
+{
+}
+
 SysLogStream::~SysLogStream()
 {
 }

@@ -811,7 +811,7 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
          if (mLogger == 0)
          {
             std::cerr << "Creating a syslog stream" << std::endl;
-            mLogger = new SysLogStream;
+            mLogger = new SysLogStream(mAppName);
          }
          return *mLogger;
 

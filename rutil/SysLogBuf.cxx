@@ -14,11 +14,32 @@
 using resip::SysLogBuf;
 
 SysLogBuf::SysLogBuf ()
- : mLevel(Log::Debug)
+ : mLevel(Log::Debug),
+   mAppName(""),
+   mFacility(LOG_DAEMON)
+{
+   init();
+}
+
+SysLogBuf::SysLogBuf (const Data& ident, int facility)
+ : mLevel(Log::Debug),
+   mAppName(ident),
+   mFacility(facility)
+{
+   init();
+}
+
+void
+SysLogBuf::init()
 {
 #if !defined(WIN32)
    setp(buffer,buffer+Size);
-   openlog (0, LOG_NDELAY, LOG_LOCAL6);
+   const char* _ident = 0;
+   if(!mAppName.empty())
+   {
+      _ident = mAppName.c_str();
+   }
+   openlog (_ident, LOG_NDELAY, mFacility);
 #endif
 }
       
@@ -61,7 +82,7 @@ SysLogBuf::sync()
          break;
    }
    *(pptr()) = 0;
-   syslog (LOG_LOCAL6 | _level, "%s", pbase());
+   syslog (mFacility | _level, "%s", pbase());
    // Set mLevel back to the default level for the next log entry
    // in case it is not explicitly specified next time.
    mLevel = Log::Debug;

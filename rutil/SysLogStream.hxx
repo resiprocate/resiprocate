@@ -1,6 +1,8 @@
 #if !defined(RESIP_SYSLOGSTREAM_HXX)
 #define RESIP_SYSLOGSTREAM_HXX 
 
+#include <syslog.h>
+
 #include "rutil/SysLogBuf.hxx"
 
 namespace resip
@@ -11,6 +13,7 @@ class SysLogStream : private SysLogBuf, public std::ostream
 {
    public:
       SysLogStream();
+      SysLogStream(const Data& ident, int facility = LOG_DAEMON);
       virtual ~SysLogStream();
 
    private:
