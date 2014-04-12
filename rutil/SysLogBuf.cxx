@@ -39,7 +39,7 @@ SysLogBuf::init()
    {
       _ident = mAppName.c_str();
    }
-   openlog (_ident, LOG_NDELAY, mFacility);
+   openlog (_ident, LOG_NDELAY | LOG_PID, mFacility);
 #endif
 }
       
