@@ -738,6 +738,8 @@ CommandServer::handleRemoveTransportRequest(unsigned int connectionId, unsigned 
       return;
    }
    mReproRunner.getProxy()->getStack().removeTransport(transportKey);
+   mReproRunner.getProxy()->removeTransportRecordRoute(transportKey);
+
    Data text("Transport remove requested: transportKey=");
    text += Data(transportKey);
    sendResponse(connectionId, requestId, Data::Empty, 200, text);
