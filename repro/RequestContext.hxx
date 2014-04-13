@@ -61,7 +61,7 @@ class RequestContext
       virtual void send(resip::SipMessage& msg);
       void sendResponse(resip::SipMessage& response);
 
-      void forwardAck200(const resip::SipMessage& ack);
+      virtual void forwardAck200(const resip::SipMessage& ack);
       void postAck200Done();
       
       void updateTimerC();
