@@ -1,5 +1,7 @@
 #if !defined(WIN32)
 #include <syslog.h>
+#else
+#define LOG_DAEMON 0
 #endif
 
 #include <cstdio>
@@ -21,7 +23,7 @@ SysLogBuf::SysLogBuf ()
    init();
 }
 
-SysLogBuf::SysLogBuf (const Data& ident, int facility)
+SysLogBuf::SysLogBuf (const resip::Data& ident, int facility)
  : mLevel(Log::Debug),
    mAppName(ident),
    mFacility(facility)
