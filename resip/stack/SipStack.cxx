@@ -363,7 +363,9 @@ SipStack::addTransport( TransportType protocol,
                                          transportFlags,
                                          cvm,
                                          useEmailAsSIP,
-                                         certificateFilename, privateKeyFilename);
+                                         certificateFilename, 
+                                         privateKeyFilename,
+                                         privateKeyPassPhrase);
 #else
             CritLog (<< "Can't add TLS transport: TLS not supported in this stack. You don't have openssl.");
             throw Transport::Exception("Can't add TLS transport: TLS not supported in this stack. You don't have openssl.", __FILE__,__LINE__);
@@ -379,7 +381,9 @@ SipStack::addTransport( TransportType protocol,
                                           sipDomainname,
                                           mSocketFunc,
                                           *mCompression,
-                                          certificateFilename, privateKeyFilename);
+                                          certificateFilename, 
+                                          privateKeyFilename,
+                                          privateKeyPassPhrase);
 #else
             CritLog (<< "Can't add DTLS transport: DTLS not supported in this stack.");
             throw Transport::Exception("Can't add DTLS transport: DTLS not supported in this stack.", __FILE__,__LINE__);
@@ -414,7 +418,9 @@ SipStack::addTransport( TransportType protocol,
                   useEmailAsSIP,
                   wsConnectionValidator,
                   wsCookieContextFactory,
-                  certificateFilename, privateKeyFilename);
+                  certificateFilename, 
+                  privateKeyFilename,
+                  privateKeyPassPhrase);
 #else
             CritLog (<< "Can't add WSS transport: Secure Websockets not supported in this stack. You don't have openssl.");
             throw Transport::Exception("Can't add WSS transport: Secure Websockets not supported in this stack. You don't have openssl.", __FILE__,__LINE__);

@@ -42,7 +42,9 @@ class WssTransport : public TlsBaseTransport, public WsBaseTransport
                    bool useEmailAsSIP = false,
                    SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
                    SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(new BasicWsCookieContextFactory()),
-                   const Data& certificateFilename = "", const Data& privateKeyFilename = "");
+                   const Data& certificateFilename = "", 
+                   const Data& privateKeyFilename = "",
+                   const Data& privateKeyPassPhrase = "");
       virtual  ~WssTransport();
 
       bool isUseEmailAsSIP()

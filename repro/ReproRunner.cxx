@@ -558,11 +558,11 @@ ReproRunner::createSipStack()
    Data certPath = mProxyConfig->getConfigData("CertificatePath", "");
    if(certPath.empty())
    {
-      security = new Security();
+      security = new Security(Security::ExportableSuite, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", ""));
    }
    else
    {
-      security = new Security(certPath);
+      security = new Security(certPath, Security::ExportableSuite, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", ""));
    }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);
@@ -1373,6 +1373,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          // Transport1TlsDomain = sipdomain.com
          // Transport1TlsCertificate = /etc/ssl/crt/sipdomain.com.pem
          // Transport1TlsPrivateKey = /etc/ssl/private/sipdomain.com.pem
+         // Transport1TlsPrivateKeyPassPhrase = <pwd>
          // Transport1TlsClientVerification = None
          // Transport1RecordRouteUri = sip:sipdomain.com;transport=TLS
          // Transport1RcvBufLen = 2000
@@ -1392,6 +1393,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
             Data tlsCertificateSettingKey(settingKeyBase + "TlsCertificate");
             Data tlsPrivateKeySettingKey(settingKeyBase + "TlsPrivateKey");
+            Data tlsPrivateKeyPassPhraseKey(settingKeyBase + "TlsPrivateKeyPassPhrase");
             Data tlsCVMSettingKey(settingKeyBase + "TlsClientVerification");
             Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
             Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
@@ -1428,6 +1430,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, "");
                Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, "");
                Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, "");
+               Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData(tlsPrivateKeyPassPhraseKey, "");
                Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
                SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
                if(isEqualNoCase(tlsCVMValue, "Optional"))
@@ -1468,7 +1471,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                                  StunEnabled, 
                                  ipAddr,       // interface to bind to
                                  tlsDomain,
-                                 Data::Empty,  // private key passphrase - not currently used
+                                 tlsPrivateKeyPassPhrase,  // private key passphrase
                                  SecurityTypes::TLSv1, // sslType
                                  0,            // transport flags
                                  tlsCertificate, tlsPrivateKey,
@@ -1549,6 +1552,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", "");
          Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", "");
          Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", "");
+         Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", "");
          Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
          if(isEqualNoCase(tlsCVMValue, "Optional"))
@@ -1597,8 +1601,8 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (tlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
-            if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
+            if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
+            if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
          }
          if (wsPort)
          {
@@ -1607,13 +1611,13 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          }
          if (wssPort)
          {
-            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
-            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
          }
          if (dtlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey);
-            if (mUseV6) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, Data::Empty, tlsDomain, Data::Empty, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey);
+            if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey);
+            if (mUseV6) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, SecurityTypes::TLSv1, 0, tlsCertificate, tlsPrivateKey);
          }
       }
    }

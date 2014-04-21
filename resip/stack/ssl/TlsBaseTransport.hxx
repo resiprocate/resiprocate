@@ -37,7 +37,9 @@ class TlsBaseTransport : public TcpBaseTransport
                    unsigned transportFlags = 0,
                    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                    bool useEmailAsSIP = false,
-                   const Data& certificateFilename = "", const Data& privateKeyFilename = "");
+                   const Data& certificateFilename = "", 
+                   const Data& privateKeyFilename = "",
+                   const Data& privateKeyPassPhrase = "");
       virtual  ~TlsBaseTransport();
 
       SSL_CTX* getCtx() const;

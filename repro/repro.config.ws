@@ -77,6 +77,9 @@ TLSCertificate =
 # PEM-encoded private key for TLS
 TLSPrivateKey = 
 
+# Private key pass phrase if private keys are encrypted with a password
+TLSPrivateKeyPassPhrase =
+
 # Whether or not we ask for (Optional) or expect (Mandatory) TLS
 # clients to present a client certificate
 # Possible values:
@@ -108,6 +111,8 @@ TLSUseEmailAsSIP = false
 # Transport<Num>TlsDomain = <TLSDomain> - only required if transport is TLS, DTLS or WSS
 # Transport<Num>TlsCertificate = <TLSCertificate> - only for TLS, DTLS or WSS
 # Transport<Num>TlsPrivateKey = <TLSPrivateKey> - only for TLS, DTLS or WSS
+# Transport<Num>TlsPrivatePassPhrase = <TLSPrivateKeyPassPhrase> - only for TLS, DTLS or WSS
+#                                                                  when private key has passwd
 # Transport<Num>TlsClientVerification = <'None'|'Optional'|'Mandatory'> - default is None
 # Transport<Num>RecordRouteUri = <'auto'|URI> - if set to auto then record route URI
 #                                               is automatically generated from the other
@@ -135,6 +140,7 @@ TLSUseEmailAsSIP = false
 # Transport3TlsDomain = sipdomain.com
 # Transport3TlsCertificate = /etc/ssl/crt/sipdomain.com.crt
 # Transport3TlsPrivateKey = /etc/ssl/private/sipdomain.com.key
+# Transport3TlsPrivateKeyPassPhrase = password
 # Transport3TlsClientVerification = Mandatory
 # Transport3RecordRouteUri = sip:h1.sipdomain.com;transport=TLS
 #
@@ -676,7 +682,7 @@ DisableIdentity = false
 EnablePAssertedIdentityProcessing = false
 
 # Disable auth-int DIGEST challenges
-DisableAuthInt = false
+DisableAuthInt = true
 
 # Send 403 if a client sends a bad nonce in their credentials (will send a new 
 # challenge otherwise)

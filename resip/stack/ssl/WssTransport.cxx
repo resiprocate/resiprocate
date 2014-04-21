@@ -34,8 +34,12 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
                            bool useEmailAsSIP,
                            SharedPtr<WsConnectionValidator> connectionValidator,
                            SharedPtr<WsCookieContextFactory> cookieContextFactory,
-                           const Data& certificateFilename, const Data& privateKeyFilename):
-   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, compression, transportFlags, cvm, useEmailAsSIP, certificateFilename, privateKeyFilename),
+                           const Data& certificateFilename, 
+                           const Data& privateKeyFilename,
+                           const Data& privateKeyPassPhrase):
+   TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, 
+                    compression, transportFlags, cvm, useEmailAsSIP, certificateFilename, privateKeyFilename,
+                    privateKeyPassPhrase),
    WsBaseTransport(connectionValidator, cookieContextFactory)
 {
    InfoLog (<< "Creating WSS transport for domain " 

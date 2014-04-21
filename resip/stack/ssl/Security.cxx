@@ -127,7 +127,8 @@ bool BaseSecurity::mAllowWildcardCertificates = false;
 BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
 BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
 
-Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
+Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) : 
+   BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase)
 {
 #ifdef WIN32
    mPath = "C:\\sipCerts\\";
@@ -141,8 +142,8 @@ Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
 #endif
 }
 
-Security::Security(const Data& directory, const CipherList& cipherSuite) : 
-   BaseSecurity(cipherSuite), 
+Security::Security(const Data& directory, const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) : 
+   BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase), 
    mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure out.
@@ -263,8 +264,23 @@ Security::preload()
    }
 }
 
+// Generic password callback to copy over provided userdata/password
+int pem_passwd_cb(char *buf, int size, int rwflag, void *password)
+{
+   if(password)
+   {
+      strncpy(buf, (char *)(password), size);
+      buf[size - 1] = '\0';
+      return(strlen(buf));
+   }
+   else
+   {
+       return 0;
+   }
+}
+
 SSL_CTX* 
-Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename)
+Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase)
 {
 #if (OPENSSL_VERSION_NUMBER >= 0x1000000fL )
    SSL_CTX* ctx = SSL_CTX_new(method);
@@ -287,6 +303,12 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
    // Load domain cert chain and private key
    if(!domain.empty())
    {
+      // Set Private Key PassPhrase
+      if(!privateKeyPassPhrase.empty())
+      {
+          SSL_CTX_set_default_passwd_cb(ctx, pem_passwd_cb);
+          SSL_CTX_set_default_passwd_cb_userdata(ctx, (void*)privateKeyPassPhrase.c_str()); 
+      }
       Data certFilename(certificateFilename.empty() ? mPath + pemTypePrefixes(DomainCert) + domain + PEM : certificateFilename);
       if(SSL_CTX_use_certificate_chain_file(ctx, certFilename.c_str()) != 1)
       {
@@ -294,6 +316,14 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
          SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Failed opening PEM chain file", __FILE__,__LINE__);
       }
+
+      // Check if we have the domain cert in the main storage yet - needed for Identity header calculations
+      if(mDomainCerts.find(domain) == mDomainCerts.end())
+      {
+          // Add to storage
+          addCertPEM( DomainCert, domain, Data::fromFile(certFilename), false);
+      }
+
       Data keyFilename(privateKeyFilename.empty() ? mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM : privateKeyFilename);
       if(SSL_CTX_use_PrivateKey_file(ctx, keyFilename.c_str(), SSL_FILETYPE_PEM) != 1)
       {
@@ -306,6 +336,13 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
          ErrLog (<< "Invalid domain private key from file: " << keyFilename);
          SSL_CTX_free(ctx);
          throw BaseSecurity::Exception("Invalid domain private key", __FILE__,__LINE__);
+      }
+
+      // Check if we have the domain cert in the main storage yet - needed for Identity header calculations
+      if(mDomainPrivateKeys.find(domain) == mDomainPrivateKeys.end())
+      {
+         // Add to storage
+         addPrivateKeyPEM( DomainPrivateKey, domain, Data::fromFile(keyFilename), false, privateKeyPassPhrase);
       }
    }
 
@@ -324,7 +361,6 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
    // .dlb. extra copy
    buffer = Data::fromFile(filename);
 }
-
 
 void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
@@ -348,14 +384,12 @@ Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
    }
 }
 
-
 void
 Security::onRemovePEM(const Data& name, PEMType type) const
 {
    assert(0);
    // TODO - should delete file 
 }
-
 
 void
 BaseSecurity::addCertDER (PEMType type, 
@@ -385,7 +419,6 @@ BaseSecurity::addCertDER (PEMType type,
    }
    addCertX509(type,key,cert,write);
 }
-
 
 void
 BaseSecurity::addCertPEM (PEMType type, 
@@ -418,7 +451,6 @@ BaseSecurity::addCertPEM (PEMType type,
    
    BIO_free(in);
 }
-
 
 void
 BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
@@ -497,7 +529,6 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
    }
 }
 
-
 bool
 BaseSecurity::hasCert (PEMType type, const Data& aor) const
 {
@@ -537,7 +568,6 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
    return   true;
 }
 
-
 void
 BaseSecurity::removeCert (PEMType type, const Data& aor)
 {
@@ -555,7 +585,6 @@ BaseSecurity::removeCert (PEMType type, const Data& aor)
 
    assert(  certs.find(aor) == certs.end() );
 }
-
 
 Data
 BaseSecurity::getCertDER (PEMType type, const Data& key) const
@@ -597,7 +626,6 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
    OPENSSL_free(buffer);
    return certDER;
 }
-
 
 void 
 BaseSecurity::addPrivateKeyPKEY(PEMType type, 
@@ -693,12 +721,12 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    }
 }
 
-
 void
 BaseSecurity::addPrivateKeyDER( PEMType type,
                                 const Data& name,
                                 const Data& privateKeyDER,
-                                bool write )
+                                bool write,
+                                const Data& privateKeyPassPhrase)
 {
    assert( !name.empty() );
    if( privateKeyDER.empty() )
@@ -708,13 +736,27 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    }
 
    char* passPhrase = 0;
-   if (type != DomainPrivateKey)
+   if (privateKeyPassPhrase.empty())
    {
-      PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
-      if(iter != mUserPassPhrases.end())
+      if (type == UserPrivateKey)
       {
-         passPhrase = const_cast<char*>(iter->second.c_str());
+         PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
+         if(iter != mUserPassPhrases.end())
+         {
+            passPhrase = const_cast<char*>(iter->second.c_str());
+         }
       }
+      else
+      {
+         if(!mDefaultPrivateKeyPassPhrase.empty())
+         {
+            passPhrase = const_cast<char*>(mDefaultPrivateKeyPassPhrase.c_str());
+         }
+      }
+   }
+   else
+   {
+      passPhrase = passPhrase = const_cast<char*>(privateKeyPassPhrase.c_str());
    }
    
    BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyDER.c_str()), -1);
@@ -726,7 +768,6 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    
    try
    {
-
       EVP_PKEY* privateKey;
       if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, passPhrase) == 0)
       {
@@ -746,12 +787,12 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    BIO_free(in);
 }
 
-
 void
 BaseSecurity::addPrivateKeyPEM( PEMType type,
                                 const Data& name,
                                 const Data& privateKeyPEM,
-                                bool write )
+                                bool write,
+                                const Data& privateKeyPassPhrase)
 {
    assert( !name.empty() );
    if( privateKeyPEM.empty() )
@@ -770,19 +811,43 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
    char* passPhrase = 0;
    try
    {
-      if (type == UserPrivateKey)
+      if (privateKeyPassPhrase.empty())
       {
-         PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
-         if(iter != mUserPassPhrases.end())
+         if (type == UserPrivateKey)
          {
-            passPhrase = const_cast<char*>(iter->second.c_str());
+            PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
+            if(iter != mUserPassPhrases.end())
+            {
+               passPhrase = const_cast<char*>(iter->second.c_str());
+            }
          }
+         else
+         {
+            if(!mDefaultPrivateKeyPassPhrase.empty())
+            {
+               passPhrase = const_cast<char*>(mDefaultPrivateKeyPassPhrase.c_str());
+            }
+         }
+      }
+      else
+      {
+         passPhrase = passPhrase = const_cast<char*>(privateKeyPassPhrase.c_str());
       }
       
       EVP_PKEY* privateKey=0;
-      if ( ( privateKey = PEM_read_bio_PrivateKey(in, NULL, 0, passPhrase)) == NULL)
+      if ( ( privateKey = PEM_read_bio_PrivateKey(in, NULL, pem_passwd_cb, passPhrase)) == NULL)
       {
-         ErrLog(<< "Could not read private key from <" << privateKeyPEM << ">" );
+         char buffer[120];
+         unsigned long err = ERR_get_error();
+         ERR_error_string(err, buffer);
+         if(ERR_GET_LIB(err) == ERR_LIB_EVP && ERR_GET_FUNC(err) == EVP_F_EVP_DECRYPTFINAL_EX && ERR_GET_REASON(err) == EVP_R_BAD_DECRYPT)
+         {
+            ErrLog(<< "Could not read private key (error=" << buffer << ") - likely incorrect password provided, may load correctly when transports are added with appropriate password");
+         }
+         else
+         {
+            ErrLog(<< "Could not read private key (error=" << buffer << ") from <" << privateKeyPEM << ">" );
+         }
          throw Exception("Could not read private key ", __FILE__,__LINE__);
       }
       
@@ -797,7 +862,6 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
 
    BIO_free(in);
 }
-
 
 bool
 BaseSecurity::hasPrivateKey( PEMType type,
@@ -834,7 +898,6 @@ BaseSecurity::hasPrivateKey( PEMType type,
 
    return   true;
 }
-
 
 Data
 BaseSecurity::getPrivateKeyPEM( PEMType type,
@@ -888,7 +951,6 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    return retVal;
 }
 
-
 Data
 BaseSecurity::getPrivateKeyDER( PEMType type,
                                 const Data& key) const
@@ -940,7 +1002,6 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
    return retVal;
 }
 
-
 void
 BaseSecurity::removePrivateKey(PEMType type, const Data& key)
 {
@@ -965,12 +1026,12 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 {
 }
 
-
-BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
+BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) :
    mTlsCtx(0),
    mSslCtx(0),
    mCipherList(cipherSuite),
-   mRootTlsCerts(0),                    
+   mDefaultPrivateKeyPassPhrase(defaultPrivateKeyPassPhrase),
+   mRootTlsCerts(0),
    mRootSslCerts(0)
 { 
    DebugLog(<< "BaseSecurity::BaseSecurity");
@@ -995,6 +1056,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    }
    assert(mTlsCtx);
 
+   SSL_CTX_set_default_passwd_cb(mTlsCtx, pem_passwd_cb);
    SSL_CTX_set_cert_store(mTlsCtx, mRootTlsCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
@@ -1002,6 +1064,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
+   SSL_CTX_set_default_passwd_cb(mSslCtx, pem_passwd_cb);
    SSL_CTX_set_cert_store(mSslCtx, mRootSslCerts);
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
@@ -1054,13 +1117,11 @@ BaseSecurity::~BaseSecurity ()
 
 }
 
-
 void
 BaseSecurity::initialize ()
 {
   Timer::getTimeMs(); // initalize time offsets
 }
-
 
 Security::CertificateInfoContainer
 BaseSecurity::getRootCertDescriptions() const
@@ -1070,7 +1131,6 @@ BaseSecurity::getRootCertDescriptions() const
    assert(0); // TODO 
    return   CertificateInfoContainer();
 }
-
 
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
@@ -1113,7 +1173,6 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 #endif
 }
 
-
 void
 BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
 {
@@ -1126,7 +1185,6 @@ BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 {
    addCertDER(DomainCert, domainName, certDER, false);
 }
-
 
 bool
 BaseSecurity::hasDomainCert(const Data& domainName) const
@@ -1141,27 +1199,23 @@ BaseSecurity::removeDomainCert(const Data& domainName)
    return   removeCert(DomainCert, domainName);
 }
 
-
 Data
 BaseSecurity::getDomainCertDER(const Data& domainName) const
 {
    return   getCertDER(DomainCert, domainName);
 }
 
-
 void
-BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM)
+BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM, const Data& privateKeyPassPhrase)
 {
-   addPrivateKeyPEM(DomainPrivateKey, domainName, privateKeyPEM, false);
+   addPrivateKeyPEM(DomainPrivateKey, domainName, privateKeyPEM, false, privateKeyPassPhrase);
 }
-
 
 bool
 BaseSecurity::hasDomainPrivateKey(const Data& domainName) const
 {
-   return   hasPrivateKey(DomainPrivateKey, domainName);
+   return hasPrivateKey(DomainPrivateKey, domainName);
 }
-
 
 void
 BaseSecurity::removeDomainPrivateKey(const Data& domainName)
@@ -1176,7 +1230,6 @@ BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
    return   getPrivateKeyPEM(DomainPrivateKey, domainName);
 }
 
-
 void
 BaseSecurity::addUserCertPEM(const Data& aor, const Data& certPEM)
 {
@@ -1189,7 +1242,6 @@ BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 {
    addCertDER(UserCert, aor, certDER, false);
 }
-
 
 bool
 BaseSecurity::hasUserCert(const Data& aor) const
@@ -1204,13 +1256,11 @@ BaseSecurity::removeUserCert(const Data& aor)
    removeCert(UserCert, aor);
 }
 
-
 Data
 BaseSecurity::getUserCertDER(const Data& aor) const
 {
    return   getCertDER(UserCert, aor);
 }
-
 
 void
 BaseSecurity::setUserPassPhrase(const Data& aor, const Data& passPhrase)
@@ -1223,7 +1273,6 @@ BaseSecurity::setUserPassPhrase(const Data& aor, const Data& passPhrase)
       mUserPassPhrases.insert(std::make_pair(aor, passPhrase));
    }
 }
-
 
 bool
 BaseSecurity::hasUserPassPhrase(const Data& aor) const
@@ -1241,7 +1290,6 @@ BaseSecurity::hasUserPassPhrase(const Data& aor) const
    }
 }
 
-
 void
 BaseSecurity::removeUserPassPhrase(const Data& aor)
 {
@@ -1253,7 +1301,6 @@ BaseSecurity::removeUserPassPhrase(const Data& aor)
       mUserPassPhrases.erase(iter);
    }
 }
-
 
 Data
 BaseSecurity::getUserPassPhrase(const Data& aor) const
@@ -1271,27 +1318,23 @@ BaseSecurity::getUserPassPhrase(const Data& aor) const
    }
 }
 
-
 void
-BaseSecurity::addUserPrivateKeyPEM(const Data& aor, const Data& cert)
+BaseSecurity::addUserPrivateKeyPEM(const Data& aor, const Data& cert, const Data& privateKeyPassPhrase)
 {
-   addPrivateKeyPEM(UserPrivateKey, aor, cert, false);
+   addPrivateKeyPEM(UserPrivateKey, aor, cert, false, privateKeyPassPhrase);
 }
 
-
 void
-BaseSecurity::addUserPrivateKeyDER(const Data& aor, const Data& cert)
+BaseSecurity::addUserPrivateKeyDER(const Data& aor, const Data& cert, const Data& privateKeyPassPhrase)
 {
-   addPrivateKeyDER(UserPrivateKey, aor, cert, false);
+   addPrivateKeyDER(UserPrivateKey, aor, cert, false, privateKeyPassPhrase);
 }
-
 
 bool
 BaseSecurity::hasUserPrivateKey(const Data& aor) const
 {
-   return   hasPrivateKey(UserPrivateKey, aor);
+   return hasPrivateKey(UserPrivateKey, aor);
 }
-
 
 void
 BaseSecurity::removeUserPrivateKey(const Data& aor)
@@ -1299,20 +1342,17 @@ BaseSecurity::removeUserPrivateKey(const Data& aor)
    removePrivateKey(UserPrivateKey, aor);
 }
 
-
 Data
 BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
 {
    return   getPrivateKeyPEM(UserPrivateKey, aor);
 }
 
-
 Data
 BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
 {
    return   getPrivateKeyDER(UserPrivateKey, aor);
 }
-
 
 void
 BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )

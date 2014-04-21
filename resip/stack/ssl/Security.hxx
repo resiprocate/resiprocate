@@ -79,7 +79,7 @@ class BaseSecurity
       static CipherList ExportableSuite;
       static CipherList StrongestSuite;
       
-      BaseSecurity(const CipherList& cipherSuite = ExportableSuite);
+      BaseSecurity(const CipherList& cipherSuite = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library
@@ -123,7 +123,7 @@ class BaseSecurity
       void removeDomainCert(const Data& domainName);
       Data getDomainCertDER(const Data& domainName) const;
 
-      void addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM);
+      void addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM, const Data& privateKeyPassPhrase = Data::Empty);
       bool hasDomainPrivateKey(const Data& domainName) const;
       void removeDomainPrivateKey(const Data& domainName);
       Data getDomainPrivateKeyPEM(const Data& domainName) const;
@@ -139,8 +139,8 @@ class BaseSecurity
       void removeUserPassPhrase(const Data& aor);
       Data getUserPassPhrase(const Data& aor) const;
 
-      void addUserPrivateKeyPEM(const Data& aor, const Data& certPEM);
-      void addUserPrivateKeyDER(const Data& aor, const Data& certDER);
+      void addUserPrivateKeyPEM(const Data& aor, const Data& certPEM, const Data& privateKeyPassPhrase = Data::Empty);
+      void addUserPrivateKeyDER(const Data& aor, const Data& certDER, const Data& privateKeyPassPhrase = Data::Empty);
       bool hasUserPrivateKey(const Data& aor) const;
       void removeUserPrivateKey(const Data& aor);
       Data getUserPrivateKeyPEM(const Data& aor) const;
@@ -202,6 +202,7 @@ class BaseSecurity
       static void dumpAsn(char*, Data);
 
       CipherList mCipherList;
+      Data mDefaultPrivateKeyPassPhrase;
 
       // root cert list
       X509List       mRootCerts;
@@ -222,8 +223,8 @@ class BaseSecurity
       Data getCertDER (PEMType type, const Data& name) const;
       void addCertX509(PEMType type, const Data& name, X509* cert, bool write);
 
-      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write);
-      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write);
+      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write, const Data& privateKeyPassPhrase = Data::Empty);
+      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write, const Data& privateKeyPassPhrase = Data::Empty);
       bool hasPrivateKey    (PEMType type, const Data& name) const;
       void removePrivateKey (PEMType type, const Data& name);
       Data getPrivateKeyPEM (PEMType type, const Data& name) const;
@@ -238,14 +239,15 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-      Security(const Data& pathToCerts, const CipherList& = ExportableSuite);
-      Security(const CipherList& = ExportableSuite);
+      Security(const Data& pathToCerts, const CipherList& = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      Security(const CipherList& = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
 
       void addCADirectory(const Data& caDirectory);
       void addCAFile(const Data& caFile);
 
       virtual void preload();
-      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename);
+      virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, 
+                                       const Data& privateKeyFilename, const Data& privateKeyPassPhrase);
 
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
