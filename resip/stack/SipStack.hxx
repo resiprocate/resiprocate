@@ -265,6 +265,20 @@ class SipStack : public FdSetIOObserver
       };
 
       /**
+         Used by the application to provide a handler that will get called for all
+         inbound and outbound SIP messages on transports that are added after calling this.
+
+         @note                        If you want a custom handler per transport then
+                                      you can call setSipMessageLoggingHandler on the
+                                      Transport pointer returned from addTransport
+
+         @param handler               SharedPtr to a handler to call for inbound and
+                                      outbound SIP messages for all transports added
+                                      after calling this.
+      */
+      void setTransportSipMessageLoggingHandler(SharedPtr<Transport::SipMessageLoggingHandler> handler) { mTransportSipMessageLoggingHandler = handler; }
+
+      /**
          Used by the application to add in a new built-in transport.  The transport is
          created and then added to the Transport Selector.
 
@@ -1121,6 +1135,8 @@ class SipStack : public FdSetIOObserver
       AfterSocketCreationFuncPtr mSocketFunc;
 
       unsigned int mNextTransportKey;
+
+      SharedPtr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
 
       friend class Executive;
       friend class StatelessHandler;

@@ -121,6 +121,26 @@ public:
 };
 ReproLogger g_ReproLogger;
 
+class ReproSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
+{
+public:
+   virtual ~ReproSipMessageLoggingHandler(){}
+   virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg)
+   {
+       InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+               << "OUTBOUND: Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+               << msg
+               << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+   virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg)
+   {
+       InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+               << "INBOUND: Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+               << msg
+               << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
+};
+
 ReproRunner::ReproRunner()
    : mRunning(false)
    , mRestarting(false)
@@ -646,6 +666,12 @@ ReproRunner::createSipStack()
 
    // Add External Stats handler
    mSipStack->setExternalStatsHandler(this);
+
+   // Set Transport SipMessage Logging Handler - if enabled
+   if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
+   {
+       mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<ReproSipMessageLoggingHandler>(new ReproSipMessageLoggingHandler));
+   }
 
    // Add stack transports
    bool allTransportsSpecifyRecordRoute=false;
@@ -1459,12 +1485,11 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                   }
                   if(!tlsPrivateKey.empty())
                   {
-                     security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey));
+                     security->addDomainPrivateKeyPEM(tlsDomain, Data::fromFile(tlsPrivateKey), tlsPrivateKeyPassPhrase);
                   }
                }
 #endif
 
-               int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
                Transport *t = mSipStack->addTransport(tt,
                                  port,
                                  DnsUtil::isIpV6Address(ipAddr) ? V6 : V4,
@@ -1479,59 +1504,63 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                                  useEmailAsSIP,
                                  basicWsConnectionValidator, wsCookieContextFactory);
 
-               if (t && rcvBufLen>0 )
+               if (t)
                {
-#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
-                  // this new method is part of the epoll changeset,
-                  // which isn't commited yet.
-                  t->setRcvBufLen(rcvBufLen);
-#else
-                   assert(0);
-#endif
-               }
-
-               Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, "");
-               if(!recordRouteUri.empty())
-               {
-                  try
+                  int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
+                  if (rcvBufLen >0 )
                   {
-                     if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
+#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
+                     // this new method is part of the epoll changeset,
+                     // which isn't commited yet.
+                     t->setRcvBufLen(rcvBufLen);
+#else
+                      assert(0);
+#endif
+                  }
+
+                  Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, "");
+                  if(!recordRouteUri.empty())
+                  {
+                     try
                      {
-                        if(isSecure(tt))
+                        if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
                         {
-                           NameAddr rr;
-                           rr.uri().host()=tlsDomain;
-                           rr.uri().port()=port;
-                           rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                           mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                           InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+                           if(isSecure(tt))
+                           {
+                              NameAddr rr;
+                              rr.uri().host()=tlsDomain;
+                              rr.uri().port()=port;
+                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
+                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
+                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+                           }
+                           else
+                           {
+                              NameAddr rr;
+                              rr.uri().host()=ipAddr;
+                              rr.uri().port()=port;
+                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
+                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
+                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+                           }
                         }
                         else
                         {
-                           NameAddr rr;
-                           rr.uri().host()=ipAddr;
-                           rr.uri().port()=port;
-                           rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
+                           NameAddr rr(recordRouteUri);
                            mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                           InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
+                           InfoLog (<< "Transport specific record-route enabled: " << rr);
                         }
                      }
-                     else
+                     catch(BaseException& e)
                      {
-                        NameAddr rr(recordRouteUri);
-                        mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                        InfoLog (<< "Transport specific record-route enabled: " << rr);
+                        ErrLog (<< "Invalid uri provided in " << recordRouteUriSettingKey << " setting (ignoring): " << e);
+                        allTransportsSpecifyRecordRoute = false;
                      }
                   }
-                  catch(BaseException& e)
+                  else 
                   {
-                     ErrLog (<< "Invalid uri provided in " << recordRouteUriSettingKey << " setting (ignoring): " << e);
                      allTransportsSpecifyRecordRoute = false;
                   }
-               }
-               else 
-               {
-                  allTransportsSpecifyRecordRoute = false;
                }
             }
             else

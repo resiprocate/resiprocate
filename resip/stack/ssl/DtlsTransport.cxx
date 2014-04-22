@@ -435,7 +435,7 @@ DtlsTransport::_read( FdSet& fdset )
       }
 #endif
 
-   mStateMachineFifo.add( message ) ;
+   pushRxMsgUp(message);
 }
 
 void DtlsTransport::_write( FdSet& fdset )

@@ -1220,8 +1220,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          // Call back anyone who wants to perform outbound decoration
          msg->callOutboundDecorators(source, target,remoteSigcompId);
 
-         std::auto_ptr<SendData> send(new SendData(target, 
-                                                   resip::Data::Empty, 
+         Transport::SipMessageLoggingHandler* handler = transport->getSipMessageLoggingHandler();
+         if(handler)
+         {
+            handler->outboundMessage(source, target, *msg);
+         }
+
+         std::auto_ptr<SendData> send(new SendData(target,
+                                                   resip::Data::Empty,
                                                    msg->getTransactionId(),
                                                    remoteSigcompId));
 

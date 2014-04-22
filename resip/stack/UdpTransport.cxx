@@ -120,7 +120,8 @@ UdpTransport::setPollGrp(FdPollGrp *grp)
  * Called after a message is added. Could try writing it now.
  */
 void
-UdpTransport::process() {
+UdpTransport::process() 
+{
    mStateMachineFifo.flush();
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXNOW)!= 0 )
    {
@@ -129,8 +130,11 @@ UdpTransport::process() {
        // shouldn't ever happen (with current code)
        // but in future we may throttle transmits
    }
+
    if ( mPollGrp )
+   {
        updateEvents();
+   }
 }
 
 void
@@ -689,7 +693,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
    }
 #endif
 
-   mStateMachineFifo.add(message);
+   pushRxMsgUp(message);
    ++mRxTransactionCnt;
    return origBufferConsumed;
 }

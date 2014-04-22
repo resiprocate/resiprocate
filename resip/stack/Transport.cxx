@@ -379,7 +379,6 @@ Transport::stampReceived(SipMessage* message)
    StackLog (<< endl << endl << *message);
 }
 
-
 bool
 Transport::basicCheck(const SipMessage& msg)
 {
@@ -427,11 +426,16 @@ Transport::callSocketFunc(Socket sock)
 }
 
 void
-Transport::pushRxMsgUp(TransactionMessage* msg)
+Transport::pushRxMsgUp(SipMessage* message)
 {
-   mStateMachineFifo.add(msg);
-}
+   SipMessageLoggingHandler* handler = getSipMessageLoggingHandler();
+   if(handler)
+   {
+       handler->inboundMessage(message->getSource(), message->getReceivedTransportTuple(), *message);
+   }
 
+   mStateMachineFifo.add(message);
+}
 
 bool
 Transport::operator==(const Transport& rhs) const

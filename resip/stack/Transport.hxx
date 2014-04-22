@@ -10,7 +10,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/SendData.hxx"
-
+#include "rutil/SharedPtr.hxx"
 namespace resip
 {
 
@@ -72,6 +72,16 @@ class FdPollGrp;
 class Transport : public FdSetIOObserver
 {
    public:
+    class SipMessageLoggingHandler
+      {
+      public:
+          virtual ~SipMessageLoggingHandler(){}
+          virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg) = 0;
+          virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg) = 0;
+      };
+
+      void setSipMessageLoggingHandler(SharedPtr<SipMessageLoggingHandler> handler) { mSipMessageLoggingHandler = handler; }
+      SipMessageLoggingHandler* getSipMessageLoggingHandler() { return 0 != mSipMessageLoggingHandler.get() ? mSipMessageLoggingHandler.get() : 0; }
 
       /**
          @brief General exception class for Transport.
@@ -342,7 +352,7 @@ class Transport : public FdSetIOObserver
       }
 
       // called by Connection to deliver a received message
-      virtual void pushRxMsgUp(TransactionMessage* msg);
+      virtual void pushRxMsgUp(SipMessage* msg);
 
       // set the receive buffer length (SO_RCVBUF)
       virtual void setRcvBufLen(int buflen) { };	// make pure?
@@ -365,6 +375,8 @@ class Transport : public FdSetIOObserver
       friend EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
 
       Data mTlsDomain;
+      SharedPtr<SipMessageLoggingHandler> mSipMessageLoggingHandler;
+
    protected:
       AfterSocketCreationFuncPtr mSocketFunc;
       Compression &mCompression;

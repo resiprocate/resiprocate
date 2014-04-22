@@ -522,6 +522,12 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
        transport->setCongestionManager(mCongestionManager);
    }
 
+   // Set Sip Message Logging Handler if one was provided
+   if(mTransportSipMessageLoggingHandler.get())
+   {
+       transport->setSipMessageLoggingHandler(mTransportSipMessageLoggingHandler);
+   }
+
    if(mProcessingHasStarted)
    {
        // Stack is running.  Need to queue add request for TransactionController Thread
