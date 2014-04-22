@@ -33,7 +33,9 @@ class WinSecurity : public Security
                           //with the domain
       } MsCertStoreType;
       //for details on certificate stores, see
-      //http://msdn.microsoft.com/library/default.asp?url=/library/en-us/seccrypto/security/certificate_services.asp
+      //http://msdn.microsoft.com/en-us/library/windows/desktop/aa376539(v=vs.85).aspx
+      //http://msdn.microsoft.com/en-us/library/windows/desktop/aa386971(v=vs.85).aspx
+      
       WinSecurity(const CipherList& cipherList = ExportableSuite) : Security(cipherList){}
       WinSecurity(const Data& pathToCerts, const CipherList& cipherList = ExportableSuite) : Security(pathToCerts, cipherList){}
 

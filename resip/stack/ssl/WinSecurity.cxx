@@ -32,8 +32,6 @@ using namespace std;
 void 
 WinSecurity::preload()
 {
-   HCERTSTORE storeHandle = NULL;
-
    getCerts(WinSecurity::ROOT_CA_STORE);
    //getCerts(WinSecurity::CA_STORE);
    //getCredentials(WinSecurity::PRIVATE_STORE);
@@ -138,7 +136,7 @@ WinSecurity::openSystemCertStore(const Data& name)
    //                    dwFlags, 
    //                    storeName
    //                );
-   mStoreHandle = ::CertOpenSystemStore(0, "Root");
+   mStoreHandle = ::CertOpenSystemStore(0, name.c_str());
 #ifdef UNICODE
    LocalFree((HLOCAL)storeName);
 #endif
@@ -161,6 +159,7 @@ WinSecurity::closeCertifStore(HCERTSTORE storeHandle)
     
    ::CertCloseStore(storeHandle ,0);
 }
+
 void 
 WinSecurity::getCerts(MsCertStoreType eType)
 {
@@ -170,6 +169,8 @@ WinSecurity::getCerts(MsCertStoreType eType)
    int i = 0;
    if(NULL != storeHandle)
    {
+      InfoLog(<< "WinSecurity::getCerts: reading certs from store type=" << certStoreTypes(eType));
+
       PCCERT_CONTEXT   pCertContext = NULL;  
       while((pCertContext = ::CertEnumCertificatesInStore(storeHandle, pCertContext)) != NULL)
       {

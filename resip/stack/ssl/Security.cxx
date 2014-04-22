@@ -756,7 +756,7 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    }
    else
    {
-      passPhrase = passPhrase = const_cast<char*>(privateKeyPassPhrase.c_str());
+      passPhrase = const_cast<char*>(privateKeyPassPhrase.c_str());
    }
    
    BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyDER.c_str()), -1);
@@ -831,7 +831,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
       }
       else
       {
-         passPhrase = passPhrase = const_cast<char*>(privateKeyPassPhrase.c_str());
+         passPhrase = const_cast<char*>(privateKeyPassPhrase.c_str());
       }
       
       EVP_PKEY* privateKey=0;
