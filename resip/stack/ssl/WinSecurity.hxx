@@ -48,6 +48,7 @@ class WinSecurity : public Security
    protected:
       HCERTSTORE openSystemCertStore(const Data& name);
       void getCerts(MsCertStoreType eType);
+      void getCredentials(MsCertStoreType eType);
       void closeCertifStore(HCERTSTORE);
 };
 
