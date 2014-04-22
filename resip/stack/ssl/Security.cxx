@@ -320,8 +320,13 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
       // Check if we have the domain cert in the main storage yet - needed for Identity header calculations
       if(mDomainCerts.find(domain) == mDomainCerts.end())
       {
-          // Add to storage
-          addCertPEM( DomainCert, domain, Data::fromFile(certFilename), false);
+         // Add to storage
+         addCertPEM( DomainCert, domain, Data::fromFile(certFilename), false);
+         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain cert and added to Security storage, domain=" << domain << ", filename=" <<  certFilename);
+      }
+      else
+      {
+         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain cert, domain=" << domain << ", filename=" <<  certFilename);
       }
 
       Data keyFilename(privateKeyFilename.empty() ? mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM : privateKeyFilename);
@@ -343,6 +348,11 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
       {
          // Add to storage
          addPrivateKeyPEM( DomainPrivateKey, domain, Data::fromFile(keyFilename), false, privateKeyPassPhrase);
+         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain private key and added to Security storage, domain=" << domain << ", filename=" <<  keyFilename);
+      }
+      else
+      {
+          InfoLog(<< "Security::createDomainCtx: Successfully loaded domain private key, domain=" << domain << ", filename=" <<  keyFilename);
       }
    }
 
