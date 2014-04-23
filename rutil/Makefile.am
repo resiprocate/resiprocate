@@ -53,6 +53,7 @@ librutil_la_SOURCES = \
 	Log.cxx \
 	MD5Stream.cxx \
 	Mutex.cxx \
+	NetNs.cxx \
 	ParseBuffer.cxx \
 	ParseException.cxx \
 	Poll.cxx \
@@ -168,6 +169,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	Lock.hxx \
 	TimeLimitFifo.hxx \
 	Mutex.hxx \
+	NetNs.hxx \
 	GenericTimerQueue.hxx \
 	IntrusiveListElement.hxx \
 	ssl/SHA1Stream.hxx \

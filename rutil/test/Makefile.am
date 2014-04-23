@@ -25,6 +25,7 @@ TESTS = \
 	testIntrusiveList \
 	testLogger \
 	testMD5Stream \
+	testNetNs \
 	testParseBuffer \
 	testRandomHex \
 	testRandomThread \
@@ -45,6 +46,7 @@ check_PROGRAMS = \
 	testIntrusiveList \
 	testLogger \
 	testMD5Stream \
+	testNetNs \
 	testParseBuffer \
 	testRandomHex \
 	testRandomThread \
@@ -64,6 +66,7 @@ testInserter_SOURCES = testInserter.cxx
 testIntrusiveList_SOURCES = testIntrusiveList.cxx
 testLogger_SOURCES = testLogger.cxx TestSubsystemLogLevel.cxx
 testMD5Stream_SOURCES = testMD5Stream.cxx
+testNetNs_SOURCES = testNetNs.cxx
 testParseBuffer_SOURCES = testParseBuffer.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
 testRandomThread_SOURCES = testRandomThread.cxx
