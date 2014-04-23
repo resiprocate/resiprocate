@@ -132,6 +132,22 @@ main(int argc, char* argv[])
 
       assert (sip1 == sip2);
       assert (sip2 == sip1);
+
+#ifdef USE_NETNS
+      cerr << "Testing NETNS" << endl;
+
+      sip1.netNs() = "ns1";
+      assert(sip1.netNs() == "ns1");
+      assert(!(sip1 == sip2));
+      assert(!(sip2 == sip1));
+      Uri sip3(sip1);
+      assert(sip1 == sip3);
+      assert(!(sip2 == sip3));
+      assert(!(sip3 == sip2));
+      sip2 = sip1;
+      assert(sip1 == sip2);
+      assert(sip2 == sip1);
+#endif
    }
 
    {

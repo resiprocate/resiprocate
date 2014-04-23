@@ -68,17 +68,20 @@ class Tuple
             int port, 
             IpVersion ipVer, 
             TransportType type=UNKNOWN_TRANSPORT, 
-            const Data& targetDomain = Data::Empty);
+            const Data& targetDomain = Data::Empty,
+            const Data& netNs = Data::Empty);
 
       Tuple(const Data& printableAddress, 
             int port, 
             TransportType type, 
-            const Data& targetDomain = Data::Empty);
+            const Data& targetDomain = Data::Empty,
+            const Data& netNs = Data::Empty);
 
       Tuple(const in_addr& pipv4, 
             int pport,
             TransportType ptype, 
-            const Data& targetDomain = Data::Empty);
+            const Data& targetDomain = Data::Empty,
+            const Data& netNs = Data::Empty);
 
       Tuple(const sockaddr& addr, 
             TransportType ptype, 
@@ -95,7 +98,8 @@ class Tuple
       Tuple(const in6_addr& pipv6,  
             int pport, 
             TransportType ptype, 
-            const Data& targetDomain = Data::Empty);
+            const Data& targetDomain = Data::Empty,
+            const Data& netNs = Data::Empty);
 #endif
       
       /// @brief Retrieve a const binary representation of the socket address
@@ -238,7 +242,19 @@ class Tuple
       {
          return mTargetDomain;
       }
-      
+
+      /// @brief Set the netns (network namespace) for this Tuple
+      void setNetNs(const Data& netNs)
+      {
+          mNetNs = netNs;
+      }
+
+      /// @brief Get the netns for this Tuple
+      const Data& getNetNs() const
+      {
+          return(mNetNs);
+      }
+
       /**
          @brief Creates a 32-bit hash based on the contents of this Tuple.
       */
@@ -258,6 +274,8 @@ private:
       };
       TransportType mTransportType;
       Data mTargetDomain; 
+
+      Data mNetNs;  ///< The network namespace to which the address and port are scoped
 
       friend EncodeStream& operator<<(EncodeStream& strm, const Tuple& tuple);
       friend class DnsResult;

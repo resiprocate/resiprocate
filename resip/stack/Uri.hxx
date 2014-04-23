@@ -145,6 +145,9 @@ class Uri : public ParserCategory
       Data& password() {checkParsed(); return mPassword;}
       const Data& password() const {checkParsed(); return mPassword;}
 
+      Data& netNs() {return(mNetNs);}
+      const Data& netNs() const {return(mNetNs);}
+
       Data toString() const;
 
       /** Returns true if the uri can be converted into a string that can be
@@ -261,6 +264,7 @@ class Uri : public ParserCategory
       Data mUserParameters;
       int mPort;
       Data mPassword;
+      Data mNetNs;  ///< Net namespace name scoping host and port
 
       void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
       mutable bool mHostCanonicalized;

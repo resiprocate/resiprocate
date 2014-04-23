@@ -7,6 +7,9 @@
 #include "rutil/Inserter.hxx"
 #include "resip/stack/Connection.hxx"
 #include "resip/stack/Tuple.hxx"
+#ifdef USE_NETNS
+#   include "rutil/NetNs.hxx"
+#endif
 
 using namespace resip;
 using namespace std;
@@ -234,6 +237,53 @@ main()
       assert(t5.mFlowKey == t5prime.mFlowKey);
       assert(t6.mFlowKey == t6prime.mFlowKey);
       assert(loopback.mFlowKey == loopbackprime.mFlowKey);
+   }
+#endif
+
+#ifdef USE_NETNS
+   {
+      Tuple testNetNsTuple("192.168.1.106", 5069, V4, TCP, Data::Empty, "namespace1");
+      assert(testNetNsTuple.getNetNs() == "namespace1");
+      // Check assignment copies netns
+      Tuple netNsTupleCopy = testNetNsTuple;
+      assert(netNsTupleCopy.getNetNs() == "namespace1");
+      assert(testNetNsTuple == netNsTupleCopy);
+      assert(!(testNetNsTuple < netNsTupleCopy));
+      assert(!(netNsTupleCopy < testNetNsTuple));
+      assert(!(Tuple::AnyPortCompare().operator()(testNetNsTuple, netNsTupleCopy)));
+      assert(!(Tuple::AnyPortCompare().operator()(netNsTupleCopy, testNetNsTuple)));
+
+      netNsTupleCopy.setNetNs("namespace2");
+      assert(netNsTupleCopy.getNetNs() == "namespace2");
+      assert(!(testNetNsTuple == netNsTupleCopy));
+      assert(testNetNsTuple < netNsTupleCopy);
+      assert(!(netNsTupleCopy < testNetNsTuple));
+      assert((Tuple::AnyPortCompare().operator()(testNetNsTuple, netNsTupleCopy)));
+      assert(!(Tuple::AnyPortCompare().operator()(netNsTupleCopy, testNetNsTuple)));
+
+      Tuple copyTuple2(netNsTupleCopy);
+      assert(copyTuple2.getNetNs() == "namespace2");
+
+      Data binaryToken;
+      // NetNs keeps a dictionary of netns.  If we have not yet used a
+      // netns, its not in the dictionary.  So we need to prime the dictionary
+      // here.
+      NetNs::setNs("namespace1");
+      NetNs::setNs("");
+      //cout << "testNetNsTuple: " << testNetNsTuple << endl;
+      Tuple::writeBinaryToken(testNetNsTuple, binaryToken);
+      Tuple reconstructed = Tuple::makeTupleFromBinaryToken(binaryToken);
+      //cout << "reconstructed: " << reconstructed<< endl;
+      assert(reconstructed.getNetNs() == "namespace1");
+      assert(reconstructed == testNetNsTuple);
+      Data binaryTokenWithSalt;
+      Tuple::writeBinaryToken(testNetNsTuple, binaryTokenWithSalt, "iLikePeperToo");
+      Tuple reconstructedWithSalt = Tuple::makeTupleFromBinaryToken(binaryTokenWithSalt, "iLikePeperToo");
+      //cout << "reconstructedWithSalt: " << reconstructedWithSalt << endl;
+      assert(reconstructedWithSalt.getNetNs() == "namespace1");
+      assert(reconstructedWithSalt == testNetNsTuple);
+
+      resipCerr << "NETNS OK and tested" << std::endl;
    }
 #endif
 

@@ -71,6 +71,7 @@ Uri::Uri(const Uri& rhs,
      mUserParameters(rhs.mUserParameters),
      mPort(rhs.mPort),
      mPassword(rhs.mPassword),
+     mNetNs(rhs.mNetNs),
      mHostCanonicalized(rhs.mHostCanonicalized),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
      mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
@@ -345,6 +346,7 @@ Uri::operator=(const Uri& rhs)
       mUserParameters = rhs.mUserParameters;
       mPort = rhs.mPort;
       mPassword = rhs.mPassword;
+      mNetNs = rhs.mNetNs;
       if (rhs.mEmbeddedHeaders.get() != 0)
       {
          mEmbeddedHeaders.reset(new SipMessage(*rhs.mEmbeddedHeaders));
@@ -443,7 +445,9 @@ Uri::operator==(const Uri& other) const
        ((isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)) ? mUser == other.mUser : isEqualNoCase(mUser, other.mUser)) &&
        isEqualNoCase(mUserParameters,other.mUserParameters) &&
        mPassword == other.mPassword &&
-       mPort == other.mPort)
+       mPort == other.mPort &&
+       mNetNs == other.mNetNs
+      )
    {
       for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
@@ -764,7 +768,9 @@ Uri::aorEqual(const resip::Uri& rhs) const
    }
    
    return (mUser==rhs.mUser) && (mHost==rhs.mHost) && (mPort==rhs.mPort) && 
-            (isEqualNoCase(mScheme,rhs.mScheme));
+            (isEqualNoCase(mScheme,rhs.mScheme) &&
+            (mNetNs == rhs.mNetNs)
+          );
 }
 
 void 

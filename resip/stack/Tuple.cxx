@@ -24,7 +24,9 @@
 #include "rutil/HashMap.hxx"
 #include "rutil/MD5Stream.hxx"
 #include "rutil/Logger.hxx"
-
+#ifdef USE_NETNS
+#   include "rutil/NetNs.hxx"
+#endif
 
 using std::auto_ptr;
 using namespace resip;
@@ -58,12 +60,14 @@ Tuple::Tuple(const Data& printableAddr,
              int port,
              IpVersion ipVer,
              TransportType type,
-             const Data& targetDomain) :
+             const Data& targetDomain,
+             const Data& netNs) :
    mFlowKey(0),
    mTransportKey(0),
    onlyUseExistingConnection(false),
    mTransportType(type),
-   mTargetDomain(targetDomain)
+   mTargetDomain(targetDomain),
+   mNetNs(netNs)
 {
    if (ipVer == V4)
    {
@@ -109,12 +113,14 @@ Tuple::Tuple(const Data& printableAddr,
 Tuple::Tuple(const Data& printableAddr, 
              int port,
              TransportType ptype,
-             const Data& targetDomain) : 
+             const Data& targetDomain,
+             const Data& netNs) : 
    mFlowKey(0),
    mTransportKey(0),
    onlyUseExistingConnection(false),
    mTransportType(ptype),
-   mTargetDomain(targetDomain)
+   mTargetDomain(targetDomain),
+   mNetNs(netNs)
 {
    if (DnsUtil::isIpV4Address(printableAddr))
    {
@@ -148,12 +154,14 @@ Tuple::Tuple(const Data& printableAddr,
 Tuple::Tuple(const in_addr& ipv4,
              int port,
              TransportType ptype,
-             const Data& targetDomain)
+             const Data& targetDomain,
+             const Data& netNs)
      :mFlowKey(0),
      mTransportKey(0),
      onlyUseExistingConnection(false),
      mTransportType(ptype),
-     mTargetDomain(targetDomain)
+     mTargetDomain(targetDomain),
+     mNetNs(netNs)
 {
    memset(&m_anonv4, 0, sizeof(sockaddr_in));
    m_anonv4.sin_addr = ipv4;
@@ -165,12 +173,14 @@ Tuple::Tuple(const in_addr& ipv4,
 Tuple::Tuple(const in6_addr& ipv6,
              int port,
              TransportType ptype,
-             const Data& targetDomaina)
+             const Data& targetDomaina,
+             const Data& netNs)
      :mFlowKey(0),
      mTransportKey(0),
      onlyUseExistingConnection(false),
      mTransportType(ptype),
-     mTargetDomain(targetDomaina)
+     mTargetDomain(targetDomaina),
+     mNetNs(netNs)
 {
    memset(&m_anonv6, 0, sizeof(sockaddr_in6));
    m_anonv6.sin6_addr = ipv6;
@@ -245,6 +255,14 @@ Tuple::setSockaddr(const GenericIPAddress& addr)
 #endif
 }
 
+#ifdef USE_NETNS
+#   define TOKEN_SIZE 8
+#   define TOKEN_IP_ADDRESS_OFFSET 4
+#else
+#   define TOKEN_SIZE 7
+#   define TOKEN_IP_ADDRESS_OFFSET 3
+#endif
+
 void
 Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const Data& salt)
 {
@@ -253,8 +271,8 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
    // bytes for V6, and 14 extra bytes for V4. 
    // V6: sin6_len(1), sin6_flowinfo(4), flowId(4), onlyUseExistingConnection(1)
    // V4: sin_family(2 instead of 1), sin_zero(8), flowId(4), onlyUseExistingConnection(1)
-   UInt32 rawToken[7];
-   memset(&rawToken, 0, 28);
+   UInt32 rawToken[TOKEN_SIZE];
+   memset(&rawToken, 0, TOKEN_SIZE * 4);
 
    rawToken[0] = tuple.mFlowKey;
 
@@ -272,6 +290,10 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
       rawToken[2] += 0x00000010;
    }
 
+#ifdef USE_NETNS
+   rawToken[3] = NetNs::getNetNsId(tuple.getNetNs());
+#endif
+
 #ifdef USE_IPV6
    if(tuple.ipVersion()==V6)
    {
@@ -279,19 +301,19 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
       rawToken[2] += 0x00000001;
       in6_addr address = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr()).sin6_addr;
       assert(sizeof(address)==16);
-      memcpy(&rawToken[3],&address,16);
+      memcpy(&rawToken[TOKEN_IP_ADDRESS_OFFSET],&address,16);
    }
    else
 #endif
    {
       in_addr address = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr()).sin_addr;
       assert(sizeof(address)==4);
-      memcpy(&rawToken[3],&address,4);
+      memcpy(&rawToken[TOKEN_IP_ADDRESS_OFFSET],&address,4);
    }
    
    container.clear();
-   container.reserve(((tuple.ipVersion()==V6) ? 28 : 16) + (salt.empty() ? 0 : 32));
-   container.append((char*)&rawToken[0],(tuple.ipVersion()==V6) ? 28 : 16);
+   container.reserve(((tuple.ipVersion()==V6) ? TOKEN_SIZE*4 : (TOKEN_SIZE-3)*4) + (salt.empty() ? 0 : 32));
+   container.append((char*)&rawToken[0],(tuple.ipVersion()==V6) ? TOKEN_SIZE*4 : (TOKEN_SIZE-3)*4);
 
    if(!salt.empty())
    {
@@ -337,10 +359,10 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    UInt16 port= (rawToken[2] >> 16);
 
    // Now that we have the version we can do a more accurate check on the size
-   if(!((version==V4 && salt.empty() && binaryFlowToken.size()==16) ||
-        (version==V4 && !salt.empty() && binaryFlowToken.size()==48) ||
-        (version==V6 && salt.empty() && binaryFlowToken.size()==28) ||
-        (version==V6 && !salt.empty() && binaryFlowToken.size()==60)))
+   if(!((version==V4 && salt.empty() && binaryFlowToken.size()==(TOKEN_SIZE-3)*4) ||
+        (version==V4 && !salt.empty() && binaryFlowToken.size()==(TOKEN_SIZE-3)*4 + 32) ||
+        (version==V6 && salt.empty() && binaryFlowToken.size()==TOKEN_SIZE*4) ||
+        (version==V6 && !salt.empty() && binaryFlowToken.size()==TOKEN_SIZE*4 + 32)))
    {
       DebugLog(<<"Binary flow token is the wrong size for its IP version.");
       return Tuple();
@@ -349,7 +371,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    // If salt is specified, validate HMAC
    if(!salt.empty())
    {
-      unsigned int tokenSizeLessHMAC = version == V4 ? 16 : 28;
+      unsigned int tokenSizeLessHMAC = version == V4 ? (TOKEN_SIZE-3)*4 : TOKEN_SIZE*4;
       Data flowTokenLessHMAC(Data::Share, binaryFlowToken.data(), tokenSizeLessHMAC);
       Data flowTokenHMAC(Data::Share, binaryFlowToken.data()+tokenSizeLessHMAC, 32);
       MD5Stream ms;
@@ -361,15 +383,29 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
       }
    }
 
+   Data netNs("");
+#ifdef USE_NETNS
+   int netNsId = rawToken[3];
+   try
+   {
+      netNs = NetNs::getNetNsName(netNsId);
+   }
+   catch(NetNs::Exception e)
+   {
+       ErrLog(<< "Tuple binary token contained netns id: " << netNsId << "which does not exist." 
+               << e);
+   }
+#endif
+
    if(version==V6)
    {
 #ifdef USE_IPV6
       in6_addr address;
       assert(sizeof(address)==16);
-      memcpy(&address,&rawToken[3],16);
-      Tuple result(address,port,type);
+      memcpy(&address,&rawToken[TOKEN_IP_ADDRESS_OFFSET],16);
+      Tuple result(address, port, type, Data::Empty, netNs);
 #else
-      Tuple result(resip::Data::Empty, port, type);
+      Tuple result(resip::Data::Empty, port, type, Data::Empty, netNs);
 #endif
       result.mFlowKey=(FlowKey)mFlowKey;
       result.mTransportKey = (TransportKey)transportKey;
@@ -379,8 +415,8 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
 
    in_addr address;
    assert(sizeof(address)==4);
-   memcpy(&address,&rawToken[3],4);
-   Tuple result(address,port,type);
+   memcpy(&address,&rawToken[TOKEN_IP_ADDRESS_OFFSET],4);
+   Tuple result(address, port, type, Data::Empty, netNs);
    result.mFlowKey=(FlowKey)mFlowKey;
    result.mTransportKey = (TransportKey)transportKey;
    result.onlyUseExistingConnection=isRealFlow;
@@ -567,14 +603,16 @@ bool Tuple::operator==(const Tuple& rhs) const
       {
          return (m_anonv4.sin_port == rhs.m_anonv4.sin_port &&
                  mTransportType == rhs.mTransportType &&
-                 memcmp(&m_anonv4.sin_addr, &rhs.m_anonv4.sin_addr, sizeof(in_addr)) == 0);
+                 memcmp(&m_anonv4.sin_addr, &rhs.m_anonv4.sin_addr, sizeof(in_addr)) == 0 &&
+                 rhs.mNetNs == mNetNs);
       }
       else // v6
       {
 #ifdef USE_IPV6
          return (m_anonv6.sin6_port == rhs.m_anonv6.sin6_port &&
                  mTransportType == rhs.mTransportType &&
-                 memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0);
+                 memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0 &&
+                 rhs.mNetNs == mNetNs);
 #else
          assert(0);
          return false;
@@ -600,6 +638,22 @@ Tuple::operator<(const Tuple& rhs) const
    {
       return false;
    }
+
+#ifdef USE_NETNS
+   // netns needs to be checked before port and address as the port/address 
+   // comparison bails out in equal case.  Ideally netns comparison should
+   // be last as its the most expensive comparison.  For now putting it here
+   // for minimal code change
+   else if(mNetNs < rhs.mNetNs)
+   {
+       return(true);
+   }
+   else if(mNetNs > rhs.mNetNs)
+   {
+       return(false);
+   }
+#endif
+
    else if (mSockaddr.sa_family == AF_INET && rhs.mSockaddr.sa_family == AF_INET)
    {
       int c=memcmp(&m_anonv4.sin_addr,
@@ -658,6 +712,7 @@ Tuple::operator<(const Tuple& rhs) const
       return false;
    }
 #endif
+
    else
    {
       //assert(0);
@@ -703,6 +758,10 @@ resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
       ostrm << " transportKey=" << tuple.mTransportKey;
    }
 
+#ifdef USE_NETNS
+      ostrm << " mNetNs=" << tuple.mNetNs;
+#endif
+
    ostrm << " ]";
    
    return ostrm;
@@ -719,6 +778,9 @@ Tuple::hash() const
          reinterpret_cast<const sockaddr_in6&>(mSockaddr);
 
       return size_t(Data(Data::Share, (const char *)&in6.sin6_addr.s6_addr, sizeof(in6.sin6_addr.s6_addr)).hash() +
+#ifdef USE_NETNS
+                    mNetNs.hash() +
+#endif
                     5*in6.sin6_port +
                     25*mTransportType);
    }
@@ -729,6 +791,9 @@ Tuple::hash() const
          reinterpret_cast<const sockaddr_in&>(mSockaddr);
          
       return size_t(in4.sin_addr.s_addr +
+#ifdef USE_NETNS
+                    mNetNs.hash() +
+#endif
                     5*in4.sin_port +
                     25*mTransportType);
    }    
@@ -913,7 +978,9 @@ Tuple::AnyPortCompare::operator()(const Tuple& lhs,
    {
       return false;
    }
-   else if (lhs.mSockaddr.sa_family == AF_INET && rhs.mSockaddr.sa_family == AF_INET)
+
+   // transport types equal, so compare addresses
+   if (lhs.mSockaddr.sa_family == AF_INET && rhs.mSockaddr.sa_family == AF_INET)
    {
       int c = memcmp(&lhs.m_anonv4.sin_addr,
                      &rhs.m_anonv4.sin_addr,
@@ -954,6 +1021,20 @@ Tuple::AnyPortCompare::operator()(const Tuple& lhs,
    {
       return false;
    }
+#endif
+#ifdef USE_NETNS
+   // transport type and addresses are equal, so compare netns
+   if(lhs.mNetNs < rhs.mNetNs)
+   {
+       //DebugLog(<< "AnyPortCompare netns less than (l=" << lhs.mNetNs << ", r=" << rhs.mNetNs);
+       return(true);
+   }
+   else if(rhs.mNetNs < lhs.mNetNs)
+   {
+       //DebugLog(<< "AnyPortCompare netns greater than (l=" << lhs.mNetNs << ", r=" << rhs.mNetNs);
+       return(false);
+   }
+   //DebugLog(<< "AnyPortCompare netns equal to (l=\"" << lhs.mNetNs << "\", r=\"" << rhs.mNetNs << "\"");
 #endif
 
    return false;
