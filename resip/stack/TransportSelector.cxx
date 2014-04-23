@@ -37,7 +37,9 @@
 #include "rutil/FdPoll.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsStub.hxx"
-
+#ifdef USE_NETNS
+#   include "rutil/NetNs.hxx"
+#endif
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
 #include <osc/SigcompMessage.h>
@@ -68,8 +70,6 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),
-   mSocket( INVALID_SOCKET ),
-   mSocket6( INVALID_SOCKET ),
    mCompression(compression),
    mSigcompStack (0),
    mPollGrp(0),
@@ -118,13 +118,26 @@ TransportSelector::~TransportSelector()
    delete mSigcompStack;
 #endif
 
-   if (mSocket != INVALID_SOCKET)
+   for(HashMap<Data, Socket>::iterator socketIterator = mSockets.begin();
+       socketIterator != mSockets.end(); socketIterator++)
    {
-      closeSocket( mSocket );
+      if (socketIterator->second != INVALID_SOCKET)
+      {
+         closeSocket(socketIterator->second);
+         DebugLog(<< "Closing TransportSelector::mSocket[" << socketIterator->first << "]");
+      }
+      mSockets.erase(socketIterator);
    }
-   if (mSocket6 != INVALID_SOCKET)
+
+   for(HashMap<Data, Socket>::iterator socketIterator = mSocket6s.begin();
+       socketIterator != mSocket6s.end(); socketIterator++)
    {
-      closeSocket( mSocket6 );
+      if (socketIterator->second != INVALID_SOCKET)
+      {
+         closeSocket(socketIterator->second);
+         DebugLog(<< "Closing TransportSelector::mSocket6[" << socketIterator->first << "]");
+      }
+      mSocket6s.erase(socketIterator);
    }
 
    setPollGrp(0);
@@ -197,7 +210,9 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
    }
 
    Tuple tuple(transport->interfaceName(), transport->port(),
-               transport->ipVersion(), transport->transport());
+               transport->ipVersion(), transport->transport(),
+               Data::Empty, // Domain
+               transport->netNs());
    tuple.mTransportKey = transport->getKey();
 
    if(!isSecure(transport->transport()))
@@ -660,7 +675,9 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
 
    // XXX: Is there better way to do below (without the copy)?
    source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), 
-      via.transport().empty() ? target.getType() : toTransportType(via.transport()));  // Transport type is pre-populated in via, lock to it
+      via.transport().empty() ? target.getType() : toTransportType(via.transport()), // Transport type is pre-populated in via, lock to it
+      Data::Empty, target.getNetNs());
+   DebugLog(<< "source: " << source);
 
    if ( target.mFlowKey!=0 && (source.getPort()==0 || source.isAnyInterface()) )
    {
@@ -726,22 +743,38 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       // this process will determine which interface the kernel would use to
       // send a packet to the target by making a connect call on a udp socket.
       Socket tmp = INVALID_SOCKET;
+      Data netNs = target.getNetNs();
+      // One IPV4 and IPV6 socket per namespace.  Even if we do not support netns,
+      // we still have the default namespace of "" (empty string).
       if (target.isV4())
       {
-         if (mSocket == INVALID_SOCKET)
+         // If socket does not exist for namespace, create one
+         if (mSockets.find(netNs) == mSockets.end() || mSockets[netNs] == INVALID_SOCKET)
          {
-            mSocket = InternalTransport::socket(UDP, V4); // may throw
+#ifdef USE_NETNS
+            NetNs::setNs(netNs);
+#endif
+            mSockets[netNs] = InternalTransport::socket(UDP, V4); // may throw
          }
-         tmp = mSocket;
+         tmp = mSockets[netNs];
       }
       else
       {
-         if (mSocket6 == INVALID_SOCKET)
+         // If socket does not exist for namespace, create one
+         if (mSocket6s.find(netNs) == mSocket6s.end() || mSocket6s[netNs] == INVALID_SOCKET)
          {
-            mSocket6 = InternalTransport::socket(UDP, V6); // may throw
+#ifdef USE_NETNS
+            NetNs::setNs(netNs);
+#endif
+            mSocket6s[netNs] = InternalTransport::socket(UDP, V6); // may throw
          }
-         tmp = mSocket6;
+         tmp = mSocket6s[netNs];
       }
+
+#ifdef USE_NETNS
+      // Not sure if connect has to be done in netns context or just the socket create
+      NetNs::setNs(netNs);
+#endif
 
       int ret = connect(tmp,&target.getSockaddr(), target.length());
       if (ret < 0)
@@ -788,14 +821,14 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       // fails. I'm not sure the stack can recover from this error condition.
       if (target.isV4())
       {
-         ret = connect(mSocket,
+         ret = connect(mSockets[netNs],
                        (struct sockaddr*)&mUnspecified.v4Address,
                        sizeof(mUnspecified.v4Address));
       }
 #ifdef USE_IPV6
       else
       {
-         ret = connect(mSocket6,
+         ret = connect(mSocket6s[netNs],
                        (struct sockaddr*)&mUnspecified6.v6Address,
                        sizeof(mUnspecified6.v6Address));
       }
@@ -901,7 +934,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             if ((transport = findTransportByDest(target)) != NULL)
             {
                source = transport->getTuple();
+               DebugLog(<< "Found transport: " << source);
             }
+         }
+         else
+         {
+            DebugLog(<< "Found transport: " << source);
          }
          
          if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
@@ -940,6 +978,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          {
             source = determineSourceInterface(msg, target);
             transport = findTransportBySource(source, msg);
+            DebugLog(<< "Found transport: " << source);
 
             // .bwc. determineSourceInterface might give us a port
             if(transport && source.getPort()==0)
@@ -1032,6 +1071,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          if(transport)
          {
             source = transport->getTuple();
+            DebugLog(<< "Found transport: " << source);
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -1407,9 +1447,13 @@ TransportSelector::findLoopbackTransportBySource(bool ignorePort, Tuple& search)
          //Compare only the first byte (the 127)
          if(i->first.isEqualWithMask(search,8,ignorePort))
          {
-            search=i->first;
-            DebugLog(<<"Match!");
-            return i->second;
+            // Not sure if this should go here or in Tuple::isEqualWithMask
+            if(i->first.getNetNs() == search.getNetNs())
+            {
+               search=i->first;
+               DebugLog(<<"Match!");
+               return i->second;
+            }
          }
       }
 #ifdef USE_IPV6
@@ -1461,9 +1505,10 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
       // 2. search for matching port on any loopback interface
       if (search.isLoopback())
       {
-         Transport *trans=findLoopbackTransportBySource( /*ignorePort*/false, search);
+         Transport *trans = findLoopbackTransportBySource( /*ignorePort*/false, search);
          if (trans)
          {
+            DebugLog(<< "findLoopbackTransportBySource(" << search << ")");
             return trans;
          }
       }
@@ -1485,7 +1530,7 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
          AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
          if (i != mAnyPortTransports.end())
          {
-            DebugLog(<< "findTransport (any port, specific interface) => " << *(i->second));
+            DebugLog(<< "findTransport (any port, specific interface) => " << *(i->second) << " key: " << (i->first) << " search: " << search);
             return i->second;
          }
       }

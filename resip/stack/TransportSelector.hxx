@@ -234,9 +234,9 @@ class TransportSelector
       typedef std::multimap<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> TypeToTransportMap;
       TypeToTransportMap mTypeToTransportMap;
 
-      // fake socket for connect() and route table lookups
-      mutable Socket mSocket;
-      mutable Socket mSocket6;
+      // fake socket(s) one for each netns, for connect() and route table lookups
+      mutable HashMap<Data, Socket> mSockets;
+      mutable HashMap<Data, Socket> mSocket6s;
 
       // An AF_UNSPEC addr_in for rapid unconnect
       GenericIPAddress mUnspecified;

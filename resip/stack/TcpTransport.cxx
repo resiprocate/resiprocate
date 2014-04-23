@@ -20,8 +20,9 @@ TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
                            IpVersion version, const Data& pinterface,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
-                           unsigned transportFlags)
-   : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
+                           unsigned transportFlags,
+                           const Data& netNs)
+   : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags, netNs)
 {
    mTuple.setType(TCP);
 
@@ -29,7 +30,11 @@ TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
 
    InfoLog (<< "Creating TCP transport host=" << pinterface
             << " port=" << mTuple.getPort()
-            << " ipv4=" << bool(version==V4) );
+            << " ipv4=" << bool(version==V4)
+#ifdef USE_NETNS
+            << " netns=" << netNs
+#endif
+           );
             
    mTxFifo.setDescription("TcpTransport::mTxFifo");
 }

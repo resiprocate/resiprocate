@@ -7,6 +7,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/NetNs.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -23,11 +24,17 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    const Data& pinterface,
                                    AfterSocketCreationFuncPtr socketFunc,
                                    Compression &compression,
-                                   unsigned transportFlags)
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags)
+                                   unsigned transportFlags,
+                                   const Data& netNs)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags, netNs)
 {
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)==0 )
    {
+#ifdef USE_NETNS
+      DebugLog(<< "TcpBaseTransport: " << this << " netns: " << netNs);
+      // setns here
+      NetNs::setNs(netNs);
+#endif
       mFd = InternalTransport::socket(TCP, version);
    }
 }
@@ -167,7 +174,7 @@ TcpBaseTransport::processListen()
       }
       makeSocketNonBlocking(sock);
 
-      DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
+      DebugLog (<< this << " Received TCP connection from: " << tuple << " mTuple: " << mTuple << " as fd=" << sock);
 
       if (mSocketFunc)
       {
@@ -193,6 +200,9 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       TransportFailure::FailureReason &failReason, int &failSubCode)
 {
    // attempt to open
+#ifdef USE_NETNS
+      NetNs::setNs(netNs());
+#endif
    Socket sock = InternalTransport::socket( TCP, ipVersion());
    // fdset.clear(sock); !kw! removed as part of epoll impl
 
@@ -206,6 +216,9 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
          mConnectionManager.gcWithTarget(1); // free one up
       }
 
+#ifdef USE_NETNS
+      NetNs::setNs(netNs());
+#endif
       sock = InternalTransport::socket( TCP, ipVersion());
       if ( sock == INVALID_SOCKET )
       {
@@ -225,6 +238,9 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
    assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
    mTuple.copySockaddrAnyPort(sa);
+#ifdef USE_NETNS
+      NetNs::setNs(netNs());
+#endif
    if(::bind(sock, sa, mTuple.length()) != 0)
    {
       WarningLog( << "Error in binding to source interface address. " << strerror(errno));

@@ -46,6 +46,10 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
    mCompression(compression),
    mTransportFlags(0)
 {
+#ifdef USE_NETNS
+   // Needs to be implemented for NETNS
+   assert(0);
+#endif
    mInterface = Tuple::inet_ntop(mTuple);
 }
 
@@ -56,9 +60,10 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const Data& tlsDomain,
                      AfterSocketCreationFuncPtr socketFunc,
                      Compression &compression,
-                     unsigned transportFlags) :
+                     unsigned transportFlags,
+                     const Data& netNs) :
    mInterface(intfc),
-   mTuple(intfc, portNum, version),
+   mTuple(intfc, portNum, version, UNKNOWN_TRANSPORT, Data::Empty, netNs),
    mCongestionManager(0),
    mStateMachineFifo(rxFifo,8),
    mShuttingDown(false),

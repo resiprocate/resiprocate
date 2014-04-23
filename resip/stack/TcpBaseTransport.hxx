@@ -19,7 +19,8 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
                        const Data& interfaceName,
                        AfterSocketCreationFuncPtr socketFunc,
                        Compression &compression,
-                       unsigned transportFlags = 0);
+                       unsigned transportFlags = 0,
+                       const Data& netNs = Data::Empty);
       virtual  ~TcpBaseTransport();
 
       virtual void processPollEvent(FdPollEventMask mask);

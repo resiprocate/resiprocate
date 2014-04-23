@@ -308,7 +308,8 @@ SipStack::addTransport( TransportType protocol,
                         SecurityTypes::TlsClientVerificationMode cvm,
                         bool useEmailAsSIP,
                         SharedPtr<WsConnectionValidator> wsConnectionValidator,
-                        SharedPtr<WsCookieContextFactory> wsCookieContextFactory)
+                        SharedPtr<WsCookieContextFactory> wsCookieContextFactory,
+                        const Data& netNs)
 {
    assert(!mShuttingDown);
 
@@ -337,6 +338,14 @@ SipStack::addTransport( TransportType protocol,
       }
    }
 
+#ifdef USE_NETNS
+   if(!netNs.empty() && protocol != TCP)
+   {
+      ErrLog(<< "Failed to create transport, netns is currently only supported for TCP.  Cannot use netns: " << netNs);
+      throw Transport::Exception("netns only supported for TCP", __FILE__,__LINE__);
+   }
+#endif
+
    InternalTransport* transport=0;
    Fifo<TransactionMessage>& stateMacFifo = mTransactionController->transportSelector().stateMacFifo();
    try
@@ -347,7 +356,8 @@ SipStack::addTransport( TransportType protocol,
             transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression, transportFlags);
             break;
          case TCP:
-            transport = new TcpTransport(stateMacFifo, port, version, ipInterface, mSocketFunc, *mCompression, transportFlags);
+            transport = 
+               new TcpTransport(stateMacFifo, port, version, ipInterface, mSocketFunc, *mCompression, transportFlags, netNs);
             break;
          case TLS:
 #if defined( USE_SSL )
@@ -452,7 +462,9 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    // don't have any transport collisions.  Note:  We store two set's here in order to 
    // avoid needing to ask the TransportSelector under some form of locking.
    Tuple tuple(transport->interfaceName(), transport->port(),
-               transport->ipVersion(), transport->transport());
+               transport->ipVersion(), transport->transport(),
+               Data::Empty, // target domain
+               transport->netNs());
    if(!isSecure(transport->transport()))
    {
       if(mNonSecureTransports.count(tuple) == 0)

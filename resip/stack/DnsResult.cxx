@@ -309,7 +309,13 @@ DnsResult::lookupInternal(const Uri& uri)
       if (isNumeric) // IP address specified
       {
          mPort = getDefaultPort(mTransport, uri.port());
-         Tuple tuple(mTarget, mPort, mTransport, mTarget);
+         // If the target Uri has a netns specified, we need to copy it into the Tuple
+         // We need to distinguish between the Uri not having an netns set and the 
+         // the default/global netns "" (emtpy string).
+         Tuple tuple(mTarget, mPort, mTransport, mTarget, uri.netNs());
+#ifdef USE_NETNS
+         DebugLog(<< "DnsResult netns: " << uri.netNs());
+#endif
 
          // ?bwc? If this is greylisted, what can we do? This is the only result
          if(!(mInterface.getMarkManager().getMarkType(tuple)==TupleMarkManager::BLACK))
@@ -462,7 +468,12 @@ DnsResult::lookupInternal(const Uri& uri)
                   {
                      mTransport=TCP;
                      mPort = getDefaultPort(mTransport,uri.port());
-                     tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+                     // Need to get netns from Uri if set and set it in
+                     // the Tuple for this IP address case
+                     tuple=Tuple(mTarget, mPort, mTransport, mTarget, uri.netNs());
+#ifdef USE_NETNS
+                     DebugLog(<< "DnsResult netns: " << uri.netNs());
+#endif
                      mark=mInterface.getMarkManager().getMarkType(tuple);
                   }
 

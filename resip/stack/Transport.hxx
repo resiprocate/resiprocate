@@ -141,8 +141,8 @@ class Transport : public FdSetIOObserver
                 const Data& tlsDomain = Data::Empty,
                 AfterSocketCreationFuncPtr socketFunc = 0,
                 Compression &compression = Compression::Disabled,
-                unsigned transportFlags = 0
-         );
+                unsigned transportFlags = 0,
+                const Data& netNs = Data::Empty);
 
       virtual ~Transport();
 
@@ -252,6 +252,9 @@ class Transport : public FdSetIOObserver
       const TransportType transport() const { return mTuple.getType(); }
       virtual bool isReliable() const =0;
       virtual bool isDatagram() const =0;
+
+      /// @return net namespace in which Transport is bound
+      const Data& netNs() const { return(mTuple.getNetNs()); }
 
       /**
          @return true here if the subclass has a specific contact

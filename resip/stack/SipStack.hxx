@@ -318,6 +318,10 @@ class SipStack : public FdSetIOObserver
                                       because many commercial CAs offer email certificates but not
                                       sip: certificates.  For reasons of standards compliance, it
                                       is disabled by default.
+
+         @param netNs                 Set the network namespace (netns) in which the Transport is
+                                      to bind the the given address and port.
+
       */
       Transport* addTransport(TransportType protocol,
                               int port,
@@ -332,7 +336,9 @@ class SipStack : public FdSetIOObserver
                               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                               bool useEmailAsSIP = false,
                               SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
-                              SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>());
+                              SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(),
+                              const Data& netns = Data::Empty
+                             );
 
       /**
           Used to plug-in custom transports.  Adds the transport to the Transport
@@ -790,6 +796,9 @@ class SipStack : public FdSetIOObserver
       {
          mStatsManager.setExternalStatsHandler(handler);
       }
+
+      /** @brief get statistics manager **/
+      const StatisticsManager* getStatisticsManager() {return(&mStatsManager);}
 
       /** @brief output current state of the stack - for debug **/
       EncodeStream& dump(EncodeStream& strm) const;

@@ -27,9 +27,10 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      const Data& interfaceObj,
                                      AfterSocketCreationFuncPtr socketFunc,
                                      Compression &compression,
-                                     unsigned transportFlags) :
+                                     unsigned transportFlags,
+                                     const Data& netNs) :
    Transport(rxFifo, portNum, version, interfaceObj, Data::Empty,
-             socketFunc, compression, transportFlags),
+             socketFunc, compression, transportFlags, netNs),
    mFd(INVALID_SOCKET),
    mInterruptorHandle(0),
    mTxFifoOutBuffer(mTxFifo),
@@ -125,7 +126,11 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
 void
 InternalTransport::bind()
 {
-   DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple));
+   DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple) 
+#ifdef USE_NETNS
+         << " in netns=\"" <<mTuple.getNetNs() << "\""
+#endif
+            );
 
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {

@@ -18,7 +18,8 @@ class TcpTransport : public TcpBaseTransport
                    const Data& interfaceObj,
                    AfterSocketCreationFuncPtr socketFunc=0,
                    Compression &compression = Compression::Disabled,
-                   unsigned transportFlags = 0);
+                   unsigned transportFlags = 0,
+                   const Data& netNs = Data::Empty);
       virtual  ~TcpTransport();
 
    protected:

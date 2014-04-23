@@ -103,6 +103,7 @@ check_PROGRAMS = \
 	testSipMessageEncode \
 	testSipMessageMemory \
 	testSipStack1 \
+	testSipStackNetNs \
 	testStack \
 	testTcp \
 	testTime \
@@ -156,6 +157,7 @@ testSipMessage_SOURCES = testSipMessage.cxx TestSupport.cxx
 testSipMessageEncode_SOURCES = testSipMessageEncode.cxx
 testSipMessageMemory_SOURCES = testSipMessageMemory.cxx TestSupport.cxx
 testSipStack1_SOURCES = testSipStack1.cxx
+testSipStackNetNs_SOURCES = testSipStackNetNs.cxx
 testSocketFunc_SOURCES = testSocketFunc.cxx
 testStack_SOURCES = testStack.cxx
 testTcp_SOURCES = testTcp.cxx
