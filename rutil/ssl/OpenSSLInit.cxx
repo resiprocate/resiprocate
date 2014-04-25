@@ -71,13 +71,12 @@ OpenSSLInit::OpenSSLInit()
 OpenSSLInit::~OpenSSLInit()
 {
    mInitialized = false;
-	ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
-	ERR_remove_state(0);// free thread error queue
-	CRYPTO_cleanup_all_ex_data();
-	EVP_cleanup();// Clean up data allocated during OpenSSL_add_all_algorithms
+   ERR_remove_state(0);// free thread error queue
+   EVP_cleanup();// Clean up data allocated during OpenSSL_add_all_algorithms
+   CRYPTO_cleanup_all_ex_data();
+   ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
+   sk_SSL_COMP_free (SSL_COMP_get_compression_methods()); 
 
-    //!dcm! We know we have a leak; see BaseSecurity::~BaseSecurity for
-    //!details.
 //	CRYPTO_mem_leaks_fp(stderr);
 
 	delete [] mMutexes;
