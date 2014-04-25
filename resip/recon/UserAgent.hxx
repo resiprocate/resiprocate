@@ -1,6 +1,8 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
+#include <boost/function.hpp>
+
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
@@ -16,12 +18,6 @@
 #include <rutil/Log.hxx>
 #include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
-
-#ifdef WIN32
-   #define sleepMs(t) Sleep(t)
-#else
-   #define sleepMs(t) usleep(t*1000)
-#endif
 
 namespace recon
 {
