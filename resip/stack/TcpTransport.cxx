@@ -28,13 +28,16 @@ TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
 
    init();
 
+#ifdef USE_NETNS
    InfoLog (<< "Creating TCP transport host=" << pinterface
             << " port=" << mTuple.getPort()
             << " ipv4=" << bool(version==V4)
-#ifdef USE_NETNS
-            << " netns=" << netNs
+            << " netns=" << netNs);
+#else
+   InfoLog (<< "Creating TCP transport host=" << pinterface
+            << " port=" << mTuple.getPort()
+            << " ipv4=" << bool(version==V4));
 #endif
-           );
             
    mTxFifo.setDescription("TcpTransport::mTxFifo");
 }

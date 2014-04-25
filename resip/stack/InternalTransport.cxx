@@ -126,11 +126,12 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
 void
 InternalTransport::bind()
 {
-   DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple) 
 #ifdef USE_NETNS
-         << " in netns=\"" <<mTuple.getNetNs() << "\""
+   DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple) 
+             << " in netns=\"" <<mTuple.getNetNs() << "\"");
+#else
+   DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple)); 
 #endif
-            );
 
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {
