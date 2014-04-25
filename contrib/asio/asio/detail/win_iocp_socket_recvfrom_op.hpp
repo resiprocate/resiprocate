@@ -2,7 +2,7 @@
 // detail/win_iocp_socket_recvfrom_op.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,7 +19,7 @@
 
 #if defined(ASIO_HAS_IOCP)
 
-#include <boost/utility/addressof.hpp>
+#include "asio/detail/addressof.hpp"
 #include "asio/detail/bind_handler.hpp"
 #include "asio/detail/buffer_sequence_adapter.hpp"
 #include "asio/detail/fenced_block.hpp"
@@ -42,13 +42,13 @@ public:
 
   win_iocp_socket_recvfrom_op(Endpoint& endpoint,
       socket_ops::weak_cancel_token_type cancel_token,
-      const MutableBufferSequence& buffers, Handler handler)
+      const MutableBufferSequence& buffers, Handler& handler)
     : operation(&win_iocp_socket_recvfrom_op::do_complete),
       endpoint_(endpoint),
       endpoint_size_(static_cast<int>(endpoint.capacity())),
       cancel_token_(cancel_token),
       buffers_(buffers),
-      handler_(handler)
+      handler_(ASIO_MOVE_CAST(Handler)(handler))
   {
   }
 
@@ -58,12 +58,17 @@ public:
   }
 
   static void do_complete(io_service_impl* owner, operation* base,
-      asio::error_code ec, std::size_t bytes_transferred)
+      const asio::error_code& result_ec,
+      std::size_t bytes_transferred)
   {
+    asio::error_code ec(result_ec);
+
     // Take ownership of the operation object.
     win_iocp_socket_recvfrom_op* o(
         static_cast<win_iocp_socket_recvfrom_op*>(base));
-    ptr p = { boost::addressof(o->handler_), o, o };
+    ptr p = { asio::detail::addressof(o->handler_), o, o };
+
+    ASIO_HANDLER_COMPLETION((o));
 
 #if defined(ASIO_ENABLE_BUFFER_DEBUGGING)
     // Check whether buffers are still valid.
@@ -87,14 +92,16 @@ public:
     // deallocated the memory here.
     detail::binder2<Handler, asio::error_code, std::size_t>
       handler(o->handler_, ec, bytes_transferred);
-    p.h = boost::addressof(handler.handler_);
+    p.h = asio::detail::addressof(handler.handler_);
     p.reset();
 
     // Make the upcall if required.
     if (owner)
     {
-      asio::detail::fenced_block b;
+      fenced_block b(fenced_block::half);
+      ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_, handler.arg2_));
       asio_handler_invoke_helpers::invoke(handler, handler.handler_);
+      ASIO_HANDLER_INVOCATION_END;
     }
   }
 

@@ -2,7 +2,7 @@
 // ip/address_v4.hpp
 // ~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,14 +17,14 @@
 
 #include "asio/detail/config.hpp"
 #include <string>
-#include <boost/array.hpp>
+#include "asio/detail/array.hpp"
 #include "asio/detail/socket_types.hpp"
 #include "asio/detail/winsock_init.hpp"
 #include "asio/error_code.hpp"
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
 # include <iosfwd>
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 #include "asio/detail/push_options.hpp"
 
@@ -44,7 +44,15 @@ class address_v4
 {
 public:
   /// The type used to represent an address as an array of bytes.
-  typedef boost::array<unsigned char, 4> bytes_type;
+  /**
+   * @note This type is defined in terms of the C++0x template @c std::array
+   * when it is available. Otherwise, it uses @c boost:array.
+   */
+#if defined(GENERATING_DOCUMENTATION)
+  typedef array<unsigned char, 4> bytes_type;
+#else
+  typedef asio::detail::array<unsigned char, 4> bytes_type;
+#endif
 
   /// Default constructor.
   address_v4()
@@ -64,12 +72,29 @@ public:
   {
   }
 
+#if defined(ASIO_HAS_MOVE)
+  /// Move constructor.
+  address_v4(address_v4&& other)
+    : addr_(other.addr_)
+  {
+  }
+#endif // defined(ASIO_HAS_MOVE)
+
   /// Assign from another address.
   address_v4& operator=(const address_v4& other)
   {
     addr_ = other.addr_;
     return *this;
   }
+
+#if defined(ASIO_HAS_MOVE)
+  /// Move-assign from another address.
+  address_v4& operator=(address_v4&& other)
+  {
+    addr_ = other.addr_;
+    return *this;
+  }
+#endif // defined(ASIO_HAS_MOVE)
 
   /// Get the address in bytes, in network byte order.
   ASIO_DECL bytes_type to_bytes() const;
@@ -96,6 +121,12 @@ public:
   /// Create an address from an IP address string in dotted decimal form.
   ASIO_DECL static address_v4 from_string(
       const std::string& str, asio::error_code& ec);
+
+  /// Determine whether the address is a loopback address.
+  ASIO_DECL bool is_loopback() const;
+
+  /// Determine whether the address is unspecified.
+  ASIO_DECL bool is_unspecified() const;
 
   /// Determine whether the address is a class A address.
   ASIO_DECL bool is_class_a() const;
@@ -148,19 +179,19 @@ public:
   /// Obtain an address object that represents any address.
   static address_v4 any()
   {
-    return address_v4(static_cast<unsigned long>(INADDR_ANY));
+    return address_v4();
   }
 
   /// Obtain an address object that represents the loopback address.
   static address_v4 loopback()
   {
-    return address_v4(static_cast<unsigned long>(INADDR_LOOPBACK));
+    return address_v4(0x7F000001);
   }
 
   /// Obtain an address object that represents the broadcast address.
   static address_v4 broadcast()
   {
-    return address_v4(static_cast<unsigned long>(INADDR_BROADCAST));
+    return address_v4(0xFFFFFFFF);
   }
 
   /// Obtain an address object that represents the broadcast address that
@@ -177,7 +208,7 @@ private:
   asio::detail::in4_addr_type addr_;
 };
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
 
 /// Output an address as a string.
 /**
@@ -195,7 +226,7 @@ template <typename Elem, typename Traits>
 std::basic_ostream<Elem, Traits>& operator<<(
     std::basic_ostream<Elem, Traits>& os, const address_v4& addr);
 
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 } // namespace ip
 } // namespace asio

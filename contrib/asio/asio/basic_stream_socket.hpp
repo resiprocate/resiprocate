@@ -2,7 +2,7 @@
 // basic_stream_socket.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,9 @@
 
 #include "asio/detail/config.hpp"
 #include <cstddef>
+#include "asio/async_result.hpp"
 #include "asio/basic_socket.hpp"
+#include "asio/detail/handler_type_requirements.hpp"
 #include "asio/detail/throw_error.hpp"
 #include "asio/error.hpp"
 #include "asio/stream_socket_service.hpp"
@@ -44,8 +46,12 @@ class basic_stream_socket
   : public basic_socket<Protocol, StreamSocketService>
 {
 public:
+  /// (Deprecated: Use native_handle_type.) The native representation of a
+  /// socket.
+  typedef typename StreamSocketService::native_handle_type native_type;
+
   /// The native representation of a socket.
-  typedef typename StreamSocketService::native_type native_type;
+  typedef typename StreamSocketService::native_handle_type native_handle_type;
 
   /// The protocol type.
   typedef Protocol protocol_type;
@@ -121,11 +127,88 @@ public:
    * @throws asio::system_error Thrown on failure.
    */
   basic_stream_socket(asio::io_service& io_service,
-      const protocol_type& protocol, const native_type& native_socket)
+      const protocol_type& protocol, const native_handle_type& native_socket)
     : basic_socket<Protocol, StreamSocketService>(
         io_service, protocol, native_socket)
   {
   }
+
+#if defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
+  /// Move-construct a basic_stream_socket from another.
+  /**
+   * This constructor moves a stream socket from one object to another.
+   *
+   * @param other The other basic_stream_socket object from which the move
+   * will occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_stream_socket(io_service&) constructor.
+   */
+  basic_stream_socket(basic_stream_socket&& other)
+    : basic_socket<Protocol, StreamSocketService>(
+        ASIO_MOVE_CAST(basic_stream_socket)(other))
+  {
+  }
+
+  /// Move-assign a basic_stream_socket from another.
+  /**
+   * This assignment operator moves a stream socket from one object to another.
+   *
+   * @param other The other basic_stream_socket object from which the move
+   * will occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_stream_socket(io_service&) constructor.
+   */
+  basic_stream_socket& operator=(basic_stream_socket&& other)
+  {
+    basic_socket<Protocol, StreamSocketService>::operator=(
+        ASIO_MOVE_CAST(basic_stream_socket)(other));
+    return *this;
+  }
+
+  /// Move-construct a basic_stream_socket from a socket of another protocol
+  /// type.
+  /**
+   * This constructor moves a stream socket from one object to another.
+   *
+   * @param other The other basic_stream_socket object from which the move
+   * will occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_stream_socket(io_service&) constructor.
+   */
+  template <typename Protocol1, typename StreamSocketService1>
+  basic_stream_socket(
+      basic_stream_socket<Protocol1, StreamSocketService1>&& other,
+      typename enable_if<is_convertible<Protocol1, Protocol>::value>::type* = 0)
+    : basic_socket<Protocol, StreamSocketService>(
+        ASIO_MOVE_CAST2(basic_stream_socket<
+          Protocol1, StreamSocketService1>)(other))
+  {
+  }
+
+  /// Move-assign a basic_stream_socket from a socket of another protocol type.
+  /**
+   * This assignment operator moves a stream socket from one object to another.
+   *
+   * @param other The other basic_stream_socket object from which the move
+   * will occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_stream_socket(io_service&) constructor.
+   */
+  template <typename Protocol1, typename StreamSocketService1>
+  typename enable_if<is_convertible<Protocol1, Protocol>::value,
+      basic_stream_socket>::type& operator=(
+        basic_stream_socket<Protocol1, StreamSocketService1>&& other)
+  {
+    basic_socket<Protocol, StreamSocketService>::operator=(
+        ASIO_MOVE_CAST2(basic_stream_socket<
+          Protocol1, StreamSocketService1>)(other));
+    return *this;
+  }
+#endif // defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
 
   /// Send some data on the socket.
   /**
@@ -156,9 +239,9 @@ public:
   std::size_t send(const ConstBufferSequence& buffers)
   {
     asio::error_code ec;
-    std::size_t s = this->service.send(
-        this->implementation, buffers, 0, ec);
-    asio::detail::throw_error(ec);
+    std::size_t s = this->get_service().send(
+        this->get_implementation(), buffers, 0, ec);
+    asio::detail::throw_error(ec, "send");
     return s;
   }
 
@@ -194,9 +277,9 @@ public:
       socket_base::message_flags flags)
   {
     asio::error_code ec;
-    std::size_t s = this->service.send(
-        this->implementation, buffers, flags, ec);
-    asio::detail::throw_error(ec);
+    std::size_t s = this->get_service().send(
+        this->get_implementation(), buffers, flags, ec);
+    asio::detail::throw_error(ec, "send");
     return s;
   }
 
@@ -222,7 +305,8 @@ public:
   std::size_t send(const ConstBufferSequence& buffers,
       socket_base::message_flags flags, asio::error_code& ec)
   {
-    return this->service.send(this->implementation, buffers, flags, ec);
+    return this->get_service().send(
+        this->get_implementation(), buffers, flags, ec);
   }
 
   /// Start an asynchronous send.
@@ -261,9 +345,18 @@ public:
    * std::vector.
    */
   template <typename ConstBufferSequence, typename WriteHandler>
-  void async_send(const ConstBufferSequence& buffers, WriteHandler handler)
+  ASIO_INITFN_RESULT_TYPE(WriteHandler,
+      void (asio::error_code, std::size_t))
+  async_send(const ConstBufferSequence& buffers,
+      ASIO_MOVE_ARG(WriteHandler) handler)
   {
-    this->service.async_send(this->implementation, buffers, 0, handler);
+    // If you get an error on the following line it means that your handler does
+    // not meet the documented type requirements for a WriteHandler.
+    ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
+
+    return this->get_service().async_send(
+        this->get_implementation(), buffers, 0,
+        ASIO_MOVE_CAST(WriteHandler)(handler));
   }
 
   /// Start an asynchronous send.
@@ -304,10 +397,19 @@ public:
    * std::vector.
    */
   template <typename ConstBufferSequence, typename WriteHandler>
-  void async_send(const ConstBufferSequence& buffers,
-      socket_base::message_flags flags, WriteHandler handler)
+  ASIO_INITFN_RESULT_TYPE(WriteHandler,
+      void (asio::error_code, std::size_t))
+  async_send(const ConstBufferSequence& buffers,
+      socket_base::message_flags flags,
+      ASIO_MOVE_ARG(WriteHandler) handler)
   {
-    this->service.async_send(this->implementation, buffers, flags, handler);
+    // If you get an error on the following line it means that your handler does
+    // not meet the documented type requirements for a WriteHandler.
+    ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
+
+    return this->get_service().async_send(
+        this->get_implementation(), buffers, flags,
+        ASIO_MOVE_CAST(WriteHandler)(handler));
   }
 
   /// Receive some data on the socket.
@@ -342,8 +444,9 @@ public:
   std::size_t receive(const MutableBufferSequence& buffers)
   {
     asio::error_code ec;
-    std::size_t s = this->service.receive(this->implementation, buffers, 0, ec);
-    asio::detail::throw_error(ec);
+    std::size_t s = this->get_service().receive(
+        this->get_implementation(), buffers, 0, ec);
+    asio::detail::throw_error(ec, "receive");
     return s;
   }
 
@@ -382,9 +485,9 @@ public:
       socket_base::message_flags flags)
   {
     asio::error_code ec;
-    std::size_t s = this->service.receive(
-        this->implementation, buffers, flags, ec);
-    asio::detail::throw_error(ec);
+    std::size_t s = this->get_service().receive(
+        this->get_implementation(), buffers, flags, ec);
+    asio::detail::throw_error(ec, "receive");
     return s;
   }
 
@@ -410,7 +513,8 @@ public:
   std::size_t receive(const MutableBufferSequence& buffers,
       socket_base::message_flags flags, asio::error_code& ec)
   {
-    return this->service.receive(this->implementation, buffers, flags, ec);
+    return this->get_service().receive(
+        this->get_implementation(), buffers, flags, ec);
   }
 
   /// Start an asynchronous receive.
@@ -451,9 +555,17 @@ public:
    * std::vector.
    */
   template <typename MutableBufferSequence, typename ReadHandler>
-  void async_receive(const MutableBufferSequence& buffers, ReadHandler handler)
+  ASIO_INITFN_RESULT_TYPE(ReadHandler,
+      void (asio::error_code, std::size_t))
+  async_receive(const MutableBufferSequence& buffers,
+      ASIO_MOVE_ARG(ReadHandler) handler)
   {
-    this->service.async_receive(this->implementation, buffers, 0, handler);
+    // If you get an error on the following line it means that your handler does
+    // not meet the documented type requirements for a ReadHandler.
+    ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+
+    return this->get_service().async_receive(this->get_implementation(),
+        buffers, 0, ASIO_MOVE_CAST(ReadHandler)(handler));
   }
 
   /// Start an asynchronous receive.
@@ -496,10 +608,18 @@ public:
    * std::vector.
    */
   template <typename MutableBufferSequence, typename ReadHandler>
-  void async_receive(const MutableBufferSequence& buffers,
-      socket_base::message_flags flags, ReadHandler handler)
+  ASIO_INITFN_RESULT_TYPE(ReadHandler,
+      void (asio::error_code, std::size_t))
+  async_receive(const MutableBufferSequence& buffers,
+      socket_base::message_flags flags,
+      ASIO_MOVE_ARG(ReadHandler) handler)
   {
-    this->service.async_receive(this->implementation, buffers, flags, handler);
+    // If you get an error on the following line it means that your handler does
+    // not meet the documented type requirements for a ReadHandler.
+    ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+
+    return this->get_service().async_receive(this->get_implementation(),
+        buffers, flags, ASIO_MOVE_CAST(ReadHandler)(handler));
   }
 
   /// Write some data to the socket.
@@ -533,8 +653,9 @@ public:
   std::size_t write_some(const ConstBufferSequence& buffers)
   {
     asio::error_code ec;
-    std::size_t s = this->service.send(this->implementation, buffers, 0, ec);
-    asio::detail::throw_error(ec);
+    std::size_t s = this->get_service().send(
+        this->get_implementation(), buffers, 0, ec);
+    asio::detail::throw_error(ec, "write_some");
     return s;
   }
 
@@ -558,7 +679,7 @@ public:
   std::size_t write_some(const ConstBufferSequence& buffers,
       asio::error_code& ec)
   {
-    return this->service.send(this->implementation, buffers, 0, ec);
+    return this->get_service().send(this->get_implementation(), buffers, 0, ec);
   }
 
   /// Start an asynchronous write.
@@ -597,10 +718,17 @@ public:
    * std::vector.
    */
   template <typename ConstBufferSequence, typename WriteHandler>
-  void async_write_some(const ConstBufferSequence& buffers,
-      WriteHandler handler)
+  ASIO_INITFN_RESULT_TYPE(WriteHandler,
+      void (asio::error_code, std::size_t))
+  async_write_some(const ConstBufferSequence& buffers,
+      ASIO_MOVE_ARG(WriteHandler) handler)
   {
-    this->service.async_send(this->implementation, buffers, 0, handler);
+    // If you get an error on the following line it means that your handler does
+    // not meet the documented type requirements for a WriteHandler.
+    ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
+
+    return this->get_service().async_send(this->get_implementation(),
+        buffers, 0, ASIO_MOVE_CAST(WriteHandler)(handler));
   }
 
   /// Read some data from the socket.
@@ -635,8 +763,9 @@ public:
   std::size_t read_some(const MutableBufferSequence& buffers)
   {
     asio::error_code ec;
-    std::size_t s = this->service.receive(this->implementation, buffers, 0, ec);
-    asio::detail::throw_error(ec);
+    std::size_t s = this->get_service().receive(
+        this->get_implementation(), buffers, 0, ec);
+    asio::detail::throw_error(ec, "read_some");
     return s;
   }
 
@@ -661,7 +790,8 @@ public:
   std::size_t read_some(const MutableBufferSequence& buffers,
       asio::error_code& ec)
   {
-    return this->service.receive(this->implementation, buffers, 0, ec);
+    return this->get_service().receive(
+        this->get_implementation(), buffers, 0, ec);
   }
 
   /// Start an asynchronous read.
@@ -701,10 +831,17 @@ public:
    * std::vector.
    */
   template <typename MutableBufferSequence, typename ReadHandler>
-  void async_read_some(const MutableBufferSequence& buffers,
-      ReadHandler handler)
+  ASIO_INITFN_RESULT_TYPE(ReadHandler,
+      void (asio::error_code, std::size_t))
+  async_read_some(const MutableBufferSequence& buffers,
+      ASIO_MOVE_ARG(ReadHandler) handler)
   {
-    this->service.async_receive(this->implementation, buffers, 0, handler);
+    // If you get an error on the following line it means that your handler does
+    // not meet the documented type requirements for a ReadHandler.
+    ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+
+    return this->get_service().async_receive(this->get_implementation(),
+        buffers, 0, ASIO_MOVE_CAST(ReadHandler)(handler));
   }
 };
 

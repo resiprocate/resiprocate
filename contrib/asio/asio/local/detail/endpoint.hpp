@@ -2,7 +2,7 @@
 // local/detail/endpoint.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Derived from a public domain implementation written by Daniel Casimiro.
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -38,10 +38,10 @@ public:
   ASIO_DECL endpoint();
 
   // Construct an endpoint using the specified path name.
-  ASIO_DECL endpoint(const char* path);
+  ASIO_DECL endpoint(const char* path_name);
 
   // Construct an endpoint using the specified path name.
-  ASIO_DECL endpoint(const std::string& path);
+  ASIO_DECL endpoint(const std::string& path_name);
 
   // Copy constructor.
   endpoint(const endpoint& other)

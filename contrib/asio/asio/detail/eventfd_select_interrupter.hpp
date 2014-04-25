@@ -2,7 +2,7 @@
 // detail/eventfd_select_interrupter.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Roelof Naude (roelof.naude at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -34,6 +34,9 @@ public:
   // Destructor.
   ASIO_DECL ~eventfd_select_interrupter();
 
+  // Recreate the interrupter's descriptors. Used after a fork.
+  ASIO_DECL void recreate();
+
   // Interrupt the select call.
   ASIO_DECL void interrupt();
 
@@ -47,6 +50,12 @@ public:
   }
 
 private:
+  // Open the descriptors. Throws on error.
+  ASIO_DECL void open_descriptors();
+
+  // Close the descriptors.
+  ASIO_DECL void close_descriptors();
+
   // The read end of a connection used to interrupt the select call. This file
   // descriptor is passed to select such that when it is time to stop, a single
   // 64bit value will be written on the other end of the connection and this

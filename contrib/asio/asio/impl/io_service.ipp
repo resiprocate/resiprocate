@@ -2,7 +2,7 @@
 // impl/io_service.ipp
 // ~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,8 +16,9 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
-#include <boost/limits.hpp>
 #include "asio/io_service.hpp"
+#include "asio/detail/limits.hpp"
+#include "asio/detail/scoped_ptr.hpp"
 #include "asio/detail/service_registry.hpp"
 #include "asio/detail/throw_error.hpp"
 
@@ -32,17 +33,18 @@
 namespace asio {
 
 io_service::io_service()
-  : service_registry_(new asio::detail::service_registry(*this)),
-    impl_(service_registry_->use_service<impl_type>())
+  : service_registry_(new asio::detail::service_registry(
+        *this, static_cast<impl_type*>(0),
+        (std::numeric_limits<std::size_t>::max)())),
+    impl_(service_registry_->first_service<impl_type>())
 {
-  impl_.init((std::numeric_limits<std::size_t>::max)());
 }
 
 io_service::io_service(std::size_t concurrency_hint)
-  : service_registry_(new asio::detail::service_registry(*this)),
-    impl_(service_registry_->use_service<impl_type>())
+  : service_registry_(new asio::detail::service_registry(
+        *this, static_cast<impl_type*>(0), concurrency_hint)),
+    impl_(service_registry_->first_service<impl_type>())
 {
-  impl_.init(concurrency_hint);
 }
 
 io_service::~io_service()
@@ -107,9 +109,19 @@ void io_service::stop()
   impl_.stop();
 }
 
+bool io_service::stopped() const
+{
+  return impl_.stopped();
+}
+
 void io_service::reset()
 {
   impl_.reset();
+}
+
+void io_service::notify_fork(asio::io_service::fork_event event)
+{
+  service_registry_->notify_fork(event);
 }
 
 io_service::service::service(asio::io_service& owner)
@@ -119,6 +131,10 @@ io_service::service::service(asio::io_service& owner)
 }
 
 io_service::service::~service()
+{
+}
+
+void io_service::service::fork_service(asio::io_service::fork_event)
 {
 }
 

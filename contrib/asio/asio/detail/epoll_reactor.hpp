@@ -2,7 +2,7 @@
 // detail/epoll_reactor.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -20,17 +20,17 @@
 #if defined(ASIO_HAS_EPOLL)
 
 #include "asio/io_service.hpp"
-#include "asio/detail/epoll_reactor_fwd.hpp"
+#include "asio/detail/atomic_count.hpp"
+#include "asio/detail/limits.hpp"
 #include "asio/detail/mutex.hpp"
 #include "asio/detail/object_pool.hpp"
 #include "asio/detail/op_queue.hpp"
 #include "asio/detail/reactor_op.hpp"
 #include "asio/detail/select_interrupter.hpp"
 #include "asio/detail/socket_types.hpp"
-#include "asio/detail/timer_op.hpp"
 #include "asio/detail/timer_queue_base.hpp"
-#include "asio/detail/timer_queue_fwd.hpp"
 #include "asio/detail/timer_queue_set.hpp"
+#include "asio/detail/wait_op.hpp"
 
 #include "asio/detail/push_options.hpp"
 
@@ -41,19 +41,31 @@ class epoll_reactor
   : public asio::detail::service_base<epoll_reactor>
 {
 public:
-  enum { read_op = 0, write_op = 1,
+  enum op_types { read_op = 0, write_op = 1,
     connect_op = 1, except_op = 2, max_ops = 3 };
 
   // Per-descriptor queues.
-  class descriptor_state
+  class descriptor_state : operation
   {
     friend class epoll_reactor;
     friend class object_pool_access;
-    mutex mutex_;
-    op_queue<reactor_op> op_queue_[max_ops];
-    bool shutdown_;
+
     descriptor_state* next_;
     descriptor_state* prev_;
+
+    mutex mutex_;
+    epoll_reactor* reactor_;
+    int descriptor_;
+    uint32_t registered_events_;
+    op_queue<reactor_op> op_queue_[max_ops];
+    bool shutdown_;
+
+    ASIO_DECL descriptor_state();
+    void set_ready_events(uint32_t events) { task_result_ = events; }
+    ASIO_DECL operation* perform_io(uint32_t events);
+    ASIO_DECL static void do_complete(
+        io_service_impl* owner, operation* base,
+        const asio::error_code& ec, std::size_t bytes_transferred);
   };
 
   // Per-descriptor data.
@@ -68,6 +80,10 @@ public:
   // Destroy all user-defined handler objects owned by the service.
   ASIO_DECL void shutdown_service();
 
+  // Recreate internal descriptors following a fork.
+  ASIO_DECL void fork_service(
+      asio::io_service::fork_event fork_ev);
+
   // Initialise the task.
   ASIO_DECL void init_task();
 
@@ -76,17 +92,28 @@ public:
   ASIO_DECL int register_descriptor(socket_type descriptor,
       per_descriptor_data& descriptor_data);
 
+  // Register a descriptor with an associated single operation. Returns 0 on
+  // success, system error code on failure.
+  ASIO_DECL int register_internal_descriptor(
+      int op_type, socket_type descriptor,
+      per_descriptor_data& descriptor_data, reactor_op* op);
+
+  // Move descriptor registration from one descriptor_data object to another.
+  ASIO_DECL void move_descriptor(socket_type descriptor,
+      per_descriptor_data& target_descriptor_data,
+      per_descriptor_data& source_descriptor_data);
+
   // Post a reactor operation for immediate completion.
-  void post_immediate_completion(reactor_op* op)
+  void post_immediate_completion(reactor_op* op, bool is_continuation)
   {
-    io_service_.post_immediate_completion(op);
+    io_service_.post_immediate_completion(op, is_continuation);
   }
 
   // Start a new operation. The reactor operation will be performed when the
   // given descriptor is flagged as ready, or an error has occurred.
   ASIO_DECL void start_op(int op_type, socket_type descriptor,
-      per_descriptor_data& descriptor_data,
-      reactor_op* op, bool allow_speculative);
+      per_descriptor_data& descriptor_data, reactor_op* op,
+      bool is_continuation, bool allow_speculative);
 
   // Cancel all operations associated with the given descriptor. The
   // handlers associated with the descriptor will be invoked with the
@@ -96,8 +123,12 @@ public:
 
   // Cancel any operations that are running against the descriptor and remove
   // its registration from the reactor.
-  ASIO_DECL void close_descriptor(socket_type descriptor,
-      per_descriptor_data& descriptor_data);
+  ASIO_DECL void deregister_descriptor(socket_type descriptor,
+      per_descriptor_data& descriptor_data, bool closing);
+
+  // Remote the descriptor's registration from the reactor.
+  ASIO_DECL void deregister_internal_descriptor(
+      socket_type descriptor, per_descriptor_data& descriptor_data);
 
   // Add a new timer queue to the reactor.
   template <typename Time_Traits>
@@ -112,13 +143,14 @@ public:
   template <typename Time_Traits>
   void schedule_timer(timer_queue<Time_Traits>& queue,
       const typename Time_Traits::time_type& time,
-      typename timer_queue<Time_Traits>::per_timer_data& timer, timer_op* op);
+      typename timer_queue<Time_Traits>::per_timer_data& timer, wait_op* op);
 
   // Cancel the timer operations associated with the given token. Returns the
   // number of operations that have been posted or dispatched.
   template <typename Time_Traits>
   std::size_t cancel_timer(timer_queue<Time_Traits>& queue,
-      typename timer_queue<Time_Traits>::per_timer_data& timer);
+      typename timer_queue<Time_Traits>::per_timer_data& timer,
+      std::size_t max_cancelled = (std::numeric_limits<std::size_t>::max)());
 
   // Run epoll once until interrupted or events are ready to be dispatched.
   ASIO_DECL void run(bool block, op_queue<operation>& ops);
@@ -133,6 +165,15 @@ private:
   // Create the epoll file descriptor. Throws an exception if the descriptor
   // cannot be created.
   ASIO_DECL static int do_epoll_create();
+
+  // Create the timerfd file descriptor. Does not throw.
+  ASIO_DECL static int do_timerfd_create();
+
+  // Allocate a new descriptor state object.
+  ASIO_DECL descriptor_state* allocate_descriptor_state();
+
+  // Free an existing descriptor state object.
+  ASIO_DECL void free_descriptor_state(descriptor_state* s);
 
   // Helper function to add a new timer queue.
   ASIO_DECL void do_add_timer_queue(timer_queue_base& queue);
@@ -160,14 +201,14 @@ private:
   // Mutex to protect access to internal data.
   mutex mutex_;
 
+  // The interrupter is used to break a blocking epoll_wait call.
+  select_interrupter interrupter_;
+
   // The epoll file descriptor.
   int epoll_fd_;
 
   // The timer file descriptor.
   int timer_fd_;
-
-  // The interrupter is used to break a blocking epoll_wait call.
-  select_interrupter interrupter_;
 
   // The timer queues.
   timer_queue_set timer_queues_;
@@ -180,6 +221,10 @@ private:
 
   // Keep track of all registered descriptors.
   object_pool<descriptor_state> registered_descriptors_;
+
+  // Helper class to do post-perform_io cleanup.
+  struct perform_io_cleanup_on_block_exit;
+  friend struct perform_io_cleanup_on_block_exit;
 };
 
 } // namespace detail

@@ -2,7 +2,7 @@
 // detail/win_iocp_socket_accept_op.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,7 +19,7 @@
 
 #if defined(ASIO_HAS_IOCP)
 
-#include <boost/utility/addressof.hpp>
+#include "asio/detail/addressof.hpp"
 #include "asio/detail/bind_handler.hpp"
 #include "asio/detail/buffer_sequence_adapter.hpp"
 #include "asio/detail/fenced_block.hpp"
@@ -44,7 +44,7 @@ public:
   win_iocp_socket_accept_op(win_iocp_socket_service_base& socket_service,
       socket_type socket, Socket& peer, const Protocol& protocol,
       typename Protocol::endpoint* peer_endpoint,
-      bool enable_connection_aborted, Handler handler)
+      bool enable_connection_aborted, Handler& handler)
     : operation(&win_iocp_socket_accept_op::do_complete),
       socket_service_(socket_service),
       socket_(socket),
@@ -52,7 +52,7 @@ public:
       protocol_(protocol),
       peer_endpoint_(peer_endpoint),
       enable_connection_aborted_(enable_connection_aborted),
-      handler_(handler)
+      handler_(ASIO_MOVE_CAST(Handler)(handler))
   {
   }
 
@@ -72,11 +72,14 @@ public:
   }
 
   static void do_complete(io_service_impl* owner, operation* base,
-      asio::error_code ec, std::size_t /*bytes_transferred*/)
+      const asio::error_code& result_ec,
+      std::size_t /*bytes_transferred*/)
   {
+    asio::error_code ec(result_ec);
+
     // Take ownership of the operation object.
     win_iocp_socket_accept_op* o(static_cast<win_iocp_socket_accept_op*>(base));
-    ptr p = { boost::addressof(o->handler_), o, o };
+    ptr p = { asio::detail::addressof(o->handler_), o, o };
 
     if (owner)
     {
@@ -106,7 +109,7 @@ public:
       if (!ec)
       {
         o->peer_.assign(o->protocol_,
-            typename Socket::native_type(
+            typename Socket::native_handle_type(
               o->new_socket_.get(), peer_endpoint), ec);
         if (!ec)
           o->new_socket_.release();
@@ -117,6 +120,8 @@ public:
         *o->peer_endpoint_ = peer_endpoint;
     }
 
+    ASIO_HANDLER_COMPLETION((o));
+
     // Make a copy of the handler so that the memory can be deallocated before
     // the upcall is made. Even if we're not about to make an upcall, a
     // sub-object of the handler may be the true owner of the memory associated
@@ -125,14 +130,16 @@ public:
     // deallocated the memory here.
     detail::binder1<Handler, asio::error_code>
       handler(o->handler_, ec);
-    p.h = boost::addressof(handler.handler_);
+    p.h = asio::detail::addressof(handler.handler_);
     p.reset();
 
     // Make the upcall if required.
     if (owner)
     {
-      asio::detail::fenced_block b;
+      fenced_block b(fenced_block::half);
+      ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
       asio_handler_invoke_helpers::invoke(handler, handler.handler_);
+      ASIO_HANDLER_INVOCATION_END;
     }
   }
 

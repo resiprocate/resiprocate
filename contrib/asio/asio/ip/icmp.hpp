@@ -2,7 +2,7 @@
 // ip/icmp.hpp
 // ~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -45,28 +45,24 @@ public:
   /// The type of a ICMP endpoint.
   typedef basic_endpoint<icmp> endpoint;
 
-  /// (Deprecated: use resolver::query.) The type of a resolver query.
-  typedef basic_resolver_query<icmp> resolver_query;
-
-  /// (Deprecated: use resolver::iterator.) The type of a resolver iterator.
-  typedef basic_resolver_iterator<icmp> resolver_iterator;
-
   /// Construct to represent the IPv4 ICMP protocol.
   static icmp v4()
   {
-    return icmp(IPPROTO_ICMP, PF_INET);
+    return icmp(ASIO_OS_DEF(IPPROTO_ICMP),
+        ASIO_OS_DEF(AF_INET));
   }
 
   /// Construct to represent the IPv6 ICMP protocol.
   static icmp v6()
   {
-    return icmp(IPPROTO_ICMPV6, PF_INET6);
+    return icmp(ASIO_OS_DEF(IPPROTO_ICMPV6),
+        ASIO_OS_DEF(AF_INET6));
   }
 
   /// Obtain an identifier for the type of the protocol.
   int type() const
   {
-    return SOCK_RAW;
+    return ASIO_OS_DEF(SOCK_RAW);
   }
 
   /// Obtain an identifier for the protocol.
@@ -101,9 +97,9 @@ public:
 
 private:
   // Construct with a specific family.
-  explicit icmp(int protocol, int family)
-    : protocol_(protocol),
-      family_(family)
+  explicit icmp(int protocol_id, int protocol_family)
+    : protocol_(protocol_id),
+      family_(protocol_family)
   {
   }
 

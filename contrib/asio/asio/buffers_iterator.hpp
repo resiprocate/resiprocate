@@ -2,7 +2,7 @@
 // buffers_iterator.hpp
 // ~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,12 +17,10 @@
 
 #include "asio/detail/config.hpp"
 #include <cstddef>
-#include <boost/assert.hpp>
-#include <boost/detail/workaround.hpp>
-#include <boost/iterator.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-#include <boost/type_traits/add_const.hpp>
+#include <iterator>
 #include "asio/buffer.hpp"
+#include "asio/detail/assert.hpp"
+#include "asio/detail/type_traits.hpp"
 
 #include "asio/detail/push_options.hpp"
 
@@ -40,7 +38,7 @@ namespace detail
     template <typename ByteType>
     struct byte_type
     {
-      typedef typename boost::add_const<ByteType>::type type;
+      typedef typename add_const<ByteType>::type type;
     };
   };
 
@@ -60,8 +58,9 @@ namespace detail
   {
     enum
     {
-      is_mutable = boost::is_convertible<
-        typename BufferSequence::value_type, mutable_buffer>::value
+      is_mutable = is_convertible<
+          typename BufferSequence::value_type,
+          mutable_buffer>::value
     };
     typedef buffers_iterator_types_helper<is_mutable> helper;
     typedef typename helper::buffer_type buffer_type;
@@ -72,18 +71,47 @@ namespace detail
 /// A random access iterator over the bytes in a buffer sequence.
 template <typename BufferSequence, typename ByteType = char>
 class buffers_iterator
-  : public boost::iterator<
-      std::random_access_iterator_tag,
-      typename detail::buffers_iterator_types<
-        BufferSequence, ByteType>::byte_type>
 {
 private:
   typedef typename detail::buffers_iterator_types<
       BufferSequence, ByteType>::buffer_type buffer_type;
-  typedef typename detail::buffers_iterator_types<
-      BufferSequence, ByteType>::byte_type byte_type;
 
 public:
+  /// The type used for the distance between two iterators.
+  typedef std::ptrdiff_t difference_type;
+
+  /// The type of the value pointed to by the iterator.
+  typedef ByteType value_type;
+
+#if defined(GENERATING_DOCUMENTATION)
+  /// The type of the result of applying operator->() to the iterator.
+  /**
+   * If the buffer sequence stores buffer objects that are convertible to
+   * mutable_buffer, this is a pointer to a non-const ByteType. Otherwise, a
+   * pointer to a const ByteType.
+   */
+  typedef const_or_non_const_ByteType* pointer;
+#else // defined(GENERATING_DOCUMENTATION)
+  typedef typename detail::buffers_iterator_types<
+      BufferSequence, ByteType>::byte_type* pointer;
+#endif // defined(GENERATING_DOCUMENTATION)
+
+#if defined(GENERATING_DOCUMENTATION)
+  /// The type of the result of applying operator*() to the iterator.
+  /**
+   * If the buffer sequence stores buffer objects that are convertible to
+   * mutable_buffer, this is a reference to a non-const ByteType. Otherwise, a
+   * reference to a const ByteType.
+   */
+  typedef const_or_non_const_ByteType& reference;
+#else // defined(GENERATING_DOCUMENTATION)
+  typedef typename detail::buffers_iterator_types<
+      BufferSequence, ByteType>::byte_type& reference;
+#endif // defined(GENERATING_DOCUMENTATION)
+
+  /// The iterator category.
+  typedef std::random_access_iterator_tag iterator_category;
+
   /// Default constructor. Creates an iterator in an undefined state.
   buffers_iterator()
     : current_buffer_(),
@@ -97,9 +125,9 @@ public:
 
   /// Construct an iterator representing the beginning of the buffers' data.
   static buffers_iterator begin(const BufferSequence& buffers)
-#if BOOST_WORKAROUND(__GNUC__, == 4) && BOOST_WORKAROUND(__GNUC_MINOR__, == 3)
-    __attribute__ ((noinline))
-#endif
+#if defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 3)
+    __attribute__ ((__noinline__))
+#endif // defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 3)
   {
     buffers_iterator new_iter;
     new_iter.begin_ = buffers.begin();
@@ -117,9 +145,9 @@ public:
 
   /// Construct an iterator representing the end of the buffers' data.
   static buffers_iterator end(const BufferSequence& buffers)
-#if BOOST_WORKAROUND(__GNUC__, == 4) && BOOST_WORKAROUND(__GNUC_MINOR__, == 3)
-    __attribute__ ((noinline))
-#endif
+#if defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 3)
+    __attribute__ ((__noinline__))
+#endif // defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 3)
   {
     buffers_iterator new_iter;
     new_iter.begin_ = buffers.begin();
@@ -135,19 +163,19 @@ public:
   }
 
   /// Dereference an iterator.
-  byte_type& operator*() const
+  reference operator*() const
   {
     return dereference();
   }
 
   /// Dereference an iterator.
-  byte_type* operator->() const
+  pointer operator->() const
   {
     return &dereference();
   }
 
   /// Access an individual element.
-  byte_type& operator[](std::ptrdiff_t difference) const
+  reference operator[](std::ptrdiff_t difference) const
   {
     buffers_iterator tmp(*this);
     tmp.advance(difference);
@@ -270,9 +298,9 @@ public:
 
 private:
   // Dereference the iterator.
-  byte_type& dereference() const
+  reference dereference() const
   {
-    return buffer_cast<byte_type*>(current_buffer_)[current_buffer_position_];
+    return buffer_cast<pointer>(current_buffer_)[current_buffer_position_];
   }
 
   // Compare two iterators for equality.
@@ -284,7 +312,7 @@ private:
   // Increment the iterator.
   void increment()
   {
-    BOOST_ASSERT(current_ != end_ && "iterator out of bounds");
+    ASIO_ASSERT(current_ != end_ && "iterator out of bounds");
     ++position_;
 
     // Check if the increment can be satisfied by the current buffer.
@@ -307,7 +335,7 @@ private:
   // Decrement the iterator.
   void decrement()
   {
-    BOOST_ASSERT(position_ > 0 && "iterator out of bounds");
+    ASIO_ASSERT(position_ > 0 && "iterator out of bounds");
     --position_;
 
     // Check if the decrement can be satisfied by the current buffer.
@@ -339,7 +367,7 @@ private:
   {
     if (n > 0)
     {
-      BOOST_ASSERT(current_ != end_ && "iterator out of bounds");
+      ASIO_ASSERT(current_ != end_ && "iterator out of bounds");
       for (;;)
       {
         std::ptrdiff_t current_buffer_balance
@@ -362,7 +390,7 @@ private:
         // next iteration of this loop.
         if (++current_ == end_)
         {
-          BOOST_ASSERT(n == 0 && "iterator out of bounds");
+          ASIO_ASSERT(n == 0 && "iterator out of bounds");
           current_buffer_ = buffer_type();
           current_buffer_position_ = 0;
           return;
@@ -374,7 +402,7 @@ private:
     else if (n < 0)
     {
       std::size_t abs_n = -n;
-      BOOST_ASSERT(position_ >= abs_n && "iterator out of bounds");
+      ASIO_ASSERT(position_ >= abs_n && "iterator out of bounds");
       for (;;)
       {
         // Check if the advance can be satisfied by the current buffer.
@@ -392,7 +420,7 @@ private:
         // Check if we've reached the beginning of the buffers.
         if (current_ == begin_)
         {
-          BOOST_ASSERT(abs_n == 0 && "iterator out of bounds");
+          ASIO_ASSERT(abs_n == 0 && "iterator out of bounds");
           current_buffer_position_ = 0;
           return;
         }

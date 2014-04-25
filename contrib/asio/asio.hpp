@@ -2,7 +2,7 @@
 // asio.hpp
 // ~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,16 +15,20 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
+#include "asio/async_result.hpp"
 #include "asio/basic_datagram_socket.hpp"
 #include "asio/basic_deadline_timer.hpp"
 #include "asio/basic_io_object.hpp"
 #include "asio/basic_raw_socket.hpp"
+#include "asio/basic_seq_packet_socket.hpp"
 #include "asio/basic_serial_port.hpp"
+#include "asio/basic_signal_set.hpp"
 #include "asio/basic_socket_acceptor.hpp"
 #include "asio/basic_socket_iostream.hpp"
 #include "asio/basic_socket_streambuf.hpp"
 #include "asio/basic_stream_socket.hpp"
 #include "asio/basic_streambuf.hpp"
+#include "asio/basic_waitable_timer.hpp"
 #include "asio/buffer.hpp"
 #include "asio/buffered_read_stream_fwd.hpp"
 #include "asio/buffered_read_stream.hpp"
@@ -34,13 +38,22 @@
 #include "asio/buffered_write_stream.hpp"
 #include "asio/buffers_iterator.hpp"
 #include "asio/completion_condition.hpp"
+#include "asio/connect.hpp"
+#include "asio/coroutine.hpp"
 #include "asio/datagram_socket_service.hpp"
 #include "asio/deadline_timer_service.hpp"
 #include "asio/deadline_timer.hpp"
 #include "asio/error.hpp"
 #include "asio/error_code.hpp"
+#include "asio/generic/basic_endpoint.hpp"
+#include "asio/generic/datagram_protocol.hpp"
+#include "asio/generic/raw_protocol.hpp"
+#include "asio/generic/seq_packet_protocol.hpp"
+#include "asio/generic/stream_protocol.hpp"
 #include "asio/handler_alloc_hook.hpp"
+#include "asio/handler_continuation_hook.hpp"
 #include "asio/handler_invoke_hook.hpp"
+#include "asio/handler_type.hpp"
 #include "asio/io_service.hpp"
 #include "asio/ip/address.hpp"
 #include "asio/ip/address_v4.hpp"
@@ -75,9 +88,12 @@
 #include "asio/read.hpp"
 #include "asio/read_at.hpp"
 #include "asio/read_until.hpp"
+#include "asio/seq_packet_socket_service.hpp"
 #include "asio/serial_port.hpp"
 #include "asio/serial_port_base.hpp"
 #include "asio/serial_port_service.hpp"
+#include "asio/signal_set.hpp"
+#include "asio/signal_set_service.hpp"
 #include "asio/socket_acceptor_service.hpp"
 #include "asio/socket_base.hpp"
 #include "asio/strand.hpp"
@@ -87,9 +103,14 @@
 #include "asio/thread.hpp"
 #include "asio/time_traits.hpp"
 #include "asio/version.hpp"
+#include "asio/wait_traits.hpp"
+#include "asio/waitable_timer_service.hpp"
 #include "asio/windows/basic_handle.hpp"
+#include "asio/windows/basic_object_handle.hpp"
 #include "asio/windows/basic_random_access_handle.hpp"
 #include "asio/windows/basic_stream_handle.hpp"
+#include "asio/windows/object_handle.hpp"
+#include "asio/windows/object_handle_service.hpp"
 #include "asio/windows/overlapped_ptr.hpp"
 #include "asio/windows/random_access_handle.hpp"
 #include "asio/windows/random_access_handle_service.hpp"

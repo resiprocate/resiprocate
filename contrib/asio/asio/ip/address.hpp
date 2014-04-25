@@ -2,7 +2,7 @@
 // ip/address.hpp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -21,9 +21,9 @@
 #include "asio/ip/address_v4.hpp"
 #include "asio/ip/address_v6.hpp"
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
 # include <iosfwd>
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 #include "asio/detail/push_options.hpp"
 
@@ -54,8 +54,18 @@ public:
   /// Copy constructor.
   ASIO_DECL address(const address& other);
 
+#if defined(ASIO_HAS_MOVE)
+  /// Move constructor.
+  ASIO_DECL address(address&& other);
+#endif // defined(ASIO_HAS_MOVE)
+
   /// Assign from another address.
   ASIO_DECL address& operator=(const address& other);
+
+#if defined(ASIO_HAS_MOVE)
+  /// Move-assign from another address.
+  ASIO_DECL address& operator=(address&& other);
+#endif // defined(ASIO_HAS_MOVE)
 
   /// Assign from an IPv4 address.
   ASIO_DECL address& operator=(
@@ -107,6 +117,15 @@ public:
   ASIO_DECL static address from_string(
       const std::string& str, asio::error_code& ec);
 
+  /// Determine whether the address is a loopback address.
+  ASIO_DECL bool is_loopback() const;
+
+  /// Determine whether the address is unspecified.
+  ASIO_DECL bool is_unspecified() const;
+
+  /// Determine whether the address is a multicast address.
+  ASIO_DECL bool is_multicast() const;
+
   /// Compare two addresses for equality.
   ASIO_DECL friend bool operator==(const address& a1, const address& a2);
 
@@ -148,7 +167,7 @@ private:
   asio::ip::address_v6 ipv6_address_;
 };
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
 
 /// Output an address as a string.
 /**
@@ -166,7 +185,7 @@ template <typename Elem, typename Traits>
 std::basic_ostream<Elem, Traits>& operator<<(
     std::basic_ostream<Elem, Traits>& os, const address& addr);
 
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 } // namespace ip
 } // namespace asio

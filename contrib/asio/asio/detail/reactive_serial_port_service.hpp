@@ -2,7 +2,7 @@
 // detail/reactive_serial_port_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Rep Invariant Systems, Inc. (info@repinvariant.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -19,7 +19,7 @@
 #include "asio/detail/config.hpp"
 
 #if defined(ASIO_HAS_SERIAL_PORT)
-#if !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#if !defined(ASIO_WINDOWS) && !defined(__CYGWIN__)
 
 #include <string>
 #include "asio/error.hpp"
@@ -38,7 +38,7 @@ class reactive_serial_port_service
 {
 public:
   // The native type of a serial port.
-  typedef reactive_descriptor_service::native_type native_type;
+  typedef reactive_descriptor_service::native_handle_type native_handle_type;
 
   // The implementation type of the serial port.
   typedef reactive_descriptor_service::implementation_type implementation_type;
@@ -55,6 +55,22 @@ public:
     descriptor_service_.construct(impl);
   }
 
+  // Move-construct a new serial port implementation.
+  void move_construct(implementation_type& impl,
+      implementation_type& other_impl)
+  {
+    descriptor_service_.move_construct(impl, other_impl);
+  }
+
+  // Move-assign from another serial port implementation.
+  void move_assign(implementation_type& impl,
+      reactive_serial_port_service& other_service,
+      implementation_type& other_impl)
+  {
+    descriptor_service_.move_assign(impl,
+        other_service.descriptor_service_, other_impl);
+  }
+
   // Destroy a serial port implementation.
   void destroy(implementation_type& impl)
   {
@@ -67,7 +83,8 @@ public:
 
   // Assign a native descriptor to a serial port implementation.
   asio::error_code assign(implementation_type& impl,
-      const native_type& native_descriptor, asio::error_code& ec)
+      const native_handle_type& native_descriptor,
+      asio::error_code& ec)
   {
     return descriptor_service_.assign(impl, native_descriptor, ec);
   }
@@ -86,9 +103,9 @@ public:
   }
 
   // Get the native serial port representation.
-  native_type native(implementation_type& impl)
+  native_handle_type native_handle(implementation_type& impl)
   {
-    return descriptor_service_.native(impl);
+    return descriptor_service_.native_handle(impl);
   }
 
   // Cancel all operations associated with the serial port.
@@ -124,7 +141,7 @@ public:
   {
     errno = 0;
     descriptor_ops::error_wrapper(::tcsendbreak(
-          descriptor_service_.native(impl), 0), ec);
+          descriptor_service_.native_handle(impl), 0), ec);
     return ec;
   }
 
@@ -140,7 +157,7 @@ public:
   // lifetime of the asynchronous operation.
   template <typename ConstBufferSequence, typename Handler>
   void async_write_some(implementation_type& impl,
-      const ConstBufferSequence& buffers, Handler handler)
+      const ConstBufferSequence& buffers, Handler& handler)
   {
     descriptor_service_.async_write_some(impl, buffers, handler);
   }
@@ -157,7 +174,7 @@ public:
   // valid for the lifetime of the asynchronous operation.
   template <typename MutableBufferSequence, typename Handler>
   void async_read_some(implementation_type& impl,
-      const MutableBufferSequence& buffers, Handler handler)
+      const MutableBufferSequence& buffers, Handler& handler)
   {
     descriptor_service_.async_read_some(impl, buffers, handler);
   }
@@ -211,7 +228,7 @@ private:
 # include "asio/detail/impl/reactive_serial_port_service.ipp"
 #endif // defined(ASIO_HEADER_ONLY)
 
-#endif // !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#endif // !defined(ASIO_WINDOWS) && !defined(__CYGWIN__)
 #endif // defined(ASIO_HAS_SERIAL_PORT)
 
 #endif // ASIO_DETAIL_REACTIVE_SERIAL_PORT_SERVICE_HPP

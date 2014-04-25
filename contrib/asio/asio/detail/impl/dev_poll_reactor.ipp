@@ -2,7 +2,7 @@
 // detail/impl/dev_poll_reactor.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -20,6 +20,7 @@
 #if defined(ASIO_HAS_DEV_POLL)
 
 #include "asio/detail/dev_poll_reactor.hpp"
+#include "asio/detail/assert.hpp"
 #include "asio/detail/throw_error.hpp"
 #include "asio/error.hpp"
 
@@ -37,7 +38,7 @@ dev_poll_reactor::dev_poll_reactor(asio::io_service& io_service)
     shutdown_(false)
 {
   // Add the interrupter's descriptor to /dev/poll.
-  ::pollfd ev = { 0 };
+  ::pollfd ev = { 0, 0, 0 };
   ev.fd = interrupter_.read_descriptor();
   ev.events = POLLIN | POLLERR;
   ev.revents = 0;
@@ -62,7 +63,67 @@ void dev_poll_reactor::shutdown_service()
     op_queue_[i].get_all_operations(ops);
 
   timer_queues_.get_all_timers(ops);
+
+  io_service_.abandon_operations(ops);
 } 
+
+// Helper class to re-register all descriptors with /dev/poll.
+class dev_poll_reactor::fork_helper
+{
+public:
+  fork_helper(dev_poll_reactor* reactor, short events)
+    : reactor_(reactor), events_(events)
+  {
+  }
+
+  bool set(int descriptor)
+  {
+    ::pollfd& ev = reactor_->add_pending_event_change(descriptor);
+    ev.events = events_;
+    return true;
+  }
+
+private:
+  dev_poll_reactor* reactor_;
+  short events_;
+};
+
+void dev_poll_reactor::fork_service(asio::io_service::fork_event fork_ev)
+{
+  if (fork_ev == asio::io_service::fork_child)
+  {
+    detail::mutex::scoped_lock lock(mutex_);
+
+    if (dev_poll_fd_ != -1)
+      ::close(dev_poll_fd_);
+    dev_poll_fd_ = -1;
+    dev_poll_fd_ = do_dev_poll_create();
+
+    interrupter_.recreate();
+
+    // Add the interrupter's descriptor to /dev/poll.
+    ::pollfd ev = { 0, 0, 0 };
+    ev.fd = interrupter_.read_descriptor();
+    ev.events = POLLIN | POLLERR;
+    ev.revents = 0;
+    ::write(dev_poll_fd_, &ev, sizeof(ev));
+
+    // Re-register all descriptors with /dev/poll. The changes will be written
+    // to the /dev/poll descriptor the next time the reactor is run.
+    op_queue<operation> ops;
+    fork_helper read_op_helper(this, POLLERR | POLLHUP | POLLIN);
+    op_queue_[read_op].get_descriptors(read_op_helper, ops);
+    fork_helper write_op_helper(this, POLLERR | POLLHUP | POLLOUT);
+    op_queue_[write_op].get_descriptors(write_op_helper, ops);
+    fork_helper except_op_helper(this, POLLERR | POLLHUP | POLLPRI);
+    op_queue_[except_op].get_descriptors(except_op_helper, ops);
+    interrupter_.interrupt();
+
+    // The ops op_queue will always be empty because the fork_helper's set()
+    // member function never returns false.
+    ASIO_ASSERT(ops.empty());
+  }
+}
 
 void dev_poll_reactor::init_task()
 {
@@ -74,15 +135,41 @@ int dev_poll_reactor::register_descriptor(socket_type, per_descriptor_data&)
   return 0;
 }
 
-void dev_poll_reactor::start_op(int op_type, socket_type descriptor,
+int dev_poll_reactor::register_internal_descriptor(int op_type,
+    socket_type descriptor, per_descriptor_data&, reactor_op* op)
+{
+  asio::detail::mutex::scoped_lock lock(mutex_);
+
+  op_queue_[op_type].enqueue_operation(descriptor, op);
+  ::pollfd& ev = add_pending_event_change(descriptor);
+  ev.events = POLLERR | POLLHUP;
+  switch (op_type)
+  {
+  case read_op: ev.events |= POLLIN; break;
+  case write_op: ev.events |= POLLOUT; break;
+  case except_op: ev.events |= POLLPRI; break;
+  default: break;
+  }
+  interrupter_.interrupt();
+
+  return 0;
+}
+
+void dev_poll_reactor::move_descriptor(socket_type,
     dev_poll_reactor::per_descriptor_data&,
-    reactor_op* op, bool allow_speculative)
+    dev_poll_reactor::per_descriptor_data&)
+{
+}
+
+void dev_poll_reactor::start_op(int op_type, socket_type descriptor,
+    dev_poll_reactor::per_descriptor_data&, reactor_op* op,
+    bool is_continuation, bool allow_speculative)
 {
   asio::detail::mutex::scoped_lock lock(mutex_);
 
   if (shutdown_)
   {
-    post_immediate_completion(op);
+    post_immediate_completion(op, is_continuation);
     return;
   }
 
@@ -95,7 +182,7 @@ void dev_poll_reactor::start_op(int op_type, socket_type descriptor,
         if (op->perform())
         {
           lock.unlock();
-          io_service_.post_immediate_completion(op);
+          io_service_.post_immediate_completion(op, is_continuation);
           return;
         }
       }
@@ -128,8 +215,8 @@ void dev_poll_reactor::cancel_ops(socket_type descriptor,
   cancel_ops_unlocked(descriptor, asio::error::operation_aborted);
 }
 
-void dev_poll_reactor::close_descriptor(socket_type descriptor,
-    dev_poll_reactor::per_descriptor_data&)
+void dev_poll_reactor::deregister_descriptor(socket_type descriptor,
+    dev_poll_reactor::per_descriptor_data&, bool)
 {
   asio::detail::mutex::scoped_lock lock(mutex_);
 
@@ -140,6 +227,26 @@ void dev_poll_reactor::close_descriptor(socket_type descriptor,
 
   // Cancel any outstanding operations associated with the descriptor.
   cancel_ops_unlocked(descriptor, asio::error::operation_aborted);
+}
+
+void dev_poll_reactor::deregister_internal_descriptor(
+    socket_type descriptor, dev_poll_reactor::per_descriptor_data&)
+{
+  asio::detail::mutex::scoped_lock lock(mutex_);
+
+  // Remove the descriptor from /dev/poll. Since this function is only called
+  // during a fork, we can apply the change immediately.
+  ::pollfd ev = { 0, 0, 0 };
+  ev.fd = descriptor;
+  ev.events = POLLREMOVE;
+  ev.revents = 0;
+  ::write(dev_poll_fd_, &ev, sizeof(ev));
+
+  // Destroy all operations associated with the descriptor.
+  op_queue<operation> ops;
+  asio::error_code ec;
+  for (int i = 0; i < max_ops; ++i)
+    op_queue_[i].cancel_operations(descriptor, ops, ec);
 }
 
 void dev_poll_reactor::run(bool block, op_queue<operation>& ops)
@@ -178,8 +285,8 @@ void dev_poll_reactor::run(bool block, op_queue<operation>& ops)
   lock.unlock();
 
   // Block on the /dev/poll descriptor.
-  ::pollfd events[128] = { { 0 } };
-  ::dvpoll dp = { 0 };
+  ::pollfd events[128] = { { 0, 0, 0 } };
+  ::dvpoll dp = { 0, 0, 0 };
   dp.dp_fds = events;
   dp.dp_nfds = 128;
   dp.dp_timeout = timeout;
@@ -227,7 +334,7 @@ void dev_poll_reactor::run(bool block, op_queue<operation>& ops)
         // The poll operation can produce POLLHUP or POLLERR events when there
         // is no operation pending, so if we do not remove the descriptor we
         // can end up in a tight polling loop.
-        ::pollfd ev = { 0 };
+        ::pollfd ev = { 0, 0, 0 };
         ev.fd = descriptor;
         ev.events = POLLREMOVE;
         ev.revents = 0;
@@ -235,7 +342,7 @@ void dev_poll_reactor::run(bool block, op_queue<operation>& ops)
       }
       else
       {
-        ::pollfd ev = { 0 };
+        ::pollfd ev = { 0, 0, 0 };
         ev.fd = descriptor;
         ev.events = POLLERR | POLLHUP;
         if (more_reads)

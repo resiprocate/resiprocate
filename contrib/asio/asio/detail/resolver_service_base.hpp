@@ -2,7 +2,7 @@
 // detail/resolver_service_base.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,7 +16,6 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
-#include <boost/scoped_ptr.hpp>
 #include "asio/error.hpp"
 #include "asio/io_service.hpp"
 #include "asio/detail/mutex.hpp"
@@ -24,6 +23,7 @@
 #include "asio/detail/operation.hpp"
 #include "asio/detail/socket_ops.hpp"
 #include "asio/detail/socket_types.hpp"
+#include "asio/detail/scoped_ptr.hpp"
 #include "asio/detail/thread.hpp"
 
 #include "asio/detail/push_options.hpp"
@@ -47,6 +47,10 @@ public:
   // Destroy all user-defined handler objects owned by the service.
   ASIO_DECL void shutdown_service();
 
+  // Perform any fork-related housekeeping.
+  ASIO_DECL void fork_service(
+      asio::io_service::fork_event fork_ev);
+
   // Construct a new resolver implementation.
   ASIO_DECL void construct(implementation_type& impl);
 
@@ -60,6 +64,7 @@ protected:
   // Helper function to start an asynchronous resolve operation.
   ASIO_DECL void start_resolve_op(operation* op);
 
+#if !defined(ASIO_WINDOWS_RUNTIME)
   // Helper class to perform exception-safe cleanup of addrinfo objects.
   class auto_addrinfo
     : private asio::detail::noncopyable
@@ -84,6 +89,7 @@ protected:
   private:
     asio::detail::addrinfo_type* ai_;
   };
+#endif // !defined(ASIO_WINDOWS_RUNTIME)
 
   // Helper class to run the work io_service in a thread.
   class work_io_service_runner;
@@ -99,16 +105,16 @@ private:
   asio::detail::mutex mutex_;
 
   // Private io_service used for performing asynchronous host resolution.
-  boost::scoped_ptr<asio::io_service> work_io_service_;
+  asio::detail::scoped_ptr<asio::io_service> work_io_service_;
 
   // The work io_service implementation used to post completions.
   io_service_impl& work_io_service_impl_;
 
   // Work for the private io_service to perform.
-  boost::scoped_ptr<asio::io_service::work> work_;
+  asio::detail::scoped_ptr<asio::io_service::work> work_;
 
   // Thread used for running the work io_service's run loop.
-  boost::scoped_ptr<asio::detail::thread> work_thread_;
+  asio::detail::scoped_ptr<asio::detail::thread> work_thread_;
 };
 
 } // namespace detail

@@ -2,7 +2,7 @@
 // detail/socket_option.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,9 +18,8 @@
 #include "asio/detail/config.hpp"
 #include <cstddef>
 #include <stdexcept>
-#include <boost/config.hpp>
-#include <boost/throw_exception.hpp>
 #include "asio/detail/socket_types.hpp"
+#include "asio/detail/throw_exception.hpp"
 
 #include "asio/detail/push_options.hpp"
 
@@ -122,7 +121,7 @@ public:
     default:
       {
         std::length_error ex("boolean socket option resize");
-        boost::throw_exception(ex);
+        asio::detail::throw_exception(ex);
       }
     }
   }
@@ -203,7 +202,7 @@ public:
     if (s != sizeof(value_))
     {
       std::length_error ex("integer socket option resize");
-      boost::throw_exception(ex);
+      asio::detail::throw_exception(ex);
     }
   }
 
@@ -227,7 +226,7 @@ public:
   linger(bool e, int t)
   {
     enabled(e);
-    timeout BOOST_PREVENT_MACRO_SUBSTITUTION(t);
+    timeout ASIO_PREVENT_MACRO_SUBSTITUTION(t);
   }
 
   // Set the value for whether linger is enabled.
@@ -243,7 +242,7 @@ public:
   }
 
   // Set the value for the linger timeout.
-  void timeout BOOST_PREVENT_MACRO_SUBSTITUTION(int value)
+  void timeout ASIO_PREVENT_MACRO_SUBSTITUTION(int value)
   {
 #if defined(WIN32)
     value_.l_linger = static_cast<u_short>(value);
@@ -253,7 +252,7 @@ public:
   }
 
   // Get the value for the linger timeout.
-  int timeout BOOST_PREVENT_MACRO_SUBSTITUTION() const
+  int timeout ASIO_PREVENT_MACRO_SUBSTITUTION() const
   {
     return static_cast<int>(value_.l_linger);
   }
@@ -274,14 +273,14 @@ public:
 
   // Get the address of the linger data.
   template <typename Protocol>
-  ::linger* data(const Protocol&)
+  detail::linger_type* data(const Protocol&)
   {
     return &value_;
   }
 
   // Get the address of the linger data.
   template <typename Protocol>
-  const ::linger* data(const Protocol&) const
+  const detail::linger_type* data(const Protocol&) const
   {
     return &value_;
   }
@@ -300,12 +299,12 @@ public:
     if (s != sizeof(value_))
     {
       std::length_error ex("linger socket option resize");
-      boost::throw_exception(ex);
+      asio::detail::throw_exception(ex);
     }
   }
 
 private:
-  ::linger value_;
+  detail::linger_type value_;
 };
 
 } // namespace socket_option

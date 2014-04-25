@@ -2,7 +2,7 @@
 // detail/pipe_select_interrupter.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,8 @@
 
 #include "asio/detail/config.hpp"
 
-#if !defined(BOOST_WINDOWS)
+#if !defined(ASIO_WINDOWS)
+#if !defined(ASIO_WINDOWS_RUNTIME)
 #if !defined(__CYGWIN__)
 #if !defined(__SYMBIAN32__)
 #if !defined(ASIO_HAS_EVENTFD)
@@ -36,6 +37,9 @@ public:
   // Destructor.
   ASIO_DECL ~pipe_select_interrupter();
 
+  // Recreate the interrupter's descriptors. Used after a fork.
+  ASIO_DECL void recreate();
+
   // Interrupt the select call.
   ASIO_DECL void interrupt();
 
@@ -49,6 +53,12 @@ public:
   }
 
 private:
+  // Open the descriptors. Throws on error.
+  ASIO_DECL void open_descriptors();
+
+  // Close the descriptors.
+  ASIO_DECL void close_descriptors();
+
   // The read end of a connection used to interrupt the select call. This file
   // descriptor is passed to select such that when it is time to stop, a single
   // byte will be written on the other end of the connection and this
@@ -73,6 +83,7 @@ private:
 #endif // !defined(ASIO_HAS_EVENTFD)
 #endif // !defined(__SYMBIAN32__)
 #endif // !defined(__CYGWIN__)
-#endif // !defined(BOOST_WINDOWS)
+#endif // !defined(ASIO_WINDOWS_RUNTIME)
+#endif // !defined(ASIO_WINDOWS)
 
 #endif // ASIO_DETAIL_PIPE_SELECT_INTERRUPTER_HPP

@@ -2,7 +2,7 @@
 // ip/impl/address.ipp
 // ~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,8 +17,8 @@
 
 #include "asio/detail/config.hpp"
 #include <typeinfo>
-#include <boost/throw_exception.hpp>
 #include "asio/detail/throw_error.hpp"
+#include "asio/detail/throw_exception.hpp"
 #include "asio/error.hpp"
 #include "asio/ip/address.hpp"
 #include "asio/system_error.hpp"
@@ -56,6 +56,15 @@ address::address(const address& other)
 {
 }
 
+#if defined(ASIO_HAS_MOVE)
+address::address(address&& other)
+  : type_(other.type_),
+    ipv4_address_(other.ipv4_address_),
+    ipv6_address_(other.ipv6_address_)
+{
+}
+#endif // defined(ASIO_HAS_MOVE)
+
 address& address::operator=(const address& other)
 {
   type_ = other.type_;
@@ -63,6 +72,16 @@ address& address::operator=(const address& other)
   ipv6_address_ = other.ipv6_address_;
   return *this;
 }
+
+#if defined(ASIO_HAS_MOVE)
+address& address::operator=(address&& other)
+{
+  type_ = other.type_;
+  ipv4_address_ = other.ipv4_address_;
+  ipv6_address_ = other.ipv6_address_;
+  return *this;
+}
+#endif // defined(ASIO_HAS_MOVE)
 
 address& address::operator=(const asio::ip::address_v4& ipv4_address)
 {
@@ -85,7 +104,7 @@ asio::ip::address_v4 address::to_v4() const
   if (type_ != ipv4)
   {
     std::bad_cast ex;
-    boost::throw_exception(ex);
+    asio::detail::throw_exception(ex);
   }
   return ipv4_address_;
 }
@@ -95,7 +114,7 @@ asio::ip::address_v6 address::to_v6() const
   if (type_ != ipv6)
   {
     std::bad_cast ex;
-    boost::throw_exception(ex);
+    asio::detail::throw_exception(ex);
   }
   return ipv6_address_;
 }
@@ -156,6 +175,27 @@ address address::from_string(const std::string& str,
     asio::error_code& ec)
 {
   return from_string(str.c_str(), ec);
+}
+
+bool address::is_loopback() const
+{
+  return (type_ == ipv4)
+    ? ipv4_address_.is_loopback()
+    : ipv6_address_.is_loopback();
+}
+
+bool address::is_unspecified() const
+{
+  return (type_ == ipv4)
+    ? ipv4_address_.is_unspecified()
+    : ipv6_address_.is_unspecified();
+}
+
+bool address::is_multicast() const
+{
+  return (type_ == ipv4)
+    ? ipv4_address_.is_multicast()
+    : ipv6_address_.is_multicast();
 }
 
 bool operator==(const address& a1, const address& a2)

@@ -2,7 +2,7 @@
 // detail/impl/reactive_serial_port_service.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Rep Invariant Systems, Inc. (info@repinvariant.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -19,7 +19,7 @@
 #include "asio/detail/config.hpp"
 
 #if defined(ASIO_HAS_SERIAL_PORT)
-#if !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#if !defined(ASIO_WINDOWS) && !defined(__CYGWIN__)
 
 #include <cstring>
 #include "asio/detail/reactive_serial_port_service.hpp"
@@ -112,7 +112,7 @@ asio::error_code reactive_serial_port_service::do_set_option(
   termios ios;
   errno = 0;
   descriptor_ops::error_wrapper(::tcgetattr(
-        descriptor_service_.native(impl), &ios), ec);
+        descriptor_service_.native_handle(impl), &ios), ec);
   if (ec)
     return ec;
 
@@ -121,7 +121,7 @@ asio::error_code reactive_serial_port_service::do_set_option(
 
   errno = 0;
   descriptor_ops::error_wrapper(::tcsetattr(
-        descriptor_service_.native(impl), TCSANOW, &ios), ec);
+        descriptor_service_.native_handle(impl), TCSANOW, &ios), ec);
   return ec;
 }
 
@@ -133,7 +133,7 @@ asio::error_code reactive_serial_port_service::do_get_option(
   termios ios;
   errno = 0;
   descriptor_ops::error_wrapper(::tcgetattr(
-        descriptor_service_.native(impl), &ios), ec);
+        descriptor_service_.native_handle(impl), &ios), ec);
   if (ec)
     return ec;
 
@@ -145,7 +145,7 @@ asio::error_code reactive_serial_port_service::do_get_option(
 
 #include "asio/detail/pop_options.hpp"
 
-#endif // !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#endif // !defined(ASIO_WINDOWS) && !defined(__CYGWIN__)
 #endif // defined(ASIO_HAS_SERIAL_PORT)
 
 #endif // ASIO_DETAIL_IMPL_REACTIVE_SERIAL_PORT_SERVICE_IPP

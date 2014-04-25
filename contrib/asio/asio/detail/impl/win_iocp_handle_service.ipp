@@ -2,7 +2,7 @@
 // detail/impl/win_iocp_handle_service.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Rep Invariant Systems, Inc. (info@repinvariant.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -99,6 +99,64 @@ void win_iocp_handle_service::construct(
   impl_list_ = &impl;
 }
 
+void win_iocp_handle_service::move_construct(
+    win_iocp_handle_service::implementation_type& impl,
+    win_iocp_handle_service::implementation_type& other_impl)
+{
+  impl.handle_ = other_impl.handle_;
+  other_impl.handle_ = INVALID_HANDLE_VALUE;
+
+  impl.safe_cancellation_thread_id_ = other_impl.safe_cancellation_thread_id_;
+  other_impl.safe_cancellation_thread_id_ = 0;
+
+  // Insert implementation into linked list of all implementations.
+  asio::detail::mutex::scoped_lock lock(mutex_);
+  impl.next_ = impl_list_;
+  impl.prev_ = 0;
+  if (impl_list_)
+    impl_list_->prev_ = &impl;
+  impl_list_ = &impl;
+}
+
+void win_iocp_handle_service::move_assign(
+    win_iocp_handle_service::implementation_type& impl,
+    win_iocp_handle_service& other_service,
+    win_iocp_handle_service::implementation_type& other_impl)
+{
+  close_for_destruction(impl);
+
+  if (this != &other_service)
+  {
+    // Remove implementation from linked list of all implementations.
+    asio::detail::mutex::scoped_lock lock(mutex_);
+    if (impl_list_ == &impl)
+      impl_list_ = impl.next_;
+    if (impl.prev_)
+      impl.prev_->next_ = impl.next_;
+    if (impl.next_)
+      impl.next_->prev_= impl.prev_;
+    impl.next_ = 0;
+    impl.prev_ = 0;
+  }
+
+  impl.handle_ = other_impl.handle_;
+  other_impl.handle_ = INVALID_HANDLE_VALUE;
+
+  impl.safe_cancellation_thread_id_ = other_impl.safe_cancellation_thread_id_;
+  other_impl.safe_cancellation_thread_id_ = 0;
+
+  if (this != &other_service)
+  {
+    // Insert implementation into linked list of all implementations.
+    asio::detail::mutex::scoped_lock lock(other_service.mutex_);
+    impl.next_ = other_service.impl_list_;
+    impl.prev_ = 0;
+    if (other_service.impl_list_)
+      other_service.impl_list_->prev_ = &impl;
+    other_service.impl_list_ = &impl;
+  }
+}
+
 void win_iocp_handle_service::destroy(
     win_iocp_handle_service::implementation_type& impl)
 {
@@ -118,7 +176,7 @@ void win_iocp_handle_service::destroy(
 
 asio::error_code win_iocp_handle_service::assign(
     win_iocp_handle_service::implementation_type& impl,
-    const native_type& native_handle, asio::error_code& ec)
+    const native_handle_type& handle, asio::error_code& ec)
 {
   if (is_open(impl))
   {
@@ -126,10 +184,10 @@ asio::error_code win_iocp_handle_service::assign(
     return ec;
   }
 
-  if (iocp_service_.register_handle(native_handle, ec))
+  if (iocp_service_.register_handle(handle, ec))
     return ec;
 
-  impl.handle_ = native_handle;
+  impl.handle_ = handle;
   ec = asio::error_code();
   return ec;
 }
@@ -140,19 +198,27 @@ asio::error_code win_iocp_handle_service::close(
 {
   if (is_open(impl))
   {
+    ASIO_HANDLER_OPERATION(("handle", &impl, "close"));
+
     if (!::CloseHandle(impl.handle_))
     {
       DWORD last_error = ::GetLastError();
       ec = asio::error_code(last_error,
           asio::error::get_system_category());
-      return ec;
+    }
+    else
+    {
+      ec = asio::error_code();
     }
 
     impl.handle_ = INVALID_HANDLE_VALUE;
     impl.safe_cancellation_thread_id_ = 0;
   }
+  else
+  {
+    ec = asio::error_code();
+  }
 
-  ec = asio::error_code();
   return ec;
 }
 
@@ -163,8 +229,12 @@ asio::error_code win_iocp_handle_service::cancel(
   if (!is_open(impl))
   {
     ec = asio::error::bad_descriptor;
+    return ec;
   }
-  else if (FARPROC cancel_io_ex_ptr = ::GetProcAddress(
+
+  ASIO_HANDLER_OPERATION(("handle", &impl, "cancel"));
+
+  if (FARPROC cancel_io_ex_ptr = ::GetProcAddress(
         ::GetModuleHandleA("KERNEL32"), "CancelIoEx"))
   {
     // The version of Windows supports cancellation from any thread.
@@ -222,7 +292,7 @@ asio::error_code win_iocp_handle_service::cancel(
 }
 
 size_t win_iocp_handle_service::do_write(
-    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
     const asio::const_buffer& buffer, asio::error_code& ec)
 {
   if (!is_open(impl))
@@ -278,7 +348,7 @@ size_t win_iocp_handle_service::do_write(
 }
 
 void win_iocp_handle_service::start_write_op(
-    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
     const asio::const_buffer& buffer, operation* op)
 {
   update_cancellation_thread_id(impl);
@@ -316,7 +386,7 @@ void win_iocp_handle_service::start_write_op(
 }
 
 size_t win_iocp_handle_service::do_read(
-    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
     const asio::mutable_buffer& buffer, asio::error_code& ec)
 {
   if (!is_open(impl))
@@ -369,14 +439,17 @@ size_t win_iocp_handle_service::do_read(
   if (!ok)
   {
     DWORD last_error = ::GetLastError();
-    if (last_error == ERROR_HANDLE_EOF)
+    if (last_error != ERROR_MORE_DATA)
     {
-      ec = asio::error::eof;
-    }
-    else
-    {
-      ec = asio::error_code(last_error,
-          asio::error::get_system_category());
+      if (last_error == ERROR_HANDLE_EOF)
+      {
+        ec = asio::error::eof;
+      }
+      else
+      {
+        ec = asio::error_code(last_error,
+            asio::error::get_system_category());
+      }
     }
     return 0;
   }
@@ -386,7 +459,7 @@ size_t win_iocp_handle_service::do_read(
 }
 
 void win_iocp_handle_service::start_read_op(
-    win_iocp_handle_service::implementation_type& impl, boost::uint64_t offset,
+    win_iocp_handle_service::implementation_type& impl, uint64_t offset,
     const asio::mutable_buffer& buffer, operation* op)
 {
   update_cancellation_thread_id(impl);
@@ -436,6 +509,8 @@ void win_iocp_handle_service::close_for_destruction(implementation_type& impl)
 {
   if (is_open(impl))
   {
+    ASIO_HANDLER_OPERATION(("handle", &impl, "close"));
+
     ::CloseHandle(impl.handle_);
     impl.handle_ = INVALID_HANDLE_VALUE;
     impl.safe_cancellation_thread_id_ = 0;

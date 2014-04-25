@@ -2,7 +2,7 @@
 // deadline_timer_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,10 +16,16 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
+
+#if defined(ASIO_HAS_BOOST_DATE_TIME) \
+  || defined(GENERATING_DOCUMENTATION)
+
 #include <cstddef>
+#include "asio/async_result.hpp"
 #include "asio/detail/deadline_timer_service.hpp"
 #include "asio/io_service.hpp"
 #include "asio/time_traits.hpp"
+#include "asio/detail/timer_queue_ptime.hpp"
 
 #include "asio/detail/push_options.hpp"
 
@@ -71,12 +77,6 @@ public:
   {
   }
 
-  /// Destroy all user-defined handler objects owned by the service.
-  void shutdown_service()
-  {
-    service_impl_.shutdown_service();
-  }
-
   /// Construct a new timer implementation.
   void construct(implementation_type& impl)
   {
@@ -93,6 +93,13 @@ public:
   std::size_t cancel(implementation_type& impl, asio::error_code& ec)
   {
     return service_impl_.cancel(impl, ec);
+  }
+
+  /// Cancels one asynchronous wait operation associated with the timer.
+  std::size_t cancel_one(implementation_type& impl,
+      asio::error_code& ec)
+  {
+    return service_impl_.cancel_one(impl, ec);
   }
 
   /// Get the expiry time for the timer as an absolute time.
@@ -129,12 +136,27 @@ public:
 
   // Start an asynchronous wait on the timer.
   template <typename WaitHandler>
-  void async_wait(implementation_type& impl, WaitHandler handler)
+  ASIO_INITFN_RESULT_TYPE(WaitHandler,
+      void (asio::error_code))
+  async_wait(implementation_type& impl,
+      ASIO_MOVE_ARG(WaitHandler) handler)
   {
-    service_impl_.async_wait(impl, handler);
+    detail::async_result_init<
+      WaitHandler, void (asio::error_code)> init(
+        ASIO_MOVE_CAST(WaitHandler)(handler));
+
+    service_impl_.async_wait(impl, init.handler);
+
+    return init.result.get();
   }
 
 private:
+  // Destroy all user-defined handler objects owned by the service.
+  void shutdown_service()
+  {
+    service_impl_.shutdown_service();
+  }
+
   // The platform-specific implementation.
   service_impl_type service_impl_;
 };
@@ -142,5 +164,8 @@ private:
 } // namespace asio
 
 #include "asio/detail/pop_options.hpp"
+
+#endif // defined(ASIO_HAS_BOOST_DATE_TIME)
+       // || defined(GENERATING_DOCUMENTATION)
 
 #endif // ASIO_DEADLINE_TIMER_SERVICE_HPP

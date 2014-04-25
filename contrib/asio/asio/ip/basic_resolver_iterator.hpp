@@ -2,7 +2,7 @@
 // ip/basic_resolver_iterator.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,14 +16,19 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
-#include <boost/iterator.hpp>
+#include <cstddef>
 #include <cstring>
+#include <iterator>
 #include <string>
 #include <vector>
 #include "asio/detail/shared_ptr.hpp"
 #include "asio/detail/socket_ops.hpp"
 #include "asio/detail/socket_types.hpp"
 #include "asio/ip/basic_resolver_entry.hpp"
+
+#if defined(ASIO_WINDOWS_RUNTIME)
+# include "asio/detail/winrt_utils.hpp"
+#endif // defined(ASIO_WINDOWS_RUNTIME)
 
 #include "asio/detail/push_options.hpp"
 
@@ -44,15 +49,23 @@ namespace ip {
  */
 template <typename InternetProtocol>
 class basic_resolver_iterator
-#if defined(GENERATING_DOCUMENTATION)
-  : public std::iterator<
-#else // defined(GENERATING_DOCUMENTATION)
-  : public boost::iterator<
-#endif // defined(GENERATING_DOCUMENTATION)
-      std::forward_iterator_tag,
-      const basic_resolver_entry<InternetProtocol> >
 {
 public:
+  /// The type used for the distance between two iterators.
+  typedef std::ptrdiff_t difference_type;
+
+  /// The type of the value pointed to by the iterator.
+  typedef basic_resolver_entry<InternetProtocol> value_type;
+
+  /// The type of the result of applying operator->() to the iterator.
+  typedef const basic_resolver_entry<InternetProtocol>* pointer;
+
+  /// The type of the result of applying operator*() to the iterator.
+  typedef const basic_resolver_entry<InternetProtocol>& reference;
+
+  /// The iterator category.
+  typedef std::forward_iterator_tag iterator_category;
+
   /// Default constructor creates an end iterator.
   basic_resolver_iterator()
     : index_(0)
@@ -76,8 +89,8 @@ public:
 
     while (address_info)
     {
-      if (address_info->ai_family == PF_INET
-          || address_info->ai_family == PF_INET6)
+      if (address_info->ai_family == ASIO_OS_DEF(AF_INET)
+          || address_info->ai_family == ASIO_OS_DEF(AF_INET6))
       {
         using namespace std; // For memcpy.
         typename InternetProtocol::endpoint endpoint;
@@ -106,6 +119,67 @@ public:
           endpoint, host_name, service_name));
     return iter;
   }
+
+  /// Create an iterator from a sequence of endpoints, host and service name.
+  template <typename EndpointIterator>
+  static basic_resolver_iterator create(
+      EndpointIterator begin, EndpointIterator end,
+      const std::string& host_name, const std::string& service_name)
+  {
+    basic_resolver_iterator iter;
+    if (begin != end)
+    {
+      iter.values_.reset(new values_type);
+      for (EndpointIterator ep_iter = begin; ep_iter != end; ++ep_iter)
+      {
+        iter.values_->push_back(
+            basic_resolver_entry<InternetProtocol>(
+              *ep_iter, host_name, service_name));
+      }
+    }
+    return iter;
+  }
+
+#if defined(ASIO_WINDOWS_RUNTIME)
+  /// Create an iterator from a Windows Runtime list of EndpointPair objects.
+  static basic_resolver_iterator create(
+      Windows::Foundation::Collections::IVectorView<
+        Windows::Networking::EndpointPair^>^ endpoints,
+      const asio::detail::addrinfo_type& hints,
+      const std::string& host_name, const std::string& service_name)
+  {
+    basic_resolver_iterator iter;
+    if (endpoints->Size)
+    {
+      iter.values_.reset(new values_type);
+      for (unsigned int i = 0; i < endpoints->Size; ++i)
+      {
+        auto pair = endpoints->GetAt(i);
+
+        if (hints.ai_family == ASIO_OS_DEF(AF_INET)
+            && pair->RemoteHostName->Type
+              != Windows::Networking::HostNameType::Ipv4)
+          continue;
+
+        if (hints.ai_family == ASIO_OS_DEF(AF_INET6)
+            && pair->RemoteHostName->Type
+              != Windows::Networking::HostNameType::Ipv6)
+          continue;
+
+        iter.values_->push_back(
+            basic_resolver_entry<InternetProtocol>(
+              typename InternetProtocol::endpoint(
+                ip::address::from_string(
+                  asio::detail::winrt_utils::string(
+                    pair->RemoteHostName->CanonicalName)),
+                asio::detail::winrt_utils::integer(
+                  pair->RemoteServiceName)),
+              host_name, service_name));
+      }
+    }
+    return iter;
+  }
+#endif // defined(ASIO_WINDOWS_RUNTIME)
 
   /// Dereference an iterator.
   const basic_resolver_entry<InternetProtocol>& operator*() const

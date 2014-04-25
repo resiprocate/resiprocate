@@ -2,7 +2,7 @@
 // detail/win_iocp_serial_port_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Rep Invariant Systems, Inc. (info@repinvariant.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -35,7 +35,7 @@ class win_iocp_serial_port_service
 {
 public:
   // The native type of a serial port.
-  typedef win_iocp_handle_service::native_type native_type;
+  typedef win_iocp_handle_service::native_handle_type native_handle_type;
 
   // The implementation type of the serial port.
   typedef win_iocp_handle_service::implementation_type implementation_type;
@@ -53,6 +53,22 @@ public:
     handle_service_.construct(impl);
   }
 
+  // Move-construct a new serial port implementation.
+  void move_construct(implementation_type& impl,
+      implementation_type& other_impl)
+  {
+    handle_service_.move_construct(impl, other_impl);
+  }
+
+  // Move-assign from another serial port implementation.
+  void move_assign(implementation_type& impl,
+      win_iocp_serial_port_service& other_service,
+      implementation_type& other_impl)
+  {
+    handle_service_.move_assign(impl,
+        other_service.handle_service_, other_impl);
+  }
+
   // Destroy a serial port implementation.
   void destroy(implementation_type& impl)
   {
@@ -65,9 +81,9 @@ public:
 
   // Assign a native handle to a serial port implementation.
   asio::error_code assign(implementation_type& impl,
-      const native_type& native_handle, asio::error_code& ec)
+      const native_handle_type& handle, asio::error_code& ec)
   {
-    return handle_service_.assign(impl, native_handle, ec);
+    return handle_service_.assign(impl, handle, ec);
   }
 
   // Determine whether the serial port is open.
@@ -84,9 +100,9 @@ public:
   }
 
   // Get the native serial port representation.
-  native_type native(implementation_type& impl)
+  native_handle_type native_handle(implementation_type& impl)
   {
-    return handle_service_.native(impl);
+    return handle_service_.native_handle(impl);
   }
 
   // Cancel all operations associated with the handle.
@@ -136,7 +152,7 @@ public:
   // lifetime of the asynchronous operation.
   template <typename ConstBufferSequence, typename Handler>
   void async_write_some(implementation_type& impl,
-      const ConstBufferSequence& buffers, Handler handler)
+      const ConstBufferSequence& buffers, Handler& handler)
   {
     handle_service_.async_write_some(impl, buffers, handler);
   }
@@ -153,7 +169,7 @@ public:
   // valid for the lifetime of the asynchronous operation.
   template <typename MutableBufferSequence, typename Handler>
   void async_read_some(implementation_type& impl,
-      const MutableBufferSequence& buffers, Handler handler)
+      const MutableBufferSequence& buffers, Handler& handler)
   {
     handle_service_.async_read_some(impl, buffers, handler);
   }

@@ -2,7 +2,7 @@
 // detail/signal_blocker.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,10 +17,11 @@
 
 #include "asio/detail/config.hpp"
 
-#if !defined(BOOST_HAS_THREADS) || defined(ASIO_DISABLE_THREADS) \
-  || defined(BOOST_WINDOWS) || defined(__CYGWIN__) || defined(__SYMBIAN32__)
+#if !defined(ASIO_HAS_THREADS) || defined(ASIO_WINDOWS) \
+  || defined(ASIO_WINDOWS_RUNTIME) \
+  || defined(__CYGWIN__) || defined(__SYMBIAN32__)
 # include "asio/detail/null_signal_blocker.hpp"
-#elif defined(BOOST_HAS_PTHREADS)
+#elif defined(ASIO_HAS_PTHREADS)
 # include "asio/detail/posix_signal_blocker.hpp"
 #else
 # error Only Windows and POSIX are supported!
@@ -29,10 +30,11 @@
 namespace asio {
 namespace detail {
 
-#if !defined(BOOST_HAS_THREADS) || defined(ASIO_DISABLE_THREADS) \
-  || defined(BOOST_WINDOWS) || defined(__CYGWIN__) || defined(__SYMBIAN32__)
+#if !defined(ASIO_HAS_THREADS) || defined(ASIO_WINDOWS) \
+  || defined(ASIO_WINDOWS_RUNTIME) \
+  || defined(__CYGWIN__) || defined(__SYMBIAN32__)
 typedef null_signal_blocker signal_blocker;
-#elif defined(BOOST_HAS_PTHREADS)
+#elif defined(ASIO_HAS_PTHREADS)
 typedef posix_signal_blocker signal_blocker;
 #endif
 

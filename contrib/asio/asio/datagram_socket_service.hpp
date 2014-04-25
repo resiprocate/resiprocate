@@ -2,7 +2,7 @@
 // datagram_socket_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,10 +17,14 @@
 
 #include "asio/detail/config.hpp"
 #include <cstddef>
+#include "asio/async_result.hpp"
+#include "asio/detail/type_traits.hpp"
 #include "asio/error.hpp"
 #include "asio/io_service.hpp"
 
-#if defined(ASIO_HAS_IOCP)
+#if defined(ASIO_WINDOWS_RUNTIME)
+# include "asio/detail/null_socket_service.hpp"
+#elif defined(ASIO_HAS_IOCP)
 # include "asio/detail/win_iocp_socket_service.hpp"
 #else
 # include "asio/detail/reactive_socket_service.hpp"
@@ -53,7 +57,9 @@ public:
 
 private:
   // The type of the platform-specific implementation.
-#if defined(ASIO_HAS_IOCP)
+#if defined(ASIO_WINDOWS_RUNTIME)
+  typedef detail::null_socket_service<Protocol> service_impl_type;
+#elif defined(ASIO_HAS_IOCP)
   typedef detail::win_iocp_socket_service<Protocol> service_impl_type;
 #else
   typedef detail::reactive_socket_service<Protocol> service_impl_type;
@@ -67,11 +73,18 @@ public:
   typedef typename service_impl_type::implementation_type implementation_type;
 #endif
 
-  /// The native socket type.
+  /// (Deprecated: Use native_handle_type.) The native socket type.
 #if defined(GENERATING_DOCUMENTATION)
   typedef implementation_defined native_type;
 #else
-  typedef typename service_impl_type::native_type native_type;
+  typedef typename service_impl_type::native_handle_type native_type;
+#endif
+
+  /// The native socket type.
+#if defined(GENERATING_DOCUMENTATION)
+  typedef implementation_defined native_handle_type;
+#else
+  typedef typename service_impl_type::native_handle_type native_handle_type;
 #endif
 
   /// Construct a new datagram socket service for the specified io_service.
@@ -82,17 +95,41 @@ public:
   {
   }
 
-  /// Destroy all user-defined handler objects owned by the service.
-  void shutdown_service()
-  {
-    service_impl_.shutdown_service();
-  }
-
   /// Construct a new datagram socket implementation.
   void construct(implementation_type& impl)
   {
     service_impl_.construct(impl);
   }
+
+#if defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
+  /// Move-construct a new datagram socket implementation.
+  void move_construct(implementation_type& impl,
+      implementation_type& other_impl)
+  {
+    service_impl_.move_construct(impl, other_impl);
+  }
+
+  /// Move-assign from another datagram socket implementation.
+  void move_assign(implementation_type& impl,
+      datagram_socket_service& other_service,
+      implementation_type& other_impl)
+  {
+    service_impl_.move_assign(impl, other_service.service_impl_, other_impl);
+  }
+
+  /// Move-construct a new datagram socket implementation from another protocol
+  /// type.
+  template <typename Protocol1>
+  void converting_move_construct(implementation_type& impl,
+      typename datagram_socket_service<
+        Protocol1>::implementation_type& other_impl,
+      typename enable_if<is_convertible<
+        Protocol1, Protocol>::value>::type* = 0)
+  {
+    service_impl_.template converting_move_construct<Protocol1>(
+        impl, other_impl);
+  }
+#endif // defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
 
   /// Destroy a datagram socket implementation.
   void destroy(implementation_type& impl)
@@ -104,7 +141,7 @@ public:
   asio::error_code open(implementation_type& impl,
       const protocol_type& protocol, asio::error_code& ec)
   {
-    if (protocol.type() == SOCK_DGRAM)
+    if (protocol.type() == ASIO_OS_DEF(SOCK_DGRAM))
       service_impl_.open(impl, protocol, ec);
     else
       ec = asio::error::invalid_argument;
@@ -113,7 +150,7 @@ public:
 
   /// Assign an existing native socket to a datagram socket.
   asio::error_code assign(implementation_type& impl,
-      const protocol_type& protocol, const native_type& native_socket,
+      const protocol_type& protocol, const native_handle_type& native_socket,
       asio::error_code& ec)
   {
     return service_impl_.assign(impl, protocol, native_socket, ec);
@@ -132,10 +169,16 @@ public:
     return service_impl_.close(impl, ec);
   }
 
-  /// Get the native socket implementation.
+  /// (Deprecated: Use native_handle().) Get the native socket implementation.
   native_type native(implementation_type& impl)
   {
-    return service_impl_.native(impl);
+    return service_impl_.native_handle(impl);
+  }
+
+  /// Get the native socket implementation.
+  native_handle_type native_handle(implementation_type& impl)
+  {
+    return service_impl_.native_handle(impl);
   }
 
   /// Cancel all asynchronous operations associated with the socket.
@@ -175,10 +218,19 @@ public:
 
   /// Start an asynchronous connect.
   template <typename ConnectHandler>
-  void async_connect(implementation_type& impl,
-      const endpoint_type& peer_endpoint, ConnectHandler handler)
+  ASIO_INITFN_RESULT_TYPE(ConnectHandler,
+      void (asio::error_code))
+  async_connect(implementation_type& impl,
+      const endpoint_type& peer_endpoint,
+      ASIO_MOVE_ARG(ConnectHandler) handler)
   {
-    service_impl_.async_connect(impl, peer_endpoint, handler);
+    detail::async_result_init<
+      ConnectHandler, void (asio::error_code)> init(
+        ASIO_MOVE_CAST(ConnectHandler)(handler));
+
+    service_impl_.async_connect(impl, peer_endpoint, init.handler);
+
+    return init.result.get();
   }
 
   /// Set a socket option.
@@ -203,6 +255,32 @@ public:
       IoControlCommand& command, asio::error_code& ec)
   {
     return service_impl_.io_control(impl, command, ec);
+  }
+
+  /// Gets the non-blocking mode of the socket.
+  bool non_blocking(const implementation_type& impl) const
+  {
+    return service_impl_.non_blocking(impl);
+  }
+
+  /// Sets the non-blocking mode of the socket.
+  asio::error_code non_blocking(implementation_type& impl,
+      bool mode, asio::error_code& ec)
+  {
+    return service_impl_.non_blocking(impl, mode, ec);
+  }
+
+  /// Gets the non-blocking mode of the native socket implementation.
+  bool native_non_blocking(const implementation_type& impl) const
+  {
+    return service_impl_.native_non_blocking(impl);
+  }
+
+  /// Sets the non-blocking mode of the native socket implementation.
+  asio::error_code native_non_blocking(implementation_type& impl,
+      bool mode, asio::error_code& ec)
+  {
+    return service_impl_.native_non_blocking(impl, mode, ec);
   }
 
   /// Get the local endpoint.
@@ -237,10 +315,19 @@ public:
 
   /// Start an asynchronous send.
   template <typename ConstBufferSequence, typename WriteHandler>
-  void async_send(implementation_type& impl, const ConstBufferSequence& buffers,
-      socket_base::message_flags flags, WriteHandler handler)
+  ASIO_INITFN_RESULT_TYPE(WriteHandler,
+      void (asio::error_code, std::size_t))
+  async_send(implementation_type& impl, const ConstBufferSequence& buffers,
+      socket_base::message_flags flags,
+      ASIO_MOVE_ARG(WriteHandler) handler)
   {
-    service_impl_.async_send(impl, buffers, flags, handler);
+    detail::async_result_init<
+      WriteHandler, void (asio::error_code, std::size_t)> init(
+        ASIO_MOVE_CAST(WriteHandler)(handler));
+
+    service_impl_.async_send(impl, buffers, flags, init.handler);
+
+    return init.result.get();
   }
 
   /// Send a datagram to the specified endpoint.
@@ -254,11 +341,21 @@ public:
 
   /// Start an asynchronous send.
   template <typename ConstBufferSequence, typename WriteHandler>
-  void async_send_to(implementation_type& impl,
+  ASIO_INITFN_RESULT_TYPE(WriteHandler,
+      void (asio::error_code, std::size_t))
+  async_send_to(implementation_type& impl,
       const ConstBufferSequence& buffers, const endpoint_type& destination,
-      socket_base::message_flags flags, WriteHandler handler)
+      socket_base::message_flags flags,
+      ASIO_MOVE_ARG(WriteHandler) handler)
   {
-    service_impl_.async_send_to(impl, buffers, destination, flags, handler);
+    detail::async_result_init<
+      WriteHandler, void (asio::error_code, std::size_t)> init(
+        ASIO_MOVE_CAST(WriteHandler)(handler));
+
+    service_impl_.async_send_to(impl, buffers,
+        destination, flags, init.handler);
+
+    return init.result.get();
   }
 
   /// Receive some data from the peer.
@@ -272,11 +369,20 @@ public:
 
   /// Start an asynchronous receive.
   template <typename MutableBufferSequence, typename ReadHandler>
-  void async_receive(implementation_type& impl,
+  ASIO_INITFN_RESULT_TYPE(ReadHandler,
+      void (asio::error_code, std::size_t))
+  async_receive(implementation_type& impl,
       const MutableBufferSequence& buffers,
-      socket_base::message_flags flags, ReadHandler handler)
+      socket_base::message_flags flags,
+      ASIO_MOVE_ARG(ReadHandler) handler)
   {
-    service_impl_.async_receive(impl, buffers, flags, handler);
+    detail::async_result_init<
+      ReadHandler, void (asio::error_code, std::size_t)> init(
+        ASIO_MOVE_CAST(ReadHandler)(handler));
+
+    service_impl_.async_receive(impl, buffers, flags, init.handler);
+
+    return init.result.get();
   }
 
   /// Receive a datagram with the endpoint of the sender.
@@ -291,15 +397,30 @@ public:
 
   /// Start an asynchronous receive that will get the endpoint of the sender.
   template <typename MutableBufferSequence, typename ReadHandler>
-  void async_receive_from(implementation_type& impl,
+  ASIO_INITFN_RESULT_TYPE(ReadHandler,
+      void (asio::error_code, std::size_t))
+  async_receive_from(implementation_type& impl,
       const MutableBufferSequence& buffers, endpoint_type& sender_endpoint,
-      socket_base::message_flags flags, ReadHandler handler)
+      socket_base::message_flags flags,
+      ASIO_MOVE_ARG(ReadHandler) handler)
   {
-    service_impl_.async_receive_from(impl, buffers, sender_endpoint, flags,
-        handler);
+    detail::async_result_init<
+      ReadHandler, void (asio::error_code, std::size_t)> init(
+        ASIO_MOVE_CAST(ReadHandler)(handler));
+
+    service_impl_.async_receive_from(impl, buffers,
+        sender_endpoint, flags, init.handler);
+
+    return init.result.get();
   }
 
 private:
+  // Destroy all user-defined handler objects owned by the service.
+  void shutdown_service()
+  {
+    service_impl_.shutdown_service();
+  }
+
   // The platform-specific implementation.
   service_impl_type service_impl_;
 };

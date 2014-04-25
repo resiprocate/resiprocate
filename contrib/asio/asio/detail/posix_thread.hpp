@@ -2,7 +2,7 @@
 // detail/posix_thread.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 
 #include "asio/detail/config.hpp"
 
-#if defined(BOOST_HAS_PTHREADS) && !defined(ASIO_DISABLE_THREADS)
+#if defined(ASIO_HAS_PTHREADS)
 
 #include <pthread.h>
 #include "asio/detail/noncopyable.hpp"
@@ -38,7 +38,7 @@ class posix_thread
 public:
   // Constructor.
   template <typename Function>
-  posix_thread(Function f)
+  posix_thread(Function f, unsigned int = 0)
     : joined_(false)
   {
     start_thread(new func<Function>(f));
@@ -100,6 +100,6 @@ private:
 # include "asio/detail/impl/posix_thread.ipp"
 #endif // defined(ASIO_HEADER_ONLY)
 
-#endif // defined(BOOST_HAS_PTHREADS) && !defined(ASIO_DISABLE_THREADS)
+#endif // defined(ASIO_HAS_PTHREADS)
 
 #endif // ASIO_DETAIL_POSIX_THREAD_HPP

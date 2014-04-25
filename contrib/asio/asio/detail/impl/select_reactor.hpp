@@ -2,7 +2,7 @@
 // detail/impl/select_reactor.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -20,7 +20,8 @@
 #if defined(ASIO_HAS_IOCP) \
   || (!defined(ASIO_HAS_DEV_POLL) \
       && !defined(ASIO_HAS_EPOLL) \
-      && !defined(ASIO_HAS_KQUEUE))
+      && !defined(ASIO_HAS_KQUEUE) \
+      && !defined(ASIO_WINDOWS_RUNTIME))
 
 #include "asio/detail/push_options.hpp"
 
@@ -43,13 +44,13 @@ void select_reactor::remove_timer_queue(timer_queue<Time_Traits>& queue)
 template <typename Time_Traits>
 void select_reactor::schedule_timer(timer_queue<Time_Traits>& queue,
     const typename Time_Traits::time_type& time,
-    typename timer_queue<Time_Traits>::per_timer_data& timer, timer_op* op)
+    typename timer_queue<Time_Traits>::per_timer_data& timer, wait_op* op)
 {
   asio::detail::mutex::scoped_lock lock(mutex_);
 
   if (shutdown_)
   {
-    io_service_.post_immediate_completion(op);
+    io_service_.post_immediate_completion(op, false);
     return;
   }
 
@@ -61,11 +62,12 @@ void select_reactor::schedule_timer(timer_queue<Time_Traits>& queue,
 
 template <typename Time_Traits>
 std::size_t select_reactor::cancel_timer(timer_queue<Time_Traits>& queue,
-    typename timer_queue<Time_Traits>::per_timer_data& timer)
+    typename timer_queue<Time_Traits>::per_timer_data& timer,
+    std::size_t max_cancelled)
 {
   asio::detail::mutex::scoped_lock lock(mutex_);
   op_queue<operation> ops;
-  std::size_t n = queue.cancel_timer(timer, ops);
+  std::size_t n = queue.cancel_timer(timer, ops, max_cancelled);
   lock.unlock();
   io_service_.post_deferred_completions(ops);
   return n;
@@ -79,6 +81,7 @@ std::size_t select_reactor::cancel_timer(timer_queue<Time_Traits>& queue,
 #endif // defined(ASIO_HAS_IOCP)
        //   || (!defined(ASIO_HAS_DEV_POLL)
        //       && !defined(ASIO_HAS_EPOLL)
-       //       && !defined(ASIO_HAS_KQUEUE))
+       //       && !defined(ASIO_HAS_KQUEUE)
+       //       && !defined(ASIO_WINDOWS_RUNTIME))
 
 #endif // ASIO_DETAIL_IMPL_SELECT_REACTOR_HPP

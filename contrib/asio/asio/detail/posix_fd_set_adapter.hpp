@@ -2,7 +2,7 @@
 // detail/posix_fd_set_adapter.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,9 +17,12 @@
 
 #include "asio/detail/config.hpp"
 
-#if !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#if !defined(ASIO_WINDOWS) \
+  && !defined(__CYGWIN__) \
+  && !defined(ASIO_WINDOWS_RUNTIME)
 
 #include <cstring>
+#include "asio/detail/noncopyable.hpp"
 #include "asio/detail/socket_types.hpp"
 
 #include "asio/detail/push_options.hpp"
@@ -28,11 +31,17 @@ namespace asio {
 namespace detail {
 
 // Adapts the FD_SET type to meet the Descriptor_Set concept's requirements.
-class posix_fd_set_adapter
+class posix_fd_set_adapter : noncopyable
 {
 public:
   posix_fd_set_adapter()
     : max_descriptor_(invalid_socket)
+  {
+    using namespace std; // Needed for memset on Solaris.
+    FD_ZERO(&fd_set_);
+  }
+
+  void reset()
   {
     using namespace std; // Needed for memset on Solaris.
     FD_ZERO(&fd_set_);
@@ -75,6 +84,8 @@ private:
 
 #include "asio/detail/pop_options.hpp"
 
-#endif // !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#endif // !defined(ASIO_WINDOWS)
+       // && !defined(__CYGWIN__)
+       // && !defined(ASIO_WINDOWS_RUNTIME)
 
 #endif // ASIO_DETAIL_POSIX_FD_SET_ADAPTER_HPP

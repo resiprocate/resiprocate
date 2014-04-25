@@ -2,7 +2,7 @@
 // ip/basic_endpoint.hpp
 // ~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,9 +19,9 @@
 #include "asio/ip/address.hpp"
 #include "asio/ip/detail/endpoint.hpp"
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
 # include <iosfwd>
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 #include "asio/detail/push_options.hpp"
 
@@ -77,8 +77,9 @@ public:
    * asio::ip::udp::endpoint ep(asio::ip::udp::v6(), 9876);
    * @endcode
    */
-  basic_endpoint(const InternetProtocol& protocol, unsigned short port_num)
-    : impl_(protocol.family(), port_num)
+  basic_endpoint(const InternetProtocol& internet_protocol,
+      unsigned short port_num)
+    : impl_(internet_protocol.family(), port_num)
   {
   }
 
@@ -96,12 +97,29 @@ public:
   {
   }
 
+#if defined(ASIO_HAS_MOVE)
+  /// Move constructor.
+  basic_endpoint(basic_endpoint&& other)
+    : impl_(other.impl_)
+  {
+  }
+#endif // defined(ASIO_HAS_MOVE)
+
   /// Assign from another endpoint.
   basic_endpoint& operator=(const basic_endpoint& other)
   {
     impl_ = other.impl_;
     return *this;
   }
+
+#if defined(ASIO_HAS_MOVE)
+  /// Move-assign from another endpoint.
+  basic_endpoint& operator=(basic_endpoint&& other)
+  {
+    impl_ = other.impl_;
+    return *this;
+  }
+#endif // defined(ASIO_HAS_MOVE)
 
   /// The protocol associated with the endpoint.
   protocol_type protocol() const
@@ -130,9 +148,9 @@ public:
   }
 
   /// Set the underlying size of the endpoint in the native type.
-  void resize(std::size_t size)
+  void resize(std::size_t new_size)
   {
-    impl_.resize(size);
+    impl_.resize(new_size);
   }
 
   /// Get the capacity of the endpoint in the native type.
@@ -214,7 +232,7 @@ private:
   asio::ip::detail::endpoint impl_;
 };
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
 
 /// Output an endpoint as a string.
 /**
@@ -233,7 +251,7 @@ std::basic_ostream<Elem, Traits>& operator<<(
     std::basic_ostream<Elem, Traits>& os,
     const basic_endpoint<InternetProtocol>& endpoint);
 
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 } // namespace ip
 } // namespace asio

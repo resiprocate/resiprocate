@@ -2,7 +2,7 @@
 // basic_deadline_timer.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,9 +16,14 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
+
+#if defined(ASIO_HAS_BOOST_DATE_TIME) \
+  || defined(GENERATING_DOCUMENTATION)
+
 #include <cstddef>
 #include "asio/basic_io_object.hpp"
 #include "asio/deadline_timer_service.hpp"
+#include "asio/detail/handler_type_requirements.hpp"
 #include "asio/detail/throw_error.hpp"
 #include "asio/error.hpp"
 
@@ -160,7 +165,7 @@ public:
   {
     asio::error_code ec;
     this->service.expires_at(this->implementation, expiry_time, ec);
-    asio::detail::throw_error(ec);
+    asio::detail::throw_error(ec, "expires_at");
   }
 
   /// Constructor to set a particular expiry time relative to now.
@@ -179,7 +184,7 @@ public:
   {
     asio::error_code ec;
     this->service.expires_from_now(this->implementation, expiry_time, ec);
-    asio::detail::throw_error(ec);
+    asio::detail::throw_error(ec, "expires_from_now");
   }
 
   /// Cancel any asynchronous operations that are waiting on the timer.
@@ -208,7 +213,7 @@ public:
   {
     asio::error_code ec;
     std::size_t s = this->service.cancel(this->implementation, ec);
-    asio::detail::throw_error(ec);
+    asio::detail::throw_error(ec, "cancel");
     return s;
   }
 
@@ -237,6 +242,67 @@ public:
   std::size_t cancel(asio::error_code& ec)
   {
     return this->service.cancel(this->implementation, ec);
+  }
+
+  /// Cancels one asynchronous operation that is waiting on the timer.
+  /**
+   * This function forces the completion of one pending asynchronous wait
+   * operation against the timer. Handlers are cancelled in FIFO order. The
+   * handler for the cancelled operation will be invoked with the
+   * asio::error::operation_aborted error code.
+   *
+   * Cancelling the timer does not change the expiry time.
+   *
+   * @return The number of asynchronous operations that were cancelled. That is,
+   * either 0 or 1.
+   *
+   * @throws asio::system_error Thrown on failure.
+   *
+   * @note If the timer has already expired when cancel_one() is called, then
+   * the handlers for asynchronous wait operations will:
+   *
+   * @li have already been invoked; or
+   *
+   * @li have been queued for invocation in the near future.
+   *
+   * These handlers can no longer be cancelled, and therefore are passed an
+   * error code that indicates the successful completion of the wait operation.
+   */
+  std::size_t cancel_one()
+  {
+    asio::error_code ec;
+    std::size_t s = this->service.cancel_one(this->implementation, ec);
+    asio::detail::throw_error(ec, "cancel_one");
+    return s;
+  }
+
+  /// Cancels one asynchronous operation that is waiting on the timer.
+  /**
+   * This function forces the completion of one pending asynchronous wait
+   * operation against the timer. Handlers are cancelled in FIFO order. The
+   * handler for the cancelled operation will be invoked with the
+   * asio::error::operation_aborted error code.
+   *
+   * Cancelling the timer does not change the expiry time.
+   *
+   * @param ec Set to indicate what error occurred, if any.
+   *
+   * @return The number of asynchronous operations that were cancelled. That is,
+   * either 0 or 1.
+   *
+   * @note If the timer has already expired when cancel_one() is called, then
+   * the handlers for asynchronous wait operations will:
+   *
+   * @li have already been invoked; or
+   *
+   * @li have been queued for invocation in the near future.
+   *
+   * These handlers can no longer be cancelled, and therefore are passed an
+   * error code that indicates the successful completion of the wait operation.
+   */
+  std::size_t cancel_one(asio::error_code& ec)
+  {
+    return this->service.cancel_one(this->implementation, ec);
   }
 
   /// Get the timer's expiry time as an absolute time.
@@ -276,7 +342,7 @@ public:
     asio::error_code ec;
     std::size_t s = this->service.expires_at(
         this->implementation, expiry_time, ec);
-    asio::detail::throw_error(ec);
+    asio::detail::throw_error(ec, "expires_at");
     return s;
   }
 
@@ -345,7 +411,7 @@ public:
     asio::error_code ec;
     std::size_t s = this->service.expires_from_now(
         this->implementation, expiry_time, ec);
-    asio::detail::throw_error(ec);
+    asio::detail::throw_error(ec, "expires_from_now");
     return s;
   }
 
@@ -389,7 +455,7 @@ public:
   {
     asio::error_code ec;
     this->service.wait(this->implementation, ec);
-    asio::detail::throw_error(ec);
+    asio::detail::throw_error(ec, "wait");
   }
 
   /// Perform a blocking wait on the timer.
@@ -429,14 +495,24 @@ public:
    * asio::io_service::post().
    */
   template <typename WaitHandler>
-  void async_wait(WaitHandler handler)
+  ASIO_INITFN_RESULT_TYPE(WaitHandler,
+      void (asio::error_code))
+  async_wait(ASIO_MOVE_ARG(WaitHandler) handler)
   {
-    this->service.async_wait(this->implementation, handler);
+    // If you get an error on the following line it means that your handler does
+    // not meet the documented type requirements for a WaitHandler.
+    ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
+
+    return this->service.async_wait(this->implementation,
+        ASIO_MOVE_CAST(WaitHandler)(handler));
   }
 };
 
 } // namespace asio
 
 #include "asio/detail/pop_options.hpp"
+
+#endif // defined(ASIO_HAS_BOOST_DATE_TIME)
+       // || defined(GENERATING_DOCUMENTATION)
 
 #endif // ASIO_BASIC_DEADLINE_TIMER_HPP

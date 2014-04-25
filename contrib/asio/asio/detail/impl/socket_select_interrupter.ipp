@@ -2,7 +2,7 @@
 // detail/impl/socket_select_interrupter.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,9 @@
 
 #include "asio/detail/config.hpp"
 
-#if defined(BOOST_WINDOWS) \
+#if !defined(ASIO_WINDOWS_RUNTIME)
+
+#if defined(ASIO_WINDOWS) \
   || defined(__CYGWIN__) \
   || defined(__SYMBIAN32__)
 
@@ -34,6 +36,11 @@ namespace asio {
 namespace detail {
 
 socket_select_interrupter::socket_select_interrupter()
+{
+  open_descriptors();
+}
+
+void socket_select_interrupter::open_descriptors()
 {
   asio::error_code ec;
   socket_holder acceptor(socket_ops::socket(
@@ -109,12 +116,27 @@ socket_select_interrupter::socket_select_interrupter()
 
 socket_select_interrupter::~socket_select_interrupter()
 {
+  close_descriptors();
+}
+
+void socket_select_interrupter::close_descriptors()
+{
   asio::error_code ec;
   socket_ops::state_type state = socket_ops::internal_non_blocking;
   if (read_descriptor_ != invalid_socket)
     socket_ops::close(read_descriptor_, state, true, ec);
   if (write_descriptor_ != invalid_socket)
     socket_ops::close(write_descriptor_, state, true, ec);
+}
+
+void socket_select_interrupter::recreate()
+{
+  close_descriptors();
+
+  write_descriptor_ = invalid_socket;
+  read_descriptor_ = invalid_socket;
+
+  open_descriptors();
 }
 
 void socket_select_interrupter::interrupt()
@@ -144,8 +166,10 @@ bool socket_select_interrupter::reset()
 
 #include "asio/detail/pop_options.hpp"
 
-#endif // defined(BOOST_WINDOWS)
+#endif // defined(ASIO_WINDOWS)
        // || defined(__CYGWIN__)
        // || defined(__SYMBIAN32__)
+
+#endif // !defined(ASIO_WINDOWS_RUNTIME)
 
 #endif // ASIO_DETAIL_IMPL_SOCKET_SELECT_INTERRUPTER_IPP

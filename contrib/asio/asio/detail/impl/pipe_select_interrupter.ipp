@@ -2,7 +2,7 @@
 // detail/impl/pipe_select_interrupter.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,8 @@
 
 #include "asio/detail/config.hpp"
 
-#if !defined(BOOST_WINDOWS)
+#if !defined(ASIO_WINDOWS_RUNTIME)
+#if !defined(ASIO_WINDOWS)
 #if !defined(__CYGWIN__)
 #if !defined(__SYMBIAN32__)
 #if !defined(ASIO_HAS_EVENTFD)
@@ -27,6 +28,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "asio/detail/pipe_select_interrupter.hpp"
+#include "asio/detail/socket_types.hpp"
 #include "asio/detail/throw_error.hpp"
 #include "asio/error.hpp"
 
@@ -37,6 +39,11 @@ namespace detail {
 
 pipe_select_interrupter::pipe_select_interrupter()
 {
+  open_descriptors();
+}
+
+void pipe_select_interrupter::open_descriptors()
+{
   int pipe_fds[2];
   if (pipe(pipe_fds) == 0)
   {
@@ -44,6 +51,11 @@ pipe_select_interrupter::pipe_select_interrupter()
     ::fcntl(read_descriptor_, F_SETFL, O_NONBLOCK);
     write_descriptor_ = pipe_fds[1];
     ::fcntl(write_descriptor_, F_SETFL, O_NONBLOCK);
+
+#if defined(FD_CLOEXEC)
+    ::fcntl(read_descriptor_, F_SETFD, FD_CLOEXEC);
+    ::fcntl(write_descriptor_, F_SETFD, FD_CLOEXEC);
+#endif // defined(FD_CLOEXEC)
   }
   else
   {
@@ -55,16 +67,31 @@ pipe_select_interrupter::pipe_select_interrupter()
 
 pipe_select_interrupter::~pipe_select_interrupter()
 {
+  close_descriptors();
+}
+
+void pipe_select_interrupter::close_descriptors()
+{
   if (read_descriptor_ != -1)
     ::close(read_descriptor_);
   if (write_descriptor_ != -1)
     ::close(write_descriptor_);
 }
 
+void pipe_select_interrupter::recreate()
+{
+  close_descriptors();
+
+  write_descriptor_ = -1;
+  read_descriptor_ = -1;
+
+  open_descriptors();
+}
+
 void pipe_select_interrupter::interrupt()
 {
   char byte = 0;
-  int result = ::write(write_descriptor_, &byte, 1);
+  signed_size_type result = ::write(write_descriptor_, &byte, 1);
   (void)result;
 }
 
@@ -73,7 +100,7 @@ bool pipe_select_interrupter::reset()
   for (;;)
   {
     char data[1024];
-    int bytes_read = ::read(read_descriptor_, data, sizeof(data));
+    signed_size_type bytes_read = ::read(read_descriptor_, data, sizeof(data));
     if (bytes_read < 0 && errno == EINTR)
       continue;
     bool was_interrupted = (bytes_read > 0);
@@ -91,6 +118,7 @@ bool pipe_select_interrupter::reset()
 #endif // !defined(ASIO_HAS_EVENTFD)
 #endif // !defined(__SYMBIAN32__)
 #endif // !defined(__CYGWIN__)
-#endif // !defined(BOOST_WINDOWS)
+#endif // !defined(ASIO_WINDOWS)
+#endif // !defined(ASIO_WINDOWS_RUNTIME)
 
 #endif // ASIO_DETAIL_IMPL_PIPE_SELECT_INTERRUPTER_IPP

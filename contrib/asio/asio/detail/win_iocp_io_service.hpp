@@ -2,7 +2,7 @@
 // detail/win_iocp_io_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,34 +19,36 @@
 
 #if defined(ASIO_HAS_IOCP)
 
-#include <boost/scoped_ptr.hpp>
 #include "asio/io_service.hpp"
+#include "asio/detail/call_stack.hpp"
+#include "asio/detail/limits.hpp"
 #include "asio/detail/mutex.hpp"
 #include "asio/detail/op_queue.hpp"
+#include "asio/detail/scoped_ptr.hpp"
 #include "asio/detail/socket_types.hpp"
-#include "asio/detail/timer_op.hpp"
-#include "asio/detail/timer_queue_base.hpp"
-#include "asio/detail/timer_queue_fwd.hpp"
-#include "asio/detail/timer_queue_set.hpp"
-#include "asio/detail/win_iocp_io_service_fwd.hpp"
-#include "asio/detail/win_iocp_operation.hpp"
 #include "asio/detail/thread.hpp"
+#include "asio/detail/timer_queue_base.hpp"
+#include "asio/detail/timer_queue_set.hpp"
+#include "asio/detail/wait_op.hpp"
+#include "asio/detail/win_iocp_operation.hpp"
+#include "asio/detail/win_iocp_thread_info.hpp"
 
 #include "asio/detail/push_options.hpp"
 
 namespace asio {
 namespace detail {
 
-class timer_op;
+class wait_op;
 
 class win_iocp_io_service
   : public asio::detail::service_base<win_iocp_io_service>
 {
 public:
-  // Constructor.
-  ASIO_DECL win_iocp_io_service(asio::io_service& io_service);
 
-  ASIO_DECL void init(size_t concurrency_hint);
+  // Constructor. Specifies a concurrency hint that is passed through to the
+  // underlying I/O completion port.
+  ASIO_DECL win_iocp_io_service(asio::io_service& io_service,
+      size_t concurrency_hint = 0);
 
   // Destroy all user-defined handler objects owned by the service.
   ASIO_DECL void shutdown_service();
@@ -75,6 +77,12 @@ public:
   // Stop the event processing loop.
   ASIO_DECL void stop();
 
+  // Determine whether the io_service is stopped.
+  bool stopped() const
+  {
+    return ::InterlockedExchangeAdd(&stopped_, 0) != 0;
+  }
+
   // Reset in preparation for a subsequent run invocation.
   void reset()
   {
@@ -94,17 +102,23 @@ public:
       stop();
   }
 
+  // Return whether a handler can be dispatched immediately.
+  bool can_dispatch()
+  {
+    return thread_call_stack::contains(this) != 0;
+  }
+
   // Request invocation of the given handler.
   template <typename Handler>
-  void dispatch(Handler handler);
+  void dispatch(Handler& handler);
 
   // Request invocation of the given handler and return immediately.
   template <typename Handler>
-  void post(Handler handler);
+  void post(Handler& handler);
 
   // Request invocation of the given operation and return immediately. Assumes
   // that work_started() has not yet been called for the operation.
-  void post_immediate_completion(win_iocp_operation* op)
+  void post_immediate_completion(win_iocp_operation* op, bool)
   {
     work_started();
     post_deferred_completion(op);
@@ -118,6 +132,26 @@ public:
   // that work_started() was previously called for the operations.
   ASIO_DECL void post_deferred_completions(
       op_queue<win_iocp_operation>& ops);
+
+  // Request invocation of the given operation using the thread-private queue
+  // and return immediately. Assumes that work_started() has not yet been
+  // called for the operation.
+  void post_private_immediate_completion(win_iocp_operation* op)
+  {
+    post_immediate_completion(op, false);
+  }
+
+  // Request invocation of the given operation using the thread-private queue
+  // and return immediately. Assumes that work_started() was previously called
+  // for the operation.
+  void post_private_deferred_completion(win_iocp_operation* op)
+  {
+    post_deferred_completion(op);
+  }
+
+  // Process unfinished operations as part of a shutdown_service operation.
+  // Assumes that work_started() was previously called for the operations.
+  ASIO_DECL void abandon_operations(op_queue<operation>& ops);
 
   // Called after starting an overlapped I/O operation that did not complete
   // immediately. The caller must have already called work_started() prior to
@@ -149,13 +183,14 @@ public:
   template <typename Time_Traits>
   void schedule_timer(timer_queue<Time_Traits>& queue,
       const typename Time_Traits::time_type& time,
-      typename timer_queue<Time_Traits>::per_timer_data& timer, timer_op* op);
+      typename timer_queue<Time_Traits>::per_timer_data& timer, wait_op* op);
 
   // Cancel the timer associated with the given token. Returns the number of
   // handlers that have been posted or dispatched.
   template <typename Time_Traits>
   std::size_t cancel_timer(timer_queue<Time_Traits>& queue,
-      typename timer_queue<Time_Traits>::per_timer_data& timer);
+      typename timer_queue<Time_Traits>::per_timer_data& timer,
+      std::size_t max_cancelled = (std::numeric_limits<std::size_t>::max)());
 
 private:
 #if defined(WINVER) && (WINVER < 0x0500)
@@ -198,7 +233,12 @@ private:
   long outstanding_work_;
 
   // Flag to indicate whether the event loop has been stopped.
-  long stopped_;
+  mutable long stopped_;
+
+  // Flag to indicate whether there is an in-flight stop event. Every event
+  // posted using PostQueuedCompletionStatus consumes non-paged pool, so to
+  // avoid exhausting this resouce we limit the number of outstanding events.
+  long stop_event_posted_;
 
   // Flag to indicate whether the service has been shut down.
   long shutdown_;
@@ -232,7 +272,7 @@ private:
   friend struct timer_thread_function;
 
   // Background thread used for processing timeouts.
-  boost::scoped_ptr<thread> timer_thread_;
+  scoped_ptr<thread> timer_thread_;
 
   // A waitable timer object used for waiting for timeouts.
   auto_handle waitable_timer_;
@@ -248,6 +288,10 @@ private:
 
   // The operations that are ready to dispatch.
   op_queue<win_iocp_operation> completed_ops_;
+
+  // Per-thread call stack to track the state of each thread in the io_service.
+  typedef call_stack<win_iocp_io_service,
+      win_iocp_thread_info> thread_call_stack;
 };
 
 } // namespace detail

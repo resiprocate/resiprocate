@@ -2,7 +2,7 @@
 // detail/descriptor_ops.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,9 @@
 
 #include "asio/detail/config.hpp"
 
-#if !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#if !defined(ASIO_WINDOWS) \
+  && !defined(ASIO_WINDOWS_RUNTIME) \
+  && !defined(__CYGWIN__)
 
 #include <cstddef>
 #include "asio/error_code.hpp"
@@ -39,7 +41,10 @@ enum
   internal_non_blocking = 2,
 
   // Helper "state" used to determine whether the descriptor is non-blocking.
-  non_blocking = user_set_non_blocking | internal_non_blocking
+  non_blocking = user_set_non_blocking | internal_non_blocking,
+
+  // The descriptor may have been dup()-ed.
+  possible_dup = 4
 };
 
 typedef unsigned char state_type;
@@ -59,8 +64,11 @@ ASIO_DECL int open(const char* path, int flags,
 ASIO_DECL int close(int d, state_type& state,
     asio::error_code& ec);
 
+ASIO_DECL bool set_user_non_blocking(int d,
+    state_type& state, bool value, asio::error_code& ec);
+
 ASIO_DECL bool set_internal_non_blocking(int d,
-    state_type& state, asio::error_code& ec);
+    state_type& state, bool value, asio::error_code& ec);
 
 typedef iovec buf;
 
@@ -81,14 +89,16 @@ ASIO_DECL bool non_blocking_write(int d,
 ASIO_DECL int ioctl(int d, state_type& state, long cmd,
     ioctl_arg_type* arg, asio::error_code& ec);
 
-ASIO_DECL int fcntl(int d, long cmd, asio::error_code& ec);
+ASIO_DECL int fcntl(int d, int cmd, asio::error_code& ec);
 
-ASIO_DECL int fcntl(int d, long cmd,
+ASIO_DECL int fcntl(int d, int cmd,
     long arg, asio::error_code& ec);
 
-ASIO_DECL int poll_read(int d, asio::error_code& ec);
+ASIO_DECL int poll_read(int d,
+    state_type state, asio::error_code& ec);
 
-ASIO_DECL int poll_write(int d, asio::error_code& ec);
+ASIO_DECL int poll_write(int d,
+    state_type state, asio::error_code& ec);
 
 } // namespace descriptor_ops
 } // namespace detail
@@ -100,6 +110,8 @@ ASIO_DECL int poll_write(int d, asio::error_code& ec);
 # include "asio/detail/impl/descriptor_ops.ipp"
 #endif // defined(ASIO_HEADER_ONLY)
 
-#endif // !defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#endif // !defined(ASIO_WINDOWS)
+       //   && !defined(ASIO_WINDOWS_RUNTIME)
+       //   && !defined(__CYGWIN__)
 
 #endif // ASIO_DETAIL_DESCRIPTOR_OPS_HPP

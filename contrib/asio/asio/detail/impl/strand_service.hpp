@@ -2,7 +2,7 @@
 // detail/impl/strand_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,6 +15,7 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
+#include "asio/detail/addressof.hpp"
 #include "asio/detail/call_stack.hpp"
 #include "asio/detail/completion_handler.hpp"
 #include "asio/detail/fenced_block.hpp"
@@ -28,7 +29,7 @@ namespace detail {
 
 inline strand_service::strand_impl::strand_impl()
   : operation(&strand_service::do_complete),
-    count_(0)
+    locked_(false)
 {
 }
 
@@ -40,51 +41,42 @@ struct strand_service::on_dispatch_exit
   ~on_dispatch_exit()
   {
     impl_->mutex_.lock();
-    bool more_handlers = (--impl_->count_ > 0);
+    impl_->ready_queue_.push(impl_->waiting_queue_);
+    bool more_handlers = impl_->locked_ = !impl_->ready_queue_.empty();
     impl_->mutex_.unlock();
 
     if (more_handlers)
-      io_service_->post_immediate_completion(impl_);
+      io_service_->post_immediate_completion(impl_, false);
   }
 };
 
-inline void strand_service::destroy(strand_service::implementation_type& impl)
-{
-  impl = 0;
-}
-
 template <typename Handler>
 void strand_service::dispatch(strand_service::implementation_type& impl,
-    Handler handler)
+    Handler& handler)
 {
   // If we are already in the strand then the handler can run immediately.
   if (call_stack<strand_impl>::contains(impl))
   {
-    asio::detail::fenced_block b;
+    fenced_block b(fenced_block::full);
     asio_handler_invoke_helpers::invoke(handler, handler);
     return;
   }
 
   // Allocate and construct an operation to wrap the handler.
   typedef completion_handler<Handler> op;
-  typename op::ptr p = { boost::addressof(handler),
+  typename op::ptr p = { asio::detail::addressof(handler),
     asio_handler_alloc_helpers::allocate(
       sizeof(op), handler), 0 };
   p.p = new (p.v) op(handler);
 
-  // If we are running inside the io_service, and no other handler is queued
-  // or running, then the handler can run immediately.
-  bool can_dispatch = call_stack<io_service_impl>::contains(&io_service_);
-  impl->mutex_.lock();
-  bool first = (++impl->count_ == 1);
-  if (can_dispatch && first)
+  ASIO_HANDLER_CREATION((p.p, "strand", impl, "dispatch"));
+
+  bool dispatch_immediately = do_dispatch(impl, p.p);
+  operation* o = p.p;
+  p.v = p.p = 0;
+
+  if (dispatch_immediately)
   {
-    // Immediate invocation is allowed.
-    impl->mutex_.unlock();
-
-    // Memory must be releaesed before any upcall is made.
-    p.reset();
-
     // Indicate that this strand is executing on the current thread.
     call_stack<strand_impl>::context ctx(impl);
 
@@ -92,44 +84,30 @@ void strand_service::dispatch(strand_service::implementation_type& impl,
     on_dispatch_exit on_exit = { &io_service_, impl };
     (void)on_exit;
 
-    asio::detail::fenced_block b;
-    asio_handler_invoke_helpers::invoke(handler, handler);
-    return;
+    completion_handler<Handler>::do_complete(
+        &io_service_, o, asio::error_code(), 0);
   }
-
-  // Immediate invocation is not allowed, so enqueue for later.
-  impl->queue_.push(p.p);
-  impl->mutex_.unlock();
-  p.v = p.p = 0;
-
-  // The first handler to be enqueued is responsible for scheduling the
-  // strand.
-  if (first)
-    io_service_.post_immediate_completion(impl);
 }
 
 // Request the io_service to invoke the given handler and return immediately.
 template <typename Handler>
 void strand_service::post(strand_service::implementation_type& impl,
-    Handler handler)
+    Handler& handler)
 {
+  bool is_continuation =
+    asio_handler_cont_helpers::is_continuation(handler);
+
   // Allocate and construct an operation to wrap the handler.
   typedef completion_handler<Handler> op;
-  typename op::ptr p = { boost::addressof(handler),
+  typename op::ptr p = { asio::detail::addressof(handler),
     asio_handler_alloc_helpers::allocate(
       sizeof(op), handler), 0 };
   p.p = new (p.v) op(handler);
 
-  // Add the handler to the queue.
-  impl->mutex_.lock();
-  bool first = (++impl->count_ == 1);
-  impl->queue_.push(p.p);
-  impl->mutex_.unlock();
-  p.v = p.p = 0;
+  ASIO_HANDLER_CREATION((p.p, "strand", impl, "post"));
 
-  // The first handler to be enqueue is responsible for scheduling the strand.
-  if (first)
-    io_service_.post_immediate_completion(impl);
+  do_post(impl, p.p, is_continuation);
+  p.v = p.p = 0;
 }
 
 } // namespace detail

@@ -2,7 +2,7 @@
 // basic_streambuf.hpp
 // ~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,18 +17,18 @@
 
 #include "asio/detail/config.hpp"
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
 
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
 #include <streambuf>
 #include <vector>
-#include <boost/limits.hpp>
-#include <boost/throw_exception.hpp>
 #include "asio/basic_streambuf_fwd.hpp"
 #include "asio/buffer.hpp"
+#include "asio/detail/limits.hpp"
 #include "asio/detail/noncopyable.hpp"
+#include "asio/detail/throw_exception.hpp"
 
 #include "asio/detail/push_options.hpp"
 
@@ -129,9 +129,9 @@ public:
    * of the streambuf's input sequence is 0.
    */
   explicit basic_streambuf(
-      std::size_t max_size = (std::numeric_limits<std::size_t>::max)(),
+      std::size_t maximum_size = (std::numeric_limits<std::size_t>::max)(),
       const Allocator& allocator = Allocator())
-    : max_size_(max_size),
+    : max_size_(maximum_size),
       buffer_(allocator)
   {
     std::size_t pend = (std::min<std::size_t>)(max_size_, buffer_delta);
@@ -236,6 +236,8 @@ public:
    */
   void consume(std::size_t n)
   {
+    if (egptr() < pptr())
+      setg(&buffer_[0], gptr(), pptr());
     if (gptr() + n > pptr())
       n = pptr() - gptr();
     gbump(static_cast<int>(n));
@@ -324,7 +326,7 @@ protected:
       else
       {
         std::length_error ex("asio::streambuf too long");
-        boost::throw_exception(ex);
+        asio::detail::throw_exception(ex);
       }
     }
 
@@ -361,6 +363,6 @@ inline std::size_t read_size_helper(
 
 #include "asio/detail/pop_options.hpp"
 
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 #endif // ASIO_BASIC_STREAMBUF_HPP

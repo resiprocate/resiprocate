@@ -2,7 +2,7 @@
 // detail/reactive_socket_connect_op.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,7 +16,7 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
-#include <boost/utility/addressof.hpp>
+#include "asio/detail/addressof.hpp"
 #include "asio/detail/bind_handler.hpp"
 #include "asio/detail/buffer_sequence_adapter.hpp"
 #include "asio/detail/fenced_block.hpp"
@@ -55,20 +55,23 @@ class reactive_socket_connect_op : public reactive_socket_connect_op_base
 public:
   ASIO_DEFINE_HANDLER_PTR(reactive_socket_connect_op);
 
-  reactive_socket_connect_op(socket_type socket, Handler handler)
+  reactive_socket_connect_op(socket_type socket, Handler& handler)
     : reactive_socket_connect_op_base(socket,
         &reactive_socket_connect_op::do_complete),
-      handler_(handler)
+      handler_(ASIO_MOVE_CAST(Handler)(handler))
   {
   }
 
   static void do_complete(io_service_impl* owner, operation* base,
-      asio::error_code /*ec*/, std::size_t /*bytes_transferred*/)
+      const asio::error_code& /*ec*/,
+      std::size_t /*bytes_transferred*/)
   {
     // Take ownership of the handler object.
     reactive_socket_connect_op* o
       (static_cast<reactive_socket_connect_op*>(base));
-    ptr p = { boost::addressof(o->handler_), o, o };
+    ptr p = { asio::detail::addressof(o->handler_), o, o };
+
+    ASIO_HANDLER_COMPLETION((o));
 
     // Make a copy of the handler so that the memory can be deallocated before
     // the upcall is made. Even if we're not about to make an upcall, a
@@ -78,14 +81,16 @@ public:
     // deallocated the memory here.
     detail::binder1<Handler, asio::error_code>
       handler(o->handler_, o->ec_);
-    p.h = boost::addressof(handler.handler_);
+    p.h = asio::detail::addressof(handler.handler_);
     p.reset();
 
     // Make the upcall if required.
     if (owner)
     {
-      asio::detail::fenced_block b;
+      fenced_block b(fenced_block::half);
+      ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
       asio_handler_invoke_helpers::invoke(handler, handler);
+      ASIO_HANDLER_INVOCATION_END;
     }
   }
 

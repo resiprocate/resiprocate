@@ -2,7 +2,7 @@
 // impl/io_service.hpp
 // ~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,6 +15,7 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
+#include "asio/detail/handler_type_requirements.hpp"
 #include "asio/detail/service_registry.hpp"
 
 #include "asio/detail/push_options.hpp"
@@ -29,6 +30,13 @@ inline Service& use_service(io_service& ios)
   (void)static_cast<const io_service::id*>(&Service::id);
 
   return ios.service_registry_->template use_service<Service>();
+}
+
+template <>
+inline detail::io_service_impl& use_service<detail::io_service_impl>(
+    io_service& ios)
+{
+  return ios.impl_;
 }
 
 template <typename Service>
@@ -65,16 +73,38 @@ inline bool has_service(io_service& ios)
 
 namespace asio {
 
-template <typename Handler>
-inline void io_service::dispatch(Handler handler)
+template <typename CompletionHandler>
+inline ASIO_INITFN_RESULT_TYPE(CompletionHandler, void ())
+io_service::dispatch(ASIO_MOVE_ARG(CompletionHandler) handler)
 {
-  impl_.dispatch(handler);
+  // If you get an error on the following line it means that your handler does
+  // not meet the documented type requirements for a CompletionHandler.
+  ASIO_COMPLETION_HANDLER_CHECK(CompletionHandler, handler) type_check;
+
+  detail::async_result_init<
+    CompletionHandler, void ()> init(
+      ASIO_MOVE_CAST(CompletionHandler)(handler));
+
+  impl_.dispatch(init.handler);
+
+  return init.result.get();
 }
 
-template <typename Handler>
-inline void io_service::post(Handler handler)
+template <typename CompletionHandler>
+inline ASIO_INITFN_RESULT_TYPE(CompletionHandler, void ())
+io_service::post(ASIO_MOVE_ARG(CompletionHandler) handler)
 {
-  impl_.post(handler);
+  // If you get an error on the following line it means that your handler does
+  // not meet the documented type requirements for a CompletionHandler.
+  ASIO_COMPLETION_HANDLER_CHECK(CompletionHandler, handler) type_check;
+
+  detail::async_result_init<
+    CompletionHandler, void ()> init(
+      ASIO_MOVE_CAST(CompletionHandler)(handler));
+
+  impl_.post(init.handler);
+
+  return init.result.get();
 }
 
 template <typename Handler>
@@ -89,35 +119,25 @@ io_service::wrap(Handler handler)
 }
 
 inline io_service::work::work(asio::io_service& io_service)
-  : io_service_(io_service)
+  : io_service_impl_(io_service.impl_)
 {
-  io_service_.impl_.work_started();
+  io_service_impl_.work_started();
 }
 
 inline io_service::work::work(const work& other)
-  : io_service_(other.io_service_)
+  : io_service_impl_(other.io_service_impl_)
 {
-  io_service_.impl_.work_started();
+  io_service_impl_.work_started();
 }
 
 inline io_service::work::~work()
 {
-  io_service_.impl_.work_finished();
-}
-
-inline asio::io_service& io_service::work::io_service()
-{
-  return io_service_;
+  io_service_impl_.work_finished();
 }
 
 inline asio::io_service& io_service::work::get_io_service()
 {
-  return io_service_;
-}
-
-inline asio::io_service& io_service::service::io_service()
-{
-  return owner_;
+  return io_service_impl_.get_io_service();
 }
 
 inline asio::io_service& io_service::service::get_io_service()

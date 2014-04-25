@@ -2,7 +2,7 @@
 // error.hpp
 // ~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,7 +16,10 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
-#if defined(BOOST_WINDOWS) || defined(__CYGWIN__)
+#include "asio/error_code.hpp"
+#if defined(ASIO_WINDOWS) \
+  || defined(__CYGWIN__) \
+  || defined(ASIO_WINDOWS_RUNTIME)
 # include <winerror.h>
 #else
 # include <cerrno>
@@ -34,7 +37,13 @@
 # define ASIO_GETADDRINFO_ERROR(e) implementation_defined
 /// INTERNAL ONLY.
 # define ASIO_WIN_OR_POSIX(e_win, e_posix) implementation_defined
-#elif defined(BOOST_WINDOWS) || defined(__CYGWIN__)
+#elif defined(ASIO_WINDOWS_RUNTIME)
+# define ASIO_NATIVE_ERROR(e) __HRESULT_FROM_WIN32(e)
+# define ASIO_SOCKET_ERROR(e) __HRESULT_FROM_WIN32(WSA ## e)
+# define ASIO_NETDB_ERROR(e) __HRESULT_FROM_WIN32(WSA ## e)
+# define ASIO_GETADDRINFO_ERROR(e) __HRESULT_FROM_WIN32(WSA ## e)
+# define ASIO_WIN_OR_POSIX(e_win, e_posix) e_win
+#elif defined(ASIO_WINDOWS) || defined(__CYGWIN__)
 # define ASIO_NATIVE_ERROR(e) e
 # define ASIO_SOCKET_ERROR(e) WSA ## e
 # define ASIO_NETDB_ERROR(e) WSA ## e
@@ -208,25 +217,76 @@ enum misc_errors
   fd_set_failure
 };
 
-enum ssl_errors
+inline const asio::error_category& get_system_category()
 {
-};
+  return asio::system_category();
+}
 
-// boostify: error category definitions start here.
+#if !defined(ASIO_WINDOWS) && !defined(__CYGWIN__)
+
+extern ASIO_DECL
+const asio::error_category& get_netdb_category();
+
+extern ASIO_DECL
+const asio::error_category& get_addrinfo_category();
+
+#else // !defined(ASIO_WINDOWS) && !defined(__CYGWIN__)
+
+inline const asio::error_category& get_netdb_category()
+{
+  return get_system_category();
+}
+
+inline const asio::error_category& get_addrinfo_category()
+{
+  return get_system_category();
+}
+
+#endif // !defined(ASIO_WINDOWS) && !defined(__CYGWIN__)
+
+extern ASIO_DECL
+const asio::error_category& get_misc_category();
+
+static const asio::error_category& system_category
+  = asio::error::get_system_category();
+static const asio::error_category& netdb_category
+  = asio::error::get_netdb_category();
+static const asio::error_category& addrinfo_category
+  = asio::error::get_addrinfo_category();
+static const asio::error_category& misc_category
+  = asio::error::get_misc_category();
 
 } // namespace error
 } // namespace asio
 
-#include "asio/detail/pop_options.hpp"
+#if defined(ASIO_HAS_STD_SYSTEM_ERROR)
+namespace std {
 
-#include "asio/error_code.hpp"
+template<> struct is_error_code_enum<asio::error::basic_errors>
+{
+  static const bool value = true;
+};
 
-#include "asio/detail/push_options.hpp"
+template<> struct is_error_code_enum<asio::error::netdb_errors>
+{
+  static const bool value = true;
+};
+
+template<> struct is_error_code_enum<asio::error::addrinfo_errors>
+{
+  static const bool value = true;
+};
+
+template<> struct is_error_code_enum<asio::error::misc_errors>
+{
+  static const bool value = true;
+};
+
+} // namespace std
+#endif // defined(ASIO_HAS_STD_SYSTEM_ERROR)
 
 namespace asio {
 namespace error {
-
-// boostify: error category definitions end here.
 
 inline asio::error_code make_error_code(basic_errors e)
 {
@@ -250,12 +310,6 @@ inline asio::error_code make_error_code(misc_errors e)
 {
   return asio::error_code(
       static_cast<int>(e), get_misc_category());
-}
-
-inline asio::error_code make_error_code(ssl_errors e)
-{
-  return asio::error_code(
-      static_cast<int>(e), get_ssl_category());
 }
 
 } // namespace error

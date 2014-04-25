@@ -2,7 +2,7 @@
 // ip/detail/endpoint.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -77,12 +77,12 @@ public:
   }
 
   // Set the underlying size of the endpoint in the native type.
-  ASIO_DECL void resize(std::size_t size);
+  ASIO_DECL void resize(std::size_t new_size);
 
   // Get the capacity of the endpoint in the native type.
   std::size_t capacity() const
   {
-    return sizeof(asio::detail::sockaddr_storage_type);
+    return sizeof(data_);
   }
 
   // Get the port associated with the endpoint.
@@ -108,20 +108,19 @@ public:
   // Determine whether the endpoint is IPv4.
   bool is_v4() const
   {
-    return data_.base.sa_family == AF_INET;
+    return data_.base.sa_family == ASIO_OS_DEF(AF_INET);
   }
 
-#if !defined(BOOST_NO_IOSTREAM)
+#if !defined(ASIO_NO_IOSTREAM)
   // Convert to a string.
   ASIO_DECL std::string to_string(asio::error_code& ec) const;
-#endif // !defined(BOOST_NO_IOSTREAM)
+#endif // !defined(ASIO_NO_IOSTREAM)
 
 private:
   // The underlying IP socket address.
   union data_union
   {
     asio::detail::socket_addr_type base;
-    asio::detail::sockaddr_storage_type storage;
     asio::detail::sockaddr_in4_type v4;
     asio::detail::sockaddr_in6_type v6;
   } data_;
