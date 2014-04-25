@@ -3,13 +3,14 @@
 #endif
 
 #ifdef USE_SSL
+#include <asio.hpp>
+#include <asio/ssl.hpp>
+#include <boost/function.hpp>
+#include <iostream>
+
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/Timer.hxx>
-
-#include <asio.hpp>
-#include <boost/function.hpp>
-#include <iostream>
 
 #include "FlowDtlsSocketContext.hxx"
 #include "FlowManagerSubsystem.hxx"

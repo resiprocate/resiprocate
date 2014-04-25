@@ -7,8 +7,14 @@
 #error You must define ASIO_ENABLE_CANCELIO in your build settings.
 #endif
 
-#include <vector>
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
+#include <boost/bind.hpp>
+
+#include <vector>
+
 #include <rutil/Data.hxx>
 #include <rutil/Mutex.hxx>
 

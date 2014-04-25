@@ -103,7 +103,7 @@ Note:  Ensure you use at least SVN revision 11413 of sipXtapi.
 
 /resip/                  <- https://svn.resiprocate.org/rep/resiprocate/main
 /resip/contrib/openssl   <- OpenSSL 1.0.1 or above
-/resip/contrib/boost     <- BOOST 1.34.1 (required in this location for Windows builds only)
+/resip/contrib/boost     <- BOOST 1.34.1 or above (required in this location for Windows builds only)
 /sipXtapi                <- https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi
 
 Building recon on Windows

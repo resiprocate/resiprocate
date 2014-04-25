@@ -5,6 +5,9 @@
 #include <rutil/compat.hxx>
 #include <rutil/Data.hxx>
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 
 #include "StunTuple.hxx"
 

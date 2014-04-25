@@ -1,11 +1,15 @@
 #ifndef ASYNC_SOCKET_BASE_HXX
 #define ASYNC_SOCKET_BASE_HXX
 
-#include <deque>
 #include <asio.hpp>
-#include <boost/bind.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
+
+#include <deque>
 
 #include "DataBuffer.hxx"
 #include "StunTuple.hxx"

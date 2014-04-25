@@ -2,6 +2,10 @@
 #define FlowDtlsTimerContext_hxx 
 
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
+
 #include <rutil/SharedPtr.hxx>
 #include "dtls_wrapper/DtlsTimer.hxx"
 

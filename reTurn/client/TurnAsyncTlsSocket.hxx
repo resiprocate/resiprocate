@@ -9,6 +9,7 @@
 
 #include <asio.hpp>
 #include <asio/ssl.hpp>
+#include <boost/bind.hpp>
 
 #include "TurnAsyncTcpSocket.hxx"
 #include "reTurn/AsyncTlsSocketBase.hxx"

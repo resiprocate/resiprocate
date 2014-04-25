@@ -6,7 +6,9 @@
 #endif
 
 #include <asio.hpp>
+#ifdef USE_SSL
 #include <asio/ssl.hpp>
+#endif
 #ifdef WIN32
 #include <srtp.h>
 #else

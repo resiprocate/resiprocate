@@ -2,6 +2,9 @@
 #define UDP_SERVER_HXX
 
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include <string>
 #include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"

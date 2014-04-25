@@ -4,6 +4,9 @@
 #include <map>
 #include <boost/noncopyable.hpp>
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 
 #include "StunTuple.hxx"
 #include "StunAuth.hxx"

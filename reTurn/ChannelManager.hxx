@@ -2,6 +2,9 @@
 #define CHANNELMANAGER_HXX
 
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 
 #include "RemotePeer.hxx"
 

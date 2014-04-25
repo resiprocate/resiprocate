@@ -3,6 +3,9 @@
 
 #include <map>
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>

@@ -1,5 +1,4 @@
 #include "TurnAsyncTcpSocket.hxx"
-#include <boost/bind.hpp>
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)

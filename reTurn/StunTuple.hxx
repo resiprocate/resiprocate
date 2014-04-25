@@ -2,6 +2,9 @@
 #define STUNTUPLE_HXX
 
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include <rutil/resipfaststreams.hxx>
 
 namespace reTurn {
