@@ -37,12 +37,6 @@
 //#define DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
 #include <rutil/WinLeakCheck.hxx>
 
-#ifdef WIN32
-   #define sleepMs(t) Sleep(t)
-#else
-   #define sleepMs(t) usleep(t*1000)
-#endif
-
 using namespace recon;
 using namespace resip;
 using namespace std;
