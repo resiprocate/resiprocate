@@ -304,9 +304,9 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
    if(!domain.empty())
    {
       // Set Private Key PassPhrase
+      SSL_CTX_set_default_passwd_cb(ctx, pem_passwd_cb);
       if(!privateKeyPassPhrase.empty())
       {
-          SSL_CTX_set_default_passwd_cb(ctx, pem_passwd_cb);
           SSL_CTX_set_default_passwd_cb_userdata(ctx, (void*)privateKeyPassPhrase.c_str()); 
       }
       Data certFilename(certificateFilename.empty() ? mPath + pemTypePrefixes(DomainCert) + domain + PEM : certificateFilename);
