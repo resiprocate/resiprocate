@@ -29,9 +29,11 @@ class ServerInviteSession: public InviteSession
           call accept in order to cause the message to be sent.
           If sendOfferAtAccept is true, no UPDATE will be sent if media is negotiated reliable,
           it will be sent at accept */
-      virtual void provideOffer(const Contents& offer, bool sendOfferAtAccept=false);
+      virtual void provideOffer(const Contents& offer);
+      virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level, const Contents* alternative);
+      virtual void provideOffer(const Contents& offer, bool sendOfferAtAccept);
       virtual void provideOffer(const Contents& offer, DialogUsageManager::EncryptionLevel level,
-                                const Contents* alternative, bool sendOfferAtAccept=false);
+                                const Contents* alternative, bool sendOfferAtAccept);
 
       /** Called to request that the far end provide an offer.  This will cause a 
           reinvite with no body to be sent.  */

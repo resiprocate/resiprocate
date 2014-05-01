@@ -345,6 +345,14 @@ ServerInviteSession::provideOffer(const Contents& offer,
    }
 }
 
+void
+ServerInviteSession::provideOffer(const Contents& offer,
+                                  DialogUsageManager::EncryptionLevel level, 
+                                  const Contents* alternative)
+{
+   this->provideOffer(offer, level, alternative, false);
+}
+
 void 
 ServerInviteSession::provideOffer(const Contents& offer,
                                   bool sendOfferAtAccept)
@@ -352,6 +360,11 @@ ServerInviteSession::provideOffer(const Contents& offer,
    this->provideOffer(offer, mCurrentEncryptionLevel, 0, sendOfferAtAccept);
 }
 
+void 
+ServerInviteSession::provideOffer(const Contents& offer)
+{
+   this->provideOffer(offer, mCurrentEncryptionLevel, 0, false);
+}
 
 void
 ServerInviteSession::requestOffer()
