@@ -28,6 +28,42 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   initNetwork();
+
+   {
+      // This test excercises a now fixed use-after-free bug when adding multi-headers to a list that has been copied, and then
+      // one of the headers is accessed (but not necessarily parsed).  
+      Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
+         "Record-Route: <sip:rruser@rrdomain;lr>\r\n"
+         "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
+         "From: Jason Fischl<sip:jason_AT_meet2talk.com@whistler.gloo.net>;tag=ba1aee2d\r\n"
+         "Via: SIP/2.0/UDP 192.168.2.220:5060;branch=z9hG4bK-c87542-da4d3e6a.0-1--c87542-;rport=5060;received=192.168.2.220;stid=579667358\r\n"
+         "Via: SIP/2.0/UDP 192.168.2.15:5100;branch=z9hG4bK-c87542-579667358-1--c87542-;rport=5100;received=192.168.2.15\r\n"
+         "Call-ID: 6c64b42fce01b007\r\n"
+         "CSeq: 2 INVITE\r\n"
+         "Route: <sip:proxy@192.168.2.220:5060;lr>\r\n"
+         "Contact: <sip:192.168.2.15:5100>\r\n"
+         "Content-Length: 0\r\n"
+         "\r\n");
+
+      auto_ptr<SipMessage> msg(SipMessage::make(txt, true /* isExternal */));
+
+      SipMessage response;
+      Helper::makeResponse(response, *msg, 200);
+
+      // Trigger a parse of Record-Route
+      NameAddr rr("sip:test@rr.com");
+      if(!(response.header(h_RecordRoutes).front() == rr))
+      {
+         //
+      }
+      // Now push a new Record-Route
+      response.header(h_RecordRoutes).push_front(rr);
+      assert(response.header(h_RecordRoutes).back().uri().user() == "rruser");
+
+      //InfoLog(<< response);
+   }
+
    static ExtensionParameter p_tag_ext("tag");
    {
       Data txt(
@@ -44,7 +80,6 @@ main(int argc, char** argv)
             "Content-Length: 0\r\n"
             "\r\n"
             );
-      initNetwork();
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       assert(msg.get());   

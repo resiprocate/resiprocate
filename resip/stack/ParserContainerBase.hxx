@@ -133,17 +133,25 @@ class ParserContainerBase
             static const HeaderKit Empty;
 
             HeaderKit(): pc(0){}
+
+            // Poor man's move c'tor, watch out!
             HeaderKit(const HeaderKit& orig) 
             : pc(orig.pc),
                hfv(orig.hfv)
-            {}
-
+            {
+               HeaderKit& nc_orig = const_cast<HeaderKit&>(orig);
+               std::swap(nc_orig.pc, pc);
+               hfv.swap(nc_orig.hfv);
+            }
+ 
+            // Poor man's move semantics, watch out!
             HeaderKit& operator=(const HeaderKit& rhs)
             {
                if(this!=&rhs)
                {
-                  pc=rhs.pc;
-                  hfv=rhs.hfv;
+                  HeaderKit& nc_orig = const_cast<HeaderKit&>(rhs);
+                  std::swap(nc_orig.pc, pc);
+                  hfv.swap(nc_orig.hfv);
                }
                return *this;
             }

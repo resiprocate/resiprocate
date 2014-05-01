@@ -105,6 +105,18 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv, NoOwnershipEnum 
    // ?bwc? assert(!hfv.mMine); ?
 }
 
+HeaderFieldValue&
+HeaderFieldValue::swap(HeaderFieldValue& orig)
+{
+   if (this != &orig)
+   {
+      std::swap(mField, orig.mField);
+      std::swap(mFieldLength, orig.mFieldLength);
+      std::swap(mMine, orig.mMine);
+   }
+   return *this;
+}
+
 HeaderFieldValue::~HeaderFieldValue()
 {
   if (mMine)
