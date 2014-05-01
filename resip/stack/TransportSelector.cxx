@@ -126,7 +126,6 @@ TransportSelector::~TransportSelector()
          closeSocket(socketIterator->second);
          DebugLog(<< "Closing TransportSelector::mSocket[" << socketIterator->first << "]");
       }
-      mSockets.erase(socketIterator);
    }
 
    for(HashMap<Data, Socket>::iterator socketIterator = mSocket6s.begin();
@@ -137,7 +136,6 @@ TransportSelector::~TransportSelector()
          closeSocket(socketIterator->second);
          DebugLog(<< "Closing TransportSelector::mSocket6[" << socketIterator->first << "]");
       }
-      mSocket6s.erase(socketIterator);
    }
 
    setPollGrp(0);
