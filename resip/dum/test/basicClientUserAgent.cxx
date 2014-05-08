@@ -121,7 +121,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
 #endif
    mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
    mInterruptor(new EventThreadInterruptor(*mPollGrp)),
-   mStack(new SipStack(mSecurity, DnsStub::EmptyNameserverList, mInterruptor)),
+   mStack(new SipStack(mSecurity, DnsStub::EmptyNameserverList, mInterruptor, false, 0, 0, mPollGrp)),
    mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mDum(new DialogUsageManager(*mStack)),
    mDumShutdownRequested(false),
