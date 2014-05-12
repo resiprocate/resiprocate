@@ -354,6 +354,7 @@ WinSecurity::getCredentials(MsCertStoreType eType)
 
                 if(bCallerFreeProvOrNCryptKey)
                 {
+#if(_WIN32_WINNT >= 0x0600)
                     if(dwKeySpec == CERT_NCRYPT_KEY_SPEC)
                     {
                         NCryptFreeObject(hCryptProv);
@@ -362,6 +363,9 @@ WinSecurity::getCredentials(MsCertStoreType eType)
                     {
                         CryptReleaseContext(hCryptProv, 0);
                     }
+#else
+                    CryptReleaseContext(hCryptProv, 0);
+#endif // if(_WIN32_WINNT >= 0x0600)
                 }
             }
         }
