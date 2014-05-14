@@ -300,7 +300,7 @@ Log::toLevel(const Data& l)
    int i=0;
    while (strlen(mDescriptions[i]))
    {
-      if (isEqualNoCase(pri, Data(mDescriptions[i])) == 0)
+      if (isEqualNoCase(pri, Data(mDescriptions[i])))
       {
          return Level(i-1);
       }
