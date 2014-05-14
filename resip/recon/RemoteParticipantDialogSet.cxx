@@ -3,7 +3,7 @@
 #endif
 
 // sipX includes
-#ifdef WIN32
+#if (_MSC_VER >= 1600)
 #include <stdint.h>       // Use Visual Studio's stdint.h
 #define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
 #endif

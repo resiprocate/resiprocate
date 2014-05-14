@@ -414,6 +414,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\DtmfPayloadContents.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Embedded.cxx"
 				>
 			</File>
@@ -1076,6 +1080,10 @@
 			</File>
 			<File
 				RelativePath=".\ssl\DtlsTransport.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DtmfPayloadContents.hxx"
 				>
 			</File>
 			<File

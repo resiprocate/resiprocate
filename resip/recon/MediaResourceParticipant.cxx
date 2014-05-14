@@ -216,9 +216,9 @@ MediaResourceParticipant::startPlay()
             {
                StackLog(<<"sending tone to sipX connection: " << participant->getMediaConnectionId());
                // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
-               //status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
+               status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
                // this is for newer sipXtapi API, option to suppress inband tones:
-               status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */, !isDtmf /* inband */, true /* RFC 4733 */);
+               //status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */, !isDtmf /* inband */, true /* RFC 4733 */);
             }
             else
             {
@@ -421,9 +421,9 @@ MediaResourceParticipant::destroyParticipant()
                if(participant)
                {
                   // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
-                  //status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
+                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
                   // this is for newer sipXtapi API, option to suppress inband tones:
-                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
+                  //status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
                }
                else
                {
