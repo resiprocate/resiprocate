@@ -7,6 +7,18 @@
 #include <fcntl.h>
 #include <errno.h>
 
+///////////////////////////////////////////////////////////////////////////////
+// Note: valgrind v3.7.0 does not support the setns() call, so we use the
+// following to check for valgrind and do a crude fix-up.
+///////////////////////////////////////////////////////////////////////////////
+#ifdef BUILD_FOR_VALGRIND
+#include <valgrind/valgrind.h>
+#endif
+#ifndef RUNNING_ON_VALGRIND
+#define RUNNING_ON_VALGRIND 0
+#warning Defaulting RUNNING_ON_VALGRIND to 0
+#endif
+
 #ifndef HAVE_SETNS
 #    include <linux/unistd.h>
 #endif
@@ -62,30 +74,40 @@ int NetNs::setNs(const Data& netNs)
    // the global netns namespace
    if(netNsFd >= 0)
    {
+      DebugLog(<< "setns(\"" << netNs << "\"(" << netNsFd << "))");
+      int error;
+
 #ifdef HAVE_SETNS
-      int error = setns(netNsFd, CLONE_NEWNET);
+#define DO_SETNS(fd, flag) setns(fd, flag)
 #else
-      // Make system call directly
-      int error = syscall(__NR_setns, netNsFd, CLONE_NEWNET);
+// Make system call directly
+#define DO_SETNS(fd, flag)  syscall(__NR_setns, fd, flag)
 #endif
+
+   ///////////////////////////////////////////////////////////////////////////////
+   // Note: valgrind v3.7.0 does not support the setns() call.  In order to work
+   // around this, we make the syscall to setns, indicate that an "error" occurred, and
+   // then suppress throwing the exception.  It's kind of an ugly hack, but it
+   // does let us run valgrind on our code.
+   ///////////////////////////////////////////////////////////////////////////////
+
+      error = DO_SETNS(netNsFd, CLONE_NEWNET);
 
       if(error)
       {
-         // setns normally closes the file descriptor when its done, but because
+         // setns normally closes the file descriptor when it is done, but because
          // it failed close the FD here just in case.
          close(netNsFd);
 
-         throw Exception("Can't change to name space \"" + netNs + "\"(fd:" +
-               Data((int) netNsFd) + "), error: " + Data((int) error) +
-               " errno: " + Data((int) errno), __FILE__,__LINE__);
+         if (!(RUNNING_ON_VALGRIND)) {
+            throw Exception("Can't change to name space \"" + netNs + "\"(fd:" +
+                  Data((int) netNsFd) + "), error: " + Data((int) error) +
+                  " errno: " + Data((int) errno), __FILE__,__LINE__);
+         }
       }
-      else
-      {
-         DebugLog(<< "setns(" << netNs << "(" << netNsFd << "))");
-      }
-   }
 
-   // Add name to the dictionary if its not already in there
+   // Add name to the dictionary if it is not already in there
+   }
    return(getNetNsId(netNs, true));
 }
 
