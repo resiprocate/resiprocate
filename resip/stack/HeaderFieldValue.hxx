@@ -43,6 +43,7 @@ class HeaderFieldValue
       HeaderFieldValue(const HeaderFieldValue& hfv, NoOwnershipEnum);
       HeaderFieldValue& operator=(const HeaderFieldValue&);
       HeaderFieldValue& copyWithPadding(const HeaderFieldValue& rhs);
+      HeaderFieldValue& swap(HeaderFieldValue& orig);
 
       ~HeaderFieldValue();
 

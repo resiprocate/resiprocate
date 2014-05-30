@@ -154,11 +154,18 @@ ParserContainerBase::copyParsers(const Parsers& parsers)
    mParsers.reserve(mParsers.size() + parsers.size());
    for(Parsers::const_iterator p=parsers.begin(); p!=parsers.end(); ++p)
    {
-      mParsers.push_back(*p);
+      // Copy c'tor and assignment operator for HeaderKit are actually poor
+      // man's move semantics, so we have to implement real copy semantics here.
+      mParsers.push_back(HeaderKit::Empty);
+
       HeaderKit& kit(mParsers.back());
-      if(kit.pc)
+      if(p->pc)
       {
-         kit.pc = makeParser(*kit.pc);
+         kit.pc = makeParser(*(p->pc));
+      } 
+      else 
+      {
+         kit.hfv = p->hfv;
       }
    }
 }
