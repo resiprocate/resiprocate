@@ -3,6 +3,8 @@
   #include "config.h"
 #endif
 
+#include <boost/crc.hpp>
+
 #include "StunMessage.hxx"
 
 #include <rutil/compat.hxx>
@@ -10,7 +12,6 @@
 #include <rutil/Random.hxx>
 #include <rutil/DataStream.hxx>
 #include <rutil/MD5Stream.hxx>
-#include <boost/crc.hpp>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"

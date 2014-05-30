@@ -3,6 +3,9 @@
 
 #include <rutil/compat.hxx>
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include "reTurn/AsyncSocketBaseHandler.hxx"
 #include "reTurn/DataBuffer.hxx"
 #include "reTurn/StunTuple.hxx"

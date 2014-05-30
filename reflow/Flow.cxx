@@ -3,7 +3,11 @@
 #endif
 
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include <boost/function.hpp>
+
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/Timer.hxx>

@@ -7,12 +7,18 @@
 #error You must define ASIO_ENABLE_CANCELIO in your build settings.
 #endif
 
-#include <map>
-#include <queue>
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+
 #include <rutil/Data.hxx>
 #include <rutil/Mutex.hxx>
-#include <boost/function.hpp>
+
+#include <map>
+#include <queue>
 
 #include "reTurn/StunTuple.hxx"
 #include "reTurn/StunMessage.hxx"

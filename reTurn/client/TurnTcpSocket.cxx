@@ -3,7 +3,6 @@
 #endif
 
 #include "TurnTcpSocket.hxx"
-#include <boost/bind.hpp>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 

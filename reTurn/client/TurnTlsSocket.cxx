@@ -4,10 +4,11 @@
 #endif
 
 #ifdef USE_SSL
+#include <boost/bind.hpp>
+
 #include "TurnTlsSocket.hxx"
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-#include <boost/bind.hpp>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 

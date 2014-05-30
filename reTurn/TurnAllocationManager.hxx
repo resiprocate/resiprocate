@@ -3,6 +3,9 @@
 
 #include <map>
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include "TurnAllocationKey.hxx"
 #include "ReTurnConfig.hxx"
 #include "StunTuple.hxx"

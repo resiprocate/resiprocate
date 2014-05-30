@@ -1,11 +1,7 @@
 #if !defined(ConversationManager_hxx)
 #define ConversationManager_hxx
 
-#ifdef WIN32
-#define BOOST__STDC_CONSTANT_MACROS_DEFINED  // elminate duplicate define warnings under windows
-#include <stdint.h>       // Use Visual Studio's stdint.h
-#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
-#endif
+#include <boost/function.hpp>
 
 #include "BridgeMixer.hxx"
 

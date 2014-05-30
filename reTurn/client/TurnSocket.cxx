@@ -1,6 +1,5 @@
 #include "TurnSocket.hxx"
 #include "ErrorCode.hxx"
-#include <boost/bind.hpp>
 #include <rutil/Lock.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>

@@ -2,6 +2,9 @@
 #define ASYNC_UDP_SOCKET_BASE_HXX
 
 #include <asio.hpp>
+#ifdef USE_SSL
+#include <asio/ssl.hpp>
+#endif
 #include <boost/bind.hpp>
 
 #include "AsyncSocketBase.hxx"

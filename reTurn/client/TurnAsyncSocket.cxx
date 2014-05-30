@@ -1,7 +1,6 @@
 #include "TurnAsyncSocket.hxx"
 #include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
-#include <boost/bind.hpp>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"

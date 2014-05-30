@@ -5,7 +5,6 @@
 
 #ifdef USE_SSL
 #include "TurnAsyncTlsSocket.hxx"
-#include <boost/bind.hpp>
 
 using namespace std;
 

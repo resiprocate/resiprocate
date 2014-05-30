@@ -3,7 +3,6 @@
 #endif
 
 #include "TurnUdpSocket.hxx"
-#include <boost/bind.hpp>
 
 using namespace std;
 
