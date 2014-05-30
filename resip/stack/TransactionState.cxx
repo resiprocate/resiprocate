@@ -397,17 +397,18 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
 void
 TransactionState::process(TransactionController& controller, 
                            TransactionMessage* message)
-{
+{ 
+   // Note:  KeepAliveMessage is a special SipMessage - check for it first
+   KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
+   if (keepAlive)
    {
-      KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
-      if (keepAlive)
-      {
-         StackLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
-         controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
-         delete keepAlive;
-         return;      
-      }
+      StackLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
+      controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
+      delete keepAlive;
+      return;
+   }
 
+   {
       ConnectionTerminated* term = dynamic_cast<ConnectionTerminated*>(message);
       if (term)
       {
