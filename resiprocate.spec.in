@@ -35,6 +35,7 @@ Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
 %endif
+Obsoletes: resiprocate-b2bua
 
 %description
 The reSIProcate components, particularly the SIP stack, are in use in both
