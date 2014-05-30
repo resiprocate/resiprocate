@@ -136,6 +136,8 @@ class TransactionUser
             mCongestionManager->registerFifo(&mFifo);
          }
       }
+
+      const TimeLimitFifo<Message>* getFifo() { return(&mFifo); } const
       
       virtual UInt16 getExpectedWait() const
       {
