@@ -28,6 +28,16 @@ struct GenericIPAddress
       
       GenericIPAddress(const sockaddr& addr) : address(addr) 
       {
+#ifdef IPPROTO_IPV6
+         if (addr.sa_family == AF_INET6)
+         {
+            v6Address = reinterpret_cast<const sockaddr_in6&>(addr);
+         }
+         else
+#endif
+         {
+            v4Address = reinterpret_cast<const sockaddr_in&>(addr);
+         }
       }
 
       GenericIPAddress(const sockaddr_in& v4) : v4Address(v4)
