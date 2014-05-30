@@ -2549,7 +2549,7 @@ TransactionState::sendCurrentToWire()
             StackLog(<<"!ah! response with force target going to : "<<target);
             transmitState=mController.mTransportSelector.transmit(
                         sip, 
-                        mTarget,
+                        target,
                         mIsReliable ? 0 : &mMsgToRetransmit);
          }
          else
