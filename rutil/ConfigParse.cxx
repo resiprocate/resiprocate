@@ -117,13 +117,16 @@ ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
             {
                cerr << "Invalid command line parameters:"  << endl;
                cerr << " Name/Value pairs must contain an = or a : between the name and the value" << endl;
-               throw Exception("Name/Value pairs must contain an = or a : between the name and the value", __FILE__, __LINE__);
+               cerr << " Bad argument: " << argData << endl;
+               Data exceptionString("Name/Value pairs must contain an = or a : between the name and the value (Bad argument: " + argData + ")");
+               throw Exception(exceptionString, __FILE__, __LINE__);
             }
          }
          catch(BaseException& ex)
          {
             cerr << "Invalid command line parameters:"  << endl;
             cerr << " Exception parsing Name/Value pairs: " << ex << endl;
+            cerr << " Bad argument: " << argData << endl;
             throw;
          }
       }
@@ -131,7 +134,9 @@ ConfigParse::parseCommandLine(int argc, char** argv, int skipCount)
       {
          cerr << "Invalid command line parameters:"  << endl;
          cerr << " Name/Value pairs must be prefixed with either a -, --, or a /" << endl;
-         throw Exception("Name/Value pairs must be prefixed with either a -, --, or a /",  __FILE__, __LINE__);
+         cerr << " Bad argument: " << argData << endl;
+         Data exceptionString("Name/Value pairs must be prefixed with either a -, --, or a / (Bad argument: " + argData + ")");
+         throw Exception(exceptionString,  __FILE__, __LINE__);
       }
    }
 }
@@ -153,7 +158,8 @@ ConfigParse::parseConfigFile(const Data& filename)
    
    if(!configFile)
    {
-      throw Exception("Error opening/reading configuration file", __FILE__, __LINE__);
+      Data exceptionString("Error opening/reading configuration file: " + filename);
+      throw Exception(exceptionString,  __FILE__, __LINE__);
    }
 
    string sline;
