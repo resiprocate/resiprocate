@@ -1,4 +1,20 @@
 = Release Notes v 1.9 =
+==1.9.7 Changes==
+rpm: Indicate that b2bua package is obsolete
+resip/stack: TlsConnection: correctly handle OpenSSL error queue after SSL_read
+resip/stack: fix for forced target routing in TransactionState - thanks to John Gregg for this
+rutil: enhance command line parsing exceptions with additional details - thanks to John Gregg for initial contribution
+rutil: if a v6 address is passed to the GenericIPAddress sockaddr constructor, ensure the entire v6 address is copied over properly.  Note:  sockaddr is smaller than sockaddr_in6 - Thanks to Bjorn A for this fix
+rutil: accept case insensitive log level strings
+resip/dum: fix obscure bug in basicClient where if we don't use a threaded stack processing does not function correctly - required PollGrp to be passed to SipStack constructor
+resip/stack: fix for a use-after-free bug when adding multi-headers to a list that has been copied, and then one of the headers is accessed (but not necessarily parsed) - thanks to Byron Campen for this fix!
+resip/stack: Added accessor for TransactionUser FIFO so to obtain stats
+resip/stack: additional OpenSSL cleanup fn - reordered functions to match order used in this post: http://openssl.6102.n7.nabble.com/Cleanup-procedure-missing-some-calls-td37441.html
+reTurn: modified asio and boost include file ordering to avoid multiply defined symbol errors on linking
+resip/recon: remove extra sleep definitions
+resip/stack: fix a bug with Keepalive processing that causes transaction state leakage and potential traps
+rutil: syslog: use LOG_PID, avoid sending redundant data in log string.
+
 ==1.9.6 Changes==
 *resip/recon: fixes a bug that makes it impossible to use codecs with RTP clock rates other than 8000, makes Opus support possible
 *autotools: minor tweaks to reduce warnings during build/linking
