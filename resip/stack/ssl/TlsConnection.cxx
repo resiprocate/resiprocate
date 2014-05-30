@@ -25,6 +25,34 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
+inline bool handleOpenSSLErrorQueue(int ret, unsigned long err, const char* op)
+{
+   bool hadReason = false;
+   while (true)
+   {
+      const char* file;
+      int line;
+
+      unsigned long code = ERR_get_error_line(&file,&line);
+      if ( code == 0 )
+      {
+         break;
+      }
+
+      char buf[256];
+      ERR_error_string_n(code,buf,sizeof(buf));
+      ErrLog( << buf  );
+      DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      hadReason = true;
+   }
+   ErrLog( << "Got TLS " << op << " error=" << err << " ret=" << ret  );
+   if(!hadReason)
+   {
+      WarningLog(<<"no reason found with ERR_get_error_line");
+   }
+   return hadReason;
+}
+
 TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple, 
                               Socket fd, Security* security, 
                               bool server, Data domain,  SecurityTypes::SSLType sslType ,
@@ -267,29 +295,7 @@ TlsConnection::checkState()
                DebugLog(<<"unrecognised/unhandled SSL_get_error result: " << err);
             }
             ErrLog( << "TLS handshake failed ");
-            bool hadReason = false;
-            while (true)
-            {
-               const char* file;
-               int line;
-
-               unsigned long code = ERR_get_error_line(&file,&line);
-               if ( code == 0 )
-               {
-                  break;
-               }
-
-               char buf[256];
-               ERR_error_string_n(code,buf,sizeof(buf));
-               ErrLog( << buf  );
-               ErrLog( << "Error code = "
-                        << code << " file=" << file << " line=" << line );
-               hadReason = true;
-            }
-            if(!hadReason)
-            {
-               WarningLog(<<"no reason found with ERR_get_error_line");
-            }
+            handleOpenSSLErrorQueue(ok, err, "SSL_do_handshake");
             mBio = NULL;
             mTlsState = Broken;
             return mTlsState;
@@ -413,9 +419,11 @@ TlsConnection::read(char* buf, int count )
          break;
          default:
          {
-            char buf[256];
-            ERR_error_string_n(err,buf,sizeof(buf));
-            ErrLog( << "Got TLS read ret=" << bytesRead << " error=" << err  << " " << buf << (err==5?" - intermediate certificates may be missing from local PEM file" : "") );
+            handleOpenSSLErrorQueue(bytesRead, err, "SSL_read");
+            if(err == 5)
+            {
+               WarningLog(<<"err=5 sometimes indicates that intermediate certificates may be missing from local PEM file");
+            }
             return -1;
          }
          break;
@@ -498,23 +506,7 @@ TlsConnection::write( const char* buf, int count )
          break;
          default:
          {
-            while (true)
-            {
-               const char* file;
-               int line;
-               
-               unsigned long code = ERR_get_error_line(&file,&line);
-               if ( code == 0 )
-               {
-                  break;
-               }
-               
-               char buf[256];
-               ERR_error_string_n(code,buf,sizeof(buf));
-               ErrLog( << buf  );
-               DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
-            }
-            ErrLog( << "Got TLS write error=" << err << " ret=" << ret  );
+            handleOpenSSLErrorQueue(ret, err, "SSL_write");
             return -1;
          }
          break;
