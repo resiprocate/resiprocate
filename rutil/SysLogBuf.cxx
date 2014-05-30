@@ -16,7 +16,7 @@ SysLogBuf::SysLogBuf ()
 {
 #if !defined(WIN32)
    setp(buffer,buffer+Size);
-   openlog (0, LOG_NDELAY, LOG_LOCAL6);
+   openlog (0, LOG_NDELAY | LOG_PID, LOG_LOCAL6);
 #endif
 }
       

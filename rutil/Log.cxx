@@ -368,12 +368,12 @@ Log::tags(Log::Level level,
 #else // #if defined( WIN32 ) || defined( __APPLE__ )
    if(resip::Log::getLoggerData().type() == Syslog)
    {
-      strm << mDescriptions[level+1] << Log::delim
-           << timestamp(ts) << Log::delim
+      strm // << mDescriptions[level+1] << Log::delim
+   //        << timestamp(ts) << Log::delim
    //        << mHostname << Log::delim
-           << mAppName << Log::delim
+   //        << mAppName << Log::delim
            << subsystem << Log::delim
-           << mPid << Log::delim
+   //        << mPid << Log::delim
            << pthread_self() << Log::delim
            << pfile << ":" << line;
    }
