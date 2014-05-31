@@ -555,6 +555,13 @@ TlsConnection::isGood() // has data that can be read
    }
 
    int mode = SSL_get_shutdown(mSsl);
+   if ( mode < 0 )
+   {
+      int err = SSL_get_error(mSsl, mode);
+      handleOpenSSLErrorQueue(mode, err, "SSL_get_shutdown");
+      return false;
+   }
+
    if ( mode != 0 ) 
    {
       return false;
