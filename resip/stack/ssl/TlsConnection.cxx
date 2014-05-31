@@ -137,7 +137,27 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
 TlsConnection::~TlsConnection()
 {
 #if defined(USE_SSL)
-   SSL_shutdown(mSsl);
+   ERR_clear_error();
+   int ret = SSL_shutdown(mSsl);
+   if(ret < 0)
+   {
+      int err = SSL_get_error(mSsl, ret);
+      switch (err)
+      {
+         case SSL_ERROR_WANT_READ:
+         case SSL_ERROR_WANT_WRITE:
+         case SSL_ERROR_NONE:
+            {
+               // WANT_READ or WANT_WRITE can arise for bi-directional shutdown on
+               // non-blocking sockets, safe to ignore
+               StackLog( << "Got TLS shutdown error condition of " << err  );
+            }
+            break;
+         default:
+            ErrLog(<<"Unexpected error in SSL_shutdown");
+            handleOpenSSLErrorQueue(ret, err, "SSL_shutdown");
+      }
+   }
    SSL_free(mSsl);
 #endif // USE_SSL   
 }
