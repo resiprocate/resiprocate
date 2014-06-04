@@ -59,6 +59,7 @@ do
   MOD_NAME=`basename ${MOD_SRC}`
 
   export CPPFLAGS=""
+  export CXXFLAGS=""
   export LDFLAGS=""
 
   source ${MOD_SRC}
@@ -85,6 +86,7 @@ do
   export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
 
   export CPPFLAGS="${CPPFLAGS} -I${OPENSSL_HOME}/include"
+  export CXXFLAGS="${CXXFLAGS} -Os"
   export LDFLAGS="${LDFLAGS} -L${OPENSSL_HOME}/libs/${MOD_NAME}"
 
   autoreconf -fi
