@@ -77,6 +77,10 @@ class Transport : public FdSetIOObserver
       public:
           virtual ~SipMessageLoggingHandler(){}
           virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg) = 0;
+          // Note:  retranmissions store already encoded messages, so callback doesn't send SipMessage it sends
+          //        the encoded version of the SipMessage instead.  If you need a SipMessage you will need to
+          //        re-parse back into a SipMessage in the callback handler.
+          virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data) {}
           virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg) = 0;
       };
 

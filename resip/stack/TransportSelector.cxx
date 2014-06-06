@@ -1342,6 +1342,12 @@ TransportSelector::retransmit(const SendData& data)
    if(transport)
    {
       // If this is not true, it means the transport has been removed.
+      Transport::SipMessageLoggingHandler* handler = transport->getSipMessageLoggingHandler();
+      if(handler)
+      {
+         handler->outboundRetransmit(transport->getTuple(), data.destination, data);
+      }
+       
       transport->send(std::auto_ptr<SendData>(data.clone()));
    }
 }

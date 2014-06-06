@@ -132,6 +132,13 @@ public:
                << msg
                << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
    }
+   virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data)
+   {
+       InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
+               << "OUTBOUND(retransmit): Src=" << source << ", Dst=" << destination << "\r\n\r\n"
+               << data.data
+               << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
+   }
    virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg)
    {
        InfoLog(<< "\r\n*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*v*\r\n"
