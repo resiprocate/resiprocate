@@ -106,7 +106,7 @@ MasterProfile::addSupportedOptionTag(const Token& tag)
 {
    if (tag == Token(Symbols::C100rel))
    {
-      //use enablePrackUas and enablePrackUac
+      //use setUasReliableProvisionalMode and setUacReliableProvisionalMode
       assert(0);
    }
    mSupportedOptionTags.push_back(tag);
