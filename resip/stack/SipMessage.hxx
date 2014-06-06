@@ -576,6 +576,8 @@ class SipMessage : public TransactionMessage
       void clear(bool leaveResponseStuff=false);
       // !bwc! Frees all heap-allocated memory owned.
       void freeMem(bool leaveResponseStuff=false);
+      // Clears mHeaders and cleans up memory
+      void clearHeaders();
       
       // !bwc! Initializes members. Will not free heap-allocated memory.
       // Will begin by calling clear().

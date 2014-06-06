@@ -92,7 +92,7 @@ SipMessage::clear(bool leaveResponseStuff)
    if(!leaveResponseStuff)
    {
       memset(mHeaderIndices,0,sizeof(mHeaderIndices));
-      mHeaders.clear();
+      clearHeaders();
       
       // !bwc! The "invalid" 0 index.
       mHeaders.push_back(getEmptyHfvl());
@@ -136,7 +136,7 @@ SipMessage::init(const SipMessage& rhs)
    memcpy(&mHeaderIndices,&rhs.mHeaderIndices,sizeof(mHeaderIndices));
 
    // .bwc. Clear out the pesky invalid 0 index.
-   mHeaders.clear();
+   clearHeaders();
    mHeaders.reserve(rhs.mHeaders.size());
    for (TypedHeaders::const_iterator i = rhs.mHeaders.begin();
         i != rhs.mHeaders.end(); i++)
@@ -217,12 +217,7 @@ SipMessage::freeMem(bool leaveResponseStuff)
 
    if(!leaveResponseStuff)
    {
-      for (TypedHeaders::iterator i = mHeaders.begin();
-           i != mHeaders.end(); i++)
-      {
-         freeHfvl(*i);
-      }
-      mHeaders.clear();
+      clearHeaders();
 
       for (vector<char*>::iterator i = mBufferList.begin();
            i != mBufferList.end(); i++)
@@ -246,6 +241,16 @@ SipMessage::freeMem(bool leaveResponseStuff)
    {
       delete *i;
    }
+}
+
+void
+SipMessage::clearHeaders()
+{
+    for (TypedHeaders::iterator i = mHeaders.begin(); i != mHeaders.end(); i++)
+    {
+        freeHfvl(*i);
+    }
+    mHeaders.clear();
 }
 
 SipMessage*
@@ -1757,7 +1762,7 @@ SipMessage::copyOutboundDecoratorsToStackCancel(SipMessage& cancel)
   {
      if((*i)->copyToStackCancels())
      {
-        cancel.addOutboundDecorator(*(new auto_ptr<MessageDecorator>((*i)->clone())));
+        cancel.addOutboundDecorator(std::auto_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
 }
@@ -1771,7 +1776,7 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
   {
      if((*i)->copyToStackFailureAcks())
      {
-        ack.addOutboundDecorator(*(new auto_ptr<MessageDecorator>((*i)->clone())));
+        ack.addOutboundDecorator(std::auto_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
 }
