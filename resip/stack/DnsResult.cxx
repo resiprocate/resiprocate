@@ -298,6 +298,11 @@ DnsResult::lookupInternal(const Uri& uri)
    //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mSips = (uri.scheme() == Symbols::Sips);
    mTarget = (!mSips && uri.exists(p_maddr)) ? uri.param(p_maddr) : uri.host();
+   // remove brackets around ipv6 address if present
+   if (mTarget[0] == '[' && mTarget[mTarget.size()-1] == ']')
+   {
+      mTarget = mTarget.substr(1,mTarget.size()-2);
+   }
    mSrvKey = Symbols::UNDERSCORE + uri.scheme().substr(0, uri.scheme().size()) + Symbols::DOT;
    bool isNumeric = DnsUtil::isIpAddress(mTarget);
 
