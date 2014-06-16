@@ -30,7 +30,7 @@ class ServerSubscription : public BaseSubscription
       void setSubscriptionState(SubscriptionState state);
 
       SharedPtr<SipMessage> update(const Contents* document);
-      void end(TerminateReason reason, const Contents* document = 0);
+      void end(TerminateReason reason, const Contents* document = 0, int retryAfter = 0);
 
       virtual void end();
       virtual void send(SharedPtr<SipMessage> msg);

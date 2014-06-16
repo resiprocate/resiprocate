@@ -362,7 +362,7 @@ ServerSubscription::makeNotify()
 
 
 void
-ServerSubscription::end(TerminateReason reason, const Contents* document)
+ServerSubscription::end(TerminateReason reason, const Contents* document, int retryAfter)
 {
    mSubscriptionState = Terminated;
    makeNotify();
@@ -370,6 +370,10 @@ ServerSubscription::end(TerminateReason reason, const Contents* document)
    if (document)
    {
       mLastRequest->setContents(document);
+   }
+   if (retryAfter != 0)
+   {
+        mLastRequest->header(h_SubscriptionState).param(p_retryAfter) = retryAfter;
    }
    send(mLastRequest);
 }
