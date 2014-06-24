@@ -1,6 +1,7 @@
 #if !defined(RESIP_SERVERSUBSCRIPTION_HXX)
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
+#include "resip/stack/Helper.hxx"
 #include "resip/dum/BaseSubscription.hxx"
 
 namespace resip

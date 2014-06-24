@@ -2,6 +2,7 @@
 #include "resip/dum/Profile.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/HeaderTypes.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -22,7 +23,8 @@ MasterProfile::MasterProfile() :
    mUasReliableProvisionalMode(Never),
    mServerRegistrationMinExpires(0),
    mServerRegistrationMaxExpires(UINT_MAX),
-   mServerRegistrationDefaultExpires(3600)
+   mServerRegistrationDefaultExpires(3600),
+   mNonUsageTerminatingResponseEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -430,6 +432,40 @@ UserProfile*
 MasterProfile::clone() const
 {
    return new MasterProfile(*this);
+}
+
+bool& MasterProfile::nonUsageTerminatingResponseEnabled()
+{
+  return mNonUsageTerminatingResponseEnabled;
+}
+
+bool MasterProfile::nonUsageTerminatingResponseEnabled() const
+{
+  return mNonUsageTerminatingResponseEnabled;
+}
+
+void MasterProfile::addNonUsageTerminatingResponse(int code)
+{
+  DebugLog(<< "MasterProfile::addNonUsageTerminatingResponse" << "added code: " << code);
+  mNonUsageTerminatingResponses.insert(code);
+}
+
+bool MasterProfile::isNonUsageTerminatingResponse(int code) const
+{
+  bool isAllowed = (mNonUsageTerminatingResponses.end() != mNonUsageTerminatingResponses.find(code));
+
+  DebugLog(<< "MasterProfile::isNonUsageTerminatingResponse" << "is code " << code << " allowed: " << isAllowed);
+  return isAllowed;
+}
+
+const std::set<int>& MasterProfile::getNonUsageTerminatingResponses() const
+{
+  return mNonUsageTerminatingResponses;
+}
+
+void MasterProfile::clearNonUsageTerminatingResponses(void)
+{
+  mNonUsageTerminatingResponses.clear();
 }
 
 /* ====================================================================

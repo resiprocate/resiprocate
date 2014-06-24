@@ -4,6 +4,7 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 
@@ -310,7 +311,9 @@ ServerSubscription::dispatch(const SipMessage& msg)
       }
       else
       {
-         switch(Helper::determineFailureMessageEffect(msg))
+         switch(Helper::determineFailureMessageEffect(msg,
+             (mDum.getMasterProfile()->nonUsageTerminatingResponseEnabled()) ?
+             &mDum.getMasterProfile()->getNonUsageTerminatingResponses() : NULL))
          {
             case Helper::TransactionTermination:
                DebugLog( << "ServerSubscription::TransactionTermination: " << msg.brief());
@@ -447,7 +450,6 @@ ServerSubscription::dump(EncodeStream& strm) const
    strm << "ServerSubscription " << mSubscriber;
    return strm;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

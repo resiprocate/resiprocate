@@ -163,6 +163,14 @@ class MasterProfile : public UserProfile
       virtual bool& checkReqUriInMergeDetectionEnabled();
       virtual bool checkReqUriInMergeDetectionEnabled() const;
 
+      /// Default is to not allow non-usage terminating responses
+      virtual bool& nonUsageTerminatingResponseEnabled();
+      virtual bool nonUsageTerminatingResponseEnabled() const;
+      virtual void addNonUsageTerminatingResponse(int code);
+      virtual bool isNonUsageTerminatingResponse(int code) const;
+      virtual const std::set<int>& getNonUsageTerminatingResponses() const;
+      virtual void clearNonUsageTerminatingResponses(void);
+
    private:
       virtual UserProfile* clone() const;
       std::set<Data> mSupportedSchemes;
@@ -185,6 +193,9 @@ class MasterProfile : public UserProfile
       UInt32 mServerRegistrationMinExpires;
       UInt32 mServerRegistrationMaxExpires;
       UInt32 mServerRegistrationDefaultExpires;
+
+      bool mNonUsageTerminatingResponseEnabled;
+      std::set<int> mNonUsageTerminatingResponses;
 };
    
 }
