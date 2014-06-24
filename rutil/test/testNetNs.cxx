@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <ifaddrs.h>
 
+#include "rutil/Logger.hxx"
 #include "rutil/NetNs.hxx"
 #include "rutil/HashMap.hxx"
 
