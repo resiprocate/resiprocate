@@ -86,6 +86,25 @@ TlsBaseTransport::getCtx() const
    return mSecurity->getTlsCtx();
 }
 
+bool
+TlsBaseTransport::setPeerCertificateVerificationCallback(
+   SecurityTypes::SSLVendor vendor, void *func, void *arg)
+{
+   // Only OpenSSL is supported at present
+   if(vendor != SecurityTypes::OpenSSL)
+   {
+      ErrLog(<<"refusing to set SSL callback for unknown SSL stack vendor");
+      return false;
+   }
+
+   // For full details of this callback see:
+   // https://www.openssl.org/docs/ssl/SSL_CTX_set_cert_verify_callback.html
+   SSL_CTX_set_cert_verify_callback(getCtx(),
+      (int (*)(X509_STORE_CTX *,void *))func, arg);
+
+   return true;
+}
+
 Connection* 
 TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {

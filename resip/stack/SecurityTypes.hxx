@@ -6,6 +6,11 @@ namespace resip
 
 namespace SecurityTypes 
 { 
+typedef enum
+{
+   OpenSSL
+} SSLVendor;
+
 typedef enum 
 { 
    NoSSL = 0,
