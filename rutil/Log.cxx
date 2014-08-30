@@ -269,7 +269,7 @@ Log::initialize(Type type,
                 Level level,
                 const Data& appName,
                 ExternalLogger& logger,
-                const Data& syslogFacility = "LOG_DAEMON")
+                const Data& syslogFacility)
 {
    initialize(type, level, appName, 0, &logger);
 }
