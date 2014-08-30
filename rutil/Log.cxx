@@ -269,9 +269,9 @@ Log::initialize(Type type,
                 Level level,
                 const Data& appName,
                 ExternalLogger& logger,
-                const Data& syslogFacility)
+                const Data& syslogFacilityName)
 {
-   initialize(type, level, appName, 0, &logger);
+   initialize(type, level, appName, 0, &logger, syslogFacilityName);
 }
 
 void
