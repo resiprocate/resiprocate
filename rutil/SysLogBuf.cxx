@@ -1,9 +1,3 @@
-#if !defined(WIN32)
-#include <syslog.h>
-#else
-#define LOG_DAEMON 0
-#endif
-
 #include <cstdio>
 #include <cassert>
 #include "rutil/SysLogBuf.hxx"
