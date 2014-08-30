@@ -95,7 +95,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    try
    {
       // Initialize Logging
-      resip::Log::initialize(reTurnConfig.mLoggingType, reTurnConfig.mLoggingLevel, "reTurnServer", reTurnConfig.mLoggingFilename.c_str());
+      resip::Log::initialize(reTurnConfig.mLoggingType, reTurnConfig.mLoggingLevel, "reTurnServer", reTurnConfig.mLoggingFilename.c_str(), 0, reTurnConfig.mSyslogFacility);
       resip::GenericLogImpl::MaxLineCount = reTurnConfig.mLoggingFileMaxLineCount;
 
       // Initialize server.
