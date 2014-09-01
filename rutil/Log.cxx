@@ -250,7 +250,7 @@ Log::initialize(Type type, Level level, const Data& appName,
       mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
       if(mSyslogFacility == -1)
       {
-         mSyslogFacility = LOG_DEBUG;
+         mSyslogFacility = LOG_DAEMON;
       }
    }
  
