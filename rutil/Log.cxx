@@ -220,8 +220,7 @@ Log::parseSyslogFacilityName(const Data& facilityName)
       return LOG_UUCP;
    }
 #endif
-   // FIXME - maybe we should throw an exception or log
-   // an error about use of a bad facility name?
+   // Nothing matched or syslog not supported on this platform
    return -1;
 }
 
@@ -250,6 +249,11 @@ Log::initialize(Type type, Level level, const Data& appName,
       mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
       if(mSyslogFacility == -1)
       {
+         if(type == Log::Syslog)
+         {
+            syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+         }
+         std::cerr << "invalid syslog facility name specified: " << syslogFacilityName.c_str() << std::endl;
          mSyslogFacility = LOG_DAEMON;
       }
    }
