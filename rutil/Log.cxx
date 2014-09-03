@@ -805,7 +805,6 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
       case Log::Syslog:
          if (mLogger == 0)
          {
-            std::cerr << "Creating a syslog stream" << std::endl;
             mLogger = new SysLogStream;
          }
          return *mLogger;
@@ -821,7 +820,6 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
              (maxLineCount() && mLineCount >= maxLineCount()) ||
              (maxByteCount() && ((unsigned int)mLogger->tellp()+bytesToWrite) >= maxByteCount()))
          {
-            std::cerr << "Creating a logger for file \"" << mLogFileName.c_str() << "\"" << std::endl;
             Data logFileName(mLogFileName != "" ? mLogFileName : "resiprocate.log");
             if (mLogger)
             {
