@@ -248,6 +248,16 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       failSubCode = errno;
       return NULL;
    }
+#ifdef TARGET_OS_IPHONE
+   int on = 1;
+   if ( ::setsockopt ( sock, SOL_SOCKET, SO_NOSIGPIPE, (const char*)&on, sizeof(on)) )
+   {
+      int e = getErrno();
+      WarningLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strerror(e));
+      error(e);
+      throw Exception("Failed setsockopt", __FILE__,__LINE__);
+   }
+#endif
    makeSocketNonBlocking(sock);
    if (mSocketFunc)
    {
