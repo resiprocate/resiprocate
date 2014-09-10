@@ -71,7 +71,8 @@
 # ICE_NET_SUBDIRS:
 #    subdirectories containing additional targets.mk files
 #
-ICE_NET_ARCHIVE                   = nr_socket.c nr_socket_local.c \
+ICE_NET_ARCHIVE                   = local_addr.c nr_interface_prioritizer.c \
+                                    nr_resolver.c nr_socket.c nr_socket_local.c \
                                     transport_addr.c transport_addr_reg.c
 ICE_NET_ARCHIVE_NAME              =
 ICE_NET_ARCHIVE_TYPE              =
@@ -97,7 +98,10 @@ ICE_NET_SUBDIRS                   =
 #
 #    LOCAL ENVIRONMENT
 #
-ICE_NET_BUILD                     = nr_socket.$(OBJSUFFIX) nr_socket.d \
+ICE_NET_BUILD                     = local_addr.$(OBJSUFFIX) local_addr.d \
+                                    nr_interface_prioritizer.$(OBJSUFFIX) nr_interface_prioritizer.d \
+                                    nr_resolver.$(OBJSUFFIX) nr_resolver.d \
+                                    nr_socket.$(OBJSUFFIX) nr_socket.d \
                                     nr_socket_local.$(OBJSUFFIX) \
                                     nr_socket_local.d \
                                     transport_addr.$(OBJSUFFIX) \
@@ -120,6 +124,9 @@ GLOBAL_LDFLAGS                   += $(ICE_NET_GLOBAL_LDFLAGS)
 #    GENERIC DEPENDENCIES
 #
 all:                                $(ICE_NET_BUILD)
+depend:                             local_addr.d
+depend:                             nr_interface_prioritizer.d
+depend:                             nr_resolver.d
 depend:                             nr_socket.d
 depend:                             nr_socket_local.d
 depend:                             transport_addr.d
@@ -130,6 +137,24 @@ depend:                             transport_addr_reg.d
 #
 #    BUILD DEPENDENCIES
 #
+
+local_addr.$(OBJSUFFIX): $(ICE_NET_SRCDIR)local_addr.c local_addr.d
+	$(COMPILE.c) $@ $< $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+local_addr.d: $(ICE_NET_SRCDIR)local_addr.c
+	$(COMPILE.c) $@ $< -MM -MG $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+nr_interface_prioritizer.$(OBJSUFFIX): $(ICE_NET_SRCDIR)nr_interface_prioritizer.c nr_interface_prioritizer.d
+	$(COMPILE.c) $@ $< $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+nr_interface_prioritizer.d: $(ICE_NET_SRCDIR)nr_interface_prioritizer.c
+	$(COMPILE.c) $@ $< -MM -MG $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+nr_resolver.$(OBJSUFFIX): $(ICE_NET_SRCDIR)nr_resolver.c nr_resolver.d
+	$(COMPILE.c) $@ $< $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+nr_resolver.d: $(ICE_NET_SRCDIR)nr_resolver.c
+	$(COMPILE.c) $@ $< -MM -MG $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
 
 nr_socket.$(OBJSUFFIX): $(ICE_NET_SRCDIR)nr_socket.c nr_socket.d
 	$(COMPILE.c) $@ $< $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
@@ -154,6 +179,12 @@ transport_addr_reg.$(OBJSUFFIX): $(ICE_NET_SRCDIR)transport_addr_reg.c transport
 
 transport_addr_reg.d: $(ICE_NET_SRCDIR)transport_addr_reg.c
 	$(COMPILE.c) $@ $< -MM -MG $(ICE_NET_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+$(GLOBAL_LIBNAME): local_addr.$(OBJSUFFIX)
+
+$(GLOBAL_LIBNAME): nr_interface_prioritizer.$(OBJSUFFIX)
+
+$(GLOBAL_LIBNAME): nr_resolver.$(OBJSUFFIX)
 
 $(GLOBAL_LIBNAME): nr_socket.$(OBJSUFFIX)
 

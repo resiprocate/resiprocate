@@ -55,7 +55,8 @@ int nr_stun_build_req_no_auth(nr_stun_client_stun_binding_request_params *params
 
 
 typedef struct nr_stun_client_stun_keepalive_params_ {
-#ifdef WIN32  // silly VC++ gives error if no members
+#if defined(WIN32) || defined(__clang__)
+    // VC++ and clang give error and warning respectively if no members
     int dummy;
 #endif
 } nr_stun_client_stun_keepalive_params;
@@ -79,6 +80,7 @@ typedef struct nr_stun_client_ice_use_candidate_params_ {
     char *username;
     Data password;
     UINT4 priority;
+    UINT8 tiebreaker;
 } nr_stun_client_ice_use_candidate_params;
 
 int nr_stun_build_use_candidate(nr_stun_client_ice_use_candidate_params *params, nr_stun_message **msg);
@@ -98,24 +100,35 @@ int nr_stun_build_req_ice(nr_stun_client_ice_binding_request_params *params, nr_
 #endif /* USE_ICE */
 
 
-#ifdef USE_TURN
-typedef struct nr_stun_client_allocate_request1_params_ {
-    char *username;
-} nr_stun_client_allocate_request1_params;
-
-int nr_stun_build_allocate_request1(nr_stun_client_allocate_request1_params *params, nr_stun_message **msg);
-
-
-typedef struct nr_stun_client_allocate_request2_params_ {
+typedef struct nr_stun_client_auth_params_ {
+    char authenticate;
     char *username;
     char *realm;
     char *nonce;
-    Data *password;
-    UINT4 bandwidth_kbps;
-    UINT4 lifetime_secs;
-} nr_stun_client_allocate_request2_params;
+    Data password;
+} nr_stun_client_auth_params;
 
-int nr_stun_build_allocate_request2(nr_stun_client_allocate_request2_params *params, nr_stun_message **msg);
+#ifdef USE_TURN
+typedef struct nr_stun_client_allocate_request_params_ {
+    UINT4 lifetime_secs;
+} nr_stun_client_allocate_request_params;
+
+int nr_stun_build_allocate_request(nr_stun_client_auth_params *auth, nr_stun_client_allocate_request_params *params, nr_stun_message **msg);
+
+
+typedef struct nr_stun_client_refresh_request_params_ {
+    UINT4 lifetime_secs;
+} nr_stun_client_refresh_request_params;
+
+int nr_stun_build_refresh_request(nr_stun_client_auth_params *auth, nr_stun_client_refresh_request_params *params, nr_stun_message **msg);
+
+
+
+typedef struct nr_stun_client_permission_request_params_ {
+    nr_transport_addr remote_addr;
+} nr_stun_client_permission_request_params;
+
+int nr_stun_build_permission_request(nr_stun_client_auth_params *auth, nr_stun_client_permission_request_params *params, nr_stun_message **msg);
 
 
 typedef struct nr_stun_client_send_indication_params_ {
@@ -124,15 +137,6 @@ typedef struct nr_stun_client_send_indication_params_ {
 } nr_stun_client_send_indication_params;
 
 int nr_stun_build_send_indication(nr_stun_client_send_indication_params *params, nr_stun_message **msg);
-
-
-typedef struct nr_stun_client_set_active_dest_request_params_ {
-    nr_transport_addr remote_addr;
-    Data *password;
-} nr_stun_client_set_active_dest_request_params;
-
-int nr_stun_build_set_active_dest_request(nr_stun_client_set_active_dest_request_params *params, nr_stun_message **msg);
-
 
 typedef struct nr_stun_client_data_indication_params_ {
     nr_transport_addr remote_addr;
@@ -144,5 +148,7 @@ int nr_stun_build_data_indication(nr_stun_client_data_indication_params *params,
 
 int nr_stun_form_success_response(nr_stun_message *req, nr_transport_addr *from, Data *password, nr_stun_message *res);
 void nr_stun_form_error_response(nr_stun_message *request, nr_stun_message* response, int number, char* msg);
+int nr_stun_compute_lt_message_integrity_password(const char *username, const char *realm,
+                                                  Data *password, Data *hmac_key);
 
 #endif

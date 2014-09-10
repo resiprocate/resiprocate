@@ -1,5 +1,6 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
+Copyright (c) 2013, Mozilla
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,47 +31,25 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdarg.h>
 
 
-static char *RCSSTRING __UNUSED__="$Id: ice_util.c,v 1.2 2008/04/28 17:59:05 ekr Exp $";
+#ifndef _nr_socket_buffered_stun_h
+#define _nr_socket_buffered_stun_h
 
-#include <stdarg.h>
-#include <string.h>
-#include "nr_api.h"
-#include "ice_util.h"
+#include "nr_socket.h"
 
-int nr_concat_strings(char **outp,...)
-  {
-    va_list ap;
-    char *s,*out=0;
-    int len=0;
-    int _status;
+/* Wrapper socket which provides buffered STUN-oriented I/O
 
-    va_start(ap,outp);
-    while(s=va_arg(ap,char *)){
-      len+=strlen(s);
-    }
-    va_end(ap);
+   1. Writes don't block and are automatically flushed when needed.
+   2. All reads are in units of STUN messages
 
+   This socket takes ownership of the inner socket |sock|.
+ */
+int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending,
+  nr_socket **sockp);
 
-    if(!(out=RMALLOC(len+1)))
-      ABORT(R_NO_MEMORY);
+int nr_socket_buffered_set_connected_to(nr_socket *sock,
+    nr_transport_addr *remote_addr);
 
-    *outp=out;
-
-    va_start(ap,outp);
-    while(s=va_arg(ap,char *)){
-      len=strlen(s);
-      memcpy(out,s,len);
-      out+=len;
-    }
-    va_end(ap);
-
-    *out=0;
-
-    _status=0;
-  abort:
-    return(_status);
-  }
+#endif
 

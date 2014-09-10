@@ -1,5 +1,7 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
+Copyright (c) 2013, Mozilla
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -13,9 +15,10 @@ met:
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
 
-* Neither the name of Adobe Systems, Network Resonance nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+* Neither the name of Adobe Systems, Network Resonance, Mozilla nor
+  the names of its contributors may be used to endorse or promote
+  products derived from this software without specific prior written
+  permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -30,47 +33,27 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdarg.h>
+#ifndef _local_addr_h
+#define _local_addr_h
 
+#include "transport_addr.h"
 
-static char *RCSSTRING __UNUSED__="$Id: ice_util.c,v 1.2 2008/04/28 17:59:05 ekr Exp $";
+typedef struct nr_interface_ {
+  int type;
+#define NR_INTERFACE_TYPE_UNKNOWN 0x0
+#define NR_INTERFACE_TYPE_WIRED   0x1
+#define NR_INTERFACE_TYPE_WIFI    0x2
+#define NR_INTERFACE_TYPE_MOBILE  0x4
+#define NR_INTERFACE_TYPE_VPN     0x8
+  int estimated_speed; /* Speed in kbps */
+} nr_interface;
 
-#include <stdarg.h>
-#include <string.h>
-#include "nr_api.h"
-#include "ice_util.h"
+typedef struct nr_local_addr_ {
+  nr_transport_addr addr;
+  nr_interface interface;
+} nr_local_addr;
 
-int nr_concat_strings(char **outp,...)
-  {
-    va_list ap;
-    char *s,*out=0;
-    int len=0;
-    int _status;
+int nr_local_addr_copy(nr_local_addr *to, nr_local_addr *from);
+int nr_local_addr_fmt_info_string(nr_local_addr *addr, char *buf, int len);
 
-    va_start(ap,outp);
-    while(s=va_arg(ap,char *)){
-      len+=strlen(s);
-    }
-    va_end(ap);
-
-
-    if(!(out=RMALLOC(len+1)))
-      ABORT(R_NO_MEMORY);
-
-    *outp=out;
-
-    va_start(ap,outp);
-    while(s=va_arg(ap,char *)){
-      len=strlen(s);
-      memcpy(out,s,len);
-      out+=len;
-    }
-    va_end(ap);
-
-    *out=0;
-
-    _status=0;
-  abort:
-    return(_status);
-  }
-
+#endif

@@ -1,5 +1,7 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
+Copyright (c) 2013, Mozilla
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -13,9 +15,10 @@ met:
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
 
-* Neither the name of Adobe Systems, Network Resonance nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+* Neither the name of Adobe Systems, Network Resonance, Mozilla nor
+  the names of its contributors may be used to endorse or promote
+  products derived from this software without specific prior written
+  permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -30,47 +33,53 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdarg.h>
+#include <nr_api.h>
+#include "nr_resolver.h"
 
+int nr_resolver_create_int(void *obj, nr_resolver_vtbl *vtbl, nr_resolver **resolverp)
+{
+  int _status;
+  nr_resolver *resolver=0;
 
-static char *RCSSTRING __UNUSED__="$Id: ice_util.c,v 1.2 2008/04/28 17:59:05 ekr Exp $";
+  if (!(resolver=RCALLOC(sizeof(nr_resolver))))
+    ABORT(R_NO_MEMORY);
 
-#include <stdarg.h>
-#include <string.h>
-#include "nr_api.h"
-#include "ice_util.h"
+  resolver->obj=obj;
+  resolver->vtbl=vtbl;
 
-int nr_concat_strings(char **outp,...)
-  {
-    va_list ap;
-    char *s,*out=0;
-    int len=0;
-    int _status;
+  *resolverp=resolver;
+  _status=0;
+abort:
+  return(_status);
+}
 
-    va_start(ap,outp);
-    while(s=va_arg(ap,char *)){
-      len+=strlen(s);
-    }
-    va_end(ap);
+int nr_resolver_destroy(nr_resolver **resolverp)
+{
+  nr_resolver *resolver;
 
+  if(!resolverp || !*resolverp)
+    return(0);
 
-    if(!(out=RMALLOC(len+1)))
-      ABORT(R_NO_MEMORY);
+  resolver=*resolverp;
+  *resolverp=0;
 
-    *outp=out;
+  resolver->vtbl->destroy(&resolver->obj);
 
-    va_start(ap,outp);
-    while(s=va_arg(ap,char *)){
-      len=strlen(s);
-      memcpy(out,s,len);
-      out+=len;
-    }
-    va_end(ap);
+  RFREE(resolver);
 
-    *out=0;
+  return(0);
+}
 
-    _status=0;
-  abort:
-    return(_status);
-  }
+int nr_resolver_resolve(nr_resolver *resolver,
+                        nr_resolver_resource *resource,
+                        int (*cb)(void *cb_arg, nr_transport_addr *addr),
+                        void *cb_arg,
+                        void **handle)
+{
+  return resolver->vtbl->resolve(resolver->obj, resource, cb, cb_arg, handle);
+}
 
+int nr_resolver_cancel(nr_resolver *resolver, void *handle)
+{
+  return resolver->vtbl->cancel(resolver->obj, handle);
+}

@@ -40,14 +40,14 @@ extern "C" {
 #endif /* __cplusplus */
 
 typedef struct nr_ice_handler_vtbl_ {
-  /* The checks on this media stream are done. The handler needs to 
+  /* The checks on this media stream are done. The handler needs to
      select a single pair to proceed with (regular nomination).
      Once this returns the check starts and the pair can be
      written on. Use nr_ice_candidate_pair_select() to perform the
      selection.
      TODO: !ekr! is this right?
   */
-  int (*select_pair)(void *obj,nr_ice_media_stream *stream, 
+  int (*select_pair)(void *obj,nr_ice_media_stream *stream,
 int component_id, nr_ice_cand_pair **potentials,int potential_ct);
 
   /* This media stream is ready to read/write (aggressive nomination).
@@ -66,6 +66,9 @@ int component_id, nr_ice_cand_pair **potentials,int potential_ct);
 
   /* A message was delivered to us */
   int (*msg_recvd)(void *obj, nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, int component_id, UCHAR *msg, int len);
+
+  /* ICE has started checking. */
+  int (*ice_checking)(void *obj, nr_ice_peer_ctx *pctx);
 } nr_ice_handler_vtbl;
 
 typedef struct nr_ice_handler_ {

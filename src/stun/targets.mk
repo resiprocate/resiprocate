@@ -71,7 +71,8 @@
 # ICE_STUN_SUBDIRS:
 #    subdirectories containing additional targets.mk files
 #
-ICE_STUN_ARCHIVE                  = addrs.c nr_socket_turn.c stun_build.c \
+ICE_STUN_ARCHIVE                  = addrs.c nr_socket_buffered_stun.c \
+                                    nr_socket_turn.c stun_build.c \
                                     stun_client_ctx.c stun_codec.c stun_hint.c \
                                     stun_msg.c stun_proc.c stun_server_ctx.c \
                                     stun_util.c turn_client_ctx.c
@@ -103,6 +104,8 @@ ICE_STUN_SUBDIRS                  =
 #    LOCAL ENVIRONMENT
 #
 ICE_STUN_BUILD                    = addrs.$(OBJSUFFIX) addrs.d \
+                                    nr_socket_buffered_stun.$(OBJSUFFIX) \
+                                    nr_socket_buffered_stun.d \
                                     nr_socket_turn.$(OBJSUFFIX) \
                                     nr_socket_turn.d stun_build.$(OBJSUFFIX) \
                                     stun_build.d stun_client_ctx.$(OBJSUFFIX) \
@@ -132,6 +135,7 @@ GLOBAL_LDFLAGS                   += $(ICE_STUN_GLOBAL_LDFLAGS)
 #
 all:                                $(ICE_STUN_BUILD)
 depend:                             addrs.d
+depend:                             nr_socket_buffered_stun.d
 depend:                             nr_socket_turn.d
 depend:                             stun_build.d
 depend:                             stun_client_ctx.d
@@ -153,6 +157,12 @@ addrs.$(OBJSUFFIX): $(ICE_STUN_SRCDIR)addrs.c addrs.d
 	$(COMPILE.c) $@ $< $(ICE_STUN_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
 
 addrs.d: $(ICE_STUN_SRCDIR)addrs.c
+	$(COMPILE.c) $@ $< -MM -MG $(ICE_STUN_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+nr_socket_buffered_stun.$(OBJSUFFIX): $(ICE_STUN_SRCDIR)nr_socket_buffered_stun.c nr_socket_buffered_stun.d
+	$(COMPILE.c) $@ $< $(ICE_STUN_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
+
+nr_socket_buffered_stun.d: $(ICE_STUN_SRCDIR)nr_socket_buffered_stun.c
 	$(COMPILE.c) $@ $< -MM -MG $(ICE_STUN_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
 
 nr_socket_turn.$(OBJSUFFIX): $(ICE_STUN_SRCDIR)nr_socket_turn.c nr_socket_turn.d
@@ -216,6 +226,8 @@ turn_client_ctx.d: $(ICE_STUN_SRCDIR)turn_client_ctx.c
 	$(COMPILE.c) $@ $< -MM -MG $(ICE_STUN_LOCAL_CFLAGS) $(GLOBAL_CFLAGS)
 
 $(GLOBAL_LIBNAME): addrs.$(OBJSUFFIX)
+
+$(GLOBAL_LIBNAME): nr_socket_buffered_stun.$(OBJSUFFIX)
 
 $(GLOBAL_LIBNAME): nr_socket_turn.$(OBJSUFFIX)
 
