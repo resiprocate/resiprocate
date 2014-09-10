@@ -52,7 +52,7 @@ struct nr_ice_cand_pair_ {
 #define NR_ICE_PAIR_STATE_SUCCEEDED        5
 #define NR_ICE_PAIR_STATE_CANCELLED        6
 
-  UCHAR peer_nominated;               /* The peer sent USE-CANDIDATE 
+  UCHAR peer_nominated;               /* The peer sent USE-CANDIDATE
                                          on this check */
   UCHAR nominated;                    /* Is this nominated or not */
 
@@ -60,15 +60,12 @@ struct nr_ice_cand_pair_ {
   nr_ice_candidate *local;            /* The local candidate */
   nr_ice_candidate *remote;           /* The remote candidate */
   char *foundation;                   /* The combined foundations */
-       
-  char *r2l_user;                     /* Stashed username */
-  Data r2l_pwd;                       /* Stashed password */
 
   nr_stun_client_ctx *stun_client;    /* STUN context when acting as a client */
   void *stun_client_handle;
 
   void *stun_cb_timer;
-  void *restart_controlled_cb_timer;
+  void *restart_role_change_cb_timer;
   void *restart_nominated_cb_timer;
 
   TAILQ_ENTRY(nr_ice_cand_pair_) entry;
@@ -85,6 +82,7 @@ int nr_ice_candidate_pair_do_triggered_check(nr_ice_peer_ctx *pctx, nr_ice_cand_
 int nr_ice_candidate_pair_insert(nr_ice_cand_pair_head *head,nr_ice_cand_pair *pair);
 void nr_ice_candidate_pair_restart_stun_nominated_cb(NR_SOCKET s, int how, void *cb_arg);
 int nr_ice_candidate_pair_destroy(nr_ice_cand_pair **pairp);
+void nr_ice_candidate_pair_role_change(nr_ice_cand_pair *pair);
 
 #ifdef __cplusplus
 }

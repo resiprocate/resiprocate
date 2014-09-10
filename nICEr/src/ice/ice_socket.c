@@ -35,11 +35,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: ice_socket.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
 #include <assert.h>
+#include <string.h>
 #include "nr_api.h"
 #include "ice_ctx.h"
 #include "stun.h"
 
-    
 static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     int r;
@@ -53,15 +53,21 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     int is_stun;
     int is_req;
     int is_ind;
+    int processed_indication=0;
+
     nr_socket *stun_srv_sock=sock->sock;
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Socket ready to read",sock->ctx->label);
-    
+
     /* Re-arm first! */
     NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
 
     if(r=nr_socket_recvfrom(sock->sock,buf,sizeof(buf),&len_s,0,&addr)){
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): Error reading from socket",sock->ctx->label);
+      if (r != R_WOULDBLOCK && (sock->type != NR_ICE_SOCKET_TYPE_DGRAM)) {
+        /* Report this error upward. Bug 946423 */
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): Error on reliable socket. Abandoning.",sock->ctx->label);
+        NR_ASYNC_CANCEL(s, NR_ASYNC_WAIT_READ);
+      }
       return;
     }
 
@@ -75,17 +81,19 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
 #ifdef USE_TURN
   re_process:
 #endif /* USE_TURN */
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Read %d bytes",sock->ctx->label,len);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Read %d bytes %sfrom %s",sock->ctx->label,len,(processed_indication ? "relayed " : ""),addr.as_string);
 
     /* First question: is this STUN or not? */
     is_stun=nr_is_stun_message(buf,len);
 
     if(is_stun){
-      snprintf(string, sizeof(string)-1, "ICE(%s): Message is STUN",sock->ctx->label);
-      r_dump(NR_LOG_STUN, LOG_DEBUG, string, (char*)buf, len);
-
       is_req=nr_is_stun_request_message(buf,len);
       is_ind=is_req?0:nr_is_stun_indication_message(buf,len);
+
+      snprintf(string, sizeof(string)-1, "ICE(%s): Message is STUN (%s)",sock->ctx->label,
+               is_req ? "request" : (is_ind ? "indication" : "other"));
+      r_dump(NR_LOG_STUN, LOG_DEBUG, string, (char*)buf, len);
+
 
       /* We need to offer it to all of our stun contexts
          to see who bites */
@@ -112,26 +120,43 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
               r=nr_stun_server_process_request(sc1->u.server,stun_srv_sock,(char *)buf,len,&addr,NR_STUN_AUTH_RULE_SHORT_TERM);
             }
             break;
-
 #ifdef USE_TURN
           case NR_ICE_TURN_CLIENT:
             /* data indications are ok, so don't ignore those */
+            /* Check that this is from the right TURN server address. Else
+               skip */
+            if (nr_transport_addr_cmp(
+                    &sc1->u.turn_client.turn_client->turn_server_addr,
+                    &addr, NR_TRANSPORT_ADDR_CMP_MODE_ALL))
+              break;
+
             if(!is_req){
               if(!is_ind)
-                r=nr_turn_client_process_response(sc1->u.turn_client,buf,len,&addr);
+                r=nr_turn_client_process_response(sc1->u.turn_client.turn_client,buf,len,&addr);
               else{
-                /* This is a bit of a hack. If it's a data indication, strip
-                   off the TURN framing and re-enter. We don't care about
-                   other kinds of indication */
                 nr_transport_addr n_addr;
                 size_t n_len;
-                
-                r=nr_turn_client_rewrite_indication_data(buf,len,&n_len,&n_addr);
+
+                if (processed_indication) {
+                  /* Don't allow recursively wrapped indications */
+                  r_log(LOG_ICE, LOG_WARNING,
+                        "ICE(%s): discarding recursively wrapped indication",
+                        sock->ctx->label);
+                  break;
+                }
+                /* This is a bit of a hack. If it's a data indication, strip
+                   off the TURN framing and re-enter. This works because
+                   all STUN processing is on the same physical socket.
+                   We don't care about other kinds of indication */
+                r=nr_turn_client_parse_data_indication(
+                    sc1->u.turn_client.turn_client, &addr,
+                    buf, len, buf, &n_len, len, &n_addr);
                 if(!r){
                   r_log(LOG_ICE,LOG_DEBUG,"Unwrapped a data indication.");
                   len=n_len;
                   nr_transport_addr_copy(&addr,&n_addr);
-                  stun_srv_sock=sc1->u.turn_client->wrapping_sock;
+                  stun_srv_sock=sc1->u.turn_client.turn_sock;
+                  processed_indication=1;
                   goto re_process;
                 }
               }
@@ -143,9 +168,9 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
             assert(0); /* Can't happen */
             return;
         }
-        if(!r){
+        if(!r) {
           break;
-        }        
+        }
 
         sc1=sc2;
       }
@@ -153,12 +178,12 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
         if (nr_ice_ctx_is_known_id(sock->ctx,((nr_stun_message_header*)buf)->id.octet))
             r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Message is a retransmit",sock->ctx->label);
         else
-            r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Message does not correspond to any registered stun ctx",sock->ctx->label);
+            r_log(LOG_ICE,LOG_NOTICE,"ICE(%s): Message does not correspond to any registered stun ctx",sock->ctx->label);
       }
     }
     else{
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Message is not STUN",sock->ctx->label);
-      
+
       nr_ice_ctx_deliver_packet(sock->ctx, sock->component, &addr, buf, len);
     }
 
@@ -169,7 +194,8 @@ int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsoc
   {
     nr_ice_socket *sock=0;
     NR_SOCKET fd;
-    int _status;
+    nr_transport_addr addr;
+    int r,_status;
 
     if(!(sock=RCALLOC(sizeof(nr_ice_socket))))
       ABORT(R_NO_MEMORY);
@@ -178,10 +204,23 @@ int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsoc
     sock->ctx=ctx;
     sock->component=comp;
 
+    if(r=nr_socket_getaddr(nsock, &addr))
+      ABORT(r);
+
+    if (addr.protocol == IPPROTO_UDP) {
+      sock->type = NR_ICE_SOCKET_TYPE_DGRAM;
+    }
+    else {
+      assert(addr.protocol == IPPROTO_TCP);
+      sock->type = NR_ICE_SOCKET_TYPE_STREAM;
+    }
+
     TAILQ_INIT(&sock->candidates);
     TAILQ_INIT(&sock->stun_ctxs);
-    
-    nr_socket_getfd(nsock,&fd);
+
+    if(r=nr_socket_getfd(nsock,&fd))
+      ABORT(r);
+
     NR_ASYNC_WAIT(fd,NR_ASYNC_WAIT_READ,nr_ice_socket_readable_cb,sock);
 
     *sockp=sock;
@@ -197,16 +236,16 @@ int nr_ice_socket_destroy(nr_ice_socket **isockp)
   {
     nr_ice_stun_ctx *s1,*s2;
     nr_ice_socket *isock;
-    
+
     if(!isockp || !*isockp)
       return(0);
-    
+
     isock=*isockp;
     *isockp=0;
 
     /* Close the socket */
     nr_ice_socket_close(isock);
-    
+
     /* The STUN server */
     nr_stun_server_ctx_destroy(&isock->stun_server);
 
@@ -217,7 +256,7 @@ int nr_ice_socket_destroy(nr_ice_socket **isockp)
     }
 
     RFREE(isock);
-    
+
     return(0);
   }
 
@@ -241,7 +280,7 @@ int nr_ice_socket_close(nr_ice_socket *isock)
       NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_WRITE);
       nr_socket_destroy(&isock->sock);
     }
-    
+
     return(0);
   }
 
@@ -257,7 +296,7 @@ int nr_ice_socket_register_stun_client(nr_ice_socket *sock, nr_stun_client_ctx *
     sc->u.client=srv;
 
     TAILQ_INSERT_TAIL(&sock->stun_ctxs,sc,entry);
-    
+
     *handle=sc;
 
     _status=0;
@@ -285,7 +324,8 @@ int nr_ice_socket_register_stun_server(nr_ice_socket *sock, nr_stun_server_ctx *
     return(_status);
   }
 
-int nr_ice_socket_register_turn_client(nr_ice_socket *sock, nr_turn_client_ctx *srv,void **handle)
+int nr_ice_socket_register_turn_client(nr_ice_socket *sock, nr_turn_client_ctx *srv,
+                                       nr_socket *turn_socket, void **handle)
   {
     nr_ice_stun_ctx *sc=0;
     int _status;
@@ -294,7 +334,8 @@ int nr_ice_socket_register_turn_client(nr_ice_socket *sock, nr_turn_client_ctx *
       ABORT(R_NO_MEMORY);
 
     sc->type=NR_ICE_TURN_CLIENT;
-    sc->u.turn_client=srv;
+    sc->u.turn_client.turn_client=srv;
+    sc->u.turn_client.turn_sock=turn_socket;
 
     TAILQ_INSERT_TAIL(&sock->stun_ctxs,sc,entry);
 
@@ -313,7 +354,7 @@ int nr_ice_socket_deregister(nr_ice_socket *sock, void *handle)
 
     if(!sc)
       return(0);
-    
+
     sc->type=NR_ICE_STUN_NONE;
 
     return(0);
