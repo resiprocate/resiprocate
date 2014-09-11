@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Only do the Coverity scan in the GCC builds, not clang
+if [ "x${CC}" == "xclang" ];
+then
+  echo "*** Not setting up Coverity for the $CC build. ***"
+  exit 0
+fi
+
 # Get latest URL from here:
 #    https://scan.coverity.com/download
 
