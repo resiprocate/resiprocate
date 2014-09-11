@@ -124,7 +124,11 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    }
 
    mBio = BIO_new_socket((int)fd,0/*close flag*/);
-   assert( mBio );
+   if( !mBio )
+   {
+      throw Transport::Exception("Failed to create OpenSSL BIO for socket",
+         __FILE__, __LINE__);
+   }
    
    SSL_set_bio( mSsl, mBio, mBio );
 
