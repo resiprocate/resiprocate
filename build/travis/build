@@ -2,28 +2,39 @@
 
 set -e
 
-# Coverity complains with a message
-#    Use the linux64 Prevent distribution on this machine
-#    This platform is not supported by Coverity.
-#    See documentation for the ltest of supported platforms.
-#
-# Setting COVERITY_UNSUPPORTED=1 should work around the error:
+CORES=`cat /proc/cpuinfo | grep -c ^cpu`
+echo "*** Detected ${CORES} CPU core(s). ***"
+MAKE_ARGS=-j`expr ${CORES} + 1`
 
-COVERITY_UNSUPPORTED=1 \
-PATH=/tmp/coverity-scan/cov-analysis/bin:${PATH} \
-  cov-build --dir cov-int \
-  make -j8
+# Check if we are building for a Coverity scan
+# We may not do the scan every time on every platform
+if [ -e /tmp/coverity-scan/cov-analysis/bin ];
+then
+  # Coverity complains with a message
+  #    Use the linux64 Prevent distribution on this machine
+  #    This platform is not supported by Coverity.
+  #    See documentation for the ltest of supported platforms.
+  #
+  # Setting COVERITY_UNSUPPORTED=1 should work around the error:
 
-# submit the coverity artifacts to their scanning service:
-tar czf resiprocate-coverity.tgz cov-int
-curl \
-  --form project=reSIProcate \
-  --form token=-OmW1wnKp9CVC7iGPDUlqw \
-  --form email=daniel@pocock.com.au \
-  --form file=@resiprocate-coverity.tgz \
-  --form version=unknown \
-  --form description="Travis auto build" \
-  http://scan5.coverity.com/cgi-bin/upload.py
+  COVERITY_UNSUPPORTED=1 \
+    PATH=/tmp/coverity-scan/cov-analysis/bin:${PATH} \
+    cov-build --dir cov-int \
+    make ${MAKE_ARGS}
+
+  # submit the coverity artifacts to their scanning service:
+  tar czf resiprocate-coverity.tgz cov-int
+  curl \
+    --form project=reSIProcate \
+    --form token=-OmW1wnKp9CVC7iGPDUlqw \
+    --form email=daniel@pocock.com.au \
+    --form file=@resiprocate-coverity.tgz \
+    --form version=unknown \
+    --form description="Travis auto build" \
+    http://scan5.coverity.com/cgi-bin/upload.py
+else
+  make ${MAKE_ARGS}
+fi
 
 # we run the test cases after the Coverity scan for now, because
 # the Coverity scan might find false positives in the test code
@@ -31,5 +42,5 @@ curl \
 # code is not released code, as scanning the test code may allow
 # it to evaluate more code paths through the stack itself
 
-make check
+make ${MAKE_ARGS} check
 
