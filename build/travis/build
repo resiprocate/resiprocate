@@ -2,7 +2,11 @@
 
 set -e
 
-CORES=`cat /proc/cpuinfo | grep -c ^cpu`
+# 2014-09-11 - this detected 128 cores but the build failed
+#              Web site suggests 1.5 cores
+#              => hardcode for 1 core
+#CORES=`cat /proc/cpuinfo | grep -c ^cpu`
+CORES=1
 echo "*** Detected ${CORES} CPU core(s). ***"
 MAKE_ARGS=-j`expr ${CORES} + 1`
 
