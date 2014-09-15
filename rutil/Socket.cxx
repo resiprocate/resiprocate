@@ -63,7 +63,7 @@ resip::makeSocketBlocking(Socket fd)
 
 
 bool
-configureConnectedSocket(Socket fd)
+resip::configureConnectedSocket(Socket fd)
 {
 #ifdef REQUIRE_SO_NOSIGPIPE
    int on = 1;
