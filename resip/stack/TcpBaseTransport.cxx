@@ -3,6 +3,7 @@
 #endif
 
 #include <memory>
+#include "rutil/compat.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -172,6 +173,10 @@ TcpBaseTransport::processListen()
          }
          return -1;
       }
+      if(!configureConnectedSocket(sock))
+      {
+         throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
+      }
       makeSocketNonBlocking(sock);
 
       DebugLog (<< this << " Received TCP connection from: " << tuple << " mTuple: " << mTuple << " as fd=" << sock);
@@ -248,16 +253,10 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       failSubCode = errno;
       return NULL;
    }
-#ifdef TARGET_OS_IPHONE
-   int on = 1;
-   if ( ::setsockopt ( sock, SOL_SOCKET, SO_NOSIGPIPE, (const char*)&on, sizeof(on)) )
+   if(!configureConnectedSocket(sock))
    {
-      int e = getErrno();
-      WarningLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strerror(e));
-      error(e);
-      throw Exception("Failed setsockopt", __FILE__,__LINE__);
+      throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
    }
-#endif
    makeSocketNonBlocking(sock);
    if (mSocketFunc)
    {

@@ -144,6 +144,13 @@ typedef short          Int16;
 typedef int            Int32;
 #endif
 
+#if defined( TARGET_OS_IPHONE )
+// TARGET_OS_IPHONE can be 0 or 1, so must also check the value
+#if TARGET_OS_IPHONE
+#define REQUIRE_SO_NOSIGPIPE
+#endif
+#endif
+
 #if defined( WIN32 )
   typedef signed __int64   Int64;
   typedef unsigned __int64 UInt64;

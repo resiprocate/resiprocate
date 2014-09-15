@@ -109,6 +109,7 @@ typedef void(*AfterSocketCreationFuncPtr)(Socket s, int transportType, const cha
 
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
+bool configureConnectedSocket(Socket fd);
 int closeSocket( Socket fd );
 int getSocketError(Socket fd);	// getsockopt(SOCK_SOCKET,SO_ERROR)
 int increaseLimitFds(unsigned int targetFds);

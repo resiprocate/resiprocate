@@ -62,6 +62,24 @@ resip::makeSocketBlocking(Socket fd)
 
 
 
+bool
+configureConnectedSocket(Socket fd)
+{
+#ifdef REQUIRE_SO_NOSIGPIPE
+   int on = 1;
+   if ( ::setsockopt ( fd, SOL_SOCKET, SO_NOSIGPIPE, (const char*)&on, sizeof(on)) )
+   {
+      int e = getErrno();
+      ErrorLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strerror(e));
+      error(e);
+      return false;
+   }
+#endif
+   return true;
+}
+
+
+
 void
 resip::initNetwork()
 {
