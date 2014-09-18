@@ -156,6 +156,13 @@ defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
 defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
 defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
+defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
+defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
+defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
+defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", Token, "RFC 3455");
+
+defineMultiHeader(UserToUser, "User-to-User", Token, "draft-ietf-cuss-sip-uui-17");
+
 //====================
 // Mime
 //====================

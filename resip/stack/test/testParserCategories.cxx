@@ -717,7 +717,11 @@ main(int arc, char** argv)
       checkHeaderName(SecurityVerify);
       checkHeaderName(ContentLength);
       checkHeaderName(ContentId);
-
+      checkHeaderName(PAccessNetworkInfo);
+      checkHeaderName(PChargingVector);
+      checkHeaderName(PChargingFunctionAddresses);
+      checkHeaderName(PVisitedNetworkID);
+      checkHeaderName(UserToUser);
    }
 
 #define checkParameterName(_name) resipCerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
@@ -803,7 +807,17 @@ main(int arc, char** argv)
       
       checkParameterName(url);
       
-
+      checkParameterName(utranCellId3gpp);
+      checkParameterName(cgi3gpp);
+      checkParameterName(ccf);
+      checkParameterName(ecf);
+      checkParameterName(icidValue);
+      checkParameterName(icidGeneratedAt);
+      checkParameterName(origIoi);
+      checkParameterName(termIoi);
+      //checkParameterName(purpose);
+      checkParameterName(content);
+      checkParameterName(encoding);
 
       // test parameter hash
       for (int i = 0; i < ParameterTypes::MAX_PARAMETER; i++)

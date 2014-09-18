@@ -149,6 +149,19 @@ class ParameterTypes
          defineParam(mp, "mp", DataParameter, "RFC 4244-bis"),
          defineParam(np, "np", DataParameter, "RFC 4244-bis"),
 
+         defineParam(utranCellId3gpp, "utran-cell-id-3gpp", DataParameter, "RFC 3455"), // P-Access-Network-Info
+         defineParam(cgi3gpp, "cgi-3gpp", DataParameter, "RFC 3455"), // P-Access-Network-Info
+         defineParam(ccf, "ccf", DataParameter, "RFC 3455"), // P-Charging-Function-Addresses
+         defineParam(ecf, "ecf", DataParameter, "RFC 3455"), // P-Charging-Function-Addresses
+         defineParam(icidValue, "icid-value", DataParameter, "RFC 3455"), // P-Charging-Vector
+         defineParam(icidGeneratedAt, "icid-generated-at", DataParameter, "RFC 3455"), // P-Charging-Vector
+         defineParam(origIoi, "orig-ioi", DataParameter, "RFC 3455"), // P-Charging-Vector
+         defineParam(termIoi, "term-ioi", DataParameter, "RFC 3455"), // P-Charging-Vector
+
+         //defineParam(purpose, "purpose", DataParameter, "draft-ietf-cuss-sip-uui-17"),
+         defineParam(content, "content", DataParameter, "draft-ietf-cuss-sip-uui-17"),
+         defineParam(encoding, "encoding", DataParameter, "draft-ietf-cuss-sip-uui-17"),
+
          defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, "Internal"),
          defineParam(wsSrcIp, "ws-src-ip", DataParameter, ""),
