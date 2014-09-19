@@ -817,7 +817,7 @@
 			<File
 				RelativePath=".\TransportThread.cxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\TuIM.cxx"
 				>
@@ -909,15 +909,47 @@
 			<File
 				RelativePath=".\ssl\WssConnection.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ssl\WssTransport.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\WsTransport.cxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\X509Contents.cxx"
 				>
@@ -1034,7 +1066,7 @@
 			<File
 				RelativePath=".\DnsResultMessage.hxx"
 				>
-			</File>						
+			</File>
 			<File
 				RelativePath=".\DtlsMessage.hxx"
 				>
@@ -1422,7 +1454,7 @@
 			<File
 				RelativePath=".\TransactionControllerThread.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\TransactionMap.hxx"
 				>
@@ -1466,7 +1498,7 @@
 			<File
 				RelativePath=".\TransportThread.hxx"
 				>
-			</File>			
+			</File>
 			<File
 				RelativePath=".\TuIM.hxx"
 				>
@@ -1565,8 +1597,8 @@
 			</File>
 			<File
 				RelativePath=".\WsTransport.hxx"
-				>	
-            </File>				
+				>
+			</File>
 			<File
 				RelativePath=".\X509Contents.hxx"
 				>
