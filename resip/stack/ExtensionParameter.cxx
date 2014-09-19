@@ -18,9 +18,6 @@ ExtensionParameter::ExtensionParameter(const Data& name)
       assert(false);
       throw Exception("Empty extension parameter",__FILE__,__LINE__);
    }
-   if (ParameterTypes::getType(mName.data(), (int)mName.size()) != ParameterTypes::UNKNOWN) {
-      throw Exception("Extension parameter name is not unknown",__FILE__,__LINE__);
-   }
 }
 
 const Data& 
