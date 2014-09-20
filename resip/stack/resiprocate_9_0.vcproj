@@ -1059,6 +1059,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gen\DayOfWeek.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DeprecatedDialog.hxx"
 				>
 			</File>
@@ -1216,6 +1220,10 @@
 			</File>
 			<File
 				RelativePath=".\Mime.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\gen\Month.cxx"
 				>
 			</File>
 			<File

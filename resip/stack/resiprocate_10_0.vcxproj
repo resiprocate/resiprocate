@@ -525,6 +525,7 @@
     <ClInclude Include="CSeqCategory.hxx" />
     <ClInclude Include="DataParameter.hxx" />
     <ClInclude Include="DateCategory.hxx" />
+    <ClInclude Include="gen\DayOfWeek.cxx" />
     <ClInclude Include="DeprecatedDialog.hxx" />
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
@@ -566,6 +567,7 @@
     <ClInclude Include="MethodHash.hxx" />
     <ClInclude Include="MethodTypes.hxx" />
     <ClInclude Include="Mime.hxx" />
+    <ClInclude Include="gen\Month.cxx" />
     <ClInclude Include="MsgHeaderScanner.hxx" />
     <ClInclude Include="MultipartAlternativeContents.hxx" />
     <ClInclude Include="MultipartMixedContents.hxx" />
