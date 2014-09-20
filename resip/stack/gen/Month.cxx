@@ -1,5 +1,5 @@
 /* ANSI-C code produced by gperf version 3.0.3 */
-/* Command-line: gperf -L ANSI-C -t -k '*' -H month_hash -N in_month_word_set --compare-strncmp month.gperf  */
+/* Command-line: gperf -T -L ANSI-C -t -k '*' -H resip::month_hash -N resip::in_month_word_set --compare-strncmp month.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -30,13 +30,10 @@
 
 #line 1 "month.gperf"
 
-//#include "resip/stack/DateCategory.hxx"
-//#include "resip/stack/Month.hxx"
-
 namespace resip
 {
-#line 8 "month.gperf"
 struct months { const char *name; Month type; };
+}
 
 #define MONTH_TOTAL_KEYWORDS 12
 #define MIN_WORD_LENGTH 3
@@ -53,7 +50,7 @@ inline
 #endif
 #endif
 static unsigned int
-month_hash (register const char *str, register unsigned int len)
+resip::month_hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
@@ -94,48 +91,48 @@ __attribute__ ((__gnu_inline__))
 #endif
 #endif
 struct months *
-in_month_word_set (register const char *str, register unsigned int len)
+resip::in_month_word_set (register const char *str, register unsigned int len)
 {
   static struct months wordlist[] =
     {
       {""}, {""}, {""},
-#line 15 "month.gperf"
+#line 14 "month.gperf"
       {"Jun", Jun},
       {""}, {""}, {""},
-#line 16 "month.gperf"
+#line 15 "month.gperf"
       {"Jul", Jul},
-#line 10 "month.gperf"
+#line 9 "month.gperf"
       {"Jan", Jan},
       {""}, {""}, {""}, {""},
-#line 14 "month.gperf"
+#line 13 "month.gperf"
       {"May", May},
       {""}, {""}, {""},
-#line 11 "month.gperf"
+#line 10 "month.gperf"
       {"Feb", Feb},
-#line 12 "month.gperf"
+#line 11 "month.gperf"
       {"Mar", Mar},
       {""}, {""}, {""}, {""},
-#line 13 "month.gperf"
+#line 12 "month.gperf"
       {"Apr", Apr},
       {""}, {""}, {""},
-#line 21 "month.gperf"
+#line 20 "month.gperf"
       {"Dec", Dec},
-#line 17 "month.gperf"
+#line 16 "month.gperf"
       {"Aug", Aug},
       {""}, {""}, {""}, {""},
-#line 18 "month.gperf"
+#line 17 "month.gperf"
       {"Sep", Sep},
       {""}, {""}, {""}, {""},
-#line 19 "month.gperf"
+#line 18 "month.gperf"
       {"Oct", Oct},
       {""}, {""}, {""}, {""},
-#line 20 "month.gperf"
+#line 19 "month.gperf"
       {"Nov", Nov}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = month_hash (str, len);
+      register int key = resip::month_hash (str, len);
 
       if (key <= MONTH_MAX_HASH_VALUE && key >= 0)
         {
@@ -146,7 +143,4 @@ in_month_word_set (register const char *str, register unsigned int len)
         }
     }
   return 0;
-}
-#line 22 "month.gperf"
-
 }

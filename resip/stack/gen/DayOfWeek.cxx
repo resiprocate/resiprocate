@@ -1,5 +1,5 @@
 /* ANSI-C code produced by gperf version 3.0.3 */
-/* Command-line: gperf -L ANSI-C -t -k '*' -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp dayofweek.gperf  */
+/* Command-line: gperf -T -L ANSI-C -t -k '*' -H resip::dayofweek_hash -N resip::in_dayofweek_word_set --compare-strncmp dayofweek.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -30,13 +30,10 @@
 
 #line 1 "dayofweek.gperf"
 
-//#include "resip/stack/DateCategory.hxx"
-//#include "resip/stack/DayOfWeek.hxx"
-
 namespace resip
 {
-#line 8 "dayofweek.gperf"
 struct days { const char *name; DayOfWeek type; };
+}
 
 #define TOTAL_KEYWORDS 7
 #define MIN_WORD_LENGTH 3
@@ -53,7 +50,7 @@ inline
 #endif
 #endif
 static unsigned int
-dayofweek_hash (register const char *str, register unsigned int len)
+resip::dayofweek_hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
@@ -94,36 +91,36 @@ __attribute__ ((__gnu_inline__))
 #endif
 #endif
 struct days *
-in_dayofweek_word_set (register const char *str, register unsigned int len)
+resip::in_dayofweek_word_set (register const char *str, register unsigned int len)
 {
   static struct days wordlist[] =
     {
       {""}, {""}, {""},
-#line 16 "dayofweek.gperf"
+#line 15 "dayofweek.gperf"
       {"Sat", Sat},
       {""},
-#line 11 "dayofweek.gperf"
+#line 10 "dayofweek.gperf"
       {"Mon", Mon},
       {""}, {""},
-#line 10 "dayofweek.gperf"
+#line 9 "dayofweek.gperf"
       {"Sun", Sun},
       {""},
-#line 13 "dayofweek.gperf"
+#line 12 "dayofweek.gperf"
       {"Wed", Wed},
       {""}, {""},
-#line 14 "dayofweek.gperf"
+#line 13 "dayofweek.gperf"
       {"Thu", Thu},
       {""},
-#line 15 "dayofweek.gperf"
+#line 14 "dayofweek.gperf"
       {"Fri", Fri},
       {""}, {""},
-#line 12 "dayofweek.gperf"
+#line 11 "dayofweek.gperf"
       {"Tue", Tue}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = dayofweek_hash (str, len);
+      register int key = resip::dayofweek_hash (str, len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
         {
@@ -134,7 +131,4 @@ in_dayofweek_word_set (register const char *str, register unsigned int len)
         }
     }
   return 0;
-}
-#line 17 "dayofweek.gperf"
-
 }
