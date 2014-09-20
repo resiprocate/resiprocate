@@ -5,6 +5,12 @@
 #include <time.h>
 
 #include "resip/stack/DateCategory.hxx"
+
+extern "C" {
+#include "DayOfWeek.hxx"
+#include "Month.hxx"
+}
+
 #include "resip/stack/Transport.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -166,264 +172,38 @@ DateCategory::setDatetime(time_t datetime)
    return true;
 }
 
-/* ANSI-C code produced by gperf version 2.7.2 */
-/* Command-line: gperf -L ANSI-C -t -k '*' dayofweek.gperf  */
-/**
-   @internal
-*/
-struct days { char name[32]; DayOfWeek day; };
-
-#ifdef __GNUC__
-__inline
-#else
-#ifdef __cplusplus
-inline
-#endif
-#endif
-static unsigned int
-dayofweek_hash (register const char *str, register unsigned int len)
-{
-  static unsigned char asso_values[] =
-    {
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-       1, 13, 13, 13, 13, 13, 13,  5, 13, 13,
-      13, 13, 13,  2,  0, 13, 13,  7, 13, 13,
-      13, 13, 13, 13, 13, 13, 13,  7, 13, 13,
-       0,  0, 13, 13,  4,  0, 13, 13, 13, 13,
-       0,  0, 13, 13,  0, 13,  0,  0, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-      13, 13, 13, 13, 13, 13
-    };
-  register int hval = len;
-
-  switch (hval)
-    {
-      default: /*FALLTHRU*/
-      case 3:
-        hval += asso_values[(unsigned char)str[2]];
-        /*FALLTHRU*/
-      case 2:
-        hval += asso_values[(unsigned char)str[1]];
-        /*FALLTHRU*/
-      case 1:
-        hval += asso_values[(unsigned char)str[0]];
-        break;
-    }
-  return hval;
-}
-
-#ifdef __GNUC__
-__inline
-#endif
-struct days *
-in_dayofweek_word_set (register const char *str, register unsigned int len)
-{
-   static const unsigned int MIN_WORD_LENGTH = 3;
-   static const unsigned int MAX_WORD_LENGTH = 3;
-   static const int MAX_HASH_VALUE = 12;
-   
-   static struct days wordlist[] =
-    {
-      {""}, {""}, {""},
-      {"Tue", Tue},
-      {"Fri", Fri},
-      {"Sun", Sun},
-      {""},
-      {"Thu", Thu},
-      {"Mon", Mon},
-      {""},
-      {"Wed", Wed},
-      {""},
-      {"Sat", Sat}
-    };
-
-  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
-    {
-      register int key = dayofweek_hash (str, len);
-
-      if (key <= MAX_HASH_VALUE && key >= 0)
-        {
-          register const char *s = wordlist[key].name;
-
-          if (*str == *s && !strcmp (str + 1, s + 1))
-            return &wordlist[key];
-        }
-    }
-  return 0;
-}
-
 DayOfWeek
 DateCategory::DayOfWeekFromData(const Data& dow)
 {
-   static const unsigned int MIN_WORD_LENGTH = 3;
-   static const unsigned int MAX_WORD_LENGTH = 3;
-   static const int MAX_HASH_VALUE = 12;
-
    register const char *str = dow.data();
    register Data::size_type len = dow.size();
 
-   static struct days wordlist[] =
-      {
-         {""}, {""}, {""},
-         {"Tue", Tue},
-         {"Fri", Fri},
-         {"Sun", Sun},
-         {""},
-         {"Thu", Thu},
-         {"Mon", Mon},
-         {""},
-         {"Wed", Wed},
-         {""},
-         {"Sat", Sat}
-      };
-
-   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+   struct days* _day = in_dayofweek_word_set(str, len);
+   if(_day != 0)
    {
-      register int key = dayofweek_hash (str, (unsigned int)len);
-      
-      if (key <= MAX_HASH_VALUE && key >= 0)
-      {
-         register const char *s = wordlist[key].name;
-         
-         if (*str == *s && !strncmp (str+1, s+1, len-1))
-         {
-            return wordlist[key].day;
-         }
-      }
+      return _day->day;
    }
-   return Sun;
-}
-
-/* ANSI-C code produced by gperf version 2.7.2 */
-/* Command-line: gperf -L ANSI-C -t -k '*' month.gperf  */
-/**
-   @internal
-*/
-struct months { char name[32]; Month type; };
-
-/* maximum key range = 31, duplicates = 0 */
-
-#ifdef __GNUC__
-__inline
-#else
-#ifdef __cplusplus
-inline
-#endif
-#endif
-static unsigned int
-month_hash (register const char *str, register unsigned int len)
-{
-   static unsigned char asso_values[] =
-      {
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 15, 34, 34,  8, 34,
-         5, 34, 34, 34,  0, 34, 34, 10,  3, 14,
-         34, 34, 34,  9, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 10,  0,  0,
-         34,  0, 34, 10, 34, 34, 34, 34,  4, 34,
-         0,  0,  0, 34,  0, 34,  0,  0,  0, 34,
-         34, 10, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
-         34, 34, 34, 34, 34, 34
-      };
-   register int hval = len;
-
-   switch (hval)
+   else
    {
-      default: /*FALLTHRU*/
-      case 3:
-         hval += asso_values[(unsigned char)str[2]];
-         /*FALLTHRU*/
-      case 2:
-         hval += asso_values[(unsigned char)str[1]];
-         /*FALLTHRU*/
-      case 1:
-         hval += asso_values[(unsigned char)str[0]];
-         break;
+      return Sun;
    }
-   return hval;
 }
 
 Month
 DateCategory::MonthFromData(const Data& mon)
 {
-   static const unsigned int MIN_WORD_LENGTH = 3;
-   static const unsigned int MAX_WORD_LENGTH = 3;
-   static const int MAX_HASH_VALUE = 33;
-
    register const char *str = mon.data();
    register Data::size_type len = mon.size();
 
-   static struct months wordlist[] =
-      {
-         {""}, {""}, {""},
-         {"Jun", Jun},
-         {""}, {""},
-         {"Nov", Nov},
-         {"Jul", Jul},
-         {"Feb", Feb},
-         {""}, {""},
-         {"Dec", Dec},
-         {"Sep", Sep},
-         {"Jan", Jan},
-         {""}, {""}, {""},
-         {"Oct", Oct},
-         {"Apr", Apr},
-         {""}, {""}, {""}, {""},
-         {"Mar", Mar},
-         {""}, {""}, {""}, {""},
-         {"Aug", Aug},
-         {""}, {""}, {""}, {""},
-         {"May", May}
-      };
-
-   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+   struct months* _month = in_month_word_set(str, len);
+   if(_month != 0)
    {
-      register int key = month_hash (str, (unsigned int)len);
-
-      if (key <= MAX_HASH_VALUE && key >= 0)
-      {
-         register const char *s = wordlist[key].name;
-
-         if (*str == *s && !strncmp (str + 1, s + 1, mon.size()-1))
-            return wordlist[key].type;
-      }
+      return _month->type;
    }
-   return Jan;
+   else
+   {
+      return Jan;
+   }
 }
 
 const DayOfWeek& 

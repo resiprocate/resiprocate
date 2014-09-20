@@ -1,14 +1,22 @@
+%{
+#include "resip/stack/DateCategory.hxx"
+
+namespace resip
+{
+%}
 struct months { const char *name; Month type; };
 %%
-Jan, Month::Jan
-Feb, Month::Feb
-Mar, Month::Mar
-Apr, Month::Apr
-May, Month::May
-Jun, Month::Jun
-Jul, Month::Jul
-Aug, Month::Aug
-Sep, Month::Sep
-Oct, Month::Oct
-Nov, Month::Nov
-Dec, Month::Dec
+Jan, Jan
+Feb, Feb
+Mar, Mar
+Apr, Apr
+May, May
+Jun, Jun
+Jul, Jul
+Aug, Aug
+Sep, Sep
+Oct, Oct
+Nov, Nov
+Dec, Dec
+%%
+}

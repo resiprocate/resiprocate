@@ -71,6 +71,7 @@ libresip_la_SOURCES = \
 	ContentsFactoryBase.cxx \
 	CpimContents.cxx \
 	DataParameter.cxx \
+	gen/DayOfWeek.cxx \
 	DeprecatedDialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
@@ -98,6 +99,7 @@ libresip_la_SOURCES = \
 	MessageWaitingContents.cxx \
 	gen/MethodHash.cxx \
 	MethodTypes.cxx \
+	gen/Month.cxx \
 	MsgHeaderScanner.cxx \
 	MultipartAlternativeContents.cxx \
 	MultipartMixedContents.cxx \
@@ -187,6 +189,14 @@ GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
 gen/MethodHash.cxx: MethodHash.gperf
 	mkdir -p $(abs_srcdir)/gen
 	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@
+
+gen/DayOfWeek.cxx: dayofweek.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf -L ANSI-C -t -k '*' -H dayofweek_hash -N in_dayofweek_word_set $< > $@
+
+gen/Month.cxx: month.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf -L ANSI-C -t -k '*' -H month_hash -N in_month_word_set $< > $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
