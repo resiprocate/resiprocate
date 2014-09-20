@@ -466,7 +466,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HeaderHash.cxx"
+				RelativePath=".\gen\HeaderHash.cxx"
 				>
 			</File>
 			<File
@@ -526,7 +526,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MethodHash.cxx"
+				RelativePath=".\gen\MethodHash.cxx"
 				>
 			</File>
 			<File
@@ -574,7 +574,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ParameterHash.cxx"
+				RelativePath=".\gen\ParameterHash.cxx"
 				>
 			</File>
 			<File

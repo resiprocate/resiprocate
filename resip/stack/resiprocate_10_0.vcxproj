@@ -369,7 +369,7 @@
     <ClCompile Include="GenericUri.cxx" />
     <ClCompile Include="HeaderFieldValue.cxx" />
     <ClCompile Include="HeaderFieldValueList.cxx" />
-    <ClCompile Include="HeaderHash.cxx" />
+    <ClCompile Include="gen\HeaderHash.cxx" />
     <ClCompile Include="Headers.cxx" />
     <ClCompile Include="HeaderTypes.cxx" />
     <ClCompile Include="Helper.cxx" />
@@ -384,7 +384,7 @@
     <ClCompile Include="Message.cxx" />
     <ClCompile Include="MessageFilterRule.cxx" />
     <ClCompile Include="MessageWaitingContents.cxx" />
-    <ClCompile Include="MethodHash.cxx" />
+    <ClCompile Include="gen\MethodHash.cxx" />
     <ClCompile Include="MethodTypes.cxx" />
     <ClCompile Include="Mime.cxx" />
     <ClCompile Include="MsgHeaderScanner.cxx" />
@@ -396,7 +396,7 @@
     <ClCompile Include="NonceHelper.cxx" />
     <ClCompile Include="OctetContents.cxx" />
     <ClCompile Include="Parameter.cxx" />
-    <ClCompile Include="ParameterHash.cxx" />
+    <ClCompile Include="gen\ParameterHash.cxx" />
     <ClCompile Include="ParameterTypes.cxx" />
     <ClCompile Include="ParserCategories.cxx" />
     <ClCompile Include="ParserCategory.cxx" />

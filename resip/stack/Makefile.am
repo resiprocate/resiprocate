@@ -86,7 +86,7 @@ libresip_la_SOURCES = \
 	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
-	HeaderHash.cxx \
+	gen/HeaderHash.cxx \
 	HeaderTypes.cxx \
 	Headers.cxx \
 	Helper.cxx \
@@ -96,7 +96,7 @@ libresip_la_SOURCES = \
 	LazyParser.cxx \
 	Message.cxx \
 	MessageWaitingContents.cxx \
-	MethodHash.cxx \
+	gen/MethodHash.cxx \
 	MethodTypes.cxx \
 	MsgHeaderScanner.cxx \
 	MultipartAlternativeContents.cxx \
@@ -106,7 +106,7 @@ libresip_la_SOURCES = \
 	NonceHelper.cxx \
 	OctetContents.cxx \
 	Parameter.cxx \
-	ParameterHash.cxx \
+	gen/ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
 	ParserContainerBase.cxx \
@@ -184,12 +184,14 @@ GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
 # rule for case sensitive sorts of hash
-MethodHash.cxx: MethodHash.gperf
+gen/MethodHash.cxx: MethodHash.gperf
+	mkdir -p $(abs_srcdir)/gen
 	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
-%.cxx: %.gperf
+gen/%.cxx: %.gperf
+	mkdir -p $(abs_srcdir)/gen
 	gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@
 
 
