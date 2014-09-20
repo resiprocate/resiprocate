@@ -1,6 +1,8 @@
 %{
 namespace resip
 {
+struct days { const char *name; DayOfWeek type; };
+}
 %}
 struct days { const char *name; DayOfWeek type; };
 %%
@@ -11,5 +13,3 @@ Wed, Wed
 Thu, Thu
 Fri, Fri
 Sat, Sat
-%%
-}
