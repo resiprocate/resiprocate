@@ -30,6 +30,13 @@ AM_CXXFLAGS = -I $(top_srcdir)
 
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
+BUILT_SOURCES = \
+	gen/DayOfWeek.cxx \
+	gen/HeaderHash.cxx \
+	gen/MethodHash.cxx \
+	gen/Month.cxx \
+	gen/ParameterHash.cxx
+
 lib_LTLIBRARIES = libresip.la
 
 libresip_la_LIBADD = ../../rutil/librutil.la
@@ -71,7 +78,6 @@ libresip_la_SOURCES = \
 	ContentsFactoryBase.cxx \
 	CpimContents.cxx \
 	DataParameter.cxx \
-	gen/DayOfWeek.cxx \
 	DeprecatedDialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
@@ -99,7 +105,6 @@ libresip_la_SOURCES = \
 	MessageWaitingContents.cxx \
 	gen/MethodHash.cxx \
 	MethodTypes.cxx \
-	gen/Month.cxx \
 	MsgHeaderScanner.cxx \
 	MultipartAlternativeContents.cxx \
 	MultipartMixedContents.cxx \
@@ -192,11 +197,11 @@ gen/MethodHash.cxx: MethodHash.gperf
 
 gen/DayOfWeek.cxx: dayofweek.gperf
 	mkdir -p $(abs_srcdir)/gen
-	gperf -L ANSI-C -t -k '*' -H dayofweek_hash -N in_dayofweek_word_set $< > $@
+	gperf -L ANSI-C -t -k '*' -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp $< > $@
 
 gen/Month.cxx: month.gperf
 	mkdir -p $(abs_srcdir)/gen
-	gperf -L ANSI-C -t -k '*' -H month_hash -N in_month_word_set $< > $@
+	gperf -L ANSI-C -t -k '*' -H month_hash -N in_month_word_set --compare-strncmp $< | sed -e 's/TOTAL_KEYWORDS/MONTH_TOTAL_KEYWORDS/g' -e 's/MAX_HASH_VALUE/MONTH_MAX_HASH_VALUE/g' > $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?

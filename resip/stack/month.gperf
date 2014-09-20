@@ -1,6 +1,4 @@
 %{
-#include "resip/stack/DateCategory.hxx"
-
 namespace resip
 {
 %}

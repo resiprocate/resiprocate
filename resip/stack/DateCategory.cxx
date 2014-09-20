@@ -6,11 +6,6 @@
 
 #include "resip/stack/DateCategory.hxx"
 
-extern "C" {
-#include "DayOfWeek.hxx"
-#include "Month.hxx"
-}
-
 #include "resip/stack/Transport.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -23,6 +18,9 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+#include "gen/DayOfWeek.cxx"
+#include "gen/Month.cxx"
 
 //====================
 // Date
@@ -181,7 +179,7 @@ DateCategory::DayOfWeekFromData(const Data& dow)
    struct days* _day = in_dayofweek_word_set(str, len);
    if(_day != 0)
    {
-      return _day->day;
+      return _day->type;
    }
    else
    {

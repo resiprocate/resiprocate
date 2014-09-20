@@ -1,5 +1,5 @@
 /* ANSI-C code produced by gperf version 3.0.3 */
-/* Command-line: gperf -L ANSI-C -t -k '*' -H dayofweek_hash -N in_dayofweek_word_set dayofweek.gperf  */
+/* Command-line: gperf -L ANSI-C -t -k '*' -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp dayofweek.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -30,11 +30,12 @@
 
 #line 1 "dayofweek.gperf"
 
-#include "resip/stack/DateCategory.hxx"
+//#include "resip/stack/DateCategory.hxx"
+//#include "resip/stack/DayOfWeek.hxx"
 
 namespace resip
 {
-#line 7 "dayofweek.gperf"
+#line 8 "dayofweek.gperf"
 struct days { const char *name; DayOfWeek type; };
 
 #define TOTAL_KEYWORDS 7
@@ -98,25 +99,25 @@ in_dayofweek_word_set (register const char *str, register unsigned int len)
   static struct days wordlist[] =
     {
       {""}, {""}, {""},
-#line 15 "dayofweek.gperf"
+#line 16 "dayofweek.gperf"
       {"Sat", Sat},
       {""},
-#line 10 "dayofweek.gperf"
+#line 11 "dayofweek.gperf"
       {"Mon", Mon},
       {""}, {""},
-#line 9 "dayofweek.gperf"
+#line 10 "dayofweek.gperf"
       {"Sun", Sun},
       {""},
-#line 12 "dayofweek.gperf"
+#line 13 "dayofweek.gperf"
       {"Wed", Wed},
       {""}, {""},
-#line 13 "dayofweek.gperf"
+#line 14 "dayofweek.gperf"
       {"Thu", Thu},
       {""},
-#line 14 "dayofweek.gperf"
+#line 15 "dayofweek.gperf"
       {"Fri", Fri},
       {""}, {""},
-#line 11 "dayofweek.gperf"
+#line 12 "dayofweek.gperf"
       {"Tue", Tue}
     };
 
@@ -128,12 +129,12 @@ in_dayofweek_word_set (register const char *str, register unsigned int len)
         {
           register const char *s = wordlist[key].name;
 
-          if (*str == *s && !strcmp (str + 1, s + 1))
+          if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
             return &wordlist[key];
         }
     }
   return 0;
 }
-#line 16 "dayofweek.gperf"
+#line 17 "dayofweek.gperf"
 
 }

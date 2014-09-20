@@ -1,5 +1,5 @@
 /* ANSI-C code produced by gperf version 3.0.3 */
-/* Command-line: gperf -L ANSI-C -t -k '*' -H month_hash -N in_month_word_set month.gperf  */
+/* Command-line: gperf -L ANSI-C -t -k '*' -H month_hash -N in_month_word_set --compare-strncmp month.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -30,18 +30,19 @@
 
 #line 1 "month.gperf"
 
-#include "resip/stack/DateCategory.hxx"
+//#include "resip/stack/DateCategory.hxx"
+//#include "resip/stack/Month.hxx"
 
 namespace resip
 {
-#line 7 "month.gperf"
+#line 8 "month.gperf"
 struct months { const char *name; Month type; };
 
-#define TOTAL_KEYWORDS 12
+#define MONTH_TOTAL_KEYWORDS 12
 #define MIN_WORD_LENGTH 3
 #define MAX_WORD_LENGTH 3
 #define MIN_HASH_VALUE 3
-#define MAX_HASH_VALUE 43
+#define MONTH_MAX_HASH_VALUE 43
 /* maximum key range = 41, duplicates = 0 */
 
 #ifdef __GNUC__
@@ -98,37 +99,37 @@ in_month_word_set (register const char *str, register unsigned int len)
   static struct months wordlist[] =
     {
       {""}, {""}, {""},
-#line 14 "month.gperf"
+#line 15 "month.gperf"
       {"Jun", Jun},
       {""}, {""}, {""},
-#line 15 "month.gperf"
+#line 16 "month.gperf"
       {"Jul", Jul},
-#line 9 "month.gperf"
+#line 10 "month.gperf"
       {"Jan", Jan},
       {""}, {""}, {""}, {""},
-#line 13 "month.gperf"
+#line 14 "month.gperf"
       {"May", May},
       {""}, {""}, {""},
-#line 10 "month.gperf"
-      {"Feb", Feb},
 #line 11 "month.gperf"
+      {"Feb", Feb},
+#line 12 "month.gperf"
       {"Mar", Mar},
       {""}, {""}, {""}, {""},
-#line 12 "month.gperf"
+#line 13 "month.gperf"
       {"Apr", Apr},
       {""}, {""}, {""},
-#line 20 "month.gperf"
+#line 21 "month.gperf"
       {"Dec", Dec},
-#line 16 "month.gperf"
+#line 17 "month.gperf"
       {"Aug", Aug},
       {""}, {""}, {""}, {""},
-#line 17 "month.gperf"
+#line 18 "month.gperf"
       {"Sep", Sep},
       {""}, {""}, {""}, {""},
-#line 18 "month.gperf"
+#line 19 "month.gperf"
       {"Oct", Oct},
       {""}, {""}, {""}, {""},
-#line 19 "month.gperf"
+#line 20 "month.gperf"
       {"Nov", Nov}
     };
 
@@ -136,16 +137,16 @@ in_month_word_set (register const char *str, register unsigned int len)
     {
       register int key = month_hash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
+      if (key <= MONTH_MAX_HASH_VALUE && key >= 0)
         {
           register const char *s = wordlist[key].name;
 
-          if (*str == *s && !strcmp (str + 1, s + 1))
+          if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
             return &wordlist[key];
         }
     }
   return 0;
 }
-#line 21 "month.gperf"
+#line 22 "month.gperf"
 
 }
