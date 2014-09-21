@@ -1,5 +1,5 @@
-/* ANSI-C code produced by gperf version 3.0.3 */
-/* Command-line: gperf -T -L ANSI-C -t -k '*' -H resip::dayofweek_hash -N resip::in_dayofweek_word_set --compare-strncmp dayofweek.gperf  */
+/* C++ code produced by gperf version 3.0.3 */
+/* Command-line: gperf -L C++ -t -k '*' -Z DayOfWeekHash -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp dayofweek.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -32,8 +32,8 @@
 
 namespace resip
 {
+#line 5 "dayofweek.gperf"
 struct days { const char *name; DayOfWeek type; };
-}
 
 #define TOTAL_KEYWORDS 7
 #define MIN_WORD_LENGTH 3
@@ -42,15 +42,16 @@ struct days { const char *name; DayOfWeek type; };
 #define MAX_HASH_VALUE 18
 /* maximum key range = 16, duplicates = 0 */
 
-#ifdef __GNUC__
-__inline
-#else
-#ifdef __cplusplus
-inline
-#endif
-#endif
-static unsigned int
-resip::dayofweek_hash (register const char *str, register unsigned int len)
+class DayOfWeekHash
+{
+private:
+  static inline unsigned int dayofweek_hash (const char *str, unsigned int len);
+public:
+  static struct days *in_dayofweek_word_set (const char *str, unsigned int len);
+};
+
+inline unsigned int
+DayOfWeekHash::dayofweek_hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
@@ -84,43 +85,37 @@ resip::dayofweek_hash (register const char *str, register unsigned int len)
   return len + asso_values[(unsigned char)str[2]] + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]];
 }
 
-#ifdef __GNUC__
-__inline
-#ifdef __GNUC_STDC_INLINE__
-__attribute__ ((__gnu_inline__))
-#endif
-#endif
 struct days *
-resip::in_dayofweek_word_set (register const char *str, register unsigned int len)
+DayOfWeekHash::in_dayofweek_word_set (register const char *str, register unsigned int len)
 {
   static struct days wordlist[] =
     {
       {""}, {""}, {""},
-#line 15 "dayofweek.gperf"
+#line 13 "dayofweek.gperf"
       {"Sat", Sat},
       {""},
-#line 10 "dayofweek.gperf"
+#line 8 "dayofweek.gperf"
       {"Mon", Mon},
       {""}, {""},
-#line 9 "dayofweek.gperf"
+#line 7 "dayofweek.gperf"
       {"Sun", Sun},
       {""},
-#line 12 "dayofweek.gperf"
+#line 10 "dayofweek.gperf"
       {"Wed", Wed},
       {""}, {""},
-#line 13 "dayofweek.gperf"
+#line 11 "dayofweek.gperf"
       {"Thu", Thu},
       {""},
-#line 14 "dayofweek.gperf"
+#line 12 "dayofweek.gperf"
       {"Fri", Fri},
       {""}, {""},
-#line 11 "dayofweek.gperf"
+#line 9 "dayofweek.gperf"
       {"Tue", Tue}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = resip::dayofweek_hash (str, len);
+      register int key = dayofweek_hash (str, len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
         {
@@ -131,4 +126,7 @@ resip::in_dayofweek_word_set (register const char *str, register unsigned int le
         }
     }
   return 0;
+}
+#line 14 "dayofweek.gperf"
+
 }

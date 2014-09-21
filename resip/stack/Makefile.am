@@ -31,10 +31,10 @@ AM_CXXFLAGS = -I $(top_srcdir)
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
 BUILT_SOURCES = \
-	gen/DayOfWeek.cxx \
+	gen/DayOfWeekHash.cxx \
 	gen/HeaderHash.cxx \
 	gen/MethodHash.cxx \
-	gen/Month.cxx \
+	gen/MonthHash.cxx \
 	gen/ParameterHash.cxx
 
 lib_LTLIBRARIES = libresip.la
@@ -195,11 +195,11 @@ gen/MethodHash.cxx: MethodHash.gperf
 	mkdir -p $(abs_srcdir)/gen
 	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@
 
-gen/DayOfWeek.cxx: dayofweek.gperf
+gen/DayOfWeekHash.cxx: dayofweek.gperf
 	mkdir -p $(abs_srcdir)/gen
 	gperf -L C++ -t -k '*' -Z DayOfWeekHash -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp $< > $@
 
-gen/Month.cxx: month.gperf
+gen/MonthHash.cxx: month.gperf
 	mkdir -p $(abs_srcdir)/gen
 	gperf -L C++ -t -k '*' -Z MonthHash -H month_hash -N in_month_word_set --compare-strncmp $< | sed -e 's/TOTAL_KEYWORDS/MONTH_TOTAL_KEYWORDS/g' -e 's/MAX_HASH_VALUE/MONTH_MAX_HASH_VALUE/g' > $@
 

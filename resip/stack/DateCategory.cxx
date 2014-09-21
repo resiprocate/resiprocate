@@ -19,8 +19,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-#include "gen/DayOfWeek.cxx"
-#include "gen/Month.cxx"
+#include "gen/DayOfWeekHash.cxx"
+#include "gen/MonthHash.cxx"
 
 //====================
 // Date

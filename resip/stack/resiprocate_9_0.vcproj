@@ -1059,7 +1059,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gen\DayOfWeek.cxx"
+				RelativePath=".\gen\DayOfWeekHash.cxx"
 				>
 			</File>
 			<File
@@ -1223,7 +1223,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gen\Month.cxx"
+				RelativePath=".\gen\MonthHash.cxx"
 				>
 			</File>
 			<File
