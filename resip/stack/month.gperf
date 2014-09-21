@@ -1,8 +1,6 @@
 %{
 namespace resip
 {
-struct months { const char *name; Month type; };
-}
 %}
 struct months { const char *name; Month type; };
 %%
@@ -18,3 +16,5 @@ Sep, Sep
 Oct, Oct
 Nov, Nov
 Dec, Dec
+%%
+}
