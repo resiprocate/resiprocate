@@ -197,11 +197,11 @@ gen/MethodHash.cxx: MethodHash.gperf
 
 gen/DayOfWeek.cxx: dayofweek.gperf
 	mkdir -p $(abs_srcdir)/gen
-	gperf -L ANSI-C -t -k '*' -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp $< > $@
+	gperf -L C++ -t -k '*' -Z DayOfWeekHash -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp $< > $@
 
 gen/Month.cxx: month.gperf
 	mkdir -p $(abs_srcdir)/gen
-	gperf -L ANSI-C -t -k '*' -H month_hash -N in_month_word_set --compare-strncmp $< | sed -e 's/TOTAL_KEYWORDS/MONTH_TOTAL_KEYWORDS/g' -e 's/MAX_HASH_VALUE/MONTH_MAX_HASH_VALUE/g' > $@
+	gperf -L C++ -t -k '*' -Z MonthHash -H month_hash -N in_month_word_set --compare-strncmp $< | sed -e 's/TOTAL_KEYWORDS/MONTH_TOTAL_KEYWORDS/g' -e 's/MAX_HASH_VALUE/MONTH_MAX_HASH_VALUE/g' > $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
