@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
 	RootNamespace="resiprocate"
@@ -459,7 +459,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HeaderHash.cxx"
+				RelativePath=".\gen\HeaderHash.cxx"
 				>
 			</File>
 			<File
@@ -519,7 +519,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MethodHash.cxx"
+				RelativePath=".\gen\MethodHash.cxx"
 				>
 			</File>
 			<File
@@ -567,7 +567,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ParameterHash.cxx"
+				RelativePath=".\gen\ParameterHash.cxx"
 				>
 			</File>
 			<File
@@ -1052,6 +1052,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gen\DayOfWeekHash.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DeprecatedDialog.hxx"
 				>
 			</File>
@@ -1205,6 +1209,10 @@
 			</File>
 			<File
 				RelativePath=".\Mime.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\gen\MonthHash.cxx"
 				>
 			</File>
 			<File

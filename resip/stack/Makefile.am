@@ -30,6 +30,13 @@ AM_CXXFLAGS = -I $(top_srcdir)
 
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
+BUILT_SOURCES = \
+	gen/DayOfWeekHash.cxx \
+	gen/HeaderHash.cxx \
+	gen/MethodHash.cxx \
+	gen/MonthHash.cxx \
+	gen/ParameterHash.cxx
+
 lib_LTLIBRARIES = libresip.la
 
 libresip_la_LIBADD = ../../rutil/librutil.la
@@ -86,7 +93,7 @@ libresip_la_SOURCES = \
 	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
-	HeaderHash.cxx \
+	gen/HeaderHash.cxx \
 	HeaderTypes.cxx \
 	Headers.cxx \
 	Helper.cxx \
@@ -96,7 +103,7 @@ libresip_la_SOURCES = \
 	LazyParser.cxx \
 	Message.cxx \
 	MessageWaitingContents.cxx \
-	MethodHash.cxx \
+	gen/MethodHash.cxx \
 	MethodTypes.cxx \
 	MsgHeaderScanner.cxx \
 	MultipartAlternativeContents.cxx \
@@ -106,7 +113,7 @@ libresip_la_SOURCES = \
 	NonceHelper.cxx \
 	OctetContents.cxx \
 	Parameter.cxx \
-	ParameterHash.cxx \
+	gen/ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
 	ParserContainerBase.cxx \
@@ -184,14 +191,23 @@ GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
 # rule for case sensitive sorts of hash
-MethodHash.cxx: MethodHash.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@ || echo "gperf not installed, touching $@" && touch $@
+gen/MethodHash.cxx: MethodHash.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@
+
+gen/DayOfWeekHash.cxx: dayofweek.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf -L C++ -t -k '*' -Z DayOfWeekHash -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp $< > $@
+
+gen/MonthHash.cxx: month.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf -L C++ -t -k '*' -Z MonthHash -H month_hash -N in_month_word_set --compare-strncmp $< | sed -e 's/TOTAL_KEYWORDS/MONTH_TOTAL_KEYWORDS/g' -e 's/MAX_HASH_VALUE/MONTH_MAX_HASH_VALUE/g' > $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
-%.cxx: %.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@ || \
-	echo "gperf not installed, touching $@" && touch $@
+gen/%.cxx: %.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@
 
 
 resipincludedir = $(includedir)/resip/stack

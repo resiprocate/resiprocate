@@ -7,8 +7,10 @@ echo Note - Ensure gperf.exe is present in the path or resip/stack directory
 echo        before continuing
 echo.
 pause
-gperf -C -D -E -L C++ -t --key-positions="*" --compare-strncmp -Z MethodHash MethodHash.gperf > MethodHash.cxx
-gperf -C -D -E -L C++ -t --key-positions="*" --compare-strncmp --ignore-case -Z HeaderHash HeaderHash.gperf > HeaderHash.cxx
-gperf -C -D -E -L C++ -t --key-positions="*" --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf > ParameterHash.cxx
+if not exist gen mkdir gen
+gperf -C -D -E -L C++ -t --key-positions="*" --compare-strncmp -Z MethodHash MethodHash.gperf > gen\MethodHash.cxx
+gperf -C -D -E -L C++ -t --key-positions="*" --compare-strncmp --ignore-case -Z HeaderHash HeaderHash.gperf > gen\HeaderHash.cxx
+gperf -C -D -E -L C++ -t --key-positions="*" --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf > gen\ParameterHash.cxx
 echo MethodHash.cxx, HeaderHash.cxx and ParameterHash.cxx have been created using gperf.
+echo DayOfWeekHash.cxx and MonthHash.cxx require sed, please generate them on a Linux host.
 pause
