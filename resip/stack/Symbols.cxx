@@ -125,10 +125,10 @@ const char* Symbols::id = "id"; // from RFC 3323
 
 const char* Symbols::Gruu = "gruu";
 
-const char* Uui = "uui";
-const char* Hex = "hex";
-const char* IsdnInterwork = "isdn-interwork";
-const char* IsdnUui = "isdn-uui";
+const char* Symbols::Uui = "uui";
+const char* Symbols::Hex = "hex";
+const char* Symbols::IsdnInterwork = "isdn-interwork";
+const char* Symbols::IsdnUui = "isdn-uui";
 
 #if defined(WIN32)
 const char *Symbols::pathSep = "\\";
