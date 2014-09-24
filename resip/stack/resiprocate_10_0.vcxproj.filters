@@ -25,6 +25,7 @@
     <ClCompile Include="CSeqCategory.cxx" />
     <ClCompile Include="DataParameter.cxx" />
     <ClCompile Include="DateCategory.cxx" />
+    <ClCompile Include="gen\DayOfWeekHash.cxx" />
     <ClCompile Include="DeprecatedDialog.cxx" />
     <ClCompile Include="DnsInterface.cxx" />
     <ClCompile Include="DnsResult.cxx" />
@@ -60,6 +61,7 @@
     <ClCompile Include="MethodHash.cxx" />
     <ClCompile Include="MethodTypes.cxx" />
     <ClCompile Include="Mime.cxx" />
+    <ClCompile Include="gen\MonthHash.cxx" />
     <ClCompile Include="MsgHeaderScanner.cxx" />
     <ClCompile Include="MultipartAlternativeContents.cxx" />
     <ClCompile Include="MultipartMixedContents.cxx" />
@@ -170,7 +172,6 @@
     <ClInclude Include="CSeqCategory.hxx" />
     <ClInclude Include="DataParameter.hxx" />
     <ClInclude Include="DateCategory.hxx" />
-    <ClInclude Include="gen\DayOfWeekHash.cxx" />
     <ClInclude Include="DeprecatedDialog.hxx" />
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
@@ -210,7 +211,6 @@
     <ClInclude Include="MethodHash.hxx" />
     <ClInclude Include="MethodTypes.hxx" />
     <ClInclude Include="Mime.hxx" />
-    <ClInclude Include="gen\MonthHash.cxx" />
     <ClInclude Include="MsgHeaderScanner.hxx" />
     <ClInclude Include="MultipartAlternativeContents.hxx" />
     <ClInclude Include="MultipartMixedContents.hxx" />
