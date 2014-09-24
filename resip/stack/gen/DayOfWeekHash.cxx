@@ -32,7 +32,7 @@
 
 #include <string.h>
 #include <ctype.h>
-#include "DateCategory.hxx"
+#include "resip/stack/DateCategory.hxx"
 
 namespace resip
 {
