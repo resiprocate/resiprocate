@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 #include "resip/stack/DateCategory.hxx"
