@@ -378,6 +378,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gen\DayOfWeekHash.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DeprecatedDialog.cxx"
 				>
 			</File>
@@ -535,6 +539,10 @@
 			</File>
 			<File
 				RelativePath=".\Mime.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\gen\MonthHash.cxx"
 				>
 			</File>
 			<File
@@ -1059,42 +1067,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gen\DayOfWeekHash.cxx"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\DeprecatedDialog.hxx"
 				>
 			</File>
@@ -1253,42 +1225,6 @@
 			<File
 				RelativePath=".\Mime.hxx"
 				>
-			</File>
-			<File
-				RelativePath=".\gen\MonthHash.cxx"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\MsgHeaderScanner.hxx"

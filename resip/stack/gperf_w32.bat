@@ -8,9 +8,10 @@ echo        before continuing
 echo.
 pause
 if not exist gen mkdir gen
+gperf -C -D -E -L C++ -t -k "*" --compare-strncmp -Z DayOfWeekHash DayOfWeekHash.gperf > gen\DayOfWeekHash.cxx
+gperf -C -D -E -L C++ -t -k "*" --compare-strncmp -Z MonthHash MonthHash.gperf > gen\MonthHash.cxx
 gperf -C -D -E -L C++ -t -k "*" --compare-strncmp -Z MethodHash MethodHash.gperf > gen\MethodHash.cxx
 gperf -C -D -E -L C++ -t -k "*" --compare-strncmp --ignore-case -Z HeaderHash HeaderHash.gperf > gen\HeaderHash.cxx
 gperf -C -D -E -L C++ -t -k "*" --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf > gen\ParameterHash.cxx
-echo MethodHash.cxx, HeaderHash.cxx and ParameterHash.cxx have been created using gperf.
-echo DayOfWeekHash.cxx and MonthHash.cxx require sed, please generate them on a Linux host.
+echo DayOfWeekHash.cxx, MonthHash.cxx, MethodHash.cxx, HeaderHash.cxx and ParameterHash.cxx have been created using gperf.
 pause

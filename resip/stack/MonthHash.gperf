@@ -1,4 +1,8 @@
 %{
+#include <string.h>
+#include <ctype.h>
+#include "resip/stack/DateCategory.hxx"
+
 namespace resip
 {
 %}

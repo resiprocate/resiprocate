@@ -1,5 +1,5 @@
 /* C++ code produced by gperf version 3.0.3 */
-/* Command-line: gperf -L C++ -t -k '*' -Z DayOfWeekHash -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp dayofweek.gperf  */
+/* Command-line: gperf -C -D -E -L C++ -t -k '*' --compare-strncmp -Z DayOfWeekHash DayOfWeekHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -28,32 +28,30 @@
 #error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
 #endif
 
-#line 1 "dayofweek.gperf"
+#line 1 "DayOfWeekHash.gperf"
+
+#include <string.h>
+#include <ctype.h>
+#include "resip/stack/DateCategory.hxx"
 
 namespace resip
 {
-#line 5 "dayofweek.gperf"
+#line 9 "DayOfWeekHash.gperf"
 struct days { const char *name; DayOfWeek type; };
-
-#define TOTAL_KEYWORDS 7
-#define MIN_WORD_LENGTH 3
-#define MAX_WORD_LENGTH 3
-#define MIN_HASH_VALUE 3
-#define MAX_HASH_VALUE 18
 /* maximum key range = 16, duplicates = 0 */
 
 class DayOfWeekHash
 {
 private:
-  static inline unsigned int dayofweek_hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, unsigned int len);
 public:
-  static struct days *in_dayofweek_word_set (const char *str, unsigned int len);
+  static const struct days *in_word_set (const char *str, unsigned int len);
 };
 
 inline unsigned int
-DayOfWeekHash::dayofweek_hash (register const char *str, register unsigned int len)
+DayOfWeekHash::hash (register const char *str, register unsigned int len)
 {
-  static unsigned char asso_values[] =
+  static const unsigned char asso_values[] =
     {
       19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
       19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
@@ -85,48 +83,61 @@ DayOfWeekHash::dayofweek_hash (register const char *str, register unsigned int l
   return len + asso_values[(unsigned char)str[2]] + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]];
 }
 
-struct days *
-DayOfWeekHash::in_dayofweek_word_set (register const char *str, register unsigned int len)
+const struct days *
+DayOfWeekHash::in_word_set (register const char *str, register unsigned int len)
 {
-  static struct days wordlist[] =
+  enum
     {
-      {""}, {""}, {""},
-#line 13 "dayofweek.gperf"
+      TOTAL_KEYWORDS = 7,
+      MIN_WORD_LENGTH = 3,
+      MAX_WORD_LENGTH = 3,
+      MIN_HASH_VALUE = 3,
+      MAX_HASH_VALUE = 18
+    };
+
+  static const struct days wordlist[] =
+    {
+#line 17 "DayOfWeekHash.gperf"
       {"Sat", Sat},
-      {""},
-#line 8 "dayofweek.gperf"
+#line 12 "DayOfWeekHash.gperf"
       {"Mon", Mon},
-      {""}, {""},
-#line 7 "dayofweek.gperf"
+#line 11 "DayOfWeekHash.gperf"
       {"Sun", Sun},
-      {""},
-#line 10 "dayofweek.gperf"
+#line 14 "DayOfWeekHash.gperf"
       {"Wed", Wed},
-      {""}, {""},
-#line 11 "dayofweek.gperf"
+#line 15 "DayOfWeekHash.gperf"
       {"Thu", Thu},
-      {""},
-#line 12 "dayofweek.gperf"
+#line 16 "DayOfWeekHash.gperf"
       {"Fri", Fri},
-      {""}, {""},
-#line 9 "dayofweek.gperf"
+#line 13 "DayOfWeekHash.gperf"
       {"Tue", Tue}
+    };
+
+  static const signed char lookup[] =
+    {
+      -1, -1, -1,  0, -1,  1, -1, -1,  2, -1,  3, -1, -1,  4,
+      -1,  5, -1, -1,  6
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = dayofweek_hash (str, len);
+      register int key = hash (str, len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
         {
-          register const char *s = wordlist[key].name;
+          register int index = lookup[key];
 
-          if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
-            return &wordlist[key];
+          if (index >= 0)
+            {
+              register const char *s = wordlist[index].name;
+
+              if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
+                return &wordlist[index];
+            }
         }
     }
   return 0;
 }
-#line 14 "dayofweek.gperf"
+#line 18 "DayOfWeekHash.gperf"
 
 }

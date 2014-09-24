@@ -1,5 +1,5 @@
 /* C++ code produced by gperf version 3.0.3 */
-/* Command-line: gperf -L C++ -t -k '*' -Z MonthHash -H month_hash -N in_month_word_set --compare-strncmp month.gperf  */
+/* Command-line: gperf -C -D -E -L C++ -t -k '*' --compare-strncmp -Z MonthHash MonthHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -28,32 +28,30 @@
 #error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
 #endif
 
-#line 1 "month.gperf"
+#line 1 "MonthHash.gperf"
+
+#include <string.h>
+#include <ctype.h>
+#include "resip/stack/DateCategory.hxx"
 
 namespace resip
 {
-#line 5 "month.gperf"
+#line 9 "MonthHash.gperf"
 struct months { const char *name; Month type; };
-
-#define MONTH_TOTAL_KEYWORDS 12
-#define MIN_WORD_LENGTH 3
-#define MAX_WORD_LENGTH 3
-#define MIN_HASH_VALUE 3
-#define MONTH_MAX_HASH_VALUE 43
 /* maximum key range = 41, duplicates = 0 */
 
 class MonthHash
 {
 private:
-  static inline unsigned int month_hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, unsigned int len);
 public:
-  static struct months *in_month_word_set (const char *str, unsigned int len);
+  static const struct months *in_word_set (const char *str, unsigned int len);
 };
 
 inline unsigned int
-MonthHash::month_hash (register const char *str, register unsigned int len)
+MonthHash::hash (register const char *str, register unsigned int len)
 {
-  static unsigned char asso_values[] =
+  static const unsigned char asso_values[] =
     {
       44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
       44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
@@ -85,60 +83,73 @@ MonthHash::month_hash (register const char *str, register unsigned int len)
   return len + asso_values[(unsigned char)str[2]] + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]];
 }
 
-struct months *
-MonthHash::in_month_word_set (register const char *str, register unsigned int len)
+const struct months *
+MonthHash::in_word_set (register const char *str, register unsigned int len)
 {
-  static struct months wordlist[] =
+  enum
     {
-      {""}, {""}, {""},
-#line 12 "month.gperf"
+      TOTAL_KEYWORDS = 12,
+      MIN_WORD_LENGTH = 3,
+      MAX_WORD_LENGTH = 3,
+      MIN_HASH_VALUE = 3,
+      MAX_HASH_VALUE = 43
+    };
+
+  static const struct months wordlist[] =
+    {
+#line 16 "MonthHash.gperf"
       {"Jun", Jun},
-      {""}, {""}, {""},
-#line 13 "month.gperf"
+#line 17 "MonthHash.gperf"
       {"Jul", Jul},
-#line 7 "month.gperf"
+#line 11 "MonthHash.gperf"
       {"Jan", Jan},
-      {""}, {""}, {""}, {""},
-#line 11 "month.gperf"
+#line 15 "MonthHash.gperf"
       {"May", May},
-      {""}, {""}, {""},
-#line 8 "month.gperf"
+#line 12 "MonthHash.gperf"
       {"Feb", Feb},
-#line 9 "month.gperf"
+#line 13 "MonthHash.gperf"
       {"Mar", Mar},
-      {""}, {""}, {""}, {""},
-#line 10 "month.gperf"
+#line 14 "MonthHash.gperf"
       {"Apr", Apr},
-      {""}, {""}, {""},
-#line 18 "month.gperf"
+#line 22 "MonthHash.gperf"
       {"Dec", Dec},
-#line 14 "month.gperf"
+#line 18 "MonthHash.gperf"
       {"Aug", Aug},
-      {""}, {""}, {""}, {""},
-#line 15 "month.gperf"
+#line 19 "MonthHash.gperf"
       {"Sep", Sep},
-      {""}, {""}, {""}, {""},
-#line 16 "month.gperf"
+#line 20 "MonthHash.gperf"
       {"Oct", Oct},
-      {""}, {""}, {""}, {""},
-#line 17 "month.gperf"
+#line 21 "MonthHash.gperf"
       {"Nov", Nov}
+    };
+
+  static const signed char lookup[] =
+    {
+      -1, -1, -1,  0, -1, -1, -1,  1,  2, -1, -1, -1, -1,  3,
+      -1, -1, -1,  4,  5, -1, -1, -1, -1,  6, -1, -1, -1,  7,
+       8, -1, -1, -1, -1,  9, -1, -1, -1, -1, 10, -1, -1, -1,
+      -1, 11
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = month_hash (str, len);
+      register int key = hash (str, len);
 
-      if (key <= MONTH_MAX_HASH_VALUE && key >= 0)
+      if (key <= MAX_HASH_VALUE && key >= 0)
         {
-          register const char *s = wordlist[key].name;
+          register int index = lookup[key];
 
-          if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
-            return &wordlist[key];
+          if (index >= 0)
+            {
+              register const char *s = wordlist[index].name;
+
+              if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
+                return &wordlist[index];
+            }
         }
     }
   return 0;
 }
-#line 19 "month.gperf"
+#line 23 "MonthHash.gperf"
 
 }

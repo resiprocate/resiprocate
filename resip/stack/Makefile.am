@@ -1,6 +1,6 @@
 # $Id$
 
-EXTRA_DIST = dayofweek.gperf
+EXTRA_DIST = DayOfWeekHash.gperf
 EXTRA_DIST += Doxyfile
 EXTRA_DIST += FAQ
 EXTRA_DIST += gperfNotes.txt
@@ -9,7 +9,7 @@ EXTRA_DIST += groups.doc
 EXTRA_DIST += HeaderHash.gperf
 EXTRA_DIST += mainpage.doc
 EXTRA_DIST += MethodHash.gperf
-EXTRA_DIST += month.gperf
+EXTRA_DIST += MonthHash.gperf
 EXTRA_DIST += ParameterHash.gperf
 EXTRA_DIST += parametersA.gperf
 EXTRA_DIST += Readme-Compliance.txt
@@ -50,6 +50,7 @@ libresip_la_SOURCES = \
 	CallId.cxx \
 	Cookie.cxx \
 	DateCategory.cxx \
+	gen/DayOfWeekHash.cxx \
 	DtmfPayloadContents.cxx \
 	ExpiresCategory.cxx \
 	GenericUri.cxx \
@@ -105,6 +106,7 @@ libresip_la_SOURCES = \
 	MessageWaitingContents.cxx \
 	gen/MethodHash.cxx \
 	MethodTypes.cxx \
+	gen/MonthHash.cxx \
 	MsgHeaderScanner.cxx \
 	MultipartAlternativeContents.cxx \
 	MultipartMixedContents.cxx \
@@ -193,15 +195,15 @@ GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
 # rule for case sensitive sorts of hash
 gen/MethodHash.cxx: MethodHash.gperf
 	mkdir -p $(abs_srcdir)/gen
-	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@
+	gperf $(GPERFOPTS) -Z MethodHash $< > $@
 
-gen/DayOfWeekHash.cxx: dayofweek.gperf
+# note: the Date header field is case sensitive (RFC 3261 s20.17)
+gen/DayOfWeekHash.cxx: DayOfWeekHash.gperf
 	mkdir -p $(abs_srcdir)/gen
-	gperf -L C++ -t -k '*' -Z DayOfWeekHash -H dayofweek_hash -N in_dayofweek_word_set --compare-strncmp $< > $@
-
-gen/MonthHash.cxx: month.gperf
+	gperf $(GPERFOPTS) -Z DayOfWeekHash $< > $@
+gen/MonthHash.cxx: MonthHash.gperf
 	mkdir -p $(abs_srcdir)/gen
-	gperf -L C++ -t -k '*' -Z MonthHash -H month_hash -N in_month_word_set --compare-strncmp $< | sed -e 's/TOTAL_KEYWORDS/MONTH_TOTAL_KEYWORDS/g' -e 's/MAX_HASH_VALUE/MONTH_MAX_HASH_VALUE/g' > $@
+	gperf $(GPERFOPTS) -Z MonthHash $< > $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
 	RootNamespace="resiprocate"
@@ -375,6 +375,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gen\DayOfWeekHash.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DeprecatedDialog.cxx"
 				>
 			</File>
@@ -528,6 +532,10 @@
 			</File>
 			<File
 				RelativePath=".\Mime.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\gen\MonthHash.cxx"
 				>
 			</File>
 			<File
@@ -1052,42 +1060,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gen\DayOfWeekHash.cxx"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\DeprecatedDialog.hxx"
 				>
 			</File>
@@ -1242,42 +1214,6 @@
 			<File
 				RelativePath=".\Mime.hxx"
 				>
-			</File>
-			<File
-				RelativePath=".\gen\MonthHash.cxx"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="SSL-Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\MsgHeaderScanner.hxx"

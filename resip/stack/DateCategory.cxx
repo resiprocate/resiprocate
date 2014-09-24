@@ -19,10 +19,30 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+namespace resip
+{
+// Implemented in gen/DayOfWeekHash.cxx
+struct days { const char *name; DayOfWeek type; };
+class DayOfWeekHash
+{
+private:
+  static inline unsigned int hash (const char *str, unsigned int len);
+public:
+  static const struct days *in_word_set (const char *str, unsigned int len);
+};
 
-#include "gen/DayOfWeekHash.cxx"
-#include "gen/MonthHash.cxx"
+// Implemented in gen/MonthHash.cxx
+struct months { const char *name; Month type; };
+class MonthHash
+{
+private:
+  static inline unsigned int hash (const char *str, unsigned int len);
+public:
+  static const struct months *in_word_set (const char *str, unsigned int len);
+};
+}
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 //====================
 // Date
@@ -178,7 +198,7 @@ DateCategory::DayOfWeekFromData(const Data& dow)
    register const char *str = dow.data();
    register Data::size_type len = dow.size();
 
-   struct days* _day = DayOfWeekHash::in_dayofweek_word_set(str, len);
+   const struct days* _day = DayOfWeekHash::in_word_set(str, len);
    if(_day != 0)
    {
       return _day->type;
@@ -195,7 +215,7 @@ DateCategory::MonthFromData(const Data& mon)
    register const char *str = mon.data();
    register Data::size_type len = mon.size();
 
-   struct months* _month = MonthHash::in_month_word_set(str, len);
+   const struct months* _month = MonthHash::in_word_set(str, len);
    if(_month != 0)
    {
       return _month->type;
