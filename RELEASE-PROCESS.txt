@@ -23,13 +23,9 @@ done after the tarball release.  That is not covered here.
 Workspace
 ---------
 
-Obtain a release branch from SVN, using the git-svn tool.
-git-svn is used because it makes it easier to build a clean tarball
-(without the risk of distributing .svn/* by mistake)
+Obtain a release branch from the source repository.
 
-  git svn clone \
-    --trunk=https://svn.resiprocate.org/rep/resiprocate/main/branches/release-1.8 \
-    resip-1.8
+  git clone https://github.com/resiprocate/resiprocate resip-1.8
 
   cd resip-1.8
 
@@ -45,11 +41,10 @@ Update version information and tag it:
   git add configure.ac
   git commit -m 'Update to version 1.8.5'
 
-  git svn dcommit         (send changes back to SVN)
+  git push                (send changes back to server)
 
-  svn copy -m 'release: Tag 1.8.5' \
-     https://svn.resiprocate.org/rep/resiprocate/branches/resiprocate-1.8 \
-     https://svn.resiprocate.org/rep/resiprocate/tags/resiprocate-1.8.5
+  git tag -s -m 'release: Tag 1.8.5' resiprocate-1.8.5
+  git push --tags
 
 Bootstrap
 ---------
