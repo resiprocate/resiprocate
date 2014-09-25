@@ -374,10 +374,6 @@
 				RelativePath=".\DateCategory.cxx"
 				>
 			</File>
-                        <File
-                                RelativePath=".\gen\DayOfWeekHash.cxx"
-                                >
-                        </File>
 			<File
 				RelativePath=".\gen\DayOfWeekHash.cxx"
 				>
@@ -538,10 +534,6 @@
 				RelativePath=".\Mime.cxx"
 				>
 			</File>
-                        <File
-                                RelativePath=".\gen\MonthHash.cxx"
-                                >
-                        </File>
 			<File
 				RelativePath=".\gen\MonthHash.cxx"
 				>
