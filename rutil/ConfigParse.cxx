@@ -189,7 +189,16 @@ ConfigParse::parseConfigFile(const Data& filename)
          pb.data(value, anchor);
       }
       //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-      insertConfigValue("config file", mFileConfigValues, name, value);
+      Data lowerName(name);
+      lowerName.lowercase();
+      if(lowerName == "include")
+      {
+         parseConfigFile(value);
+      }
+      else
+      {
+         insertConfigValue("config file", mFileConfigValues, name, value);
+      }
    }
 }
 
