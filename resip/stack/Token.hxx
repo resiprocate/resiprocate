@@ -94,10 +94,6 @@ class Token : public ParserCategory
       defineParam(origIoi, "orig-ioi", DataParameter, "RFC 3455"); // P-Charging-Vector
       defineParam(termIoi, "term-ioi", DataParameter, "RFC 3455"); // P-Charging-Vector
 
-      defineParam(purpose, "purpose", DataParameter, "draft-ietf-cuss-sip-uui-17"); // User-to-User
-      defineParam(content, "content", DataParameter, "draft-ietf-cuss-sip-uui-17"); // User-to-User
-      defineParam(encoding, "encoding", DataParameter, "draft-ietf-cuss-sip-uui-17"); // User-to-User
-
 #undef defineParam
 
    private:

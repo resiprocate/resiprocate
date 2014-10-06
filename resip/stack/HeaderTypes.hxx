@@ -139,9 +139,9 @@ class Headers
          defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455"),
          defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455"),
          defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455"),
-         defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", Token, "RFC 3455"),
+         defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455"),
 
-         defineMultiHeader(UserToUser, "User-to-User", Token, "draft-ietf-cuss-sip-uui-17"),
+         defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"),
 
          defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
          MAX_HEADERS,

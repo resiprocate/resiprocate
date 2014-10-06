@@ -466,6 +466,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Token.cxx" />
+    <ClCompile Include="TokenOrQuotedStringCategory.cxx" />
     <ClCompile Include="TransactionController.cxx" />
     <ClCompile Include="TransactionMap.cxx" />
     <ClCompile Include="TransactionState.cxx" />
@@ -630,6 +631,7 @@
     <ClInclude Include="ssl\TlsConnection.hxx" />
     <ClInclude Include="ssl\TlsTransport.hxx" />
     <ClInclude Include="Token.hxx" />
+    <ClInclude Include="TokenOrQuotedStringCategory.hxx" />
     <ClInclude Include="TransactionController.hxx" />
     <ClInclude Include="TransactionControllerThread.hxx" />
     <ClInclude Include="TransactionMap.hxx" />

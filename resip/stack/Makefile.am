@@ -64,6 +64,7 @@ libresip_la_SOURCES = \
 	StatusLine.cxx \
 	StringCategory.cxx \
 	Token.cxx \
+	TokenOrQuotedStringCategory.cxx \
 	Via.cxx \
 	WarningCategory.cxx \
 	\
@@ -345,6 +346,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	TimerMessage.hxx \
 	TimerQueue.hxx \
 	Token.hxx \
+	TokenOrQuotedStringCategory.hxx \
 	TransactionController.hxx \
 	TransactionControllerThread.hxx \
 	TransactionMap.hxx \

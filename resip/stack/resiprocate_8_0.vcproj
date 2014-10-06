@@ -791,6 +791,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TokenOrQuotedStringCategory.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TransactionController.cxx"
 				>
 			</File>
@@ -1453,6 +1457,10 @@
 			</File>
 			<File
 				RelativePath=".\Token.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TokenOrQuotedStringCategory.hxx"
 				>
 			</File>
 			<File

@@ -86,6 +86,7 @@ class Token;
 class Uri;
 class Via;
 class WarningCategory;
+class TokenOrQuotedStringCategory;
 
 defineParam(data, "data", ExistsParameter, NameAddr, "RFC 3840");
 defineParam(control, "control", ExistsParameter, NameAddr, "RFC 3840");
@@ -195,9 +196,9 @@ defineParam(icidGeneratedAt, "icid-generated-at", DataParameter, Token, "RFC 345
 defineParam(origIoi, "orig-ioi", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
 defineParam(termIoi, "term-ioi", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
 
-//defineParam(purpose, "purpose", DataParameter, Token, "draft-ietf-cuss-sip-uui-17");
-defineParam(content, "content", DataParameter, Token, "draft-ietf-cuss-sip-uui-17");
-defineParam(encoding, "encoding", DataParameter, Token, "draft-ietf-cuss-sip-uui-17");
+//defineParam(purpose, "purpose", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
+defineParam(content, "content", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
+defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");

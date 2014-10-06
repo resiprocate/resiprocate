@@ -159,9 +159,6 @@ defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-0
 defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
 defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
 defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
-defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", Token, "RFC 3455");
-
-defineMultiHeader(UserToUser, "User-to-User", Token, "draft-ietf-cuss-sip-uui-17");
 
 //====================
 // Mime
@@ -304,6 +301,12 @@ defineMultiHeader(Via, "Via", Via, "RFC 3261");
 // RAckCategory
 //====================
 defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
+
+//============================
+// TokenOrQuotedStringCategory
+//============================
+defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
+defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
 
 //====================
 // special first line accessors

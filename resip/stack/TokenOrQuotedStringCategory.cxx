@@ -2,149 +2,181 @@
 #include "config.h"
 #endif
 
-#include "resip/stack/Token.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/DnsUtil.hxx"
+#include "resip/stack/TokenOrQuotedStringCategory.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-//#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-
-//====================
-// Token
-//===================
-Token::Token() 
-   : ParserCategory(), 
-     mValue() 
-{}
-  
-Token::Token(const Data& d) 
+//============================
+// TokenOrQuotedStringCategory
+//============================
+TokenOrQuotedStringCategory::TokenOrQuotedStringCategory()
    : ParserCategory(),
-     mValue(d) 
+     mValue(),
+     mQuoted(false)
 {}
 
-Token::Token(const HeaderFieldValue& hfv, Headers::Type type, PoolBase* pool) 
-   : ParserCategory(hfv, type, pool), 
-     mValue() 
+TokenOrQuotedStringCategory::TokenOrQuotedStringCategory(const Data& value,
+                                                         bool quoted)
+   : ParserCategory(),
+     mValue(value),
+     mQuoted(quoted)
+{
+}
+
+TokenOrQuotedStringCategory::TokenOrQuotedStringCategory(const HeaderFieldValue& hfv,
+                                                         Headers::Type type,
+                                                         PoolBase* pool)
+   : ParserCategory(hfv, type, pool),
+     mValue(),
+     mQuoted(false)
 {}
 
-Token::Token(const Token& rhs, PoolBase* pool)
+TokenOrQuotedStringCategory::TokenOrQuotedStringCategory(const TokenOrQuotedStringCategory& rhs,
+                                                         PoolBase* pool)
    : ParserCategory(rhs, pool),
-     mValue(rhs.mValue)
+     mValue(rhs.mValue),
+     mQuoted(rhs.mQuoted)
 {}
 
-Token&
-Token::operator=(const Token& rhs)
+TokenOrQuotedStringCategory&
+TokenOrQuotedStringCategory::operator=(const TokenOrQuotedStringCategory& rhs)
 {
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
       mValue = rhs.mValue;
+      mQuoted = rhs.mQuoted;
    }
    return *this;
 }
 
-bool
-Token::isEqual(const Token& rhs) const
+ParserCategory*
+TokenOrQuotedStringCategory::clone() const
 {
-   return (value() == rhs.value());
+   return new TokenOrQuotedStringCategory(*this);
+}
+
+ParserCategory*
+TokenOrQuotedStringCategory::clone(void* location) const
+{
+   return new (location) TokenOrQuotedStringCategory(*this);
+}
+
+ParserCategory*
+TokenOrQuotedStringCategory::clone(PoolBase* pool) const
+{
+   return new (pool) TokenOrQuotedStringCategory(*this, pool);
 }
 
 bool
-Token::operator==(const Token& rhs) const
+TokenOrQuotedStringCategory::isEqual(const TokenOrQuotedStringCategory& rhs) const
 {
-   return (value() == rhs.value());
+   return ((value() == rhs.value()) && (isQuoted() == rhs.isQuoted()));
 }
 
 bool
-Token::operator!=(const Token& rhs) const
+TokenOrQuotedStringCategory::operator==(const TokenOrQuotedStringCategory& rhs) const
 {
-   return (value() != rhs.value());
+   return ((value() == rhs.value()) && (isQuoted() == rhs.isQuoted()));
 }
 
 bool
-Token::operator<(const Token& rhs) const
+TokenOrQuotedStringCategory::operator!=(const TokenOrQuotedStringCategory& rhs) const
 {
+   return ((value() != rhs.value()) || (isQuoted() != rhs.isQuoted()));
+}
+
+bool
+TokenOrQuotedStringCategory::operator<(const TokenOrQuotedStringCategory& rhs) const
+{
+   // don't use mQuoted for operator <
    return (value() < rhs.value());
 }
 
-const Data& 
-Token::value() const 
-{
-   checkParsed(); 
-   return mValue;
-}
-
-Data& 
-Token::value()
-{
-   checkParsed(); 
-   return mValue;
-}
-
 void
-Token::parse(ParseBuffer& pb)
+TokenOrQuotedStringCategory::parse(ParseBuffer& pb)
 {
    const char* startMark = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   if (*pb.position() == Symbols::DOUBLE_QUOTE[0]) {
+      setQuoted(true);
+      pb.skipChar();
+      startMark = pb.position();
+      pb.skipToEndQuote();
+   }
+   else {
+      setQuoted(false);
+      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   }
    pb.data(mValue, startMark);
    pb.skipToChar(Symbols::SEMI_COLON[0]);
    parseParameters(pb);
 }
 
-ParserCategory* 
-Token::clone() const
+EncodeStream&
+TokenOrQuotedStringCategory::encodeParsed(EncodeStream& str) const
 {
-   return new Token(*this);
-}
-
-ParserCategory* 
-Token::clone(void* location) const
-{
-   return new (location) Token(*this);
-}
-
-ParserCategory* 
-Token::clone(PoolBase* pool) const
-{
-   return new (pool) Token(*this, pool);
-}
-
-EncodeStream& 
-Token::encodeParsed(EncodeStream& str) const
-{
-   str << mValue;
+   str << quotedValue();
    encodeParameters(str);
    return str;
 }
 
-ParameterTypes::Factory Token::ParameterFactories[ParameterTypes::MAX_PARAMETER]={0};
-
-Parameter* 
-Token::createParam(ParameterTypes::Type type, ParseBuffer& pb, const std::bitset<256>& terminators, PoolBase* pool)
+const Data& TokenOrQuotedStringCategory::value() const
 {
-   if(type > ParameterTypes::UNKNOWN && type < ParameterTypes::MAX_PARAMETER && ParameterFactories[type])
+   checkParsed();
+   return mValue;
+}
+
+Data& TokenOrQuotedStringCategory::value()
+{
+   checkParsed();
+   return mValue;
+}
+
+Data TokenOrQuotedStringCategory::quotedValue() const
+{
+   checkParsed();
+   Data tokenValue;
+   if (mQuoted) {
+      tokenValue += Symbols::DOUBLE_QUOTE;
+   }
+   // mValue does not contain quoted string
+   tokenValue += mValue;
+   if (mQuoted) {
+      tokenValue += Symbols::DOUBLE_QUOTE;
+   }
+   return tokenValue;
+}
+
+ParameterTypes::Factory TokenOrQuotedStringCategory::ParameterFactories[ParameterTypes::MAX_PARAMETER] = { 0 };
+
+Parameter*
+TokenOrQuotedStringCategory::createParam(ParameterTypes::Type type,
+                                         ParseBuffer& pb,
+                                         const std::bitset<256>& terminators,
+                                         PoolBase* pool)
+{
+   if ((type > ParameterTypes::UNKNOWN) && (type < ParameterTypes::MAX_PARAMETER) && ParameterFactories[type])
    {
       return ParameterFactories[type](type, pb, terminators, pool);
    }
    return 0;
 }
 
-bool 
-Token::exists(const Param<Token>& paramType) const
+bool
+TokenOrQuotedStringCategory::exists(const Param<TokenOrQuotedStringCategory>& paramType) const
 {
     checkParsed();
-    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    bool ret = (getParameterByEnum(paramType.getTypeNum()) != NULL);
     return ret;
 }
 
-void 
-Token::remove(const Param<Token>& paramType)
+void
+TokenOrQuotedStringCategory::remove(const Param<TokenOrQuotedStringCategory>& paramType)
 {
     checkParsed();
     removeParameterByEnum(paramType.getTypeNum());
@@ -152,7 +184,7 @@ Token::remove(const Param<Token>& paramType)
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
 _enum##_Param::DType&                                                                                           \
-Token::param(const _enum##_Param& paramType)                                                           \
+TokenOrQuotedStringCategory::param(const _enum##_Param& paramType)                                              \
 {                                                                                                               \
    checkParsed();                                                                                               \
    _enum##_Param::Type* p =                                                                                     \
@@ -166,7 +198,7 @@ Token::param(const _enum##_Param& paramType)                                    
 }                                                                                                               \
                                                                                                                 \
 const _enum##_Param::DType&                                                                                     \
-Token::param(const _enum##_Param& paramType) const                                                     \
+TokenOrQuotedStringCategory::param(const _enum##_Param& paramType) const                                        \
 {                                                                                                               \
    checkParsed();                                                                                               \
    _enum##_Param::Type* p =                                                                                     \
@@ -180,39 +212,9 @@ Token::param(const _enum##_Param& paramType) const                              
    return p->value();                                                                                           \
 }
 
-defineParam(text, "text", ExistsOrDataParameter, "RFC 3840");
-defineParam(cause, "cause", UInt32Parameter, "RFC 3326");
-defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
-defineParam(dQop, "d-qop", DataParameter, "RFC 3329");
-defineParam(dVer, "d-ver", QuotedDataParameter, "RFC 3329");
-defineParam(expires, "expires", UInt32Parameter, "RFC 3261");
-defineParam(filename, "filename", DataParameter, "RFC 2183");
-defineParam(fromTag, "from-tag", DataParameter, "RFC 4235");
-defineParam(handling, "handling", DataParameter, "RFC 3261");
-defineParam(id, "id", DataParameter, "RFC 3265");
-defineParam(q, "q", QValueParameter, "RFC 3261");
-defineParam(reason, "reason", DataParameter, "RFC 3265");
-defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC 3265");
-defineParam(toTag, "to-tag", DataParameter, "RFC 4235");
-defineParam(extension, "ext", DataParameter, "RFC 3966"); // Token is used when ext is a user-parameter
-defineParam(profileType, "profile-type", DataParameter, "RFC 6080");
-defineParam(vendor, "vendor", QuotedDataParameter, "RFC 6080");
-defineParam(model, "model", QuotedDataParameter, "RFC 6080");
-defineParam(version, "version", QuotedDataParameter, "RFC 6080");
-defineParam(effectiveBy, "effective-by", UInt32Parameter, "RFC 6080");
-defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework-07 (removed in 08)");
-defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework-05 (renamed to auid in 06, which was then removed in 08)");
-defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework-11 (removed in 12)");
-defineParam(require, "require", DataParameter, "RFC 5373");
-
-defineParam(utranCellId3gpp, "utran-cell-id-3gpp", DataParameter, "RFC 3455"); // P-Access-Network-Info
-defineParam(cgi3gpp, "cgi-3gpp", DataParameter, "RFC 3455"); // P-Access-Network-Info
-defineParam(ccf, "ccf", DataParameter, "RFC 3455"); // P-Charging-Function-Addresses
-defineParam(ecf, "ecf", DataParameter, "RFC 3455"); // P-Charging-Function-Addresses
-defineParam(icidValue, "icid-value", DataParameter, "RFC 3455"); // P-Charging-Vector
-defineParam(icidGeneratedAt, "icid-generated-at", DataParameter, "RFC 3455"); // P-Charging-Vector
-defineParam(origIoi, "orig-ioi", DataParameter, "RFC 3455"); // P-Charging-Vector
-defineParam(termIoi, "term-ioi", DataParameter, "RFC 3455"); // P-Charging-Vector
+defineParam(purpose, "purpose", DataParameter, "draft-ietf-cuss-sip-uui-17"); // User-to-User
+defineParam(content, "content", DataParameter, "draft-ietf-cuss-sip-uui-17"); // User-to-User
+defineParam(encoding, "encoding", DataParameter, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 
 #undef defineParam
 
