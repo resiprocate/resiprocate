@@ -25,8 +25,7 @@ TokenOrQuotedStringCategory::TokenOrQuotedStringCategory(const Data& value,
    : ParserCategory(),
      mValue(value),
      mQuoted(quoted)
-{
-}
+{}
 
 TokenOrQuotedStringCategory::TokenOrQuotedStringCategory(const HeaderFieldValue& hfv,
                                                          Headers::Type type,
@@ -102,13 +101,15 @@ void
 TokenOrQuotedStringCategory::parse(ParseBuffer& pb)
 {
    const char* startMark = pb.skipWhitespace();
-   if (*pb.position() == Symbols::DOUBLE_QUOTE[0]) {
+   if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+   {
       setQuoted(true);
       pb.skipChar();
       startMark = pb.position();
       pb.skipToEndQuote();
    }
-   else {
+   else
+   {
       setQuoted(false);
       pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
    }
@@ -141,12 +142,14 @@ Data TokenOrQuotedStringCategory::quotedValue() const
 {
    checkParsed();
    Data tokenValue;
-   if (mQuoted) {
+   if (mQuoted)
+   {
       tokenValue += Symbols::DOUBLE_QUOTE;
    }
    // mValue does not contain quoted string
    tokenValue += mValue;
-   if (mQuoted) {
+   if (mQuoted)
+   {
       tokenValue += Symbols::DOUBLE_QUOTE;
    }
    return tokenValue;
