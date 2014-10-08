@@ -717,7 +717,11 @@ main(int arc, char** argv)
       checkHeaderName(SecurityVerify);
       checkHeaderName(ContentLength);
       checkHeaderName(ContentId);
-
+      checkHeaderName(PAccessNetworkInfo);
+      checkHeaderName(PChargingVector);
+      checkHeaderName(PChargingFunctionAddresses);
+      checkHeaderName(PVisitedNetworkID);
+      checkHeaderName(UserToUser);
    }
 
 #define checkParameterName(_name) resipCerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
@@ -803,7 +807,17 @@ main(int arc, char** argv)
       
       checkParameterName(url);
       
-
+      checkParameterName(utranCellId3gpp);
+      checkParameterName(cgi3gpp);
+      checkParameterName(ccf);
+      checkParameterName(ecf);
+      checkParameterName(icidValue);
+      checkParameterName(icidGeneratedAt);
+      checkParameterName(origIoi);
+      checkParameterName(termIoi);
+      //checkParameterName(purpose);
+      checkParameterName(content);
+      checkParameterName(encoding);
 
       // test parameter hash
       for (int i = 0; i < ParameterTypes::MAX_PARAMETER; i++)
@@ -3069,6 +3083,29 @@ main(int arc, char** argv)
       cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
    }
 
+   {
+      TR _tr( "Test TokenOrQuotedStringCategory (token + parameters parse test)");
+
+      Data tokenString = "uui-0123456789;purpose=\"abcd\"";
+      ParseBuffer pb(tokenString.data(), tokenString.size());
+      TokenOrQuotedStringCategory tok;
+      tok.parse(pb);
+      assert(tok.value() == "uui-0123456789");
+      assert(tok.quotedValue() == "uui-0123456789");
+      assert(tok.param(p_purpose) == "abcd");
+   }
+
+   {
+      TR _tr( "Test TokenOrQuotedStringCategory (quoted string + parameters parse test)");
+
+      Data quotedString = "\"the quick silver fox jumped over the lazy brown dog\";encoding=hex";
+      ParseBuffer pb(quotedString.data(), quotedString.size());
+      TokenOrQuotedStringCategory tok;
+      tok.parse(pb);
+      assert(tok.value() == "the quick silver fox jumped over the lazy brown dog");
+      assert(tok.quotedValue() == "\"the quick silver fox jumped over the lazy brown dog\"");
+      assert(tok.param(p_encoding) == Symbols::Hex);
+   }
 
    assert(!failed);
    resipCerr << "\nTEST OK" << endl;

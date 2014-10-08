@@ -136,6 +136,13 @@ class Headers
          defineMultiHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"), // ?bwc? Not in 3323, should we keep?
          defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244"),
 
+         defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455"),
+         defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455"),
+         defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455"),
+         defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455"),
+
+         defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"),
+
          defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
          MAX_HEADERS,
          NONE

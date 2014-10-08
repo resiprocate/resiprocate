@@ -377,10 +377,10 @@
 				RelativePath=".\DateCategory.cxx"
 				>
 			</File>
-                        <File
-                                RelativePath=".\gen\DayOfWeekHash.cxx"
-                                >
-                        </File>
+			<File
+				RelativePath=".\gen\DayOfWeekHash.cxx"
+				>
+			</File>
 			<File
 				RelativePath=".\DeprecatedDialog.cxx"
 				>
@@ -541,10 +541,10 @@
 				RelativePath=".\Mime.cxx"
 				>
 			</File>
-                        <File
-                                RelativePath=".\gen\MonthHash.cxx"
-                                >
-                        </File>
+			<File
+				RelativePath=".\gen\MonthHash.cxx"
+				>
+			</File>
 			<File
 				RelativePath=".\MsgHeaderScanner.cxx"
 				>
@@ -795,6 +795,10 @@
 			</File>
 			<File
 				RelativePath=".\Token.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TokenOrQuotedStringCategory.cxx"
 				>
 			</File>
 			<File
@@ -1062,10 +1066,10 @@
 				RelativePath=".\DataParameter.hxx"
 				>
 			</File>
-                        <File
-                                RelativePath=".\DateCategory.hxx"
-                                >
-                        </File>
+			<File
+				RelativePath=".\DateCategory.hxx"
+				>
+			</File>
 			<File
 				RelativePath=".\DeprecatedDialog.hxx"
 				>
@@ -1464,6 +1468,10 @@
 			</File>
 			<File
 				RelativePath=".\Token.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TokenOrQuotedStringCategory.hxx"
 				>
 			</File>
 			<File

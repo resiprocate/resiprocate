@@ -64,6 +64,7 @@ libresip_la_SOURCES = \
 	StatusLine.cxx \
 	StringCategory.cxx \
 	Token.cxx \
+	TokenOrQuotedStringCategory.cxx \
 	Via.cxx \
 	WarningCategory.cxx \
 	\
@@ -189,7 +190,7 @@ libresip_la_SOURCES += \
 endif
 
 SUFFIXES = .gperf .cxx
-GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
+GPERFOPTS = -C -D -E -L C++ -t --key-positions='*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
 # rule for case sensitive sorts of hash
@@ -345,6 +346,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	TimerMessage.hxx \
 	TimerQueue.hxx \
 	Token.hxx \
+	TokenOrQuotedStringCategory.hxx \
 	TransactionController.hxx \
 	TransactionControllerThread.hxx \
 	TransactionMap.hxx \
