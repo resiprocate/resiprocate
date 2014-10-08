@@ -72,6 +72,7 @@ toData(const resip::ParserCategory& p)
    resip::Data result;
    resip::oDataStream str(result);
    str << p;
+   str.flush();
    return result;
 }
 
