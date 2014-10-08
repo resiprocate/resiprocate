@@ -3083,6 +3083,29 @@ main(int arc, char** argv)
       cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
    }
 
+   {
+      TR _tr( "Test TokenOrQuotedStringCategory (token + parameters parse test)");
+
+      Data tokenString = "uui-0123456789;purpose=\"abcd\"";
+      ParseBuffer pb(tokenString.data(), tokenString.size());
+      TokenOrQuotedStringCategory tok;
+      tok.parse(pb);
+      assert(tok.value() == "uui-0123456789");
+      assert(tok.quotedValue() == "uui-0123456789");
+      assert(tok.param(p_purpose) == "abcd");
+   }
+
+   {
+      TR _tr( "Test TokenOrQuotedStringCategory (quoted string + parameters parse test)");
+
+      Data quotedString = "\"the quick silver fox jumped over the lazy brown dog\";encoding=hex";
+      ParseBuffer pb(quotedString.data(), quotedString.size());
+      TokenOrQuotedStringCategory tok;
+      tok.parse(pb);
+      assert(tok.value() == "the quick silver fox jumped over the lazy brown dog");
+      assert(tok.quotedValue() == "\"the quick silver fox jumped over the lazy brown dog\"");
+      assert(tok.param(p_encoding) == Symbols::Hex);
+   }
 
    assert(!failed);
    resipCerr << "\nTEST OK" << endl;
