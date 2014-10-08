@@ -103,7 +103,7 @@ class ParameterTypes
          defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????"),
          defineParam(permission, "permission", DataParameter, "RFC 2046"),
          defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847"),
-         defineParam(purpose, "purpose", DataParameter, "RFC ????"),
+         defineParam(purpose, "purpose", DataParameter, "RFC 3261, draft-ietf-cuss-sip-uui-17"),
          defineParam(q, "q", QValueParameter, "RFC 3261"),
 
          defineParam(realm, "realm", QuotedDataParameter, "RFC ????"),
@@ -158,9 +158,8 @@ class ParameterTypes
          defineParam(origIoi, "orig-ioi", DataParameter, "RFC 3455"), // P-Charging-Vector
          defineParam(termIoi, "term-ioi", DataParameter, "RFC 3455"), // P-Charging-Vector
 
-         //defineParam(purpose, "purpose", DataParameter, "draft-ietf-cuss-sip-uui-17"),
-         defineParam(content, "content", DataParameter, "draft-ietf-cuss-sip-uui-17"),
-         defineParam(encoding, "encoding", DataParameter, "draft-ietf-cuss-sip-uui-17"),
+         defineParam(content, "content", DataParameter, "draft-ietf-cuss-sip-uui-17"), // User-to-User
+         defineParam(encoding, "encoding", DataParameter, "draft-ietf-cuss-sip-uui-17"), // User-to-User
 
          defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, "Internal"),

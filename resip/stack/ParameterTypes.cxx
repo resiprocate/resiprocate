@@ -104,7 +104,7 @@ defineParam(nonce, "nonce", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(opaque, "opaque", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(permission, "permission", DataParameter, Mime, "RFC 2046");
 defineParam(protocol, "protocol", QuotedDataParameter, Mime, "RFC 1847");
-defineParam(purpose, "purpose", DataParameter, GenericUri, "RFC 3261");
+defineParam2(purpose, "purpose", DataParameter, GenericUri, TokenOrQuotedStringCategory, "RFC 3261, draft-ietf-cuss-sip-uui-17");
 defineParam3(q, "q", QValueParameter, NameAddr, Token, Mime, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
@@ -158,9 +158,8 @@ defineParam(icidGeneratedAt, "icid-generated-at", DataParameter, Token, "RFC 345
 defineParam(origIoi, "orig-ioi", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
 defineParam(termIoi, "term-ioi", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
 
-//defineParam(purpose, "purpose", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
-defineParam(content, "content", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
-defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
+defineParam(content, "content", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
+defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");
