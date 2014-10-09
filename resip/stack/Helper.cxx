@@ -1996,14 +1996,14 @@ Helper::extractFromPkcs7(const SipMessage& message,
 
 Helper::FailureMessageEffect 
 Helper::determineFailureMessageEffect(const SipMessage& response,
-    const std::set<int>* nonUsageTerminatingResponses)
+    const std::set<int>* additionalTransationTerminatingResponses)
 {
    assert(response.isResponse());
    int code = response.header(h_StatusLine).statusCode();
    assert(code >= 400);
    
-   if (nonUsageTerminatingResponses &&
-       (nonUsageTerminatingResponses->end() != nonUsageTerminatingResponses->find(code)))
+   if (additionalTransationTerminatingResponses &&
+       (additionalTransationTerminatingResponses->end() != additionalTransationTerminatingResponses->find(code)))
    {
       return Helper::TransactionTermination;
    }

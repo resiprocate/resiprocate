@@ -541,7 +541,7 @@ class Helper
                                  RetryAfter, OptionalRetryAfter, ApplicationDependant };
       
       static FailureMessageEffect determineFailureMessageEffect(const SipMessage& response,
-          const std::set<int>* nonUsageTerminatingResponses = NULL);
+          const std::set<int>* additionalTransationTerminatingResponses = NULL);
 
       // Just simply walk the contents tree and return the first SdpContents in
       // the tree.

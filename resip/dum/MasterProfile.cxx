@@ -24,7 +24,7 @@ MasterProfile::MasterProfile() :
    mServerRegistrationMinExpires(0),
    mServerRegistrationMaxExpires(UINT_MAX),
    mServerRegistrationDefaultExpires(3600),
-   mNonUsageTerminatingResponseEnabled(false)
+   mAdditionalTransationTerminatingResponsesEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -434,38 +434,38 @@ MasterProfile::clone() const
    return new MasterProfile(*this);
 }
 
-bool& MasterProfile::nonUsageTerminatingResponseEnabled()
+bool& MasterProfile::additionalTransationTerminatingResponsesEnabled()
 {
-  return mNonUsageTerminatingResponseEnabled;
+  return mAdditionalTransationTerminatingResponsesEnabled;
 }
 
-bool MasterProfile::nonUsageTerminatingResponseEnabled() const
+bool MasterProfile::additionalTransationTerminatingResponsesEnabled() const
 {
-  return mNonUsageTerminatingResponseEnabled;
+  return mAdditionalTransationTerminatingResponsesEnabled;
 }
 
-void MasterProfile::addNonUsageTerminatingResponse(int code)
+void MasterProfile::addAdditionalTransationTerminatingResponses(int code)
 {
-  DebugLog(<< "MasterProfile::addNonUsageTerminatingResponse" << "added code: " << code);
-  mNonUsageTerminatingResponses.insert(code);
+  DebugLog(<< "MasterProfile::addAdditionalTransationTerminatingResponses" << "added code: " << code);
+  mAdditionalTransationTerminatingResponsess.insert(code);
 }
 
-bool MasterProfile::isNonUsageTerminatingResponse(int code) const
+bool MasterProfile::isAdditionalTransationTerminatingResponse(int code) const
 {
-  bool isAllowed = (mNonUsageTerminatingResponses.end() != mNonUsageTerminatingResponses.find(code));
+  bool isAllowed = (mAdditionalTransationTerminatingResponsess.end() != mAdditionalTransationTerminatingResponsess.find(code));
 
-  DebugLog(<< "MasterProfile::isNonUsageTerminatingResponse" << "is code " << code << " allowed: " << isAllowed);
+  DebugLog(<< "MasterProfile::isAdditionalTransationTerminatingResponse" << "is code " << code << " allowed: " << isAllowed);
   return isAllowed;
 }
 
-const std::set<int>& MasterProfile::getNonUsageTerminatingResponses() const
+const std::set<int>& MasterProfile::getAdditionalTransationTerminatingResponses() const
 {
-  return mNonUsageTerminatingResponses;
+  return mAdditionalTransationTerminatingResponsess;
 }
 
-void MasterProfile::clearNonUsageTerminatingResponses(void)
+void MasterProfile::clearAdditionalTransationTerminatingResponses(void)
 {
-  mNonUsageTerminatingResponses.clear();
+  mAdditionalTransationTerminatingResponsess.clear();
 }
 
 /* ====================================================================
