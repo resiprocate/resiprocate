@@ -2,6 +2,7 @@
 #include "resip/dum/Profile.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/HeaderTypes.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -22,7 +23,8 @@ MasterProfile::MasterProfile() :
    mUasReliableProvisionalMode(Never),
    mServerRegistrationMinExpires(0),
    mServerRegistrationMaxExpires(UINT_MAX),
-   mServerRegistrationDefaultExpires(3600)
+   mServerRegistrationDefaultExpires(3600),
+   mAdditionalTransationTerminatingResponsesEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -430,6 +432,40 @@ UserProfile*
 MasterProfile::clone() const
 {
    return new MasterProfile(*this);
+}
+
+bool& MasterProfile::additionalTransationTerminatingResponsesEnabled()
+{
+  return mAdditionalTransationTerminatingResponsesEnabled;
+}
+
+bool MasterProfile::additionalTransationTerminatingResponsesEnabled() const
+{
+  return mAdditionalTransationTerminatingResponsesEnabled;
+}
+
+void MasterProfile::addAdditionalTransationTerminatingResponses(int code)
+{
+  DebugLog(<< "MasterProfile::addAdditionalTransationTerminatingResponses" << "added code: " << code);
+  mAdditionalTransationTerminatingResponsess.insert(code);
+}
+
+bool MasterProfile::isAdditionalTransationTerminatingResponse(int code) const
+{
+  bool isAllowed = (mAdditionalTransationTerminatingResponsess.end() != mAdditionalTransationTerminatingResponsess.find(code));
+
+  DebugLog(<< "MasterProfile::isAdditionalTransationTerminatingResponse" << "is code " << code << " allowed: " << isAllowed);
+  return isAllowed;
+}
+
+const std::set<int>& MasterProfile::getAdditionalTransationTerminatingResponses() const
+{
+  return mAdditionalTransationTerminatingResponsess;
+}
+
+void MasterProfile::clearAdditionalTransationTerminatingResponses(void)
+{
+  mAdditionalTransationTerminatingResponsess.clear();
 }
 
 /* ====================================================================
