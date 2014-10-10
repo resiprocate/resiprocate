@@ -328,8 +328,8 @@ ServerSubscription::dispatch(const SipMessage& msg)
       else
       {
          switch(Helper::determineFailureMessageEffect(msg,
-             (mDum.getMasterProfile()->additionalTransationTerminatingResponsesEnabled()) ?
-             &mDum.getMasterProfile()->getAdditionalTransationTerminatingResponses() : NULL))
+             (mDum.getMasterProfile()->additionalTransactionTerminatingResponsesEnabled()) ?
+             &mDum.getMasterProfile()->getAdditionalTransactionTerminatingResponses() : NULL))
          {
             case Helper::TransactionTermination:
                DebugLog( << "ServerSubscription::TransactionTermination: " << msg.brief());

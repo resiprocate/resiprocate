@@ -465,7 +465,7 @@ BerkeleyDb::dbBeginTransaction(const Table table)
       return false;
    }
 
-   // Open new Cursors - since cursors used in a transaction must be opened and closed within the transation
+   // Open new Cursors - since cursors used in a transaction must be opened and closed within the transaction
    if(mTableInfo[table].mCursor)
    {
       mTableInfo[table].mCursor->close();
@@ -490,7 +490,7 @@ BerkeleyDb::dbCommitTransaction(const Table table)
    assert(mDb);
    assert(mTableInfo[table].mTransaction);
 
-   // Close the cursor - since cursors used in a transaction must be opened and closed within the transation
+   // Close the cursor - since cursors used in a transaction must be opened and closed within the transaction
    if(mTableInfo[table].mCursor)
    {
       mTableInfo[table].mCursor->close();
@@ -520,7 +520,7 @@ BerkeleyDb::dbRollbackTransaction(const Table table)
    assert(mDb);
    assert(mTableInfo[table].mTransaction);
 
-   // Close the cursor - since cursors used in a transaction must be opened and closed within the transation
+   // Close the cursor - since cursors used in a transaction must be opened and closed within the transaction
    if(mTableInfo[table].mCursor)
    {
       mTableInfo[table].mCursor->close();

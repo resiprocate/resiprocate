@@ -174,17 +174,17 @@ class MasterProfile : public UserProfile
       /// Currently, it is only used by ServerSubscriptions.
       /// Default is to not allow additional transaction terminating responses
       /// To enable it:
-      /// 1. Set additionalTransationTerminatingResponsesEnabled() = true on master profile
-      /// 2. Call method addAdditionalTransationTerminatingResponses(code) to provide SIP responses for which the application
+      /// 1. Set additionalTransactionTerminatingResponsesEnabled() = true on master profile
+      /// 2. Call method addAdditionalTransactionTerminatingResponses(code) to provide SIP responses for which the application
       /// need the transaction to be terminated
-      virtual bool& additionalTransationTerminatingResponsesEnabled();
-      virtual bool additionalTransationTerminatingResponsesEnabled() const;
+      virtual bool& additionalTransactionTerminatingResponsesEnabled();
+      virtual bool additionalTransactionTerminatingResponsesEnabled() const;
 
-      virtual void addAdditionalTransationTerminatingResponses(int code);
-      virtual bool isAdditionalTransationTerminatingResponse(int code) const;
+      virtual void addAdditionalTransactionTerminatingResponses(int code);
+      virtual bool isAdditionalTransactionTerminatingResponse(int code) const;
 
-      virtual const std::set<int>& getAdditionalTransationTerminatingResponses() const;
-      virtual void clearAdditionalTransationTerminatingResponses(void);
+      virtual const std::set<int>& getAdditionalTransactionTerminatingResponses() const;
+      virtual void clearAdditionalTransactionTerminatingResponses(void);
 
    private:
       virtual UserProfile* clone() const;
@@ -209,8 +209,8 @@ class MasterProfile : public UserProfile
       UInt32 mServerRegistrationMaxExpires;
       UInt32 mServerRegistrationDefaultExpires;
 
-      bool mAdditionalTransationTerminatingResponsesEnabled;
-      std::set<int> mAdditionalTransationTerminatingResponsess;
+      bool mAdditionalTransactionTerminatingResponsesEnabled;
+      std::set<int> mAdditionalTransactionTerminatingResponsess;
 };
    
 }

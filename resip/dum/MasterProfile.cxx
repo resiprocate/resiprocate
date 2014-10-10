@@ -24,7 +24,7 @@ MasterProfile::MasterProfile() :
    mServerRegistrationMinExpires(0),
    mServerRegistrationMaxExpires(UINT_MAX),
    mServerRegistrationDefaultExpires(3600),
-   mAdditionalTransationTerminatingResponsesEnabled(false)
+   mAdditionalTransactionTerminatingResponsesEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -434,38 +434,38 @@ MasterProfile::clone() const
    return new MasterProfile(*this);
 }
 
-bool& MasterProfile::additionalTransationTerminatingResponsesEnabled()
+bool& MasterProfile::additionalTransactionTerminatingResponsesEnabled()
 {
-  return mAdditionalTransationTerminatingResponsesEnabled;
+  return mAdditionalTransactionTerminatingResponsesEnabled;
 }
 
-bool MasterProfile::additionalTransationTerminatingResponsesEnabled() const
+bool MasterProfile::additionalTransactionTerminatingResponsesEnabled() const
 {
-  return mAdditionalTransationTerminatingResponsesEnabled;
+  return mAdditionalTransactionTerminatingResponsesEnabled;
 }
 
-void MasterProfile::addAdditionalTransationTerminatingResponses(int code)
+void MasterProfile::addAdditionalTransactionTerminatingResponses(int code)
 {
-  DebugLog(<< "MasterProfile::addAdditionalTransationTerminatingResponses" << "added code: " << code);
-  mAdditionalTransationTerminatingResponsess.insert(code);
+  DebugLog(<< "MasterProfile::addAdditionalTransactionTerminatingResponses" << "added code: " << code);
+  mAdditionalTransactionTerminatingResponsess.insert(code);
 }
 
-bool MasterProfile::isAdditionalTransationTerminatingResponse(int code) const
+bool MasterProfile::isAdditionalTransactionTerminatingResponse(int code) const
 {
-  bool isAllowed = (mAdditionalTransationTerminatingResponsess.end() != mAdditionalTransationTerminatingResponsess.find(code));
+  bool isAllowed = (mAdditionalTransactionTerminatingResponsess.end() != mAdditionalTransactionTerminatingResponsess.find(code));
 
-  DebugLog(<< "MasterProfile::isAdditionalTransationTerminatingResponse" << "is code " << code << " allowed: " << isAllowed);
+  DebugLog(<< "MasterProfile::isAdditionalTransactionTerminatingResponse" << "is code " << code << " allowed: " << isAllowed);
   return isAllowed;
 }
 
-const std::set<int>& MasterProfile::getAdditionalTransationTerminatingResponses() const
+const std::set<int>& MasterProfile::getAdditionalTransactionTerminatingResponses() const
 {
-  return mAdditionalTransationTerminatingResponsess;
+  return mAdditionalTransactionTerminatingResponsess;
 }
 
-void MasterProfile::clearAdditionalTransationTerminatingResponses(void)
+void MasterProfile::clearAdditionalTransactionTerminatingResponses(void)
 {
-  mAdditionalTransationTerminatingResponsess.clear();
+  mAdditionalTransactionTerminatingResponsess.clear();
 }
 
 /* ====================================================================
