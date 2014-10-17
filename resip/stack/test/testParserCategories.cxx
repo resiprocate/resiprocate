@@ -1431,6 +1431,34 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Auth Missing Algorithm Type Param Name");  // Reported infinite loop on mailing list - fixed on Oct 17, 2014
+      const char* authorizationString = "Digest username=\"000999234\",realm=\"1.1.1.1\",nonce=\"1413544408:b15ee1a80dd75f9db443e2d4feab821b\",uri=\"sip:1.1.1.1\",=MD5,response=\"ef0f8cdc6a75fe810e2ce82a2758f45e\"";
+      HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
+      
+      Auth auth(hfv, Headers::UNKNOWN);
+
+      resipCerr << "Auth scheme: " <<  auth.scheme() << endl;
+      assert(auth.scheme() == "Digest");
+      resipCerr << "   realm: " <<  auth.param(p_realm) << endl;
+      assert(auth.param(p_realm) == "1.1.1.1"); 
+      assert(auth.param(p_username) == "000999234"); 
+      assert(auth.param(p_nonce) == "1413544408:b15ee1a80dd75f9db443e2d4feab821b"); 
+      assert(auth.param(p_uri) == "sip:1.1.1.1"); 
+      //assert(auth.param(p_algorithm) == "MD5"); 
+      assert(auth.param(p_response) == "ef0f8cdc6a75fe810e2ce82a2758f45e"); 
+
+      Data dsData;
+      {
+         DataStream s(dsData);
+         auth.encode(s);
+      }
+
+      resipCerr << dsData.c_str() << endl;
+      
+      assert(dsData == "Digest username=\"000999234\",realm=\"1.1.1.1\",nonce=\"1413544408:b15ee1a80dd75f9db443e2d4feab821b\",uri=\"sip:1.1.1.1\",response=\"ef0f8cdc6a75fe810e2ce82a2758f45e\"");
+   }
+
+   {
       TR _tr("More Auth");
       const char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));

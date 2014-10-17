@@ -136,14 +136,20 @@ Auth::parseAuthParameters(ParseBuffer& pb)
             // invoke the particular factory
             mParameters.push_back(p);
          }
-         pb.skipWhitespace();
-         if (pb.eof() || *pb.position() != Symbols::COMMA[0])
-         {
-            break;
-         }
-         pb.skipChar();
-         pb.skipWhitespace();
       }
+      else
+      {
+          // empty parameter name - skip and advance pb to next parameter
+          pb.skipToOneOf(terminators);
+      }
+
+      pb.skipWhitespace();
+      if (pb.eof() || *pb.position() != Symbols::COMMA[0])
+      {
+         break;
+      }
+      pb.skipChar();
+      pb.skipWhitespace();
    }
 }
 
