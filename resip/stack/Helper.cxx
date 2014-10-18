@@ -2201,7 +2201,7 @@ Helper::isClientBehindNAT(const SipMessage& request, bool privateToPublicOnly)
       {
          // Ensure the via host is an IP address (note: web-rtc uses hostnames here instead)
          if(DnsUtil::isIpV4Address(request.header(h_Vias).front().sentHost()) 
-#ifdef USE_IPv6
+#ifdef USE_IPV6
              || DnsUtil::isIpV6Address(request.header(h_Vias).front().sentHost())
 #endif
              )
@@ -2254,7 +2254,7 @@ Helper::getClientPublicAddress(const SipMessage& request)
 
       // Check IP from Via sentHost
       if(DnsUtil::isIpV4Address(it->sentHost())  // Ensure the via host is an IP address (note: web-rtc uses hostnames here instead)
-#ifdef USE_IPv6
+#ifdef USE_IPV6
           || DnsUtil::isIpV6Address(it->sentHost())
 #endif
           )
