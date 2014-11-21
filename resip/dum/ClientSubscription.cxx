@@ -163,7 +163,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
          // Timer for initial NOTIFY; since we don't know when the initial
          // SUBSRIBE is sent, we have to set the timer when the 200 comes in, if
          // it beat the NOTIFY.
-         mDum.addTimer(DumTimeout::WaitForNotify, 
+         mDum.addTimerMs(DumTimeout::WaitForNotify, 
                  64*Timer::T1, 
                  getBaseHandle(),
                  ++mTimerSeq);
