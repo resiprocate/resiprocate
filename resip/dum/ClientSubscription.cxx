@@ -522,7 +522,7 @@ ClientSubscription::requestRefresh(UInt32 expires)
       mLastSubSecs = Timer::getTimeSecs();
       send(mLastRequest);
       // Timer for reSUB NOTIFY.
-      mDum.addTimer(DumTimeout::WaitForNotify, 
+      mDum.addTimerMs(DumTimeout::WaitForNotify, 
               64*Timer::T1, 
               getBaseHandle(),
               ++mTimerSeq);
@@ -581,7 +581,7 @@ ClientSubscription::end(bool immediate)
          mEnded = true;
          send(mLastRequest);
          // Timer for NOTIFY terminated
-         mDum.addTimer(DumTimeout::WaitForNotify, 
+         mDum.addTimerMs(DumTimeout::WaitForNotify, 
                  64*Timer::T1, 
                  getBaseHandle(),
                  ++mTimerSeq);
