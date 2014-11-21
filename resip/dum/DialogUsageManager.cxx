@@ -1775,8 +1775,8 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
 {
    // RFC 2162 - 8.2.2
    if(request.exists(h_Requires) &&                 // Don't check requires if method is ACK or CANCEL
-      (request.header(h_RequestLine).getMethod() != ACK ||
-       request.header(h_RequestLine).getMethod() != CANCEL))
+      request.header(h_RequestLine).getMethod() != ACK &&
+      request.header(h_RequestLine).getMethod() != CANCEL)
    {
       Tokens unsupported = getMasterProfile()->getUnsupportedOptionsTags(request.header(h_Requires));
       if (!unsupported.empty())
