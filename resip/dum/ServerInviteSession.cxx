@@ -233,9 +233,10 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
 class ServerInviteSessionProvisionalCommand : public DumCommandAdapter
 {
 public:
-   ServerInviteSessionProvisionalCommand(const ServerInviteSessionHandle& serverInviteSessionHandle, int statusCode)
+   ServerInviteSessionProvisionalCommand(const ServerInviteSessionHandle& serverInviteSessionHandle, int statusCode, bool earlyFlag)
       : mServerInviteSessionHandle(serverInviteSessionHandle),
-        mStatusCode(statusCode)
+        mStatusCode(statusCode),
+        mEarlyFlag(earlyFlag)
    {
    }
 
@@ -243,7 +244,7 @@ public:
    {
       if(mServerInviteSessionHandle.isValid())
       {
-         mServerInviteSessionHandle->provisional(mStatusCode);
+         mServerInviteSessionHandle->provisional(mStatusCode, mEarlyFlag);
       }
    }
 
@@ -254,12 +255,13 @@ public:
 private:
    ServerInviteSessionHandle mServerInviteSessionHandle;
    int mStatusCode;
+   bool mEarlyFlag;
 };
 
 void 
-ServerInviteSession::provisionalCommand(int statusCode)
+ServerInviteSession::provisionalCommand(int statusCode, bool earlyFlag)
 {
-   mDum.post(new ServerInviteSessionProvisionalCommand(getHandle(), statusCode));
+   mDum.post(new ServerInviteSessionProvisionalCommand(getHandle(), statusCode, earlyFlag));
 }
 
 void
