@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <stdexcept>
 
 #include "resip/stack/ssl/Security.hxx"
 //#include "rutil/ssl/OpenSSLInit.hxx"
@@ -111,6 +112,14 @@ int
 main(int argc, const char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   assert(Security::parseSSLType("TLSv1") == SecurityTypes::TLSv1);
+   assert(Security::parseSSLType("SSLv23") == SecurityTypes::SSLv23);
+   try
+   {
+      SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+      assert(0); // should have thrown an exception
+   }
+   catch (const invalid_argument& ia) { } // ignore, expected exception
 #if 0
    testMultiple();
 #else
