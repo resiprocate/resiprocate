@@ -181,6 +181,8 @@ class BaseSecurity
       static void setAllowWildcardCertificates(bool bEnable) { mAllowWildcardCertificates = bEnable; }
       static bool allowWildcardCertificates() { return mAllowWildcardCertificates; }
 
+      static SecurityTypes::SSLType parseSSLType(const Data& typeName);
+
    public:
       SSL_CTX*       getTlsCtx ();
       SSL_CTX*       getSslCtx ();

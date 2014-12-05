@@ -8,6 +8,7 @@
 
 #include <ostream>
 #include <fstream>
+#include <stdexcept>
 
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
@@ -2608,6 +2609,24 @@ BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
    if(mAllowWildcardCertificates)
       return matchHostNameWithWildcards(certificateName,domainName);
    return isEqualNoCase(certificateName,domainName);
+}
+/**
+   Converts a string containing an SSL type name to the corresponding
+   enum value.
+*/
+SecurityTypes::SSLType
+BaseSecurity::parseSSLType(const Data& typeName)
+{
+   if(typeName == "TLSv1")
+   {
+      return SecurityTypes::TLSv1;
+   }
+   if(typeName == "SSLv23")
+   {
+      return SecurityTypes::SSLv23;
+   }
+   Data error = "Not a recognized SSL type: " + typeName;
+   throw invalid_argument(error.c_str());
 }
 /**
    Does a wildcard match on domain and certificate name
