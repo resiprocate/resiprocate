@@ -54,9 +54,11 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
       switch(sslType)
       {
       case SecurityTypes::SSLv23:
+         DebugLog(<<"Using SSLv23_method");
          mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain, certificateFilename, privateKeyFilename );
          break;
       case SecurityTypes::TLSv1:
+         DebugLog(<<"Using TLSv1_method");
          mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename);
          break;
       default:
@@ -79,12 +81,15 @@ TlsBaseTransport::getCtx() const
 { 
    if(mDomainCtx)
    {
+      DebugLog(<<"Using TlsDomain-transport SSL_CTX");
       return mDomainCtx;
    }
    else if(mSslType == SecurityTypes::SSLv23)
    {
+      DebugLog(<<"Using SSLv23_method");
       return mSecurity->getSslCtx();
    }
+   DebugLog(<<"Using TLSv1_method");
    return mSecurity->getTlsCtx();
 }
 
