@@ -5,6 +5,7 @@
 #ifdef USE_SSL
 
 #include <memory>
+#include <stdexcept>
 
 #include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
@@ -52,13 +53,16 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    // otherwise we will use the SSL Ctx or TLS Ctx created in the Security class
    if(!sipDomain.empty())
    {
-      if (sslType == SecurityTypes::SSLv23)
+      switch(sslType)
       {
+      case SecurityTypes::SSLv23:
          mDomainCtx = mSecurity->createDomainCtx(SSLv23_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
-      }
-      else
-      {
+         break;
+      case SecurityTypes::TLSv1:
          mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+         break;
+      default:
+         throw invalid_argument("Unrecognised SecurityTypes::SSLType value");
       }
    }
 }
