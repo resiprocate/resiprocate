@@ -1,4 +1,11 @@
 = Release Notes v 1.9 =
+==1.9.8 Changes==
+resip/stack: add static fields on BaseSecurity for setting OpenSSL CTX options
+resip/stack: explicitly disable SSLv2 and SSLv3 by default when using SSLv23
+resip/stack: allow application to provide OpenSSL certificate verification callback
+repro: change default OpenSSL method from TLSv1_method to SSLv23_method (enables TLS v1.1 and v1.2)
+repro: add configuration options OpenSSLCTXSetOptions and OpenSSLCTXClearOptions to control OpenSSL CTX options
+repro: add configuration OpenSSLCipherList to manually configure the OpenSSL cipher list
 ==1.9.7 Changes==
 rpm: Indicate that b2bua package is obsolete
 resip/stack: TlsConnection: correctly handle OpenSSL error queue after SSL_read
