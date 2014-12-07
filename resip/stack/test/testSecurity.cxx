@@ -120,6 +120,16 @@ main(int argc, const char** argv)
       assert(0); // should have thrown an exception
    }
    catch (const invalid_argument& ia) { } // ignore, expected exception
+
+   assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv2") == SSL_OP_NO_SSLv2);
+   assert(Security::parseOpenSSLCTXOption("SSL_OP_NO_SSLv3") == SSL_OP_NO_SSLv3);
+   try
+   {
+      SecurityTypes::SSLType val = BaseSecurity::parseSSLType("BigBrotherIsWatching");
+      assert(0); // should have thrown an exception
+   }
+   catch (const invalid_argument& ia) { } // ignore, expected exception
+
 #if 0
    testMultiple();
 #else

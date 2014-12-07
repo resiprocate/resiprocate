@@ -2700,6 +2700,156 @@ BaseSecurity::parseSSLType(const Data& typeName)
    throw invalid_argument(error.c_str());
 }
 /**
+   Converts a string containing an OpenSSL option name
+   (for SSL_CTX_set_options) to the numeric value from ssl.h
+*/
+long
+BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
+{
+   if(optionName == "SSL_OP_ALL")
+   {
+      return SSL_OP_ALL;
+   }
+   if(optionName == "SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION")
+   {
+      return SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
+   }
+   if(optionName == "SSL_OP_CIPHER_SERVER_PREFERENCE")
+   {
+      return SSL_OP_CIPHER_SERVER_PREFERENCE;
+   }
+   if(optionName == "SSL_OP_CISCO_ANYCONNECT")
+   {
+      return SSL_OP_CISCO_ANYCONNECT;
+   }
+   if(optionName == "SSL_OP_COOKIE_EXCHANGE")
+   {
+      return SSL_OP_COOKIE_EXCHANGE;
+   }
+   if(optionName == "SSL_OP_CRYPTOPRO_TLSEXT_BUG")
+   {
+      return SSL_OP_CRYPTOPRO_TLSEXT_BUG;
+   }
+   if(optionName == "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS")
+   {
+      return SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+   }
+   if(optionName == "SSL_OP_EPHEMERAL_RSA")
+   {
+      return SSL_OP_EPHEMERAL_RSA;
+   }
+   if(optionName == "SSL_OP_LEGACY_SERVER_CONNECT")
+   {
+      return SSL_OP_LEGACY_SERVER_CONNECT;
+   }
+   if(optionName == "SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER")
+   {
+      return SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER;
+   }
+   if(optionName == "SSL_OP_MICROSOFT_SESS_ID_BUG")
+   {
+      return SSL_OP_MICROSOFT_SESS_ID_BUG;
+   }
+   if(optionName == "SSL_OP_MSIE_SSLV2_RSA_PADDING")
+   {
+      return SSL_OP_MSIE_SSLV2_RSA_PADDING;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_CA_DN_BUG")
+   {
+      return SSL_OP_NETSCAPE_CA_DN_BUG;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_CHALLENGE_BUG")
+   {
+      return SSL_OP_NETSCAPE_CHALLENGE_BUG;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG")
+   {
+      return SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG")
+   {
+      return SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG;
+   }
+   if(optionName == "SSL_OP_NO_COMPRESSION")
+   {
+      return SSL_OP_NO_COMPRESSION;
+   }
+   if(optionName == "SSL_OP_NO_QUERY_MTU")
+   {
+      return SSL_OP_NO_QUERY_MTU;
+   }
+   if(optionName == "SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION")
+   {
+      return SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
+   }
+   if(optionName == "SSL_OP_NO_SSLv2")
+   {
+      return SSL_OP_NO_SSLv2;
+   }
+   if(optionName == "SSL_OP_NO_SSLv3")
+   {
+      return SSL_OP_NO_SSLv3;
+   }
+   if(optionName == "SSL_OP_NO_TICKET")
+   {
+      return SSL_OP_NO_TICKET;
+   }
+   if(optionName == "SSL_OP_NO_TLSv1")
+   {
+      return SSL_OP_NO_TLSv1;
+   }
+   if(optionName == "SSL_OP_NO_TLSv1_1")
+   {
+      return SSL_OP_NO_TLSv1_1;
+   }
+   if(optionName == "SSL_OP_NO_TLSv1_2")
+   {
+      return SSL_OP_NO_TLSv1_2;
+   }
+   if(optionName == "SSL_OP_PKCS1_CHECK_1")
+   {
+      return SSL_OP_PKCS1_CHECK_1;
+   }
+   if(optionName == "SSL_OP_PKCS1_CHECK_2")
+   {
+      return SSL_OP_PKCS1_CHECK_2;
+   }
+   if(optionName == "SSL_OP_SAFARI_ECDHE_ECDSA_BUG")
+   {
+      return SSL_OP_SAFARI_ECDHE_ECDSA_BUG;
+   }
+   if(optionName == "SSL_OP_SINGLE_DH_USE")
+   {
+      return SSL_OP_SINGLE_DH_USE;
+   }
+   if(optionName == "SSL_OP_SINGLE_ECDH_USE")
+   {
+      return SSL_OP_SINGLE_ECDH_USE;
+   }
+   if(optionName == "SSL_OP_SSLEAY_080_CLIENT_DH_BUG")
+   {
+      return SSL_OP_SSLEAY_080_CLIENT_DH_BUG;
+   }
+   if(optionName == "SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG")
+   {
+      return SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG;
+   }
+   if(optionName == "SSL_OP_TLS_BLOCK_PADDING_BUG")
+   {
+      return SSL_OP_TLS_BLOCK_PADDING_BUG;
+   }
+   if(optionName == "SSL_OP_TLS_D5_BUG")
+   {
+      return SSL_OP_TLS_D5_BUG;
+   }
+   if(optionName == "SSL_OP_TLS_ROLLBACK_BUG")
+   {
+      return SSL_OP_TLS_ROLLBACK_BUG;
+   }
+   Data error = "Not a recognized OpenSSL option name: " + optionName;
+   throw invalid_argument(error.c_str());
+}
+/**
    Does a wildcard match on domain and certificate name
    @todo    looks incomplete, make better
 */
