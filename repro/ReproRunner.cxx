@@ -565,14 +565,20 @@ ReproRunner::createSipStack()
          "OpenSSLCTXSetOptions", BaseSecurity::OpenSSLCTXSetOptions);
    setOpenSSLCTXOptionsFromConfig(
          "OpenSSLCTXClearOptions", BaseSecurity::OpenSSLCTXClearOptions);
+   Security::CipherList cipherList = Security::ExportableSuite;
+   Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", "");
+   if(!ciphers.empty())
+   {
+      cipherList = ciphers;
+   }
    Data certPath = mProxyConfig->getConfigData("CertificatePath", "");
    if(certPath.empty())
    {
-      security = new Security();
+      security = new Security(cipherList);
    }
    else
    {
-      security = new Security(certPath);
+      security = new Security(certPath, cipherList);
    }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);
