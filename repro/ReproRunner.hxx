@@ -64,6 +64,7 @@ protected:
    virtual void cleanupObjects();
 
    virtual bool loadPlugins();
+   virtual void setOpenSSLCTXOptionsFromConfig(const resip::Data& configVar, long& opts);
    virtual bool createSipStack();
    virtual bool createDatastore();
    virtual bool createProxy();
