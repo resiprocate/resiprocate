@@ -128,6 +128,21 @@ bool BaseSecurity::mAllowWildcardCertificates = false;
 BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
 BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
 
+/**
+ * Note:
+ *
+ * When SSLv23 mode is selected and the options flags SSL_OP_NO_SSLv2
+ * and SSL_OP_NO_SSLv3 are set, SSLv23_method() will allow a dynamic
+ * choice of TLS v1.0, v1.1 or v1.2 on each connection.
+ *
+ * If SSL_OP_NO_SSLv3 is removed (by an application changing the value
+ * of BaseSecurity::OpenSSLCTXSetOptions before instantiating
+ * resip::Security) then using SSLv23_method() will allow a dynamic
+ * choice of SSL v3.0 or any of the TLS versions on each connection.
+ */
+long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+long BaseSecurity::OpenSSLCTXClearOptions = 0;
+
 Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) : 
    BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase)
 {
@@ -359,6 +374,8 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
 
    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
+   SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
 
    return ctx;
 }
@@ -1072,6 +1089,8 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
    assert(ret);
+   SSL_CTX_set_options(mTlsCtx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(mTlsCtx, BaseSecurity::OpenSSLCTXClearOptions);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
@@ -1080,6 +1099,8 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
    assert(ret);
+   SSL_CTX_set_options(mSslCtx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(mSslCtx, BaseSecurity::OpenSSLCTXClearOptions);
 }
 
 

@@ -79,6 +79,17 @@ class BaseSecurity
       static CipherList ExportableSuite;
       static CipherList StrongestSuite;
       
+      /**
+       * Note:
+       *
+       * To allow these to be backported to v1.9.x without ABI breakage,
+       * they are implemented as static fields.  In the next release branch,
+       * non-static versions could be added and the static values
+       * used as defaults.
+       */
+      static long OpenSSLCTXSetOptions;
+      static long OpenSSLCTXClearOptions;
+
       BaseSecurity(const CipherList& cipherSuite = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
       virtual ~BaseSecurity();
 
