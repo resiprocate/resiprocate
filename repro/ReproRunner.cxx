@@ -561,6 +561,21 @@ ReproRunner::loadPlugins()
 #endif
 }
 
+void
+ReproRunner::setOpenSSLCTXOptionsFromConfig(const Data& configVar, long& opts)
+{
+   std::set<Data> values;
+   if(mProxyConfig->getConfigValue(configVar, values))
+   {
+      opts = 0;
+      for(std::set<Data>::iterator it = values.begin();
+            it != values.end(); it++)
+      {
+         opts |= Security::parseOpenSSLCTXOption(*it);
+      }
+   }
+}
+
 bool
 ReproRunner::createSipStack()
 {
@@ -585,6 +600,10 @@ ReproRunner::createSipStack()
    Security* security = 0;
    Compression* compression = 0;
 #ifdef USE_SSL
+   setOpenSSLCTXOptionsFromConfig(
+         "OpenSSLCTXSetOptions", BaseSecurity::OpenSSLCTXSetOptions);
+   setOpenSSLCTXOptionsFromConfig(
+         "OpenSSLCTXClearOptions", BaseSecurity::OpenSSLCTXClearOptions);
    Data certPath = mProxyConfig->getConfigData("CertificatePath", "");
    if(certPath.empty())
    {
