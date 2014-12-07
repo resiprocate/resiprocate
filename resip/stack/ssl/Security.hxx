@@ -199,6 +199,16 @@ class BaseSecurity
       typedef std::map<Data,Data>      PassPhraseMap;
 
    protected:
+      /**
+       * Note:
+       *
+       * mTlsCtx is being used when TLSv1 is requested.
+       * Adding more non-static fields like mTlsCtx for subsequent
+       * versions (e.g. for OpenSSL TLSv1_1_method()) breaks ABI
+       * compatability and is therefore difficult to backport onto
+       * release branches.  Better to use SSLv23_method and use OpenSSL
+       * options flags to specify the exact protocol versions to support.
+       */
       SSL_CTX*       mTlsCtx;
       SSL_CTX*       mSslCtx;
       static void dumpAsn(char*, Data);

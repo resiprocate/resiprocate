@@ -11,6 +11,11 @@ typedef enum
    OpenSSL
 } SSLVendor;
 
+/**
+ * Note:
+ * Before adding to the SSLType enum, please see the comments
+ * about mTlsCtx in resip/stack/ssl/Security.hxx
+ */
 typedef enum 
 { 
    NoSSL = 0,
