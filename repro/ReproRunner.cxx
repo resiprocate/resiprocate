@@ -84,7 +84,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
-#define DEFAULT_TLS_METHOD "TLSv1"
+#define DEFAULT_TLS_METHOD "SSLv23"
 #endif
 
 #if defined(USE_MYSQL)
