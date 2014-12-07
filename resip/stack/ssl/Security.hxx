@@ -193,6 +193,7 @@ class BaseSecurity
       static bool allowWildcardCertificates() { return mAllowWildcardCertificates; }
 
       static SecurityTypes::SSLType parseSSLType(const Data& typeName);
+      static long parseOpenSSLCTXOption(const Data& optionName);
 
    public:
       SSL_CTX*       getTlsCtx ();
