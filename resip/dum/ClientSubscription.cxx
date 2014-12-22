@@ -786,15 +786,6 @@ ClientSubscription::rejectUpdateCommand(int statusCode, const Data& reasonPhrase
    mDum.post(new ClientSubscriptionRejectUpdateCommand(getHandle(), statusCode, reasonPhrase));
 }
 
-void ClientSubscription::dialogDestroyed(const SipMessage& msg)
-{
-   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);   
-   mEnded = true;
-   handler->onTerminated(getHandle(), &msg);
-   delete this;   
-}
-
 EncodeStream&
 ClientSubscription::dump(EncodeStream& strm) const
 {

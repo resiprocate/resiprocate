@@ -39,7 +39,6 @@ class ClientSubscription: public BaseSubscription
 
    protected:
       virtual ~ClientSubscription();
-      virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
       virtual void send(SharedPtr<SipMessage> msg);
       virtual void flowTerminated();

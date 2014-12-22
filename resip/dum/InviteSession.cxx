@@ -95,17 +95,6 @@ InviteSession::~InviteSession()
    }
 }
 
-void 
-InviteSession::dialogDestroyed(const SipMessage& msg)
-{
-   assert(0);
-   
-   // !jf! Is this correct? Merged from main...
-   // !jf! what reason - guessed for now?
-   //mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, msg);   
-   //delete this;   
-}
-
 bool
 InviteSession::hasLocalOfferAnswer() const
 {
@@ -887,7 +876,6 @@ InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> con
    else
    {
       WarningLog (<< "Can't refer before Connected");
-      assert(0);
       throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
    }
 }

@@ -836,38 +836,6 @@ Dialog::dispatch(const SipMessage& msg)
             assert(0);
             return;
       }
-
-#if 0     // merged from head back to teltel-branch
-      if (msg.header(h_StatusLine).statusCode() >= 400
-          && Helper::determineFailureMessageEffect(msg) == Helper::DialogTermination)
-      {
-         //kill all usages
-         mDestroying = true;
-
-         for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
-              it != mServerSubscriptions.end(); )
-         {
-            ServerSubscription* s = *it;
-            it++;
-            s->dialogDestroyed(msg);
-         }
-
-         for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
-              it != mClientSubscriptions.end(); )
-         {
-            ClientSubscription* s = *it;
-            it++;
-            s->dialogDestroyed(msg);
-         }
-         if (mInviteSession)
-         {
-            mInviteSession->dialogDestroyed(msg);
-         }
-         mDestroying = false;
-         possiblyDie(); //should aways result in destruction of this
-         return;
-      }
-#endif
    }
 }
 
