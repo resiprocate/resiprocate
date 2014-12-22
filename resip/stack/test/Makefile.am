@@ -116,8 +116,10 @@ check_PROGRAMS = \
 	testWsCookieContext
 
 if USE_SSL
-TESTS += testSocketFunc
-check_PROGRAMS += testSocketFunc
+TESTS += testSocketFunc \
+	testSecurity
+check_PROGRAMS += testSocketFunc \
+	testSecurity
 endif
 
 UAS_SOURCES = UAS.cxx
@@ -149,6 +151,7 @@ testPlainContents_SOURCES = testPlainContents.cxx
 testResponses_SOURCES = testResponses.cxx
 testRlmi_SOURCES = testRlmi.cxx TestSupport.cxx
 testSdp_SOURCES = testSdp.cxx TestSupport.cxx
+testSecurity_SOURCES = testSecurity.cxx
 testSelect_SOURCES = testSelect.cxx
 testSelectInterruptor_SOURCES = testSelectInterruptor.cxx
 testServer_SOURCES = testServer.cxx

@@ -8,6 +8,7 @@
 
 #include <ostream>
 #include <fstream>
+#include <stdexcept>
 
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
@@ -126,6 +127,21 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 bool BaseSecurity::mAllowWildcardCertificates = false;
 BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
 BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
+
+/**
+ * Note:
+ *
+ * When SSLv23 mode is selected and the options flags SSL_OP_NO_SSLv2
+ * and SSL_OP_NO_SSLv3 are set, SSLv23_method() will allow a dynamic
+ * choice of TLS v1.0, v1.1 or v1.2 on each connection.
+ *
+ * If SSL_OP_NO_SSLv3 is removed (by an application changing the value
+ * of BaseSecurity::OpenSSLCTXSetOptions before instantiating
+ * resip::Security) then using SSLv23_method() will allow a dynamic
+ * choice of SSL v3.0 or any of the TLS versions on each connection.
+ */
+long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+long BaseSecurity::OpenSSLCTXClearOptions = 0;
 
 Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) : 
    BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase)
@@ -358,6 +374,8 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
 
    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
+   SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
 
    return ctx;
 }
@@ -1071,6 +1089,8 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
    assert(ret);
+   SSL_CTX_set_options(mTlsCtx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(mTlsCtx, BaseSecurity::OpenSSLCTXClearOptions);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
@@ -1079,6 +1099,8 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
    assert(ret);
+   SSL_CTX_set_options(mSslCtx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(mSslCtx, BaseSecurity::OpenSSLCTXClearOptions);
 }
 
 
@@ -2658,6 +2680,174 @@ BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
    if(mAllowWildcardCertificates)
       return matchHostNameWithWildcards(certificateName,domainName);
    return isEqualNoCase(certificateName,domainName);
+}
+/**
+   Converts a string containing an SSL type name to the corresponding
+   enum value.
+*/
+SecurityTypes::SSLType
+BaseSecurity::parseSSLType(const Data& typeName)
+{
+   if(typeName == "TLSv1")
+   {
+      return SecurityTypes::TLSv1;
+   }
+   if(typeName == "SSLv23")
+   {
+      return SecurityTypes::SSLv23;
+   }
+   Data error = "Not a recognized SSL type: " + typeName;
+   throw invalid_argument(error.c_str());
+}
+/**
+   Converts a string containing an OpenSSL option name
+   (for SSL_CTX_set_options) to the numeric value from ssl.h
+*/
+long
+BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
+{
+   if(optionName == "SSL_OP_ALL")
+   {
+      return SSL_OP_ALL;
+   }
+   if(optionName == "SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION")
+   {
+      return SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
+   }
+   if(optionName == "SSL_OP_CIPHER_SERVER_PREFERENCE")
+   {
+      return SSL_OP_CIPHER_SERVER_PREFERENCE;
+   }
+   if(optionName == "SSL_OP_CISCO_ANYCONNECT")
+   {
+      return SSL_OP_CISCO_ANYCONNECT;
+   }
+   if(optionName == "SSL_OP_COOKIE_EXCHANGE")
+   {
+      return SSL_OP_COOKIE_EXCHANGE;
+   }
+   if(optionName == "SSL_OP_CRYPTOPRO_TLSEXT_BUG")
+   {
+      return SSL_OP_CRYPTOPRO_TLSEXT_BUG;
+   }
+   if(optionName == "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS")
+   {
+      return SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+   }
+   if(optionName == "SSL_OP_EPHEMERAL_RSA")
+   {
+      return SSL_OP_EPHEMERAL_RSA;
+   }
+   if(optionName == "SSL_OP_LEGACY_SERVER_CONNECT")
+   {
+      return SSL_OP_LEGACY_SERVER_CONNECT;
+   }
+   if(optionName == "SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER")
+   {
+      return SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER;
+   }
+   if(optionName == "SSL_OP_MICROSOFT_SESS_ID_BUG")
+   {
+      return SSL_OP_MICROSOFT_SESS_ID_BUG;
+   }
+   if(optionName == "SSL_OP_MSIE_SSLV2_RSA_PADDING")
+   {
+      return SSL_OP_MSIE_SSLV2_RSA_PADDING;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_CA_DN_BUG")
+   {
+      return SSL_OP_NETSCAPE_CA_DN_BUG;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_CHALLENGE_BUG")
+   {
+      return SSL_OP_NETSCAPE_CHALLENGE_BUG;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG")
+   {
+      return SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG;
+   }
+   if(optionName == "SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG")
+   {
+      return SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG;
+   }
+   if(optionName == "SSL_OP_NO_COMPRESSION")
+   {
+      return SSL_OP_NO_COMPRESSION;
+   }
+   if(optionName == "SSL_OP_NO_QUERY_MTU")
+   {
+      return SSL_OP_NO_QUERY_MTU;
+   }
+   if(optionName == "SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION")
+   {
+      return SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
+   }
+   if(optionName == "SSL_OP_NO_SSLv2")
+   {
+      return SSL_OP_NO_SSLv2;
+   }
+   if(optionName == "SSL_OP_NO_SSLv3")
+   {
+      return SSL_OP_NO_SSLv3;
+   }
+   if(optionName == "SSL_OP_NO_TICKET")
+   {
+      return SSL_OP_NO_TICKET;
+   }
+   if(optionName == "SSL_OP_NO_TLSv1")
+   {
+      return SSL_OP_NO_TLSv1;
+   }
+   if(optionName == "SSL_OP_NO_TLSv1_1")
+   {
+      return SSL_OP_NO_TLSv1_1;
+   }
+   if(optionName == "SSL_OP_NO_TLSv1_2")
+   {
+      return SSL_OP_NO_TLSv1_2;
+   }
+   if(optionName == "SSL_OP_PKCS1_CHECK_1")
+   {
+      return SSL_OP_PKCS1_CHECK_1;
+   }
+   if(optionName == "SSL_OP_PKCS1_CHECK_2")
+   {
+      return SSL_OP_PKCS1_CHECK_2;
+   }
+   if(optionName == "SSL_OP_SAFARI_ECDHE_ECDSA_BUG")
+   {
+      return SSL_OP_SAFARI_ECDHE_ECDSA_BUG;
+   }
+   if(optionName == "SSL_OP_SINGLE_DH_USE")
+   {
+      return SSL_OP_SINGLE_DH_USE;
+   }
+   if(optionName == "SSL_OP_SINGLE_ECDH_USE")
+   {
+      return SSL_OP_SINGLE_ECDH_USE;
+   }
+   if(optionName == "SSL_OP_SSLEAY_080_CLIENT_DH_BUG")
+   {
+      return SSL_OP_SSLEAY_080_CLIENT_DH_BUG;
+   }
+   if(optionName == "SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG")
+   {
+      return SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG;
+   }
+   if(optionName == "SSL_OP_TLS_BLOCK_PADDING_BUG")
+   {
+      return SSL_OP_TLS_BLOCK_PADDING_BUG;
+   }
+   if(optionName == "SSL_OP_TLS_D5_BUG")
+   {
+      return SSL_OP_TLS_D5_BUG;
+   }
+   if(optionName == "SSL_OP_TLS_ROLLBACK_BUG")
+   {
+      return SSL_OP_TLS_ROLLBACK_BUG;
+   }
+   Data error = "Not a recognized OpenSSL option name: " + optionName;
+   throw invalid_argument(error.c_str());
 }
 /**
    Does a wildcard match on domain and certificate name
