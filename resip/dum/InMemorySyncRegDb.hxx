@@ -68,7 +68,7 @@ class InMemorySyncRegDb : public RegistrationPersistenceManager
       /// return all the AOR in the DB 
       virtual void getAors(UriList& container);
       
-   private:
+   protected:
       typedef std::map<Uri,ContactList *> database_map_t;
       database_map_t mDatabase;
       Mutex mDatabaseMutex;
