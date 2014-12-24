@@ -48,7 +48,7 @@ static char *RCSSTRING __UNUSED__="$Id: transport_addr_reg.c,v 1.2 2008/04/28 17
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "nr_api.h"
 #include "transport_addr.h"
 #include "transport_addr_reg.h"

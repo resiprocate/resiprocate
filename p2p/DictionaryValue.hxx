@@ -16,7 +16,7 @@ class DictionaryValue : public AbstractValue
       
       virtual std::vector<resip::Data> collectSignableData() const
       {
-         assert(0);
+         resip_assert(0);
       }
       
    private:

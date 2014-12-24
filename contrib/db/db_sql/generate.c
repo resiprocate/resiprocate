@@ -1369,7 +1369,7 @@ generated from SQL DDL by db_sql";
 	static char *include_stmts =
 "#include <sys/types.h>                                                     \n\
 #include <sys/stat.h>                                                       \n\
-#include <assert.h>                                                         \n\
+#include "rutil/Assert.h"                                                         \n\
 #include <errno.h>                                                          \n\
 #include <stdlib.h>                                                         \n\
 #include <string.h>                                                         \n\

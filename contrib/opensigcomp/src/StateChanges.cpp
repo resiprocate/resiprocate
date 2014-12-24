@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "StateChanges.h"
 #include "State.h"
 #include "Types.h"
@@ -132,7 +132,7 @@ osc::StateChanges::~StateChanges()
 osc::StateChanges & osc::StateChanges::operator=(StateChanges const &r)
 {
   DEBUG_STACK_FRAME;
-  assert(0);
+  resip_assert(0);
   if (&r == this)
   {
     return *this;
@@ -144,7 +144,7 @@ osc::StateChanges & osc::StateChanges::operator=(StateChanges const &r)
 osc::StateChanges::StateChanges(osc::StateChanges const &r)
 {
   DEBUG_STACK_FRAME;
-  assert(0);
+  resip_assert(0);
 }
 
 #ifdef DEBUG

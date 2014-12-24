@@ -140,7 +140,7 @@ public:
 
 	void set_cursor(BaseType *dbc)
 	{
-		assert(dbc != NULL);
+		resip_assert(dbc != NULL);
 		if (csr_ptr_) {
 			// Only dup_src_ will inform this, not csr_ptr_.
 			delete csr_ptr_;
@@ -157,7 +157,7 @@ public:
 	// If dup_src_ is informing this object, pass false parameter.
 	inline BaseType* duplicate(bool erase_dupper = true)
 	{
-		assert(dup_src_ != NULL);
+		resip_assert(dup_src_ != NULL);
 		if (csr_ptr_) {
 			// Only dup_src_ will inform this, not csr_ptr_.
 			delete csr_ptr_;
@@ -663,7 +663,7 @@ retry:		ret = csr_->get(&k1.get_dbt(), &d1, flag);
 			limit_buf_size_after_use();
 		} else if (ret == DB_BUFFER_SMALL) {
 			sz = d1.get_size();
-			assert(sz > 0);
+			resip_assert(sz > 0);
 			enlarge_dbt(d1, sz);
 			goto retry;
 		} else {
@@ -1275,7 +1275,7 @@ retry:		if (this->csr_ &&
 			this->curr_data_.reset();
 		} else if (ret == DB_BUFFER_SMALL) {
 			sz = d.get_size();
-			assert(sz > 0);
+			resip_assert(sz > 0);
 			this->enlarge_dbt(d, sz);
 			goto retry;
 		} else if (ret == 0) {

@@ -116,7 +116,7 @@ UserProfile::hasGruu(const Data& aor, const Data& instance) const
 NameAddr&
 UserProfile:: getGruu(const Data& aor)
 {
-   assert(0);
+   resip_assert(0);
    static NameAddr gruu;
    return gruu;
 }
@@ -124,7 +124,7 @@ UserProfile:: getGruu(const Data& aor)
 NameAddr&
 UserProfile:: getGruu(const Data& aor, const NameAddr& contact)
 {
-   assert(0);
+   resip_assert(0);
    static NameAddr gruu;
    return gruu;
 }

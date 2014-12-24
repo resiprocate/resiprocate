@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "SipIMP.h"
 #include "BuddyDlg.h"
@@ -124,7 +124,7 @@ BOOL BuddyDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	CTreeCtrl* tree = (CTreeCtrl*) GetDlgItem(IDC_TREE);
-	assert(tree);
+	resip_assert(tree);
 
 	CImageList          *pImageList;
 	CBitmap             bitmap;
@@ -144,7 +144,7 @@ BOOL BuddyDlg::OnInitDialog()
 
 	if ( theApp.tuIM )
 	{
-		assert( theApp.tuIM );
+		resip_assert( theApp.tuIM );
 		HTREEITEM group = TVI_ROOT;
 		//group = tree->InsertItem(_T("Friends"), TVI_ROOT, TVI_SORT);
 		for ( int i=0; i<theApp.tuIM->getNumBuddies(); i++)
@@ -155,7 +155,7 @@ BOOL BuddyDlg::OnInitDialog()
 		tree->Expand(group,TVE_EXPAND);
 
 			UINT_PTR timer = SetTimer(1/*timer number*/, 10 /* time ms*/, timerProcCallback/*callback*/);
-	assert(timer);
+	resip_assert(timer);
 	}
 	else
 	{
@@ -237,7 +237,7 @@ void BuddyDlg::OnEnChangeEdit()
 {
 
 	CEdit* edit = (CEdit*)GetDlgItem(IDC_EDIT);
-	assert(edit);
+	resip_assert(edit);
 
 	int numLines = edit->GetLineCount();
 
@@ -250,7 +250,7 @@ void BuddyDlg::OnEnChangeEdit()
 		text = text.Trim("\n\r");
 
 		CTreeCtrl* tree = (CTreeCtrl*) GetDlgItem(IDC_TREE);
-		assert(tree);
+		resip_assert(tree);
 		HTREEITEM sel = tree->GetSelectedItem();
 		CString dest = tree->GetItemText(sel);
 
@@ -277,7 +277,7 @@ CALLBACK EXPORT BuddyDlg::timerProcCallback(
 	//BuddyDlg* dlg = (BuddyDlg*)( wnd );
 	//assert(dlg);
 
-	assert( buddy );
+	resip_assert( buddy );
 	buddy->timerProc();
 }
 
@@ -332,7 +332,7 @@ BuddyDlg::presenseUpdate(const resip::Uri& uri, bool open, const resip::Data& st
 
 	// go trhough the items in the list and change the icon of the aproperate one 
 		CTreeCtrl* tree = (CTreeCtrl*) GetDlgItem(IDC_TREE);
-	assert(tree);
+	resip_assert(tree);
 
 	HTREEITEM item = tree->GetRootItem();
 
@@ -412,7 +412,7 @@ void BuddyDlg::OnBnClickedButtonAdd()
 void BuddyDlg::addBuddy(CString name)
 {
 	CTreeCtrl* tree = (CTreeCtrl*) GetDlgItem(IDC_TREE);
-	assert(tree);
+	resip_assert(tree);
 
 	HTREEITEM group = TVI_ROOT;
 	//group = tree->InsertItem(_T("Friends"), TVI_ROOT, TVI_SORT);
@@ -428,7 +428,7 @@ void BuddyDlg::OnBnClickedButtonClear()
 	app->WriteProfileInt("buddyList","size", 0 );
 
 	CTreeCtrl* tree = (CTreeCtrl*) GetDlgItem(IDC_TREE);
-	assert(tree);
+	resip_assert(tree);
 
 	tree->DeleteAllItems();
 }
@@ -436,12 +436,12 @@ void BuddyDlg::OnBnClickedButtonClear()
 void BuddyDlg::OnBnClickedCheckOnline()
 {
 	CButton* button = (CButton*)GetDlgItem(IDC_CHECK_ONLINE);
-	assert(button);
+	resip_assert(button);
 
 	bool online = (BST_CHECKED != button->GetCheck());
 
 	CEdit* edit = (CEdit*)GetDlgItem(IDC_EDIT_NOTE);
-	assert(edit);
+	resip_assert(edit);
 
 	CString text;
 	edit->GetWindowText(text);
@@ -458,7 +458,7 @@ void BuddyDlg::OnEnKillfocusEditNote()
 void BuddyDlg::OnBnClickedCheckSign()
 {
 	CButton* button = (CButton*)GetDlgItem(IDC_CHECK_SIGN);
-	assert(button);
+	resip_assert(button);
 
 	bool checked = (BST_CHECKED == button->GetCheck());
 
@@ -468,7 +468,7 @@ void BuddyDlg::OnBnClickedCheckSign()
 void BuddyDlg::OnBnClickedCheckEncrypt()
 {
 	CButton* button = (CButton*)GetDlgItem(IDC_CHECK_ENCRYPT);
-	assert(button);
+	resip_assert(button);
 
 	bool checked = (BST_CHECKED == button->GetCheck());
 
@@ -478,11 +478,11 @@ void BuddyDlg::OnBnClickedCheckEncrypt()
 void BuddyDlg::OnBnClickedButtonDel()
 {
 	CWinApp* app = AfxGetApp();
-	assert(app);
+	resip_assert(app);
 
 	// TODO: Add your control notification handler code here
 	CTreeCtrl* tree = (CTreeCtrl*) GetDlgItem(IDC_TREE);
-	assert(tree);
+	resip_assert(tree);
 
 	HTREEITEM sel = tree->GetSelectedItem();
 	CString dest = tree->GetItemText(sel);
@@ -497,12 +497,12 @@ void BuddyDlg::OnBnClickedButtonDel()
 		return;
 	}
 
-	assert( theApp.tuIM );
+	resip_assert( theApp.tuIM );
 	theApp.tuIM->removeBuddy( uri );
 
 	//tree->DeleteAllItems();
 
-	assert( theApp.tuIM );
+	resip_assert( theApp.tuIM );
 	//HTREEITEM group = TVI_ROOT;
 	//group = tree->InsertItem(_T("Friends"), TVI_ROOT, TVI_SORT);
 	for ( int i=0; i<theApp.tuIM->getNumBuddies(); i++)
@@ -523,7 +523,7 @@ void BuddyDlg::OnBnClickedButtonDel()
 void BuddyDlg::OnBnClickedButtonSend()
 {
 	CEdit* edit = (CEdit*)GetDlgItem(IDC_EDIT);
-	assert(edit);
+	resip_assert(edit);
 
 	CString text;
 	edit->GetWindowText(text);
@@ -532,7 +532,7 @@ void BuddyDlg::OnBnClickedButtonSend()
 	text = text.Trim("\n\r");
 
 	CTreeCtrl* tree = (CTreeCtrl*) GetDlgItem(IDC_TREE);
-	assert(tree);
+	resip_assert(tree);
 	HTREEITEM sel = tree->GetSelectedItem();
 	CString dest = tree->GetItemText(sel);
 
@@ -549,7 +549,7 @@ void BuddyDlg::OnBnClickedButtonSend()
 void BuddyDlg::display(const CString& text)
 {
     CEdit* display = (CEdit*)GetDlgItem(IDC_DISPLAY);
-	assert(display);
+	resip_assert(display);
 	display->ReplaceSel( text + CString( _T("\r\n")) );
 }
 

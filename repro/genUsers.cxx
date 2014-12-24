@@ -1,5 +1,5 @@
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include <iostream>
 
 #include "repro/UserStore.hxx"

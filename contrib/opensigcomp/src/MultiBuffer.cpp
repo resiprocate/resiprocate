@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "Libc.h"
 #include "MultiBuffer.h"
 #include "Buffer.h"
@@ -191,7 +191,7 @@ osc::MultiBuffer::MultiBuffer(MultiBuffer const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -206,6 +206,6 @@ osc::MultiBuffer::operator=(MultiBuffer const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }

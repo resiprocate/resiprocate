@@ -105,11 +105,11 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 
    mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
    mServerCtx = mSecurity->createDomainCtx(DTLSv1_server_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
-   assert( mClientCtx ) ;
-   assert( mServerCtx ) ;
+   resip_assert( mClientCtx ) ;
+   resip_assert( mServerCtx ) ;
 
    mDummyBio = BIO_new( BIO_s_mem() ) ;
-   assert( mDummyBio ) ;
+   resip_assert( mDummyBio ) ;
 
    mSendData = NULL ;
 
@@ -204,7 +204,7 @@ DtlsTransport::_read( FdSet& fdset )
    if ( ssl == NULL )
    {
       ssl = SSL_new( mServerCtx ) ;
-      assert( ssl ) ;
+      resip_assert( ssl ) ;
 
       // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
       SSL_set_verify(ssl, 0, 0);
@@ -214,7 +214,7 @@ DtlsTransport::_read( FdSet& fdset )
       SSL_set_accept_state( ssl ) ;
 
       wbio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
-      assert( wbio ) ;
+      resip_assert( wbio ) ;
 
       BIO_dgram_set_peer( wbio, &peer ) ;
 
@@ -453,8 +453,8 @@ void DtlsTransport::_write( FdSet& fdset )
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
 
-   assert( &(*sendData) );
-   assert( sendData->destination.getPort() != 0 );
+   resip_assert( &(*sendData) );
+   resip_assert( sendData->destination.getPort() != 0 );
 
    sockaddr peer = sendData->destination.getSockaddr();
 
@@ -464,7 +464,7 @@ void DtlsTransport::_write( FdSet& fdset )
    if ( ssl == NULL )
    {
       ssl = SSL_new( mClientCtx ) ;
-      assert( ssl ) ;
+      resip_assert( ssl ) ;
 
 
       InfoLog( << "DTLS handshake starting (client mode)" );
@@ -472,7 +472,7 @@ void DtlsTransport::_write( FdSet& fdset )
       SSL_set_connect_state( ssl ) ;
 
       wBio = BIO_new_dgram( (int)mFd, BIO_NOCLOSE ) ;
-      assert( wBio ) ;
+      resip_assert( wBio ) ;
 
       BIO_dgram_set_peer( wBio, &peer) ;
 

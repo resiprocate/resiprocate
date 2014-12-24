@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"

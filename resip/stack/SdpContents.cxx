@@ -422,7 +422,7 @@ void parseEorP(ParseBuffer& pb, Data& eOrp, Data& freeText)
          pb.skipChar(Symbols::RPAREN[0]);
          break;
       default:
-         assert(0);
+         resip_assert(0);
    }
 }
 
@@ -1559,7 +1559,7 @@ SdpContents::Session::Medium::getValues(const Data& key) const
    }
    if (!mSession)
    {
-      assert(false);
+      resip_assert(false);
       static list<Data> error;
       return error;
    }
@@ -1603,7 +1603,7 @@ SdpContents::Session::Medium::CodecContainer&
 SdpContents::Session::Medium::codecs()
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
-	assert(0);
+	resip_assert(0);
 #else 
    if (!mRtpMapDone)
    {

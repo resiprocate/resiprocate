@@ -45,7 +45,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_parser.c,v 1.2 2008/04/28 17:59:01 e
 #include <strings.h>
 #endif
 #include <string.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <ctype.h>
 #include "nr_api.h"
 #include "ice_ctx.h"
@@ -237,7 +237,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     if (*str == '\0')
         ABORT(R_BAD_DATA);
 
-    assert(nr_ice_candidate_type_names[0] == 0);
+    resip_assert(nr_ice_candidate_type_names[0] == 0);
 #if __STDC_VERSION__ >= 201112L
     _Static_assert(nr_ice_candidate_type_names[0] == 0,"Candidate name array is misformatted");
 #endif

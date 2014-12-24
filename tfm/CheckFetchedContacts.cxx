@@ -26,7 +26,7 @@ void
 CheckFetchedContacts::operator()(boost::shared_ptr<Event> event)
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
-   assert(sipEvent);
+   resip_assert(sipEvent);
    boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
 
    set<NameAddr> msgContacts;
@@ -56,8 +56,8 @@ CheckFetchedContacts::operator()(boost::shared_ptr<Event> event)
        uCon != _contacts.end();
        uCon++, msgCon++)
    {
-      assert(uCon != _contacts.end());
-      assert(msgCon != msgContacts.end());
+      resip_assert(uCon != _contacts.end());
+      resip_assert(msgCon != msgContacts.end());
       
       if (!(compareContacts(*uCon, *msgCon)))
       {

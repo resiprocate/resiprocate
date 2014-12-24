@@ -28,7 +28,7 @@ MediaEvent::executeCommand()
 resip::Message* 
 MediaEvent::clone() const
 {
-   assert(0);
+   resip_assert(0);
    return 0;
 }
 

@@ -86,7 +86,7 @@ Uri::~Uri()
 Uri
 Uri::fromTel(const Uri& tel, const Data& host)
 {
-   assert(tel.scheme() == Symbols::Tel);
+   resip_assert(tel.scheme() == Symbols::Tel);
 
    Uri u;
    u.scheme() = Symbols::Sip;
@@ -169,7 +169,7 @@ Uri::fromTel(const Uri& tel, const Data& host)
 Uri
 Uri::fromTel(const Uri& tel, const Uri& hostUri)
 {
-   assert(tel.scheme() == Symbols::Tel);
+   resip_assert(tel.scheme() == Symbols::Tel);
 
    Uri u(hostUri);
    u.scheme() = Symbols::Sip;
@@ -489,8 +489,8 @@ Uri::operator==(const Uri& other) const
                   // ?bwc? It looks like we're just assuming the dynamic_cast 
                   // will succeed everywhere else; why are we bothering to 
                   // assert()?
-                  assert(dp1);
-                  assert(dp2);
+                  resip_assert(dp1);
+                  resip_assert(dp2);
                }
                if (!(otherParam &&
                      isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),

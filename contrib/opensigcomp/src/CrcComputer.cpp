@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "CrcComputer.h"
 
 osc::u16 osc::CrcComputer::s_table[256] =
@@ -84,7 +84,7 @@ osc::CrcComputer::CrcComputer(CrcComputer const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -107,7 +107,7 @@ osc::CrcComputer::operator=(CrcComputer const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 

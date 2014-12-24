@@ -21,7 +21,7 @@ ClientAuthExtension::makeChallengeResponseAuth(const SipMessage& request,
                                                const Data& nonceCountString,
                                                Auth& auth)
 {
-   assert(0);
+   resip_assert(0);
 }
 
 void 
@@ -34,7 +34,7 @@ ClientAuthExtension::makeChallengeResponseAuthWithA1(const SipMessage& request,
                                                      const Data& nonceCountString,
                                                      Auth& auth)
 {
-   assert(0);
+   resip_assert(0);
 }
 
       

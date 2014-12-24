@@ -553,7 +553,7 @@ static void vxprintf(
         /* Remove trailing zeros and the "." if no digits follow the "." */
         if( flag_rtz && flag_dp ){
           while( bufpt[-1]=='0' ) *(--bufpt) = 0;
-          assert( bufpt>buf );
+          resip_assert( bufpt>buf );
           if( bufpt[-1]=='.' ){
             if( flag_altform2 ){
               *(bufpt++) = '0';
@@ -678,7 +678,7 @@ static void vxprintf(
         SrcList *pSrc = va_arg(ap, SrcList*);
         int k = va_arg(ap, int);
         struct SrcList_item *pItem = &pSrc->a[k];
-        assert( k>=0 && k<pSrc->nSrc );
+        resip_assert( k>=0 && k<pSrc->nSrc );
         if( pItem->zDatabase && pItem->zDatabase[0] ){
           sqlite3StrAccumAppend(pAccum, pItem->zDatabase, -1);
           sqlite3StrAccumAppend(pAccum, ".", 1);

@@ -35,7 +35,7 @@ DnsAAAARecord::DnsAAAARecord(const RROverlay& overlay)
    free(name);
    memcpy(&mAddr, overlay.data(), sizeof(in6_addr));
 #else
-   assert(0);
+   resip_assert(0);
 #endif
 }
 
@@ -44,7 +44,7 @@ bool DnsAAAARecord::isSameValue(const Data& value) const
 #ifdef USE_IPV6
    return DnsUtil::inet_ntop(mAddr) == value;
 #else
-   assert(0);
+   resip_assert(0);
    return false;
 #endif
 }
@@ -56,7 +56,7 @@ DnsAAAARecord::dump(EncodeStream& strm) const
    strm << mName << " (AAAA) --> " << DnsUtil::inet_ntop(mAddr);
    return strm;
 #else
-   assert(0);
+   resip_assert(0);
    strm <<  " (AAAA) --> ? (IPV6 is disabled in this library, what "
                                     "happened here?)";
    return strm;

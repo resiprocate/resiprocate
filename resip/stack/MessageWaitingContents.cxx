@@ -60,7 +60,7 @@ MessageWaitingContents::MessageWaitingContents(const Data& data, const Mime& con
    {
       mHeaders[i] = 0;
    }
-   assert(0);
+   resip_assert(0);
 }
 
 MessageWaitingContents::MessageWaitingContents(const MessageWaitingContents& rhs)
@@ -271,7 +271,7 @@ resip::skipSipLWS(ParseBuffer& pb)
 	       }
 	       break;
 	    default:
-	       assert(false);
+	       resip_assert(false);
 	 }
       }
       pb.skipChar();
@@ -359,7 +359,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
          default :
             pb.fail(__FILE__, __LINE__);
       }
-      assert(ht != -1);
+      resip_assert(ht != -1);
 
       pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::COLON);
       pb.skipWhitespace();

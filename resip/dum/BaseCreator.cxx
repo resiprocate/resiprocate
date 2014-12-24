@@ -43,7 +43,7 @@ BaseCreator::getUserProfile()
 void 
 BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 {
-   assert(mUserProfile.get());
+   resip_assert(mUserProfile.get());
    makeInitialRequest(target, mUserProfile->getDefaultFrom(), method);
 }
 
@@ -63,7 +63,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    mLastRequest->header(h_CallId).value() = Helper::computeCallId();
 
-   assert(mUserProfile.get());
+   resip_assert(mUserProfile.get());
    if (!mUserProfile->getImsAuthUserName().empty())
    {
       Auth auth;

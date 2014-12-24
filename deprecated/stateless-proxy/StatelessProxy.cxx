@@ -17,7 +17,7 @@ StatelessProxy::StatelessProxy(const char* proxyHost, int proxyPort,
      mLoose(false),
      mUseTarget(targetHost != 0)
 {
-   assert(proto == 0 || proto == Symbols::UDP || proto == Symbols::TCP);
+   resip_assert(proto == 0 || proto == Symbols::UDP || proto == Symbols::TCP);
    
    // used for record-route
    mProxyUrl.host() = proxyHost;
@@ -39,14 +39,14 @@ StatelessProxy::StatelessProxy(const char* proxyHost, int proxyPort,
 bool
 StatelessProxy::onForwardRequest(SipMessage* request)
 {
-   assert(request->isRequest());
+   resip_assert(request->isRequest());
    return true;
 }
 
 bool
 StatelessProxy::onForwardResponse(SipMessage* request)
 {
-   assert(request->isResponse());
+   resip_assert(request->isResponse());
    return true;
 }
 
@@ -58,7 +58,7 @@ StatelessProxy::thread()
       FdSet fdset;
       buildFdSet(fdset);
       int err = fdset.selectMilliSeconds(getTimeTillNextProcessMS());
-      assert (err != -1);
+      resip_assert (err != -1);
       process(fdset);
 
       SipMessage* received = receive();
@@ -237,7 +237,7 @@ StatelessProxy::handleResponse(SipMessage* response)
             if (response->header(h_Vias).front().sentHost() == mProxyUrl.host())
             {
                response->header(h_Vias).pop_front();
-               assert(!response->header(h_Vias).empty());
+               resip_assert(!response->header(h_Vias).empty());
                
                static Data unknown("UNKNOWN");
                response->setRFC2543TransactionId(unknown);
@@ -253,7 +253,7 @@ StatelessProxy::handleResponse(SipMessage* response)
 void
 StatelessProxy::sendResponse(SipMessage* request, int code, const Data& reason) 
 {
-   assert(request->isRequest());
+   resip_assert(request->isRequest());
    SipMessage* response = resip::Helper::makeResponse(*request, code, reason);
    // !jf! may need to copy tid here
    send(*response);

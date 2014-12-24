@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include <cerrno>
 
 #include "rutil/RecursiveMutex.hxx"
@@ -36,26 +36,26 @@ namespace resip
 
 RecursiveMutex::RecursiveMutex()
 {
-   assert(0); 
+   resip_assert(0); 
 }
 
 
 RecursiveMutex::~RecursiveMutex ()
 {
-   assert(0);
+   resip_assert(0);
 }
 
 
 void
 RecursiveMutex::lock()
 {
-   assert(0); 
+   resip_assert(0); 
 }
 
 void
 RecursiveMutex::unlock()
 {
-   assert(0); 
+   resip_assert(0); 
 }
 
 }
@@ -76,7 +76,7 @@ RecursiveMutex::RecursiveMutex()
  #endif
 
    rc = pthread_mutex_init(&mId, &mMutexAttr);
-   assert( rc == 0 );
+   resip_assert( rc == 0 );
 #else
 	InitializeCriticalSection(&mId);
 #endif
@@ -87,8 +87,8 @@ RecursiveMutex::~RecursiveMutex ()
 {
 #ifndef WIN32
     int  rc = pthread_mutex_destroy(&mId);
-    assert( rc != EBUSY );  // currently locked 
-    assert( rc == 0 );
+    resip_assert( rc != EBUSY );  // currently locked 
+    resip_assert( rc == 0 );
     rc = pthread_mutexattr_destroy(&mMutexAttr);
 #else
 	DeleteCriticalSection(&mId);
@@ -102,9 +102,9 @@ RecursiveMutex::lock()
 #ifndef WIN32
     int  rc = pthread_mutex_lock(&mId);
     (void)rc;
-    assert( rc != EINVAL );
-    assert( rc != EDEADLK );
-    assert( rc == 0 );
+    resip_assert( rc != EINVAL );
+    resip_assert( rc != EDEADLK );
+    resip_assert( rc == 0 );
 #else
 	EnterCriticalSection(&mId);
 #endif
@@ -116,9 +116,9 @@ RecursiveMutex::unlock()
 #ifndef WIN32
     int  rc = pthread_mutex_unlock(&mId);
     (void)rc;
-    assert( rc != EINVAL );
-    assert( rc != EPERM );
-    assert( rc == 0 );
+    resip_assert( rc != EINVAL );
+    resip_assert( rc != EPERM );
+    resip_assert( rc == 0 );
 #else
 	LeaveCriticalSection(&mId);
 #endif

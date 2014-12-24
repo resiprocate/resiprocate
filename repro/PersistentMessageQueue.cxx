@@ -3,7 +3,7 @@
 #endif
 
 //#include <fcntl.h>
-//#include <cassert>
+//#include "rutil/Assert.h"
 //#include <cstdlib>
 
 #include "rutil/Data.hxx"

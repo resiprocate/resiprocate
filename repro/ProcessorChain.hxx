@@ -17,7 +17,7 @@ class ProcessorChain : public Processor
       void addProcessor(std::auto_ptr<Processor>);
       template<class T> void insertProcessor(std::auto_ptr<Processor> rp)
       {
-         assert(!mChainReady);
+         resip_assert(!mChainReady);
          rp->setChainType(mType);
          for(Chain::iterator it = mChain.begin();
             it != mChain.end();

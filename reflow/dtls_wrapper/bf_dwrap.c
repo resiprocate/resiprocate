@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <openssl/bio.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <memory.h>
 
 #define BIO_TYPE_DWRAP       (50 | 0x0400 | 0x0200)
@@ -93,14 +93,14 @@ static int dwrap_write(BIO *b, const char *in, int inl)
 
 static int dwrap_puts(BIO *b, const char *in)
 {
-   assert(0);
+   resip_assert(0);
 
    return 0;
 }
 
 static int dwrap_gets(BIO *b, char *buf, int size)
 {
-   assert(0);
+   resip_assert(0);
 
    return 0;
 }

@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <string.h>
 #include <errno.h>
 
@@ -101,17 +101,17 @@ sippy_get_string( char* buf, int bufSize )
    int length;
    
    len = read(  FD_GAG_TO_GAIM, &length, sizeof(length) );
-   assert( len == sizeof(length) );
+   resip_assert( len == sizeof(length) );
    
    if ( length+1 >= bufSize )
    {
-      assert(0);
+      resip_assert(0);
    }
    
    if (length)
    {
      len = read( FD_GAG_TO_GAIM, buf, length );
-     assert( len == length );
+     resip_assert( len == length );
    }
    
    buf[length]=0;
@@ -124,15 +124,15 @@ sippy_get_int( int* i )
    int length;
    
    len = read(  FD_GAG_TO_GAIM, &length, sizeof(length) );
-   assert( len == sizeof(length) );
+   resip_assert( len == sizeof(length) );
    
    if ( length != sizeof(int) )
    {
-      assert(0);
+      resip_assert(0);
    }
    
    len = read( FD_GAG_TO_GAIM, i, length );
-   assert( len == length );
+   resip_assert( len == length );
 }
 
 
@@ -143,15 +143,15 @@ sippy_get_bool( unsigned char* i )
    int length;
    
    len = read(  FD_GAG_TO_GAIM, &length, sizeof(length) );
-   assert( len == sizeof(length) );
+   resip_assert( len == sizeof(length) );
    
    if ( length != sizeof(char) )
    {
-      assert(0);
+      resip_assert(0);
    }
    
    len = read( FD_GAG_TO_GAIM, i, length );
-   assert( len == length );
+   resip_assert( len == length );
 }
 
 
@@ -160,13 +160,13 @@ sippy_send_bool( const unsigned char b )
 {  
    int len;
    int l;
-   assert( FD_GAIM_TO_GAG );
+   resip_assert( FD_GAIM_TO_GAG );
    
    len=sizeof(b);
    l=write( FD_GAIM_TO_GAG, &len, sizeof(len) );
-   assert( l == sizeof(len) );
+   resip_assert( l == sizeof(len) );
    l=write( FD_GAIM_TO_GAG, &b, len );
-   assert( l == len );
+   resip_assert( l == len );
 }
 
 static void 
@@ -174,17 +174,17 @@ sippy_send_string( const char* buf )
 {  
    int len;
    int l;
-   assert( FD_GAIM_TO_GAG );
+   resip_assert( FD_GAIM_TO_GAG );
    
    /*RjS - Gaim gives us NULLs instead of empty strings sometimes
    */      
    len=(buf==NULL?0:strlen(buf));
    l=write( FD_GAIM_TO_GAG, &len, sizeof(len) );
-   assert( l == sizeof(len) );
+   resip_assert( l == sizeof(len) );
    if (len>0)
    {
      l=write( FD_GAIM_TO_GAG, buf, len );
-     assert( l == len );
+     resip_assert( l == len );
    }
 }
 
@@ -192,9 +192,9 @@ static void
 sippy_send_command( const gag_command_t command )
 {  
    int l;
-   assert( FD_GAIM_TO_GAG );
+   resip_assert( FD_GAIM_TO_GAG );
    l=write( FD_GAIM_TO_GAG, &command, sizeof(command) );
-   assert( l == sizeof(command) );
+   resip_assert( l == sizeof(command) );
 }
 
 static const char *
@@ -219,14 +219,14 @@ sippy_recv_cb(gpointer data, gint source, GaimInputCondition condition)
      int err = errno;
      gaim_debug(GAIM_DEBUG_INFO,"sippy","err=%d\n",err);  
      /* something really bad happened */
-     assert(0);
+     resip_assert(0);
   }
   if ( len == 0 )
   {
      /* not ready */
      return;
   }
-  assert( len == sizeof(command) );
+  resip_assert( len == sizeof(command) );
   
   switch ( command )
   {
@@ -339,7 +339,7 @@ sippy_recv_cb(gpointer data, gint source, GaimInputCondition condition)
      break;
      
      default:
-        assert(0);
+        resip_assert(0);
   }
 }
 
@@ -718,7 +718,7 @@ sippy_send_im(GaimConnection *gc, const char *who, const char *what, GaimConvImF
    const char* to = who;
    const char* im = what;
 
-   assert( FD_GAIM_TO_GAG );
+   resip_assert( FD_GAIM_TO_GAG );
 
    sippy_send_command( SIMPLE_IM );
    sippy_send_string( to );

@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: ice_media_stream.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
 #include <string.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <nr_api.h>
 #include <r_assoc.h>
 #include <async_timer.h>
@@ -190,7 +190,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
         cand=TAILQ_FIRST(&comp->candidates);
         while(cand){
           if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
-            assert(index < attrct);
+            resip_assert(index < attrct);
 
             if (index >= attrct)
               ABORT(R_INTERNAL);
@@ -343,14 +343,14 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
     nr_ice_cand_pair *pair;
     int timer_val;
 
-    assert(stream->pctx->active_streams!=0);
+    resip_assert(stream->pctx->active_streams!=0);
 
     timer_val=stream->pctx->ctx->Ta*stream->pctx->active_streams;
 
     if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED) {
       r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): (bug) bogus state for stream %s",stream->pctx->label,stream->label);
     }
-    assert(stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
+    resip_assert(stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): check timer expired for media stream %s",stream->pctx->label,stream->label);
     stream->timer=0;
@@ -398,7 +398,7 @@ int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream 
 
     /* Don't start the check timer if the stream is done (failed/completed) */
     if (stream->ice_state > NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE) {
-      assert(0);
+      resip_assert(0);
       ABORT(R_INTERNAL);
     }
 
@@ -570,8 +570,8 @@ int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state)
     if (state == str->ice_state)
       return 0;
 
-    assert(state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
-    assert(str->ice_state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
+    resip_assert(state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
+    resip_assert(str->ice_state < sizeof(nr_ice_media_stream_states)/sizeof(char *));
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): stream %s state %s->%s",
       str->pctx->label,str->label,
@@ -879,7 +879,7 @@ int nr_ice_media_stream_disable_component(nr_ice_media_stream *stream, int compo
 void nr_ice_media_stream_role_change(nr_ice_media_stream *stream)
   {
     nr_ice_cand_pair *pair;
-    assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
+    resip_assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
 
     pair=TAILQ_FIRST(&stream->check_list);
     while(pair){

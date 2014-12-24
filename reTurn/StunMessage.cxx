@@ -99,7 +99,7 @@ StunMessage::operator=(const StunMessage& rhs)
 {
    if (this != &rhs)
    {
-      assert(false);
+      resip_assert(false);
    }
 
    return *this;
@@ -182,7 +182,7 @@ StunMessage::createHeader(UInt16 stunclass, UInt16 method)
 void 
 StunMessage::setErrorCode(unsigned short errorCode, const char* reason)
 {
-   assert(errorCode >= 100 && errorCode <= 699);
+   resip_assert(errorCode >= 100 && errorCode <= 699);
    mHasErrorCode = true;
    mErrorCode.errorClass = errorCode / 100;
    mErrorCode.number = errorCode % 100;
@@ -1380,7 +1380,7 @@ StunMessage::encodeAtrAddress(char* ptr, UInt16 type, const StunAtrAddress& atr)
 char* 
 StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
 {
-   assert(atr.reason);
+   resip_assert(atr.reason);
    UInt16 padsize = (unsigned int)atr.reason->size() % 4 == 0 ? 0 : 4 - ((unsigned int)atr.reason->size() % 4);
 
    ptr = encode16(ptr, ErrorCode);
@@ -1409,7 +1409,7 @@ StunMessage::encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr)
 char* 
 StunMessage::encodeAtrString(char* ptr, UInt16 type, const Data* atr, UInt16 maxBytes)
 {
-   assert(atr);
+   resip_assert(atr);
    UInt16 size = atr->size() > maxBytes ? maxBytes : (UInt16)atr->size();
    UInt16 padsize = size % 4 == 0 ? 0 : 4 - (size % 4);
 	
@@ -1449,7 +1449,7 @@ StunMessage::hasMagicCookie()
 unsigned int
 StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen) 
 {
-   assert(bufLen >= sizeof(StunMsgHdr));
+   resip_assert(bufLen >= sizeof(StunMsgHdr));
    char* ptr = buf;
 
    mHeader.msgType = mClass | mMethod;
@@ -1695,7 +1695,7 @@ StunMessage::computeHmac(char* hmac, const char* input, int length, const char* 
         key, sizeKey, 
         reinterpret_cast<const unsigned char*>(input), length, 
         reinterpret_cast<unsigned char*>(hmac), &resultSize);
-   assert(resultSize == 20);
+   resip_assert(resultSize == 20);
 }
 #endif
 
@@ -1712,7 +1712,7 @@ StunMessage::createUsernameAndPassword()
    {
       mUsername = new Data;
    }
-   assert(mUsername);
+   resip_assert(mUsername);
 
    if(mRemoteTuple.getAddress().is_v6())
    {
@@ -1730,7 +1730,7 @@ StunMessage::createUsernameAndPassword()
    computeHmac(hmac, mUsername->data(), (int)mUsername->size(), USERNAME_KEY.data(), (int)USERNAME_KEY.size());
    *mUsername += Data(hmac, sizeof(hmac)).hex();
 	
-   assert( mUsername->size()%4 == 0 );
+   resip_assert( mUsername->size()%4 == 0 );
    	
    StackLog(<< "computed username=" << *mUsername);
 
@@ -1741,7 +1741,7 @@ StunMessage::createUsernameAndPassword()
    {
       mPassword = new Data;
    }
-   assert(mPassword);
+   resip_assert(mPassword);
    generateShortTermPasswordForUsername(*mPassword);
 
    StackLog(<< "computed password=" << *mPassword);
@@ -1751,7 +1751,7 @@ void
 StunMessage::generateShortTermPasswordForUsername(Data& password)
 {
    char hmac[20];
-   assert(mHasUsername && mUsername);
+   resip_assert(mHasUsername && mUsername);
    computeHmac(hmac, mUsername->data(), (int)mUsername->size(), PASSWORD_KEY.data(), (int)PASSWORD_KEY.size());
    password = Data(hmac, sizeof(hmac)).hex();
 }
@@ -1759,9 +1759,9 @@ StunMessage::generateShortTermPasswordForUsername(Data& password)
 void
 StunMessage::getTupleFromUsername(StunTuple& tuple)
 {
-   assert(mHasUsername);
-   assert(mUsername && mUsername->size() >= 92);
-   assert(mUsername->size() == 92 || mUsername->size() == 108);
+   resip_assert(mHasUsername);
+   resip_assert(mUsername && mUsername->size() >= 92);
+   resip_assert(mUsername->size() == 92 || mUsername->size() == 108);
 
    if(mUsername->size() > 92)  // if over a certain size, then contains IPv6 address
    {
@@ -1798,7 +1798,7 @@ StunMessage::getTupleFromUsername(StunTuple& tuple)
 void
 StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationPassword)
 {
-   assert(mHasUsername);
+   resip_assert(mHasUsername);
 
    if(mHasRealm)  // Longterm authenicationmode
    {
@@ -1813,7 +1813,7 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationP
 void
 StunMessage::calculateHmacKeyForHa1(Data& hmacKey, const Data& ha1)
 {
-   assert(mHasUsername);
+   resip_assert(mHasUsername);
 
    if(mHasRealm)  // Longterm authenicationmode
    {

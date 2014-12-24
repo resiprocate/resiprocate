@@ -60,7 +60,7 @@ PrivateKeyPublicationHandler::add(ServerPublicationHandle h, const Contents* con
    if (h->getDocumentKey() == h->getPublisher())
    {
       const Pkcs8Contents* pkcs8 = dynamic_cast<const Pkcs8Contents*>(contents);
-      assert(pkcs8);
+      resip_assert(pkcs8);
       mSecurity.addUserPrivateKeyDER(h->getPublisher(), pkcs8->getBodyData());
    }
    else

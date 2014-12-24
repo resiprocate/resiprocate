@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string.h>
 #include <sys/types.h>
-#include <cassert>
+#include "rutil/Assert.h"
 
 #if !defined (WIN32)
 #include <arpa/inet.h>
@@ -211,7 +211,7 @@ Tuple::Tuple(const struct sockaddr& addr,
 #endif
    else
    {
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -232,7 +232,7 @@ Tuple::copySockaddrAnyPort(sockaddr *sa)
 #endif
    else
    {
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -250,7 +250,7 @@ Tuple::setSockaddr(const GenericIPAddress& addr)
   }
 #else
   {
-     assert(0);
+     resip_assert(0);
   }
 #endif
 }
@@ -300,14 +300,14 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple, resip::Data& container, const
       // 0x0000000X
       rawToken[2] += 0x00000001;
       in6_addr address = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr()).sin6_addr;
-      assert(sizeof(address)==16);
+      resip_assert(sizeof(address)==16);
       memcpy(&rawToken[TOKEN_IP_ADDRESS_OFFSET],&address,16);
    }
    else
 #endif
    {
       in_addr address = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr()).sin_addr;
-      assert(sizeof(address)==4);
+      resip_assert(sizeof(address)==4);
       memcpy(&rawToken[TOKEN_IP_ADDRESS_OFFSET],&address,4);
    }
    
@@ -401,7 +401,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    {
 #ifdef USE_IPV6
       in6_addr address;
-      assert(sizeof(address)==16);
+      resip_assert(sizeof(address)==16);
       memcpy(&address,&rawToken[TOKEN_IP_ADDRESS_OFFSET],16);
       Tuple result(address, port, type, Data::Empty, netNs);
 #else
@@ -414,7 +414,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    }
 
    in_addr address;
-   assert(sizeof(address)==4);
+   resip_assert(sizeof(address)==4);
    memcpy(&address,&rawToken[TOKEN_IP_ADDRESS_OFFSET],4);
    Tuple result(address, port, type, Data::Empty, netNs);
    result.mFlowKey=(FlowKey)mFlowKey;
@@ -458,7 +458,7 @@ Tuple::setPort(int port)
 #ifdef USE_IPV6
       m_anonv6.sin6_port = htons(port);
 #else
-      assert(0);
+      resip_assert(0);
 #endif
    }
 }
@@ -475,7 +475,7 @@ Tuple::getPort() const
 #ifdef USE_IPV6
       return ntohs(m_anonv6.sin6_port);
 #else
-      assert(0);
+      resip_assert(0);
 #endif
    }
    
@@ -522,7 +522,7 @@ Tuple::isLoopback() const
    }
    else
    {
-      assert(0);
+      resip_assert(0);
    }
    
    return false;
@@ -570,7 +570,7 @@ Tuple::isPrivateAddress() const
 #endif
    else
    {
-      assert(0);
+      resip_assert(0);
    }
    
    return false;
@@ -590,7 +590,7 @@ Tuple::length() const
    }
 #endif
 
-   assert(0);
+   resip_assert(0);
    return 0;
 }
 
@@ -614,7 +614,7 @@ bool Tuple::operator==(const Tuple& rhs) const
                  memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0 &&
                  rhs.mNetNs == mNetNs);
 #else
-         assert(0);
+         resip_assert(0);
          return false;
 #endif
       }
@@ -738,7 +738,7 @@ resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
    }
    else
    {
-      assert(0);
+      resip_assert(0);
    }
 
    ostrm << " " << Tuple::toData(tuple.mTransportType);
@@ -1065,7 +1065,7 @@ Tuple::toGenericIPAddress() const
   }
 #else
   {
-     assert(0);
+     resip_assert(0);
      return m_anonv4; //bogus
   }
 #endif

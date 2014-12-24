@@ -182,7 +182,7 @@ TestEndPoint::And::And(const list<SequenceClass*>& sequences,
    : mActive(false),
      mAfterAction(aferAction)
 {
-   assert(sequences.size() > 1);
+   resip_assert(sequences.size() > 1);
 
    mSequences = sequences;
 }
@@ -219,21 +219,21 @@ TestEndPoint::And::setSequenceSet(boost::shared_ptr<SequenceSet> set)
 bool
 TestEndPoint::And::isMatch(boost::shared_ptr<Event> event) const
 {
-   assert(0);
+   resip_assert(0);
    return false;   
 }
 
 resip::Data
 TestEndPoint::And::explainMismatch(boost::shared_ptr<Event> event) const
 {
-   assert(0);
+   resip_assert(0);
    return Data::Empty;   
 }
 
 void
 TestEndPoint::And::onEvent(TestEndPoint& user, boost::shared_ptr<Event> event)
 {
-   assert(0);
+   resip_assert(0);
 }
 
 TestEndPoint::And::~And()
@@ -294,17 +294,17 @@ TestEndPoint::Pause::Pause(int msec, TestEndPoint* endPoint)
 
 void TestEndPoint::Pause::exec(boost::shared_ptr<Event> event)
 {
-   assert(mNext);
+   resip_assert(mNext);
    boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
-   assert(sset.get());
+   resip_assert(sset.get());
    sset->enqueue(boost::shared_ptr<Event>(new ExpectActionEvent(mNext, event)), mMsec);
 }
 
 void TestEndPoint::Pause::exec()
 {
-   assert(mNext);
+   resip_assert(mNext);
    boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
-   assert(sset.get());
+   resip_assert(sset.get());
    sset->enqueue(boost::shared_ptr<Event>(new ExpectActionEvent(mNext, mEndPoint)), mMsec);
 }
 

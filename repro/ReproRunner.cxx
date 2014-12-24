@@ -202,7 +202,7 @@ ReproRunner::run(int argc, char** argv)
    }
 
    // Parse command line and configuration file
-   assert(!mProxyConfig);
+   resip_assert(!mProxyConfig);
    Data defaultConfigFilename("repro.config");
    try
    {
@@ -639,9 +639,9 @@ ReproRunner::createSipStack()
 
    // Create EventThreadInterruptor used to wake up the stack for 
    // for reasons other than an Fd signalling
-   assert(!mFdPollGrp);
+   resip_assert(!mFdPollGrp);
    mFdPollGrp = FdPollGrp::create();
-   assert(!mAsyncProcessHandler);
+   resip_assert(!mAsyncProcessHandler);
    mAsyncProcessHandler = new EventThreadInterruptor(*mFdPollGrp);
 
    // Set Flags that will enable/disable IPv4 and/or IPv6, based on 
@@ -669,7 +669,7 @@ ReproRunner::createSipStack()
    }
 
    // Create the SipStack Object
-   assert(!mSipStack);
+   resip_assert(!mSipStack);
    mSipStack = new SipStack(security,
                             dnsServers,
                             mAsyncProcessHandler,
@@ -788,7 +788,7 @@ ReproRunner::createSipStack()
    }
 
    // Create Congestion Manager, if required
-   assert(!mCongestionManager);
+   resip_assert(!mCongestionManager);
    if(mProxyConfig->getConfigBool("CongestionManagement", true))
    {
       Data metricData = mProxyConfig->getConfigData("CongestionManagementMetric", "WAIT_TIME", true);
@@ -812,7 +812,7 @@ ReproRunner::createSipStack()
    }
 
    // Create base thread to run stack in (note:  stack may use other sub-threads, depending on configuration)
-   assert(!mStackThread);
+   resip_assert(!mStackThread);
    mStackThread = new EventStackThread(*mSipStack,
                                        *dynamic_cast<EventThreadInterruptor*>(mAsyncProcessHandler),
                                        *mFdPollGrp);
@@ -823,8 +823,8 @@ bool
 ReproRunner::createDatastore()
 {
    // Create Database access objects
-   assert(!mAbstractDb);
-   assert(!mRuntimeAbstractDb);
+   resip_assert(!mAbstractDb);
+   resip_assert(!mRuntimeAbstractDb);
 #ifdef USE_MYSQL
    Data mySQLServer;
    mProxyConfig->getConfigValue("MySQLServer", mySQLServer);
@@ -853,7 +853,7 @@ ReproRunner::createDatastore()
    {
       mAbstractDb = new BerkeleyDb(mProxyConfig->getConfigData("DatabasePath", "./", true));
    }
-   assert(mAbstractDb);
+   resip_assert(mAbstractDb);
    if(!mAbstractDb->isSane())
    {
       CritLog(<<"Failed to open configuration database");
@@ -873,10 +873,10 @@ ReproRunner::createDatastore()
    // We only need removed records to linger if we have reg sync enabled
    if(!mRestarting)  // If we are restarting then we left the InMemoryRegistrationDb intact at shutdown - don't recreate
    {
-      assert(!mRegistrationPersistenceManager);
+      resip_assert(!mRegistrationPersistenceManager);
       mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
    }
-   assert(mRegistrationPersistenceManager);
+   resip_assert(mRegistrationPersistenceManager);
 
    // Copy contacts from the StaticRegStore to the RegistrationPersistanceManager
    populateRegistrations();
@@ -923,9 +923,9 @@ ReproRunner::createDialogUsageManager()
    }
    
    // Create DialogeUsageManager if Registrar or Certificate Server are enabled
-   assert(!mRegistrar);
-   assert(!mDum);
-   assert(!mDumThread);
+   resip_assert(!mRegistrar);
+   resip_assert(!mDum);
+   resip_assert(!mDumThread);
    mRegistrar = new Registrar;
    resip::MessageFilterRuleList ruleList;
    bool registrarEnabled = !mProxyConfig->getConfigBool("DisableRegistrar", false);
@@ -940,8 +940,8 @@ ReproRunner::createDialogUsageManager()
    // If registrar is enabled, configure DUM to handle REGISTER requests
    if (registrarEnabled)
    {   
-      assert(mDum);
-      assert(mRegistrationPersistenceManager);
+      resip_assert(mDum);
+      resip_assert(mRegistrationPersistenceManager);
       mDum->setServerRegistrationHandler(mRegistrar);
       mDum->setRegistrationPersistenceManager(mRegistrationPersistenceManager);
 
@@ -955,7 +955,7 @@ ReproRunner::createDialogUsageManager()
    
    // If Certificate Server is enabled, configure DUM to handle SUBSCRIBE and 
    // PUBLISH requests for events: credential and certificate
-   assert(!mCertServer);
+   resip_assert(!mCertServer);
    if (certServerEnabled)
    {
 #if defined(USE_SSL)
@@ -977,7 +977,7 @@ ReproRunner::createDialogUsageManager()
 
    if (mDum)
    {
-      assert(mAuthFactory);
+      resip_assert(mAuthFactory);
       mAuthFactory->setDum(mDum);
 
       if(mAuthFactory->certificateAuthEnabled())
@@ -1015,7 +1015,7 @@ ReproRunner::createProxy()
    int numAsyncProcessorWorkerThreads = mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2);
    if(numAsyncProcessorWorkerThreads > 0)
    {
-      assert(!mAsyncProcessorDispatcher);
+      resip_assert(!mAsyncProcessorDispatcher);
       mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<Worker>(new AsyncProcessorWorker), 
                                                  mSipStack, 
                                                  numAsyncProcessorWorkerThreads);
@@ -1029,7 +1029,7 @@ ReproRunner::createProxy()
                     "Baboons" are processors which operate on a request for each target  
                               as the request is about to be forwarded to that target */
    // Make Monkeys
-   assert(!mMonkeys);
+   resip_assert(!mMonkeys);
    mMonkeys = new ProcessorChain(Processor::REQUEST_CHAIN);
    makeRequestProcessorChain(*mMonkeys);
    InfoLog(<< *mMonkeys);
@@ -1039,7 +1039,7 @@ ReproRunner::createProxy()
    }
 
    // Make Lemurs
-   assert(!mLemurs);
+   resip_assert(!mLemurs);
    mLemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
    makeResponseProcessorChain(*mLemurs);
    InfoLog(<< *mLemurs);
@@ -1049,7 +1049,7 @@ ReproRunner::createProxy()
    }
 
    // Make Baboons
-   assert(!mBaboons);
+   resip_assert(!mBaboons);
    mBaboons = new ProcessorChain(Processor::TARGET_CHAIN);
    makeTargetProcessorChain(*mBaboons);
    InfoLog(<< *mBaboons);
@@ -1059,7 +1059,7 @@ ReproRunner::createProxy()
    }
 
    // Create main Proxy class
-   assert(!mProxy);
+   resip_assert(!mProxy);
    mProxy = new Proxy(*mSipStack, 
                       *mProxyConfig, 
                       *mMonkeys, 
@@ -1103,9 +1103,9 @@ ReproRunner::createProxy()
 void 
 ReproRunner::populateRegistrations()
 {
-   assert(mRegistrationPersistenceManager);
-   assert(mProxyConfig);
-   assert(mProxyConfig->getDataStore());
+   resip_assert(mRegistrationPersistenceManager);
+   resip_assert(mProxyConfig);
+   resip_assert(mProxyConfig->getDataStore());
 
    // Copy contacts from the StaticRegStore to the RegistrationPersistanceManager
    StaticRegStore::StaticRegRecordMap& staticRegList = mProxyConfig->getDataStore()->mStaticRegStore.getStaticRegList();
@@ -1135,8 +1135,8 @@ ReproRunner::populateRegistrations()
 bool
 ReproRunner::createWebAdmin()
 {
-   assert(mWebAdminList.empty());
-   assert(!mWebAdminThread);
+   resip_assert(mWebAdminList.empty());
+   resip_assert(!mWebAdminThread);
 
    std::vector<resip::Data> httpServerBindAddresses;
    mProxyConfig->getConfigValue("HttpBindAddress", httpServerBindAddresses);
@@ -1235,10 +1235,10 @@ ReproRunner::createWebAdmin()
 void
 ReproRunner::createRegSync()
 {
-   assert(!mRegSyncClient);
-   assert(!mRegSyncServerV4);
-   assert(!mRegSyncServerV6);
-   assert(!mRegSyncServerThread);
+   resip_assert(!mRegSyncClient);
+   resip_assert(!mRegSyncServerV4);
+   resip_assert(!mRegSyncServerV6);
+   resip_assert(!mRegSyncServerThread);
    if(mRegSyncPort != 0)
    {
       std::list<RegSyncServer*> regSyncServerList;
@@ -1267,8 +1267,8 @@ ReproRunner::createRegSync()
 void
 ReproRunner::createCommandServer()
 {
-   assert(mCommandServerList.empty());
-   assert(!mCommandServerThread);
+   resip_assert(mCommandServerList.empty());
+   resip_assert(!mCommandServerThread);
 
    std::vector<resip::Data> commandServerBindAddresses;
    mProxyConfig->getConfigValue("CommandBindAddress", commandServerBindAddresses);
@@ -1331,7 +1331,7 @@ ReproRunner::createCommandServer()
 Data
 ReproRunner::addDomains(TransactionUser& tu, bool log)
 {
-   assert(mProxyConfig);
+   resip_assert(mProxyConfig);
    Data realm;
    
    std::vector<Data> configDomains;
@@ -1400,8 +1400,8 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
 bool
 ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 {
-   assert(mProxyConfig);
-   assert(mSipStack);
+   resip_assert(mProxyConfig);
+   resip_assert(mSipStack);
 
    allTransportsSpecifyRecordRoute=false;
    mStartupTransportRecordRoutes.clear();
@@ -1515,7 +1515,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                if(isSecure(tt))
                {
                   Security* security = mSipStack->getSecurity();
-                  assert(security != 0);
+                  resip_assert(security != 0);
                   // FIXME: see comments about CertificatePath
                   if(!tlsCertificate.empty())
                   {
@@ -1552,7 +1552,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                      // which isn't commited yet.
                      t->setRcvBufLen(rcvBufLen);
 #else
-                      assert(0);
+                      resip_assert(0);
 #endif
                   }
 
@@ -1642,7 +1642,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          if (tlsPort || wssPort || dtlsPort)
          {
             Security* security = mSipStack->getSecurity();
-            assert(security != 0);
+            resip_assert(security != 0);
             // FIXME: should check that EITHER CertificatePath was set or both of these
             // are supplied
             // In any case, it will still give a helpful error when it fails to
@@ -1708,8 +1708,8 @@ ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor>
 void  // Monkeys
 ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 {
-   assert(mProxyConfig);
-   assert(mRegistrationPersistenceManager);
+   resip_assert(mProxyConfig);
+   resip_assert(mRegistrationPersistenceManager);
 
    // Add strict route fixup monkey
    addProcessor(chain, std::auto_ptr<Processor>(new StrictRouteFixup));
@@ -1718,7 +1718,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
-   assert(mAuthFactory);
+   resip_assert(mAuthFactory);
    if(mAuthFactory->certificateAuthEnabled())
    {
       // TODO: perhaps this should be initialised from the trusted node
@@ -1798,8 +1798,8 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
 void  // Lemurs
 ReproRunner::makeResponseProcessorChain(ProcessorChain& chain)
 {
-   assert(mProxyConfig);
-   assert(mRegistrationPersistenceManager);
+   resip_assert(mProxyConfig);
+   resip_assert(mRegistrationPersistenceManager);
 
    // Add outbound target handler lemur
    addProcessor(chain, std::auto_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager))); 
@@ -1814,7 +1814,7 @@ ReproRunner::makeResponseProcessorChain(ProcessorChain& chain)
 void  // Baboons
 ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
 {
-   assert(mProxyConfig);
+   resip_assert(mProxyConfig);
 
 #ifndef RESIP_FIXED_POINT
    if(mProxyConfig->getConfigBool("GeoProximityTargetSorting", false))

@@ -2,7 +2,7 @@
 #define WORKER_HXX 1
 
 #include "resip/stack/ApplicationMessage.hxx"
-#include <cassert>
+#include "rutil/Assert.h"
 
 namespace repro
 {

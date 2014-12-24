@@ -1,5 +1,5 @@
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include <fcntl.h>
 #include <errno.h>
 
@@ -98,7 +98,7 @@ resip::initNetwork()
    {
       // could not find a usable WinSock DLL
       //cerr << "Could not load winsock" << endl;
-      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work
+      resip_assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work
       exit(1);
    }
 
@@ -116,7 +116,7 @@ resip::initNetwork()
       WSACleanup( );
       //cerr << "Bad winsock verion" << endl;
       // TODO !cj! - add error message logging
-      assert(0); // if this is failing, try a different version that 2.2, 1.0 or later will likely work
+      resip_assert(0); // if this is failing, try a different version that 2.2, 1.0 or later will likely work
       exit(1);
    }
 	}
@@ -232,7 +232,7 @@ static int trySetRcvBuf(Socket fd, int buflen)
    {
       return -1;
    }
-   assert(optlen == sizeof(rbuflen));
+   resip_assert(optlen == sizeof(rbuflen));
    if (rbuflen < buflen)
    {
       return -1;
@@ -244,7 +244,7 @@ static int trySetRcvBuf(Socket fd, int buflen)
 **/
 int resip::setSocketRcvBufLen(Socket fd, int buflen)
 {
-   assert(buflen >= 1024);
+   resip_assert(buflen >= 1024);
    int goal=buflen;
    int trylen=goal;
    int sts;

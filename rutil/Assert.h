@@ -1,53 +1,27 @@
 
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <string>
+#ifndef __ASSERTION_H
+#define __ASSERTION_H
 
-#include "resip/stack/NameAddr.hxx"
-#include "resip/stack/Uri.hxx"
-#include "rutil/Data.hxx"
+/**
+ * This file needs to work for both C and C++ code.
+ *
+ * The resip_assert() macro is preferred over regular assert()
+ * for all library and application code.  Unit tests should continue
+ * to use regular assert().
+ *
+ * It is possible to redefine resip_assert() to provide additional logging
+ * or throw an exception such as std::runtime_error() as desired.
+ */
 
-#include "DialerConfiguration.hxx"
-#include "DialInstance.hxx"
 
-using namespace resip;
-using namespace std;
+#include <assert.h>
+#define resip_assert(x) assert(x)
 
-Data getFullFilename()
-{
-#ifdef WIN32
-   char *home_drive = getenv("HOMEDRIVE");
-   resip_assert(home_drive); // FIXME
-   char *home_path = getenv("HOMEPATH");
-   resip_assert(home_path); // FIXME
-   Data full_filename(string(home_drive) + string(home_dir) + string("\sipdial\sipdial.cfg"));
-   return full_filename;
-#else   
-   char *home_dir = getenv("HOME");
-   resip_assert(home_dir); // FIXME
-   Data full_filename(string(home_dir) + string("/.sipdial/sipdial.cfg"));
-   return full_filename;
 #endif
-}
-
-int main(int argc, char *argv[]) 
-{
-   Data defaultConfig(getFullFilename());
-   DialerConfiguration dc;
-   dc.parseConfig(argc, argv, defaultConfig, 1);
-
-   Data targetUri(argv[1]);
-   
-   DialInstance di(dc, Uri(targetUri));
-   di.execute();
-
-}
-
 
 /* ====================================================================
  *
- * Copyright 2012 Daniel Pocock.  All rights reserved.
+ * Copyright (c) 2014 Daniel Pocock  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

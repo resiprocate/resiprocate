@@ -27,7 +27,7 @@ DtmfEvent::executeCommand()
 resip::Message* 
 DtmfEvent::clone() const
 {
-   assert(0);
+   resip_assert(0);
    return 0;
 }
 

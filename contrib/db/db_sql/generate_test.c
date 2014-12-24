@@ -274,7 +274,7 @@ format_string_for_type(ATTR_TYPE *t)
 	} else {
 		fprintf(stderr,
 		    "Unexpected C type in schema: %s", c_type);
-		assert(0);
+		resip_assert(0);
 	}
 	return NULL; /*NOTREACHED*/
 }
@@ -305,7 +305,7 @@ data_value_for_type(ATTR_TYPE *t)
 	} else {
 		fprintf(stderr,
 		    "Unexpected C type in schema: %s", c_type);
-		assert(0);
+		resip_assert(0);
 	}
 	return NULL; /*NOTREACHED*/
 }

@@ -59,21 +59,21 @@ EnumResult::~EnumResult()
 void
 EnumResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 {
-   assert(0);
+   resip_assert(0);
    delete this;
 }
 
 void
 EnumResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 {
-   assert(0);
+   resip_assert(0);
    delete this;
 }
 
 void
 EnumResult::onDnsResult(const DNSResult<DnsSrvRecord>&)
 {
-   assert(0);
+   resip_assert(0);
    delete this;
 }
 
@@ -87,7 +87,7 @@ EnumResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
 void
 EnumResult::onDnsResult(const DNSResult<DnsCnameRecord>&)
 {
-   assert(0);
+   resip_assert(0);
    delete this;
 }
 
@@ -111,7 +111,7 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHa
 DnsResult::~DnsResult()
 {
    //DebugLog (<< "DnsResult::~DnsResult() " << *this);
-   assert(mType != Pending);
+   resip_assert(mType != Pending);
 }
 
 void 
@@ -120,7 +120,7 @@ DnsResult::transition(Type t)
    if((t == Pending || t== Available) && 
          (mType== Finished || mType == Destroyed) )
    {
-      assert(0);
+      resip_assert(0);
    }
    
    mType = t;
@@ -129,7 +129,7 @@ DnsResult::transition(Type t)
 void
 DnsResult::destroy()
 {
-   assert(this);
+   resip_assert(this);
    //DebugLog (<< "DnsResult::destroy() " << *this);
    
    if (mType == Pending)
@@ -148,8 +148,8 @@ DnsResult::blacklistLast(UInt64 expiry)
 {
    if(mHaveReturnedResults)
    {
-      assert(!mLastReturnedPath.empty());
-      assert(mLastReturnedPath.size()<=3);
+      resip_assert(!mLastReturnedPath.empty());
+      resip_assert(mLastReturnedPath.size()<=3);
       GreyOrBlacklistCommand* command = new GreyOrBlacklistCommand(mVip, mInterface.getMarkManager(), 
                                                                    mLastReturnedPath.back(), 
                                                                    mLastResult, 
@@ -166,8 +166,8 @@ DnsResult::greylistLast(UInt64 expiry)
 {
    if(mHaveReturnedResults)
    {
-      assert(!mLastReturnedPath.empty());
-      assert(mLastReturnedPath.size()<=3);
+      resip_assert(!mLastReturnedPath.empty());
+      resip_assert(mLastReturnedPath.size()<=3);
       GreyOrBlacklistCommand* command = new GreyOrBlacklistCommand(mVip, mInterface.getMarkManager(), 
                                                                    mLastReturnedPath.back(), 
                                                                    mLastResult, 
@@ -191,7 +191,7 @@ DnsResult::GreyOrBlacklistCommand::execute()
 DnsResult::Type
 DnsResult::available()
 {
-   assert(mType != Destroyed);
+   resip_assert(mType != Destroyed);
    if (mType == Available)
    {
       if (!mResults.empty())
@@ -213,8 +213,8 @@ DnsResult::available()
 Tuple
 DnsResult::next()
 {
-   assert(available()==Available);
-   assert(mCurrentPath.size()<=3);
+   resip_assert(available()==Available);
+   resip_assert(mCurrentPath.size()<=3);
    
    mLastResult=mResults.front();
    mResults.pop_front();
@@ -275,7 +275,7 @@ DnsResult::lookupInternalWithEnum(const Uri& uri)
       mInputUri = uri;
       int order = 0;
       std::vector<Data> enums = uri.getEnumLookups(mDnsStub.getEnumSuffixes());
-      assert(enums.size() >= 1);
+      resip_assert(enums.size() >= 1);
       if (!enums.empty())
       {
          mDoingEnum = enums.size();
@@ -503,7 +503,7 @@ DnsResult::lookupInternal(const Uri& uri)
             else
             {
                // .bwc. Numeric result is blacklisted. Oh well.
-               assert(mResults.empty());
+               resip_assert(mResults.empty());
                transition(Available);
                DebugLog(<< "Numeric result, but this result is currently blacklisted: " << tuple);
             }
@@ -543,7 +543,7 @@ DnsResult::lookupInternal(const Uri& uri)
             else
             {
                // !bwc! Debatable.
-               assert(0);
+               resip_assert(0);
                if (mHandler) mHandler->handle(this);
             }
          }
@@ -564,7 +564,7 @@ void DnsResult::lookupHost(const Data& target)
       mPassHostFromAAAAtoA = target;
       mDnsStub.lookup<RR_AAAA>(target, Protocol::Sip, this);
 #else
-      assert(0);
+      resip_assert(0);
       mDnsStub.lookup<RR_A>(target, Protocol::Sip, this);
 #endif
    }
@@ -576,7 +576,7 @@ void DnsResult::lookupHost(const Data& target)
    {
       CritLog(<<"Cannot lookup target="<<target
 	      <<" because DnsInterface doesn't support transport="<<mTransport);
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -601,7 +601,7 @@ DnsResult::getDefaultPort(TransportType transport, int port)
          default:
             ErrLog( << "Should not get this - unknown transport" );
             return Symbols::DefaultSipPort; // !cj! todo - remove 
-            assert(0);
+            resip_assert(0);
       }
    }
    else
@@ -609,7 +609,7 @@ DnsResult::getDefaultPort(TransportType transport, int port)
       return port;
    }
 
-   assert(0);
+   resip_assert(0);
    return 0;
 }
 
@@ -619,7 +619,7 @@ DnsResult::primeResults()
    StackLog(<< "Priming " << Inserter(mSRVResults));
    //assert(mType != Pending);
    //assert(mType != Finished);
-   assert(mResults.empty());
+   resip_assert(mResults.empty());
 
    if (!mSRVResults.empty())
    {
@@ -650,7 +650,7 @@ DnsResult::primeResults()
       }
       else
       {
-         assert(0);
+         resip_assert(0);
          if (mHandler) mHandler->handle(this);
       }
       // don't call primeResults since we need to wait for the response to
@@ -680,8 +680,8 @@ DnsResult::SRV
 DnsResult::retrieveSRV()
 {
     // !ah! if mTransport is known -- should we ignore those that don't match?!
-   assert(!mSRVResults.empty());
-   assert(mSRVCount==0);
+   resip_assert(!mSRVResults.empty());
+   resip_assert(mSRVCount==0);
 
    const SRV& srv = *mSRVResults.begin();
    int priority = srv.priority;
@@ -702,7 +702,7 @@ DnsResult::retrieveSRV()
       // All SRVs must match. 
       
       transport=mTransport;
-      assert(mSRVResults.begin()->transport==transport);
+      resip_assert(mSRVResults.begin()->transport==transport);
    }
    
    if (mCumulativeWeight == 0)
@@ -712,7 +712,7 @@ DnsResult::retrieveSRV()
               && i->priority == priority 
               && i->transport == transport; i++)
       {
-         assert(i->weight>=0);
+         resip_assert(i->weight>=0);
          mCumulativeWeight += i->weight;
       }
    }
@@ -749,7 +749,7 @@ DnsResult::retrieveSRV()
    {
       InfoLog (<< "SRV Results problem selected=" << selected << " cum=" << mCumulativeWeight);
    }
-   assert(i != mSRVResults.end());
+   resip_assert(i != mSRVResults.end());
    SRV next = *i;
    mCumulativeWeight -= next.weight;
    mSRVResults.erase(i);
@@ -1016,7 +1016,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
       return;
    }
    StackLog (<< "DnsResult::onDnsResult() " << result.status);
-   assert(mInterface.isSupported(mTransport, V6));
+   resip_assert(mInterface.isSupported(mTransport, V6));
 
    // This function assumes that the AAAA query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -1056,14 +1056,14 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    // funnel through to host processing
    mDnsStub.lookup<RR_A>(mPassHostFromAAAAtoA, Protocol::Sip, this);
 #else
-   assert(0);
+   resip_assert(0);
 #endif
 }
 
 void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
 {
    StackLog (<< "Received SRV result for: " << mTarget);
-   assert(mSRVCount>=0);
+   resip_assert(mSRVCount>=0);
    mSRVCount--;
    StackLog (<< "DnsResult::onDnsResult() " << mSRVCount << " status=" << result.status);
 
@@ -1208,7 +1208,7 @@ void
 DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result, int order)
 {
    Lock l(mEnumDestinationsMutex);
-   assert(mDoingEnum > 0);
+   resip_assert(mDoingEnum > 0);
 
    mDoingEnum--;
 

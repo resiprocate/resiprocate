@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -110,8 +110,8 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
 {
    try
    {
-      assert( response.isResponse() );
-      assert( origRequest.isRequest() );
+      resip_assert( response.isResponse() );
+      resip_assert( origRequest.isRequest() );
       
       DialogSetId id(origRequest);
 
@@ -146,7 +146,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       // AuthState associated with this DialogSet if the algorithm is supported
       if (authState.handleChallenge(userProfile, response))
       {
-         assert(origRequest.header(h_Vias).size() == 1);
+         resip_assert(origRequest.header(h_Vias).size() == 1);
          origRequest.header(h_CSeq).sequence()++;
          DebugLog (<< "Produced response to digest challenge for " << userProfile );
          return true;
@@ -158,7 +158,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
    }
    catch(BaseException& e)
    {
-      assert(0);
+      resip_assert(0);
       ErrLog(<< "Unexpected exception in ClientAuthManager::handle " << e);
       return false;
    }      
@@ -321,7 +321,7 @@ ClientAuthManager::RealmState::authSucceeded()
    switch(mState)
    {
       case Invalid:
-         assert(0);
+         resip_assert(0);
          break;
       case Current:
       case Cached:
@@ -329,7 +329,7 @@ ClientAuthManager::RealmState::authSucceeded()
          transition(Cached);
          break;
       case Failed:
-         assert(0);
+         resip_assert(0);
          break;         
    };
 }
@@ -424,7 +424,7 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
 void 
 ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
 {
-   assert(mState != Failed);
+   resip_assert(mState != Failed);
    if (mState == Failed) return;
 
    Data nonceCountString;

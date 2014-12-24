@@ -48,7 +48,7 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
 {
 #ifdef USE_NETNS
    // Needs to be implemented for NETNS
-   assert(0);
+   resip_assert(0);
 #endif
    mInterface = Tuple::inet_ntop(mTuple);
 }
@@ -226,7 +226,7 @@ Transport::fail(const Data& tid, TransportFailure::FailureReason reason, int sub
 std::auto_ptr<SendData>
 Transport::makeSendData( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
-   assert(dest.getPort() != -1);
+   resip_assert(dest.getPort() != -1);
    std::auto_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
    return data;
 }
@@ -251,7 +251,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
   DataStream encodeStream(encoded);
   errMsg->encode(encodeStream);
   encodeStream.flush();
-  assert(!encoded.empty());
+  resip_assert(!encoded.empty());
 
   InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
 

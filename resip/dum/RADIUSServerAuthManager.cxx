@@ -56,7 +56,7 @@ RADIUSServerAuthManager::requestCredential(
       Data radiusUser = user;
       DebugLog(<< "radiusUser = " << radiusUser.c_str() << ", " << "user = " << user.c_str());
 
-      assert(msg.isRequest());
+      resip_assert(msg.isRequest());
       Data reqUri = auth.param(p_uri);
       Data reqMethod = Data(resip::getMethodName(msg.header(h_RequestLine).getMethod()));
 

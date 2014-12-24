@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -98,7 +98,7 @@ void
 ClientPublication::dispatch(const SipMessage& msg)
 {
    ClientPublicationHandler* handler = mDum.getClientPublicationHandler(mEventType);
-   assert(handler);   
+   resip_assert(handler);   
 
    if (msg.isRequest())
    {
@@ -112,7 +112,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          return;
       }
 
-      assert(code >= 200);
+      resip_assert(code >= 200);
       mWaitingForResponse = false;
 
       if (code < 300)

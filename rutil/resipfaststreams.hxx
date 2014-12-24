@@ -15,7 +15,7 @@
 #include <iostream> //for std::endl, std::cerr, etc.
 #include <stdio.h> //for snprintf
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include "rutil/compat.hxx"
 
 namespace resip
@@ -326,7 +326,7 @@ class ResipFastOStream : public ResipBasicIOStream
          }
          else
          {
-            assert(0);
+            resip_assert(0);
          }
          return *this;
       }

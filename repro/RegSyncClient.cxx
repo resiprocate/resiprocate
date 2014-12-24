@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include <sstream>
 
 #include <resip/stack/Symbols.hxx>
@@ -28,7 +28,7 @@ RegSyncClient::RegSyncClient(InMemorySyncRegDb* regDb,
    mPort(port),
    mSocketDesc(0)
 {
-    assert(mRegDb);
+    resip_assert(mRegDb);
 }
 
 void 

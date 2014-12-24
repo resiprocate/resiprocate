@@ -364,7 +364,7 @@ bool
 FilterStore::applyRegex(int conditionNum, const Data& header, const Data& match, regex_t *regex, Data& rewrite)
 {
    int ret;
-   assert(conditionNum < 10);
+   resip_assert(conditionNum < 10);
    
    // TODO - !cj! www.pcre.org looks like it has better performance
    // !mbg! is this true now that the compiled regexp is used?

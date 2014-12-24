@@ -94,8 +94,8 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
    // ?bwc? Has something already checked for well-formedness here? 
    // Maybe DialogSet? We need to be absolutely certain that this exists and is
    // well-formed. Assert for now.
-   assert(!invite.empty(h_Contacts));
-   assert(invite.header(h_Contacts).front().isWellFormed());
+   resip_assert(!invite.empty(h_Contacts));
+   resip_assert(invite.header(h_Contacts).front().isWellFormed());
    eventInfo->mLocalTarget = invite.header(h_Contacts).front().uri();
    eventInfo->mRemoteIdentity = invite.header(h_To);
    eventInfo->mLocalOfferAnswer = (invite.getContents() != NULL ? std::auto_ptr<Contents>(invite.getContents()->clone()) : std::auto_ptr<Contents>());
@@ -131,7 +131,7 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
          {
             // ?bwc? Has something already checked for well-formedness here? 
             // Maybe DialogSet? Assert for now.
-            assert(response.header(h_Contacts).front().isWellFormed());
+            resip_assert(response.header(h_Contacts).front().isWellFormed());
             eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(response.header(h_Contacts).front().uri()));
          }
          ProceedingDialogEvent evt(*eventInfo);
@@ -340,7 +340,7 @@ DialogEventStateManager::getFrontContact(const SipMessage& msg)
       {
          // ?bwc? Has something already checked for well-formedness here? 
          // Maybe DialogSet? Assert for now.
-         assert(msg.header(h_Contacts).front().isWellFormed());
+         resip_assert(msg.header(h_Contacts).front().isWellFormed());
          pContact = new Uri(msg.header(h_Contacts).front().uri());
       }
    }

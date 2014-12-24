@@ -93,7 +93,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
             case RequestHandler::RespondFromAlternateIp:
             case RequestHandler::RespondFromAlternateIpPort:
                // These only happen for UDP server for RFC3489 backwards compatibility
-               assert(false);
+               resip_assert(false);
                break;
             case RequestHandler::RespondFromReceiving:
             default:

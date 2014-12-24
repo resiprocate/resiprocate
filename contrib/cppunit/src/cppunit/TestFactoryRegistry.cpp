@@ -2,7 +2,7 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/portability/CppUnitMap.h>
 #include <cppunit/TestSuite.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 
 
 CPPUNIT_NS_BEGIN
@@ -67,7 +67,7 @@ public:
     // If the following assertion failed, then TestFactoryRegistry::getRegistry() 
     // was called during static variable destruction without checking the registry 
     // validity beforehand using TestFactoryRegistry::isValid() beforehand.
-    assert( isValid() );
+    resip_assert( isValid() );
     if ( !isValid() )         // release mode
       return NULL;            // => force CRASH
 

@@ -55,8 +55,8 @@ SelectTransporter::addListenerImpl(resip::TransportType transport,
                                    resip::GenericIPAddress &address)
 {
    int status;
-   assert(!mHasBootstrapSocket);
-   assert(transport == resip::TCP);
+   resip_assert(!mHasBootstrapSocket);
+   resip_assert(transport == resip::TCP);
 
    DebugLog(<< "Adding bootstrap listener");
 
@@ -117,7 +117,7 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
    if (bytesSent != data.size()) 
    { 
       ErrLog( << "Cannot send -- ::send returned " << bytesSent << " errno " << resip::getErrno()); 
-      assert(0);
+      resip_assert(0);
    }
    else
    {
@@ -136,7 +136,7 @@ SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
    if (bytesSent != data->size()) 
    { 
       ErrLog(<< "Cannot send -- ::send returned " << bytesSent << " errno " << resip::getErrno()); 
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -194,7 +194,7 @@ SelectTransporter::collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned sho
            continue;
         }
      }
-     assert(status==0);
+     resip_assert(status==0);
      
      status = ::listen(s, 5);
      if (status) { ErrLog( << "Cannot ::listen, errno " << resip::getErrno()); }
@@ -206,7 +206,7 @@ SelectTransporter::collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned sho
         std::make_pair(s,addrPort)));
 
      i = mListenerMap.find(std::make_pair(nodeId, appId));
-     assert(i != mListenerMap.end());
+     resip_assert(i != mListenerMap.end());
    }
    else
    {
@@ -234,11 +234,11 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    if (!s) 
    {
       ErrLog(<< "::socket() failed");
-      assert(0);
+      resip_assert(0);
    }
    
    int status = ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
-   if (status) { ErrLog( << "Cannot ::connect, errno " << resip::getErrno()); assert(0); return; }
+   if (status) { ErrLog( << "Cannot ::connect, errno " << resip::getErrno()); resip_assert(0); return; }
 
    DebugLog(<<"Connect succeeded");
 
@@ -251,7 +251,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    if (bytesRead != sizeof(buffer)) 
    {
       ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << resip::getErrno()); 
-      assert(0);
+      resip_assert(0);
    }
    s2c::NodeIdStruct nid;
    nid.mHigh = *((UInt64*)(buffer));
@@ -313,7 +313,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
    // Later on, we'll have to have different processing
    // based on the transports -- but this will likely be
    // hidden from us by the ICE library
-   assert (candidate.getTransportType() == resip::TCP
+   resip_assert (candidate.getTransportType() == resip::TCP
            || candidate.getTransportType() == resip::TLS);
 
    s = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -340,7 +340,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
    if (bytesRead != sizeof(buffer)) 
    {
       ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << resip::getErrno()); 
-      assert(0);
+      resip_assert(0);
    }
       
    // Parse the node id
@@ -412,7 +412,7 @@ SelectTransporter::process(int ms)
 
       if((s = accept(mBootstrapSocket, &addr, &addrlen))==(-1)){
         ErrLog( << "Could not accept, errno " << resip::getErrno());
-        assert(false);
+        resip_assert(false);
       }
       DebugLog(<<"Accepted a connection");
 
@@ -433,7 +433,7 @@ SelectTransporter::process(int ms)
       if (bytesRead != sizeof(buffer)) 
       {
          ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << resip::getErrno()); 
-         assert(0);
+         resip_assert(0);
       }
       
       // Parse the node id
@@ -492,7 +492,7 @@ SelectTransporter::process(int ms)
         if (bytesRead != sizeof(buffer)) 
         {
            ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << resip::getErrno()); 
-           assert(0);
+           resip_assert(0);
         }
 
         s2c::NodeIdStruct nids;
@@ -561,12 +561,12 @@ SelectTransporter::process(int ms)
               if(bytesRead == -1) 
               {
                   ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << resip::getErrno()); 
-                  assert(false);
+                  resip_assert(false);
               }
               left-=bytesRead;
               ptr+=bytesRead;
               DebugLog(<< "Read from socket: " << bytesRead << " left=" << left);
-              assert(bytesRead!=0); // Closed...
+              resip_assert(bytesRead!=0); // Closed...
             }
 
             if (int_buffer[0] == htonl(0x80000000 | 0x52454C4F))
@@ -590,7 +590,7 @@ SelectTransporter::process(int ms)
             else
             {
               ErrLog(<< "Not a correct reload message");
-              assert(0);
+              resip_assert(0);
                delete(buffer);
                // Yikes! This isn't a reload message!
             }

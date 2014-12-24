@@ -28,7 +28,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "Libc.h"
 #include "Sha1Hasher.h"
 
@@ -105,7 +105,7 @@ osc::Sha1Hasher::Sha1Hasher(Sha1Hasher const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -128,7 +128,7 @@ osc::Sha1Hasher::operator=(Sha1Hasher const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 
@@ -138,7 +138,7 @@ void
 osc::Sha1Hasher::reset()
 {
   DEBUG_STACK_FRAME;
-  assert (sizeof(m_c.ctx) <= sizeof (m_c.padding));
+  resip_assert (sizeof(m_c.ctx) <= sizeof (m_c.padding));
   SHA1_Init(&m_c.ctx);
 }
 
@@ -180,7 +180,7 @@ void
 osc::Sha1Hasher::reset()
 {
   DEBUG_STACK_FRAME;
-  assert (sizeof(m_c.context) <= sizeof (m_c.padding));
+  resip_assert (sizeof(m_c.context) <= sizeof (m_c.padding));
   m_c.context.h[0] = 0x67452301;
   m_c.context.h[1] = 0xEFCDAB89;
   m_c.context.h[2] = 0x98BADCFE;

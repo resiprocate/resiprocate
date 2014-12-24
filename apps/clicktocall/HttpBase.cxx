@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>

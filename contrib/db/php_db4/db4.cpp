@@ -743,7 +743,7 @@ do { \
   } \
    pdb = getPhpDbFromObj(_self TSRMLS_CC); \
   if(!pdb || !pdb->db) { \
-    assert(0); \
+    resip_assert(0); \
     php_error_docref(NULL TSRMLS_CC, E_WARNING, "not a valid db4 object"); \
     RETURN_FALSE; \
   } \
@@ -760,7 +760,7 @@ do { \
   } \
    pdb = getPhpDbFromObj(_self TSRMLS_CC); \
   if(!pdb) { \
-    assert(0); \
+    resip_assert(0); \
     php_error_docref(NULL TSRMLS_CC, E_WARNING, "not a valid db4 object"); \
     RETURN_FALSE; \
   } \

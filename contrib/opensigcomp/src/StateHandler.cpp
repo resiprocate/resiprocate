@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "State.h"
 #include "StateHandler.h"
 #include "Types.h"
@@ -454,7 +454,7 @@ osc::StateHandler::processChanges(osc::StateChanges &changes,
         break;
 
       default:
-        assert(0);
+        resip_assert(0);
     }
   }
 

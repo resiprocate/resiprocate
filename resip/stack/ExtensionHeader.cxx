@@ -6,7 +6,7 @@
 #include "HeaderTypes.hxx"
 #include "rutil/Logger.hxx"
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include "rutil/ParseBuffer.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -16,10 +16,10 @@ using namespace resip;
 ExtensionHeader::ExtensionHeader(const char* name)
    : mName(name)
 {
-   assert(name);
+   resip_assert(name);
    if (mName.empty())
    {
-      assert(false);
+      resip_assert(false);
       throw Exception("Empty extension header",__FILE__,__LINE__);
    }
    if (Headers::getType(mName.data(), (int)mName.size()) != Headers::UNKNOWN) {
@@ -32,7 +32,7 @@ ExtensionHeader::ExtensionHeader(const Data& name)
 {
    if (mName.empty())
    {
-      assert(false);
+      resip_assert(false);
       throw Exception("Empty extension header",__FILE__,__LINE__);
    }
    if (Headers::getType(mName.data(), (int)mName.size()) != Headers::UNKNOWN) {

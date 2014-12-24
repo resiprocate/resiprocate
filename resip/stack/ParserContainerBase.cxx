@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "resip/stack/ParserContainerBase.hxx"
 #include "resip/stack/Embedded.hxx"
@@ -57,7 +57,7 @@ ParserContainerBase::operator=(const ParserContainerBase& rhs)
 void
 ParserContainerBase::pop_front() 
 {
-   assert(!mParsers.empty());
+   resip_assert(!mParsers.empty());
    freeParser(mParsers.front());
    mParsers.erase(mParsers.begin());
 }
@@ -65,7 +65,7 @@ ParserContainerBase::pop_front()
 void
 ParserContainerBase::pop_back() 
 {
-   assert(!mParsers.empty());
+   resip_assert(!mParsers.empty());
    freeParser(mParsers.back());
    mParsers.pop_back(); 
 }
@@ -118,7 +118,7 @@ EncodeStream&
 ParserContainerBase::encodeEmbedded(const Data& headerName, 
                                     EncodeStream& str) const
 {
-   assert(!headerName.empty());
+   resip_assert(!headerName.empty());
 
    if (!mParsers.empty())
    {

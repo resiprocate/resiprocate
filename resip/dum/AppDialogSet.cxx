@@ -86,7 +86,7 @@ AppDialogSet::getDialogSetId()
 AppDialogSet*
 AppDialogSet::reuse()
 {
-   assert(mDialogSet);
+   resip_assert(mDialogSet);
    mDialogSet->appDissociate();
    mDialogSet = 0;
    

@@ -8,7 +8,7 @@
 //	release version messes time_t definition again
 #include <set>
 #include <vector>
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "AresCompat.hxx"
 
@@ -97,7 +97,7 @@ DnsStub::DnsStub(const NameserverList& additional,
    {
       if (retCode == ExternalDns::BuildMismatch)
       {
-         assert(0);
+         resip_assert(0);
          throw DnsStubException("Library was not build w/ required capabilities(probably USE_IPV6 resip/ares mismatch",
                                 __FILE__,__LINE__);
       }
@@ -420,7 +420,7 @@ DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter
      mSink(s),
      mFollowCname(followCname)
 {
-   assert(s);
+   resip_assert(s);
 }
 
 DnsStub::Query::~Query()
@@ -497,7 +497,7 @@ DnsStub::Query::go()
    {
       if(mStub.mDnsProvider && mStub.mDnsProvider->hostFileLookupLookupOnlyMode())
       {
-         assert(mRRType == T_A);
+         resip_assert(mRRType == T_A);
          StackLog (<< targetToQuery << " not cached. Doing hostfile lookup");
          in_addr address;
          if (mStub.mDnsProvider->hostFileLookup(targetToQuery.c_str(), address))
@@ -613,11 +613,11 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          case ARES_EBADFAMILY:
             ErrLog (<< "Bad lookup type " << mStub.errorMessage(status) << " for " << mTarget);
             // .bwc. This should not happen. If it does, we have code to fix.
-            assert(0);
+            resip_assert(0);
             break;
          default:
             ErrLog (<< "Unknown error " << mStub.errorMessage(status) << " for " << mTarget);
-            assert(0);
+            resip_assert(0);
             break;
       }
 
@@ -858,7 +858,7 @@ DnsStub::getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCach
 void 
 DnsStub::doGetDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler)
 {
-   assert(handler != 0);
+   resip_assert(handler != 0);
    Data dnsCacheDump;
    mRRCache.getCacheDump(dnsCacheDump);
    handler->onDnsCacheDumpRetrieved(key, dnsCacheDump);

@@ -30,7 +30,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "Libc.h"
 #include "Udvm.h"
 #include "UdvmOpcodes.h"
@@ -122,7 +122,7 @@ osc::Udvm::Udvm(Udvm const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -147,7 +147,7 @@ osc::Udvm::operator=(Udvm const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 
@@ -207,7 +207,7 @@ void
 osc::Udvm::loadState(const osc::byte_t *stateId, osc::u16 idLength)
 {
   DEBUG_STACK_FRAME;
-  assert(idLength > 0);
+  resip_assert(idLength > 0);
   osc::state_id_t id(stateId, idLength);
   osc::nack_code_t findStatus;
   osc::State *state = m_stateHandler.getState(id, findStatus);

@@ -262,7 +262,7 @@ UserAgent::onTerminated(InviteSessionHandle h, InviteSessionHandler::TerminatedR
 void
 UserAgent::onRedirected(ClientInviteSessionHandle, const SipMessage& msg)
 {
-   assert(false);
+   resip_assert(false);
 }
 
 void
@@ -278,61 +278,61 @@ UserAgent::onOffer(InviteSessionHandle handle, const SipMessage& msg, const SdpC
 void
 UserAgent::onOfferRequired(InviteSessionHandle, const SipMessage& msg)
 {
-   assert(false);
+   resip_assert(false);
 }
 
 void
 UserAgent::onOfferRejected(InviteSessionHandle, const SipMessage* msg)
 {
-    assert(0);
+    resip_assert(0);
 }
 
 void
 UserAgent::onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
-    assert(0);
+    resip_assert(0);
 }
 
 void
 UserAgent::onInfo(InviteSessionHandle, const SipMessage& msg)
 {
-    assert(0);
+    resip_assert(0);
 }
 
 void
 UserAgent::onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
 {
-    assert(0);
+    resip_assert(0);
 }
 
 void
 UserAgent::onInfoFailure(InviteSessionHandle, const SipMessage& msg)
 {
-    assert(0);
+    resip_assert(0);
 }
 
 void
 UserAgent::onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)
 {
-    assert(0);
+    resip_assert(0);
 }
 
 void
 UserAgent::onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg)
 {
-   assert(false);
+   resip_assert(false);
 }
 
 void
 UserAgent::onReferRejected(InviteSessionHandle, const SipMessage& msg)
 {
-   assert(0);
+   resip_assert(0);
 }
 
 void
 UserAgent::onReferNoSub(InviteSessionHandle, const SipMessage& msg)
 {
-   assert(0);
+   resip_assert(0);
 }
 
 void

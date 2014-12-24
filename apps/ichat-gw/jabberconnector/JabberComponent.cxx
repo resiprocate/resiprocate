@@ -4,7 +4,7 @@
 #endif
 
 #include <sstream>
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <algorithm>
 #include "../Version.hxx"
 #include "JabberComponent.hxx"
@@ -33,7 +33,7 @@ IChatCallRequest::sendIChatVCRequest(const std::string& fullTo)
    {
       mJabberComponent->notifyIChatCallProceeding(mB2BSessionHandle, fullTo); 
 
-      assert(mJabberComponent);
+      resip_assert(mJabberComponent);
       mJabberComponent->sendPresence(fullTo, mJabberComponent->mControlJID, false /* advertiseIChatSupport */, true /* available */);  // Doing this let's us push the control presence as well send calls
 
       std::string id = mJabberComponent->mComponent->getID();
@@ -322,7 +322,7 @@ JabberComponent::proceedingIChatCall(const std::string& to, const std::string& f
    if(it!=mOutstandingServerIChatCallRequests.end())
    {
       // Store session handle for notifications to SIP layer
-      assert(it->second.mB2BSessionHandle == 0);
+      resip_assert(it->second.mB2BSessionHandle == 0);
       std::ostringstream oss;
       oss << "JabberComponent::proceedingIChatCall - set handle to " << handle;
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, oss.str());
@@ -714,46 +714,46 @@ void
 JabberComponent::onNewIPCMsg(const IPCMsg& msg)
 {
    const std::vector<std::string>& args = msg.getArgs();
-   assert(args.size() >= 1);
+   resip_assert(args.size() >= 1);
    if(args.at(0) == "initiateIChatCall")
    {
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - initiateIChatCall");
-      assert(args.size() == 4);
+      resip_assert(args.size() == 4);
       initiateIChatCall(args.at(1).c_str(), args.at(2).c_str(), atoi(args.at(3).c_str()), false /* TODO - make setting? */);
    }
    else if(args.at(0) == "cancelIChatCall")
    {
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - cancelIChatCall");
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       cancelIChatCall(args.at(1).c_str(), args.at(2).c_str());
    }
    else if(args.at(0) == "proceedingIChatCall")
    {
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - proceedingIChatCall");
-      assert(args.size() == 4);
+      resip_assert(args.size() == 4);
       proceedingIChatCall(args.at(1).c_str(), args.at(2).c_str(), atoi(args.at(3).c_str()));
    }
    else if(args.at(0) == "acceptIChatCall")
    {
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - acceptIChatCall");
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       acceptIChatCall(args.at(1).c_str(), args.at(2).c_str());
    }
    else if(args.at(0) == "rejectIChatCall")
    {
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - rejectIChatCall");
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       rejectIChatCall(args.at(1).c_str(), args.at(2).c_str());
    }
    else if(args.at(0) == "sendSubscriptionResponse")
    {
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - sendSubscriptionResponse");
-      assert(args.size() == 4);
+      resip_assert(args.size() == 4);
       sendSubscriptionResponse(args.at(1).c_str(), args.at(2).c_str(), atoi(args.at(3).c_str()) != 0);
    }
    else
    {
-      assert(false);
+      resip_assert(false);
    }
 }
 

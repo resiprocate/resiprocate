@@ -39,7 +39,7 @@ static char *RCSSTRING __UNUSED__="$Id: turn_client_ctx.c,v 1.2 2008/04/28 18:21
 
 #ifdef USE_TURN
 
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <string.h>
 
 #include "nr_api.h"
@@ -164,14 +164,14 @@ static int nr_turn_stun_set_auth_params(nr_turn_stun_ctx *ctx,
   RFREE(ctx->realm);
   RFREE(ctx->nonce);
 
-  assert(realm);
+  resip_assert(realm);
   if (!realm)
     ABORT(R_BAD_ARGS);
   ctx->realm=r_strdup(realm);
   if (!ctx->realm)
     ABORT(R_NO_MEMORY);
 
-  assert(nonce);
+  resip_assert(nonce);
   if (!nonce)
     ABORT(R_BAD_ARGS);
   ctx->nonce=r_strdup(nonce);
@@ -286,12 +286,12 @@ static void nr_turn_stun_ctx_cb(NR_SOCKET s, int how, void *arg)
       break;
 
     case NR_STUN_CLIENT_STATE_CANCELLED:
-      assert(0);  /* Shouldn't happen */
+      resip_assert(0);  /* Shouldn't happen */
       return;
       break;
 
     default:
-      assert(0);  /* Shouldn't happen */
+      resip_assert(0);  /* Shouldn't happen */
       return;
   }
 
@@ -532,7 +532,7 @@ int nr_turn_client_allocate(nr_turn_client_ctx *ctx,
   nr_turn_stun_ctx *stun = 0;
   int r,_status;
 
-  assert(ctx->state == NR_TURN_CLIENT_STATE_INITTED);
+  resip_assert(ctx->state == NR_TURN_CLIENT_STATE_INITTED);
 
   ctx->finished_cb=finished_cb;
   ctx->cb_arg=cb_arg;
@@ -602,7 +602,7 @@ static int nr_turn_client_refresh_setup(nr_turn_client_ctx *ctx,
   nr_turn_stun_ctx *stun = 0;
   int r,_status;
 
-  assert(ctx->state == NR_TURN_CLIENT_STATE_ALLOCATED);
+  resip_assert(ctx->state == NR_TURN_CLIENT_STATE_ALLOCATED);
   if (ctx->state != NR_TURN_CLIENT_STATE_ALLOCATED)
     ABORT(R_NOT_PERMITTED);
 
@@ -632,7 +632,7 @@ static int nr_turn_client_start_refresh_timer(nr_turn_client_ctx *tctx,
 {
   int _status;
 
-  assert(!tctx->refresh_timer_handle);
+  resip_assert(!tctx->refresh_timer_handle);
 
   if (lifetime <= TURN_REFRESH_SLACK_SECONDS) {
     r_log(NR_LOG_TURN, LOG_ERR, "Too short lifetime specified for turn %u", lifetime);
@@ -794,7 +794,7 @@ int nr_turn_client_parse_data_indication(nr_turn_client_ctx *ctx,
     ABORT(R_BAD_DATA);
   }
 
-  assert(newsize >= attr->u.data.length);
+  resip_assert(newsize >= attr->u.data.length);
   if (newsize < attr->u.data.length)
     ABORT(R_BAD_ARGS);
 
@@ -838,7 +838,7 @@ static int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx, nr_transport_addr
     }
   }
 
-  assert(perm);
+  resip_assert(perm);
 
   /* Now check that the permission is up-to-date */
   now = r_gettimeint();
@@ -865,7 +865,7 @@ static int nr_turn_permission_create(nr_turn_client_ctx *ctx, nr_transport_addr 
   int r, _status;
   nr_turn_permission *perm = 0;
 
-  assert(ctx->state == NR_TURN_CLIENT_STATE_ALLOCATED);
+  resip_assert(ctx->state == NR_TURN_CLIENT_STATE_ALLOCATED);
 
   r_log(NR_LOG_TURN, LOG_INFO, "TURN(%s): Creating permission for %s",
         ctx->label, addr->as_string);

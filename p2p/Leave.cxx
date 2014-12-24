@@ -14,7 +14,7 @@ LeaveAns::LeaveAns(LeaveReq *request)
 void 
 LeaveAns::getEncodedPayload(resip::DataStream &data) 
 {
-	assert(0);
+	resip_assert(0);
 }
 
 void
@@ -30,7 +30,7 @@ LeaveReq::LeaveReq()
 void 
 LeaveReq::getEncodedPayload(resip::DataStream &data) 
 {
-	assert(0);
+	resip_assert(0);
 }
 
 LeaveReq::LeaveReq(const DestinationId &dest, NodeId node) :

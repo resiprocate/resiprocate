@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "resip/stack/ContentsFactoryBase.hxx"
 #include "rutil/WinLeakCheck.hxx"

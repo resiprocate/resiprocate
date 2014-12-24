@@ -60,7 +60,7 @@ CertPublicationHandler::add(ServerPublicationHandle h, const Contents* contents)
    if (h->getDocumentKey() == h->getPublisher())
    {
       const X509Contents* x509 = dynamic_cast<const X509Contents*>(contents);
-      assert(x509);
+      resip_assert(x509);
       mSecurity.addUserCertDER(h->getPublisher(), x509->getBodyData());
       h->send(h->accept(200));
    }

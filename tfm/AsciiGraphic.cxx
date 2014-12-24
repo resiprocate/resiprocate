@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include <algorithm>
 #include <iostream>
 
@@ -27,7 +27,7 @@ AsciiGraphic::renderToStream(EncodeStream& str) const
       }
       out.push_back(spaces);
    }
-   assert(out.size() == box.mHeight+1);
+   resip_assert(out.size() == box.mHeight+1);
 
    // transfer the Sequence to matrix
    render(out);

@@ -52,7 +52,7 @@ ChannelManager::createChannelBinding(const StunTuple& peerTuple)
 RemotePeer*
 ChannelManager::createChannelBinding(const StunTuple& peerTuple, unsigned short channel)
 {
-   assert(findRemotePeerByPeerAddress(peerTuple) == 0);
+   resip_assert(findRemotePeerByPeerAddress(peerTuple) == 0);
 
    // Create New RemotePeer
    RemotePeer* remotePeer = new RemotePeer(peerTuple, channel, TURN_CHANNEL_BINDING_LIFETIME_SECONDS);

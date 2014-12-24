@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "TcpStream.h"
 #include "MultiBuffer.h"
 
@@ -50,7 +50,7 @@ osc::TcpStream::TcpStream(TcpStream const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -83,7 +83,7 @@ osc::TcpStream::operator=(TcpStream const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 
@@ -255,7 +255,7 @@ osc::TcpStream::addMessageToFrameList(const osc::MultiBuffer &mb,
 
   }
 
-  assert(static_cast<size_t>(curr - buffer) == resultSize);
+  resip_assert(static_cast<size_t>(curr - buffer) == resultSize);
 
   osc::SigcompMessage *message = new SigcompMessage(buffer, resultSize);
   if (!message)

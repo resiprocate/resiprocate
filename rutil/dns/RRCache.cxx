@@ -27,7 +27,7 @@
 #include <vector>
 #include <list>
 #include <map>
-#include <cassert>
+#include "rutil/Assert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"
@@ -96,7 +96,7 @@ RRCache::updateCache(const Data& target,
 {
    Data domain = (*begin).domain();
    FactoryMap::iterator it = mFactoryMap.find(rrType);
-   assert(it != mFactoryMap.end());
+   resip_assert(it != mFactoryMap.end());
    RRList* key = new RRList(domain, rrType);         
    RRSet::iterator lb = mRRSet.lower_bound(key);
    if (lb != mRRSet.end() &&
@@ -212,11 +212,11 @@ RRCache::getTTL(const RROverlay& overlay)
    char* name = 0;
    long len = 0;
    int status = ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
-   assert( status == ARES_SUCCESS );
+   resip_assert( status == ARES_SUCCESS );
    const unsigned char* pPos = overlay.data() + len;
    free(name); name = 0;
    status = ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
-   assert( status == ARES_SUCCESS );
+   resip_assert( status == ARES_SUCCESS );
    free(name);
    pPos += len;
    pPos += 16; // skip four 32 bit entities.
@@ -229,7 +229,7 @@ RRCache::purge()
    if (mRRSet.size() < mSize) return;
    RRList* lst = *(mLruHead->begin());
    RRSet::iterator it = mRRSet.find(lst);
-   assert(it != mRRSet.end());
+   resip_assert(it != mRRSet.end());
    lst->remove();
    delete *it;
    mRRSet.erase(it);

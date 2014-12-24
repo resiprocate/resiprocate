@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/dum/HandleManager.hxx"
@@ -72,7 +72,7 @@ void
 HandleManager::remove(Handled::Id id)
 {
    HandleMap::iterator i = mHandleMap.find(id);
-   assert (i != mHandleMap.end());
+   resip_assert (i != mHandleMap.end());
    mHandleMap.erase(i);
    if (mShuttingDown)
    {
@@ -111,12 +111,12 @@ HandleManager::getHandled(Handled::Id id) const
    if (i == mHandleMap.end())
    {
       InfoLog (<< "Reference to stale handle: " << id);
-      assert(0);
+      resip_assert(0);
       throw HandleException("Stale handle", __FILE__, __LINE__);
    }
    else
    {
-      assert(i->second);
+      resip_assert(i->second);
       return i->second;
    }
 }

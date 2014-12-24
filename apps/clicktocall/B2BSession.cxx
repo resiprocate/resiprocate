@@ -105,7 +105,7 @@ B2BSession::startCall(const Uri& destinationUri, const NameAddr& from, const Sdp
 void
 B2BSession::clickToCall(const resip::Uri& initiator, const resip::Uri& destination, bool anchorCall, const XmlRpcInfo& xmlRpcInfo)
 {
-   assert(mClickToCallState == Undefined);
+   resip_assert(mClickToCallState == Undefined);
 
    // Store Click-To-Call request info
    mClickToCallInitiator = true;
@@ -281,7 +281,7 @@ B2BSession::transitionClickToCallState(ClickToCallState newState, unsigned int s
          resultText = "Failed to connect to destination";
          break;
       default:
-         assert(false);
+         resip_assert(false);
       }
       mClickToCallState = newState;
 
@@ -428,7 +428,7 @@ B2BSession::onTerminated(InviteSessionHandle h, InviteSessionHandler::Terminated
       reasonData = "ended due to a timeout";
       break;
    default:
-      assert(false);
+      resip_assert(false);
       break;
    }
 
@@ -548,7 +548,7 @@ B2BSession::onOffer(InviteSessionHandle h, const SipMessage& msg, const SdpConte
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
    }
    else
@@ -574,7 +574,7 @@ B2BSession::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
    }
    else

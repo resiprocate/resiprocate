@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include <sstream>
 
 #include <resip/stack/Symbols.hxx>
@@ -28,7 +28,7 @@ RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
    XmlRpcServerBase(port, version),
    mRegDb(regDb)
 {
-   assert(mRegDb);
+   resip_assert(mRegDb);
    mRegDb->addHandler(this);
 }
 

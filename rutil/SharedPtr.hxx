@@ -16,7 +16,7 @@
 #include <functional>           // for std::less
 #include <typeinfo>             // for std::bad_cast
 #include <iosfwd>               // for std::basic_ostream
-#include <cassert>
+#include "rutil/Assert.h"
 
 namespace resip
 {
@@ -180,7 +180,7 @@ public:
 
    template<class Y> void reset(Y * p) // Y must be complete
    {
-      assert(p == 0 || p != px); // catch self-reset errors
+      resip_assert(p == 0 || p != px); // catch self-reset errors
       this_type(p).swap(*this);
    }
 
@@ -191,13 +191,13 @@ public:
 
    reference operator* () const // never throws
    {
-      assert(px != 0);
+      resip_assert(px != 0);
       return *px;
    }
 
    T * operator-> () const // never throws
    {
-      assert(px != 0);
+      resip_assert(px != 0);
       return px;
    }
     
@@ -335,7 +335,7 @@ template<class T, class U> SharedPtr<T> shared_polymorphic_cast(SharedPtr<U> con
 
 template<class T, class U> SharedPtr<T> shared_polymorphic_downcast(SharedPtr<U> const & r)
 {
-    assert(dynamic_cast<T *>(r.get()) == r.get());
+    resip_assert(dynamic_cast<T *>(r.get()) == r.get());
     return shared_static_cast<T>(r);
 }
 

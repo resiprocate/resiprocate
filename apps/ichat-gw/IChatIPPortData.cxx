@@ -72,7 +72,7 @@ IChatIPPortData::IChatIPPortData(const std::string& hexblob) : mHexBlob(hexblob)
          addIPPortData(Data(ipPortDataBlob->interfaceName), Tuple(addr,ntohs(ipPortDataBlob->port),UDP));
 #else
          ErrLog(<< "IPv6 support not enabled at compile time.");
-         assert(0);
+         resip_assert(0);
 #endif
       }
       InfoLog(<< "IChatIPPortData: name=" << mIPPortDataList.back().first << " addr=" << mIPPortDataList.back().second);

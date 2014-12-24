@@ -1529,7 +1529,7 @@ static int yy_find_shift_action(
   if( stateno>YY_SHIFT_MAX || (i = yy_shift_ofst[stateno])==YY_SHIFT_USE_DFLT ){
     return yy_default[stateno];
   }
-  assert( iLookAhead!=YYNOCODE );
+  resip_assert( iLookAhead!=YYNOCODE );
   i += iLookAhead;
   if( i<0 || i>=YY_SZ_ACTTAB || yy_lookahead[i]!=iLookAhead ){
     if( iLookAhead>0 ){
@@ -1585,19 +1585,19 @@ static int yy_find_reduce_action(
     return yy_default[stateno];
   }
 #else
-  assert( stateno<=YY_REDUCE_MAX );
+  resip_assert( stateno<=YY_REDUCE_MAX );
 #endif
   i = yy_reduce_ofst[stateno];
-  assert( i!=YY_REDUCE_USE_DFLT );
-  assert( iLookAhead!=YYNOCODE );
+  resip_assert( i!=YY_REDUCE_USE_DFLT );
+  resip_assert( iLookAhead!=YYNOCODE );
   i += iLookAhead;
 #ifdef YYERRORSYMBOL
   if( i<0 || i>=YY_SZ_ACTTAB || yy_lookahead[i]!=iLookAhead ){
     return yy_default[stateno];
   }
 #else
-  assert( i>=0 && i<YY_SZ_ACTTAB );
-  assert( yy_lookahead[i]==iLookAhead );
+  resip_assert( i>=0 && i<YY_SZ_ACTTAB );
+  resip_assert( yy_lookahead[i]==iLookAhead );
 #endif
   return yy_action[i];
 }
@@ -3035,7 +3035,7 @@ static void yy_reduce(
       yy_shift(yypParser,yyact,yygoto,&yygotominor);
     }
   }else{
-    assert( yyact == YYNSTATE + YYNRULE + 1 );
+    resip_assert( yyact == YYNSTATE + YYNRULE + 1 );
     yy_accept(yypParser);
   }
 }
@@ -3070,7 +3070,7 @@ static void yy_syntax_error(
 #define TOKEN (yyminor.yy0)
 
   yymajor = yymajor;	/* quiet the compiler */
-  assert( TOKEN.z[0] );  /* The tokenizer always gives us a token */
+  resip_assert( TOKEN.z[0] );  /* The tokenizer always gives us a token */
   sqlite3ErrorMsg(pParse, "near \"%T\": syntax error", &TOKEN);
   pParse->parseError = 1;
   sqlite3ParserARG_STORE; /* Suppress warning about unused %extra_argument variable */
@@ -3156,14 +3156,14 @@ void sqlite3Parser(
   do{
     yyact = yy_find_shift_action(yypParser,yymajor);
     if( yyact<YYNSTATE ){
-      assert( !yyendofinput );  /* Impossible to shift the $ token */
+      resip_assert( !yyendofinput );  /* Impossible to shift the $ token */
       yy_shift(yypParser,yyact,yymajor,&yyminorunion);
       yypParser->yyerrcnt--;
       yymajor = YYNOCODE;
     }else if( yyact < YYNSTATE + YYNRULE ){
       yy_reduce(yypParser,yyact-YYNSTATE);
     }else{
-      assert( yyact == YY_ERROR_ACTION );
+      resip_assert( yyact == YY_ERROR_ACTION );
 #ifdef YYERRORSYMBOL
       int yymx;
 #endif

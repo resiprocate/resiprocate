@@ -6,7 +6,7 @@
 SubDialog::SubDialog(Data key, SipStack* stack, DialogState *dlgState)
  : mKey(key)
 {
-  assert (dlgState);
+  resip_assert (dlgState);
   mStack = stack;
   mSubState = NULL;
   mDlgState = dlgState;
@@ -48,8 +48,8 @@ SubDialog::processSubscribe(SipMessage* msg)
     // setup observation of resource 
     ResourceMgr::instance().attachToPresenceDoc(mSubState->resource(),this);
   } else {
-    assert(mSubState);
-    assert(mDlgState);
+    resip_assert(mSubState);
+    resip_assert(mDlgState);
     // verify remote CSeq is sane
     // ?dlb? expires not present?
     mSubState->expires() = (time(NULL)+msg->header(h_Expires).value());
@@ -75,7 +75,7 @@ void
 SubDialog::sendNotify(const Contents* document)
 {
 
-  assert (document);
+  resip_assert (document);
 
   bool expired = (mSubState->expires()<=time(NULL));
 
@@ -156,7 +156,7 @@ SubDialog::processNotifyResponse(SipMessage *msg)
 
 time_t
 SubDialog::expires() {
-  assert(mSubState);
+  resip_assert(mSubState);
   return mSubState->expires();
 }
 

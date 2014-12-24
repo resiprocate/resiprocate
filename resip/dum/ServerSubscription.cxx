@@ -105,7 +105,7 @@ void
 ServerSubscription::send(SharedPtr<SipMessage> msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   assert(handler);   
+   resip_assert(handler);   
    if (msg->isResponse())
    {
       int code = msg->header(h_StatusLine).statusCode();
@@ -166,7 +166,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
       case SubDlgInitial:
          return true;
       case SubDlgTerminating: //terminated state not using in ServerSubscription
-         assert(0);
+         resip_assert(0);
          return true;
       case SubDlgEstablished:
       {
@@ -195,7 +195,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
          break;
       }
       default: // !jf!
-         assert(0);
+         resip_assert(0);
          break;
          
    }
@@ -214,7 +214,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
    DebugLog( << "ServerSubscription::dispatch: " << msg.brief());
 
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
 
    if (msg.isRequest())
    {      
@@ -405,11 +405,11 @@ ServerSubscription::end()
 void
 ServerSubscription::dispatch(const DumTimeout& timeout)
 {
-   assert(timeout.type() == DumTimeout::Subscription);
+   resip_assert(timeout.type() == DumTimeout::Subscription);
    if (timeout.seq() == mTimerSeq)
    {
       ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-      assert(handler);
+      resip_assert(handler);
       makeNotifyExpires();
       handler->onExpired(getHandle(), *mLastRequest);
       send(mLastRequest);
@@ -436,7 +436,7 @@ void
 ServerSubscription::onReadyToSend(SipMessage& msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
    handler->onReadyToSend(getHandle(), msg);
 }
 
@@ -445,7 +445,7 @@ ServerSubscription::flowTerminated()
 {
    // notify handler
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
    handler->onFlowTerminated(getHandle());
 }
 

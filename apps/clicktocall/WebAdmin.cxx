@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include <time.h>
 
 #include <resip/stack/Symbols.hxx>
@@ -171,8 +171,8 @@ WebAdmin::buildPage( const Data& uri,
       s.flush();
    }
    
-   assert( !authenticatedUser.empty() );
-   assert( !page.empty() );
+   resip_assert( !authenticatedUser.empty() );
+   resip_assert( !page.empty() );
    
    setPage( page, pageNumber,200 );
 }

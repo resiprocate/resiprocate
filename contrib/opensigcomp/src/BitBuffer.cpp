@@ -29,7 +29,7 @@
 
 #include "ProfileStack.h"
 #include "Libc.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "BitBuffer.h"
 
 /**
@@ -52,7 +52,7 @@ osc::BitBuffer::BitBuffer(BitBuffer const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -112,7 +112,7 @@ osc::BitBuffer::operator=(BitBuffer const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 

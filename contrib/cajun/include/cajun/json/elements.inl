@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "visitor.h"
 #include "reader.h"
-#include <cassert>
+#include "rutil/Assert.h"
 #include <algorithm>
 #include <map>
 

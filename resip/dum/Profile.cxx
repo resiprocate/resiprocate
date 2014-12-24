@@ -16,7 +16,7 @@ Profile::Profile(SharedPtr<Profile> baseProfile) :
    mHasOutboundDecorator(false),
    mBaseProfile(baseProfile)
 {
-   assert(baseProfile.get());
+   resip_assert(baseProfile.get());
 
    reset();  // default all settings to fallthrough to mBaseProfile
 }
@@ -448,7 +448,7 @@ Profile::unsetOverrideHostAndPort()
 void 
 Profile::addAdvertisedCapability(const Headers::Type header)
 {
-   assert(header == Headers::Allow ||
+   resip_assert(header == Headers::Allow ||
           header == Headers::AcceptEncoding ||
           header == Headers::AcceptLanguage ||
           header == Headers::AllowEvents ||
@@ -508,7 +508,7 @@ Profile::getOutboundProxy() const
    {
        return mBaseProfile->getOutboundProxy();
    }
-   assert(mHasOutboundProxy);
+   resip_assert(mHasOutboundProxy);
    return mOutboundProxy;
 }
 
@@ -640,7 +640,7 @@ Profile::getUserAgent() const
    {
        return mBaseProfile->getUserAgent();
    }
-   assert(mHasUserAgent);
+   resip_assert(mHasUserAgent);
    return mUserAgent;
 }
  
@@ -676,7 +676,7 @@ Profile::getProxyRequires() const
    {
        return mBaseProfile->getProxyRequires();
    }
-   assert(mHasProxyRequires);
+   resip_assert(mHasProxyRequires);
    return mProxyRequires;
 }
  
@@ -939,7 +939,7 @@ Profile::getUserAgentCapabilities() const
    {
        return mBaseProfile->getUserAgentCapabilities();
    }
-   assert(mHasUserAgentCapabilities);
+   resip_assert(mHasUserAgentCapabilities);
    return mUserAgentCapabilities;
 }
 

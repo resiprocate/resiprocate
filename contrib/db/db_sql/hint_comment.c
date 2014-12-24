@@ -51,7 +51,7 @@ static_copy_minus_whitespace(in, len)
 	
 		if (in_quote || ! isspace(in[in_i])) {
 			out[out_i++] = in[in_i];
-			assert(out_i < smw_bufsiz);
+			resip_assert(out_i < smw_bufsiz);
 		}
 	}
 
@@ -79,20 +79,20 @@ hint_comment_from_token(t)
 	/* The token should be a whole comment; verify that */
 
 	if (t->z[0] == '/') {
-		assert(t->n >= 4 &&
+		resip_assert(t->n >= 4 &&
 		       t->z[1] == '*' &&
 		       t->z[t->n - 2] == '*' &&
 		       t->z[t->n - 1] == '/'); 
 		p = ((char *)t->z) + 2;
 		len = t->n - 4;
 	} else if (t->z[0] == '-') {
-		assert(t->n >= 3 &&
+		resip_assert(t->n >= 3 &&
 		       t->z[1] == '-');
 		p = ((char *)t->z) + 2;
 		len = t->n - 2;
 	}
 
-	assert(p != NULL);
+	resip_assert(p != NULL);
 
 	if (*p != '+')              /* the hint comment indicator */
 		return NULL;

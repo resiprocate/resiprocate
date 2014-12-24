@@ -5,7 +5,7 @@
 #include "vld.h"
 #endif
 
-#include <assert.h>
+#include "rutil/Assert.h"
 
 #include "db_cxx.h"
 

@@ -109,7 +109,7 @@ MasterProfile::addSupportedOptionTag(const Token& tag)
    if (tag == Token(Symbols::C100rel))
    {
       //use setUasReliableProvisionalMode and setUacReliableProvisionalMode
-      assert(0);
+      resip_assert(0);
    }
    mSupportedOptionTags.push_back(tag);
 }

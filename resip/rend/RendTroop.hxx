@@ -350,7 +350,7 @@ public:
             + mMoods[REND_SM_PendNotify].mChain.size()
             + mMoods[REND_SM_Wave].mChain.size();
       }
-      assert( mood > REND_SM_None && mood < REND_SM_MAX );
+      resip_assert( mood > REND_SM_None && mood < REND_SM_MAX );
       return mMoods[mood].mChain.size();
    }
 

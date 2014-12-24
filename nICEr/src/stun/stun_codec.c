@@ -44,7 +44,7 @@ static char *RCSSTRING __UNUSED__="$Id: stun_codec.c,v 1.2 2008/04/28 18:21:30 e
 #else   /* UNIX */
 #include <string.h>
 #endif  /* end UNIX */
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <stddef.h>
 
 #include "nr_api.h"
@@ -446,11 +446,11 @@ nr_stun_attr_codec_addr_encode(nr_stun_attr_info *attr_info, void *data, int off
         break;
 
     case NR_IPV6:
-        assert(0);
+        resip_assert(0);
         ABORT(R_INTERNAL);
         break;
     default:
-        assert(0);
+        resip_assert(0);
         ABORT(R_INTERNAL);
         break;
     }
@@ -708,7 +708,7 @@ nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen,
     header->length = htons(length);
 
     /* make sure FINGERPRINT is final attribute in message */
-    assert(length + sizeof(*header) == buflen);
+    resip_assert(length + sizeof(*header) == buflen);
 
     if (r_crc32((char*)buf, offset, &checksum)) {
         r_log(NR_LOG_STUN, LOG_WARNING, "Unable to compute fingerprint");
@@ -859,7 +859,7 @@ nr_stun_attr_codec_message_integrity_decode(nr_stun_attr_info *attr_info, int at
         if (nr_stun_compute_message_integrity(buf, start, result->password, result->passwordlen, computedHMAC))
             ABORT(R_FAILED);
 
-        assert(sizeof(computedHMAC) == sizeof(result->hash));
+        resip_assert(sizeof(computedHMAC) == sizeof(result->hash));
 
         result->valid = (memcmp(computedHMAC, result->hash, 20) == 0);
     }
@@ -1260,12 +1260,12 @@ static void sanity_check_encoding_stuff(nr_stun_message *msg)
         if ((attr->length % 4) != 0) {
             padding_bytes = 4 - (attr->length % 4);
         }
-        assert(attr->length == (attr->encoding_length - (4 + padding_bytes)));
-        assert(((void*)attr->encoding) == (msg->buffer + 20 + l));
+        resip_assert(attr->length == (attr->encoding_length - (4 + padding_bytes)));
+        resip_assert(((void*)attr->encoding) == (msg->buffer + 20 + l));
         l += attr->encoding_length;
-        assert((l % 4) == 0);
+        resip_assert((l % 4) == 0);
     }
-    assert(l == msg->header.length);
+    resip_assert(l == msg->header.length);
 }
 #endif /* SANITY_CHECKS */
 
@@ -1352,7 +1352,7 @@ nr_stun_encode_message(nr_stun_message *msg)
 
     r_log(NR_LOG_STUN, LOG_DEBUG, "Encoded Length: %d", msg->header.length);
 
-    assert(msg->length < NR_STUN_MAX_MESSAGE_SIZE);
+    resip_assert(msg->length < NR_STUN_MAX_MESSAGE_SIZE);
 
 #ifdef SANITY_CHECKS
     sanity_check_encoding_stuff(msg);

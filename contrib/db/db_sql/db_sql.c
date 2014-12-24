@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "db_sql.h"
 
 extern int getopt(int, char *const [], const char *);
@@ -282,7 +282,7 @@ read_and_parse(fp)
 			collector_len = 1 + line_len - copy_len;
 			collector = realloc(collector, collector_len);
 			memcpy(collector, buf + copy_len, collector_len);
-			assert(collector[collector_len-1] == 0);
+			resip_assert(collector[collector_len-1] == 0);
 		}
 	}
 

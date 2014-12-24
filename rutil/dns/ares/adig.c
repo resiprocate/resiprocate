@@ -29,7 +29,7 @@
 #include <netdb.h>
 #endif
 
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
    {
       // could not find a usable WinSock DLL
       //cerr << "Could not load winsock" << endl;
-      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
+      resip_assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
       exit(1);
    }
     
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
       /* WinSock DLL.                                  */
       WSACleanup( );
       //cerr << "Bad winsock verion" << endl;
-      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
+      resip_assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
       exit(1);
    }  
 #endif

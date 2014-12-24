@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include <iostream>
 #include <sstream>
 #include <string.h>
@@ -30,7 +30,7 @@ IPCThread::IPCThread(unsigned short localPort, unsigned short remotePort, IPCHan
     mHandler(handler),
     mMutex(mutex)
 {   
-   assert(handler!=0);
+   resip_assert(handler!=0);
    mSocket = createIPCSocket("127.0.0.1",mLocalPort);
    if(mSocket == INVALID_SOCKET)
    {

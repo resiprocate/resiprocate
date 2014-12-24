@@ -334,7 +334,7 @@ SipMessage::parseAllHeaders()
       scs->parseAll();
    }
    
-   assert(mStartLine);
+   resip_assert(mStartLine);
 
    mStartLine->checkParsed();
    
@@ -350,7 +350,7 @@ SipMessage::getTransactionId() const
       throw Exception("No Via in message", __FILE__,__LINE__);
    }
    
-   assert(exists(h_Vias) && !header(h_Vias).empty());
+   resip_assert(exists(h_Vias) && !header(h_Vias).empty());
    if( exists(h_Vias) && header(h_Vias).front().exists(p_branch) 
        && header(h_Vias).front().param(p_branch).hasMagicCookie() 
        && (!header(h_Vias).front().param(p_branch).getTransactionId().empty())
@@ -371,7 +371,7 @@ SipMessage::getTransactionId() const
 void
 SipMessage::compute2543TransactionHash() const
 {
-   assert (mRFC2543TransactionId.empty());
+   resip_assert (mRFC2543TransactionId.empty());
    
    /*  From rfc3261, 17.2.3
        The INVITE request matches a transaction if the Request-URI, To tag,
@@ -569,7 +569,7 @@ SipMessage::method() const
       }
       else
       {
-         assert(0);
+         resip_assert(0);
       }
    }
    catch(resip::ParseException&)
@@ -600,7 +600,7 @@ SipMessage::methodStr() const
          }
          else
          {
-            assert(0);
+            resip_assert(0);
          }
       }
       catch(resip::ParseException&)
@@ -690,7 +690,7 @@ SipMessage::encodeBrief(EncodeStream& str) const
 bool
 SipMessage::isClientTransaction() const
 {
-   assert(mRequest || mResponse);
+   resip_assert(mRequest || mResponse);
    return ((mIsExternal && mResponse) || (!mIsExternal && mRequest));
 }
 
@@ -1014,8 +1014,8 @@ SipMessage::setContents(auto_ptr<Contents> contents)
    if (mContents->exists(h_ContentType))
    {
       header(h_ContentType) = mContents->header(h_ContentType);
-      assert( header(h_ContentType).type() == mContents->getType().type() );
-      assert( header(h_ContentType).subType() == mContents->getType().subType() );
+      resip_assert( header(h_ContentType).type() == mContents->getType().type() );
+      resip_assert( header(h_ContentType).subType() == mContents->getType().subType() );
    }
    else
    {
@@ -1066,7 +1066,7 @@ SipMessage::getContents() const
       {
          mContents = ContentsFactoryBase::getFactoryMap()[const_header(h_ContentType)]->create(mContentsHfv, const_header(h_ContentType));
       }
-      assert( mContents );
+      resip_assert( mContents );
       
       // copy contents headers into the contents
       if (!empty(h_ContentDisposition))
@@ -1125,7 +1125,7 @@ SipMessage::header(const ExtensionHeader& headerName) const
       }
    }
    // missing extension header
-   assert(false);
+   resip_assert(false);
 
    return *(StringCategories*)0;
 }
@@ -1189,7 +1189,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
 {
    if (header != Headers::UNKNOWN)
    {
-      assert(header >= Headers::UNKNOWN && header < Headers::MAX_HEADERS);
+      resip_assert(header >= Headers::UNKNOWN && header < Headers::MAX_HEADERS);
       HeaderFieldValueList* hfvl=0;
       if (mHeaderIndices[header] == 0)
       {
@@ -1240,7 +1240,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
    }
    else
    {
-      assert(headerLen >= 0);
+      resip_assert(headerLen >= 0);
       for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
            i != mUnknownHeaders.end(); i++)
       {
@@ -1270,7 +1270,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
 RequestLine& 
 SipMessage::header(const RequestLineType& l)
 {
-   assert (!isResponse());
+   resip_assert (!isResponse());
    if (mStartLine == 0 )
    { 
       mStartLine = new (mStartLineMem) RequestLine;
@@ -1282,11 +1282,11 @@ SipMessage::header(const RequestLineType& l)
 const RequestLine& 
 SipMessage::header(const RequestLineType& l) const
 {
-   assert (!isResponse());
+   resip_assert (!isResponse());
    if (mStartLine == 0 )
    { 
       // request line missing
-      assert(false);
+      resip_assert(false);
    }
    return *static_cast<RequestLine*>(mStartLine);
 }
@@ -1294,7 +1294,7 @@ SipMessage::header(const RequestLineType& l) const
 StatusLine& 
 SipMessage::header(const StatusLineType& l)
 {
-   assert (!isRequest());
+   resip_assert (!isRequest());
    if (mStartLine == 0 )
    { 
       mStartLine = new (mStartLineMem) StatusLine;
@@ -1306,11 +1306,11 @@ SipMessage::header(const StatusLineType& l)
 const StatusLine& 
 SipMessage::header(const StatusLineType& l) const
 {
-   assert (!isRequest());
+   resip_assert (!isRequest());
    if (mStartLine == 0 )
    { 
       // status line missing
-      assert(false);
+      resip_assert(false);
    }
    return *static_cast<StatusLine*>(mStartLine);
 }
@@ -1631,7 +1631,7 @@ SipMessage::clearForceTarget()
 const Uri&
 SipMessage::getForceTarget() const
 {
-   assert(mForceTarget);
+   resip_assert(mForceTarget);
    return *mForceTarget;
 }
 

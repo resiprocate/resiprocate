@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #ifndef WIN32
 #include <unistd.h>
 #endif
@@ -131,8 +131,8 @@ Cisco7960Client::offhook()
 void 
 Cisco7960Client::selectLine(int lineNumber)
 {
-   assert(lineNumber >= 1);
-   assert(lineNumber <= 6);
+   resip_assert(lineNumber >= 1);
+   resip_assert(lineNumber <= 6);
    
    send("test key line" + Data(lineNumber));
    expect();
@@ -166,7 +166,7 @@ Cisco7960Client::soft(int key, int repeat)
 void 
 Cisco7960Client::provisionLine(int lineNumber, const Data& name, const Data& authName, const Data& authPass, const Data& proxy, int proxyPort)
 {
-   assert(0);
+   resip_assert(0);
 }
 
 void 

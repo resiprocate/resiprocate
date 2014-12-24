@@ -98,7 +98,7 @@ GruuMonkey::process(RequestContext& context)
                // and only uses sendOverExistingConnection 
                if (i->mSipPath.empty())
                {
-                  assert(i->mServerSessionId)  // make sure there is either a Path or a sessionId
+                  resip_assert(i->mServerSessionId)  // make sure there is either a Path or a sessionId
                   context.addTarget(newTarget, i->mServerSessionId);
                }
                else

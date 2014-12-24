@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: ice_peer_ctx.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
 #include <string.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <registry.h>
 #include <nr_api.h>
 #include "ice_ctx.h"
@@ -129,8 +129,8 @@ int nr_ice_peer_ctx_parse_stream_attributes(nr_ice_peer_ctx *pctx, nr_ice_media_
        pairs */
     lufrag=stream->ufrag?stream->ufrag:pctx->ctx->ufrag;
     lpwd=stream->pwd?stream->pwd:pctx->ctx->pwd;
-    assert(lufrag);
-    assert(lpwd);
+    resip_assert(lufrag);
+    resip_assert(lpwd);
     rufrag=pstream->ufrag?pstream->ufrag:pctx->peer_ufrag;
     rpwd=pstream->pwd?pstream->pwd:pctx->peer_pwd;
     if (!rufrag || !rpwd)
@@ -452,7 +452,7 @@ static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
       STAILQ_REMOVE(&pctx->peer_streams,str1,nr_ice_media_stream_,entry);
       nr_ice_media_stream_destroy(&str1);
     }
-    assert(pctx->ctx);
+    resip_assert(pctx->ctx);
     if (pctx->ctx)
       STAILQ_REMOVE(&pctx->ctx->peers, pctx, nr_ice_peer_ctx_, entry);
 
@@ -651,7 +651,7 @@ int nr_ice_peer_ctx_stream_done(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stre
        of various kinds to be fired from here */
     if (!pctx->reported_done) {
       pctx->reported_done = 1;
-      assert(!pctx->done_cb_timer);
+      resip_assert(!pctx->done_cb_timer);
       NR_ASYNC_TIMER_SET(0,nr_ice_peer_ctx_fire_done,pctx,&pctx->done_cb_timer);
     }
 

@@ -196,7 +196,7 @@ bool
 RequestFilter::asyncProcess(AsyncProcessorMessage* msg)
 {
    RequestFilterAsyncMessage* async = dynamic_cast<RequestFilterAsyncMessage*>(msg);
-   assert(async);
+   resip_assert(async);
 
 #ifdef USE_MYSQL
    if(mMySqlDb)
@@ -205,7 +205,7 @@ RequestFilter::asyncProcess(AsyncProcessorMessage* msg)
       return true;
    }
 #else
-   assert(false);
+   resip_assert(false);
    async->mQueryResult = -1;
 #endif
    return false;

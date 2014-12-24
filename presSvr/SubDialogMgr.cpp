@@ -77,13 +77,13 @@ SubDialogMgr::createDialog(SipMessage* msg)
      msg->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
   }
   Data dialogKey = getDialogKey(msg);
-  assert(mDialogMap.find(dialogKey)==mDialogMap.end());
+  resip_assert(mDialogMap.find(dialogKey)==mDialogMap.end());
 
   DialogState* dlgState = mDialogSetMgr.attachDialogState(msg);
   SubDialog *dlg = new SubDialog(dialogKey,mStack,dlgState);
   pair<DialogMap_t::iterator,bool> result = 
     mDialogMap.insert(make_pair(dialogKey,dlg));
-  assert(result.second);
+  resip_assert(result.second);
   return(dlg);
 }
 
@@ -92,7 +92,7 @@ SubDialogMgr::destroyDialog(SubDialog* dlg)
 {
   DialogMap_t::iterator iter=
 	 mDialogMap.find(dlg->key());
-  assert ( iter!=mDialogMap.end() ); 
+  resip_assert ( iter!=mDialogMap.end() ); 
   mDialogSetMgr.detachDialogState(dlg);
   mDialogMap.erase(iter);
   delete (dlg);
@@ -110,7 +110,7 @@ SubDialogMgr::getDialogKey(SipMessage * msg)
     dlgKeyStr << mDialogSetMgr.getDialogSetKey(msg);
     dlgKeyStr << ":";
     MD5Stream eventHashStr;
-    assert(msg->exists(h_Event));
+    resip_assert(msg->exists(h_Event));
     // ?dlb? empty event Ok?
     eventHashStr << msg->header(h_Event);
     if (msg->header(h_Event).exists(p_id))
@@ -120,7 +120,7 @@ SubDialogMgr::getDialogKey(SipMessage * msg)
   }
   else
   {
-    assert(msg->exists(h_Vias));
+    resip_assert(msg->exists(h_Vias));
     return msg->header(h_Vias).front().param(p_branch).clientData();
   }
 }

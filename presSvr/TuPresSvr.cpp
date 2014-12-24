@@ -15,7 +15,7 @@ TuPresSvr::process()
     mStack->buildFdSet(fdset);
 //    int err = fdset.selectMilliSeconds(0);
     int err = fdset.selectMilliSeconds(100);
-    assert( err != -1 );
+    resip_assert( err != -1 );
 
     mStack->process(fdset);
 

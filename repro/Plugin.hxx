@@ -1,7 +1,7 @@
 #ifndef PLUGIN_HXX
 #define PLUGIN_HXX
 
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "resip/stack/SipStack.hxx"
 #include "repro/ProcessorChain.hxx"

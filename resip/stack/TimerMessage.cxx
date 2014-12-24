@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include "resip/stack/TimerMessage.hxx"
 
 using namespace resip;
@@ -59,14 +59,14 @@ TimerMessage::isClientTransaction() const
          return false;
 
       case Timer::TimerC:
-         assert(0);
+         resip_assert(0);
          break;
 
 	  default:
-         assert(0);
+         resip_assert(0);
          break;
    }
-   assert(0);
+   resip_assert(0);
    return false;
 }
 

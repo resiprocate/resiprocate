@@ -11,7 +11,7 @@
 
 #include "dbstl_common.h"
 #include "dbstl_resource_manager.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 
 START_NS(dbstl)
 

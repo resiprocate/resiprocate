@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "DeflateCompressor.h"
 #include "DeflateDictionary.h"
 #include "BitBuffer.h"
@@ -245,7 +245,7 @@ osc::DeflateCompressor::DeflateCompressor(osc::StateHandler &stateHandler)
   : Compressor(stateHandler)
 {
   DEBUG_STACK_FRAME;
-  assert(stateHandler.getSigcompVersion() == 2);
+  resip_assert(stateHandler.getSigcompVersion() == 2);
 }
 
 // Using "this" in a constructor list is not always kosher, so MSVC++
@@ -263,7 +263,7 @@ osc::DeflateCompressor::DeflateCompressor(DeflateCompressor const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -286,7 +286,7 @@ osc::DeflateCompressor::operator=(DeflateCompressor const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 

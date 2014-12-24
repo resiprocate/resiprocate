@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "rutil/Assert.h"
 
 #include "compat.hxx"
 #include "rutil/Coders.hxx"

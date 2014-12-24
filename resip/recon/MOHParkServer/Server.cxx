@@ -333,7 +333,7 @@ Server::Server(ConfigParser& config) :
       // Create WebAdmin
       mWebAdmin = new WebAdmin(*this, true /* noWebChallenges */, Data::Empty, Data::Empty, mConfig.mHttpPort, resip::V4);
       mWebAdminThread = new WebAdminThread(*mWebAdmin);
-      assert(mWebAdminThread && mWebAdmin);
+      resip_assert(mWebAdminThread && mWebAdmin);
       mWebAdminThread->run();
    }
 }
@@ -368,7 +368,7 @@ Server::initializeResipLogging(unsigned int maxByteCount, const Data& level, con
 void
 Server::startup()
 {
-   assert(mMyUserAgent);
+   resip_assert(mMyUserAgent);
    mMyUserAgent->startup();
    mMOHManager.startup();
    mParkManager.startup();
@@ -377,7 +377,7 @@ Server::startup()
 void 
 Server::process(int timeoutMs)
 {
-   assert(mMyUserAgent);
+   resip_assert(mMyUserAgent);
    mMyUserAgent->process(timeoutMs);
 }
 
@@ -386,7 +386,7 @@ Server::shutdown()
 {
    mMOHManager.shutdown(true /*shuttingDownServer*/);
    mParkManager.shutdown(true /*shuttingDownServer*/);
-   assert(mMyUserAgent);
+   resip_assert(mMyUserAgent);
    mMyUserAgent->shutdown();
    OsSysLog::shutdown();
 }

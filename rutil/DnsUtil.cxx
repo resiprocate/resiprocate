@@ -56,7 +56,7 @@ DnsUtil::lookupARecords(const Data& host)
    struct hostent hostbuf; 
    char buffer[8192];
    ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
-   assert (ret != ERANGE);
+   resip_assert (ret != ERANGE);
 #elif defined(__QNX__) || defined(__SUNPRO_CC)
    struct hostent hostbuf; 
    char buffer[8192];
@@ -67,7 +67,7 @@ DnsUtil::lookupARecords(const Data& host)
    result = gethostbyname( host.c_str() );
    ret = (result == 0);
 #else
-   assert(0);
+   resip_assert(0);
    return names;
 #endif
    
@@ -96,8 +96,8 @@ DnsUtil::lookupARecords(const Data& host)
    }
    else
    {
-      assert(result);
-      assert(result->h_length == 4);
+      resip_assert(result);
+      resip_assert(result->h_length == 4);
       char str[256];
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
@@ -465,7 +465,7 @@ DnsUtil::getInterfaces(const Data& matching)
    struct ifconf ifc;
 
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
-   assert( s != INVALID_SOCKET );	// can run out of file descs
+   resip_assert( s != INVALID_SOCKET );	// can run out of file descs
    const int len = 100 * sizeof(struct ifreq);
    int maxRet = 40;
 
@@ -564,7 +564,7 @@ DnsUtil::getInterfaces(const Data& matching)
          ) // should never happen
       {  
          DebugLog (<< "  ignore because: name looks bogus");
-         assert(0);
+         resip_assert(0);
          continue;
       }
 
@@ -588,7 +588,7 @@ DnsUtil::getInterfaces(const Data& matching)
       return results;
    }
 #else
-   assert(0);
+   resip_assert(0);
 #endif
 #endif
 

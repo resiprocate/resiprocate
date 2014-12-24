@@ -44,7 +44,7 @@ static char *RCSSTRING __UNUSED__="$Id: stun_util.c,v 1.2 2008/04/28 18:21:30 ek
 #else   /* UNIX */
 #include <string.h>
 #endif  /* end UNIX */
-#include <assert.h>
+#include "rutil/Assert.h"
 
 #include "stun.h"
 #include "stun_reg.h"
@@ -83,11 +83,11 @@ nr_stun_xor_mapped_address(UINT4 magicCookie, nr_transport_addr *from, nr_transp
             from->protocol, to);
         break;
     case NR_IPV6:
-        assert(0);
+        resip_assert(0);
         ABORT(R_INTERNAL);
         break;
     default:
-        assert(0);
+        resip_assert(0);
         ABORT(R_INTERNAL);
         break;
     }
@@ -131,7 +131,7 @@ nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
         if (!children)
             ABORT(R_NO_MEMORY);
 
-        assert(sizeof(size_t) == sizeof(*count));
+        resip_assert(sizeof(size_t) == sizeof(*count));
 
         if ((r=NR_reg_get_children(NR_STUN_REG_PREF_ADDRESS_PRFX, children, (size_t)(*count + 10), (size_t*)count)))
             ABORT(r);
@@ -163,7 +163,7 @@ nr_stun_different_transaction(UCHAR *msg, int len, nr_stun_message *req)
     if (sizeof(header) > len)
         ABORT(R_FAILED);
 
-    assert(sizeof(header.id) == sizeof(UINT12));
+    resip_assert(sizeof(header.id) == sizeof(UINT12));
 
     memcpy(&header, msg, sizeof(header));
 

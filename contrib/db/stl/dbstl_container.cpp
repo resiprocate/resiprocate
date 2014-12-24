@@ -40,7 +40,7 @@ void *DbstlReAlloc(void *ptr, size_t size)
 {
 	void *p;
 
-	assert(size != 0);
+	resip_assert(size != 0);
 	if ((p = realloc(ptr, size)) == NULL)
 		THROW(NotEnoughMemoryException, 
 		    ("DbstlReAlloc failed to allocate memory", size));
@@ -52,7 +52,7 @@ void *DbstlMalloc(size_t size)
 {
 	void *p;
 
-	assert(size != 0);
+	resip_assert(size != 0);
 	if ((p = malloc(size)) == NULL)
 		THROW(NotEnoughMemoryException, 
 		    ("DbstlMalloc failed to allocate memory", size));
@@ -230,7 +230,7 @@ void db_container::verify_db_handles(const db_container &cntnr) const
 	// If they don't point to two anonymous databases at the same time,
 	// then two identical file names and two identical database names 
 	// mean the two databases are the same.
-	assert(this->pdb_ != pdb2);
+	resip_assert(this->pdb_ != pdb2);
 	if (pdb_ == NULL)
 		return;
 
@@ -246,7 +246,7 @@ void db_container::verify_db_handles(const db_container &cntnr) const
 	same_dbname = (dbn == NULL && dbn2 == NULL) ||
 	    (dbn != NULL && dbn2 != NULL && strcmp(dbn, dbn2) == 0);
 
-	assert((!(anonymous_inmemdbs) && same_dbfile && same_dbname) == false);
+	resip_assert((!(anonymous_inmemdbs) && same_dbfile && same_dbname) == false);
 
 	// If any one of the two environments are transactional, both of them
 	// should be opened in the same transactional environment.
@@ -258,7 +258,7 @@ void db_container::verify_db_handles(const db_container &cntnr) const
 		if ((flags & DB_INIT_TXN) || (flags2 & DB_INIT_TXN)) {
 			BDBOP(dbenv_->get_home(&home), ret);
 			BDBOP(penv2->get_home(&home), ret);
-			assert(home != NULL && home2 != NULL && 
+			resip_assert(home != NULL && home2 != NULL && 
 			    strcmp(home, home2) == 0);
 		}
 	}

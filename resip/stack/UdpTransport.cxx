@@ -161,7 +161,7 @@ UdpTransport::processPollEvent(FdPollEventMask mask)
    ++mPollEventCnt;
    if ( mask & FPEM_Error )
    {
-      assert(0);
+      resip_assert(0);
    }
    if ( mask & FPEM_Write )
    {
@@ -238,11 +238,11 @@ void
 UdpTransport::processTxOne(SendData *data)
 {
    ++mTxMsgCnt;
-   assert(data);
+   resip_assert(data);
    std::auto_ptr<SendData> sendData(data);
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
-   assert( sendData->destination.getPort() != 0 );
+   resip_assert( sendData->destination.getPort() != 0 );
 
    const sockaddr& addr = sendData->destination.getSockaddr();
    int expected;
@@ -335,7 +335,7 @@ UdpTransport::processRxAll()
    }
    if ( buffer && (mTransportFlags & RESIP_TRANSPORT_FLAG_KEEP_BUFFER)!=0 )
    {
-      assert(mRxBuffer==NULL);
+      resip_assert(mRxBuffer==NULL);
       mRxBuffer = buffer;
       buffer = NULL;
    }

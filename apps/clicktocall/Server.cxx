@@ -76,7 +76,7 @@ class ShutdownCmd  : public resip::DumCommand
       {
          mServer->shutdownImpl();
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       std::ostream& encode(std::ostream& strm) const { strm << " ShutdownCmd: "; return strm; }
       std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
    private:
@@ -96,7 +96,7 @@ public:
          return new B2BSession(mServer);
          break;
       default:
-         assert(false);
+         resip_assert(false);
          return 0;
          //return new DefaultDialogSet(mConversationManager);
          break;

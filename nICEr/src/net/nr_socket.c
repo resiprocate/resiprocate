@@ -34,12 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static char *RCSSTRING __UNUSED__="$Id: nr_socket.c,v 1.2 2008/04/28 17:59:02 ekr Exp $";
 
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <nr_api.h>
 #include "nr_socket.h"
 #include "local_addr.h"
 
-#define CHECK_DEFINED(f) assert(sock->vtbl->f); if (!sock->vtbl->f) ERETURN(R_INTERNAL);
+#define CHECK_DEFINED(f) resip_assert(sock->vtbl->f); if (!sock->vtbl->f) ERETURN(R_INTERNAL);
 int nr_socket_create_int(void *obj, nr_socket_vtbl *vtbl, nr_socket **sockp)
   {
     int _status;
@@ -48,7 +48,7 @@ int nr_socket_create_int(void *obj, nr_socket_vtbl *vtbl, nr_socket **sockp)
     if(!(sock=RCALLOC(sizeof(nr_socket))))
       ABORT(R_NO_MEMORY);
 
-    assert(vtbl->version == 1);
+    resip_assert(vtbl->version == 1);
     if (vtbl->version != 1)
        ABORT(R_INTERNAL);
 
@@ -75,7 +75,7 @@ int nr_socket_destroy(nr_socket **sockp)
 
     CHECK_DEFINED(destroy);
 
-    assert(sock->vtbl);
+    resip_assert(sock->vtbl);
     if (sock->vtbl)
       sock->vtbl->destroy(&sock->obj);
 

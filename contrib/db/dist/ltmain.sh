@@ -3170,7 +3170,7 @@ int setenv (const char *, const char *, int);
 #endif
 #include <malloc.h>
 #include <stdarg.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>

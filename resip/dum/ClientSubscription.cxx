@@ -73,14 +73,14 @@ ClientSubscription::dispatch(const SipMessage& msg)
    DebugLog (<< "ClientSubscription::dispatch " << msg.brief());
    
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
 
    clearDustbin();
 
    // asserts are checks the correctness of Dialog::dispatch
    if (msg.isRequest() )
    {
-      assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
+      resip_assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
       mRefreshing = false;
 
       // !dlb! 481 NOTIFY iff state is dead?
@@ -140,7 +140,7 @@ void
 ClientSubscription::processResponse(const SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
 
    mRefreshing = false;
    int statusCode = msg.header(h_StatusLine).statusCode();
@@ -270,7 +270,7 @@ ClientSubscription::processNextNotify()
 
    QueuedNotify* qn = mQueuedNotifies.front();
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
 
    unsigned long refreshInterval = 0;
    bool setRefreshTimer=false; 
@@ -628,7 +628,7 @@ ClientSubscription::endCommand(bool immediate)
 void 
 ClientSubscription::acceptUpdate(int statusCode, const char* reason)
 {
-   assert(!mQueuedNotifies.empty());
+   resip_assert(!mQueuedNotifies.empty());
    if (mQueuedNotifies.empty())
    {
       InfoLog(<< "No queued notify to accept");
@@ -714,8 +714,8 @@ void
 ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);   
-   assert(!mQueuedNotifies.empty());
+   resip_assert(handler);   
+   resip_assert(!mQueuedNotifies.empty());
    if (mQueuedNotifies.empty())
    {
       InfoLog(<< "No queued notify to reject");
@@ -797,7 +797,7 @@ void
 ClientSubscription::onReadyToSend(SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
    handler->onReadyToSend(getHandle(), msg);
 }
 
@@ -806,14 +806,14 @@ ClientSubscription::flowTerminated()
 {
    // notify handler
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);
+   resip_assert(handler);
    handler->onFlowTerminated(getHandle());
 }
 
 void
 ClientSubscription::sendQueuedRefreshRequest()
 {
-   assert(!mRefreshing);
+   resip_assert(!mRefreshing);
 
    if (mHaveQueuedRefresh)
    {

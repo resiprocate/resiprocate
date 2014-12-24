@@ -23,7 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -266,7 +266,7 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
        }
        else
        {
-         assert( channel->servers[i].family == AF_INET );
+         resip_assert( channel->servers[i].family == AF_INET );
          channel->servers[i].addr = options->servers[i].addr;
        }
 #else

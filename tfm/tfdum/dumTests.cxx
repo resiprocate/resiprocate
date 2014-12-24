@@ -234,7 +234,7 @@ class DumTestCase : public DumFixture
                switch(m)
                {
                   case None:
-                     assert(0);
+                     resip_assert(0);
                      return "Broken";                     
                   case Uac:
                      return "uac";
@@ -1019,7 +1019,7 @@ class DumTestCase : public DumFixture
             }
             virtual void operator()(boost::shared_ptr<Event> event)
             {
-               assert(0);
+               resip_assert(0);
             }
             virtual void operator()()
             {
@@ -2285,15 +2285,15 @@ class DumTestCase : public DumFixture
                mSource(source),
                mStale(stale)
             {
-               assert(mSource->header(h_StatusLine).responseCode() == 401 || mSource->header(h_StatusLine).responseCode() == 407);
-               assert(mSource->header(h_WWWAuthenticates).size() == 1);
+               resip_assert(mSource->header(h_StatusLine).responseCode() == 401 || mSource->header(h_StatusLine).responseCode() == 407);
+               resip_assert(mSource->header(h_WWWAuthenticates).size() == 1);
             }
                
             boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg)
             {
-               assert(msg->header(h_StatusLine).responseCode() == 401 || msg->header(h_StatusLine).responseCode() == 407);
-               assert(msg->header(h_WWWAuthenticates).size() == 1);
-               assert(mSource->header(h_WWWAuthenticates).size() == 1);
+               resip_assert(msg->header(h_StatusLine).responseCode() == 401 || msg->header(h_StatusLine).responseCode() == 407);
+               resip_assert(msg->header(h_WWWAuthenticates).size() == 1);
+               resip_assert(mSource->header(h_WWWAuthenticates).size() == 1);
                msg->header(h_WWWAuthenticates).front().param(p_nonce) = mSource->header(h_WWWAuthenticates).front().param(p_nonce);
                if (mStale)
                {

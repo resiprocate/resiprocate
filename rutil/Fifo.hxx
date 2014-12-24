@@ -1,7 +1,7 @@
 #if !defined(RESIP_FIFO_HXX)
 #define RESIP_FIFO_HXX 
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include "rutil/AbstractFifo.hxx"
 #include "rutil/SelectInterruptor.hxx"
 
@@ -94,7 +94,7 @@ Fifo<Msg>::clear()
       delete mFifo.front();
       mFifo.pop_front();
    }
-   assert(mFifo.empty());
+   resip_assert(mFifo.empty());
 }
 
 template <class Msg>

@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "Libc.h"
 #include "SigcompMessage.h"
 #include "Sha1Hasher.h"
@@ -288,7 +288,7 @@ osc::SigcompMessage::SigcompMessage(SigcompMessage const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -325,7 +325,7 @@ osc::SigcompMessage::operator=(SigcompMessage const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 

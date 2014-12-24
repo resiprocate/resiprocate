@@ -39,7 +39,7 @@ class A { int m; B *p_; };
 class B { int n; };
 
 The user also needs to register callbacks for  
-i). returning an object¡¯s size in bytes; 
+i). returning an objectï¿½ï¿½s size in bytes; 
 ii). Marshalling and unmarshalling an object;
 iii). Copying a complex object and  and assigning an object to another 
 object of the same type; 
@@ -186,7 +186,7 @@ public:
 	/// seq[length - 1] are all sequence seq's memory.
 	static size_t  length(const T *seq)
 	{
-		assert(inst_->seqlen_ != NULL);
+		resip_assert(inst_->seqlen_ != NULL);
 		return (size_t)inst_->seqlen_(seq);
 	}
 

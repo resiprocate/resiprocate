@@ -53,9 +53,9 @@ UdpServer::start()
 void 
 UdpServer::setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort)
 {
-   assert(!mAlternatePortUdpServer);
-   assert(!mAlternateIpUdpServer);
-   assert(!mAlternateIpPortUdpServer);
+   resip_assert(!mAlternatePortUdpServer);
+   resip_assert(!mAlternateIpUdpServer);
+   resip_assert(!mAlternateIpPortUdpServer);
    mAlternatePortUdpServer = alternatePort;
    mAlternateIpUdpServer = alternateIp;
    mAlternateIpPortUdpServer = alternateIpPort;

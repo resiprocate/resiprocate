@@ -199,7 +199,7 @@ get_current_entity()
 	 *  entity list
 	 */
 	ENTITY *entity = the_schema.entities_tail;
-	assert(entity);
+	resip_assert(entity);
 
 	return entity;
 }
@@ -217,7 +217,7 @@ get_current_attribute()
 	 */
 	entity = get_current_entity();
 	attr = entity->attributes_tail;
-	assert(attr);
+	resip_assert(attr);
 	return attr;
 }
 

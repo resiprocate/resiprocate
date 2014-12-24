@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 #include "StateMap.h"
 #include "State.h"
 
@@ -63,7 +63,7 @@ osc::StateMap::StateMap(StateMap const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
 }
 
 /**
@@ -106,7 +106,7 @@ osc::StateMap::operator=(StateMap const &r)
     return *this;
   }
   /* Assign attributes */
-  assert(0);
+  resip_assert(0);
   return *this;
 }
 
@@ -204,7 +204,7 @@ osc::StateMap::calculateBucketNumber(const osc::byte_t *id)
   int bitsLeft = m_keyBits;
   size_t bucketNumber = 0;
 
-  assert (m_keyBits < 6*8);
+  resip_assert (m_keyBits < 6*8);
 
   // Pull in any whole bytes of the state ID that we need to use
   while (bitsLeft >= 8)
@@ -222,7 +222,7 @@ osc::StateMap::calculateBucketNumber(const osc::byte_t *id)
     bucketNumber |= (static_cast<size_t>(*id) >> (8 - bitsLeft));
   }
 
-  assert (bucketNumber < m_numberOfBuckets);
+  resip_assert (bucketNumber < m_numberOfBuckets);
 
   return bucketNumber;
 }

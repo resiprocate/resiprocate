@@ -90,9 +90,9 @@ FlowDtlsSocketContext::handshakeCompleted()
    mSocket->createSrtpSessionPolicies(mSRTPPolicyOut, mSRTPPolicyIn);
 
    r=srtp_create(&mSRTPSessionIn, &mSRTPPolicyIn);   
-   assert(r==0);
+   resip_assert(r==0);
    r=srtp_create(&mSRTPSessionOut, &mSRTPPolicyOut);
-   assert(r==0);
+   resip_assert(r==0);
    mSrtpInitialized = true;
 }
  

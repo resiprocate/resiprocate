@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
@@ -594,7 +594,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
                   rtpHeader->ssrc = pSendingEndpoint->mSsrc;
 
                   // relay packet to second sender
-                  assert(pSendingEndpoint->mRelayDatagram.get() == 0);
+                  resip_assert(pSendingEndpoint->mRelayDatagram.get() == 0);
                   pSendingEndpoint->mRelayDatagram = buffer;
                   pSendingEndpoint->mRelayDatagramLen = len;
                   if(pSendingEndpoint->mKeepaliveMode)

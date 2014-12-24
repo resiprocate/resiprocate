@@ -14,7 +14,7 @@ DialogSetMgr::~DialogSetMgr() {
 DialogState*
 DialogSetMgr::matchDialogState(SipMessage* msg)
 {
-  assert(0); // Clean this function out
+  resip_assert(0); // Clean this function out
   Data key = getDialogSetKey(msg);
   DialogSetMap_iter iter = mDialogSetMap.find(key);
   if (iter!=mDialogSetMap.end())

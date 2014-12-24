@@ -91,7 +91,7 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
          break;
       default:
          InfoLog (<< "Try to create an unsupported socket type: " << Tuple::toData(type));
-         assert(0);
+         resip_assert(0);
          throw Transport::Exception("Unsupported transport", __FILE__,__LINE__);
    }
 

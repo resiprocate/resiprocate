@@ -56,8 +56,8 @@ public:
    virtual void doFramedReceive();
 
    /// Class override callbacks
-   virtual void onConnectSuccess() { assert(false); }
-   virtual void onConnectFailure(const asio::error_code& e) { assert(false); }
+   virtual void onConnectSuccess() { resip_assert(false); }
+   virtual void onConnectFailure(const asio::error_code& e) { resip_assert(false); }
    virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) = 0;
    virtual void onReceiveFailure(const asio::error_code& e) = 0;
    virtual void onSendSuccess() = 0;
@@ -68,14 +68,14 @@ public:
 
    // Stubbed out async handlers needed by Protocol specific Subclasses of this - the requirement for these 
    // to be in the base class all revolves around the shared_from_this() use/requirement
-   virtual void start() { assert(false); }
-   virtual void stop() { assert(false); }
-   virtual void handleReadHeader(const asio::error_code& e) { assert(false); }
-   virtual void handleServerHandshake(const asio::error_code& e) { assert(false); }
-   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
-   virtual void handleUdpResolve(const asio::error_code& ec, asio::ip::udp::resolver::iterator endpoint_iterator) { assert(false); }
-   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
-   virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
+   virtual void start() { resip_assert(false); }
+   virtual void stop() { resip_assert(false); }
+   virtual void handleReadHeader(const asio::error_code& e) { resip_assert(false); }
+   virtual void handleServerHandshake(const asio::error_code& e) { resip_assert(false); }
+   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
+   virtual void handleUdpResolve(const asio::error_code& ec, asio::ip::udp::resolver::iterator endpoint_iterator) { resip_assert(false); }
+   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
+   virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
 
 protected:
    /// Handle completion of a sendData operation.

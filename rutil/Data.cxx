@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <cassert>
+#include "rutil/Assert.h"
 #include <ctype.h>
 #include <fstream>
 #include <math.h>
@@ -226,7 +226,7 @@ Data::Data(size_type capacity,
                : LocalAlloc),
      mShareEnum(capacity > LocalAlloc ? Take : Borrow)
 {
-   assert( capacity >= 0 );
+   resip_assert( capacity >= 0 );
    mBuf[mSize] = 0;
 }
 
@@ -242,7 +242,7 @@ Data::Data(size_type capacity, bool)
                : LocalAlloc),
      mShareEnum(capacity > LocalAlloc ? Take : Borrow)
 {
-   assert( capacity >= 0 );
+   resip_assert( capacity >= 0 );
    mBuf[mSize] = 0;
 }
 #endif
@@ -266,7 +266,7 @@ Data::Data(const char* str, size_type length, bool)
      mCapacity(mSize),
      mShareEnum(Share)
 {
-   assert(str);
+   resip_assert(str);
 }
 
 void
@@ -275,7 +275,7 @@ Data::initFromString(const char* str, size_type len)
    mSize = len;
    if(len > 0)
    {
-      assert(str);
+      resip_assert(str);
    }
    size_t bytes = len + 1;
    if(bytes <= len)
@@ -308,7 +308,7 @@ Data::Data(ShareEnum se, const char* buffer, size_type length)
      mCapacity(mSize),
      mShareEnum(se)
 {
-   assert(buffer);
+   resip_assert(buffer);
 }
 
 Data::Data(ShareEnum se, const char* buffer, size_type length, size_type capacity)
@@ -317,7 +317,7 @@ Data::Data(ShareEnum se, const char* buffer, size_type length, size_type capacit
      mCapacity(capacity),
      mShareEnum(se)
 {
-   assert(buffer);
+   resip_assert(buffer);
 }
 
 Data::Data(ShareEnum se, const char* buffer)
@@ -326,7 +326,7 @@ Data::Data(ShareEnum se, const char* buffer)
      mCapacity(mSize),
      mShareEnum(se)
 {
-   assert(buffer);
+   resip_assert(buffer);
 }
 
 Data::Data(ShareEnum se, const Data& staticData)
@@ -338,7 +338,7 @@ Data::Data(ShareEnum se, const Data& staticData)
    // !dlb! maybe:
    // if you are trying to use Take, but make sure that you unset the mShareEnum on
    // the staticData
-   assert(se == Share); // makes no sense to call this with 'Take'.
+   resip_assert(se == Share); // makes no sense to call this with 'Take'.
 }
 //=============================================================================
 
@@ -441,8 +441,8 @@ Data::Data(double value,
                : LocalAlloc),
      mShareEnum(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
 {
-   assert(precision >= 0);
-   assert(precision < MaxDigitPrecision);
+   resip_assert(precision >= 0);
+   resip_assert(precision < MaxDigitPrecision);
 
    double v = value;
    bool neg = (value < 0.0);
@@ -513,7 +513,7 @@ Data::Data(double value,
       mSize = m.size() + d.size() + 1;
    }
 
-   assert(mBuf[mSize] == 0);
+   resip_assert(mBuf[mSize] == 0);
 }
 #endif
 
@@ -618,7 +618,7 @@ Data::Data(bool value)
 Data&
 Data::setBuf(ShareEnum se, const char* buffer, size_type length)
 {
-   assert(buffer);
+   resip_assert(buffer);
    if (mShareEnum == Take)
    {
       delete[] mBuf;
@@ -718,7 +718,7 @@ resip::operator==(const Data& lhs, const Data& rhs)
 bool 
 resip::operator==(const Data& lhs, const char* rhs)
 {
-   assert(rhs); // .dlb. not consistent with constructor
+   resip_assert(rhs); // .dlb. not consistent with constructor
    if (strncmp(lhs.mBuf, rhs, lhs.mSize) != 0)
    {
       return false;
@@ -752,7 +752,7 @@ resip::operator<(const Data& lhs, const Data& rhs)
 bool
 resip::operator<(const Data& lhs, const char* rhs)
 {
-   assert(rhs);
+   resip_assert(rhs);
    Data::size_type l = strlen(rhs);
    int res = memcmp(lhs.mBuf, rhs, resipMin(lhs.mSize, l));
 
@@ -773,7 +773,7 @@ resip::operator<(const Data& lhs, const char* rhs)
 bool
 resip::operator<(const char* lhs, const Data& rhs)
 {
-   assert(lhs);
+   resip_assert(lhs);
    Data::size_type l = strlen(lhs);
    int res = memcmp(lhs, rhs.mBuf, resipMin(l, rhs.mSize));
 
@@ -798,7 +798,7 @@ resip::operator<(const char* lhs, const Data& rhs)
 Data& 
 Data::operator=(const Data& data)
 {
-   assert(mBuf);
+   resip_assert(mBuf);
    
    if (&data != this)
    {
@@ -934,7 +934,7 @@ Data::at(size_type p)
 Data& 
 Data::operator=(const char* str)
 {
-   assert(str);
+   resip_assert(str);
    size_type l = strlen(str);
 
    if (mShareEnum == Share)
@@ -960,7 +960,7 @@ Data::operator=(const char* str)
 Data 
 Data::operator+(const char* str) const
 {
-   assert(str);
+   resip_assert(str);
    size_t l = strlen(str);
    Data tmp(mSize + l, Data::Preallocate);
    tmp.mSize = mSize + l;
@@ -983,7 +983,7 @@ Data::reserve(size_type len)
 Data&
 Data::append(const char* str, size_type len)
 {
-   assert(str);
+   resip_assert(str);
    if (mCapacity <= mSize + len)  // append null terminates, thus the equality
    {
       // .dlb. pad for future growth?
@@ -1045,7 +1045,7 @@ void
 Data::resize(size_type newCapacity, 
              bool copy)
 {
-   assert(newCapacity >= mCapacity || mShareEnum == Data::Share);
+   resip_assert(newCapacity >= mCapacity || mShareEnum == Data::Share);
 
    char *oldBuf = mBuf;
    bool needToDelete=(mShareEnum==Take);
@@ -1103,7 +1103,7 @@ Data::md5(EncodingType type) const
       default:
          return digest.hex();
    }
-   assert(0);
+   resip_assert(0);
    return digest.hex();
 }
 
@@ -1216,7 +1216,7 @@ Data::charUnencoded() const
             // !rwm! changed from high==0 || low==0
             if (high == 0 && low == 0)
             {
-               assert(0);
+               resip_assert(0);
                // ugh
                return ret;
             }
@@ -1821,14 +1821,14 @@ Data::postfix(const Data& post) const
 Data 
 Data::substr(size_type first, size_type count) const
 {
-   assert(first <= mSize);
+   resip_assert(first <= mSize);
    if ( count == Data::npos)
    {
       return Data(mBuf+first, mSize-first);
    }
    else
    {
-      assert(first + count <= mSize);
+      resip_assert(first + count <= mSize);
       return Data(mBuf+first, count);
    }
 }
@@ -1855,7 +1855,7 @@ Data::replace(const Data& match,
               const Data& replaceWith,
               int max)
 {
-   assert(!match.empty());
+   resip_assert(!match.empty());
 
    int count = 0;
 
@@ -2172,7 +2172,7 @@ switch(size) \
 bool 
 Data::sizeEqualCaseInsensitiveTokenCompare(const Data& rhs) const
 {
-   assert(mSize==rhs.mSize);
+   resip_assert(mSize==rhs.mSize);
    const char* d1(mBuf);
    const char* d2(rhs.mBuf);
 
@@ -2303,7 +2303,7 @@ Data::fromFile(const Data& filename)
                                     __FILE__,__LINE__);
    }
 
-   assert(is.is_open());
+   resip_assert(is.is_open());
 
    int length = 0;
 
@@ -2316,7 +2316,7 @@ Data::fromFile(const Data& filename)
    // this is a work around for a bug in CodeWarrior 9's implementation of seekg.
    // http://groups.google.ca/group/comp.sys.mac.programmer.codewarrior/browse_frm/thread/a4279eb75f3bd55a
    FILE * tmpFile = fopen(filename.c_str(), "r+b");
-   assert(tmpFile != NULL);
+   resip_assert(tmpFile != NULL);
    fseek(tmpFile, 0, SEEK_END);
    length = ftell(tmpFile);
    fseek(tmpFile, 0, SEEK_SET);
@@ -2452,9 +2452,9 @@ Data::base64encode(bool useSafeSet) const
    {
       unsigned char codeBits = (p[index] & 0xfc)>>2;
       
-      assert(codeBits < 64);
+      resip_assert(codeBits < 64);
       dstData[dstIndex++] = codeChar[codeBits]; // c0 output
-      assert(dstIndex <= dstLimitLength);
+      resip_assert(dstIndex <= dstLimitLength);
       
       // do second codeBits
       codeBits = ((p[index]&0x3)<<4);
@@ -2462,16 +2462,16 @@ Data::base64encode(bool useSafeSet) const
       {
          codeBits |= ((p[index+1]&0xf0)>>4);
       }
-      assert(codeBits < 64);
+      resip_assert(codeBits < 64);
       dstData[dstIndex++] = codeChar[codeBits]; // c1 output
-      assert(dstIndex <= dstLimitLength);
+      resip_assert(dstIndex <= dstLimitLength);
       
       if (index+1 >= srcLength) 
       {
          dstData[dstIndex++] = codeChar[64];
-         assert(dstIndex <= dstLimitLength);
+         resip_assert(dstIndex <= dstLimitLength);
          dstData[dstIndex++] = codeChar[64];
-         assert(dstIndex <= dstLimitLength);
+         resip_assert(dstIndex <= dstLimitLength);
          break; // encoded d0 only
       }
       
@@ -2481,22 +2481,22 @@ Data::base64encode(bool useSafeSet) const
       {
          codeBits |= ((p[index+2]&0xc0)>>6);
       }
-      assert(codeBits < 64);
+      resip_assert(codeBits < 64);
       dstData[dstIndex++] = codeChar[codeBits]; // c2 output
-      assert(dstIndex <= dstLimitLength);
+      resip_assert(dstIndex <= dstLimitLength);
       
       if (index+2 >= srcLength) 
       {
          dstData[dstIndex++] = codeChar[64];   
-         assert(dstIndex <= dstLimitLength);
+         resip_assert(dstIndex <= dstLimitLength);
          break; // encoded d0 d1 only
       }
       
       // do fourth codeBits
       codeBits = ((p[index+2]&0x3f));
-      assert(codeBits < 64);
+      resip_assert(codeBits < 64);
       dstData[dstIndex++] = codeChar[codeBits]; // c3 output
-      assert(dstIndex <= dstLimitLength);
+      resip_assert(dstIndex <= dstLimitLength);
       // outputed all d0,d1, and d2
    }
 

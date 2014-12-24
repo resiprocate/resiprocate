@@ -206,7 +206,7 @@ public:
 	/// you don't need to call this function.
 	inline void _DB_STL_StoreElement()
 	{
-		assert(_DB_STL_itr_ != NULL);
+		resip_assert(_DB_STL_itr_ != NULL);
 		_DB_STL_itr_->replace_current(*this);
 	}
 
@@ -630,7 +630,7 @@ public:
 	/// you don't need to call this function.
 	inline void _DB_STL_StoreElement()
 	{
-		assert(_DB_STL_itr_ != NULL);
+		resip_assert(_DB_STL_itr_ != NULL);
 		_DB_STL_itr_->replace_current(dbstl_my_value_);
 	}
 
@@ -786,7 +786,7 @@ public:
 		typename DM::ElemSizeFunct elemszf = 
 		    DM::instance()->get_size_function();
 
-		assert(seqcpy != NULL && seqlen != NULL);
+		resip_assert(seqcpy != NULL && seqlen != NULL);
 		sql = seqlen(src);
 		if (elemszf == NULL)
 			slen = sizeof(T) * (sql + 1);

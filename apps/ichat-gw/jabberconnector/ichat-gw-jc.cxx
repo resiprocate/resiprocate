@@ -1,6 +1,6 @@
 #include <signal.h>
 #include <iostream>
-#include <assert.h>
+#include "rutil/Assert.h"
 
 #include "JabberComponent.hxx"
 
@@ -63,7 +63,7 @@ main (int argc, char** argv)
    {
       // could not find a usable WinSock DLL
       cerr << "Could not load winsock" << endl;
-      assert(0); 
+      resip_assert(0); 
       exit(1);
    }    
 #endif

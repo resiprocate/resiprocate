@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 #include <fcntl.h>
 
 #ifdef HAVE_CONFIG_H
@@ -140,8 +140,8 @@ MySqlDb::connectToDatabase() const
    disconnectFromDatabase();
 
    // Now try to connect
-   assert(mConn == 0);
-   assert(mConnected == false);
+   resip_assert(mConn == 0);
+   resip_assert(mConnected == false);
 
    mConn = mysql_init(0);
    if(mConn == 0)
@@ -191,8 +191,8 @@ MySqlDb::query(const Data& queryCommand, MYSQL_RES** result) const
    }
    if(rc == 0)
    {
-      assert(mConn!=0);
-      assert(mConnected);
+      resip_assert(mConn!=0);
+      resip_assert(mConnected);
       rc = mysql_query(mConn,queryCommand.c_str());
       if(rc != 0)
       {
@@ -702,7 +702,7 @@ MySqlDb::tableName(Table table) const
    switch (table)
    {
       case UserTable:
-         assert(false);  // usersavp is not used!
+         resip_assert(false);  // usersavp is not used!
          return usersavp;
       case RouteTable:
          return routesavp;
@@ -717,7 +717,7 @@ MySqlDb::tableName(Table table) const
       case SiloTable:
          return siloavp;
       default:
-         assert(0);
+         resip_assert(0);
    }
    return 0;
 }

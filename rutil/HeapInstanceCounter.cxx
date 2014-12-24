@@ -3,7 +3,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Data.hxx"
 
-#include <assert.h>
+#include "rutil/Assert.h"
 #include <map>
 
 using namespace std;

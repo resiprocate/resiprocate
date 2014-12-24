@@ -179,7 +179,7 @@ void CallHandler::setupStreams(int stream_ct, int streams[])
   {
     int r;
 
-    assert(stream_ct<10);
+    resip_assert(stream_ct<10);
 
     for(int i=0;i<stream_ct;i++){
       if(r=nr_ice_add_media_stream(mIceCtx,"stream",streams[i],&mStreams[i]))
@@ -494,7 +494,7 @@ void CallHandler::send(int stream, int component, unsigned char *data,
   {
     int r;
 
-    assert(stream>=0 && stream<mStreamCt);
+    resip_assert(stream>=0 && stream<mStreamCt);
  
     if(r=nr_ice_media_stream_send(mIcePeerCtx,mStreams[stream],component,data,len))
       abort();

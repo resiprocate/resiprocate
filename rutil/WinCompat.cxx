@@ -525,7 +525,7 @@ WinCompat::determineSourceInterface(const GenericIPAddress& destination)
    }  
 
 #else
-   assert(0);
+   resip_assert(0);
 #endif
    return GenericIPAddress();
 }

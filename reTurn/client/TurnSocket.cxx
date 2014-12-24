@@ -413,7 +413,7 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
    {
       // No remote peer yet (ie. not data sent or received from remote peer) - so create one
       mActiveDestination = mChannelManager.createChannelBinding(remoteTuple);
-      assert(mActiveDestination);
+      resip_assert(mActiveDestination);
       errorCode = channelBind(*mActiveDestination);
    }
 

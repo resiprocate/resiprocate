@@ -7,7 +7,7 @@
 
 #include "resip/stack/ssl/Security.hxx"
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include <list>
 #include "rutil/BaseException.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -69,7 +69,7 @@ EncryptionManager::~EncryptionManager()
 void EncryptionManager::setRemoteCertStore(std::auto_ptr<RemoteCertStore> store)
 {
    ErrLog(<< "Async currently is not supported");
-   assert(0);
+   resip_assert(0);
    //mRemoteCertStore = store;
 }
 
@@ -418,8 +418,8 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
                                                             const Data& aor, 
                                                             const Data& data)
 {
-   assert(mSenderAor==aor);
-   assert(mPendingRequests>0&&mPendingRequests<=2);
+   resip_assert(mSenderAor==aor);
+   resip_assert(mPendingRequests>0&&mPendingRequests<=2);
    Result result = Pending;
 
    if (success)
@@ -523,9 +523,9 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
                                                                const Data& aor, 
                                                                const Data& data)
 {
-   assert(mRecipientAor==aor);
-   assert(type==MessageId::UserCert);
-   assert(mPendingRequests==1);
+   resip_assert(mRecipientAor==aor);
+   resip_assert(type==MessageId::UserCert);
+   resip_assert(mPendingRequests==1);
    if (success)
    {
       InfoLog(<< "Adding user cert for " << aor << endl);
@@ -620,19 +620,19 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
                                                                       const Data& aor, 
                                                                       const Data& data)
 {
-   assert(mPendingRequests>0&&mPendingRequests<=3);
+   resip_assert(mPendingRequests>0&&mPendingRequests<=3);
    Result result = Pending;
    if (success)
    {
       if (type == MessageId::UserCert)
       {
-         assert(aor==mSenderAor||aor==mRecipientAor);
+         resip_assert(aor==mSenderAor||aor==mRecipientAor);
          InfoLog(<< "Adding user cert for " << aor << endl);
          mDum.getSecurity()->addUserCertDER(aor, data);
       }
       else
       {
-         assert(aor==mSenderAor);
+         resip_assert(aor==mSenderAor);
          InfoLog(<< "Adding private key for " << aor << endl);
          mDum.getSecurity()->addUserPrivateKeyDER(aor, data);
       }
@@ -795,20 +795,20 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
                                                                const Data& data)
 {
    Result result = Complete;
-   assert(mPendingRequests>0 && mPendingRequests<=2);
+   resip_assert(mPendingRequests>0 && mPendingRequests<=2);
    if (success)
    {
       if (aor == mSigner)
       {
-         assert(MessageId::UserCert == type);
-         assert(mPendingRequests==1);
+         resip_assert(MessageId::UserCert == type);
+         resip_assert(mPendingRequests==1);
          --mPendingRequests;
          InfoLog(<< "Adding user cert for " << aor << endl);
          mDum.getSecurity()->addUserCertDER(aor, data);
       }
       else
       {
-         assert(aor == mDecryptor);
+         resip_assert(aor == mDecryptor);
          if (MessageId::UserCert == type)
          {
             InfoLog(<< "Adding user cert for " << aor << endl);

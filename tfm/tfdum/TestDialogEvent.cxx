@@ -34,7 +34,7 @@ bool
 DialogEventPred::passes(boost::shared_ptr<Event> event)
 {
    DialogEventHandlerEvent* dehEvent = dynamic_cast<DialogEventHandlerEvent*>(event.get());
-   assert(dehEvent);
+   resip_assert(dehEvent);
 
    bool passesIdCheck = (dehEvent->getDialogEventInfo().getDialogEventId() == mDialogEventInfo.getDialogEventId()) || 
                         (mDialogEventInfo.getDialogEventId() == "*");

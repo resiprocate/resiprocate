@@ -644,7 +644,7 @@ Proxy::doSessionAccounting(const resip::SipMessage& sip, bool received, RequestC
 {
    if(mSessionAccountingEnabled)
    {
-      assert(mAccountingCollector);
+      resip_assert(mAccountingCollector);
       mAccountingCollector->doSessionAccounting(sip, received, context);
    }
 }
@@ -654,7 +654,7 @@ Proxy::doRegistrationAccounting(AccountingCollector::RegistrationEvent regEvent,
 {
    if(mRegistrationAccountingEnabled)
    {
-      assert(mAccountingCollector);
+      resip_assert(mAccountingCollector);
       mAccountingCollector->doRegistrationAccounting(regEvent, sip);
    }
 }

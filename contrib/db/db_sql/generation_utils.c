@@ -64,7 +64,7 @@ prepare_string(in, indent_level, is_comment)
 			for (tmp_i = out_i + indentation;
 			     out_i < tmp_i; 
 			     out_i++) {
-				assert(out_i < ttw_bufsiz);
+				resip_assert(out_i < ttw_bufsiz);
 				out[out_i] = INDENT_CHAR;
 			}
 			if (is_comment) {
@@ -82,7 +82,7 @@ prepare_string(in, indent_level, is_comment)
 					for(tmp_i = out_i + INDENT_MULTIPLIER;
 					    out_i < tmp_i;
 					    out_i++) {
-						assert(out_i < ttw_bufsiz);
+						resip_assert(out_i < ttw_bufsiz);
 						out[out_i] = INDENT_CHAR;
 					}
 			}
@@ -98,10 +98,10 @@ prepare_string(in, indent_level, is_comment)
 				for (tmp_i = out_i + indentation;
 				     out_i < tmp_i;
 				     out_i++) {
-					assert(out_i < ttw_bufsiz);
+					resip_assert(out_i < ttw_bufsiz);
 					out[out_i] = INDENT_CHAR;
 				}
-				assert(out_i + 5 < ttw_bufsiz);
+				resip_assert(out_i + 5 < ttw_bufsiz);
 				out[out_i++] = ' ';
 				out[out_i++] = '*';
 				out[out_i++] = '/';
@@ -111,7 +111,7 @@ prepare_string(in, indent_level, is_comment)
 			return out;
 		}
 	}
-	assert(0); /* if this goes off, we exceeded ttw_bufsiz */
+	resip_assert(0); /* if this goes off, we exceeded ttw_bufsiz */
 	return NULL;
 }
 
@@ -223,7 +223,7 @@ array_dim_name(e, a)
 	s = malloc(len);
 	snprintf(s, len, format, e->name, a->name);
 
-	assert(strlen(s) == len - 1);
+	resip_assert(strlen(s) == len - 1);
 	
 	a->array_dim_name = s;
 	
@@ -258,7 +258,7 @@ decl_name(e, a)
 
 		s = malloc(len);
 		snprintf(s, len, format, a->name, dim_name);
-		assert(strlen(s) == len - 1);
+		resip_assert(strlen(s) == len - 1);
 
 		a->decl_name = s;
 	}
@@ -288,7 +288,7 @@ serialized_length_name(e)
 	s = malloc(len);
 	snprintf(s, len, format, e->name);
 
-	assert(strlen(s) == len - 1);
+	resip_assert(strlen(s) == len - 1);
 	
 	e->serialized_length_name = s;
 	

@@ -185,7 +185,7 @@ class TestHolder : public ReproFixture
       static boost::shared_ptr<SipMessage>
       largeContact(boost::shared_ptr<SipMessage> msg)
       {
-         assert(msg->exists(h_Contacts) &&
+         resip_assert(msg->exists(h_Contacts) &&
                 !msg->header(h_Contacts).empty());
 
          const int oversize = 4096;
@@ -287,9 +287,9 @@ class TestHolder : public ReproFixture
             virtual void operator()(boost::shared_ptr<Event> event)
             {
                SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
-               assert(sipEvent);
+               resip_assert(sipEvent);
                boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
-               assert(!msg->exists(h_RecordRoutes));
+               resip_assert(!msg->exists(h_RecordRoutes));
             }
       };
 
@@ -340,7 +340,7 @@ class TestHolder : public ReproFixture
       static boost::shared_ptr<SipMessage>
       fiddleBranchCase(boost::shared_ptr<SipMessage> msg)
       {
-         assert(msg->isResponse());
+         resip_assert(msg->isResponse());
          // Yes, this is evil. However, BranchParameter does not expose any API
          // for doing this evil, evil thing.
          Data& branch = *const_cast<Data*>(&(msg->header(h_Vias).front().param(p_branch).getTransactionId()));
@@ -374,8 +374,8 @@ class TestHolder : public ReproFixture
       static boost::shared_ptr<SipMessage>
       removeProxyVias(boost::shared_ptr<SipMessage> msg)
       {
-         assert(msg->header(h_Vias).size()>1);
-         assert(msg->isResponse());
+         resip_assert(msg->header(h_Vias).size()>1);
+         resip_assert(msg->isResponse());
          Via top=msg->header(h_Vias).front();
          msg->remove(h_Vias);
          msg->header(h_Vias).push_back(top);
@@ -385,8 +385,8 @@ class TestHolder : public ReproFixture
       static boost::shared_ptr<SipMessage>
       addProxyVia(boost::shared_ptr<SipMessage> msg)
       {
-         assert(msg->header(h_Vias).size()>1);
-         assert(msg->isResponse());
+         resip_assert(msg->header(h_Vias).size()>1);
+         resip_assert(msg->isResponse());
          Via top=msg->header(h_Vias).front();
          msg->header(h_Vias).pop_front();
          msg->header(h_Vias).push_front( Via() );
@@ -397,8 +397,8 @@ class TestHolder : public ReproFixture
       static boost::shared_ptr<SipMessage>
       corruptProxyBranch(boost::shared_ptr<SipMessage> msg)
       {
-         assert(msg->header(h_Vias).size()>1);
-         assert(msg->isResponse());
+         resip_assert(msg->header(h_Vias).size()>1);
+         resip_assert(msg->isResponse());
          // Yes, this is evil. However, BranchParameter does not expose any API
          // for doing this evil, evil thing.
          Vias::iterator i = msg->header(h_Vias).begin();
@@ -9535,9 +9535,9 @@ class TestHolder : public ReproFixture
          bool operator()(boost::shared_ptr<Event> event) const
          {
             SipEvent* msgEvent = dynamic_cast<SipEvent*>(event.get());
-            assert(msgEvent);
+            resip_assert(msgEvent);
             boost::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
-            assert(msg.get());
+            resip_assert(msg.get());
 
             DebugLog (<< "Looking for rport=" << mRport << endl << *msg);
             
@@ -9560,7 +9560,7 @@ class TestHolder : public ReproFixture
 
    static boost::shared_ptr<SipMessage>& addRport(boost::shared_ptr<SipMessage>& msg)
    { 
-      assert(!msg->header(h_Vias).empty());
+      resip_assert(!msg->header(h_Vias).empty());
       // mentioning it makes it so
       msg->header(h_Vias).front().param(p_rport);
       return msg;

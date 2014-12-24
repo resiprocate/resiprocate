@@ -32,7 +32,7 @@
 #include "SigcompMessage.h"
 #include "Types.h"
 #include "Buffer.h"
-#include <assert.h>
+#include "rutil/Assert.h"
 
 #ifdef DEBUG
 #include <ostream>
@@ -108,7 +108,7 @@ class CompartmentMap: public osc::ReadWriteLockable
   private:
 
     // Copying is verboten
-    CompartmentMap(osc::CompartmentMap const &map){ assert(0); }
+    CompartmentMap(osc::CompartmentMap const &map){ resip_assert(0); }
 
     /**
       Helper class for CompartmentMap.
@@ -155,9 +155,9 @@ class CompartmentMap: public osc::ReadWriteLockable
 #endif
       private:
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
-        CompartmentBucket(CompartmentBucket &bucket){ assert(0); }
+        CompartmentBucket(CompartmentBucket &bucket){ resip_assert(0); }
 #else
-        CompartmentBucket(osc::CompartmentMap::CompartmentBucket &bucket){ assert(0); }
+        CompartmentBucket(osc::CompartmentMap::CompartmentBucket &bucket){ resip_assert(0); }
 #endif
         void remove(size_t index);
 

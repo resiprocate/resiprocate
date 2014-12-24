@@ -5521,7 +5521,7 @@ for ac_c_preproc_warn_flag in '' yes
 do
   # Use a header file that comes with gcc, so configuring glibc
   # with a fresh cross-compiler works.
-  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+  # Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
   # <limits.h> exists even on freestanding compilers.
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp. "Syntax error" is here to catch this case.
@@ -5534,7 +5534,7 @@ cat >>conftest.$ac_ext <<_ACEOF
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 		     Syntax error
 _ACEOF
@@ -5628,7 +5628,7 @@ for ac_c_preproc_warn_flag in '' yes
 do
   # Use a header file that comes with gcc, so configuring glibc
   # with a fresh cross-compiler works.
-  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+  # Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
   # <limits.h> exists even on freestanding compilers.
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp. "Syntax error" is here to catch this case.
@@ -5641,7 +5641,7 @@ cat >>conftest.$ac_ext <<_ACEOF
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 		     Syntax error
 _ACEOF
@@ -6152,7 +6152,7 @@ for ac_cxx_preproc_warn_flag in '' yes
 do
   # Use a header file that comes with gcc, so configuring glibc
   # with a fresh cross-compiler works.
-  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+  # Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
   # <limits.h> exists even on freestanding compilers.
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp. "Syntax error" is here to catch this case.
@@ -6165,7 +6165,7 @@ cat >>conftest.$ac_ext <<_ACEOF
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 		     Syntax error
 _ACEOF
@@ -6259,7 +6259,7 @@ for ac_cxx_preproc_warn_flag in '' yes
 do
   # Use a header file that comes with gcc, so configuring glibc
   # with a fresh cross-compiler works.
-  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+  # Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
   # <limits.h> exists even on freestanding compilers.
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp. "Syntax error" is here to catch this case.
@@ -6272,7 +6272,7 @@ cat >>conftest.$ac_ext <<_ACEOF
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 		     Syntax error
 _ACEOF
@@ -9645,13 +9645,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char shl_load (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef shl_load
@@ -9801,13 +9801,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char dlopen (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef dlopen
@@ -13385,13 +13385,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char shl_load (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef shl_load
@@ -13541,13 +13541,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char dlopen (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef dlopen
@@ -18971,13 +18971,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char shl_load (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef shl_load
@@ -19127,13 +19127,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char dlopen (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef dlopen
@@ -20594,13 +20594,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char shl_load (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef shl_load
@@ -21054,13 +21054,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    Prefer <limits.h> to "rutil/Assert.h" if __STDC__ is defined, since
     <limits.h> exists even on freestanding compilers.  */
 
 #ifdef __STDC__
 # include <limits.h>
 #else
-# include <assert.h>
+# include "rutil/Assert.h"
 #endif
 
 #undef $ac_func

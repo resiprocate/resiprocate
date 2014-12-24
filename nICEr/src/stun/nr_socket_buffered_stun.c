@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <sys/types.h>
 #include <sys/queue.h>
-#include <assert.h>
+#include "rutil/Assert.h"
 
 #include "p_buf.h"
 #include "nr_socket.h"
@@ -222,14 +222,14 @@ static int nr_socket_buffered_stun_recvfrom(void *obj,void * restrict buf,
 
 reread:
   /* Read all the expected bytes */
-  assert(sock->bytes_needed <= sock->buffer_size - sock->bytes_read);
+  resip_assert(sock->bytes_needed <= sock->buffer_size - sock->bytes_read);
 
   if(r=nr_socket_read(sock->inner,
                       sock->buffer + sock->bytes_read,
                       sock->bytes_needed, &bytes_read, 0))
     ABORT(r);
 
-  assert(bytes_read <= sock->bytes_needed);
+  resip_assert(bytes_read <= sock->bytes_needed);
   sock->bytes_needed -= bytes_read;
   sock->bytes_read += bytes_read;
 
@@ -245,7 +245,7 @@ reread:
     /* Parse the header */
     if (r = nr_stun_message_length(sock->buffer, sock->bytes_read, &tmp_length))
       ABORT(r);
-    assert(tmp_length >= 0);
+    resip_assert(tmp_length >= 0);
     if (tmp_length < 0)
       ABORT(R_BAD_DATA);
     remaining_length = tmp_length;
@@ -270,7 +270,7 @@ reread:
   sock->bytes_read = 0;
   sock->bytes_needed = sizeof(nr_stun_message_header);
 
-  assert(!nr_transport_addr_is_wildcard(&sock->remote_addr));
+  resip_assert(!nr_transport_addr_is_wildcard(&sock->remote_addr));
   if (!nr_transport_addr_is_wildcard(&sock->remote_addr)) {
     if ((r=nr_transport_addr_copy(from, &sock->remote_addr)))
       ABORT(r);
@@ -316,7 +316,7 @@ static void nr_socket_buffered_stun_connected_cb(NR_SOCKET s, int how, void *arg
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)arg;
 
-  assert(!sock->connected);
+  resip_assert(!sock->connected);
 
   sock->connected = 1;
   if (sock->pending)
@@ -424,7 +424,7 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
     }
 
     n1->r_offset += written;
-    assert(sock->pending >= written);
+    resip_assert(sock->pending >= written);
     sock->pending -= written;
 
     if (n1->r_offset < n1->length) {
@@ -437,7 +437,7 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
     nr_p_buf_free(sock->p_bufs, n1);
   }
 
-  assert(!sock->pending);
+  resip_assert(!sock->pending);
   _status=0;
 abort:
   if (_status && _status != R_WOULDBLOCK) {

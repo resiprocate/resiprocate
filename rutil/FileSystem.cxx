@@ -3,7 +3,7 @@
 
 #include <sys/stat.h>
 
-#include <cassert>
+#include "rutil/Assert.h"
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -27,7 +27,7 @@ FileSystem::Directory::iterator::iterator() : mNixDir(0), mDirent(0)
 
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
-   assert(!dir.getPath().empty());   
+   resip_assert(!dir.getPath().empty());   
    //InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());   
    mPath = dir.getPath();
    if ((mNixDir = opendir( dir.getPath().c_str() )))

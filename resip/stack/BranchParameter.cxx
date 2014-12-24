@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include <cassert>
+#include "rutil/Assert.h"
 #include "resip/stack/BranchParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -188,7 +188,7 @@ BranchParameter::getTransactionId() const
 void
 BranchParameter::incrementTransportSequence()
 {
-   assert(mIsMyBranch);
+   resip_assert(mIsMyBranch);
    mTransportSeq++;
 }
 

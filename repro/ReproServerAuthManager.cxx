@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/Assert.h"
 
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
@@ -48,7 +48,7 @@ ReproServerAuthManager::rejectBadNonces() const
 ServerAuthManager::AsyncBool
 ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
-   assert(msg.isRequest());
+   resip_assert(msg.isRequest());
    if(!mAclDb.isRequestTrusted(msg))
    {
       return ServerAuthManager::requiresChallenge(msg);
