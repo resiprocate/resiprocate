@@ -76,19 +76,18 @@ TransactionUser::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 bool
 TransactionUser::isForMe(const SipMessage& msg) const
 {
-   DebugLog (<< "Checking if " << msg.brief() << " is for me");
    // do this for each MessageFilterRule
    for (MessageFilterRuleList::const_iterator i = mRuleList.begin() ; 
         i != mRuleList.end() ; ++i)
    {
-       DebugLog (<< "Checking rule...");
+       DebugLog(<< "TransactionUser::isForMe: TU=" << name() << ", Checking rule... : " << msg.brief());
        if (i->matches(msg))
        {
-          DebugLog (<< "Match!");
+           DebugLog(<< "TransactionUser::isForMe: TU=" << name() << ", Match! : " << msg.brief());
           return true;
        }       
    }
-   DebugLog (<< "No matching rule found");
+   DebugLog(<< "TransactionUser::isForMe: TU=" << name() << ", No matching rule found : " << msg.brief());
    return false;
 }
 
