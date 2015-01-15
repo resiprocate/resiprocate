@@ -573,6 +573,10 @@
 				RelativePath=".\dns\AresDns.hxx"
 				>
 			</File>
+                        <File
+                                RelativePath=".\Assert.h"
+                                >
+                        </File>
 			<File
 				RelativePath=".\AsyncID.hxx"
 				>
