@@ -7,10 +7,23 @@
  *
  * The resip_assert() macro is preferred over regular assert()
  * for all library and application code.  Unit tests should continue
- * to use regular assert().
+ * to use regular assert().  Third party code placed on contrib
+ * should not be adapted to use resip_assert()
  *
  * It is possible to redefine resip_assert() to provide additional logging
  * or throw an exception such as std::runtime_error() as desired.
+ *
+ * On UNIX systems, this could add a call to syslog.  On Windows,
+ * it could be a notification in the system's event log.
+ *
+ * CAUTION: do not call other reSIProcate stack methods from here.
+ * For example, do not try to use the reSIProcate logger or even
+ * basic classes like resip::Data.  If the resip_assert() was
+ * invoked from one of those other low-level classes then the stack
+ * may be in such a bad state that they behave unpredictably
+ * or even worse, recursion may occur if resip_assert() is invoked
+ * again.  We may do further work on this code to make it work
+ * safely with the logger but at present it is not ready for that.
  */
 
 
