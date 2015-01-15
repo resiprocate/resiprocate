@@ -378,9 +378,9 @@ bdb_run_parser(Parse *pParse, const char *zSql, char **pzErrMsg){
 	}
   
 	while(zSql[i]!=0 ){
-		resip_assert( i>=0 );
+		assert( i>=0 );
 		pParse->sLastToken.z = (u8*)&zSql[i];
-		resip_assert( pParse->sLastToken.dyn==0 );
+		assert( pParse->sLastToken.dyn==0 );
 		pParse->sLastToken.n = getToken((unsigned char*)&zSql[i],&tokenType);
 		i += pParse->sLastToken.n;
 		if( i>SQLITE_MAX_SQL_LENGTH ){

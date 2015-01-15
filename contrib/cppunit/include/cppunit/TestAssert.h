@@ -405,8 +405,8 @@ void CPPUNIT_API assertDoubleEquals( double expected,
 
 #if CPPUNIT_ENABLE_NAKED_ASSERT
 
-#undef resip_assert
-#define resip_assert(c)                 CPPUNIT_ASSERT(c)
+#undef assert
+#define assert(c)                 CPPUNIT_ASSERT(c)
 #define assertEqual(e,a)          CPPUNIT_ASSERT_EQUAL(e,a)
 #define assertDoublesEqual(e,a,d) CPPUNIT_ASSERT_DOUBLES_EQUAL(e,a,d)
 #define assertLongsEqual(e,a)     CPPUNIT_ASSERT_EQUAL(e,a)

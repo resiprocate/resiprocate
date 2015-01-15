@@ -85,7 +85,7 @@ generate_verification(vfile, hfilename)
 "Simple test for a Berkeley DB implementation                               \n\
 generated from SQL DDL by db_sql                                            \n\
 ");
-	pr_test("#include "rutil/Assert.h"\n");
+	pr_test("#include <assert.h>\n");
 	pr_test("#include <math.h>\n\n");
 
 	pr_test("\n#include \"%s\"\n\n", hfilename);
@@ -356,7 +356,7 @@ data_value_for_type(ATTR_TYPE *t)
 	} else {
 		fprintf(stderr,
 		    "Unexpected C type in schema: %s", c_type);
-		resip_assert(0);
+		assert(0);
 	}
 	return NULL; /*NOTREACHED*/
 }
@@ -418,7 +418,7 @@ define_records_fields_attrop(ENTITY *e, ATTRIBUTE *a, int first, int last)
 	} else {
 		fprintf(stderr,
 		    "Unexpected C type in schema: %s", a->type->c_type);
-		resip_assert(0);
+		assert(0);
 	}
 	if (!last)
 		pr_test(", ");
@@ -761,7 +761,7 @@ deletion_test_exit_entop(ENTITY *e)
 	} else {
 		fprintf(stderr,
 		    "Unexpected C type in schema: %s", a->type->c_type);
-		resip_assert(0);
+		assert(0);
 	}
 
 	if (column != CTYPENUM) {

@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include "rutil/Assert.h"
+#include <cassert>
 #include <set>
 #include <sstream>
 

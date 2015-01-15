@@ -661,7 +661,7 @@ public:
 		verify_db_handles(x);
 		this->set_db_handle_int(this->clone_db_config(
 		    x.get_db_handle()), x.get_db_env_handle());
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		
 		this->begin_txn();
 		try {
@@ -692,7 +692,7 @@ public:
 		ASSIGNMENT_PREDCOND(x)
 		db_container::operator =(x);
 		verify_db_handles(x);
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		this->begin_txn();
 		try {
 			this->copy_db((self &)x);
@@ -1153,7 +1153,7 @@ public:
 		verify_db_handles(x);
 		this->set_db_handle_int(this->clone_db_config(
 		    x.get_db_handle()), x.get_db_env_handle());
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 
 		this->begin_txn();
 		try {
@@ -1189,7 +1189,7 @@ public:
 		ASSIGNMENT_PREDCOND(x)
 		db_container::operator =(x);
 		verify_db_handles(x);
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		this->begin_txn();
 		try {
 			this->copy_db((self &)x);

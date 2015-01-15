@@ -183,7 +183,7 @@ osc::CompartmentMap::insertCompartment
   osc::u32 hash = ( compartment.getLookup2Hash() ) & m_mask;
   
   // Make sure the hash fits in the bucket space
-  resip_assert( hash < m_bucketCount );
+  assert( hash < m_bucketCount );
   
   // Check to see that the bucket doesn't contains the compartment
   if( !m_buckets[hash].contains( compartment.getCompartmentId() ) )
@@ -211,7 +211,7 @@ osc::CompartmentMap::removeCompartment ( osc::compartment_id_t const &cID )
   // Get the hash
   osc::u32 hash = ( cID.getLookup2Hash() ) & m_mask;
   // Check to make sure the hash fits in the bucket space
-  resip_assert( hash < m_bucketCount ); 
+  assert( hash < m_bucketCount ); 
   // Remove the offending compartment
   if( m_buckets[hash].remove( cID ) )
   {
@@ -235,7 +235,7 @@ osc::CompartmentMap::getCompartment ( osc::compartment_id_t const &cID )
   // Get the hash
   osc::u32 hash = ( cID.getLookup2Hash() ) & m_mask;
   // Check to make sure that hash is inside the bucket space
-  resip_assert( hash < m_bucketCount );
+  assert( hash < m_bucketCount );
   osc::Compartment * compartment = m_buckets[hash].contains( cID );
   if( !compartment ) // Does the compartment exist?
   {
@@ -347,7 +347,7 @@ osc::CompartmentMap::CompartmentBucket::rehash
     // Rehash.
     osc::u32 hash = ( m_compartments[p]->getLookup2Hash() ) & mask;
     // Check that the hash will fit in the bucket array
-    resip_assert(hash < top);
+    assert(hash < top);
     // Add the compartment to the new hash
     newBuckets[hash].add(m_compartments[p]);
   } 
@@ -364,7 +364,7 @@ osc::CompartmentMap::CompartmentBucket::remove ( size_t index )
   DEBUG_STACK_FRAME;
   // Remove the specified compartment by swapping it in the array for
   // the final element
-  resip_assert (index < m_count);
+  assert (index < m_count);
   m_compartments[index] = m_compartments[m_count-1];
   m_count--;
 }

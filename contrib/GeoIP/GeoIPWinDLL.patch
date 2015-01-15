@@ -13,7 +13,7 @@ diff -u -r1.32 -r1.33
 +#ifndef _WIN32
  #include <netdb.h>
 +#endif	/* _WIN32 */
- #include "rutil/Assert.h"
+ #include <assert.h>
  #include <sys/types.h> /* for fstat */
  #include <sys/stat.h>	/* for fstat */
  #include "zlib.h"

@@ -536,7 +536,7 @@ protected:
 		DbEnv *penv = pdb->get_env();
 
 		coflags = this->owner_->get_cursor_open_flags();
-		resip_assert(this->owner_ != NULL);
+		assert(this->owner_ != NULL);
 		if (!this->read_only_ && penv != NULL) {
 			BDBOP((penv->get_open_flags(&oflags)), ret);
 			if ((oflags & DB_INIT_CDB) != 0)
@@ -558,7 +558,7 @@ protected:
 	int first() const
 	{
 
-		resip_assert(this->owner_ != NULL);
+		assert(this->owner_ != NULL);
 		this->itr_status_ = pcsr_->first();
 		if (this->itr_status_ == 0)	
 			refresh();
@@ -575,7 +575,7 @@ protected:
 	int last() const
 	{
 
-		resip_assert(this->owner_ != NULL);
+		assert(this->owner_ != NULL);
 		this->itr_status_ = pcsr_->last();
 		if (this->itr_status_ == 0)
 			refresh();
@@ -591,7 +591,7 @@ protected:
 	int next(int flags = DB_NEXT) const
 	{
 
-		resip_assert(this->owner_ != NULL);
+		assert(this->owner_ != NULL);
 		
 		if (this->itr_status_ == INVALID_ITERATOR_POSITION) {
 			if (this->inval_pos_type_ == base::IPT_BEFORE_FIRST) {
@@ -622,7 +622,7 @@ protected:
 	int prev(int flags = DB_PREV) const
 	{
 
-		resip_assert(this->owner_ != NULL);
+		assert(this->owner_ != NULL);
 		if (this->itr_status_ == INVALID_ITERATOR_POSITION) { 
 			if (this->inval_pos_type_ == base::IPT_AFTER_LAST) {
 				// This rend itr must have an non-NULL owner.
@@ -1232,9 +1232,9 @@ public:
 			DBTYPE dbtype;
 			int ret;
 
-			resip_assert(pdb != NULL);
+			assert(pdb != NULL);
 			ret = pdb->get_type(&dbtype);
-			resip_assert(ret == 0);
+			assert(ret == 0);
 			if (dbtype != DB_HASH) {
 				THROW(InvalidFunctionCall, (
 				    "db_map<>::hasher"));
@@ -1406,7 +1406,7 @@ public:
 		verify_db_handles(x);
 		this->set_db_handle_int(this->clone_db_config(
 		    x.get_db_handle()), x.get_db_env_handle());
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		
 		this->begin_txn();
 		try {
@@ -1434,7 +1434,7 @@ public:
 		ASSIGNMENT_PREDCOND(x)
 		db_container::operator =(x);
 		verify_db_handles(x);
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		this->begin_txn();
 		try {
 			copy_db((self &)x);
@@ -1487,7 +1487,7 @@ public:
 	
 		witr.itr_status_ = witr.pcsr_->insert(x.first, x.second, 
 		    DB_KEYLAST);
-		resip_assert(witr.itr_status_ == 0);
+		assert(witr.itr_status_ == 0);
 		witr.refresh(false);
 		ib.first = witr;
 		ib.second = true;
@@ -1760,9 +1760,9 @@ public:
 		DBTYPE dbtype = DB_UNKNOWN;
 		int ret;
 
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		ret = this->get_db_handle()->get_type(&dbtype);
-		resip_assert(ret == 0);
+		assert(ret == 0);
 		return dbtype == DB_HASH;
 	}
 
@@ -1778,9 +1778,9 @@ public:
 		int ret;
 		DbTxn*txn;
 		
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		ret = this->get_db_handle()->get_type(&dbtype);
-		resip_assert(ret == 0);
+		assert(ret == 0);
 		if (dbtype != DB_HASH) {
 			THROW(InvalidFunctionCall, ("db_map<>::bucket_count"));
 			
@@ -1834,7 +1834,7 @@ public:
 		    current_txn(this->get_db_handle()->get_env());
 		BDBOP(this->get_db_handle()->stat(txn, &sp, flags), ret);
 
-		resip_assert((dbtype == DB_BTREE) || (dbtype == DB_HASH));
+		assert((dbtype == DB_BTREE) || (dbtype == DB_HASH));
 		// dbtype is BTREE OR HASH, no others.
 		sz = dbtype == DB_BTREE ? ((DB_BTREE_STAT*)sp)->
 		    bt_ndata : ((DB_HASH_STAT*)sp)->hash_ndata;
@@ -1913,7 +1913,7 @@ public:
 			witr.pcsr_->insert(x, d, DB_KEYLAST);
 			// Should be OK this time.
 			ret = witr.move_to(x);
-			resip_assert(ret == 0);
+			assert(ret == 0);
 			// Return the reference to the data item of x.
 		}
 		
@@ -2440,9 +2440,9 @@ protected:
 		bool bret;
 		u_int32_t sz1, sz2;
 
-		resip_assert(pdb != NULL);
+		assert(pdb != NULL);
 		ret = pdb->get_type(&dbtype);
-		resip_assert(ret == 0);
+		assert(ret == 0);
 		db_compare_fcn_t comp = NULL;
 
 		if (dbtype == DB_BTREE)
@@ -2679,7 +2679,7 @@ public:
 		verify_db_handles(x);
 		this->set_db_handle_int(this->clone_db_config(
 		    x.get_db_handle()), x.get_db_env_handle());
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		
 		this->begin_txn();
 		try {
@@ -2708,7 +2708,7 @@ public:
 		ASSIGNMENT_PREDCOND(x)
 		db_container::operator =(x);
 		verify_db_handles(x);
-		resip_assert(this->get_db_handle() != NULL);
+		assert(this->get_db_handle() != NULL);
 		this->begin_txn();
 		try {
 			this->copy_db((self &)x);

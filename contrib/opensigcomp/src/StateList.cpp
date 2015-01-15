@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "StateList.h"
 #include "State.h"
 
@@ -62,7 +62,7 @@ osc::StateList::StateList(StateList const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
 }
 
 /**
@@ -86,7 +86,7 @@ osc::StateList::operator=(StateList const &r)
     return *this;
   }
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
   return *this;
 }
 
@@ -274,8 +274,8 @@ osc::StateList::addStateNodeBefore(osc::StateList::StateNode *newNode,
                                      osc::StateList::StateNode *oldNode)
 {
   DEBUG_STACK_FRAME;
-  resip_assert(newNode);
-  resip_assert(newNode != oldNode);
+  assert(newNode);
+  assert(newNode != oldNode);
 
   if (oldNode)
   {

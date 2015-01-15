@@ -58,7 +58,7 @@ ssize_t pread (int fd, void *buf, size_t count, off_t offset)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <sys/types.h> /* for fstat */
 #include <sys/stat.h>	/* for fstat */
 

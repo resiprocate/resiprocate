@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "Libc.h"
 #include "DeflateDictionary.h"
 
@@ -60,7 +60,7 @@ osc::DeflateDictionary::DeflateDictionary(DeflateDictionary const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
 }
 
 /**
@@ -93,7 +93,7 @@ osc::DeflateDictionary::addHistory(const byte_t *buffer, size_t size)
   m_curr += size;
 
   // It is illegal to call this once "addFuture" has been called.
-  resip_assert(m_curr == m_data.getSize());
+  assert(m_curr == m_data.getSize());
 
   return true;
 }
@@ -224,7 +224,7 @@ osc::DeflateDictionary::operator=(DeflateDictionary const &r)
     return *this;
   }
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
   return *this;
 }
 

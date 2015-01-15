@@ -29,7 +29,7 @@
 
  
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "CompressorData.h"
 
 /**
@@ -47,7 +47,7 @@ osc::CompressorData::CompressorData(CompressorData const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
 }
 
 /**
@@ -70,7 +70,7 @@ osc::CompressorData::operator=(CompressorData const &r)
     return *this;
   }
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
   return *this;
 }
 

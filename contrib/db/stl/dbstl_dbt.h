@@ -9,7 +9,7 @@
 #ifndef _DB_STL_DBT_H
 #define _DB_STL_DBT_H
 
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <string>
 
 #include "dbstl_common.h"
@@ -425,7 +425,7 @@ public:
 		// using shall copy or customized copy.
 		if (pdbt->ulen < sz) {
 			pdbt->data = (DbstlReAlloc(pdbt->data, sz));
-			resip_assert(pdbt->data != NULL);
+			assert(pdbt->data != NULL);
 			pdbt->size = (sz);
 			pdbt->ulen = (sz);
 			pdbt->flags = (DB_DBT_USERMEM);
@@ -661,7 +661,7 @@ protected:
 		seqlenf = DbstlElemTraits<T>::instance()->
 		    get_sequence_len_function();
 
-		resip_assert(seqlenf != NULL);
+		assert(seqlenf != NULL);
 		sql = sz = (u_int32_t)seqlenf(t);
 		if (szf)
 			for (i = 0, totalsz = 0; i < sz; i++)

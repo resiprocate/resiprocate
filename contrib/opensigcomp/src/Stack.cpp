@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "Stack.h"
 #include "Compressor.h"
 #include "Compartment.h"
@@ -67,7 +67,7 @@ osc::Stack::Stack(Stack const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
 }
 
 /**
@@ -95,7 +95,7 @@ osc::Stack::operator=(Stack const &r)
     return *this;
   }
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
   return *this;
 }
 
@@ -268,8 +268,8 @@ osc::Stack::provideCompartmentId(osc::StateChanges *stateChanges,
                                  const void *id, size_t idLength)
 {
   DEBUG_STACK_FRAME;
-  resip_assert(id != 0);
-  resip_assert(idLength != 0);
+  assert(id != 0);
+  assert(idLength != 0);
 
   if (!stateChanges)
   {
@@ -543,8 +543,8 @@ bool
 osc::Stack::closeCompartment(const void *id, size_t idLength)
 {
   DEBUG_STACK_FRAME;
-  resip_assert(id != 0);
-  resip_assert(idLength != 0);
+  assert(id != 0);
+  assert(idLength != 0);
 /*
   m_stateHandler.removeCompartment(osc::compartment_id_t(
                        reinterpret_cast<const osc::byte_t*>(id), 

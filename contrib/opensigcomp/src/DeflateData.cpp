@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "Libc.h"
 #include "DeflateData.h"
 
@@ -50,7 +50,7 @@ osc::DeflateData::DeflateData(DeflateData const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
 }
 
 /**
@@ -73,7 +73,7 @@ osc::DeflateData::operator=(DeflateData const &r)
     return *this;
   }
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
   return *this;
 }
 

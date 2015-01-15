@@ -6,7 +6,7 @@
  * $Id$
  */
 
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <utility>
 
 #include "dbstl_resource_manager.h"
@@ -194,10 +194,10 @@ void ResourceManager::close_all_db_envs()
 		BDBOP(i->first->get_open_flags(&oflags), ret);
 		txnstk_sz = env_txns_[i->first].size();
 		if (oflags & DB_INIT_CDB) {
-			resip_assert(txnstk_sz == 1);
+			assert(txnstk_sz == 1);
 			BDBOP(env_txns_[i->first].top()->commit(0), ret);
 		} else
-			resip_assert(txnstk_sz == 0);
+			assert(txnstk_sz == 0);
 
 		i->first->close(0);
 	}
@@ -228,10 +228,10 @@ void ResourceManager::close_db_env(DbEnv *penv)
 	BDBOP(penv->get_open_flags(&oflags), ret);
 	txnstk_sz = itr->second.size();
 	if (oflags & DB_INIT_CDB) {
-		resip_assert(txnstk_sz == 1);
+		assert(txnstk_sz == 1);
 		BDBOP(itr->second.top()->commit(0), ret);
 	} else
-		resip_assert(txnstk_sz == 0);
+		assert(txnstk_sz == 0);
 	env_txns_.erase(itr);
 	penv->close(0);
 
@@ -305,14 +305,14 @@ ResourceManager::~ResourceManager(void)
 	    i != open_envs_.end(); ++i) {
 		BDBOP(i->first->get_open_flags(&oflags), ret);
 		if (oflags & DB_INIT_CDB) {
-			resip_assert(env_txns_[i->first].size() == 1);
+			assert(env_txns_[i->first].size() == 1);
 			BDBOP(env_txns_[i->first].top()->commit(0), ret);
 			env_txns_[i->first].pop();
 		}
 
 		(i->second)--;
 		if (i->second == 0) {
-			resip_assert(env_txns_[i->first].size() == 0);
+			assert(env_txns_[i->first].size() == 0);
 			i->first->close(0);
 			set<DbEnv *>::iterator itrdb = delenvs.find(i->first);
 			// If new'ed by open_db, delete it.
@@ -384,7 +384,7 @@ Db* ResourceManager::open_db (
 	global_lock(mtx_handle_);
 	open_dbs_.insert(make_pair(pdb, 1u));
 	pair<set<Db *>::iterator, bool> delinsret = deldbs.insert(pdb);
-	resip_assert(delinsret.second);
+	assert(delinsret.second);
 	global_unlock(mtx_handle_);
 	csrset_t *mycsrs = new csrset_t();
 	all_csrs_.insert(make_pair(pdb, mycsrs));
@@ -500,11 +500,11 @@ int ResourceManager::open_cursor(DbCursorBase *dcbcsr,
 		pcsrset = new csrset_t;
 		pair<db_csr_map_t::iterator, bool> insret0 = 
 		    all_csrs_.insert(make_pair(pdb, pcsrset));
-		resip_assert(insret0.second);
+		assert(insret0.second);
 	} else
 		pcsrset = itrpcsrset->second;
 
-	resip_assert(pcsrset != NULL);
+	assert(pcsrset != NULL);
 	if (pcsrset->size() == 0) {
 newcursor:
 		BDBOP2(pdb->cursor(ptxn, &csr, flags), ret,
@@ -516,8 +516,8 @@ newcursor:
 		// duplicate from a write cursor.
 		csitr = pcsrset->begin();
 		Dbc *csr22 = (*csitr)->get_cursor();
-		resip_assert(csr22 != NULL);
-		resip_assert(!((oflags & DB_INIT_TXN) && (flags & DB_WRITECURSOR)));
+		assert(csr22 != NULL);
+		assert(!((oflags & DB_INIT_TXN) && (flags & DB_WRITECURSOR)));
 		// If opening a CDS write cursor, must find a write cursor
 		// to duplicate from.
 		if (((flags & DB_WRITECURSOR) != 0)) {
@@ -616,7 +616,7 @@ void ResourceManager::add_cursor(Db* dbp, DbCursorBase* dcbcsr)
 {
 	if (!dbp || !dcbcsr)
 		return;
-	resip_assert(dcbcsr->get_cursor() != NULL);
+	assert(dcbcsr->get_cursor() != NULL);
 
 	(all_csrs_[dbp])->insert(dcbcsr);
 	// Register to txncsrs_, we suppose current transaction is the context
@@ -762,7 +762,7 @@ DbTxn* ResourceManager::begin_txn(u_int32_t flags, DbEnv*env1, int outtxn)
 	if (!env1)
 		return NULL;
 
-	resip_assert(env_txns_.count(env1) > 0);
+	assert(env_txns_.count(env1) > 0);
 
 	stack<DbTxn*>&stk = env_txns_[env1];
 
@@ -809,10 +809,10 @@ void ResourceManager::commit_txn(DbEnv *env, u_int32_t flags)
 	if (!env)
 		return;
 
-	resip_assert(env_txns_.count(env) > 0);
+	assert(env_txns_.count(env) > 0);
 	stack<DbTxn*> &stk = env_txns_[env];
 	ptxn = stk.top();
-	resip_assert(ptxn != NULL);
+	assert(ptxn != NULL);
 	size_t txncnt = txn_count_[ptxn];
 
 	if (txncnt > 1) // used internally
@@ -931,7 +931,7 @@ void ResourceManager::abort_txn(DbEnv*env)
 
 DbTxn* ResourceManager::set_current_txn_handle(DbEnv *env, DbTxn *newtxn)
 {
-	resip_assert(env_txns_.count(env) > 0);
+	assert(env_txns_.count(env) > 0);
 	stack<DbTxn*> &stk = env_txns_[env];
 	DbTxn *ptxn = stk.top();
 	stk.pop();
@@ -963,7 +963,7 @@ void ResourceManager::add_txn_cursor(DbCursorBase *dcbcsr, DbEnv *env)
 
 	if (itr == txn_csrs_.end()) {
 		insret = txn_csrs_.insert(make_pair(ptxn, new csrset_t()));
-		resip_assert(insret.second);
+		assert(insret.second);
 		itr = insret.first;
 	}
 	pset = itr->second;

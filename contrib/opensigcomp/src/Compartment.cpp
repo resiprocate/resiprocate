@@ -27,7 +27,7 @@
 */
 
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "Compartment.h"
 #include "StateHandler.h"
 #include "CompressorData.h"
@@ -497,7 +497,7 @@ osc::Compartment::operator=(osc::Compartment const &r)
   {
     return *this;
   }
-  resip_assert(0);
+  assert(0);
   return *this;
 } 
 

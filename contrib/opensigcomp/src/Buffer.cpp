@@ -28,7 +28,7 @@
 
 
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "Libc.h"
 #include "Buffer.h"
 #include "Types.h"

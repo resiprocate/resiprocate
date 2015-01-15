@@ -29,7 +29,7 @@
 
 #ifndef __OSC_STATE_H
 #define __OSC_STATE_H 1
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "Types.h"
 #include "Buffer.h"
 

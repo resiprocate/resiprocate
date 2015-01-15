@@ -25,7 +25,7 @@ void setString(char **pz, ...){
   const char *z;
   char *zResult;
 
-  resip_assert( pz!=0 );
+  assert( pz!=0 );
   nByte = 1;
   va_start(ap, pz);
   while( (z = va_arg(ap, const char*))!=0 ){

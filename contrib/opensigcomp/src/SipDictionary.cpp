@@ -29,7 +29,7 @@
 
 
 #include "ProfileStack.h"
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "SipDictionary.h"
 
 /**
@@ -181,7 +181,7 @@ osc::SipDictionary::SipDictionary(SipDictionary const &r)
 {
   DEBUG_STACK_FRAME;
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
 }
 
 /**
@@ -208,7 +208,7 @@ osc::SipDictionary::operator=(SipDictionary const &r)
     return *this;
   }
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
   return *this;
 }
 

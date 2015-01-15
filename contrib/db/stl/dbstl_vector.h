@@ -211,7 +211,7 @@ public:
 				// By this stage all valid cases using
 				// INVALID_ITERATOR_POSITION have been dealt
 				// with.
-				resip_assert((this->itr_status_ !=
+				assert((this->itr_status_ !=
 				    INVALID_ITERATOR_POSITION) &&
 				    (itr.itr_status_ != 
 				    INVALID_ITERATOR_POSITION));
@@ -269,7 +269,7 @@ public:
 				// By this stage all valid cases using
 				// INVALID_ITERATOR_POSITION have been dealt
 				// with.
-				resip_assert((this->itr_status_ !=
+				assert((this->itr_status_ !=
 				    INVALID_ITERATOR_POSITION) &&
 				    (itr.itr_status_ != 
 				    INVALID_ITERATOR_POSITION));
@@ -2753,7 +2753,7 @@ public:
 		verify_db_handles(x);
 		try {
 			begin_txn();
-			resip_assert(!(i == x.end()));
+			assert(!(i == x.end()));
 			insert(position, *i);
 			x.erase(i);
 			commit_txn();

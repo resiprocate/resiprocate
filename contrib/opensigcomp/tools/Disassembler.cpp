@@ -23,7 +23,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "Disassembler.h"
 
 osc::Disassembler::opcode_data_t
@@ -480,7 +480,7 @@ osc::Disassembler::Disassembler(Disassembler const &r)
   : m_sh(), m_udvm(m_sh)
 {
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
 }
 
 /**
@@ -501,7 +501,7 @@ osc::Disassembler::operator=(Disassembler const &r)
     return *this;
   }
   /* Assign attributes */
-  resip_assert(0);
+  assert(0);
   return *this;
 }
 

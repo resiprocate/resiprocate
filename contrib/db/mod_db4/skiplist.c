@@ -19,7 +19,7 @@ extern "C"
 {
 #include <stdio.h>
 #include <stdlib.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 
 #include "skiplist.h"
 }
@@ -38,20 +38,20 @@ extern "C"
     fprintf(stderr, 						\
     "In file %s on line %d: malloc failed to allocate memory, exiting...", \
       __FILE__, __LINE__);					\
-      resip_assert(0);						\
+      assert(0);						\
   }								\
   ptr = (struct type*)tmptr;					\
 } while (0)
 
 #define MALLOC_N(type, num, ptr) do {				\
   void *tmptr = NULL;						\
-  resip_assert(num >= 0);						\
+  assert(num >= 0);						\
   tmptr = malloc(sizeof(struct type) * num);			\
   if (tmptr == NULL){						\
     fprintf(stderr, 						\
     "In file %s on line %d: malloc failed to allocate memory, exiting...", \
       __FILE__, __LINE__);					\
-      resip_assert(0);						\
+      assert(0);						\
   }								\
   ptr = (struct type*)tmptr;					\
 } while (0)
@@ -79,12 +79,12 @@ void skiplisti_init(Skiplist *sl) {
 }
 
 static int indexing_comp(void *a, void *b) {
-  resip_assert(a);
-  resip_assert(b);
+  assert(a);
+  assert(b);
   return (void *)(((Skiplist *)a)->compare)>(void *)(((Skiplist *)b)->compare);
 }
 static int indexing_compk(void *a, void *b) {
-  resip_assert(b);
+  assert(b);
   return a>(void *)(((Skiplist *)b)->compare);
 }
 
@@ -164,7 +164,7 @@ void *skiplist_find_compare(Skiplist *sli,
     sl = sli;
   } else {
     skiplist_find(sli->index, (void *)comp, &m);
-    resip_assert(m);
+    assert(m);
     sl= (Skiplist *) m->data;
   }
   skiplisti_find_compare(sl, data, iter, sl->comparek);
@@ -228,7 +228,7 @@ struct skiplistnode *skiplist_insert_compare(Skiplist *sl,
     sl->height = 1;
     MALLOC(skiplistnode, sl->bottom);
     sl->topend = sl->bottomend = sl->top = sl->bottom;
-    resip_assert(sl->top);
+    assert(sl->top);
     sl->top->next = (struct skiplistnode *) NULL;
     sl->top->data = (struct skiplistnode *) NULL;
     sl->top->prev =(struct skiplistnode *) NULL;
@@ -304,7 +304,7 @@ struct skiplistnode *skiplist_insert_compare(Skiplist *sl,
     li=ret;
     for(p = skiplist_getlist(sl->index); p; skiplist_next(sl->index, &p)) {
       ni = skiplist_insert((Skiplist *)p->data, ret->data);
-      resip_assert(ni);
+      assert(ni);
 #ifdef SLDEBUG
       fprintf(stderr, "Adding %p to index %p\n", ret->data, p->data);
 #endif
@@ -342,7 +342,7 @@ struct skiplistnode *skiplist_append(Skiplist *sl, void *data) {
 
   for(;sl->height<nh;sl->height++) {
     MALLOC(skiplistnode, sl->top->up); 
-    resip_assert(sl->top);
+    assert(sl->top);
     sl->top->up->down = sl->top;
     sl->top = sl->top->up;
     sl->top->prev = sl->top->next = sl->top->nextindex =
@@ -477,7 +477,7 @@ int skiplisti_remove(Skiplist *sl, struct skiplistnode *m, FreeFunc myfree) {
     sl->height--;
   }
   if(!sl->top) sl->bottom = NULL;
-  resip_assert(sl->height>=0);
+  assert(sl->height>=0);
 #ifdef SLDEBUG
   skiplist_print_struct(sl, "AR: ");
 #endif
@@ -492,7 +492,7 @@ int skiplist_remove_compare(Skiplist *sli,
     sl = sli;
   } else {
     skiplist_find(sli->index, (void *)comp, &m);
-    resip_assert(m);
+    assert(m);
     sl= (Skiplist *) m->data;
   }
   skiplisti_find_compare(sl, data, &m, comp);

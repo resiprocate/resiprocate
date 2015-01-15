@@ -60,7 +60,7 @@ namespace IDEHandler = VC6IdeHandler;
 #elif _MSC_VER >= 1300     // VC++ 7 or more
 
 #include <initguid.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 
 #pragma warning( disable : 4278 )
 #pragma warning( disable : 4146 )
@@ -129,7 +129,7 @@ namespace VC7IdeHandler {
          if ( !SUCCEEDED( result ) )
             return;
          
-         resip_assert( pIDocuments.p );
+         assert( pIDocuments.p );
          
          CComPtr< EnvDTE::Document > pIDocument;
          CComBSTR bstrFileName( fileName );
@@ -142,7 +142,7 @@ namespace VC7IdeHandler {
          if ( !SUCCEEDED( result ) )
             return;
          
-         resip_assert( pIDocument.p );
+         assert( pIDocument.p );
          
          CComPtr< IDispatch > pIDispatch;
          result = pIDocument->get_Selection( &pIDispatch );
@@ -152,7 +152,7 @@ namespace VC7IdeHandler {
          CComPtr< EnvDTE::TextSelection > pITextSelection;
          pIDispatch->QueryInterface( &pITextSelection );
          
-         resip_assert( pITextSelection.p );
+         assert( pITextSelection.p );
          
          result = pITextSelection->GotoLine( line, TRUE );
          if ( !SUCCEEDED( result ) )
