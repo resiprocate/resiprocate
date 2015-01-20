@@ -73,6 +73,7 @@ Uri::Uri(const Uri& rhs,
      mPassword(rhs.mPassword),
      mNetNs(rhs.mNetNs),
      mHostCanonicalized(rhs.mHostCanonicalized),
+     mCanonicalHost(rhs.mCanonicalHost),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
      mEmbeddedHeaders(rhs.mEmbeddedHeaders.get() ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
 {}
@@ -270,14 +271,18 @@ Uri::isEnumSearchable() const
    // count the digits (skip the leading `+')
    for(const char* i=user().begin() + 1; i!= user().end(); i++)
    {
-      if(isdigit(*i))
+      if (isdigit(*i))
+      {
          digits++;
+      }
       else
-         if(*i != '-')
+      {
+         if (*i != '-')
          {
             StackLog(<< "user part of Uri contains non-digit: " << *i);
             return false; // Only digits and '-' permitted
          }
+      }
    }
    if(digits > 15)
    {
@@ -315,7 +320,6 @@ Uri::getEnumLookups(const std::vector<Data>& suffixes) const
    return results;
 }
 
-
 bool
 Uri::hasEmbedded() const
 {
@@ -331,8 +335,6 @@ Uri::removeEmbedded()
    mEmbeddedHeadersText.reset();
 }
 
-
-
 Uri&
 Uri::operator=(const Uri& rhs)
 {
@@ -341,7 +343,8 @@ Uri::operator=(const Uri& rhs)
       ParserCategory::operator=(rhs);
       mScheme = rhs.mScheme;
       mHost = rhs.mHost;
-      mHostCanonicalized=rhs.mHostCanonicalized;
+      mHostCanonicalized = rhs.mHostCanonicalized;
+      mCanonicalHost = rhs.mCanonicalHost;
       mUser = rhs.mUser;
       mUserParameters = rhs.mUserParameters;
       mPort = rhs.mPort;
@@ -411,24 +414,23 @@ Uri::operator==(const Uri& other) const
    if (DnsUtil::isIpV6Address(mHost) &&
        DnsUtil::isIpV6Address(other.mHost))
    {
-
       // compare canonicalized IPV6 addresses
 
       // update canonicalized if host changed
       if (!mHostCanonicalized)
       {
-         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
          mHostCanonicalized=true;
       }
 
       // update canonicalized if host changed
       if (!other.mHostCanonicalized)
       {
-         other.mHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
+         other.mCanonicalHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
          other.mHostCanonicalized=true;
       }
 
-      if (mHost != other.mHost)
+      if (mCanonicalHost != other.mCanonicalHost)
       {
          return false;
       }
@@ -446,8 +448,7 @@ Uri::operator==(const Uri& other) const
        isEqualNoCase(mUserParameters,other.mUserParameters) &&
        mPassword == other.mPassword &&
        mPort == other.mPort &&
-       mNetNs == other.mNetNs
-      )
+       mNetNs == other.mNetNs)
    {
       for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
@@ -700,11 +701,12 @@ Uri::operator<(const Uri& other) const
    {
       if(DnsUtil::isIpV6Address(mHost))
       {
-         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
       }
       else
       {
-         mHost.lowercase();
+         mCanonicalHost = mHost;
+         mCanonicalHost.lowercase();
       }
       mHostCanonicalized=true;
    }
@@ -713,21 +715,22 @@ Uri::operator<(const Uri& other) const
    {
       if(DnsUtil::isIpV6Address(other.mHost))
       {
-         other.mHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
+         other.mCanonicalHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
       }
       else
       {
-         other.mHost.lowercase();
+         other.mCanonicalHost = other.mHost;
+         other.mCanonicalHost.lowercase();
       }
       other.mHostCanonicalized=true;
    }
 
-   if (mHost < other.mHost)
+   if (mCanonicalHost < other.mCanonicalHost)
    {
       return true;
    }
 
-   if (mHost > other.mHost)
+   if (mCanonicalHost > other.mCanonicalHost)
    {
       return false;
    }
@@ -745,11 +748,12 @@ Uri::aorEqual(const resip::Uri& rhs) const
    {
       if(DnsUtil::isIpV6Address(mHost))
       {
-         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
       }
       else
       {
-         mHost.lowercase();
+         mCanonicalHost = mHost;
+         mCanonicalHost.lowercase();
       }
       mHostCanonicalized=true;
    }
@@ -758,19 +762,18 @@ Uri::aorEqual(const resip::Uri& rhs) const
    {
       if(DnsUtil::isIpV6Address(rhs.mHost))
       {
-         rhs.mHost = DnsUtil::canonicalizeIpV6Address(rhs.mHost);
+         rhs.mCanonicalHost = DnsUtil::canonicalizeIpV6Address(rhs.mHost);
       }
       else
       {
-         rhs.mHost.lowercase();
+         rhs.mCanonicalHost = rhs.mHost;
+         rhs.mCanonicalHost.lowercase();
       }
       rhs.mHostCanonicalized=true;
    }
    
-   return (mUser==rhs.mUser) && (mHost==rhs.mHost) && (mPort==rhs.mPort) && 
-            (isEqualNoCase(mScheme,rhs.mScheme) &&
-            (mNetNs == rhs.mNetNs)
-          );
+   return (mUser == rhs.mUser) && (mCanonicalHost == rhs.mCanonicalHost) && (mPort == rhs.mPort) &&
+           isEqualNoCase(mScheme, rhs.mScheme) && (mNetNs == rhs.mNetNs);
 }
 
 void 
@@ -786,13 +789,15 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
    {
       if (DnsUtil::isIpV6Address(mHost))
       {
-         mHost = DnsUtil::canonicalizeIpV6Address(mHost);
+         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
          hostIsIpV6Address = true;
       }
       else
       {
-         mHost.lowercase();
+         mCanonicalHost = mHost;
+         mCanonicalHost.lowercase();
       }
+      mHostCanonicalized = true;
    }
 
    // !bwc! Maybe reintroduce caching of aor. (Would use a bool instead of the
@@ -800,7 +805,7 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
    //                                                  @:10000
    aor.clear();
    aor.reserve((dropScheme ? 0 : mScheme.size()+1)
-               + mUser.size() + mHost.size() + 7);
+       + mUser.size() + mCanonicalHost.size() + 7);
    if(!dropScheme)
    {
       aor += mScheme;
@@ -817,7 +822,7 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 #else
       aor += mUser;
 #endif
-      if(!mHost.empty())
+      if(!mCanonicalHost.empty())
       {
          aor += Symbols::AT_SIGN;
       }
@@ -826,12 +831,12 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
    if(hostIsIpV6Address && addPort)
    {
       aor += Symbols::LS_BRACKET;
-      aor += mHost;
+      aor += mCanonicalHost;
       aor += Symbols::RS_BRACKET;
    }
    else
    {
-      aor += mHost;
+      aor += mCanonicalHost;
    }
 
    if(addPort)
@@ -1069,10 +1074,8 @@ Uri::parse(ParseBuffer& pb)
       start = pb.skipChar();
       pb.skipToChar(']');
       pb.data(mHost, start);
-      // .bwc. We do not save this canonicalization, since we weren't doing so
-      // before. This may change soon.
-      Data canonicalizedHost=DnsUtil::canonicalizeIpV6Address(mHost);
-      if(canonicalizedHost.empty())
+      mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
+      if (mCanonicalHost.empty())
       {
          // .bwc. So the V6 addy is garbage.
          throw ParseException("Unparsable V6 address (note, this might"
@@ -1080,6 +1083,7 @@ Uri::parse(ParseBuffer& pb)
                                     " enabled)","Uri",__FILE__,
                                        __LINE__);
       }
+      mHostCanonicalized = true;
       pb.skipChar();
       pb.skipToOneOf(hostDelimiter);
    }
