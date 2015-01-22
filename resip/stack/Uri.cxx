@@ -1136,7 +1136,12 @@ void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
 EncodeStream& 
 Uri::encodeParsed(EncodeStream& str) const
 {
-   str << mScheme << Symbols::COLON; 
+   // Relative URIs may not have the scheme
+   if (!mScheme.empty())
+   {
+      str << mScheme << Symbols::COLON;
+   }
+
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
