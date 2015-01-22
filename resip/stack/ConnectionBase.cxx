@@ -635,7 +635,8 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
                // only try to use it if cookieContextFactory is available
                if(wst->cookieContextFactory().get())
                {
-                  wsCookieContext = wst->cookieContextFactory()->makeCookieContext(cookieList);
+                  Uri& requestUri = mMessage->header(h_RequestLine).uri();
+                  wsCookieContext = wst->cookieContextFactory()->makeCookieContext(cookieList, requestUri);
                   wsConnectionBase->setWsCookieContext(wsCookieContext);
                }
             }
