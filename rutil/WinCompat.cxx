@@ -4,6 +4,7 @@
 
 #include <Winsock2.h>
 #include <Iphlpapi.h>
+#include <tchar.h>
 
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinCompat.hxx"
@@ -194,6 +195,34 @@ void WinCompat::destroyInstance()
 {
     delete mInstance;
     mInstance = 0;
+}
+
+bool WinCompat::windowsEventLog(WORD type, WORD numStrings, LPCTSTR* strings)
+{
+    // type can be:
+    // EVENTLOG_SUCCESS (0x0000) Information event
+    // EVENTLOG_AUDIT_FAILURE (0x0010) Failure Audit event
+    // EVENTLOG_AUDIT_SUCCESS (0x0008) Success Audit event
+    // EVENTLOG_ERROR_TYPE (0x0001) Error event
+    // EVENTLOG_INFORMATION_TYPE (0x0004) Information event
+    // EVENTLOG_WARNING_TYPE (0x0002) Warning event
+
+    HKEY key;
+    long errorCode =
+        ::RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Services\\EventLog\\Application\\reSIProcate"),
+                         0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &key, NULL);
+    if (ERROR_SUCCESS == errorCode)
+    {
+        ::RegCloseKey(key);
+        HANDLE eventLogHandle = ::RegisterEventSource(NULL, _T("reSIProcate"));
+        if (eventLogHandle != NULL)
+        {
+            BOOL retVal = ::ReportEvent(eventLogHandle, type, 0, 0, NULL, numStrings, 0, strings, NULL);
+            ::DeregisterEventSource(eventLogHandle);
+            return (retVal != FALSE);
+        }
+    }
+    return false;
 }
 
 WinCompat::~WinCompat()
