@@ -525,6 +525,7 @@ ReproRunner::loadPlugins()
 void
 ReproRunner::setOpenSSLCTXOptionsFromConfig(const Data& configVar, long& opts)
 {
+#ifdef USE_SSL
    std::set<Data> values;
    if(mProxyConfig->getConfigValue(configVar, values))
    {
@@ -535,6 +536,7 @@ ReproRunner::setOpenSSLCTXOptionsFromConfig(const Data& configVar, long& opts)
          opts |= Security::parseOpenSSLCTXOption(*it);
       }
    }
+#endif
 }
 
 bool
@@ -1436,8 +1438,10 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, "");
                Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
                SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
-               SecurityTypes::SSLType sslType = Security::parseSSLType(
-                  mProxyConfig->getConfigData(tlsConnectionMethodKey, DEFAULT_TLS_METHOD));
+               SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
+#ifdef USE_SSL
+               sslType = Security::parseSSLType(mProxyConfig->getConfigData(tlsConnectionMethodKey, DEFAULT_TLS_METHOD));
+#endif
                if(isEqualNoCase(tlsCVMValue, "Optional"))
                {
                   cvm = SecurityTypes::Optional;
@@ -1559,8 +1563,10 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", "");
          Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
-         SecurityTypes::SSLType sslType = Security::parseSSLType(
-            mProxyConfig->getConfigData("TLSConnectionMethod", DEFAULT_TLS_METHOD));
+         SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
+#ifdef USE_SSL
+         sslType = Security::parseSSLType(mProxyConfig->getConfigData("TLSConnectionMethod", DEFAULT_TLS_METHOD));
+#endif
          if(isEqualNoCase(tlsCVMValue, "Optional"))
          {
             cvm = SecurityTypes::Optional;
