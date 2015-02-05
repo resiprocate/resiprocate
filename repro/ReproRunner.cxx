@@ -221,7 +221,7 @@ ReproRunner::run(int argc, char** argv)
    // Non-Windows server process stuff
    if(!mRestarting)
    {
-      setPidFile(mProxyConfig->getConfigData("PidFile", "", true));
+      setPidFile(mProxyConfig->getConfigData("PidFile", Data::Empty, true));
 
       if(isAlreadyRunning())
       {
@@ -264,8 +264,8 @@ ReproRunner::run(int argc, char** argv)
    }
 
    // Drop privileges (can do this now that sockets are bound)
-   Data runAsUser = mProxyConfig->getConfigData("RunAsUser", "", true);
-   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", "", true); 
+   Data runAsUser = mProxyConfig->getConfigData("RunAsUser", Data::Empty, true);
+   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", Data::Empty, true); 
    if(!runAsUser.empty())
    {
       InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
@@ -607,19 +607,19 @@ ReproRunner::createSipStack()
    setOpenSSLCTXOptionsFromConfig(
          "OpenSSLCTXClearOptions", BaseSecurity::OpenSSLCTXClearOptions);
    Security::CipherList cipherList = Security::ExportableSuite;
-   Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", "");
+   Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", Data::Empty);
    if(!ciphers.empty())
    {
       cipherList = ciphers;
    }
-   Data certPath = mProxyConfig->getConfigData("CertificatePath", "");
+   Data certPath = mProxyConfig->getConfigData("CertificatePath", Data::Empty);
    if(certPath.empty())
    {
-      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", ""));
+      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
    }
    else
    {
-      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", ""));
+      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
    }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);
@@ -833,22 +833,22 @@ ReproRunner::createDatastore()
    if(!mySQLServer.empty())
    {
       mAbstractDb = new MySqlDb(mySQLServer, 
-                       mProxyConfig->getConfigData("MySQLUser", ""), 
-                       mProxyConfig->getConfigData("MySQLPassword", ""),
-                       mProxyConfig->getConfigData("MySQLDatabaseName", ""),
+                       mProxyConfig->getConfigData("MySQLUser", Data::Empty), 
+                       mProxyConfig->getConfigData("MySQLPassword", Data::Empty),
+                       mProxyConfig->getConfigData("MySQLDatabaseName", Data::Empty),
                        mProxyConfig->getConfigUnsignedLong("MySQLPort", 0),
-                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
+                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
    }
    Data runtimeMySQLServer;
    mProxyConfig->getConfigValue("RuntimeMySQLServer", runtimeMySQLServer);
    if(!runtimeMySQLServer.empty())
    {
       mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
-                       mProxyConfig->getConfigData("RuntimeMySQLUser", ""), 
-                       mProxyConfig->getConfigData("RuntimeMySQLPassword", ""),
-                       mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", ""),
+                       mProxyConfig->getConfigData("RuntimeMySQLUser", Data::Empty), 
+                       mProxyConfig->getConfigData("RuntimeMySQLPassword", Data::Empty),
+                       mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", Data::Empty),
                        mProxyConfig->getConfigUnsignedLong("RuntimeMySQLPort", 0),
-                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
+                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
    }
 #endif
    if (!mAbstractDb)
@@ -917,7 +917,7 @@ ReproRunner::createDialogUsageManager()
 #ifdef PACKAGE_VERSION
    Data serverText(mProxyConfig->getConfigData("ServerText", "repro " PACKAGE_VERSION));
 #else
-   Data serverText(mProxyConfig->getConfigData("ServerText", ""));
+   Data serverText(mProxyConfig->getConfigData("ServerText", Data::Empty));
 #endif
    if(!serverText.empty())
    {
@@ -990,7 +990,7 @@ ReproRunner::createDialogUsageManager()
          mDum->addIncomingFeature(mAuthFactory->getCertificateAuthManager());
       }
 
-      Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+      Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
       if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
       {
          SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
@@ -1074,7 +1074,7 @@ ReproRunner::createProxy()
 #ifdef PACKAGE_VERSION
    Data serverText(mProxyConfig->getConfigData("ServerText", "repro " PACKAGE_VERSION));
 #else
-   Data serverText(mProxyConfig->getConfigData("ServerText", ""));
+   Data serverText(mProxyConfig->getConfigData("ServerText", Data::Empty));
 #endif
    if(!serverText.empty())
    {
@@ -1258,7 +1258,7 @@ ReproRunner::createRegSync()
       {
          mRegSyncServerThread = new RegSyncServerThread(regSyncServerList);
       }
-      Data regSyncPeerAddress(mProxyConfig->getConfigData("RegSyncPeer", ""));
+      Data regSyncPeerAddress(mProxyConfig->getConfigData("RegSyncPeer", Data::Empty));
       if(!regSyncPeerAddress.empty())
       {
          mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), regSyncPeerAddress, mRegSyncPort);
@@ -1409,15 +1409,15 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    mStartupTransportRecordRoutes.clear();
 
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
-   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
    SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
    SharedPtr<WsCookieContextFactory> wsCookieContextFactory;
    if(!wsCookieAuthSharedSecret.empty())
    {
       basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
-      Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", "");
-      Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", "");
-      Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", "");
+      Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", Data::Empty);
+      Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", Data::Empty);
+      Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", Data::Empty);
 
       wsCookieContextFactory.reset(new BasicWsCookieContextFactory(infoCookieName, extraCookieName, macCookieName));
    }
@@ -1451,7 +1451,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             const Data& settingKeyBase = *it;
             DebugLog(<< "checking values for transport: " << settingKeyBase);
             Data interfaceSettingKey(settingKeyBase + "Interface");
-            Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, "", true);
+            Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, Data::Empty, true);
             Data typeSettingKey(settingKeyBase + "Type");
             Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
             Data tlsCertificateSettingKey(settingKeyBase + "TlsCertificate");
@@ -1491,10 +1491,10 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                {
                   CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << mProxyConfig->getConfigData(typeSettingKey, "UDP"));
                }
-               Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, "");
-               Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, "");
-               Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, "");
-               Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData(tlsPrivateKeyPassPhraseKey, "");
+               Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, Data::Empty);
+               Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, Data::Empty);
+               Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, Data::Empty);
+               Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData(tlsPrivateKeyPassPhraseKey, Data::Empty);
                Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
                SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
                SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
@@ -1560,7 +1560,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 #endif
                   }
 
-                  Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, "");
+                  Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, Data::Empty);
                   if(!recordRouteUri.empty())
                   {
                      try
@@ -1614,16 +1614,26 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
       }
       else
       {
+         Data ipAddress = mProxyConfig->getConfigData("IPAddress", Data::Empty, true);
+         bool isV4Address = DnsUtil::isIpV4Address(ipAddress);
+         bool isV6Address = DnsUtil::isIpV6Address(ipAddress);
+         if(!isV4Address && !isV6Address)
+         {
+            ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            ipAddress = Data::Empty;
+            isV4Address = true;
+            isV6Address = true;
+         }
          int udpPort = mProxyConfig->getConfigInt("UDPPort", 5060);
          int tcpPort = mProxyConfig->getConfigInt("TCPPort", 5060);
          int tlsPort = mProxyConfig->getConfigInt("TLSPort", 5061);
          int wsPort = mProxyConfig->getConfigInt("WSPort", 80);
          int wssPort = mProxyConfig->getConfigInt("WSSPort", 443);
          int dtlsPort = mProxyConfig->getConfigInt("DTLSPort", 0);
-         Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", "");
-         Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", "");
-         Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", "");
-         Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", "");
+         Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", Data::Empty);
+         Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", Data::Empty);
+         Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", Data::Empty);
+         Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
          Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
          SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
@@ -1666,33 +1676,33 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
          if (udpPort)
          {
-            if (mUseV4) mSipStack->addTransport(UDP, udpPort, V4, StunEnabled);
-            if (mUseV6) mSipStack->addTransport(UDP, udpPort, V6, StunEnabled);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(UDP, udpPort, V4, StunEnabled, ipAddress);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(UDP, udpPort, V6, StunEnabled, ipAddress);
          }
          if (tcpPort)
          {
-            if (mUseV4) mSipStack->addTransport(TCP, tcpPort, V4, StunEnabled);
-            if (mUseV6) mSipStack->addTransport(TCP, tcpPort, V6, StunEnabled);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(TCP, tcpPort, V4, StunEnabled, ipAddress);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(TCP, tcpPort, V6, StunEnabled, ipAddress);
          }
          if (tlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
-            if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
          }
          if (wsPort)
          {
-            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
-            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  ipAddress, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, Data::Empty, Data::Empty, SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  ipAddress, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, Data::Empty, Data::Empty, SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
          }
          if (wssPort)
          {
-            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
-            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
          }
          if (dtlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
-            if (mUseV6) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
          }
       }
    }
@@ -1735,7 +1745,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       addProcessor(chain, mAuthFactory->getCertificateAuthenticator());
    }
 
-   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
    Data wsCookieExtraHeaderName = mProxyConfig->getConfigData("WSCookieExtraHeaderName", "X-WS-Session-Extra");
    if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
    {
