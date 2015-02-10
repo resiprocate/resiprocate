@@ -11,6 +11,8 @@ EXTRA_DIST += users.txt
 
 dist_man_MANS = reTurnServer.8
 
+dist_returnpkglib_SCRIPTS = psql-user-extract
+
 SUBDIRS = .
 SUBDIRS += client
 SUBDIRS += test
