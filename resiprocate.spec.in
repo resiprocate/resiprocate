@@ -98,6 +98,15 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
+%package turn-server-psql
+Summary: ICE/STUN/TURN server PostgreSQL users script
+Requires: python-psycopg2
+
+%description turn-server-psql
+reTurn is the TURN server developed as part of the reSIProcate project.
+This packages provides a Python script to synchronize the reTurn
+users.txt file from a PostgreSQL table.
+
 %package sipdialer
 Summary: Click-to-call utility
 
@@ -363,6 +372,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/reTurnServer.config
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/users.txt
 %config(noreplace) %{_sysconfdir}/logrotate.d/resiprocate-turn-server
+%dir %{_libdir}/@PACKAGE@/reTurnServer
 %attr(0750,return,return) %dir %{_localstatedir}/log/reTurnServer
 %config %ghost %{_localstatedir}/log/reTurnServer/reTurnServer.log
 %if %use_systemd
@@ -372,6 +382,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 %{_sbindir}/reTurnServer
 %{_mandir}/man8/reTurnServer.8*
+
+%files turn-server-psql
+%{_libdir}/@PACKAGE@/reTurnServer/psql-user-extract
 
 %files sipdialer
 %{_bindir}/sipdialer
