@@ -240,6 +240,9 @@ AC_ARG_ENABLE(repro-plugins,
 AC_SUBST([reproplugindir])
 reproplugindir='${pkglibdir}/repro/plugins'
 
+AC_SUBST([returnpkglibdir])
+returnpkglibdir'${pkglibdir}/reTurnServer'
+
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
 [  --with-rend             Build rend],
