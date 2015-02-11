@@ -142,9 +142,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
 #if defined (USE_SSL)
       addOutgoingFeature(encryptionOutgoing);
 #endif
-
    }
-
 }
 
 DialogUsageManager::~DialogUsageManager()
@@ -152,14 +150,6 @@ DialogUsageManager::~DialogUsageManager()
    mShutdownState = Destroying;
    //InfoLog ( << "~DialogUsageManager" );
 
-#if(0)
-   // !kh!
-   DialogSetMap::iterator dialogSet = mDialogSetMap.begin();
-   for (; dialogSet != mDialogSetMap.end(); ++dialogSet)
-   {
-      delete dialogSet->second;
-   }
-#endif
    if(!mDialogSetMap.empty())
    {
       DebugLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
@@ -179,7 +169,7 @@ DialogUsageManager::~DialogUsageManager()
    while(!mDialogSetMap.empty())
    {
       DialogSet*  ds = mDialogSetMap.begin()->second;
-      delete ds;
+      delete ds;  // Deleting a dialog set removes itself from the map
    }
 
    if(mIsDefaultServerReferHandler)
@@ -189,6 +179,12 @@ DialogUsageManager::~DialogUsageManager()
 
    delete mIncomingTarget;
    delete mOutgoingTarget;
+
+   // Delete Server Publications
+   while (!mServerPublications.empty())
+   {
+       delete mServerPublications.begin()->second;  // Deleting a ServerPublication removes itself from the map
+   }
 
    //InfoLog ( << "~DialogUsageManager done" );
 }
