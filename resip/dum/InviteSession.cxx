@@ -2414,7 +2414,11 @@ InviteSession::setSessionTimerHeaders(SipMessage &msg)
       {
          msg.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresher ? "uas" : "uac");
       }
-      msg.header(h_MinSE).value() = mMinSE;
+      if(msg.isRequest() || 
+         (msg.isResponse() && msg.header(h_StatusLine).responseCode() == 422))
+      {
+         msg.header(h_MinSE).value() = mMinSE;
+      }
    }
    else
    {

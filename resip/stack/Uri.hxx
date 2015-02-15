@@ -258,8 +258,7 @@ class Uri : public ParserCategory
 
    protected:
       Data mScheme;
-      // .bwc. I don't like this.
-      mutable Data mHost;
+      Data mHost;
       Data mUser;
       Data mUserParameters;
       int mPort;
@@ -268,6 +267,7 @@ class Uri : public ParserCategory
 
       void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
       mutable bool mHostCanonicalized;
+      mutable Data mCanonicalHost;  ///< cache for IPv6 host comparison
 
    private:
       std::auto_ptr<Data> mEmbeddedHeadersText;

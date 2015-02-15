@@ -55,9 +55,9 @@ class UserStore
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 
       
+      static Key buildKey(const resip::Data& user, const resip::Data& domain);
+
    private:
-      Key buildKey( const resip::Data& user, 
-                    const resip::Data& domain) const;
 
       AbstractDb& mDb;
 };
