@@ -449,6 +449,12 @@ TlsConnection::read(char* buf, int count )
             return 0;
          }
          break;
+         case SSL_ERROR_ZERO_RETURN:
+         {
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)");
+            return -1;
+         }
+         break;
          default:
          {
             handleOpenSSLErrorQueue(bytesRead, err, "SSL_read");
