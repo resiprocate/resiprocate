@@ -13,7 +13,6 @@ LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
   ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls --with-freeradius --with-ssl \
               --with-c-ares \
               --with-mysql \
-              --with-radius \
               --with-repro \
               --enable-repro-plugins \
               --with-python \
