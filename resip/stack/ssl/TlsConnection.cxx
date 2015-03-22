@@ -420,6 +420,8 @@ TlsConnection::read(char* buf, int count )
             }
             else
             {
+               // This puts the error return code into bytesRead to
+               // be used in the conditional block later in this method.
                bytesRead = bytesPending;
             }
          }
