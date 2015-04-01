@@ -51,8 +51,9 @@ class Dialog
       void send(SharedPtr<SipMessage> msg);
       //void send(SipMessage& msg);
       
-      void makeRequest(SipMessage& request, MethodTypes method);
+      void makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq = true);
       void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);
+      void setRequestNextCSeq(SipMessage& request);
 
       //void setLocalContact(const NameAddr& localContact);
       //void setRemoteTarget(const NameAddr& remoteTarget);
