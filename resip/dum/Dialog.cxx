@@ -719,7 +719,7 @@ Dialog::dispatch(const SipMessage& msg)
             // else drop on the floor
             break;       
 
-		 case REFER:
+         case REFER:
             if(mInviteSession)
             {
                if (code >= 300)
@@ -960,7 +960,7 @@ Dialog::redirected(const SipMessage& msg)
 }
 
 void
-Dialog::makeRequest(SipMessage& request, MethodTypes method)
+Dialog::makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq)
 {
    RequestLine rLine(method);
 
@@ -1000,7 +1000,10 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    //don't increment CSeq for ACK or CANCEL
    if (method != ACK && method != CANCEL)
    {
-      request.header(h_CSeq).sequence() = ++mLocalCSeq;
+      if(incrementCSeq)
+      {
+         setRequestNextCSeq(request);
+      }
    }
    else
    {
@@ -1029,7 +1032,6 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    DebugLog ( << "Dialog::makeRequest: " << std::endl << std::endl << request );
 }
-
 
 void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
@@ -1076,6 +1078,12 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    DebugLog ( << "Dialog::makeResponse: " << std::endl << std::endl << response);
 }
 
+void 
+Dialog::setRequestNextCSeq(SipMessage& request)
+{
+   assert(request.isRequest() && request.method() != ACK && request.method() != CANCEL);
+   request.header(h_CSeq).sequence() = ++mLocalCSeq;
+}
 
 ClientInviteSession*
 Dialog::makeClientInviteSession(const SipMessage& response)
@@ -1091,14 +1099,11 @@ Dialog::makeClientInviteSession(const SipMessage& response)
                                   creator->getInitialOffer(), creator->getEncryptionLevel(), creator->getServerSubscription());
 }
 
-
-
 ClientSubscription*
 Dialog::makeClientSubscription(const SipMessage& request)
 {
    return new ClientSubscription(mDum, *this, request, mDefaultSubExpiration);
 }
-
 
 ServerInviteSession*
 Dialog::makeServerInviteSession(const SipMessage& request)

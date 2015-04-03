@@ -92,13 +92,35 @@ Connection::performWrite()
 {
    if(transportWrite())
    {
-      assert(mInWritable);
-      getConnectionManager().removeFromWritable(this);
-      mInWritable = false;
-      return 0; // What does this transportWrite() mean?
+      // If we get here it means:
+      // a. on a previous invocation, SSL_do_handshake wanted to write
+      //         (SSL_ERROR_WANT_WRITE)
+      // b. now the handshake is complete or it wants to read
+      if(mInWritable)
+      {
+         getConnectionManager().removeFromWritable(this);
+         mInWritable = false;
+      }
+      else
+      {
+         WarningLog(<<"performWrite invoked while not in write set");
+      }
+      return 0; // Q. What does this transportWrite() mean?
+                // A. It makes the TLS handshake move along after it
+                //    was waiting in the write set.
    }
 
-   assert(!mOutstandingSends.empty());
+   // If the TLS handshake returned SSL_ERROR_WANT_WRITE again
+   // then we could get here without really having something to write
+   // so just return, remaining in the write set.
+   if(mOutstandingSends.empty())
+   {
+      // FIXME: this needs to be more elaborate with respect
+      // to TLS handshaking but it doesn't appear we can do that
+      // without ABI breakage.
+      return 0;
+   }
+
    switch(mOutstandingSends.front()->command)
    {
    case SendData::CloseConnection:
@@ -279,7 +301,8 @@ Connection::ensureWritable()
 {
    if(!mInWritable)
    {
-      assert(!mOutstandingSends.empty());
+      //assert(!mOutstandingSends.empty()); // empty during TLS handshake
+      // therefore must be careful to check mOutstandingSends later
       getConnectionManager().addToWritable(this);
       mInWritable = true;
    }

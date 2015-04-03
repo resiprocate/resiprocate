@@ -850,7 +850,7 @@ InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> con
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       SharedPtr<SipMessage> refer(new SipMessage());
-      mDialog.makeRequest(*refer, REFER);
+      mDialog.makeRequest(*refer, REFER, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr(); 
       refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
@@ -897,6 +897,7 @@ InviteSession::nitComplete()
       mNitState = NitProceeding;
       mReferSub = qn->referSubscription();
       mLastSentNITRequest = qn->getNIT();
+      mDialog.setRequestNextCSeq(*mLastSentNITRequest.get());
       InfoLog(<< "checkNITQueue - sending queued NIT:" << mLastSentNITRequest->brief());
       send(mLastSentNITRequest);
       delete qn;
@@ -973,8 +974,8 @@ InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::auto_
 {
    if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      SharedPtr<SipMessage> refer(new SipMessage());      
-      mDialog.makeRequest(*refer, REFER);
+      SharedPtr<SipMessage> refer(new SipMessage());
+      mDialog.makeRequest(*refer, REFER, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
       refer->setContents(contents);
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr();
@@ -1049,7 +1050,7 @@ void
 InviteSession::info(const Contents& contents)
 {
    SharedPtr<SipMessage> info(new SipMessage());
-   mDialog.makeRequest(*info, INFO);
+   mDialog.makeRequest(*info, INFO, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
    // !jf! handle multipart here
    info->setContents(&contents);
    DumHelper::setOutgoingEncryptionLevel(*info, mCurrentEncryptionLevel);
@@ -1101,7 +1102,7 @@ void
 InviteSession::message(const Contents& contents)
 {
    SharedPtr<SipMessage> message(new SipMessage());
-   mDialog.makeRequest(*message, MESSAGE);
+   mDialog.makeRequest(*message, MESSAGE, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
    // !jf! handle multipart here
    message->setContents(&contents);
    DumHelper::setOutgoingEncryptionLevel(*message, mCurrentEncryptionLevel);

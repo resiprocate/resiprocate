@@ -518,7 +518,7 @@ AbstractDb::getConfig( const AbstractDb::Key& key) const
    else
    {
       // unknown version 
-      ErrLog( <<"Data in ACL database with unknown version " << version );
+      ErrLog( <<"Data in Config database with unknown version " << version );
       ErrLog( <<"record size is " << data.size() );
    }
       
