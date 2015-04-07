@@ -119,12 +119,13 @@ class XMLCursor
       static EncodeStream& encode(EncodeStream& strm, const AttributeMap& attrs);
       class Node;
 
-		class AttributeValueEqual {
-			Data data_;
-			public:
-				AttributeValueEqual(const Data& data) : data_(data) {};
-				bool operator()(const std::pair<const Data, Data>& data) { return data.second == data_; }
-		};
+      class AttributeValueEqual 
+      {
+         Data data_;
+         public:
+            AttributeValueEqual(const Data& data) : data_(data) {};
+            bool operator()(const std::pair<const Data, Data>& data) { return data.second == data_; }
+      };
 
    private:
       static void skipProlog(ParseBuffer& pb);
