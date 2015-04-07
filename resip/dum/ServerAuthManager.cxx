@@ -312,10 +312,19 @@ ServerAuthManager::authorizedForThisIdentity(const resip::Data &user,
 const Data& 
 ServerAuthManager::getChallengeRealm(const SipMessage& msg)
 {
+    // (1) Check if static realm is defined
    if(!mStaticRealm.empty())
    {
       return mStaticRealm;
    }
+
+    // (2) Check From domain
+    if (mDum.isMyDomain(msg.header(h_From).uri().host()))
+    {
+        return msg.header(h_From).uri().host();
+    }
+
+    // (3) Punt: Use Request URI
    return msg.header(h_RequestLine).uri().host();
 }
 
