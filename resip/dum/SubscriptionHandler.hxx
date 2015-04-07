@@ -25,7 +25,7 @@ class ClientSubscriptionHandler
       
       //subscription can be ended through a notify or a failure response.
       virtual void onTerminated(ClientSubscriptionHandle, const SipMessage* msg)=0;   
-      //not sure if this has any value.
+      //not sure if this has any value - can be called for either a 200/SUBSCRIBE or a NOTIFY - whichever arrives first
       virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0;
 
       /// called to allow app to adorn a message.
