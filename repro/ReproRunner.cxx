@@ -1619,7 +1619,10 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          bool isV6Address = DnsUtil::isIpV6Address(ipAddress);
          if(!isV4Address && !isV6Address)
          {
-            ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            if (!ipAddress.empty())
+            {
+               ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            }
             ipAddress = Data::Empty;
             isV4Address = true;
             isV6Address = true;
