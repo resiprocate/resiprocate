@@ -1,5 +1,7 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
+Copyright (c) 2013, Mozilla
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -13,9 +15,10 @@ met:
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
 
-* Neither the name of Adobe Systems, Network Resonance nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+* Neither the name of Adobe Systems, Network Resonance, Mozilla nor
+  the names of its contributors may be used to endorse or promote
+  products derived from this software without specific prior written
+  permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -30,28 +33,34 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef _nr_proxy_tunnel_h
+#define _nr_proxy_tunnel_h
 
+#include "nr_socket.h"
+#include "nr_resolver.h"
+#include "nr_socket_wrapper.h"
 
-#ifndef _stun_reg_h
-#define _stun_reg_h
-#ifdef __cplusplus
-using namespace std;
-extern "C" {
-#endif /* __cplusplus */
+typedef struct nr_proxy_tunnel_config_ {
+  nr_resolver *resolver;
+  char *proxy_host;
+  UINT2 proxy_port;
+} nr_proxy_tunnel_config;
 
-#define NR_STUN_REG_PREF_CLNT_RETRANSMIT_TIMEOUT    "stun.client.retransmission_timeout"
-#define NR_STUN_REG_PREF_CLNT_RETRANSMIT_BACKOFF    "stun.client.retransmission_backoff_factor"
-#define NR_STUN_REG_PREF_CLNT_MAXIMUM_TRANSMITS     "stun.client.maximum_transmits"
-#define NR_STUN_REG_PREF_CLNT_FINAL_RETRANSMIT_BACKOFF   "stun.client.final_retransmit_backoff"
+int nr_proxy_tunnel_config_create(nr_proxy_tunnel_config **config);
 
-#define NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS            "stun.allow_loopback"
-#define NR_STUN_REG_PREF_ADDRESS_PRFX               "stun.address"
-#define NR_STUN_REG_PREF_SERVER_NAME                "stun.server.name"
-#define NR_STUN_REG_PREF_SERVER_NONCE_SIZE          "stun.server.nonce_size"
-#define NR_STUN_REG_PREF_SERVER_REALM               "stun.server.realm"
+int nr_proxy_tunnel_config_destroy(nr_proxy_tunnel_config **config);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+int nr_proxy_tunnel_config_set_proxy(nr_proxy_tunnel_config *config,
+                                     const char* host, UINT2 port);
+
+int nr_proxy_tunnel_config_set_resolver(nr_proxy_tunnel_config *config,
+                                        nr_resolver *resolver);
+
+int nr_socket_proxy_tunnel_create(nr_proxy_tunnel_config *config,
+                                  nr_socket *inner,
+                                  nr_socket **socketpp);
+
+int nr_socket_wrapper_factory_proxy_tunnel_create(nr_proxy_tunnel_config *config,
+                                                  nr_socket_wrapper_factory **factory);
+
 #endif
-
