@@ -1,4 +1,5 @@
 #include "resip/stack/WsCookieContext.hxx"
+#include "resip/stack/Transport.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 
@@ -53,6 +54,16 @@ WsCookieContext:: WsCookieContext(const CookieList& cookieList, const Data& info
       }
    }
 
+   if(mWsSessionInfo.empty())
+   {
+      ErrLog(<<"Cookie " << infoCookieName << " missing or empty");
+      throw Transport::Exception("Required cookie missing", __FILE__, __LINE__);
+   }
+   if(mWsSessionMAC.empty())
+   {
+      ErrLog(<<"Cookie " << macCookieName << " missing or empty");
+      throw Transport::Exception("Required cookie missing", __FILE__, __LINE__);
+   }
    ParseBuffer pb(mWsSessionInfo);
    StackLog(<<"Checking Cookie scheme version");
    int contextVersion = pb.uInt32();
