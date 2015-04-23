@@ -49,7 +49,7 @@
         <li>use proxy_domain = example.org to serve both</li>
       </ul>
     </li>
-    <li>set sip_from and sip_to to restrict the callee can caller URIs, or just use wildcards like *@*</li>
+    <li>set sip_from and sip_to to restrict the callee and caller URIs, or just use wildcards like *@*</li>
     <li>set the HMAC key to match the key in repro.config</li>
     <li>make sure you connect within the specified time_limit</li>
   </ul>
