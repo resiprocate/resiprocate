@@ -28,9 +28,15 @@ int main()
    cookies.push_back(mac);
 
    BasicWsCookieContextFactory factory;
-   SharedPtr<WsCookieContext> ctx = factory.makeCookieContext(cookies);
+   Uri uri("/");
+   SharedPtr<WsCookieContext> ctx = factory.makeCookieContext(cookies, uri);
 
    assert(ctx->getExpiresTime() == 1987814798);
+
+   uri = Uri("/;WSSessionInfo=1:1387814798:1987834798:bob@example.org:alice@example.org;WSSessionExtra=kangaroo");
+   ctx = factory.makeCookieContext(cookies, uri);
+   assert(ctx->getExpiresTime() == 1987834798);
+   assert(ctx->getWsSessionExtra() == "kangaroo");
 
    return 0;
 }
