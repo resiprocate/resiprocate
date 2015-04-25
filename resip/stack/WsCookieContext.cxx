@@ -59,17 +59,17 @@ WsCookieContext::WsCookieContext(const CookieList& cookieList, const Data& infoC
    UnknownParameterType pInfo(infoCookieName);
    if(requestUri.exists(pInfo))
    {
-      mWsSessionInfo = requestUri.param(pInfo);
+      mWsSessionInfo = requestUri.param(pInfo).urlDecoded();
    }
    UnknownParameterType pExtra(extraCookieName);
    if(requestUri.exists(pExtra))
    {
-      mWsSessionExtra = requestUri.param(pExtra);
+      mWsSessionExtra = requestUri.param(pExtra).urlDecoded();
    }
    UnknownParameterType pMac(macCookieName);
    if(requestUri.exists(pMac))
    {
-      mWsSessionMAC = requestUri.param(pMac);
+      mWsSessionMAC = requestUri.param(pMac).urlDecoded();
    }
 
    if(mWsSessionInfo.empty())
