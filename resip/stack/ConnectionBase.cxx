@@ -573,8 +573,9 @@ ConnectionBase::wsParseCookies(CookieList& cookieList, const SipMessage* message
             pb.data(value, anchor);
          }
 
-         cookieList.push_back(Cookie(name, value));
-         DebugLog(<< "Cookie: " << Cookie(name, value));
+         Cookie cookie(name, value);
+         cookieList.push_back(cookie);
+         DebugLog(<< "Cookie: " << cookie);
 
          if(!pb.eof() && *(pb.position()) == Symbols::SEMI_COLON[0])
          {
