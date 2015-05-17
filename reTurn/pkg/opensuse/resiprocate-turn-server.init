@@ -40,48 +40,48 @@ test -f $config || exit 6
 case "$1" in
     start)
         [ -d $piddir ] || mkdir -p $piddir && chown ${proguser}:${proggrp} $piddir
-	echo "Starting $prog "
-	startproc -p $pidfile $exec $config
+        echo "Starting $prog "
+        startproc -p $pidfile $exec $config
         rc_status -v
         ;;
     stop)
         echo -n "Stopping $prog "
-	killproc $exec
-	rc_status -v
+        killproc $exec
+        rc_status -v
         ;;
     restart)
         $0 stop
-	$0 start
-	rc_status
+        $0 start
+        rc_status
         ;;
     reload)
         echo -n "Reload service $prog "
-	rc_failed 3
-	rc_status -v
+        rc_failed 3
+        rc_status -v
         ;;
     force-reload)
         echo -n "Reload service $prog "
-	$0 try-restart
-	rc_status
+        $0 try-restart
+        rc_status
         ;;
     status)
         echo -n "Checking for service $prog "
-	/sbin/checkproc $exec
-	rc_status -v
+        /sbin/checkproc $exec
+        rc_status -v
         ;;
     probe)
         test $config -nt $pidfile && echo reload
 	;;
     condrestart|try-restart)
         if test "$1" = "condrestart"; then
-	        echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
+              echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
         fi
-	$0 status
-	if test $? = 0; then
-	        $0 restart
-	else
-		rc_reset
-	fi
+        $0 status
+        if test $? = 0; then
+              $0 restart
+        else
+              rc_reset
+        fi
         rc_status
         ;;
     *)
