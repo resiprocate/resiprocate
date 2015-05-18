@@ -382,14 +382,15 @@ CertificatePath =
 
 # This parameter specifies the cipher list to be passed to
 # SSL_CTX_set_cipher_list.
-# The default value is defined in the code as BaseSecurity::ExportableSuite
+# The default value is defined in the code as BaseSecurity::StrongestSuite
+# using the value HIGH:!aNULL:!eNULL
 # Uncomment the line below and add or remove cipher names as required.
 # See https://www.openssl.org/docs/apps/ciphers.html for details
 # of the format of this parameter.
-#OpenSSLCipherList = !SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4
-
-# and a slightly stronger cipher list:
-#OpenSSLCipherList = !SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES
+#OpenSSLCipherList = HIGH:!aNULL:!eNULL
+#
+# and a weaker cipher list suitable for US export:
+#OpenSSLCipherList = EXPORT:!aNULL:!eNULL
 
 # Define database connections
 # Databases can be file based, SQL based or something else.
