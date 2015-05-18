@@ -467,15 +467,22 @@ BaseSecurity::addCertPEM (PEMType type,
       ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
       throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
    }
-   cert = PEM_read_bio_X509(in,0,0,0);
-   if (cert == NULL)
+   while(!BIO_eof(in))
    {
-      ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
-      BIO_free(in); 
-      throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
-   }
+      cert = PEM_read_bio_X509(in,0,0,0);
+      if (cert == NULL)
+      {
+         ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
+         BIO_free(in);
+         throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
+      }
    
-   addCertX509(type,name,cert,write);
+      addCertX509(type,name,cert,write);
+      if(type != RootCert)
+      {
+         break;
+      }
+   }
    
    BIO_free(in);
 }
