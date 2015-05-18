@@ -313,6 +313,42 @@ Daemonize = false
 #
 CertificatePath =
 
+# This option specifies flags to be passed to OpenSSL's
+# SSL_CTX_set_options method after creating the SSL context
+# for a transport.
+#
+# The flags here are added (logical OR) to any existing flags already
+# set by default within the OpenSSL stack.
+#
+# By default, the reSIProcate stack adds flags SSL_OP_NO_SSLv2
+# and SSL_OP_NO_SSLv3 which disable deprecated and insecure
+# SSL versions.  To add more flags, uncomment the line below and add
+# the flags required, separated by commas.
+#OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2, SSL_OP_NO_SSLv3
+
+# This option specifies flags to be passed to OpenSSL's
+# SSL_CTX_clear_options method after creating the SSL context
+# for a transport.
+#
+# The flags here are removed from any existing flags
+# already set by default within the OpenSSL stack.
+#
+# To clear the option SSL_OP_NO_SSLv3 and get SSLv3 support
+# (not recommended for security reasons), uncomment the example below:
+#OpenSSLCTXClearOptions = SSL_OP_NO_SSLv3
+
+# This parameter specifies the cipher list to be passed to
+# SSL_CTX_set_cipher_list.
+# The default value is defined in the code as BaseSecurity::StrongestSuite
+# using the value HIGH:!aNULL:!eNULL
+# Uncomment the line below and add or remove cipher names as required.
+# See https://www.openssl.org/docs/apps/ciphers.html for details
+# of the format of this parameter.
+#OpenSSLCipherList = HIGH:!aNULL:!eNULL
+#
+# and a weaker cipher list suitable for US export:
+#OpenSSLCipherList = EXPORT:!aNULL:!eNULL
+
 # The Path to read and write Berkely DB database files
 DatabasePath = ./
 

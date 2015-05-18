@@ -567,7 +567,7 @@ ReproRunner::createSipStack()
          "OpenSSLCTXSetOptions", BaseSecurity::OpenSSLCTXSetOptions);
    setOpenSSLCTXOptionsFromConfig(
          "OpenSSLCTXClearOptions", BaseSecurity::OpenSSLCTXClearOptions);
-   Security::CipherList cipherList = Security::ExportableSuite;
+   Security::CipherList cipherList = Security::StrongestSuite;
    Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", "");
    if(!ciphers.empty())
    {
