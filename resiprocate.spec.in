@@ -163,6 +163,7 @@ install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 repro/users.txt %{buildroot}%{_sysconfdir}/repro/users.txt
 sed -i \
+ -e 's!^#CAFile = /etc/pki/tls/cert.pem$!CAFile = /etc/pki/tls/cert.pem!' \
  -e 's!^LoggingType = cout$!LoggingType = file!' \
  -e 's!^LogLevel = INFO$!LogLevel = WARNING!' \
  -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
