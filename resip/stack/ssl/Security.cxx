@@ -2748,14 +2748,18 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    {
       return SSL_OP_NO_TLSv1;
    }
+#ifdef SSL_OP_NO_TLSv1_1
    if(optionName == "SSL_OP_NO_TLSv1_1")
    {
       return SSL_OP_NO_TLSv1_1;
    }
+#endif
+#ifdef SSL_OP_NO_TLSv1_2
    if(optionName == "SSL_OP_NO_TLSv1_2")
    {
       return SSL_OP_NO_TLSv1_2;
    }
+#endif
    if(optionName == "SSL_OP_PKCS1_CHECK_1")
    {
       return SSL_OP_PKCS1_CHECK_1;
