@@ -267,12 +267,41 @@ Daemonize = false
 # Path to load certificates from (optional, there is no default)
 # Note that repro loads ALL root certificates found by any of the settings
 #
-#    CertificatePath
 #    CADirectory
 #    CAFile
+#    CertificatePath
 #
 # Setting one option does not disable the other options.
 #
+# Path to load root certificates from
+# Iff this directory is specified, all files in the directory
+# will be loaded as root certificates, prefixes and suffixes are
+# not considered
+# Note that repro loads ALL root certificates found by the settings
+# CertificatePath, CADirectory and CAFile.  Setting one option does
+# not disable the other options.
+# On Debian, the typical location is /etc/ssl/certs
+# On Red Hat/CentOS, there isn't a directory like this.
+#CADirectory = /etc/ssl/certs
+
+# Specify a single file containing one or more root certificates
+# and possible chain/intermediate certificates to be loaded
+# Iff this filename is specified, the certificates in the file will
+# be loaded as root certificates
+#
+# This option is typically used to load a bundle of certificates
+# such as /etc/ssl/certs/ca-certificates.crt on Debian and
+# /etc/pki/tls/cert.pem on Red Hat/CentOS
+#
+# Note that repro loads ALL root certificates found by the settings
+# CertificatePath, CADirectory and CAFile.  Setting one option does
+# not disable the other options.
+#
+# Uncomment for Debian/Ubuntu:
+#CAFile = /etc/ssl/certs/ca-certificates.crt
+# Uncomment for Fedora, Red Hat, CentOS:
+#CAFile = /etc/pki/tls/cert.pem
+
 # Certificates in this location have to match one of the filename
 # patterns expected by the legacy reSIProcate SSL code:
 #
@@ -283,38 +312,6 @@ Daemonize = false
 # TransportXTlsPrivateKey and not set CertificatePath at all.
 #
 CertificatePath =
-
-# Path to load root certificates from
-# Iff this directory is specified, all files in the directory
-# will be loaded as root certificates, prefixes and suffixes are
-# not considered
-# Note that repro loads ALL root certificates found by the settings
-# CertificatePath, CADirectory and CAFile.  Setting one option does
-# not disable the other options.
-# On Debian, the typical location is /etc/ssl/certs
-#CADirectory = /etc/ssl/certs
-
-# Specify a single file containing one or more root certificates
-# and possible chain/intermediate certificates to be loaded
-# Iff this filename is specified, the certificates in the file will
-# be loaded as root certificates
-#
-# This does NOT currently support bundles of unrelated root certificates
-# stored in the same PEM file, it ONLY supports related/chained root
-# certificates.  If multiple roots must be supported, use the CADirectory
-# option.
-#
-# In the future, this behavior may change to load a bundle,
-# such as /etc/ssl/certs/ca-certificates.txt on Debian and
-# /etc/pki/tls/cert.pem on Red Hat/CentOS
-#
-# Note that repro loads ALL root certificates found by the settings
-# CertificatePath, CADirectory and CAFile.  Setting one option does
-# not disable the other options.
-#
-# This example loads just the CACert.org chain, which typically
-# includes the class 1 root and the class 3 root (signed by the class 1 root)
-#CAFile = /etc/ssl/certs/cacert.org.pem
 
 # The Path to read and write Berkely DB database files
 DatabasePath = ./
