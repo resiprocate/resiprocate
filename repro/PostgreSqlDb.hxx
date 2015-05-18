@@ -1,11 +1,7 @@
-#if !defined(RESIP_MYSQLDB_HXX)
-#define RESIP_MYSQLDB_HXX 
+#if !defined(RESIP_POSTGRESQLDB_HXX)
+#define RESIP_POSTGRESQLDB_HXX 
 
-#ifdef WIN32
-#include <mysql.h>
-#else 
-#include <mysql/mysql.h>
-#endif
+#include <libpq-fe.h>
 
 #include "rutil/Data.hxx"
 #include "repro/SqlDb.hxx"
@@ -18,18 +14,18 @@ namespace resip
 namespace repro
 {
 
-class MySqlDb: public SqlDb
+class PostgreSqlDb: public SqlDb
 {
    public:
-      MySqlDb(const resip::Data& dbServer, 
+      PostgreSqlDb(const resip::Data& dbServer, 
               const resip::Data& user, 
               const resip::Data& password, 
               const resip::Data& databaseName, 
               unsigned int port, 
               const resip::Data& customUserAuthQuery);
-      
-      ~MySqlDb();
 
+      ~PostgreSqlDb();
+      
       virtual bool addUser( const Key& key, const UserRecord& rec );
       virtual UserRecord getUser( const Key& key ) const;
       virtual resip::Data getUserAuthInfo(  const Key& key ) const;
@@ -59,7 +55,7 @@ class MySqlDb: public SqlDb
       void initialize() const;
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
-      int query(const resip::Data& queryCommand, MYSQL_RES** result) const;
+      int query(const resip::Data& queryCommand, PGresult** result) const;
       virtual int query(const resip::Data& queryCommand) const;
       resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const;
 
@@ -70,8 +66,9 @@ class MySqlDb: public SqlDb
       unsigned int mDBPort;
       resip::Data mCustomUserAuthQuery;
 
-      mutable MYSQL* mConn;
-      mutable MYSQL_RES* mResult[MaxTable];
+      mutable PGconn* mConn;
+      mutable PGresult* mResult[MaxTable];
+      mutable int mRow[MaxTable];
 
       void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
 };
@@ -80,45 +77,37 @@ class MySqlDb: public SqlDb
 #endif  
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2015 Daniel Pocock.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
- * 3. The names "VOCAL", "Vovida Open Communication Application Library",
- *    and "Vovida Open Communication Application Library (VOCAL)" must
- *    not be used to endorse or promote products derived from this
- *    software without prior written permission. For written
- *    permission, please contact vocal@vovida.org.
  *
- * 4. Products derived from this software may not be called "VOCAL", nor
- *    may "VOCAL" appear in their name, without prior written
- *    permission of Vovida Networks, Inc.
- * 
- * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
- * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
- * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- * DAMAGE.
+ * 3. Neither the name of the author(s) nor the names of any contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR(S) OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  * 
  * ====================================================================
  */
+

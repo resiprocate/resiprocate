@@ -203,6 +203,14 @@ AC_ARG_WITH(mysql,
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
+AM_CONDITIONAL(USE_POSTGRESQL, false)
+AC_ARG_WITH(postgresql,
+[  --with-postgresql       Link against PostgreSQL client libraries],
+ [AC_DEFINE_UNQUOTED(USE_POSTGRESQL, , USE_POSTGRESQL)
+ AC_SUBST(LIBPOSTGRESQL_LIBADD, "-lpq")
+ AM_CONDITIONAL(USE_POSTGRESQL, true)],
+ [ AC_SUBST(LIBPOSTGRESQL_LIBADD, "")])
+
 AM_CONDITIONAL(USE_MAXMIND_GEOIP, false)
 AC_ARG_WITH(geoip,
 [  --with-geoip            Link against MaxMind GeoIP libraries],

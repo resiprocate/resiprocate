@@ -2,6 +2,7 @@
 #define ProxyConfig_hxx
 
 #include <map>
+#include "repro/AbstractDb.hxx"
 #include "repro/Store.hxx"
 #include <resip/stack/Uri.hxx>
 #include <rutil/ConfigParse.hxx>
@@ -24,6 +25,8 @@ public:
    using resip::ConfigParse::getConfigValue;
    bool getConfigValue(const resip::Data& name, resip::Uri &value);
    resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
+
+   AbstractDb *getDatabase(int configIndex);
 
 protected:
 
