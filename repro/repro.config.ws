@@ -9,9 +9,12 @@
 
 # Logging Type: syslog|cerr|cout|file
 # Note:  Logging to cout can negatively effect performance.
-#        When repro is placed into production 'file' or 
+#        When repro is placed into production 'file' or
 #        'syslog' should be used.
 LoggingType = cout
+
+# For syslog, also specify the facility, default is LOG_DAEMON
+SyslogFacility = LOG_DAEMON
 
 # Logging level: NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK
 LogLevel = INFO
@@ -26,6 +29,10 @@ LogFileMaxBytes = 5242880
 # logging to syslog concurrently
 # If unspecified, defaults to argv[0] (name of the executable)
 #LoggingInstanceName = repro-dev
+
+# Enable INFO level SIP Message Logging - outputs all SIP messages
+# sent and/or received to log file in an easy to read format
+EnableSipMessageLogging = false
 
 ########################################################
 # Transport settings
@@ -89,6 +96,35 @@ TLSPrivateKey =
 #    SIP messages coming from the peer
 TLSClientVerification = None
 
+# The SSL or TLS connection mode to use
+# SSL v2 and v3 are deprecated and SSL v2 is particularly insecure
+# and should be avoided.
+# TLSv1 was the default up to and including reSIProcate v1.9.7.
+# With the setting TLSv1, only TLS v1.0 could be used
+# and not TLS v1.1 or newer versions.
+# The value SSLv23 works as a catch-all and gives the potential
+# to allow all the SSL and TLS versions.  Despite the name SSLv23, it
+# does not allow SSL v2.0 or v3.0 if the SSL_CTX_set_options method is used
+# to prohibit them or if OpenSSL is compiled without them.
+# See the page https://www.openssl.org/docs/ssl/SSL_CTX_new.html
+# for a more detailed discussion of how repro will behave when
+# using the values SSLv23 or TLSv1 here.
+# For optimal security and compatibility, set SSLv23 here and make sure
+# that either your OpenSSL is compiled without legacy SSL versions or
+# that the parameter OpenSSLCTXSetOptions (later in repro.config)
+# contains the values SSL_OP_NO_SSLv2 and SSL_OP_NO_SSLv3
+#
+#        TLSConnectionMethod          Supported
+#              value                  protocol
+#    ---------------------------------------------------
+#
+#            SSLv23                  TLS 1.0, 1.1, 1.2 and beyond
+#                                      negotiated dynamically
+#
+#            TLSv1                   Only TLS 1.0 (problematic)
+#
+TLSConnectionMethod = SSLv23
+
 # Whether we accept the subjectAltName email address as if it was a SIP
 # address (when checking the validity of a client certificate)
 # Very few commercial CAs offer support for SIP addresses in subjectAltName
@@ -109,6 +145,7 @@ TLSUseEmailAsSIP = false
 # Transport<Num>TlsCertificate = <TLSCertificate> - only for TLS, DTLS or WSS
 # Transport<Num>TlsPrivateKey = <TLSPrivateKey> - only for TLS, DTLS or WSS
 # Transport<Num>TlsClientVerification = <'None'|'Optional'|'Mandatory'> - default is None
+# Transport<Num>TlsConnectionMethod = <'TLSv1'|'SSLv23'> - default is SSLv23
 # Transport<Num>RecordRouteUri = <'auto'|URI> - if set to auto then record route URI
 #                                               is automatically generated from the other
 #                                               transport settings.  Otherwise explicity
@@ -177,7 +214,7 @@ DisableHttpAuth = false
 HttpAdminRealm = repro
 
 # File containing user/password details
-# 
+#
 # The format is:
 #
 #   username:realm:HA1
@@ -189,7 +226,7 @@ HttpAdminRealm = repro
 #   HA1 = `echo -n user:realm:password | md5sum`
 #
 # You can use the htdigest utility from Apache to create and
-# manage this file 
+# manage this file
 #
 HttpAdminUserFile = users.txt
 
