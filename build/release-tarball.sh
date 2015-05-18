@@ -25,7 +25,7 @@ autoreconf --install && \
   ./configure --with-ssl \
               --with-c-ares \
               --with-mysql \
-              --with-radius \
+              --with-freeradius \
               --with-repro \
               --enable-repro-plugins \
               --with-python \
