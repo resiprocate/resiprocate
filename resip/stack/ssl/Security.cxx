@@ -125,8 +125,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 
 // .amr. RFC 5922 mandates exact match only on certificates, so this is the default, but RFC 2459 and RFC 3261 don't prevent wildcards, so enable if you want that mode.
 bool BaseSecurity::mAllowWildcardCertificates = false;
-BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
-BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
+BaseSecurity::CipherList BaseSecurity::ExportableSuite("EXPORT:!aNULL:!eNULL");
+BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:!aNULL:!eNULL");
 
 /**
  * Note:
@@ -467,15 +467,22 @@ BaseSecurity::addCertPEM (PEMType type,
       ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
       throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
    }
-   cert = PEM_read_bio_X509(in,0,0,0);
-   if (cert == NULL)
+   while(!BIO_eof(in))
    {
-      ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
-      BIO_free(in); 
-      throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
-   }
+      cert = PEM_read_bio_X509(in,0,0,0);
+      if (cert == NULL)
+      {
+         ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
+         BIO_free(in);
+         throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
+      }
    
-   addCertX509(type,name,cert,write);
+      addCertX509(type,name,cert,write);
+      if(type != RootCert)
+      {
+         break;
+      }
+   }
    
    BIO_free(in);
 }
@@ -2798,14 +2805,18 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    {
       return SSL_OP_NO_TLSv1;
    }
+#ifdef SSL_OP_NO_TLSv1_1
    if(optionName == "SSL_OP_NO_TLSv1_1")
    {
       return SSL_OP_NO_TLSv1_1;
    }
+#endif
+#ifdef SSL_OP_NO_TLSv1_2
    if(optionName == "SSL_OP_NO_TLSv1_2")
    {
       return SSL_OP_NO_TLSv1_2;
    }
+#endif
    if(optionName == "SSL_OP_PKCS1_CHECK_1")
    {
       return SSL_OP_PKCS1_CHECK_1;

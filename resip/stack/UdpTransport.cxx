@@ -230,15 +230,22 @@ UdpTransport::processTxAll()
       processTxOne(msg);
       // With UDP we don't need to worry about write blocking (I hope)
       if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXALL)==0 )
+      {
          break;
+      }
    }
 }
 
 void
 UdpTransport::processTxOne(SendData *data)
 {
-   ++mTxMsgCnt;
    assert(data);
+   if(data->command != SendData::NoCommand)
+   {
+      // We don't handle any special SendData commands in the UDP transport yet.
+      return;
+   }
+   ++mTxMsgCnt;
    std::auto_ptr<SendData> sendData(data);
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");

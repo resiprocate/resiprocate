@@ -606,7 +606,7 @@ ReproRunner::createSipStack()
          "OpenSSLCTXSetOptions", BaseSecurity::OpenSSLCTXSetOptions);
    setOpenSSLCTXOptionsFromConfig(
          "OpenSSLCTXClearOptions", BaseSecurity::OpenSSLCTXClearOptions);
-   Security::CipherList cipherList = Security::ExportableSuite;
+   Security::CipherList cipherList = Security::StrongestSuite;
    Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", Data::Empty);
    if(!ciphers.empty())
    {
@@ -827,34 +827,66 @@ ReproRunner::createDatastore()
    // Create Database access objects
    assert(!mAbstractDb);
    assert(!mRuntimeAbstractDb);
-#ifdef USE_MYSQL
-   Data mySQLServer;
-   mProxyConfig->getConfigValue("MySQLServer", mySQLServer);
-   if(!mySQLServer.empty())
+   int defaultDatabaseIndex = mProxyConfig->getConfigInt("DefaultDatabase", -1);
+   if(defaultDatabaseIndex >= 0)
    {
-      mAbstractDb = new MySqlDb(mySQLServer, 
-                       mProxyConfig->getConfigData("MySQLUser", Data::Empty), 
-                       mProxyConfig->getConfigData("MySQLPassword", Data::Empty),
-                       mProxyConfig->getConfigData("MySQLDatabaseName", Data::Empty),
-                       mProxyConfig->getConfigUnsignedLong("MySQLPort", 0),
-                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
+      mAbstractDb = mProxyConfig->getDatabase(defaultDatabaseIndex);
+      if(!mAbstractDb)
+      {
+         CritLog(<<"Failed to get configuration database");
+         cleanupObjects();
+         return false;
+      }
    }
-   Data runtimeMySQLServer;
-   mProxyConfig->getConfigValue("RuntimeMySQLServer", runtimeMySQLServer);
-   if(!runtimeMySQLServer.empty())
+   else     // Try legacy configuration parameter names
    {
-      mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
-                       mProxyConfig->getConfigData("RuntimeMySQLUser", Data::Empty), 
-                       mProxyConfig->getConfigData("RuntimeMySQLPassword", Data::Empty),
-                       mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", Data::Empty),
-                       mProxyConfig->getConfigUnsignedLong("RuntimeMySQLPort", 0),
-                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
+#ifdef USE_MYSQL
+      Data mySQLServer;
+      mProxyConfig->getConfigValue("MySQLServer", mySQLServer);
+      if(!mySQLServer.empty())
+      {
+         WarningLog(<<"Using deprecated parameter MySQLServer, please update to indexed Database definitions.");
+         mAbstractDb = new MySqlDb(mySQLServer,
+                          mProxyConfig->getConfigData("MySQLUser", Data::Empty),
+                          mProxyConfig->getConfigData("MySQLPassword", Data::Empty),
+                          mProxyConfig->getConfigData("MySQLDatabaseName", Data::Empty),
+                          mProxyConfig->getConfigUnsignedLong("MySQLPort", 0),
+                          mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
+      }
+#endif
+      if (!mAbstractDb)
+      {
+         mAbstractDb = new BerkeleyDb(mProxyConfig->getConfigData("DatabasePath", "./", true));
+      }
+   }
+   int runtimeDatabaseIndex = mProxyConfig->getConfigInt("RuntimeDatabase", -1);
+   if(runtimeDatabaseIndex >= 0)
+   {
+      mRuntimeAbstractDb = mProxyConfig->getDatabase(runtimeDatabaseIndex);
+      if(!mRuntimeAbstractDb || !mRuntimeAbstractDb->isSane())
+      {
+         CritLog(<<"Failed to get runtime database");
+         cleanupObjects();
+         return false;
+      }
+   }
+#ifdef USE_MYSQL
+   else     // Try legacy configuration parameter names
+   {
+      Data runtimeMySQLServer;
+      mProxyConfig->getConfigValue("RuntimeMySQLServer", runtimeMySQLServer);
+      if(!runtimeMySQLServer.empty())
+      {
+         WarningLog(<<"Using deprecated parameter RuntimeMySQLServer, please update to indexed Database definitions.");
+         mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
+                          mProxyConfig->getConfigData("RuntimeMySQLUser", Data::Empty), 
+                          mProxyConfig->getConfigData("RuntimeMySQLPassword", Data::Empty),
+                          mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", Data::Empty),
+                          mProxyConfig->getConfigUnsignedLong("RuntimeMySQLPort", 0),
+                          mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
+      }
    }
 #endif
-   if (!mAbstractDb)
-   {
-      mAbstractDb = new BerkeleyDb(mProxyConfig->getConfigData("DatabasePath", "./", true));
-   }
    assert(mAbstractDb);
    if(!mAbstractDb->isSane())
    {
@@ -1619,7 +1651,10 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          bool isV6Address = DnsUtil::isIpV6Address(ipAddress);
          if(!isV4Address && !isV6Address)
          {
-            ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            if (!ipAddress.empty())
+            {
+               ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            }
             ipAddress = Data::Empty;
             isV4Address = true;
             isV6Address = true;

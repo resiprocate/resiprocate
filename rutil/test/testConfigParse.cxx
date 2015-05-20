@@ -1,49 +1,74 @@
-#ifndef RESIP_WsCookieContext_hxx
-#define RESIP_WsCookieContext_hxx
+#include "rutil/ConfigParse.hxx"
+#include <cassert>
+#include <iostream>
 
-#include "Cookie.hxx"
-#include "rutil/Data.hxx"
-#include "Uri.hxx"
+using namespace resip;
+using namespace std;
 
-#define RESIP_WS_COOKIE_CONTEXT_VERSION 1
-
-namespace resip
+class MyConfigParse : public ConfigParse
 {
-
-class WsCookieContext
-{
-   public:
-      WsCookieContext();
-      WsCookieContext(const CookieList& cookieList, const Data& infoCookieName, const Data& extraCookieName, const Data& macCookieName, const Uri& requestUri);
-      WsCookieContext(const WsCookieContext& rhs);
-      ~WsCookieContext();
-
-      WsCookieContext& operator=(const WsCookieContext& rhs);
-
-      Data getWsSessionInfo() const { return mWsSessionInfo; };
-      Data getWsSessionExtra() const { return mWsSessionExtra; };
-      Data getWsSessionMAC() const { return mWsSessionMAC; };
-      Uri getWsFromUri() const { return mWsFromUri; };
-      Uri getWsDestUri() const { return mWsDestUri; };
-      time_t getExpiresTime() const { return mExpiresTime; };
-
-   private:
-      Data mWsSessionInfo;
-      Data mWsSessionExtra;
-      Data mWsSessionMAC;
-      Uri mWsFromUri;
-      Uri mWsDestUri;
-      time_t mExpiresTime;
+public:
+   MyConfigParse() {};
+   virtual void printHelpText(int argc, char **argv)
+   {
+      cout << "Testing ConfigParse::printHelpText" << std::endl;
+   }
 };
 
+int
+main(int argc, char *argv[])
+{
+   Data defaultConfigFilename("testConfigParse-1.config");
+   MyConfigParse cp;
+   cp.parseConfig(argc, argv, defaultConfigFilename);
+
+   {
+      // Does not exist in the sample config file
+      Data param0 = cp.getConfigData("Param0", "");
+      assert(param0.empty());
+   }
+
+   {
+      // Does not exist in the sample config file
+      // Test use of a default value
+      Data param0 = cp.getConfigData("Param0", "unit testing");
+      assert(param0 == "unit testing");
+   }
+
+   {
+      Data param1 = cp.getConfigData("Param1", "");
+      assert(param1 == "unit testing is good");
+   }
+
+   {
+      ConfigParse::NestedConfigMap m = cp.getConfigNested("Foo");
+      assert(m.size() == 0);
+   }
+
+   {
+      ConfigParse::NestedConfigMap m = cp.getConfigNested("Transport");
+      assert(m.size() == 2);
+
+      ConfigParse& n1 = m[1];
+      ConfigParse& n101 = m[101];
+
+      Data protocol1 = n1.getConfigData("Protocol", "UDP");
+      assert(protocol1 == "TLS");
+      int port1 = n1.getConfigInt("Port", 5060);
+      assert(port1 == 5061);
+
+      Data protocol101 = n101.getConfigData("Protocol", "UDP");
+      assert(protocol101 == "WSS");
+      int port101 = n101.getConfigInt("Port", 8443);
+      assert(port101 == 443);
+   }
+
+   return 0;
 }
 
-#endif
-
 /* ====================================================================
- * BSD License
  *
- * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
+ * Copyright 2014 Daniel Pocock.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -75,4 +100,6 @@ class WsCookieContext
  *
  * ====================================================================
  *
+ *
  */
+

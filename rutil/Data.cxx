@@ -664,6 +664,32 @@ Data::takeBuf(Data& other)
 }
 
 Data&
+Data::duplicate(const Data& other)
+{
+   if (&other == this)
+      return *this;
+
+   if (mShareEnum == Data::Take)
+      delete[] mBuf;
+
+   if (other.mBuf == other.mPreBuffer)
+   {
+      // plus one picks up the terminating safety NULL
+      memcpy(mPreBuffer, other.mPreBuffer, other.mSize + 1);
+      mBuf = mPreBuffer;
+   }
+   else
+   {
+      mBuf = other.mBuf;
+   }
+   mSize = other.mSize;
+   mCapacity = other.mCapacity;
+   mShareEnum = other.mShareEnum;
+
+   return *this;
+}
+
+Data&
 Data::copy(const char *buf, size_type length)
 {
    if (mShareEnum == Data::Share || mCapacity < length+1)

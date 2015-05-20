@@ -46,37 +46,51 @@ RequestFilter::RequestFilter(ProxyConfig& config,
                      Dispatcher* asyncDispatcher) :
    AsyncProcessor("RequestFilter", asyncDispatcher),
    mFilterStore(config.getDataStore()->mFilterStore),
-   mMySqlDb(0),
+   mSqlDb(0),
    mDefaultNoMatchBehavior(config.getConfigData("RequestFilterDefaultNoMatchBehavior", "")),  // Default: empty string = Continue Processing
    mDefaultDBErrorBehavior(config.getConfigData("RequestFilterDefaultDBErrorBehavior", "500, Server Internal DB Error"))
 {
-#ifdef USE_MYSQL
-   Data mySQLSettingPrefix("RequestFilter");
-   Data mySQLServer = config.getConfigData("RequestFilterMySQLServer", "");
-   if(mySQLServer.empty())
+   const char* databaseParams[] = { "RequestFilterDatabase", "RuntimeDatabase", "DefaultDatabase", 0 };
+   for(const char** databaseParam = databaseParams; *databaseParam != 0; databaseParam++)
    {
-      // If RequestFilterMySQLServer setting is blank, then fallback to
-      // RuntimeMySql settings
-      mySQLSettingPrefix = "Runtime";
-      mySQLServer = config.getConfigData("RuntimeMySQLServer", "");
-      if(mySQLServer.empty())
+      int databaseIndex = config.getConfigInt(*databaseParam, -1);
+      if(databaseIndex >= 0)
       {
-         // If RuntimeMySQLServer setting is blank, then fallback to
-         // global MySql settings
-         mySQLSettingPrefix.clear();
-         mySQLServer = config.getConfigData("MySQLServer", "");
+         mSqlDb = dynamic_cast<SqlDb*>(config.getDatabase(databaseIndex));
+         // FIXME - should we check it is an SQL database and not BerkeleyDB?
       }
    }
-
-   if(!mySQLServer.empty())
+#ifdef USE_MYSQL
+   if(!mSqlDb)     // Try legacy configuration parameter names
    {
-      // Initialize My SQL using Global settings
-      mMySqlDb = new MySqlDb(mySQLServer, 
-                    config.getConfigData(mySQLSettingPrefix + "MySQLUser", ""), 
-                    config.getConfigData(mySQLSettingPrefix + "MySQLPassword", ""),
-                    config.getConfigData(mySQLSettingPrefix + "MySQLDatabaseName", ""),
-                    config.getConfigUnsignedLong(mySQLSettingPrefix + "MySQLPort", 0),
-                    Data::Empty);
+      Data mySQLSettingPrefix("RequestFilter");
+      Data mySQLServer = config.getConfigData("RequestFilterMySQLServer", "");
+      if(mySQLServer.empty())
+      {
+         // If RequestFilterMySQLServer setting is blank, then fallback to
+         // RuntimeMySql settings
+         mySQLSettingPrefix = "Runtime";
+         mySQLServer = config.getConfigData("RuntimeMySQLServer", "");
+         if(mySQLServer.empty())
+         {
+            // If RuntimeMySQLServer setting is blank, then fallback to
+            // global MySql settings
+            mySQLSettingPrefix.clear();
+            mySQLServer = config.getConfigData("MySQLServer", "");
+         }
+      }
+
+      if(!mySQLServer.empty())
+      {
+         // Initialize My SQL using Global settings
+         WarningLog(<<"Using deprecated parameter " << mySQLSettingPrefix << "MySQLServer, please update to indexed Database definitions.");
+         mSqlDb = new MySqlDb(mySQLServer, 
+                       config.getConfigData(mySQLSettingPrefix + "MySQLUser", ""), 
+                       config.getConfigData(mySQLSettingPrefix + "MySQLPassword", ""),
+                       config.getConfigData(mySQLSettingPrefix + "MySQLDatabaseName", ""),
+                       config.getConfigUnsignedLong(mySQLSettingPrefix + "MySQLPort", 0),
+                       Data::Empty);
+      }
    }
 #endif
 }
@@ -165,7 +179,7 @@ RequestFilter::process(RequestContext &rc)
          case FilterStore::Reject:
             return applyActionResult(rc, actionData);
          case FilterStore::SQLQuery:
-            if(mMySqlDb)
+            if(mSqlDb)
             {
                // Dispatch async
                std::auto_ptr<ApplicationMessage> async(new RequestFilterAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy(), actionData));
@@ -199,9 +213,9 @@ RequestFilter::asyncProcess(AsyncProcessorMessage* msg)
    assert(async);
 
 #ifdef USE_MYSQL
-   if(mMySqlDb)
+   if(mSqlDb)
    {
-      async->mQueryResult = mMySqlDb->singleResultQuery(async->mQuery, async->mQueryResultData);
+      async->mQueryResult = mSqlDb->singleResultQuery(async->mQuery, async->mQueryResultData);
       return true;
    }
 #else

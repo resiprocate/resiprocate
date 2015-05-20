@@ -186,6 +186,12 @@ DialogUsageManager::~DialogUsageManager()
        delete mServerPublications.begin()->second;  // Deleting a ServerPublication removes itself from the map
    }
 
+   // Remove any lingering incoming feature chain memory
+   for(FeatureChainMap::iterator it = mIncomingFeatureChainMap.begin(); it != mIncomingFeatureChainMap.end(); it++)
+   {
+      delete it->second;
+   }
+
    //InfoLog ( << "~DialogUsageManager done" );
 }
 

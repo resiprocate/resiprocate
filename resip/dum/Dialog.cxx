@@ -41,7 +41,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
-     mDefaultSubExpiration(0),
      mAppDialog(0),
      mDestroying(false),
      mReUseDialogSet(false)
@@ -751,33 +750,6 @@ Dialog::dispatch(const SipMessage& msg)
             {
                client->dispatch(response);
             }
-            else if (code < 300)
-            {
-               /*
-                  we're capturing the  value from the expires header off
-                  the 2xx because the ClientSubscription is only created
-                  after receiving the NOTIFY that comes (usually) after
-                  this 2xx.  We really should be creating the
-                  ClientSubscription at either the 2xx or the NOTIFY
-                  whichever arrives first. .mjf.
-                  Note: we're capturing a duration here (not the
-                  absolute time because all the inputs to
-                  ClientSubscription desling with the expiration are expecting
-                  duration type values from the headers. .mjf.
-                */
-               if(response.exists(h_Expires))
-               {
-                  mDefaultSubExpiration = response.header(h_Expires).value();
-               }
-               else
-               {
-                  //?dcm? defaults to 3600 in ClientSubscription if no expires value
-                  //is provided anywhere...should we assume the value from the
-                  //sub in the basecreator if it exists?
-                  mDefaultSubExpiration = 0;
-               }               
-               return;
-            }
             else
             {
                //!dcm! -- can't subscribe in an existing Dialog, this is all
@@ -1102,7 +1074,7 @@ Dialog::makeClientInviteSession(const SipMessage& response)
 ClientSubscription*
 Dialog::makeClientSubscription(const SipMessage& request)
 {
-   return new ClientSubscription(mDum, *this, request, mDefaultSubExpiration);
+   return new ClientSubscription(mDum, *this, request);
 }
 
 ServerInviteSession*

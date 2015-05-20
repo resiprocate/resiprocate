@@ -1,7 +1,8 @@
 [Unit]
 Description=reSIProcate reTurn ICE/STUN/TURN server daemon
+After=network-online.target
 After=syslog.target
-After=network.target
+Wants=network-online.target
 
 [Service]
 ExecStart=/usr/sbin/reTurnServer /etc/reTurn/reTurnServer.config --Daemonize=false
