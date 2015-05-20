@@ -443,7 +443,6 @@ ReproRunner::onHUP()
 void
 ReproRunner::cleanupObjects()
 {
-   delete mCongestionManager; mCongestionManager = 0;
    if(!mRestarting)
    {
       // We leave command server running during restart
@@ -485,6 +484,7 @@ ReproRunner::cleanupObjects()
    delete mRuntimeAbstractDb; mRuntimeAbstractDb = 0;
    delete mStackThread; mStackThread = 0;
    delete mSipStack; mSipStack = 0;
+   delete mCongestionManager; mCongestionManager = 0;
    delete mAsyncProcessHandler; mAsyncProcessHandler = 0;
    delete mFdPollGrp; mFdPollGrp = 0;
    delete mProxyConfig; mProxyConfig = 0;
@@ -1759,7 +1759,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    // Add am I responsible monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible)); 
+   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
 
    // Add RequestFilter monkey
    if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))
