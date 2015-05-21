@@ -84,7 +84,7 @@ InMemorySyncPubDb::initialSync(unsigned int connectionId)
       {
          if (shouldEraseDocument(eTagIt->second, now))
          {
-            eTagIt = keyIt->second.erase(eTagIt);
+            keyIt->second.erase(eTagIt++);
          }
          else
          {
@@ -96,7 +96,7 @@ InMemorySyncPubDb::initialSync(unsigned int connectionId)
       // If there are no more eTags then remove entity
       if (keyIt->second.size() == 0)
       {
-         keyIt = mPublicationDb.erase(keyIt);
+         mPublicationDb.erase(keyIt++);
       }
       else
       {
@@ -236,7 +236,7 @@ InMemorySyncPubDb::getMergedETags(const Data& eventType, const Data& documentKey
          else
          {
             // ETag has expired - remove it
-            eTagIt = keyIt->second.erase(eTagIt);
+            keyIt->second.erase(eTagIt++);
             // If no more Etags for key, then remove key entry and bail out
             if (keyIt->second.size() == 0)
             {
