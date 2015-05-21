@@ -663,7 +663,7 @@ Data::takeBuf(Data& other)
    return *this;
 }
 
-Data&
+Data& 
 Data::duplicate(const Data& other)
 {
    if (&other == this)
@@ -1164,7 +1164,7 @@ Data::escaped() const
          
          int hi = (c & 0xF0)>>4;
          int low = (c & 0x0F);
-	   
+      
          ret += hexmap[hi];
          ret += hexmap[low];
       }
@@ -1210,7 +1210,7 @@ Data::charEncoded() const
          
          int hi = (c & 0xF0)>>4;
          int low = (c & 0x0F);
-	   
+      
          ret += hexmap[hi];
          ret += hexmap[low];
       }
@@ -2302,7 +2302,7 @@ Data::escapeToStream(std::ostream& str,
          }
          int hi = (*p & 0xF0)>>4;
          int low = (*p & 0x0F);
-	   
+      
          str << '%' << hex[hi] << hex[low];
          anchor=++p;
       }
