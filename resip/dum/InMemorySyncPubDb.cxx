@@ -1,5 +1,5 @@
 #include "resip/dum/InMemorySyncPubDb.hxx"
-#include "rutil/Compat.hxx"
+#include "rutil/compat.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
