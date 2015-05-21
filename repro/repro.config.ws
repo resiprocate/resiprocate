@@ -244,13 +244,21 @@ CommandBindAddress =
 # 0 to disable (default: 5081)
 CommandPort = 5081
 
-# Port on which to listen for and send XML RPC messaging used in registration sync 
+# Port on which to listen for and send XML RPC messaging used in registration/publication sync 
 # process - 0 to disable (default: 0)
 RegSyncPort = 0
+
+# Port on which to connect to RegSync peer for registration/publication sync 
+# process - 0 to use same value RegSyncPort (default: 0)
+RemoteRegSyncPort = 0
 
 # Hostname/ip address of another instance of repro to synchronize registrations with 
 # (note xmlrpcport must also be specified)
 RegSyncPeer =
+
+# Enable Publication Syncronization - Currently only applies to Presence Publications
+# Requires RegSyncPort to be specified
+EnablePublicationRepication = true
 
 # Non-outbound connections over this age (expressed in seconds) are
 # considered eligible for garbage collection.
@@ -637,6 +645,18 @@ AssumePath = true
 # Disable registrar
 DisableRegistrar = false
 
+# Enable Presence server
+EnablePresenceServer = true
+
+# Will report "open" basic presence for aor's that are registered, but don't publish presence.
+# Always report "closed" basic presence for unregistered AORs
+PresenceUsesRegistrationState = false
+
+# If enabled presence server will fabricate a simple presence closed state for users
+# that haven't published any presence.  If disabled then a 480 response is returned.
+# Note:  This setting has no effect when PresenceUsesRegistrationState is set to true.
+PresenceNotifyClosedStateForNonPublishedUsers = true
+
 # Specify a comma separate list of enum suffixes to search for enum dns resolution
 EnumSuffixes =
 
@@ -697,6 +717,17 @@ ClientNatDetectionMode = DISABLED
 # outbound is enabled (default: 0)
 FlowTimer = 0
 
+# When set to false then we only allow relaying (forwarding of a request that is not
+# From one of our domain users to a destination that is not one of domains), if the sending
+# source is in our ACL list.  With this set to true we will always allow requests to be
+# relayed.
+AlwaysAllowRelaying = false
+
+# When set to false, we will strip the Proxy-Authorization headers from forwarded requests when
+# forwarding outside of our domain and the Proxy-Authorization realm is our domain.  With
+# this set to true we will never strip the Proxy-Authorization headers from forwarded
+# requests.
+NeverStripProxyAuthorizationHeaders = false
 
 ########################################################
 # CertificateAuthenticator Monkey Settings
