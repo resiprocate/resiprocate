@@ -477,6 +477,9 @@
     <ClCompile Include="monkeys\LocationServer.cxx" />
     <ClCompile Include="OutboundTarget.cxx" />
     <ClCompile Include="monkeys\OutboundTargetHandler.cxx" />
+    <ClCompile Include="stateAgents\PresencePublicationHandler.cxx" />
+    <ClCompile Include="stateAgents\PresenceServer.cxx" />
+    <ClCompile Include="stateAgents\PresenceSubscriptionHandler.cxx" />
     <ClCompile Include="stateAgents\PrivateKeyPublicationHandler.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -511,6 +514,7 @@
     <ClCompile Include="Store.cxx" />
     <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
     <ClCompile Include="Target.cxx" />
+    <ClCompile Include="UserAuthGrabber.cxx" />
     <ClCompile Include="UserStore.cxx" />
     <ClCompile Include="WorkerThread.cxx" />
     <ClCompile Include="XmlRpcConnection.cxx" />
@@ -552,6 +556,9 @@
     <ClInclude Include="monkeys\LocationServer.hxx" />
     <ClInclude Include="OutboundTarget.hxx" />
     <ClInclude Include="monkeys\OutboundTargetHandler.hxx" />
+    <ClInclude Include="stateAgents\PresencePublicationHandler.hxx" />
+    <ClInclude Include="stateAgents\PresenceServer.hxx" />
+    <ClInclude Include="stateAgents\PresenceSubscriptionHandler.hxx" />
     <ClInclude Include="stateAgents\PrivateKeyPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\PrivateKeySubscriptionHandler.hxx" />
     <ClInclude Include="Processor.hxx" />

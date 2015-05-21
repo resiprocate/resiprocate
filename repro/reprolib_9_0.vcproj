@@ -385,6 +385,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\CommandServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\CommandServerThread.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ConfigStore.cxx"
 				>
 			</File>
@@ -434,6 +442,18 @@
 			</File>
 			<File
 				RelativePath=".\PersistentMessageQueue.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresencePublicationHandler.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceSubscriptionHandler.cxx"
 				>
 			</File>
 			<File
@@ -528,10 +548,10 @@
 				RelativePath=".\ReproServerAuthManager.cxx"
 				>
 			</File>
-                        <File
-                                RelativePath=".\ReproTlsPeerAuthManager.cxx"
-                                >
-                        </File>
+			<File
+				RelativePath=".\ReproTlsPeerAuthManager.cxx"
+				>
+			</File>
 			<File
 				RelativePath=".\RequestContext.cxx"
 				>
@@ -582,6 +602,10 @@
 			</File>
 			<File
 				RelativePath=".\Target.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\UserAuthGrabber.cxx"
 				>
 			</File>
 			<File
@@ -667,6 +691,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CommandServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\CommandServerThread.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ConfigStore.hxx"
 				>
 			</File>
@@ -720,6 +752,18 @@
 			</File>
 			<File
 				RelativePath=".\PersistentMessageQueue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresencePublicationHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceSubscriptionHandler.hxx"
 				>
 			</File>
 			<File
@@ -782,10 +826,10 @@
 				RelativePath=".\ReproServerAuthManager.hxx"
 				>
 			</File>
-                        <File
-                                RelativePath=".\ReproTlsPeerAuthManager.hxx"
-                                >
-                        </File>
+			<File
+				RelativePath=".\ReproTlsPeerAuthManager.hxx"
+				>
+			</File>
 			<File
 				RelativePath=".\RequestContext.hxx"
 				>

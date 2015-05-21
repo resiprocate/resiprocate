@@ -9,9 +9,11 @@
 #endif
 
 #include "resip/dum/RegistrationPersistenceManager.hxx"
+#include "resip/dum/PublicationPersistenceManager.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
@@ -46,7 +48,7 @@ using namespace std;
 
 WebAdmin::RemoveKey::RemoveKey(const Data &key1, const Data &key2) : mKey1(key1), mKey2(key2) 
 {
-}; 
+}
 
 bool
 WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
@@ -67,6 +69,7 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
 
 WebAdmin::WebAdmin(Proxy& proxy,
                    RegistrationPersistenceManager& regDb,
+                   PublicationPersistenceManager& pubDb,
                    const Data& realm, // this realm is used for http challenges                
                    int port,
                    IpVersion version,
@@ -75,6 +78,7 @@ WebAdmin::WebAdmin(Proxy& proxy,
    mProxy(proxy),
    mStore(*mProxy.getConfig().getDataStore()),
    mRegDb(regDb),
+   mPubDb(pubDb),
    mNoWebChallenges(proxy.getConfig().getConfigBool("DisableHttpAuth", false)),
    mPageOutlinePre(
 #include "repro/webadmin/pageOutlinePre.ixx"
@@ -229,7 +233,8 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("editRoute.html") ) &&
       ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("registrations.html") ) &&  
-      ( pageName != Data("settings.html") ) &&  
+      ( pageName != Data("publications.html")) &&
+      ( pageName != Data("settings.html")) &&
       ( pageName != Data("restart.html") ) &&  
       ( pageName != Data("logLevel.html") ) &&
       ( pageName != Data("user.html")  ) )
@@ -417,6 +422,7 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("showRoutes.html") ) buildShowRoutesSubPage(s);
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
+      if ( pageName == Data("publications.html"))  buildPublicationsSubPage(s);
       if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
       if ( pageName == Data("restart.html"))     buildRestartSubPage(s);
       if ( pageName == Data("logLevel.html"))    buildLogLevelSubPage(s);
@@ -447,7 +453,6 @@ WebAdmin::buildPage( const Data& uri,
    
    setPage( page, pageNumber,200 );
 }
-
 
 void
 WebAdmin::buildDomainsSubPage(DataStream& s)
@@ -523,7 +528,6 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "     </form>" << endl <<
       "<p><em>WARNING:</em>  You must restart repro after adding domains.</p>" << endl;
 }
-
 
 void
 WebAdmin::buildAclsSubPage(DataStream& s)
@@ -641,7 +645,6 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "assumed.  All other transport types must specify ACLs by address.</p>" << endl;
 }
 
-
 void
 WebAdmin::buildAddUserSubPage(DataStream& s)
 {
@@ -733,7 +736,6 @@ WebAdmin::buildAddUserSubPage(DataStream& s)
          ;
 }
 
-
 void
 WebAdmin::buildEditUserSubPage(DataStream& s)
 {
@@ -820,7 +822,6 @@ WebAdmin::buildEditUserSubPage(DataStream& s)
    }
 }
 
-
 void 
 WebAdmin::buildShowUsersSubPage(DataStream& s)
 {
@@ -875,7 +876,6 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       }
    }
    
-      
    s << 
       "<h2>Users</h2>" << endl <<
       "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
@@ -1047,7 +1047,6 @@ WebAdmin::buildAddFilterSubPage(DataStream& s)
       "</pre>" << endl;
 }
 
-
 void
 WebAdmin::buildEditFilterSubPage(DataStream& s)
 {
@@ -1139,7 +1138,6 @@ WebAdmin::buildEditFilterSubPage(DataStream& s)
       // go back to show filter page
    }
 }
-
 
 void
 WebAdmin::buildShowFiltersSubPage(DataStream& s)
@@ -1310,7 +1308,6 @@ WebAdmin::buildShowFiltersSubPage(DataStream& s)
    }
 }
 
-
 void
 WebAdmin::buildAddRouteSubPage(DataStream& s)
 {
@@ -1393,7 +1390,6 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
       "</pre>" << endl;
 }
 
-
 void
 WebAdmin::buildEditRouteSubPage(DataStream& s)
 {
@@ -1456,7 +1452,6 @@ WebAdmin::buildEditRouteSubPage(DataStream& s)
       // go back to show route page
    }
 }
-
 
 void
 WebAdmin::buildShowRoutesSubPage(DataStream& s)
@@ -1617,7 +1612,6 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "</form>" << endl;
 }
 
-
 void
 WebAdmin::buildRegistrationsSubPage(DataStream& s)
 {
@@ -1634,7 +1628,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          
          if(bar1==Data::npos || bar2 == Data::npos || bar3==Data::npos)
          {
-            InfoLog(<< "Registration removal key was malformed: " << i->mKey2);
+            WarningLog(<< "Registration removal key was malformed: " << i->mKey2);
             continue;
          }
          
@@ -1660,7 +1654,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          }
          catch(resip::ParseBuffer::Exception& e)
          {
-            InfoLog(<< "Registration removal key was malformed: " << e <<
+            WarningLog(<< "Registration removal key was malformed: " << e <<
                      " Key was: " << i->mKey2);
          }
       }
@@ -1694,8 +1688,8 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             try
             {
                rec.mRegExpires = NeverExpire;
-               rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
-                                      // be syncronized to a paired server (this is actually configuration information)
+               rec.mSyncContact = true;  // Tag this permanent contact as being a synchronized contact so that it will
+                                         // not be synchronized to a paired server (this is actually configuration information)
 
                // Add to DB Store
                Uri aor(regAor);
@@ -1713,19 +1707,19 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             }
             catch(resip::ParseBuffer::Exception& e)
             {
-               InfoLog(<< "Registration add: aor " << regAor << " was malformed: " << e);
+               WarningLog(<< "Registration add: aor " << regAor << " was malformed: " << e);
                s << "<p>Error parsing: AOR=" << regAor << "</p>\n";
             }  
          }
          catch(resip::ParseBuffer::Exception& e)
          {
-            InfoLog(<< "Registration add: path " << regPath << " was malformed: " << e);
+            WarningLog(<< "Registration add: path " << regPath << " was malformed: " << e);
             s << "<p>Error parsing: Path=" << regPath << "</p>\n";
          }
       }
       catch(resip::ParseBuffer::Exception& e)
       {
-         InfoLog(<< "Registration add: contact " << regContact << " was malformed: " << e);
+         WarningLog(<< "Registration add: contact " << regContact << " was malformed: " << e);
          s << "<p>Error parsing: Contact=" << regContact << "</p>\n";
       }
    }   
@@ -1764,88 +1758,207 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <td>Reg ID</td>" << endl <<
       "  <td>QValue</td>" << endl <<
       "  <td>Path</td>" << endl <<
-      "  <td>Expires In</td>" << endl << 
+      "  <td>Sync'd?</td>" << endl <<
+      "  <td>Expires In</td>" << endl <<
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
   
-      RegistrationPersistenceManager::UriList aors;
-      mRegDb.getAors(aors);
-      for ( RegistrationPersistenceManager::UriList::const_iterator 
-               aor = aors.begin(); aor != aors.end(); ++aor )
-      {
-         Uri uri = *aor;
-         ContactList contacts;
-         mRegDb.getContacts(uri, contacts);
+   UInt64 now = Timer::getTimeSecs();
+   RegistrationPersistenceManager::UriList aors;
+   mRegDb.getAors(aors);
+   for ( RegistrationPersistenceManager::UriList::const_iterator 
+            aor = aors.begin(); aor != aors.end(); ++aor )
+   {
+      Uri uri = *aor;
+      ContactList contacts;
+      mRegDb.getContacts(uri, contacts);
          
-         bool first = true;
-         UInt64 now = Timer::getTimeSecs();
-         for (ContactList::iterator i = contacts.begin();
-              i != contacts.end(); ++i )
+      bool first = true;
+      for (ContactList::iterator i = contacts.begin();
+            i != contacts.end(); ++i )
+      {
+         if(i->mRegExpires > now)
          {
-            if(i->mRegExpires > now)
-            {
-               UInt64 secondsRemaining = i->mRegExpires - now;
+            UInt64 secondsRemaining = i->mRegExpires - now;
 
-               s << "<tr>" << endl
-                 << "  <td>" ;
-               if (first) 
-               { 
-                  s << uri;
-                  first = false;
-               }
-               s << "</td>" << endl
-                 << "  <td>";
+            s << "<tr>" << endl
+               << "  <td>" ;
+            if (first) 
+            { 
+               s << uri;
+               first = false;
+            }
+            s << "</td>" << endl
+               << "  <td>";
             
-               const ContactInstanceRecord& r = *i;
-               const NameAddr& contact = r.mContact;
-               const Data& instanceId = r.mInstance;
-               int regId = r.mRegId;
+            const ContactInstanceRecord& r = *i;
+            const NameAddr& contact = r.mContact;
+            const Data& instanceId = r.mInstance;
+            int regId = r.mRegId;
 
-               s << contact.uri();
-               s <<"</td>" << endl 
-                 << "<td>" << instanceId.xmlCharDataEncode() 
-                 << "</td><td>" << regId 
-                 << "</td><td>";
+            s << contact.uri();
+            s <<"</td>" << endl 
+               << "<td>" << instanceId.xmlCharDataEncode() 
+               << "</td><td>" << regId 
+               << "</td><td>";
 #ifdef RESIP_FIXED_POINT
-               // If RESIP_FIXED_POINT is enabled then q-value is shown as an integer in the range of 0..1000 where 1000 = qvalue of 1.0
-               s << (contact.exists(p_q) ? contact.param(p_q) : 1000) << "</td><td>";  
+            // If RESIP_FIXED_POINT is enabled then q-value is shown as an integer in the range of 0..1000 where 1000 = qvalue of 1.0
+            s << (contact.exists(p_q) ? contact.param(p_q) : 1000) << "</td><td>";  
 #else
-               s << (contact.exists(p_q) ? contact.param(p_q).floatVal() : 1.0f) << "</td><td>";
+            s << (contact.exists(p_q) ? contact.param(p_q).floatVal() : 1.0f) << "</td><td>";
 #endif
-               NameAddrs::const_iterator naIt = r.mSipPath.begin();
-               for(;naIt != r.mSipPath.end(); naIt++)
-               {
-                  s << naIt->uri() << "<br>" << endl;
-               }
-               bool staticRegContact = r.mRegExpires == NeverExpire;
-               if(!staticRegContact)
-               {
-                  s <<"</td><td>" << secondsRemaining << "s</td>" << endl;
-               }
-               else
-               {
-                  s <<"</td><td>Never</td>" << endl;
-               }
-               s << "  <td>"
-                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
-                                                              << "|" << instanceId.urlEncoded() 
-                                                              << "|" << regId
-                                                              << "|" << (staticRegContact ? "1" : "0")
-                 << "\"/></td>" << endl
-                 << "</tr>" << endl;
+            NameAddrs::const_iterator naIt = r.mSipPath.begin();
+            for(;naIt != r.mSipPath.end(); naIt++)
+            {
+               s << naIt->uri() << "<br>" << endl;
+            }
+
+            bool staticRegContact = r.mRegExpires == NeverExpire;
+            if(!staticRegContact)
+            {
+               s << "</td><td>" << (r.mSyncContact ? "true" : "false") << "</td>" << endl;
+               s << "<td>" << secondsRemaining << "s</td>" << endl;
             }
             else
             {
-               // remove expired contact 
-               mRegDb.removeContact(uri, *i);
+               s << "</td><td></td>" << endl;
+               s << "</td><td>Never</td>" << endl;
             }
+            s << "  <td>"
+               << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
+                                                            << "|" << instanceId.urlEncoded() 
+                                                            << "|" << regId
+                                                            << "|" << (staticRegContact ? "1" : "0")
+               << "\"/></td>" << endl
+               << "</tr>" << endl;
+         }
+         else
+         {
+            // remove expired contact 
+            mRegDb.removeContact(uri, *i);
          }
       }
+   }
                   
-      s << "</table>" << endl << 
-         "</form>" << endl;
+   s << "</table>" << endl << 
+      "</form>" << endl;
 }
 
+void
+WebAdmin::buildPublicationsSubPage(DataStream& s)
+{
+   if (!mRemoveSet.empty())
+   {
+      int j = 0;
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         size_t bar1 = i->mKey2.find("|");
+
+         if (bar1 == Data::npos)
+         {
+            WarningLog(<< "Publication removal key was malformed: " << i->mKey2);
+            continue;
+         }
+
+         bool staticRegContact = false;
+         try
+         {
+            Data eventType = i->mKey2.substr(0, bar1);
+            Data eTag = i->mKey2.substr(bar1 + 1, Data::npos).urlDecoded();
+            if (mPubDb.removeDocument(eventType, i->mKey1, eTag, Timer::getTimeSecs()))
+            {
+               ++j;
+            }
+            else
+            {
+               WarningLog(<< "Publication removal was unsuccessful: eventType=" << eventType << ", docKey=" << i->mKey1 << ", eTag=" << eTag);
+            }
+         }
+         catch (resip::ParseBuffer::Exception& e)
+         {
+            WarningLog(<< "Publication removal key was malformed: " << e << " Key was: " << i->mKey2);
+         }
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
+
+   s <<
+      "<h2>Publications</h2>" << endl <<
+      "<form id=\"showPub\" method=\"get\" action=\"publications.html\" name=\"showPub\" enctype=\"application/x-www-form-urlencoded\">" << endl <<
+      "<div class=space>" << endl <<
+      "</div>" << endl <<
+
+      "<table" REPRO_BORDERED_TABLE_PROPS ">" << endl <<
+
+      "<tr>" << endl <<
+      "  <td>AOR</td>" << endl <<
+      "  <td>Event Type</td>" << endl <<
+      "  <td>ETag</td>" << endl <<
+      "  <td>Data</td>" << endl <<
+      "  <td>Sync'd?</td>" << endl <<
+      "  <td>Expires In</td>" << endl <<
+      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl <<
+      "</tr>" << endl;
+
+   UInt64 now = Timer::getTimeSecs();
+   mPubDb.lockDocuments();
+   PublicationPersistenceManager::KeyToETagMap& publications = mPubDb.getDocuments();
+   // Iterate through keys
+   PublicationPersistenceManager::KeyToETagMap::iterator keyIt = publications.begin();
+   for (; keyIt != publications.end(); keyIt++)
+   {
+      bool first = true;
+      // Iterator through documents in sub-map
+      PublicationPersistenceManager::ETagToDocumentMap::iterator eTagIt = keyIt->second.begin();
+      for (; eTagIt != keyIt->second.end(); eTagIt++)
+      {
+         if (eTagIt->second.mExpirationTime > now)
+         {
+            UInt64 secondsRemaining = eTagIt->second.mExpirationTime - now;
+
+            s << "<tr>" << endl
+               << "  <td>";
+            if (first)
+            {
+               s << eTagIt->second.mDocumentKey;
+            }
+            s << "</td>" << endl
+               << "  <td>";
+
+            if (first)
+            {
+               s << eTagIt->second.mEventType;
+               first = false;
+            }
+            s << "</td>" << endl
+              << "  <td>";
+            s << eTagIt->second.mETag;
+            s << "</td>" << endl
+               << "  <td>";
+            GenericPidfContents* pidf = dynamic_cast<GenericPidfContents*>(eTagIt->second.mContents.get());
+            if (pidf)
+            {
+               s << (pidf->getSimplePresenceOnline() ? "open" : "closed");
+               if (!pidf->getSimplePresenceNote().empty())
+               {
+                  s << " - " << pidf->getSimplePresenceNote();
+               }
+            }
+            s << "</td>" << endl;
+
+            s << "<td>" << (eTagIt->second.mSyncPublication ? "true" : "false") << "</td>" << endl
+               << "<td>" << secondsRemaining << "s</td>" << endl
+               << "  <td>"
+               << "<input type=\"checkbox\" name=\"remove." << eTagIt->second.mDocumentKey << "\" value=\"" << eTagIt->second.mEventType << "|" << eTagIt->second.mETag.urlEncoded()
+               << "\"/></td>" << endl
+               << "</tr>" << endl;
+         }
+      }
+   }
+   mPubDb.unlockDocuments();
+   s << "</table>" << endl <<
+      "</form>" << endl;
+}
 
 void
 WebAdmin::buildSettingsSubPage(DataStream& s)
@@ -2043,7 +2156,6 @@ WebAdmin::buildUserPage()
    return ret;
 }
 
-
 Data
 WebAdmin::buildCertPage(const Data& domain)
 {
@@ -2056,7 +2168,6 @@ WebAdmin::buildCertPage(const Data& domain)
    return Data::Empty;
 #endif
 }
-
 
 Data 
 WebAdmin::buildDefaultPage()

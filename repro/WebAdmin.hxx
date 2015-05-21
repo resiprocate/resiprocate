@@ -13,6 +13,7 @@
 namespace resip
 {
 class RegistrationPersistenceManager;
+class PublicationPersistenceManager;
 class Security;
 class DataStream;
 }
@@ -43,6 +44,7 @@ class WebAdmin : public HttpBase,
 
       WebAdmin(Proxy& proxy,
                resip::RegistrationPersistenceManager& regDb,
+               resip::PublicationPersistenceManager& pubDb,
                const resip::Data& realm, // this realm is used for http challenges
                int port=5080,
                resip::IpVersion version=resip::V4,
@@ -80,6 +82,7 @@ class WebAdmin : public HttpBase,
       void buildShowRoutesSubPage(resip::DataStream& s);
 
       void buildRegistrationsSubPage(resip::DataStream& s);
+      void buildPublicationsSubPage(resip::DataStream& s);
       void buildSettingsSubPage(resip::DataStream& s);
       void buildRestartSubPage(resip::DataStream& s);
       void buildLogLevelSubPage(resip::DataStream& s);
@@ -89,6 +92,7 @@ class WebAdmin : public HttpBase,
       Proxy& mProxy;
       Store& mStore;
       resip::RegistrationPersistenceManager& mRegDb;
+      resip::PublicationPersistenceManager& mPubDb;
 
       resip::Data mDnsCache;
       resip::Mutex mDnsCacheMutex;

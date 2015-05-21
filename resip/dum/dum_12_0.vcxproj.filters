@@ -80,6 +80,7 @@
     <ClCompile Include="UserAuthInfo.cxx" />
     <ClCompile Include="UserProfile.cxx" />
     <ClCompile Include="WsCookieAuthManager.cxx" />
+    <ClCompile Include="InMemorySyncPubDb.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WsCookieAuthManager.hxx" />
@@ -180,5 +181,7 @@
     <ClInclude Include="UsageUseException.hxx" />
     <ClInclude Include="UserAuthInfo.hxx" />
     <ClInclude Include="UserProfile.hxx" />
+    <ClInclude Include="InMemorySyncPubDb.hxx" />
+    <ClInclude Include="PublicationPersistenceManager.hxx" />
   </ItemGroup>
 </Project>

@@ -93,6 +93,7 @@ libresip_la_SOURCES = \
 	QValue.cxx \
 	QValueParameter.cxx \
 	GenericContents.cxx \
+	GenericPidfContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	gen/HeaderHash.cxx \
@@ -257,6 +258,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ExternalBodyContents.hxx \
 	FloatParameter.hxx \
 	GenericContents.hxx \
+	GenericPidfContents.hxx \
 	GenericUri.hxx \
 	HeaderFieldValue.hxx \
 	HeaderFieldValueList.hxx \

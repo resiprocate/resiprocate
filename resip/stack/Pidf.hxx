@@ -55,8 +55,8 @@ class Pidf : public Contents
       static bool init();   
    
       /** @deprecated
-	      @brief Deprecated
-	  */
+         @brief Deprecated
+      */
       class Tuple
       {
          public:

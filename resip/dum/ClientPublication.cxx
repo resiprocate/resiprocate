@@ -135,7 +135,7 @@ ClientPublication::dispatch(const SipMessage& msg)
             mPublish->header(h_SIPIfMatch) = msg.header(h_SIPETag);
             if(!mPendingPublish)
             {
-               mPublish->releaseContents();           
+               mPublish->releaseContents();
             }
             mDum.addTimer(DumTimeout::Publication, 
                           Helper::aBitSmallerThan(msg.header(h_Expires).value()), 

@@ -146,6 +146,7 @@
     <ClCompile Include="gen\HeaderHash.cxx" />
     <ClCompile Include="gen\MethodHash.cxx" />
     <ClCompile Include="gen\ParameterHash.cxx" />
+    <ClCompile Include="GenericPidfContents.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AddTransport.hxx" />
@@ -315,6 +316,7 @@
     <ClInclude Include="WsTransport.hxx" />
     <ClInclude Include="X509Contents.hxx" />
     <ClInclude Include="DtmfPayloadContents.hxx" />
+    <ClInclude Include="GenericPidfContents.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">

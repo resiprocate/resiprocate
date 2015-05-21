@@ -48,6 +48,9 @@ class ServerSubscriptionHandler
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
       virtual void onNewSubscriptionFromRefer(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
+      //called when a new document is Published that matches this subscription.  Also
+      //called when the publication is removed or expires, in which case contents 
+      //and attrs are passed as null pointers.
       virtual void onPublished(ServerSubscriptionHandle associated, 
                                ServerPublicationHandle publication, 
                                const Contents* contents,

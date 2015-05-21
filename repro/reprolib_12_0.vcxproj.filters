@@ -58,6 +58,10 @@
     <ClCompile Include="WorkerThread.cxx" />
     <ClCompile Include="XmlRpcConnection.cxx" />
     <ClCompile Include="XmlRpcServerBase.cxx" />
+    <ClCompile Include="UserAuthGrabber.cxx" />
+    <ClCompile Include="stateAgents\PresencePublicationHandler.cxx" />
+    <ClCompile Include="stateAgents\PresenceServer.cxx" />
+    <ClCompile Include="stateAgents\PresenceSubscriptionHandler.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="XmlRpcServerBase.hxx" />
@@ -127,5 +131,8 @@
     <ClInclude Include="Worker.hxx" />
     <ClInclude Include="WorkerThread.hxx" />
     <ClInclude Include="XmlRpcConnection.hxx" />
+    <ClInclude Include="stateAgents\PresencePublicationHandler.hxx" />
+    <ClInclude Include="stateAgents\PresenceServer.hxx" />
+    <ClInclude Include="stateAgents\PresenceSubscriptionHandler.hxx" />
   </ItemGroup>
 </Project>

@@ -1,28 +1,66 @@
-#ifndef USER_AUTH_GRABBER
-#define USER_AUTH_GRABBER 1
+#include "repro/UserAuthGrabber.hxx"
+#include "repro/AbstractDb.hxx"
+#include "repro/UserInfoMessage.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
+#include "repro/stateAgents/PresenceSubscriptionHandler.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
-#include "repro/Worker.hxx"
-#include "repro/UserStore.hxx"
-#include "resip/stack/ApplicationMessage.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
-namespace repro
+using namespace repro;
+using namespace resip;
+
+UserAuthGrabber::UserAuthGrabber(repro::UserStore& userStore) :
+   mUserStore(userStore)
 {
-
-class UserAuthGrabber : public Worker
-{
-   public:
-      UserAuthGrabber(repro::UserStore& userStore);
-      virtual ~UserAuthGrabber();
-      
-      virtual bool process(resip::ApplicationMessage* msg);
-      virtual UserAuthGrabber* clone() const;
-      
-   protected:
-      UserStore& mUserStore;
-};
-
 }
-#endif
+
+UserAuthGrabber::~UserAuthGrabber()
+{
+}
+
+bool 
+UserAuthGrabber::process(resip::ApplicationMessage* msg)
+{
+   repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);    // auth for repro's DigestAuthenticator
+   if (uinf)
+   {
+      uinf->mRec.passwordHash = mUserStore.getUserAuthInfo(uinf->user(), uinf->realm());
+      uinf->setMode(resip::UserAuthInfo::RetrievedA1);
+      DebugLog(<< "Grabbed user info for " << uinf->user() << "@" << uinf->realm() << " : " << uinf->A1());
+      return true;
+   }
+
+   resip::UserAuthInfo* uainf = dynamic_cast<resip::UserAuthInfo*>(msg);  // auth for DUM's ServerAuthManager
+   if (uainf)
+   {
+      uainf->setA1(mUserStore.getUserAuthInfo(uainf->getUser(), uainf->getRealm()));
+      if (uainf->getA1().empty())
+      {
+         uainf->setMode(resip::UserAuthInfo::UserUnknown);
+      }
+      DebugLog(<< "Grabbed user info for " << uainf->getUser() << "@" << uainf->getRealm() << " : " << uainf->getA1());
+      return true;
+   }
+
+   repro::PresenceUserExists* pue = dynamic_cast<repro::PresenceUserExists*>(msg);  // user exists query for Presence server
+   if (pue)
+   {
+      pue->setUserExists(!mUserStore.getUserInfo(UserStore::buildKey(pue->getUser(), pue->getDomain())).user.empty());
+      DebugLog(<< "Checking existence for " << pue->getUser() << "@" << pue->getDomain() << " : user " << (pue->getUserExists() ? "exists" : "does not exist"));
+      return true;
+   }
+
+   WarningLog(<< "Did not recognize message type...");
+   return false;
+}
+      
+UserAuthGrabber* 
+UserAuthGrabber::clone() const
+{
+   return new UserAuthGrabber(mUserStore);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
