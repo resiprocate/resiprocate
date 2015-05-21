@@ -1860,7 +1860,6 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
             continue;
          }
 
-         bool staticRegContact = false;
          try
          {
             Data eventType = i->mKey2.substr(0, bar1);
