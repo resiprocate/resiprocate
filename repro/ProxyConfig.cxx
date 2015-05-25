@@ -10,16 +10,6 @@
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
-#include "repro/BerkeleyDb.hxx"
-
-#if defined(USE_MYSQL)
-#include "repro/MySqlDb.hxx"
-#endif
-
-#if defined(USE_POSTGRESQL)
-#include "repro/PostgreSqlDb.hxx"
-#endif
-
 using namespace repro;
 using namespace resip;
 using namespace std;

@@ -93,6 +93,10 @@
 #include "repro/MySqlDb.hxx"
 #endif
 
+#if defined(USE_POSTGRESQL)
+#include "repro/PostgreSqlDb.hxx"
+#endif
+
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
