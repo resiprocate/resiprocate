@@ -34,10 +34,10 @@ public:
    PresenceUserExists(resip::DialogUsageManager& dum, PresenceSubscriptionHandler* handler, resip::ServerSubscriptionHandle h,
       bool sendAcceptReject, const resip::Uri& aor) :
       mDum(dum), mSubscriptionHandler(handler), mServerSubscriptionHandle(h), mSendAcceptReject(sendAcceptReject),
-      mAor(aor), mUserExists(false) { mTu = &dum; }
+      mUserExists(false), mAor(aor) { mTu = &dum; }
    PresenceUserExists(const PresenceUserExists& orig) : DumCommand(orig),
       mDum(orig.mDum), mSubscriptionHandler(orig.mSubscriptionHandler), mServerSubscriptionHandle(orig.mServerSubscriptionHandle),
-      mSendAcceptReject(orig.mSendAcceptReject), mAor(orig.mAor), mUserExists(orig.mUserExists) {}
+      mSendAcceptReject(orig.mSendAcceptReject), mUserExists(orig.mUserExists), mAor(orig.mAor)  {}
    virtual PresenceUserExists* clone() const { return new PresenceUserExists(*this); }
 
    virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "PresenceUserExists: " << mAor; return ostr; }

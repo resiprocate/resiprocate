@@ -24,9 +24,9 @@ PresenceSubscriptionHandler::PresenceSubscriptionHandler(resip::DialogUsageManag
     mDum(dum), 
     mPublicationDb(dynamic_cast<InMemorySyncPubDb*>(dum.getPublicationPersistenceManager())),
     mRegistrationDb(dynamic_cast<InMemorySyncRegDb*>(dum.getRegistrationPersistenceManager())),
-    mUserDispatcher(userDispatcher), 
     mPresenceUsesRegistrationState(presenceUsesRegistrationState),
-    mPresenceNotifyClosedStateForNonPublishedUsers(presenceNotifyClosedStateForNonPublishedUsers)
+    mPresenceNotifyClosedStateForNonPublishedUsers(presenceNotifyClosedStateForNonPublishedUsers),
+    mUserDispatcher(userDispatcher)
 {
    assert(mPublicationDb);
    assert(mRegistrationDb);
