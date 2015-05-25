@@ -91,68 +91,6 @@ ProxyConfig::getConfigUri(const resip::Data& name, const resip::Uri defaultValue
    return ret;
 }
 
-AbstractDb*
-ProxyConfig::getDatabase(int configIndex)
-{
-   ConfigParse::NestedConfigMap m = getConfigNested("Database");
-   ConfigParse::NestedConfigMap::iterator it = m.find(configIndex);
-   if(it == m.end())
-   {
-      WarningLog(<<"Failed to find Database settings for index " << configIndex);
-      return 0;
-   }
-   ConfigParse& dbConfig = it->second;
-   Data dbType = dbConfig.getConfigData("Type", "");
-   dbType.lowercase();
-   if(dbType == "berkeleydb")
-   {
-      Data path = dbConfig.getConfigData("Path",
-                          getConfigData("DatabasePath", "./", true), true);
-      return new BerkeleyDb(path);
-   }
-   else if(dbType == "mysql")
-   {
-#ifdef USE_MYSQL
-      Data mySQLServer = dbConfig.getConfigData("Host", Data::Empty);
-      if(!mySQLServer.empty())
-      {
-         return new MySqlDb(mySQLServer,
-                          dbConfig.getConfigData("User", Data::Empty),
-                          dbConfig.getConfigData("Password", Data::Empty),
-                          dbConfig.getConfigData("DatabaseName", Data::Empty),
-                          dbConfig.getConfigUnsignedLong("Port", 0),
-                          dbConfig.getConfigData("CustomUserAuthQuery", Data::Empty));
-      }
-#else
-      ErrLog(<<"Database" << configIndex << " type MySQL support not compiled into repro");
-      return 0;
-#endif
-   }
-   else if(dbType == "postgresql")
-   {
-#ifdef USE_POSTGRESQL
-      Data postgreSQLServer = dbConfig.getConfigData("Host", Data::Empty);
-      if(!postgreSQLServer.empty())
-      {
-         return new PostgreSqlDb(postgreSQLServer,
-                          dbConfig.getConfigData("User", Data::Empty),
-                          dbConfig.getConfigData("Password", Data::Empty),
-                          dbConfig.getConfigData("DatabaseName", Data::Empty),
-                          dbConfig.getConfigUnsignedLong("Port", 0),
-                          dbConfig.getConfigData("CustomUserAuthQuery", Data::Empty));
-      }
-#else 
-      ErrLog(<<"Database" << configIndex << " type PostgreSQL support not compiled into repro");
-      return 0;
-#endif
-   }
-   else
-   {
-      ErrLog(<<"Database" << configIndex << " type '" << dbType << "' not supported / invalid");
-   }
-   return 0;
-}
-
 void
 ProxyConfig::printHelpText(int argc, char **argv)
 {
