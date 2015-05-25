@@ -51,7 +51,6 @@ class ServerSubscription : public BaseSubscription
 
    protected:
       virtual ~ServerSubscription();
-      virtual void dialogDestroyed(const SipMessage& msg);           
       void onReadyToSend(SipMessage& msg);
       virtual void flowTerminated();
       

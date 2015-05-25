@@ -18,9 +18,9 @@ using namespace std;
 
 int main()
 {
-   Cookie info("WSSessionInfo", "1:1387814798:1987814798:bob@example.org:alice@example.org");
+   Cookie info("WSSessionInfo", "1%3A1387814798%3A1987814798%3Abob@example.org%3Aalice@example.org");
    Cookie extra("WSSessionExtra", "custom");
-   Cookie mac("WSSessionMac", "abcdabcdabcdabcdabcdabcdabcdabcd");
+   Cookie mac("WSSessionMAC", "abcdabcdabcdabcdabcdabcdabcdabcd");
 
    CookieList cookies;
    cookies.push_back(info);
@@ -28,9 +28,15 @@ int main()
    cookies.push_back(mac);
 
    BasicWsCookieContextFactory factory;
-   SharedPtr<WsCookieContext> ctx = factory.makeCookieContext(cookies);
+   Uri uri("/");
+   SharedPtr<WsCookieContext> ctx = factory.makeCookieContext(cookies, uri);
 
    assert(ctx->getExpiresTime() == 1987814798);
+
+   uri = Uri("/;WSSessionInfo=1%3A1387814798%3A1987834798%3Abob@example.org%3Aalice@example.org;WSSessionExtra=crazy%3Akangaroo");
+   ctx = factory.makeCookieContext(cookies, uri);
+   assert(ctx->getExpiresTime() == 1987834798);
+   assert(ctx->getWsSessionExtra() == "crazy:kangaroo");
 
    return 0;
 }

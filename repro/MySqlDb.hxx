@@ -8,7 +8,7 @@
 #endif
 
 #include "rutil/Data.hxx"
-#include "repro/AbstractDb.hxx"
+#include "repro/SqlDb.hxx"
 
 namespace resip
 {
@@ -18,7 +18,7 @@ namespace resip
 namespace repro
 {
 
-class MySqlDb: public AbstractDb
+class MySqlDb: public SqlDb
 {
    public:
       MySqlDb(const resip::Data& dbServer, 
@@ -28,12 +28,9 @@ class MySqlDb: public AbstractDb
               unsigned int port, 
               const resip::Data& customUserAuthQuery);
       
-      virtual ~MySqlDb();
-      
-      virtual bool isSane() {return mConnected;}
+      ~MySqlDb();
 
       virtual bool addUser( const Key& key, const UserRecord& rec );
-      virtual void eraseUser( const Key& key );
       virtual UserRecord getUser( const Key& key ) const;
       virtual resip::Data getUserAuthInfo(  const Key& key ) const;
       virtual Key firstUserKey();// return empty if no more
@@ -50,9 +47,6 @@ class MySqlDb: public AbstractDb
       virtual bool dbReadRecord(const Table table, 
                                 const resip::Data& key, 
                                 resip::Data& data) const; // return false if not found
-      virtual void dbEraseRecord(const Table table, 
-                                 const resip::Data& key,
-                                 bool isSecondaryKey=false);  // allows deleting records from a table that supports secondary keying using a secondary key
       virtual resip::Data dbNextKey(const Table table, 
                                     bool first=true); // return empty if no more
       virtual bool dbNextRecord(const Table table,
@@ -61,13 +55,12 @@ class MySqlDb: public AbstractDb
                                 bool forUpdate, // specifying to add SELECT ... FOR UPDATE so the rows are locked
                                 bool first=false);  // return false if no more
       virtual bool dbBeginTransaction(const Table table);
-      virtual bool dbCommitTransaction(const Table table);
-      virtual bool dbRollbackTransaction(const Table table);
 
       void initialize() const;
       void disconnectFromDatabase() const;
       int connectToDatabase() const;
       int query(const resip::Data& queryCommand, MYSQL_RES** result) const;
+      virtual int query(const resip::Data& queryCommand) const;
       resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const;
 
       resip::Data mDBServer;
@@ -79,15 +72,8 @@ class MySqlDb: public AbstractDb
 
       mutable MYSQL* mConn;
       mutable MYSQL_RES* mResult[MaxTable];
-      mutable volatile bool mConnected;
-      // when multiple threads are in use with the same connection, you need to 
-      // mutex calls to mysql_query and mysql_store_result: 
-      // http://dev.mysql.com/doc/refman/5.1/en/threaded-clients.html
-      mutable resip::Mutex mMutex;  
 
-      const char* tableName( Table table ) const;
       void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
-      void getUserAndDomainFromKey(const AbstractDb::Key& key, resip::Data& user, resip::Data& domain) const;
 };
 
 }

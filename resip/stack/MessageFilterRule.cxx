@@ -42,12 +42,11 @@ MessageFilterRule::MessageFilterRule(SchemeList    schemeList,
 bool
 MessageFilterRule::matches(const SipMessage &msg) const
 {
-   DebugLog(<< "Matching rule for: " << std::endl << std::endl << msg);
    const Data scheme = msg.header(h_RequestLine).uri().scheme();
 
    if (!schemeIsInList(scheme))
    {
-      DebugLog(<< "Scheme is not in list. Rule does not match.");
+      DebugLog(<< "  MessageFilterRule::matches: Scheme is not in list. Rule does not match.");
       return false;
    }
    
@@ -56,7 +55,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
       // !rwm! Should be hostport, not host
       if (!hostIsInList( msg.header(h_RequestLine).uri().host()))
       {
-         DebugLog(<< "Host is not in list. Rule does not match.");
+         DebugLog(<< "  MessageFilterRule::matches: Host is not in list. Rule does not match.");
          return false;
       }
    }
@@ -64,7 +63,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
    MethodTypes method = msg.header(h_RequestLine).method();
    if (!methodIsInList(method))
    {
-      DebugLog(<< "Method is not in list. Rule does not match.");
+      DebugLog(<< "  MessageFilterRule::matches: Method is not in list. Rule does not match.");
       return false;
    }
    else
@@ -76,7 +75,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
          case PUBLISH:      
             if (!eventIsInList(msg))
             {
-               DebugLog(<< "Event is not in list. Rule does not match.");
+               DebugLog(<< "  MessageFilterRule::matches: Event is not in list. Rule does not match.");
                return false;
             }
             break;

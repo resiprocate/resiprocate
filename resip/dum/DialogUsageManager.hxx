@@ -14,6 +14,7 @@
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/MergedRequestKey.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
+#include "resip/dum/PublicationPersistenceManager.hxx"
 #include "resip/dum/ServerSubscription.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
@@ -186,10 +187,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void removeExternalMessageHandler(ExternalMessageHandler* handler);
       void clearExternalMessageHandler();
 
-      /// Sets a manager to handle storage of registration state
+      /// Sets a manager to handle storage of registration or publication state
       void setRegistrationPersistenceManager(RegistrationPersistenceManager*);
-
-      void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
+      RegistrationPersistenceManager* getRegistrationPersistenceManager() { return mRegistrationPersistenceManager; }
+      void setPublicationPersistenceManager(PublicationPersistenceManager*);
+      PublicationPersistenceManager* getPublicationPersistenceManager() { return mPublicationPersistenceManager; }
       
       // The message is owned by the underlying datastructure and may go away in
       // the future. If the caller wants to keep it, it should make a copy. The
@@ -510,6 +512,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       RequestValidationHandler* mRequestValidationHandler;
 
       RegistrationPersistenceManager *mRegistrationPersistenceManager;
+      PublicationPersistenceManager *mPublicationPersistenceManager;
 
       OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 

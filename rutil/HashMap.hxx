@@ -11,7 +11,15 @@
    @ingroup data_structures
 */
 
-#  if ( (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3) ) || ( __GNUC__ > 4 )
+// For GNU libstdc++ the decision which hashmap implementation to use must be
+// done on the version of libstdc++ and not on the compiler version.
+// Otherwise for example mixing RHEL6 GCC (4.4.7) and Clang 3.4 on RHEL6 will produce
+// ABI incompatible results.
+// The version encodings are described here:
+//   https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
+#include <map> // force include of nonstandard <bits/c++config.h>
+
+#  if ( defined(__GLIBCXX__) && (__GLIBCXX__ >= 20080306) ) // >= 4.3.0
 #    include <tr1/unordered_map>
 #    include <tr1/unordered_set>
 #    define HASH_MAP_NAMESPACE std::tr1
@@ -33,7 +41,7 @@ struct hash<type>                                 \
 }
 #define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash<type>::operator()(const type& data) const { return ret; }
 
-#  elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) || ( __GNUC__ > 3 )
+#  elif ( ( defined(__GLIBCPP__) && (__GLIBCPP__ >= 20020514) ) || ( defined(__GLIBCXX__) && (__GLIBCXX__ >= 20020514) ) || defined(_LIBCPP_VERSION) ) // >= 3.1.0 or libc++
 #    include <ext/hash_map>
 #    include <ext/hash_set>
 #    define HASH_MAP_NAMESPACE __gnu_cxx

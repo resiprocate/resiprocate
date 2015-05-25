@@ -2,6 +2,7 @@
 #include <rutil/BaseException.hxx>
 #include <rutil/XMLCursor.hxx>
 #include <rutil/WinLeakCheck.hxx>
+#include <repro/RegSyncServer.hxx>
 
 using namespace resip;
 using namespace std;
@@ -91,7 +92,7 @@ main (int argc, char** argv)
    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
    localAddr.sin_port = 0;
 
-   rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
+   rc = ::bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
    if(rc < 0) 
    {
       cerr <<"error binding locally" << endl;
@@ -99,7 +100,7 @@ main (int argc, char** argv)
    }
 
    // Connect to server
-   rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
+   rc = ::connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
    if(rc < 0) 
    {
       cerr << "error connecting" << endl;
@@ -108,37 +109,51 @@ main (int argc, char** argv)
 
    Data command(&argv[cmdIndex][1]); // [1] skips leading slash
    Data request(1024, Data::Preallocate);
-   request += "<";
-   request += command;
-   request += ">\r\n  <Request>\r\n";
-   for(int i = cmdIndex+1; i < argc; i++)
+   bool dumpRawResult = false;
+   if (isEqualNoCase(command, "initialsync"))
    {
-      Data parm;
-      Data value;
-      Data arg(argv[i]);
-      ParseBuffer pb(arg);
-      const char *anchor = pb.position();
-      pb.skipToChar('=');
-      if(!pb.eof())
+      request += "<InitialSync>\r\n";
+      request += "  <Request>\r\n";
+      request += "     <Version>" + Data(REGSYNC_VERSION) + "</Version>\r\n";
+      request += "  </Request>\r\n";
+      request += "</InitialSync>\r\n";
+
+      dumpRawResult = true;
+   }
+   else
+   {
+      request += "<";
+      request += command;
+      request += ">\r\n  <Request>\r\n";
+      for (int i = cmdIndex + 1; i < argc; i++)
       {
-         pb.data(parm, anchor);
-         pb.skipChar();
-         anchor = pb.position();
-         pb.skipToEnd();
-         pb.data(value, anchor);
+         Data parm;
+         Data value;
+         Data arg(argv[i]);
+         ParseBuffer pb(arg);
+         const char *anchor = pb.position();
+         pb.skipToChar('=');
+         if (!pb.eof())
+         {
+            pb.data(parm, anchor);
+            pb.skipChar();
+            anchor = pb.position();
+            pb.skipToEnd();
+            pb.data(value, anchor);
+         }
+         request += "    <";
+         request += parm;
+         request += ">";
+         request += value;
+         request += "</";
+         request += parm;
+         request += ">\r\n";
       }
-      request += "    <";
-      request += parm;
-      request += ">";
-      request += value;
+      request += "  </Request>\r\n";
       request += "</";
-      request += parm;
+      request += command;
       request += ">\r\n";
    }
-   request += "  </Request>\r\n";
-   request += "</";
-   request += command;
-   request += ">\r\n";
 
    //cout << "Sending:\r\n" << request << endl;
 
@@ -164,62 +179,68 @@ main (int argc, char** argv)
       if(rc > 0)
       {
          Data response(Data::Borrow, (const char*)&readBuffer, rc);
-         //cout << "Received response: \r\n" << response.xmlCharDataDecode() << endl;
 
-         ParseBuffer pb(response);
-         XMLCursor xml(pb);
-         bool responseOK = false;
-         if(xml.firstChild() && xml.nextSibling() && xml.firstChild())  // Move to Response node
+         if (dumpRawResult)
          {
-            while(true)
+            //cout << "Received response: \r\n" << response.xmlCharDataDecode() << endl;
+            cout << "Received response: \r\n" << response << endl;
+         }
+         else
+         {
+            ParseBuffer pb(response);
+            XMLCursor xml(pb);
+            bool responseOK = false;
+            if (xml.firstChild() && xml.nextSibling() && xml.firstChild())  // Move to Response node
             {
-               if(isEqualNoCase(xml.getTag(), "Result"))
+               while (true)
                {
-                  unsigned int code=0;
-                  Data text;
-                  XMLCursor::AttributeMap::const_iterator it = xml.getAttributes().find("Code");
-                  if(it != xml.getAttributes().end())
+                  if (isEqualNoCase(xml.getTag(), "Result"))
                   {
-                     code = it->second.convertUnsignedLong();
+                     unsigned int code = 0;
+                     Data text;
+                     XMLCursor::AttributeMap::const_iterator it = xml.getAttributes().find("Code");
+                     if (it != xml.getAttributes().end())
+                     {
+                        code = it->second.convertUnsignedLong();
+                     }
+                     if (xml.firstChild())
+                     {
+                        text = xml.getValue().xmlCharDataDecode();
+                        xml.parent();
+                     }
+                     if (code >= 200 && code < 300)
+                     {
+                        // Success
+                        cout << text << endl;
+                     }
+                     else
+                     {
+                        cout << "Error " << code << " processing request: " << text << endl;
+                     }
+                     responseOK = true;
                   }
-                  if(xml.firstChild())
+                  else if (isEqualNoCase(xml.getTag(), "Data"))
                   {
-                     text = xml.getValue().xmlCharDataDecode();
-                     xml.parent();
+                     if (xml.firstChild())
+                     {
+                        cout << xml.getValue().xmlCharDataDecode() << endl;
+                        xml.parent();
+                     }
                   }
-                  if(code >= 200 && code < 300)
+                  if (!xml.nextSibling())
                   {
-                     // Success
-                     cout << text << endl;
+                     // break on no more sibilings
+                     break;
                   }
-                  else
-                  {
-                     cout << "Error " << code << " processing request: " << text << endl;
-                  }
-                  responseOK = true;
-               }
-               else if(isEqualNoCase(xml.getTag(), "Data"))
-               {
-                  if(xml.firstChild())
-                  {
-                     cout << xml.getValue().xmlCharDataDecode() << endl;
-                     xml.parent();
-                  }
-               }
-               if(!xml.nextSibling())
-               {
-                  // break on no more sibilings
-                  break;
                }
             }
+            if (!responseOK)
+            {
+               cout << "Unable to parse response:" << endl << response << endl;
+            }
+            closeSocket(sd);
+            break;
          }
-         if(!responseOK)
-         {
-            cout << "Unable to parse response:" << endl << response << endl;
-         }
-
-         closeSocket(sd); 
-         break;
       }
    }
 }

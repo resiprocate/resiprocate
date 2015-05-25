@@ -326,6 +326,7 @@
     <ClCompile Include="DumProcessHandler.cxx" />
     <ClCompile Include="DumThread.cxx" />
     <ClCompile Include="DumTimeout.cxx" />
+    <ClCompile Include="InMemorySyncPubDb.cxx" />
     <ClCompile Include="ssl\EncryptionManager.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -417,6 +418,8 @@
     <ClInclude Include="DumShutdownHandler.hxx" />
     <ClInclude Include="DumThread.hxx" />
     <ClInclude Include="DumTimeout.hxx" />
+    <ClInclude Include="InMemorySyncPubDb.hxx" />
+    <ClInclude Include="PublicationPersistenceManager.hxx" />
     <ClInclude Include="ssl\EncryptionManager.hxx" />
     <ClInclude Include="EncryptionRequest.hxx" />
     <ClInclude Include="EventDispatcher.hxx" />

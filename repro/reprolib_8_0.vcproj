@@ -437,6 +437,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\stateAgents\PresencePublicationHandler.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceServer.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceSubscriptionHandler.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.cxx"
 				>
 				<FileConfiguration
@@ -585,6 +597,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\UserAuthGrabber.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\UserStore.cxx"
 				>
 			</File>
@@ -728,6 +744,18 @@
 			</File>
 			<File
 				RelativePath=".\PersistentMessageQueue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresencePublicationHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\stateAgents\PresenceSubscriptionHandler.hxx"
 				>
 			</File>
 			<File

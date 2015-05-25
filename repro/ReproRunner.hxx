@@ -16,6 +16,7 @@ namespace resip
    class TransactionUser;
    class SipStack;
    class RegistrationPersistenceManager;
+   class PublicationPersistenceManager;
    class FdPollGrp;
    class AsyncProcessHandler;
    class ThreadIf;
@@ -41,6 +42,7 @@ class RegSyncServerThread;
 class CommandServer;
 class CommandServerThread;
 class Processor;
+class PresenceServer;
 
 class ReproRunner : public resip::ServerProcess,
                     public resip::ExternalStatsHandler
@@ -100,6 +102,7 @@ protected:
    AbstractDb* mAbstractDb;
    AbstractDb* mRuntimeAbstractDb;
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
+   resip::PublicationPersistenceManager* mPublicationPersistenceManager;
    AuthenticatorFactory* mAuthFactory;
    Dispatcher* mAsyncProcessorDispatcher;
    ProcessorChain* mMonkeys;
@@ -109,6 +112,7 @@ protected:
    std::list<WebAdmin*> mWebAdminList;
    WebAdminThread* mWebAdminThread;
    Registrar* mRegistrar;
+   PresenceServer* mPresenceServer;
    resip::DialogUsageManager* mDum;
    resip::ThreadIf* mDumThread;
    CertServer* mCertServer;

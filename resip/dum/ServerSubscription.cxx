@@ -433,15 +433,6 @@ ServerSubscription::neutralNotify()
 }
 
 void 
-ServerSubscription::dialogDestroyed(const SipMessage& msg)
-{
-   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   assert(handler);   
-   handler->onError(getHandle(), msg);
-   terminateSubscription(handler);
-}
-
-void 
 ServerSubscription::onReadyToSend(SipMessage& msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);

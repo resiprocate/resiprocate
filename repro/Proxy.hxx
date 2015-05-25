@@ -84,6 +84,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool getAssumePath() const { return mAssumePath; }
 
       bool isPAssertedIdentityProcessingEnabled() { return mPAssertedIdentityProcessing; }
+      bool isNeverStripProxyAuthorizationHeadersEnabled() { return mNeverStripProxyAuthorizationHeaders; }
       
       UserStore& getUserStore();
       resip::SipStack& getStack(){return mStack;}
@@ -123,6 +124,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool mRecordRouteForced;
       bool mAssumePath;
       bool mPAssertedIdentityProcessing;
+      bool mNeverStripProxyAuthorizationHeaders;
       resip::Data mServerText;
       int mTimerC;
       resip::KeyValueStore mKeyValueStore;

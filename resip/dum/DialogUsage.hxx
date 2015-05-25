@@ -79,10 +79,6 @@ class DialogUsage : public BaseUsage
       DialogUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~DialogUsage();
 
-      //virtual void sendToDialog(SharedPtr<SipMessage> msg);
-
-      virtual void dialogDestroyed(const SipMessage& msg) = 0;
-      
       Dialog& mDialog;
 };
  

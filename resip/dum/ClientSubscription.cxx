@@ -18,14 +18,12 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
-ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
-                                       const SipMessage& request, UInt32 defaultSubExpiration)
+ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false),
      mNextRefreshSecs(0),
      mLastSubSecs(Timer::getTimeSecs()), // Not exactly, but more forgiving
-     mDefaultExpires(defaultSubExpiration),
      mRefreshing(false),
      mHaveQueuedRefresh(false),
      mQueuedRefreshInterval(-1),
@@ -35,10 +33,6 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
    if(request.method() == SUBSCRIBE)
    {
       *mLastRequest = request;
-      if (defaultSubExpiration > 0)
-      {
-         mLastRequest->header(h_Expires).value() = defaultSubExpiration;
-      }
    }
    else
    {
@@ -160,6 +154,9 @@ ClientSubscription::processResponse(const SipMessage& msg)
 
       if(!mOnNewSubscriptionCalled)
       {
+         handler->onNewSubscription(getHandle(), msg);
+         mOnNewSubscriptionCalled = true;
+
          // Timer for initial NOTIFY; since we don't know when the initial
          // SUBSRIBE is sent, we have to set the timer when the 200 comes in, if
          // it beat the NOTIFY.
@@ -168,8 +165,10 @@ ClientSubscription::processResponse(const SipMessage& msg)
                  getBaseHandle(),
                  ++mTimerSeq);
       }
-
-      sendQueuedRefreshRequest();
+      else
+      {
+         sendQueuedRefreshRequest();
+      }
    }
    else if (!mEnded &&
             statusCode == 481 &&
@@ -286,18 +285,13 @@ ClientSubscription::processNextNotify()
       {
          expires = mLastRequest->header(h_Expires).value();
       }
-      else if (mDefaultExpires)
+      else
       {
          /* if we haven't gotten an expires value from:
             1. the subscription state from this notify
-            2. the last request
-            then use the default expires (meaning it came from the 2xx in response
-            to the initial SUBSCRIBE). .mjf.
+            2. the last request (may have came from the 2xx in response)
+            then use some reasonable value.
           */
-         expires = mDefaultExpires;
-      }
-      else
-      {
          expires = 3600;
       }
       
@@ -429,6 +423,11 @@ ClientSubscription::processNextNotify()
    }
    else if (!mEnded)
    {
+      if (setRefreshTimer)
+      {
+         scheduleRefresh(refreshInterval);
+      }
+
       handler->onUpdateExtension(getHandle(), qn->notify(), qn->outOfOrder());
    }
    else if (mEnded)
@@ -458,7 +457,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
       if(timer.type() == DumTimeout::WaitForNotify)
       {
          ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-         if(mOnNewSubscriptionCalled && mEnded)
+         if(mEnded)
          {
             // NOTIFY terminated didn't come in
             handler->onTerminated(getHandle(),0);
@@ -784,15 +783,6 @@ void
 ClientSubscription::rejectUpdateCommand(int statusCode, const Data& reasonPhrase)
 {
    mDum.post(new ClientSubscriptionRejectUpdateCommand(getHandle(), statusCode, reasonPhrase));
-}
-
-void ClientSubscription::dialogDestroyed(const SipMessage& msg)
-{
-   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);   
-   mEnded = true;
-   handler->onTerminated(getHandle(), &msg);
-   delete this;   
 }
 
 EncodeStream&

@@ -38,6 +38,7 @@
 #include "resip/stack/WsCookieContextFactory.hxx"
 
 #include "resip/dum/InMemorySyncRegDb.hxx"
+#include "resip/dum/InMemorySyncPubDb.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
@@ -80,6 +81,7 @@
 #include "repro/monkeys/RequestFilter.hxx"
 #include "repro/monkeys/MessageSilo.hxx"
 #include "repro/monkeys/CertificateAuthenticator.hxx"
+#include "repro/stateAgents/PresenceServer.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -164,6 +166,7 @@ ReproRunner::ReproRunner()
    , mAbstractDb(0)
    , mRuntimeAbstractDb(0)
    , mRegistrationPersistenceManager(0)
+   , mPublicationPersistenceManager(0)
    , mAuthFactory(0)
    , mAsyncProcessorDispatcher(0)
    , mMonkeys(0)
@@ -172,6 +175,7 @@ ReproRunner::ReproRunner()
    , mProxy(0)
    , mWebAdminThread(0)
    , mRegistrar(0)
+   , mPresenceServer(0)
    , mDum(0)
    , mDumThread(0)
    , mCertServer(0)
@@ -221,7 +225,7 @@ ReproRunner::run(int argc, char** argv)
    // Non-Windows server process stuff
    if(!mRestarting)
    {
-      setPidFile(mProxyConfig->getConfigData("PidFile", "", true));
+      setPidFile(mProxyConfig->getConfigData("PidFile", Data::Empty, true));
 
       if(isAlreadyRunning())
       {
@@ -264,8 +268,8 @@ ReproRunner::run(int argc, char** argv)
    }
 
    // Drop privileges (can do this now that sockets are bound)
-   Data runAsUser = mProxyConfig->getConfigData("RunAsUser", "", true);
-   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", "", true); 
+   Data runAsUser = mProxyConfig->getConfigData("RunAsUser", Data::Empty, true);
+   Data runAsGroup = mProxyConfig->getConfigData("RunAsGroup", Data::Empty, true); 
    if(!runAsUser.empty())
    {
       InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
@@ -443,7 +447,6 @@ ReproRunner::onHUP()
 void
 ReproRunner::cleanupObjects()
 {
-   delete mCongestionManager; mCongestionManager = 0;
    if(!mRestarting)
    {
       // We leave command server running during restart
@@ -464,6 +467,7 @@ ReproRunner::cleanupObjects()
    delete mDumThread; mDumThread = 0;
    delete mDum; mDum = 0;
    delete mRegistrar; mRegistrar = 0;
+   delete mPresenceServer; mPresenceServer = 0;
    delete mWebAdminThread; mWebAdminThread = 0;
    for(std::list<WebAdmin*>::iterator it = mWebAdminList.begin(); it != mWebAdminList.end(); it++)
    {
@@ -478,13 +482,15 @@ ReproRunner::cleanupObjects()
    delete mAsyncProcessorDispatcher; mAsyncProcessorDispatcher = 0;
    if(!mRestarting) 
    {
-      // If we are restarting then leave the In Memory Registration database intact
+      // If we are restarting then leave the In Memory Registration and Publication database intact
       delete mRegistrationPersistenceManager; mRegistrationPersistenceManager = 0;
+      delete mPublicationPersistenceManager; mPublicationPersistenceManager = 0;
    }
    delete mAbstractDb; mAbstractDb = 0;
    delete mRuntimeAbstractDb; mRuntimeAbstractDb = 0;
    delete mStackThread; mStackThread = 0;
    delete mSipStack; mSipStack = 0;
+   delete mCongestionManager; mCongestionManager = 0;
    delete mAsyncProcessHandler; mAsyncProcessHandler = 0;
    delete mFdPollGrp; mFdPollGrp = 0;
    delete mProxyConfig; mProxyConfig = 0;
@@ -564,6 +570,7 @@ ReproRunner::loadPlugins()
 void
 ReproRunner::setOpenSSLCTXOptionsFromConfig(const Data& configVar, long& opts)
 {
+#ifdef USE_SSL
    std::set<Data> values;
    if(mProxyConfig->getConfigValue(configVar, values))
    {
@@ -574,6 +581,7 @@ ReproRunner::setOpenSSLCTXOptionsFromConfig(const Data& configVar, long& opts)
          opts |= Security::parseOpenSSLCTXOption(*it);
       }
    }
+#endif
 }
 
 bool
@@ -604,20 +612,20 @@ ReproRunner::createSipStack()
          "OpenSSLCTXSetOptions", BaseSecurity::OpenSSLCTXSetOptions);
    setOpenSSLCTXOptionsFromConfig(
          "OpenSSLCTXClearOptions", BaseSecurity::OpenSSLCTXClearOptions);
-   Security::CipherList cipherList = Security::ExportableSuite;
-   Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", "");
+   Security::CipherList cipherList = Security::StrongestSuite;
+   Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", Data::Empty);
    if(!ciphers.empty())
    {
       cipherList = ciphers;
    }
-   Data certPath = mProxyConfig->getConfigData("CertificatePath", "");
+   Data certPath = mProxyConfig->getConfigData("CertificatePath", Data::Empty);
    if(certPath.empty())
    {
-      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", ""));
+      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
    }
    else
    {
-      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", ""));
+      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
    }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);
@@ -825,34 +833,66 @@ ReproRunner::createDatastore()
    // Create Database access objects
    assert(!mAbstractDb);
    assert(!mRuntimeAbstractDb);
-#ifdef USE_MYSQL
-   Data mySQLServer;
-   mProxyConfig->getConfigValue("MySQLServer", mySQLServer);
-   if(!mySQLServer.empty())
+   int defaultDatabaseIndex = mProxyConfig->getConfigInt("DefaultDatabase", -1);
+   if(defaultDatabaseIndex >= 0)
    {
-      mAbstractDb = new MySqlDb(mySQLServer, 
-                       mProxyConfig->getConfigData("MySQLUser", ""), 
-                       mProxyConfig->getConfigData("MySQLPassword", ""),
-                       mProxyConfig->getConfigData("MySQLDatabaseName", ""),
-                       mProxyConfig->getConfigUnsignedLong("MySQLPort", 0),
-                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
+      mAbstractDb = mProxyConfig->getDatabase(defaultDatabaseIndex);
+      if(!mAbstractDb)
+      {
+         CritLog(<<"Failed to get configuration database");
+         cleanupObjects();
+         return false;
+      }
    }
-   Data runtimeMySQLServer;
-   mProxyConfig->getConfigValue("RuntimeMySQLServer", runtimeMySQLServer);
-   if(!runtimeMySQLServer.empty())
+   else     // Try legacy configuration parameter names
    {
-      mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
-                       mProxyConfig->getConfigData("RuntimeMySQLUser", ""), 
-                       mProxyConfig->getConfigData("RuntimeMySQLPassword", ""),
-                       mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", ""),
-                       mProxyConfig->getConfigUnsignedLong("RuntimeMySQLPort", 0),
-                       mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", ""));
+#ifdef USE_MYSQL
+      Data mySQLServer;
+      mProxyConfig->getConfigValue("MySQLServer", mySQLServer);
+      if(!mySQLServer.empty())
+      {
+         WarningLog(<<"Using deprecated parameter MySQLServer, please update to indexed Database definitions.");
+         mAbstractDb = new MySqlDb(mySQLServer,
+                          mProxyConfig->getConfigData("MySQLUser", Data::Empty),
+                          mProxyConfig->getConfigData("MySQLPassword", Data::Empty),
+                          mProxyConfig->getConfigData("MySQLDatabaseName", Data::Empty),
+                          mProxyConfig->getConfigUnsignedLong("MySQLPort", 0),
+                          mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
+      }
+#endif
+      if (!mAbstractDb)
+      {
+         mAbstractDb = new BerkeleyDb(mProxyConfig->getConfigData("DatabasePath", "./", true));
+      }
+   }
+   int runtimeDatabaseIndex = mProxyConfig->getConfigInt("RuntimeDatabase", -1);
+   if(runtimeDatabaseIndex >= 0)
+   {
+      mRuntimeAbstractDb = mProxyConfig->getDatabase(runtimeDatabaseIndex);
+      if(!mRuntimeAbstractDb || !mRuntimeAbstractDb->isSane())
+      {
+         CritLog(<<"Failed to get runtime database");
+         cleanupObjects();
+         return false;
+      }
+   }
+#ifdef USE_MYSQL
+   else     // Try legacy configuration parameter names
+   {
+      Data runtimeMySQLServer;
+      mProxyConfig->getConfigValue("RuntimeMySQLServer", runtimeMySQLServer);
+      if(!runtimeMySQLServer.empty())
+      {
+         WarningLog(<<"Using deprecated parameter RuntimeMySQLServer, please update to indexed Database definitions.");
+         mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
+                          mProxyConfig->getConfigData("RuntimeMySQLUser", Data::Empty), 
+                          mProxyConfig->getConfigData("RuntimeMySQLPassword", Data::Empty),
+                          mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", Data::Empty),
+                          mProxyConfig->getConfigUnsignedLong("RuntimeMySQLPort", 0),
+                          mProxyConfig->getConfigData("MySQLCustomUserAuthQuery", Data::Empty));
+      }
    }
 #endif
-   if (!mAbstractDb)
-   {
-      mAbstractDb = new BerkeleyDb(mProxyConfig->getConfigData("DatabasePath", "./", true));
-   }
    assert(mAbstractDb);
    if(!mAbstractDb->isSane())
    {
@@ -871,12 +911,15 @@ ReproRunner::createDatastore()
    // Create ImMemory Registration Database
    mRegSyncPort = mProxyConfig->getConfigInt("RegSyncPort", 0);
    // We only need removed records to linger if we have reg sync enabled
-   if(!mRestarting)  // If we are restarting then we left the InMemoryRegistrationDb intact at shutdown - don't recreate
+   if(!mRestarting)  // If we are restarting then we left the InMemorySyncRegDb and InMemorySyncPubDb intact at restart - don't recreate
    {
       assert(!mRegistrationPersistenceManager);
       mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
+      assert(!mPublicationPersistenceManager);
+      mPublicationPersistenceManager = new InMemorySyncPubDb((mRegSyncPort && mProxyConfig->getConfigBool("EnablePublicationRepication", false)) ? true : false);
    }
    assert(mRegistrationPersistenceManager);
+   assert(mPublicationPersistenceManager);
 
    // Copy contacts from the StaticRegStore to the RegistrationPersistanceManager
    populateRegistrations();
@@ -915,7 +958,7 @@ ReproRunner::createDialogUsageManager()
 #ifdef PACKAGE_VERSION
    Data serverText(mProxyConfig->getConfigData("ServerText", "repro " PACKAGE_VERSION));
 #else
-   Data serverText(mProxyConfig->getConfigData("ServerText", ""));
+   Data serverText(mProxyConfig->getConfigData("ServerText", Data::Empty));
 #endif
    if(!serverText.empty())
    {
@@ -975,6 +1018,32 @@ ReproRunner::createDialogUsageManager()
 #endif
    }
 
+   bool presenceEnabled = mProxyConfig->getConfigBool("EnablePresenceServer", false);
+   if (presenceEnabled)
+   {
+      assert(mDum);
+      assert(mPublicationPersistenceManager);
+
+      // Set the publication persistence manager in dum
+      mDum->setPublicationPersistenceManager(mPublicationPersistenceManager);
+
+      // Configure DUM to handle SUBSCRIBE and PUBLISH requests for presence
+      mPresenceServer = new PresenceServer(*mDum, mAuthFactory->getDispatcher(), 
+                                           mProxyConfig->getConfigBool("PresenceUsesRegistrationState", true),
+                                           mProxyConfig->getConfigBool("PresenceNotifyClosedStateForNonPublishedUsers", true));
+
+      // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
+      MessageFilterRule::MethodList methodList;
+      MessageFilterRule::EventList eventList;
+      methodList.push_back(SUBSCRIBE);
+      methodList.push_back(PUBLISH);
+      eventList.push_back(Symbols::Presence);
+      ruleList.push_back(MessageFilterRule(MessageFilterRule::SchemeList(),
+         MessageFilterRule::DomainIsMe,
+         methodList,
+         eventList));
+   }
+
    if (mDum)
    {
       assert(mAuthFactory);
@@ -988,7 +1057,7 @@ ReproRunner::createDialogUsageManager()
          mDum->addIncomingFeature(mAuthFactory->getCertificateAuthManager());
       }
 
-      Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+      Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
       if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
       {
          SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
@@ -1072,7 +1141,7 @@ ReproRunner::createProxy()
 #ifdef PACKAGE_VERSION
    Data serverText(mProxyConfig->getConfigData("ServerText", "repro " PACKAGE_VERSION));
 #else
-   Data serverText(mProxyConfig->getConfigData("ServerText", ""));
+   Data serverText(mProxyConfig->getConfigData("ServerText", Data::Empty));
 #endif
    if(!serverText.empty())
    {
@@ -1120,8 +1189,8 @@ ReproRunner::populateRegistrations()
          rec.mContact = NameAddr(it->second.mContact);
          rec.mSipPath = NameAddrs(it->second.mPath);
          rec.mRegExpires = NeverExpire;
-         rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
-                                    // be syncronized to a paired server (this is actually configuration information)
+         rec.mSyncContact = true;  // Tag this permanent contact as being a synchronized contact so that it will
+                                   // not be synchronized to a paired server (this is actually configuration information)
          mRegistrationPersistenceManager->updateContact(aor, rec);
       }
       catch(resip::ParseBuffer::Exception& e)  
@@ -1166,6 +1235,7 @@ ReproRunner::createWebAdmin()
             {
                webAdminV4 = new WebAdmin(*mProxy,
                                          *mRegistrationPersistenceManager, 
+                                         *mPublicationPersistenceManager,
                                          mHttpRealm, 
                                          httpPort,
                                          V4,
@@ -1196,7 +1266,8 @@ ReproRunner::createWebAdmin()
             {
                webAdminV6 = new WebAdmin(*mProxy,
                                          *mRegistrationPersistenceManager, 
-                                         mHttpRealm, 
+                                         *mPublicationPersistenceManager,
+                                         mHttpRealm,
                                          httpPort,
                                          V6,
                                          *it);
@@ -1241,15 +1312,20 @@ ReproRunner::createRegSync()
    assert(!mRegSyncServerThread);
    if(mRegSyncPort != 0)
    {
+      bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationRepication", false);
       std::list<RegSyncServer*> regSyncServerList;
       if(mUseV4) 
       {
-         mRegSyncServerV4 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), mRegSyncPort, V4);
+         mRegSyncServerV4 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), 
+                                              mRegSyncPort, V4, 
+                                              enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
          regSyncServerList.push_back(mRegSyncServerV4);
       }
       if(mUseV6) 
       {
-         mRegSyncServerV6 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), mRegSyncPort, V6);
+         mRegSyncServerV6 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                              mRegSyncPort, V6,
+                                              enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
          regSyncServerList.push_back(mRegSyncServerV6);
       }
       if(!regSyncServerList.empty())
@@ -1259,7 +1335,14 @@ ReproRunner::createRegSync()
       Data regSyncPeerAddress(mProxyConfig->getConfigData("RegSyncPeer", ""));
       if(!regSyncPeerAddress.empty())
       {
-         mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), regSyncPeerAddress, mRegSyncPort);
+         int remoteRegSyncPort = mProxyConfig->getConfigInt("RemoteRegSyncPort", 0);
+         if (remoteRegSyncPort == 0)
+         {
+            remoteRegSyncPort = mRegSyncPort;
+         }
+         mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                            regSyncPeerAddress, remoteRegSyncPort,
+                                            enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
       }
    }
 }
@@ -1407,15 +1490,15 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    mStartupTransportRecordRoutes.clear();
 
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
-   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
    SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
    SharedPtr<WsCookieContextFactory> wsCookieContextFactory;
    if(!wsCookieAuthSharedSecret.empty())
    {
       basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
-      Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", "");
-      Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", "");
-      Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", "");
+      Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", Data::Empty);
+      Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", Data::Empty);
+      Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", Data::Empty);
 
       wsCookieContextFactory.reset(new BasicWsCookieContextFactory(infoCookieName, extraCookieName, macCookieName));
    }
@@ -1449,7 +1532,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             const Data& settingKeyBase = *it;
             DebugLog(<< "checking values for transport: " << settingKeyBase);
             Data interfaceSettingKey(settingKeyBase + "Interface");
-            Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, "", true);
+            Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, Data::Empty, true);
             Data typeSettingKey(settingKeyBase + "Type");
             Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
             Data tlsCertificateSettingKey(settingKeyBase + "TlsCertificate");
@@ -1489,14 +1572,16 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                {
                   CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << mProxyConfig->getConfigData(typeSettingKey, "UDP"));
                }
-               Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, "");
-               Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, "");
-               Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, "");
-               Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData(tlsPrivateKeyPassPhraseKey, "");
+               Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, Data::Empty);
+               Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, Data::Empty);
+               Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, Data::Empty);
+               Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData(tlsPrivateKeyPassPhraseKey, Data::Empty);
                Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
                SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
-               SecurityTypes::SSLType sslType = Security::parseSSLType(
-                  mProxyConfig->getConfigData(tlsConnectionMethodKey, DEFAULT_TLS_METHOD));
+               SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
+#ifdef USE_SSL
+               sslType = Security::parseSSLType(mProxyConfig->getConfigData(tlsConnectionMethodKey, DEFAULT_TLS_METHOD));
+#endif
                if(isEqualNoCase(tlsCVMValue, "Optional"))
                {
                   cvm = SecurityTypes::Optional;
@@ -1556,7 +1641,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 #endif
                   }
 
-                  Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, "");
+                  Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, Data::Empty);
                   if(!recordRouteUri.empty())
                   {
                      try
@@ -1610,20 +1695,35 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
       }
       else
       {
+         Data ipAddress = mProxyConfig->getConfigData("IPAddress", Data::Empty, true);
+         bool isV4Address = DnsUtil::isIpV4Address(ipAddress);
+         bool isV6Address = DnsUtil::isIpV6Address(ipAddress);
+         if(!isV4Address && !isV6Address)
+         {
+            if (!ipAddress.empty())
+            {
+               ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            }
+            ipAddress = Data::Empty;
+            isV4Address = true;
+            isV6Address = true;
+         }
          int udpPort = mProxyConfig->getConfigInt("UDPPort", 5060);
          int tcpPort = mProxyConfig->getConfigInt("TCPPort", 5060);
          int tlsPort = mProxyConfig->getConfigInt("TLSPort", 5061);
          int wsPort = mProxyConfig->getConfigInt("WSPort", 80);
          int wssPort = mProxyConfig->getConfigInt("WSSPort", 443);
          int dtlsPort = mProxyConfig->getConfigInt("DTLSPort", 0);
-         Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", "");
-         Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", "");
-         Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", "");
-         Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", "");
+         Data tlsDomain = mProxyConfig->getConfigData("TLSDomainName", Data::Empty);
+         Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", Data::Empty);
+         Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", Data::Empty);
+         Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
          Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
          SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
-         SecurityTypes::SSLType sslType = Security::parseSSLType(
-            mProxyConfig->getConfigData("TLSConnectionMethod", DEFAULT_TLS_METHOD));
+         SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
+#ifdef USE_SSL
+         sslType = Security::parseSSLType(mProxyConfig->getConfigData("TLSConnectionMethod", DEFAULT_TLS_METHOD));
+#endif
          if(isEqualNoCase(tlsCVMValue, "Optional"))
          {
             cvm = SecurityTypes::Optional;
@@ -1660,33 +1760,33 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
          if (udpPort)
          {
-            if (mUseV4) mSipStack->addTransport(UDP, udpPort, V4, StunEnabled);
-            if (mUseV6) mSipStack->addTransport(UDP, udpPort, V6, StunEnabled);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(UDP, udpPort, V4, StunEnabled, ipAddress);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(UDP, udpPort, V6, StunEnabled, ipAddress);
          }
          if (tcpPort)
          {
-            if (mUseV4) mSipStack->addTransport(TCP, tcpPort, V4, StunEnabled);
-            if (mUseV6) mSipStack->addTransport(TCP, tcpPort, V6, StunEnabled);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(TCP, tcpPort, V4, StunEnabled, ipAddress);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(TCP, tcpPort, V6, StunEnabled, ipAddress);
          }
          if (tlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
-            if (mUseV6) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(TLS, tlsPort, V4, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(TLS, tlsPort, V6, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP);
          }
          if (wsPort)
          {
-            if (mUseV4) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
-            if (mUseV6) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  Data::Empty, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, "", "", SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(WS, wsPort, V4, StunEnabled,  ipAddress, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, Data::Empty, Data::Empty, SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(WS, wsPort, V6, StunEnabled,  ipAddress, Data::Empty, Data::Empty, SecurityTypes::NoSSL, 0, Data::Empty, Data::Empty, SecurityTypes::None, false, basicWsConnectionValidator, wsCookieContextFactory);
          }
          if (wssPort)
          {
-            if (mUseV4) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
-            if (mUseV6) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(WSS, wssPort, V4, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(WSS, wssPort, V6, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey, cvm, useEmailAsSIP, basicWsConnectionValidator, wsCookieContextFactory);
          }
          if (dtlsPort)
          {
-            if (mUseV4) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
-            if (mUseV6) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, Data::Empty, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
+            if (mUseV4 && isV4Address) mSipStack->addTransport(DTLS, dtlsPort, V4, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
+            if (mUseV6 && isV6Address) mSipStack->addTransport(DTLS, dtlsPort, V6, StunEnabled, ipAddress, tlsDomain, tlsPrivateKeyPassPhrase, sslType, 0, tlsCertificate, tlsPrivateKey);
          }
       }
    }
@@ -1729,7 +1829,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       addProcessor(chain, mAuthFactory->getCertificateAuthenticator());
    }
 
-   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", "");
+   Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
    Data wsCookieExtraHeaderName = mProxyConfig->getConfigData("WSCookieExtraHeaderName", "X-WS-Session-Extra");
    if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
    {
@@ -1743,7 +1843,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    // Add am I responsible monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible)); 
+   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
 
    // Add RequestFilter monkey
    if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))

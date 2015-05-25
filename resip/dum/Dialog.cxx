@@ -41,7 +41,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
-     mDefaultSubExpiration(0),
      mAppDialog(0),
      mDestroying(false),
      mReUseDialogSet(false)
@@ -719,7 +718,7 @@ Dialog::dispatch(const SipMessage& msg)
             // else drop on the floor
             break;       
 
-		 case REFER:
+         case REFER:
             if(mInviteSession)
             {
                if (code >= 300)
@@ -750,33 +749,6 @@ Dialog::dispatch(const SipMessage& msg)
             if (client)
             {
                client->dispatch(response);
-            }
-            else if (code < 300)
-            {
-               /*
-                  we're capturing the  value from the expires header off
-                  the 2xx because the ClientSubscription is only created
-                  after receiving the NOTIFY that comes (usually) after
-                  this 2xx.  We really should be creating the
-                  ClientSubscription at either the 2xx or the NOTIFY
-                  whichever arrives first. .mjf.
-                  Note: we're capturing a duration here (not the
-                  absolute time because all the inputs to
-                  ClientSubscription desling with the expiration are expecting
-                  duration type values from the headers. .mjf.
-                */
-               if(response.exists(h_Expires))
-               {
-                  mDefaultSubExpiration = response.header(h_Expires).value();
-               }
-               else
-               {
-                  //?dcm? defaults to 3600 in ClientSubscription if no expires value
-                  //is provided anywhere...should we assume the value from the
-                  //sub in the basecreator if it exists?
-                  mDefaultSubExpiration = 0;
-               }               
-               return;
             }
             else
             {
@@ -836,38 +808,6 @@ Dialog::dispatch(const SipMessage& msg)
             assert(0);
             return;
       }
-
-#if 0     // merged from head back to teltel-branch
-      if (msg.header(h_StatusLine).statusCode() >= 400
-          && Helper::determineFailureMessageEffect(msg) == Helper::DialogTermination)
-      {
-         //kill all usages
-         mDestroying = true;
-
-         for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
-              it != mServerSubscriptions.end(); )
-         {
-            ServerSubscription* s = *it;
-            it++;
-            s->dialogDestroyed(msg);
-         }
-
-         for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
-              it != mClientSubscriptions.end(); )
-         {
-            ClientSubscription* s = *it;
-            it++;
-            s->dialogDestroyed(msg);
-         }
-         if (mInviteSession)
-         {
-            mInviteSession->dialogDestroyed(msg);
-         }
-         mDestroying = false;
-         possiblyDie(); //should aways result in destruction of this
-         return;
-      }
-#endif
    }
 }
 
@@ -992,7 +932,7 @@ Dialog::redirected(const SipMessage& msg)
 }
 
 void
-Dialog::makeRequest(SipMessage& request, MethodTypes method)
+Dialog::makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq)
 {
    RequestLine rLine(method);
 
@@ -1032,7 +972,10 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    //don't increment CSeq for ACK or CANCEL
    if (method != ACK && method != CANCEL)
    {
-      request.header(h_CSeq).sequence() = ++mLocalCSeq;
+      if(incrementCSeq)
+      {
+         setRequestNextCSeq(request);
+      }
    }
    else
    {
@@ -1061,7 +1004,6 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    DebugLog ( << "Dialog::makeRequest: " << std::endl << std::endl << request );
 }
-
 
 void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
@@ -1108,6 +1050,12 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    DebugLog ( << "Dialog::makeResponse: " << std::endl << std::endl << response);
 }
 
+void 
+Dialog::setRequestNextCSeq(SipMessage& request)
+{
+   assert(request.isRequest() && request.method() != ACK && request.method() != CANCEL);
+   request.header(h_CSeq).sequence() = ++mLocalCSeq;
+}
 
 ClientInviteSession*
 Dialog::makeClientInviteSession(const SipMessage& response)
@@ -1123,14 +1071,11 @@ Dialog::makeClientInviteSession(const SipMessage& response)
                                   creator->getInitialOffer(), creator->getEncryptionLevel(), creator->getServerSubscription());
 }
 
-
-
 ClientSubscription*
 Dialog::makeClientSubscription(const SipMessage& request)
 {
-   return new ClientSubscription(mDum, *this, request, mDefaultSubExpiration);
+   return new ClientSubscription(mDum, *this, request);
 }
-
 
 ServerInviteSession*
 Dialog::makeServerInviteSession(const SipMessage& request)

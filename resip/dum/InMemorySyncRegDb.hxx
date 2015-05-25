@@ -16,10 +16,20 @@ namespace resip
 class InMemorySyncRegDbHandler
 {
 public:
-    virtual ~InMemorySyncRegDbHandler(){}
-    virtual void onAorModified(const resip::Uri& aor, const ContactList& contacts) = 0;
-    virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const ContactList& contacts) = 0;
+   typedef enum
+   {
+      SyncServer,
+      AllChanges
+   } HandlerMode;
+   InMemorySyncRegDbHandler(HandlerMode mode = SyncServer) : mMode(mode) {}
+   virtual ~InMemorySyncRegDbHandler(){}
+   HandlerMode getMode() { return mMode; }
+   virtual void onAorModified(const resip::Uri& aor, const ContactList& contacts) = 0;
+   virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const ContactList& contacts) {}
+protected:
+   HandlerMode mMode;
 };
+
 
 /**
   Implementation of a persistence manager. This class keeps
@@ -48,11 +58,13 @@ class InMemorySyncRegDb : public RegistrationPersistenceManager
       
       virtual void addHandler(InMemorySyncRegDbHandler* handler);
       virtual void removeHandler(InMemorySyncRegDbHandler* handler);
+
       virtual void initialSync(unsigned int connectionId);
 
       virtual void addAor(const Uri& aor, const ContactList& contacts);
       virtual void removeAor(const Uri& aor);
       virtual bool aorIsRegistered(const Uri& aor);
+      virtual bool aorIsRegistered(const Uri& aor, UInt64* maxExpires);
       
       virtual void lockRecord(const Uri& aor);
       virtual void unlockRecord(const Uri& aor);
@@ -68,7 +80,7 @@ class InMemorySyncRegDb : public RegistrationPersistenceManager
       /// return all the AOR in the DB 
       virtual void getAors(UriList& container);
       
-   private:
+   protected:
       typedef std::map<Uri,ContactList *> database_map_t;
       database_map_t mDatabase;
       Mutex mDatabaseMutex;
@@ -77,7 +89,7 @@ class InMemorySyncRegDb : public RegistrationPersistenceManager
       Mutex mLockedRecordsMutex;
       Condition mRecordUnlocked;
 
-      void invokeOnAorModified(const resip::Uri& aor, const ContactList& contacts);
+      void invokeOnAorModified(bool sync, const resip::Uri& aor, const ContactList& contacts);
       void invokeOnInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const ContactList& contacts);
       unsigned int mRemoveLingerSecs;
       typedef std::list<InMemorySyncRegDbHandler*> HandlerList;

@@ -238,19 +238,39 @@ RRCache::purge()
 void 
 RRCache::logCache()
 {
-   for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
+   UInt64 now = Timer::getTimeSecs();
+   for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); )
    {
-      (*it)->log();
+      if (now >= (*it)->absoluteExpiry())
+      {
+         delete *it;
+         mRRSet.erase(it++);
+      }
+      else
+      {
+         (*it)->log();
+         ++it;
+      }
    }
 }
 
 void 
 RRCache::getCacheDump(Data& dnsCacheDump)
 {
+   UInt64 now = Timer::getTimeSecs();
    DataStream strm(dnsCacheDump);
-   for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
+   for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); )
    {
-      (*it)->encodeRRList(strm);
+      if (now >= (*it)->absoluteExpiry())
+      {
+         delete *it;
+         mRRSet.erase(it++);
+      }
+      else
+      {
+         (*it)->encodeRRList(strm);
+         ++it;
+      }
    }
    strm.flush();
 }

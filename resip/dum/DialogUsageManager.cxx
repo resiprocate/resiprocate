@@ -60,12 +60,13 @@
 #include "resip/dum/OutgoingEvent.hxx"
 #include "resip/dum/DumHelper.hxx"
 #include "resip/dum/MergedRequestRemovalCommand.hxx"
+#include "resip/dum/InMemorySyncPubDb.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/Lockable.hxx"
-#include "rutil/WinLeakCheck.hxx"
 #include "rutil/Timer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
@@ -103,6 +104,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mDialogSetHandler(0),
    mRequestValidationHandler(0),
    mRegistrationPersistenceManager(0),
+   mPublicationPersistenceManager(0),
    mIsDefaultServerReferHandler(true),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
@@ -142,9 +144,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
 #if defined (USE_SSL)
       addOutgoingFeature(encryptionOutgoing);
 #endif
-
    }
-
 }
 
 DialogUsageManager::~DialogUsageManager()
@@ -152,14 +152,6 @@ DialogUsageManager::~DialogUsageManager()
    mShutdownState = Destroying;
    //InfoLog ( << "~DialogUsageManager" );
 
-#if(0)
-   // !kh!
-   DialogSetMap::iterator dialogSet = mDialogSetMap.begin();
-   for (; dialogSet != mDialogSetMap.end(); ++dialogSet)
-   {
-      delete dialogSet->second;
-   }
-#endif
    if(!mDialogSetMap.empty())
    {
       DebugLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
@@ -179,7 +171,7 @@ DialogUsageManager::~DialogUsageManager()
    while(!mDialogSetMap.empty())
    {
       DialogSet*  ds = mDialogSetMap.begin()->second;
-      delete ds;
+      delete ds;  // Deleting a dialog set removes itself from the map
    }
 
    if(mIsDefaultServerReferHandler)
@@ -189,6 +181,18 @@ DialogUsageManager::~DialogUsageManager()
 
    delete mIncomingTarget;
    delete mOutgoingTarget;
+
+   // Delete Server Publications
+   while (!mServerPublications.empty())
+   {
+       delete mServerPublications.begin()->second;  // Deleting a ServerPublication removes itself from the map
+   }
+
+   // Remove any lingering incoming feature chain memory
+   for(FeatureChainMap::iterator it = mIncomingFeatureChainMap.begin(); it != mIncomingFeatureChainMap.end(); it++)
+   {
+      delete it->second;
+   }
 
    //InfoLog ( << "~DialogUsageManager done" );
 }
@@ -393,8 +397,10 @@ DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceMan
 }
 
 void
-DialogUsageManager::setRemoteCertStore(auto_ptr<RemoteCertStore> store)
+DialogUsageManager::setPublicationPersistenceManager(PublicationPersistenceManager* manager)
 {
+   assert(!mPublicationPersistenceManager);
+   mPublicationPersistenceManager = manager;
 }
 
 void
@@ -1596,7 +1602,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
    
    try
    {
-      InfoLog (<< "Got: " << msg->brief());
+      DebugLog (<< "Got: " << msg->brief());
       DumDecrypted* decryptedMsg = dynamic_cast<DumDecrypted*>(msg.get());
       SipMessage* sipMsg = 0;
       if (decryptedMsg)
@@ -1664,7 +1670,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
    catch(BaseException& e)
    {
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
-	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
+     ErrLog(<<"Illegal message rejected: " << e.getMessage());
    }
 }
 
@@ -2058,7 +2064,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case PUBLISH:
             assert(false);
-	    return;
+            return;
          case SUBSCRIBE:
             if (!checkEventPackage(request))
             {
@@ -2066,7 +2072,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                         << request.brief());
                return;
             }
-	    /*FALLTHRU*/
+           /*FALLTHRU*/
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
@@ -2151,7 +2157,7 @@ DialogUsageManager::processResponse(const SipMessage& response)
       }
        else
       {
-		 InfoLog (<< "Throwing away stray response: " << std::endl << std::endl << response.brief());
+          InfoLog (<< "Throwing away stray response: " << std::endl << std::endl << response.brief());
       }
    }
 }
@@ -2174,9 +2180,22 @@ DialogUsageManager::processPublish(const SipMessage& request)
       }
       else
       {
-         SharedPtr<SipMessage> response(new SipMessage);
-         makeResponse(*response, request, 412);
-         send(response);
+         // Check if publication exists in PublicationDb - may have been sync'd over,
+         // or exists from a restart.  In this case, fabricate a new ServerSubcription 
+         // to handle this request.
+         if (mPublicationPersistenceManager &&
+             mPublicationPersistenceManager->documentExists(request.header(h_Event).value(), request.header(h_RequestLine).uri().getAor(), request.header(h_SIPIfMatch).value()))
+         {
+            ServerPublication* sp = new ServerPublication(*this, request.header(h_SIPIfMatch).value(), request);
+            mServerPublications[request.header(h_SIPIfMatch).value()] = sp;
+            sp->dispatch(request);
+         }
+         else
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            makeResponse(*response, request, 412);
+            send(response);
+         }
       }
    }
    else

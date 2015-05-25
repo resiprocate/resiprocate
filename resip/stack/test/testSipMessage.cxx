@@ -2246,6 +2246,56 @@ main(int argc, char** argv)
       assert(embeddedMsg2.header(h_Requires).find(Token(Symbols::Replaces)));
    }
 
+   {
+      Data txt(
+         "GET / HTTP/1.1\r\n"
+         "Upgrade: websocket\r\n"
+         "Connection: Upgrade\r\n"
+         "Host: localhost\r\n"
+         "Origin: http://localhost\r\n"
+         "Sec-WebSocket-Protocol: sip\r\n"
+         "Pragma: no-cache\r\n"
+         "Cache-Control: no-cache\r\n"
+         "Sec-WebSocket-Key: rFi6Qbjr0EmH04nUqfCAKQ==\r\n"
+         "Sec-WebSocket-Version: 13\r\n"
+         "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits, x-webkit-deflate-frame\r\n"
+         "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36\r\n"
+         "\r\n" );
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+
+      assert(msg->header(h_RequestLine).unknownMethodName() == "GET");
+      assert(msg->header(h_RequestLine).uri().path() == "/");
+      assert( msg->header(h_ContentLength).value() == 0 );
+   }
+
+   {
+      Data txt(
+         "GET /;p1=123;p2=456 HTTP/1.1\r\n"
+         "Upgrade: websocket\r\n"
+         "Connection: Upgrade\r\n"
+         "Host: localhost\r\n"
+         "Origin: http://localhost\r\n"
+         "Sec-WebSocket-Protocol: sip\r\n"
+         "Pragma: no-cache\r\n"
+         "Cache-Control: no-cache\r\n"
+         "Sec-WebSocket-Key: rFi6Qbjr0EmH04nUqfCAKQ==\r\n"
+         "Sec-WebSocket-Version: 13\r\n"
+         "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits, x-webkit-deflate-frame\r\n"
+         "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36\r\n"
+         "\r\n" );
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+
+      assert(msg->header(h_RequestLine).unknownMethodName() == "GET");
+      Uri& uri = msg->header(h_RequestLine).uri();
+      assert(uri.path() == "/");
+      assert(uri.param(UnknownParameterType("p1")) == Data("123"));
+      assert(uri.param(UnknownParameterType("p2")) == Data("456"));
+
+      assert( msg->header(h_ContentLength).value() == 0 );
+   }
+
    resipCerr << "\nTEST OK" << endl;
    return 0;
 }

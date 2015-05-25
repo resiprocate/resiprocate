@@ -415,6 +415,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\DtmfPayloadContents.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Embedded.cxx"
 				>
 			</File>
@@ -448,6 +452,10 @@
 			</File>
 			<File
 				RelativePath=".\GenericContents.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\GenericPidfContents.cxx"
 				>
 			</File>
 			<File
@@ -1088,6 +1096,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DtmfPayloadContents.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Embedded.hxx"
 				>
 			</File>
@@ -1125,6 +1137,10 @@
 			</File>
 			<File
 				RelativePath=".\GenericContents.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\GenericPidfContents.hxx"
 				>
 			</File>
 			<File

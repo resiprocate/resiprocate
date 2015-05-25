@@ -21,6 +21,7 @@ all: \
 	testEmbedded.obj testEmbedded.exe \
 	testEmptyHeader.obj testEmptyHeader.exe \
 	testExternalLogger.obj testExternalLogger.exe \
+    testGenericPidfContents.obj testGenericPidfContents.exe \
 	testIM.obj testIM.exe \
 	testLockStep.obj testLockStep.exe \
 	testMessageWaiting.obj testMessageWaiting.exe \
@@ -71,6 +72,7 @@ run:
 	testEmbedded.exe
 	testEmptyHeader.exe
 	testExternalLogger.exe
+    testGenericPidfContents.exe
 	testIM.exe
 	testMessageWaiting.exe
 	testMultipartMixedContents.exe

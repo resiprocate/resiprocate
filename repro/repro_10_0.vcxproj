@@ -516,6 +516,7 @@ endlocal
     <ClCompile Include="repro.cxx" />
     <ClCompile Include="ReproRunner.cxx" />
     <ClCompile Include="ReproVersion.cxx" />
+    <ClCompile Include="SqlDb.cxx" />
     <ClCompile Include="WebAdmin.cxx" />
     <ClCompile Include="WebAdminThread.cxx" />
   </ItemGroup>
@@ -526,6 +527,7 @@ endlocal
     <ClInclude Include="MySqlDb.hxx" />
     <ClInclude Include="ReproRunner.hxx" />
     <ClInclude Include="ReproVersion.hxx" />
+    <ClInclude Include="SqlDb.hxx" />
     <ClInclude Include="WebAdmin.hxx" />
     <ClInclude Include="WebAdminThread.hxx" />
   </ItemGroup>

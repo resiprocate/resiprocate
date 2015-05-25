@@ -458,6 +458,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GenericPidfContents.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\GenericUri.cxx"
 				>
 			</File>
@@ -1136,6 +1140,10 @@
 			</File>
 			<File
 				RelativePath=".\GenericContents.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\GenericPidfContents.hxx"
 				>
 			</File>
 			<File

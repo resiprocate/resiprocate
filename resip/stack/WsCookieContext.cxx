@@ -1,4 +1,6 @@
 #include "resip/stack/WsCookieContext.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/UnknownParameterType.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 
@@ -35,7 +37,7 @@ WsCookieContext& WsCookieContext::operator=(const WsCookieContext& rhs)
    return *this;
 }
 
-WsCookieContext:: WsCookieContext(const CookieList& cookieList, const Data& infoCookieName, const Data& extraCookieName, const Data& macCookieName)
+WsCookieContext::WsCookieContext(const CookieList& cookieList, const Data& infoCookieName, const Data& extraCookieName, const Data& macCookieName, const Uri& requestUri)
 {
    for (CookieList::const_iterator it = cookieList.begin(); it != cookieList.end(); ++it)
    {
@@ -51,6 +53,34 @@ WsCookieContext:: WsCookieContext(const CookieList& cookieList, const Data& info
       {
          mWsSessionMAC = (*it).value();
       }
+   }
+
+   // If present, parameters in the request URI override those in the cookies
+   UnknownParameterType pInfo(infoCookieName);
+   if(requestUri.exists(pInfo))
+   {
+      mWsSessionInfo = requestUri.param(pInfo).urlDecoded();
+   }
+   UnknownParameterType pExtra(extraCookieName);
+   if(requestUri.exists(pExtra))
+   {
+      mWsSessionExtra = requestUri.param(pExtra).urlDecoded();
+   }
+   UnknownParameterType pMac(macCookieName);
+   if(requestUri.exists(pMac))
+   {
+      mWsSessionMAC = requestUri.param(pMac).urlDecoded();
+   }
+
+   if(mWsSessionInfo.empty())
+   {
+      ErrLog(<<"Cookie " << infoCookieName << " missing or empty");
+      throw Transport::Exception("Required cookie missing", __FILE__, __LINE__);
+   }
+   if(mWsSessionMAC.empty())
+   {
+      ErrLog(<<"Cookie " << macCookieName << " missing or empty");
+      throw Transport::Exception("Required cookie missing", __FILE__, __LINE__);
    }
 
    ParseBuffer pb(mWsSessionInfo);
