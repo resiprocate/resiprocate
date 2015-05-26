@@ -151,14 +151,14 @@ make %{?_smp_mflags}
 %install
 make DESTDIR=%{buildroot} install
 %if %use_systemd
-install -p -D -m644 repro/pkg/fedora/repro.service %{buildroot}%{_unitdir}/repro.service
-install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service %{buildroot}%{_unitdir}/resiprocate-turn-server.service
+install -p -D -m644 repro/pkg/common/repro.service %{buildroot}%{_unitdir}/repro.service
+install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.service %{buildroot}%{_unitdir}/resiprocate-turn-server.service
 %else
 install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
 install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
 %endif
-install -p -D -m644 repro/pkg/fedora/repro.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/repro
-install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/resiprocate-turn-server
+install -p -D -m644 repro/pkg/common/repro.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/repro
+install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/resiprocate-turn-server
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 repro/users.txt %{buildroot}%{_sysconfdir}/repro/users.txt
