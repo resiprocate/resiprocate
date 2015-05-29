@@ -377,14 +377,14 @@ CertificatePath =
 # This parameter specifies the cipher list to be passed to
 # SSL_CTX_set_cipher_list.
 # The default value is defined in the code as BaseSecurity::StrongestSuite
-# using the value HIGH:!aNULL:!eNULL
+# using the value HIGH:-COMPLEMENTOFDEFAULT
 # Uncomment the line below and add or remove cipher names as required.
 # See https://www.openssl.org/docs/apps/ciphers.html for details
 # of the format of this parameter.
-#OpenSSLCipherList = HIGH:!aNULL:!eNULL
+#OpenSSLCipherList = HIGH:-COMPLEMENTOFDEFAULT
 #
-# and a weaker cipher list suitable for US export:
-#OpenSSLCipherList = EXPORT:!aNULL:!eNULL
+# and a weaker cipher list suitable for US export and compatibility with older devices:
+#OpenSSLCipherList = HIGH:RC4-SHA:-COMPLEMENTOFDEFAULT
 
 # The Path to read and write Berkely DB database files
 DatabasePath = ./
