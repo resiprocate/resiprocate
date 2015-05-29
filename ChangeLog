@@ -1,4 +1,12 @@
 = Release Notes v 1.9 =
+==1.9.10 Changes==
+resip/stack: support for OpenSSL versions that don't have all option names
+resip/stack: lower severity of some log messages when TLS connections close
+resip/stack: make ensureWriteable more tolerant during TLS handshakes, resolves crashes
+resip/stack: add support for CA root cert bundle files
+resip/stack: use StrongestSuite as default cipher list
+resip/dum: challenge with correct realm when from and req URI domains don't match
+rpm: update Wants and After details in unit files
 ==1.9.9 Changes==
 resip/stack: only support SSL_OP_SAFARI_ECDHE_ECDSA_BUG as configuration string with compatible OpenSSL versions
 ==1.9.8 Changes==
