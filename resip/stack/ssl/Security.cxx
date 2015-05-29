@@ -2775,10 +2775,12 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    {
       return SSL_OP_PKCS1_CHECK_2;
    }
+#ifdef SSL_OP_SAFARI_ECDHE_ECDSA_BUG
    if(optionName == "SSL_OP_SAFARI_ECDHE_ECDSA_BUG")
    {
       return SSL_OP_SAFARI_ECDHE_ECDSA_BUG;
    }
+#endif
    if(optionName == "SSL_OP_SINGLE_DH_USE")
    {
       return SSL_OP_SINGLE_DH_USE;

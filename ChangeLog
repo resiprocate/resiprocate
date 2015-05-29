@@ -1,4 +1,6 @@
 = Release Notes v 1.9 =
+==1.9.9 Changes==
+resip/stack: only support SSL_OP_SAFARI_ECDHE_ECDSA_BUG as configuration string with compatible OpenSSL versions
 ==1.9.8 Changes==
 resip/stack: add static fields on BaseSecurity for setting OpenSSL CTX options
 resip/stack: explicitly disable SSLv2 and SSLv3 by default when using SSLv23
