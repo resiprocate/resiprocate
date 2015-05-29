@@ -125,8 +125,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 
 // .amr. RFC 5922 mandates exact match only on certificates, so this is the default, but RFC 2459 and RFC 3261 don't prevent wildcards, so enable if you want that mode.
 bool BaseSecurity::mAllowWildcardCertificates = false;
-BaseSecurity::CipherList BaseSecurity::ExportableSuite("EXPORT:!aNULL:!eNULL");
-BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:!aNULL:!eNULL");
+BaseSecurity::CipherList BaseSecurity::ExportableSuite("HIGH:RC4-SHA:-COMPLEMENTOFDEFAULT");
+BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT");
 
 /**
  * Note:
