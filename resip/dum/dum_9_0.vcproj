@@ -497,6 +497,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\InMemorySyncPubDb.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\InMemorySyncRegDb.cxx"
 				>
 			</File>
@@ -851,6 +855,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\InMemorySyncPubDb.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\InMemorySyncRegDb.hxx"
 				>
 			</File>
@@ -928,6 +936,10 @@
 			</File>
 			<File
 				RelativePath=".\PublicationHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\PublicationPersistenceManager.hxx"
 				>
 			</File>
 			<File

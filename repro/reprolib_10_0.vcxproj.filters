@@ -35,9 +35,6 @@
     <ClCompile Include="monkeys\QValueTargetHandler.cxx" />
     <ClCompile Include="monkeys\RecursiveRedirect.cxx" />
     <ClCompile Include="Registrar.cxx" />
-    <ClCompile Include="RegSyncClient.cxx" />
-    <ClCompile Include="RegSyncServer.cxx" />
-    <ClCompile Include="RegSyncServerThread.cxx" />
     <ClCompile Include="ReproAuthenticatorFactory.cxx" />
     <ClCompile Include="ReproServerAuthManager.cxx" />
     <ClCompile Include="ReproTlsPeerAuthManager.cxx" />
@@ -58,6 +55,13 @@
     <ClCompile Include="WorkerThread.cxx" />
     <ClCompile Include="XmlRpcConnection.cxx" />
     <ClCompile Include="XmlRpcServerBase.cxx" />
+    <ClCompile Include="stateAgents\PresencePublicationHandler.cxx" />
+    <ClCompile Include="stateAgents\PresenceServer.cxx" />
+    <ClCompile Include="stateAgents\PresenceSubscriptionHandler.cxx" />
+    <ClCompile Include="RegSyncClient.cxx" />
+    <ClCompile Include="RegSyncServer.cxx" />
+    <ClCompile Include="RegSyncServerThread.cxx" />
+    <ClCompile Include="UserAuthGrabber.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="XmlRpcServerBase.hxx" />
@@ -75,7 +79,6 @@
     <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\CertServer.hxx" />
     <ClInclude Include="stateAgents\CertSubscriptionHandler.hxx" />
-    <ClInclude Include="ChainTraverser.hxx" />
     <ClInclude Include="CommandServer.hxx" />
     <ClInclude Include="CommandServerThread.hxx" />
     <ClInclude Include="ConfigStore.hxx" />
@@ -102,9 +105,6 @@
     <ClInclude Include="monkeys\QValueTargetHandler.hxx" />
     <ClInclude Include="monkeys\RecursiveRedirect.hxx" />
     <ClInclude Include="Registrar.hxx" />
-    <ClInclude Include="RegSyncClient.hxx" />
-    <ClInclude Include="RegSyncServer.hxx" />
-    <ClInclude Include="RegSyncServerThread.hxx" />
     <ClInclude Include="ReproAuthenticatorFactory.hxx" />
     <ClInclude Include="ReproServerAuthManager.hxx" />
     <ClInclude Include="ReproTlsPeerAuthManager.hxx" />
@@ -128,5 +128,11 @@
     <ClInclude Include="Worker.hxx" />
     <ClInclude Include="WorkerThread.hxx" />
     <ClInclude Include="XmlRpcConnection.hxx" />
+    <ClInclude Include="stateAgents\PresencePublicationHandler.hxx" />
+    <ClInclude Include="stateAgents\PresenceServer.hxx" />
+    <ClInclude Include="stateAgents\PresenceSubscriptionHandler.hxx" />
+    <ClInclude Include="RegSyncClient.hxx" />
+    <ClInclude Include="RegSyncServer.hxx" />
+    <ClInclude Include="RegSyncServerThread.hxx" />
   </ItemGroup>
 </Project>

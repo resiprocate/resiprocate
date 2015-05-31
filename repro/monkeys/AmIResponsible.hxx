@@ -10,10 +10,13 @@ namespace repro
   class AmIResponsible: public Processor
   {
     public:
-      AmIResponsible();
+      AmIResponsible(bool alwaysAllowRelaying = false);
       virtual ~AmIResponsible();
 
       virtual processor_action_t process(RequestContext &);
+
+  private:
+      bool mAlwaysAllowRelaying;
   };
 }
 #endif

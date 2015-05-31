@@ -38,7 +38,6 @@ class ServerPublication : public BaseUsage
    private:
       friend class DialogUsageManager;
       ServerPublication(DialogUsageManager& dum, const Data& etag, const SipMessage& request);
-
       SipMessage mLastRequest;
       SharedPtr<SipMessage> mLastResponse;
       const Data mEtag;

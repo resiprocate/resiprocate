@@ -14,8 +14,7 @@ class DialogUsageManager;
 class ClientSubscription: public BaseSubscription
 {
    public:      
-      ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
-                         const SipMessage& request, UInt32 defaultSubExpiration);
+      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
@@ -73,9 +72,6 @@ class ClientSubscription: public BaseSubscription
       // .bwc. This is when our next reSUB is scheduled to happen.
       UInt64 mNextRefreshSecs;
       UInt64 mLastSubSecs;
-
-      // this is the expires value from the 2xx coming from the SUB message
-      UInt32 mDefaultExpires;
 
       bool mRefreshing;
       bool mHaveQueuedRefresh;

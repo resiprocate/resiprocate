@@ -22,6 +22,7 @@ all: \
 	testEmbedded.obj testEmbedded.exe \
 	testEmptyHeader.obj testEmptyHeader.exe \
 	testExternalLogger.obj testExternalLogger.exe \
+    testGenericPidfContents.obj testGenericPidfContents.exe \
 	testIM.obj testIM.exe \
 	testLockStep.obj testLockStep.exe \
 	testMessageWaiting.obj testMessageWaiting.exe \
@@ -35,7 +36,7 @@ all: \
 	testResponses.obj testResponses.exe \
 	testRlmi.obj testRlmi.exe \
 	testSdp.obj testSdp.exe \
-        testSecurity.obj testSecurity.exe \
+    testSecurity.obj testSecurity.exe \
 	testSelect.obj testSelect.exe \
 	testSelectInterruptor.obj testSelectInterruptor.exe \
 	testServer.obj testServer.exe \
@@ -73,6 +74,7 @@ run:
 	testEmbedded.exe
 	testEmptyHeader.exe
 	testExternalLogger.exe
+    testGenericPidfContents.exe
 	testIM.exe
 	testMessageWaiting.exe
 	testMultipartMixedContents.exe

@@ -346,6 +346,7 @@
     <ClCompile Include="CSeqCategory.cxx" />
     <ClCompile Include="DataParameter.cxx" />
     <ClCompile Include="DateCategory.cxx" />
+    <ClCompile Include="GenericPidfContents.cxx" />
     <ClCompile Include="gen\DayOfWeekHash.cxx" />
     <ClCompile Include="DeprecatedDialog.cxx" />
     <ClCompile Include="DnsInterface.cxx" />
@@ -534,6 +535,7 @@
     <ClInclude Include="DnsResultMessage.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="DtmfPayloadContents.hxx" />
+    <ClInclude Include="GenericPidfContents.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="RemoveTransport.hxx" />
@@ -624,7 +626,6 @@
     <ClInclude Include="TcpConnection.hxx" />
     <ClInclude Include="TcpTransport.hxx" />
     <ClInclude Include="TerminateFlow.hxx" />
-    <ClInclude Include="TextParameter.hxx" />
     <ClInclude Include="TimeAccumulate.hxx" />
     <ClInclude Include="TimerMessage.hxx" />
     <ClInclude Include="TimerQueue.hxx" />

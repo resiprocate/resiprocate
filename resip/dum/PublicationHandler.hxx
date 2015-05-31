@@ -3,6 +3,7 @@
 
 #include "resip/dum/Handles.hxx"
 #include "resip/stack/Mime.hxx"
+#include "resip/stack/Contents.hxx"
 
 namespace resip
 {

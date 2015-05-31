@@ -26,6 +26,7 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
    : NonDialogUsage(dum, dialogSet),
      mWaitingForResponse(false),
      mPendingPublish(false),
+     mPendingEnd(false),
      mPublish(req),
      mEventType(req->header(h_Event).value()),
      mTimerSeq(0),
@@ -53,8 +54,15 @@ ClientPublication::end(bool immediate)
    InfoLog (<< "End client publication to " << mPublish->header(h_RequestLine).uri());
    if(!immediate)
    {
-      mPublish->header(h_Expires).value() = 0;
-      send(mPublish);
+      if(!mWaitingForResponse)
+      {
+         mPublish->header(h_Expires).value() = 0;
+         send(mPublish);
+      }
+      else
+      {
+         mPendingEnd = true;
+      }
    }
    else
    {
@@ -68,7 +76,6 @@ public:
    ClientPublicationEndCommand(const ClientPublicationHandle& clientPublicationHandle, bool immediate)
       : mClientPublicationHandle(clientPublicationHandle), mImmediate(immediate)
    {
-
    }
 
    virtual void executeCommand()
@@ -128,7 +135,7 @@ ClientPublication::dispatch(const SipMessage& msg)
             mPublish->header(h_SIPIfMatch) = msg.header(h_SIPETag);
             if(!mPendingPublish)
             {
-               mPublish->releaseContents();           
+               mPublish->releaseContents();
             }
             mDum.addTimer(DumTimeout::Publication, 
                           Helper::aBitSmallerThan(msg.header(h_Expires).value()), 
@@ -211,7 +218,6 @@ ClientPublication::dispatch(const SipMessage& msg)
                              getBaseHandle(),
                              ++mTimerSeq);       
                return;
-               
             }
          }
          else
@@ -220,10 +226,17 @@ ClientPublication::dispatch(const SipMessage& msg)
             delete this;
             return;
          }
-
       }
 
-      if (mPendingPublish)
+      if (mPendingEnd)
+      {
+         mPublish->header(h_Expires).value() = 0;
+         mPublish->releaseContents();
+         InfoLog (<< "Sending pending end PUBLISH: " << mPublish->brief());
+         send(mPublish);
+         mPendingEnd = false;
+      }
+      else if (mPendingPublish)
       {
          InfoLog (<< "Sending pending PUBLISH: " << mPublish->brief());
          send(mPublish);
@@ -243,9 +256,9 @@ ClientPublication::dispatch(const DumTimeout& timer)
 void
 ClientPublication::refresh(unsigned int expiration)
 {
-   if (expiration == 0 && mPublish->exists(h_Expires))
+   if (expiration != 0)
    {
-      expiration = mPublish->header(h_Expires).value();
+       mPublish->header(h_Expires).value() = expiration;
    }
    send(mPublish);
 }
@@ -257,7 +270,6 @@ public:
       : mClientPublicationHandle(clientPublicationHandle),
         mExpiration(expiration)
    {
-
    }
 
    virtual void executeCommand()
@@ -313,7 +325,6 @@ public:
       : mClientPublicationHandle(clientPublicationHandle),
       mBody(body?body->clone():0)
    {
-
    }
 
    virtual void executeCommand()

@@ -121,7 +121,7 @@ public:
    {
       if(mServerPagerMessageHandle.isValid())
       {
-         mServerPagerMessageHandle->accept(mStatusCode);
+         mServerPagerMessageHandle->send(mServerPagerMessageHandle->accept(mStatusCode));
       }
    }
 
@@ -161,7 +161,7 @@ public:
    {
       if(mServerPagerMessageHandle.isValid())
       {
-         mServerPagerMessageHandle->reject(mStatusCode);
+         mServerPagerMessageHandle->send(mServerPagerMessageHandle->reject(mStatusCode));
       }
    }
 
@@ -187,7 +187,6 @@ ServerPagerMessage::dump(EncodeStream& strm) const
    mRequest.encodeBrief(strm);
    return strm;
 }
-
 
 
 /* ====================================================================

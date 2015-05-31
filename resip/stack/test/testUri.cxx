@@ -693,6 +693,20 @@ main(int argc, char* argv[])
       uri.setUserAsTelephoneSubscriber(telSub);
       assert(Data::from(uri) == "sip:+1-(234)-00442031111111;ext=4545@lvdx.com");
    }
+
+   {
+      Uri uri = Uri("/");
+      assert(uri.path() == "/");
+      assert(Data::from(uri) == "/");
+   }
+
+   {
+      Uri uri = Uri("/;p1=123;p2=456");
+      assert(uri.path() == "/");
+      assert(uri.param(UnknownParameterType("p1")) == Data("123"));
+      assert(uri.param(UnknownParameterType("p2")) == Data("456"));
+      assert(Data::from(uri) == "/;p1=123;p2=456");
+   }
    cerr << endl << "All OK" << endl;
    return 0;
 }

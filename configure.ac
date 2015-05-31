@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.9.0~rc2)
+AC_INIT(resiprocate,1.10.0)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -202,6 +202,14 @@ AC_ARG_WITH(mysql,
  AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient_r")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
+
+AM_CONDITIONAL(USE_POSTGRESQL, false)
+AC_ARG_WITH(postgresql,
+[  --with-postgresql       Link against PostgreSQL client libraries],
+ [AC_DEFINE_UNQUOTED(USE_POSTGRESQL, , USE_POSTGRESQL)
+ AC_SUBST(LIBPOSTGRESQL_LIBADD, "-lpq")
+ AM_CONDITIONAL(USE_POSTGRESQL, true)],
+ [ AC_SUBST(LIBPOSTGRESQL_LIBADD, "")])
 
 AM_CONDITIONAL(USE_MAXMIND_GEOIP, false)
 AC_ARG_WITH(geoip,

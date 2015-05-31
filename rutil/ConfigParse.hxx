@@ -12,6 +12,8 @@ namespace resip
 
 class ConfigParse
 {
+private:
+   class NestedConfigParse;
 public:
    class Exception : public BaseException
    {
@@ -56,6 +58,9 @@ public:
    bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
    bool getConfigValue(const resip::Data& name, std::set<resip::Data> &value);
 
+   typedef HashMap<int, NestedConfigParse> NestedConfigMap;
+   NestedConfigMap getConfigNested(const resip::Data& mapsPrefix);
+
    bool AddBasePathIfRequired(Data& filename);
 
    void insertConfigValue(const resip::Data& name, const resip::Data& value);
@@ -78,6 +83,13 @@ protected:
 
 private:
    friend EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);
+};
+
+class ConfigParse::NestedConfigParse : public ConfigParse
+{
+public:
+   NestedConfigParse() {};
+   virtual void printHelpText(int argc, char **argv) {};
 };
 
 EncodeStream& operator<<(EncodeStream& strm, const ConfigParse& config);

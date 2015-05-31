@@ -400,7 +400,7 @@ TlsConnection::read(char* buf, int count )
    }
 
    int bytesRead = SSL_read(mSsl,buf,count);
-   StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, (bytesRead > 0)?(bytesRead):(0)) << "]");
+   //StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, (bytesRead > 0)?(bytesRead):(0)) << "]");
 
    if (bytesRead > 0)
    {
@@ -410,9 +410,9 @@ TlsConnection::read(char* buf, int count )
          char* buffer = getWriteBufferForExtraBytes(bytesPending);
          if (buffer)
          {
-            StackLog(<< "reading remaining buffered bytes");
+            //StackLog(<< "reading remaining buffered bytes");
             bytesPending = SSL_read(mSsl, buffer, bytesPending);
-            StackLog(<< "SSL_read returned  " << bytesPending << " bytes [" << Data(Data::Borrow, buffer, (bytesPending > 0)?(bytesPending):(0)) << "]");
+            //StackLog(<< "SSL_read returned  " << bytesPending << " bytes [" << Data(Data::Borrow, buffer, (bytesPending > 0)?(bytesPending):(0)) << "]");
             
             if (bytesPending > 0)
             {
@@ -420,6 +420,8 @@ TlsConnection::read(char* buf, int count )
             }
             else
             {
+               // This puts the error return code into bytesRead to
+               // be used in the conditional block later in this method.
                bytesRead = bytesPending;
             }
          }
@@ -447,6 +449,12 @@ TlsConnection::read(char* buf, int count )
          {
             StackLog( << "Got TLS read got condition of " << err  );
             return 0;
+         }
+         break;
+         case SSL_ERROR_ZERO_RETURN:
+         {
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)");
+            return -1;
          }
          break;
          default:
@@ -534,6 +542,12 @@ TlsConnection::write( const char* buf, int count )
          {
             StackLog( << "Got TLS write got condition of " << err  );
             return 0;
+         }
+         break;
+         case SSL_ERROR_ZERO_RETURN:
+         {
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)");
+            return -1;
          }
          break;
          default:

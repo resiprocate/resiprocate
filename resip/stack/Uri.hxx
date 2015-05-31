@@ -45,6 +45,8 @@ class Uri : public ParserCategory
       const Data& userParameters() const {checkParsed(); return mUserParameters;}
       Data& opaque() {checkParsed(); return mHost;}
       const Data& opaque() const {checkParsed(); return mHost;}
+      Data& path() {checkParsed(); return mPath;}
+      const Data& path() const {checkParsed(); return mPath;}
 
       // Returns user@host[:port] (no scheme)
       Data getAor() const;
@@ -264,6 +266,7 @@ class Uri : public ParserCategory
       int mPort;
       Data mPassword;
       Data mNetNs;  ///< Net namespace name scoping host and port
+      Data mPath;
 
       void getAorInternal(bool dropScheme, bool addPort, Data& aor) const;
       mutable bool mHostCanonicalized;

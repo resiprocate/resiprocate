@@ -4,6 +4,7 @@
 #include <rutil/Data.hxx>
 #include <rutil/XMLCursor.hxx>
 #include <resip/dum/InMemorySyncRegDb.hxx>
+#include <resip/dum/InMemorySyncPubDb.hxx>
 #include <rutil/ThreadIf.hxx>
 
 namespace repro
@@ -14,7 +15,8 @@ class RegSyncClient : public resip::ThreadIf
 public:
    RegSyncClient(resip::InMemorySyncRegDb* regDb,
                  resip::Data address,
-                 unsigned short port);
+                 unsigned short port,
+                 resip::InMemorySyncPubDb* pubDb = 0);
 
    virtual void thread();
    virtual void shutdown();
@@ -24,9 +26,11 @@ private:
    bool tryParse();  // returns true if we processed something and there is more data in the buffer
    void handleXml(const resip::Data& xmlData);
    void handleRegInfoEvent(resip::XMLCursor& xml);
+   void handlePubInfoEvent(resip::XMLCursor& xml);
    void processModify(const resip::Uri& aor, resip::ContactList& syncContacts);
 
    resip::InMemorySyncRegDb* mRegDb;
+   resip::InMemorySyncPubDb* mPubDb;
    resip::Data mAddress;
    unsigned short mPort;
    char mRxBuffer[8000];
@@ -42,7 +46,7 @@ private:
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

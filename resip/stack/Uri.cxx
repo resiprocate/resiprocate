@@ -72,6 +72,7 @@ Uri::Uri(const Uri& rhs,
      mPort(rhs.mPort),
      mPassword(rhs.mPassword),
      mNetNs(rhs.mNetNs),
+     mPath(rhs.mPath),
      mHostCanonicalized(rhs.mHostCanonicalized),
      mCanonicalHost(rhs.mCanonicalHost),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText.get() ? new Data(*rhs.mEmbeddedHeadersText) : 0),
@@ -343,6 +344,7 @@ Uri::operator=(const Uri& rhs)
       ParserCategory::operator=(rhs);
       mScheme = rhs.mScheme;
       mHost = rhs.mHost;
+      mPath = rhs.mPath;
       mHostCanonicalized = rhs.mHostCanonicalized;
       mCanonicalHost = rhs.mCanonicalHost;
       mUser = rhs.mUser;
@@ -448,7 +450,8 @@ Uri::operator==(const Uri& other) const
        isEqualNoCase(mUserParameters,other.mUserParameters) &&
        mPassword == other.mPassword &&
        mPort == other.mPort &&
-       mNetNs == other.mNetNs)
+       mNetNs == other.mNetNs &&
+       mPath == mPath)
    {
       for (ParameterList::const_iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
@@ -989,6 +992,21 @@ Uri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* start = pb.position();
+
+   // Relative URLs (typically HTTP) start with a slash.  These
+   // are seen when parsing the WebSocket handshake.
+   if (*pb.position() == Symbols::SLASH[0])
+   {
+      mScheme.clear();
+      pb.skipToOneOf("?;", ParseBuffer::Whitespace);
+      pb.data(mPath, start);
+      if (!pb.eof() && !ParseBuffer::oneOf(*pb.position(), ParseBuffer::Whitespace))
+      {
+         parseParameters(pb);
+      }
+      return;
+   }
+
    pb.skipToOneOf(":@");
 
    pb.assertNotEof();
@@ -1146,7 +1164,12 @@ void Uri::setUriPasswordEncoding(unsigned char c, bool encode)
 EncodeStream& 
 Uri::encodeParsed(EncodeStream& str) const
 {
-   str << mScheme << Symbols::COLON; 
+   // Relative URIs may not have the scheme
+   if (!mScheme.empty())
+   {
+      str << mScheme << Symbols::COLON;
+   }
+
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
@@ -1186,6 +1209,10 @@ Uri::encodeParsed(EncodeStream& str) const
    if (mPort != 0)
    {
       str << Symbols::COLON << mPort;
+   }
+   if (!mPath.empty())
+   {
+      str << mPath;
    }
    encodeParameters(str);
    encodeEmbeddedHeaders(str);
