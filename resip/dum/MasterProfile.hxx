@@ -163,6 +163,29 @@ class MasterProfile : public UserProfile
       virtual bool& checkReqUriInMergeDetectionEnabled();
       virtual bool checkReqUriInMergeDetectionEnabled() const;
 
+      /// Enabling this setting will allow the application layer to provide additional SIP responses, from class 4xx, 5xx, 6xx, 
+      /// that will lead to transaction termination instead of other failure effects like dialog termination, as defined by
+      /// method Helper::determineFailureMessageEffect. (See header Helper.hxx for all transaction failure effects).
+      /// A scenarui when this is useful is when, for a server subscription, a NOTIFY is responded with an error response due to a timeout
+      /// condition, but the application needs the subscription to be continued. Even though RFC 3265 prescribes the
+      /// notifier should remove the subscription in such cases, timeouts may occur for transient conditions like a
+      /// overloaded proxy, a slow network connection, eventually nobody would benefit if the subscription is terminated by the server.
+      /// With this setting enabled the subscription will be continued, but only until the subscription expires.
+      /// Currently, it is only used by ServerSubscriptions.
+      /// Default is to not allow additional transaction terminating responses
+      /// To enable it:
+      /// 1. Set additionalTransactionTerminatingResponsesEnabled() = true on master profile
+      /// 2. Call method addAdditionalTransactionTerminatingResponses(code) to provide SIP responses for which the application
+      /// need the transaction to be terminated
+      virtual bool& additionalTransactionTerminatingResponsesEnabled();
+      virtual bool additionalTransactionTerminatingResponsesEnabled() const;
+
+      virtual void addAdditionalTransactionTerminatingResponses(int code);
+      virtual bool isAdditionalTransactionTerminatingResponse(int code) const;
+
+      virtual const std::set<int>& getAdditionalTransactionTerminatingResponses() const;
+      virtual void clearAdditionalTransactionTerminatingResponses(void);
+
    private:
       virtual UserProfile* clone() const;
       std::set<Data> mSupportedSchemes;
@@ -185,6 +208,9 @@ class MasterProfile : public UserProfile
       UInt32 mServerRegistrationMinExpires;
       UInt32 mServerRegistrationMaxExpires;
       UInt32 mServerRegistrationDefaultExpires;
+
+      bool mAdditionalTransactionTerminatingResponsesEnabled;
+      std::set<int> mAdditionalTransactionTerminatingResponsess;
 };
    
 }

@@ -90,7 +90,7 @@ nr_stun_encode_htons(UINT2 data, int buflen, UCHAR *buf, int *offset)
    UINT2 d = htons(data);
 
    if (*offset + sizeof(d) >= buflen) {
-      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d >= %d", *offset, sizeof(d), buflen);
+      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %zd >= %d", *offset, sizeof(d), buflen);
       return R_BAD_DATA;
    }
 
@@ -106,7 +106,7 @@ nr_stun_encode_htonl(UINT4 data, int buflen, UCHAR *buf, int *offset)
    UINT4 d = htonl(data);
 
    if (*offset + sizeof(d) > buflen) {
-      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d > %d", *offset, sizeof(d), buflen);
+      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %zd > %d", *offset, sizeof(d), buflen);
       return R_BAD_DATA;
    }
 
@@ -119,10 +119,10 @@ nr_stun_encode_htonl(UINT4 data, int buflen, UCHAR *buf, int *offset)
 int
 nr_stun_encode_htonll(UINT8 data, int buflen, UCHAR *buf, int *offset)
 {
-   UINT8 d = htonll(data);
+   UINT8 d = nr_htonll(data);
 
    if (*offset + sizeof(d) > buflen) {
-      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d > %d", *offset, sizeof(d), buflen);
+      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %zd > %d", *offset, sizeof(d), buflen);
       return R_BAD_DATA;
    }
 
@@ -153,7 +153,7 @@ nr_stun_decode_htons(UCHAR *buf, int buflen, int *offset, UINT2 *data)
    UINT2 d;
 
    if (*offset + sizeof(d) > buflen) {
-      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d > %d", *offset, sizeof(d), buflen);
+      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %zd > %d", *offset, sizeof(d), buflen);
       return R_BAD_DATA;
    }
 
@@ -170,7 +170,7 @@ nr_stun_decode_htonl(UCHAR *buf, int buflen, int *offset, UINT4 *data)
    UINT4 d;
 
    if (*offset + sizeof(d) > buflen) {
-      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d > %d", *offset, sizeof(d), buflen);
+      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %zd > %d", *offset, sizeof(d), buflen);
       return R_BAD_DATA;
    }
 
@@ -187,13 +187,13 @@ nr_stun_decode_htonll(UCHAR *buf, int buflen, int *offset, UINT8 *data)
    UINT8 d;
 
    if (*offset + sizeof(d) > buflen) {
-      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d > %d", *offset, sizeof(d), buflen);
+      r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %zd > %d", *offset, sizeof(d), buflen);
       return R_BAD_DATA;
    }
 
    memcpy(&d, &buf[*offset], sizeof(d));
    *offset += sizeof(d);
-   *data = htonll(d);
+   *data = nr_htonll(d);
 
    return 0;
 }
@@ -229,7 +229,7 @@ nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, int len, void *data, i
             /* who knows what to do, just assume everything is working ok */
         }
         else if (nchars > max_chars) {
-            r_log(NR_LOG_STUN, LOG_WARNING, "%s is too large: %d characters", attr_info->name, nchars);
+            r_log(NR_LOG_STUN, LOG_WARNING, "%s is too large: %zd characters", attr_info->name, nchars);
             ABORT(R_FAILED);
         }
     }
@@ -279,6 +279,55 @@ nr_stun_attr_username_illegal(nr_stun_attr_info *attr_info, int attrlen, void *d
 {
     return nr_stun_attr_string_illegal(attr_info, attrlen, data, NR_STUN_MAX_USERNAME_BYTES, -1);
 }
+
+static int
+nr_stun_attr_codec_UCHAR_print(nr_stun_attr_info *attr_info, char *msg, void *data)
+{
+    r_log(NR_LOG_STUN, LOG_DEBUG, "%s %s: %u", msg, attr_info->name, *(UCHAR*)data);
+    return 0;
+}
+
+static int
+nr_stun_attr_codec_UCHAR_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+{
+    int start = offset;
+    UINT4 tmp = *((UCHAR *)data);
+    tmp <<= 24;
+
+    if (nr_stun_encode_htons(attr_info->type    , buflen, buf, &offset)
+     || nr_stun_encode_htons(sizeof(UINT4)      , buflen, buf, &offset)
+     || nr_stun_encode_htonl(tmp                , buflen, buf, &offset))
+        return R_FAILED;
+
+    *attrlen = offset - start;
+
+    return 0;
+}
+
+static int
+nr_stun_attr_codec_UCHAR_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+{
+    UINT4 tmp;
+
+    if (attrlen != sizeof(UINT4)) {
+        r_log(NR_LOG_STUN, LOG_WARNING, "Integer is illegal size: %d", attrlen);
+        return R_FAILED;
+    }
+
+    if (nr_stun_decode_htonl(buf, buflen, &offset, &tmp))
+        return R_FAILED;
+
+    *((UCHAR *)data) = (tmp >> 24) & 0xff;
+
+    return 0;
+}
+
+nr_stun_attr_codec nr_stun_attr_codec_UCHAR = {
+    "UCHAR",
+    nr_stun_attr_codec_UCHAR_print,
+    nr_stun_attr_codec_UCHAR_encode,
+    nr_stun_attr_codec_UCHAR_decode
+};
 
 static int
 nr_stun_attr_codec_UINT4_print(nr_stun_attr_info *attr_info, char *msg, void *data)
@@ -474,15 +523,10 @@ nr_stun_attr_codec nr_stun_attr_codec_addr = {
     nr_stun_attr_codec_addr_decode
 };
 
-typedef struct nr_ice_attr_data_ {
-    UCHAR  data[NR_STUN_MAX_MESSAGE_SIZE];
-    int    length;
-} nr_ice_attr_data;
-
 static int
 nr_stun_attr_codec_data_print(nr_stun_attr_info *attr_info, char *msg, void *data)
 {
-    nr_ice_attr_data *d = data;
+    nr_stun_attr_data *d = data;
     r_dump(NR_LOG_STUN, LOG_DEBUG, attr_info->name, (char*)d->data, d->length);
     return 0;
 }
@@ -490,7 +534,7 @@ nr_stun_attr_codec_data_print(nr_stun_attr_info *attr_info, char *msg, void *dat
 static int
 nr_stun_attr_codec_data_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
 {
-    nr_ice_attr_data *d = data;
+    nr_stun_attr_data *d = data;
     int start = offset;
 
     if (nr_stun_encode_htons(attr_info->type     , buflen, buf, &offset)
@@ -507,7 +551,7 @@ static int
 nr_stun_attr_codec_data_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
 {
     int _status;
-    nr_ice_attr_data *result = data;
+    nr_stun_attr_data *result = data;
 
     /* -1 because it is going to be null terminated just to be safe */
     if (attrlen >= (sizeof(result->data) - 1)) {
@@ -675,7 +719,7 @@ nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen,
 
     r_log(NR_LOG_STUN, LOG_DEBUG, "Computed FINGERPRINT %08x", (checksum ^ 0x5354554e));
     if (! fingerprint->valid)
-        r_log(NR_LOG_STUN, LOG_DEBUG, "Invalid FINGERPRINT %08x", fingerprint->checksum);
+        r_log(NR_LOG_STUN, LOG_WARNING, "Invalid FINGERPRINT %08x", fingerprint->checksum);
 
     _status=0;
   abort:
@@ -921,7 +965,7 @@ nr_stun_attr_codec_string_decode(nr_stun_attr_info *attr_info, int attrlen, UCHA
         /* stund 0.96 sends a final null in the Server attribute, so
          * only error if the null appears anywhere else in a string */
         if (strlen(result) != attrlen-1) {
-            r_log(NR_LOG_STUN, LOG_WARNING, "Error in string: %d/%d", strlen(result), attrlen);
+            r_log(NR_LOG_STUN, LOG_WARNING, "Error in string: %zd/%d", strlen(result), attrlen);
             ABORT(R_FAILED);
         }
     }
@@ -1000,7 +1044,7 @@ nr_stun_attr_codec_unknown_attributes_decode(nr_stun_attr_info *attr_info, int a
     }
 
     unknown_attributes->num_attributes = attrlen / 2;
- 
+
     if (unknown_attributes->num_attributes > NR_STUN_MAX_UNKNOWN_ATTRIBUTES) {
         r_log(NR_LOG_STUN, LOG_WARNING, "Too many UNKNOWN-ATTRIBUTES: %d", unknown_attributes->num_attributes);
         ABORT(R_REJECTED);
@@ -1052,7 +1096,7 @@ nr_stun_attr_codec_xor_mapped_address_encode(nr_stun_attr_info *attr_info, void 
 
     nr_stun_xor_mapped_address(magic_cookie, &xor_mapped_address->unmasked, &xor_mapped_address->masked);
 
-    r_log(NR_LOG_STUN, LOG_DEBUG, "Masked XOR-MAPPED-ADDRESS = %s", &xor_mapped_address->masked.as_string);
+    r_log(NR_LOG_STUN, LOG_DEBUG, "Masked XOR-MAPPED-ADDRESS = %s", xor_mapped_address->masked.as_string);
 
     if (nr_stun_attr_codec_addr.encode(attr_info, &xor_mapped_address->masked, offset, buflen, buf, attrlen))
         return R_FAILED;
@@ -1102,6 +1146,12 @@ nr_stun_attr_codec nr_stun_attr_codec_old_xor_mapped_address = {
     nr_stun_attr_codec_xor_mapped_address_decode
 };
 
+nr_stun_attr_codec nr_stun_attr_codec_xor_peer_address = {
+    "xor_peer_address",
+    nr_stun_attr_codec_xor_mapped_address_print,
+    nr_stun_attr_codec_xor_mapped_address_encode,
+    nr_stun_attr_codec_xor_mapped_address_decode
+};
 
 #define NR_ADD_STUN_ATTRIBUTE(type, name, codec, illegal) \
  { (type), (name), &(codec), illegal },
@@ -1134,11 +1184,11 @@ static nr_stun_attr_info attrs[] = {
 #endif
 
 #ifdef USE_TURN
-   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_BANDWIDTH, "BANDWIDTH", nr_stun_attr_codec_UINT4, 0)
    NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_DATA, "DATA", nr_stun_attr_codec_data, 0)
    NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_LIFETIME, "LIFETIME", nr_stun_attr_codec_UINT4, 0)
-   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_RELAY_ADDRESS, "RELAY-ADDRESS", nr_stun_attr_codec_addr, 0)
-   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_REMOTE_ADDRESS, "REMOTE-ADDRESS", nr_stun_attr_codec_addr, 0)
+   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_XOR_RELAY_ADDRESS, "XOR-RELAY-ADDRESS", nr_stun_attr_codec_xor_mapped_address, 0)
+   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_XOR_PEER_ADDRESS, "XOR-PEER-ADDRESS", nr_stun_attr_codec_xor_peer_address, 0)
+   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_REQUESTED_TRANSPORT, "REQUESTED-TRANSPORT", nr_stun_attr_codec_UCHAR, 0)
 #endif /* USE_TURN */
 
    /* for backwards compatibilty */
@@ -1202,6 +1252,8 @@ static void sanity_check_encoding_stuff(nr_stun_message *msg)
     int padding_bytes;
     int l;
 
+    r_log(NR_LOG_STUN, LOG_DEBUG, "Starting to sanity check encoding");
+
     l = 0;
     TAILQ_FOREACH(attr, &msg->attributes, entry) {
         padding_bytes = 0;
@@ -1259,7 +1311,7 @@ nr_stun_encode_message(nr_stun_message *msg)
 
     TAILQ_FOREACH(attr, &msg->attributes, entry) {
         if ((r=nr_stun_find_attr_info(attr->type, &attr_info))) {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Unrecognized attribute: 0x%04x", attr->type);
+            r_log(NR_LOG_STUN, LOG_WARNING, "Unrecognized attribute: 0x%04x", attr->type);
             ABORT(R_INTERNAL);
         }
 
@@ -1363,6 +1415,8 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
     offset = sizeof(msg->header);
 
     while (size > 0) {
+        r_log(NR_LOG_STUN, LOG_DEBUG, "size = %d", size);
+
         if (size < 4) {
            r_log(NR_LOG_STUN, LOG_WARNING, "Illegal message length: %d", size);
            ABORT(R_FAILED);
@@ -1391,14 +1445,14 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
                 ++msg->comprehension_required_unknown_attributes;
             else
                 ++msg->comprehension_optional_unknown_attributes;
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Unrecognized attribute: 0x%04x", attr->type);
+            r_log(NR_LOG_STUN, LOG_INFO, "Unrecognized attribute: 0x%04x", attr->type);
         }
         else {
             attr_info->name = attr_info->name;
             attr->type_name = attr_info->codec->name;
 
             if (attr->type == NR_STUN_ATTR_MESSAGE_INTEGRITY) {
-                if (get_password(arg, msg, &password) == 0) {
+                if (get_password && get_password(arg, msg, &password) == 0) {
                     if (password->len > sizeof(attr->u.message_integrity.password)) {
                         r_log(NR_LOG_STUN, LOG_WARNING, "Password too long: %d bytes", password->len);
                         ABORT(R_FAILED);
@@ -1414,7 +1468,7 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
             }
             else if (attr->type == NR_STUN_ATTR_OLD_XOR_MAPPED_ADDRESS) {
                 attr->type = NR_STUN_ATTR_XOR_MAPPED_ADDRESS;
-                r_log(NR_LOG_STUN, LOG_DEBUG, "Translating obsolete XOR-MAPPED-ADDRESS type");
+                r_log(NR_LOG_STUN, LOG_INFO, "Translating obsolete XOR-MAPPED-ADDRESS type");
             }
 
             if ((r=attr_info->codec->decode(attr_info, attr->length, msg->buffer, offset+4, msg->length, &attr->u))) {
@@ -1431,10 +1485,14 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
                 attr_info->codec->print(attr_info, "Parsed", &attr->u);
 
 #ifdef USE_STUN_PEDANTIC
+                r_log(NR_LOG_STUN, LOG_DEBUG, "Before pedantic attr_info checks");
                 if (attr_info->illegal) {
-                    if ((r=attr_info->illegal(attr_info, attr->length, &attr->u)))
+                    if ((r=attr_info->illegal(attr_info, attr->length, &attr->u))) {
+                        r_log(NR_LOG_STUN, LOG_WARNING, "Failed pedantic attr_info checks");
                         ABORT(r);
+                    }
                 }
+                r_log(NR_LOG_STUN, LOG_DEBUG, "After pedantic attr_info checks");
 #endif /* USE_STUN_PEDANTIC */
             }
         }

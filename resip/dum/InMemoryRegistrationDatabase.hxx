@@ -47,7 +47,7 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       /// return all the AOR in the DB 
       virtual void getAors(UriList& container);
       
-   private:
+   protected:
       typedef std::map<Uri,ContactList *> database_map_t;
       database_map_t mDatabase;
       Mutex mDatabaseMutex;
@@ -58,14 +58,12 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
 
       bool mCheckExpiry;
 
-   protected:
       /**
        * Find aor in mDatabase
        * Before returning the iterator pointing to aor,
        * delete all expired contacts
        */
       database_map_t::iterator findNotExpired(const Uri& aor);
-
 };
 
 }

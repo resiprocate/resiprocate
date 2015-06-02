@@ -6,6 +6,7 @@ EXTRA_DIST += pkg
 EXTRA_DIST += Doxyfile
 EXTRA_DIST += php
 EXTRA_DIST += README_MySQL.txt
+EXTRA_DIST += README_PostgreSQL.txt
 EXTRA_DIST += repro_10_0.vcxproj repro_10_0.vcxproj.filters
 EXTRA_DIST += reprolib_10_0.vcxproj reprolib_10_0.vcxproj.filters
 EXTRA_DIST += *.vcproj
@@ -16,6 +17,7 @@ EXTRA_DIST += WinSetup WinSetupx64
 EXTRA_DIST += repro.config
 EXTRA_DIST += repro.config.ws
 EXTRA_DIST += create_mysql_reprodb.sql
+EXTRA_DIST += create_postgresql_reprodb.sql
 EXTRA_DIST += genUsers.cxx
 EXTRA_DIST += users.txt
 
@@ -86,9 +88,11 @@ librepro_la_SOURCES = \
 	RequestContext.cxx \
 	ResponseContext.cxx \
 	RRDecorator.cxx \
-        Processor.cxx \
-        ProcessorChain.cxx \
+    Processor.cxx \
+    ProcessorChain.cxx \
+	SqlDb.cxx \
 	Target.cxx \
+    UserAuthGrabber.cxx \
 	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
 	XmlRpcServerBase.cxx \
@@ -97,9 +101,12 @@ librepro_la_SOURCES = \
 	PersistentMessageQueue.cxx \
 	QValueTarget.cxx \
 	\
-        monkeys/CertificateAuthenticator.cxx \
-        monkeys/DigestAuthenticator.cxx \
- 		monkeys/CookieAuthenticator.cxx \
+	stateAgents/PresenceServer.cxx \
+	stateAgents/PresencePublicationHandler.cxx \
+	stateAgents/PresenceSubscriptionHandler.cxx \
+    monkeys/CertificateAuthenticator.cxx \
+    monkeys/DigestAuthenticator.cxx \
+ 	monkeys/CookieAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/IsTrustedNode.cxx \
@@ -121,9 +128,9 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	AccountingCollector.hxx \
 	Ack200DoneMessage.hxx \
 	AclStore.hxx \
-        AsyncProcessor.hxx \
-        AsyncProcessorMessage.hxx \
-        AsyncProcessorWorker.hxx \
+    AsyncProcessor.hxx \
+    AsyncProcessorMessage.hxx \
+    AsyncProcessorWorker.hxx \
 	AuthenticatorFactory.hxx \
 	BerkeleyDb.hxx \
 	BasicWsConnectionValidator.hxx \
@@ -136,8 +143,8 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	HttpBase.hxx \
 	HttpConnection.hxx \
 	monkeys/AmIResponsible.hxx \
-        monkeys/CertificateAuthenticator.hxx \
-		monkeys/CookieAuthenticator.hxx \
+    monkeys/CertificateAuthenticator.hxx \
+    monkeys/CookieAuthenticator.hxx \
 	monkeys/ConstantLocationMonkey.hxx \
 	monkeys/DigestAuthenticator.hxx \
 	monkeys/GruuMonkey.hxx \
@@ -158,6 +165,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	OutboundTarget.hxx \
 	PersistentMessageQueue.hxx \
 	Plugin.hxx \
+	PostgreSqlDb.hxx \
 	ProcessorChain.hxx \
 	Processor.hxx \
 	ProcessorMessage.hxx \
@@ -180,9 +188,13 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	RouteStore.hxx \
 	RRDecorator.hxx \
 	SiloStore.hxx \
+	SqlDb.hxx \
 	stateAgents/CertPublicationHandler.hxx \
 	stateAgents/CertServer.hxx \
 	stateAgents/CertSubscriptionHandler.hxx \
+	stateAgents/PresencePublicationHandler.hxx \
+	stateAgents/PresenceServer.hxx \
+	stateAgents/PresenceSubscriptionHandler.hxx \
 	stateAgents/PrivateKeyPublicationHandler.hxx \
 	stateAgents/PrivateKeySubscriptionHandler.hxx \
 	StaticRegStore.hxx \
@@ -211,6 +223,11 @@ endif
 if USE_MYSQL
 librepro_la_SOURCES += MySqlDb.cxx
 librepro_la_LIBADD += @LIBMYSQL_LIBADD@
+endif
+
+if USE_POSTGRESQL
+librepro_la_SOURCES += PostgreSqlDb.cxx
+librepro_la_LIBADD += @LIBPOSTGRESQL_LIBADD@
 endif
 
 if USE_MAXMIND_GEOIP

@@ -1,8 +1,7 @@
 #ifndef RESIP_ExtensionParameter_hxx
 #define RESIP_ExtensionParameter_hxx
 
-#include "rutil/Data.hxx"
-
+#include "rutil/BaseException.hxx"
 namespace resip
 {
 
@@ -12,6 +11,13 @@ class ExtensionParameter
       explicit ExtensionParameter(const Data& unknownParameterName);
 
       const Data& getName() const;
+
+      class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line);
+            const char* name() const;
+      };
 
    private:
       const Data mName;

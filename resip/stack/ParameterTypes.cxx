@@ -104,7 +104,7 @@ defineParam(nonce, "nonce", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(opaque, "opaque", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(permission, "permission", DataParameter, Mime, "RFC 2046");
 defineParam(protocol, "protocol", QuotedDataParameter, Mime, "RFC 1847");
-defineParam(purpose, "purpose", DataParameter, GenericUri, "RFC 3261");
+defineParam2(purpose, "purpose", DataParameter, GenericUri, TokenOrQuotedStringCategory, "RFC 3261, draft-ietf-cuss-sip-uui-17");
 defineParam3(q, "q", QValueParameter, NameAddr, Token, Mime, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, Auth, "RFC 2617");
 defineParam(reason, "reason", DataParameter, Token, "RFC 3265");
@@ -148,6 +148,18 @@ defineParam(index, "index", DataParameter, NameAddr, "RFC 4244");
 defineParam(rc, "rc", DataParameter, NameAddr, "RFC 4244-bis");
 defineParam(mp, "mp", DataParameter, NameAddr, "RFC 4244-bis");
 defineParam(np, "np", DataParameter, NameAddr, "RFC 4244-bis");
+
+defineParam(utranCellId3gpp, "utran-cell-id-3gpp", DataParameter, Token, "RFC 3455"); // P-Access-Network-Info
+defineParam(cgi3gpp, "cgi-3gpp", DataParameter, Token, "RFC 3455"); // P-Access-Network-Info
+defineParam(ccf, "ccf", DataParameter, Token, "RFC 3455"); // P-Charging-Function-Addresses
+defineParam(ecf, "ecf", DataParameter, Token, "RFC 3455"); // P-Charging-Function-Addresses
+defineParam(icidValue, "icid-value", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
+defineParam(icidGeneratedAt, "icid-generated-at", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
+defineParam(origIoi, "orig-ioi", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
+defineParam(termIoi, "term-ioi", DataParameter, Token, "RFC 3455"); // P-Charging-Vector
+
+defineParam(content, "content", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
+defineParam(encoding, "encoding", DataParameter, TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17"); // User-to-User
 
 // Internal use only
 defineParam(qopOptions,"qop",DataParameter, Auth, "RFC 3261");

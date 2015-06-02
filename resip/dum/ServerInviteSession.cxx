@@ -233,9 +233,10 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
 class ServerInviteSessionProvisionalCommand : public DumCommandAdapter
 {
 public:
-   ServerInviteSessionProvisionalCommand(const ServerInviteSessionHandle& serverInviteSessionHandle, int statusCode)
+   ServerInviteSessionProvisionalCommand(const ServerInviteSessionHandle& serverInviteSessionHandle, int statusCode, bool earlyFlag)
       : mServerInviteSessionHandle(serverInviteSessionHandle),
-        mStatusCode(statusCode)
+        mStatusCode(statusCode),
+        mEarlyFlag(earlyFlag)
    {
    }
 
@@ -243,7 +244,7 @@ public:
    {
       if(mServerInviteSessionHandle.isValid())
       {
-         mServerInviteSessionHandle->provisional(mStatusCode);
+         mServerInviteSessionHandle->provisional(mStatusCode, mEarlyFlag);
       }
    }
 
@@ -254,12 +255,13 @@ public:
 private:
    ServerInviteSessionHandle mServerInviteSessionHandle;
    int mStatusCode;
+   bool mEarlyFlag;
 };
 
 void 
-ServerInviteSession::provisionalCommand(int statusCode)
+ServerInviteSession::provisionalCommand(int statusCode, bool earlyFlag)
 {
-   mDum.post(new ServerInviteSessionProvisionalCommand(getHandle(), statusCode));
+   mDum.post(new ServerInviteSessionProvisionalCommand(getHandle(), statusCode, earlyFlag));
 }
 
 void
@@ -337,7 +339,8 @@ ServerInviteSession::provideOffer(const Contents& offer,
       case UAS_WaitingToHangup:
       case UAS_WaitingToRequestOffer:
       case UAS_AcceptedWaitingAnswer:
-         assert(0);
+         WarningLog (<< "Incorrect state to provideOffer: " << toData(mState));
+         throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
          break;
       default:
          InviteSession::provideOffer(offer, level, alternative);
@@ -494,7 +497,8 @@ ServerInviteSession::provideAnswer(const Contents& answer)
       case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_AcceptedWaitingAnswer:
-         assert(0);
+         WarningLog (<< "Incorrect state to provideAnswer: " << toData(mState));
+         throw DialogUsage::Exception("Can't provide an answer", __FILE__,__LINE__);
          break;
       default:
          InviteSession::provideAnswer(answer);

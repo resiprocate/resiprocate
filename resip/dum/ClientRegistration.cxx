@@ -289,7 +289,7 @@ ClientRegistration::requestRefresh(UInt32 expires)
 void
 ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
-   if(mState == RetryAdding && mState == RetryRefreshing)
+   if(mState == RetryAdding || mState == RetryRefreshing)
    {
       // disable retry time and try refresh immediately
       ++mTimerSeq;

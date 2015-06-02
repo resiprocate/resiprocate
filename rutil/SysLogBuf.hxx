@@ -3,6 +3,12 @@
 
 #include <iostream>
 
+#if !defined(WIN32)
+#include <syslog.h>
+#else
+#define LOG_DAEMON 0
+#endif
+
 #include "rutil/Log.hxx"
 
 namespace resip

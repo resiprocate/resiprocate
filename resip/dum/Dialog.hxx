@@ -51,8 +51,9 @@ class Dialog
       void send(SharedPtr<SipMessage> msg);
       //void send(SipMessage& msg);
       
-      void makeRequest(SipMessage& request, MethodTypes method);
+      void makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq = true);
       void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);
+      void setRequestNextCSeq(SipMessage& request);
 
       //void setLocalContact(const NameAddr& localContact);
       //void setRemoteTarget(const NameAddr& remoteTarget);
@@ -145,9 +146,6 @@ class Dialog
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
       CallID mCallId;
-      
-      // used to capture the 2xx expiration value for the initial subscription response
-      UInt32 mDefaultSubExpiration;
 
       // store until we get a response (non-401/407)
       // !jf! this shouldn't be necessary

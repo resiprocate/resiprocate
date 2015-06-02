@@ -42,6 +42,7 @@ TESTS = \
 	testEmbedded \
 	testEmptyHeader \
 	testExternalLogger \
+    testGenericPidfContents \
 	testIM \
 	testMessageWaiting \
 	testMultipartMixedContents \
@@ -82,6 +83,7 @@ check_PROGRAMS = \
 	testEmbedded \
 	testEmptyHeader \
 	testExternalLogger \
+    testGenericPidfContents \
 	testIM \
 	testLockStep \
 	testMessageWaiting \
@@ -116,8 +118,10 @@ check_PROGRAMS = \
 	testWsCookieContext
 
 if USE_SSL
-TESTS += testSocketFunc
-check_PROGRAMS += testSocketFunc
+TESTS += testSocketFunc \
+	testSecurity
+check_PROGRAMS += testSocketFunc \
+	testSecurity
 endif
 
 UAS_SOURCES = UAS.cxx
@@ -137,6 +141,7 @@ testDns_SOURCES = testDns.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx TestSupport.cxx
 testExternalLogger_SOURCES = testExternalLogger.cxx
+testGenericPidfContents_SOURCES = testGenericPidfContents.cxx TestSupport.cxx
 testIM_SOURCES = testIM.cxx
 testLockStep_SOURCES = testLockStep.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
@@ -149,6 +154,7 @@ testPlainContents_SOURCES = testPlainContents.cxx
 testResponses_SOURCES = testResponses.cxx
 testRlmi_SOURCES = testRlmi.cxx TestSupport.cxx
 testSdp_SOURCES = testSdp.cxx TestSupport.cxx
+testSecurity_SOURCES = testSecurity.cxx
 testSelect_SOURCES = testSelect.cxx
 testSelectInterruptor_SOURCES = testSelectInterruptor.cxx
 testServer_SOURCES = testServer.cxx

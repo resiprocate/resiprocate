@@ -1,12 +1,6 @@
 #if !defined(RESIP_SYSLOGSTREAM_HXX)
 #define RESIP_SYSLOGSTREAM_HXX 
 
-#if !defined(WIN32)
-#include <syslog.h>
-#else
-#define LOG_DAEMON 0
-#endif
-
 #include "rutil/SysLogBuf.hxx"
 
 namespace resip

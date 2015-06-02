@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.9.0~rc2)
+AC_INIT(resiprocate,1.10.0)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -123,7 +123,7 @@ AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,
  [#include <arpa/inet.h>])
 
 AC_DEFINE(REPRO_BUILD_REV, PACKAGE_VERSION, REPRO_BUILD_REV)
-AH_TEMPLATE([REPRO_BUILD_REV], [SVN revsion])
+AH_TEMPLATE([REPRO_BUILD_REV], [SVN revision])
 AC_DEFINE_UNQUOTED(REPRO_BUILD_HOST, "`hostname`", REPRO_BUILD_HOST)
 AH_TEMPLATE([REPRO_BUILD_HOST], [Host where package was configured])
 AC_DEFINE(REPRO_RELEASE_VERSION, PACKAGE_VERSION, REPRO_RELEASE_VERSION)
@@ -202,6 +202,14 @@ AC_ARG_WITH(mysql,
  AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient_r")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
+
+AM_CONDITIONAL(USE_POSTGRESQL, false)
+AC_ARG_WITH(postgresql,
+[  --with-postgresql       Link against PostgreSQL client libraries],
+ [AC_DEFINE_UNQUOTED(USE_POSTGRESQL, , USE_POSTGRESQL)
+ AC_SUBST(LIBPOSTGRESQL_LIBADD, "-lpq")
+ AM_CONDITIONAL(USE_POSTGRESQL, true)],
+ [ AC_SUBST(LIBPOSTGRESQL_LIBADD, "")])
 
 AM_CONDITIONAL(USE_MAXMIND_GEOIP, false)
 AC_ARG_WITH(geoip,

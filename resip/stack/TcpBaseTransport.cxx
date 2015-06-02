@@ -3,6 +3,7 @@
 #endif
 
 #include <memory>
+#include "rutil/compat.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -172,6 +173,10 @@ TcpBaseTransport::processListen()
          }
          return -1;
       }
+      if(!configureConnectedSocket(sock))
+      {
+         throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
+      }
       makeSocketNonBlocking(sock);
 
       DebugLog (<< this << " Received TCP connection from: " << tuple << " mTuple: " << mTuple << " as fd=" << sock);
@@ -247,6 +252,10 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       failReason = TransportFailure::Failure;
       failSubCode = errno;
       return NULL;
+   }
+   if(!configureConnectedSocket(sock))
+   {
+      throw Exception("Failed to configure connected socket", __FILE__,__LINE__);
    }
    makeSocketNonBlocking(sock);
    if (mSocketFunc)

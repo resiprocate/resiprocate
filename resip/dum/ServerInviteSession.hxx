@@ -60,7 +60,7 @@ class ServerInviteSession: public InviteSession
        * Provide asynchronous method access by using command
        */
       void redirectCommand(const NameAddrs& contacts, int code=302);
-      void provisionalCommand(int code=180);
+      void provisionalCommand(int code=180, bool earlyFlag=true);
       void acceptCommand(int statusCode=200);
 
    private:

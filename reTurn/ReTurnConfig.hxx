@@ -79,6 +79,7 @@ public:
    bool mUserDatabaseHashedPasswords;
 
    resip::Data mLoggingType;
+   resip::Data mSyslogFacility;
    resip::Data mLoggingLevel;
    resip::Data mLoggingFilename;
    unsigned int mLoggingFileMaxLineCount;

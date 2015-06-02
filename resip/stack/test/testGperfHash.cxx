@@ -36,6 +36,9 @@ testHeaderHash(bool verbose)
   else
     for (int ht = 0; ht < Headers::MAX_HEADERS; ht++)
     {
+      if (ht == Headers::RESIP_DO_NOT_USE) {
+         continue;
+      }
       const Data& hName = Headers::getHeaderName(ht);
       Headers::Type ht1 = Headers::getType(hName.c_str(), hName.size());
       if (ht != ht1)
@@ -97,13 +100,20 @@ testParameterHash(bool verbose)
 //    cout << "Checking " << pName << endl;
       ParameterTypes::Type pt1 = ParameterTypes::getType(pName.c_str(),
 							 pName.size());
-      if (pt != pt1 && pt1 != ParameterTypes::qopFactory) // qop is weird
+      if (pt1 != ParameterTypes::qopOptions && // qop is weird
+          pt1 != ParameterTypes::qop )
       {
-	if (verbose)
-	  cerr << "Parameter " << pt << " => " << pName << " => " << pt1 << endl;
-	gotErrors = true;
+        if (pt != pt1)
+        {
+          if (verbose)
+            cerr << "Parameter " << pt << " => " << pName << " => " << pt1 << endl;
+          gotErrors = true;
+        }
       }
     }
+
+  assert(ParameterTypes::ParameterNames[ParameterTypes::qop] == "qop");
+  assert(ParameterTypes::ParameterNames[ParameterTypes::qopOptions] == "qop");
 
   return gotErrors;
 }

@@ -26,6 +26,13 @@ ContactInstanceRecord::operator==(const ContactInstanceRecord& rhs) const
       return mInstance == rhs.mInstance && 
              mRegId == rhs.mRegId;
    }
+   else if (mRegId == 0 && rhs.mRegId == 0 &&
+           !mInstance.empty() && !rhs.mInstance.empty())
+   {
+       // If RegId is not specified on either but instance Id is, then look for instanceId
+       // match only - RFC5627 matching (even though we don't fully support GRUU yet)
+       return mInstance == rhs.mInstance;
+   }
    else
    {
       // otherwise both instance (if specified) and contact must match

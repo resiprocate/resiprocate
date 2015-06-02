@@ -597,7 +597,7 @@ MessageWaitingContents::header(const Data& hn) const
             "code, before we _do_ start throwing. This is why const-correctness"
             " should never be made a TODO item </rant>");
       MessageWaitingContents* ncthis = const_cast<MessageWaitingContents*>(this);
-      h=ncthis->mExtensions.insert(std::make_pair<Data, Data>(hn,Data::Empty)).first;
+      h=ncthis->mExtensions.insert(std::make_pair(hn,Data::Empty)).first;
    }
    return h->second;
 }

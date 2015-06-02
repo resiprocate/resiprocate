@@ -125,6 +125,11 @@ class Symbols
       static const char* id;
 
       static const char* Gruu;
+
+      static const char* Uui; // from draft-ietf-cuss-sip-uui-17
+      static const char* Hex; // from draft-ietf-cuss-sip-uui-17
+      static const char* IsdnInterwork; // from draft-johnston-sipping-cc-uui-09
+      static const char* IsdnUui; // from draft-johnston-sipping-cc-uui-09
 };
 
 }

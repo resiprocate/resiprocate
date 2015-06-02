@@ -117,5 +117,10 @@ min-se, Headers::MinSE
 refer-sub, Headers::ReferSub
 remote-party-id, Headers::RemotePartyId
 history-info, Headers::HistoryInfo
+p-access-network-info, Headers::PAccessNetworkInfo
+p-charging-vector, Headers::PChargingVector
+p-charging-function-addresses, Headers::PChargingFunctionAddresses
+p-visited-network-id, Headers::PVisitedNetworkID
+user-to-user, Headers::UserToUser
 %%
 }

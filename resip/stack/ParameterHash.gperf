@@ -100,6 +100,16 @@ index, ParameterTypes::index
 rc, ParameterTypes::rc
 mp, ParameterTypes::mp
 np, ParameterTypes::np
+utran-cell-id-3gpp, ParameterTypes::utranCellId3gpp
+cgi-3gpp, ParameterTypes::cgi3gpp
+ccf, ParameterTypes::ccf
+ecf, ParameterTypes::ecf
+icid-value, ParameterTypes::icidValue
+icid-generated-at, ParameterTypes::icidGeneratedAt
+orig-ioi, ParameterTypes::origIoi
+term-ioi, ParameterTypes::termIoi
+content, ParameterTypes::content
+encoding, ParameterTypes::encoding
 addtransport, ParameterTypes::addTransport
 ws-src-ip, ParameterTypes::wsSrcIp
 ws-src-port, ParameterTypes::wsSrcPort

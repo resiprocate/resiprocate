@@ -86,11 +86,17 @@ nr_is_stun_message(UCHAR *buf, int len)
     case NR_STUN_MSG_ALLOCATE_REQUEST:
     case NR_STUN_MSG_ALLOCATE_RESPONSE:
     case NR_STUN_MSG_ALLOCATE_ERROR_RESPONSE:
+    case NR_STUN_MSG_REFRESH_REQUEST:
+    case NR_STUN_MSG_REFRESH_RESPONSE:
+    case NR_STUN_MSG_REFRESH_ERROR_RESPONSE:
+    case NR_STUN_MSG_PERMISSION_REQUEST:
+    case NR_STUN_MSG_PERMISSION_RESPONSE:
+    case NR_STUN_MSG_PERMISSION_ERROR_RESPONSE:
+    case NR_STUN_MSG_CHANNEL_BIND_REQUEST:
+    case NR_STUN_MSG_CHANNEL_BIND_RESPONSE:
+    case NR_STUN_MSG_CHANNEL_BIND_ERROR_RESPONSE:
     case NR_STUN_MSG_SEND_INDICATION:
     case NR_STUN_MSG_DATA_INDICATION:
-    case NR_STUN_MSG_SET_ACTIVE_DEST_REQUEST:
-    case NR_STUN_MSG_SET_ACTIVE_DEST_RESPONSE:
-    case NR_STUN_MSG_SET_ACTIVE_DEST_ERROR_RESPONSE:
 #ifdef NR_STUN_MSG_CONNECT_REQUEST
     case NR_STUN_MSG_CONNECT_REQUEST:
 #endif
@@ -223,4 +229,21 @@ nr_has_stun_cookie(UCHAR *buf, int len)
 
    return 1;
 }
+
+int
+nr_stun_message_length(UCHAR *buf, int buf_len, int *msg_len)
+{
+  nr_stun_message_header *hdr;
+
+  if (!nr_is_stun_message(buf, buf_len))
+    return(R_BAD_DATA);
+
+  hdr = (nr_stun_message_header *)buf;
+
+  *msg_len = ntohs(hdr->length);
+
+  return(0);
+}
+
+
 

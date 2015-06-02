@@ -66,14 +66,16 @@ typedef struct nr_transport_addr_ {
     struct sockaddr_in6 addr6;
   } u;
   char ifname[MAXIFNAME];
-  char as_string[40];     /* A string version */
+  /* A string version.
+     56 = 5 ("IP6:[") + 39 (ipv6 address) + 2 ("]:") + 5 (port) + 4 (/UDP) + 1 (null) */
+  char as_string[56];
 } nr_transport_addr;
 
 int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int saddr_len, int protocol, int keep, nr_transport_addr *addr);
 
 // addresses, ports in local byte order
 int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transport_addr *addr);
-int nr_ip4_str_port_to_transport_addr(char *ip4, UINT2 port, int protocol, nr_transport_addr *addr);
+int nr_ip4_str_port_to_transport_addr(const char *ip4, UINT2 port, int protocol, nr_transport_addr *addr);
 
 int nr_transport_addr_get_addrstring(nr_transport_addr *addr, char *str, int maxlen);
 int nr_transport_addr_get_port(nr_transport_addr *addr, int *port);
@@ -87,6 +89,10 @@ int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int 
 int nr_transport_addr_is_wildcard(nr_transport_addr *addr);
 int nr_transport_addr_is_loopback(nr_transport_addr *addr);
 int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from);
+int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from);
+int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr);
+int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char *buf, int len);
+int nr_transport_addr_set_port(nr_transport_addr *addr, int port);
 
 #endif
 

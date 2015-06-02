@@ -49,6 +49,31 @@ class TlsBaseTransport : public TcpBaseTransport
       bool isUseEmailAsSIP()
          { return mUseEmailAsSIP; };
 
+      /** @brief Set a custom callback function to be used by the SSL stack
+          to inspect the peer certificate.
+
+          callback semantics (the arguments and return values) are very
+          specific to the SSL stack in use.  If the vendor parameter does
+          not match the SSL stack then this method returns false and does not
+          use the callback.
+
+          This method should be called before the stack starts accepting
+          connections, otherwise, any connection received before setting the
+          callback would be validated using the default validation function
+          provided by the SSL stack.
+
+          @param vendor the SSL stack vendor,
+                        for example, SecurityTypes::OpenSSL
+          @param func a pointer to the callback function, 0 to disable callback
+          @param arg an argument to be passed to the callback if the
+                     vendor API supports this
+          @return true if successful, false on failure
+      */
+      bool setPeerCertificateVerificationCallback(
+         SecurityTypes::SSLVendor vendor,
+         void *func,
+         void *arg);
+
    protected:
       Connection* createConnection(const Tuple& who, Socket fd, bool server=false);
 

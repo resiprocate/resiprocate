@@ -1,6 +1,6 @@
 # $Id$
 
-EXTRA_DIST = dayofweek.gperf
+EXTRA_DIST = DayOfWeekHash.gperf
 EXTRA_DIST += Doxyfile
 EXTRA_DIST += FAQ
 EXTRA_DIST += gperfNotes.txt
@@ -9,7 +9,7 @@ EXTRA_DIST += groups.doc
 EXTRA_DIST += HeaderHash.gperf
 EXTRA_DIST += mainpage.doc
 EXTRA_DIST += MethodHash.gperf
-EXTRA_DIST += month.gperf
+EXTRA_DIST += MonthHash.gperf
 EXTRA_DIST += ParameterHash.gperf
 EXTRA_DIST += parametersA.gperf
 EXTRA_DIST += Readme-Compliance.txt
@@ -30,6 +30,13 @@ AM_CXXFLAGS = -I $(top_srcdir)
 
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
 
+BUILT_SOURCES = \
+	gen/DayOfWeekHash.cxx \
+	gen/HeaderHash.cxx \
+	gen/MethodHash.cxx \
+	gen/MonthHash.cxx \
+	gen/ParameterHash.cxx
+
 lib_LTLIBRARIES = libresip.la
 
 libresip_la_LIBADD = ../../rutil/librutil.la
@@ -43,6 +50,7 @@ libresip_la_SOURCES = \
 	CallId.cxx \
 	Cookie.cxx \
 	DateCategory.cxx \
+	gen/DayOfWeekHash.cxx \
 	DtmfPayloadContents.cxx \
 	ExpiresCategory.cxx \
 	GenericUri.cxx \
@@ -56,6 +64,7 @@ libresip_la_SOURCES = \
 	StatusLine.cxx \
 	StringCategory.cxx \
 	Token.cxx \
+	TokenOrQuotedStringCategory.cxx \
 	Via.cxx \
 	WarningCategory.cxx \
 	\
@@ -84,9 +93,10 @@ libresip_la_SOURCES = \
 	QValue.cxx \
 	QValueParameter.cxx \
 	GenericContents.cxx \
+	GenericPidfContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
-	HeaderHash.cxx \
+	gen/HeaderHash.cxx \
 	HeaderTypes.cxx \
 	Headers.cxx \
 	Helper.cxx \
@@ -96,8 +106,9 @@ libresip_la_SOURCES = \
 	LazyParser.cxx \
 	Message.cxx \
 	MessageWaitingContents.cxx \
-	MethodHash.cxx \
+	gen/MethodHash.cxx \
 	MethodTypes.cxx \
+	gen/MonthHash.cxx \
 	MsgHeaderScanner.cxx \
 	MultipartAlternativeContents.cxx \
 	MultipartMixedContents.cxx \
@@ -106,7 +117,7 @@ libresip_la_SOURCES = \
 	NonceHelper.cxx \
 	OctetContents.cxx \
 	Parameter.cxx \
-	ParameterHash.cxx \
+	gen/ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
 	ParserContainerBase.cxx \
@@ -180,18 +191,27 @@ libresip_la_SOURCES += \
 endif
 
 SUFFIXES = .gperf .cxx
-GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
+GPERFOPTS = -C -D -E -L C++ -t --key-positions='*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
 # rule for case sensitive sorts of hash
-MethodHash.cxx: MethodHash.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@ || echo "gperf not installed, touching $@" && touch $@
+gen/MethodHash.cxx: MethodHash.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf $(GPERFOPTS) -Z MethodHash $< > $@
+
+# note: the Date header field is case sensitive (RFC 3261 s20.17)
+gen/DayOfWeekHash.cxx: DayOfWeekHash.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf $(GPERFOPTS) -Z DayOfWeekHash $< > $@
+gen/MonthHash.cxx: MonthHash.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf $(GPERFOPTS) -Z MonthHash $< > $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
-%.cxx: %.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@ || \
-	echo "gperf not installed, touching $@" && touch $@
+gen/%.cxx: %.gperf
+	mkdir -p $(abs_srcdir)/gen
+	gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@
 
 
 resipincludedir = $(includedir)/resip/stack
@@ -238,6 +258,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ExternalBodyContents.hxx \
 	FloatParameter.hxx \
 	GenericContents.hxx \
+	GenericPidfContents.hxx \
 	GenericUri.hxx \
 	HeaderFieldValue.hxx \
 	HeaderFieldValueList.hxx \
@@ -327,6 +348,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	TimerMessage.hxx \
 	TimerQueue.hxx \
 	Token.hxx \
+	TokenOrQuotedStringCategory.hxx \
 	TransactionController.hxx \
 	TransactionControllerThread.hxx \
 	TransactionMap.hxx \

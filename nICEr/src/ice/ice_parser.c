@@ -137,6 +137,10 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     cand->stream=stream;
     skip_whitespace(&str);
 
+    /* Skip a= if present */
+    if (!strncmp(str, "a=", 2))
+        str += 2;
+
     /* Candidate attr */
     if (strncasecmp(str, "candidate:", 10))
         ABORT(R_BAD_DATA);
@@ -238,6 +242,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
         ABORT(R_BAD_DATA);
 
     assert(nr_ice_candidate_type_names[0] == 0);
+
     for (i = 1; nr_ice_candidate_type_names[i]; ++i) {
         if(!strncasecmp(nr_ice_candidate_type_names[i], str, strlen(nr_ice_candidate_type_names[i]))) {
             cand->type=i;
@@ -328,13 +333,16 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     }
 #endif
 
+    nr_ice_candidate_compute_codeword(cand);
+
     *candp=cand;
 
     _status=0;
   abort:
-    /* TODO(ekr@rtfm.com): Fix memory leak if we have a parse error */
-    if (_status)
+    if (_status){
         r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Error parsing attribute: %s",ctx->label,orig);
+        nr_ice_candidate_destroy(&cand);
+    }
 
     RFREE(connection_address);
     RFREE(rel_addr);
@@ -487,6 +495,8 @@ nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int
             if (*str == '\0')
                 ABORT(R_BAD_DATA);
 
+            RFREE(pctx->peer_ufrag);
+            pctx->peer_ufrag = 0;
             if ((r=grab_token(&str, &pctx->peer_ufrag)))
                 ABORT(r);
         }
@@ -499,6 +509,8 @@ nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int
             if (*str == '\0')
                 ABORT(R_BAD_DATA);
 
+            RFREE(pctx->peer_pwd);
+            pctx->peer_pwd = 0;
             if ((r=grab_token(&str, &pctx->peer_pwd)))
                 ABORT(r);
         }
@@ -512,9 +524,9 @@ nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int
 
                 skip_whitespace(&str);
 
-#if 0
-//TODO: !nn! for now, just drop on the floor, later put somewhere
-#endif
+                //TODO: for now, just throw away; later put somewhere
+                RFREE(ice_option_tag);
+
                 ice_option_tag = 0;  /* prevent free */
             }
         }

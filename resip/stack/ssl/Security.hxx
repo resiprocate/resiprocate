@@ -79,7 +79,18 @@ class BaseSecurity
       static CipherList ExportableSuite;
       static CipherList StrongestSuite;
       
-      BaseSecurity(const CipherList& cipherSuite = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      /**
+       * Note:
+       *
+       * To allow these to be backported to v1.9.x without ABI breakage,
+       * they are implemented as static fields.  In the next release branch,
+       * non-static versions could be added and the static values
+       * used as defaults.
+       */
+      static long OpenSSLCTXSetOptions;
+      static long OpenSSLCTXClearOptions;
+
+      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library
@@ -181,6 +192,9 @@ class BaseSecurity
       static void setAllowWildcardCertificates(bool bEnable) { mAllowWildcardCertificates = bEnable; }
       static bool allowWildcardCertificates() { return mAllowWildcardCertificates; }
 
+      static SecurityTypes::SSLType parseSSLType(const Data& typeName);
+      static long parseOpenSSLCTXOption(const Data& optionName);
+
    public:
       SSL_CTX*       getTlsCtx ();
       SSL_CTX*       getSslCtx ();
@@ -197,6 +211,16 @@ class BaseSecurity
       typedef std::map<Data,Data>      PassPhraseMap;
 
    protected:
+      /**
+       * Note:
+       *
+       * mTlsCtx is being used when TLSv1 is requested.
+       * Adding more non-static fields like mTlsCtx for subsequent
+       * versions (e.g. for OpenSSL TLSv1_1_method()) breaks ABI
+       * compatability and is therefore difficult to backport onto
+       * release branches.  Better to use SSLv23_method and use OpenSSL
+       * options flags to specify the exact protocol versions to support.
+       */
       SSL_CTX*       mTlsCtx;
       SSL_CTX*       mSslCtx;
       static void dumpAsn(char*, Data);
@@ -239,8 +263,8 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-      Security(const Data& pathToCerts, const CipherList& = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
-      Security(const CipherList& = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      Security(const Data& pathToCerts, const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      Security(const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
 
       void addCADirectory(const Data& caDirectory);
       void addCAFile(const Data& caFile);

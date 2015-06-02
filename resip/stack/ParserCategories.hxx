@@ -21,6 +21,7 @@
 #include "resip/stack/Token.hxx"
 #include "resip/stack/Via.hxx"
 #include "resip/stack/WarningCategory.hxx"
+#include "resip/stack/TokenOrQuotedStringCategory.hxx"
 
 #endif
 

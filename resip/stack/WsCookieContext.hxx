@@ -14,7 +14,7 @@ class WsCookieContext
 {
    public:
       WsCookieContext();
-      WsCookieContext(const CookieList& cookieList, const Data& infoCookieName, const Data& extraCookieName, const Data& macCookieName);
+      WsCookieContext(const CookieList& cookieList, const Data& infoCookieName, const Data& extraCookieName, const Data& macCookieName, const Uri& requestUri);
       WsCookieContext(const WsCookieContext& rhs);
       ~WsCookieContext();
 

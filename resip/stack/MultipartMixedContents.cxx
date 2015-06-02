@@ -153,7 +153,8 @@ MultipartMixedContents::encodeParsed(EncodeStream& str) const
       (*i)->encode(str);
    }
 
-   str << Symbols::CRLF << boundary << Symbols::DASHDASH;
+   // Note:  last CRLF isn't strictly required by RFC2046 ABNF, but some implementations seem to require it so we include it
+   str << Symbols::CRLF << boundary << Symbols::DASHDASH << Symbols::CRLF;
    return str;
 }
 

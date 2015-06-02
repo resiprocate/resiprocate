@@ -186,7 +186,9 @@ nr_stun_message_has_attribute(nr_stun_message *msg, UINT2 type, nr_stun_message_
     { __code } \
     _status=0; \
   abort: \
-    if (_status) RFREE(attr); \
+    if (_status){ \
+      nr_stun_message_attribute_destroy(msg, &attr); \
+    } \
     return(_status); \
   }
 
@@ -267,11 +269,28 @@ NR_STUN_MESSAGE_ADD_ATTRIBUTE(
 )
 
 int
+nr_stun_message_add_requested_transport_attribute(nr_stun_message *msg, UCHAR protocol)
+NR_STUN_MESSAGE_ADD_ATTRIBUTE(
+    NR_STUN_ATTR_REQUESTED_TRANSPORT,
+    { attr->u.requested_transport = protocol; }
+)
+
+int
 nr_stun_message_add_xor_mapped_address_attribute(nr_stun_message *msg, nr_transport_addr *mapped_address)
 NR_STUN_MESSAGE_ADD_ATTRIBUTE(
     NR_STUN_ATTR_XOR_MAPPED_ADDRESS,
     {
         if ((r=nr_transport_addr_copy(&attr->u.xor_mapped_address.unmasked, mapped_address)))
+            ABORT(r);
+    }
+)
+
+int
+nr_stun_message_add_xor_peer_address_attribute(nr_stun_message *msg, nr_transport_addr *peer_address)
+NR_STUN_MESSAGE_ADD_ATTRIBUTE(
+    NR_STUN_ATTR_XOR_PEER_ADDRESS,
+    {
+        if ((r=nr_transport_addr_copy(&attr->u.xor_mapped_address.unmasked, peer_address)))
             ABORT(r);
     }
 )
@@ -308,19 +327,18 @@ NR_STUN_MESSAGE_ADD_ATTRIBUTE(
 
 #ifdef USE_TURN
 int
-nr_stun_message_add_bandwidth_attribute(nr_stun_message *msg, UINT4 bandwidth_kbps)
-NR_STUN_MESSAGE_ADD_ATTRIBUTE(
-    NR_STUN_ATTR_BANDWIDTH,
-    { attr->u.bandwidth_kbps = bandwidth_kbps; }
-)
-
-int
 nr_stun_message_add_data_attribute(nr_stun_message *msg, UCHAR *data, int length)
-{
-//TODO: !nn! implement nr_stun_message_add_data_attribute (TURN)
-UNIMPLEMENTED;
-return R_FAILED;
-}
+
+NR_STUN_MESSAGE_ADD_ATTRIBUTE(
+    NR_STUN_ATTR_DATA,
+    {
+      if (length > NR_STUN_MAX_MESSAGE_SIZE)
+        ABORT(R_BAD_ARGS);
+
+      memcpy(attr->u.data.data, data, length);
+      attr->u.data.length=length;
+    }
+)
 
 int
 nr_stun_message_add_lifetime_attribute(nr_stun_message *msg, UINT4 lifetime_secs)
@@ -329,15 +347,6 @@ NR_STUN_MESSAGE_ADD_ATTRIBUTE(
     { attr->u.lifetime_secs = lifetime_secs; }
 )
 
-int
-nr_stun_message_add_remote_address_attribute(nr_stun_message *msg, nr_transport_addr *remote_address)
-NR_STUN_MESSAGE_ADD_ATTRIBUTE(
-    NR_STUN_ATTR_REMOTE_ADDRESS,
-    {
-        if ((r=nr_transport_addr_copy(&attr->u.remote_address, remote_address)))
-            ABORT(r);
-    }
-)
 #endif /* USE_TURN */
 
 #ifdef USE_STUND_0_96

@@ -378,6 +378,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gen\DayOfWeekHash.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DeprecatedDialog.cxx"
 				>
 			</File>
@@ -454,6 +458,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GenericPidfContents.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\GenericUri.cxx"
 				>
 			</File>
@@ -466,7 +474,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HeaderHash.cxx"
+				RelativePath=".\gen\HeaderHash.cxx"
 				>
 			</File>
 			<File
@@ -526,7 +534,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MethodHash.cxx"
+				RelativePath=".\gen\MethodHash.cxx"
 				>
 			</File>
 			<File
@@ -535,6 +543,10 @@
 			</File>
 			<File
 				RelativePath=".\Mime.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\gen\MonthHash.cxx"
 				>
 			</File>
 			<File
@@ -574,7 +586,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ParameterHash.cxx"
+				RelativePath=".\gen\ParameterHash.cxx"
 				>
 			</File>
 			<File
@@ -787,6 +799,10 @@
 			</File>
 			<File
 				RelativePath=".\Token.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TokenOrQuotedStringCategory.cxx"
 				>
 			</File>
 			<File
@@ -1127,6 +1143,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GenericPidfContents.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\GenericUri.hxx"
 				>
 			</File>
@@ -1456,6 +1476,10 @@
 			</File>
 			<File
 				RelativePath=".\Token.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TokenOrQuotedStringCategory.hxx"
 				>
 			</File>
 			<File

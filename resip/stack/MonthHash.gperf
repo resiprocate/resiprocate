@@ -1,0 +1,24 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "resip/stack/DateCategory.hxx"
+
+namespace resip
+{
+%}
+struct months { const char *name; Month type; };
+%%
+Jan, Jan
+Feb, Feb
+Mar, Mar
+Apr, Apr
+May, May
+Jun, Jun
+Jul, Jul
+Aug, Aug
+Sep, Sep
+Oct, Oct
+Nov, Nov
+Dec, Dec
+%%
+}

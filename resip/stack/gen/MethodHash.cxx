@@ -1,5 +1,5 @@
 /* C++ code produced by gperf version 3.0.3 */
-/* Command-line: gperf -C -D -E -L C++ -t -k '*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
+/* Command-line: gperf -C -D -E -L C++ -t --key-positions='*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \

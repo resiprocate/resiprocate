@@ -1,6 +1,17 @@
 # This file is only looked at when a checked-out SVN
 # repository is used as the source for a git repo.
 
+*.o
+*.lo
+*.la
+Makefile.in
+.deps
+.libs
+/stamp-h1
+/autom4te.cache
+/build-aux
+/resiprocate.spec
+
 /SVN-VERSION
 /.make_prefs
 /build/Makefile.conf

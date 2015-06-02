@@ -119,17 +119,19 @@ LocationServer::process(RequestContext& context)
    {
       mStore.unlockRecord(inputUri);
 
-      if(mUserInfoDispatcher)
+      // Note: if we already have targets added from the Route processor we will just skip this
+      // as we don't want to return a 404
+      if(mUserInfoDispatcher && !context.getResponseContext().hasTargets())
       {
          // User does not have an active registration - check if they even exist or not
          // so we know if should send a 404 vs a 480.
-         // Since users are not kept in memory we need to go to the database asynchrounously 
-         // to look for existance.  We will use the existing mechanism in place for asynhcronous 
-         // authentication lookups in order to check for existance - we don't need the returned 
+         // Since users are not kept in memory we need to go to the database asynchronously 
+         // to look for existence.  We will use the existing mechanism in place for asynchronous 
+         // authentication lookups in order to check for existence - we don't need the returned 
          // A1 hash, but the efficiency of this request is more than adequate for this purpose.
          // Currently repro authentication treats authentication realm the same as users aor domain,
          // if this changes in the future we may need to add a different mechanism to check for
-         // existance.
+         // existence.
          // Note:  repro authentication must be enabled in order for mUserInfoDispatcher to be
          //        defined and for 404 responses to work
          UserInfoMessage* async = new UserInfoMessage(*this, context.getTransactionId(), &(context.getProxy()));

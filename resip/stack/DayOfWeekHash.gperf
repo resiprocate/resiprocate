@@ -1,0 +1,19 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "resip/stack/DateCategory.hxx"
+
+namespace resip
+{
+%}
+struct days { const char *name; DayOfWeek type; };
+%%
+Sun, Sun
+Mon, Mon
+Tue, Tue
+Wed, Wed
+Thu, Thu
+Fri, Fri
+Sat, Sat
+%%
+}

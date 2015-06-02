@@ -68,7 +68,7 @@ nr_stun_receive_message(nr_stun_message *req, nr_stun_message *msg)
      || msg->header.magic_cookie == NR_STUN_MAGIC_COOKIE2) {
 #endif /* USE_RFC_3489_BACKWARDS_COMPATIBLE */
     if (!nr_is_stun_message(msg->buffer, msg->length)) {
-        r_log(NR_LOG_STUN, LOG_DEBUG, "Not a STUN message");
+        r_log(NR_LOG_STUN, LOG_WARNING, "Not a STUN message");
         ABORT(R_REJECTED);
     }
 #ifdef USE_RFC_3489_BACKWARDS_COMPATIBLE
@@ -77,19 +77,19 @@ nr_stun_receive_message(nr_stun_message *req, nr_stun_message *msg)
 
     if (req == 0) {
         if (NR_STUN_GET_TYPE_CLASS(msg->header.type) != NR_CLASS_REQUEST) {
-            r_log(NR_LOG_STUN,LOG_NOTICE,"Illegal message type: %03x", msg->header.type);
+            r_log(NR_LOG_STUN,LOG_WARNING,"Illegal message type: %03x", msg->header.type);
             ABORT(R_REJECTED);
         }
     }
     else {
         if (NR_STUN_GET_TYPE_CLASS(msg->header.type) != NR_CLASS_RESPONSE
          && NR_STUN_GET_TYPE_CLASS(msg->header.type) != NR_CLASS_ERROR_RESPONSE) {
-            r_log(NR_LOG_STUN,LOG_NOTICE,"Illegal message class: %03x", msg->header.type);
+            r_log(NR_LOG_STUN,LOG_WARNING,"Illegal message class: %03x", msg->header.type);
             ABORT(R_REJECTED);
         }
 
         if (NR_STUN_GET_TYPE_METHOD(req->header.type) != NR_STUN_GET_TYPE_METHOD(msg->header.type)) {
-            r_log(NR_LOG_STUN,LOG_NOTICE,"Inconsistent message method: %03x", msg->header.type);
+            r_log(NR_LOG_STUN,LOG_WARNING,"Inconsistent message method: %03x expected %03x", msg->header.type, req->header.type);
             ABORT(R_REJECTED);
         }
 
@@ -105,7 +105,7 @@ nr_stun_receive_message(nr_stun_message *req, nr_stun_message *msg)
 
         if (nr_stun_message_has_attribute(msg, NR_STUN_ATTR_FINGERPRINT, &attr)
          && !attr->u.fingerprint.valid) {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Invalid fingerprint");
+            r_log(NR_LOG_STUN, LOG_WARNING, "Invalid fingerprint");
             ABORT(R_REJECTED);
         }
 
@@ -121,9 +121,9 @@ nr_stun_receive_message(nr_stun_message *req, nr_stun_message *msg)
 #ifdef USE_RFC_3489_BACKWARDS_COMPATIBLE
         /* in RFC 3489 there is no magic cookie, it's part of the transaction ID */
 #else
-#ifdef NDEBUG 
+#ifdef NDEBUG
         /* in deployment builds we should always see a recognized magic cookie */
-        r_log(NR_LOG_STUN, LOG_ERR, "Missing Magic Cookie");
+        r_log(NR_LOG_STUN, LOG_WARNING, "Missing Magic Cookie");
         ABORT(R_REJECTED);
 #else
         /* ignore this condition because sometimes we like to pretend we're
@@ -149,7 +149,7 @@ nr_stun_process_request(nr_stun_message *req, nr_stun_message *res)
     int r;
     nr_stun_attr_unknown_attributes unknown_attributes = { { 0 } };
     nr_stun_message_attribute *attr;
-    
+
     if (req->comprehension_required_unknown_attributes > 0) {
         nr_stun_form_error_response(req, res, 420, "Unknown Attributes");
 
@@ -187,11 +187,11 @@ nr_stun_process_indication(nr_stun_message *ind)
 {
     int _status;
 #ifdef USE_STUN_PEDANTIC
-    
+
     if (ind->comprehension_required_unknown_attributes > 0)
         ABORT(R_REJECTED);
 #endif /* USE_STUN_PEDANTIC */
- 
+
     _status=0;
 #ifdef USE_STUN_PEDANTIC
   abort:
@@ -199,20 +199,26 @@ nr_stun_process_indication(nr_stun_message *ind)
     return _status;
 }
 
-/* draft-ietf-behave-rfc3489bis-10.txt S 7.3.3 */
+/* RFC5389 S 7.3.3, except that we *also* allow a MAPPED_ADDRESS
+   to compensate for a bug in Google's STUN server where it
+   always returns MAPPED_ADDRESS.
+
+   Mozilla bug: 888274.
+ */
 int
 nr_stun_process_success_response(nr_stun_message *res)
 {
     int _status;
-    
+
 #ifdef USE_STUN_PEDANTIC
     if (res->comprehension_required_unknown_attributes > 0)
         ABORT(R_REJECTED);
 #endif /* USE_STUN_PEDANTIC */
 
     if (NR_STUN_GET_TYPE_METHOD(res->header.type) == NR_METHOD_BINDING) {
-        if (! nr_stun_message_has_attribute(res, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, 0)) {
-            r_log(NR_LOG_STUN, LOG_ERR, "Missing XOR-MAPPED-ADDRESS");
+        if (! nr_stun_message_has_attribute(res, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, 0) &&
+            ! nr_stun_message_has_attribute(res, NR_STUN_ATTR_MAPPED_ADDRESS, 0)) {
+            r_log(NR_LOG_STUN, LOG_WARNING, "Missing XOR-MAPPED-ADDRESS and MAPPED_ADDRESS");
             ABORT(R_REJECTED);
         }
     }
@@ -224,7 +230,7 @@ nr_stun_process_success_response(nr_stun_message *res)
 
 /* draft-ietf-behave-rfc3489bis-10.txt S 7.3.4 */
 int
-nr_stun_process_error_response(nr_stun_message *res)
+nr_stun_process_error_response(nr_stun_message *res, UINT2 *error_code)
 {
     int _status;
     nr_stun_message_attribute *attr;
@@ -234,9 +240,11 @@ nr_stun_process_error_response(nr_stun_message *res)
     }
 
     if (! nr_stun_message_has_attribute(res, NR_STUN_ATTR_ERROR_CODE, &attr)) {
-        r_log(NR_LOG_STUN, LOG_ERR, "Missing ERROR-CODE");
+        r_log(NR_LOG_STUN, LOG_WARNING, "Missing ERROR-CODE");
         ABORT(R_REJECTED);
     }
+
+    *error_code = attr->u.error_code.number;
 
     switch (attr->u.error_code.number / 100) {
     case 3:
@@ -246,13 +254,13 @@ nr_stun_process_error_response(nr_stun_message *res)
 
         if (attr->u.error_code.number == 300) {
             if (!nr_stun_message_has_attribute(res, NR_STUN_ATTR_ALTERNATE_SERVER, 0)) {
-                r_log(NR_LOG_STUN, LOG_ERR, "Missing ALTERNATE-SERVER");
+                r_log(NR_LOG_STUN, LOG_WARNING, "Missing ALTERNATE-SERVER");
                 ABORT(R_REJECTED);
             }
 
             /* draft-ietf-behave-rfc3489bis-10.txt S 11 */
             if (!nr_stun_message_has_attribute(res, NR_STUN_ATTR_MESSAGE_INTEGRITY, 0)) {
-                r_log(NR_LOG_STUN, LOG_ERR, "Missing MESSAGE-INTEGRITY");
+                r_log(NR_LOG_STUN, LOG_WARNING, "Missing MESSAGE-INTEGRITY");
                 ABORT(R_REJECTED);
             }
 
@@ -357,12 +365,12 @@ nr_stun_receive_response_short_term_auth(nr_stun_message *res)
         /* drop thru */
     case NR_STUN_MAGIC_COOKIE:
         if (!nr_stun_message_has_attribute(res, NR_STUN_ATTR_MESSAGE_INTEGRITY, &attr)) {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Missing MESSAGE-INTEGRITY");
+            r_log(NR_LOG_STUN, LOG_WARNING, "Missing MESSAGE-INTEGRITY");
             ABORT(R_REJECTED);
         }
 
         if (!attr->u.message_integrity.valid) {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Bad MESSAGE-INTEGRITY");
+            r_log(NR_LOG_STUN, LOG_WARNING, "Bad MESSAGE-INTEGRITY");
             ABORT(R_REJECTED);
         }
 
@@ -522,7 +530,7 @@ nr_stun_receive_response_long_term_auth(nr_stun_message *res, nr_stun_client_ctx
                 ABORT(R_NO_MEMORY);
         }
         else {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Missing REALM");
+            r_log(NR_LOG_STUN, LOG_WARNING, "Missing REALM");
             ABORT(R_REJECTED);
         }
 
@@ -533,13 +541,13 @@ nr_stun_receive_response_long_term_auth(nr_stun_message *res, nr_stun_client_ctx
                 ABORT(R_NO_MEMORY);
         }
         else {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Missing NONCE");
+            r_log(NR_LOG_STUN, LOG_WARNING, "Missing NONCE");
             ABORT(R_REJECTED);
         }
 
         if (nr_stun_message_has_attribute(res, NR_STUN_ATTR_MESSAGE_INTEGRITY, &attr)) {
             if (!attr->u.message_integrity.valid) {
-                r_log(NR_LOG_STUN, LOG_DEBUG, "Bad MESSAGE-INTEGRITY");
+                r_log(NR_LOG_STUN, LOG_WARNING, "Bad MESSAGE-INTEGRITY");
                 ABORT(R_REJECTED);
             }
         }

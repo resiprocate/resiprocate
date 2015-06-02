@@ -135,6 +135,7 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 
 // Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
 // If you've included either SDK then these will be defined.
+// We could also check that __MACTYPES__ is not defined
 #if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
@@ -142,6 +143,16 @@ typedef unsigned int   UInt32;
 typedef char           Int8;
 typedef short          Int16;
 typedef int            Int32;
+#else
+# On Apple platforms, MacTypes.h should provide the types:
+#include <MacTypes.h>
+#endif
+
+#if defined( TARGET_OS_IPHONE )
+// TARGET_OS_IPHONE can be 0 or 1, so must also check the value
+#if TARGET_OS_IPHONE
+#define REQUIRE_SO_NOSIGPIPE
+#endif
 #endif
 
 #if defined( WIN32 )

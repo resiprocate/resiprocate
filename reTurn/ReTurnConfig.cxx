@@ -54,6 +54,7 @@ ReTurnConfig::ReTurnConfig() :
    mUsersDatabaseFilename(""),
    mUserDatabaseHashedPasswords(false),
    mLoggingType("cout"),
+   mSyslogFacility("LOG_DAEMON"),
    mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
    mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
@@ -90,6 +91,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
    mUserDatabaseHashedPasswords = getConfigBool("UserDatabaseHashedPasswords", mUserDatabaseHashedPasswords);
    mLoggingType = getConfigData("LoggingType", mLoggingType);
+   mSyslogFacility = getConfigData("SyslogFacility", "LOG_DAEMON");
    mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
    mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
    mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", mLoggingFileMaxLineCount);

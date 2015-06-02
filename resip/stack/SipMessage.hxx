@@ -449,6 +449,13 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(Via, "Via", Via, "RFC 3261");
       defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
+      defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
+      defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
+      defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
+      defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
+
+      defineMultiHeader(UserToUser, "User-to-User", TokenOrQuotedStringCategory, "draft-ietf-cuss-sip-uui-17");
+
       /// unknown header interface
       const StringCategories& header(const ExtensionHeader& symbol) const;
       StringCategories& header(const ExtensionHeader& symbol);
@@ -656,9 +663,11 @@ class SipMessage : public TransactionMessage
       // generated request), set by the Transport and setFromTu and setFromExternal APIs
       bool mIsExternal;
 
-      // !bwc! Would be nice to tweak this to automatically make SipMessage 4KB,
-      // but I don't know how ugly it would be.
-      DinkyPool<2968> mPool;
+      // Sizing so that average SipMessages don't need to allocate heap memory
+      // To profile current sizing, enable DINKYPOOL_PROFILING in SipMessage.cxx 
+      // and look for DebugLog message in SipMessage destructor to know when heap
+      // allocations are occuring and how much of the pool is used.
+      DinkyPool<3732> mPool;
 
       typedef std::vector<HeaderFieldValueList*, 
                            StlPoolAllocator<HeaderFieldValueList*, 

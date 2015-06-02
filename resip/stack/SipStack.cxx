@@ -73,7 +73,15 @@ SipStack::SipStack(Security* pSecurity,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression,
                    FdPollGrp *pollGrp) :
+#ifdef WIN32
+   // If PollGrp is not passed in, then EventStackThead isn't being used and application
+   // is most likely implementing a select/process loop to drive the stack - in this case
+   // we want windows to default to fdset implementation, since the Poll implementation on
+   // windows does not support the select/process loop
+   mPollGrp(pollGrp?pollGrp:FdPollGrp::create("fdset")),
+#else
    mPollGrp(pollGrp?pollGrp:FdPollGrp::create()),
+#endif
    mPollGrpIsMine(!pollGrp),
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
@@ -147,7 +155,15 @@ SipStack::init(const SipStackOptions& options)
    }
    else
    {
+#ifdef WIN32
+      // If PollGrp is not passed in, then EventStackThead isn't being used and application
+      // is most likely implementing a select/process loop to drive the stack - in this case
+      // we want windows to default to fdset implementation, since the Poll implementation on
+      // windows does not support the select/process loop
+      mPollGrp = FdPollGrp::create("fdset");
+#else
       mPollGrp = FdPollGrp::create();
+#endif
       mPollGrpIsMine=true;
    }
 

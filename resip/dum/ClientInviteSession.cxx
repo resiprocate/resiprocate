@@ -109,7 +109,8 @@ ClientInviteSession::provideOffer(const Contents& offer, DialogUsageManager::Enc
       case UAC_Cancelled:
       case UAC_QueuedUpdate:
       case Terminated:
-         assert(0);
+         WarningLog (<< "Incorrect state to provideOffer: " << toData(mState));
+         throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
          break;
 
       default:
@@ -180,7 +181,8 @@ ClientInviteSession::provideAnswer (const Contents& answer)
       case UAC_Cancelled:
       case UAC_QueuedUpdate:
       case Terminated:
-         assert(0);
+         WarningLog (<< "Incorrect state to provideAnswer: " << toData(mState));
+         throw DialogUsage::Exception("Can't provide an answer", __FILE__,__LINE__);
          break;
 
       default:

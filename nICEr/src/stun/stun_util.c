@@ -98,7 +98,7 @@ nr_stun_xor_mapped_address(UINT4 magicCookie, nr_transport_addr *from, nr_transp
 }
 
 int
-nr_stun_find_local_addresses(nr_transport_addr addrs[], int maxaddrs, int *count)
+nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
 {
     int r,_status;
     NR_registry *children = 0;
@@ -110,14 +110,23 @@ nr_stun_find_local_addresses(nr_transport_addr addrs[], int maxaddrs, int *count
             ABORT(r);
 
     if (*count == 0) {
-        if ((r=nr_stun_get_addrs(addrs, maxaddrs, 1, count)))
+        char allow_loopback;
+
+        if ((r=NR_reg_get_char(NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, &allow_loopback))) {
+            if (r == R_NOT_FOUND)
+                allow_loopback = 0;
+            else
+                ABORT(r);
+        }
+
+        if ((r=nr_stun_get_addrs(addrs, maxaddrs, !allow_loopback, count)))
             ABORT(r);
 
         goto done;
     }
 
     if (*count >= maxaddrs) {
-        r_log(NR_LOG_STUN, LOG_WARNING, "Address list truncated from %d to %d", *count, maxaddrs);
+        r_log(NR_LOG_STUN, LOG_INFO, "Address list truncated from %d to %d", *count, maxaddrs);
        *count = maxaddrs;
     }
 
@@ -137,7 +146,7 @@ nr_stun_find_local_addresses(nr_transport_addr addrs[], int maxaddrs, int *count
             ABORT(r);
 
         for (i = 0; i < *count; ++i) {
-            if ((r=nr_reg_get_transport_addr(children[i], 0, &addrs[i])))
+            if ((r=nr_reg_get_transport_addr(children[i], 0, &addrs[i].addr)))
                 ABORT(r);
         }
     }
@@ -208,45 +217,34 @@ nr_stun_msg_type(int type)
     case NR_STUN_MSG_ALLOCATE_ERROR_RESPONSE:
          ret = "ALLOCATE-ERROR-RESPONSE";
          break;
+    case NR_STUN_MSG_REFRESH_REQUEST:
+         ret = "REFRESH-REQUEST";
+         break;
+    case NR_STUN_MSG_REFRESH_RESPONSE:
+         ret = "REFRESH-RESPONSE";
+         break;
+    case NR_STUN_MSG_REFRESH_ERROR_RESPONSE:
+         ret = "REFRESH-ERROR-RESPONSE";
+         break;
     case NR_STUN_MSG_SEND_INDICATION:
          ret = "SEND-INDICATION";
          break;
     case NR_STUN_MSG_DATA_INDICATION:
          ret = "DATA-INDICATION";
          break;
-    case NR_STUN_MSG_SET_ACTIVE_DEST_REQUEST:
-         ret = "SET-ACTIVE-DEST-REQUEST";
+    case NR_STUN_MSG_PERMISSION_REQUEST:
+         ret = "PERMISSION-REQUEST";
          break;
-    case NR_STUN_MSG_SET_ACTIVE_DEST_RESPONSE:
-         ret = "SET-ACTIVE-DEST-RESPONSE";
+    case NR_STUN_MSG_PERMISSION_RESPONSE:
+         ret = "PERMISSION-RESPONSE";
          break;
-    case NR_STUN_MSG_SET_ACTIVE_DEST_ERROR_RESPONSE:
-         ret = "SET-ACTIVE-DEST-ERROR-RESPONSE";
+    case NR_STUN_MSG_PERMISSION_ERROR_RESPONSE:
+         ret = "PERMISSION-ERROR-RESPONSE";
          break;
-#ifdef NR_STUN_MSG_CONNECT_REQUEST
-    case NR_STUN_MSG_CONNECT_REQUEST:
-         ret = "CONNECT-REQUEST";
-         break;
-#endif
-#ifdef NR_STUN_MSG_CONNECT_RESPONSE
-    case NR_STUN_MSG_CONNECT_RESPONSE:
-         ret = "CONNECT-RESPONSE";
-         break;
-#endif
-#ifdef NR_STUN_MSG_CONNECT_ERROR_RESPONSE
-    case NR_STUN_MSG_CONNECT_ERROR_RESPONSE:
-         ret = "CONNECT-ERROR-RESPONSE";
-         break;
-#endif
-#ifdef NR_STUN_MSG_CONNECT_STATUS_INDICATION
-    case NR_STUN_MSG_CONNECT_STATUS_INDICATION:
-         ret = "CONNECT-STATUS-INDICATION";
-         break;
-#endif
 #endif /* USE_TURN */
 
     default:
-         assert(0);
+         /* ret remains 0 */
          break;
     }
 
@@ -259,32 +257,32 @@ nr_random_alphanum(char *alphanum, int size)
     static char alphanums[256] = {
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
         'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y', 'Z', 
+        'U', 'V', 'W', 'X', 'Y', 'Z',
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
         'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z', 
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+        'u', 'v', 'w', 'x', 'y', 'z',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
         'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y', 'Z', 
+        'U', 'V', 'W', 'X', 'Y', 'Z',
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
         'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z', 
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+        'u', 'v', 'w', 'x', 'y', 'z',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
         'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y', 'Z', 
+        'U', 'V', 'W', 'X', 'Y', 'Z',
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
         'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z', 
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+        'u', 'v', 'w', 'x', 'y', 'z',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
         'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y', 'Z', 
+        'U', 'V', 'W', 'X', 'Y', 'Z',
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
         'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z', 
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+        'u', 'v', 'w', 'x', 'y', 'z',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
     int i;
 

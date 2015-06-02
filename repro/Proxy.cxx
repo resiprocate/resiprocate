@@ -84,6 +84,7 @@ Proxy::Proxy(SipStack& stack,
      mRecordRouteForced(config.getConfigBool("ForceRecordRouting", false)),
      mAssumePath(config.getConfigBool("AssumePath", false)),
      mPAssertedIdentityProcessing(config.getConfigBool("EnablePAssertedIdentityProcessing", false)),
+     mNeverStripProxyAuthorizationHeaders(config.getConfigBool("NeverStripProxyAuthorizationHeaders", false)),
 #ifdef PACKAGE_VERSION
      mServerText(config.getConfigData("ServerText", "repro " PACKAGE_VERSION)),
 #else

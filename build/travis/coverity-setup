@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+echo "*** Coverity scan disabled, must update scripts for proper Coverity/Github integration ***"
+exit 0
+
+# Only do the Coverity scan in the GCC builds, not clang
+if [ "x${CC}" == "xclang" ];
+then
+  echo "*** Not setting up Coverity for the $CC build. ***"
+  exit 0
+fi
+
 # Get latest URL from here:
 #    https://scan.coverity.com/download
 

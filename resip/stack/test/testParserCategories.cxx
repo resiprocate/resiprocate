@@ -72,6 +72,7 @@ toData(const resip::ParserCategory& p)
    resip::Data result;
    resip::oDataStream str(result);
    str << p;
+   str.flush();
    return result;
 }
 
@@ -717,7 +718,11 @@ main(int arc, char** argv)
       checkHeaderName(SecurityVerify);
       checkHeaderName(ContentLength);
       checkHeaderName(ContentId);
-
+      checkHeaderName(PAccessNetworkInfo);
+      checkHeaderName(PChargingVector);
+      checkHeaderName(PChargingFunctionAddresses);
+      checkHeaderName(PVisitedNetworkID);
+      checkHeaderName(UserToUser);
    }
 
 #define checkParameterName(_name) resipCerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
@@ -803,7 +808,17 @@ main(int arc, char** argv)
       
       checkParameterName(url);
       
-
+      checkParameterName(utranCellId3gpp);
+      checkParameterName(cgi3gpp);
+      checkParameterName(ccf);
+      checkParameterName(ecf);
+      checkParameterName(icidValue);
+      checkParameterName(icidGeneratedAt);
+      checkParameterName(origIoi);
+      checkParameterName(termIoi);
+      //checkParameterName(purpose);
+      checkParameterName(content);
+      checkParameterName(encoding);
 
       // test parameter hash
       for (int i = 0; i < ParameterTypes::MAX_PARAMETER; i++)
@@ -1413,6 +1428,34 @@ main(int arc, char** argv)
       resipCerr << dsData.c_str() << endl;
       
       assert(dsData == "Digest realm=\"66.100.107.120\",username=\"1234\",nonce=\"1011235448\",uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
+   }
+
+   {
+      TR _tr("Auth Missing Algorithm Type Param Name");  // Reported infinite loop on mailing list - fixed on Oct 17, 2014
+      const char* authorizationString = "Digest username=\"000999234\",realm=\"1.1.1.1\",nonce=\"1413544408:b15ee1a80dd75f9db443e2d4feab821b\",uri=\"sip:1.1.1.1\",=MD5,response=\"ef0f8cdc6a75fe810e2ce82a2758f45e\"";
+      HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
+      
+      Auth auth(hfv, Headers::UNKNOWN);
+
+      resipCerr << "Auth scheme: " <<  auth.scheme() << endl;
+      assert(auth.scheme() == "Digest");
+      resipCerr << "   realm: " <<  auth.param(p_realm) << endl;
+      assert(auth.param(p_realm) == "1.1.1.1"); 
+      assert(auth.param(p_username) == "000999234"); 
+      assert(auth.param(p_nonce) == "1413544408:b15ee1a80dd75f9db443e2d4feab821b"); 
+      assert(auth.param(p_uri) == "sip:1.1.1.1"); 
+      //assert(auth.param(p_algorithm) == "MD5"); 
+      assert(auth.param(p_response) == "ef0f8cdc6a75fe810e2ce82a2758f45e"); 
+
+      Data dsData;
+      {
+         DataStream s(dsData);
+         auth.encode(s);
+      }
+
+      resipCerr << dsData.c_str() << endl;
+      
+      assert(dsData == "Digest username=\"000999234\",realm=\"1.1.1.1\",nonce=\"1413544408:b15ee1a80dd75f9db443e2d4feab821b\",uri=\"sip:1.1.1.1\",response=\"ef0f8cdc6a75fe810e2ce82a2758f45e\"");
    }
 
    {
@@ -3069,6 +3112,29 @@ main(int arc, char** argv)
       cout << Timer::getTimeMicroSec() - now << " microseconds" << endl;
    }
 
+   {
+      TR _tr( "Test TokenOrQuotedStringCategory (token + parameters parse test)");
+
+      Data tokenString = "uui-0123456789;purpose=\"abcd\"";
+      ParseBuffer pb(tokenString.data(), tokenString.size());
+      TokenOrQuotedStringCategory tok;
+      tok.parse(pb);
+      assert(tok.value() == "uui-0123456789");
+      assert(tok.quotedValue() == "uui-0123456789");
+      assert(tok.param(p_purpose) == "abcd");
+   }
+
+   {
+      TR _tr( "Test TokenOrQuotedStringCategory (quoted string + parameters parse test)");
+
+      Data quotedString = "\"the quick silver fox jumped over the lazy brown dog\";encoding=hex";
+      ParseBuffer pb(quotedString.data(), quotedString.size());
+      TokenOrQuotedStringCategory tok;
+      tok.parse(pb);
+      assert(tok.value() == "the quick silver fox jumped over the lazy brown dog");
+      assert(tok.quotedValue() == "\"the quick silver fox jumped over the lazy brown dog\"");
+      assert(tok.param(p_encoding) == Symbols::Hex);
+   }
 
    assert(!failed);
    resipCerr << "\nTEST OK" << endl;

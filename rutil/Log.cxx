@@ -28,6 +28,7 @@ const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
+int Log::mSyslogFacility = LOG_DAEMON;
 unsigned int Log::MaxLineCount = 0; // no limit by default
 unsigned int Log::MaxByteCount = 0; // no limit by default
 
@@ -106,14 +107,15 @@ LogStaticInitializer::~LogStaticInitializer()
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger)
+Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName)
 {
-   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger);
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName);
 }
 
 void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
-                const char *logFileName, ExternalLogger* externalLogger)
+                const char *logFileName, ExternalLogger* externalLogger,
+                const Data& syslogFacilityName)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -124,13 +126,110 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
    Level level = Log::Info;
    level = toLevel(leveld);
 
-   Log::initialize(type, level, appName, logFileName, externalLogger);
+   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName);
+}
+
+int
+Log::parseSyslogFacilityName(const Data& facilityName)
+{
+#ifndef WIN32
+   /* In theory, some platforms may not have all the log facilities
+      defined in syslog.h.  Only LOG_USER and LOG_LOCAL[0-7] are considered
+      mandatory.
+      If the compile fails with errors in this method, then the unsupported
+      facility names could be wrapped in conditional logic.
+   */
+   if(facilityName == "LOG_AUTH")
+   {
+      return LOG_AUTH;
+   }
+   else if(facilityName == "LOG_AUTHPRIV")
+   {
+      return LOG_AUTHPRIV;
+   }
+   else if(facilityName == "LOG_CRON")
+   {
+      return LOG_CRON;
+   }
+   else if(facilityName == "LOG_DAEMON")
+   {
+      return LOG_DAEMON;
+   }
+   else if(facilityName == "LOG_FTP")
+   {
+      return LOG_FTP;
+   }
+   else if(facilityName == "LOG_KERN")
+   {
+      return LOG_KERN;
+   }
+   else if(facilityName == "LOG_LOCAL0")
+   {
+      return LOG_LOCAL0;
+   }
+   else if(facilityName == "LOG_LOCAL1")
+   {
+      return LOG_LOCAL1;
+   }
+   else if(facilityName == "LOG_LOCAL2")
+   {
+      return LOG_LOCAL2;
+   }
+   else if(facilityName == "LOG_LOCAL3")
+   {
+      return LOG_LOCAL3;
+   }
+   else if(facilityName == "LOG_LOCAL4")
+   {
+      return LOG_LOCAL4;
+   }
+   else if(facilityName == "LOG_LOCAL5")
+   {
+      return LOG_LOCAL5;
+   }
+   else if(facilityName == "LOG_LOCAL6")
+   {
+      return LOG_LOCAL6;
+   }
+   else if(facilityName == "LOG_LOCAL7")
+   {
+      return LOG_LOCAL7;
+   }
+   else if(facilityName == "LOG_LPR")
+   {
+      return LOG_LPR;
+   }
+   else if(facilityName == "LOG_MAIL")
+   {
+      return LOG_MAIL;
+   }
+   else if(facilityName == "LOG_NEWS")
+   {
+      return LOG_NEWS;
+   }
+   else if(facilityName == "LOG_SYSLOG")
+   {
+      return LOG_SYSLOG;
+   }
+   else if(facilityName == "LOG_USER")
+   {
+      return LOG_USER;
+   }
+   else if(facilityName == "LOG_UUCP")
+   {
+      return LOG_UUCP;
+   }
+#endif
+   // FIXME - maybe we should throw an exception or log
+   // an error about use of a bad facility name?
+   return -1;
 }
 
 void 
 Log::initialize(Type type, Level level, const Data& appName, 
                 const char * logFileName,
-                ExternalLogger* externalLogger)
+                ExternalLogger* externalLogger,
+                const Data& syslogFacilityName)
 {
    Lock lock(_mutex);
    mDefaultLoggerData.reset();   
@@ -145,6 +244,15 @@ Log::initialize(Type type, Level level, const Data& appName,
    pb.skipBackToChar('/');
 #endif
    mAppName = pb.position();
+
+   if(!syslogFacilityName.empty())
+   {
+      mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
+      if(mSyslogFacility == -1)
+      {
+         mSyslogFacility = LOG_DAEMON;
+      }
+   }
  
    char buffer[1024];  
    gethostname(buffer, sizeof(buffer));
@@ -160,9 +268,10 @@ void
 Log::initialize(Type type,
                 Level level,
                 const Data& appName,
-                ExternalLogger& logger)
+                ExternalLogger& logger,
+                const Data& syslogFacilityName)
 {
-   initialize(type, level, appName, 0, &logger);
+   initialize(type, level, appName, 0, &logger, syslogFacilityName);
 }
 
 void
@@ -811,7 +920,7 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
          if (mLogger == 0)
          {
             std::cerr << "Creating a syslog stream" << std::endl;
-            mLogger = new SysLogStream(mAppName);
+            mLogger = new SysLogStream(mAppName, mSyslogFacility);
          }
          return *mLogger;
 
