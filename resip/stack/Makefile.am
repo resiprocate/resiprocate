@@ -146,6 +146,7 @@ libresip_la_SOURCES = \
 	Symbols.cxx \
 	TcpBaseTransport.cxx \
 	TcpConnection.cxx \
+	TcpConnectState.cxx \
 	TcpTransport.cxx \
 	TimeAccumulate.cxx \
 	TimerMessage.cxx \
@@ -342,6 +343,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	Symbols.hxx \
 	TcpBaseTransport.hxx \
 	TcpConnection.hxx \
+	TcpConnectState.hxx \
 	TcpTransport.hxx \
 	TerminateFlow.hxx \
 	TimeAccumulate.hxx \

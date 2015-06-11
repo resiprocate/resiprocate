@@ -223,6 +223,15 @@ Transport::fail(const Data& tid, TransportFailure::FailureReason reason, int sub
    }
 }
 
+void 
+Transport::setTcpConnectState(const Data& tid, TcpConnectState::State state)
+{
+    if (!tid.empty())
+    {
+        mStateMachineFifo.add(new TcpConnectState(tid, state));
+    }
+}
+
 std::auto_ptr<SendData>
 Transport::makeSendData( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {

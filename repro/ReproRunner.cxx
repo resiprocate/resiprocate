@@ -660,10 +660,12 @@ ReproRunner::createSipStack()
    unsigned long overrideT1 = mProxyConfig->getConfigInt("TimerT1", 0);
    if(overrideT1)
    {
-      WarningLog(<< "Overriding T1! (new value is " << 
-               overrideT1 << ")");
+      WarningLog(<< "Overriding T1! (new value is " << overrideT1 << ")");
       resip::Timer::resetT1(overrideT1);
    }
+
+   // Set TCP Connect timeout 
+   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigInt("TCPConnectTimeout", 0);
 
    unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("StreamMessageSizeLimit", 0);
    if(messageSizeLimit > 0)
