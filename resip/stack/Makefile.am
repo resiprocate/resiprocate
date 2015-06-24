@@ -185,13 +185,13 @@ GPERFOPTS = -C -D -E -L C++ -t -k '*' --compare-strncmp
 
 # rule for case sensitive sorts of hash
 MethodHash.cxx: MethodHash.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@ || echo "gperf not installed, touching $@" && touch $@
+	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@ || echo "gperf not installed, touching $@" && touch $(srcdir)/$@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
 %.cxx: %.gperf
 	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) --ignore-case -Z $* $< > $@ || \
-	echo "gperf not installed, touching $@" && touch $@
+	echo "gperf not installed, touching $@" && touch $(srcdir)/$@
 
 
 resipincludedir = $(includedir)/resip/stack
