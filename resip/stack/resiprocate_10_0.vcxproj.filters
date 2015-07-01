@@ -120,6 +120,7 @@
     <ClCompile Include="TransportFailure.cxx" />
     <ClCompile Include="TransportSelector.cxx" />
     <ClCompile Include="TransportThread.cxx" />
+    <ClCompile Include="TuIM.cxx" />
     <ClCompile Include="Tuple.cxx" />
     <ClCompile Include="TupleMarkManager.cxx" />
     <ClCompile Include="TuSelector.cxx" />
@@ -146,7 +147,7 @@
     <ClCompile Include="gen\MethodHash.cxx" />
     <ClCompile Include="gen\ParameterHash.cxx" />
     <ClCompile Include="GenericPidfContents.cxx" />
-    <ClCompile Include="TuIM.cxx" />
+    <ClCompile Include="TcpConnectState.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AddTransport.hxx" />
@@ -288,6 +289,7 @@
     <ClInclude Include="TransportSelector.hxx" />
     <ClInclude Include="TransportSelectorThread.hxx" />
     <ClInclude Include="TransportThread.hxx" />
+    <ClInclude Include="TuIM.hxx" />
     <ClInclude Include="Tuple.hxx" />
     <ClInclude Include="TupleMarkManager.hxx" />
     <ClInclude Include="TuSelector.hxx" />
@@ -316,7 +318,7 @@
     <ClInclude Include="X509Contents.hxx" />
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
-    <ClInclude Include="TuIM.hxx" />
+    <ClInclude Include="TcpConnectState.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">

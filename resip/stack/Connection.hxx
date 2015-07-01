@@ -100,7 +100,7 @@ class Connection : public ConnectionBase,
       void enableFlowTimer();
       bool isFlowTimerEnabled() { return mFlowTimerEnabled; }
 
-      bool mRequestPostConnectSocketFuncCall;
+      bool mFirstWriteAfterConnectedPending;
       static volatile bool mEnablePostConnectSocketFuncCall;
       static void setEnablePostConnectSocketFuncCall(bool enabled = true) { mEnablePostConnectSocketFuncCall = enabled; }
 

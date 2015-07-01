@@ -614,6 +614,7 @@
     <ClCompile Include="Symbols.cxx" />
     <ClCompile Include="TcpBaseTransport.cxx" />
     <ClCompile Include="TcpConnection.cxx" />
+    <ClCompile Include="TcpConnectState.cxx" />
     <ClCompile Include="TcpTransport.cxx" />
     <ClCompile Include="TimeAccumulate.cxx" />
     <ClCompile Include="TimerMessage.cxx" />
@@ -788,6 +789,7 @@
     <ClInclude Include="Symbols.hxx" />
     <ClInclude Include="TcpBaseTransport.hxx" />
     <ClInclude Include="TcpConnection.hxx" />
+    <ClInclude Include="TcpConnectState.hxx" />
     <ClInclude Include="TcpTransport.hxx" />
     <ClInclude Include="TerminateFlow.hxx" />
     <ClInclude Include="TimeAccumulate.hxx" />
