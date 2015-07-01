@@ -138,13 +138,16 @@ class SdpContents : public Contents
                   Data& encodingParameters() {return mEncodingParameters;}
 
                   static const Codec ULaw_8000;
-                  static const Codec ALaw_8000;
-                  static const Codec G729_8000;
-                  static const Codec G723_8000;
                   static const Codec GSM_8000;
+                  static const Codec G723_8000;
+                  static const Codec ALaw_8000;
+                  static const Codec G722_8000;
+                  static const Codec CN;
+                  static const Codec G729_8000;
+                  static const Codec H263;
+
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
-                  static const Codec CN;
 
                   typedef HashMap<int, Codec> CodecMap;
                   // "static" payload types as defined in RFC 3551.
@@ -230,7 +233,7 @@ class SdpContents : public Contents
                   /** @brief set the address for the session
                     * 
                     * @param host IP address to associate with the session
-					* @param type type of addressing
+               * @param type type of addressing
                     **/
                   void setAddress(const Data& host, AddrType type = IP4);
 
@@ -340,7 +343,7 @@ class SdpContents : public Contents
                     * 
                     * @param addType address type (IP4 or IP6)
                     * @param address IP address
-					* @param ttl time to live
+               * @param ttl time to live
                     * 
                     **/
                   Connection(AddrType addType,
@@ -367,7 +370,7 @@ class SdpContents : public Contents
                   /** @brief set the address for the connection
                     * 
                     * @param host IP address to associate with the connection
-					* @param type type of addressing
+               * @param type type of addressing
                     **/
                   void setAddress(const Data& host, AddrType type = IP4);
                   unsigned long ttl() const {return mTTL;}
@@ -765,6 +768,12 @@ class SdpContents : public Contents
                   //        via pMatchingCodec if a non-NULL pointer is passed in.  The codec returned if from this medium.
                   const Codec& findFirstMatchingCodecs(const Medium& medium, Codec* pMatchingCodec = 0) const;
 
+                  /** @brief finds the telephone-event codec
+                  *
+                  * @return telephone-event "codec"
+                  **/
+                  const Codec& findTelephoneEventPayloadCodec() const;
+
                   /** @brief finds the telephone-event payload type
                     * 
                     * @return payload type of telephone-event "codec"  
@@ -1046,6 +1055,8 @@ static bool invokeSdpContentsInit = SdpContents::init();
 typedef SdpContents::Session::Codec Codec;
 
 bool operator==(const SdpContents::Session::Codec& lhs,
+                const SdpContents::Session::Codec& rhs);
+bool operator!=(const SdpContents::Session::Codec& lhs,
                 const SdpContents::Session::Codec& rhs);
 
 EncodeStream& operator<<(EncodeStream& str, const SdpContents::Session::Codec& codec);
