@@ -67,7 +67,7 @@ class RRCache
                }
                else
                {
-                  return lhs->key() < rhs->key();
+                  return (Data(lhs->key())).lowercase() < (Data(rhs->key())).lowercase();
                }
             }
       };
