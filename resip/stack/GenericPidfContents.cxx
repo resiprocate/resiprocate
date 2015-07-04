@@ -680,6 +680,15 @@ GenericPidfContents::generateNowTimestampData()
    return generateTimestampData(now);
 }
 
+static void pad2(const int x, DataStream& str)
+{
+    if (x < 10)
+    {
+        str << Symbols::ZERO[0];
+    }
+    str << x;
+}
+
 Data 
 GenericPidfContents::generateTimestampData(time_t datetime)
 {
@@ -705,7 +714,17 @@ GenericPidfContents::generateTimestampData(time_t datetime)
    Data timestamp;
    {
       DataStream ds(timestamp);
-      ds << gmt.tm_year + 1900 << "-" << setfill('0') << setw(2) << gmt.tm_mon + 1 << "-" << setfill('0') << setw(2) << gmt.tm_mday << "T" << setfill('0') << setw(2) << gmt.tm_hour << ":" << setfill('0') << setw(2) << gmt.tm_min << ":" << setfill('0') << setw(2) << gmt.tm_sec << "Z";
+      ds << gmt.tm_year + 1900 << "-";
+      pad2(gmt.tm_mon + 1, ds);
+      ds << "-";
+      pad2(gmt.tm_mday, ds);
+      ds << "T";
+      pad2(gmt.tm_hour, ds);
+      ds << ":";
+      pad2(gmt.tm_min, ds);
+      ds << ":";
+      pad2(gmt.tm_sec, ds);
+      ds << "Z";
    }
    return timestamp;
 }

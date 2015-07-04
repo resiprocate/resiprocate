@@ -50,7 +50,8 @@ class Timer
          TimerStaleServer,
          TimerStateless,
          TimerCleanUp,
-         ApplicationTimer // .dlb. Fifo, so no thread issues
+         ApplicationTimer, // .dlb. Fifo, so no thread issues
+         TcpConnectTimer
       } Type;
       
       static Data toData(Type timer);
@@ -121,7 +122,9 @@ class Timer
       static unsigned long TH; // default 64*T1
       
       static unsigned long TD;
-      static unsigned long TS;       
+      static unsigned long TS;
+
+      static unsigned long TcpConnectTimeout;
 };
 
 // !bwc! There is some duplicated code between TransactionTimer and 

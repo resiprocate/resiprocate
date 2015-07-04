@@ -93,6 +93,10 @@
 #include "repro/MySqlDb.hxx"
 #endif
 
+#if defined(USE_POSTGRESQL)
+#include "repro/PostgreSqlDb.hxx"
+#endif
+
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -149,6 +153,71 @@ public:
                << msg
                << "*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*");
    }
+};
+
+class MyProxyConfig : public ProxyConfig
+{
+public:
+    AbstractDb *getDatabase(int configIndex)
+    {
+        ConfigParse::NestedConfigMap m = getConfigNested("Database");
+        ConfigParse::NestedConfigMap::iterator it = m.find(configIndex);
+        if (it == m.end())
+        {
+            WarningLog(<< "Failed to find Database settings for index " << configIndex);
+            return 0;
+        }
+        ConfigParse& dbConfig = it->second;
+        Data dbType = dbConfig.getConfigData("Type", "");
+        dbType.lowercase();
+        if (dbType == "berkeleydb")
+        {
+            Data path = dbConfig.getConfigData("Path",
+                getConfigData("DatabasePath", "./", true), true);
+            return new BerkeleyDb(path);
+        }
+        else if (dbType == "mysql")
+        {
+#ifdef USE_MYSQL
+            Data mySQLServer = dbConfig.getConfigData("Host", Data::Empty);
+            if (!mySQLServer.empty())
+            {
+                return new MySqlDb(mySQLServer,
+                    dbConfig.getConfigData("User", Data::Empty),
+                    dbConfig.getConfigData("Password", Data::Empty),
+                    dbConfig.getConfigData("DatabaseName", Data::Empty),
+                    dbConfig.getConfigUnsignedLong("Port", 0),
+                    dbConfig.getConfigData("CustomUserAuthQuery", Data::Empty));
+            }
+#else
+            ErrLog(<< "Database" << configIndex << " type MySQL support not compiled into repro");
+            return 0;
+#endif
+        }
+        else if (dbType == "postgresql")
+        {
+#ifdef USE_POSTGRESQL
+            Data postgreSQLServer = dbConfig.getConfigData("Host", Data::Empty);
+            if (!postgreSQLServer.empty())
+            {
+                return new PostgreSqlDb(postgreSQLServer,
+                    dbConfig.getConfigData("User", Data::Empty),
+                    dbConfig.getConfigData("Password", Data::Empty),
+                    dbConfig.getConfigData("DatabaseName", Data::Empty),
+                    dbConfig.getConfigUnsignedLong("Port", 0),
+                    dbConfig.getConfigData("CustomUserAuthQuery", Data::Empty));
+            }
+#else 
+            ErrLog(<< "Database" << configIndex << " type PostgreSQL support not compiled into repro");
+            return 0;
+#endif
+        }
+        else
+        {
+            ErrLog(<< "Database" << configIndex << " type '" << dbType << "' not supported / invalid");
+        }
+        return 0;
+    }
 };
 
 ReproRunner::ReproRunner()
@@ -210,7 +279,7 @@ ReproRunner::run(int argc, char** argv)
    Data defaultConfigFilename("repro.config");
    try
    {
-      mProxyConfig = new ProxyConfig();
+      mProxyConfig = new MyProxyConfig();
       mProxyConfig->parseConfig(mArgc, mArgv, defaultConfigFilename);
    }
    catch(BaseException& ex)
@@ -591,10 +660,12 @@ ReproRunner::createSipStack()
    unsigned long overrideT1 = mProxyConfig->getConfigInt("TimerT1", 0);
    if(overrideT1)
    {
-      WarningLog(<< "Overriding T1! (new value is " << 
-               overrideT1 << ")");
+      WarningLog(<< "Overriding T1! (new value is " << overrideT1 << ")");
       resip::Timer::resetT1(overrideT1);
    }
+
+   // Set TCP Connect timeout 
+   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigInt("TCPConnectTimeout", 0);
 
    unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("StreamMessageSizeLimit", 0);
    if(messageSizeLimit > 0)

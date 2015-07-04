@@ -827,6 +827,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TcpConnectState.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TransportFailure.cxx"
 				>
 			</File>
@@ -1513,6 +1517,10 @@
 			</File>
 			<File
 				RelativePath=".\Transport.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TcpConnectState.hxx"
 				>
 			</File>
 			<File

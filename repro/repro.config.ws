@@ -674,6 +674,12 @@ TimerC = 180
 # as 0 to use default of 500ms)
 TimerT1 = 0
 
+# The amount to time to allow for a TCP connect to complete for each transaction.  If
+# this value is exceed, then the stack will generate a 408 or try the next available
+# DNS entry.  Default to 0 - no special timer: error out on receiving RST/ACK error or 
+# SIP transaction timeout (32 seconds when T1 is 500).
+TCPConnectTimeout = 0
+
 # Disable outbound support (RFC5626)
 # WARNING: Before enabling this, ensure you have a RecordRouteUri setup, or are using
 # the alternate transport specification mechanism and defining a RecordRouteUri per

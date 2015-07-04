@@ -33,7 +33,7 @@ volatile bool Connection::mEnablePostConnectSocketFuncCall = false;
 Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
                        Compression &compression)
    : ConnectionBase(transport,who,compression),
-     mRequestPostConnectSocketFuncCall(false),
+     mFirstWriteAfterConnectedPending(false),
      mInWritable(false),
      mFlowTimerEnabled(false),
      mPollItemHandle(0)
@@ -240,15 +240,23 @@ Connection::performWrite()
    }
 #endif
 
-   if(mEnablePostConnectSocketFuncCall && mRequestPostConnectSocketFuncCall)
+   // Note:  The first time the socket is available for write, is when the TCP connect call is completed
+   if (mFirstWriteAfterConnectedPending)
    {
-      // Note:  The first time the socket is available for write, is when the TCP connect call is completed
-      mRequestPostConnectSocketFuncCall = false;
-      mTransport->callSocketFunc(getSocket());
+      mFirstWriteAfterConnectedPending = false;  // reset
+
+      // Notify all outstanding sends that we are now connected - stops the TCP Connection timer for all transactions
+      for (std::list<SendData*>::iterator it = mOutstandingSends.begin(); it != mOutstandingSends.end(); it++)
+      {
+         mTransport->setTcpConnectState((*it)->transactionId, TcpConnectState::Connected);
+      }
+      if (mEnablePostConnectSocketFuncCall)
+      {
+          mTransport->callSocketFunc(getSocket());
+      }
    }
 
    const Data& data = mOutstandingSends.front()->data;
-
    int nBytes = write(data.data() + mSendPos,int(data.size() - mSendPos));
 
    //DebugLog (<< "Tried to send " << data.size() - mSendPos << " bytes, sent " << nBytes << " bytes");

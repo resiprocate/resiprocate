@@ -85,6 +85,7 @@ class TransactionState : public DnsHandler
       void processClientStale(TransactionMessage* msg);
       void processServerStale(TransactionMessage* msg);
       void processTransportFailure(TransactionMessage* failure);
+      void processTcpConnectState(TransactionMessage* msg);
       void processNoDnsResults();
       void processReliability(TransportType type);
       
@@ -100,6 +101,7 @@ class TransactionState : public DnsHandler
       bool isFromTU(TransactionMessage* msg) const;
       bool isFromWire(TransactionMessage* msg) const;
       bool isTransportError(TransactionMessage* msg) const;
+      bool isTcpConnectState(TransactionMessage* msg) const;
       bool isSentReliable(TransactionMessage* msg) const;
       bool isSentUnreliable(TransactionMessage* msg) const;
       bool isReliabilityIndication(TransactionMessage* msg) const;
@@ -185,6 +187,7 @@ class TransactionState : public DnsHandler
       TransactionUser* mTransactionUser;
       TransportFailure::FailureReason mFailureReason;      
       int mFailureSubCode;
+      bool mTcpConnectTimerStarted;
 
       static UInt32 StatelessIdCounter;
       
