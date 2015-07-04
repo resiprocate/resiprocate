@@ -1,0 +1,99 @@
+
+Configuration changes in v1.9
+-----------------------------
+
+The following two options from /etc/reTurnServer.config are
+no longer used and will be ignored:
+
+  LongTermAuthUsername
+  LongTermAuthPassword
+
+reTurn v1.9 is now reading a list of permitted usernames
+and passwords from a file.  The filename must be
+specified in /etc/reTurnServer.config using the
+new configuration parameter UserDatabaseFile, for example:
+
+  UserDatabaseFile = /etc/reTurnServer-users.txt
+
+Credentials are not required for STUN but they are mandatory
+for TURN.  The reTurn server will not run without this
+configuration parameter.
+
+The users.tx file format is identical to the format used
+by the TurnServer.org project from the Jitsi community.
+
+Quickstart
+----------
+
+Everything is controlled from /etc/reTurnServer.config
+
+The daemon must be restarted after changing the config.
+
+Background
+----------
+
+Internet Connectivity Establishment (ICE) provides
+a solid solution to the problem of getting VoIP calls
+(both SIP and Jabber) through NAT environments.
+
+In particular, devices supporting ICE are able to probe
+the network topology to find the most efficient way to
+route RTP media streams.
+
+In some cases, the devices discover they are both on the
+same NAT network, and they can route RTP media to each
+other without any translation issues.
+
+In other cases, the devices discover that there is
+a co-operative NAT router that works with STUN.
+
+In about 10% of cases, the NAT routers are not
+co-operating, and a relay is needed.  reTurnServer
+provides a solid implementation of such a relay.
+
+Recommendations
+---------------
+
+As the ICE protocol is defined in a formal RFC and
+supported by a wide range of devices, it is highly
+recommended to use a solution like reTurn instead
+of solutions like rtpproxy (such solutions mangle
+the SIP packets and sometimes impose a relay when
+it is not actually required).
+
+When using ICE and TURN, it is highly recommended that
+SIP packets are routed over TLS (not regular TCP or UDP),
+for two reasons:
+- UDP packets are not big enough to store all the ICE
+  route discovery attributes, such packets can be
+  truncated or lost in the network
+- TCP and UDP can sometimes be mangled by SIP-aware
+  routers that are trying to help you.  In fact,
+  this `help' was sometimes useful before ICE was
+  invented, but when you are using ICE, a
+  SIP-aware router can actually mangle the ICE attributes,
+  and prevent call establishment.
+Bottom line: always use TLS.
+
+Practical stuff
+---------------
+
+Set up DNS SRV records to help your devices discover
+the TURN server automatically.  This makes it really
+easy.  Lumicall, for example, will automatically
+discover TURN servers in this way.
+
+Some devices (such as Lumicall) will automatically try
+to authenticate their TURN session using the same
+credentials that they use for SIP.  Therefore, it is
+a good idea to use RADIUS or some other mechanism to
+share credentials between the SIP proxy and TURN server.
+
+Getting help
+------------
+
+Please feel free to join the *-users mailing lists
+if you have questions:
+
+  http://list.resiprocate.org/mailman/listinfo
+
