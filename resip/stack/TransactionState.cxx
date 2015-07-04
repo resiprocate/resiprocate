@@ -65,7 +65,8 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mPendingOperation(None),
    mTransactionUser(tu),
    mFailureReason(TransportFailure::None),
-   mFailureSubCode(0)
+   mFailureSubCode(0),
+   mTcpConnectTimerStarted(false)
 {
    StackLog (<< "Creating new TransactionState: " << *this);
 }
@@ -919,6 +920,12 @@ TransactionState::processStateless(TransactionMessage* message)
       delete message;
       delete this;
    }
+   else if (isTcpConnectState(message))
+   {
+       // stateless mode is not supported
+       //processTcpConnectState(message);
+       delete message;
+   }
    else if (isTimer(message))
    {
       TimerMessage* timer = dynamic_cast<TimerMessage*>(message);
@@ -1095,6 +1102,13 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
             }
             break;
 
+         case Timer::TcpConnectTimer:
+             if (!mTcpConnectTimerStarted) // Ignore timer if we we connected (note: when we connect we set mTcpConnectTimerStarted to false)
+             {
+                 delete msg;
+                 break;
+             }
+             // else fallthrough 
          case Timer::TimerF:
             if (mState == Trying || mState == Proceeding)
             {
@@ -1134,6 +1148,11 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
    else if (isTransportError(msg))
    {
       processTransportFailure(msg);
+      delete msg;
+   }
+   else if (isTcpConnectState(msg))
+   {
+      processTcpConnectState(msg);
       delete msg;
    }
    else if(dynamic_cast<DnsResultMessage*>(msg))
@@ -1368,6 +1387,13 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             delete msg;
             break;
 
+         case Timer::TcpConnectTimer:
+             if (!mTcpConnectTimerStarted) // Ignore timer we we connected (note: when we connect we set mTcpConnectTimerStarted to false)
+             {
+                 delete msg;
+                 break;
+             }
+             // else fallthrough
          case Timer::TimerB:
             if (mState == Calling)
             {
@@ -1430,6 +1456,11 @@ TransactionState::processClientInvite(TransactionMessage* msg)
    {
       processTransportFailure(msg);
       delete msg;
+   }
+   else if (isTcpConnectState(msg))
+   {
+       processTcpConnectState(msg);
+       delete msg;
    }
    else if (isCancelClientTransaction(msg))
    {
@@ -2190,6 +2221,8 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
    assert(failure);
    assert(mState!=Bogus);
 
+   mTcpConnectTimerStarted = false;  // reset, in case we try another TCP connection
+
    // Store failure reasons
    if (failure->getFailureReason() > mFailureReason)
    {
@@ -2326,6 +2359,28 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
          InfoLog(<< "Transport failure on send, and failover is disabled.");
          processNoDnsResults();
       }
+   }
+}
+
+void 
+TransactionState::processTcpConnectState(TransactionMessage* msg)
+{
+   TcpConnectState* tcpConnectState = dynamic_cast<TcpConnectState*>(msg);
+   assert(tcpConnectState);
+
+   TcpConnectState* state = dynamic_cast<TcpConnectState*>(msg);
+   if (state->getState() == TcpConnectState::ConnectStarted && 
+       !mTcpConnectTimerStarted && Timer::TcpConnectTimeout != 0 &&
+       (mState == Trying || mState == Calling))
+   {
+      // Start Timer
+      mController.mTimers.add(Timer::TcpConnectTimer, mId, Timer::TcpConnectTimeout);
+      mTcpConnectTimerStarted = true;
+   }
+   else if (state->getState() == TcpConnectState::Connected &&
+       (mState == Trying || mState == Calling))
+   {
+      mTcpConnectTimerStarted = false;
    }
 }
 
@@ -2828,6 +2883,12 @@ bool
 TransactionState::isTransportError(TransactionMessage* msg) const
 {
    return dynamic_cast<TransportFailure*>(msg) != 0;
+}
+
+bool
+TransactionState::isTcpConnectState(TransactionMessage* msg) const
+{
+    return dynamic_cast<TcpConnectState*>(msg) != 0;
 }
 
 bool 

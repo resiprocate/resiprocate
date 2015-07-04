@@ -53,6 +53,9 @@ resip::Timer::TH = 64*T1;
 unsigned long
 resip::Timer::TS = 32000;
 
+unsigned long
+resip::Timer::TcpConnectTimeout = 0;  // disabled
+
 void 
 Timer::resetT1(unsigned long t1)
 {
@@ -103,6 +106,8 @@ Timer::toData(Type timer)
          return "Timer Stateless";
       case TimerCleanUp:
          return "Timer Cleanup";
+      case TcpConnectTimer:
+          return "TcpConnectTimer";
       default:
          assert(0);
    }
