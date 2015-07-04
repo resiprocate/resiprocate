@@ -6,7 +6,7 @@ The original goal of repro was to provide a SIP proxy that is
 very easy to get started with.  That was summarised in a post
 to the mailing list from Cullen Jennings in 2004:
 
-   "I thought I would just start an email thread on thins
+   "I thought I would just start an email thread on things
    that would be nice in an open source proxy.
 
    The key thing is the out of box experience, you can go
@@ -40,8 +40,16 @@ file and set the password is using the htdigest utility, for example:
 In this example, the realm value, 'repro', must match the HttpAdminRealm
 value in repro.config (if not specified, the default realm name is repro).
 
+v1.10.0~alpha1 and support indexed database configurations, similar to the
+indexed transport configurations in repro.config.  It is strongly recommended
+that all users adapt their repro.config.  The legacy database configuration
+options are still supported for now but they are likely to be phased out
+in a future release of reSIProcate.
+
 Quick start
 -----------
+
+For more thorough documentation, see http://rtcquickstart.org
 
 After installing the package, the daemon starts.
 
