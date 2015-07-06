@@ -28,7 +28,11 @@ const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
+#ifndef WIN32
 int Log::mSyslogFacility = LOG_DAEMON;
+#else
+int Log::mSyslogFacility = -1;
+#endif
 unsigned int Log::MaxLineCount = 0; // no limit by default
 unsigned int Log::MaxByteCount = 0; // no limit by default
 
@@ -249,12 +253,14 @@ Log::initialize(Type type, Level level, const Data& appName,
       mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
       if(mSyslogFacility == -1)
       {
+#ifndef WIN32
+         mSyslogFacility = LOG_DAEMON;
          if(type == Log::Syslog)
          {
             syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
          }
+#endif
          std::cerr << "invalid syslog facility name specified: " << syslogFacilityName.c_str() << std::endl;
-         mSyslogFacility = LOG_DAEMON;
       }
    }
  
