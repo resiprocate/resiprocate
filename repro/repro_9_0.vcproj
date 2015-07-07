@@ -360,14 +360,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CommandServer.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServerThread.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\HttpBase.cxx"
 				>
 			</File>
@@ -407,14 +399,6 @@
 			>
 			<File
 				RelativePath=".\BerkeleyDb.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServer.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\CommandServerThread.hxx"
 				>
 			</File>
 			<File

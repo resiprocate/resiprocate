@@ -14,7 +14,6 @@ LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-c-ares \
               --with-mysql \
               --with-postgresql \
-              --with-radius \
               --with-repro \
               --enable-repro-plugins \
               --with-python \

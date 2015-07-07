@@ -24,17 +24,32 @@ using namespace std;
 
 RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
                              int port, 
-                             IpVersion version) :
+                             IpVersion version,
+                             resip::InMemorySyncPubDb* pubDb) :
    XmlRpcServerBase(port, version),
-   mRegDb(regDb)
+   mRegDb(regDb),
+   mPubDb(pubDb)
 {
-   assert(mRegDb);
-   mRegDb->addHandler(this);
+   if (mRegDb)
+   {
+      mRegDb->addHandler(this);
+   }
+   if (mPubDb)
+   {
+      mPubDb->addHandler(this);
+   }
 }
 
 RegSyncServer::~RegSyncServer()
 {
-   mRegDb->removeHandler(this);
+   if (mRegDb)
+   {
+      mRegDb->removeHandler(this);
+   }
+   if (mPubDb)
+   {
+      mPubDb->removeHandler(this);
+   }
 }
 
 void 
@@ -71,7 +86,8 @@ RegSyncServer::sendRegistrationModifiedEvent(unsigned int connectionId, const re
    for(; cit != contacts.end(); cit++)
    {
       const ContactInstanceRecord& rec = *cit;
-      if(!rec.mReceivedFrom.onlyUseExistingConnection)
+      if(!rec.mReceivedFrom.onlyUseExistingConnection &&
+          rec.mRegExpires != NeverExpire)  // Don't sync over static registrations
       {
           streamContactInstanceRecord(ss, rec);
           infoFound = true;
@@ -83,6 +99,103 @@ RegSyncServer::sendRegistrationModifiedEvent(unsigned int connectionId, const re
    {
       sendEvent(connectionId, ss.str().c_str());
    }
+}
+
+void 
+RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+{
+   std::stringstream ss;
+   UInt64 now = Timer::getTimeSecs();
+
+   ss << "<pubinfo>" << Symbols::CRLF;
+   ss << "   <eventtype>" << eventType << "</eventtype>" << Symbols::CRLF;
+   ss << "   <documentkey>" << documentKey.xmlCharDataEncode() << "</documentkey>" << Symbols::CRLF;
+   ss << "   <etag>" << eTag.xmlCharDataEncode() << "</etag>" << Symbols::CRLF;
+   ss << "   <expires>" << (expirationTime <= now ? 0 : expirationTime - now) << "</expires>" << Symbols::CRLF;
+   ss << "   <lastupdate>" << now - lastUpdated << "</lastupdate>" << Symbols::CRLF;
+   if (expirationTime != 0 && contents != 0)  // lingering records will have expirationTime as 0 - don't need to send contents - refreshes also have no body
+   {
+      assert(securityAttributes);
+      ss << "   <contents>" << contents->getBodyData().xmlCharDataEncode() << "</contents>" << Symbols::CRLF;
+      ss << "   <isencrypted>" << (securityAttributes->isEncrypted() ? "true" : "false") << "</isencrypted>" << Symbols::CRLF;
+      if (securityAttributes->isEncrypted())
+      {
+         ss << "   <sigstatus>";
+         switch (securityAttributes->getSignatureStatus())
+         {
+         case SignatureNone:
+            ss << "none";
+            break;
+         case SignatureIsBad:
+            ss << "bad";
+            break;
+         case SignatureTrusted:
+            ss << "trusted";
+            break;
+         case SignatureCATrusted:
+            ss << "catrusted";
+            break;
+         case SignatureNotTrusted:
+            ss << "nottrusted";
+            break;
+         case SignatureSelfSigned:
+            ss << "selfsigned";
+            break;
+         default:
+            assert(false);
+            ss << "unknown";
+            break;
+         }
+         ss << "</sigstatus>" << Symbols::CRLF;
+         if (!securityAttributes->getSigner().empty())
+         {
+            ss << "   <signer>" << securityAttributes->getSigner().xmlCharDataEncode() << "</signer>" << Symbols::CRLF;
+         }
+         if (!securityAttributes->getIdentity().empty())
+         {
+            ss << "   <identity>" << securityAttributes->getIdentity().xmlCharDataEncode() << "</identity>" << Symbols::CRLF;
+            ss << "   <identitystrength>";
+            switch (securityAttributes->getIdentityStrength())
+            {
+            case SecurityAttributes::From:
+               ss << "from";
+               break;
+            case SecurityAttributes::FailedIdentity:
+               ss << "failedidentity";
+               break;
+            case SecurityAttributes::Identity:
+               ss << "identity";
+               break;
+            default:
+               assert(false);
+               ss << "unknown";
+               break;
+            }
+            ss << "</identitystrength>" << Symbols::CRLF;
+         }
+         // Note:  intentionally not syncing mLevel and mEncryptionPerformed from SecurityAttributes since they are for outbound messages only
+      }
+   }
+   ss << "</pubinfo>" << Symbols::CRLF;
+
+   sendEvent(connectionId, ss.str().c_str());
+}
+
+void 
+RegSyncServer::sendDocumentRemovedEvent(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+{
+   std::stringstream ss;
+   UInt64 now = Timer::getTimeSecs();
+
+   ss << "<pubinfo>" << Symbols::CRLF;
+   ss << "   <eventtype>" << eventType.xmlCharDataEncode() << "</eventtype>" << Symbols::CRLF;
+   ss << "   <documentkey>" << documentKey.xmlCharDataEncode() << "</documentkey>" << Symbols::CRLF;
+   ss << "   <etag>" << eTag.xmlCharDataEncode() << "</etag>" << Symbols::CRLF;
+   ss << "   <expires>0</expires>" << Symbols::CRLF;
+   ss << "   <lastupdate>" << now - lastUpdated << "</lastupdate>" << Symbols::CRLF;
+   ss << "</pubinfo>" << Symbols::CRLF;
+
+   sendEvent(connectionId, ss.str().c_str());
 }
 
 void 
@@ -141,7 +254,14 @@ RegSyncServer::handleInitialSyncRequest(unsigned int connectionId, unsigned int 
 
    if(version == REGSYNC_VERSION)
    {
-      mRegDb->initialSync(connectionId);
+      if (mRegDb)
+      {
+         mRegDb->initialSync(connectionId);
+      }
+      if (mPubDb)
+      {
+         mPubDb->initialSync(connectionId);
+      }
       sendResponse(connectionId, requestId, Data::Empty, 200, "Initial Sync Completed.");
    }
    else
@@ -156,7 +276,7 @@ RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactI
     UInt64 now = Timer::getTimeSecs();
 
     ss << "   <contactinfo>" << Symbols::CRLF;
-    ss << "      <contacturi>" << Data::from(rec.mContact.uri()).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
+    ss << "      <contacturi>" << Data::from(rec.mContact).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
     // If contact is expired or removed, then pass expires time as 0, otherwise send number of seconds until expirey
     ss << "      <expires>" << (((rec.mRegExpires == 0) || (rec.mRegExpires <= now)) ? 0 : (rec.mRegExpires-now)) << "</expires>" << Symbols::CRLF;
     ss << "      <lastupdate>" << now-rec.mLastUpdated << "</lastupdate>" << Symbols::CRLF;
@@ -200,11 +320,30 @@ RegSyncServer::onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor
    sendRegistrationModifiedEvent(connectionId, aor, contacts);
 }
 
+void 
+RegSyncServer::onDocumentModified(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+{
+   sendDocumentModifiedEvent(0, eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
+}
+
+void 
+RegSyncServer::onDocumentRemoved(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+{
+   sendDocumentRemovedEvent(0, eventType, documentKey, eTag, lastUpdated);
+}
+
+void 
+RegSyncServer::onInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+{
+   sendDocumentModifiedEvent(connectionId, eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

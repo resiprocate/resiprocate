@@ -38,6 +38,7 @@
 #include "resip/stack/WsCookieContextFactory.hxx"
 
 #include "resip/dum/InMemorySyncRegDb.hxx"
+#include "resip/dum/InMemorySyncPubDb.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
@@ -80,6 +81,7 @@
 #include "repro/monkeys/RequestFilter.hxx"
 #include "repro/monkeys/MessageSilo.hxx"
 #include "repro/monkeys/CertificateAuthenticator.hxx"
+#include "repro/stateAgents/PresenceServer.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -89,6 +91,10 @@
 
 #if defined(USE_MYSQL)
 #include "repro/MySqlDb.hxx"
+#endif
+
+#if defined(USE_POSTGRESQL)
+#include "repro/PostgreSqlDb.hxx"
 #endif
 
 #include "rutil/WinLeakCheck.hxx"
@@ -149,6 +155,71 @@ public:
    }
 };
 
+class MyProxyConfig : public ProxyConfig
+{
+public:
+    AbstractDb *getDatabase(int configIndex)
+    {
+        ConfigParse::NestedConfigMap m = getConfigNested("Database");
+        ConfigParse::NestedConfigMap::iterator it = m.find(configIndex);
+        if (it == m.end())
+        {
+            WarningLog(<< "Failed to find Database settings for index " << configIndex);
+            return 0;
+        }
+        ConfigParse& dbConfig = it->second;
+        Data dbType = dbConfig.getConfigData("Type", "");
+        dbType.lowercase();
+        if (dbType == "berkeleydb")
+        {
+            Data path = dbConfig.getConfigData("Path",
+                getConfigData("DatabasePath", "./", true), true);
+            return new BerkeleyDb(path);
+        }
+        else if (dbType == "mysql")
+        {
+#ifdef USE_MYSQL
+            Data mySQLServer = dbConfig.getConfigData("Host", Data::Empty);
+            if (!mySQLServer.empty())
+            {
+                return new MySqlDb(mySQLServer,
+                    dbConfig.getConfigData("User", Data::Empty),
+                    dbConfig.getConfigData("Password", Data::Empty),
+                    dbConfig.getConfigData("DatabaseName", Data::Empty),
+                    dbConfig.getConfigUnsignedLong("Port", 0),
+                    dbConfig.getConfigData("CustomUserAuthQuery", Data::Empty));
+            }
+#else
+            ErrLog(<< "Database" << configIndex << " type MySQL support not compiled into repro");
+            return 0;
+#endif
+        }
+        else if (dbType == "postgresql")
+        {
+#ifdef USE_POSTGRESQL
+            Data postgreSQLServer = dbConfig.getConfigData("Host", Data::Empty);
+            if (!postgreSQLServer.empty())
+            {
+                return new PostgreSqlDb(postgreSQLServer,
+                    dbConfig.getConfigData("User", Data::Empty),
+                    dbConfig.getConfigData("Password", Data::Empty),
+                    dbConfig.getConfigData("DatabaseName", Data::Empty),
+                    dbConfig.getConfigUnsignedLong("Port", 0),
+                    dbConfig.getConfigData("CustomUserAuthQuery", Data::Empty));
+            }
+#else 
+            ErrLog(<< "Database" << configIndex << " type PostgreSQL support not compiled into repro");
+            return 0;
+#endif
+        }
+        else
+        {
+            ErrLog(<< "Database" << configIndex << " type '" << dbType << "' not supported / invalid");
+        }
+        return 0;
+    }
+};
+
 ReproRunner::ReproRunner()
    : mRunning(false)
    , mRestarting(false)
@@ -164,6 +235,7 @@ ReproRunner::ReproRunner()
    , mAbstractDb(0)
    , mRuntimeAbstractDb(0)
    , mRegistrationPersistenceManager(0)
+   , mPublicationPersistenceManager(0)
    , mAuthFactory(0)
    , mAsyncProcessorDispatcher(0)
    , mMonkeys(0)
@@ -172,6 +244,7 @@ ReproRunner::ReproRunner()
    , mProxy(0)
    , mWebAdminThread(0)
    , mRegistrar(0)
+   , mPresenceServer(0)
    , mDum(0)
    , mDumThread(0)
    , mCertServer(0)
@@ -206,7 +279,7 @@ ReproRunner::run(int argc, char** argv)
    Data defaultConfigFilename("repro.config");
    try
    {
-      mProxyConfig = new ProxyConfig();
+      mProxyConfig = new MyProxyConfig();
       mProxyConfig->parseConfig(mArgc, mArgv, defaultConfigFilename);
    }
    catch(BaseException& ex)
@@ -443,7 +516,6 @@ ReproRunner::onHUP()
 void
 ReproRunner::cleanupObjects()
 {
-   delete mCongestionManager; mCongestionManager = 0;
    if(!mRestarting)
    {
       // We leave command server running during restart
@@ -464,6 +536,7 @@ ReproRunner::cleanupObjects()
    delete mDumThread; mDumThread = 0;
    delete mDum; mDum = 0;
    delete mRegistrar; mRegistrar = 0;
+   delete mPresenceServer; mPresenceServer = 0;
    delete mWebAdminThread; mWebAdminThread = 0;
    for(std::list<WebAdmin*>::iterator it = mWebAdminList.begin(); it != mWebAdminList.end(); it++)
    {
@@ -478,13 +551,15 @@ ReproRunner::cleanupObjects()
    delete mAsyncProcessorDispatcher; mAsyncProcessorDispatcher = 0;
    if(!mRestarting) 
    {
-      // If we are restarting then leave the In Memory Registration database intact
+      // If we are restarting then leave the In Memory Registration and Publication database intact
       delete mRegistrationPersistenceManager; mRegistrationPersistenceManager = 0;
+      delete mPublicationPersistenceManager; mPublicationPersistenceManager = 0;
    }
    delete mAbstractDb; mAbstractDb = 0;
    delete mRuntimeAbstractDb; mRuntimeAbstractDb = 0;
    delete mStackThread; mStackThread = 0;
    delete mSipStack; mSipStack = 0;
+   delete mCongestionManager; mCongestionManager = 0;
    delete mAsyncProcessHandler; mAsyncProcessHandler = 0;
    delete mFdPollGrp; mFdPollGrp = 0;
    delete mProxyConfig; mProxyConfig = 0;
@@ -585,10 +660,12 @@ ReproRunner::createSipStack()
    unsigned long overrideT1 = mProxyConfig->getConfigInt("TimerT1", 0);
    if(overrideT1)
    {
-      WarningLog(<< "Overriding T1! (new value is " << 
-               overrideT1 << ")");
+      WarningLog(<< "Overriding T1! (new value is " << overrideT1 << ")");
       resip::Timer::resetT1(overrideT1);
    }
+
+   // Set TCP Connect timeout 
+   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigInt("TCPConnectTimeout", 0);
 
    unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("StreamMessageSizeLimit", 0);
    if(messageSizeLimit > 0)
@@ -606,7 +683,7 @@ ReproRunner::createSipStack()
          "OpenSSLCTXSetOptions", BaseSecurity::OpenSSLCTXSetOptions);
    setOpenSSLCTXOptionsFromConfig(
          "OpenSSLCTXClearOptions", BaseSecurity::OpenSSLCTXClearOptions);
-   Security::CipherList cipherList = Security::ExportableSuite;
+   Security::CipherList cipherList = Security::StrongestSuite;
    Data ciphers = mProxyConfig->getConfigData("OpenSSLCipherList", Data::Empty);
    if(!ciphers.empty())
    {
@@ -905,12 +982,15 @@ ReproRunner::createDatastore()
    // Create ImMemory Registration Database
    mRegSyncPort = mProxyConfig->getConfigInt("RegSyncPort", 0);
    // We only need removed records to linger if we have reg sync enabled
-   if(!mRestarting)  // If we are restarting then we left the InMemoryRegistrationDb intact at shutdown - don't recreate
+   if(!mRestarting)  // If we are restarting then we left the InMemorySyncRegDb and InMemorySyncPubDb intact at restart - don't recreate
    {
       assert(!mRegistrationPersistenceManager);
       mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
+      assert(!mPublicationPersistenceManager);
+      mPublicationPersistenceManager = new InMemorySyncPubDb((mRegSyncPort && mProxyConfig->getConfigBool("EnablePublicationRepication", false)) ? true : false);
    }
    assert(mRegistrationPersistenceManager);
+   assert(mPublicationPersistenceManager);
 
    // Copy contacts from the StaticRegStore to the RegistrationPersistanceManager
    populateRegistrations();
@@ -1007,6 +1087,32 @@ ReproRunner::createDialogUsageManager()
                                            methodList,
                                            eventList));
 #endif
+   }
+
+   bool presenceEnabled = mProxyConfig->getConfigBool("EnablePresenceServer", false);
+   if (presenceEnabled)
+   {
+      assert(mDum);
+      assert(mPublicationPersistenceManager);
+
+      // Set the publication persistence manager in dum
+      mDum->setPublicationPersistenceManager(mPublicationPersistenceManager);
+
+      // Configure DUM to handle SUBSCRIBE and PUBLISH requests for presence
+      mPresenceServer = new PresenceServer(*mDum, mAuthFactory->getDispatcher(), 
+                                           mProxyConfig->getConfigBool("PresenceUsesRegistrationState", true),
+                                           mProxyConfig->getConfigBool("PresenceNotifyClosedStateForNonPublishedUsers", true));
+
+      // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
+      MessageFilterRule::MethodList methodList;
+      MessageFilterRule::EventList eventList;
+      methodList.push_back(SUBSCRIBE);
+      methodList.push_back(PUBLISH);
+      eventList.push_back(Symbols::Presence);
+      ruleList.push_back(MessageFilterRule(MessageFilterRule::SchemeList(),
+         MessageFilterRule::DomainIsMe,
+         methodList,
+         eventList));
    }
 
    if (mDum)
@@ -1154,8 +1260,8 @@ ReproRunner::populateRegistrations()
          rec.mContact = NameAddr(it->second.mContact);
          rec.mSipPath = NameAddrs(it->second.mPath);
          rec.mRegExpires = NeverExpire;
-         rec.mSyncContact = true;  // Tag this permanent contact as being a syncronized contact so that it will
-                                    // be syncronized to a paired server (this is actually configuration information)
+         rec.mSyncContact = true;  // Tag this permanent contact as being a synchronized contact so that it will
+                                   // not be synchronized to a paired server (this is actually configuration information)
          mRegistrationPersistenceManager->updateContact(aor, rec);
       }
       catch(resip::ParseBuffer::Exception& e)  
@@ -1200,6 +1306,7 @@ ReproRunner::createWebAdmin()
             {
                webAdminV4 = new WebAdmin(*mProxy,
                                          *mRegistrationPersistenceManager, 
+                                         *mPublicationPersistenceManager,
                                          mHttpRealm, 
                                          httpPort,
                                          V4,
@@ -1230,7 +1337,8 @@ ReproRunner::createWebAdmin()
             {
                webAdminV6 = new WebAdmin(*mProxy,
                                          *mRegistrationPersistenceManager, 
-                                         mHttpRealm, 
+                                         *mPublicationPersistenceManager,
+                                         mHttpRealm,
                                          httpPort,
                                          V6,
                                          *it);
@@ -1275,25 +1383,37 @@ ReproRunner::createRegSync()
    assert(!mRegSyncServerThread);
    if(mRegSyncPort != 0)
    {
+      bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationRepication", false);
       std::list<RegSyncServer*> regSyncServerList;
       if(mUseV4) 
       {
-         mRegSyncServerV4 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), mRegSyncPort, V4);
+         mRegSyncServerV4 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), 
+                                              mRegSyncPort, V4, 
+                                              enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
          regSyncServerList.push_back(mRegSyncServerV4);
       }
       if(mUseV6) 
       {
-         mRegSyncServerV6 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), mRegSyncPort, V6);
+         mRegSyncServerV6 = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                              mRegSyncPort, V6,
+                                              enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
          regSyncServerList.push_back(mRegSyncServerV6);
       }
       if(!regSyncServerList.empty())
       {
          mRegSyncServerThread = new RegSyncServerThread(regSyncServerList);
       }
-      Data regSyncPeerAddress(mProxyConfig->getConfigData("RegSyncPeer", Data::Empty));
+      Data regSyncPeerAddress(mProxyConfig->getConfigData("RegSyncPeer", ""));
       if(!regSyncPeerAddress.empty())
       {
-         mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager), regSyncPeerAddress, mRegSyncPort);
+         int remoteRegSyncPort = mProxyConfig->getConfigInt("RemoteRegSyncPort", 0);
+         if (remoteRegSyncPort == 0)
+         {
+            remoteRegSyncPort = mRegSyncPort;
+         }
+         mRegSyncClient = new RegSyncClient(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                            regSyncPeerAddress, remoteRegSyncPort,
+                                            enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
       }
    }
 }
@@ -1651,7 +1771,10 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          bool isV6Address = DnsUtil::isIpV6Address(ipAddress);
          if(!isV4Address && !isV6Address)
          {
-            ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            if (!ipAddress.empty())
+            {
+               ErrLog(<< "Malformed IP-address found in IPAddress setting, ignoring (binding to all interfaces): " << ipAddress);
+            }
             ipAddress = Data::Empty;
             isV4Address = true;
             isV6Address = true;
@@ -1791,7 +1914,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    // Add am I responsible monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible)); 
+   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
 
    // Add RequestFilter monkey
    if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))

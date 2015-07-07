@@ -88,10 +88,11 @@ librepro_la_SOURCES = \
 	RequestContext.cxx \
 	ResponseContext.cxx \
 	RRDecorator.cxx \
-        Processor.cxx \
-        ProcessorChain.cxx \
+    Processor.cxx \
+    ProcessorChain.cxx \
 	SqlDb.cxx \
 	Target.cxx \
+    UserAuthGrabber.cxx \
 	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
 	XmlRpcServerBase.cxx \
@@ -100,9 +101,12 @@ librepro_la_SOURCES = \
 	PersistentMessageQueue.cxx \
 	QValueTarget.cxx \
 	\
-        monkeys/CertificateAuthenticator.cxx \
-        monkeys/DigestAuthenticator.cxx \
- 		monkeys/CookieAuthenticator.cxx \
+	stateAgents/PresenceServer.cxx \
+	stateAgents/PresencePublicationHandler.cxx \
+	stateAgents/PresenceSubscriptionHandler.cxx \
+    monkeys/CertificateAuthenticator.cxx \
+    monkeys/DigestAuthenticator.cxx \
+ 	monkeys/CookieAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/IsTrustedNode.cxx \
@@ -124,9 +128,9 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	AccountingCollector.hxx \
 	Ack200DoneMessage.hxx \
 	AclStore.hxx \
-        AsyncProcessor.hxx \
-        AsyncProcessorMessage.hxx \
-        AsyncProcessorWorker.hxx \
+    AsyncProcessor.hxx \
+    AsyncProcessorMessage.hxx \
+    AsyncProcessorWorker.hxx \
 	AuthenticatorFactory.hxx \
 	BerkeleyDb.hxx \
 	BasicWsConnectionValidator.hxx \
@@ -139,8 +143,8 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	HttpBase.hxx \
 	HttpConnection.hxx \
 	monkeys/AmIResponsible.hxx \
-        monkeys/CertificateAuthenticator.hxx \
-		monkeys/CookieAuthenticator.hxx \
+    monkeys/CertificateAuthenticator.hxx \
+    monkeys/CookieAuthenticator.hxx \
 	monkeys/ConstantLocationMonkey.hxx \
 	monkeys/DigestAuthenticator.hxx \
 	monkeys/GruuMonkey.hxx \
@@ -188,6 +192,9 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	stateAgents/CertPublicationHandler.hxx \
 	stateAgents/CertServer.hxx \
 	stateAgents/CertSubscriptionHandler.hxx \
+	stateAgents/PresencePublicationHandler.hxx \
+	stateAgents/PresenceServer.hxx \
+	stateAgents/PresenceSubscriptionHandler.hxx \
 	stateAgents/PrivateKeyPublicationHandler.hxx \
 	stateAgents/PrivateKeySubscriptionHandler.hxx \
 	StaticRegStore.hxx \

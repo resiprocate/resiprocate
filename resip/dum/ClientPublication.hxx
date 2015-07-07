@@ -43,6 +43,7 @@ class ClientPublication : public NonDialogUsage
 
       bool mWaitingForResponse;
       bool mPendingPublish;
+      bool mPendingEnd;
       
       SharedPtr<SipMessage> mPublish;
       Data mEventType;

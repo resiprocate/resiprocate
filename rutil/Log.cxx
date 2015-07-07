@@ -28,7 +28,11 @@ const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
+#ifndef WIN32
 int Log::mSyslogFacility = LOG_DAEMON;
+#else
+int Log::mSyslogFacility = -1;
+#endif
 unsigned int Log::MaxLineCount = 0; // no limit by default
 unsigned int Log::MaxByteCount = 0; // no limit by default
 
@@ -220,8 +224,7 @@ Log::parseSyslogFacilityName(const Data& facilityName)
       return LOG_UUCP;
    }
 #endif
-   // FIXME - maybe we should throw an exception or log
-   // an error about use of a bad facility name?
+   // Nothing matched or syslog not supported on this platform
    return -1;
 }
 
@@ -250,7 +253,14 @@ Log::initialize(Type type, Level level, const Data& appName,
       mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
       if(mSyslogFacility == -1)
       {
+#ifndef WIN32
          mSyslogFacility = LOG_DAEMON;
+         if(type == Log::Syslog)
+         {
+            syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
+         }
+#endif
+         std::cerr << "invalid syslog facility name specified: " << syslogFacilityName.c_str() << std::endl;
       }
    }
  
@@ -919,7 +929,6 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
       case Log::Syslog:
          if (mLogger == 0)
          {
-            std::cerr << "Creating a syslog stream" << std::endl;
             mLogger = new SysLogStream(mAppName, mSyslogFacility);
          }
          return *mLogger;
@@ -935,7 +944,6 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
              (maxLineCount() && mLineCount >= maxLineCount()) ||
              (maxByteCount() && ((unsigned int)mLogger->tellp()+bytesToWrite) >= maxByteCount()))
          {
-            std::cerr << "Creating a logger for file \"" << mLogFileName.c_str() << "\"" << std::endl;
             Data logFileName(mLogFileName != "" ? mLogFileName : "resiprocate.log");
             if (mLogger)
             {

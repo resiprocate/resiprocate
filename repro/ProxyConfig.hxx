@@ -26,7 +26,7 @@ public:
    bool getConfigValue(const resip::Data& name, resip::Uri &value);
    resip::Uri getConfigUri(const resip::Data& name, const resip::Uri defaultValue, bool useDefaultIfEmpty=false);
 
-   AbstractDb *getDatabase(int configIndex);
+   virtual AbstractDb *getDatabase(int configIndex) { return 0; }
 
 protected:
 

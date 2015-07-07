@@ -26,7 +26,7 @@ autoreconf --install && \
               --with-c-ares \
               --with-mysql \
               --with-postgresql \
-              --with-radius \
+              --with-freeradius \
               --with-repro \
               --enable-repro-plugins \
               --with-python \

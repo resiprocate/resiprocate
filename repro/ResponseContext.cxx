@@ -902,7 +902,7 @@ ResponseContext::sendRequest(resip::SipMessage& request)
 
       // Delete the Proxy-Auth header for this realm if forwarding outside our domain
       // other Proxy-Auth headers might be needed by a downsteram node
-      if (request.exists(h_ProxyAuthorizations))
+      if (request.exists(h_ProxyAuthorizations) && !mRequestContext.getProxy().isNeverStripProxyAuthorizationHeadersEnabled())
       {
          Auths &authHeaders = request.header(h_ProxyAuthorizations);
          for (Auths::iterator i = authHeaders.begin(); i != authHeaders.end(); )

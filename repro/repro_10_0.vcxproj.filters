@@ -20,6 +20,7 @@
     <ClCompile Include="ReproVersion.cxx" />
     <ClCompile Include="WebAdmin.cxx" />
     <ClCompile Include="WebAdminThread.cxx" />
+    <ClCompile Include="SqlDb.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WebAdminThread.hxx" />
@@ -30,6 +31,7 @@
     <ClInclude Include="ReproRunner.hxx" />
     <ClInclude Include="ReproVersion.hxx" />
     <ClInclude Include="WebAdmin.hxx" />
+    <ClInclude Include="SqlDb.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="webadmin\pageOutlinePost.ixx">

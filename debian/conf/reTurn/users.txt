@@ -1,0 +1,25 @@
+#
+# reTurnServer user database file
+#
+# The format of each line is:
+#
+#    login:password:realm:state
+#
+# Note: as of v1.9.0, the Debian packages enable
+# UserDatabaseHashedPasswords and so the password field must be
+# a HA1 hashed password.
+#
+# Typically, the realm field must match the value of AuthenticationRealm
+# defined in reTurnServer.config
+#
+# The state field (not case sensitive) can be one of:
+#
+#   authorized   (user authorized)
+#   refused      (user denied access)
+#   restricted   (for when bandwidth limiting is implemented)
+#
+# This file format is interchangeable with TurnServer.org's user database
+#
+# Comments can be inserted by starting a line with #
+#
+test:foobar:example.org:REFUSED

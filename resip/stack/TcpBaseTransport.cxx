@@ -295,7 +295,8 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    // This will add the connection to the manager
    Connection *conn = createConnection(dest, sock, false);
    assert(conn);
-   conn->mRequestPostConnectSocketFuncCall = true;
+   conn->mFirstWriteAfterConnectedPending = true;
+
    return conn;
 }
 
@@ -361,6 +362,14 @@ TcpBaseTransport::processAllWriteRequests()
       }
       else // have a connection
       {
+         // Check if we have written anything or not on the connection.  If not, then this is either the first or 
+         // a subsequent transaction trying to use this connection attempt - set TcpConnectState for this 
+         // transaction to ConnectStarted
+         if (conn->mFirstWriteAfterConnectedPending == true)
+         {
+             // Notify the transaction state that we have started a TCP connect, so that it can run a TCP connect timer
+             setTcpConnectState(data->transactionId, TcpConnectState::ConnectStarted);
+         }
          conn->requestWrite(data);
       }
    }

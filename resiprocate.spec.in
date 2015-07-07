@@ -12,8 +12,11 @@ BuildRequires: cajun-jsonapi-devel
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: gperf
-%if 0%{?fedora} >= 18
+%if 0%{?fedora} >= 18 || 0%{?rhel} >= 7
 BuildRequires: db4-cxx-devel
+%endif
+%define use_systemd 0%{?fedora} >= 17 || 0%{?rhel} >= 7
+%if %use_systemd
 BuildRequires: systemd
 %endif
 BuildRequires: db4-devel
@@ -22,18 +25,24 @@ BuildRequires: mysql-devel
 BuildRequires: pcre-devel
 BuildRequires: perl
 BuildRequires: popt-devel
+BuildRequires: postgresql-devel
 BuildRequires: python-devel
 BuildRequires: python-pycxx-devel
+%define use_freeradius_client 0%{?fedora} == 0 || 0%{?fedora} >= 21 || 0%{?rhel} >= 7
+%if %use_freeradius_client
+BuildRequires: freeradius-client-devel
+%else
 BuildRequires: radiusclient-ng-devel
+%endif
 BuildRequires: xerces-c-devel
 Requires: openssl >= 0.9.8
-Requires: chkconfig
-%if 0%{?fedora} < 17
-Requires(preun): initscripts
-%else
+%if %use_systemd
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
+%else
+Requires: chkconfig
+Requires(preun): initscripts
 %endif
 Obsoletes: resiprocate-b2bua
 
@@ -134,43 +143,46 @@ such as the repro SIP proxy.
 %setup -q
 
 %build
-%if 0%{?fedora} < 14
-PYVERSION=2.6
+PYCONFIG=/usr/bin/python2.7-config
+[ -x $PYCONFIG ] || PYCONFIG=/usr/bin/python2.6-config
+if [ ! -x $PYCONFIG ] ; then echo "python*-config not found" ; exit 1 ; fi
+%if %use_freeradius_client
+RADIUS_CFG=--with-freeradius
 %else
-PYVERSION=2.7
+RADIUS_CFG=--with-radius
 %endif
-PYCONFIG=/usr/bin/python${PYVERSION}-config
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-radius --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python2
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python2
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{?_smp_mflags}
 
 %install
 make DESTDIR=%{buildroot} install
-%if 0%{?fedora} >= 17
-install -p -D -m644 repro/pkg/fedora/repro.service %{buildroot}%{_unitdir}/repro.service
-install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.service %{buildroot}%{_unitdir}/resiprocate-turn-server.service
+%if %use_systemd
+install -p -D -m644 repro/pkg/common/repro.service %{buildroot}%{_unitdir}/repro.service
+install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.service %{buildroot}%{_unitdir}/resiprocate-turn-server.service
 %else
 install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
 install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
 %endif
-install -p -D -m644 repro/pkg/fedora/repro.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/repro
-install -p -D -m644 reTurn/pkg/fedora/resiprocate-turn-server.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/resiprocate-turn-server
+install -p -D -m644 repro/pkg/common/repro.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/repro
+install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/resiprocate-turn-server
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 repro/users.txt %{buildroot}%{_sysconfdir}/repro/users.txt
 sed -i \
+ -e 's!^#CAFile = /etc/pki/tls/cert.pem$!CAFile = /etc/pki/tls/cert.pem!' \
  -e 's!^LoggingType = cout$!LoggingType = file!' \
  -e 's!^LogLevel = INFO$!LogLevel = WARNING!' \
  -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
  -e 's!^LogFileMaxBytes = 5242880!LogFileMaxBytes = 0!' \
  -e 's!^HttpAdminUserFile = users.txt$!HttpAdminUserFile = %{_sysconfdir}/repro/users.txt!' \
- -e 's!^#PluginDirectory = /usr/lib/repro/plugins$!PluginDirectory = %{_libdir}/resiprocate/repro/plugins!' \
+ -e 's!^#PluginDirectory = /usr/lib/repro/plugins$!PluginDirectory = %{_libdir}/@PACKAGE@/repro/plugins!' \
  -e 's!^#RunAsUser = repro$!RunAsUser = repro!' \
  -e 's!^#RunAsGroup = repro$!RunAsGroup = repro!' \
  -e 's!^Daemonize = false$!Daemonize = true!' \
- -e 's!^DatabasePath = ./$!DatabasePath = %{_sharedstatedir}/repro!' \
+ -e 's!^Database1Path = ./$!Database1Path = %{_sharedstatedir}/repro!' \
  -e 's!^ChallengeThirdPartiesCallingLocalDomains = true$!ChallengeThirdPartiesCallingLocalDomains = false!' \
             %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 reTurn/reTurnServer.config %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
@@ -217,7 +229,7 @@ getent passwd return >/dev/null || \
 
 %post repro
 /sbin/ldconfig
-%if 0%{?fedora} >= 18
+%if %use_systemd
 %systemd_post repro.service
 %else
 if [ $1 -eq 1 ] ; then
@@ -227,7 +239,7 @@ fi
 %endif
 
 %post turn-server
-%if 0%{?fedora} >= 18
+%if %use_systemd
 %systemd_post resiprocate-turn-server.service
 %else
 if [ $1 -eq 1 ] ; then
@@ -237,7 +249,7 @@ fi
 %endif
 
 %preun repro
-%if 0%{?fedora} >= 18
+%if %use_systemd
 %systemd_preun repro.service
 %else
 if [ "$1" = 0 ]
@@ -249,7 +261,7 @@ fi
 %endif
 
 %preun turn-server
-%if 0%{?fedora} >= 18
+%if %use_systemd
 %systemd_preun resiprocate-turn-server.service
 %else
 if [ "$1" = 0 ]
@@ -264,7 +276,7 @@ fi
 
 %postun repro
 /sbin/ldconfig
-%if 0%{?fedora} >= 18
+%if %use_systemd
 %systemd_postun_with_restart repro.service
 %else
 if [ $1 -ge 1 ] ; then
@@ -274,7 +286,7 @@ fi
 %endif
 
 %postun turn-server
-%if 0%{?fedora} >= 18
+%if %use_systemd
 %systemd_postun_with_restart resiprocate-turn-server.service
 %else
 if [ $1 -ge 1 ] ; then
@@ -339,7 +351,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/logrotate.d/repro
 %attr(0750,repro,repro) %dir %{_localstatedir}/log/repro
 %config %ghost %{_localstatedir}/log/repro/repro.log
-%if 0%{?fedora} >= 17
+%if %use_systemd
 %{_unitdir}/repro.service
 %else
 %{_initddir}/repro
@@ -359,7 +371,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/@PACKAGE@/reTurnServer
 %attr(0750,return,return) %dir %{_localstatedir}/log/reTurnServer
 %config %ghost %{_localstatedir}/log/reTurnServer/reTurnServer.log
-%if 0%{?fedora} >= 17
+%if %use_systemd
 %{_unitdir}/resiprocate-turn-server.service
 %else
 %{_initddir}/resiprocate-turn-server

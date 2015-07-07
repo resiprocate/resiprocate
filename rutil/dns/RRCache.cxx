@@ -243,12 +243,13 @@ RRCache::logCache()
    {
       if (now >= (*it)->absoluteExpiry())
       {
-         it = mRRSet.erase(it);
+         delete *it;
+         mRRSet.erase(it++);
       }
       else
       {
          (*it)->log();
-         it++;
+         ++it;
       }
    }
 }
@@ -262,12 +263,13 @@ RRCache::getCacheDump(Data& dnsCacheDump)
    {
       if (now >= (*it)->absoluteExpiry())
       {
-         it = mRRSet.erase(it);
+         delete *it;
+         mRRSet.erase(it++);
       }
       else
       {
          (*it)->encodeRRList(strm);
-         it++;
+         ++it;
       }
    }
    strm.flush();
