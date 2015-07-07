@@ -349,7 +349,6 @@ AC_OUTPUT(Makefile \
 	resip/recon/Makefile \
 	resip/recon/MOHParkServer/Makefile \
 	resip/recon/test/Makefile \
-	presSvr/Makefile \
 	p2p/s2c/s2c/Makefile \
 	p2p/Makefile \
 	)

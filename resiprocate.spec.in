@@ -130,15 +130,6 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
-%package presence-server
-Summary: Basic SIP presence server
-
-%description presence-server
-Provides a simple SIP presence server.
-reSIProcate is a framework that aims to fully implement the SIP protocol
-in first class C++.  It is intended for use in other applications,
-such as the repro SIP proxy.
-
 %prep
 %setup -q
 
@@ -388,9 +379,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files clicktocall
 %{_sbindir}/clicktocall
-
-%files presence-server
-%{_sbindir}/presSvr
 
 %changelog
 * Sat Nov 24 2012 Daniel Pocock <daniel@pocock.com.au> - @VERSION@-1
