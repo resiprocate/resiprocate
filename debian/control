@@ -141,6 +141,29 @@ Description: reSIProcate SIP stack - ICE/TURN server
  in first class C++.  It is intended for use in other applications,
  such as the repro SIP proxy.
 
+Package: resiprocate-turn-server-psql
+Section: net
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, resiprocate-turn-server, python-psycopg2
+Description: reSIProcate SIP stack - ICE/TURN server
+ reTurn is the TURN server developed as part of the reSIProcate project.
+ TURN (RFC 5766) provides a standardised solution for VoIP applications
+ to find the most efficient way to route media streams when NAT and
+ firewall devices may be present.
+ .
+ reTurn provides a high-quality, low maintenance solution for serving
+ small and large IP telephony installations.  It has been used successfully
+ with a variety of SIP and Jabber applications, including Lumicall,
+ Jitsi, Empathy and Psi.
+ .
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ This packages provides a Python script to synchronize the reTurn
+ users.txt file from a PostgreSQL table.
+
 Package: sipdialer
 Section: net
 Architecture: any
