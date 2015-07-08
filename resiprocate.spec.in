@@ -157,15 +157,13 @@ install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.service %{buildroo
 install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
 install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
 %endif
-install -p -D -m644 repro/pkg/common/repro.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/repro
-install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/resiprocate-turn-server
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 repro/users.txt %{buildroot}%{_sysconfdir}/repro/users.txt
 sed -i \
  -e 's!^#CAFile = /etc/pki/tls/cert.pem$!CAFile = /etc/pki/tls/cert.pem!' \
- -e 's!^LoggingType = cout$!LoggingType = file!' \
- -e 's!^LogLevel = INFO$!LogLevel = WARNING!' \
+ -e 's!^LoggingType = cout$!LoggingType = syslog!' \
+ -e 's!^LogLevel = INFO$!LogLevel = DEBUG!' \
  -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
  -e 's!^LogFileMaxBytes = 5242880!LogFileMaxBytes = 0!' \
  -e 's!^HttpAdminUserFile = users.txt$!HttpAdminUserFile = %{_sysconfdir}/repro/users.txt!' \
@@ -181,7 +179,7 @@ install -p -D -m640 reTurn/users.txt %{buildroot}%{_sysconfdir}/reTurn/users.txt
 sed -i -e 's/1234/6078a36f89704d83763c9e174b3e87a4/' %{buildroot}%{_sysconfdir}/reTurn/users.txt
 sed -i \
  -e 's!^TlsTurnPort = 5349!TlsTurnPort = 0!' \
- -e 's!^LoggingLevel = DEBUG!LoggingLevel = WARNING!' \
+ -e 's!^LoggingType = file$!LoggingType = syslog!' \
  -e 's!^LogFilename = reTurnServer.log!LogFilename = %{_localstatedir}/log/reTurnServer/reTurnServer.log!' \
  -e 's!^LogFileMaxLines = 50000!LogFileMaxLines = 0!' \
  -e 's!^Daemonize = false!Daemonize = true!' \
@@ -199,10 +197,6 @@ rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.la
 install -m 0755 -d %{buildroot}/%{_docdir}/repro/examples/pyroute
 install -p -D -m644 repro/plugins/pyroute/*.py %{buildroot}/%{_docdir}/repro/examples/pyroute
 install -p -D -m644 repro/plugins/pyroute/README.txt %{buildroot}/%{_docdir}/repro/examples/pyroute
-install -m 0750 -d %{buildroot}%{_localstatedir}/log/repro
-touch %{buildroot}%{_localstatedir}/log/repro/repro.log
-install -m 0750 -d %{buildroot}%{_localstatedir}/log/reTurnServer
-touch %{buildroot}%{_localstatedir}/log/reTurnServer/reTurnServer.log
 
 %pre repro
 getent group repro >/dev/null || groupadd -r repro
@@ -339,9 +333,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0750,repro,repro) %dir %{_sharedstatedir}/repro
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/repro.config
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/users.txt
-%config(noreplace) %{_sysconfdir}/logrotate.d/repro
-%attr(0750,repro,repro) %dir %{_localstatedir}/log/repro
-%config %ghost %{_localstatedir}/log/repro/repro.log
 %if %use_systemd
 %{_unitdir}/repro.service
 %else
@@ -358,10 +349,7 @@ rm -rf $RPM_BUILD_ROOT
 %files turn-server
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/reTurnServer.config
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/users.txt
-%config(noreplace) %{_sysconfdir}/logrotate.d/resiprocate-turn-server
 %dir %{_libdir}/@PACKAGE@/reTurnServer
-%attr(0750,return,return) %dir %{_localstatedir}/log/reTurnServer
-%config %ghost %{_localstatedir}/log/reTurnServer/reTurnServer.log
 %if %use_systemd
 %{_unitdir}/resiprocate-turn-server.service
 %else
