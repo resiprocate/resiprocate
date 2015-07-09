@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static char *RCSSTRING __UNUSED__="$Id: ice_candidate_pair.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <string.h>
 #include <nr_api.h>
 #include "async_timer.h"
@@ -76,7 +76,7 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
     /* Priority computation S 5.7.2 */
     if(pctx->ctx->flags & NR_ICE_CTX_FLAGS_OFFERER)
     {
-      resip_assert(!(pctx->ctx->flags & NR_ICE_CTX_FLAGS_ANSWERER));
+      assert(!(pctx->ctx->flags & NR_ICE_CTX_FLAGS_ANSWERER));
 
       o_priority=lcand->priority;
       a_priority=rcand->priority;
@@ -168,7 +168,7 @@ int nr_ice_candidate_pair_destroy(nr_ice_cand_pair **pairp)
 
 int nr_ice_candidate_pair_unfreeze(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair)
   {
-    resip_assert(pair->state==NR_ICE_PAIR_STATE_FROZEN);
+    assert(pair->state==NR_ICE_PAIR_STATE_FROZEN);
 
     nr_ice_candidate_pair_set_state(pctx,pair,NR_ICE_PAIR_STATE_WAITING);
 
@@ -361,14 +361,14 @@ static void nr_ice_candidate_pair_restart(nr_ice_peer_ctx *pctx, nr_ice_cand_pai
       /* ignore if this fails (which it shouldn't) because it's only an
        * optimization and the cleanup routines are not going to do the right
        * thing if this fails */
-      resip_assert(0);
+      assert(0);
     }
 
     _status=0;
   abort:
     if(_status){
       /* Don't fire the CB, but schedule it to fire ASAP */
-      resip_assert(!pair->stun_cb_timer);
+      assert(!pair->stun_cb_timer);
       NR_ASYNC_TIMER_SET(0,nr_ice_candidate_pair_stun_cb,pair, &pair->stun_cb_timer);
       _status=0;
     }
@@ -497,7 +497,7 @@ int nr_ice_candidate_pair_set_state(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pai
       if(state!=NR_ICE_PAIR_STATE_WAITING)
         pctx->waiting_pairs--;
 
-      resip_assert(pctx->waiting_pairs>=0);
+      assert(pctx->waiting_pairs>=0);
     }
     pair->state=state;
 

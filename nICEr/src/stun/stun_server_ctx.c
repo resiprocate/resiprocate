@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: stun_server_ctx.c,v 1.2 2008/04/28 18:21:30 ekr Exp $";
 
 #include <string.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 
 #include "nr_api.h"
 #include "stun.h"
@@ -142,7 +142,7 @@ int nr_stun_server_add_default_client(nr_stun_server_ctx *ctx, char *ufrag, Data
     int r,_status;
     nr_stun_server_client *clnt;
 
-    resip_assert(!ctx->default_client);
+    assert(!ctx->default_client);
     if (ctx->default_client)
       ABORT(R_INTERNAL);
 
@@ -302,7 +302,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
             ABORT(r);
     }
 
-    resip_assert(res->header.type == 0);
+    assert(res->header.type == 0);
 
     clnt = 0;
     if (NR_STUN_GET_TYPE_CLASS(req->header.type) == NR_CLASS_REQUEST) {
@@ -357,12 +357,12 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
        you are sending an error, things go wonky */
 #ifdef SANITY_CHECKS
     if (_status == R_ALREADY) {
-        resip_assert(NR_STUN_GET_TYPE_CLASS(res->header.type) == NR_CLASS_ERROR_RESPONSE);
-        resip_assert(nr_stun_message_has_attribute(res, NR_STUN_ATTR_ERROR_CODE, 0));
+        assert(NR_STUN_GET_TYPE_CLASS(res->header.type) == NR_CLASS_ERROR_RESPONSE);
+        assert(nr_stun_message_has_attribute(res, NR_STUN_ATTR_ERROR_CODE, 0));
     }
     else {
-        resip_assert(NR_STUN_GET_TYPE_CLASS(res->header.type) == NR_CLASS_RESPONSE);
-        resip_assert(!nr_stun_message_has_attribute(res, NR_STUN_ATTR_ERROR_CODE, 0));
+        assert(NR_STUN_GET_TYPE_CLASS(res->header.type) == NR_CLASS_RESPONSE);
+        assert(!nr_stun_message_has_attribute(res, NR_STUN_ATTR_ERROR_CODE, 0));
     }
 #endif /* SANITY_CHECKS */
 #endif

@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: ice_ctx.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
 #include <csi_platform.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <sys/types.h>
 #ifdef WIN32
 #include <winsock2.h>
@@ -465,7 +465,7 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
     nr_ice_ctx *ctx;
 
 
-    resip_assert(cb_arg);
+    assert(cb_arg);
     if (!cb_arg)
       return;
     ctx = cand->ctx;
@@ -739,7 +739,7 @@ int nr_ice_ctx_remember_id(nr_ice_ctx *ctx, nr_stun_message *msg)
     if (!xid)
         ABORT(R_NO_MEMORY);
 
-    resip_assert(sizeof(xid->id) == sizeof(msg->header.id));
+    assert(sizeof(xid->id) == sizeof(msg->header.id));
 #if __STDC_VERSION__ >= 201112L
     _Static_assert(sizeof(xid->id) == sizeof(msg->header.id),"Message ID Size Mismatch");
 #endif

@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: ice_candidate.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
 #include <csi_platform.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/queue.h>
@@ -91,7 +91,7 @@ void nr_ice_candidate_compute_codeword(nr_ice_candidate *cand)
 char *nr_ice_candidate_type_names[]={0,"host","srflx","prflx","relay",0};
 
 static const char *nr_ctype_name(nr_ice_candidate_type ctype) {
-  resip_assert(ctype<CTYPE_MAX && ctype>0);
+  assert(ctype<CTYPE_MAX && ctype>0);
   if (ctype <= 0 || ctype >= CTYPE_MAX) {
     return "ERROR";
   }
@@ -113,7 +113,7 @@ static int nr_ice_candidate_format_stun_label(char *label, size_t size, nr_ice_c
                  cand->stun_server->u.dnsname.host, cand->stun_server->u.dnsname.port);
         break;
       default:
-        resip_assert(0);
+        assert(0);
         ABORT(R_BAD_ARGS);
     }
 
@@ -165,7 +165,7 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket
         break;
 
       default:
-        resip_assert(0); /* Can't happen */
+        assert(0); /* Can't happen */
         ABORT(R_BAD_ARGS);
     }
     if(!(cand->label=r_strdup(label)))
@@ -436,7 +436,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
       (256 - cand->component_id);
 
     /* S 4.1.2 */
-    resip_assert(cand->priority>=1&&cand->priority<=2147483647);
+    assert(cand->priority>=1&&cand->priority<=2147483647);
 
     _status=0;
   abort:
@@ -569,7 +569,7 @@ static int nr_ice_candidate_initialize2(nr_ice_candidate *cand)
 
     switch(cand->type){
       case HOST:
-        resip_assert(0); /* Can't happen */
+        assert(0); /* Can't happen */
         ABORT(R_INTERNAL);
         break;
 #ifdef USE_TURN
@@ -629,7 +629,7 @@ static int nr_ice_srvrflx_start_stun(nr_ice_candidate *cand)
   {
     int r,_status;
 
-    resip_assert(!cand->delay_timer);
+    assert(!cand->delay_timer);
     if(r=nr_stun_client_ctx_create(cand->label, cand->isock->sock,
       &cand->stun_server_addr, cand->stream->ctx->gather_rto,
       &cand->u.srvrflx.stun))
@@ -672,7 +672,7 @@ static void nr_ice_start_relay_turn_timer_cb(NR_SOCKET s, int how, void *cb_arg)
 static int nr_ice_start_relay_turn(nr_ice_candidate *cand)
   {
     int r,_status;
-    resip_assert(!cand->delay_timer);
+    assert(!cand->delay_timer);
     if(r=nr_turn_client_ctx_create(cand->label, cand->isock->sock,
                                    cand->u.relayed.server->username,
                                    cand->u.relayed.server->password,
@@ -795,7 +795,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
       ABORT(R_NOT_FOUND);
       break;
     default:
-      resip_assert(0); /* should never happen */
+      assert(0); /* should never happen */
       ABORT(R_INTERNAL);
     }
 
@@ -827,8 +827,8 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     int port;
     int len;
 
-    resip_assert(!strcmp(nr_ice_candidate_type_names[HOST], "host"));
-    resip_assert(!strcmp(nr_ice_candidate_type_names[RELAYED], "relay"));
+    assert(!strcmp(nr_ice_candidate_type_names[HOST], "host"));
+    assert(!strcmp(nr_ice_candidate_type_names[RELAYED], "relay"));
 
     if(r=nr_transport_addr_get_addrstring(&cand->addr,addr,sizeof(addr)))
       ABORT(r);
@@ -863,7 +863,7 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
         snprintf(attr,maxlen," raddr %s rport %d",addr,port);
         break;
       default:
-        resip_assert(0);
+        assert(0);
         ABORT(R_INTERNAL);
         break;
     }

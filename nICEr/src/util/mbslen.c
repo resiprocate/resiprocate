@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <errno.h>
 #include <csi_platform.h>
 
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -86,7 +86,7 @@ mbslen(const char *s, size_t *ncharsp)
 
     if (loc == 0) {
         /* unable to create the UTF-8 locale */
-        resip_assert(loc != 0);  /* should never happen */
+        assert(loc != 0);  /* should never happen */
 #endif /* HAVE_XLOCALE */
 
 #ifdef WIN32

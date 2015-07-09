@@ -7,6 +7,7 @@
 
 #ifdef USE_POSTGRESQL
 
+#include "rutil/Assert.h"
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
@@ -134,8 +135,8 @@ PostgreSqlDb::connectToDatabase() const
    disconnectFromDatabase();
 
    // Now try to connect
-   assert(mConn == 0);
-   assert(isConnected() == false);
+   resip_assert(mConn == 0);
+   resip_assert(isConnected() == false);
 
    Data conninfo = "host=" + mDBServer + " " +
                    "port=" + Data((UInt32)mDBPort) + " " +
@@ -183,8 +184,8 @@ PostgreSqlDb::query(const Data& queryCommand, PGresult** result) const
    }
    if(rc == 0)
    {
-      assert(mConn!=0);
-      assert(isConnected());
+      resip_assert(mConn!=0);
+      resip_assert(isConnected());
       _result = PQexec(mConn, queryCommand.c_str());
       rc = pqOK(_result);
       if(rc != 0)

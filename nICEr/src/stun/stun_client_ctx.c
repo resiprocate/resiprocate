@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static char *RCSSTRING __UNUSED__="$Id: stun_client_ctx.c,v 1.2 2008/04/28 18:21:30 ekr Exp $";
 
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <string.h>
 
 #include <nr_api.h>
@@ -156,7 +156,7 @@ int nr_stun_client_restart(nr_stun_client_ctx *ctx)
     if (ctx->state != NR_STUN_CLIENT_STATE_RUNNING)
         ABORT(R_NOT_PERMITTED);
 
-    resip_assert(ctx->retry_ct <= 2);
+    assert(ctx->retry_ct <= 2);
     if (ctx->retry_ct > 2)
         ABORT(R_NOT_PERMITTED);
 
@@ -309,7 +309,7 @@ static int nr_stun_client_send_request(nr_stun_client_ctx *ctx)
         case NR_STUN_CLIENT_MODE_BINDING_REQUEST_LONG_TERM_AUTH:
             ctx->params.stun_binding_request.nonce = ctx->nonce;
             ctx->params.stun_binding_request.realm = ctx->realm;
-            resip_assert(0);
+            assert(0);
             ABORT(R_INTERNAL);
             /* TODO(ekr@rtfm.com): Need to implement long-term auth for binding
                requests */
@@ -366,7 +366,7 @@ static int nr_stun_client_send_request(nr_stun_client_ctx *ctx)
 #endif /* USE_TURN */
 
         default:
-            resip_assert(0);
+            assert(0);
             ABORT(R_FAILED);
             break;
         }
@@ -511,7 +511,7 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
 #endif /* USE_TURN */
 
     default:
-        resip_assert(0);
+        assert(0);
         ABORT(R_FAILED);
         break;
     }
@@ -686,7 +686,7 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
 #endif /* USE_TURN */
 
     default:
-        resip_assert(0);
+        assert(0);
         ABORT(R_FAILED);
         break;
     }

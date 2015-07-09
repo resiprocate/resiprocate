@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include <cstring>
-#include "rutil/Assert.h"
+#include <cassert>
 
 #ifndef __APPLE__
 bool TRUE=true;

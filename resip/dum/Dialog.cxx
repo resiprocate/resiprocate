@@ -15,6 +15,7 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "rutil/Assert.h"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/TransportType.hxx"
@@ -1053,7 +1054,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 void 
 Dialog::setRequestNextCSeq(SipMessage& request)
 {
-   assert(request.isRequest() && request.method() != ACK && request.method() != CANCEL);
+   resip_assert(request.isRequest() && request.method() != ACK && request.method() != CANCEL);
    request.header(h_CSeq).sequence() = ++mLocalCSeq;
 }
 

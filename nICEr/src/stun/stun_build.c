@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: stun_build.c,v 1.2 2008/04/28 18:21:30 ekr Exp $";
 
 #include <csi_platform.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -61,7 +61,7 @@ nr_stun_form_request_or_indication(int mode, int msg_type, nr_stun_message **msg
    int r,_status;
    nr_stun_message *req = 0;
 
-   resip_assert(NR_STUN_GET_TYPE_CLASS(msg_type) == NR_CLASS_REQUEST
+   assert(NR_STUN_GET_TYPE_CLASS(msg_type) == NR_CLASS_REQUEST
        || NR_STUN_GET_TYPE_CLASS(msg_type) == NR_CLASS_INDICATION);
 
    *msg = 0;
@@ -205,8 +205,8 @@ nr_stun_build_req_stund_0_96(nr_stun_client_stun_binding_request_stund_0_96_para
     if ((r=nr_stun_message_add_change_request_attribute(req, 0)))
         ABORT(r);
 
-    resip_assert(! nr_stun_message_has_attribute(req, NR_STUN_ATTR_USERNAME, 0));
-    resip_assert(! nr_stun_message_has_attribute(req, NR_STUN_ATTR_MESSAGE_INTEGRITY, 0));
+    assert(! nr_stun_message_has_attribute(req, NR_STUN_ATTR_USERNAME, 0));
+    assert(! nr_stun_message_has_attribute(req, NR_STUN_ATTR_MESSAGE_INTEGRITY, 0));
 
     *msg = req;
 
@@ -278,7 +278,7 @@ nr_stun_build_req_ice(nr_stun_client_ice_binding_request_params *params, nr_stun
            ABORT(r);
        break;
    default:
-       resip_assert(0);
+       assert(0);
        ABORT(R_INTERNAL);
    }
 
@@ -353,10 +353,10 @@ nr_stun_build_auth_params(nr_stun_client_auth_params *auth, nr_stun_message *req
   if (!auth->authenticate)
     goto done;
 
-  resip_assert(auth->username);
-  resip_assert(auth->password.len);
-  resip_assert(auth->realm);
-  resip_assert(auth->nonce);
+  assert(auth->username);
+  assert(auth->password.len);
+  assert(auth->realm);
+  assert(auth->nonce);
 
   if (r=nr_stun_compute_lt_message_integrity_password(auth->username,
                                                       auth->realm,
@@ -604,7 +604,7 @@ nr_stun_form_error_response(nr_stun_message *req, nr_stun_message* res, int numb
     }
 
     if (nr_stun_message_add_error_code_attribute(res, number, str)) {
-         resip_assert(0);  /* should never happen */
+         assert(0);  /* should never happen */
     }
 
     if (!NR_reg_get_string(NR_STUN_REG_PREF_SERVER_NAME, server_name, sizeof(server_name))) {

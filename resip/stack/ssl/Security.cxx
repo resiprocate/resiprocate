@@ -17,6 +17,7 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "rutil/Assert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
@@ -673,11 +674,11 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
 
    /*
    // make a copy of the the key 
-   assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
+   resip_assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
-   assert( rsa );
+   resip_assert( rsa );
    EVP_PKEY* nKey = EVP_PKEY_new();
-   assert( nKey );
+   resip_assert( nKey );
    EVP_PKEY_set1_RSA(nKey, rsa);
    */
    

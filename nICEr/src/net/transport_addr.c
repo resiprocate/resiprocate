@@ -48,7 +48,7 @@ static char *RCSSTRING __UNUSED__="$Id: transport_addr.c,v 1.2 2008/04/28 17:59:
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif
-#include "rutil/Assert.h"
+#include <assert.h>
 #include "nr_api.h"
 #include "transport_addr.h"
 
@@ -315,7 +315,7 @@ int nr_transport_addr_get_ip4(nr_transport_addr *addr, UINT4 *ip4p)
    haven't been made. Hmmm.. */
 int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int mode)
   {
-    resip_assert(mode);
+    assert(mode);
 
     if(addr1->ip_version != addr2->ip_version)
       return(1);
@@ -329,7 +329,7 @@ int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int 
     if(mode < NR_TRANSPORT_ADDR_CMP_MODE_ADDR)
       return(0);
 
-    resip_assert(addr1->addr_len == addr2->addr_len);
+    assert(addr1->addr_len == addr2->addr_len);
     switch(addr1->ip_version){
       case NR_IPV4:
         if(addr1->u.addr4.sin_addr.s_addr != addr2->u.addr4.sin_addr.s_addr)
