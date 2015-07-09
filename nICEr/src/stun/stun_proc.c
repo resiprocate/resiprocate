@@ -44,7 +44,7 @@ static char *RCSSTRING __UNUSED__="$Id: stun_proc.c,v 1.2 2008/04/28 18:21:30 ek
 #else   /* UNIX */
 #include <string.h>
 #endif  /* end UNIX */
-#include "rutil/Assert.h"
+#include <assert.h>
 
 #include "stun.h"
 #include "stun_reg.h"
@@ -165,7 +165,7 @@ nr_stun_process_request(nr_stun_message *req, nr_stun_message *res)
             }
         }
 
-        resip_assert(req->comprehension_required_unknown_attributes + req->comprehension_optional_unknown_attributes == unknown_attributes.num_attributes);
+        assert(req->comprehension_required_unknown_attributes + req->comprehension_optional_unknown_attributes == unknown_attributes.num_attributes);
 
         if ((r=nr_stun_message_add_unknown_attributes_attribute(res, &unknown_attributes)))
             ABORT(R_ALREADY);
@@ -433,7 +433,7 @@ nr_stun_add_realm_and_nonce(int new_nonce, nr_stun_server_client *clnt, nr_stun_
     _status=0;
  abort:
 #ifdef USE_TURN
-resip_assert(_status == 0); /* TODO: !nn! cleanup after I reimplmement TURN */
+assert(_status == 0); /* TODO: !nn! cleanup after I reimplmement TURN */
 #endif
     RFREE(realm);
     return _status;
@@ -471,7 +471,7 @@ nr_stun_receive_request_long_term_auth(nr_stun_message *req, nr_stun_server_ctx 
             ABORT(R_ALREADY);
         }
 
-        resip_assert(!mi->u.message_integrity.unknown_user);
+        assert(!mi->u.message_integrity.unknown_user);
 
         if (!nr_stun_message_has_attribute(req, NR_STUN_ATTR_REALM, 0)) {
             nr_stun_form_error_response(req, res, 400, "Missing REALM");
@@ -483,7 +483,7 @@ nr_stun_receive_request_long_term_auth(nr_stun_message *req, nr_stun_server_ctx 
             ABORT(R_ALREADY);
         }
 
-        resip_assert(sizeof(clnt->nonce) == sizeof(n->u.nonce));
+        assert(sizeof(clnt->nonce) == sizeof(n->u.nonce));
         if (strncmp(clnt->nonce, n->u.nonce, sizeof(n->u.nonce))) {
             nr_stun_form_error_response(req, res, 438, "Stale NONCE");
             nr_stun_add_realm_and_nonce(1, clnt, res);

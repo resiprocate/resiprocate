@@ -45,7 +45,7 @@ static char *RCSSTRING __UNUSED__="$Id: stun_hint.c,v 1.2 2008/04/28 18:21:30 ek
 #else   /* UNIX */
 #include <string.h>
 #endif  /* end UNIX */
-#include "rutil/Assert.h"
+#include <assert.h>
 
 #include "stun.h"
 

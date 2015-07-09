@@ -39,7 +39,7 @@ static char *RCSSTRING __UNUSED__="$Id: nr_socket_turn.c,v 1.2 2008/04/28 18:21:
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 
 #include "stun.h"
 #include "turn_client_ctx.h"
@@ -108,7 +108,7 @@ static int nr_socket_turn_destroy(void **objp)
     sturn=*objp;
     *objp=0;
 
-    resip_assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
 
     /* we don't own the socket, so don't destroy it */
 
@@ -124,8 +124,8 @@ static int nr_socket_turn_sendto(void *obj,const void *msg, size_t len,
     int r,_status;
     nr_socket_turn *sturn=obj;
 
-    resip_assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-    resip_assert(sturn->turn);
+    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+    assert(sturn->turn);
 
     if ((r = nr_turn_client_send_indication(sturn->turn, msg, len, flags,
                                             addr)))
@@ -141,7 +141,7 @@ static int nr_socket_turn_recvfrom(void *obj,void * restrict buf,
   {
     /* Reading from TURN sockets is done by the indication
        processing code in turn_client_ctx. */
-    resip_assert(0);
+    assert(0);
 
     return(R_INTERNAL);
   }
@@ -149,7 +149,7 @@ static int nr_socket_turn_recvfrom(void *obj,void * restrict buf,
 static int nr_socket_turn_getfd(void *obj, NR_SOCKET *fd)
   {
     /* You should never directly be touching this fd. */
-    resip_assert(0);
+    assert(0);
 
     return(R_INTERNAL);
   }
@@ -159,8 +159,8 @@ static int nr_socket_turn_getaddr(void *obj, nr_transport_addr *addrp)
     nr_socket_turn *sturn=obj;
     int r, _status;
 
-    resip_assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-    resip_assert(sturn->turn);
+    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+    assert(sturn->turn);
 
     /* This returns the relayed address */
     if ((r=nr_turn_client_get_relayed_address(sturn->turn, addrp)))
@@ -176,7 +176,7 @@ static int nr_socket_turn_close(void *obj)
     /* No-op */
 #ifndef NDEBUG
     nr_socket_turn *sturn=obj;
-    resip_assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
 #endif
 
     return 0;
@@ -185,8 +185,8 @@ static int nr_socket_turn_close(void *obj)
 int nr_socket_turn_set_ctx(nr_socket *sock, nr_turn_client_ctx *ctx)
 {
   nr_socket_turn *sturn=(nr_socket_turn*)sock->obj;
-  resip_assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-  resip_assert(!sturn->turn);
+  assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+  assert(!sturn->turn);
 
   sturn->turn = ctx;
 

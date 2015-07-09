@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: ice_component.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
 #include <string.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <nr_api.h>
 #include <registry.h>
 #include <async_timer.h>
@@ -391,11 +391,11 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     /* Note: we need to recompute these because
        we have not yet computed the values in the peer media stream.*/
     lufrag=component->stream->ufrag ? component->stream->ufrag : ctx->ufrag;
-    resip_assert(lufrag);
+    assert(lufrag);
     if (!lufrag)
       ABORT(R_INTERNAL);
     lpwd=component->stream->pwd ? component->stream->pwd :ctx->pwd;
-    resip_assert(lpwd);
+    assert(lpwd);
     if (!lpwd)
       ABORT(R_INTERNAL);
     INIT_DATA(pwd, (UCHAR *)lpwd, strlen(lpwd));
@@ -670,7 +670,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
     }
 
     /* OK, we've got a pair to work with. Turn it on */
-    resip_assert(pair);
+    assert(pair);
     if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_USE_CANDIDATE,0)){
       if(comp->stream->pctx->controlling){
         r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND_PAIR(%s): Peer sent USE-CANDIDATE but is controlled",comp->stream->pctx->label, pair->codeword);
@@ -699,8 +699,8 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
   abort:
     if(_status){
       nr_ice_candidate_destroy(&pcand);
-      resip_assert(*error != 0);
-      if(r!=R_NO_MEMORY) resip_assert(*error != 500);
+      assert(*error != 0);
+      if(r!=R_NO_MEMORY) assert(*error != 500);
     }
     return(_status);
   }
@@ -776,7 +776,7 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
       case RELAYED:
         break;
       default:
-        resip_assert(0);
+        assert(0);
         ABORT(R_INTERNAL);
         break;
     }
@@ -796,7 +796,7 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
         /* If we are pairing our own trickle candidates, the remote candidate should
            all be paired */
         if (pair_all_remote)
-          resip_assert (pcand->state == NR_ICE_CAND_PEER_CANDIDATE_PAIRED);
+          assert (pcand->state == NR_ICE_CAND_PEER_CANDIDATE_PAIRED);
 
         nr_ice_compute_codeword(pcand->label,strlen(pcand->label),codeword);
         r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND(%s): Pairing with peer candidate %s", pctx->label, codeword, pcand->label);
@@ -958,7 +958,7 @@ static int nr_ice_component_have_all_pairs_failed(nr_ice_component *comp)
             /* states that will never be recovered from */
             break;
         default:
-            resip_assert(0);
+            assert(0);
             break;
         }
       }
@@ -1037,7 +1037,7 @@ static void nr_ice_component_keepalive_cb(NR_SOCKET s, int how, void *cb_arg)
     nr_ice_component *comp=cb_arg;
     UINT4 keepalive_timeout;
 
-    resip_assert(comp->keepalive_ctx);
+    assert(comp->keepalive_ctx);
 
     if(NR_reg_get_uint4(NR_ICE_REG_KEEPALIVE_TIMER,&keepalive_timeout)){
       keepalive_timeout=15000; /* Default */
@@ -1059,7 +1059,7 @@ int nr_ice_component_finalize(nr_ice_component *lcomp, nr_ice_component *rcomp)
     nr_ice_socket *s1,*s2;
 
     if(rcomp->state==NR_ICE_COMPONENT_NOMINATED){
-      resip_assert(rcomp->active == rcomp->nominated);
+      assert(rcomp->active == rcomp->nominated);
       isock=rcomp->nominated->local->isock;
     }
 
@@ -1093,7 +1093,7 @@ int nr_ice_component_insert_pair(nr_ice_component *pcomp, nr_ice_cand_pair *pair
     /* Pairs for peer reflexive are marked SUCCEEDED immediately */
     if (pair->state != NR_ICE_PAIR_STATE_FROZEN &&
         pair->state != NR_ICE_PAIR_STATE_SUCCEEDED){
-      resip_assert(0);
+      assert(0);
       ABORT(R_BAD_ARGS);
     }
 

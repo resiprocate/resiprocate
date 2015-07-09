@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static char *RCSSTRING __UNUSED__="$Id: ice_socket.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <string.h>
 #include "nr_api.h"
 #include "ice_ctx.h"
@@ -165,7 +165,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
 #endif /* USE_TURN */
 
           default:
-            resip_assert(0); /* Can't happen */
+            assert(0); /* Can't happen */
             return;
         }
         if(!r) {
@@ -211,7 +211,7 @@ int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsoc
       sock->type = NR_ICE_SOCKET_TYPE_DGRAM;
     }
     else {
-      resip_assert(addr.protocol == IPPROTO_TCP);
+      assert(addr.protocol == IPPROTO_TCP);
       sock->type = NR_ICE_SOCKET_TYPE_STREAM;
     }
 
@@ -274,7 +274,7 @@ int nr_ice_socket_close(nr_ice_socket *isock)
       return(0);
 
     nr_socket_getfd(isock->sock,&fd);
-    resip_assert(isock->sock!=0);
+    assert(isock->sock!=0);
     if(fd != no_socket){
       NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_READ);
       NR_ASYNC_CANCEL(fd,NR_ASYNC_WAIT_WRITE);

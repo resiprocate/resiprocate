@@ -46,7 +46,7 @@ static char *RCSSTRING __UNUSED__="$Id: nr_socket_local.c,v 1.2 2008/04/28 17:59
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <errno.h>
 #include "nr_api.h"
 #include "nr_socket.h"
