@@ -458,6 +458,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GenericPidfContents.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\GenericUri.cxx"
 				>
 			</File>
@@ -826,6 +830,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TcpConnectState.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TransportFailure.cxx"
 				>
 			</File>
@@ -1136,6 +1144,10 @@
 			</File>
 			<File
 				RelativePath=".\GenericContents.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\GenericPidfContents.hxx"
 				>
 			</File>
 			<File
@@ -1508,6 +1520,10 @@
 			</File>
 			<File
 				RelativePath=".\Transport.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TcpConnectState.hxx"
 				>
 			</File>
 			<File

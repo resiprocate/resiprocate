@@ -663,6 +663,32 @@ Data::takeBuf(Data& other)
    return *this;
 }
 
+Data& 
+Data::duplicate(const Data& other)
+{
+   if (&other == this)
+      return *this;
+
+   if (mShareEnum == Data::Take)
+      delete[] mBuf;
+
+   if (other.mBuf == other.mPreBuffer)
+   {
+      // plus one picks up the terminating safety NULL
+      memcpy(mPreBuffer, other.mPreBuffer, other.mSize + 1);
+      mBuf = mPreBuffer;
+   }
+   else
+   {
+      mBuf = other.mBuf;
+   }
+   mSize = other.mSize;
+   mCapacity = other.mCapacity;
+   mShareEnum = other.mShareEnum;
+
+   return *this;
+}
+
 Data&
 Data::copy(const char *buf, size_type length)
 {
@@ -1138,7 +1164,7 @@ Data::escaped() const
          
          int hi = (c & 0xF0)>>4;
          int low = (c & 0x0F);
-	   
+      
          ret += hexmap[hi];
          ret += hexmap[low];
       }
@@ -1184,7 +1210,7 @@ Data::charEncoded() const
          
          int hi = (c & 0xF0)>>4;
          int low = (c & 0x0F);
-	   
+      
          ret += hexmap[hi];
          ret += hexmap[low];
       }
@@ -2276,7 +2302,7 @@ Data::escapeToStream(std::ostream& str,
          }
          int hi = (*p & 0xF0)>>4;
          int low = (*p & 0x0F);
-	   
+      
          str << '%' << hex[hi] << hex[low];
          anchor=++p;
       }

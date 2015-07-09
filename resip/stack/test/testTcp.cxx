@@ -97,20 +97,20 @@ main(int argc, char* argv[])
    cout << "Performing " << runs << " runs." << endl;
    
    Fifo<TransactionMessage> txFifo;
-   TcpTransport* sender = new TcpTransport(txFifo, 5070, V4, Data::Empty);
+   TcpTransport* sender = new TcpTransport(txFifo, 5870, V4, Data::Empty);
 
    Fifo<TransactionMessage> rxFifo;
-   TcpTransport* receiver = new TcpTransport(rxFifo, 5080, V4, Data::Empty);
+   TcpTransport* receiver = new TcpTransport(rxFifo, 5880, V4, Data::Empty);
    
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
    target.uri().host() = "localhost";
-   target.uri().port() = 5080;
+   target.uri().port() = 5880;
    target.uri().param(p_transport) = "tcp";
    
    NameAddr from = target;
-   from.uri().port() = 5070;
+   from.uri().port() = 5870;
 
    InfoLog (<< "Creating messages");
    

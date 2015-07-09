@@ -1,0 +1,12 @@
+usr/include/rutil
+usr/include/repro
+usr/include/repro/monkeys
+usr/include/repro/stateAgents
+usr/include/resip/dum
+usr/include/resip/stack
+usr/include/sipdial
+usr/lib/*/librutil.so
+usr/lib/*/libresip.so
+usr/lib/*/libdum.so
+usr/lib/*/libsipdial.so
+usr/lib/*/librepro.so

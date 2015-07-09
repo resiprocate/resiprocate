@@ -403,18 +403,18 @@ void parseEorP(ParseBuffer& pb, Data& eOrp, Data& freeText)
          //              ^
          // <mjh@isi.edu>
          // ^
-		  
+        
          pb.data(freeText, anchor);
          anchor = pb.skipChar();
          pb.skipToEndQuote(Symbols::RA_QUOTE[0]);
          pb.data(eOrp, anchor);
          pb.skipChar(Symbols::RA_QUOTE[0]);
          break;
-		  
+        
       case '(':					// Symbols::LPAREN[0]
          // mjh@isi.edu (Mark Handley)
          //             ^
-		  
+        
          pb.data(eOrp, anchor);
          anchor = pb.skipChar();
          pb.skipToEndQuote(Symbols::RPAREN[0]);
@@ -724,20 +724,20 @@ parseTypedTime(ParseBuffer& pb)
    {
       switch (*pb.position())
       {
-	 case 's' :
-	    pb.skipChar();
-	    break;
-	 case 'm' :
-	    v *= 60;
-	    pb.skipChar();
-	    break;
-	 case 'h' :
-	    v *= 3600;
-	    pb.skipChar();
+    case 's' :
+       pb.skipChar();
        break;
-	 case 'd' :
-	    v *= 3600*24;
-	    pb.skipChar();
+    case 'm' :
+       v *= 60;
+       pb.skipChar();
+       break;
+    case 'h' :
+       v *= 3600;
+       pb.skipChar();
+       break;
+    case 'd' :
+       v *= 3600*24;
+       pb.skipChar();
       }
    }
    return v;
@@ -1314,12 +1314,12 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    {
       anchor = pb.skipChar(Symbols::SPACE[0]);
       pb.skipToOneOf(Symbols::SPACE, Symbols::CRLF);
-	  if(pb.position() != anchor)
-	  {
-		Data format;
-		pb.data(format, anchor);
-		addFormat(format);
-	  }
+     if(pb.position() != anchor)
+     {
+      Data format;
+      pb.data(format, anchor);
+      addFormat(format);
+     }
    }
 
    skipEol(pb);
@@ -1603,7 +1603,7 @@ SdpContents::Session::Medium::CodecContainer&
 SdpContents::Session::Medium::codecs()
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
-	resip_assert(0);
+   resip_assert(0);
 #else 
    if (!mRtpMapDone)
    {
@@ -1685,7 +1685,7 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const CodecContainer& code
       {
          if (*sIter == *eIter)
          {
-			   if (pMatchingCodec) 
+            if (pMatchingCodec) 
             {
                *pMatchingCodec = *eIter;
             }
@@ -1709,16 +1709,27 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const Medium& medium, Code
    }
 }
 
-int
-SdpContents::Session::Medium::findTelephoneEventPayloadType() const
+const Codec& 
+SdpContents::Session::Medium::findTelephoneEventPayloadCodec() const
 {
    const CodecContainer& codecList = codecs();
    for (CodecContainer::const_iterator i = codecList.begin(); i != codecList.end(); i++)
    {
       if (i->getName() == SdpContents::Session::Codec::TelephoneEvent.getName())
       {
-         return i->payloadType();
+         return *i;
       }
+   }
+   return emptyCodec;
+}
+
+int
+SdpContents::Session::Medium::findTelephoneEventPayloadType() const
+{
+   const Codec& telephoneEventCodec = findTelephoneEventPayloadCodec();
+   if (!(telephoneEventCodec == emptyCodec))
+   {
+      return telephoneEventCodec.payloadType();
    }
    return -1;
 }
@@ -1883,6 +1894,12 @@ resip::operator==(const Codec& lhs, const Codec& rhs)
             (lhs.mEncodingParameters == defaultEncodingParameters && rhs.mEncodingParameters.empty())));
 }
 
+bool
+resip::operator!=(const Codec& lhs, const Codec& rhs)
+{
+   return !operator==(lhs, rhs);
+}
+
 EncodeStream&
 resip::operator<<(EncodeStream& str, const Codec& codec)
 {
@@ -1898,14 +1915,16 @@ resip::operator<<(EncodeStream& str, const Codec& codec)
 }
 
 const Codec Codec::ULaw_8000("PCMU", 0, 8000);
-const Codec Codec::ALaw_8000("PCMA", 8, 8000);
-const Codec Codec::G729_8000("G729", 18, 8000);
+const Codec Codec::GSM_8000("GSM",   3, 8000);
 const Codec Codec::G723_8000("G723", 4, 8000);
-const Codec Codec::GSM_8000("GSM", 3, 8000);
+const Codec Codec::ALaw_8000("PCMA", 8, 8000);
+const Codec Codec::G722_8000("G722", 9, 8000);
+const Codec Codec::CN("CN",          13, 8000);
+const Codec Codec::G729_8000("G729", 18, 8000);
+const Codec Codec::H263("H263",      34, 90000);
 
 const Codec Codec::TelephoneEvent("telephone-event", 101, 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event",102, 8000);
-const Codec Codec::CN("CN", 13, 8000);
 
 bool Codec::sStaticCodecsCreated = false;
 std::auto_ptr<Codec::CodecMap> Codec::sStaticCodecs;

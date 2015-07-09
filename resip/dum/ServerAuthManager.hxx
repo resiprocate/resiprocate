@@ -100,7 +100,6 @@ class ServerAuthManager : public DumFeature
       virtual void onAuthSuccess(const SipMessage& msg);
       virtual void onAuthFailure(AuthFailureReason reason, const SipMessage& msg);
 
-   private:
       bool mChallengeThirdParties;
       resip::Data mStaticRealm;
 };

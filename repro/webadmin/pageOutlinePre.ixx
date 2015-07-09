@@ -46,5 +46,6 @@
 "      <h2>Statistics</h2>\n"
 "        <p><a href=\"settings.html\">Settings</a></p>\n"
 "        <p><a href=\"registrations.html\">Registrations</a></p>\n"
+"        <p><a href=\"publications.html\">Publications</a></p>\n"
 "    </div>\n"
 "    <div class=\"main\">\n"

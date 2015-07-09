@@ -3,6 +3,7 @@
 EXTRA_DIST = Makefile.w32 make_w32.bat
 EXTRA_DIST += runtests.sh
 EXTRA_DIST += sweepRandom.sh
+EXTRA_DIST += testConfigParse-1.config
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
@@ -14,6 +15,7 @@ LDADD += $(LIBSSL_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
 TESTS = \
 	testCompat \
 	testCoders \
+	testConfigParse \
 	testCountStream \
 	testData \
 	testDataPerformance \
@@ -35,6 +37,7 @@ TESTS = \
 check_PROGRAMS = \
 	testCompat \
 	testCoders \
+	testConfigParse \
 	testCountStream \
 	testData \
 	testDataPerformance \
@@ -55,6 +58,7 @@ check_PROGRAMS = \
 
 testCompat_SOURCES = testCompat.cxx
 testCoders_SOURCES = testCoders.cxx
+testConfigParse_SOURCES = testConfigParse.cxx
 testCountStream_SOURCES = testCountStream.cxx
 testData_SOURCES = testData.cxx
 testDataPerformance_SOURCES = testDataPerformance.cxx

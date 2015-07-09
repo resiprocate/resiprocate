@@ -304,6 +304,9 @@
     <ClCompile Include="monkeys\RequestFilter.cxx" />
     <ClCompile Include="PersistentMessageQueue.cxx" />
     <ClCompile Include="ProxyConfig.cxx" />
+    <ClCompile Include="RegSyncClient.cxx" />
+    <ClCompile Include="RegSyncServer.cxx" />
+    <ClCompile Include="RegSyncServerThread.cxx" />
     <ClCompile Include="ReproAuthenticatorFactory.cxx" />
     <ClCompile Include="ReproTlsPeerAuthManager.cxx" />
     <ClCompile Include="SiloStore.cxx" />
@@ -335,6 +338,9 @@
     <ClCompile Include="monkeys\LocationServer.cxx" />
     <ClCompile Include="OutboundTarget.cxx" />
     <ClCompile Include="monkeys\OutboundTargetHandler.cxx" />
+    <ClCompile Include="stateAgents\PresencePublicationHandler.cxx" />
+    <ClCompile Include="stateAgents\PresenceServer.cxx" />
+    <ClCompile Include="stateAgents\PresenceSubscriptionHandler.cxx" />
     <ClCompile Include="stateAgents\PrivateKeyPublicationHandler.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -354,9 +360,6 @@
     <ClCompile Include="monkeys\QValueTargetHandler.cxx" />
     <ClCompile Include="monkeys\RecursiveRedirect.cxx" />
     <ClCompile Include="Registrar.cxx" />
-    <ClCompile Include="RegSyncClient.cxx" />
-    <ClCompile Include="RegSyncServer.cxx" />
-    <ClCompile Include="RegSyncServerThread.cxx" />
     <ClCompile Include="ReproServerAuthManager.cxx" />
     <ClCompile Include="RequestContext.cxx" />
     <ClCompile Include="ResponseContext.cxx" />
@@ -369,6 +372,7 @@
     <ClCompile Include="Store.cxx" />
     <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
     <ClCompile Include="Target.cxx" />
+    <ClCompile Include="UserAuthGrabber.cxx" />
     <ClCompile Include="UserStore.cxx" />
     <ClCompile Include="WorkerThread.cxx" />
     <ClCompile Include="XmlRpcConnection.cxx" />
@@ -394,13 +398,15 @@
     <ClInclude Include="monkeys\RequestFilter.hxx" />
     <ClInclude Include="PersistentMessageQueue.hxx" />
     <ClInclude Include="ProxyConfig.hxx" />
+    <ClInclude Include="RegSyncClient.hxx" />
+    <ClInclude Include="RegSyncServer.hxx" />
+    <ClInclude Include="RegSyncServerThread.hxx" />
     <ClInclude Include="ReproAuthenticatorFactory.hxx" />
     <ClInclude Include="ReproTlsPeerAuthManager.hxx" />
     <ClInclude Include="SiloStore.hxx" />
     <ClInclude Include="stateAgents\CertPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\CertServer.hxx" />
     <ClInclude Include="stateAgents\CertSubscriptionHandler.hxx" />
-    <ClInclude Include="ChainTraverser.hxx" />
     <ClInclude Include="CommandServer.hxx" />
     <ClInclude Include="CommandServerThread.hxx" />
     <ClInclude Include="ConfigStore.hxx" />
@@ -411,6 +417,9 @@
     <ClInclude Include="monkeys\LocationServer.hxx" />
     <ClInclude Include="OutboundTarget.hxx" />
     <ClInclude Include="monkeys\OutboundTargetHandler.hxx" />
+    <ClInclude Include="stateAgents\PresencePublicationHandler.hxx" />
+    <ClInclude Include="stateAgents\PresenceServer.hxx" />
+    <ClInclude Include="stateAgents\PresenceSubscriptionHandler.hxx" />
     <ClInclude Include="stateAgents\PrivateKeyPublicationHandler.hxx" />
     <ClInclude Include="stateAgents\PrivateKeySubscriptionHandler.hxx" />
     <ClInclude Include="Processor.hxx" />
@@ -420,9 +429,6 @@
     <ClInclude Include="monkeys\QValueTargetHandler.hxx" />
     <ClInclude Include="monkeys\RecursiveRedirect.hxx" />
     <ClInclude Include="Registrar.hxx" />
-    <ClInclude Include="RegSyncClient.hxx" />
-    <ClInclude Include="RegSyncServer.hxx" />
-    <ClInclude Include="RegSyncServerThread.hxx" />
     <ClInclude Include="ReproServerAuthManager.hxx" />
     <ClInclude Include="RequestContext.hxx" />
     <ClInclude Include="ResponseContext.hxx" />

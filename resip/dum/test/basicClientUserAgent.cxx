@@ -156,13 +156,13 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->addSupportedMethod(CANCEL);
    mProfile->addSupportedMethod(OPTIONS);
    mProfile->addSupportedMethod(BYE);
-   //mProfile->addSupportedMethod(REFER);    
-   mProfile->addSupportedMethod(NOTIFY);    
-   mProfile->addSupportedMethod(SUBSCRIBE); 
-   //mProfile->addSupportedMethod(UPDATE);    
-   mProfile->addSupportedMethod(INFO);    
-   mProfile->addSupportedMethod(MESSAGE);    
-   //mProfile->addSupportedMethod(PRACK);     
+   //mProfile->addSupportedMethod(REFER);
+   mProfile->addSupportedMethod(NOTIFY);
+   mProfile->addSupportedMethod(SUBSCRIBE);
+   //mProfile->addSupportedMethod(UPDATE);
+   mProfile->addSupportedMethod(INFO);
+   mProfile->addSupportedMethod(MESSAGE);
+   mProfile->addSupportedMethod(PRACK);
    //mProfile->addSupportedOptionTag(Token(Symbols::C100rel));  // Automatically added when using setUacReliableProvisionalMode
    mProfile->setUacReliableProvisionalMode(MasterProfile::Supported);
    mProfile->setUasReliableProvisionalMode(MasterProfile::SupportedEssential);  

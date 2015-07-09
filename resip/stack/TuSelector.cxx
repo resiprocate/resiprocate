@@ -67,7 +67,7 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
    {
       if (exists(msg->getTransactionUser()))
       {
-         DebugLog (<< "Send to TU: " << *(msg->getTransactionUser()) << " " << std::endl << std::endl << *msg);
+         DebugLog (<< "Send to " << *(msg->getTransactionUser()) << " " << std::endl << std::endl << *msg);
          msg->getTransactionUser()->postToTransactionUser(msg, usage);
       }
       else
@@ -186,6 +186,7 @@ TuSelector::unregisterTransactionUser(TransactionUser& tu)
 TransactionUser* 
 TuSelector::selectTransactionUser(const SipMessage& msg)
 {
+   DebugLog(<< "TuSelector::selectTransactionUser: Checking which TU message belongs to:" << std::endl << std::endl << msg);
    for(TuList::iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {
       if (it->tu->isForMe(msg))

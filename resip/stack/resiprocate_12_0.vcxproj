@@ -1,0 +1,850 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Debug-MT|Win32">
+      <Configuration>SSL-Debug-MT</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Debug-MT|x64">
+      <Configuration>SSL-Debug-MT</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Debug|Win32">
+      <Configuration>SSL-Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Debug|x64">
+      <Configuration>SSL-Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Release-MT|Win32">
+      <Configuration>SSL-Release-MT</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Release-MT|x64">
+      <Configuration>SSL-Release-MT</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Release|Win32">
+      <Configuration>SSL-Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="SSL-Release|x64">
+      <Configuration>SSL-Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>resiprocate</ProjectName>
+    <ProjectGuid>{2A8BE839-6466-4001-B224-8F1C3168D04A}</ProjectGuid>
+    <RootNamespace>resiprocate</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.21006.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'" />
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">
+    <ClCompile>
+      <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Aor.cxx" />
+    <ClCompile Include="ApiCheck.cxx" />
+    <ClCompile Include="ApplicationSip.cxx" />
+    <ClCompile Include="Auth.cxx" />
+    <ClCompile Include="BasicNonceHelper.cxx" />
+    <ClCompile Include="BranchParameter.cxx" />
+    <ClCompile Include="CallId.cxx" />
+    <ClCompile Include="Compression.cxx" />
+    <ClCompile Include="Connection.cxx" />
+    <ClCompile Include="ConnectionBase.cxx" />
+    <ClCompile Include="ConnectionManager.cxx" />
+    <ClCompile Include="Contents.cxx" />
+    <ClCompile Include="ContentsFactoryBase.cxx" />
+    <ClCompile Include="Cookie.cxx" />
+    <ClCompile Include="CpimContents.cxx" />
+    <ClCompile Include="CSeqCategory.cxx" />
+    <ClCompile Include="DataParameter.cxx" />
+    <ClCompile Include="DateCategory.cxx" />
+    <ClCompile Include="GenericPidfContents.cxx" />
+    <ClCompile Include="gen\DayOfWeekHash.cxx" />
+    <ClCompile Include="DeprecatedDialog.cxx" />
+    <ClCompile Include="DnsInterface.cxx" />
+    <ClCompile Include="DnsResult.cxx" />
+    <ClCompile Include="DtlsMessage.cxx" />
+    <ClCompile Include="DtmfPayloadContents.cxx" />
+    <ClCompile Include="ssl\DtlsTransport.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Embedded.cxx" />
+    <ClCompile Include="EventStackThread.cxx" />
+    <ClCompile Include="ExistsOrDataParameter.cxx" />
+    <ClCompile Include="ExistsParameter.cxx" />
+    <ClCompile Include="ExpiresCategory.cxx" />
+    <ClCompile Include="ExtensionHeader.cxx" />
+    <ClCompile Include="ExtensionParameter.cxx" />
+    <ClCompile Include="ExternalBodyContents.cxx" />
+    <ClCompile Include="GenericContents.cxx" />
+    <ClCompile Include="GenericUri.cxx" />
+    <ClCompile Include="HeaderFieldValue.cxx" />
+    <ClCompile Include="HeaderFieldValueList.cxx" />
+    <ClCompile Include="gen\HeaderHash.cxx" />
+    <ClCompile Include="Headers.cxx" />
+    <ClCompile Include="HeaderTypes.cxx" />
+    <ClCompile Include="Helper.cxx" />
+    <ClCompile Include="IntegerCategory.cxx" />
+    <ClCompile Include="IntegerParameter.cxx" />
+    <ClCompile Include="InternalTransport.cxx" />
+    <ClCompile Include="InteropHelper.cxx" />
+    <ClCompile Include="InterruptableStackThread.cxx" />
+    <ClCompile Include="InvalidContents.cxx" />
+    <ClCompile Include="KeepAliveMessage.cxx" />
+    <ClCompile Include="LazyParser.cxx" />
+    <ClCompile Include="Message.cxx" />
+    <ClCompile Include="MessageFilterRule.cxx" />
+    <ClCompile Include="MessageWaitingContents.cxx" />
+    <ClCompile Include="gen\MethodHash.cxx" />
+    <ClCompile Include="MethodTypes.cxx" />
+    <ClCompile Include="Mime.cxx" />
+    <ClCompile Include="gen\MonthHash.cxx" />
+    <ClCompile Include="MsgHeaderScanner.cxx" />
+    <ClCompile Include="MultipartAlternativeContents.cxx" />
+    <ClCompile Include="MultipartMixedContents.cxx" />
+    <ClCompile Include="MultipartRelatedContents.cxx" />
+    <ClCompile Include="MultipartSignedContents.cxx" />
+    <ClCompile Include="NameAddr.cxx" />
+    <ClCompile Include="NonceHelper.cxx" />
+    <ClCompile Include="OctetContents.cxx" />
+    <ClCompile Include="Parameter.cxx" />
+    <ClCompile Include="gen\ParameterHash.cxx" />
+    <ClCompile Include="ParameterTypes.cxx" />
+    <ClCompile Include="ParserCategories.cxx" />
+    <ClCompile Include="ParserCategory.cxx" />
+    <ClCompile Include="ParserContainerBase.cxx" />
+    <ClCompile Include="Pidf.cxx" />
+    <ClCompile Include="Pkcs7Contents.cxx" />
+    <ClCompile Include="Pkcs8Contents.cxx" />
+    <ClCompile Include="PlainContents.cxx" />
+    <ClCompile Include="PrivacyCategory.cxx" />
+    <ClCompile Include="QuotedDataParameter.cxx" />
+    <ClCompile Include="QValue.cxx" />
+    <ClCompile Include="QValueParameter.cxx" />
+    <ClCompile Include="RAckCategory.cxx" />
+    <ClCompile Include="RequestLine.cxx" />
+    <ClCompile Include="Rlmi.cxx" />
+    <ClCompile Include="RportParameter.cxx" />
+    <ClCompile Include="SdpContents.cxx" />
+    <ClCompile Include="ssl\Security.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="SecurityAttributes.cxx" />
+    <ClCompile Include="SERNonceHelper.cxx" />
+    <ClCompile Include="SipFrag.cxx" />
+    <ClCompile Include="SipMessage.cxx" />
+    <ClCompile Include="SipStack.cxx" />
+    <ClCompile Include="ssl\TlsBaseTransport.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ssl\WssConnection.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ssl\WssTransport.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="StackThread.cxx" />
+    <ClCompile Include="StatelessHandler.cxx" />
+    <ClCompile Include="StatisticsHandler.cxx" />
+    <ClCompile Include="StatisticsManager.cxx" />
+    <ClCompile Include="StatisticsMessage.cxx" />
+    <ClCompile Include="StatusLine.cxx" />
+    <ClCompile Include="StringCategory.cxx" />
+    <ClCompile Include="Symbols.cxx" />
+    <ClCompile Include="TcpBaseTransport.cxx" />
+    <ClCompile Include="TcpConnection.cxx" />
+    <ClCompile Include="TcpConnectState.cxx" />
+    <ClCompile Include="TcpTransport.cxx" />
+    <ClCompile Include="TimeAccumulate.cxx" />
+    <ClCompile Include="TimerMessage.cxx" />
+    <ClCompile Include="TimerQueue.cxx" />
+    <ClCompile Include="ssl\TlsConnection.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ssl\TlsTransport.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Token.cxx" />
+    <ClCompile Include="TokenOrQuotedStringCategory.cxx" />
+    <ClCompile Include="TransactionController.cxx" />
+    <ClCompile Include="TransactionMap.cxx" />
+    <ClCompile Include="TransactionState.cxx" />
+    <ClCompile Include="TransactionUser.cxx" />
+    <ClCompile Include="TransactionUserMessage.cxx" />
+    <ClCompile Include="Transport.cxx" />
+    <ClCompile Include="TransportFailure.cxx" />
+    <ClCompile Include="TransportSelector.cxx" />
+    <ClCompile Include="TransportThread.cxx" />
+    <ClCompile Include="TuIM.cxx" />
+    <ClCompile Include="Tuple.cxx" />
+    <ClCompile Include="TupleMarkManager.cxx" />
+    <ClCompile Include="TuSelector.cxx" />
+    <ClCompile Include="UdpTransport.cxx" />
+    <ClCompile Include="UInt32Category.cxx" />
+    <ClCompile Include="UInt32Parameter.cxx" />
+    <ClCompile Include="UnknownParameter.cxx" />
+    <ClCompile Include="Uri.cxx" />
+    <ClCompile Include="Via.cxx" />
+    <ClCompile Include="WarningCategory.cxx" />
+    <ClCompile Include="ssl\WinSecurity.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="WsBaseTransport.cxx" />
+    <ClCompile Include="WsConnection.cxx" />
+    <ClCompile Include="WsConnectionBase.cxx" />
+    <ClCompile Include="WsCookieContext.cxx" />
+    <ClCompile Include="WsDecorator.cxx" />
+    <ClCompile Include="WsFrameExtractor.cxx" />
+    <ClCompile Include="WsTransport.cxx" />
+    <ClCompile Include="X509Contents.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AddTransport.hxx" />
+    <ClInclude Include="Aor.hxx" />
+    <ClInclude Include="ApiCheck.hxx" />
+    <ClInclude Include="ApiCheckList.hxx" />
+    <ClInclude Include="ApplicationMessage.hxx" />
+    <ClInclude Include="ApplicationSip.hxx" />
+    <ClInclude Include="Auth.hxx" />
+    <ClInclude Include="BasicNonceHelper.hxx" />
+    <ClInclude Include="BranchParameter.hxx" />
+    <ClInclude Include="CallId.hxx" />
+    <ClInclude Include="CancelableTimerQueue.hxx" />
+    <ClInclude Include="CancelClientInviteTransaction.hxx" />
+    <ClInclude Include="Compression.hxx" />
+    <ClInclude Include="Connection.hxx" />
+    <ClInclude Include="ConnectionBase.hxx" />
+    <ClInclude Include="ConnectionManager.hxx" />
+    <ClInclude Include="ConnectionTerminated.hxx" />
+    <ClInclude Include="Contents.hxx" />
+    <ClInclude Include="ContentsFactory.hxx" />
+    <ClInclude Include="ContentsFactoryBase.hxx" />
+    <ClInclude Include="Cookie.hxx" />
+    <ClInclude Include="CpimContents.hxx" />
+    <ClInclude Include="CSeqCategory.hxx" />
+    <ClInclude Include="DataParameter.hxx" />
+    <ClInclude Include="DateCategory.hxx" />
+    <ClInclude Include="DeprecatedDialog.hxx" />
+    <ClInclude Include="DnsInterface.hxx" />
+    <ClInclude Include="DnsResult.hxx" />
+    <ClInclude Include="DnsResultMessage.hxx" />
+    <ClInclude Include="DtlsMessage.hxx" />
+    <ClInclude Include="DtmfPayloadContents.hxx" />
+    <ClInclude Include="GenericPidfContents.hxx" />
+    <ClInclude Include="KeepAlivePong.hxx" />
+    <ClInclude Include="MessageDecorator.hxx" />
+    <ClInclude Include="RemoveTransport.hxx" />
+    <ClInclude Include="ssl\DtlsTransport.hxx" />
+    <ClInclude Include="Embedded.hxx" />
+    <ClInclude Include="EventStackThread.hxx" />
+    <ClInclude Include="ExistsOrDataParameter.hxx" />
+    <ClInclude Include="ExistsParameter.hxx" />
+    <ClInclude Include="ExpiresCategory.hxx" />
+    <ClInclude Include="ExtensionHeader.hxx" />
+    <ClInclude Include="ExtensionParameter.hxx" />
+    <ClInclude Include="ExternalBodyContents.hxx" />
+    <ClInclude Include="GenericContents.hxx" />
+    <ClInclude Include="GenericUri.hxx" />
+    <ClInclude Include="HeaderFieldValue.hxx" />
+    <ClInclude Include="HeaderFieldValueList.hxx" />
+    <ClInclude Include="HeaderHash.hxx" />
+    <ClInclude Include="Headers.hxx" />
+    <ClInclude Include="HeaderTypes.hxx" />
+    <ClInclude Include="Helper.hxx" />
+    <ClInclude Include="IntegerCategory.hxx" />
+    <ClInclude Include="IntegerParameter.hxx" />
+    <ClInclude Include="InternalTransport.hxx" />
+    <ClInclude Include="InteropHelper.hxx" />
+    <ClInclude Include="InterruptableStackThread.hxx" />
+    <ClInclude Include="InvalidContents.hxx" />
+    <ClInclude Include="KeepAliveMessage.hxx" />
+    <ClInclude Include="LazyParser.hxx" />
+    <ClInclude Include="MarkListener.hxx" />
+    <ClInclude Include="Message.hxx" />
+    <ClInclude Include="MessageFilterRule.hxx" />
+    <ClInclude Include="MessageWaitingContents.hxx" />
+    <ClInclude Include="MethodHash.hxx" />
+    <ClInclude Include="MethodTypes.hxx" />
+    <ClInclude Include="Mime.hxx" />
+    <ClInclude Include="MsgHeaderScanner.hxx" />
+    <ClInclude Include="MultipartAlternativeContents.hxx" />
+    <ClInclude Include="MultipartMixedContents.hxx" />
+    <ClInclude Include="MultipartRelatedContents.hxx" />
+    <ClInclude Include="MultipartSignedContents.hxx" />
+    <ClInclude Include="NameAddr.hxx" />
+    <ClInclude Include="NonceHelper.hxx" />
+    <ClInclude Include="OctetContents.hxx" />
+    <ClInclude Include="Parameter.hxx" />
+    <ClInclude Include="ParameterHash.hxx" />
+    <ClInclude Include="ParameterTypeEnums.hxx" />
+    <ClInclude Include="ParameterTypes.hxx" />
+    <ClInclude Include="ParserCategories.hxx" />
+    <ClInclude Include="ParserCategory.hxx" />
+    <ClInclude Include="ParserContainer.hxx" />
+    <ClInclude Include="ParserContainerBase.hxx" />
+    <ClInclude Include="Pidf.hxx" />
+    <ClInclude Include="Pkcs7Contents.hxx" />
+    <ClInclude Include="Pkcs8Contents.hxx" />
+    <ClInclude Include="PlainContents.hxx" />
+    <ClInclude Include="PollStatistics.hxx" />
+    <ClInclude Include="PrivacyCategory.hxx" />
+    <ClInclude Include="QuotedDataParameter.hxx" />
+    <ClInclude Include="QValue.hxx" />
+    <ClInclude Include="QValueParameter.hxx" />
+    <ClInclude Include="RAckCategory.hxx" />
+    <ClInclude Include="RequestLine.hxx" />
+    <ClInclude Include="Rlmi.hxx" />
+    <ClInclude Include="RportParameter.hxx" />
+    <ClInclude Include="SdpContents.hxx" />
+    <ClInclude Include="ssl\Security.hxx" />
+    <ClInclude Include="SecurityAttributes.hxx" />
+    <ClInclude Include="SecurityTypes.hxx" />
+    <ClInclude Include="SendData.hxx" />
+    <ClInclude Include="SERNonceHelper.hxx" />
+    <ClInclude Include="ShutdownMessage.hxx" />
+    <ClInclude Include="SipFrag.hxx" />
+    <ClInclude Include="SipMessage.hxx" />
+    <ClInclude Include="SipStack.hxx" />
+    <ClInclude Include="ssl\TlsBaseTransport.hxx" />
+    <ClInclude Include="ssl\WssConnection.hxx" />
+    <ClInclude Include="ssl\WssTransport.hxx" />
+    <ClInclude Include="StackThread.hxx" />
+    <ClInclude Include="StartLine.hxx" />
+    <ClInclude Include="StatelessHandler.hxx" />
+    <ClInclude Include="StatisticsHandler.hxx" />
+    <ClInclude Include="StatisticsManager.hxx" />
+    <ClInclude Include="StatisticsMessage.hxx" />
+    <ClInclude Include="StatusLine.hxx" />
+    <ClInclude Include="StringCategory.hxx" />
+    <ClInclude Include="Symbols.hxx" />
+    <ClInclude Include="TcpBaseTransport.hxx" />
+    <ClInclude Include="TcpConnection.hxx" />
+    <ClInclude Include="TcpConnectState.hxx" />
+    <ClInclude Include="TcpTransport.hxx" />
+    <ClInclude Include="TerminateFlow.hxx" />
+    <ClInclude Include="TimeAccumulate.hxx" />
+    <ClInclude Include="TimerMessage.hxx" />
+    <ClInclude Include="TimerQueue.hxx" />
+    <ClInclude Include="ssl\TlsConnection.hxx" />
+    <ClInclude Include="ssl\TlsTransport.hxx" />
+    <ClInclude Include="Token.hxx" />
+    <ClInclude Include="TokenOrQuotedStringCategory.hxx" />
+    <ClInclude Include="TransactionController.hxx" />
+    <ClInclude Include="TransactionControllerThread.hxx" />
+    <ClInclude Include="TransactionMap.hxx" />
+    <ClInclude Include="TransactionMessage.hxx" />
+    <ClInclude Include="TransactionState.hxx" />
+    <ClInclude Include="TransactionTerminated.hxx" />
+    <ClInclude Include="TransactionUser.hxx" />
+    <ClInclude Include="TransactionUserMessage.hxx" />
+    <ClInclude Include="Transport.hxx" />
+    <ClInclude Include="TransportFailure.hxx" />
+    <ClInclude Include="TransportSelector.hxx" />
+    <ClInclude Include="TransportSelectorThread.hxx" />
+    <ClInclude Include="TransportThread.hxx" />
+    <ClInclude Include="TuIM.hxx" />
+    <ClInclude Include="Tuple.hxx" />
+    <ClInclude Include="TupleMarkManager.hxx" />
+    <ClInclude Include="TuSelector.hxx" />
+    <ClInclude Include="UdpTransport.hxx" />
+    <ClInclude Include="UInt32Category.hxx" />
+    <ClInclude Include="UInt32Parameter.hxx" />
+    <ClInclude Include="UnknownHeaderType.hxx" />
+    <ClInclude Include="UnknownParameter.hxx" />
+    <ClInclude Include="UnknownParameterType.hxx" />
+    <ClInclude Include="Uri.hxx" />
+    <ClInclude Include="ValueFifo.hxx" />
+    <ClInclude Include="Via.hxx" />
+    <ClInclude Include="WarningCategory.hxx" />
+    <ClInclude Include="ssl\WinSecurity.hxx" />
+    <ClInclude Include="WsBaseTransport.hxx" />
+    <ClInclude Include="WsConnection.hxx" />
+    <ClInclude Include="WsConnectionBase.hxx" />
+    <ClInclude Include="WsConnectionValidator.hxx" />
+    <ClInclude Include="WsCookieContext.hxx" />
+    <ClInclude Include="WsCookieContextFactory.hxx" />
+    <ClInclude Include="WsDecorator.hxx" />
+    <ClInclude Include="WsFrameExtractor.hxx" />
+    <ClInclude Include="WsTransport.hxx" />
+    <ClInclude Include="X509Contents.hxx" />
+    <ClInclude Include="ZeroOutStatistics.hxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HeaderHash.gperf" />
+    <None Include="MethodHash.gperf" />
+    <None Include="ParameterHash.gperf" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

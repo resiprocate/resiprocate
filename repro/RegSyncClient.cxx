@@ -3,6 +3,7 @@
 
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/Tuple.hxx>
+#include <resip/stack/GenericPidfContents.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Logger.hxx>
@@ -22,8 +23,10 @@ using namespace std;
 
 RegSyncClient::RegSyncClient(InMemorySyncRegDb* regDb,
                              Data address,
-                             unsigned short port) :
+                             unsigned short port,
+                             InMemorySyncPubDb* pubDb) :
    mRegDb(regDb),
+   mPubDb(pubDb),
    mAddress(address),
    mPort(port),
    mSocketDesc(0)
@@ -274,7 +277,18 @@ RegSyncClient::handleXml(const Data& xmlData)
              ErrLog(<< "RegSyncClient::handleXml: exception: " << e);
          }
       }
-      else 
+      else if (isEqualNoCase(xml.getTag(), "pubinfo"))
+      {
+         try
+         {
+            handlePubInfoEvent(xml);
+         }
+         catch (BaseException& e)
+         {
+            ErrLog(<< "RegSyncClient::handleXml: exception: " << e);
+         }
+      }
+      else
       {
          WarningLog(<< "RegSyncClient::handleXml: Ignoring XML message with unknown method: " << xml.getTag());
       }
@@ -398,7 +412,10 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
    }
    xml.parent();
 
-   processModify(aor, contacts);
+   if (mRegDb)
+   {
+      processModify(aor, contacts);
+   }
 }
 
 void 
@@ -444,11 +461,191 @@ RegSyncClient::processModify(const resip::Uri& aor, ContactList& syncContacts)
    mRegDb->unlockRecord(aor);
 }
 
+void
+RegSyncClient::handlePubInfoEvent(resip::XMLCursor& xml)
+{
+   UInt64 now = Timer::getTimeSecs();
+   PublicationPersistenceManager::PubDocument document;
+   DebugLog(<< "RegSyncClient::handlePubInfoEvent");
+   if (xml.firstChild())
+   {
+      do
+      {
+         if (isEqualNoCase(xml.getTag(), "eventtype"))
+         {
+            if (xml.firstChild())
+            {
+               document.mEventType = xml.getValue();
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "documentkey"))
+         {
+            if (xml.firstChild())
+            {
+               document.mDocumentKey = xml.getValue().xmlCharDataDecode();
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "etag"))
+         {
+            if (xml.firstChild())
+            {
+               document.mETag = xml.getValue().xmlCharDataDecode();
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "expires"))
+         {
+            if (xml.firstChild())
+            {
+               UInt64 expires = xml.getValue().convertUInt64();
+               document.mExpirationTime = (expires == 0 ? 0 : now + expires);
+               document.mLingerTime = document.mExpirationTime;
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "lastUpdate"))
+         {
+            if (xml.firstChild())
+            {
+               document.mLastUpdated = now - xml.getValue().convertUInt64();
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "contents"))
+         {
+            if (xml.firstChild())
+            {
+               Data contentsData = xml.getValue().xmlCharDataDecode();
+               HeaderFieldValue hfv(contentsData.data(), contentsData.size());
+               GenericPidfContents pidf(hfv, GenericPidfContents::getStaticType());
+               document.mContents.reset((Contents*)new GenericPidfContents(pidf));  // ensure we copy other pidf - since it shares data with contentsData
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "isencrypted"))
+         {
+            if (xml.firstChild())
+            {
+               if (document.mSecurityAttributes.get() == 0)
+               {
+                  document.mSecurityAttributes.reset(new SecurityAttributes);
+               }
+               if (isEqualNoCase(xml.getValue(), "true"))
+               {
+                  document.mSecurityAttributes->setEncrypted();
+               }
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "sigstatus"))
+         {
+            if (xml.firstChild())
+            {
+               if (document.mSecurityAttributes.get() == 0)
+               {
+                  document.mSecurityAttributes.reset(new SecurityAttributes);
+               }
+               if (isEqualNoCase(xml.getValue(), "none"))
+               {
+                  document.mSecurityAttributes->setSignatureStatus(SignatureNone);
+               }
+               else if (isEqualNoCase(xml.getValue(), "bad"))
+               {
+                  document.mSecurityAttributes->setSignatureStatus(SignatureIsBad);
+               }
+               else if (isEqualNoCase(xml.getValue(), "trusted"))
+               {
+                  document.mSecurityAttributes->setSignatureStatus(SignatureTrusted);
+               }
+               else if (isEqualNoCase(xml.getValue(), "catrusted"))
+               {
+                  document.mSecurityAttributes->setSignatureStatus(SignatureCATrusted);
+               }
+               else if (isEqualNoCase(xml.getValue(), "nottrusted"))
+               {
+                  document.mSecurityAttributes->setSignatureStatus(SignatureNotTrusted);
+               }
+               else if (isEqualNoCase(xml.getValue(), "selfsigned"))
+               {
+                  document.mSecurityAttributes->setSignatureStatus(SignatureSelfSigned);
+               }
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "signer"))
+         {
+            if (xml.firstChild())
+            {
+               if (document.mSecurityAttributes.get() == 0)
+               {
+                  document.mSecurityAttributes.reset(new SecurityAttributes);
+               }
+               document.mSecurityAttributes->setSigner(xml.getValue().xmlCharDataDecode());
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "identity"))
+         {
+            if (xml.firstChild())
+            {
+               if (document.mSecurityAttributes.get() == 0)
+               {
+                  document.mSecurityAttributes.reset(new SecurityAttributes);
+               }
+               document.mSecurityAttributes->setIdentity(xml.getValue().xmlCharDataDecode());
+               xml.parent();
+            }
+         }
+         else if (isEqualNoCase(xml.getTag(), "identitystrength"))
+         {
+            if (xml.firstChild())
+            {
+               if (document.mSecurityAttributes.get() == 0)
+               {
+                  document.mSecurityAttributes.reset(new SecurityAttributes);
+               }
+               if (isEqualNoCase(xml.getValue(), "from"))
+               {
+                  document.mSecurityAttributes->setIdentityStrength(SecurityAttributes::From);
+               }
+               else if (isEqualNoCase(xml.getValue(), "failedidentity"))
+               {
+                  document.mSecurityAttributes->setIdentityStrength(SecurityAttributes::FailedIdentity);
+               }
+               else if (isEqualNoCase(xml.getValue(), "identity"))
+               {
+                  document.mSecurityAttributes->setIdentityStrength(SecurityAttributes::Identity);
+               }
+               xml.parent();
+            }
+         }
+      } while (xml.nextSibling());
+      xml.parent();
+   }
+   xml.parent();
+
+   if (mPubDb)
+   {
+      if (document.mExpirationTime != 0)
+      {
+         document.mSyncPublication = true;
+         mPubDb->addUpdateDocument(document);
+      }
+      else
+      {
+         // Note:  This never comes in an initial sync - only realtime updates
+         mPubDb->removeDocument(document.mEventType, document.mDocumentKey, document.mETag, document.mLastUpdated, true);
+      }
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * Copyright (c) 2010 SIP Spectrum, Inc.  All rights reserved.
+ * Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

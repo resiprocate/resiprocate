@@ -574,8 +574,9 @@ ConnectionBase::wsParseCookies(CookieList& cookieList, const SipMessage* message
             pb.data(value, anchor);
          }
 
-         cookieList.push_back(Cookie(name, value));
-         DebugLog(<< "Cookie: " << Cookie(name, value));
+         Cookie cookie(name, value);
+         cookieList.push_back(cookie);
+         DebugLog(<< "Cookie: " << cookie);
 
          if(!pb.eof() && *(pb.position()) == Symbols::SEMI_COLON[0])
          {
@@ -635,7 +636,8 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
                // only try to use it if cookieContextFactory is available
                if(wst->cookieContextFactory().get())
                {
-                  wsCookieContext = wst->cookieContextFactory()->makeCookieContext(cookieList);
+                  Uri& requestUri = mMessage->header(h_RequestLine).uri();
+                  wsCookieContext = wst->cookieContextFactory()->makeCookieContext(cookieList, requestUri);
                   wsConnectionBase->setWsCookieContext(wsCookieContext);
                }
             }

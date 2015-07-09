@@ -1,0 +1,74 @@
+#!/usr/bin/make -f
+
+DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+#CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+#CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS)
+#CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS)
+#LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
+
+#include /usr/share/cdbs/1/rules/debhelper.mk
+#include /usr/share/cdbs/1/class/autotools.mk
+
+DEB_DH_INSTALL_ARGS := --sourcedir=debian/tmp
+
+#CPPFLAGS += -DRESIP_FIXED_POINT
+# this is just temporary, reSIProcate 1.9.x should not need this:
+CPPFLAGS += -I/usr/include/sipxtapi
+# these are also temporary, should be implemented in reSIProcate's build system, for sipXtapi
+# with librecon:
+CPPFLAGS += -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS
+CPPFLAGS += -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20
+CPPFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS
+CXXFLAGS += -fpermissive
+LDFLAGS += -lcares
+
+CFG_ARGS := --with-ssl \
+		--with-popt \
+		--with-mysql \
+		--with-apps \
+		--enable-ipv6 \
+		--enable-dtls \
+		--with-freeradius \
+		--with-repro \
+		--enable-repro-plugins \
+		--with-python \
+		--with-c-ares
+
+# on kfreebsd, sipxtapi is not available and recon can't be built
+# upstream hopes to eliminate the dependency on sipxtapi in a future release
+# so there is no attempt to port sipxtapi
+# on sparc, libsrtp is not available (fails with a bus error during test cases)
+ifeq ($(DEB_HOST_ARCH_OS),linux)
+CFG_ARGS += --with-recon
+endif
+
+PYVERSION=2.7
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(CFG_ARGS) DEPS_PYTHON_CFLAGS="`/usr/bin/python$(PYVERSION)-config --cflags`" DEPS_PYTHON_LIBS="`/usr/bin/python$(PYVERSION)-config --ldflags`" PYCXX_SRCDIR=/usr/share/python$(PYVERSION)/CXX/Python2
+ifeq ($(DEB_HOST_ARCH_OS),kfreebsd)
+# this is due to a problem with the test case rather than the stack itself
+# upstream is investigating
+	sed -i -e 's/assert.!failedToReceiveGoodMessage);//' resip/stack/test/testTcp.cxx
+endif
+
+override_dh_auto_build:
+	dh_auto_build --parallel
+
+# let the test cases run
+#override_dh_auto_test:
+#	true
+
+# force building in the pkgroot or it won't build
+%:
+	dh $@ --with autoreconf --builddirectory=.
+
+#install/repro::
+#	cp debian/repro.config-sample debian/repro/etc/repro/repro.config
+
+#install/resiprocate-turn-server::
+#	cp debian/reTurnServer.config-sample debian/resiprocate-turn-server/etc/reTurnServer.config
+

@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.9.0~rc2)
+AC_INIT(resiprocate,1.10.0~alpha2)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -203,6 +203,14 @@ AC_ARG_WITH(mysql,
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
+AM_CONDITIONAL(USE_POSTGRESQL, false)
+AC_ARG_WITH(postgresql,
+[  --with-postgresql       Link against PostgreSQL client libraries],
+ [AC_DEFINE_UNQUOTED(USE_POSTGRESQL, , USE_POSTGRESQL)
+ AC_SUBST(LIBPOSTGRESQL_LIBADD, "-lpq")
+ AM_CONDITIONAL(USE_POSTGRESQL, true)],
+ [ AC_SUBST(LIBPOSTGRESQL_LIBADD, "")])
+
 AM_CONDITIONAL(USE_MAXMIND_GEOIP, false)
 AC_ARG_WITH(geoip,
 [  --with-geoip            Link against MaxMind GeoIP libraries],
@@ -239,6 +247,9 @@ AC_ARG_ENABLE(repro-plugins,
 
 AC_SUBST([reproplugindir])
 reproplugindir='${pkglibdir}/repro/plugins'
+
+AC_SUBST([returnpkglibdir])
+returnpkglibdir'${pkglibdir}/reTurnServer'
 
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
@@ -338,7 +349,6 @@ AC_OUTPUT(Makefile \
 	resip/recon/Makefile \
 	resip/recon/MOHParkServer/Makefile \
 	resip/recon/test/Makefile \
-	presSvr/Makefile \
 	p2p/s2c/s2c/Makefile \
 	p2p/Makefile \
 	)

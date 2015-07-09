@@ -1,0 +1,3 @@
+usr/sbin/reTurnServer
+debian/conf/reTurnServer.config etc/reTurn
+debian/conf/reTurn/users.txt etc/reTurn

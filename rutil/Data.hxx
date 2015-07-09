@@ -347,7 +347,15 @@ class Data
 
       /**
         Functional equivalent of: *this = Data(buf, length)
-        but avoid the intermediate allocation and free. Also,
+        and Data& copy(const char *buf, size_type length)
+        but avoids an actual copy of the data if {other} is Shared
+        or Borrowed.  Will have the same storage mode as {other}.
+      **/
+      Data& duplicate(const Data& other);
+
+      /**
+        Functional equivalent of: *this = Data(buf, length)
+        but avoids the intermediate allocation and free. Also,
         will never decrease capacity. Safe to call even if {buf}
         is part of {this}.
 

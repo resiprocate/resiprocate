@@ -55,6 +55,7 @@ libdum_la_SOURCES =   \
 	Handle.cxx \
 	Handled.cxx \
 	InMemoryRegistrationDatabase.cxx \
+	InMemorySyncPubDb.cxx \
 	InMemorySyncRegDb.cxx \
 	InviteSession.cxx \
 	InviteSessionCreator.cxx \
@@ -81,8 +82,8 @@ libdum_la_SOURCES =   \
 	SubscriptionHandler.cxx \
 	SubscriptionCreator.cxx \
 	SubscriptionState.cxx \
-        TlsPeerAuthManager.cxx \
-        WsCookieAuthManager.cxx \
+    TlsPeerAuthManager.cxx \
+    WsCookieAuthManager.cxx \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
 	NetworkAssociation.cxx \
@@ -161,6 +162,7 @@ nobase_duminclude_HEADERS = AppDialog.hxx \
 	HttpProvider.hxx \
 	IdentityHandler.hxx \
 	InMemoryRegistrationDatabase.hxx \
+	InMemorySyncPubDb.hxx \
 	InMemorySyncRegDb.hxx \
 	InviteDialogs.hxx \
 	InviteSessionCreator.hxx \
@@ -182,6 +184,7 @@ nobase_duminclude_HEADERS = AppDialog.hxx \
 	Profile.hxx \
 	PublicationCreator.hxx \
 	PublicationHandler.hxx \
+	PublicationPersistenceManager.hxx \
 	RADIUSServerAuthManager.hxx \
 	RedirectHandler.hxx \
 	RedirectManager.hxx \

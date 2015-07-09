@@ -663,9 +663,11 @@ class SipMessage : public TransactionMessage
       // generated request), set by the Transport and setFromTu and setFromExternal APIs
       bool mIsExternal;
 
-      // !bwc! Would be nice to tweak this to automatically make SipMessage 4KB,
-      // but I don't know how ugly it would be.
-      DinkyPool<2968> mPool;
+      // Sizing so that average SipMessages don't need to allocate heap memory
+      // To profile current sizing, enable DINKYPOOL_PROFILING in SipMessage.cxx 
+      // and look for DebugLog message in SipMessage destructor to know when heap
+      // allocations are occuring and how much of the pool is used.
+      DinkyPool<3732> mPool;
 
       typedef std::vector<HeaderFieldValueList*, 
                            StlPoolAllocator<HeaderFieldValueList*, 

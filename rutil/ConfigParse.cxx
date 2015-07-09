@@ -189,7 +189,16 @@ ConfigParse::parseConfigFile(const Data& filename)
          pb.data(value, anchor);
       }
       //cout << "Config file Name='" << name << "' value='" << value << "'" << endl;
-      insertConfigValue("config file", mFileConfigValues, name, value);
+      Data lowerName(name);
+      lowerName.lowercase();
+      if(lowerName == "include")
+      {
+         parseConfigFile(value);
+      }
+      else
+      {
+         insertConfigValue("config file", mFileConfigValues, name, value);
+      }
    }
 }
 
@@ -405,6 +414,41 @@ ConfigParse::getConfigValue(const resip::Data& name, std::set<resip::Data> &valu
    }
 
    return found;
+}
+
+ConfigParse::NestedConfigMap
+ConfigParse::getConfigNested(const resip::Data& mapsPrefix)
+{
+   NestedConfigMap m;
+   Data::size_type numPos = mapsPrefix.size();
+   Data mapsPrefixLower(mapsPrefix);
+   mapsPrefixLower.lowercase();
+   ConfigValuesMap::iterator it = mConfigValues.begin();
+   for(; it != mConfigValues.end(); it++)
+   {
+      const Data& keyName = it->first;
+      if(keyName.prefix(mapsPrefixLower) && keyName.size() > numPos
+         && isdigit(keyName[numPos]))
+      {
+         Data::size_type i = numPos + 1;
+         while(i < keyName.size() && isdigit(keyName[i]))
+         {
+            i++;
+         }
+         if(keyName.size() - i < 1)
+         {
+            stringstream err_text;
+            err_text << "Configuration key " << keyName << " missing subkey name";
+            Data err_data(err_text.str());
+            throw Exception(err_data, __FILE__, __LINE__);
+         }
+         Data index = keyName.substr(numPos, i - numPos);
+         Data nestedKey = keyName.substr(i, keyName.size() - i);
+         NestedConfigParse& nested = m[index.convertInt()];
+         nested.insertConfigValue(nestedKey, it->second);
+      }
+   }
+   return m;
 }
 
 void 
