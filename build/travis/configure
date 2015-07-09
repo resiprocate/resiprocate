@@ -6,6 +6,7 @@ set -e
   --with-popt \
   --with-ssl \
   --with-mysql \
+  --with-postgresql \
   --with-apps \
   --enable-dtls \
   --enable-ipv6 \
@@ -18,7 +19,7 @@ set -e
   --with-python \
   --with-rend \
   --with-recon \
-  CPPFLAGS="-I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
+  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
   --with-c-ares
 

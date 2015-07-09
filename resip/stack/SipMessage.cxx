@@ -83,6 +83,19 @@ SipMessage::operator=(const SipMessage& rhs)
 
 SipMessage::~SipMessage()
 {
+//#define DINKYPOOL_PROFILING
+#ifdef DINKYPOOL_PROFILING
+   if (mPool.getHeapBytes() > 0)
+   {
+       InfoLog(<< "SipMessage mPool filled up and used " << mPool.getHeapBytes() << " bytes on the heap, consider increasing the mPool size (sizeof SipMessage is " << sizeof(SipMessage) << " bytes): msg="
+           << std::endl << *this);
+   }
+   else
+   {
+       InfoLog(<< "SipMessage mPool used " << mPool.getPoolBytes() << " bytes of a total " << mPool.getPoolSizeBytes() << " bytes (sizeof SipMessage is " << sizeof(SipMessage) << " bytes): msg="
+           << std::endl << *this);
+   }
+#endif
    freeMem();
 }
 

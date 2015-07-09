@@ -299,7 +299,7 @@ DnsResult::lookupInternal(const Uri& uri)
    mSips = (uri.scheme() == Symbols::Sips);
    mTarget = (!mSips && uri.exists(p_maddr)) ? uri.param(p_maddr) : uri.host();
    // remove brackets around ipv6 address if present
-   if (mTarget[0] == '[' && mTarget[mTarget.size()-1] == ']')
+   if (mTarget.size() >= 2 && mTarget[0] == '[' && mTarget[mTarget.size()-1] == ']')
    {
       mTarget = mTarget.substr(1,mTarget.size()-2);
    }

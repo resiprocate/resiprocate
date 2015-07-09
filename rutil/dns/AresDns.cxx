@@ -194,6 +194,18 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    if (ret != Success)
       return ret;
 
+#ifndef USE_CARES
+   if ( mPollGrp )
+   {
+      // Ensure vector starts empty, since init may be called more than once
+      mPollItems.clear(); 
+      // expand vector to hold {nservers} and init to NULLAr
+      mPollItems.insert( mPollItems.end(), mChannel->nservers, (AresDnsPollItem*)0);
+      // tell ares to let us know when things change
+      ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
+   }
+#endif
+
 #ifdef WIN32
       // For windows OSs it is uncommon to run a local DNS server.  Therefor if there
       // are no defined DNS servers in windows networking and ARES just returned the
@@ -221,8 +233,7 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
                       unsigned int features,
                       ares_channeldata** channel,
                       int timeout,
-                      int tries
-)
+                      int tries)
 {
    if(*channel)
    {
@@ -373,23 +384,13 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
       // In ares, we must manipulate these directly
       if (timeout > 0)
       {
-         mChannel->timeout = timeout;
+         (*channel)->timeout = timeout;
       }
 
       if (tries > 0)
       {
-         mChannel->tries = tries;
+         (*channel)->tries = tries;
       }
-
-#ifndef USE_CARES
-      if ( mPollGrp )
-      {
-         // expand vector to hold {nservers} and init to NULL
-         mPollItems.insert( mPollItems.end(), (*channel)->nservers, (AresDnsPollItem*)0);
-         // tell ares to let us know when things change
-         ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
-      }
-#endif
 
 #elif defined(USE_CARES)
       {

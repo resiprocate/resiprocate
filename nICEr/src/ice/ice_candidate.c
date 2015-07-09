@@ -259,6 +259,13 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
 
     cand=*candp;
 
+    if (cand->state == NR_ICE_CAND_STATE_INITIALIZING) {
+      /* Make sure the ICE ctx isn't still waiting around for this candidate
+       * to init. */
+      cand->state=NR_ICE_CAND_STATE_FAILED;
+      cand->done_cb(0,0,cand->cb_arg);
+    }
+
     switch(cand->type){
       case HOST:
         break;
@@ -290,12 +297,6 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
     RFREE(cand);
 
     return(0);
-  }
-
-void nr_ice_candidate_destroy_cb(NR_SOCKET s, int h, void *cb_arg)
-  {
-    nr_ice_candidate *cand=cb_arg;
-    nr_ice_candidate_destroy(&cand);
   }
 
 /* This algorithm is not super-fast, but I don't think we need a hash
@@ -463,7 +464,9 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
         if(r=nr_socket_getaddr(cand->isock->sock,&cand->addr))
           ABORT(r);
         cand->osock=cand->isock->sock;
-        cand->state=NR_ICE_CAND_STATE_INITIALIZED;
+        // This is actually ready, but we set this anyway to prevent it from
+        // being paired twice.
+        cand->state=NR_ICE_CAND_STATE_INITIALIZING;
         // Post this so that it doesn't happen in-line
         cand->ready_cb = ready_cb;
         cand->ready_cb_arg = cb_arg;

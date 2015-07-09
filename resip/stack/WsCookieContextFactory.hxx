@@ -18,7 +18,7 @@ class WsCookieContextFactory
       virtual ~WsCookieContextFactory() {};
 
    public:
-      virtual SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList) = 0;
+      virtual SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList, const Uri& requestUri) = 0;
 };
 
 class BasicWsCookieContextFactory : public WsCookieContextFactory
@@ -33,9 +33,9 @@ class BasicWsCookieContextFactory : public WsCookieContextFactory
 
       virtual ~BasicWsCookieContextFactory() {};
 
-      SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList)
+      SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList, const Uri& requestUri)
       {
-         SharedPtr<WsCookieContext> ctx(new WsCookieContext(cookieList, mInfoCookieName, mExtraCookieName, macCookieName));
+         SharedPtr<WsCookieContext> ctx(new WsCookieContext(cookieList, mInfoCookieName, mExtraCookieName, macCookieName, requestUri));
          return ctx;
       };
 

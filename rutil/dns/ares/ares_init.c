@@ -167,6 +167,7 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
   channel->ndomains = -1;
   channel->nsort = -1;
   channel->lookups = NULL;
+  channel->servers = NULL;
 
   /* Initialize configuration by each of the four sources, from highest
    * precedence to lowest.

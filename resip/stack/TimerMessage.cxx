@@ -48,6 +48,7 @@ TimerMessage::isClientTransaction() const
       case Timer::TimerStaleClient:
       case Timer::TimerCleanUp:
       case Timer::TimerStateless:
+      case Timer::TcpConnectTimer:
          return true;
 
       case Timer::TimerG:

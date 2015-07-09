@@ -25,7 +25,7 @@ class ClientSubscriptionHandler
       
       //subscription can be ended through a notify or a failure response.
       virtual void onTerminated(ClientSubscriptionHandle, const SipMessage* msg)=0;   
-      //not sure if this has any value.
+      //not sure if this has any value - can be called for either a 200/SUBSCRIBE or a NOTIFY - whichever arrives first
       virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0;
 
       /// called to allow app to adorn a message.
@@ -48,6 +48,9 @@ class ServerSubscriptionHandler
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
       virtual void onNewSubscriptionFromRefer(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
+      //called when a new document is Published that matches this subscription.  Also
+      //called when the publication is removed or expires, in which case contents 
+      //and attrs are passed as null pointers.
       virtual void onPublished(ServerSubscriptionHandle associated, 
                                ServerPublicationHandle publication, 
                                const Contents* contents,

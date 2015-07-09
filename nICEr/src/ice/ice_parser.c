@@ -45,7 +45,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_parser.c,v 1.2 2008/04/28 17:59:01 e
 #include <strings.h>
 #endif
 #include <string.h>
-#include "rutil/Assert.h"
+#include <assert.h>
 #include <ctype.h>
 #include "nr_api.h"
 #include "ice_ctx.h"
@@ -136,6 +136,10 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     cand->state=NR_ICE_CAND_PEER_CANDIDATE_UNPAIRED;
     cand->stream=stream;
     skip_whitespace(&str);
+
+    /* Skip a= if present */
+    if (!strncmp(str, "a=", 2))
+        str += 2;
 
     /* Candidate attr */
     if (strncasecmp(str, "candidate:", 10))
@@ -237,10 +241,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     if (*str == '\0')
         ABORT(R_BAD_DATA);
 
-    resip_assert(nr_ice_candidate_type_names[0] == 0);
-#if __STDC_VERSION__ >= 201112L
-    _Static_assert(nr_ice_candidate_type_names[0] == 0,"Candidate name array is misformatted");
-#endif
+    assert(nr_ice_candidate_type_names[0] == 0);
 
     for (i = 1; nr_ice_candidate_type_names[i]; ++i) {
         if(!strncasecmp(nr_ice_candidate_type_names[i], str, strlen(nr_ice_candidate_type_names[i]))) {

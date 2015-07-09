@@ -170,35 +170,33 @@ Pidf::encodeParsed(EncodeStream& str) const
 void
 Pidf::parse(ParseBuffer& pb)
 {
-/*
-   REVISIT WHY THE BELOW WAS REMOVED
-   REMOVING IT SCREWS UP WHAT GOES OUT IN THE PUBLISH
-*/
    DebugLog(<< "Pidf::parse(" << Data(pb.start(), int(pb.end()-pb.start())) << ") ");
 
-	std::string pidf_namespace;
+   std::string pidf_namespace;
 
    XMLCursor xml(pb);
 
-	XMLCursor::AttributeMap attr = xml.getAttributes();
-	XMLCursor::AttributeMap::const_iterator it =
-			std::find_if(attr.begin(), attr.end(), XMLCursor::AttributeValueEqual("urn:ietf:params:xml:ns:pidf"));
+   XMLCursor::AttributeMap attr = xml.getAttributes();
+   XMLCursor::AttributeMap::const_iterator it =
+         std::find_if(attr.begin(), attr.end(), XMLCursor::AttributeValueEqual("urn:ietf:params:xml:ns:pidf"));
 
-	if ( it != attr.end() ) {
+   if ( it != attr.end() ) 
+   {
 
-		std::string key(it->first.data(), it->first.size());
+      std::string key(it->first.data(), it->first.size());
 
-		size_t pos = key.find(':');
+      size_t pos = key.find(':');
 
-		if ( pos != string::npos) {
-			pidf_namespace.assign(key, pos+1, key.size()-pos-1);
-			pidf_namespace.append(1, ':');
-		}
-	}
+      if ( pos != string::npos) 
+      {
+         pidf_namespace.assign(key, pos+1, key.size()-pos-1);
+         pidf_namespace.append(1, ':');
+      }
+   }
 
-	const std::string presence = pidf_namespace + "presence";
+   const std::string presence = pidf_namespace + "presence";
 
-	if (xml.getTag() == presence.c_str())
+   if (xml.getTag() == presence.c_str())
    {
       XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("entity");
       if (i != xml.getAttributes().end())
@@ -214,8 +212,8 @@ Pidf::parse(ParseBuffer& pb)
       {
          do
          {
-				const std::string tuple = pidf_namespace + "tuple";
-				if (xml.getTag() == tuple.c_str())
+            const std::string tuple = pidf_namespace + "tuple";
+            if (xml.getTag() == tuple.c_str())
             {
                Tuple t;
                t.attributes = xml.getAttributes();
@@ -231,10 +229,10 @@ Pidf::parse(ParseBuffer& pb)
                {
                   do
                   {
-							const std::string status = pidf_namespace + "status";
-							const std::string contact = pidf_namespace + "contact";
-							const std::string note = pidf_namespace + "note";
-							const std::string timestamp = pidf_namespace + "timestamp";
+                     const std::string status = pidf_namespace + "status";
+                     const std::string contact = pidf_namespace + "contact";
+                     const std::string note = pidf_namespace + "note";
+                     const std::string timestamp = pidf_namespace + "timestamp";
                      if (xml.getTag() == status.c_str())
                      {
                         // look for basic
@@ -242,7 +240,7 @@ Pidf::parse(ParseBuffer& pb)
                         {
                            do
                            {
-										std::string basic = pidf_namespace + "basic";
+                              std::string basic = pidf_namespace + "basic";
                               if (xml.getTag() == basic.c_str())
                               {
                                  if (xml.firstChild())
@@ -255,7 +253,7 @@ Pidf::parse(ParseBuffer& pb)
                            xml.parent();
                         }
                      }
-							else if (xml.getTag() == contact.c_str())
+                     else if (xml.getTag() == contact.c_str())
                      {
                         XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("priority");
                         if (i != xml.getAttributes().end())
@@ -268,7 +266,7 @@ Pidf::parse(ParseBuffer& pb)
                            xml.parent();
                         }
                      }
-							else if (xml.getTag() == note.c_str())
+                     else if (xml.getTag() == note.c_str())
                      {
                         if (xml.firstChild())
                         {
@@ -276,7 +274,7 @@ Pidf::parse(ParseBuffer& pb)
                            xml.parent();
                         }
                      }
-							else if (xml.getTag() == timestamp.c_str())
+                     else if (xml.getTag() == timestamp.c_str())
                      {
                         if (xml.firstChild())
                         {
@@ -298,17 +296,6 @@ Pidf::parse(ParseBuffer& pb)
    {
       DebugLog(<< "no presence tag!");
    }
-/*
-   REVISIT WHY THE ABOVE WAS REMOVED
-*/
-
-   // THIS HERE IS THE ESSENCE OF WHAT IS USED.
-   // const char* anchor = pb.position();
-   const char* anchor = pb.start();
-   pb.skipToEnd();
-   pb.data(mNote, anchor);
-   DebugLog(<< "mNote is : " << mNote );
-   // END OF - ESSENCE
 }
 
 void 
@@ -372,6 +359,7 @@ Pidf::merge(const Pidf& other)
       for (vector<Tuple>::iterator j = getTuples().begin();
            j != getTuples().end(); ++j)
       {
+         // TODO - only merge over if timestamp is greater
          if (i->id == j->id)
          {
             found = true;

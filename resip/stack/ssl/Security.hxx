@@ -90,7 +90,7 @@ class BaseSecurity
       static long OpenSSLCTXSetOptions;
       static long OpenSSLCTXClearOptions;
 
-      BaseSecurity(const CipherList& cipherSuite = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library
@@ -263,8 +263,8 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-      Security(const Data& pathToCerts, const CipherList& = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
-      Security(const CipherList& = ExportableSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      Security(const Data& pathToCerts, const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      Security(const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
 
       void addCADirectory(const Data& caDirectory);
       void addCAFile(const Data& caFile);

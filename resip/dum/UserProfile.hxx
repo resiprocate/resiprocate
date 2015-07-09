@@ -122,6 +122,7 @@ class UserProfile : public Profile
       // that use this profile
       const Tuple& getClientOutboundFlowTuple() const { return mClientOutboundFlowTuple; }
       void clearClientOutboundFlowTuple() { mClientOutboundFlowTuple = Tuple(); }
+      void setClientOutboundFlowTuple(const Tuple& outboundFlowTuple) { mClientOutboundFlowTuple = outboundFlowTuple; }  // Only for advanced users
 
    protected:
       virtual UserProfile* clone() const;

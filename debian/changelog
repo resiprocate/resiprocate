@@ -1,0 +1,342 @@
+resiprocate (1:1.10.0~alpha1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 04 Jul 2015 19:16:32 +0200
+
+resiprocate (1.9.8-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Improve administrative control over TLS. (Closes: #772480)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 07 Dec 2014 18:08:04 +0100
+
+resiprocate (1.9.7-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 31 May 2014 12:51:05 +0200
+
+resiprocate (1.9.6-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 10 Apr 2014 10:04:36 +0200
+
+resiprocate (1.9.5-2) unstable; urgency=high
+
+  * Fix/suppress lintian issues
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 27 Mar 2014 10:12:28 +0100
+
+resiprocate (1.9.5-1) unstable; urgency=high
+
+  * New upstream release
+  * Fix crash when not checking return value of getenv
+  * Fix other potential misuse of return values from dynamic_cast
+  * librecon now disables inband DTMF tones
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 26 Mar 2014 15:45:21 +0100
+
+resiprocate (1.9.4-1) unstable; urgency=high
+
+  * New upstream release
+  * Fix crash in librecon when UA is not using
+    a UserProfile derived from ConversationProfile (Closes: #742638)
+  * Ensure consistent use of milliseconds in DTMF tone API.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Tue, 25 Mar 2014 21:34:22 +0100
+
+resiprocate (1.9.3-1) unstable; urgency=high
+
+  * New upstream release
+  * Fix issue with reTurn-client failing to send media on
+    sockets that do not involve a TURN relay (Closes: #742506)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Mon, 24 Mar 2014 15:59:43 +0100
+
+resiprocate (1.9.2-2) unstable; urgency=high
+
+  * Add pkg-config to build-deps
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 09 Mar 2014 23:02:41 +0100
+
+resiprocate (1.9.2-1) unstable; urgency=high
+
+  * New upstream release
+  * Fix issues found by ASan (Closes: #740232)
+  * Invoke dh-autoreconf
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 09 Mar 2014 21:06:22 +0100
+
+resiprocate (1.9.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Support for libasio-dev v1.10.1
+  * Log an error if repro.config doesn't specify HttpAdminUserFile
+    (when a legacy repro.config is present)
+  * Eliminate log messages about trying to write a PEM file
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 20 Feb 2014 16:35:46 +0100
+
+resiprocate (1.9.0-3) unstable; urgency=medium
+
+  * Add range for libasio-dev version
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 11 Feb 2014 20:26:34 +0100
+
+resiprocate (1.9.0-2) unstable; urgency=low
+
+  * Add upper bound on libasio-dev version
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 11 Feb 2014 15:50:12 +0100
+
+resiprocate (1.9.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Mon, 10 Feb 2014 20:28:29 +0100
+
+resiprocate (1.9.0~rc2-1) unstable; urgency=low
+
+  * New upstream release
+  * Change from syslog to dedicated logging
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Mon, 27 Jan 2014 20:18:53 +0100
+
+resiprocate (1.9.0~rc1-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 21 Jan 2014 19:46:37 +0100
+
+resiprocate (1.9.0~beta11-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Wed, 15 Jan 2014 12:41:18 +0100
+
+resiprocate (1.9.0~beta10-3) unstable; urgency=low
+
+  * Improve dhparam file handling
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 14 Jan 2014 16:25:45 +0100
+
+resiprocate (1.9.0~beta10-2) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Mon, 13 Jan 2014 12:51:45 +0100
+
+resiprocate (1.9.0~beta10-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sun, 12 Jan 2014 11:46:45 +0100
+
+resiprocate (1.9.0~beta9-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sun, 12 Jan 2014 09:00:18 +0100
+
+resiprocate (1.9.0~beta8-5) unstable; urgency=low
+
+  * Ensure recon-dev package depends on srtp headers
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sun, 29 Dec 2013 16:06:59 +0100
+
+resiprocate (1.9.0~beta8-4) unstable; urgency=low
+
+  * Ensure reTurn dev package depends on boost and asio headers
+  * Add binary version restriction to dev header interdependencies
+  * Fix conflicts/replaces specifications for dev packages
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sun, 29 Dec 2013 09:33:55 +0100
+
+resiprocate (1.9.0~beta8-3) unstable; urgency=low
+
+  * Ensure dev packages depend on dependency headers
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sun, 29 Dec 2013 08:47:06 +0100
+
+resiprocate (1.9.0~beta8-2) unstable; urgency=low
+
+  * Ensure dev packages depend on libresiprocate-1.9-dev
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sat, 28 Dec 2013 23:21:43 +0100
+
+resiprocate (1.9.0~beta8-1) unstable; urgency=low
+
+  * New upstream release
+  * Adds Python plugin support
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 19 Dec 2013 21:29:54 +0100
+
+resiprocate (1.9.0~beta7-1) unstable; urgency=low
+
+  * New upstream release
+  * Enable DTLS support
+  * Enable repro plugins and ship repro headers in dev package
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Mon, 09 Dec 2013 20:20:09 +0100
+
+resiprocate (1.9.0~beta6-2) unstable; urgency=low
+
+  * Workaround for kFreeBSD testTcp issue
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Mon, 04 Nov 2013 23:33:45 +0100
+
+resiprocate (1.9.0~beta6-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 10 Oct 2013 14:44:31 +0200
+
+resiprocate (1.9.0~beta5-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Wed, 09 Oct 2013 13:03:13 +0200
+
+resiprocate (1.9.0~beta4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 08 Oct 2013 15:42:37 +0200
+
+resiprocate (1.8.14-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sat, 28 Sep 2013 20:47:51 +0200
+
+resiprocate (1.8.13-1) unstable; urgency=high
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 10 Sep 2013 20:01:27 +0200
+
+resiprocate (1.8.12-4) unstable; urgency=high
+
+  * Only required libsrtp-dev on Linux builds
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Fri, 06 Sep 2013 13:21:53 +0200
+
+resiprocate (1.8.12-3) unstable; urgency=high
+
+  * Use provides/replaces to allow upgrade to v1.9 (Closes: #717977)
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Fri, 06 Sep 2013 10:16:01 +0200
+
+resiprocate (1.8.12-2) unstable; urgency=high
+
+  * Suppress recon tests on non-Intel builds due to sipXtapi bug
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 06 Aug 2013 10:19:09 +0200
+
+resiprocate (1.8.12-1) unstable; urgency=high
+
+  * New upstream release
+  * Upstream has fixed various issues, Debian patches dropped
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Mon, 05 Aug 2013 22:26:40 +0200
+
+resiprocate (1.8.11-4) unstable; urgency=high
+
+  * Fix for 64-bit IPv6 Tuple comparison issue
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Fri, 19 Jul 2013 12:36:53 +0200
+
+resiprocate (1.8.11-3) unstable; urgency=low
+
+  * Fix for big-endian build issues
+  * Stop distributing libb2bua
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 18 Jul 2013 20:51:23 +0200
+
+resiprocate (1.8.11-2) unstable; urgency=low
+
+  * Disable librecon build on non-Linux architectures
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 18 Jul 2013 13:48:31 +0200
+
+resiprocate (1.8.11-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 18 Jul 2013 11:10:22 +0200
+
+resiprocate (1.8.10-5) unstable; urgency=low
+
+  * Disable recon test cases
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sun, 23 Jun 2013 14:10:53 +0200
+
+resiprocate (1.8.10-4) unstable; urgency=low
+
+  * Disable apps/clicktocall test case
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sun, 23 Jun 2013 12:09:33 +0200
+
+resiprocate (1.8.10-3) unstable; urgency=low
+
+  * Remove DM-Upload-Allowed
+  * Update for standards version 3.9.4
+  * Enable test cases
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sat, 22 Jun 2013 17:52:06 +0200
+
+resiprocate (1.8.10-2) unstable; urgency=low
+
+  * Disable MOHParkServer build
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sat, 22 Jun 2013 13:12:54 +0200
+
+resiprocate (1.8.10-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Sat, 22 Jun 2013 12:19:23 +0200
+
+resiprocate (1.8.9-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 20 Jun 2013 23:45:01 +0200
+
+resiprocate (1.8.8-2) unstable; urgency=low
+
+  * Add libsrtp-dev to build-depends
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Wed, 08 May 2013 14:27:23 +0200
+
+resiprocate (1.8.8-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Tue, 07 May 2013 22:38:49 +0200
+
+resiprocate (1.8.7-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Fri, 05 Apr 2013 17:40:45 +0200
+
+resiprocate (1.8.5-1) unstable; urgency=low
+
+  * New upstream release
+  * Make sure repro hashed passwords are not world readable
+  * Remove /var/lib/repro on purge (Closes: #675273)
+  * Delay in postrm in case process hasn't finished stopping
+  * Fix support for multiple ENUM carriers
+  * Fix issue with help text causing crash
+  * Fix clash between DIGEST and mutual TLS when used concurrently
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Wed, 08 Aug 2012 15:02:03 +0200
+
+resiprocate (1.8.2-1) unstable; urgency=low
+
+  * Initial release (Closes: #412427)
+
+ -- Daniel Pocock <daniel@pocock.com.au>  Thu, 17 May 2012 19:29:59 +0000

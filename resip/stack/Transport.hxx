@@ -6,6 +6,7 @@
 #include "rutil/FdSetIOObserver.hxx"
 #include "rutil/ProducerFifoBuffer.hxx"
 #include "resip/stack/TransportFailure.hxx"
+#include "resip/stack/TcpConnectState.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Compression.hxx"
@@ -224,6 +225,11 @@ class Transport : public FdSetIOObserver
       void fail(const Data& tid,
             TransportFailure::FailureReason reason = TransportFailure::Failure,
             int subCode = 0);
+
+      /**
+         Posts a TcpConnectState to the TransactionMessage Fifo.
+      */
+      void setTcpConnectState(const Data& tid, TcpConnectState::State state);
 
       /**
          Generates a generic log for the platform specific socket

@@ -131,7 +131,7 @@ TcpBaseTransport::setPollGrp(FdPollGrp *grp)
 void
 TcpBaseTransport::buildFdSet( FdSet& fdset)
 {
-   resip_assert( mPollGrp==NULL );
+   assert( mPollGrp==NULL );
    mConnectionManager.buildFdSet(fdset);
    if ( mFd!=INVALID_SOCKET )
    {
@@ -236,12 +236,12 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       }
    }
 
-   resip_assert(sock != INVALID_SOCKET);
+   assert(sock != INVALID_SOCKET);
 
    DebugLog (<<"Opening new connection to " << dest);
    char _sa[RESIP_MAX_SOCKADDR_SIZE];
    sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
-   resip_assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
+   assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
    mTuple.copySockaddrAnyPort(sa);
 #ifdef USE_NETNS
       NetNs::setNs(netNs());
@@ -294,8 +294,9 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
 
    // This will add the connection to the manager
    Connection *conn = createConnection(dest, sock, false);
-   resip_assert(conn);
-   conn->mRequestPostConnectSocketFuncCall = true;
+   assert(conn);
+   conn->mFirstWriteAfterConnectedPending = true;
+
    return conn;
 }
 
@@ -348,7 +349,7 @@ TcpBaseTransport::processAllWriteRequests()
             // NOTE: We fail this one but don't give up on others in queue
             return;
          }
-         resip_assert(conn->getSocket() != INVALID_SOCKET);
+         assert(conn->getSocket() != INVALID_SOCKET);
          data->destination.mFlowKey = conn->getSocket();
       }
 
@@ -361,6 +362,14 @@ TcpBaseTransport::processAllWriteRequests()
       }
       else // have a connection
       {
+         // Check if we have written anything or not on the connection.  If not, then this is either the first or 
+         // a subsequent transaction trying to use this connection attempt - set TcpConnectState for this 
+         // transaction to ConnectStarted
+         if (conn->mFirstWriteAfterConnectedPending == true)
+         {
+             // Notify the transaction state that we have started a TCP connect, so that it can run a TCP connect timer
+             setTcpConnectState(data->transactionId, TcpConnectState::ConnectStarted);
+         }
          conn->requestWrite(data);
       }
    }
@@ -384,7 +393,7 @@ TcpBaseTransport::process()
 void
 TcpBaseTransport::process(FdSet& fdSet)
 {
-   resip_assert( mPollGrp==NULL );
+   assert( mPollGrp==NULL );
 
    processAllWriteRequests();
 
@@ -412,7 +421,7 @@ TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
 void
 TcpBaseTransport::setRcvBufLen(int buflen)
 {
-   resip_assert(0);	// not implemented yet
+   assert(0);	// not implemented yet
    // need to store away the length and use when setting up new connections
 }
 

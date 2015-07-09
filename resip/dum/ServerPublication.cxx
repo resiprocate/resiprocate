@@ -3,6 +3,7 @@
 #include "resip/dum/PublicationHandler.hxx"
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
+#include "resip/dum/PublicationPersistenceManager.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -16,6 +17,7 @@ ServerPublication::ServerPublication(DialogUsageManager& dum,
      mLastResponse(new SipMessage), 
      mEtag(etag),
      mEventType(msg.header(h_Event).value()),
+     mDocumentKey(msg.header(h_RequestLine).uri().getAor()),
      mTimerSeq(0)
 {
 }
@@ -52,7 +54,7 @@ ServerPublication::getPublisher() const
 void
 ServerPublication::updateMatchingSubscriptions()
 {
-   Data key = mEventType + mLastRequest.header(h_RequestLine).uri().getAor();
+   Data key = mEventType + mDocumentKey;
    std::pair<DialogUsageManager::ServerSubscriptions::iterator,DialogUsageManager::ServerSubscriptions::iterator> subs;
    subs = mDum.mServerSubscriptions.equal_range(key);
    
@@ -74,8 +76,6 @@ ServerPublication::accept(int statusCode)
 {
    Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
    mLastResponse->header(h_Expires).value() = mExpires;
-
-   updateMatchingSubscriptions();
 
    return mLastResponse;   
 }
@@ -113,6 +113,15 @@ ServerPublication::dispatch(const SipMessage& msg)
          Helper::makeResponse(*mLastResponse, mLastRequest, 200);
          mLastResponse->header(h_Expires).value() = mExpires;
          mDum.send(mLastResponse);
+
+         if (mDum.mPublicationPersistenceManager)
+         {
+            // Remove document from persistence manager
+            mDum.mPublicationPersistenceManager->removeDocument(mEventType, mDocumentKey, mEtag, Timer::getTimeSecs());
+         }
+         // Notify all matching subscriptions removal - by sending a null body
+         updateMatchingSubscriptions();
+
          delete this;
          return;
       }
@@ -134,6 +143,18 @@ ServerPublication::dispatch(const SipMessage& msg)
    }
    else
    {
+      if (mExpires == 0)
+      {
+         // This can happen if we receive an unpublish after startup with an e-tag. 
+         // We will then 412 the request.  The sender will likely resend with no e-tag
+         // and we will end up here.  There is nothing really to do.  The sender is
+         // essentially unpublishing a publication we don't have, so we can just ignore it.
+         Helper::makeResponse(*mLastResponse, mLastRequest, 200);
+         mLastResponse->header(h_Expires).value() = mExpires;
+         mDum.send(mLastResponse);
+         delete this;
+         return;
+      }
       mLastBody = Helper::extractFromPkcs7(msg, *mDum.getSecurity());
       handler->onInitial(getHandle(), mEtag, msg, 
                          mLastBody.mContents.get(), 
@@ -145,10 +166,19 @@ ServerPublication::dispatch(const SipMessage& msg)
 void
 ServerPublication::dispatch(const DumTimeout& msg)
 {
+   // If this timer expires with a matching seq - it indicates the publisher didn't 
+   // rePUBLISH within the expiry time and the publication has expired.
    if (msg.seq() == mTimerSeq)
    {
       ServerPublicationHandler* handler = mDum.getServerPublicationHandler(mEventType);
       handler->onExpired(getHandle(), mEtag);
+
+      if (mDum.mPublicationPersistenceManager)
+      {
+         // Remove document from persistence manager
+         mDum.mPublicationPersistenceManager->removeDocument(mEventType, mDocumentKey, mEtag, Timer::getTimeSecs());
+      }
+
       delete this;
    }
 }
@@ -165,7 +195,23 @@ ServerPublication::send(SharedPtr<SipMessage> response)
    }
    else
    {
-      mDum.addTimer(DumTimeout::Publication, response->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+      UInt32 expires = response->header(h_Expires).value();  // ServerPublicationHandler may have changed expiration time
+      mDum.addTimer(DumTimeout::Publication, expires, getBaseHandle(), ++mTimerSeq);
+
+      if (mDum.mPublicationPersistenceManager)
+      {
+         // Add document to persistence manager
+         UInt64 now = Timer::getTimeSecs();
+         mDum.mPublicationPersistenceManager->addUpdateDocument(mEventType, mDocumentKey, mEtag, now + expires, mLastBody.mContents.get(), mLastBody.mAttributes.get());
+      }
+
+      // If we don't have a contents then it was a refresh (note:  Unpublishes don't go through here)
+      if (mLastBody.mContents.get())
+      {
+         // Notify all matching subscriptions of new document
+         // Note: we do this after all uses of mLastBody, since calling this will release the contents stored in mLastBody
+         updateMatchingSubscriptions();
+      }
    }
 }
 

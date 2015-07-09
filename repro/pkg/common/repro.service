@@ -1,0 +1,12 @@
+[Unit]
+Description=reSIProcate repro SIP proxy daemon
+After=network-online.target
+After=syslog.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/sbin/repro /etc/repro/repro.config --Daemonize=false
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

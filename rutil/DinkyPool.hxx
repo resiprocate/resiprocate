@@ -20,9 +20,7 @@ template<unsigned int S>
 class DinkyPool : public PoolBase
 {
    public:
-      DinkyPool() :
-         count(0){}
-
+      DinkyPool() : count(0), heapBytes(0) {}
       ~DinkyPool(){}
 
       void* allocate(size_t size)
@@ -33,6 +31,7 @@ class DinkyPool : public PoolBase
             count+=(size+7)/8;
             return result;
          }
+         heapBytes += size;
          return ::operator new(size);
       }
 
@@ -49,6 +48,11 @@ class DinkyPool : public PoolBase
       {
          return std::numeric_limits<size_t>::max();
       }
+
+      size_t getHeapBytes() const { return heapBytes; }
+      size_t getPoolBytes() const { return count*8; }
+      size_t getPoolSizeBytes() const { return sizeof(mBuf); }
+
    private:
       // disabled
       DinkyPool& operator=(const DinkyPool& rhs);
@@ -56,6 +60,7 @@ class DinkyPool : public PoolBase
 
       size_t count; // 8-byte chunks alloced so far
       char mBuf[(S+7)/8][8]; // 8-byte chunks for alignment
+      size_t heapBytes;
 };
 
 }

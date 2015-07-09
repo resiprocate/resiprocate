@@ -17,8 +17,9 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-AmIResponsible::AmIResponsible() : 
-   Processor("AmIResponsible")
+AmIResponsible::AmIResponsible(bool alwaysAllowRelaying) :
+   Processor("AmIResponsible"),
+   mAlwaysAllowRelaying(alwaysAllowRelaying)
 {}
 
 AmIResponsible::~AmIResponsible()
@@ -104,7 +105,7 @@ AmIResponsible::process(RequestContext& context)
          //       I-don't-want-to-be-used-as-a-relay problem is crypto; specifically 
          //       Record-Route with crypto that states "Yeah, I set up this dialog, 
          //       let it through".
-         if (!request.header(h_To).exists(p_tag))
+         if (!request.header(h_To).exists(p_tag) && !mAlwaysAllowRelaying)
          {
             // Ensure From header is well formed
             if(!request.header(h_From).isWellFormed())

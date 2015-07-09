@@ -1,0 +1,9 @@
+
+
+NMUs are welcome
+
+Please make your changes in the git VCS, push the changes and make
+a signed tag when you NMU, otherwise your changes will be lost on
+the next upload.
+
+
