@@ -30,7 +30,9 @@
 
 #include "config.h"
 
-#define LOG_EVENT_AND_ASSERT
+// Uncomment or define on the compiler command line to have
+// assertion failures logged to the Windows event logger
+//#define LOG_EVENT_AND_ASSERT
 
 #if defined(WIN32) && defined(LOG_EVENT_AND_ASSERT)
 
