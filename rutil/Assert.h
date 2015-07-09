@@ -28,7 +28,7 @@
 
 #include <assert.h>
 
-#define LOG_EVENT_AND_ASSERT
+//#define LOG_EVENT_AND_ASSERT
 
 #if defined(WIN32) && defined(LOG_EVENT_AND_ASSERT)
 
