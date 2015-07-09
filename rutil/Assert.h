@@ -46,7 +46,7 @@
     HKEY key;                                                                  \
     long errorCode =                                                           \
         RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Services\\EventLog\\Application\\reSIProcate"), \
-                         0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &key, NULL); \
+                       0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &key, NULL); \
     if (ERROR_SUCCESS == errorCode)                                            \
     {                                                                          \
         HANDLE eventLogHandle;                                                 \
@@ -78,7 +78,7 @@
       SysLogAssertEvent( (x) );                                                \
    }                                                                           \
    {                                                                           \
-      _ASSERTE( (x) );                                                         \
+      assert( (x) );                                                           \
    }                                                                           \
 }
 
