@@ -500,6 +500,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractFifo.hxx" />
+    <ClInclude Include="Assert.h" />
     <ClInclude Include="CongestionManager.hxx" />
     <ClInclude Include="ConsumerFifoBuffer.hxx" />
     <ClInclude Include="DinkyPool.hxx" />
