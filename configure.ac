@@ -302,6 +302,13 @@ AC_ARG_WITH(python,
  fi
 ], )
 
+AM_CONDITIONAL(RESIP_ASSERT_SYSLOG, false)
+AC_ARG_ENABLE(assert-syslog,
+[  --enable-assert-syslog  Log assertion failures with Syslog],
+ [AC_DEFINE_UNQUOTED(RESIP_ASSERT_SYSLOG, , RESIP_ASSERT_SYSLOG)
+ AM_CONDITIONAL(RESIP_ASSERT_SYSLOG, true)
+], )
+
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
