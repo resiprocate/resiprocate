@@ -48,12 +48,14 @@ class WinCompat
       static std::list<std::pair<Data,Data> > getInterfaces(const Data& matching);
       static void destroyInstance();
 
+      static bool windowsEventLog(WORD type, WORD numStrings, LPCTSTR* strings);
+
    private:
       static WinCompat* instance();
       static WinCompat* mInstance;
 
-      static GenericIPAddress WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination);
-      static GenericIPAddress WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination);
+      static GenericIPAddress determineSourceInterfaceWithIPv6(const GenericIPAddress& destination);
+      static GenericIPAddress determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination);
       typedef DWORD (WINAPI * GetBestInterfaceExProc)(const sockaddr *, DWORD *);
       typedef DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
       typedef DWORD (WINAPI * GetAdaptersInfoProc)(PIP_ADAPTER_INFO, PULONG);

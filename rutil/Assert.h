@@ -26,11 +26,69 @@
  * safely with the logger but at present it is not ready for that.
  */
 
-
 #include <assert.h>
+
+#define LOG_EVENT_AND_ASSERT
+
+#if defined(WIN32) && defined(LOG_EVENT_AND_ASSERT)
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <Winreg.h>
+#include <winnt.h>
+#include <tchar.h>
+#include <crtdbg.h>
+
+#define SysLogAssertEvent(x)                                                   \
+{                                                                              \
+    HKEY key;                                                                  \
+    long errorCode =                                                           \
+        RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Services\\EventLog\\Application\\reSIProcate"), \
+                         0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &key, NULL); \
+    if (ERROR_SUCCESS == errorCode)                                            \
+    {                                                                          \
+        HANDLE eventLogHandle;                                                 \
+        RegCloseKey(key);                                                      \
+        eventLogHandle = RegisterEventSource(NULL, _T("reSIProcate"));         \
+        if (eventLogHandle != NULL)                                            \
+        {                                                                      \
+            TCHAR appPath[MAX_PATH];                                                    \
+            TCHAR moduleInfo[1024];                                                     \
+            TCHAR fileInfo[1024];                                                       \
+            TCHAR lineInfo[1024];                                                       \
+            TCHAR assertInfo[1024];                                                     \
+            const TCHAR* lines[4] = { moduleInfo, fileInfo, lineInfo, assertInfo };     \
+            GetModuleFileName(0, appPath, MAX_PATH);                                    \
+            _sntprintf_s(moduleInfo, 1024, _TRUNCATE, _T("\r\nModule : %s"), appPath);  \
+            _sntprintf_s(fileInfo, 1024, _TRUNCATE, _T("\r\nFile : %s"), _T(__FILE__)); \
+            _sntprintf_s(lineInfo, 1024, _TRUNCATE, _T("\r\nLine : %d"), __LINE__);     \
+            _sntprintf_s(assertInfo, 1024, _TRUNCATE, _T("\r\nAssert: %s"), _T(#x));    \
+            ReportEvent(eventLogHandle, EVENTLOG_ERROR_TYPE, 0, 0, NULL, 4, 0, lines, NULL); \
+            DeregisterEventSource(eventLogHandle);                                      \
+        }                                                                      \
+    }                                                                          \
+}
+
+#define resip_assert(x)                                                        \
+{                                                                              \
+   if ( !(x) )                                                                 \
+   {                                                                           \
+      SysLogAssertEvent( (x) );                                                \
+   }                                                                           \
+   {                                                                           \
+      _ASSERTE( (x) );                                                         \
+   }                                                                           \
+}
+
+#else
+
 #define resip_assert(x) assert(x)
 
-#endif
+#endif // defined(WIN32) && defined(LOG_EVENT_AND_ASSERT)
+
+#endif // __ASSERTION_H
 
 /* ====================================================================
  *
