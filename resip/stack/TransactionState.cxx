@@ -34,6 +34,7 @@
 #include "resip/stack/TuSelector.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/KeepAliveMessage.hxx"
+#include "rutil/Assert.h"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"
@@ -2366,7 +2367,7 @@ void
 TransactionState::processTcpConnectState(TransactionMessage* msg)
 {
    TcpConnectState* tcpConnectState = dynamic_cast<TcpConnectState*>(msg);
-   assert(tcpConnectState);
+   resip_assert(tcpConnectState);
 
    TcpConnectState* state = dynamic_cast<TcpConnectState*>(msg);
    if (state->getState() == TcpConnectState::ConnectStarted && 

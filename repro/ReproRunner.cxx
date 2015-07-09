@@ -23,6 +23,7 @@
 
 #endif
 
+#include "rutil/Assert.h"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -986,7 +987,7 @@ ReproRunner::createDatastore()
    {
       resip_assert(!mRegistrationPersistenceManager);
       mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
-      assert(!mPublicationPersistenceManager);
+      resip_assert(!mPublicationPersistenceManager);
       mPublicationPersistenceManager = new InMemorySyncPubDb((mRegSyncPort && mProxyConfig->getConfigBool("EnablePublicationRepication", false)) ? true : false);
    }
    resip_assert(mRegistrationPersistenceManager);
@@ -1092,8 +1093,8 @@ ReproRunner::createDialogUsageManager()
    bool presenceEnabled = mProxyConfig->getConfigBool("EnablePresenceServer", false);
    if (presenceEnabled)
    {
-      assert(mDum);
-      assert(mPublicationPersistenceManager);
+      resip_assert(mDum);
+      resip_assert(mPublicationPersistenceManager);
 
       // Set the publication persistence manager in dum
       mDum->setPublicationPersistenceManager(mPublicationPersistenceManager);
