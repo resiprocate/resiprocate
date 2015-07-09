@@ -28,6 +28,8 @@
 
 #include <assert.h>
 
+#include "config.h"
+
 #define LOG_EVENT_AND_ASSERT
 
 #if defined(WIN32) && defined(LOG_EVENT_AND_ASSERT)
@@ -84,7 +86,22 @@
 
 #else
 
+#ifdef RESIP_ASSERT_SYSLOG
+#include <syslog.h>
+#define resip_assert(x)                                                        \
+{                                                                              \
+   if ( !(x) )                                                                 \
+   {                                                                           \
+      syslog( LOG_DAEMON | LOG_CRIT, "assertion failed: %s:%d: %s", __FILE__, __LINE__, #x );                 \
+      assert( (x) );                                                           \
+   }                                                                           \
+   {                                                                           \
+      assert( (x) );                                                           \
+   }                                                                           \
+}
+#else
 #define resip_assert(x) assert(x)
+#endif
 
 #endif // defined(WIN32) && defined(LOG_EVENT_AND_ASSERT)
 
