@@ -1,4 +1,4 @@
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "resip/dum/ChallengeInfo.hxx"
 #include "resip/dum/DumFeature.hxx"

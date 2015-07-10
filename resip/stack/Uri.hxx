@@ -2,7 +2,7 @@
 #define RESIP_URI_HXX 
 
 #include <bitset>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "resip/stack/ParserCategory.hxx"
 #include "resip/stack/Token.hxx"

@@ -2,7 +2,7 @@
 #define RESIP_HANDLE_HXX
 
 #include <iosfwd>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "resip/dum/Handled.hxx"
 #include "resip/dum/HandleManager.hxx"
 #include "resip/dum/HandleException.hxx"

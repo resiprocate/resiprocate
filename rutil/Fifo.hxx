@@ -1,7 +1,7 @@
 #if !defined(RESIP_FIFO_HXX)
 #define RESIP_FIFO_HXX 
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/AbstractFifo.hxx"
 #include "rutil/SelectInterruptor.hxx"
 

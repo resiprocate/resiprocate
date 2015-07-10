@@ -1,4 +1,4 @@
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "resip/stack/ParserContainerBase.hxx"
 #include "resip/stack/Embedded.hxx"

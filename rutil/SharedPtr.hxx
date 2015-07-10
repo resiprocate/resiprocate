@@ -16,7 +16,7 @@
 #include <functional>           // for std::less
 #include <typeinfo>             // for std::bad_cast
 #include <iosfwd>               // for std::basic_ostream
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 namespace resip
 {

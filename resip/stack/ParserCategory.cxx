@@ -14,7 +14,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 
 #include <iostream>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Logger.hxx"
 //#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below

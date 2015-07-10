@@ -1,6 +1,6 @@
 
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
 #include "rutil/MD5Stream.hxx"

@@ -6,7 +6,7 @@ typedef unsigned int size_t;
 }
 
 */
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <cerrno>
 #include "rutil/Mutex.hxx"
 

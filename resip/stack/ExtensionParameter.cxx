@@ -5,7 +5,7 @@
 #include "ExtensionParameter.hxx"
 #include "ParameterTypeEnums.hxx"
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <string.h>
 
 using namespace resip;

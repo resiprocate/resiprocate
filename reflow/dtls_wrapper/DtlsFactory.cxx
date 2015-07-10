@@ -4,7 +4,7 @@
 
 #ifdef USE_SSL
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <iostream>
 #include <rutil/ssl/OpenSSLInit.hxx>
 

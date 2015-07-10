@@ -7,7 +7,7 @@
 #include "P2PSubsystem.hxx"
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 #include "MessageStructsGen.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 namespace s2c {
 

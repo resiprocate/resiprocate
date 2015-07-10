@@ -3,7 +3,7 @@
 #endif
 
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "resip/stack/HeaderFieldValue.hxx"
 #include "resip/stack/HeaderFieldValueList.hxx"

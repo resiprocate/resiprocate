@@ -6,7 +6,7 @@
 #include "HeaderTypes.hxx"
 #include "rutil/Logger.hxx"
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/ParseBuffer.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP

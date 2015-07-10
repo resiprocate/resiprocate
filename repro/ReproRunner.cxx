@@ -23,7 +23,7 @@
 
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"

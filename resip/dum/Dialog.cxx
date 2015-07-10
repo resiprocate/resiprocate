@@ -15,7 +15,7 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/UsageUseException.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/TransportType.hxx"

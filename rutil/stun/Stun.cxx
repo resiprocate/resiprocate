@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <cstring>
 #include <iostream>
 #include <cstdlib>   

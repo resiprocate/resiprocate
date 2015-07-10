@@ -7,7 +7,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "FlowManagerSubsystem.hxx"
 #include "FakeSelectSocketDescriptor.hxx"

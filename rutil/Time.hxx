@@ -3,7 +3,7 @@
 
 #include "rutil/Mutex.hxx"
 #include <limits.h>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 namespace resip
 {

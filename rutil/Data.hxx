@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "rutil/compat.hxx"
 #include "rutil/DataStream.hxx"

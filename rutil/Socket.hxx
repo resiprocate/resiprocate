@@ -1,7 +1,7 @@
 #if !defined(RESIP_SOCKET_HXX)
 #define RESIP_SOCKET_HXX  
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <errno.h>
 #include <algorithm>
 

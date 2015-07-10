@@ -1,7 +1,7 @@
 #ifndef RESIP_TimeLimitFifo_hxx
 #define RESIP_TimeLimitFifo_hxx 
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <memory>
 #include "rutil/AbstractFifo.hxx"
 #include <iostream>

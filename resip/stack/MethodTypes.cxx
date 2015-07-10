@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <cstdio>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "resip/stack/MethodTypes.hxx"
 #include "resip/stack/Symbols.hxx"

@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "SipIMP.h"
 #include "BuddyDlg.h"

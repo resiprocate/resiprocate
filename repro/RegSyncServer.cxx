@@ -2,7 +2,7 @@
 
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <rutil/Assert.h>
+#include <rutil/ResipAssert.h>
 #include <rutil/Data.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Logger.hxx>

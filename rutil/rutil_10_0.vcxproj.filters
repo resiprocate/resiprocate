@@ -62,7 +62,6 @@
     <ClCompile Include="XMLCursor.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Assert.h" />
     <ClInclude Include="XMLCursor.hxx" />
     <ClInclude Include="AbstractFifo.hxx" />
     <ClInclude Include="dns\AresCompat.hxx" />
@@ -121,6 +120,7 @@
     <ClInclude Include="dns\QueryTypes.hxx" />
     <ClInclude Include="Random.hxx" />
     <ClInclude Include="RecursiveMutex.hxx" />
+    <ClInclude Include="ResipAssert.h" />
     <ClInclude Include="resipfaststreams.hxx" />
     <ClInclude Include="dns\RRCache.hxx" />
     <ClInclude Include="dns\RRFactory.hxx" />

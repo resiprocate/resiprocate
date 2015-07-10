@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string.h>
 #include <sys/types.h>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #if !defined (WIN32)
 #include <arpa/inet.h>

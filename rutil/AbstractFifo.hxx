@@ -1,7 +1,7 @@
 #ifndef RESIP_AbstractFifo_hxx
 #define RESIP_AbstractFifo_hxx 
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <deque>
 
 #include "rutil/Mutex.hxx"

@@ -1,6 +1,6 @@
 #include "rutil/SelectInterruptor.hxx"
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/Logger.hxx"
 
 #ifndef WIN32

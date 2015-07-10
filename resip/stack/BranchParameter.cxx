@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "resip/stack/BranchParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"

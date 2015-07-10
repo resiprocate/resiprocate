@@ -17,7 +17,7 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"

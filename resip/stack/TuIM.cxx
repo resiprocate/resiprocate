@@ -14,7 +14,7 @@
    suppport loading destination certificates from server 
 */
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <memory>
 
 #include "resip/stack/SipStack.hxx"

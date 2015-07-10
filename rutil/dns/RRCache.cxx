@@ -27,7 +27,7 @@
 #include <vector>
 #include <list>
 #include <map>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"

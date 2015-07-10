@@ -8,7 +8,7 @@
 //	release version messes time_t definition again
 #include <set>
 #include <vector>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "AresCompat.hxx"
 

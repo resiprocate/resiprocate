@@ -4,7 +4,7 @@
 #endif
 
 #include <sstream>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <algorithm>
 #include "../Version.hxx"
 #include "JabberComponent.hxx"

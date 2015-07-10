@@ -1,5 +1,5 @@
 #include <cstdio>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/SysLogBuf.hxx"
 #include "rutil/Log.hxx"
 

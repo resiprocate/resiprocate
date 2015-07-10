@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/ParseException.hxx"
 #include "resip/stack/QuotedDataParameter.hxx"
 #include "resip/stack/Symbols.hxx"

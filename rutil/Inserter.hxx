@@ -8,7 +8,7 @@
 #include <list>
 #include <vector>
 #include <deque>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "HashMap.hxx"
 #include "rutil/compat.hxx"

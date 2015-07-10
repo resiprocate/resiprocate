@@ -1,6 +1,6 @@
 #include "DataBuffer.hxx"
 #include <memory.h>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <rutil/WinLeakCheck.hxx>
 
 namespace reTurn {

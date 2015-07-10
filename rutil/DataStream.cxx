@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/DataStream.hxx"
 #include "rutil/Data.hxx"
 

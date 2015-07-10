@@ -8,7 +8,7 @@
 #include "rutil/Mutex.hxx"
 #include "rutil/RWMutex.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <vector>
 
 // This will not be built or installed if USE_SSL is not defined; if you are 

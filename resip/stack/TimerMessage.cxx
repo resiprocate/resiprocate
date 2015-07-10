@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "resip/stack/TimerMessage.hxx"
 
 using namespace resip;

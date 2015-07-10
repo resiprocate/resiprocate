@@ -7,7 +7,7 @@
 
 #include "resip/stack/ssl/Security.hxx"
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <list>
 #include "rutil/BaseException.hxx"
 #include "resip/stack/SipMessage.hxx"

@@ -3,7 +3,7 @@
 
 #ifdef UNDER_CE
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 namespace resip
 {
 wchar_t* ToWString(const char *str);

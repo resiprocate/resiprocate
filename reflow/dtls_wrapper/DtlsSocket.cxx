@@ -5,7 +5,7 @@
 #ifdef USE_SSL
 
 #include <iostream>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <string.h>
 
 #include "DtlsFactory.hxx"

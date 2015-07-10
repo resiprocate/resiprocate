@@ -8,7 +8,7 @@
 #include <resip/dum/RegistrationPersistenceManager.hxx>
 #include <resip/dum/ServerPublication.hxx>
 #include <resip/stack/GenericPidfContents.hxx>
-#include <rutil/Assert.h>
+#include <rutil/ResipAssert.h>
 #include <rutil/Logger.hxx>
 
 using namespace repro;

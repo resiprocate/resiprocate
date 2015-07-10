@@ -6,7 +6,7 @@
 #include <rutil/Data.hxx>
 
 // SYSTEM INCLUDES
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <stdio.h>
 #ifndef _WIN32
 #include <netinet/in.h>

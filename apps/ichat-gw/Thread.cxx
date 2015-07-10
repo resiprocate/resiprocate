@@ -1,4 +1,4 @@
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "Thread.hxx"
 
@@ -13,7 +13,7 @@ using namespace std;
 typedef unsigned(__stdcall *THREAD_START_ROUTINE)(void*);
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <iostream>
 
 extern "C"

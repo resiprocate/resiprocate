@@ -3,7 +3,7 @@
 
 #include <sys/stat.h>
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP

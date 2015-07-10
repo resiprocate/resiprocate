@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"

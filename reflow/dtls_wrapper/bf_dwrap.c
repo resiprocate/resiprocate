@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <openssl/bio.h>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <memory.h>
 
 #define BIO_TYPE_DWRAP       (50 | 0x0400 | 0x0200)

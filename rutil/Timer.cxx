@@ -13,7 +13,7 @@
 #  include <unistd.h>
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/Time.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Logger.hxx"

@@ -18,7 +18,7 @@
 #endif
 
 #include <sys/types.h>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #ifndef WIN32
 #include <sys/socket.h>

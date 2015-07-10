@@ -34,7 +34,7 @@
 #include "resip/stack/TuSelector.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/KeepAliveMessage.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"

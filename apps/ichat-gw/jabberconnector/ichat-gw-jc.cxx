@@ -1,6 +1,6 @@
 #include <signal.h>
 #include <iostream>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "JabberComponent.hxx"
 

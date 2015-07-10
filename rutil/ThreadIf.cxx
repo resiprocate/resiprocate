@@ -15,7 +15,7 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 #include "rutil/Socket.hxx"
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <iostream>
 #include "rutil/ThreadIf.hxx"
 #include "rutil/Mutex.hxx"

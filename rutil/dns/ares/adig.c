@@ -29,7 +29,7 @@
 #include <netdb.h>
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

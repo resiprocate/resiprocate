@@ -3,7 +3,7 @@
 #endif
 
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "resip/stack/Embedded.hxx"
 #include "rutil/Data.hxx"

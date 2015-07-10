@@ -1,5 +1,5 @@
 #include "p2p/ChordUpdate.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 using namespace p2p;
 using namespace s2c;

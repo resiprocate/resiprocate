@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <string.h>
 #include <time.h>
 #ifndef WIN32

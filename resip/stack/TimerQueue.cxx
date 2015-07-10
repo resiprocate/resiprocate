@@ -3,7 +3,7 @@
 #include "config.h"
 #endif
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include <limits.h>
 
 #include "resip/stack/TimerQueue.hxx"

@@ -50,7 +50,7 @@
 
 #include "RWMutex.hxx"
 #include "Lock.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 using resip::RWMutex;
 using resip::Lock;

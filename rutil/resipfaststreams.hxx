@@ -15,7 +15,7 @@
 #include <iostream> //for std::endl, std::cerr, etc.
 #include <stdio.h> //for snprintf
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/compat.hxx"
 
 namespace resip

@@ -1,5 +1,5 @@
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 
 #include "resip/dum/ChallengeInfo.hxx"
 #include "rutil/Data.hxx"

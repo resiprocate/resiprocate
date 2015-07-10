@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "ares.h"
 
 const char *ares_strerror(int code)

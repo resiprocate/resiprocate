@@ -61,7 +61,7 @@
 #include "resip/dum/DumHelper.hxx"
 #include "resip/dum/MergedRequestRemovalCommand.hxx"
 #include "resip/dum/InMemorySyncPubDb.hxx"
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"

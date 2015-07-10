@@ -1,7 +1,7 @@
 #ifndef RESIP_TransactionMessage_hxx
 #define RESIP_TransactionMessage_hxx
 
-#include "rutil/Assert.h"
+#include "rutil/ResipAssert.h"
 #include "resip/stack/Message.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 

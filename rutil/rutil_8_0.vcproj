@@ -569,10 +569,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Assert.h"
-				>
-			</File>
-			<File
 				RelativePath=".\AsyncID.hxx"
 				>
 			</File>
@@ -786,6 +782,10 @@
 			</File>
 			<File
 				RelativePath=".\RecursiveMutex.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ResipAssert.h"
 				>
 			</File>
 			<File
