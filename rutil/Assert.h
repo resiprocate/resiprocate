@@ -97,7 +97,6 @@
    if ( !(x) )                                                                 \
    {                                                                           \
       syslog( LOG_DAEMON | LOG_CRIT, "assertion failed: %s:%d: %s", __FILE__, __LINE__, #x );                 \
-      assert( (x) );                                                           \
    }                                                                           \
    {                                                                           \
       assert( (x) );                                                           \
