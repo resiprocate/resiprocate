@@ -822,7 +822,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-            ErrLog(<< "Can’t create a dialog, on a UAS response.");
+            ErrLog(<< "Can't create a dialog, on a UAS response.");
             return;
          }
 
