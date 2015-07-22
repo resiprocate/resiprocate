@@ -1030,8 +1030,8 @@ Helper::authenticateRequest(const SipMessage& request,
                                                             i->param(p_nonce),
                                                             i->param(p_qop),
                                                             i->param(p_cnonce),
-                                                            i->param(p_nc)),
-                                                            request.getContents())
+                                                            i->param(p_nc),
+                                                            request.getContents()))
                   {
                      return Authenticated;
                   }
