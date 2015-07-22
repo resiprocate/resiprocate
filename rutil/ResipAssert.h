@@ -92,11 +92,12 @@
 
 #ifdef RESIP_ASSERT_SYSLOG
 #include <syslog.h>
+#define RESIP_ASSERT_SYSLOG_PRIORITY (LOG_DAEMON | LOG_CRIT)
 #define resip_assert(x)                                                        \
 {                                                                              \
    if ( !(x) )                                                                 \
    {                                                                           \
-      syslog( LOG_DAEMON | LOG_CRIT, "assertion failed: %s:%d: %s", __FILE__, __LINE__, #x );                 \
+      syslog( RESIP_ASSERT_SYSLOG_PRIORITY, "assertion failed: %s:%d: %s", __FILE__, __LINE__, #x );                 \
    }                                                                           \
    {                                                                           \
       assert( (x) );                                                           \
