@@ -35,6 +35,11 @@ DialogUsage::~DialogUsage()
 AppDialogSetHandle 
 DialogUsage::getAppDialogSet()
 {
+   if (mDialog.mDialogSet.mAppDialogSet == 0)
+   {
+      ErrLog(<< "mDialog.mDialogSet.mAppDialogSet is NULL!!!");
+      return AppDialogSetHandle();
+   }
    return mDialog.mDialogSet.mAppDialogSet->getHandle();
 }
 
