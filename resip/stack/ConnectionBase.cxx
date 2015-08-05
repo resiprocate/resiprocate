@@ -216,7 +216,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             return false;
          }
 
-         if (mMsgHeaderScanner.getHeaderCount() > 256)
+         if (mMsgHeaderScanner.getHeaderCount() > 1024)
          {
             WarningLog(<< "Discarding preparse; too many headers");
             delete [] mBuffer;
