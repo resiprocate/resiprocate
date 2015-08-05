@@ -378,6 +378,8 @@ Dialog::handleTargetRefresh(const SipMessage& msg)
    {
       case INVITE:
       case UPDATE:
+      case SUBSCRIBE: // RFC6665 - Note: target refreshes via NOTIFY requests are handled via 
+                      //           ClientSubscription usage after NOTIFY ordering is confirmed
          if (msg.isRequest() || (msg.isResponse() && msg.header(h_StatusLine).statusCode()/100 == 2))
          {
             //?dcm? modify local target; 12.2.2 of 3261 implies that the remote

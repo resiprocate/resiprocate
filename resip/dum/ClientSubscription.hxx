@@ -67,12 +67,12 @@ class ClientSubscription: public BaseSubscription
       Dustbin mDustbin;
 
       bool mOnNewSubscriptionCalled;
-      //SipMessage mLastNotify;      
       bool mEnded;
       // .bwc. This is when our next reSUB is scheduled to happen.
       UInt64 mNextRefreshSecs;
       UInt64 mLastSubSecs;
 
+      bool mSubscribed;
       bool mRefreshing;
       bool mHaveQueuedRefresh;
       int mQueuedRefreshInterval;
