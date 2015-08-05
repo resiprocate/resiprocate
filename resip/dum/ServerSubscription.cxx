@@ -26,8 +26,7 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
    : BaseSubscription(dum, dialog, req),
      mSubscriber(req.header(h_From).uri().getAor()),
      mExpires(60),
-     mAbsoluteExpiry(0),
-     mDeleteSubscription(true)
+     mAbsoluteExpiry(0)
 {
    if (req.header(h_RequestLine).method() == REFER && req.header(h_To).exists(p_tag))
    {
@@ -75,7 +74,8 @@ ServerSubscription::getTimeLeft()
 SharedPtr<SipMessage>
 ServerSubscription::accept(int statusCode)
 {
-   mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
+   // Response is built in dispatch when request arrives, just need to adjust the status code here
+   mLastResponse->header(h_StatusLine).responseCode() = statusCode;
    mLastResponse->header(h_Expires).value() = mExpires;
    return mLastResponse;
 }
@@ -87,19 +87,17 @@ ServerSubscription::reject(int statusCode)
    {
       throw UsageUseException("Must reject with a code greater than or equal to 300", __FILE__, __LINE__);
    }
-   mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
+   // Response is built in dispatch when request arrives, just need to adjust the status code here
+   mLastResponse->header(h_StatusLine).responseCode() = statusCode;
+   mLastResponse->remove(h_Contacts);  // Remove any contact header for non-success response
    return mLastResponse;
 }
 
 void ServerSubscription::terminateSubscription(ServerSubscriptionHandler* handler)
 {
-  if (mDeleteSubscription)
-  {
-    handler->onTerminated(getHandle());
-    delete this;
-  }
+   handler->onTerminated(getHandle());
+   delete this;
 }
-
 
 void 
 ServerSubscription::send(SharedPtr<SipMessage> msg)
@@ -108,6 +106,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
    assert(handler);   
    if (msg->isResponse())
    {
+      mLastResponse.reset();  // Release ref count on memory - so message goes away when send is done
       int code = msg->header(h_StatusLine).statusCode();
       if (code < 200)
       {
@@ -152,7 +151,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
       DialogUsage::send(msg);
       if (mSubscriptionState == Terminated)
       {
-        terminateSubscription(handler);
+         terminateSubscription(handler);
       }
    }
 }
@@ -197,7 +196,6 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
       default: // !jf!
          assert(0);
          break;
-         
    }
    return false;   
 }
@@ -205,7 +203,11 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
 void 
 ServerSubscription::setSubscriptionState(SubscriptionState state)
 {
-   mSubscriptionState = state;
+   // Don't allow a transition out of Terminated state
+   if (mSubscriptionState != Terminated)
+   {
+      mSubscriptionState = state;
+   }
 }
 
 void 
@@ -221,7 +223,11 @@ ServerSubscription::dispatch(const SipMessage& msg)
       //!dcm! -- need to have a mechanism to retrieve default & acceptable
       //expiration times for an event package--part of handler API?
       //added to handler for now.
-      mLastSubscribe = msg;      
+      if (mLastResponse.get() == 0)
+      {
+          mLastResponse.reset(new SipMessage);
+      }
+      mDialog.makeResponse(*mLastResponse, msg, 200);  // Generate response now and wait for user to accept or reject, then adjust status code
    
       int errorResponseCode = 0;
       handler->getExpires(msg,mExpires,errorResponseCode);
@@ -252,8 +258,10 @@ ServerSubscription::dispatch(const SipMessage& msg)
           */
          if (mSubscriptionState == Invalid)
          {
+            // Move to terminated state - application is not allowed to switch out of this state.  This
+            // allows applications to treat polling requests just like normal subscriptions.  Any attempt
+            // to call setSubscriptionState will NoOp.
             mSubscriptionState = Terminated;
-            mDeleteSubscription = false;
 
             if (mEventType != "refer" )
             {
@@ -263,24 +271,21 @@ ServerSubscription::dispatch(const SipMessage& msg)
             {
                handler->onNewSubscriptionFromRefer(getHandle(), msg);
             }
-
-            mDeleteSubscription = true;
-
-            if (mLastResponse->header(h_StatusLine).statusCode() >= 300)
-            {
-              send(mLastResponse);
-              return;
-            }
+            // note:  it might be nice to call onExpiredByClient here, but it's dangerous, since inline calls 
+            //        to reject or the inline sending of a Notify in the onNewSubscription handler will cause 
+            //        'this' to be deleted
+            return;
          }
 
-         makeNotifyExpires();
+         makeNotifyExpires();  // builds a NOTIFY message into mLastRequest
          handler->onExpiredByClient(getHandle(), msg, *mLastRequest);
 
-         mDialog.makeResponse(*mLastResponse, mLastSubscribe, 200);
+         // Send 200 response to sender
          mLastResponse->header(h_Expires).value() = mExpires;
          send(mLastResponse);
 
-         send(mLastRequest);  // Send Notify Expires
+         // Send Notify Expires
+         send(mLastRequest);
          return;
       }
       if (mSubscriptionState == Invalid)
@@ -307,7 +312,8 @@ ServerSubscription::dispatch(const SipMessage& msg)
    else
    {     
       //.dcm. - will need to change if retry-afters are reaching here
-      mLastRequest->releaseContents();
+      //mLastRequest->releaseContents();
+      mLastRequest.reset();   // Release ref count on memory - so message goes away when send is done
       int code = msg.header(h_StatusLine).statusCode();
 
       if(code < 200)
@@ -360,6 +366,10 @@ ServerSubscription::makeNotifyExpires()
 void
 ServerSubscription::makeNotify()
 {
+   if (mLastRequest.get() == 0)
+   {
+      mLastRequest.reset(new SipMessage);
+   }
    mDialog.makeRequest(*mLastRequest, NOTIFY);
    mLastRequest->header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
    if (mSubscriptionState == Terminated)

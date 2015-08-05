@@ -15,7 +15,6 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    mSubscriptionId(Data::Empty),
    mTimerSeq(0),
    mSubscriptionState(Invalid)
-   
 {
    if (request.exists(h_Event))
    {
@@ -37,7 +36,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
 bool
 BaseSubscription::matches(const SipMessage& msg)
 {
-   if (msg.isResponse() && msg.header(h_CSeq) == mLastRequest->header(h_CSeq))
+   if (msg.isResponse() && mLastRequest.get() != 0 && msg.header(h_CSeq) == mLastRequest->header(h_CSeq))
    {
       return true;
    }
@@ -48,7 +47,6 @@ BaseSubscription::matches(const SipMessage& msg)
          return msg.header(h_Event).value() == mEventType 
             && ( !msg.header(h_Event).exists(p_id) || 
                  msg.header(h_Event).param(p_id) == mSubscriptionId);
-         
       }
       else
       {
@@ -57,7 +55,6 @@ BaseSubscription::matches(const SipMessage& msg)
       }
    }
 }
-
 
 BaseSubscription::~BaseSubscription()
 {
