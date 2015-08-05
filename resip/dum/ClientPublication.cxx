@@ -24,6 +24,7 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      DialogSet& dialogSet,
                                      SharedPtr<SipMessage> req)
    : NonDialogUsage(dum, dialogSet),
+     mPublished(false),
      mWaitingForResponse(false),
      mPendingPublish(false),
      mPendingEnd(false),
@@ -51,21 +52,28 @@ ClientPublication::end()
 void
 ClientPublication::end(bool immediate)
 {
-   InfoLog (<< "End client publication to " << mPublish->header(h_RequestLine).uri());
-   if(!immediate)
+   if (immediate)
    {
-      if(!mWaitingForResponse)
-      {
-         mPublish->header(h_Expires).value() = 0;
-         send(mPublish);
-      }
-      else
-      {
-         mPendingEnd = true;
-      }
+      InfoLog(<< "End client publication immediately to " << mPublish->header(h_RequestLine).uri());
+      delete this;
+      return;
+   }
+   if (mWaitingForResponse)
+   {
+      InfoLog(<< "Waiting for response, pending End of client publication to " << mPublish->header(h_RequestLine).uri());
+      mPendingEnd = true;
+      return;
+   }
+   if (mPublished)
+   {
+      InfoLog(<< "End client publication to " << mPublish->header(h_RequestLine).uri());
+      mPublish->header(h_Expires).value() = 0;
+      mPublish->releaseContents();
+      send(mPublish);
    }
    else
    {
+      InfoLog(<< "End client publication immediately (not published) to " << mPublish->header(h_RequestLine).uri());
       delete this;
    }
 }
@@ -124,6 +132,7 @@ ClientPublication::dispatch(const SipMessage& msg)
 
       if (code < 300)
       {
+         mPublished = true;
          if (mPublish->exists(h_Expires) && mPublish->header(h_Expires).value() == 0)
          {
             handler->onRemove(getHandle(), msg);
@@ -230,11 +239,20 @@ ClientPublication::dispatch(const SipMessage& msg)
 
       if (mPendingEnd)
       {
-         mPublish->header(h_Expires).value() = 0;
-         mPublish->releaseContents();
-         InfoLog (<< "Sending pending end PUBLISH: " << mPublish->brief());
-         send(mPublish);
          mPendingEnd = false;
+         if (mPublished)
+         {
+            mPublish->header(h_Expires).value() = 0;
+            mPublish->releaseContents();
+            InfoLog(<< "Sending pending end PUBLISH: " << mPublish->brief());
+            send(mPublish);
+         }
+         else
+         {
+             InfoLog(<< "Pending end PUBLISH, but not published, so ending immediately: " << mPublish->brief());
+             delete this;
+             return;
+         }
       }
       else if (mPendingPublish)
       {

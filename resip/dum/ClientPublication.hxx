@@ -41,6 +41,7 @@ class ClientPublication : public NonDialogUsage
    private:
       friend class DialogSet;
 
+      bool mPublished;
       bool mWaitingForResponse;
       bool mPendingPublish;
       bool mPendingEnd;
