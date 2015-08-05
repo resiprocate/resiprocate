@@ -224,7 +224,7 @@ Contents::exists(const MIME_Header& type) const
       return mDescription != 0;
    }
 
-   assert(false);
+   resip_assert(false);
    return false;
 }
 
@@ -273,7 +273,7 @@ Contents::remove(const MIME_Header& type)
       return;
    }
 
-   assert(false);
+   resip_assert(false);
 }
 
 const H_ContentType::Type&
@@ -564,7 +564,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
                // add to application headers someday
                std::cerr << "Unknown MIME Content- header: " << headerName << std::endl;
                ErrLog(<< "Unknown MIME Content- header: " << headerName);
-               assert(false);
+               resip_assert(false);
             }
          }
       }

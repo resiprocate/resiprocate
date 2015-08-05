@@ -7,7 +7,7 @@
 #include "P2PSubsystem.hxx"
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 #include "MessageStructsGen.hxx"
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 namespace s2c {
 
@@ -342,7 +342,7 @@ void IpAddressAndPortStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -366,7 +366,7 @@ void IpAddressAndPortStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -455,7 +455,7 @@ void DestinationStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -488,7 +488,7 @@ void DestinationStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -1518,7 +1518,7 @@ void FramedMessageStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -1545,7 +1545,7 @@ void FramedMessageStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -1889,7 +1889,7 @@ void PingInformationStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -1912,7 +1912,7 @@ void PingInformationStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -2415,7 +2415,7 @@ void StoredDataValueStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -2440,7 +2440,7 @@ void StoredDataValueStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -3069,7 +3069,7 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -3128,7 +3128,7 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -3916,7 +3916,7 @@ void SipRegistrationStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -3958,7 +3958,7 @@ void SipRegistrationStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -4086,7 +4086,7 @@ void ChordUpdateStruct :: decode(std::istream& in)
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 
@@ -4168,7 +4168,7 @@ void ChordUpdateStruct :: encode(std::ostream& out) const
           break;
 
        default: /* User error */ 
-          assert(1==0);
+          resip_assert(1==0);
    }
 
 

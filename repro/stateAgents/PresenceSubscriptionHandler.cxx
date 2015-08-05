@@ -8,6 +8,7 @@
 #include <resip/dum/RegistrationPersistenceManager.hxx>
 #include <resip/dum/ServerPublication.hxx>
 #include <resip/stack/GenericPidfContents.hxx>
+#include <rutil/ResipAssert.h>
 #include <rutil/Logger.hxx>
 
 using namespace repro;
@@ -28,8 +29,8 @@ PresenceSubscriptionHandler::PresenceSubscriptionHandler(resip::DialogUsageManag
     mPresenceNotifyClosedStateForNonPublishedUsers(presenceNotifyClosedStateForNonPublishedUsers),
     mUserDispatcher(userDispatcher)
 {
-   assert(mPublicationDb);
-   assert(mRegistrationDb);
+   resip_assert(mPublicationDb);
+   resip_assert(mRegistrationDb);
    if (mPresenceUsesRegistrationState)
    {
       mRegistrationDb->addHandler(this);
@@ -267,8 +268,8 @@ const UInt32 ReSubGraceTime = 32;  // Somewhat arbitrary - using SIP transaction
 void
 PresenceSubscriptionHandler::adjustNotifyExpiresTime(SipMessage& notify, UInt64 regMaxExpires)
 {
-   assert(notify.exists(h_SubscriptionState));
-   assert(notify.header(h_SubscriptionState).exists(p_expires));
+   resip_assert(notify.exists(h_SubscriptionState));
+   resip_assert(notify.header(h_SubscriptionState).exists(p_expires));
 
    // The following is an effort to catch timed out / expired registrations
    // We are reducing the subscription expiration time to try and get the client to refresh the

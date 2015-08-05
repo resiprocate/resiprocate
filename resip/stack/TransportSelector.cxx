@@ -172,39 +172,39 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
    // Make _extra_ sure that no garbage goes in here.
    if(transport->transport()==TCP)
    {
-      assert(dynamic_cast<TcpTransport*>(transport));
+      resip_assert(dynamic_cast<TcpTransport*>(transport));
    }
 #ifdef USE_SSL
    else if(transport->transport()==TLS)
    {
-      assert(dynamic_cast<TlsTransport*>(transport));
+      resip_assert(dynamic_cast<TlsTransport*>(transport));
    }
 #endif
    else if(transport->transport()==UDP)
    {
-      assert(dynamic_cast<UdpTransport*>(transport));
+      resip_assert(dynamic_cast<UdpTransport*>(transport));
    }
 #ifdef USE_DTLS
 #ifdef USE_SSL
    else if(transport->transport()==DTLS)
    {
-      assert(dynamic_cast<DtlsTransport*>(transport));
+      resip_assert(dynamic_cast<DtlsTransport*>(transport));
    }
 #endif
 #endif
    else if(transport->transport()==WS)
    {
-      assert(dynamic_cast<WsTransport*>(transport));
+      resip_assert(dynamic_cast<WsTransport*>(transport));
    }
 #ifdef USE_SSL
    else if(transport->transport()==WSS)
    {
-      assert(dynamic_cast<WssTransport*>(transport));
+      resip_assert(dynamic_cast<WssTransport*>(transport));
    }
 #endif
    else
    {
-      assert(0);
+      resip_assert(0);
    }
 
    Tuple tuple(transport->interfaceName(), transport->port(),
@@ -239,7 +239,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
       else
       {
          WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
-         assert(false); // should never get here - checked in SipStack first
+         resip_assert(false); // should never get here - checked in SipStack first
          return;
       }
    }
@@ -254,7 +254,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isS
       else
       {
          WarningLog (<< "Can't add transport, overlapping properties with existing transport: " << tuple);
-         assert(false); // should never get here - checked in SipStack first
+         resip_assert(false); // should never get here - checked in SipStack first
          return;
       }
    }
@@ -560,11 +560,11 @@ TransportSelector::dnsResolve(DnsResult* result,
    else if (msg->isResponse())
    {
       ErrLog(<<"unimplemented response dns");
-      assert(0);
+      resip_assert(0);
    }
    else
    {
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -587,7 +587,7 @@ bool isDgramTransport (TransportType type)
          return   false;
 
       default:
-         assert(unknown_transport);
+         resip_assert(unknown_transport);
          return unknown_transport;  // !kh! just to make it compile wo/warning.
    }
 }
@@ -597,7 +597,7 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
 {
 // !kh! both getaddrinfo() and IPv6 are not supported by cygwin, yet.
 #ifdef __CYGWIN__
-   assert(0);
+   resip_assert(0);
    return Tuple();
 #else
    // !kh!
@@ -662,8 +662,8 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
 Transport*
 TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tuple& source) const
 {
-   assert(msg->exists(h_Vias));
-   assert(!msg->const_header(h_Vias).empty());
+   resip_assert(msg->exists(h_Vias));
+   resip_assert(!msg->const_header(h_Vias).empty());
    const Via& via = msg->const_header(h_Vias).front();
 
    if (via.sentHost().empty() && via.transport().empty())
@@ -682,7 +682,7 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
       WarningLog(<< "Sending request with incomplete Via header and FlowKey."
         <<" This code no smart enough to pick the correct Transport."
         <<" Via=" << via);
-      assert(0);
+      resip_assert(0);
    }
    if ( source.isAnyInterface() )
    {
@@ -710,12 +710,12 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
-   assert(msg->exists(h_Vias));
-   assert(!msg->header(h_Vias).empty());
+   resip_assert(msg->exists(h_Vias));
+   resip_assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
 
    // this case should be handled already for UDP and TCP targets
-   assert( (!(msg->isRequest() && !via.sentHost().empty())) || (target.getType() == TLS || target.getType() == DTLS) );
+   resip_assert( (!(msg->isRequest() && !via.sentHost().empty())) || (target.getType() == TLS || target.getType() == DTLS) );
    if (1)
    {
       Tuple source(target);
@@ -833,7 +833,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 #else
       else
       {
-         assert(0);
+         resip_assert(0);
       }
 #endif
 
@@ -879,7 +879,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 TransportSelector::TransmitState
 TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 {
-   assert(msg);
+   resip_assert(msg);
 
    if(msg->mIsDecorated)
    {
@@ -948,7 +948,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          }
          else if (transport)// .bwc. Here we use transport to find source.
          {
-            assert( source.getType()!=0 );
+            resip_assert( source.getType()!=0 );
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -958,7 +958,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 
                // .bwc. determineSourceInterface() can give us a port, if the TU
                // put one in the topmost Via.
-               assert(source.ipVersion()==temp.ipVersion() &&
+               resip_assert(source.ipVersion()==temp.ipVersion() &&
                         source.getType()==temp.getType());
                source=temp;
 
@@ -1077,7 +1077,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             {
                Tuple temp = source;
                source = determineSourceInterface(msg,target);
-               assert(source.ipVersion()==temp.ipVersion() &&
+               resip_assert(source.ipVersion()==temp.ipVersion() &&
                         source.getType()==temp.getType());
 
                /* determineSourceInterface might return an arbitrary port here,
@@ -1113,7 +1113,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
       }
       else
       {
-         assert(0);
+         resip_assert(0);
       }
 
       // .bwc. At this point, source, transport, and target should be
@@ -1253,7 +1253,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 #endif
          }
 
-         assert(target.mTransportKey == transport->getKey());
+         resip_assert(target.mTransportKey == transport->getKey());
 
          // Call back anyone who wants to perform outbound decoration
          msg->callOutboundDecorators(source, target,remoteSigcompId);
@@ -1280,7 +1280,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          // dynamic resizing.)
          mAvgBufferSize = (255*mAvgBufferSize + send->data.size()+128)/256;
 
-         assert(!send->data.empty());
+         resip_assert(!send->data.empty());
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
@@ -1313,7 +1313,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 void
 TransportSelector::retransmit(const SendData& data)
 {
-   assert(data.destination.mTransportKey);
+   resip_assert(data.destination.mTransportKey);
    Transport* transport = findTransportByDest(data.destination);
 
    // !jf! The previous call to transmit may have blocked or failed (It seems to
@@ -1468,7 +1468,7 @@ TransportSelector::findLoopbackTransportBySource(bool ignorePort, Tuple& search)
 #endif
       else
       {
-         assert(0);
+         resip_assert(0);
       }
    }
    
@@ -1573,7 +1573,7 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 Transport*
 TransportSelector::findTlsTransport(const Data& domainname, TransportType type, IpVersion version) const
 {
-   assert(type==TLS || type==DTLS);
+   resip_assert(type==TLS || type==DTLS);
    DebugLog (<< "Searching for " << ((type==TLS) ? "TLS" : "DTLS") << " transport for domain='"
                   << domainname << "'" << " have " << mTlsTransports.size());
 

@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 #include <string.h>
 
 #include "rutil/FdPoll.hxx"
@@ -192,8 +192,8 @@ FdPollItemHandle
 FdPollImplFdSet::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item)
 {
    // if this isn't true then the linked lists will get messed up
-   assert(item);
-   assert(fd!=INVALID_SOCKET);
+   resip_assert(item);
+   resip_assert(fd!=INVALID_SOCKET);
 
    unsigned useIdx;
    if ( mFreeHeadIdx >= 0 )
@@ -235,10 +235,10 @@ void
 FdPollImplFdSet::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
 {
    int useIdx = IMPL_FDSET_HandleToIdx(handle);
-   assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
+   resip_assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
-   assert(info.mSocketFd!=INVALID_SOCKET);
-   assert(info.mItemObj);
+   resip_assert(info.mSocketFd!=INVALID_SOCKET);
+   resip_assert(info.mItemObj);
    info.mEvMask = newMask;
 
    if(info.mSocketFd != INVALID_SOCKET && info.mSocketFd)
@@ -257,10 +257,10 @@ FdPollImplFdSet::delPollItem(FdPollItemHandle handle)
 
    int useIdx = IMPL_FDSET_HandleToIdx(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
-   assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
+   resip_assert(useIdx>=0 && ((unsigned)useIdx) < mItems.size());
    FdPollItemFdSetInfo& info = mItems[useIdx];
-   assert(info.mSocketFd!=INVALID_SOCKET);
-   assert(info.mItemObj);
+   resip_assert(info.mSocketFd!=INVALID_SOCKET);
+   resip_assert(info.mItemObj);
    killCache(info.mSocketFd);
    // we don't change the lists here since the select loop might
    // be iterating. Just mark it as dead and gc it later.
@@ -342,7 +342,7 @@ FdPollImplFdSet::waitAndProcess(int ms)
       if ( err!=EINTR )
       {
          CritLog(<<"select() failed: "<<strerror(err));
-         assert(0);     // .kw. not sure correct behavior...
+         resip_assert(0);     // .kw. not sure correct behavior...
       }
       return false;
    }
@@ -365,12 +365,12 @@ FdPollImplFdSet::buildFdSet(FdSet& fdset)
    // Step 1: build a new FdSet from the Items vector
    while ( (itemIdx = *prevIdxRef) != -1 )
    {
-      assert( ++loopCnt < 99123123 );
+      resip_assert( ++loopCnt < 99123123 );
       FdPollItemFdSetInfo& info = mItems[itemIdx];
       if ( info.mItemObj==0 )
       {
          // item was deleted, need to garbage collect
-         assert( info.mEvMask==0 );
+         resip_assert( info.mEvMask==0 );
          // unlink from live list
          *prevIdxRef = info.mNextIdx;
          // link into free list
@@ -380,7 +380,7 @@ FdPollImplFdSet::buildFdSet(FdSet& fdset)
       }
       if ( info.mEvMask!=0 )
       {
-         assert(info.mSocketFd!=INVALID_SOCKET);
+         resip_assert(info.mSocketFd!=INVALID_SOCKET);
          if(info.mEvMask & FPEM_Read)  fdset.setRead(info.mSocketFd);
          if(info.mEvMask & FPEM_Write) fdset.setWrite(info.mSocketFd);
          if(info.mEvMask & FPEM_Error) fdset.setExcept(info.mSocketFd);
@@ -420,11 +420,11 @@ FdPollImplFdSet::processFdSet(FdSet& fdset)
    while ( (itemIdx = *prevIdxRef) != -1 )
    {
       FdPollItemFdSetInfo& info = mItems[itemIdx];
-      assert( ++loopCnt < 99123123 );
+      resip_assert( ++loopCnt < 99123123 );
       if ( info.mEvMask!=0 && info.mItemObj!=0 )
       {
          FdPollEventMask usrMask = 0;
-         assert(info.mSocketFd!=INVALID_SOCKET);
+         resip_assert(info.mSocketFd!=INVALID_SOCKET);
          if(fdset.readyToRead(info.mSocketFd))  usrMask |= FPEM_Read;
          if(fdset.readyToWrite(info.mSocketFd)) usrMask |= FPEM_Write;
          if(fdset.hasException(info.mSocketFd)) usrMask |= FPEM_Error;
@@ -567,7 +567,7 @@ CvtUsrToSysMask(unsigned short usrMask)
 FdPollItemHandle
 FdPollImplPoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item)
 {
-   assert(fd>=0);
+   resip_assert(fd>=0);
    //InfoLog(<<"adding poll item fd="<<fd);
    
    Lock lock(mMutex);
@@ -594,8 +594,8 @@ FdPollImplPoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMa
    if(it != mItems.end())
    {
       FdPollItemPollInfo& info = it->second;
-      assert(info.mSocketFd!=INVALID_SOCKET);
-      assert(info.mItemObj);
+      resip_assert(info.mSocketFd!=INVALID_SOCKET);
+      resip_assert(info.mItemObj);
 
       if(info.mSocketFd != INVALID_SOCKET && info.mSocketFd)
       {
@@ -615,10 +615,10 @@ FdPollImplPoll::delPollItem(FdPollItemHandle handle)
    if(it != mItems.end())
    {
       FdPollItemPollInfo& info = it->second;
-      assert(info.mSocketFd!=INVALID_SOCKET);
-      assert(info.mItemObj);
-      assert(info.mFdPollCacheIndex != -1);
-      assert(mPollFdCache.size() >= 1);
+      resip_assert(info.mSocketFd!=INVALID_SOCKET);
+      resip_assert(info.mItemObj);
+      resip_assert(info.mFdPollCacheIndex != -1);
+      resip_assert(mPollFdCache.size() >= 1);
 
       if(mPollFdCache.size() > 1)
       {
@@ -743,7 +743,7 @@ FdPollImplPoll::waitAndProcess(int ms)
       if ( err != EINTR )
       {
          CritLog(<<"poll() failed: " << err << " " << strerror(err));
-         assert(0);     // .kw. not sure correct behavior...
+         resip_assert(0);     // .kw. not sure correct behavior...
       }
       return false;
    }
@@ -797,7 +797,7 @@ FdPollImplPoll::waitAndProcess(int ms)
          if (err != EINTR)
          {
             CritLog(<<"select() failed: "<<strerror(err));
-            assert(0);     // .kw. not sure correct behavior...
+            resip_assert(0);     // .kw. not sure correct behavior...
          }
       }
 
@@ -815,14 +815,14 @@ void
 FdPollImplPoll::buildFdSet(FdSet& fdset)
 {
    CritLog(<<"buildFdSet failed - API not supported for FdPollImplPoll.");
-   assert(false);
+   resip_assert(false);
 }
 
 bool
 FdPollImplPoll::processFdSet(FdSet& fdset)
 {
    CritLog(<<"processFdSet failed - API not supported for FdPollImplPoll.");
-   assert(false);
+   resip_assert(false);
    return false;
 }
 
@@ -904,7 +904,7 @@ FdPollImplEpoll::FdPollImplEpoll() :
 
 FdPollImplEpoll::~FdPollImplEpoll()
 {
-   assert( mEvCacheLen == 0 );  // poll not active
+   resip_assert( mEvCacheLen == 0 );  // poll not active
    unsigned itemIdx;
    for (itemIdx=0; itemIdx < mItems.size(); itemIdx++)
    {
@@ -946,7 +946,7 @@ CvtUsrToSysMask(unsigned short usrMask)
 FdPollItemHandle
 FdPollImplEpoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item)
 {
-   assert(fd>=0);
+   resip_assert(fd>=0);
    //DebugLog(<<"adding epoll item fd="<<fd);
    if (mItems.size() <= (unsigned)fd)
    {
@@ -957,7 +957,7 @@ FdPollImplEpoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *i
       mItems.resize(newsz);
    }
    FdPollItemIf *olditem = mItems[fd];
-   assert(olditem == NULL);     // what is right thing to do?
+   resip_assert(olditem == NULL);     // what is right thing to do?
    mItems[fd] = item;
    struct epoll_event ev;
    memset(&ev, 0, sizeof(ev));  // make valgrind happy
@@ -975,8 +975,8 @@ void
 FdPollImplEpoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMask)
 {
    int fd = IMPL_EPOLL_HandleToFd(handle);
-   assert(fd>=0 && ((unsigned)fd) < mItems.size());
-   assert(mItems[fd] != NULL);
+   resip_assert(fd>=0 && ((unsigned)fd) < mItems.size());
+   resip_assert(mItems[fd] != NULL);
 
    struct epoll_event ev;
    memset(&ev, 0, sizeof(ev));  // make valgrind happy
@@ -994,8 +994,8 @@ FdPollImplEpoll::delPollItem(FdPollItemHandle handle)
 {
    int fd = IMPL_EPOLL_HandleToFd(handle);
    //DebugLog(<<"deleting epoll item fd="<<fd);
-   assert(fd>=0 && ((unsigned)fd) < mItems.size());
-   assert( mItems[fd] != NULL );
+   resip_assert(fd>=0 && ((unsigned)fd) < mItems.size());
+   resip_assert( mItems[fd] != NULL );
    mItems[fd] = NULL;
    if (epoll_ctl(mEPollFd, EPOLL_CTL_DEL, fd, NULL) < 0)
    {
@@ -1070,7 +1070,7 @@ FdPollImplEpoll::waitAndProcess(int ms)
 {
    bool didSomething = false;
    int waitMs = ms;
-   assert( mEvCache.size() > 0 );
+   resip_assert( mEvCache.size() > 0 );
 
    if(!mFdSetObservers.empty())
    {
@@ -1111,7 +1111,7 @@ FdPollImplEpoll::waitAndProcess(int ms)
          if ( err!=EINTR )
          {
             CritLog(<<"select() failed: "<<strerror(err));
-            assert(0);     // .kw. not sure correct behavior...
+            resip_assert(0);     // .kw. not sure correct behavior...
          }
          return false;
       }
@@ -1199,7 +1199,7 @@ FdPollImplEpoll::epollWait(int waitMs)
             continue;      // was killed by killCache()
          }
          int sysEvtMask = mEvCache[ne].events;
-         assert(fd>=0 && fd < (int)mItems.size());
+         resip_assert(fd>=0 && fd < (int)mItems.size());
          FdPollItemIf *item = mItems[fd];
          if (item == NULL)
          {
@@ -1246,7 +1246,7 @@ FdPollGrp::create(const char *implName)
    {
       return new FdPollImplFdSet();
    }
-   assert(0);
+   resip_assert(0);
    return NULL;
 }
 

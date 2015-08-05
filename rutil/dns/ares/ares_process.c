@@ -18,7 +18,7 @@
 #endif
 
 #include <sys/types.h>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 #ifndef WIN32
 #include <sys/socket.h>
@@ -93,7 +93,7 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
 void ares_process_poll(ares_channel channel, int server_idx,
 	int rdFd, int wrFd, time_t now) {
   if ( server_idx!= -1 ) {
-      assert( rdFd!=-1 || wrFd!=-1 );	// at least one active
+      resip_assert( rdFd!=-1 || wrFd!=-1 );	// at least one active
       if ( wrFd!=-1 && channel->servers[server_idx].tcp_socket==wrFd ) {
           write_tcp_data_core(channel, server_idx, now);
       }
@@ -188,7 +188,7 @@ static void write_tcp_data_core(ares_channel channel, int server_idx,
 	      if (server->qhead == NULL)
 	      {
 		server->qtail = NULL;
-		assert(count==0);
+		resip_assert(count==0);
 		break;
 	      }
 	    }
@@ -362,7 +362,7 @@ static void read_udp_packets(ares_channel channel, int server_idx,
       if ( read_fds && !FD_ISSET(server->udp_socket, read_fds) )
 	  continue;
 
-	  assert( server->udp_socket != -1 );
+	  resip_assert( server->udp_socket != -1 );
 	  
       count = recv(server->udp_socket, buf, sizeof(buf), 0);
       if (count <= 0)
@@ -506,8 +506,8 @@ static void handle_error(ares_channel channel, int whichserver, time_t now)
    */
   for (query = channel->queries; query != 0; query = query->next)
     {
-		assert( query != 0 );
-		assert( channel->queries != 0 );
+		resip_assert( query != 0 );
+		resip_assert( channel->queries != 0 );
 
       if (query->server == whichserver)
 	{
@@ -681,7 +681,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 
   /* Acquire a socket. */
 #ifdef USE_IPV6
-  assert(server->family == AF_INET || server->family == AF_INET6);
+  resip_assert(server->family == AF_INET || server->family == AF_INET6);
   s = (int)socket(server->family, SOCK_STREAM, 0);
 #else
   s = (int)socket(AF_INET, SOCK_STREAM, 0);
@@ -776,7 +776,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
 #ifdef USE_IPV6
   family = server->family;
-  assert(family == AF_INET || family == AF_INET6);
+  resip_assert(family == AF_INET || family == AF_INET6);
 #else
   family = AF_INET;
 #endif

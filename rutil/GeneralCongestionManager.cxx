@@ -139,12 +139,12 @@ GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) c
 {
    if(fifo->getRole() >= mFifos.size())
    {
-      assert(0);
+      resip_assert(0);
       return 0;
    }
 
    const FifoInfo& info = mFifos[fifo->getRole()];
-   assert(info.fifo==fifo);
+   resip_assert(info.fifo==fifo);
    switch(info.metric)
    {
       case SIZE:
@@ -154,7 +154,7 @@ GeneralCongestionManager::getCongestionPercent(const FifoStatsInterface* fifo) c
       case WAIT_TIME:
          return resipIntDiv(100*(UInt32)(fifo->expectedWaitTimeMilliSec()),info.maxTolerance);
       default:
-         assert(0);
+         resip_assert(0);
          return 0;
    }
    return 0;

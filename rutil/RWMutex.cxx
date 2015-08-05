@@ -50,7 +50,7 @@
 
 #include "RWMutex.hxx"
 #include "Lock.hxx"
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 using resip::RWMutex;
 using resip::Lock;
@@ -117,7 +117,7 @@ RWMutex::unlock()
    //
    if ( mWriterHasLock )
    {
-      assert( mReaderCount == 0 );
+      resip_assert( mReaderCount == 0 );
 
       mWriterHasLock = false;
 
@@ -141,7 +141,7 @@ RWMutex::unlock()
    //
    else
    {
-      assert( mReaderCount > 0 );
+      resip_assert( mReaderCount > 0 );
 
       mReaderCount--;
 

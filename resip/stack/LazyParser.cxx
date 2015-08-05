@@ -3,7 +3,7 @@
 #endif
 
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/HeaderFieldValue.hxx"
@@ -55,7 +55,7 @@ LazyParser::~LazyParser()
 LazyParser&
 LazyParser::operator=(const LazyParser& rhs)
 {
-   assert( &rhs != 0 );
+   resip_assert( &rhs != 0 );
    
    if (this != &rhs)
    {

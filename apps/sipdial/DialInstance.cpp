@@ -69,7 +69,7 @@ DialInstance::DialResult DialInstance::execute()
       if(err == -1) {
          if(errno != EINTR) {
             //B2BUA_LOG_ERR("fdset.select returned error code %d", err);
-            assert(0);  // FIXME
+            resip_assert(0);  // FIXME
          }
       }
       // Process all SIP stack activity
@@ -123,7 +123,7 @@ void DialInstance::prepareAddress()
       if(num.size() < 1)
       {
          // FIXME - check size
-         assert(0);
+         resip_assert(0);
       }
       if(num[0] == '+')
       {
@@ -139,7 +139,7 @@ void DialInstance::prepareAddress()
    }
 
    // FIXME Unsupported scheme 
-   assert(0);
+   resip_assert(0);
 }
 
 void DialInstance::sendInvite() 
@@ -196,7 +196,7 @@ Data DialInstance::processNumber(const Data& verboseNumber)
          num.append(&c, 1);
          break;
       case '+':
-         assert(i == 0);   // FIXME - better error handling needed
+         resip_assert(i == 0);   // FIXME - better error handling needed
          num.append(&c, 1);
          break;
       case '.':
@@ -205,7 +205,7 @@ Data DialInstance::processNumber(const Data& verboseNumber)
          break;
       default:
          // any other character is garbage
-         assert(0);
+         resip_assert(0);
       }
    }
    return num;

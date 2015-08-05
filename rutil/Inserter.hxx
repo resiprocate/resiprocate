@@ -8,7 +8,7 @@
 #include <list>
 #include <vector>
 #include <deque>
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "HashMap.hxx"
 #include "rutil/compat.hxx"
@@ -283,7 +283,7 @@ EncodeStream&
 operator<<(EncodeStream& s, const InserterClass<T>& inserter)
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)
-	assert(0); // CJ - really need to fix this
+	resip_assert(0); // CJ - really need to fix this
 	return s;
 #else
    return insert(s, inserter._t);
@@ -536,7 +536,7 @@ EncodeStream&
 operator<<(EncodeStream& s, const InserterPClass<T>& inserter)
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)
-	assert(0); // CJ - really need to fix this
+	resip_assert(0); // CJ - really need to fix this
 	return s;
 #else
    return insertP(s, inserter._t);

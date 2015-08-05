@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
 #include "p2p/DestinationId.hxx"
@@ -35,8 +35,8 @@ DestinationId::isNodeId() const
 NodeId
 DestinationId::asNodeId() const
 {
-   assert(isNodeId());
-   assert(mPeer.mNodeId);
+   resip_assert(isNodeId());
+   resip_assert(mPeer.mNodeId);
    return NodeId(*mPeer.mNodeId);
 }
 
@@ -49,7 +49,7 @@ DestinationId::isCompressedId()const
 CompressedId
 DestinationId::asCompressedId() const
 {
-   assert(isCompressedId());
+   resip_assert(isCompressedId());
    return CompressedId(mCompressed.mCompressedId);
 }
 
@@ -62,8 +62,8 @@ DestinationId::isResourceId()const
 ResourceId
 DestinationId::asResourceId() const
 {
-   assert(isResourceId());
-   assert(mResource.mResourceId);
+   resip_assert(isResourceId());
+   resip_assert(mResource.mResourceId);
    return ResourceId(mResource.mResourceId->mId);
 }
 

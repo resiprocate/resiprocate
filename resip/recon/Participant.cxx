@@ -59,7 +59,7 @@ Participant::setHandle(ParticipantHandle partHandle)
 void
 Participant::addToConversation(Conversation* conversation, unsigned int inputGain, unsigned int outputGain)
 {
-   assert(conversation);
+   resip_assert(conversation);
    if(mConversations.find(conversation->getHandle()) != mConversations.end()) return;  // already present
 
    mConversations[conversation->getHandle()] = conversation;
@@ -69,7 +69,7 @@ Participant::addToConversation(Conversation* conversation, unsigned int inputGai
 void 
 Participant::removeFromConversation(Conversation *conversation)
 {
-   assert(conversation);
+   resip_assert(conversation);
    //InfoLog(<< "Participant handle=" << mHandle << " removed from conversation=" << conversation->getHandle());
    mConversations.erase(conversation->getHandle());  // Note: this must come before next line - since unregisterParticipant may end up destroying conversation
    conversation->unregisterParticipant(this);
@@ -100,7 +100,7 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
    }
    mConversations.clear();  // Clear so that we won't remove replaced reference from Conversation 
    mHandle = 0;             // Set to 0 so that we won't remove replaced reference from ConversationManager
-   assert(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXGlobalMediaInterfaceMode ||  // We are either running in sipXGlobalMediaInterfaceMode
+   resip_assert(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXGlobalMediaInterfaceMode ||  // We are either running in sipXGlobalMediaInterfaceMode
           firstAssociatedConversation != 0);                                                                    // or we are running in sipXConversationMediaInterfaceMode and must have belonged to a conversation
    applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge port matrix
 }
@@ -111,14 +111,14 @@ Participant::getMediaInterface()
    switch(mConversationManager.getMediaInterfaceMode())
    {
    case ConversationManager::sipXGlobalMediaInterfaceMode:
-      assert(mConversationManager.getMediaInterface() != 0);
+      resip_assert(mConversationManager.getMediaInterface() != 0);
       return mConversationManager.getMediaInterface();
    case ConversationManager::sipXConversationMediaInterfaceMode:
-      assert(mConversations.size() == 1);
-      assert(mConversations.begin()->second->getMediaInterface() != 0);
+      resip_assert(mConversations.size() == 1);
+      resip_assert(mConversations.begin()->second->getMediaInterface() != 0);
       return mConversations.begin()->second->getMediaInterface();
    default:
-      assert(false);
+      resip_assert(false);
       return SharedPtr<MediaInterface>((MediaInterface*)0);
    }
 }
@@ -130,18 +130,18 @@ Participant::applyBridgeMixWeights()
    switch(mConversationManager.getMediaInterfaceMode())
    {
    case ConversationManager::sipXGlobalMediaInterfaceMode:
-      assert(mConversationManager.getBridgeMixer() != 0);
+      resip_assert(mConversationManager.getBridgeMixer() != 0);
       mixer = mConversationManager.getBridgeMixer();
       break;
    case ConversationManager::sipXConversationMediaInterfaceMode:
-      assert(mConversations.size() == 1);
-      assert(mConversations.begin()->second->getBridgeMixer() != 0);
+      resip_assert(mConversations.size() == 1);
+      resip_assert(mConversations.begin()->second->getBridgeMixer() != 0);
       mixer = mConversations.begin()->second->getBridgeMixer();
       break;
    default:
       break;
    }
-   assert(mixer);
+   resip_assert(mixer);
    if(mixer)
    {
       mixer->calculateMixWeightsForParticipant(this);
@@ -160,17 +160,17 @@ Participant::applyBridgeMixWeights(Conversation* removedConversation)
    switch(mConversationManager.getMediaInterfaceMode())
    {
    case ConversationManager::sipXGlobalMediaInterfaceMode:
-      assert(mConversationManager.getBridgeMixer() != 0);
+      resip_assert(mConversationManager.getBridgeMixer() != 0);
       mixer = mConversationManager.getBridgeMixer();
       break;
    case ConversationManager::sipXConversationMediaInterfaceMode:
-      assert(removedConversation->getBridgeMixer() != 0);
+      resip_assert(removedConversation->getBridgeMixer() != 0);
       mixer = removedConversation->getBridgeMixer();
       break;
    default:
       break;
    }
-   assert(mixer);
+   resip_assert(mixer);
    if(mixer)
    {
       mixer->calculateMixWeightsForParticipant(this);

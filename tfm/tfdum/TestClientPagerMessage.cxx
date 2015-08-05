@@ -21,7 +21,7 @@ TestClientPagerMessage::TestClientPagerMessage(DumUserAgent* ua, ClientPagerMess
    : TestUsage(ua),
      mHandle(h)
 {
-   assert(mHandle.isValid());
+   resip_assert(mHandle.isValid());
 }
 
 CommonAction* 

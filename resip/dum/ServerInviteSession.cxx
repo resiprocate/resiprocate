@@ -27,7 +27,7 @@ ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog
      mLocalRSeq(0),
      mAnswerSentReliably(false)
 {
-   assert(request.isRequest());
+   resip_assert(request.isRequest());
    mState = UAS_Start;
 }
 
@@ -93,7 +93,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_Start:
       default:
-         assert(0);
+         resip_assert(0);
          throw UsageUseException("Can't redirect after accepted", __FILE__, __LINE__);
          break;
    }
@@ -225,7 +225,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
       case UAS_Start:
       case UAS_WaitingToHangup:
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -475,7 +475,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
          }
          else
          {
-             assert(0);
+             resip_assert(0);
          }
          break;
 
@@ -559,7 +559,7 @@ ServerInviteSession::end(EndReason reason)
          break;
          
       case UAS_Start:
-         assert(0);
+         resip_assert(0);
          break;
 
       case UAS_Accepted:
@@ -643,7 +643,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_WaitingToRequestOffer:
       case UAS_Start:
       case UAS_WaitingToHangup:
-         assert(0);
+         resip_assert(0);
          break;
 
       default:
@@ -662,7 +662,7 @@ ServerInviteSession::accept(int code)
       case UAS_Offer:
       case UAS_EarlyOffer:
       case UAS_FirstSentOfferReliable:
-         assert(0);
+         resip_assert(0);
          break;
 
       case UAS_OfferProvidedAnswer:
@@ -674,7 +674,7 @@ ServerInviteSession::accept(int code)
          
       case UAS_NoOffer:
       case UAS_EarlyNoOffer:
-         assert(0);
+         resip_assert(0);
          break;
 
       case UAS_ProvidedOffer:
@@ -687,7 +687,7 @@ ServerInviteSession::accept(int code)
       case UAS_Accepted:
       case UAS_WaitingToOffer:
       case UAS_WaitingToRequestOffer:
-         assert(0);  // Already Accepted
+         resip_assert(0);  // Already Accepted
          break;
          
       case UAS_FirstSentAnswerReliable:
@@ -736,7 +736,7 @@ ServerInviteSession::accept(int code)
       case UAS_Start:
       case UAS_WaitingToHangup:
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -943,8 +943,8 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
 void
 ServerInviteSession::dispatchStart(const SipMessage& msg)
 {
-   assert(msg.isRequest());
-   assert(msg.header(h_CSeq).method() == INVITE);
+   resip_assert(msg.isRequest());
+   resip_assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
@@ -998,7 +998,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          }
          break;
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -1117,7 +1117,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       }
 
       case OnAck:
-         assert(mProposedLocalOfferAnswer.get());
+         resip_assert(mProposedLocalOfferAnswer.get());
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          provideProposedOffer(); 
          break;
@@ -2059,7 +2059,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
              // provide an offer in the first reliable response.  We would be in the ProvidedOfferReliable
              // state if that was the case.  Looks like provisional was called too early!
              DebugLog( << "Sending a reliable provisional after receiving an INVITE with no offer, requires provideOffer to be called first (RFC3262-Section 5).");
-             assert(false);
+             resip_assert(false);
              return false;
          }
          break;
@@ -2100,7 +2100,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
       // Capabilities - allows UAC to detect UPDATE support before 200 response
       mDum.setAdvertisedCapabilities(*m1xx.get(), mDialog.mDialogSet.getUserProfile());
 
-      assert(!mUnacknowledgedReliableProvisional.get());
+      resip_assert(!mUnacknowledgedReliableProvisional.get());
       mUnacknowledgedReliableProvisional = m1xx;
       startRetransmit1xxRelTimer();  // handles retransmissions until PRACK arrives
       startResubmit1xxRelTimer(); // handles - RFC3262 section says the UAS SHOULD send provisional reliable responses once every two and half minutes

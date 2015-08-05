@@ -38,7 +38,7 @@ ClientOutOfDialogReq::end()
 void 
 ClientOutOfDialogReq::dispatch(const SipMessage& msg)
 {
-	assert(msg.isResponse());
+	resip_assert(msg.isResponse());
     
     if (msg.header(h_StatusLine).statusCode() >= 200)
     {

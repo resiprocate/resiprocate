@@ -10,9 +10,9 @@ bool
 CheckPrivacy::operator()(boost::shared_ptr<Event> event) const
 {
    SipEvent* msgEvent = dynamic_cast<SipEvent*>(event.get());
-   assert(msgEvent);
+   resip_assert(msgEvent);
    boost::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
-   assert(msg.get());
+   resip_assert(msg.get());
    
    DebugLog (<< "Checking for privacy: " << *msg);
 

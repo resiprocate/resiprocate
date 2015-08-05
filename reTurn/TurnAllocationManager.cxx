@@ -29,7 +29,7 @@ TurnAllocationManager::~TurnAllocationManager()
 void 
 TurnAllocationManager::addTurnAllocation(TurnAllocation* turnAllocation)
 {
-   assert(findTurnAllocation(turnAllocation->getKey()) == 0);   
+   resip_assert(findTurnAllocation(turnAllocation->getKey()) == 0);   
    mTurnAllocationMap[turnAllocation->getKey()] = turnAllocation;
 }
 

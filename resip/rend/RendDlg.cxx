@@ -171,13 +171,13 @@ void
 RendDlg::buildAndRegLocalTag(RendDlgSharedPtr& dlgPtr) 
 {
    // verify idle dialog
-   assert( mState == REND_DS_None );
+   resip_assert( mState == REND_DS_None );
 
    if ( dlgPtr.get() != this ) 
    {
       dlgPtr.reset(this);
    }
-   assert( mLocalKeyIdx==0 );	// verify previously released
+   resip_assert( mLocalKeyIdx==0 );	// verify previously released
    // below updates mLocalTag
    mLocalKeyIdx = mTu.buildLocalKey( mLocalTag);
    // below, Tu makes copy of shared pointer (to get shared count)
@@ -290,13 +290,13 @@ RendDlg::addAuthFromCache(resip::SipMessage *req)
 int
 RendDlg::addAuthFromRsp(resip::SipMessage *req, const resip::SipMessage& rsp) 
 {
-   assert(rsp.isResponse());
+   resip_assert(rsp.isResponse());
    int rspCode = rsp.header(resip::h_StatusLine).responseCode();
-   assert (rspCode==/*www*/401 || rspCode==/*proxy*/407);
+   resip_assert (rspCode==/*www*/401 || rspCode==/*proxy*/407);
    if(rsp.exists(resip::h_WWWAuthenticates))
    {
       const resip::ParserContainer<resip::Auth>& auths = rsp.header(resip::h_WWWAuthenticates);
-      assert( auths.size()== 1);
+      resip_assert( auths.size()== 1);
       const resip::Auth &au = auths.front();
       //const resip::Data& realm = au.param(resip::p_realm); // use/check this?
       const resip::Data& nonce = au.param(resip::p_nonce);
@@ -307,7 +307,7 @@ RendDlg::addAuthFromRsp(resip::SipMessage *req, const resip::SipMessage& rsp)
    else if(rsp.exists(resip::h_ProxyAuthenticates))
    {
       const resip::ParserContainer<resip::Auth>& auths = rsp.header(resip::h_ProxyAuthenticates);
-      assert( auths.size()== 1);
+      resip_assert( auths.size()== 1);
       const resip::Auth &au = auths.front();
       //const resip::Data& realm = au.param(resip::p_realm); // use/check this?
       const resip::Data& nonce = au.param(resip::p_nonce);
@@ -323,7 +323,7 @@ RendDlg::makeRequest(resip::MethodTypes method)
 {
    resip::SipMessage *req = new resip::SipMessage;
 
-   assert( mState != REND_DS_None );
+   resip_assert( mState != REND_DS_None );
 
    if ( mState == REND_DS_Bound ) 
    {
@@ -332,9 +332,9 @@ RendDlg::makeRequest(resip::MethodTypes method)
       mCallId = resip::Helper::computeCallId();
    }
 
-   assert( mState==REND_DS_Opening || mState==REND_DS_Established || mState==REND_DS_Closing);
+   resip_assert( mState==REND_DS_Opening || mState==REND_DS_Established || mState==REND_DS_Closing);
 
-   assert( mLocalCSeqReq == mLocalCSeqRsp ); // last response hasn't finished yet
+   resip_assert( mLocalCSeqReq == mLocalCSeqRsp ); // last response hasn't finished yet
    RendAcctMgrIf& acctMgr = getAcctMgr();
    resip::RequestLine rLine(method);
    const resip::NameAddr& toNA = acctMgr.getNameAddrAor(mToAcctIdx);
@@ -419,7 +419,7 @@ RendDlg::makeRequest(resip::MethodTypes method)
 int
 RendDlg::sendNextCmd(int expireSecs, int maxRetryReqCnt) 
 {
-   assert( mState != REND_DS_None );
+   resip_assert( mState != REND_DS_None );
    if ( mLocalCSeqReq!=mLocalCSeqRsp )
    {
       return REND_Sts_Busy;
@@ -487,13 +487,13 @@ RendDlg::latchEstablish(RendTimeUs now, const resip::SipMessage *rsp,
    mRemoteTarget = rsp->getSource();
    // check incoming Transport against outgoing. If different,
    // then something went very wrong.
-   assert( mRemoteTarget.mTransportKey != 0 );
+   resip_assert( mRemoteTarget.mTransportKey != 0 );
    if ( mRemoteTarget.mTransportKey != mTransport->getKey() ) 
    {
       CritLog(<<"Response from different transport than request:"
          << " req-tp=[" << mTransport->getKey() << "]"
          << " rsp-tp=["<< mRemoteTarget.mTransportKey << "]");
-      assert(0);
+      resip_assert(0);
    }
    if ( mTu.mOutboundMode ) 
    {
@@ -503,7 +503,7 @@ RendDlg::latchEstablish(RendTimeUs now, const resip::SipMessage *rsp,
    {
       /* XXX: don't do this if expires==0 */
       /* XXX: but if expires==0, then shouldn't be latching! */
-      assert( mKeepAliveKey == 0 );
+      resip_assert( mKeepAliveKey == 0 );
       mKeepAliveKey = mTu.mKeepAliveMgr->addConn(now, mRemoteTarget);
    }
    return 0;
@@ -661,9 +661,9 @@ RendDlg::getRspState(int *rttMs)
    if (mLastRspCode/100 == 2 && rttMs) 
    {
       *rttMs = ((int)(mRspRecvTime - mReqSendTime))/1000;
-      assert( *rttMs >= 0 );  // can be zero on fast machines
+      resip_assert( *rttMs >= 0 );  // can be zero on fast machines
    }
-   assert( mLastRspCode > 0 );
+   resip_assert( mLastRspCode > 0 );
    return mLastRspCode;
 }
 
@@ -699,7 +699,7 @@ RendTu::~RendTu()
       CritLog(<<"TransactionUser destruction while dialogs still alive: cnt="
          <<numDialogs);
    }
-   assert( numDialogs == 0);
+   resip_assert( numDialogs == 0);
 
    if ( mKeepAliveMgr ) 
    {
@@ -811,7 +811,7 @@ RendTu::processConnTerm(RendTimeUs now, const resip::Tuple& flow)
    for ( ; it != mDialogMap.end(); ++it) {
       RendDlgSharedPtr dlgptr = it->second;
       RendDlg *dlg = dlgptr.get();
-      assert( dlg );
+      resip_assert( dlg );
       if ( dlg->mRemoteTarget.onlyUseExistingConnection
          && dlg->mRemoteTarget.mFlowKey==flow.mFlowKey
          && dlg->mRemoteTarget==flow ) {
@@ -890,7 +890,7 @@ RendTu::sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg)
       {
          if ( msg->getDestination().mTransportKey != 0 ) 
          {
-            assert( msg->getDestination().mTransportKey == dlg->mTransport->getKey() );
+            resip_assert( msg->getDestination().mTransportKey == dlg->mTransport->getKey() );
          } 
          else 
          {
@@ -1000,7 +1000,7 @@ RendTu::processRequest( RendTimeUs now, const resip::SipMessage *req)
    int act = dlg->handleRequest(cxt);
    if (act!=REND_PRA_RspSent)
    {
-      assert ( act >= 100 && act <= 999 );
+      resip_assert ( act >= 100 && act <= 999 );
       std::auto_ptr<resip::SipMessage> rsp(new resip::SipMessage);
       resip::Helper::makeResponse(*rsp, *req, act);
       sendMsg(rsp);
@@ -1123,7 +1123,7 @@ RendTu::processTimers(RendTimeUs tmrNow)
       ++cnt;
       if (tmrWhich == REND_DlgTmr_KeepAlive) 
       {
-         assert(0);
+         resip_assert(0);
          // processKeepAliveTimeout(tmrNow, tmrKey);
          continue;
       }
@@ -1144,7 +1144,7 @@ RendTu::processTimers(RendTimeUs tmrNow)
          continue;
       }
 #endif
-      assert( false );
+      resip_assert( false );
    }
    return cnt;
 }
@@ -1173,7 +1173,7 @@ RendTu::processAll(int waitMS)
       {
          // message is available, so waitMS doesn't matter
          resip::Message* msg = mFifo.getNext();
-         assert( msg );
+         resip_assert( msg );
          processMsg(tmrNow, msg);
          didsomething = true;
       }

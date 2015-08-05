@@ -69,7 +69,7 @@ class GenericTimerQueue
 
             for (typename ItVector::iterator i = iterators.begin(); i != iterators.end(); ++i)
             {
-               assert((*i)->getEvent());
+               resip_assert((*i)->getEvent());
                processTimer((*i)->getEvent());               
             }
 

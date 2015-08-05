@@ -1,7 +1,7 @@
 #if !defined(RESIP_SOCKET_HXX)
 #define RESIP_SOCKET_HXX  
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <errno.h>
 #include <algorithm>
 
@@ -159,11 +159,11 @@ public:
 
    void setRead(Socket fd)
    {
-      assert( FD_SETSIZE >= 8 );
+      resip_assert( FD_SETSIZE >= 8 );
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-      assert( fd < (int)FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
+      resip_assert( fd < (int)FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
 #else
-      assert(read.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
+      resip_assert(read.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
 #endif
       FD_SET(fd, &read);
       size = ( int(fd+1) > size) ? int(fd+1) : size;
@@ -172,9 +172,9 @@ public:
    void setWrite(Socket fd)
    {
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-      assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
+      resip_assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
 #else
-      assert(write.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
+      resip_assert(write.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
 #endif
       FD_SET(fd, &write);
       size = ( int(fd+1) > size) ? int(fd+1) : size;
@@ -183,9 +183,9 @@ public:
    void setExcept(Socket fd)
    {
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-      assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
+      resip_assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
 #else
-      assert(except.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
+      resip_assert(except.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
 #endif
       FD_SET(fd,&except);
       size = ( int(fd+1) > size) ? int(fd+1) : size;

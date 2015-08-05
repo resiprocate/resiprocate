@@ -14,7 +14,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 
 #include <iostream>
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Logger.hxx"
 //#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
@@ -348,7 +348,7 @@ ParserCategory::getParameterByEnum(ParameterTypes::Type type) const
 void
 ParserCategory::setParameter(const Parameter* parameter)
 {
-   assert(parameter);
+   resip_assert(parameter);
 
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)

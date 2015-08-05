@@ -21,8 +21,8 @@ TcpConnection::TcpConnection(Transport* transport,const Tuple& who, Socket fd,
 int 
 TcpConnection::read( char* buf, int count )
 {
-   assert(buf);
-   assert(count > 0);
+   resip_assert(buf);
+   resip_assert(count > 0);
    
 #if defined(WIN32)
    int bytesRead = ::recv(getSocket(), buf, count, 0);
@@ -82,8 +82,8 @@ TcpConnection::write( const char* buf, const int count )
 {
    //DebugLog (<< "Writing " << buf);   // Note:  this can end up writing garbage to the logs following the message for non-null terminated buffers
 
-   assert(buf);
-   assert(count > 0);
+   resip_assert(buf);
+   resip_assert(count > 0);
 
 #if defined(WIN32)
    int bytesWritten = ::send(getSocket(), buf, count, 0);

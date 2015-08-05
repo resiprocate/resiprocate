@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
@@ -94,9 +94,9 @@ AbstractDb::getSecondaryKey(const Table table,
       iDataStream s(nonConstData);
 
       short version;
-      assert(sizeof(version) == 2);
+      resip_assert(sizeof(version) == 2);
       s.read((char*)(&version), sizeof(version));
-      assert(version == 1);
+      resip_assert(version == 1);
       if (version == 1)
       {
          // DestUri is first element after version
@@ -117,7 +117,7 @@ AbstractDb::encodeUser(const UserRecord& rec, resip::Data& data)
    oDataStream s(data);
       
    short version = REPRO_DB_VERSION_USERS;
-   assert( sizeof( version) == 2 );
+   resip_assert( sizeof( version) == 2 );
    s.write( (char*)(&version) , sizeof(version) );
       
    encodeString( s, rec.user );
@@ -134,7 +134,7 @@ AbstractDb::encodeUser(const UserRecord& rec, resip::Data& data)
 bool
 AbstractDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec )
 {  
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    
    Data data;
    encodeUser(rec, data);
@@ -168,7 +168,7 @@ AbstractDb::getUser( const AbstractDb::Key& key ) const
    iDataStream s(data);
 
    short version;
-   assert( sizeof(version) == 2 );
+   resip_assert( sizeof(version) == 2 );
    s.read( (char*)(&version), sizeof(version) );
    
    if ( version == REPRO_DB_VERSION_USERS )
@@ -236,7 +236,7 @@ AbstractDb::encodeRoute(const RouteRecord& rec, resip::Data& data)
    oDataStream s(data);
       
    short version=1;
-   assert( sizeof( version) == 2 );
+   resip_assert( sizeof( version) == 2 );
    s.write( (char*)(&version) , sizeof(version) );
       
    encodeString( s, rec.mMethod );
@@ -244,7 +244,7 @@ AbstractDb::encodeRoute(const RouteRecord& rec, resip::Data& data)
    encodeString( s, rec.mMatchingPattern );
    encodeString( s, rec.mRewriteExpression );
    s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
-   assert( sizeof( rec.mOrder) == 2 );
+   resip_assert( sizeof( rec.mOrder) == 2 );
   
    //!cj! TODO - add the extra local use only flag 
 
@@ -256,7 +256,7 @@ bool
 AbstractDb::addRoute( const AbstractDb::Key& key, 
                  const AbstractDb::RouteRecord& rec )
 { 
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    
    Data data;
    encodeRoute(rec, data);
@@ -290,7 +290,7 @@ AbstractDb::getRoute( const AbstractDb::Key& key) const
    iDataStream s(data);
 
    short version;
-   assert( sizeof(version) == 2 );
+   resip_assert( sizeof(version) == 2 );
    s.read( (char*)(&version), sizeof(version) );
    
    if ( version == 1 )
@@ -300,7 +300,7 @@ AbstractDb::getRoute( const AbstractDb::Key& key) const
       decodeString(s, rec.mMatchingPattern);
       decodeString(s, rec.mRewriteExpression);
       s.read( (char*)(&rec.mOrder), sizeof(rec.mOrder) ); 
-      assert( sizeof( rec.mOrder) == 2 );
+      resip_assert( sizeof( rec.mOrder) == 2 );
    }
    else
    {
@@ -350,14 +350,14 @@ bool
 AbstractDb::addAcl( const AbstractDb::Key& key, 
                     const AbstractDb::AclRecord& rec )
 { 
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    
    Data data;
    {
       oDataStream s(data);
       
       short version=1;
-      assert( sizeof( version) == 2 );
+      resip_assert( sizeof( version) == 2 );
       s.write( (char*)(&version) , sizeof(version) );
 
       encodeString( s, rec.mTlsPeerName );
@@ -399,7 +399,7 @@ AbstractDb::getAcl( const AbstractDb::Key& key) const
    iDataStream s(data);
 
    short version;
-   assert( sizeof(version) == 2 );
+   resip_assert( sizeof(version) == 2 );
    s.read( (char*)(&version), sizeof(version) );
    
    if ( version == 1 )
@@ -459,19 +459,19 @@ bool
 AbstractDb::addConfig( const AbstractDb::Key& key, 
                  const AbstractDb::ConfigRecord& rec )
 { 
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    
    Data data;
    {
       oDataStream s(data);
       
       short version=1;
-      assert( sizeof( version) == 2 );
+      resip_assert( sizeof( version) == 2 );
       s.write( (char*)(&version) , sizeof(version) );
       
       encodeString( s, rec.mDomain );
       s.write( (char*)(&rec.mTlsPort) , sizeof( rec.mTlsPort ) );
-      assert( sizeof(rec.mTlsPort) == 2 );
+      resip_assert( sizeof(rec.mTlsPort) == 2 );
 
       s.flush();
    }
@@ -505,7 +505,7 @@ AbstractDb::getConfig( const AbstractDb::Key& key) const
    iDataStream s(data);
 
    short version;
-   assert( sizeof(version) == 2 );
+   resip_assert( sizeof(version) == 2 );
    s.read( (char*)(&version), sizeof(version) );
    
    if ( version == 1 )
@@ -513,7 +513,7 @@ AbstractDb::getConfig( const AbstractDb::Key& key) const
       decodeString(s, rec.mDomain);
 
       s.read( (char*)(&rec.mTlsPort), sizeof(rec.mTlsPort) ); 
-      assert( sizeof( rec.mTlsPort) == 2 );
+      resip_assert( sizeof( rec.mTlsPort) == 2 );
    }
    else
    {
@@ -563,14 +563,14 @@ bool
 AbstractDb::addStaticReg( const AbstractDb::Key& key, 
                           const AbstractDb::StaticRegRecord& rec )
 { 
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    
    Data data;
    {
       oDataStream s(data);
       
       short version=1;
-      assert( sizeof( version) == 2 );
+      resip_assert( sizeof( version) == 2 );
       s.write( (char*)(&version) , sizeof(version) );
       
       encodeString( s, rec.mAor );
@@ -609,7 +609,7 @@ AbstractDb::getStaticReg( const AbstractDb::Key& key) const
    iDataStream s(data);
 
    short version;
-   assert( sizeof(version) == 2 );
+   resip_assert( sizeof(version) == 2 );
    s.read( (char*)(&version), sizeof(version) );
    
    if ( version == 1 )
@@ -668,7 +668,7 @@ AbstractDb::encodeFilter(const FilterRecord& rec, resip::Data& data)
    oDataStream s(data);
 
    short version=1;
-   assert(sizeof( version) == 2);
+   resip_assert(sizeof( version) == 2);
    s.write((char*)(&version) , sizeof(version));
       
    encodeString(s, rec.mCondition1Header);
@@ -678,10 +678,10 @@ AbstractDb::encodeFilter(const FilterRecord& rec, resip::Data& data)
    encodeString(s, rec.mMethod);
    encodeString(s, rec.mEvent);
    s.write((char*)(&rec.mAction), sizeof (rec.mAction));
-   assert(sizeof(rec.mAction) == 2);
+   resip_assert(sizeof(rec.mAction) == 2);
    encodeString(s, rec.mActionData);
    s.write((char*)(&rec.mOrder), sizeof(rec.mOrder));
-   assert(sizeof(rec.mOrder) == 2);
+   resip_assert(sizeof(rec.mOrder) == 2);
 
    s.flush();
 }
@@ -691,7 +691,7 @@ bool
 AbstractDb::addFilter(const AbstractDb::Key& key, 
                       const AbstractDb::FilterRecord& rec)
 { 
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    
    Data data;
    encodeFilter(rec, data);
@@ -724,7 +724,7 @@ AbstractDb::getFilter( const AbstractDb::Key& key) const
    iDataStream s(data);
 
    short version;
-   assert(sizeof(version) == 2);
+   resip_assert(sizeof(version) == 2);
    s.read((char*)(&version), sizeof(version));
    
    if (version == 1)
@@ -736,10 +736,10 @@ AbstractDb::getFilter( const AbstractDb::Key& key) const
       decodeString(s, rec.mMethod);
       decodeString(s, rec.mEvent);
       s.read((char*)(&rec.mAction), sizeof(rec.mAction)); 
-      assert(sizeof(rec.mAction) == 2);
+      resip_assert(sizeof(rec.mAction) == 2);
       decodeString(s, rec.mActionData);
       s.read((char*)(&rec.mOrder), sizeof(rec.mOrder)); 
-      assert(sizeof(rec.mOrder) == 2);
+      resip_assert(sizeof(rec.mOrder) == 2);
    }
    else
    {
@@ -787,20 +787,20 @@ AbstractDb::nextFilterKey()
 bool
 AbstractDb::addToSilo(const Key& key, const SiloRecord& rec)
 {
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    
    Data data;
    {
       oDataStream s(data);
 
       short version=1;
-      assert(sizeof( version) == 2);
+      resip_assert(sizeof( version) == 2);
       s.write((char*)(&version) , sizeof(version));
 
       encodeString(s, rec.mDestUri);
       encodeString(s, rec.mSourceUri);
       s.write((char*)(&rec.mOriginalSentTime), sizeof (rec.mOriginalSentTime));
-      assert(sizeof(rec.mOriginalSentTime) == 8);
+      resip_assert(sizeof(rec.mOriginalSentTime) == 8);
       encodeString(s, rec.mTid);
       encodeString(s, rec.mMimeType);
       encodeString(s, rec.mMessageBody);
@@ -816,7 +816,7 @@ AbstractDb::decodeSiloRecord(Data& data, SiloRecord& rec)
    iDataStream s(data);
 
    short version;
-   assert(sizeof(version) == 2);
+   resip_assert(sizeof(version) == 2);
    s.read((char*)(&version), sizeof(version));
    
    if (version == 1)
@@ -824,7 +824,7 @@ AbstractDb::decodeSiloRecord(Data& data, SiloRecord& rec)
       decodeString(s, rec.mDestUri);
       decodeString(s, rec.mSourceUri);
       s.read((char*)(&rec.mOriginalSentTime), sizeof(rec.mOriginalSentTime)); 
-      assert(sizeof(rec.mOriginalSentTime) == 8);
+      resip_assert(sizeof(rec.mOriginalSentTime) == 8);
       decodeString(s, rec.mTid);
       decodeString(s, rec.mMimeType);
       decodeString(s, rec.mMessageBody);

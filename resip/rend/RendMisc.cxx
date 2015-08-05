@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 #include <string.h>
 #include <time.h>
 #ifndef WIN32
@@ -111,7 +111,7 @@ RendReadFileIntoData(const char *filename, resip::Data& contents)
       ErrLog( << "Could not open file " << filename << " for read");
       return -1;
    }
-   assert(is.is_open());
+   resip_assert(is.is_open());
    int length = 0;
    is.seekg(0, std::ios::end);
    length = (int)is.tellg();

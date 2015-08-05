@@ -86,18 +86,18 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    {
       DebugLog( << "Trying to form TLS connection - acting as client" );
    }
-   assert( mSecurity );
+   resip_assert( mSecurity );
 
    TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(transport);
-   assert(t);
+   resip_assert(t);
 
    SSL_CTX* ctx=t->getCtx();
-   assert(ctx);
+   resip_assert(ctx);
    
    mSsl = SSL_new(ctx);
-   assert(mSsl);
+   resip_assert(mSsl);
 
-   assert( mSecurity );
+   resip_assert( mSecurity );
 
    if(mServer)
    {
@@ -118,7 +118,7 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
          DebugLog(<< "Mandatory client certificate mode" );
          break;
       default:
-         assert( 0 );
+         resip_assert( 0 );
       }
       SSL_set_verify(mSsl, verify_mode, 0);
    }
@@ -270,7 +270,7 @@ TlsConnection::checkState()
                if(e == 0)
                {
                   TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(transport());
-                  assert(t);
+                  resip_assert(t);
                   if(mServer && t->getClientVerificationMode() != SecurityTypes::None)
                   {
                      DebugLog(<<"client may have disconnected to prompt for user certificate, because it can't supply a certificate (verification mode == " << (t->getClientVerificationMode() == SecurityTypes::Mandatory?"Mandatory":"Optional") << " for this transport) or because it does not support using client certificates over WebSockets");
@@ -302,7 +302,7 @@ TlsConnection::checkState()
                   if(mServer)
                   {
                      TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(transport());
-                     assert(t);
+                     resip_assert(t);
                      if(t->getClientVerificationMode() == SecurityTypes::Mandatory)
                      {
                         ErrLog(<<"Mandatory client certificate verification required, protocol failed, client did not send a certificate or it was not valid");
@@ -373,8 +373,8 @@ int
 TlsConnection::read(char* buf, int count )
 {
 #if defined(USE_SSL)
-   assert( mSsl ); 
-   assert( buf );
+   resip_assert( mSsl ); 
+   resip_assert( buf );
 
    switch(checkState())
    {
@@ -427,7 +427,7 @@ TlsConnection::read(char* buf, int count )
          }
          else
          {
-            assert(0);
+            resip_assert(0);
          }
       }
       else if (bytesPending < 0)
@@ -468,7 +468,7 @@ TlsConnection::read(char* buf, int count )
          }
          break;
       }
-      assert(0);
+      resip_assert(0);
    }
    StackLog(<<"SSL bytesRead="<<bytesRead);
    return bytesRead;
@@ -499,7 +499,7 @@ TlsConnection::transportWrite()
          DebugLog(<< "Transportwrite--" << fromState(mTlsState) << " fall through to write");
          return false;
    }
-   assert(0);
+   resip_assert(0);
    return false;
 }
 
@@ -507,8 +507,8 @@ int
 TlsConnection::write( const char* buf, int count )
 {
 #if defined(USE_SSL)
-   assert( mSsl );
-   assert( buf );
+   resip_assert( mSsl );
+   resip_assert( buf );
    int ret;
  
    switch(checkState())
@@ -671,7 +671,7 @@ TlsConnection::computePeerName()
 #if defined(USE_SSL)
    Data commonName;
 
-   assert(mSsl);
+   resip_assert(mSsl);
 
    if (!mBio)
    {
@@ -704,7 +704,7 @@ TlsConnection::computePeerName()
    }
 
    TlsBaseTransport *t = dynamic_cast<TlsBaseTransport*>(mTransport);
-   assert(t);
+   resip_assert(t);
 
    mPeerNames.clear();
    BaseSecurity::getCertNames(cert, mPeerNames,

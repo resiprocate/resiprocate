@@ -4,6 +4,7 @@
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "rutil/ResipAssert.h"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -104,7 +105,7 @@ DialogUsage::sendCommand(SharedPtr<SipMessage> message)
 void 
 DialogUsage::send(SipMessage& msg)
 {
-   assert(msg.isResponse() || msg.header(h_RequestLine).method() == ACK);
+   resip_assert(msg.isResponse() || msg.header(h_RequestLine).method() == ACK);
    mDialog.send(msg);
 }
 */

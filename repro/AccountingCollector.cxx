@@ -72,8 +72,8 @@ AccountingCollector::~AccountingCollector()
 void
 AccountingCollector::doRegistrationAccounting(AccountingCollector::RegistrationEvent regevent, const resip::SipMessage& msg)
 {
-   assert(msg.isRequest());
-   assert(msg.method() == REGISTER);
+   resip_assert(msg.isRequest());
+   resip_assert(msg.method() == REGISTER);
 
    if(regevent == RegistrationRefreshed && !mRegistrationAccountingLogRefreshes)
    {
@@ -628,7 +628,7 @@ AccountingCollector::initializeEventQueue(FifoEventType type, bool destroyFirst)
       }
       return mRegistrationEventQueue;
    default:
-      assert(false);
+      resip_assert(false);
       break;
    }
    return 0;

@@ -346,7 +346,7 @@ TestRtp::loadStream(const Data& file, UInt32 ssrc)
 
 #else
    InfoLog(<< "Reading pcap files disabled");
-   assert(0);
+   resip_assert(0);
 #endif
 }
 

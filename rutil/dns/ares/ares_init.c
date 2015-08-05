@@ -23,7 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -167,6 +167,7 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
   channel->ndomains = -1;
   channel->nsort = -1;
   channel->lookups = NULL;
+  channel->servers = NULL;
 
   /* Initialize configuration by each of the four sources, from highest
    * precedence to lowest.
@@ -266,7 +267,7 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
        }
        else
        {
-         assert( channel->servers[i].family == AF_INET );
+         resip_assert( channel->servers[i].family == AF_INET );
          channel->servers[i].addr = options->servers[i].addr;
        }
 #else

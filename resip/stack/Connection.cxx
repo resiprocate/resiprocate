@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+#include "rutil/ResipAssert.h"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Connection.hxx"
@@ -81,7 +82,7 @@ Connection::removeFrontOutstandingSend()
 
    if (mOutstandingSends.empty())
    {
-      assert(mInWritable);
+      resip_assert(mInWritable);
       getConnectionManager().removeFromWritable(this);
       mInWritable = false;
    }
@@ -177,7 +178,7 @@ Connection::performWrite()
             oldSd->transactionId,
             oldSd->sigcompId,
             false);
-      assert(dataWs && dataWs->data.data());
+      resip_assert(dataWs && dataWs->data.data());
       uBuffer = (UInt8*)dataWs->data.data();
 
       uBuffer[0] = 0x82;
@@ -338,7 +339,7 @@ Connection::read()
    size_t bytesToRead = resipMin(writePair.second, 
                                  static_cast<size_t>(Connection::ChunkSize));
          
-   assert(bytesToRead > 0);
+   resip_assert(bytesToRead > 0);
 
    int bytesRead = read(writePair.first, (int)bytesToRead);
    if (bytesRead <= 0)

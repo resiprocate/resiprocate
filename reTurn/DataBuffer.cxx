@@ -1,6 +1,6 @@
 #include "DataBuffer.hxx"
 #include <memory.h>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 #include <rutil/WinLeakCheck.hxx>
 
 namespace reTurn {
@@ -78,21 +78,21 @@ DataBuffer::mutableSize()
 char& 
 DataBuffer::operator[](unsigned int p) 
 { 
-   assert(p < mSize); 
+   resip_assert(p < mSize); 
    return mBuffer[p]; 
 }
 
 char 
 DataBuffer::operator[](unsigned int p) const 
 { 
-   assert(p < mSize); 
+   resip_assert(p < mSize); 
    return mBuffer[p]; 
 }
 
 unsigned int 
 DataBuffer::truncate(unsigned int newSize) 
 { 
-   assert(newSize <= mSize); 
+   resip_assert(newSize <= mSize); 
    mSize = newSize; 
    return mSize; 
 }
@@ -100,7 +100,7 @@ DataBuffer::truncate(unsigned int newSize)
 unsigned int 
 DataBuffer::offset(unsigned int bytes) 
 { 
-   assert(bytes < mSize); 
+   resip_assert(bytes < mSize); 
    mStart = mStart+bytes; 
    mSize = mSize-bytes; 
    return mSize;

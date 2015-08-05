@@ -35,7 +35,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    mServerSub(serverSub),
    mAllowOfferInPrack(false)
 {
-   assert(request->isRequest());
+   resip_assert(request->isRequest());
    if(initialOffer)  
    {
       mProposedLocalOfferAnswer = auto_ptr<Contents>(initialOffer->clone());
@@ -233,7 +233,7 @@ ClientInviteSession::end(EndReason reason)
 
       case UAC_Start:
          WarningLog (<< "Try to end when in state=" << toData(mState));
-         assert(0);
+         resip_assert(0);
          break;
 
       case Terminated:
@@ -287,7 +287,7 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
       case UAC_SentAnswer:
       case UAC_Cancelled:
          WarningLog (<< "Try to reject when in state=" << toData(mState));
-         assert(0);
+         resip_assert(0);
          break;
 
       default:
@@ -318,7 +318,7 @@ ClientInviteSession::cancel()
          break;
 
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -542,9 +542,9 @@ ClientInviteSession::handleRedirect (const SipMessage& msg)
 void
 ClientInviteSession::handleProvisional(const SipMessage& msg)
 {
-   assert(msg.isResponse());
-   assert(msg.header(h_StatusLine).statusCode() < 200);
-   assert(msg.header(h_StatusLine).statusCode() > 100);
+   resip_assert(msg.isResponse());
+   resip_assert(msg.header(h_StatusLine).statusCode() < 200);
+   resip_assert(msg.header(h_StatusLine).statusCode() > 100);
 
    //.dcm. Kept the following checks here rather than discardMessage as the
    // state machine can be affected(termination).
@@ -576,9 +576,9 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
 void
 ClientInviteSession::handleFinalResponse(const SipMessage& msg)
 {
-   assert(msg.isResponse());
-   assert(msg.header(h_StatusLine).statusCode() >= 200);
-   assert(msg.header(h_StatusLine).statusCode() < 300);
+   resip_assert(msg.isResponse());
+   resip_assert(msg.header(h_StatusLine).statusCode() >= 200);
+   resip_assert(msg.header(h_StatusLine).statusCode() < 300);
 
    handleSessionTimerResponse(msg);
    storePeerCapabilities(msg);
@@ -632,9 +632,9 @@ ClientInviteSession::handle1xxAnswer(const SipMessage& msg, const Contents& answ
 void
 ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
 {
-   assert(msg.isResponse());
-   assert(msg.header(h_StatusLine).statusCode() < 200);
-   assert(msg.header(h_StatusLine).statusCode() > 100);
+   resip_assert(msg.isResponse());
+   resip_assert(msg.header(h_StatusLine).statusCode() < 200);
+   resip_assert(msg.header(h_StatusLine).statusCode() > 100);
    
    if (isReliable(msg))
    {
@@ -665,9 +665,9 @@ ClientInviteSession::sendPrack(const Contents& offerAnswer, DialogUsageManager::
 void
 ClientInviteSession::dispatchStart (const SipMessage& msg)
 {
-   assert(msg.isResponse());
-   assert(msg.header(h_StatusLine).statusCode() > 100);
-   assert(msg.header(h_CSeq).method() == INVITE);
+   resip_assert(msg.isResponse());
+   resip_assert(msg.header(h_StatusLine).statusCode() > 100);
+   resip_assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
@@ -729,7 +729,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handleFinalResponse(msg);
          mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
          handler->onNewSession(getHandle(), InviteSession::Offer, msg);
-         assert(mProposedLocalOfferAnswer.get() == 0);
+         resip_assert(mProposedLocalOfferAnswer.get() == 0);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          if(!isTerminated())  
          {
@@ -833,7 +833,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          transition(UAC_Answered);
          handleFinalResponse(msg);
 
-         assert(mProposedLocalOfferAnswer.get() == 0);
+         resip_assert(mProposedLocalOfferAnswer.get() == 0);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
 

@@ -61,7 +61,7 @@ class MediaResourceParticipantDeleterCmd : public DumCommand
 
       void executeCommand() { Participant* participant = mConversationManager.getParticipant(mParticipantHandle); if(participant) delete participant; }
 
-      Message* clone() const { assert(0); return 0; }
+      Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
       
@@ -146,7 +146,7 @@ MediaResourceParticipant::~MediaResourceParticipant()
 void 
 MediaResourceParticipant::startPlay()
 {
-   assert(!mPlaying);
+   resip_assert(!mPlaying);
    try
    {
       InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " url=" << mMediaUrl);
@@ -373,7 +373,7 @@ MediaResourceParticipant::getConnectionPortOnBridge()
    case Tone:     
       if(mToneGenPortOnBridge == -1)
       {
-         assert(getMediaInterface() != 0);     
+         resip_assert(getMediaInterface() != 0);     
          ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
          InfoLog(<< "MediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mToneGenPortOnBridge=" << mToneGenPortOnBridge);
       }
@@ -385,7 +385,7 @@ MediaResourceParticipant::getConnectionPortOnBridge()
    case Https:
       if(mFromFilePortOnBridge == -1)
       {
-         assert(getMediaInterface() != 0);     
+         resip_assert(getMediaInterface() != 0);     
          ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
          InfoLog(<< "MediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mFromFilePortOnBridge=" << mFromFilePortOnBridge);
       }

@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 #include "ares.h"
 
 const char *ares_strerror(int code)
@@ -41,7 +41,7 @@ const char *ares_strerror(int code)
     "Destructing"
   };
 
-  assert(code >= 0 && code < (sizeof(errtext) / sizeof(*errtext)));
+  resip_assert(code >= 0 && code < (sizeof(errtext) / sizeof(*errtext)));
 
   return errtext[code];
 }

@@ -14,7 +14,7 @@ InviteSessionHandler::onEarlyMedia(ClientInviteSessionHandle h, const SipMessage
 	if(!mGenericOfferAnswer)
    {
       const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
-      assert(sdp);
+      resip_assert(sdp);
       onEarlyMedia(h, msg, *sdp);
    }
 }
@@ -69,7 +69,7 @@ InviteSessionHandler::onAnswer(InviteSessionHandle h, const SipMessage& msg, con
 	if(!mGenericOfferAnswer)
    {
       const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
-      assert(sdp);
+      resip_assert(sdp);
       onAnswer(h, msg, *sdp);
    }
 }
@@ -80,7 +80,7 @@ InviteSessionHandler::onOffer(InviteSessionHandle h, const SipMessage& msg, cons
 	if(!mGenericOfferAnswer)
    {
       const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
-      assert(sdp);
+      resip_assert(sdp);
       onOffer(h, msg, *sdp);
    }
 }
@@ -96,7 +96,7 @@ InviteSessionHandler::onRemoteAnswerChanged(InviteSessionHandle h, const SipMess
 	if(!mGenericOfferAnswer)
    {
       const SdpContents* sdp = dynamic_cast<const SdpContents*>(&body);
-      assert(sdp);
+      resip_assert(sdp);
       onRemoteSdpChanged(h, msg, *sdp);
    }
 }

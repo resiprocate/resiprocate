@@ -168,7 +168,7 @@ MOHManager::addParticipant(ParticipantHandle participantHandle, const Uri& heldU
       mServer.createMediaResourceParticipant(conversationToUse, mMusicFilename);
    }
 
-   assert(conversationToUse);
+   resip_assert(conversationToUse);
 
    mServer.addParticipant(conversationToUse, participantHandle);
    mServer.modifyParticipantContribution(conversationToUse, participantHandle, 100, 0 /* Mute participant */);

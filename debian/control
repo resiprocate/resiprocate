@@ -1,0 +1,180 @@
+Source: resiprocate
+Section: libs
+Priority: extra
+Maintainer: Debian VoIP Team <pkg-voip-maintainers@lists.alioth.debian.org>
+Uploaders: Daniel Pocock <daniel@pocock.pro>
+Build-Depends: debhelper (>= 9.0.0), gperf, libasio-dev, libboost-dev, libc-ares-dev (>= 1.6.0), libdb++-dev, libpopt-dev, libssl-dev (>= 0.9.8), perl, libmysqlclient-dev, libfreeradius-client-dev, libcppunit-dev, autotools-dev, libpcre3-dev, dpkg-dev (>= 1.16.1~), libsipxtapi-dev (>= 3.3.0~test15) [linux-any], libsrtp-dev [linux-any], libcajun-dev, python-cxx-dev, dh-autoreconf, pkg-config
+Homepage: http://www.resiprocate.org/
+Standards-Version: 3.9.5
+Vcs-Git: git://git.debian.org/pkg-voip/resiprocate.git
+Vcs-Browser: http://git.debian.org/?p=pkg-voip/resiprocate.git;a=summary
+
+Package: libresiprocate-1.10
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: reSIProcate SIP stack - shared libraries
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ This package provides the core libraries: librutil (utilities),
+ libresip (SIP stack/RFC compliant message parsing) and
+ libdum (SIP Dialog Usage Manager, a state machine for SIP dialogs).
+
+Package: libresiprocate-1.10-dev
+Section: libdevel
+Architecture: any
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libc-ares-dev, libssl-dev, libfreeradius-client-dev
+Provides: libresiprocate-dev
+Conflicts: libresiprocate-dev, libresiprocate-1.8-dev
+Replaces: libresiprocate-dev, libresiprocate-1.8-dev
+Description: reSIProcate SIP stack - development files
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ This package provides header files needed for developing applications
+ based on the core reSIProcate libraries.
+
+Package: librecon-1.10
+Architecture: linux-any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libsipxtapi (>= 3.3.0~test15)
+Description: reSIProcate conversation manager - shared libraries
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ This package provides the conversation manager library, librecon,
+ implementing the core functionality of a back-to-back user agent (B2BUA),
+ session border controller (SBC) and conferencing server.
+ .
+ As reSIProcate has no built-in media framework, this package depends on the
+ media framework from the sipXtapi project.  However, it does not utilise
+ any other features of sipXtapi for the session control.  Future versions of
+ recon aim to support multiple media frameworks using an abstraction layer.
+ 
+Package: librecon-1.10-dev
+Section: libdevel
+Depends: librecon-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.10-dev (= ${binary:Version}), libresiprocate-turn-client-1.10-dev (= ${binary:Version}), libsipxtapi-dev, libsrtp-dev
+Architecture: linux-any
+Provides: librecon-dev
+Conflicts: librecon-dev, librecon-1.8-dev
+Replaces: librecon-dev, librecon-1.8-dev
+Description: reSIProcate conversation manager - development files
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ This package provides header files needed for developing applications
+ based on librecon.
+
+Package: libresiprocate-turn-client-1.10
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: reSIProcate TURN client (reTurn) - shared libraries
+ reTurn is the TURN component of the reSIProcate project.
+ This package provides a shared library implementing the TURN
+ protocol for NAT traversal, typically used in VoIP applications
+ such as SIP and Jabber/XMPP.  It is a successor to STUN and
+ is an important part of the Interactive Connectivity Establishment (ICE)
+ protocol.
+ .
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+
+Package: libresiprocate-turn-client-1.10-dev
+Section: libdevel
+Architecture: any
+Depends: libresiprocate-turn-client-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.10-dev (= ${binary:Version}), libasio-dev (>= 1.2.0), libboost-dev
+Provides: libresiprocate-turn-client-dev
+Conflicts: libresiprocate-turn-client-dev, libresiprocate-turn-client-1.8-dev
+Replaces: libresiprocate-turn-client-dev, libresiprocate-turn-client-1.8-dev
+Description: reSIProcate TURN client (reTurn) - development files
+ This package provides header files needed for developing applications
+ based on the reSIProcate reTurn client library.
+ .
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+
+Package: repro
+Section: net
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: apache2-utils, openssl, stun-server | turn-server
+Suggests: jscommunicator-web-phone
+Provides: sip-router
+Description: reSIProcate SIP stack - lightweight SIP proxy daemon
+ repro is the SIP proxy developed as part of the reSIProcate project.
+ It provides a high-quality, low maintenance solution for serving
+ small and large IP telephony installations.
+ .
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+
+Package: resiprocate-turn-server
+Section: net
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: openssl
+Suggests: sip-router, xmpp-server, jscommunicator-web-phone
+Provides: stun-server, turn-server
+Description: reSIProcate SIP stack - ICE/TURN server
+ reTurn is the TURN server developed as part of the reSIProcate project.
+ TURN (RFC 5766) provides a standardised solution for VoIP applications
+ to find the most efficient way to route media streams when NAT and
+ firewall devices may be present.
+ .
+ reTurn provides a high-quality, low maintenance solution for serving
+ small and large IP telephony installations.  It has been used successfully
+ with a variety of SIP and Jabber applications, including Lumicall,
+ Jitsi, Empathy and Psi.
+ .
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+
+Package: resiprocate-turn-server-psql
+Section: net
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, resiprocate-turn-server, python-psycopg2
+Description: reSIProcate SIP stack - ICE/TURN server
+ reTurn is the TURN server developed as part of the reSIProcate project.
+ TURN (RFC 5766) provides a standardised solution for VoIP applications
+ to find the most efficient way to route media streams when NAT and
+ firewall devices may be present.
+ .
+ reTurn provides a high-quality, low maintenance solution for serving
+ small and large IP telephony installations.  It has been used successfully
+ with a variety of SIP and Jabber applications, including Lumicall,
+ Jitsi, Empathy and Psi.
+ .
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.
+ .
+ This packages provides a Python script to synchronize the reTurn
+ users.txt file from a PostgreSQL table.
+
+Package: sipdialer
+Section: net
+Architecture: any
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: reSIProcate SIP stack - click-to-call utility
+ sipdialer is a click-to-call application that uses the SIP REFER
+ method to force a SIP phone (for example, the phone on your desk)
+ to dial another number.  It can be registered in GConf to handle
+ clicks on sip:, sips: and tel: URIs in other applications and the
+ web browser.
+ .
+ reSIProcate is a framework that aims to fully implement the SIP protocol
+ in first class C++.  It is intended for use in other applications,
+ such as the repro SIP proxy.

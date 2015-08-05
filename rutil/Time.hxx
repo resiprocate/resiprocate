@@ -3,7 +3,7 @@
 
 #include "rutil/Mutex.hxx"
 #include <limits.h>
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 namespace resip
 {
@@ -157,7 +157,7 @@ class ResipClock
                      __int64 maxWait = (__int64)UINT_MAX - mBaseTimeUpdateInterval - mBaseTimeCushion;
                      if (maxWait <= 0)
                      {
-                        assert(0);
+                        resip_assert(0);
                         const_cast<UInt32 &>(mBaseTimeUpdateInterval) = 60000;
                         const_cast<UInt32 &>(mBaseTimeCushion) = 120000;
                         return UINT_MAX - mBaseTimeUpdateInterval - mBaseTimeCushion;

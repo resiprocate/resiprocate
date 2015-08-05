@@ -41,7 +41,7 @@ LocalParticipant::getConnectionPortOnBridge()
 {
    if(mLocalPortOnBridge == -1)
    {
-      assert(getMediaInterface() != 0);       
+      resip_assert(getMediaInterface() != 0);       
       ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
       InfoLog(<< "LocalParticipant getConnectionPortOnBridge, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
    }
@@ -56,7 +56,7 @@ LocalParticipant::addToConversation(Conversation *conversation, unsigned int inp
     if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
     {
        // The Local participant is in a new Conversation, give that conversation focus
-       assert(getMediaInterface() != 0);       
+       resip_assert(getMediaInterface() != 0);       
        getMediaInterface()->getInterface()->giveFocus();
     }
 }

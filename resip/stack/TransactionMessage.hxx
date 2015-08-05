@@ -1,7 +1,7 @@
 #ifndef RESIP_TransactionMessage_hxx
 #define RESIP_TransactionMessage_hxx
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "resip/stack/Message.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
@@ -19,7 +19,7 @@ class TransactionMessage : public Message
       // purpose of determining which TransactionMap to use
       virtual bool isClientTransaction() const = 0; 
 
-      virtual Message* clone() const {assert(false); return NULL;}
+      virtual Message* clone() const {resip_assert(false); return NULL;}
 };
 
 }

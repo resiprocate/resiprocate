@@ -173,7 +173,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& c
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
+   resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    
    Via via;
@@ -212,7 +212,7 @@ Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& 
    request->header(h_From) = to;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
+   resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    
    Via via;
@@ -244,7 +244,7 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
+   resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    Via via;
    request->header(h_Vias).push_back(via);
@@ -274,7 +274,7 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
+   resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    Via via;
    request->header(h_Vias).push_back(via);
@@ -305,7 +305,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
+   resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_front( contact );
    Via via;
    request->header(h_Vias).push_front(via);
@@ -316,7 +316,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
 int
 Helper::jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum)
 {
-   assert(upperPercentage >= lowerPercentage);
+   resip_assert(upperPercentage >= lowerPercentage);
    if (input < minimum)
    {
       return input;
@@ -575,8 +575,8 @@ Helper::getResponseCodeReason(int responseCode, Data& reason)
 SipMessage*
 Helper::makeCancel(const SipMessage& request)
 {
-   assert(request.isRequest());
-   assert(request.header(h_RequestLine).getMethod() == INVITE);
+   resip_assert(request.isRequest());
+   resip_assert(request.header(h_RequestLine).getMethod() == INVITE);
    std::auto_ptr<SipMessage> cancel(new SipMessage);
 
    RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
@@ -611,8 +611,8 @@ Helper::makeCancel(const SipMessage& request)
 SipMessage*
 Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 {
-   assert (request.header(h_Vias).size() >= 1);
-   assert (request.header(h_RequestLine).getMethod() == INVITE);
+   resip_assert (request.header(h_Vias).size() >= 1);
+   resip_assert (request.header(h_RequestLine).getMethod() == INVITE);
    
    std::auto_ptr<SipMessage> ack(new SipMessage);
 
@@ -1030,8 +1030,8 @@ Helper::authenticateRequest(const SipMessage& request,
                                                             i->param(p_nonce),
                                                             i->param(p_qop),
                                                             i->param(p_cnonce),
-                                                            i->param(p_nc)),
-                                                            request.getContents())
+                                                            i->param(p_nc),
+                                                            request.getContents()))
                   {
                      return Authenticated;
                   }
@@ -1243,7 +1243,7 @@ Helper::make405(const SipMessage& request,
             int last = 0;
 
             // ENUMS must be contiguous in order for this to work.
-            assert( i - last <= 1);
+            resip_assert( i - last <= 1);
             Token t;
             t.value() = getMethodName(static_cast<resip::MethodTypes>(i));
             resp->header(h_Allows).push_back(t);
@@ -1364,9 +1364,9 @@ Helper::makeChallengeResponseAuth(const SipMessage& request,
 {
    auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
-   assert(challenge.exists(p_realm));
+   resip_assert(challenge.exists(p_realm));
    auth.param(p_realm) = challenge.param(p_realm);
-   assert(challenge.exists(p_nonce));
+   resip_assert(challenge.exists(p_nonce));
    auth.param(p_nonce) = challenge.param(p_nonce);
    Data digestUri;
    {
@@ -1394,7 +1394,7 @@ Helper::makeChallengeResponseAuth(const SipMessage& request,
    }
    else
    {
-      assert(challenge.exists(p_realm));
+      resip_assert(challenge.exists(p_realm));
       auth.param(p_response) = Helper::makeResponseMD5(username, 
                                                        password,
                                                        challenge.param(p_realm), 
@@ -1496,9 +1496,9 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
 {
    auth.scheme() = Symbols::Digest;
    auth.param(p_username) = username;
-   assert(challenge.exists(p_realm));
+   resip_assert(challenge.exists(p_realm));
    auth.param(p_realm) = challenge.param(p_realm);
-   assert(challenge.exists(p_nonce));
+   resip_assert(challenge.exists(p_nonce));
    auth.param(p_nonce) = challenge.param(p_nonce);
    Data digestUri;
    {
@@ -1524,7 +1524,7 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    }
    else
    {
-      assert(challenge.exists(p_realm));
+      resip_assert(challenge.exists(p_realm));
       auth.param(p_response) = Helper::makeResponseMD5WithA1(passwordHashA1,
                                                              getMethodName(request.header(h_RequestLine).getMethod()),
                                                              digestUri, 
@@ -1572,8 +1572,8 @@ Helper::addAuthorization(SipMessage& request,
 {
    Data nonceCountString = Data::Empty;
    
-   assert(challenge.isResponse());
-   assert(challenge.header(h_StatusLine).responseCode() == 401 ||
+   resip_assert(challenge.isResponse());
+   resip_assert(challenge.header(h_StatusLine).responseCode() == 401 ||
           challenge.header(h_StatusLine).responseCode() == 407);
 
    if (challenge.exists(h_ProxyAuthenticates))
@@ -1602,8 +1602,8 @@ Helper::addAuthorization(SipMessage& request,
 Uri
 Helper::makeUri(const Data& aor, const Data& scheme)
 {
-   assert(!aor.prefix("sip:"));
-   assert(!aor.prefix("sips:"));
+   resip_assert(!aor.prefix("sip:"));
+   resip_assert(!aor.prefix("sips:"));
    
    Data tmp(aor.size() + scheme.size() + 1, Data::Preallocate);
    tmp += scheme;
@@ -1626,7 +1626,7 @@ Helper::processStrictRoute(SipMessage& request)
       request.header(h_Routes).push_back(NameAddr(request.const_header(h_RequestLine).uri()));
       request.header(h_RequestLine).uri() = request.const_header(h_Routes).front().uri();
       request.header(h_Routes).pop_front(); // !jf!
-      assert(!request.hasForceTarget());
+      resip_assert(!request.hasForceTarget());
       request.setForceTarget(request.const_header(h_RequestLine).uri());
    }
 }
@@ -1634,7 +1634,7 @@ Helper::processStrictRoute(SipMessage& request)
 void
 Helper::massageRoute(const SipMessage& request, NameAddr& rt)
 {
-   assert(request.isRequest());
+   resip_assert(request.isRequest());
    // .bwc. Let's not record-route with a tel uri or something, shall we?
    // If the topmost route header is malformed, we can get along without.
    if (!request.empty(h_Routes) && 
@@ -1656,7 +1656,7 @@ Helper::massageRoute(const SipMessage& request, NameAddr& rt)
 int
 Helper::getPortForReply(SipMessage& request)
 {
-   assert(request.isRequest());
+   resip_assert(request.isRequest());
    int port = 0;
    TransportType transportType = toTransportType(
       request.const_header(h_Vias).front().transport());
@@ -1998,9 +1998,9 @@ Helper::FailureMessageEffect
 Helper::determineFailureMessageEffect(const SipMessage& response,
     const std::set<int>* additionalTransactionTerminatingResponses)
 {
-   assert(response.isResponse());
+   resip_assert(response.isResponse());
    int code = response.header(h_StatusLine).statusCode();
-   assert(code >= 400);
+   resip_assert(code >= 400);
    
    if (additionalTransactionTerminatingResponses &&
        (additionalTransactionTerminatingResponses->end() != additionalTransactionTerminatingResponses->find(code)))
@@ -2188,8 +2188,8 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
 bool 
 Helper::isClientBehindNAT(const SipMessage& request, bool privateToPublicOnly)
 {
-   assert(request.isRequest());
-   assert(!request.header(h_Vias).empty());
+   resip_assert(request.isRequest());
+   resip_assert(!request.header(h_Vias).empty());
 
    // If received parameter is on top Via, then the source of the message doesn't match
    // the address provided in the via.  Assume this is because the sender is behind a NAT.
@@ -2231,8 +2231,8 @@ Helper::isClientBehindNAT(const SipMessage& request, bool privateToPublicOnly)
 Tuple
 Helper::getClientPublicAddress(const SipMessage& request)
 {
-   assert(request.isRequest());
-   assert(!request.header(h_Vias).empty());
+   resip_assert(request.isRequest());
+   resip_assert(!request.header(h_Vias).empty());
 
    // Iterate through Via's starting at the bottom (closest to the client).  Return the first
    // public address found from received parameter if present, or Via host.

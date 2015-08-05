@@ -1,0 +1,22 @@
+
+About this package
+------------------
+
+This package just contains the shared libraries
+
+It is built against the SSL and RADIUS libraries, so you can
+use those features of the stack if you want to.
+
+Documentation for developers
+----------------------------
+
+There is a large amount of documentation in various formats
+in the reSIProcate source tree.
+
+The documentation conventions (e.g. file formats and location) are
+not consistent throughout the whole project, so they are
+only represented in the package on a best-efforts basis.
+
+All the files can be obtained if necessary from the upstream
+source repository or by executing `apt-get source resiprocate'
+

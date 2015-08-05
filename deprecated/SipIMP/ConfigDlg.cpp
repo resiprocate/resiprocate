@@ -22,7 +22,7 @@ CConfigDlg::CConfigDlg(CWnd* pParent /*=NULL*/)
 	, mCertPath(_T(""))
 {
 	CWinApp* app = AfxGetApp();
-	assert( app );
+	resip_assert( app );
 	mHost = app->GetProfileString("Proxy","host","example.com");
 	mProtocol = app->GetProfileString("Proxy","protocol","UDP");
 	mPort = app->GetProfileInt("Proxy","port",5060);
@@ -78,7 +78,7 @@ void CConfigDlg::OnBnClickedOk()
 	OnOK();
 
 	CWinApp* app = AfxGetApp();
-	assert( app );
+	resip_assert( app );
 	app->WriteProfileString("Proxy","host",mHost);
 	app->WriteProfileString("Proxy","protocol",mProtocol);
 	app->WriteProfileInt("Proxy","port",mPort);

@@ -77,7 +77,7 @@ void RRVip::vip(const Data& target,
    else
    {
       TransformFactoryMap::iterator it = mFactories.find(rrType);
-      assert(it != mFactories.end());
+      resip_assert(it != mFactories.end());
       Transform* transform = it->second->createTransform(vip);
       mTransforms.insert(TransformMap::value_type(key, transform));
    }

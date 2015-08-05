@@ -344,21 +344,21 @@ ResponseContext::getTarget(const resip::Data& tid) const
    TransactionMap::const_iterator pend = mCandidateTransactionMap.find(tid);
    if(pend != mCandidateTransactionMap.end())
    {
-      assert(pend->second->status()==Target::Candidate);
+      resip_assert(pend->second->status()==Target::Candidate);
       return pend->second;
    }
    
    TransactionMap::const_iterator act = mActiveTransactionMap.find(tid);
    if(act != mActiveTransactionMap.end())
    {
-      assert(!(act->second->status()==Target::Candidate || act->second->status()==Target::Terminated));
+      resip_assert(!(act->second->status()==Target::Candidate || act->second->status()==Target::Terminated));
       return act->second;
    }
 
    TransactionMap::const_iterator term = mTerminatedTransactionMap.find(tid);
    if(term != mTerminatedTransactionMap.end())
    {
-      assert(term->second->status()==Target::Terminated);
+      resip_assert(term->second->status()==Target::Terminated);
       return term->second;
    }
 
@@ -488,7 +488,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 {
    // .bwc. This is a private function, and if anything calls this with a
    // target in an invalid state, it is a bug.
-   assert(target->status() == Target::Candidate);
+   resip_assert(target->status() == Target::Candidate);
 
    SipMessage& orig=mRequestContext.getOriginalRequest();
    SipMessage request(orig);
@@ -834,7 +834,7 @@ ResponseContext::sendingToSelf(Target* target)
 void 
 ResponseContext::sendRequest(resip::SipMessage& request)
 {
-   assert (request.isRequest());
+   resip_assert (request.isRequest());
 
    // Do any required session accounting with this forward request - allows Session Routed event
    mRequestContext.getProxy().doSessionAccounting(request, false /* received */, mRequestContext);
@@ -932,8 +932,8 @@ ResponseContext::sendRequest(resip::SipMessage& request)
 void
 ResponseContext::processCancel(const SipMessage& request)
 {
-   assert(request.isRequest());
-   assert(request.method() == CANCEL);
+   resip_assert(request.isRequest());
+   resip_assert(request.method() == CANCEL);
 
    std::auto_ptr<SipMessage> ok(Helper::makeResponse(request, 200));   
    mRequestContext.sendResponse(*ok);
@@ -968,8 +968,8 @@ ResponseContext::processResponse(SipMessage& response)
    // store this before we pop the via and lose the branch tag
    mCurrentResponseTid = response.getTransactionId();
    
-   assert (response.isResponse());
-   assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
+   resip_assert (response.isResponse());
+   resip_assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
    response.header(h_Vias).pop_front();
 
    // Stop processing responses that have nowhere else to go
@@ -1231,7 +1231,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -1290,7 +1290,7 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
    int responseCode = msg.header(h_StatusLine).statusCode();
    int p = 0;  // "p" is the relative priority of the response
 
-      assert(responseCode >= 300 && responseCode <= 599);
+      resip_assert(responseCode >= 300 && responseCode <= 599);
       if (responseCode <= 399)  // 3xx response
       { 
          return 5;  // response priority is 5
@@ -1422,8 +1422,8 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
 bool 
 ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const
 {
-   assert(lhs.isResponse());
-   assert(rhs.isResponse());
+   resip_assert(lhs.isResponse());
+   resip_assert(rhs.isResponse());
    
    // !rwm! replace with correct thingy here
    return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();

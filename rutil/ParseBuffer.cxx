@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -242,7 +242,7 @@ ParseBuffer::skipToTermCRLF()
 ParseBuffer::CurrentPosition
 ParseBuffer::skipToChars(const char* cs)
 {
-   assert(cs);
+   resip_assert(cs);
    unsigned int l = (unsigned int)strlen(cs);
 
    const char* rpos;

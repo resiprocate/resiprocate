@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "DumFeatureMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "resip/dum/BaseUsage.hxx"

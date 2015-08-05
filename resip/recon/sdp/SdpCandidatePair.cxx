@@ -71,7 +71,7 @@ bool SdpCandidatePair::setCheckState(const SdpCandidatePairCheckState checkState
          stateChangeSuccess = true;
          break;
       default:
-         assert(false);
+         resip_assert(false);
       }
       break;
    case CHECK_STATE_WAITING:
@@ -82,7 +82,7 @@ bool SdpCandidatePair::setCheckState(const SdpCandidatePairCheckState checkState
          stateChangeSuccess = true;
          break;
       default:
-         assert(false);
+         resip_assert(false);
       }
       break;
    case CHECK_STATE_INPROGRESS:
@@ -94,13 +94,13 @@ bool SdpCandidatePair::setCheckState(const SdpCandidatePairCheckState checkState
          stateChangeSuccess = true;
          break;
       default:
-         assert(false);
+         resip_assert(false);
       }
       break;
    case CHECK_STATE_SUCCEEDED:
    case CHECK_STATE_FAILED:
    default:
-      assert(false);
+      resip_assert(false);
       break;
    }
    return stateChangeSuccess;

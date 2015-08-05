@@ -105,6 +105,7 @@ endif
 
 rutilincludedir = $(includedir)/rutil
 nobase_rutilinclude_HEADERS = compat.hxx \
+	ResipAssert.h \
 	FileSystem.hxx \
 	HashMap.hxx \
 	wince/WceCompat.hxx \

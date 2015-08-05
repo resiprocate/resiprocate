@@ -158,7 +158,7 @@ Flow::Flow(asio::io_service& ioService,
       break;
    default:
       // Bad Transport type!
-      assert(false);
+      resip_assert(false);
    }
 
    if(mTurnSocket.get() && 
@@ -247,7 +247,7 @@ Flow::getSocketDescriptor()
 void
 Flow::send(char* buffer, unsigned int size)
 {
-   assert(mTurnSocket.get());
+   resip_assert(mTurnSocket.get());
    if(isReady())
    {
       if(processSendData(buffer, size, mTurnSocket->getConnectedAddress(), mTurnSocket->getConnectedPort()))
@@ -264,7 +264,7 @@ Flow::send(char* buffer, unsigned int size)
 void
 Flow::sendTo(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int size)
 {
-   assert(mTurnSocket.get());
+   resip_assert(mTurnSocket.get());
    if(isReady())
    {
       if(processSendData(buffer, size, address, port))
@@ -282,7 +282,7 @@ Flow::sendTo(const asio::ip::address& address, unsigned short port, char* buffer
 void
 Flow::rawSendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
-   assert(mTurnSocket.get());
+   resip_assert(mTurnSocket.get());
    mTurnSocket->sendTo(address, port, buffer, size);
 }
 
@@ -546,7 +546,7 @@ Flow::getLocalTuple()
 StunTuple
 Flow::getSessionTuple()
 {
-   assert(mFlowState == Ready);
+   resip_assert(mFlowState == Ready);
    Lock lock(mMutex);
 
    if(mMediaStream.mNatTraversalMode == MediaStream::TurnAllocation)
@@ -563,7 +563,7 @@ Flow::getSessionTuple()
 StunTuple
 Flow::getRelayTuple() 
 { 
-   assert(mFlowState == Ready);
+   resip_assert(mFlowState == Ready);
    Lock lock(mMutex);
    return mRelayTuple; 
 }  
@@ -571,7 +571,7 @@ Flow::getRelayTuple()
 StunTuple
 Flow::getReflexiveTuple() 
 { 
-   assert(mFlowState == Ready);
+   resip_assert(mFlowState == Ready);
    Lock lock(mMutex);
    return mReflexiveTuple; 
 } 
@@ -579,7 +579,7 @@ Flow::getReflexiveTuple()
 UInt64 
 Flow::getReservationToken()
 {
-   assert(mFlowState == Ready);
+   resip_assert(mFlowState == Ready);
    Lock lock(mMutex);
    return mReservationToken; 
 }
@@ -814,7 +814,7 @@ Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
    // Make sure we keep receiving if we get an ICMP error on a UDP socket
    if(e.value() == asio::error::connection_reset && mLocalBinding.getTransportType() == StunTuple::UDP)
    {
-      assert(mTurnSocket.get());
+      resip_assert(mTurnSocket.get());
       mTurnSocket->turnReceive();
    }
 }
@@ -853,7 +853,7 @@ Flow::flowStateToString(FlowState state)
    case Ready:
       return "Ready";
    default:
-      assert(false);
+      resip_assert(false);
       return "Unknown";
    }
 }

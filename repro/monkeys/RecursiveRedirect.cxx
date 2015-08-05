@@ -56,7 +56,7 @@ RecursiveRedirect::process(RequestContext& context)
 #endif
          context.getResponseContext().addTargetBatch(batch);
          //ResponseContext should be consuming the vector
-         assert(batch.empty());
+         resip_assert(batch.empty());
       }
       return Processor::SkipAllChains;
    }

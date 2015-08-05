@@ -119,7 +119,7 @@ DnsInterface::getSupportedNaptrType(TransportType type)
       pNaptrType = &WssNAPTRType;
       break;
    default:
-      assert(0);
+      resip_assert(0);
       break;
    }
    return pNaptrType;

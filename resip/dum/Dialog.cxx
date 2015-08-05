@@ -15,6 +15,7 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "rutil/ResipAssert.h"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/TransportType.hxx"
@@ -45,11 +46,11 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mDestroying(false),
      mReUseDialogSet(false)
 {
-   assert(msg.isExternal());
+   resip_assert(msg.isExternal());
 
-   assert(msg.header(h_CSeq).method() != MESSAGE);
-   assert(msg.header(h_CSeq).method() != REGISTER);
-   assert(msg.header(h_CSeq).method() != PUBLISH);
+   resip_assert(msg.header(h_CSeq).method() != MESSAGE);
+   resip_assert(msg.header(h_CSeq).method() != REGISTER);
+   resip_assert(msg.header(h_CSeq).method() != PUBLISH);
 
    mNetworkAssociation.setDum(&dum);
 
@@ -337,9 +338,9 @@ Dialog::getRouteSet() const
 void
 Dialog::cancel()
 {
-   assert(mType == Invitation);
+   resip_assert(mType == Invitation);
    ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
-   assert (uac);
+   resip_assert (uac);
    uac->cancel();
 }
 
@@ -564,7 +565,7 @@ Dialog::dispatch(const SipMessage& msg)
                      (request.exists(h_Requires) &&
                      request.header(h_Requires).find(Token("norefersub"))))
                {
-                  assert(mInviteSession);
+                  resip_assert(mInviteSession);
                   mInviteSession->referNoSub(msg);
                }
                else
@@ -634,7 +635,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
             break;
         default:
-           assert(0);
+           resip_assert(0);
            return;
       }
    }
@@ -654,7 +655,7 @@ Dialog::dispatch(const SipMessage& msg)
             {
                InfoLog( << "about to re-send request with digest credentials" << r->second->brief());
 
-               assert (r->second->isRequest());
+               resip_assert (r->second->isRequest());
 
                mLocalCSeq++;
                send(r->second);
@@ -807,7 +808,7 @@ Dialog::dispatch(const SipMessage& msg)
          }
          break;
          default:
-            assert(0);
+            resip_assert(0);
             return;
       }
    }
@@ -968,7 +969,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq)
    }
    else
    {
-      assert(request.exists(h_Vias));
+      resip_assert(request.exists(h_Vias));
    }
 
    //don't increment CSeq for ACK or CANCEL
@@ -1010,12 +1011,12 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq)
 void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 {
-   assert( code >= 100 );
+   resip_assert( code >= 100 );
    response.remove(h_Contacts);
    if (code < 300 && code > 100)
    {
-      assert(request.isRequest());
-      assert(request.header(h_RequestLine).getMethod() == INVITE ||
+      resip_assert(request.isRequest());
+      resip_assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
              request.header(h_RequestLine).getMethod() == BYE ||
              request.header(h_RequestLine).getMethod() == CANCEL ||
@@ -1055,7 +1056,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 void 
 Dialog::setRequestNextCSeq(SipMessage& request)
 {
-   assert(request.isRequest() && request.method() != ACK && request.method() != CANCEL);
+   resip_assert(request.isRequest() && request.method() != ACK && request.method() != CANCEL);
    request.header(h_CSeq).sequence() = ++mLocalCSeq;
 }
 
@@ -1065,7 +1066,7 @@ Dialog::makeClientInviteSession(const SipMessage& response)
    InviteSessionCreator* creator = dynamic_cast<InviteSessionCreator*>(mDialogSet.getCreator());
    if (!creator)
    {
-      assert(0); // !jf! this maybe can assert by evil UAS
+      resip_assert(0); // !jf! this maybe can assert by evil UAS
       return 0;
    }
    //return mDum.createAppClientInviteSession(*this, *creator);

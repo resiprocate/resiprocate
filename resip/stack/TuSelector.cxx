@@ -53,7 +53,7 @@ TuSelector::process()
             remove(msg->getTransactionUser());
             break;
          default:
-            assert(0);
+            resip_assert(0);
             break;
       }
       delete msg;
@@ -208,7 +208,7 @@ TuSelector::markShuttingDown(TransactionUser* tu)
          return;
       }
    }
-   assert(0);
+   resip_assert(0);
 }
 
 void
@@ -224,7 +224,7 @@ TuSelector::remove(TransactionUser* tu)
          return;
       }
    }
-   assert(0);
+   resip_assert(0);
 }
 
 bool

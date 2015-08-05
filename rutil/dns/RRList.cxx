@@ -157,7 +157,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
    case T_CNAME:
       {
          DnsCnameRecord* record = dynamic_cast<DnsCnameRecord*>(item.record);
-         assert(record);         
+         resip_assert(record);         
          strm << "CNAME: " << record->name() << " -> " << record->cname();
          break;
       }
@@ -165,7 +165,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
    case T_NAPTR:
       {
          DnsNaptrRecord* record = dynamic_cast<DnsNaptrRecord*>(item.record);
-         assert(record);
+         resip_assert(record);
          strm << "NAPTR: " << record->name() << " -> repl=" << record->replacement() << " service=" << record->service() 
             << " order=" << record->order() << " pref=" << record->preference() << " flags=" << record->flags() 
             << " regexp=" << record->regexp().regexp();
@@ -175,7 +175,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
    case T_SRV:
       {
          DnsSrvRecord* record = dynamic_cast<DnsSrvRecord*>(item.record);
-         assert(record);
+         resip_assert(record);
          strm << "SRV: " << record->name() << " -> " << record->target() << ":" << record->port() 
             << " priority=" << record->priority() << " weight=" << record->weight();               
          break;
@@ -185,7 +185,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
    case T_AAAA:
       {
          DnsAAAARecord* record = dynamic_cast<DnsAAAARecord*>(item.record);
-         assert(record);
+         resip_assert(record);
          strm << "AAAA(Host): " << record->name() << " -> " << DnsUtil::inet_ntop(record->v6Address());
          break;
       }
@@ -194,7 +194,7 @@ RRList::encodeRecordItem(RRList::RecordItem& item, EncodeStream& strm)
    case T_A:
       {
          DnsHostRecord* record = dynamic_cast<DnsHostRecord*>(item.record);
-         assert(record);
+         resip_assert(record);
          strm << "A(Host): " << record->name() << " -> " << record->host();
          break;
       }

@@ -1,0 +1,10 @@
+# library bundled with the repro binary, not used by other packages
+repro binary: package-name-doesnt-match-sonames
+# code is Vovida (BSD-like) licensed, only packaging is GPL
+repro binary: possible-gpl-code-linked-with-openssl
+# this is needed because of bug #673112
+repro binary: hardening-no-fortify-functions
+# repro db files contain passwords, can't be world readable
+repro binary: non-standard-dir-perm
+# this lintian check is broken and gives a false positive
+repro binary: maintainer-script-should-not-use-adduser-system-without-home

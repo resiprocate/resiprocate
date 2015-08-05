@@ -116,7 +116,7 @@ void
 ClientPagerMessage::page(std::auto_ptr<Contents> contents,
                          DialogUsageManager::EncryptionLevel level)
 {
-    assert(contents.get() != 0);
+    resip_assert(contents.get() != 0);
     bool do_page = mMsgQueue.empty();
     Item item;
     item.contents = contents.release();
@@ -169,10 +169,10 @@ ClientPagerMessage::pageCommand(std::auto_ptr<Contents> contents,
 void
 ClientPagerMessage::dispatch(const SipMessage& msg)
 {
-   assert(msg.isResponse());
+   resip_assert(msg.isResponse());
 
    ClientPagerMessageHandler* handler = mDum.mClientPagerMessageHandler;
-   assert(handler);
+   resip_assert(handler);
 
    int code = msg.header(h_StatusLine).statusCode();
 
@@ -270,7 +270,7 @@ ClientPagerMessage::msgQueued () const
 void
 ClientPagerMessage::pageFirstMsgQueued ()
 {
-   assert(mMsgQueue.empty() == false);
+   resip_assert(mMsgQueue.empty() == false);
    mRequest->header(h_CSeq).sequence()++;
    mRequest->setContents(mMsgQueue.front().contents);
    DumHelper::setOutgoingEncryptionLevel(*mRequest, mMsgQueue.front().encryptionLevel);

@@ -790,6 +790,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ResipAssert.h"
+				>
+			</File>
+			<File
 				RelativePath=".\resipfaststreams.hxx"
 				>
 			</File>

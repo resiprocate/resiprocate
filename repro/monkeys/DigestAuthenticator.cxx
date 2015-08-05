@@ -364,7 +364,7 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
 {
    Message *message = rc.getCurrentEvent();
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-   assert(sipMessage);
+   resip_assert(sipMessage);
 
    // Extract the user from the appropriate Proxy-Authorization header
    Auths &authorizationHeaders = sipMessage->header(h_ProxyAuthorizations); 

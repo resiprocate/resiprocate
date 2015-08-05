@@ -114,7 +114,7 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
 
    // get the certificate - should always exist since mode is set for SSL to verify the cert first
    X509* cert = SSL_get_peer_certificate(mSocket.impl()->ssl);
-   assert(cert);
+   resip_assert(cert);
 
    // Look at the SubjectAltName, and if found, set as peerName
    bool hostnamePresentInSubjectAltName = false;
@@ -169,19 +169,19 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
          {
             break;
          }
-         assert( i != -1 );
+         resip_assert( i != -1 );
          X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
-         assert( entry );
+         resip_assert( entry );
    
          ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
-         assert( s );
+         resip_assert( s );
    
          int t = M_ASN1_STRING_type(s);
          int l = M_ASN1_STRING_length(s);
          unsigned char* d = M_ASN1_STRING_data(s);
          resip::Data name(d,l);
          DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
-         assert( name.size() == (unsigned)l );
+         resip_assert( name.size() == (unsigned)l );
    
          InfoLog( << "Found common name in cert: " << name );      
          if(resip::isEqualNoCase(name, hostname.c_str()))

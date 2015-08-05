@@ -40,7 +40,7 @@ void CAddDlg::OnBnClickedOk()
 	OnOK();
 
 	CWinApp* app = AfxGetApp();
-	assert(app);
+	resip_assert(app);
 
 	CString uri = theApp.addBuddy(newBuddyName);
 

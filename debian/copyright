@@ -1,0 +1,265 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: reSIProcate
+Upstream-Contact: reSIProcate developers <resiprocate-devel@lists.resiprocate.org>
+Source: https://svn.resiprocate.org/viewsvn/resiprocate/main/
+
+Files: *
+Copyright: 2000, Vovida Networks, Inc.
+           2000, Massachusetts Institute of Technology
+           2000, Jacob Butcher
+           2002, The Internet Society
+           2003, Jason Fischl
+           2004, Pingtel Corp.
+           2005, Purplecomm, Inc.
+           2005, Scott Godin / SIP Spectrum Inc.
+           2006, Peter Gutmann
+           2006, SIPfoundry Inc.
+           2007, Marcus Mueller and Helge Hess
+           2007, Plantronics, Inc.
+           2007, Eric Rescorla and Derek MacDonald
+           2008, RTFM, Inc.
+           2007-2012, Daniel Pocock
+           2012, Ready Technology (UK) Limited
+License: Vovida
+Comment:
+ All work was originally licensed under the 4-clause Vovida license.
+ Upstream developers have been contributing new material to the
+ project using a 3-clause BSD license.  Therefore, the overall
+ project remains constrained by the 4th clause.  Each file has
+ comments inside indicating whether it was contributed under
+ the 4-clause or less restrictive 3-clause license.  When the
+ product is used as a whole, the more restrictive 4-clause
+ license is in effect.
+ .
+ This copyright file includes a copy of the Vovida license
+ and also a copy of the BSD licenses used for newer parts of
+ the code.
+ .
+ The project links against libradiusclient-ng2 which also has a
+ BSD-derived 4-clause license.  The 4th clause of the Vovida
+ and libradiusclient-ng2 licenses are compatible and cumulative
+ when used together.
+ .
+ The project links against OpenSSL which has a 5-clause license.
+ The OpenSSL license clauses are compatible and cumulative
+ when used together.
+
+Files: aclocal.m4 Makefile.in configure
+Copyright: 1992-2010, Free Software Foundation, Inc.
+License: autotools-artefacts
+Comment:
+ The artefacts created by the autotools build system contain
+ material copyright (C) Free Software Foundation, but with
+ unlimited use rather than GPL.
+
+Files: b2bua/* apps/sipdial/*
+Copyright: 2012, Daniel Pocock <daniel@pocock.com.au>
+License: BSD
+
+Files: apps/sipdial/MacOS/*
+Copyright: 2007, Marcus Mueller and Helge Hess
+License: BSD
+
+Files: rutil/dns/ares/*
+Copyright: 1998, Massachusetts Institute of Technology
+License: MIT
+
+Files: apps/clicktocall/* apps/ichat-gw/*
+Copyright: 2009, SIP Spectrum, Inc.
+License: BSD-SIPSpectrum
+
+Files: p2p/*
+Copyright: 2008, Various contributors to the Resiprocate project
+License: BSD
+
+Files: p2p/s2c/s2c/*
+Copyright: 2008, RTFM, Inc
+License: BSD
+
+Files: reflow/* resip/recon/*
+Copyright: 2007-2008, Plantronics, Inc.
+License: BSD-Plantronics and BSD-SIPSpectrum
+
+Files: reTurn/*
+Copyright: 2007-2008, Plantronics, Inc.
+           2011-2012, Daniel Pocock
+License: BSD-Plantronics and BSD
+
+Files: tfm/*
+Copyright: 2005, PurpleComm, Inc.
+           2000-2005 Vovida Networks, Inc
+License: BSD-PurpleComm
+
+Files: debian/*
+Copyright: 2012, Daniel Pocock <daniel@pocock.com.au> and
+           2009, Gregor Jasny <gjasny@googlemail.com>
+License: GPL-3+
+ On Debian systems, the full text of the GNU General Public
+ License version 3 can be found in the file
+ `/usr/share/common-licenses/GPL-3'.
+
+License: Vovida
+ The Vovida Software License, Version 1.0
+ .
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+ .
+ 3. The names "VOCAL", "Vovida Open Communication Application Library",
+    and "Vovida Open Communication Application Library (VOCAL)" must
+    not be used to endorse or promote products derived from this
+    software without prior written permission. For written
+    permission, please contact vocal@vovida.org.
+ .
+ 4. Products derived from this software may not be called "VOCAL", nor
+    may "VOCAL" appear in their name, without prior written
+    permission of Vovida Networks, Inc.
+ .
+ THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ DAMAGE.
+
+License: BSD
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+ .
+ 3. Neither the name of the author(s) nor the names of any contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR(S) OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.
+
+License: MIT
+ Permission to use, copy, modify, and distribute this
+ software and its documentation for any purpose and without
+ fee is hereby granted, provided that the above copyright
+ notice appear in all copies and that both that copyright
+ notice and this permission notice appear in supporting
+ documentation, and that the name of M.I.T. not be used in
+ advertising or publicity pertaining to distribution of the
+ software without specific, written prior permission.
+ M.I.T. makes no representations about the suitability of
+ this software for any purpose.  It is provided "as is"
+ without express or implied warranty.
+
+License: BSD-PurpleComm
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+ .
+ * Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+ * Neither the name of PurpleComm, Inc. nor the names of its contributors may
+   be used to endorse or promote products derived from this software without
+   specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: BSD-SIPSpectrum
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are
+ met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ .
+ 3. Neither the name of SIP Spectrum nor the names of its contributors
+    may be used to endorse or promote products derived from this
+    software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: BSD-Plantronics
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are
+ met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ .
+ 3. Neither the name of Plantronics nor the names of its contributors
+    may be used to endorse or promote products derived from this
+    software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: autotools-artefacts
+ This configure script is free software; the Free Software Foundation
+ gives unlimited permission to copy, distribute and modify it.
+

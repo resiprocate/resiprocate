@@ -7,7 +7,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 #include "FlowManagerSubsystem.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
@@ -34,9 +34,9 @@ FakeSelectSocketDescriptor::FakeSelectSocketDescriptor()
    memset(&socketAddr, 0, sizeof(socketAddr));   
    int len = sizeof(socketAddr);
    int error = getsockname(mSocket, (sockaddr *)&socketAddr, &len);
-   assert(error == 0);
+   resip_assert(error == 0);
    error= connect(mSocket, &socketAddr, sizeof(socketAddr)); 
-   assert(error == 0);
+   resip_assert(error == 0);
 #else
    pipe(mPipe);
 #endif
@@ -68,10 +68,10 @@ FakeSelectSocketDescriptor::send()
    static char fakeData[] = "*";
 #ifdef WIN32
    int count = ::send(mSocket, fakeData, 1, 0);
-   assert(count == 1);
+   resip_assert(count == 1);
 #else
    size_t res = ::write(mPipe[1], fakeData, 1);
-   assert(res == 1);   
+   resip_assert(res == 1);   
 #endif
 }
 

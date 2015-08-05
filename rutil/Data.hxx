@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "rutil/compat.hxx"
 #include "rutil/DataStream.hxx"
@@ -463,7 +463,7 @@ class Data
       */
       inline Data& operator+=(const char* str)
       {
-         assert(str);
+         resip_assert(str);
          return append(str, (size_type)strlen(str));
       }
 
@@ -491,7 +491,7 @@ class Data
       */
       inline char& operator[](size_type p)
       {
-         assert(p < mSize);
+         resip_assert(p < mSize);
          own();
          return mBuf[p];
       }
@@ -501,7 +501,7 @@ class Data
       */
       inline char operator[](size_type p) const
       {
-         assert(p < mSize);
+         resip_assert(p < mSize);
          return mBuf[p];
       }
 

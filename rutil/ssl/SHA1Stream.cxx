@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
@@ -59,7 +59,7 @@ SHA1Buffer::overflow(int c)
 Data 
 SHA1Buffer::getHex()
 {
-   assert(mBlown == false);
+   resip_assert(mBlown == false);
    SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
    mBlown = true;
    Data digest(Data::Share, (const char*)&mBuf[0], mBuf.size());
@@ -69,9 +69,9 @@ SHA1Buffer::getHex()
 Data
 SHA1Buffer::getBin(unsigned int bits)
 {
-   assert(mBlown == false);
-   assert (bits % 8 == 0);
-   assert (bits / 8 <= mBuf.size());
+   resip_assert(mBlown == false);
+   resip_assert (bits % 8 == 0);
+   resip_assert (bits / 8 <= mBuf.size());
    SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
    mBlown = true;
    return Data(&mBuf[20-bits/8], bits / 8);

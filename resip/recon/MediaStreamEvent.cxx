@@ -27,7 +27,7 @@ MediaStreamReadyEvent::executeCommand()
 resip::Message* 
 MediaStreamReadyEvent::clone() const
 {
-   assert(0);
+   resip_assert(0);
    return 0;
 }
 
@@ -61,7 +61,7 @@ MediaStreamErrorEvent::executeCommand()
 resip::Message* 
 MediaStreamErrorEvent::clone() const
 {
-   assert(0);
+   resip_assert(0);
    return 0;
 }
 

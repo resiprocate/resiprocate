@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <fcntl.h>
 
 #ifdef HAVE_CONFIG_H
@@ -139,8 +139,8 @@ MySqlDb::connectToDatabase() const
    disconnectFromDatabase();
 
    // Now try to connect
-   assert(mConn == 0);
-   assert(isConnected() == false);
+   resip_assert(mConn == 0);
+   resip_assert(isConnected() == false);
 
    mConn = mysql_init(0);
    if(mConn == 0)
@@ -190,8 +190,8 @@ MySqlDb::query(const Data& queryCommand, MYSQL_RES** result) const
    }
    if(rc == 0)
    {
-      assert(mConn!=0);
-      assert(isConnected());
+      resip_assert(mConn!=0);
+      resip_assert(isConnected());
       rc = mysql_query(mConn,queryCommand.c_str());
       if(rc != 0)
       {
