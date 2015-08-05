@@ -338,7 +338,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         ErrLog(<<"Response came in, but no AppDialogSet! Dropping this is very"
+         ErrLog(<<"Response came in, but no AppDialogSet! Dropping this is very "
                   "likely to cause leaks, but continuing to process it is "
                   "likely to cause a core. Taking the lesser of two evils...");
       }
@@ -960,38 +960,63 @@ DialogSet::end()
          break;         
       case ReceivedProvisional:
       {
-         assert (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE);
-         mState = Terminating;
-         // !jf! this should be made exception safe
-         SharedPtr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
-         mDum.send(cancel);
+         if (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE)
+         {
+            mState = Terminating;
+            // !jf! this should be made exception safe
+            SharedPtr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
+            mDum.send(cancel);
 
-         if (mDum.mDialogEventStateManager)
-         {
-            mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
-         }
-
-         if (mDialogs.empty())
-         {
-            mState = Cancelling;
-         }
-         else
-         {
-            //need to lag and do last element ouside of look as this DialogSet will be
-            //deleted if all dialogs are destroyed
-            for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+            if (mDum.mDialogEventStateManager)
             {
-               try
+               mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
+            }
+
+            if (mDialogs.empty())
+            {
+               mState = Cancelling;
+            }
+            else
+            {
+               //need to lag and do last element ouside of look as this DialogSet will be
+               //deleted if all dialogs are destroyed
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
                {
-                  it->second->cancel();
-               }
-               catch(UsageUseException& e)
-               {
-                  InfoLog (<< "Caught: " << e);
+                  try
+                  {
+                     it->second->cancel();
+                  }
+                  catch (UsageUseException& e)
+                  {
+                     InfoLog(<< "Caught: " << e);
+                  }
                }
             }
          }
-      }            
+         else
+         {
+            // Non-Invite Dialogset
+            if (mDialogs.empty())
+            {
+               mState = WaitingToEnd;
+            }
+            else
+            {
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+               {
+                  try
+                  {
+                     it->second->end();
+                  }
+                  catch (UsageUseException& e)
+                  {
+                     InfoLog(<< "Caught: " << e);
+                  }
+               }
+               mState = Terminating;
+            }
+         }
+      }
       break;         
       case Established:
       {
