@@ -2221,7 +2221,9 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
    assert(failure);
    assert(mState!=Bogus);
 
-   mTcpConnectTimerStarted = false;  // reset, in case we try another TCP connection
+   // We come here if the tcp connect timer expires, so we reset the flag incase we are
+   // going to try another DNS entry that is also TCP.
+   mTcpConnectTimerStarted = false;
 
    // Store failure reasons
    if (failure->getFailureReason() > mFailureReason)
@@ -2368,8 +2370,7 @@ TransactionState::processTcpConnectState(TransactionMessage* msg)
    TcpConnectState* tcpConnectState = dynamic_cast<TcpConnectState*>(msg);
    assert(tcpConnectState);
 
-   TcpConnectState* state = dynamic_cast<TcpConnectState*>(msg);
-   if (state->getState() == TcpConnectState::ConnectStarted && 
+   if (tcpConnectState->getState() == TcpConnectState::ConnectStarted &&
        !mTcpConnectTimerStarted && Timer::TcpConnectTimeout != 0 &&
        (mState == Trying || mState == Calling))
    {
@@ -2377,7 +2378,7 @@ TransactionState::processTcpConnectState(TransactionMessage* msg)
       mController.mTimers.add(Timer::TcpConnectTimer, mId, Timer::TcpConnectTimeout);
       mTcpConnectTimerStarted = true;
    }
-   else if (state->getState() == TcpConnectState::Connected &&
+   else if (tcpConnectState->getState() == TcpConnectState::Connected &&
        (mState == Trying || mState == Calling))
    {
       mTcpConnectTimerStarted = false;
