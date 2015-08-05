@@ -480,6 +480,29 @@ private:
    resip::Data mDocumentKey;
 };
 
+// Used to generate a timer expirey in DumThread context
+class repro::PresenceServerCheckDocExpiredCommand : public DumCommandAdapter
+{
+public:
+   PresenceServerCheckDocExpiredCommand(PresenceSubscriptionHandler& handler, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated)
+      : mHandler(handler), mDocumentKey(documentKey), mETag(eTag), mLastUpdated(lastUpdated) {}
+
+   virtual void executeCommand()
+   {
+      mHandler.checkExpired(mDocumentKey, mETag, mLastUpdated);
+   }
+
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   {
+      return strm << "PresenceServerCheckDocExpiredCommand: aor=" << mDocumentKey;
+   }
+private:
+   PresenceSubscriptionHandler& mHandler;
+   resip::Data mDocumentKey;
+   resip::Data mETag;
+   UInt64 mLastUpdated;
+};
+
 void
 PresenceSubscriptionHandler::notifySubscriptions(const Data& documentKey)
 {
@@ -487,19 +510,39 @@ PresenceSubscriptionHandler::notifySubscriptions(const Data& documentKey)
    mDum.applyToServerSubscriptions<PresenceServerSubscriptionFunctor>(documentKey, Symbols::Presence, functor);
 }
 
-void 
-PresenceSubscriptionHandler::onDocumentModified(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+void PresenceSubscriptionHandler::checkExpired(const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated)
 {
-   if (eventType == Symbols::Presence && contents != 0)  // If contents is 0, we have a pub refresh and we don't need to send notifies out
+    //DebugLog(<< "PresenceSubscriptionHandler::checkExpired: docKey=" << documentKey << ", tag=" << eTag << ", lastUpdated=" << lastUpdated);
+    mPublicationDb->checkExpired(Symbols::Presence, documentKey, eTag, lastUpdated);
+}
+
+void 
+PresenceSubscriptionHandler::onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+{
+   if (eventType == Symbols::Presence)
    {
-      DebugLog(<< "PresenceSubscriptionHandler::onDocumentModified: aor=" << documentKey << ", eTag=" << eTag);
-       // Signal DUM thread to send notifies for this change
-      mDum.post(new PresenceServerDocStateChangeCommand(*this, documentKey));
+      if (contents != 0)  // If contents is 0, we have a pub refresh and we don't need to send notifies out)
+      {
+         DebugLog(<< "PresenceSubscriptionHandler::onDocumentModified: aor=" << documentKey << ", eTag=" << eTag);
+         // Signal DUM thread to send notifies for this change
+         mDum.post(new PresenceServerDocStateChangeCommand(*this, documentKey));
+      }
+      // If this is a sync'd publication then set a timer to see when it times out - this is needed if sync is broken when expirey happens
+      // when timer expires then see if document has expired and if so then generate mHandler.notifySubscriptions(mDocumentKey);
+      if (sync)
+      {
+         UInt64 expiresSeconds = expirationTime - Timer::getTimeSecs();
+         if (expiresSeconds > 0)
+         {
+            //DebugLog(<< "PresenceSubscriptionHandler::onDocumentModified: starting check expired timer for sync'd publication, docKey=" << documentKey << ", tag=" << eTag << ", lastUpdated=" << lastUpdated << ", timerExpirey=" << expiresSeconds);
+            mDum.getSipStack().post(std::auto_ptr<resip::ApplicationMessage>(new PresenceServerCheckDocExpiredCommand(*this, documentKey, eTag, lastUpdated)), (unsigned int)expiresSeconds, &mDum);
+         }
+      }
    }
 }
 
 void
-PresenceSubscriptionHandler::onDocumentRemoved(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+PresenceSubscriptionHandler::onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
 {
    if (eventType == Symbols::Presence)
    {

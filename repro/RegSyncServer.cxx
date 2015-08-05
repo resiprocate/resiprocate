@@ -321,14 +321,16 @@ RegSyncServer::onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor
 }
 
 void 
-RegSyncServer::onDocumentModified(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+RegSyncServer::onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
+   assert(!sync);  // We register so that we don't get callbacks for sync'd documents
    sendDocumentModifiedEvent(0, eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
 }
 
 void 
-RegSyncServer::onDocumentRemoved(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+RegSyncServer::onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
 {
+   assert(!sync);  // We register so that we don't get callbacks for sync'd documents
    sendDocumentRemovedEvent(0, eventType, documentKey, eTag, lastUpdated);
 }
 

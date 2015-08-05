@@ -139,8 +139,8 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
             // We only need to linger a document past the latest expiration time we have ever seen, since both sides will treat the
             // publication as gone after this time anyway
             eTagIt->second.mLingerTime = lingerTime;
-            // Only pass sync as true if this update didn't just come from an inbound sync operation
-            invokeOnDocumentModified(!document.mSyncPublication /* sync? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, document.mContents.get(), document.mSecurityAttributes.get());
+            // Only pass sync as true if this update just came from an inbound sync operation
+            invokeOnDocumentModified(document.mSyncPublication /* sync publication? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, document.mContents.get(), document.mSecurityAttributes.get());
          }
       }
    }
@@ -153,8 +153,8 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
    {
       // Add new
       mPublicationDb[mapKey][document.mETag] = document;
-      // Only pass sync as true if this update didn't just come from an inbound sync operation
-      invokeOnDocumentModified(!document.mSyncPublication /* sync? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, document.mContents.get(), document.mSecurityAttributes.get());
+      // Only pass sync as true if this update just came from an inbound sync operation
+      invokeOnDocumentModified(document.mSyncPublication /* sync publication? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, document.mContents.get(), document.mSecurityAttributes.get());
    }
 }
 
@@ -280,6 +280,52 @@ InMemorySyncPubDb::documentExists(const Data& eventType, const Data& documentKey
    return false;
 }
 
+// If lastUpdated != 0 then we make sure that passed in lastUpdated matches the document before returning true
+// This method is used in timer expirey and the lastUpdated checks helps us to make sure the timer that just
+// expired hasn't been made obsolete due to a new update.
+bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+{
+   Lock g(mDatabaseMutex);
+
+   // First find entity in map
+   KeyToETagMap::iterator keyIt = mPublicationDb.find(eventType + documentKey);
+   if (keyIt != mPublicationDb.end())
+   {
+      // Next find eTag in sub-map
+      ETagToDocumentMap::iterator eTagIt = keyIt->second.find(eTag);
+      if (eTagIt != keyIt->second.end())
+      {
+         UInt64 now = Timer::getTimeSecs();
+         if (eTagIt->second.mExpirationTime >= now &&
+            (lastUpdated == 0 || lastUpdated == eTagIt->second.mLastUpdated))
+         {
+            DebugLog(<< "InMemorySyncPubDb::checkExpired:  found expired publication, docKey=" << documentKey << ", tag=" << eTag);
+            bool syncPublication = eTagIt->second.mSyncPublication;
+            // If sync is enabled - then linger the record in memory until it expires
+            if (mSyncEnabled)
+            {
+               // Tag document as expired, but in a linger state
+               eTagIt->second.mExpirationTime = 0;
+               eTagIt->second.mLastUpdated = now;
+            }
+            else
+            {
+               // ETag was found - remove it
+               keyIt->second.erase(eTagIt);
+               // If no more Etags for key, then remove key entry
+               if (keyIt->second.size() == 0)
+               {
+                  mPublicationDb.erase(keyIt);
+               }
+            }
+            invokeOnDocumentRemoved(syncPublication /* sync? */, eventType, documentKey, eTag, now);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
 void 
 InMemorySyncPubDb::lockDocuments()
 {
@@ -304,11 +350,11 @@ InMemorySyncPubDb::invokeOnDocumentModified(bool sync, const Data& eventType, co
    Lock lock(mHandlerMutex);
    for (HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)
    {
-      // If handler mode is all, then send notification, otherwise handler mode is sync and we check the passed
-      // in sync flag
-      if (sync || (*it)->getMode() == InMemorySyncPubDbHandler::AllChanges)
+      // If handler mode is all, then send notification, otherwise handler mode is sync and we ensure passed
+      // in syncPublication flag is false - so we don't sync back to originator
+      if (!sync || (*it)->getMode() == InMemorySyncPubDbHandler::AllChanges)
       {
-         (*it)->onDocumentModified(eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
+         (*it)->onDocumentModified(sync, eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
       }
    }
 }
@@ -319,11 +365,11 @@ InMemorySyncPubDb::invokeOnDocumentRemoved(bool sync, const Data& eventType, con
    Lock lock(mHandlerMutex);
    for (HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)
    {
-      // If handler mode is all, then send notification, otherwise handler mode is sync and we check the passed
-      // in sync flag
-      if (sync || (*it)->getMode() == InMemorySyncPubDbHandler::AllChanges)
+      // If handler mode is all, then send notification, otherwise handler mode is sync and we ensure passed
+      // in syncPublication flag is false - so we don't sync back to originator
+      if (!sync || (*it)->getMode() == InMemorySyncPubDbHandler::AllChanges)
       {
-         (*it)->onDocumentRemoved(eventType, documentKey, eTag, lastUpdated);
+         (*it)->onDocumentRemoved(sync, eventType, documentKey, eTag, lastUpdated);
       }
    }
 }
