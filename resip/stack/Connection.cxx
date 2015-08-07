@@ -485,13 +485,17 @@ Connection::checkConnectionTimedout()
    int errNumSize = sizeof(errNum);
    if(getsockopt(mWho.mFlowKey, SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize) == 0)
    {
-       if(errNum == ETIMEDOUT)
-       {
-           InfoLog(<< "Exception on socket " << mWho.mFlowKey << " code: " << errNum << "; closing connection");
-           setFailureReason(TransportFailure::ConnectionException, errNum);
-           delete this;
-           return true;
-       }
+      if (errNum == ETIMEDOUT || errNum == EHOSTUNREACH)
+      {
+         InfoLog(<< "Exception on socket " << mWho.mFlowKey << " code: " << errNum << "; closing connection");
+         setFailureReason(TransportFailure::ConnectionException, errNum);
+         delete this;
+         return true;
+      }
+      else if (errNum != 0)
+      {
+         WarningLog(<< "checkConnectionTimedout " << mWho.mFlowKey << " code: " << errNum << "; ignoring - should we error out?");
+      }
    }
    return false;
 }
