@@ -14,6 +14,9 @@
 #ifdef USE_MYSQL
 #include "repro/MySqlDb.hxx"
 #endif
+#ifdef USE_POSTGRESQL
+#include "repro/SqlDb.hxx"
+#endif
 #include "resip/stack/SipStack.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -50,6 +53,7 @@ RequestFilter::RequestFilter(ProxyConfig& config,
    mDefaultNoMatchBehavior(config.getConfigData("RequestFilterDefaultNoMatchBehavior", "")),  // Default: empty string = Continue Processing
    mDefaultDBErrorBehavior(config.getConfigData("RequestFilterDefaultDBErrorBehavior", "500, Server Internal DB Error"))
 {
+#if defined(USE_MYSQL) || defined(USE_POSTGRESQL) 
    const char* databaseParams[] = { "RequestFilterDatabase", "RuntimeDatabase", "DefaultDatabase", 0 };
    for(const char** databaseParam = databaseParams; *databaseParam != 0; databaseParam++)
    {
@@ -60,6 +64,7 @@ RequestFilter::RequestFilter(ProxyConfig& config,
          // FIXME - should we check it is an SQL database and not BerkeleyDB?
       }
    }
+#endif
 #ifdef USE_MYSQL
    if(!mSqlDb)     // Try legacy configuration parameter names
    {
