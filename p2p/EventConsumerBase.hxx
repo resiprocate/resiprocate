@@ -1,7 +1,7 @@
 #ifndef P2P_EventConsumerBase_hxx
 #define P2P_EventConsumerBase_hxx
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "p2p/Postable.hxx"
 

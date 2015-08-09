@@ -49,7 +49,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdown(false)
 {
-   assert(mConversationManager);
+   resip_assert(mConversationManager);
    mConversationManager->setUserAgent(this);
 
    addTransports();
@@ -276,7 +276,7 @@ UserAgent::getDefaultOutgoingConversationProfile()
    }
    else
    {
-      assert(false);
+      resip_assert(false);
       ErrLog( << "getDefaultOutgoingConversationProfile: something is wrong - no profiles to return");
       return SharedPtr<ConversationProfile>((ConversationProfile*)0);
    }
@@ -285,7 +285,7 @@ UserAgent::getDefaultOutgoingConversationProfile()
 SharedPtr<ConversationProfile> 
 UserAgent::getIncomingConversationProfile(const SipMessage& msg)
 {
-   assert(msg.isRequest());
+   resip_assert(msg.isRequest());
 
    // Examine the sip message, and select the most appropriate conversation profile
 

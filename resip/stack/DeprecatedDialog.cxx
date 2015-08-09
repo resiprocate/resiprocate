@@ -39,18 +39,18 @@ DeprecatedDialog::DeprecatedDialog(const NameAddr& localContact)
 SipMessage*
 DeprecatedDialog::makeResponse(const SipMessage& request, int code)
 {
-   assert( code >= 100 );
+   resip_assert( code >= 100 );
    
    if ( (!mCreated) && (code < 300) && (code > 100) )
    {
-      assert (code > 100);
-      assert (code < 300);      
-      assert(request.isRequest());
-      assert(request.header(h_RequestLine).getMethod() == INVITE ||
+      resip_assert (code > 100);
+      resip_assert (code < 300);      
+      resip_assert(request.isRequest());
+      resip_assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
              request.header(h_RequestLine).getMethod() == PUBLISH);
       
-      assert (request.header(h_Contacts).size() == 1);
+      resip_assert (request.header(h_Contacts).size() == 1);
 
       SipMessage* response = Helper::makeResponse(request, code, mContact);
       if (request.exists(h_RecordRoutes))
@@ -72,7 +72,7 @@ DeprecatedDialog::makeResponse(const SipMessage& request, int code)
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
       response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
-      assert (response->header(h_To).exists(p_tag));
+      resip_assert (response->header(h_To).exists(p_tag));
       mLocalTag = response->header(h_To).param(p_tag); // from response 
       if (request.header(h_From).exists(p_tag))  // 2543 compat
       {
@@ -225,7 +225,7 @@ DeprecatedDialog::targetRefreshResponse(const SipMessage& response)
 int 
 DeprecatedDialog::targetRefreshRequest(const SipMessage& request)
 {
-   assert (request.header(h_RequestLine).getMethod() != CANCEL);
+   resip_assert (request.header(h_RequestLine).getMethod() != CANCEL);
    if (request.header(h_RequestLine).getMethod() != ACK)
    {
       unsigned long cseq = request.header(h_CSeq).sequence();
@@ -263,7 +263,7 @@ DeprecatedDialog::targetRefreshRequest(const SipMessage& request)
 void
 DeprecatedDialog::updateRequest(SipMessage& request)
 {
-   assert (request.isRequest());
+   resip_assert (request.isRequest());
    if (mCreated)
    {
       request.header(h_RequestLine).uri() = mRemoteTarget.uri();
@@ -303,12 +303,12 @@ DeprecatedDialog::updateRequest(SipMessage& request)
 void
 DeprecatedDialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
 {
-   assert(request.isRequest());
+   resip_assert(request.isRequest());
    if ( (!mCreated) && (code < 300) && (code > 100) )
    {
-      assert(request.header(h_RequestLine).getMethod() == INVITE ||
+      resip_assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE);
-      assert (request.header(h_Contacts).size() == 1);
+      resip_assert (request.header(h_Contacts).size() == 1);
 
       Helper::makeResponse(response, request, code, mContact);
       response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
@@ -331,7 +331,7 @@ DeprecatedDialog::makeResponse(const SipMessage& request, SipMessage& response, 
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
-      assert (response.const_header(h_To).exists(p_tag));
+      resip_assert (response.const_header(h_To).exists(p_tag));
       mLocalTag = response.header(h_To).param(p_tag); // from response 
       if (request.header(h_From).exists(p_tag))  // 2543 compat
       {
@@ -365,13 +365,13 @@ SipMessage*
 DeprecatedDialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
 {
    SipMessage* msg = Helper::makeRegister( registrar, aor, mContact );
-   assert( msg );
+   resip_assert( msg );
 
    mRequestUri = msg->const_header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->const_header(h_CSeq).sequence();
    mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
+   resip_assert(msg->const_header(h_From).exists(p_tag));
    mLocalTag = msg->const_header(h_From).param(p_tag);  
    mRemoteUri = msg->const_header(h_To);
    mLocalUri = msg->const_header(h_From);
@@ -387,13 +387,13 @@ SipMessage*
 DeprecatedDialog::makeInitialSubscribe(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeSubscribe( target, from, mContact );
-   assert( msg );
+   resip_assert( msg );
 
    mRequestUri = msg->const_header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->const_header(h_CSeq).sequence();
    mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
+   resip_assert(msg->const_header(h_From).exists(p_tag));
    mLocalTag = msg->const_header(h_From).param(p_tag);  
    mRemoteUri = msg->const_header(h_To);
    mLocalUri = msg->const_header(h_From);
@@ -406,13 +406,13 @@ SipMessage*
 DeprecatedDialog::makeInitialPublish(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makePublish( target, from, mContact );
-   assert( msg );
+   resip_assert( msg );
 
    mRequestUri = msg->const_header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->const_header(h_CSeq).sequence();
    mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
+   resip_assert(msg->const_header(h_From).exists(p_tag));
    mLocalTag = msg->const_header(h_From).param(p_tag);  
    mRemoteUri = msg->const_header(h_To);
    mLocalUri = msg->const_header(h_From);
@@ -425,13 +425,13 @@ SipMessage*
 DeprecatedDialog::makeInitialMessage(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeMessage( target, from, mContact );
-   assert( msg );
+   resip_assert( msg );
 
    mRequestUri = msg->const_header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->const_header(h_CSeq).sequence();
    mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
+   resip_assert(msg->const_header(h_From).exists(p_tag));
    mLocalTag = msg->const_header(h_From).param(p_tag);  
    mRemoteUri = msg->const_header(h_To);
    mLocalUri = msg->const_header(h_From);
@@ -444,13 +444,13 @@ SipMessage*
 DeprecatedDialog::makeInitialInvite(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeInvite( target, from, mContact );
-   assert( msg );
+   resip_assert( msg );
 
    mRequestUri = msg->const_header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->const_header(h_CSeq).sequence();
    mCallId = msg->const_header(h_CallId);
-   assert(msg->const_header(h_From).exists(p_tag));
+   resip_assert(msg->const_header(h_From).exists(p_tag));
    mLocalTag = msg->const_header(h_From).param(p_tag);  
    mRemoteUri = msg->const_header(h_To);
    mLocalUri = msg->const_header(h_From);
@@ -543,8 +543,8 @@ DeprecatedDialog::makePublish()
 SipMessage*
 DeprecatedDialog::makeRequest(resip::MethodTypes method)
 {
-   assert(method != ACK);
-   assert(method != CANCEL);
+   resip_assert(method != ACK);
+   resip_assert(method != CANCEL);
    
    SipMessage* request = makeRequestInternal(method);
    incrementCSeq(*request);
@@ -584,8 +584,8 @@ DeprecatedDialog::makeAck()
 SipMessage*
 DeprecatedDialog::makeCancel(const SipMessage& request)
 {
-   assert (request.header(h_Vias).size() >= 1);
-   assert (request.header(h_RequestLine).getMethod() == INVITE);
+   resip_assert (request.header(h_Vias).size() >= 1);
+   resip_assert (request.header(h_RequestLine).getMethod() == INVITE);
    
    SipMessage* cancel = new SipMessage;
    

@@ -89,7 +89,7 @@ TurnAllocation::startRelay()
    else
    {
       ErrLog(<< "Only UDP relay's are currently implemented!");
-      assert(false);
+      resip_assert(false);
       stopRelay();  // Ensure allocation timer is stopped
       return false;
    }
@@ -217,7 +217,7 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
    }
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
-      assert(mUdpRelayServer);
+      resip_assert(mUdpRelayServer);
       mUdpRelayServer->doSend(peerAddress, data, isFramed ? 4 /* bufferStartPos is 4 so that framing is skipped */ : 0);
    }
    else
@@ -228,7 +228,7 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
          return;
       }
       // !SLG! TODO - implement TCP relays
-      assert(false);
+      resip_assert(false);
    }
 }
 

@@ -323,7 +323,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
                   break;
                }
             }
-            assert(potentialMedium);
+            resip_assert(potentialMedium);
 
             potentialMedium->protocol() = SdpMediaLine::SdpTransportProtocolTypeString[potentialTransportType];
 

@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
@@ -30,13 +30,13 @@ HttpConnection::HttpConnection( HttpBase& base, resip::Socket pSock ):
    mSock(pSock),
    mParsedRequest(false)
 {
-	assert( mSock > 0 );
+	resip_assert( mSock > 0 );
 }
 
 
 HttpConnection::~HttpConnection()
 {
-   assert( mSock > 0 );
+   resip_assert( mSock > 0 );
 #ifdef WIN32
    closesocket(mSock); mSock=0;
 #else
@@ -145,7 +145,7 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
 
       default:
       {
-         assert(0);  
+         resip_assert(0);  
 
          Data resp;
          { 

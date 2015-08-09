@@ -1,5 +1,5 @@
 #include <cstdio>
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "rutil/SysLogBuf.hxx"
 #include "rutil/Log.hxx"
 
@@ -84,7 +84,7 @@ SysLogBuf::sync()
    mLevel = Log::Debug;
    setp(buffer, buffer+Size);
 #else
-   assert(0);
+   resip_assert(0);
 #endif
    return 0;
 }

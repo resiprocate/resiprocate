@@ -47,7 +47,7 @@ RADIUSAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, U
    ReproRADIUSDigestAuthListener *radiusListener = 0;
    Message *message = rc.getCurrentEvent();
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-   assert(sipMessage);
+   resip_assert(sipMessage);
 
    try
    {
@@ -56,7 +56,7 @@ RADIUSAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, U
       const Data& realm = userInfo->realm();
       Data radiusUser = user;
       DebugLog(<< "radiusUser = " << radiusUser.c_str() << ", " << "user = " << user.c_str());
-      assert(sipMessage->isRequest());
+      resip_assert(sipMessage->isRequest());
       Data reqUri = auth.param(p_uri);
       Data reqMethod = resip::getMethodName(sipMessage->header(h_RequestLine).getMethod());
       RADIUSDigestAuthenticator *radius = NULL;

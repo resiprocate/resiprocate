@@ -32,6 +32,6 @@ ConnectAns::ConnectAns(Message *req,
                        const std::vector<Candidate> &candidates) :
 	ConnectBase(frag, password, application, role, candidates)
 {
-	assert(req);
+	resip_assert(req);
 	copyForwardingData(*req);
 }

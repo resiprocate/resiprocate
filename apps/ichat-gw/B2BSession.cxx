@@ -179,7 +179,7 @@ B2BSession::initiateIChatCallRequest(const std::string& to, const std::string& f
 void 
 B2BSession::startIChatCall(const Uri& destinationUri, const NameAddr& from, const SdpContents *sdp)
 {
-   assert(destinationUri.scheme() == "xmpp");
+   resip_assert(destinationUri.scheme() == "xmpp");
 
    mIChatEndpoint = true;
    mIChatDestination = destinationUri;
@@ -249,7 +249,7 @@ B2BSession::createNewPeer(const Uri& destinationUri, const NameAddr& from, const
 {
    const SdpContents *pSdp = sdp;
 
-   assert(!mPeer);
+   resip_assert(!mPeer);
 
    mPeer = new B2BSession(mServer);
 
@@ -360,8 +360,8 @@ B2BSession::notifyIChatCallFailed(unsigned int statusCode)
 void 
 B2BSession::continueIChatCall(const std::string& remoteIPPortListBlob)
 {
-   assert(!mIChatWaitingToProceed);
-   assert(mIChatWaitingToContinue);
+   resip_assert(!mIChatWaitingToProceed);
+   resip_assert(mIChatWaitingToContinue);
 
    mIChatWaitingToContinue = false;
 
@@ -607,7 +607,7 @@ B2BSession::buildLocalAnswer(SdpContents& answer)
          answer.session().origin().getVersion() = currentTime;  
 
          // Copy t= field from sdp (RFC3264)
-         assert(answer.session().getTimes().size() > 0);
+         resip_assert(answer.session().getTimes().size() > 0);
          if(offer.session().getTimes().size() >= 1)
          {
             answer.session().getTimes().clear();
@@ -726,7 +726,7 @@ bool
 B2BSession::provideLocalAnswer()
 {
    SdpContents answer;
-   assert(mInviteSessionHandle.isValid());
+   resip_assert(mInviteSessionHandle.isValid());
    bool answerOk = buildLocalAnswer(answer);
 
    if(answerOk)
@@ -1001,7 +1001,7 @@ B2BSession::onTerminated(InviteSessionHandle h, InviteSessionHandler::Terminated
       reasonData = "ended due to a timeout";
       break;
    default:
-      assert(false);
+      resip_assert(false);
       break;
    }
 
@@ -1169,7 +1169,7 @@ B2BSession::onOffer(InviteSessionHandle h, const SipMessage& msg, const SdpConte
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
    }
    else
@@ -1258,7 +1258,7 @@ B2BSession::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
    }
    else

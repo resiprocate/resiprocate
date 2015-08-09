@@ -23,8 +23,8 @@ public:
    InMemorySyncPubDbHandler(HandlerMode mode = SyncServer) : mMode(mode) {}
    virtual ~InMemorySyncPubDbHandler(){}
    HandlerMode getMode() { return mMode; }
-   virtual void onDocumentModified(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) = 0;
-   virtual void onDocumentRemoved(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated) = 0;
+   virtual void onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) = 0;
+   virtual void onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated) = 0;
    virtual void onInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) {}
 protected:
    HandlerMode mMode;
@@ -56,6 +56,7 @@ public:
    virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication = false);
    virtual bool getMergedETags(const Data& eventType, const Data& documentKey, ETagMerger& merger, Contents* destination);
    virtual bool documentExists(const Data& eventType, const Data& documentKey, const Data& eTag);
+   virtual bool checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated);
    virtual void lockDocuments();
    virtual KeyToETagMap& getDocuments();  // Ensure you lock before calling this and unlock when done
    virtual void unlockDocuments();

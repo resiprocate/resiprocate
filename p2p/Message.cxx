@@ -11,7 +11,7 @@
 #include "rutil/Log.hxx"
 
 #include <openssl/rand.h>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 using namespace p2p;
 using namespace s2c;
@@ -156,14 +156,14 @@ Message::setOverlayName(const resip::Data &overlayName)
 Message *
 Message::makeErrorResponse(Message::Error::Code code, const resip::Data& reason) const
 {
-	assert(0);
+	resip_assert(0);
 	return 0;
 }
 
 resip::Data 
 Message::getRequestMessageBody() const
 {
-	assert(isRequest());
+	resip_assert(isRequest());
 
 	return mRequestMessageBody;
 }
@@ -229,7 +229,7 @@ Message::parse(const resip::Data &message)
 			break;
 		default:
 			DebugLog(<< "Unhandled message");
-			assert(0); // unknown value
+			resip_assert(0); // unknown value
 	}
 
 	// let's decode the payload
@@ -254,11 +254,11 @@ Message::parse(const resip::Data &message)
 void 
 Message::copyForwardingData(const Message &header)
 {
-   assert(header.isRequest());
+   resip_assert(header.isRequest());
    mPDU.mHeader->mOverlay = header.mPDU.mHeader->mOverlay;		
    mPDU.mHeader->mTransactionId = header.mPDU.mHeader->mTransactionId;
    
-   assert(mPDU.mHeader->mDestinationList.empty());
+   resip_assert(mPDU.mHeader->mDestinationList.empty());
    std::vector<DestinationStruct*>::reverse_iterator i;
    for (i=header.mPDU.mHeader->mViaList.rbegin(); i!=header.mPDU.mHeader->mViaList.rend(); ++i)
    {
@@ -270,7 +270,7 @@ Message::copyForwardingData(const Message &header)
 void 
 Message::decrementTTL()
 {
-	assert(mPDU.mHeader->mTtl);
+	resip_assert(mPDU.mHeader->mTtl);
 	mPDU.mHeader->mTtl--;
 }
 
@@ -307,7 +307,7 @@ Message::getFlags() const
 ConnectAns *
 Message::makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates)
 {
-	assert(getType() == ConnectReqType);
+	resip_assert(getType() == ConnectReqType);
 
 	ConnectReq *req = static_cast<ConnectReq *>(this);
 	ConnectAns *response = new ConnectAns(req, frag, password, application, role, candidates);
@@ -319,7 +319,7 @@ Message::makeConnectResponse(const resip::Data &frag, const resip::Data &passwor
 JoinAns *
 Message::makeJoinResponse(const resip::Data &overlaySpecific)
 {
-	assert(getType() == JoinReqType);
+	resip_assert(getType() == JoinReqType);
 
 	JoinReq *req = static_cast<JoinReq *>(this);
 	JoinAns *response = new JoinAns(req, overlaySpecific);
@@ -330,7 +330,7 @@ Message::makeJoinResponse(const resip::Data &overlaySpecific)
 LeaveAns *
 Message::makeLeaveResponse() 
 {
-	assert(getType() == LeaveReqType);
+	resip_assert(getType() == LeaveReqType);
 
 	LeaveReq *req = static_cast<LeaveReq *>(this);
 	return new LeaveAns(req);
@@ -339,7 +339,7 @@ Message::makeLeaveResponse()
 UpdateAns *
 Message::makeUpdateResponse(const resip::Data &overlaySpecific)
 {
-	assert(getType() == UpdateReqType);
+	resip_assert(getType() == UpdateReqType);
 	
 	UpdateReq *req = static_cast<UpdateReq *>(this);
 	UpdateAns *response = new UpdateAns(req,overlaySpecific);
@@ -351,7 +351,7 @@ resip::Data
 Message::encodePayload()
 {
         
-	assert(mOverlayName.size());	// user needs to call setOverlayName
+	resip_assert(mOverlayName.size());	// user needs to call setOverlayName
 	
 	// create the overlay field from the overlay name
 	resip::SHA1Stream stream;
@@ -405,7 +405,7 @@ Message::encodePayload()
 	size_t finalLength = encodedData.size();
 
 	// add the length to the header
-	assert(mPDU.mHeader->mVersion);
+	resip_assert(mPDU.mHeader->mVersion);
 	UInt32 *lengthWord = reinterpret_cast<UInt32 *>(const_cast<char *>(encodedData.data()) + 13);
 
 	(*lengthWord) = (*lengthWord | (htonl(finalLength & 0x0fff) >> 8));
@@ -417,7 +417,7 @@ Message::encodePayload()
 std::vector<resip::Data> 
 Message::collectSignableData() const
 {
-	assert(0);
+	resip_assert(0);
    std::vector<resip::Data> list;
    return list;
 }
@@ -431,28 +431,28 @@ Message::isDestinationListEmpty() const
 DestinationId 
 Message::nextDestination() const
 {
-   assert(!isDestinationListEmpty());
+   resip_assert(!isDestinationListEmpty());
    return DestinationId(*mPDU.mHeader->mDestinationList.front());
 }
 
 void 
 Message::popNextDestinationId()
 {
-   assert(!isDestinationListEmpty());
+   resip_assert(!isDestinationListEmpty());
    mPDU.mHeader->mDestinationList.erase(mPDU.mHeader->mDestinationList.begin());
 }
 
 std::auto_ptr<Event> 
 Message::event()
 {
-   assert(0);
+   resip_assert(0);
    return std::auto_ptr<Event>(0);
 }
 
 void
 Message::pushVia(const DestinationId& did)
 {
-   assert(!did.isResourceId());
+   resip_assert(!did.isResourceId());
    mPDU.mHeader->mViaList.push_back(did.copyDestinationStruct());
 }
 

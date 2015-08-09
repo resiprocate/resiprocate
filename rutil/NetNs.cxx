@@ -239,8 +239,8 @@ void NetNs::initDictionary()
 
       // No locking, so test no one else touched 
       // the dictionary
-      assert(sIdDictionaryToNetNs.size() == 1);
-      assert(sNetNsDictionaryToId.size() == 1);
+      resip_assert(sIdDictionaryToNetNs.size() == 1);
+      resip_assert(sNetNsDictionaryToId.size() == 1);
    }
 }
 

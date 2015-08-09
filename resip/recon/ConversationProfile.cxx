@@ -52,7 +52,7 @@ ConversationProfile::getHandle()
 void
 ConversationProfile::setHandle(ConversationProfileHandle handle)
 {
-    assert(mHandle==0);
+    resip_assert(mHandle==0);
     mHandle = handle;
 }
 
@@ -71,7 +71,7 @@ ConversationProfile::sessionCaps() const
 bool 
 ConversationProfile::shouldAutoAnswer(const SipMessage& inviteRequest, bool *required)
 {
-   assert(inviteRequest.method() == INVITE);
+   resip_assert(inviteRequest.method() == INVITE);
    bool shouldAutoAnswer = false;
    bool autoAnswerRequired = false;
    if(inviteRequest.exists(h_PrivAnswerMode) && inviteRequest.header(h_PrivAnswerMode).value() == "Auto")

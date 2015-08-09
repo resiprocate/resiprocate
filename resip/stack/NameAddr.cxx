@@ -84,7 +84,7 @@ NameAddr::operator=(const NameAddr& rhs)
 {
    if (this != &rhs)
    {
-      assert( &rhs != 0 );
+      resip_assert( &rhs != 0 );
       
       ParserCategory::operator=(rhs);
       mAllContacts = rhs.mAllContacts;
@@ -246,7 +246,7 @@ NameAddr::parse(ParseBuffer& pb)
       {
          if(mUri.mUnknownParameters.size() > 0)
          {
-            assert(!mUnknownUriParametersBuffer);
+            resip_assert(!mUnknownUriParametersBuffer);
             mUnknownUriParametersBuffer = new Data;
             {  // Scope stream
                oDataStream str(*mUnknownUriParametersBuffer);

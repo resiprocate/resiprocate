@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "UserAgent.hxx"
 #include "UserAgentServerAuthManager.hxx"
@@ -61,7 +61,7 @@ UserAgentServerAuthManager::authorizedForThisIdentity(const resip::Data &user,
 ServerAuthManager::AsyncBool
 UserAgentServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
-   assert(msg.isRequest());
+   resip_assert(msg.isRequest());
    ConversationProfile* profile = mUserAgent.getIncomingConversationProfile(msg).get();
 
    // We want to challenge OOD Refer requests and Invite Requests with Auto-Answer indications

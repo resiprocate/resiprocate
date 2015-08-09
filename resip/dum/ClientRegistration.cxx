@@ -105,7 +105,7 @@ ClientRegistration::tryModification(ClientRegistration::State state)
       }
    }
 
-   assert(mQueuedState == None);
+   resip_assert(mQueuedState == None);
    mState = state;
 
    return mLastRequest;
@@ -230,7 +230,7 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    {
       if(mEnding && whenExpires() == 0)
       {
-         assert(mEndWhenDone);  // will always be true when mEnding is true
+         resip_assert(mEndWhenDone);  // will always be true when mEnding is true
          // We are not actually registered, and we are ending - no need to send un-register - just terminate now
          stopRegistering();
          return;
@@ -393,7 +393,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
    try
    {
       // !jf! there may be repairable errors that we can handle here
-      assert(msg.isResponse());
+      resip_assert(msg.isResponse());
       const int& code = msg.header(h_StatusLine).statusCode();
       bool nextHopSupportsOutbound = false;
       int keepAliveTime = 0;
@@ -594,7 +594,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if(mQueuedState == Removing && mEnding && whenExpires() == 0)
             {
-               assert(mEndWhenDone);  // will always be true when mEnding is true
+               resip_assert(mEndWhenDone);  // will always be true when mEnding is true
                // We are not actually registered, and we are ending - no need to send un-register - just terminate now
                stopRegistering();
                return;
@@ -653,7 +653,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      mState = RetryRefreshing;
                      break;
                   default:
-                     assert(false);
+                     resip_assert(false);
                      break;
                   }
                   if(mDum.mClientAuthManager.get()) mDum.mClientAuthManager.get()->clearAuthenticationState(DialogSetId(*mLastRequest));
@@ -936,7 +936,7 @@ ClientRegistration::checkProfileRetry(const SipMessage& msg)
          mState = RetryRefreshing;
          break;
       default:
-         assert(false);
+         resip_assert(false);
          break;
       }
 
@@ -979,7 +979,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
                mState = Refreshing;
                break;
             default:
-              assert(false);
+              resip_assert(false);
               break;
             }
 

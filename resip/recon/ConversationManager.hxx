@@ -337,7 +337,7 @@ public:
 
    /**
      This is used for attended transfer scenarios where both participants 
-     are no longer managed by the conversation manager  – for SIP this will 
+     are no longer managed by the conversation manager  ï¿½ for SIP this will 
      send a REFER with embedded Replaces header.  Note:  Replace option cannot 
      be used with early dialogs in SIP.  
 
@@ -668,7 +668,7 @@ private:
    // sipX Media related members
    void createMediaInterfaceAndMixer(bool giveFocus, ConversationHandle ownerConversationHandle, 
                                      resip::SharedPtr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
-   resip::SharedPtr<MediaInterface> getMediaInterface() const { assert(mMediaInterface.get()); return mMediaInterface; }
+   resip::SharedPtr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
    CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
    BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
    CpMediaInterfaceFactory* mMediaFactory;

@@ -158,7 +158,7 @@ RendRunner::~RendRunner()
 void
 RendRunner::setSketch(const char *sketchName) 
 {
-   assert( mSketch==NULL );
+   resip_assert( mSketch==NULL );
    if ( sketchName==NULL )
       return;
    mSketchFac = findFactory(sketchName, "cannot set sketch");
@@ -170,7 +170,7 @@ RendRunner::setArgs(const char *appName, int argc, char **argv)
    RendRunnerOpts *	runnerOpts = &TheRendRunnerOpts;
    RendAcctOptsSimple*	acctOpts = &TheRendAcctOptsSimple;
    RendOptsBase*	tuOpts = TheRendTuOptsPtr;
-   assert(mSketchFac);
+   resip_assert(mSketchFac);
    RendOptsBase*	sketchOpts = mSketchFac->getOpts();
 
    struct poptOption appOptTbl[] = 
@@ -224,8 +224,8 @@ RendRunner::doSimpleAction(RendSimpleAction act)
 void
 RendRunner::start()
 {
-   assert( mSketchFac );
-   assert( mSketch == NULL );
+   resip_assert( mSketchFac );
+   resip_assert( mSketch == NULL );
    if ( ! mLogStarted )
    {
       // only start log the first time!
@@ -409,7 +409,7 @@ RendRunner::getTroopReport(RendTroopReport& rpt)
       return -1;
    }
    int sts = mSketch->getTroopReport(rpt);
-   assert( rpt.mWavePubAliveCnt < 10000 );
+   resip_assert( rpt.mWavePubAliveCnt < 10000 );
    return sts;
 }
 
@@ -487,7 +487,7 @@ RendParseOpts(const char *appName, int argc, char *argv[],
             <<": "<<poptStrerror(ret) << std::endl;
          exit(1);
       }
-      assert( false );
+      resip_assert( false );
    }
    return pcon;
 }

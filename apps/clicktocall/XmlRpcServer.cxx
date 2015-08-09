@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <sstream>
 
 #include <resip/stack/Symbols.hxx>

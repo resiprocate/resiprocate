@@ -4,7 +4,7 @@
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

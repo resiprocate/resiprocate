@@ -99,7 +99,7 @@ bool Acl::parseAcl(Data& rawInput)
       }
       else // *pb.position() == '.'
       {
-         assert( *pb.position() == '.');
+         resip_assert( *pb.position() == '.');
          
          // Could be either an IPv4 address or an FQDN
          pb.skipToChar('/');

@@ -149,5 +149,6 @@
     <ClInclude Include="vthread.hxx" />
     <ClInclude Include="WinCompat.hxx" />
     <ClInclude Include="WinLeakCheck.hxx" />
+    <ClInclude Include="ResipAssert.h" />
   </ItemGroup>
 </Project>

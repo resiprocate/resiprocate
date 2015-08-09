@@ -40,12 +40,12 @@ DialogSetId::DialogSetId(const SipMessage& msg) :
    {
       if(msg.isRequest())
       {
-         assert(msg.header(h_From).exists(p_tag));
+         resip_assert(msg.header(h_From).exists(p_tag));
          mTag = msg.header(h_From).param(p_tag);
       }
       else
       {
-         assert(msg.header(h_To).exists(p_tag));
+         resip_assert(msg.header(h_To).exists(p_tag));
          mTag = msg.header(h_To).param(p_tag);
       }
    }

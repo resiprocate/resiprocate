@@ -13,7 +13,7 @@
 #  include <unistd.h>
 #endif
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "rutil/Time.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Logger.hxx"
@@ -109,7 +109,7 @@ Timer::toData(Type timer)
       case TcpConnectTimer:
           return "TcpConnectTimer";
       default:
-         assert(0);
+         resip_assert(0);
    }
    return "Bad Bad Bad in timer";
 }
@@ -164,7 +164,7 @@ TimerWithPayload::TimerWithPayload(unsigned long ms, Message* message) :
    mWhen(ms + Timer::getTimeMs()),
    mMessage(message)
 {
-   assert(mMessage);
+   resip_assert(mMessage);
 }
 
 std::ostream& 

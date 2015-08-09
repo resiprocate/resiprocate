@@ -105,8 +105,8 @@ class ValueFifo : public resip::FifoStatsInterface
             myTimerSize--;
          }
 
-         assert (myFifoSize > 0);
-         assert (!myList.empty());
+         resip_assert (myFifoSize > 0);
+         resip_assert (!myList.empty());
          
          T firstMessage = myList.front();
          

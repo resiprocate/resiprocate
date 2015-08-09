@@ -1,8 +1,8 @@
-#include <cassert>
 #include <sstream>
 
 #include <resip/stack/Symbols.hxx>
 #include <resip/stack/Tuple.hxx>
+#include <rutil/ResipAssert.h>
 #include <rutil/Data.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Logger.hxx>
@@ -115,7 +115,7 @@ RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& 
    ss << "   <lastupdate>" << now - lastUpdated << "</lastupdate>" << Symbols::CRLF;
    if (expirationTime != 0 && contents != 0)  // lingering records will have expirationTime as 0 - don't need to send contents - refreshes also have no body
    {
-      assert(securityAttributes);
+      resip_assert(securityAttributes);
       ss << "   <contents>" << contents->getBodyData().xmlCharDataEncode() << "</contents>" << Symbols::CRLF;
       ss << "   <isencrypted>" << (securityAttributes->isEncrypted() ? "true" : "false") << "</isencrypted>" << Symbols::CRLF;
       if (securityAttributes->isEncrypted())
@@ -142,7 +142,7 @@ RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& 
             ss << "selfsigned";
             break;
          default:
-            assert(false);
+            resip_assert(false);
             ss << "unknown";
             break;
          }
@@ -167,7 +167,7 @@ RegSyncServer::sendDocumentModifiedEvent(unsigned int connectionId, const Data& 
                ss << "identity";
                break;
             default:
-               assert(false);
+               resip_assert(false);
                ss << "unknown";
                break;
             }
@@ -321,14 +321,16 @@ RegSyncServer::onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor
 }
 
 void 
-RegSyncServer::onDocumentModified(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+RegSyncServer::onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
+   resip_assert(!sync);  // We register so that we don't get callbacks for sync'd documents
    sendDocumentModifiedEvent(0, eventType, documentKey, eTag, expirationTime, lastUpdated, contents, securityAttributes);
 }
 
 void 
-RegSyncServer::onDocumentRemoved(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+RegSyncServer::onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
 {
+   resip_assert(!sync);  // We register so that we don't get callbacks for sync'd documents
    sendDocumentRemovedEvent(0, eventType, documentKey, eTag, lastUpdated);
 }
 

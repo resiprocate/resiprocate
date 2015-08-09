@@ -21,7 +21,7 @@ public:
       {
          return pmsg->getAsyncProcessor().asyncProcess(pmsg);
       }
-      assert(false);  // unexpected message type
+      resip_assert(false);  // unexpected message type
       return false;
    }
    virtual Worker* clone() const

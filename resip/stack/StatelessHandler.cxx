@@ -46,7 +46,7 @@ void
 StatelessHandler::process()
 {
    Message* msg = mController.mStateMacFifo.getNext();
-   assert(msg);
+   resip_assert(msg);
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    TransportFailure* transport = dynamic_cast<TransportFailure*>(msg);
@@ -86,13 +86,13 @@ StatelessHandler::process()
          }
          else // no dns for sip responses
          {
-            assert(sip->isResponse());
+            resip_assert(sip->isResponse());
             DebugLog (<< "Processing response from TU: " << msg->brief());
             const Via& via = sip->const_header(h_Vias).front();
             int port = via.sentPort();
             if (sip->hasForceTarget())
             {
-               assert( /*Unimplemented*/ 0 );
+               resip_assert( /*Unimplemented*/ 0 );
             }
             else
             {
@@ -125,7 +125,7 @@ StatelessMessage::StatelessMessage(TransportSelector& selector, SipMessage* msg)
 void 
 StatelessMessage::rewriteRequest(const Uri& rewrite)
 {
-   assert(mMsg->isRequest());
+   resip_assert(mMsg->isRequest());
    if (mMsg->const_header(h_RequestLine).uri() != rewrite)
    {
       InfoLog (<< "Rewriting request-uri to " << rewrite);

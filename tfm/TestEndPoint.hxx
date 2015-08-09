@@ -110,8 +110,8 @@ class TestEndPoint
             explicit Pause(int msec, TestEndPoint* endPoint);
             virtual void exec(boost::shared_ptr<Event> event);
             virtual void exec();
-            virtual void operator()() { assert(0); }
-            virtual void operator()(boost::shared_ptr<Event> event) { assert(0); }
+            virtual void operator()() { resip_assert(0); }
+            virtual void operator()(boost::shared_ptr<Event> event) { resip_assert(0); }
             virtual resip::Data toString() const;
 
          private:

@@ -83,7 +83,7 @@ class AresDnsPollItem : public FdPollItemBase
 void
 AresDnsPollItem::processPollEvent(FdPollEventMask mask)
 {
-   assert( (mask&(FPEM_Read|FPEM_Write))!= 0 );
+   resip_assert( (mask&(FPEM_Read|FPEM_Write))!= 0 );
 
    time_t nowSecs;
    time(&nowSecs);	/// maybe nice if this was passed into us?
@@ -110,31 +110,31 @@ AresDnsPollItem::socket_poll_cb(void *cb_data,
    AresDnsPollItem *olditem = ares->mPollItems.at(server_idx);
    if ( olditem )
    {
-      assert( olditem->mChannel==channel );
-      assert( olditem->mServerIdx==server_idx );
+      resip_assert( olditem->mChannel==channel );
+      resip_assert( olditem->mServerIdx==server_idx );
    }
    switch ( act )
    {
    case ARES_POLLACTION_OPEN:
-      assert( olditem==NULL );
-      assert( fd!=INVALID_SOCKET );
+      resip_assert( olditem==NULL );
+      resip_assert( fd!=INVALID_SOCKET );
       ares->mPollItems[server_idx] = new AresDnsPollItem( grp, fd, *ares, channel, server_idx);
       break;
    case ARES_POLLACTION_CLOSE:
-      assert( olditem );
+      resip_assert( olditem );
       ares->mPollItems[server_idx] = NULL;
       delete olditem;	// destructor removes from poll
       break;
    case ARES_POLLACTION_WRITEON:
-      assert( olditem );
+      resip_assert( olditem );
       grp->modPollItem(olditem->mPollHandle, FPEM_Read|FPEM_Write);
       break;
    case ARES_POLLACTION_WRITEOFF:
-      assert( olditem );
+      resip_assert( olditem );
       grp->modPollItem(olditem->mPollHandle, FPEM_Read);
       break;
    default:
-      assert( 0 );
+      resip_assert( 0 );
    }
 }
 
@@ -544,7 +544,7 @@ AresDns::~AresDns()
 
 bool AresDns::hostFileLookup(const char* target, in_addr &addr)
 {
-   assert(target);
+   resip_assert(target);
 
    hostent *hostdata = 0;
 
@@ -627,7 +627,7 @@ AresDns::processTimers()
 #ifdef USE_CARES
    return;
 #else
-   assert( mPollGrp!=0 );
+   resip_assert( mPollGrp!=0 );
    time_t timeSecs;
    time(&timeSecs);
    ares_process_poll(mChannel, /*server*/-1, /*rd*/-1, /*wr*/-1, timeSecs);

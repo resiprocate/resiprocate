@@ -1,0 +1,130 @@
+
+Background
+----------
+
+The original goal of repro was to provide a SIP proxy that is
+very easy to get started with.  That was summarised in a post
+to the mailing list from Cullen Jennings in 2004:
+
+   "I thought I would just start an email thread on things
+   that would be nice in an open source proxy.
+
+   The key thing is the out of box experience, you can go
+   from nothing to having a running proxy that allows phone A
+   to call phone B in 15 minutes.
+
+   The key property of it is that it provides what is needed for
+   secure phone calls with devices behind a NAT."
+
+   http://list.resiprocate.org/archive/resiprocate-devel/msg00639.html
+
+This package aims to help fulfil that promise.
+
+Important - upgrades from v1.8.x to v1.9.0 and beyond
+-----------------------------------------------------
+
+Earlier versions of repro stored the web admin password in repro.config.
+As of v1.9.0, the web admin password is stored in a separate file,
+using a format compatible with the Apache htdigest utility.
+
+It is necessary to specify the location of the users.txt file in
+repro.config, for example, like this:
+
+  HttpAdminUserFile = /etc/repro/users.txt
+
+and manually set the admin password.  The easiest way to create the users.txt
+file and set the password is using the htdigest utility, for example:
+
+  # htdigest -c /etc/repro/users.txt repro admin
+
+In this example, the realm value, 'repro', must match the HttpAdminRealm
+value in repro.config (if not specified, the default realm name is repro).
+
+v1.10.0~alpha1 and support indexed database configurations, similar to the
+indexed transport configurations in repro.config.  It is strongly recommended
+that all users adapt their repro.config.  The legacy database configuration
+options are still supported for now but they are likely to be phased out
+in a future release of reSIProcate.
+
+Quick start
+-----------
+
+For more thorough documentation, see http://rtcquickstart.org
+
+After installing the package, the daemon starts.
+
+There is a built-in web server listening on port 5080
+with username = admin, password = admin.
+
+You can (and definitely should) change the password in
+/etc/repro/repro.config
+
+Using the web interface, you can:
+- add SIP accounts for your devices
+- set routing rules for calls between devices or calls
+  to external gateways
+
+Most other things (e.g. setting up SSL/TLS) is currently done
+by modifying /etc/repro/repro.config
+
+More complete documentation is here:
+
+  http://www.resiprocate.org/Using_Repro
+
+SSL/TLS on Debian
+-----------------
+
+The normal place for certs on Debian is in /etc/ssl
+
+Before repro v1.9.0~beta9, repro had particular expectations about
+certificate filenames and permissions.
+
+In particular, they needed to have names matching a particular
+template.
+
+Now, however, it is possible to specify any arbitrary certificate
+and key filenames on a per-transport basis, e.g.
+
+Transport1TlsCertificate = /etc/ssl/ssl.crt/sip-server.example.org.crt
+Transport1TlsPrivateKey = /etc/ssl/ssl.key/sip-server.example.org.key
+
+The TlsCertificate file should also contain any intermediate certificates.
+The server certificate should be first and the intermiediate certificates
+should be listed in order, starting with the one that signed your
+certificate and finishing with the one below the root.
+
+  Intermediate certificates
+  -------------------------
+
+    Sometimes the CA provides an intermediate certificate.
+    The intermediate certificate(s) should be appended to
+    the file containing the server certificate.  repro
+    will read all the certificates in the file and 
+    present them to the TLS client.
+
+    Please be aware that some older IP phones may not
+    work with intermediate certificates, 4096 bit certificates,
+    high-security hash algorithms such as SHA256.
+
+  Testing TLS with OpenSSL
+  ------------------------
+
+    You can make a test connection like this:
+
+      openssl s_client \
+          -connect secure.trendhosting.net:5061 \
+          -tls1 \
+          -CAfile /etc/ssl/certs/ca-certificates.crt
+
+    Once the connection is confirmed, you can cut and paste
+    SIP messages and see the replies from repro.
+
+Getting help
+------------
+
+Please feel free to join the repro-users mailing list
+if you have questions:
+
+  http://list.resiprocate.org/mailman/listinfo
+
+

@@ -18,7 +18,7 @@ int KeepAliveManager::mKeepAlivePongTimeoutMs = 10000;  // Defaults to 10000ms (
 void 
 KeepAliveManager::add(const Tuple& target, int keepAliveInterval, bool targetSupportsOutbound)
 {
-   assert(mDum);
+   resip_assert(mDum);
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it == mNetworkAssociations.end())
    {
@@ -88,7 +88,7 @@ KeepAliveManager::remove(const Tuple& target)
 void 
 KeepAliveManager::process(KeepAliveTimeout& timeout)
 {
-   assert(mDum);
+   resip_assert(mDum);
    static KeepAliveMessage msg;
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(timeout.target());
    if (it != mNetworkAssociations.end() && timeout.id() == it->second.id)
@@ -103,7 +103,7 @@ KeepAliveManager::process(KeepAliveTimeout& timeout)
       {
          // Assert if keep alive interval is too short in order to properly detect
          // missing pong responses - ie. interval must be greater than 10s
-         assert((it->second.keepAliveInterval*1000) > mKeepAlivePongTimeoutMs);
+         resip_assert((it->second.keepAliveInterval*1000) > mKeepAlivePongTimeoutMs);
 
          // Start pong timeout if transport is TCP based (note: pong processing of Stun messaging is currently not implemented)
          if(isReliable(it->first.getType()))
@@ -132,7 +132,7 @@ KeepAliveManager::process(KeepAliveTimeout& timeout)
 void 
 KeepAliveManager::process(KeepAlivePongTimeout& timeout)
 {
-   assert(mDum);
+   resip_assert(mDum);
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(timeout.target());
    if (it != mNetworkAssociations.end() && timeout.id() == it->second.id)
    {

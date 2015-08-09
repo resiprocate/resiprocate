@@ -44,8 +44,8 @@ protected:
    virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
    virtual bool validateServerCertificateHostname();
 
-   virtual void onServerHandshakeSuccess() { assert(false); }
-   virtual void onServerHandshakeFailure(const asio::error_code& e) { assert(false); }
+   virtual void onServerHandshakeSuccess() { resip_assert(false); }
+   virtual void onServerHandshakeFailure(const asio::error_code& e) { resip_assert(false); }
 
    asio::ssl::stream<asio::ip::tcp::socket> mSocket;
    asio::ip::tcp::resolver mResolver;

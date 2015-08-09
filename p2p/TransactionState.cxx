@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 #include <iostream>
 #include "rutil/Logger.hxx"
 
@@ -71,7 +71,7 @@ TransactionState::isClient() const
       case ServerRequest:
          return false;
       default:
-         assert(0);
+         resip_assert(0);
    }
    return false;
 }

@@ -3,7 +3,7 @@
 #include "config.h"
 #endif
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <limits.h>
 
 #include "resip/stack/TimerQueue.hxx"
@@ -75,7 +75,7 @@ BaseTimeLimitTimerQueue::~BaseTimeLimitTimerQueue()
 UInt64
 BaseTimeLimitTimerQueue::add(unsigned int timeMs,Message* payload)
 {
-   assert(payload);
+   resip_assert(payload);
    DebugLog(<< "Adding application timer: " << payload->brief() << " ms=" << timeMs);
    mTimers.push(TimerWithPayload(timeMs,payload));
    return mTimers.top().getWhen();
@@ -84,7 +84,7 @@ BaseTimeLimitTimerQueue::add(unsigned int timeMs,Message* payload)
 void
 BaseTimeLimitTimerQueue::processTimer(const TimerWithPayload& timer)
 {
-   assert(timer.getMessage());
+   resip_assert(timer.getMessage());
    addToFifo(timer.getMessage(), TimeLimitFifo<Message>::InternalElement);
 }
 
@@ -120,7 +120,7 @@ TuSelectorTimerQueue::~TuSelectorTimerQueue()
 UInt64
 TuSelectorTimerQueue::add(unsigned int timeMs,Message* payload)
 {
-   assert(payload);
+   resip_assert(payload);
    DebugLog(<< "Adding application timer: " << payload->brief() << " ms=" << timeMs);
    mTimers.push(TimerWithPayload(timeMs,payload));
    return mTimers.top().getWhen();

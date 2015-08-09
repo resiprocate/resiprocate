@@ -14,8 +14,8 @@ using namespace resip;
 bool
 RedirectManager::handle(DialogSet& dSet, SipMessage& origRequest, const SipMessage& response)
 {
-   assert( response.isResponse() );
-   assert( origRequest.isRequest() );
+   resip_assert( response.isResponse() );
+   resip_assert( origRequest.isRequest() );
 
    //380, 305 fall through to the application
    int code = response.header(h_StatusLine).statusCode();

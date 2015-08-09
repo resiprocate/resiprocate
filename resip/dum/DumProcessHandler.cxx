@@ -55,7 +55,7 @@ DumProcessHandler::handleProcessNotification()
          {
             mExternalTimer->deleteTimer(mTimerID);
          }         
-         assert(timeTillProcess < 60*4*60*1000); //4hr sanity check
+         resip_assert(timeTillProcess < 60*4*60*1000); //4hr sanity check
          mTimerID = mExternalTimer->generateAsyncID();
          DebugLog ( << "Setting dum process timer: " << timeTillProcess);
          mExternalTimer->createTimer(mTimerID, timeTillProcess);
@@ -69,7 +69,7 @@ DumProcessHandler::handleProcessNotification()
 void 
 DumProcessHandler::handleTimeout(AsyncID timerID)
 {
-   assert(timerID == mTimerID);   
+   resip_assert(timerID == mTimerID);   
    mHaveActiveTimer = false;   
    handleProcessNotification();
 }

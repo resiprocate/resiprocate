@@ -11,6 +11,7 @@ CPPFLAGS='-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi 
 CXXFLAGS='-g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive' \
 LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
   ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls --with-freeradius --with-ssl \
+              --enable-assert-syslog \
               --with-c-ares \
               --with-mysql \
               --with-postgresql \

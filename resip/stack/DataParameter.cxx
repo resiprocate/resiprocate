@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "resip/stack/DataParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -90,7 +90,7 @@ DataParameter::encode(EncodeStream& stream) const
       {
          ErrLog(<< "Accessing defaulted DataParameter: '" << getName() << "'");
       }
-      assert(!mValue.empty()); // !jf!  probably should throw here
+      resip_assert(!mValue.empty()); // !jf!  probably should throw here
       return stream << getName() << Symbols::EQUALS << mValue;
    }
 }

@@ -108,7 +108,7 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
 
    // Get the Global Interpreter Lock
    StackLog(<< "getting lock...");
-   assert(mPyUser);
+   resip_assert(mPyUser);
    PyExternalUser::Use use(*mPyUser);
 
    // arg 1: SIP method

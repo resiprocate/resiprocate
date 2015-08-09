@@ -5,6 +5,7 @@
 #include "config.h"
 #endif
 
+#include "rutil/ResipAssert.h"
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
@@ -86,7 +87,7 @@ SqlDb::tableName(Table table) const
    switch (table)
    {
       case UserTable:
-         assert(false);  // usersavp is not used!
+         resip_assert(false);  // usersavp is not used!
          return usersavp;
       case RouteTable:
          return routesavp;
@@ -101,7 +102,7 @@ SqlDb::tableName(Table table) const
       case SiloTable:
          return siloavp;
       default:
-         assert(0);
+         resip_assert(0);
    }
    return 0;
 }

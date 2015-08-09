@@ -36,7 +36,7 @@ RendCntMgr::RendCntMgr()
 void
 RendCntMgr::reset() 
 {
-   assert( CNTCHUNKSIZE* REND_CntPeriod_MAX == sizeof(mCnts) );
+   resip_assert( CNTCHUNKSIZE* REND_CntPeriod_MAX == sizeof(mCnts) );
    memset( mCnts, 0, sizeof(mCnts));
 }
 

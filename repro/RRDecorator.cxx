@@ -78,7 +78,7 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
       if(outboundFlowTokenNeeded(request, source, destination, sigcompId) ||
          mHasInboundFlowToken)  // or we have an inbound flow
       {
-         assert(mAlreadySingleRecordRouted);
+         resip_assert(mAlreadySingleRecordRouted);
          singleRecordRoute(request, source, destination, sigcompId);
       }
    }
@@ -173,7 +173,7 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
       InfoLog(<< "Adding outbound Record-Route: " << rt);
    }
 
-   assert(routes->size() > 0);
+   resip_assert(routes->size() > 0);
    routes->front().uri().param(p_drr);
    routes->push_front(rt);
    ++mAddedRecordRoute;
@@ -250,7 +250,7 @@ RRDecorator::rollbackMessage(resip::SipMessage& request)
 
    while(mAddedRecordRoute--)
    {
-      assert(!routes->empty());
+      resip_assert(!routes->empty());
       routes->pop_front();
    }
 

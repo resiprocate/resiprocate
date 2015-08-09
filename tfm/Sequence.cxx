@@ -73,8 +73,8 @@ SequenceClass::getRoot() const
 void 
 SequenceClass::setBranchCount(unsigned int count)
 {
-   assert(count);
-   assert(mBranchCount == 0);
+   resip_assert(count);
+   resip_assert(mBranchCount == 0);
 
    mBranchCount = count;
    removeFromActiveSet();
@@ -90,7 +90,7 @@ SequenceClass::setAfterAction(ActionBase* action)
 bool 
 SequenceClass::decrementBranches()
 {
-   assert(mBranchCount);
+   resip_assert(mBranchCount);
    if (!(--mBranchCount))
    {
       if (mAfterAction)
@@ -279,7 +279,7 @@ SequenceClass::handleEvent(boost::shared_ptr<Event> event)
          }
          else
          {
-            assert(0);
+            resip_assert(0);
          }
       }
       catch (BaseException& e)
@@ -350,7 +350,7 @@ void SequenceClass::cancelTimeout()
          // Race condition; it is likely that the timer is sitting, unprocessed, 
          // in our message queue, right as we satisfy the expect that the timer
          // was waiting for. It would be nice to figure out a way to fix this.
-         assert(0);
+         resip_assert(0);
       }
       mTimerId = -7;
    }

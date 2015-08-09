@@ -131,7 +131,7 @@ TcpBaseTransport::setPollGrp(FdPollGrp *grp)
 void
 TcpBaseTransport::buildFdSet( FdSet& fdset)
 {
-   assert( mPollGrp==NULL );
+   resip_assert( mPollGrp==NULL );
    mConnectionManager.buildFdSet(fdset);
    if ( mFd!=INVALID_SOCKET )
    {
@@ -236,12 +236,12 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       }
    }
 
-   assert(sock != INVALID_SOCKET);
+   resip_assert(sock != INVALID_SOCKET);
 
    DebugLog (<<"Opening new connection to " << dest);
    char _sa[RESIP_MAX_SOCKADDR_SIZE];
    sockaddr *sa = reinterpret_cast<sockaddr*>(_sa);
-   assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
+   resip_assert(RESIP_MAX_SOCKADDR_SIZE >= mTuple.length());
    mTuple.copySockaddrAnyPort(sa);
 #ifdef USE_NETNS
       NetNs::setNs(netNs());
@@ -294,7 +294,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
 
    // This will add the connection to the manager
    Connection *conn = createConnection(dest, sock, false);
-   assert(conn);
+   resip_assert(conn);
    conn->mFirstWriteAfterConnectedPending = true;
 
    return conn;
@@ -349,7 +349,7 @@ TcpBaseTransport::processAllWriteRequests()
             // NOTE: We fail this one but don't give up on others in queue
             return;
          }
-         assert(conn->getSocket() != INVALID_SOCKET);
+         resip_assert(conn->getSocket() != INVALID_SOCKET);
          data->destination.mFlowKey = conn->getSocket();
       }
 
@@ -393,7 +393,7 @@ TcpBaseTransport::process()
 void
 TcpBaseTransport::process(FdSet& fdSet)
 {
-   assert( mPollGrp==NULL );
+   resip_assert( mPollGrp==NULL );
 
    processAllWriteRequests();
 
@@ -421,7 +421,7 @@ TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
 void
 TcpBaseTransport::setRcvBufLen(int buflen)
 {
-   assert(0);	// not implemented yet
+   resip_assert(0);	// not implemented yet
    // need to store away the length and use when setting up new connections
 }
 

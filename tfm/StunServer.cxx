@@ -103,7 +103,7 @@ StunServer::process(FdSet& fdset)
    int msgLen = sizeof(msg);
    boost::shared_ptr<StunRequestContext> request = boost::shared_ptr<StunRequestContext>(new StunRequestContext());
 
-   assert(mEventSink);
+   resip_assert(mEventSink);
 
    request->recvAltIp = false;
    request->recvAltPort = false;
@@ -185,7 +185,7 @@ void
 StunServer::sendStunResponse(boost::shared_ptr<StunRequestContext> request, const resip::Uri& mappedAddr)
 {
    Lock autoLock(mMutexLock);
-   assert(mEventSink);
+   resip_assert(mEventSink);
 
    boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
 
@@ -341,7 +341,7 @@ void
 StunServer::sendStunResponse(boost::shared_ptr<StunRequestContext> request)
 {
    Lock autoLock(mMutexLock);
-   assert(mEventSink);
+   resip_assert(mEventSink);
 
    boost::shared_ptr<StunResponseContext> response = boost::shared_ptr<StunResponseContext>(new StunResponseContext());
 

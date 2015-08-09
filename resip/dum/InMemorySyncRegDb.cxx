@@ -284,7 +284,7 @@ InMemorySyncRegDb::unlockRecord(const Uri& aor)
       database_map_t::iterator i = mDatabase.find(aor);
 
       // The record must have been inserted when we locked it in the first place
-      assert (i != mDatabase.end());
+      resip_assert (i != mDatabase.end());
 
       if (i->second == 0)
       {
@@ -318,7 +318,7 @@ InMemorySyncRegDb::updateContact(const resip::Uri& aor,
       }
    }
    
-   assert(contactList);
+   resip_assert(contactList);
 
    ContactList::iterator j;
 

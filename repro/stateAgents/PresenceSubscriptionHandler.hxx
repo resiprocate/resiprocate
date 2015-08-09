@@ -63,6 +63,7 @@ class PresenceServerSubscriptionRegFunctor;
 class PresenceServerSubscriptionFunctor;
 class PresenceServerRegStateChangeCommand;
 class PresenceServerDocStateChangeCommand;
+class PresenceServerCheckDocExpiredCommand;
 class PresenceSubscriptionHandler : public resip::ServerSubscriptionHandler, 
                                     public resip::PublicationPersistenceManager::ETagMerger,
                                     public resip::InMemorySyncRegDbHandler,
@@ -92,8 +93,8 @@ public:
     virtual void onAorModified(const resip::Uri& aor, const resip::ContactList& contacts);
 
     // InMemorySyncPubDb handler interface
-    virtual void onDocumentModified(const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
-    virtual void onDocumentRemoved(const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
+    virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+    virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
 
 protected:
     resip::DialogUsageManager& mDum;
@@ -107,10 +108,12 @@ protected:
     void continueNotifyPresenceAfterUserExistsCheck(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool userExists);
     bool checkRegistrationStateChanged(const resip::Uri& aor, bool registered, UInt64 regMaxExpires);
     void notifySubscriptions(const resip::Data& documentKey);
+    void checkExpired(const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
     friend class PresenceServerSubscriptionRegFunctor;
     friend class PresenceServerSubscriptionFunctor;
     friend class PresenceServerRegStateChangeCommand;
     friend class PresenceServerDocStateChangeCommand;
+    friend class PresenceServerCheckDocExpiredCommand;
     friend class PresenceUserExists;
 
     bool mPresenceUsesRegistrationState;

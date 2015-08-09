@@ -15,7 +15,7 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 #include "rutil/Socket.hxx"
 #endif
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <iostream>
 #include "rutil/ThreadIf.hxx"
 #include "rutil/Mutex.hxx"
@@ -44,10 +44,10 @@ __stdcall
 #endif
 threadIfThreadWrapper( void* threadParm )
 {
-   assert( threadParm );
+   resip_assert( threadParm );
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
 
-   assert( t );
+   resip_assert( t );
    t->thread();
 #ifdef WIN32
    // Free data in TLS slots.
@@ -102,7 +102,7 @@ ThreadIf::~ThreadIf()
 void
 ThreadIf::run()
 {
-   assert(mId == 0);
+   resip_assert(mId == 0);
 
 #if defined(WIN32)
    // !kh!
@@ -127,13 +127,13 @@ ThreadIf::run()
          0, //DWORD dwCreationFlags,                     // creation flags
          (unsigned*)&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
          );
-   assert( mThread != 0 );
+   resip_assert( mThread != 0 );
 #else
    // spawn the thread
    if ( int retval = pthread_create( &mId, 0, threadIfThreadWrapper, this) )
    {
       std::cerr << "Failed to spawn thread: " << retval << std::endl;
-      assert(0);
+      resip_assert(0);
       // TODO - ADD LOGING HERE
    }
 #endif
@@ -185,7 +185,7 @@ ThreadIf::join()
       if ( r != 0 )
       {
          WarningLog( << "Internal error: pthread_join() returned " << r );
-         assert(0);
+         resip_assert(0);
          // TODO
       }
    }

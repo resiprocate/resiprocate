@@ -17,6 +17,7 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "rutil/ResipAssert.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
@@ -80,7 +81,7 @@ pemTypePrefixes(  Security::PEMType pType )
       default:
       {
          ErrLog( << "Some unkonw pem type prefix requested" << (int)(pType) );
-         assert(0);
+         resip_assert(0);
       }
    }
    return unknownKey;
@@ -125,8 +126,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 
 // .amr. RFC 5922 mandates exact match only on certificates, so this is the default, but RFC 2459 and RFC 3261 don't prevent wildcards, so enable if you want that mode.
 bool BaseSecurity::mAllowWildcardCertificates = false;
-BaseSecurity::CipherList BaseSecurity::ExportableSuite("EXPORT:!aNULL:!eNULL");
-BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:!aNULL:!eNULL");
+BaseSecurity::CipherList BaseSecurity::ExportableSuite("HIGH:RC4-SHA:-COMPLEMENTOFDEFAULT");
+BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT");
 
 /**
  * Note:
@@ -303,10 +304,10 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
 #else
    SSL_CTX* ctx = SSL_CTX_new((SSL_METHOD*)method);
 #endif
-   assert(ctx);
+   resip_assert(ctx);
 
    X509_STORE* x509Store = X509_STORE_new();
-   assert(x509Store);
+   resip_assert(x509Store);
 
    // Load root certs into store
    X509List::iterator it;
@@ -415,7 +416,7 @@ Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 void
 Security::onRemovePEM(const Data& name, PEMType type) const
 {
-   assert(0);
+   resip_assert(0);
    // TODO - should delete file 
 }
 
@@ -511,7 +512,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       break;
       default:
       {
-         assert(0);
+         resip_assert(0);
       }
    }
    
@@ -522,7 +523,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       if(!out)
       {
          ErrLog(<< "Failed to create BIO: this cert will not be added.");
-         assert(0);
+         resip_assert(0);
          return;
       }
 
@@ -531,7 +532,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
          int ret = PEM_write_bio_X509(out, cert);
          if(!ret)
          {
-            assert(0);
+            resip_assert(0);
             throw Exception("PEM_write_bio_X509 failed: this cert will not be "
                               "added.", __FILE__,__LINE__);
          }
@@ -542,7 +543,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
          size_t len = BIO_get_mem_data(out,&p);
          if(!p || !len)
          {
-            assert(0);
+            resip_assert(0);
             throw Exception("BIO_get_mem_data failed: this cert will not be "
                               "added.", __FILE__,__LINE__);
          }
@@ -567,7 +568,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
 bool
 BaseSecurity::hasCert (PEMType type, const Data& aor) const
 {
-   assert( !aor.empty() );
+   resip_assert( !aor.empty() );
    const X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
    X509Map::const_iterator where = certs.find(aor);
@@ -598,7 +599,7 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
       return   false;
    }
 
-   assert(  certs.find(aor) != certs.end() );
+   resip_assert(  certs.find(aor) != certs.end() );
    
    return   true;
 }
@@ -606,7 +607,7 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
 void
 BaseSecurity::removeCert (PEMType type, const Data& aor)
 {
-   assert( !aor.empty() );
+   resip_assert( !aor.empty() );
    X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
    X509Map::iterator iter = certs.find(aor);
@@ -618,13 +619,13 @@ BaseSecurity::removeCert (PEMType type, const Data& aor)
       onRemovePEM(aor, type);
    } 
 
-   assert(  certs.find(aor) == certs.end() );
+   resip_assert(  certs.find(aor) == certs.end() );
 }
 
 Data
 BaseSecurity::getCertDER (PEMType type, const Data& key) const
 {
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
 
    if (hasCert(type, key) == false)
    {
@@ -639,7 +640,7 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       // not supposed to happen,
       // hasCert() should have inserted a value into certs
       // or we should have throwed.
-      assert(0);
+      resip_assert(0);
    }
 
    //assert(0); // the code following this has no hope of working 
@@ -651,7 +652,7 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
    // !kh!
    // Although len == 0 is not an error, I am not sure what quite to do.
    // Asserting for now.
-   assert(len != 0);
+   resip_assert(len != 0);
    if(len < 0)
    {
       ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
@@ -673,11 +674,11 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
 
    /*
    // make a copy of the the key 
-   assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
+   resip_assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
-   assert( rsa );
+   resip_assert( rsa );
    EVP_PKEY* nKey = EVP_PKEY_new();
-   assert( nKey );
+   resip_assert( nKey );
    EVP_PKEY_set1_RSA(nKey, rsa);
    */
    
@@ -703,12 +704,12 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
       if(!bio)
       {
          ErrLog(<< "BIO_new failed: cannot add private key.");
-         assert(0);
+         resip_assert(0);
       }
 
       try
       {
-         assert( EVP_des_ede3_cbc() );
+         resip_assert( EVP_des_ede3_cbc() );
          const EVP_CIPHER* cipher = EVP_des_ede3_cbc();
          if (kstr == NULL )
          {
@@ -725,7 +726,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
 #endif
          if(!ret)
          {
-            assert(0);
+            resip_assert(0);
             throw Exception("PEM_write_bio_PKCS8PrivateKey failed: cannot add"
                               " private key.", __FILE__, __LINE__);
          }
@@ -735,7 +736,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
          size_t len = BIO_get_mem_data(bio,&p);
          if(!p || !len)
          {
-            assert(0);
+            resip_assert(0);
             throw Exception("BIO_get_mem_data failed: cannot add"
                               " private key.", __FILE__, __LINE__);
          }
@@ -763,7 +764,7 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
                                 bool write,
                                 const Data& privateKeyPassPhrase)
 {
-   assert( !name.empty() );
+   resip_assert( !name.empty() );
    if( privateKeyDER.empty() )
    {
       ErrLog(<< name << " is empty. Skipping.");
@@ -829,7 +830,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
                                 bool write,
                                 const Data& privateKeyPassPhrase)
 {
-   assert( !name.empty() );
+   resip_assert( !name.empty() );
    if( privateKeyPEM.empty() )
    {
       ErrLog(<< name << " is empty. Skipping.");
@@ -902,7 +903,7 @@ bool
 BaseSecurity::hasPrivateKey( PEMType type,
                              const Data& key ) const
 {
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
 
    const PrivateKeyMap& privateKeys = (type == DomainPrivateKey 
                                  ? mDomainPrivateKeys : mUserPrivateKeys);
@@ -938,7 +939,7 @@ Data
 BaseSecurity::getPrivateKeyPEM( PEMType type,
                                 const Data& key) const
 {
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
 
    if ( !hasPrivateKey(type, key) )
    {
@@ -959,20 +960,20 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
       }
    }
 
-   assert(0); // TODO - following code has no hope of working 
+   resip_assert(0); // TODO - following code has no hope of working 
     
    // !kh!
    // creates a read/write BIO buffer.
    BIO *out = BIO_new(BIO_s_mem());
-   assert(out);
+   resip_assert(out);
    EVP_PKEY* pk = where->second;
-   assert(pk);
+   resip_assert(pk);
 
    // write pk to out using key phrase p, with no cipher.
    int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);  // paraters
                                                                 // are in the wrong order
    (void)ret;
-   assert(ret == 1);
+   resip_assert(ret == 1);
 
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
@@ -990,7 +991,7 @@ Data
 BaseSecurity::getPrivateKeyDER( PEMType type,
                                 const Data& key) const
 {
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
 
    if ( !hasPrivateKey(type, key) )
    {
@@ -1011,19 +1012,19 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
       }
    }
 
-   assert(0); // TODO - following code has no hope of working 
+   resip_assert(0); // TODO - following code has no hope of working 
     
    // !kh!
    // creates a read/write BIO buffer.
    BIO *out = BIO_new(BIO_s_mem());
-   assert(out);
+   resip_assert(out);
    EVP_PKEY* pk = where->second;
-   assert(pk);
+   resip_assert(pk);
 
    // write pk to out using key phrase p, with no cipher.
    int ret = i2d_PKCS8PrivateKey_bio(out, pk, 0, 0, 0, 0, p);
    (void)ret;
-   assert(ret == 1);
+   resip_assert(ret == 1);
 
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
@@ -1040,11 +1041,11 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
 void
 BaseSecurity::removePrivateKey(PEMType type, const Data& key)
 {
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
 
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
 
-   assert( !key.empty() );
+   resip_assert( !key.empty() );
    PrivateKeyMap::iterator iter = privateKeys.find(key);
    if (iter != privateKeys.end())
    {
@@ -1076,7 +1077,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    
    mRootTlsCerts = X509_STORE_new();
    mRootSslCerts = X509_STORE_new();
-   assert(mRootTlsCerts && mRootSslCerts);
+   resip_assert(mRootTlsCerts && mRootSslCerts);
 
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    if (!mTlsCtx)
@@ -1089,23 +1090,23 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
          ErrLog(<< "OpenSSL error stack: " << errBuf);
       }
    }
-   assert(mTlsCtx);
+   resip_assert(mTlsCtx);
 
    SSL_CTX_set_default_passwd_cb(mTlsCtx, pem_passwd_cb);
    SSL_CTX_set_cert_store(mTlsCtx, mRootTlsCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
-   assert(ret);
+   resip_assert(ret);
    SSL_CTX_set_options(mTlsCtx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(mTlsCtx, BaseSecurity::OpenSSLCTXClearOptions);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
-   assert(mSslCtx);
+   resip_assert(mSslCtx);
    SSL_CTX_set_default_passwd_cb(mSslCtx, pem_passwd_cb);
    SSL_CTX_set_cert_store(mSslCtx, mRootSslCerts);
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
-   assert(ret);
+   resip_assert(ret);
    SSL_CTX_set_options(mSslCtx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(mSslCtx, BaseSecurity::OpenSSLCTXClearOptions);
 }
@@ -1167,18 +1168,18 @@ BaseSecurity::getRootCertDescriptions() const
 {
    // !kh!
    // need to be implemented.
-   assert(0); // TODO 
+   resip_assert(0); // TODO 
    return   CertificateInfoContainer();
 }
 
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 { 
-   assert( mRootTlsCerts && mRootSslCerts );
+   resip_assert( mRootTlsCerts && mRootSslCerts );
 #if 1
    addCertPEM(RootCert,Data::Empty,x509PEMEncodedRootCerts,false);
 #else
-   assert( !x509PEMEncodedRootCerts.empty() );
+   resip_assert( !x509PEMEncodedRootCerts.empty() );
 
    static X509_LOOKUP_METHOD x509_pemstring_lookup =
   {
@@ -1199,7 +1200,7 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
       mRootCerts = X509_STORE_new();
    }
    
-   assert( mRootCerts );
+   resip_assert( mRootCerts );
 
    X509_LOOKUP* lookup = X509_STORE_add_lookup(mRootCerts, &x509_pemstring_lookup);
 
@@ -1304,7 +1305,7 @@ BaseSecurity::getUserCertDER(const Data& aor) const
 void
 BaseSecurity::setUserPassPhrase(const Data& aor, const Data& passPhrase)
 {
-   assert(!aor.empty());
+   resip_assert(!aor.empty());
 
    PassPhraseMap::iterator iter = mUserPassPhrases.find(aor);
    if (iter == mUserPassPhrases.end())
@@ -1316,7 +1317,7 @@ BaseSecurity::setUserPassPhrase(const Data& aor, const Data& passPhrase)
 bool
 BaseSecurity::hasUserPassPhrase(const Data& aor) const
 {
-   assert(aor.empty());
+   resip_assert(aor.empty());
 
    PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
    if (iter == mUserPassPhrases.end())
@@ -1332,7 +1333,7 @@ BaseSecurity::hasUserPassPhrase(const Data& aor) const
 void
 BaseSecurity::removeUserPassPhrase(const Data& aor)
 {
-   assert(aor.empty());
+   resip_assert(aor.empty());
 
    PassPhraseMap::iterator iter = mUserPassPhrases.find(aor);
    if(iter != mUserPassPhrases.end())
@@ -1344,7 +1345,7 @@ BaseSecurity::removeUserPassPhrase(const Data& aor)
 Data
 BaseSecurity::getUserPassPhrase(const Data& aor) const
 {
-   assert(aor.empty());
+   resip_assert(aor.empty());
 
    PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
    if(iter == mUserPassPhrases.end())
@@ -1416,7 +1417,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    }
    
    // Make sure that necessary algorithms exist:
-   assert(EVP_sha1());
+   resip_assert(EVP_sha1());
 
 #if OPENSSL_VERSION_NUMBER < 0x00908000l
    RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
@@ -1441,15 +1442,15 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
          RSA_free(r);
     }
 #endif
-   assert(rsa);    // couldn't make key pair
+   resip_assert(rsa);    // couldn't make key pair
    
    EVP_PKEY* privkey = EVP_PKEY_new();
-   assert(privkey);
+   resip_assert(privkey);
    ret = EVP_PKEY_set1_RSA(privkey, rsa);
-   assert(ret);
+   resip_assert(ret);
 
    X509* cert = X509_new();
-   assert(cert);
+   resip_assert(cert);
    
    X509_NAME* subject = X509_NAME_new();
    X509_EXTENSION* ext = X509_EXTENSION_new();
@@ -1458,29 +1459,29 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    X509_set_version(cert, 2L);
    
    int serial = Random::getRandom();  // get an int worth of randomness
-   assert(sizeof(int)==4);
+   resip_assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
    ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_ASC, 
                                      (unsigned char *) domain.data(), (int)domain.size(), 
                                      -1, 0);
-   assert(ret);
+   resip_assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
                                      (unsigned char *) aor.data(), (int)aor.size(), 
                                      -1, 0);
-   assert(ret);
+   resip_assert(ret);
    
    ret = X509_set_issuer_name(cert, subject);
-   assert(ret);
+   resip_assert(ret);
    ret = X509_set_subject_name(cert, subject);
-   assert(ret);
+   resip_assert(ret);
    
    const long duration = 60*60*24*expireDays;   
    X509_gmtime_adj(X509_get_notBefore(cert),0);
    X509_gmtime_adj(X509_get_notAfter(cert), duration);
    
    ret = X509_set_pubkey(cert, privkey);
-   assert(ret);
+   resip_assert(ret);
    
    Data subjectAltNameStr = Data("URI:sip:") + aor
       + Data(",URI:im:")+aor
@@ -1493,13 +1494,13 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    static char CA_FALSE[] = "CA:FALSE";
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
-   assert(ret);
+   resip_assert(ret);
    X509_EXTENSION_free(ext);
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
    ret = X509_sign(cert, privkey, EVP_sha1());
-   assert(ret);
+   resip_assert(ret);
    
    addCertX509( UserCert, aor, cert, true /* write */ );
    addPrivateKeyPKEY( UserPrivateKey, aor, privkey, true /* write */ );
@@ -1508,7 +1509,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
 MultipartSignedContents*
 BaseSecurity::sign(const Data& senderAor, Contents* contents)
 {
-   assert( contents );
+   resip_assert( contents );
 
    // form the multipart
    MultipartSignedContents* multi = new MultipartSignedContents;
@@ -1531,15 +1532,15 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    const char* p = bodyData.data();
    int s = (int)bodyData.size();
    BIO* in=BIO_new_mem_buf( (void*)p,s);
-   assert(in);
+   resip_assert(in);
    DebugLog( << "created in BIO");
 
    BIO* out = BIO_new(BIO_s_mem()); // TODO - mem leak 
-   assert(out);
+   resip_assert(out);
    DebugLog( << "created out BIO" );
 
    STACK_OF(X509)* chain = sk_X509_new_null();
-   assert(chain);
+   resip_assert(chain);
 
    DebugLog( << "searching for cert/key for <" << senderAor << ">" );
    if (mUserCerts.count(senderAor) == 0 ||
@@ -1595,14 +1596,14 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
 
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
-   assert( size > 0 );
+   resip_assert( size > 0 );
 
    Data outData(outBuf,size);
    static char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
    Security::dumpAsn(RESIP_SIGN_OUT_SIG,outData);
 
    Pkcs7SignedContents* sigBody = new Pkcs7SignedContents( outData );
-   assert( sigBody );
+   resip_assert( sigBody );
 
    // add the signature to it
    sigBody->header(h_ContentType).param( p_name ) = "smime.p7s";
@@ -1612,7 +1613,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    sigBody->header(h_ContentTransferEncoding).value() = "binary";
    multi->parts().push_back( sigBody );
 
-   assert( multi->parts().size() == 2 );
+   resip_assert( multi->parts().size() == 2 );
 
    BIO_free(in);
    BIO_free(out);
@@ -1626,7 +1627,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
 Pkcs7Contents*
 BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 {
-   assert( bodyIn );
+   resip_assert( bodyIn );
 
    int flags = 0 ;
    flags |= PKCS7_BINARY;
@@ -1644,11 +1645,11 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    int s = (int)bodyData.size();
 
    BIO* in = BIO_new_mem_buf( (void*)p,s);
-   assert(in);
+   resip_assert(in);
    DebugLog( << "created in BIO");
 
    BIO* out = BIO_new(BIO_s_mem());
-   assert(out);
+   resip_assert(out);
    DebugLog( << "created out BIO" );
 
    InfoLog( << "target cert name is <" << recipCertName << ">" );
@@ -1661,10 +1662,10 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    }
 
    X509* cert = mUserCerts[recipCertName];
-   assert(cert);
+   resip_assert(cert);
 
    STACK_OF(X509) *certs = sk_X509_new_null();
-   assert(certs);
+   resip_assert(certs);
    sk_X509_push(certs, cert);
 
 // if you think you need to change the following few lines, please email fluffy
@@ -1677,7 +1678,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    //const EVP_CIPHER* cipher = EVP_enc_null();
    EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
 #endif
-   assert( cipher );
+   resip_assert( cipher );
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090705fL )
 #warning PKCS7_encrypt() is broken in OpenSSL 0.9.7d
@@ -1701,10 +1702,10 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
-   assert( size > 0 );
+   resip_assert( size > 0 );
 
    Data outData(outBuf,size);
-   assert( (long)outData.size() == size );
+   resip_assert( (long)outData.size() == size );
 
    InfoLog( << "Encrypted body size is " << outData.size() );
    InfoLog( << "Encrypted body is <" << outData.escaped() << ">" );
@@ -1713,7 +1714,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    Security::dumpAsn(RESIP_ENCRYPT_OUT, outData);
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
-   assert( outBody );
+   resip_assert( outBody );
 
    outBody->header(h_ContentType).param( p_smimeType ) = "enveloped-data";
    outBody->header(h_ContentType).param( p_name ) = "smime.p7m";
@@ -1753,7 +1754,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    }
 
    EVP_PKEY* pKey = k->second;
-   assert( pKey );
+   resip_assert( pKey );
  
    if ( pKey->type !=  EVP_PKEY_RSA )
    {
@@ -1762,12 +1763,12 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
 
-   assert( pKey->type ==  EVP_PKEY_RSA );
+   resip_assert( pKey->type ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
    unsigned char result[4096];
    int resultSize = sizeof(result);
-   assert( resultSize >= RSA_size(rsa) );
+   resip_assert( resultSize >= RSA_size(rsa) );
 
    SHA1Stream sha;
    sha << in;
@@ -1781,7 +1782,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    if( r != 1 )
    {
       ErrLog(<< "RSA_sign failed with return " << r);
-      assert(0);
+      resip_assert(0);
       return Data::Empty;
    }
 #else
@@ -1857,9 +1858,9 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
    EVP_PKEY* pKey = X509_get_pubkey( cert );
-   assert( pKey );
+   resip_assert( pKey );
 
-   assert( pKey->type ==  EVP_PKEY_RSA );
+   resip_assert( pKey->type ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
 #if 1
@@ -1869,11 +1870,11 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 #else
    unsigned char result[4096];
    int resultSize = sizeof(result);
-   assert( resultSize >= RSA_size(rsa) );
+   resip_assert( resultSize >= RSA_size(rsa) );
 
    resultSize = RSA_public_decrypt(sig.size(),(unsigned char*)sig.data(),
                                    result, rsa, RSA_PKCS1_PADDING );
-   assert( resultSize != -1 );
+   resip_assert( resultSize != -1 );
    //assert( resultSize == SHA_DIGEST_LENGTH );
    Data recievedHash(result,resultSize);
    dumpAsn("identity-out-decrypt", recievedHash );
@@ -1960,7 +1961,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    flags |= PKCS7_BINARY;
 
    // for now, assume that this is only a singed message
-   assert( contents );
+   resip_assert( contents );
 
    Data text = contents->getBodyData();
    DebugLog( << "uncode body = <" << text.escaped() << ">" );
@@ -1970,12 +1971,12 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    Security::dumpAsn(RESIP_ASN_DECRYPT, text );
 
    BIO* in = BIO_new_mem_buf( (void*)text.c_str(), (int)text.size());
-   assert(in);
+   resip_assert(in);
    InfoLog( << "created in BIO");
 
    BIO* out;
    out = BIO_new(BIO_s_mem());
-   assert(out);
+   resip_assert(out);
    InfoLog( << "created out BIO" );
 
    PKCS7* pkcs7 = d2i_PKCS7_bio(in, 0);
@@ -2034,11 +2035,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    }
 
    STACK_OF(X509)* certs = sk_X509_new_null();
-   assert( certs );
+   resip_assert( certs );
 
    //   flags |= PKCS7_NOVERIFY;
 
-   assert( mRootTlsCerts );
+   resip_assert( mRootTlsCerts );
 
    switch (type)
    {
@@ -2197,11 +2198,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    MultipartSignedContents::Parts::const_iterator it = multi->parts().begin();
    Contents* first = *it;
    ++it;
-   assert( it != multi->parts().end() );
+   resip_assert( it != multi->parts().end() );
    Contents* second = *it;
 
-   assert( second );
-   assert( first );
+   resip_assert( second );
+   resip_assert( first );
 
    InfoLog( << "message to signature-check is " << *first );
 
@@ -2231,15 +2232,15 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_SIG, sigData );
 
    BIO* in = BIO_new_mem_buf( (void*)sigData.data(),(int)sigData.size());
-   assert(in);
+   resip_assert(in);
    InfoLog( << "created in BIO");
 
    BIO* out = BIO_new(BIO_s_mem());
-   assert(out);
+   resip_assert(out);
    InfoLog( << "created out BIO" );
 
    BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),(int)textData.size());
-   assert(pkcs7Bio);
+   resip_assert(pkcs7Bio);
    InfoLog( << "created pkcs7 BIO");
 
    PKCS7* pkcs7 = d2i_PKCS7_bio(in, 0);
@@ -2300,14 +2301,14 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
    STACK_OF(X509)* certs = 0;
    certs = sk_X509_new_null();
-   assert( certs );
+   resip_assert( certs );
 
    if ( *signedBy == Data::Empty )
    {   
        //add all the certificates from mUserCerts stack to 'certs' stack  
        for(X509Map::iterator it = mUserCerts.begin(); it != mUserCerts.end(); it++)
        {
-           assert(it->second);
+           resip_assert(it->second);
            sk_X509_push(certs, it->second);
        }
    }
@@ -2317,7 +2318,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       {
          InfoLog( <<"Adding cert from " <<  *signedBy << " to check sig" );
          X509* cert = mUserCerts[ *signedBy ];
-         assert(cert);
+         resip_assert(cert);
          sk_X509_push(certs, cert);
       }
    }
@@ -2405,7 +2406,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
 #endif
 
-   assert( mRootTlsCerts );
+   resip_assert( mRootTlsCerts );
 
    switch (type)
    {
@@ -2495,7 +2496,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    (void)BIO_flush(out);
    char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
-   assert( size >= 0 );
+   resip_assert( size >= 0 );
 
    Data outData(outBuf,size);
    DebugLog( << "uncoded body is <" << outData.escaped() << ">" );
@@ -2512,7 +2513,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 SSL_CTX*
 BaseSecurity::getTlsCtx ()
 {
-   assert(mTlsCtx);
+   resip_assert(mTlsCtx);
    return   mTlsCtx;
 }
 
@@ -2520,7 +2521,7 @@ BaseSecurity::getTlsCtx ()
 SSL_CTX*
 BaseSecurity::getSslCtx ()
 {
-   assert(mSslCtx);
+   resip_assert(mSslCtx);
    return   mSslCtx;
 }
 
@@ -2552,19 +2553,19 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       {
          break;
       }
-      assert( i != -1 );
+      resip_assert( i != -1 );
       X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
-      assert( entry );
+      resip_assert( entry );
       
       ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
-      assert( s );
+      resip_assert( s );
       
       int t = M_ASN1_STRING_type(s);
       int l = M_ASN1_STRING_length(s);
       unsigned char* d = M_ASN1_STRING_data(s);
       Data name(d,l);
       DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
-      assert( name.size() == (unsigned)l );
+      resip_assert( name.size() == (unsigned)l );
       
       DebugLog( << "Found common name in cert of " << name );
       
@@ -2578,10 +2579,10 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
    for ( int i=0; i<numExt; i++ )
    {
       X509_EXTENSION* ext = X509_get_ext(cert,i);
-      assert( ext );
+      resip_assert( ext );
       
       const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
-      assert(str);
+      resip_assert(str);
       DebugLog(<< "Got certificate extention" << str );
 
       if  ( OBJ_obj2nid(X509_EXTENSION_get_object(ext)) == NID_subject_alt_name )
@@ -2911,7 +2912,7 @@ void
 BaseSecurity::dumpAsn( char* name, Data data)
 {
 #if 0 // for debugging
-   assert(name);
+   resip_assert(name);
 
    if (true) // dump asn.1 stuff to debug file
    {

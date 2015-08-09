@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <climits>
 
 #ifndef WIN32
@@ -42,20 +42,20 @@ Condition::Condition()
       if (m_gate)
       {
          res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
-         assert(res);
+         resip_assert(res);
       }
       if (m_queue)
       {
          res = CloseHandle(reinterpret_cast<HANDLE>(m_queue));
-         assert(res);
+         resip_assert(res);
       }
       if (m_mutex)
       {
          res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
-         assert(res);
+         resip_assert(res);
       }
 
-      assert(0);
+      resip_assert(0);
    }
 #  else
    mId =  CreateEvent(
@@ -65,21 +65,21 @@ Condition::Condition()
       FALSE, //BOOL bInitialState, // flag for initial state
       NULL //LPCTSTR lpName      // pointer to event-object name
       );
-   assert(mId);
+   resip_assert(mId);
 #  endif
 #else
 #ifdef _RESIP_MONOTONIC_CLOCK
    pthread_condattr_t attr;
    struct timespec dummy;
    int ret = pthread_condattr_init( &attr );
-   assert( ret == 0 );
+   resip_assert( ret == 0 );
 
 //   if((syscall( __NR_clock_getres, CLOCK_MONOTONIC, &dummy ) == 0) &&
      if((clock_getres( CLOCK_MONOTONIC, &dummy ) == 0) &&
        (pthread_condattr_setclock( &attr, CLOCK_MONOTONIC ) == 0))
    {
       ret = pthread_cond_init( &mId, &attr );
-      assert( ret == 0 );
+      resip_assert( ret == 0 );
       pthread_condattr_destroy( &attr );
       return;
    }
@@ -87,7 +87,7 @@ Condition::Condition()
 #endif
    int  rc =  pthread_cond_init(&mId,0);
    (void)rc;
-   assert( rc == 0 );
+   resip_assert( rc == 0 );
 #endif
 }
 
@@ -98,19 +98,19 @@ Condition::~Condition ()
 #  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
     int res = 0;
     res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
-    assert(res);
+    resip_assert(res);
     res = CloseHandle(reinterpret_cast<HANDLE>(m_queue));
-    assert(res);
+    resip_assert(res);
     res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    resip_assert(res);
 #  else
    BOOL ok = CloseHandle(mId);
-   assert( ok );
+   resip_assert( ok );
 #  endif
 #else
    if (pthread_cond_destroy(&mId) == EBUSY)
    {
-      assert(0);
+      resip_assert(0);
    }
 #endif
 }
@@ -121,10 +121,10 @@ Condition::enterWait ()
 {
    int res = 0;
    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
-   assert(res == WAIT_OBJECT_0);
+   resip_assert(res == WAIT_OBJECT_0);
    ++m_blocked;
    res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-   assert(res);
+   resip_assert(res);
 }
 #endif
 
@@ -143,13 +143,13 @@ Condition::wait (Mutex& mutex)
    {
       int res = 0;
       res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
-      assert(res == WAIT_OBJECT_0);
+      resip_assert(res == WAIT_OBJECT_0);
 
       unsigned was_waiting=0;
       unsigned was_gone=0;
 
       res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-      assert(res == WAIT_OBJECT_0);
+      resip_assert(res == WAIT_OBJECT_0);
       was_waiting = m_waiting;
       was_gone = m_gone;
       if (was_waiting != 0)
@@ -159,7 +159,7 @@ Condition::wait (Mutex& mutex)
             if (m_blocked != 0)
             {
                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
-               assert(res);
+               resip_assert(res);
                was_waiting = 0;
             }
             else if (m_gone != 0)
@@ -172,14 +172,14 @@ Condition::wait (Mutex& mutex)
          // this may occur if many calls to wait with a timeout are made and
          // no call to notify_* is made
          res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
-         assert(res == WAIT_OBJECT_0);
+         resip_assert(res == WAIT_OBJECT_0);
          m_blocked -= m_gone;
          res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-         assert(res);
+         resip_assert(res);
          m_gone = 0;
       }
       res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-      assert(res);
+      resip_assert(res);
 
       if (was_waiting == 1)
       {
@@ -188,10 +188,10 @@ Condition::wait (Mutex& mutex)
             // better now than spurious later
             res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),
                   INFINITE);
-            assert(res == WAIT_OBJECT_0);
+            resip_assert(res == WAIT_OBJECT_0);
          }
          res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-         assert(res);
+         resip_assert(res);
       }
    }
 
@@ -208,7 +208,7 @@ Condition::wait (Mutex& mutex)
 #else
    int ret = pthread_cond_wait(&mId, mutex.getId());
    (void)ret;
-   assert( ret == 0 );
+   resip_assert( ret == 0 );
 #endif
 }
 
@@ -246,7 +246,7 @@ Condition::wait(Mutex& mutex,
    {
        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),
              ms);
-       assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+       resip_assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
        ret = (res == WAIT_OBJECT_0);
        if (res == WAIT_TIMEOUT)
        {
@@ -264,14 +264,14 @@ Condition::wait(Mutex& mutex,
 #endif
 
    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),ms);
-   assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+   resip_assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
    ret = (res == WAIT_OBJECT_0);
 
    unsigned was_waiting=0;
    unsigned was_gone=0;
 
    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-   assert(res == WAIT_OBJECT_0);
+   resip_assert(res == WAIT_OBJECT_0);
    was_waiting = m_waiting;
    was_gone = m_gone;
    if (was_waiting != 0)
@@ -288,7 +288,7 @@ Condition::wait(Mutex& mutex,
          if (m_blocked != 0)
          {
             res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
-            assert(res);
+            resip_assert(res);
             was_waiting = 0;
          }
          else if (m_gone != 0)
@@ -301,14 +301,14 @@ Condition::wait(Mutex& mutex,
       // this may occur if many calls to wait with a timeout are made and
       // no call to notify_* is made
       res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
-      assert(res == WAIT_OBJECT_0);
+      resip_assert(res == WAIT_OBJECT_0);
       m_blocked -= m_gone;
       res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-      assert(res);
+      resip_assert(res);
       m_gone = 0;
    }
    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-   assert(res);
+   resip_assert(res);
 
    if (was_waiting == 1)
    {
@@ -316,10 +316,10 @@ Condition::wait(Mutex& mutex,
       {
          // better now than spurious later
          res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
-         assert(res ==  WAIT_OBJECT_0);
+         resip_assert(res ==  WAIT_OBJECT_0);
       }
       res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-      assert(res);
+      resip_assert(res);
    }
 
    // Reacquire the mutex
@@ -368,7 +368,7 @@ Condition::wait(Mutex& mutex,
    mutex.unlock();
    DWORD ret = WaitForSingleObject(mId, ms);
    mutex.lock();
-   assert(ret != WAIT_FAILED);
+   resip_assert(ret != WAIT_FAILED);
    return (ret == WAIT_OBJECT_0);
 #   endif
 #else	// WIN32
@@ -377,7 +377,7 @@ Condition::wait(Mutex& mutex,
    expiresTS.tv_sec = expires64 / 1000;
    expiresTS.tv_nsec = (expires64 % 1000) * 1000000L;
 
-   assert( expiresTS.tv_nsec < 1000000000L );
+   resip_assert( expiresTS.tv_nsec < 1000000000L );
 
    //std::cerr << "Condition::wait " << mutex << "ms=" << ms << " expire=" << expiresTS.tv_sec << " " << expiresTS.tv_nsec << std::endl;
    int ret = pthread_cond_timedwait(&mId, mutex.getId(), &expiresTS);
@@ -390,7 +390,7 @@ Condition::wait(Mutex& mutex,
    {
       //std::cerr << this << " pthread_cond_timedwait failed " << ret << " mutex=" << mutex << std::endl;
       (void)ret;
-      assert( ret == 0 );
+      resip_assert( ret == 0 );
       return true;
    }
 #endif	// not WIN32
@@ -411,14 +411,14 @@ Condition::signal ()
 
    int res = 0;
    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-   assert(res == WAIT_OBJECT_0);
+   resip_assert(res == WAIT_OBJECT_0);
 
    if (m_waiting != 0) // the m_gate is already closed
    {
       if (m_blocked == 0)
       {
          res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-         assert(res);
+         resip_assert(res);
          return;
       }
 
@@ -429,7 +429,7 @@ Condition::signal ()
    else
    {
       res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
-      assert(res == WAIT_OBJECT_0);
+      resip_assert(res == WAIT_OBJECT_0);
       if (m_blocked > m_gone)
       {
          if (m_gone != 0)
@@ -443,28 +443,28 @@ Condition::signal ()
       else
       {
          res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-         assert(res);
+         resip_assert(res);
       }
    }
 
    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-   assert(res);
+   resip_assert(res);
 
    if (signals)
    {
       res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
-      assert(res);
+      resip_assert(res);
    }
 #  else
    BOOL ret = SetEvent(
       mId // HANDLE hEvent   // handle to event object
       );
-   assert(ret);
+   resip_assert(ret);
 #  endif
 #else
    int ret = pthread_cond_signal(&mId);
    (void)ret;
-   assert( ret == 0 );
+   resip_assert( ret == 0 );
 #endif
 }
 
@@ -478,14 +478,14 @@ Condition::broadcast()
 
    int res = 0;
    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-   assert(res == WAIT_OBJECT_0);
+   resip_assert(res == WAIT_OBJECT_0);
 
    if (m_waiting != 0) // the m_gate is already closed
    {
       if (m_blocked == 0)
       {
          res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-         assert(res);
+         resip_assert(res);
          return;
       }
 
@@ -495,7 +495,7 @@ Condition::broadcast()
    else
    {
       res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
-      assert(res == WAIT_OBJECT_0);
+      resip_assert(res == WAIT_OBJECT_0);
       if (m_blocked > m_gone)
       {
          if (m_gone != 0)
@@ -509,20 +509,20 @@ Condition::broadcast()
       else
       {
          res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-         assert(res);
+         resip_assert(res);
       }
    }
 
    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-   assert(res);
+   resip_assert(res);
 
    if (signals)
    {
       res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
-      assert(res);
+      resip_assert(res);
    }
 #  else
-   assert(0);
+   resip_assert(0);
 #  endif
 #else
    pthread_cond_broadcast(&mId);

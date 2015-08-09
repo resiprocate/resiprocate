@@ -61,6 +61,7 @@
 #include "resip/dum/DumHelper.hxx"
 #include "resip/dum/MergedRequestRemovalCommand.hxx"
 #include "resip/dum/InMemorySyncPubDb.hxx"
+#include "rutil/ResipAssert.h"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
@@ -84,7 +85,7 @@ using namespace std;
    {                                                                    \
       if(mThreadDebugKey)                                               \
       {                                                                 \
-         assert(ThreadIf::tlsGetValue(mThreadDebugKey));                \
+         resip_assert(ThreadIf::tlsGetValue(mThreadDebugKey));                \
       }                                                                 \
    } while (false)
 #else
@@ -304,20 +305,20 @@ void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactor
 SharedPtr<MasterProfile>&
 DialogUsageManager::getMasterProfile()
 {
-   assert(mMasterProfile.get());
+   resip_assert(mMasterProfile.get());
    return mMasterProfile;
 }
 
 SharedPtr<UserProfile>&
 DialogUsageManager::getMasterUserProfile()
 {
-   assert(mMasterUserProfile.get());
+   resip_assert(mMasterUserProfile.get());
    return mMasterUserProfile;
 }
 
 void DialogUsageManager::setMasterProfile(const SharedPtr<MasterProfile>& masterProfile)
 {
-   assert(!mMasterProfile.get());
+   resip_assert(!mMasterProfile.get());
    mMasterProfile = masterProfile;
    mMasterUserProfile = masterProfile; // required so that we can return a reference to SharedPtr<UserProfile> in getMasterUserProfile
 }
@@ -358,14 +359,14 @@ DialogUsageManager::setServerAuthManager(SharedPtr<ServerAuthManager> manager)
 void
 DialogUsageManager::setClientRegistrationHandler(ClientRegistrationHandler* handler)
 {
-   assert(!mClientRegistrationHandler);
+   resip_assert(!mClientRegistrationHandler);
    mClientRegistrationHandler = handler;
 }
 
 void
 DialogUsageManager::setServerRegistrationHandler(ServerRegistrationHandler* handler)
 {
-   assert(!mServerRegistrationHandler);
+   resip_assert(!mServerRegistrationHandler);
    mServerRegistrationHandler = handler;
 }
 
@@ -378,28 +379,28 @@ DialogUsageManager::setDialogSetHandler(DialogSetHandler* handler)
 void
 DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 {
-   assert(!mInviteSessionHandler);
+   resip_assert(!mInviteSessionHandler);
    mInviteSessionHandler = handler;
 }
 
 void
 DialogUsageManager::setRequestValidationHandler(RequestValidationHandler* handler)
 {
-   assert(!mRequestValidationHandler);
+   resip_assert(!mRequestValidationHandler);
    mRequestValidationHandler = handler;
 }
 
 void
 DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceManager* manager)
 {
-   assert(!mRegistrationPersistenceManager);
+   resip_assert(!mRegistrationPersistenceManager);
    mRegistrationPersistenceManager = manager;
 }
 
 void
 DialogUsageManager::setPublicationPersistenceManager(PublicationPersistenceManager* manager)
 {
-   assert(!mPublicationPersistenceManager);
+   resip_assert(!mPublicationPersistenceManager);
    mPublicationPersistenceManager = manager;
 }
 
@@ -423,15 +424,15 @@ DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
 void
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
-   assert(handler);
-   assert(mClientSubscriptionHandlers.count(eventType) == 0);
+   resip_assert(handler);
+   resip_assert(mClientSubscriptionHandlers.count(eventType) == 0);
    mClientSubscriptionHandlers[eventType] = handler;
 }
 
 void
 DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler* handler)
 {
-   assert(handler);
+   resip_assert(handler);
    //default do-nothing server side refer handler can be replaced
    if (eventType == "refer" && mServerSubscriptionHandlers.count(eventType))
    {
@@ -446,24 +447,24 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
 void
 DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPublicationHandler* handler)
 {
-   assert(handler);
-   assert(mClientPublicationHandlers.count(eventType) == 0);
+   resip_assert(handler);
+   resip_assert(mClientPublicationHandlers.count(eventType) == 0);
    mClientPublicationHandlers[eventType] = handler;
 }
 
 void
 DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPublicationHandler* handler)
 {
-   assert(handler);
-   assert(mServerPublicationHandlers.count(eventType) == 0);
+   resip_assert(handler);
+   resip_assert(mServerPublicationHandlers.count(eventType) == 0);
    mServerPublicationHandlers[eventType] = handler;
 }
 
 void
 DialogUsageManager::addOutOfDialogHandler(MethodTypes type, OutOfDialogHandler* handler)
 {
-   assert(handler);
-   assert(mOutOfDialogHandlers.count(type) == 0);
+   resip_assert(handler);
+   resip_assert(mOutOfDialogHandlers.count(type) == 0);
    mOutOfDialogHandlers[type] = handler;
 }
 
@@ -545,14 +546,14 @@ DialogUsageManager::makeResponse(SipMessage& response,
                                  int responseCode,
                                  const Data& reason) const
 {
-   assert(request.isRequest());
+   resip_assert(request.isRequest());
    Helper::makeResponse(response, request, responseCode, reason);
 }
 
 void
 DialogUsageManager::sendResponse(const SipMessage& response)
 {
-   assert(response.isResponse());
+   resip_assert(response.isResponse());
    mStack.send(response, this);
 }
 
@@ -600,7 +601,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 {
    SharedPtr<SipMessage> inv = makeInviteSession(target, userProfile, initialOffer, ads);
    // add replaces header
-   assert(sessionToReplace.isValid());
+   resip_assert(sessionToReplace.isValid());
    if(sessionToReplace.isValid())
    {
       CallId replaces;
@@ -624,7 +625,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 {
    SharedPtr<SipMessage> inv = makeInviteSession(target, userProfile, initialOffer, level, alternative, ads);
    // add replaces header
-   assert(sessionToReplace.isValid());
+   resip_assert(sessionToReplace.isValid());
    if(sessionToReplace.isValid())
    {
       CallId replaces;
@@ -647,7 +648,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 {
    SharedPtr<SipMessage> inv = makeInviteSession(target, initialOffer, level, alternative, ads);
    // add replaces header
-   assert(sessionToReplace.isValid());
+   resip_assert(sessionToReplace.isValid());
    if(sessionToReplace.isValid())
    {
       CallId replaces;
@@ -757,7 +758,7 @@ DialogUsageManager::makeRefer(const NameAddr& target, const H_ReferTo::Type& ref
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* appDs)
 {
-   assert(userProfile.get());
+   resip_assert(userProfile.get());
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, userProfile->getDefaultSubscriptionTime()), appDs);
 }
 
@@ -798,7 +799,7 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventTy
 SharedPtr<SipMessage>
 DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* appDs)
 {
-   assert(userProfile.get());
+   resip_assert(userProfile.get());
    return makeNewSession(new RegistrationCreator(*this, target, userProfile, userProfile->getDefaultRegistrationTime()), appDs);
 }
 
@@ -887,7 +888,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       userProfile = ds->getUserProfile().get();
    }
 
-   assert(userProfile);
+   resip_assert(userProfile);
    if (!userProfile->isAnonymous() && userProfile->hasUserAgent())
    {
       msg->header(h_UserAgent).value() = userProfile->getUserAgent();
@@ -905,7 +906,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       msg->remove(h_Warnings);
    }
    
-   assert(userProfile);
+   resip_assert(userProfile);
    if (msg->isRequest() 
        && userProfile->hasProxyRequires() 
        && msg->header(h_RequestLine).method() != ACK 
@@ -1073,7 +1074,7 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
             userProfile = ds->getUserProfile().get();
          }
 
-         assert(userProfile);
+         resip_assert(userProfile);
 
          //!dcm! -- unique SharedPtr to auto_ptr conversion prob. a worthwhile
          //optimzation here. SharedPtr would have to be changed; would
@@ -1317,7 +1318,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    {
       // .bwc. Probably means multiple threads are trying to give DUM cycles 
       // simultaneously.
-      assert(!mHiddenThreadDebugKey);
+      resip_assert(!mHiddenThreadDebugKey);
       // No d'tor needed, since we're just going to use a pointer to this.
       if(!ThreadIf::tlsKeyCreate(mThreadDebugKey, 0))
       {
@@ -1346,8 +1347,8 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       if (tuMsg)
       {
          InfoLog (<< "TU unregistered ");
-         assert(mShutdownState == RemovingTransactionUser);
-         assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
+         resip_assert(mShutdownState == RemovingTransactionUser);
+         resip_assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
          mShutdownState = Shutdown;
          if (mDumShutdownHandler)
          {
@@ -1939,8 +1940,8 @@ DialogUsageManager::validateAccept(const SipMessage& request)
 bool
 DialogUsageManager::mergeRequest(const SipMessage& request)
 {
-   assert(request.isRequest());
-   assert(request.isExternal());
+   resip_assert(request.isRequest());
+   resip_assert(request.isExternal());
 
    if (!request.header(h_To).exists(p_tag))
    {
@@ -1984,7 +1985,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
        toTag = false;
    }
 
-   assert(mAppDialogSetFactory.get());
+   resip_assert(mAppDialogSetFactory.get());
    // !jf! note, the logic was reversed during ye great merge of March of Ought 5
    if (toTag ||
        findDialogSet(DialogSetId(request)))
@@ -2063,7 +2064,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             break;
          }
          case PUBLISH:
-            assert(false);
+            resip_assert(false);
             return;
          case SUBSCRIBE:
             if (!checkEventPackage(request))
@@ -2133,11 +2134,11 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case RESPONSE:
          case SERVICE:
-            assert(false);
+            resip_assert(false);
             break;
          case UNKNOWN:
          case MAX_METHODS:
-            assert(false);
+            resip_assert(false);
             break;
       }
    }
@@ -2264,7 +2265,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
             }
             break;
          default:
-            assert(0);
+            resip_assert(0);
       }
    }
 
@@ -2426,7 +2427,7 @@ DialogUsageManager::setOutgoingMessageInterceptor(SharedPtr<DumFeature> feat)
 void
 DialogUsageManager::applyToAllServerSubscriptions(ServerSubscriptionFunctor* functor)
 {
-   assert(functor);
+   resip_assert(functor);
    for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); ++it)
    {
       for (DialogSet::DialogMap::iterator i = it->second->mDialogs.begin(); i != it->second->mDialogs.end(); ++i)
@@ -2443,7 +2444,7 @@ DialogUsageManager::applyToAllServerSubscriptions(ServerSubscriptionFunctor* fun
 void
 DialogUsageManager::applyToAllClientSubscriptions(ClientSubscriptionFunctor* functor)
 {
-   assert(functor);
+   resip_assert(functor);
    for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); ++it)
    {
       for (DialogSet::DialogMap::iterator i = it->second->mDialogs.begin(); i != it->second->mDialogs.end(); ++i)

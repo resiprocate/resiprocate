@@ -107,7 +107,7 @@ Expect::output(ostream& s) const
       s << "opt(";
    }
 
-   assert(&mEndPoint);
+   resip_assert(&mEndPoint);
    
    s << mEndPoint.getName();
 

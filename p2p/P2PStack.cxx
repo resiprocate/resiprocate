@@ -19,7 +19,7 @@ P2PStack::run()
 {
    while (1)
    {
-      assert(0);
+      resip_assert(0);
       //process(1000);
    }
 
@@ -48,7 +48,7 @@ P2PStack::listenOn(int port)
    struct in_addr addr;
    if(resip::DnsUtil::inet_pton("0.0.0.0", addr)==0)
    {
-      assert(0);
+      resip_assert(0);
    }
    
    sockaddr_in addr_in;

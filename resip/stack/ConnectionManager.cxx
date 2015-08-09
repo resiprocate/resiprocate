@@ -37,10 +37,10 @@ ConnectionManager::ConnectionManager() :
 ConnectionManager::~ConnectionManager()
 {
    closeConnections();
-   assert(mReadHead->empty());
-   assert(mWriteHead->empty());
-   assert(mLRUHead->empty());
-   assert(mFlowTimerLRUHead->empty());
+   resip_assert(mReadHead->empty());
+   resip_assert(mWriteHead->empty());
+   resip_assert(mLRUHead->empty());
+   resip_assert(mFlowTimerLRUHead->empty());
 }
 
 void 
@@ -135,7 +135,7 @@ void
 ConnectionManager::buildFdSet(FdSet& fdset)
 {
    // If using PollGrp, caller shouldn't call this
-   assert( mPollGrp==0 );
+   resip_assert( mPollGrp==0 );
 
    for (ConnectionReadList::iterator i = mReadHead->begin(); 
         i != mReadHead->end(); ++i)
@@ -174,7 +174,7 @@ ConnectionManager::removeFromWritable(Connection* conn)
    }
    else
    {
-      assert(!mWriteHead->empty());
+      resip_assert(!mWriteHead->empty());
       conn->ConnectionWriteList::remove();
    }
 }
@@ -182,7 +182,7 @@ ConnectionManager::removeFromWritable(Connection* conn)
 void
 ConnectionManager::addConnection(Connection* connection)
 {
-   assert(mAddrMap.find(connection->who())==mAddrMap.end());
+   resip_assert(mAddrMap.find(connection->who())==mAddrMap.end());
 
    DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.mFlowKey  << ":" << connection->who() << ", totalConnections=" << mIdMap.size());
    
@@ -208,7 +208,7 @@ ConnectionManager::addConnection(Connection* connection)
 
    //DebugLog (<< "count=" << mAddrMap.count(connection->who()) << "who=" << connection->who() << " mAddrMap=" << Inserter(mAddrMap));
    //assert(mAddrMap.begin()->first == connection->who());
-   assert(mAddrMap.count(connection->who()) == 1);
+   resip_assert(mAddrMap.count(connection->who()) == 1);
 }
 
 void
@@ -225,7 +225,7 @@ ConnectionManager::removeConnection(Connection* connection)
    }
    else
    {
-      assert(!mReadHead->empty());
+      resip_assert(!mReadHead->empty());
       connection->ConnectionReadList::remove();
       connection->ConnectionWriteList::remove();
       if(connection->isFlowTimerEnabled())
@@ -358,7 +358,7 @@ ConnectionManager::gcWithTarget(unsigned int target)
                   ++i2;
          }
       }
-      assert(discard);
+      resip_assert(discard);
       WarningLog(<< "recycling LRU connection: " << discard << " " << discard->getSocket());
       delete discard;
       target--;
@@ -393,7 +393,7 @@ ConnectionManager::moveToFlowTimerLru(Connection *connection)
 void
 ConnectionManager::process(FdSet& fdset)
 {
-   assert( mPollGrp==NULL );	// owner shouldn't call this if polling
+   resip_assert( mPollGrp==NULL );	// owner shouldn't call this if polling
 
    // process the write list
    for (ConnectionWriteList::iterator writeIter = mWriteHead->begin();

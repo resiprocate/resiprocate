@@ -177,7 +177,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             }
          }
 
-         assert(mTransport);
+         resip_assert(mTransport);
          mMessage = new SipMessage(&mTransport->getTuple());
          
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
@@ -217,7 +217,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             return false;
          }
 
-         if (mMsgHeaderScanner.getHeaderCount() > 256)
+         if (mMsgHeaderScanner.getHeaderCount() > 1024)
          {
             WarningLog(<< "Discarding preparse; too many headers");
             delete [] mBuffer;
@@ -436,7 +436,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                {
                   Transport::stampReceived(mMessage);
                   DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-                  assert( mTransport );
+                  resip_assert( mTransport );
                   mTransport->pushRxMsgUp(mMessage);
                   mMessage = 0;
                }
@@ -511,7 +511,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
-               assert( mTransport );
+               resip_assert( mTransport );
                mTransport->pushRxMsgUp(mMessage);
                mMessage = 0;
             }
@@ -539,7 +539,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          break;
       }
       default:
-         assert(0);
+         resip_assert(0);
    }
    return true;
 }
@@ -605,9 +605,9 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       return false;
    }
 
-   assert(mTransport);
+   resip_assert(mTransport);
    mMessage = new SipMessage(&mTransport->getTuple());
-   assert(mMessage);
+   resip_assert(mMessage);
 
    mMessage->setSource(mWho);   
    mMessage->setTlsDomain(mTransport->tlsDomain());
@@ -627,7 +627,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
          if (mMessage->exists(h_Cookies))
          {
             WsBaseTransport* wst = dynamic_cast<WsBaseTransport*>(mTransport);
-            assert(wst);
+            resip_assert(wst);
             try
             {
                wsParseCookies(cookieList, mMessage);
@@ -761,14 +761,14 @@ ConnectionBase::makeWsHandshakeResponse()
 
 bool ConnectionBase::isUsingDeprecatedSecWebSocketKeys()
 {
-   assert(mMessage);
+   resip_assert(mMessage);
    return mMessage->exists(h_SecWebSocketKey1) &&
       mMessage->exists(h_SecWebSocketKey2);
 }
 
 bool ConnectionBase::isUsingSecWebSocketKey()
 {
-   assert(mMessage);
+   resip_assert(mMessage);
    return mMessage->exists(h_SecWebSocketKey);
 }
 
@@ -793,7 +793,7 @@ ConnectionBase::wsProcessData(int bytesRead)
          continue;
       }
 
-      assert(mTransport);
+      resip_assert(mTransport);
       mMessage = new SipMessage(&mTransport->getTuple());
 
       mMessage->setSource(mWho);
@@ -849,7 +849,7 @@ ConnectionBase::wsProcessData(int bytesRead)
       if (mMessage)
       {
          Transport::stampReceived(mMessage);
-         assert( mTransport );
+         resip_assert( mTransport );
          mTransport->pushRxMsgUp(mMessage);
          mMessage = 0;
       }
@@ -971,7 +971,7 @@ ConnectionBase::decompressNewBytes(int bytesRead)
            mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
         }
       }
-      assert( mTransport );
+      resip_assert( mTransport );
       mTransport->pushRxMsgUp(mMessage);
       mMessage = 0;
       sc = 0;
@@ -1045,7 +1045,7 @@ ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
    }
    else
    {
-      assert(0);
+      resip_assert(0);
       return mBuffer;
    }
 }
@@ -1061,7 +1061,7 @@ ConnectionBase::setBuffer(char* bytes, int count)
 Transport* 
 ConnectionBase::transport() const
 {
-   assert(this);
+   resip_assert(this);
    return mTransport;
 }
 

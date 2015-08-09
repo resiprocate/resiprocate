@@ -2,7 +2,7 @@
 .DS_Store
 .dependlibs
 Assert.cxx
-Assert.hxx
+Assert.h
 Debug
 Release
 bar

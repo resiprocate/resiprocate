@@ -30,7 +30,7 @@ bool
 NotifyContents::operator()(boost::shared_ptr<Event> event)
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
-   assert(sipEvent);
+   resip_assert(sipEvent);
    boost::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
    
    return (*this)(msg);

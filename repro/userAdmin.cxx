@@ -1,5 +1,5 @@
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <iostream>
 
 #include "repro/UserDb.hxx"
@@ -43,7 +43,7 @@ remove( char* pAor )
 void
 web(int port)
 {
-   assert(0);
+   resip_assert(0);
 #if 0
    UserDb db;
    
@@ -111,15 +111,15 @@ main(int argc, char* argv[])
       else if (!strcmp(argv[i],"-add"))
       {
          i++;
-         assert( i<argc );
+         resip_assert( i<argc );
          char* username = argv[i];
 
          i++;
-         assert( i<argc );
+         resip_assert( i<argc );
          char* realm = argv[i];
 
          i++;
-         assert( i<argc );
+         resip_assert( i<argc );
          char* passwd = argv[i];
 
          add( username, realm, passwd );
@@ -127,7 +127,7 @@ main(int argc, char* argv[])
       else if (!strcmp(argv[i],"-remove"))
       {
          i++;
-         assert( i<argc );
+         resip_assert( i<argc );
          char* aor = argv[i];
          remove( aor );
       }  

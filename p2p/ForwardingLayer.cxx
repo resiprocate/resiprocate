@@ -31,7 +31,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
 
    if (did.isCompressedId())
    {
-      assert(0);
+      resip_assert(0);
    }
    else if (did.isNodeId())
    {
@@ -80,7 +80,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
    }
    else // resourceID
    {
-      assert (did.isResourceId());
+      resip_assert (did.isResourceId());
       
       DebugLog(<< "ForwardingLayer: destination is resource-id");
       

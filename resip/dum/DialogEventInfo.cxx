@@ -217,7 +217,7 @@ DialogEventInfo::getLocalOfferAnswer() const
          return mInviteSession->getLocalOfferAnswer();
       }
    }
-   assert(mLocalOfferAnswer.get() != NULL);
+   resip_assert(mLocalOfferAnswer.get() != NULL);
    return *mLocalOfferAnswer;
 }
 
@@ -231,7 +231,7 @@ DialogEventInfo::getRemoteOfferAnswer() const
          return mInviteSession->getRemoteOfferAnswer();
       }
    }
-   assert(mRemoteOfferAnswer.get() != NULL);
+   resip_assert(mRemoteOfferAnswer.get() != NULL);
    return *mRemoteOfferAnswer;
 }
 

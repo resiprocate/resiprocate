@@ -32,8 +32,8 @@ RendSketchBase::~RendSketchBase()
    // (like troops) might be gone
 
    // make sure main loop is done
-   assert( mRunCurStart == 0 );
-   assert( mRunState == REND_SKETCH_RS_FINISHED);
+   resip_assert( mRunCurStart == 0 );
+   resip_assert( mRunState == REND_SKETCH_RS_FINISHED);
 
    deleteTroops();
 }
@@ -252,7 +252,7 @@ RendSketchBase::doWorkLoop(RendTimeUs reportPeriod)
 {
    RendTimeUs now = RendGetTimeUsRel();
 
-   assert(mRunState == REND_SKETCH_RS_INIT);
+   resip_assert(mRunState == REND_SKETCH_RS_INIT);
    mRunState = REND_SKETCH_RS_RUNNING;
    runTimerReset();
    runTimerGo(now);
@@ -320,7 +320,7 @@ RendSketchBase::doWorkLoop(RendTimeUs reportPeriod)
          lastUpdateTime = now;
       }
 
-      assert( lastWorkTime <= now );
+      resip_assert( lastWorkTime <= now );
       double deltaSecs = (now - lastWorkTime) * 1e-6;
       double minWorkFlt = mWorkVol.mWorkRateMin * deltaSecs + minWorkCarry;
       double maxWorkFlt = mWorkVol.mWorkRateMax * deltaSecs + maxWorkCarry;

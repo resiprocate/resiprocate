@@ -62,7 +62,7 @@ MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs
    for ( j = list.begin(); 
          j != list.end(); ++j)
    {
-      assert( *j );
+      resip_assert( *j );
       mContents.push_back( (*j)->clone() );
    }
 }
@@ -134,7 +134,7 @@ MultipartMixedContents::encodeParsed(EncodeStream& str) const
    boundary += boundaryToken;
    boundary.replace("\"", ""); // remove quotes
 
-   assert( mContents.size() > 0 );
+   resip_assert( mContents.size() > 0 );
    
    bool first = true;
    for (vector<Contents*>::const_iterator i = mContents.begin(); 

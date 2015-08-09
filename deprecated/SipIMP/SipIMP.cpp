@@ -116,9 +116,9 @@ ImCallback::receivedPage( const Data& msg, const Uri& from,
 						 const Data& signedBy,  resip::SignatureStatus sigStatus,
 						 bool wasEncryped  )
 {  
-	assert( theApp.m_pMainWnd );
+	resip_assert( theApp.m_pMainWnd );
 	BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-	assert(buddy);
+	resip_assert(buddy);
 	buddy->receivedPage(  msg, from,signedBy,  sigStatus, wasEncryped  );
 }
 
@@ -126,9 +126,9 @@ ImCallback::receivedPage( const Data& msg, const Uri& from,
 void 
 ImCallback::presenceUpdate(const Uri& dest, bool open, const Data& status )
 {
-	assert( theApp.m_pMainWnd );
+	resip_assert( theApp.m_pMainWnd );
 	BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-	assert(buddy);
+	resip_assert(buddy);
 	buddy->presenseUpdate( dest, open, status );
 }
 
@@ -146,9 +146,9 @@ ImCallback::sendPageFailed( const Uri& dest, int num )
 	msg += cNum;
 	msg += _T(")");
 
-	assert( theApp.m_pMainWnd );
+	resip_assert( theApp.m_pMainWnd );
 	BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-	assert(buddy);
+	resip_assert(buddy);
 	buddy->message( msg );
 }
 
@@ -165,9 +165,9 @@ ImCallback::registrationFailed( const Uri& dest,int num )
 	msg += cNum;
 	msg += _T(")");
 
-	assert( theApp.m_pMainWnd );
+	resip_assert( theApp.m_pMainWnd );
 	BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-	assert(buddy);
+	resip_assert(buddy);
 	buddy->message( msg );
 }
 
@@ -178,9 +178,9 @@ ImCallback::registrationWorked( const Uri& dest )
 	msg += CString(dest.getAor().c_str()); 
 	msg += _T(" worked");
 
-	assert( theApp.m_pMainWnd );
+	resip_assert( theApp.m_pMainWnd );
 	BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-	assert(buddy);
+	resip_assert(buddy);
 	buddy->message( msg );
 }
 
@@ -190,9 +190,9 @@ ImCallback::receivePageFailed(const Uri& sender)
 	CString msg = _T("Can not understand message from ");
 	msg += CString(sender.getAor().c_str()); 
 
-	assert( theApp.m_pMainWnd );
+	resip_assert( theApp.m_pMainWnd );
 	BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-	assert(buddy);
+	resip_assert(buddy);
 	buddy->message( msg );
 }
 
@@ -200,7 +200,7 @@ void
 SipImpApp::imInit()
 {  
 	sipStack = new SipStack;  
-	assert(sipStack);
+	resip_assert(sipStack);
 
 	encryp = false;
 	sign = false;
@@ -298,7 +298,7 @@ SipImpApp::imInit()
 	}
 
 #ifdef USE_SSL
-	assert( sipStack->security );
+	resip_assert( sipStack->security );
 	try
 	{
 		resip::Data key( mKey );
@@ -308,7 +308,7 @@ SipImpApp::imInit()
 		if ( !okSec )
 		{
 			//ErrLog( << "Could not load the certificates" );
-			assert( 0 );
+			resip_assert( 0 );
 		}
 	}
 	catch ( resip::Security::Exception e )
@@ -342,9 +342,9 @@ SipImpApp::imInit()
 
 	// build the TU 
 	ImCallback* callback = new ImCallback;
-	assert( callback );
+	resip_assert( callback );
 	tuIM = new TuIM(sipStack,aor,contact,callback);
-	assert(tuIM);
+	resip_assert(tuIM);
 
 	tuIM->setUAName( Data("www.SIPimp.org (win32) ver 0.3.1") );
 
@@ -365,7 +365,7 @@ SipImpApp::imInit()
 	// registter 
 	if ( !mHost.IsEmpty() )
 	{
-		assert(tuIM);
+		resip_assert(tuIM);
 		tuIM->registerAor( aor , Data(mPassword) );
 	}
 
@@ -378,21 +378,21 @@ SipImpApp::imInit()
 
 		resip::Data dName( name );
 		resip::Uri uri(dName);
-		assert( tuIM );
+		resip_assert( tuIM );
 		tuIM->addBuddy( uri , resip::Data::Empty );
 	}
 }
 
 void SipImpApp::process(void)
 {
-	assert(sipStack);
+	resip_assert(sipStack);
 	
 	if ( !tuIM )
 	{
 		return;
 	}
 	
-	assert(tuIM);
+	resip_assert(tuIM);
 
 	FdSet fdset; 
 	sipStack->buildFdSet(fdset);
@@ -401,7 +401,7 @@ void SipImpApp::process(void)
 	if ( err == -1 )
 	{
 		int e = errno;
-		assert(0);
+		resip_assert(0);
 		//InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
 	}
 	//InfoLog(<< "Select returned");
@@ -441,9 +441,9 @@ SipImpApp::sendPage(CString text, CString destiation)
 #ifndef USE_SSL
 	if ( sign || encryp )
 	{
-		assert( theApp.m_pMainWnd );
+		resip_assert( theApp.m_pMainWnd );
 		BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-		assert(buddy);
+		resip_assert(buddy);
 		buddy->message( CString(_T("no support for sign or encryption in this version")) );
 		return;
 	}
@@ -451,9 +451,9 @@ SipImpApp::sendPage(CString text, CString destiation)
 
 	if ( !tuIM->haveCerts(sign,encFor) )
 	{
-		assert( theApp.m_pMainWnd );
+		resip_assert( theApp.m_pMainWnd );
 		BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
-		assert(buddy);
+		resip_assert(buddy);
 		buddy->message( CString(_T("Don't have the aproperate certificates to send this message")) );
 		return;
 	}
@@ -469,7 +469,7 @@ SipImpApp::addBuddy(CString name)
 	{
 		return name;
 	}
-	assert(theApp.tuIM);
+	resip_assert(theApp.tuIM);
 	name.Trim();
 
 	CString uName;
@@ -493,7 +493,7 @@ SipImpApp::addBuddy(CString name)
 
 	theApp.tuIM->addBuddy(buddy, resip::Data::Empty /*group*/ );
 
-	assert( dlg );
+	resip_assert( dlg );
 	resip::Data sName = Data::from(buddy);
 	dlg->addBuddy( sName.c_str() );
 
@@ -507,7 +507,7 @@ SipImpApp::setStatus(bool online, CString note)
 	{
 		return;
 	}
-	assert(theApp.tuIM);
+	resip_assert(theApp.tuIM);
 	resip::Data status( note );
 	theApp.tuIM->setMyPresence( online, status );
 }

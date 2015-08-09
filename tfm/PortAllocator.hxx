@@ -38,7 +38,7 @@ class PortAllocator
             strm << "127.0.0.";
             static int addr = StartAddress;
 #ifndef WIN32
-            assert(addr < 253);
+            resip_assert(addr < 253);
             strm << resip::Data(++addr);
 #else
             strm << resip::Data(addr);

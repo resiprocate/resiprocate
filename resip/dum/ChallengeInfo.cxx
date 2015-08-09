@@ -1,5 +1,5 @@
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "resip/dum/ChallengeInfo.hxx"
 #include "rutil/Data.hxx"
@@ -49,7 +49,7 @@ ChallengeInfo::brief() const
 resip::Message*
 ChallengeInfo::clone() const
 {
-   assert(false); return NULL;
+   resip_assert(false); return NULL;
 }
 
 std::ostream&

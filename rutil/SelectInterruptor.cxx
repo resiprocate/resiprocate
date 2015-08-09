@@ -1,6 +1,6 @@
 #include "rutil/SelectInterruptor.hxx"
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "rutil/Logger.hxx"
 
 #ifndef WIN32
@@ -28,14 +28,14 @@ SelectInterruptor::SelectInterruptor()
    memset(&mWakeupAddr, 0, sizeof(mWakeupAddr));
    int len = sizeof(mWakeupAddr);
    int error = getsockname(mSocket, (sockaddr *)&mWakeupAddr, &len);
-   assert(error == 0);
+   resip_assert(error == 0);
    error= connect(mSocket, &mWakeupAddr, sizeof(mWakeupAddr));
-   assert(error == 0);
+   resip_assert(error == 0);
    mReadThing = mSocket;
 #else
    int x = pipe(mPipe);
    (void)x;
-   assert( x != -1 );
+   resip_assert( x != -1 );
    // make write-side non-blocking to avoid deadlock
    makeSocketNonBlocking(mPipe[1]);
    // make read-side non-blocking so safe to read out entire pipe
@@ -118,7 +118,7 @@ SelectInterruptor::interrupt()
    if(readSize == 0)  
    {
       int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
-      assert(count == sizeof(wakeUp));
+      resip_assert(count == sizeof(wakeUp));
    }
 #else
    ssize_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
@@ -132,7 +132,7 @@ SelectInterruptor::interrupt()
    } 
    else 
    {
-      assert(res == sizeof(wakeUp));
+      resip_assert(res == sizeof(wakeUp));
    }
 #endif
 }

@@ -77,7 +77,7 @@ MacSecurity::openSystemCertStore()
    if (status != noErr)
    {
       ErrLog( << "X509Anchors keychain could not be opened");
-      assert(0);
+      resip_assert(0);
       return NULL;
    }
 
@@ -100,7 +100,7 @@ MacSecurity::openSystemCertStore()
    if (status != noErr)
    {      
       ErrLog( << "System certificate store cannot be opened");
-      assert(0);
+      resip_assert(0);
       return NULL;
    }
 
@@ -175,7 +175,7 @@ MacSecurity::getCerts()
       {
          // there was an error loading the certificate
          ErrLog( << "Couldn't load certificate, error code: " << status);
-         assert(0);
+         resip_assert(0);
       }
    }
    

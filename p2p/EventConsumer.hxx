@@ -1,7 +1,7 @@
 #ifndef P2P_EventConsumer_hxx
 #define P2P_EventConsumer_hxx
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "p2p/EventConsumerBase.hxx"
 
@@ -13,37 +13,37 @@ class EventConsumer : public EventConsumerBase
    public:
       virtual ~EventConsumer(){};
 
-      virtual void consume(CertDoneEvent& certdone) { assert(0); }
-      virtual void consume(ConnectionOpened& m) { assert(0); }
-      virtual void consume(ConnectionClosed& m) { assert(0); }
-      virtual void consume(MessageArrived& m) { assert(0); }
-      virtual void consume(ApplicationMessageArrived& m) { assert(0); }
-      virtual void consume(LocalCandidatesCollected& m) { assert(0); }
+      virtual void consume(CertDoneEvent& certdone) { resip_assert(0); }
+      virtual void consume(ConnectionOpened& m) { resip_assert(0); }
+      virtual void consume(ConnectionClosed& m) { resip_assert(0); }
+      virtual void consume(MessageArrived& m) { resip_assert(0); }
+      virtual void consume(ApplicationMessageArrived& m) { resip_assert(0); }
+      virtual void consume(LocalCandidatesCollected& m) { resip_assert(0); }
       
-      virtual void consume(PingReq& m) { assert(0); }
-      virtual void consume(PingAns& m) { assert(0); }
-      virtual void consume(ConnectReq& m) { assert(0); }
-      virtual void consume(ConnectAns& m) { assert(0); }
-      virtual void consume(TunnelReq& m) { assert(0); }
-      virtual void consume(TunnelAns& m) { assert(0); }
-      virtual void consume(StoreReq& m) { assert(0); }
-      virtual void consume(StoreAns& m) { assert(0); }
-      virtual void consume(FetchReq& m) { assert(0); }
-      virtual void consume(FetchAns& m) { assert(0); }
-      virtual void consume(RemoveReq& m) { assert(0); }
-      virtual void consume(RemoveAns& m) { assert(0); }
-      virtual void consume(FindAns& m) { assert(0); }
-      virtual void consume(JoinReq& m) { assert(0); }
-      virtual void consume(JoinAns& m) { assert(0); }
-      virtual void consume(LeaveReq& m) { assert(0); }
-      virtual void consume(LeaveAns& m) { assert(0); }
-      virtual void consume(UpdateReq& m) { assert(0); }
-      virtual void consume(UpdateAns& m) { assert(0); }
-      virtual void consume(RouteQueryReq& m) { assert(0); }
-      virtual void consume(RouteQueryAns& m) { assert(0); }
-      virtual void consume(ErrorResponse& m) { assert(0); }
+      virtual void consume(PingReq& m) { resip_assert(0); }
+      virtual void consume(PingAns& m) { resip_assert(0); }
+      virtual void consume(ConnectReq& m) { resip_assert(0); }
+      virtual void consume(ConnectAns& m) { resip_assert(0); }
+      virtual void consume(TunnelReq& m) { resip_assert(0); }
+      virtual void consume(TunnelAns& m) { resip_assert(0); }
+      virtual void consume(StoreReq& m) { resip_assert(0); }
+      virtual void consume(StoreAns& m) { resip_assert(0); }
+      virtual void consume(FetchReq& m) { resip_assert(0); }
+      virtual void consume(FetchAns& m) { resip_assert(0); }
+      virtual void consume(RemoveReq& m) { resip_assert(0); }
+      virtual void consume(RemoveAns& m) { resip_assert(0); }
+      virtual void consume(FindAns& m) { resip_assert(0); }
+      virtual void consume(JoinReq& m) { resip_assert(0); }
+      virtual void consume(JoinAns& m) { resip_assert(0); }
+      virtual void consume(LeaveReq& m) { resip_assert(0); }
+      virtual void consume(LeaveAns& m) { resip_assert(0); }
+      virtual void consume(UpdateReq& m) { resip_assert(0); }
+      virtual void consume(UpdateAns& m) { resip_assert(0); }
+      virtual void consume(RouteQueryReq& m) { resip_assert(0); }
+      virtual void consume(RouteQueryAns& m) { resip_assert(0); }
+      virtual void consume(ErrorResponse& m) { resip_assert(0); }
 
-      virtual void consume(const BatchMessages& cm) { assert(0); }
+      virtual void consume(const BatchMessages& cm) { resip_assert(0); }
 
       virtual resip::Data brief() const { return "EventConsumer"; }
 

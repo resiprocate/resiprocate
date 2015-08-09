@@ -82,7 +82,7 @@ ServerRegistration::accept(SipMessage& ok)
       {
          if (!mAsyncLocalStore.get())
          {
-            assert(0);
+            resip_assert(0);
          }
          else
          {
@@ -105,7 +105,7 @@ ServerRegistration::accept(SipMessage& ok)
       {
          if (!mAsyncLocalStore.get())
          {
-            assert(0);
+            resip_assert(0);
             return;
          }
          //This register was accepted, but still need to apply the changes made by this register and then
@@ -176,7 +176,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 {
    DebugLog( << "got a registration" );
    
-   assert(msg.isRequest());
+   resip_assert(msg.isRequest());
    ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
    RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
 
@@ -432,7 +432,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
          return;
 
       default:
-         assert(0);
+         resip_assert(0);
    }
 }
 
@@ -626,7 +626,7 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
 
          if (!rec)
          {
-            assert(0);
+            resip_assert(0);
             continue;
          }
 
@@ -687,7 +687,7 @@ ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> co
    {
       case asyncStateWaitingForInitialContactList:
       {
-         assert(mAsyncLocalStore.get() == 0);
+         resip_assert(mAsyncLocalStore.get() == 0);
          mAsyncLocalStore = resip::SharedPtr<AsyncLocalStore>(new AsyncLocalStore(contacts));
          mAsyncState = asyncStateProcessingRegistration;
          processRegistration(mRequest);
@@ -695,7 +695,7 @@ ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> co
       }
       case asyncStateWaitingForAcceptReject:
       {
-         assert(0); //need to call accept() or reject(), wait for asyncUpdateContacts(), then call this function.
+         resip_assert(0); //need to call accept() or reject(), wait for asyncUpdateContacts(), then call this function.
          return false;
       }
       case asyncStateAcceptedWaitingForFinalContactList:
@@ -706,7 +706,7 @@ ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> co
       }
       default:
       {
-         assert(0);
+         resip_assert(0);
          return false;
       }
    }
@@ -721,7 +721,7 @@ ServerRegistration::asyncProcessFinalContacts(std::auto_ptr<resip::ContactPtrLis
    {
       if (!mAsyncOkMsg.get())
       {
-         assert(0);
+         resip_assert(0);
       }
       else
       {
@@ -754,7 +754,7 @@ ServerRegistration::AsyncLocalStore::updateContact(const ContactInstanceRecord &
 {
    if (!mModifiedContacts.get() || !mLog.get())
    {
-      assert(0);
+      resip_assert(0);
       return RegistrationPersistenceManager::CONTACT_UPDATED;
    }
 
@@ -793,7 +793,7 @@ ServerRegistration::AsyncLocalStore::removeContact(const ContactInstanceRecord &
 {
    if (!mModifiedContacts.get() || !mLog.get())
    {
-      assert(0);
+      resip_assert(0);
       return;
    }
 

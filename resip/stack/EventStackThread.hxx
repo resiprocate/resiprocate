@@ -129,7 +129,7 @@ class EventStackSimpleMgr
        * Thread accessor.
        * Use this to invoke addStack(), run(), shutdown(), join(), etc.
        */
-      EventStackThread& getThread() { assert(mThread); return *mThread; }
+      EventStackThread& getThread() { resip_assert(mThread); return *mThread; }
 
       /*
        * Call to release all owned resources early. Stack must be

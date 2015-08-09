@@ -301,7 +301,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       // Need to calculate HMAC across entire message - for LongTermAuthentication we use 
       // username:realm:password string as the key
       Data hmacKey;
-      assert(request.mHasUsername);  // Note:  This is checked above
+      resip_assert(request.mHasUsername);  // Note:  This is checked above
 
       request.calculateHmacKeyForHa1(hmacKey, getConfig().getHa1ForUsername(*request.mUsername, *request.mRealm));
 

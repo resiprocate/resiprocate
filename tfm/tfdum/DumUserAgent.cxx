@@ -66,7 +66,7 @@ dispatchEventHelper(E* event, C& container)
    }
 
    ErrLog(<< "No matching endpoint for event " << typeid(*event).name());
-   assert(0);
+   resip_assert(0);
    throw TestEndPoint::GlobalFailure("No matching endpoint for the event", __FILE__, __LINE__);
 }
 
@@ -327,7 +327,7 @@ DumUserAgent::process(FdSet&)
       WarningLog (<< "Unhandled exception: " << e);
       
       // should cause the test to fail
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -429,7 +429,7 @@ DumUserAgent::send(resip::SharedPtr<resip::SipMessage> msg)
 DumUaAction*
 DumUserAgent::cancelInvite()
 {
-   assert(mAppDialogSet);
+   resip_assert(mAppDialogSet);
    return new DumUaCommand(this, boost::bind(&resip::AppDialogSet::end, mAppDialogSet));
 }
 
@@ -720,7 +720,7 @@ DumUserAgent::onRefer(InviteSessionHandle h, ServerSubscriptionHandle serverSubH
    DebugLog(<< "onRefer");
    InviteEvent* event = new InviteEvent(this, Invite_Refer, h, msg, serverSubHandle);
    TestUsage* usage = findUsage(event);
-   assert(usage);
+   resip_assert(usage);
    static_cast<TestInviteSession*>(usage)->setServerSubscription(serverSubHandle);
    static_cast<TestInviteSession*>(usage)->setReferMessage(msg);
    handleEvent(event);
@@ -732,7 +732,7 @@ DumUserAgent::onReferNoSub(InviteSessionHandle h, const SipMessage& msg)
    DebugLog(<< "onReferNoSub");
    InviteEvent event(this, Invite_Refer, h, msg);
    TestUsage* usage = findUsage(&event);
-   assert(usage);
+   resip_assert(usage);
    static_cast<TestInviteSession*>(usage)->setReferMessage(msg);
    handleEvent(new InviteEvent(this, Invite_ReferNoSub, h, msg));
 }
@@ -1550,20 +1550,20 @@ DumUserAgent::From::From(const DumUserAgent& dua)
    : mUa(&dua),
      mProxy(0)
 {
-   assert(mUa);
+   resip_assert(mUa);
 }
 
 DumUserAgent::From::From(TestProxy* proxy)
    : mUa(0),
      mProxy(proxy)
 {
-   assert(proxy);
+   resip_assert(proxy);
 }
 
 Data
 DumUserAgent::From::toString() const
 {
-   assert(mUa || mProxy);
+   resip_assert(mUa || mProxy);
 
    if (mUa)
    {
@@ -1623,14 +1623,14 @@ DumUserAgent::From::isMatch(const boost::shared_ptr<resip::SipMessage>& message)
       return true;
    }
 
-   assert(0);
+   resip_assert(0);
    return false;
 }
 
 DumUserAgent::FindMatchingDialogToReplace::FindMatchingDialogToReplace(DumUserAgent& dua)
    : mUa(&dua)
 {
-   assert(mUa);
+   resip_assert(mUa);
 }
 
 Data
