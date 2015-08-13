@@ -123,9 +123,19 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
          // If doc is from sync then ensure it is newer
          if (!document.mSyncPublication || (document.mLastUpdated > eTagIt->second.mLastUpdated))
          {
+            SharedPtr<Contents> contentsForOnDocumentModified = document.mContents;
+            SharedPtr<SecurityAttributes> securityAttributesForOnDocumentModified = document.mSecurityAttributes;
             UInt64 lingerTime = resipMax(document.mExpirationTime, eTagIt->second.mExpirationTime);
             if (document.mContents.get() == 0)  // If this is a pub refresh then ensure we don't get rid of existing doc body
             {
+               // If previous document was expired then ensure we push out a notify on the refresh to tell everyone it's back
+               // This can happen if someone deletes a publication on the web page, then it is refreshed.  The delete causes a 
+               // notify of closed state, the refresh should bring the state back.
+               if (eTagIt->second.mExpirationTime == 0)
+               {
+                   contentsForOnDocumentModified = eTagIt->second.mContents; 
+                   securityAttributesForOnDocumentModified = eTagIt->second.mSecurityAttributes;
+               }
                SharedPtr<Contents> contents = eTagIt->second.mContents;
                SharedPtr<SecurityAttributes> securityAttributes = eTagIt->second.mSecurityAttributes;
                eTagIt->second = document;
@@ -140,7 +150,7 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
             // publication as gone after this time anyway
             eTagIt->second.mLingerTime = lingerTime;
             // Only pass sync as true if this update just came from an inbound sync operation
-            invokeOnDocumentModified(document.mSyncPublication /* sync publication? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, document.mContents.get(), document.mSecurityAttributes.get());
+            invokeOnDocumentModified(document.mSyncPublication /* sync publication? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, contentsForOnDocumentModified.get(), securityAttributesForOnDocumentModified.get());
          }
       }
    }
