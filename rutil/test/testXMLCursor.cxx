@@ -42,6 +42,24 @@ main()
    Log::initialize(Log::Cout, Log::Stack, "testXMLCursor");
 
    {
+       // extremely simple doc with leading whitespace and no prolog
+       const Data test("\r\n\r\n<reginfo><test>12</test></reginfo>\r\n");
+
+       try
+       {
+           XMLCursor xmlc(ParseBuffer(test.data(), test.size()));
+
+           assert(xmlc.getTag() == "reginfo");
+           traverse(xmlc);
+       }
+       catch (ParseException& e)
+       {
+           cerr << e << endl;
+           assert(false);
+       }
+   }
+
+   {
       const Data test(
          "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
          "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"\r\n"
