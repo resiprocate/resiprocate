@@ -485,7 +485,7 @@ Connection::checkConnectionTimedout()
    int errNumSize = sizeof(errNum);
    if(getsockopt(mWho.mFlowKey, SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize) == 0)
    {
-      if (errNum == ETIMEDOUT || errNum == EHOSTUNREACH)
+      if (errNum == ETIMEDOUT || errNum == EHOSTUNREACH || errNum == ECONNREFUSED)
       {
          InfoLog(<< "Exception on socket " << mWho.mFlowKey << " code: " << errNum << "; closing connection");
          setFailureReason(TransportFailure::ConnectionException, errNum);
