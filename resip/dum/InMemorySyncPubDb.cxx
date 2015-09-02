@@ -123,15 +123,20 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
          // If doc is from sync then ensure it is newer
          if (!document.mSyncPublication || (document.mLastUpdated > eTagIt->second.mLastUpdated))
          {
+            UInt64 now = Timer::getTimeSecs();
             SharedPtr<Contents> contentsForOnDocumentModified = document.mContents;
             SharedPtr<SecurityAttributes> securityAttributesForOnDocumentModified = document.mSecurityAttributes;
-            UInt64 lingerTime = resipMax(document.mExpirationTime, eTagIt->second.mExpirationTime);
+            // We should only need to linger a document past the latest expiration time we have ever seen, since both sides will
+            // treat the publication as gone after this time anyway.  However this is timing sensitive with the sync process.  
+            // So we will linger a document for twice this duration.
+            UInt64 lingerDuration = (resipMax(document.mExpirationTime, eTagIt->second.mExpirationTime) - now) * 2;
             if (document.mContents.get() == 0)  // If this is a pub refresh then ensure we don't get rid of existing doc body
             {
                // If previous document was expired then ensure we push out a notify on the refresh to tell everyone it's back
                // This can happen if someone deletes a publication on the web page, then it is refreshed.  The delete causes a 
                // notify of closed state, the refresh should bring the state back.
-               if (eTagIt->second.mExpirationTime == 0)
+               if (eTagIt->second.mExpirationTime == 0 ||
+                   eTagIt->second.mExpirationTime > now)
                {
                    contentsForOnDocumentModified = eTagIt->second.mContents; 
                    securityAttributesForOnDocumentModified = eTagIt->second.mSecurityAttributes;
@@ -146,9 +151,7 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
             {
                eTagIt->second = document;
             }
-            // We only need to linger a document past the latest expiration time we have ever seen, since both sides will treat the
-            // publication as gone after this time anyway
-            eTagIt->second.mLingerTime = lingerTime;
+            eTagIt->second.mLingerTime = now + lingerDuration;
             // Only pass sync as true if this update just came from an inbound sync operation
             invokeOnDocumentModified(document.mSyncPublication /* sync publication? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, contentsForOnDocumentModified.get(), securityAttributesForOnDocumentModified.get());
          }
