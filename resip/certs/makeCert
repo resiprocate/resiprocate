@@ -37,7 +37,7 @@ export ALTNAME
 
 openssl genrsa  -out ${ADDR}_key.pem 2048
 openssl req -new  -config openssl.cnf -reqexts cj_req \
-        -sha1 -key ${ADDR}_key.pem \
+        -sha256 -key ${ADDR}_key.pem \
         -out ${ADDR}.csr -days ${DAYS} <<EOF
 US
 California
@@ -53,14 +53,14 @@ EOF
 if [ $DAYS == 0 ]; then
 openssl ca -extensions cj_cert -config openssl.cnf \
     -passin pass:password -policy policy_anything \
-    -md sha1 -batch -notext -out ${ADDR}_cert.pem \
+    -md sha256 -batch -notext -out ${ADDR}_cert.pem \
     -startdate 990101000000Z \
     -enddate 000101000000Z \
      -infiles ${ADDR}.csr
 else
 openssl ca -extensions cj_cert -config openssl.cnf \
     -passin pass:password -policy policy_anything \
-    -md sha1 -days ${DAYS} -batch -notext -out ${ADDR}_cert.pem \
+    -md sha256 -days ${DAYS} -batch -notext -out ${ADDR}_cert.pem \
      -infiles ${ADDR}.csr
 fi
 

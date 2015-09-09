@@ -1417,7 +1417,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    }
    
    // Make sure that necessary algorithms exist:
-   resip_assert(EVP_sha1());
+   resip_assert(EVP_sha256());
 
 #if OPENSSL_VERSION_NUMBER < 0x00908000l
    RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
@@ -1499,7 +1499,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
-   ret = X509_sign(cert, privkey, EVP_sha1());
+   ret = X509_sign(cert, privkey, EVP_sha256());
    resip_assert(ret);
    
    addCertX509( UserCert, aor, cert, true /* write */ );
@@ -1513,7 +1513,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
 
    // form the multipart
    MultipartSignedContents* multi = new MultipartSignedContents;
-   multi->header(h_ContentType).param( p_micalg ) = "sha1";
+   multi->header(h_ContentType).param( p_micalg ) = "sha256";
    multi->header(h_ContentType).param( p_protocol ) = "application/pkcs7-signature";
 
    // add the main body to it
@@ -1776,7 +1776,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
 #if 1
-   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
+   int r = RSA_sign(NID_sha256, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
    if( r != 1 )
@@ -1864,7 +1864,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
 #if 1
-   int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.data(),
+   int ret = RSA_verify(NID_sha256, (unsigned char *)hashRes.data(),
                         (unsigned int)hashRes.size(), (unsigned char*)sig.data(), (unsigned int)sig.size(),
                         rsa);
 #else
