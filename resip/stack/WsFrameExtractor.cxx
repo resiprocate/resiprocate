@@ -83,18 +83,18 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
             return ret;
          }
 
-         Data::size_type takeBytes = len - pos;
-         if(takeBytes > mPayloadLength)
-         {
-            takeBytes = mPayloadLength;
-         }
-
          if(mPayload == 0)
          {
             StackLog(<<"starting new frame buffer");
             // Include an extra byte at the end for null terminator
             mPayload = (UInt8*)new char[mPayloadLength + 1];
             mPayloadPos = 0;
+         }
+
+         Data::size_type takeBytes = len - pos;
+         if(takeBytes > mPayloadLength - mPayloadPos)
+         {
+            takeBytes = mPayloadLength - mPayloadPos;
          }
 
          if(mMasked)
