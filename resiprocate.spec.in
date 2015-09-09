@@ -187,7 +187,7 @@ sed -i \
  -e 's!^#RunAsGroup = return!RunAsGroup = return!' \
  -e 's!^UserDatabaseFile = users.txt!UserDatabaseFile = %{_sysconfdir}/reTurn/users.txt!' \
  -e 's!^UserDatabaseHashedPasswords = false!UserDatabaseHashedPasswords = true!' \
- -e 's!^TlsTempDhFilename = dh512.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh512.pem!' \
+ -e 's!^TlsTempDhFilename = dh2048.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh2048.pem!' \
             %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
 install -m 0755 -d %{buildroot}%{_sharedstatedir}/repro
 rm -f %{buildroot}%{_libdir}/lib*.a

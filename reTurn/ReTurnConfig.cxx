@@ -49,7 +49,7 @@ ReTurnConfig::ReTurnConfig() :
    mMaxAllocationsPerUser(0),       // 0 - no max
    mTlsServerCertificateFilename("server.pem"),
    mTlsServerPrivateKeyFilename(""),
-   mTlsTempDhFilename("dh512.pem"),
+   mTlsTempDhFilename("dh2048.pem"),
    mTlsPrivateKeyPassword(""),
    mUsersDatabaseFilename(""),
    mUserDatabaseHashedPasswords(false),
