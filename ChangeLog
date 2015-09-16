@@ -1,4 +1,19 @@
 = Release Notes v 1.9 =
+==1.9.11 Changes==
+resip/stack: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
+repro: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
+repro: CommonNameMappings: detect repeated common names in config file
+resip/stack: fix buffer management bug in WebSocket transport
+rutil: XMLCursor: support whitespace before first XML element
+resip/stack: Helper: fix for an auth validation issue
+reTurn: add psql-user-extract script
+resip/dum: DialogUsage: added logic to avoid trapping if mAppDialogSet is 0
+resip/dum: DialogSet: Added handling for non-invite dialogs
+resip/stack: ConnectionBase: increase max headers from 256 to 1024
+rutil/dns/ares: fix for uninitialized pointer
+rutil/dns/ares: remove cache-sensitive logic from caching algorithm
+rutil/stun: Qualify bind to prevent clang from using std::bind
+resip/stack/SdpContents: add some static codec definitions and new methods
 ==1.9.10 Changes==
 resip/stack: support for OpenSSL versions that don't have all option names
 resip/stack: lower severity of some log messages when TLS connections close
