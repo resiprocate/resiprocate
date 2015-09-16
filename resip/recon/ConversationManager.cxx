@@ -78,7 +78,7 @@ ConversationManager::init(int defaultSampleRate, int maxSampleRate)
 #endif
    int codecPathsNum = sizeof(codecPaths)/sizeof(codecPaths[0]);
    OsStatus rc = CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths);
-   assert(OS_SUCCESS == rc);
+   resip_assert(OS_SUCCESS == rc);
 
    if(mMediaInterfaceMode == sipXConversationMediaInterfaceMode)
    {
@@ -135,8 +135,8 @@ ConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
 ConversationManager::~ConversationManager()
 {
-   assert(mConversations.empty());
-   assert(mParticipants.empty());
+   resip_assert(mConversations.empty());
+   resip_assert(mParticipants.empty());
    delete mBridgeMixer;
    if(mMediaInterface) mMediaInterface.reset();  // Make sure inteface is destroyed before factory
    sipxDestroyMediaFactoryFactory();
@@ -411,7 +411,7 @@ ConversationManager::allocateRTPPort()
 void
 ConversationManager::freeRTPPort(unsigned int port)
 {
-   assert(port >= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin() && port <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
+   resip_assert(port >= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin() && port <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
    mRTPPortFreeList.push_back(port);
 }
 
@@ -428,8 +428,8 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
 
    // Set local port in offer
    // for now we only allow 1 audio media
-   assert(offer.session().media().size() == 1);
-   assert(offer.session().media().front().name() == "audio");
+   resip_assert(offer.session().media().size() == 1);
+   resip_assert(offer.session().media().front().name() == "audio");
 }
 
 void
@@ -645,7 +645,7 @@ ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsi
 void 
 ConversationManager::notifyMediaEvent(ConversationHandle conversationHandle, int mediaConnectionId, MediaEvent::MediaEventType eventType)
 {
-   assert(eventType == MediaEvent::PLAY_FINISHED);
+   resip_assert(eventType == MediaEvent::PLAY_FINISHED);
 
    if(conversationHandle == 0) // sipXGlobalMediaInterfaceMode
    {
@@ -1173,7 +1173,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
 
             // Notify application
             ConversationProfile* profile = dynamic_cast<ConversationProfile*>(ood->getUserProfile().get());
-            assert(profile);
+            resip_assert(profile);
             if(profile)
             {
                onRequestOutgoingParticipant(participant->getParticipantHandle(), msg, *profile);

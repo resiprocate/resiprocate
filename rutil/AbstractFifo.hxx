@@ -1,7 +1,7 @@
 #ifndef RESIP_AbstractFifo_hxx
 #define RESIP_AbstractFifo_hxx 
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <deque>
 
 #include "rutil/Mutex.hxx"
@@ -303,7 +303,7 @@ class AbstractFifo : public FifoStatsInterface
       {
          Lock lock(mMutex); (void)lock;
          onFifoPolled();
-         assert(other.empty());
+         resip_assert(other.empty());
          while (mFifo.empty())
          {
             mCondition.wait(mMutex);
@@ -334,7 +334,7 @@ class AbstractFifo : public FifoStatsInterface
             return true;
          }
 
-         assert(other.empty());
+         resip_assert(other.empty());
          const UInt64 begin(Timer::getTimeMs());
          const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
          Lock lock(mMutex); (void)lock;

@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "rutil/AbstractFifo.hxx"
 
 using namespace resip;

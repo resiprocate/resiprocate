@@ -31,7 +31,7 @@ Dispatcher::registerPostable(Message::MessageType type,
    }
    else
    {
-      assert(0);
+      resip_assert(0);
    }
 }
 

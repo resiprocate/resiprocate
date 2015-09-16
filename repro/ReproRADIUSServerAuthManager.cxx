@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
@@ -53,7 +53,7 @@ ReproRADIUSServerAuthManager::rejectBadNonces() const
 ServerAuthManager::AsyncBool
 ReproRADIUSServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
-   assert(msg.isRequest());
+   resip_assert(msg.isRequest());
    if(!mAclDb.isRequestTrusted(msg))
    {
       return ServerAuthManager::requiresChallenge(msg);

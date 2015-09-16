@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
@@ -10,7 +10,7 @@ using namespace p2p;
 
 NodeId::NodeId() 
 {
-   assert( sizeof(mNodeId.mHigh) == 8 );
+   resip_assert( sizeof(mNodeId.mHigh) == 8 );
 }
 
 NodeId::NodeId(const s2c::NodeIdStruct& nid) : mNodeId(nid)
@@ -19,7 +19,7 @@ NodeId::NodeId(const s2c::NodeIdStruct& nid) : mNodeId(nid)
 
 NodeId::NodeId(const ResourceId& rid)
 {
-   assert(rid.value().size() == 16);
+   resip_assert(rid.value().size() == 16);
    resip::Data buffer(rid.value());
    resip::iDataStream strm(buffer);
    mNodeId.decode(strm);
@@ -53,8 +53,8 @@ NodeId::operator==(const NodeId& rhs) const
 NodeId
 NodeId::add2Pow( int power ) const
 {
-   assert( power < 128 );
-   assert( power >= 0 );
+   resip_assert( power < 128 );
+   resip_assert( power >= 0 );
    NodeId ret;
 
    ret = *this;
@@ -113,7 +113,7 @@ p2p::operator<<( std::ostream& strm, const NodeId& node )
 
 CompressedId::CompressedId(const resip::Data& cid)
 {
-   assert(0);
+   resip_assert(0);
 }
 
 bool

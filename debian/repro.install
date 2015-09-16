@@ -1,0 +1,8 @@
+usr/lib/*/librepro-*.so*
+usr/lib/*/resiprocate/repro/plugins/*.so
+usr/sbin/repro
+usr/sbin/reprocmd
+debian/conf/repro.config etc/repro
+debian/conf/repro/users.txt etc/repro
+repro/plugins/pyroute/*.py usr/share/doc/repro/examples/pyroute
+repro/plugins/pyroute/README.txt usr/share/doc/repro/examples/pyroute

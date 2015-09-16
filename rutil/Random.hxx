@@ -4,7 +4,7 @@
 #include "rutil/Mutex.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/ThreadIf.hxx"     // for ThreadLocalStorage
-#include <cassert>
+#include "rutil/ResipAssert.h"
 struct random_data;
 
 /**

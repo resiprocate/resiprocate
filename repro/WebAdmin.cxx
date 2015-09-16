@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -448,8 +448,8 @@ WebAdmin::buildPage( const Data& uri,
       }
    }
    
-   assert( !authenticatedUser.empty() );
-   assert( !page.empty() );
+   resip_assert( !authenticatedUser.empty() );
+   resip_assert( !page.empty() );
    
    setPage( page, pageNumber,200 );
 }
@@ -2158,9 +2158,9 @@ WebAdmin::buildUserPage()
 Data
 WebAdmin::buildCertPage(const Data& domain)
 {
-   assert(!domain.empty());
+   resip_assert(!domain.empty());
 #ifdef USE_SSL
-   assert( mProxy.getStack().getSecurity() );
+   resip_assert( mProxy.getStack().getSecurity() );
    return mProxy.getStack().getSecurity()->getDomainCertDER(domain);
 #else
    ErrLog( << "Proxy not build with support for certificates" );

@@ -57,7 +57,7 @@ QValueTargetHandler::process(RequestContext &rc)
    bool bail=false;
 
    resip::Message* msg = rc.getCurrentEvent();
-   assert(msg);
+   resip_assert(msg);
 
    if(msg)
    {
@@ -215,7 +215,7 @@ QValueTargetHandler::process(RequestContext &rc)
          outer++;
       }
    
-      assert(activeTargets || !startedTargets);
+      resip_assert(activeTargets || !startedTargets);
    }
    
    //Do we have anything to schedule for later?

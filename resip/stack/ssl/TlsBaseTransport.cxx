@@ -117,7 +117,7 @@ TlsBaseTransport::setPeerCertificateVerificationCallback(
 Connection* 
 TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
-   assert(this);
+   resip_assert(this);
    Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
    return conn;

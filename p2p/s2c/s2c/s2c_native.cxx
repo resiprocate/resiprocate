@@ -9,7 +9,7 @@
 
 
 
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/ParseException.hxx"
@@ -19,8 +19,8 @@ void s2c::encode_uintX(std::ostream& out, const unsigned int bits, const u_int64
   {
     int size;
 
-    assert((bits%8)==0);
-    assert(bits<=64);
+    resip_assert((bits%8)==0);
+    resip_assert(bits<=64);
 
     size=bits/8;
     
@@ -43,7 +43,7 @@ void s2c::encode_uintX(std::ostream& out, const unsigned int bits, const u_int64
         out.put(value&0xff);
         break;
       default:
-        assert(1==0);
+        resip_assert(1==0);
     }
   }
   
@@ -53,7 +53,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_char &value)
     int size;
     int c;      
     
-    assert(bits<=8);
+    resip_assert(bits<=8);
 
     size=bits/8;
     
@@ -93,7 +93,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int16 &value
     int size;
     int c;
     
-    assert(bits<=16);
+    resip_assert(bits<=16);
 
     size=bits/8;
     
@@ -115,7 +115,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int32 &value
     int size;
     int c;
     
-    assert(bits<=32);
+    resip_assert(bits<=32);
 
     size=bits/8;
     
@@ -137,7 +137,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int64 &value
     int size;
     int c;
     
-    assert(bits<=64);
+    resip_assert(bits<=64);
 
     size=bits/8;
     
@@ -165,7 +165,7 @@ void s2c::read_varray1(std::istream& in, unsigned int lenlen, resip::Data &buf)
     int c;
     
     // First read the length
-    assert(lenlen<=8);
+    resip_assert(lenlen<=8);
     while(lenlen--){
       len<<=8;
       c=in.get();

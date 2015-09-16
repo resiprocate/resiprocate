@@ -99,6 +99,15 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
+%package turn-server-psql
+Summary: ICE/STUN/TURN server PostgreSQL users script
+Requires: python-psycopg2
+
+%description turn-server-psql
+reTurn is the TURN server developed as part of the reSIProcate project.
+This packages provides a Python script to synchronize the reTurn
+users.txt file from a PostgreSQL table.
+
 %package sipdialer
 Summary: Click-to-call utility
 
@@ -121,15 +130,6 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
-%package presence-server
-Summary: Basic SIP presence server
-
-%description presence-server
-Provides a simple SIP presence server.
-reSIProcate is a framework that aims to fully implement the SIP protocol
-in first class C++.  It is intended for use in other applications,
-such as the repro SIP proxy.
-
 %prep
 %setup -q
 
@@ -143,7 +143,7 @@ RADIUS_CFG=--with-freeradius
 RADIUS_CFG=--with-radius
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python2
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python2 --enable-assert-syslog
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{?_smp_mflags}
@@ -157,15 +157,13 @@ install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.service %{buildroo
 install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
 install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
 %endif
-install -p -D -m644 repro/pkg/common/repro.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/repro
-install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.logrotate %{buildroot}%{_sysconfdir}/logrotate.d/resiprocate-turn-server
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
 install -p -D -m640 repro/users.txt %{buildroot}%{_sysconfdir}/repro/users.txt
 sed -i \
  -e 's!^#CAFile = /etc/pki/tls/cert.pem$!CAFile = /etc/pki/tls/cert.pem!' \
- -e 's!^LoggingType = cout$!LoggingType = file!' \
- -e 's!^LogLevel = INFO$!LogLevel = WARNING!' \
+ -e 's!^LoggingType = cout$!LoggingType = syslog!' \
+ -e 's!^LogLevel = INFO$!LogLevel = DEBUG!' \
  -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
  -e 's!^LogFileMaxBytes = 5242880!LogFileMaxBytes = 0!' \
  -e 's!^HttpAdminUserFile = users.txt$!HttpAdminUserFile = %{_sysconfdir}/repro/users.txt!' \
@@ -181,7 +179,7 @@ install -p -D -m640 reTurn/users.txt %{buildroot}%{_sysconfdir}/reTurn/users.txt
 sed -i -e 's/1234/6078a36f89704d83763c9e174b3e87a4/' %{buildroot}%{_sysconfdir}/reTurn/users.txt
 sed -i \
  -e 's!^TlsTurnPort = 5349!TlsTurnPort = 0!' \
- -e 's!^LoggingLevel = DEBUG!LoggingLevel = WARNING!' \
+ -e 's!^LoggingType = file$!LoggingType = syslog!' \
  -e 's!^LogFilename = reTurnServer.log!LogFilename = %{_localstatedir}/log/reTurnServer/reTurnServer.log!' \
  -e 's!^LogFileMaxLines = 50000!LogFileMaxLines = 0!' \
  -e 's!^Daemonize = false!Daemonize = true!' \
@@ -199,10 +197,6 @@ rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.la
 install -m 0755 -d %{buildroot}/%{_docdir}/repro/examples/pyroute
 install -p -D -m644 repro/plugins/pyroute/*.py %{buildroot}/%{_docdir}/repro/examples/pyroute
 install -p -D -m644 repro/plugins/pyroute/README.txt %{buildroot}/%{_docdir}/repro/examples/pyroute
-install -m 0750 -d %{buildroot}%{_localstatedir}/log/repro
-touch %{buildroot}%{_localstatedir}/log/repro/repro.log
-install -m 0750 -d %{buildroot}%{_localstatedir}/log/reTurnServer
-touch %{buildroot}%{_localstatedir}/log/reTurnServer/reTurnServer.log
 
 %pre repro
 getent group repro >/dev/null || groupadd -r repro
@@ -339,9 +333,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0750,repro,repro) %dir %{_sharedstatedir}/repro
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/repro.config
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/users.txt
-%config(noreplace) %{_sysconfdir}/logrotate.d/repro
-%attr(0750,repro,repro) %dir %{_localstatedir}/log/repro
-%config %ghost %{_localstatedir}/log/repro/repro.log
 %if %use_systemd
 %{_unitdir}/repro.service
 %else
@@ -358,9 +349,7 @@ rm -rf $RPM_BUILD_ROOT
 %files turn-server
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/reTurnServer.config
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/users.txt
-%config(noreplace) %{_sysconfdir}/logrotate.d/resiprocate-turn-server
-%attr(0750,return,return) %dir %{_localstatedir}/log/reTurnServer
-%config %ghost %{_localstatedir}/log/reTurnServer/reTurnServer.log
+%dir %{_libdir}/@PACKAGE@/reTurnServer
 %if %use_systemd
 %{_unitdir}/resiprocate-turn-server.service
 %else
@@ -369,15 +358,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/reTurnServer
 %{_mandir}/man8/reTurnServer.8*
 
+%files turn-server-psql
+%{_libdir}/@PACKAGE@/reTurnServer/psql-user-extract
+
 %files sipdialer
 %{_bindir}/sipdialer
 %{_mandir}/man1/sipdialer.1*
 
 %files clicktocall
 %{_sbindir}/clicktocall
-
-%files presence-server
-%{_sbindir}/presSvr
 
 %changelog
 * Sat Nov 24 2012 Daniel Pocock <daniel@pocock.com.au> - @VERSION@-1

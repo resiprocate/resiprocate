@@ -65,14 +65,14 @@ getTransportNameFromTypeLower(const TransportType typeEnum)
 const resip::Data& 
 toData(const TransportType typeEnum)
 {
-   assert(typeEnum >= UNKNOWN_TRANSPORT && typeEnum < MAX_TRANSPORT);
+   resip_assert(typeEnum >= UNKNOWN_TRANSPORT && typeEnum < MAX_TRANSPORT);
    return transportNames[typeEnum];
 }
 
 const resip::Data& 
 toDataLower(const TransportType typeEnum)
 {
-   assert(typeEnum >= UNKNOWN_TRANSPORT && typeEnum < MAX_TRANSPORT);
+   resip_assert(typeEnum >= UNKNOWN_TRANSPORT && typeEnum < MAX_TRANSPORT);
    return transportNamesLower[typeEnum];
 }
 

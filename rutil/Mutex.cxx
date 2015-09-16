@@ -6,7 +6,7 @@ typedef unsigned int size_t;
 }
 
 */
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <cerrno>
 #include "rutil/Mutex.hxx"
 
@@ -24,7 +24,7 @@ Mutex::Mutex()
 #ifndef WIN32
     int  rc = pthread_mutex_init(&mId,0);
     (void)rc;
-    assert( rc == 0 );
+    resip_assert( rc == 0 );
 #else
 	// Note:  Windows Critical sections are recursive in nature and perhaps
 	//        this implementation calls for a non-recursive implementation
@@ -40,8 +40,8 @@ Mutex::~Mutex ()
 #ifndef WIN32
     int  rc = pthread_mutex_destroy(&mId);
     (void)rc;
-    assert( rc != EBUSY );  // currently locked 
-    assert( rc == 0 );
+    resip_assert( rc != EBUSY );  // currently locked 
+    resip_assert( rc == 0 );
 #else
 	DeleteCriticalSection(&mId);
 #endif
@@ -54,9 +54,9 @@ Mutex::lock()
 #ifndef WIN32
     int  rc = pthread_mutex_lock(&mId);
     (void)rc;
-    assert( rc != EINVAL );
-    assert( rc != EDEADLK );
-    assert( rc == 0 );
+    resip_assert( rc != EINVAL );
+    resip_assert( rc != EDEADLK );
+    resip_assert( rc == 0 );
 #else
 	EnterCriticalSection(&mId);
 #endif
@@ -68,9 +68,9 @@ Mutex::unlock()
 #ifndef WIN32
     int  rc = pthread_mutex_unlock(&mId);
     (void)rc;
-    assert( rc != EINVAL );
-    assert( rc != EPERM );
-    assert( rc == 0 );
+    resip_assert( rc != EINVAL );
+    resip_assert( rc != EPERM );
+    resip_assert( rc == 0 );
 #else
 	LeaveCriticalSection(&mId);
 #endif

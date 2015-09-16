@@ -212,7 +212,7 @@ ParkManager::isMyProfile(recon::ConversationProfile& profile)
 ParkOrbit* 
 ParkManager::getOrbit(unsigned long orbit)
 {
-   assert((orbit >= mOrbitRangeStart) && 
+   resip_assert((orbit >= mOrbitRangeStart) && 
           (orbit < (mOrbitRangeStart + mNumOrbits)));
 
    // Check if Orbit is created or not yet
@@ -271,7 +271,7 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
    Lock lock(mMutex);
 
    unsigned long orbit = 0;
-   assert(msg.method() == REFER);
+   resip_assert(msg.method() == REFER);
 
    // Check if Orbit parameter has been specified on the To header
    if(msg.header(h_To).uri().exists(p_orbit))
@@ -284,7 +284,7 @@ ParkManager::parkParticipant(ParticipantHandle participantHandle, const SipMessa
    {
       // Park call at specified orbit
       ParkOrbit* parkOrbit = getOrbit(orbit);
-      assert(parkOrbit);
+      resip_assert(parkOrbit);
       addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_ReferTo).uri().getAorAsUri(), msg.header(h_From).uri());
    }
    else
@@ -334,7 +334,7 @@ ParkManager::incomingParticipant(ParticipantHandle participantHandle, const SipM
          // If a Referred-By header is present then this was a transferred call - park it
          // Park call at specified orbit
          ParkOrbit* parkOrbit = getOrbit(orbit);
-         assert(parkOrbit);
+         resip_assert(parkOrbit);
          addParticipantToOrbit(parkOrbit, participantHandle, msg.header(h_From).uri(), msg.header(h_ReferredBy).uri());
       }
       else  // Direct call - retrieval attempt

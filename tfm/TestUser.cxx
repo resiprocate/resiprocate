@@ -68,11 +68,11 @@ void TestUser::clean()
    //InfoLog (<< "Cleaning user: " << *mRegistration);
    mRegistration->header(h_ProxyAuthorizations).clear();
    mRegistration->remove(h_ProxyAuthenticates);
-   assert(!mRegistration->exists(h_ProxyAuthenticates));
+   resip_assert(!mRegistration->exists(h_ProxyAuthenticates));
    
    mRegistration->header(h_Authorizations).clear();
    mRegistration->remove(h_Authorizations);
-   assert(!mRegistration->exists(h_Authorizations));
+   resip_assert(!mRegistration->exists(h_Authorizations));
    //InfoLog (<< "Cleaned user: " << *mRegistration);
 }
 
@@ -95,10 +95,10 @@ TestUser::TestUserAction::operator()()
 boost::shared_ptr<SipMessage>
 TestUser::DigestRespond::go(boost::shared_ptr<SipMessage> response)
 {
-   assert(response->isResponse());
+   resip_assert(response->isResponse());
    DebugLog (<< "DigestRespond: " << Inserter(mEndPoint.mRequests));
    
-   assert(mEndPoint.mRequests.find(response->header(h_Vias).front().param(p_branch).getTransactionId()) != mEndPoint.mRequests.end());
+   resip_assert(mEndPoint.mRequests.find(response->header(h_Vias).front().param(p_branch).getTransactionId()) != mEndPoint.mRequests.end());
    boost::shared_ptr<SipMessage> request = mEndPoint.mRequests[response->header(h_Vias).front().param(p_branch).getTransactionId()];
    Helper::addAuthorization(*request, *response, mEndPoint.mAuthName, mEndPoint.mPassword, "foo", mEndPoint.mNonceCount);
 
@@ -115,7 +115,7 @@ TestUser::DigestRespond::go(boost::shared_ptr<SipMessage> response)
 boost::shared_ptr<SipMessage>
 TestUser::DigestChallenge::go(boost::shared_ptr<SipMessage> request)
 {
-   assert(request->isRequest());
+   resip_assert(request->isRequest());
    // !jf! should be a UA challenge 401
    boost::shared_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, request->header(h_To).uri().host()));;
    return challenge;

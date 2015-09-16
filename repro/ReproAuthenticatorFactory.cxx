@@ -100,6 +100,11 @@ ReproAuthenticatorFactory::loadCommonNameMappings()
       // Look for end of name
       pb.skipToOneOf("\t");
       pb.data(cn, anchor);
+      if(mCommonNameMappings.find(cn) != mCommonNameMappings.end())
+      {
+         ErrLog(<< "CN '" << cn << "' repeated in mappings file");
+         throw std::runtime_error("CN repeated in mappings file");
+      }
       pb.skipChar('\t');
 
       while(!pb.eof())
@@ -133,7 +138,7 @@ ReproAuthenticatorFactory::getCertificateAuthManager()
    if(!mCertificateAuthManager.get())
    {
       Store *db = mProxyConfig.getDataStore();
-      assert(db);
+      resip_assert(db);
       AclStore& aclStore = db->mAclStore;
       mCertificateAuthManager.reset(new ReproTlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), aclStore, true, mCommonNameMappings));
    }
@@ -145,7 +150,7 @@ ReproAuthenticatorFactory::getCertificateAuthenticator()
 {
    init();
    Store *db = mProxyConfig.getDataStore();
-   assert(db);
+   resip_assert(db);
    AclStore& aclStore = db->mAclStore;
    return std::auto_ptr<Processor>(new CertificateAuthenticator(mProxyConfig, &mSipStack, aclStore, true, mCommonNameMappings));
 }

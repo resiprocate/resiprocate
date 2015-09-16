@@ -1,0 +1,9 @@
+/var/log/repro/repro.log {
+	rotate 14
+	daily
+	compress
+	missingok
+	postrotate
+		start-stop-daemon -K -p /var/run/repro/repro.pid -s HUP -x /usr/sbin/repro -q
+	endscript
+}

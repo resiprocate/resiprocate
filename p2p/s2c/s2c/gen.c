@@ -345,7 +345,7 @@ int s2c_gen_hdr_c(char *name,FILE *out)
     fprintf(out,"#include \"P2PSubsystem.hxx\"\n");
     fprintf(out,"#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n");
     fprintf(out,"#include \"%sGen.hxx\"\n",name);
-    fprintf(out,"#include <assert.h>\n");
+    fprintf(out,"#include "rutil/ResipAssert.h"\n");
     fprintf(out,"\n");
     fprintf(out,"namespace s2c {\n");
     fprintf(out,"\n");fprintf(out,"\n");

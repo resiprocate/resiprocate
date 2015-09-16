@@ -74,7 +74,7 @@ class IntrusiveListElement
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->IntrusiveListElement<P>::mNext);
+         resip_assert(!elem->IntrusiveListElement<P>::mNext);
 
          elem->IntrusiveListElement<P>::mPrev = elem;
          elem->IntrusiveListElement<P>::mNext = elem;
@@ -84,8 +84,8 @@ class IntrusiveListElement
 
       bool empty() const
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          return static_cast<const IntrusiveListElement<P>*>(mNext) == static_cast<const IntrusiveListElement<P>*>(this);
       }
@@ -132,15 +132,15 @@ class IntrusiveListElement
 
       iterator begin()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(mNext);
       }
 
       iterator end()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(static_cast<P>(this));
       }
 
@@ -149,8 +149,8 @@ class IntrusiveListElement
       // pushing an element onto the same list twice is undefined
       void push_front(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement<P>::mNext = mNext;
          elem->IntrusiveListElement<P>::mPrev = static_cast<P>(this);
@@ -162,8 +162,8 @@ class IntrusiveListElement
       // putting an element onto the same list twice is undefined
       void push_back(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement<P>::mPrev = mPrev;
          elem->IntrusiveListElement<P>::mNext = static_cast<P>(this);
@@ -211,7 +211,7 @@ class IntrusiveListElement1
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->IntrusiveListElement1<P>::mNext);
+         resip_assert(!elem->IntrusiveListElement1<P>::mNext);
 
          elem->IntrusiveListElement1<P>::mPrev = elem;
          elem->IntrusiveListElement1<P>::mNext = elem;
@@ -221,8 +221,8 @@ class IntrusiveListElement1
 
       bool empty() const
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          return static_cast<const IntrusiveListElement1<P>*>(mNext) == static_cast<const IntrusiveListElement1<P>*>(this);
       }
@@ -269,15 +269,15 @@ class IntrusiveListElement1
 
       iterator begin()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(mNext);
       }
 
       iterator end()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(static_cast<P>(this));
       }
 
@@ -286,8 +286,8 @@ class IntrusiveListElement1
       // pushing an element onto the same list twice is undefined
       void push_front(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement1<P>::mNext = mNext;
          elem->IntrusiveListElement1<P>::mPrev = static_cast<P>(this);
@@ -299,8 +299,8 @@ class IntrusiveListElement1
       // putting an element onto the same list twice is undefined
       void push_back(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement1<P>::mPrev = mPrev;
          elem->IntrusiveListElement1<P>::mNext = static_cast<P>(this);
@@ -348,7 +348,7 @@ class IntrusiveListElement2
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->IntrusiveListElement2<P>::mNext);
+         resip_assert(!elem->IntrusiveListElement2<P>::mNext);
 
          elem->IntrusiveListElement2<P>::mPrev = elem;
          elem->IntrusiveListElement2<P>::mNext = elem;
@@ -358,8 +358,8 @@ class IntrusiveListElement2
 
       bool empty() const
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          return static_cast<const IntrusiveListElement2<P>*>(mNext) == static_cast<const IntrusiveListElement2<P>*>(this);
       }
@@ -406,15 +406,15 @@ class IntrusiveListElement2
 
       iterator begin()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(mNext);
       }
 
       iterator end()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(static_cast<P>(this));
       }
 
@@ -423,8 +423,8 @@ class IntrusiveListElement2
       // pushing an element onto the same list twice is undefined
       void push_front(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement2<P>::mNext = mNext;
          elem->IntrusiveListElement2<P>::mPrev = static_cast<P>(this);
@@ -436,8 +436,8 @@ class IntrusiveListElement2
       // putting an element onto the same list twice is undefined
       void push_back(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement2<P>::mPrev = mPrev;
          elem->IntrusiveListElement2<P>::mNext = static_cast<P>(this);
@@ -485,7 +485,7 @@ class IntrusiveListElement3
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->IntrusiveListElement3<P>::mNext);
+         resip_assert(!elem->IntrusiveListElement3<P>::mNext);
 
          elem->IntrusiveListElement3<P>::mPrev = elem;
          elem->IntrusiveListElement3<P>::mNext = elem;
@@ -495,8 +495,8 @@ class IntrusiveListElement3
 
       bool empty() const
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          return static_cast<const IntrusiveListElement3<P>*>(mNext) == static_cast<const IntrusiveListElement3<P>*>(this);
       }
@@ -543,15 +543,15 @@ class IntrusiveListElement3
 
       iterator begin()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(mNext);
       }
 
       iterator end()
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
          return iterator(static_cast<P>(this));
       }
 
@@ -560,8 +560,8 @@ class IntrusiveListElement3
       // pushing an element onto the same list twice is undefined
       void push_front(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement3<P>::mNext = mNext;
          elem->IntrusiveListElement3<P>::mPrev = static_cast<P>(this);
@@ -573,8 +573,8 @@ class IntrusiveListElement3
       // putting an element onto the same list twice is undefined
       void push_back(P elem)
       {
-         assert(mPrev);
-         assert(mNext);
+         resip_assert(mPrev);
+         resip_assert(mNext);
 
          elem->IntrusiveListElement3<P>::mPrev = mPrev;
          elem->IntrusiveListElement3<P>::mNext = static_cast<P>(this);

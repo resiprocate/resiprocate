@@ -39,23 +39,23 @@ class BatchMessages : public EventConsumerBase, public Event
       virtual void consume(ErrorResponse& m);
 
       // other consumer methods
-      virtual void consume(CertDoneEvent& certdone) { assert(0); }
-      virtual void consume(ConnectionOpened& m) { assert(0); }
-      virtual void consume(ConnectionClosed& m) { assert(0); }
-      virtual void consume(MessageArrived& m) { assert(0); }
-      virtual void consume(ApplicationMessageArrived& m) { assert(0); }
-      virtual void consume(LocalCandidatesCollected& m) { assert(0); }
-      virtual void consume(PingReq& m) { assert(0); }
-      virtual void consume(ConnectReq& m) { assert(0); }
-      virtual void consume(TunnelReq& m) { assert(0); }
-      virtual void consume(StoreReq& m) { assert(0); }
-      virtual void consume(FetchReq& m) { assert(0); }
-      virtual void consume(RemoveReq& m) { assert(0); }
-      virtual void consume(JoinReq& m) { assert(0); }
-      virtual void consume(LeaveReq& m) { assert(0); }
-      virtual void consume(UpdateReq& m) { assert(0); }
-      virtual void consume(RouteQueryReq& m) { assert(0); }
-      virtual void consume(const BatchMessages& cm) { assert(0); }
+      virtual void consume(CertDoneEvent& certdone) { resip_assert(0); }
+      virtual void consume(ConnectionOpened& m) { resip_assert(0); }
+      virtual void consume(ConnectionClosed& m) { resip_assert(0); }
+      virtual void consume(MessageArrived& m) { resip_assert(0); }
+      virtual void consume(ApplicationMessageArrived& m) { resip_assert(0); }
+      virtual void consume(LocalCandidatesCollected& m) { resip_assert(0); }
+      virtual void consume(PingReq& m) { resip_assert(0); }
+      virtual void consume(ConnectReq& m) { resip_assert(0); }
+      virtual void consume(TunnelReq& m) { resip_assert(0); }
+      virtual void consume(StoreReq& m) { resip_assert(0); }
+      virtual void consume(FetchReq& m) { resip_assert(0); }
+      virtual void consume(RemoveReq& m) { resip_assert(0); }
+      virtual void consume(JoinReq& m) { resip_assert(0); }
+      virtual void consume(LeaveReq& m) { resip_assert(0); }
+      virtual void consume(UpdateReq& m) { resip_assert(0); }
+      virtual void consume(RouteQueryReq& m) { resip_assert(0); }
+      virtual void consume(const BatchMessages& cm) { resip_assert(0); }
 
       virtual resip::Data brief() const
       { 

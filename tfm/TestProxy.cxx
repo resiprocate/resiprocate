@@ -207,7 +207,7 @@ TestProxy::getContact() const
       if (!DnsUtil::isIpV4Address(mContact.uri().host()))
       {
          list<Data> ips = DnsUtil::lookupARecords(mContact.uri().host());
-         assert(!ips.empty());
+         resip_assert(!ips.empty());
          mContact.uri().host() = ips.front();
       }
    }

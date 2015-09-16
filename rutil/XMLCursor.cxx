@@ -471,7 +471,11 @@ bool
 XMLCursor::Node::extractTag()
 {
    ParseBuffer pb(mPb);
-   const char* anchor = pb.skipChar();
+   if (!WhitespaceSignificant)
+   {
+       pb.skipWhitespace();
+   }
+   const char* anchor = pb.skipChar(LA_QUOTE[0]);
    pb.skipToOneOf(ParseBuffer::Whitespace, SLASH_RA_QUOTE);
    pb.assertNotEof();
    pb.data(mTag, anchor);

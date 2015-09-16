@@ -6,7 +6,7 @@ TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* ptu) 
    mType(type)
 {
    mTu = ptu;
-   assert(mTu);
+   resip_assert(mTu);
 }
 
 EncodeStream& 
@@ -24,14 +24,14 @@ TransactionUserMessage::encodeBrief(EncodeStream& str) const
 const Data& 
 TransactionUserMessage::getTransactionId() const
 {
-   assert(0);
+   resip_assert(0);
    return Data::Empty;
 }
 
 bool 
 TransactionUserMessage::isClientTransaction() const
 {
-   assert(0);
+   resip_assert(0);
    return false;
 }
 

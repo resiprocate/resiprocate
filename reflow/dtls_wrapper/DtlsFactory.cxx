@@ -4,7 +4,7 @@
 
 #ifdef USE_SSL
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <iostream>
 #include <rutil/ssl/OpenSSLInit.hxx>
 
@@ -27,17 +27,17 @@ DtlsFactory::DtlsFactory(std::auto_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PKEY
    int r;
 
    mContext=SSL_CTX_new(DTLSv1_method());
-   assert(mContext);
+   resip_assert(mContext);
 
    r=SSL_CTX_use_certificate(mContext, cert);
-   assert(r==1);
+   resip_assert(r==1);
 
    r=SSL_CTX_use_PrivateKey(mContext, privkey);
-   assert(r==1);
+   resip_assert(r==1);
 
    // Set SRTP profiles
    r=SSL_CTX_set_tlsext_use_srtp(mContext, DefaultSrtpProfile);
-   assert(r==0);
+   resip_assert(r==0);
 }
 
 DtlsFactory::~DtlsFactory()
@@ -71,7 +71,7 @@ DtlsFactory::setSrtpProfiles(const char *str)
 
    r=SSL_CTX_set_tlsext_use_srtp(mContext,str);
 
-   assert(r==0);
+   resip_assert(r==0);
 }
 
 void
@@ -80,13 +80,13 @@ DtlsFactory::setCipherSuites(const char *str)
    int r;
 
    r=SSL_CTX_set_cipher_list(mContext,str);
-   assert(r==1);
+   resip_assert(r==1);
 }
 
 DtlsFactory::PacketType
 DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len) 
 {
-   assert(len>=1);
+   resip_assert(len>=1);
 
    if((data[0]==0)   || (data[0]==1))
       return stun;

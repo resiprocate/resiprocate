@@ -3,7 +3,7 @@
 #endif
 
 #include <fcntl.h>
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <cstdlib>
 
 #include "rutil/Data.hxx"
@@ -66,7 +66,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
    int ret;
 #ifdef USE_DBENV
    mEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
-   assert(mEnv);
+   resip_assert(mEnv);
    ret = mEnv->open(0, DB_CREATE |     // If the env does not exist, then create it
                        DB_INIT_LOCK |  // Initialize Locking (needed for transactions)
                        DB_INIT_LOG |   // Initialize Logging (needed for transactions)
@@ -118,7 +118,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
             secondaryIndex = true;
             break;
          default:
-            assert(0);
+            resip_assert(0);
       }
 
       if(!secondaryIndex)
@@ -133,7 +133,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
       }
 
       mTableInfo[i].mDb = new Db(mEnv, DB_CXX_NO_EXCEPTIONS);
-      assert(mTableInfo[i].mDb);
+      resip_assert(mTableInfo[i].mDb);
       
       DebugLog( << "About to open Berkeley DB: " << fileName );
       ret = mTableInfo[i].mDb->open(0,
@@ -161,7 +161,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
          mSane = false;
          return;
       }
-      assert(mTableInfo[i].mCursor);
+      resip_assert(mTableInfo[i].mCursor);
 
       DebugLog( << "Opened Berkeley DB: " << fileName );
 
@@ -169,7 +169,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
       if(secondaryIndex)
       {
          mTableInfo[i].mSecondaryDb = new Db(mEnv, DB_CXX_NO_EXCEPTIONS);
-         assert(mTableInfo[i].mSecondaryDb);
+         resip_assert(mTableInfo[i].mSecondaryDb);
 
          ret = mTableInfo[i].mSecondaryDb->set_flags(DB_DUP);
          if(ret!=0)
@@ -215,7 +215,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
             mSane = false;
             return;
          }
-         assert(mTableInfo[i].mSecondaryCursor);
+         resip_assert(mTableInfo[i].mSecondaryCursor);
       }
    }
 }
@@ -280,7 +280,7 @@ BerkeleyDb::getSecondaryKeyCallback(Db *db, const Dbt *pkey, const Dbt *pdata, D
          break;
       }
    }
-   assert(table != MaxTable);
+   resip_assert(table != MaxTable);
 
    Data primaryKey(Data::Share, reinterpret_cast<const char*>(pkey->get_data()), pkey->get_size());
    Data primaryData(Data::Share, reinterpret_cast<const char*>(pdata->get_data()), pdata->get_size());
@@ -302,7 +302,7 @@ BerkeleyDb::dbWriteRecord(const Table table,
    Dbt data((void*)pData.data(), (::u_int32_t)pData.size());
    int ret;
    
-   assert(mTableInfo[table].mDb);
+   resip_assert(mTableInfo[table].mDb);
    ret = mTableInfo[table].mDb->put(mTableInfo[table].mTransaction, &key, &data, 0);
 
    if(ret == 0 && mTableInfo[table].mTransaction == 0)
@@ -329,7 +329,7 @@ BerkeleyDb::dbReadRecord(const Table table,
 
    int ret;
    
-   assert(mTableInfo[table].mDb);
+   resip_assert(mTableInfo[table].mDb);
    ret = mTableInfo[table].mDb->get(mTableInfo[table].mTransaction, &key, &data, 0);
 
    if (ret == DB_NOTFOUND)
@@ -341,8 +341,8 @@ BerkeleyDb::dbReadRecord(const Table table,
       }
       return false;
    }
-   assert(ret != DB_KEYEMPTY);
-   assert(ret == 0);
+   resip_assert(ret != DB_KEYEMPTY);
+   resip_assert(ret == 0);
    pData.copy(reinterpret_cast<const char*>(data.get_data()), data.get_size());
    if (data.get_data())
    {
@@ -370,7 +370,7 @@ BerkeleyDb::dbEraseRecord(const Table table,
    {
       db = mTableInfo[table].mSecondaryDb;
    }
-   assert(db);
+   resip_assert(db);
    db->del(mTableInfo[table].mTransaction, &key, 0);
    if(mTableInfo[table].mTransaction == 0)
    {
@@ -391,13 +391,13 @@ BerkeleyDb::dbNextKey(const Table table,
    Dbt key, data;
    int ret;
    
-   assert(mTableInfo[table].mDb);
+   resip_assert(mTableInfo[table].mDb);
    ret = mTableInfo[table].mCursor->get(&key, &data, first ? DB_FIRST : DB_NEXT);
    if (ret == DB_NOTFOUND)
    {
       return Data::Empty;
    }
-   assert(ret == 0);
+   resip_assert(ret == 0);
    
    Data d(Data::Share, reinterpret_cast<const char*>(key.get_data()), key.get_size());
    return d;
@@ -415,7 +415,7 @@ BerkeleyDb::dbNextRecord(const Table table,
    Dbt dbdata;
    int ret;
 
-   assert(mTableInfo[table].mSecondaryCursor);
+   resip_assert(mTableInfo[table].mSecondaryCursor);
    if(mTableInfo[table].mSecondaryCursor == 0)
    {
       // Iterating across multiple records with a common key is only 
@@ -445,7 +445,7 @@ BerkeleyDb::dbNextRecord(const Table table,
    {
       return false;
    }
-   assert(ret == 0);
+   resip_assert(ret == 0);
    data.copy(reinterpret_cast<const char*>(dbdata.get_data()), dbdata.get_size());
 
    return true;
@@ -456,8 +456,8 @@ BerkeleyDb::dbBeginTransaction(const Table table)
 {
 #ifdef USE_DBENV
    // For now - we support transactions on the primary table only
-   assert(mDb);
-   assert(mTableInfo[table].mTransaction == 0);
+   resip_assert(mDb);
+   resip_assert(mTableInfo[table].mTransaction == 0);
    int ret = mTableInfo[table].mDb->get_env()->txn_begin(0 /* parent trans*/, &mTableInfo[table].mTransaction, 0);
    if(ret != 0)
    {
@@ -487,8 +487,8 @@ BerkeleyDb::dbCommitTransaction(const Table table)
 {
    bool success = true;
 #ifdef USE_DBENV
-   assert(mDb);
-   assert(mTableInfo[table].mTransaction);
+   resip_assert(mDb);
+   resip_assert(mTableInfo[table].mTransaction);
 
    // Close the cursor - since cursors used in a transaction must be opened and closed within the transaction
    if(mTableInfo[table].mCursor)
@@ -517,8 +517,8 @@ BerkeleyDb::dbRollbackTransaction(const Table table)
 {
    bool success = true;
 #ifdef USE_DBENV
-   assert(mDb);
-   assert(mTableInfo[table].mTransaction);
+   resip_assert(mDb);
+   resip_assert(mTableInfo[table].mTransaction);
 
    // Close the cursor - since cursors used in a transaction must be opened and closed within the transaction
    if(mTableInfo[table].mCursor)

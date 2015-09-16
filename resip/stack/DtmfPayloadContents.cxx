@@ -168,7 +168,7 @@ DtmfPayloadContents::DtmfPayload::parse(ParseBuffer& pb)
 unsigned short
 DtmfPayloadContents::DtmfPayload::getEventCode() const
 {
-   assert(mButton);
+   resip_assert(mButton);
    unsigned short eventCode;
    if(isdigit(mButton))
    {
@@ -188,7 +188,7 @@ DtmfPayloadContents::DtmfPayload::getEventCode() const
    }
    else
    {
-      assert(0);  // unexpected button, should have been caught by the parser
+      resip_assert(0);  // unexpected button, should have been caught by the parser
    }
 
    return eventCode;

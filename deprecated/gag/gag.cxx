@@ -78,7 +78,7 @@ void init_loopback()
 #endif
 
   s = socket(PF_INET, SOCK_STREAM, 0);
-  assert(s > 0);
+  resip_assert(s > 0);
 
   status = connect(s, (struct sockaddr *)&them, sizeof(them));
   if (status < 0)
@@ -91,9 +91,9 @@ void init_loopback()
   close (0);
   close (1);
   status = dup2( static_cast<int>(s), 0);
-  assert(status >= 0);
+  resip_assert(status >= 0);
   status = dup2( static_cast<int>(s), 1);
-  assert(status >= 0);
+  resip_assert(status >= 0);
 }
 
 int
@@ -179,7 +179,7 @@ main (int argc, char **argv)
 #else
     unsigned long noBlock = 1;
 	int errNoBlock = ioctlsocket( 0, FIONBIO , &noBlock );
-	assert( errNoBlock == 0 );
+	resip_assert( errNoBlock == 0 );
 #endif
 #endif
 

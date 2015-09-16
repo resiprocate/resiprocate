@@ -29,7 +29,7 @@ class RemoveTransport : public TransactionMessage
 
       virtual Message* clone() const
       {
-         assert(false); return NULL;
+         resip_assert(false); return NULL;
       }
 
    protected:

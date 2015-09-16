@@ -166,7 +166,7 @@ Resolver::lookupARecords()
    int ret = gethostbyname_r (mHost.c_str(), &hostbuf, 
                               buffer, sizeof(buffer), &result, &herrno);
 #endif
-   assert (ret != ERANGE);
+   resip_assert (ret != ERANGE);
    if (ret != 0)
    {
 #endif
@@ -193,8 +193,8 @@ Resolver::lookupARecords()
    }
    else
    {
-      assert(result);
-      assert(result->h_length == 4);
+      resip_assert(result);
+      resip_assert(result->h_length == 4);
    
       DebugLog (<< "DNS lookup of " << mHost << ": canonical name: " << result->h_name);
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
@@ -239,7 +239,7 @@ Resolver::lookupAandAAAARecords()
             if(!ignoreV6)
             {            
                struct sockaddr* addr=iter->ai_addr;
-               assert(addr->sa_family == AF_INET6);
+               resip_assert(addr->sa_family == AF_INET6);
                
                struct sockaddr_in6* theAddr=(sockaddr_in6*)addr;
                struct in6_addr theAddrReally = theAddr->sin6_addr;
@@ -255,7 +255,7 @@ Resolver::lookupAandAAAARecords()
          {
          
             struct sockaddr* addr=iter->ai_addr;
-            assert(addr->sa_family == AF_INET);
+            resip_assert(addr->sa_family == AF_INET);
             
             struct sockaddr_in* theAddr=(sockaddr_in*)addr;
             struct in_addr theAddrReally = theAddr->sin_addr;
@@ -266,7 +266,7 @@ Resolver::lookupAandAAAARecords()
          
          else
          {
-            assert(0);
+            resip_assert(0);
          }
          
          iter=iter->ai_next;

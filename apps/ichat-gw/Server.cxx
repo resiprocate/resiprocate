@@ -77,7 +77,7 @@ class ShutdownCmd  : public resip::DumCommand
       {
          mServer->shutdownImpl();
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       std::ostream& encode(std::ostream& strm) const { strm << " ShutdownCmd: "; return strm; }
       std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
    private:
@@ -109,7 +109,7 @@ public:
          return new B2BSession(mServer);
          break;
       default:
-         assert(false);
+         resip_assert(false);
          return 0;
          //return new DefaultDialogSet(mConversationManager);
          break;
@@ -858,58 +858,58 @@ void
 Server::onNewIPCMsg(const IPCMsg& msg)
 {
    const std::vector<std::string>& args = msg.getArgs();
-   assert(args.size() >= 1);
+   resip_assert(args.size() >= 1);
    if(args.at(0) == "notifyIChatCallRequest")
    {
       InfoLog(<< "Server::onNewIPCMsg - notifyIChatCallRequest");
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       notifyIChatCallRequest(args.at(1).c_str(), args.at(2).c_str());
    }
    else if(args.at(0) == "notifyIChatCallCancelled")
    {
       InfoLog(<< "Server::onNewIPCMsg - notifyIChatCallCancelled");
-      assert(args.size() == 2);
+      resip_assert(args.size() == 2);
       notifyIChatCallCancelled(atoi(args.at(1).c_str()));
    }
    else if(args.at(0) == "notifyIChatCallProceeding")
    {
       InfoLog(<< "Server::onNewIPCMsg - notifyIChatCallProceeding");
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       notifyIChatCallProceeding(atoi(args.at(1).c_str()), args.at(2).c_str());
    }
    else if(args.at(0) == "notifyIChatCallFailed")
    {
       InfoLog(<< "Server::onNewIPCMsg - notifyIChatCallFailed");      
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       notifyIChatCallFailed(atoi(args.at(1).c_str()), atoi(args.at(2).c_str()));
    }
    else if(args.at(0) == "continueIChatCall")
    {
       InfoLog(<< "Server::onNewIPCMsg - continueIChatCall");      
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       continueIChatCall(atoi(args.at(1).c_str()), args.at(2).c_str());
    }
    else if(args.at(0) == "sipRegisterJabberUser")
    {
       InfoLog(<< "Server::onNewIPCMsg - sipRegisterJabberUser");      
-      assert(args.size() == 2);
+      resip_assert(args.size() == 2);
       sipRegisterJabberUser(args.at(1).c_str());
    }
    else if(args.at(0) == "sipUnregisterJabberUser")
    {
       InfoLog(<< "Server::onNewIPCMsg - sipUnregisterJabberUser");      
-      assert(args.size() == 2);
+      resip_assert(args.size() == 2);
       sipUnregisterJabberUser(args.at(1).c_str());
    }
    else if(args.at(0) == "checkSubscription")
    {
       InfoLog(<< "Server::onNewIPCMsg - checkSubscription");      
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       checkSubscription(args.at(1).c_str(), args.at(2).c_str());
    }
    else if(args.at(0) == "log")
    {
-      assert(args.size() == 3);
+      resip_assert(args.size() == 3);
       if(args.at(1) == "warning")
       {
          WarningLog(<< args.at(2));
@@ -925,7 +925,7 @@ Server::onNewIPCMsg(const IPCMsg& msg)
    }
    else
    {
-      assert(false);
+      resip_assert(false);
    }
 }
 

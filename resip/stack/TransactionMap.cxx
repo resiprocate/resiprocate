@@ -69,7 +69,7 @@ TransactionMap::erase(const Data& tid )
    else
    {
       InfoLog (<< "Couldn't find " << tid << " to remove");
-      assert(0);
+      resip_assert(0);
    }
 }
  

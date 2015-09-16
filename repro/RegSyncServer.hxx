@@ -46,8 +46,8 @@ protected:
    virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const resip::ContactList& contacts);
 
    // InMemorySyncPubDbHandler methods
-   virtual void onDocumentModified(const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
-   virtual void onDocumentRemoved(const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
+   virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+   virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
    virtual void onInitialSyncDocument(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
 
 private: 

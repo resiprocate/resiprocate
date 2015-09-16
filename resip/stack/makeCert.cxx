@@ -36,22 +36,22 @@ int main()
    Random::initialize();
 
    rsa = RSA_generate_key(1024, RSA_F4, NULL, NULL);
-   assert(rsa);    // couldn't make key pair
+   resip_assert(rsa);    // couldn't make key pair
 
    EVP_PKEY_assign_RSA(privkey, rsa);
-   assert(privkey);
+   resip_assert(privkey);
 
    selfcert = X509_new();
    err = makeSelfCert(&selfcert, privkey);
-   assert(!err);   // couldn't make cert
+   resip_assert(!err);   // couldn't make cert
    
    unsigned char* buffer = NULL;     
    int len = i2d_X509(selfcert, &buffer);   // if buffer is NULL, openssl
                                   // assigns memory for buffer
-   assert(buffer);
+   resip_assert(buffer);
    Data derData((char *) buffer, len);
    X509Contents *certpart = new X509Contents( derData );
-   assert(certpart);
+   resip_assert(certpart);
     
    // make an in-memory BIO        [ see  BIO_s_mem(3) ]
    BIO *mbio = BIO_new(BIO_s_mem());
@@ -64,20 +64,20 @@ int main()
    // dump the BIO into a Contents
    BIO_get_mem_ptr(mbio, &bptr);
    Pkcs8Contents *keypart = new Pkcs8Contents(Data(bptr->data, bptr->length));
-   assert(keypart);
+   resip_assert(keypart);
    BIO_free(mbio);
 
    MultipartMixedContents *certsbody = new MultipartMixedContents;
    certsbody->parts().push_back(certpart);
    certsbody->parts().push_back(keypart);
-   assert(certsbody);
+   resip_assert(certsbody);
 }
 
 
 int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type at the end of the function call
 {
   int serial;
-  assert(sizeof(int)==4);
+  resip_assert(sizeof(int)==4);
   const long duration = 60*60*24*30;   // make cert valid for 30 days
   X509* selfcert = NULL;
   X509_NAME *subject = NULL;

@@ -288,7 +288,7 @@ Conversation::unregisterParticipant(Participant *participant)
 void 
 Conversation::notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType)
 {
-   assert(eventType == MediaEvent::PLAY_FINISHED);
+   resip_assert(eventType == MediaEvent::PLAY_FINISHED);
 
    if(eventType == MediaEvent::PLAY_FINISHED)
    {

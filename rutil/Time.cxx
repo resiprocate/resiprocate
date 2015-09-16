@@ -97,7 +97,7 @@ UInt64 ResipClock::WinMonoClock::GTCInterlocked::GTC64(void)
 #if defined(_MSC_VER) && (_MSC_VER >= 1400) //no atomic intrinsics on Visual Studio 2003 and below
    ULARGE_INTEGER timeVal;
 
-   assert(IS_ALIGNED(&mBaseTime,8)); //if the implementation ever changes to use 64-bit atomic read/write then 64-bit alignment will be required.
+   resip_assert(IS_ALIGNED(&mBaseTime,8)); //if the implementation ever changes to use 64-bit atomic read/write then 64-bit alignment will be required.
 
    //InterlockedCompareExchange64 will issue a LOCK CMPXCHG8B to ensure atomic access to mBaseTime
    //Not the most efficient wat to do a 64-bit atomic read (see fild instruction), but no intrinsic for 64-bit atomic read.
@@ -130,7 +130,7 @@ UInt64 ResipClock::WinMonoClock::GTCInterlocked::GTC64(void)
 
    return timeVal.QuadPart;
 #else
-   assert(0); //this counter only compiles on Visual Studio 2005 +
+   resip_assert(0); //this counter only compiles on Visual Studio 2005 +
    return GTCLock::GTC64();
 #endif //#if (_MSC_VER >= 1400) //no atomic intrinsics on Visual Studio 2003 and below
 }
@@ -193,7 +193,7 @@ Mutex    ResipClock::WinMonoClock::GTCLockDuringRange::mWrapCounterMutex;
 UInt64
 ResipClock::getSystemTime()
 {
-   assert(sizeof(UInt64) == 64/8);
+   resip_assert(sizeof(UInt64) == 64/8);
 
 #if defined(WIN32) || defined(UNDER_CE)
 #ifdef _RESIP_MONOTONIC_CLOCK
@@ -244,7 +244,7 @@ ResipClock::getSystemTime()
 UInt64
 ResipClock::getForever()
 {
-   assert( sizeof(UInt64) == 8 );
+   resip_assert( sizeof(UInt64) == 8 );
 #if defined(WIN32) && !defined(__GNUC__)
    return 18446744073709551615ui64;
 #else
@@ -264,9 +264,9 @@ ResipClock::getRandomFutureTimeMs( UInt64 futureMs )
    UInt64 ret = now;
    ret += (futureMs*r)/10000;
 
-   assert( ret >= now );
-   assert( ret >= now+(futureMs/2) );
-   assert( ret <= now+futureMs );
+   resip_assert( ret >= now );
+   resip_assert( ret >= now+(futureMs/2) );
+   resip_assert( ret <= now+futureMs );
 
    return ret;
 }

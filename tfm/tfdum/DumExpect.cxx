@@ -173,7 +173,7 @@ resip::Data
 DumExpect::explainMismatch(boost::shared_ptr<Event> event) const
 {
    DumEvent* dumEvent = dynamic_cast<DumEvent*>(event.get());
-   assert(dumEvent);
+   resip_assert(dumEvent);
    boost::shared_ptr<SipMessage> msg = dumEvent->getMessage();
 
    Data s;

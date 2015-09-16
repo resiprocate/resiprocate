@@ -1163,7 +1163,7 @@ inline void
 SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
                                      TransactionUser* tu)
 {
-   assert(tuple.mFlowKey);
+   resip_assert(tuple.mFlowKey);
    Tuple tup(tuple);
    tup.onlyUseExistingConnection = true;
    sendTo(msg, tuple, tu);

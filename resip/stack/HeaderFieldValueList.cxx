@@ -3,7 +3,7 @@
 #endif
 
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "resip/stack/HeaderFieldValue.hxx"
 #include "resip/stack/HeaderFieldValueList.hxx"
@@ -139,7 +139,7 @@ HeaderFieldValueList::encode(const Data& headerName, EncodeStream& str) const
 EncodeStream&
 HeaderFieldValueList::encodeEmbedded(const Data& headerName, EncodeStream& str) const
 {
-  assert(!headerName.empty());
+  resip_assert(!headerName.empty());
 
    if (getParserContainer() != 0)
    {

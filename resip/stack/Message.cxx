@@ -4,7 +4,7 @@
 
 #include "resip/stack/Message.hxx"
 #include "rutil/DataStream.hxx"
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 using namespace resip;
 

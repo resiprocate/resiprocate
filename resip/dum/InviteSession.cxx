@@ -50,7 +50,7 @@ const Data& InviteSession::getEndReasonString(InviteSession::EndReason reason)
 {
    if(reason != InviteSession::UserSpecified)
    {
-      assert(reason >= InviteSession::NotSpecified && reason < InviteSession::ENDREASON_MAX); //!dcm! -- necessary?
+      resip_assert(reason >= InviteSession::NotSpecified && reason < InviteSession::ENDREASON_MAX); //!dcm! -- necessary?
       return EndReasons[reason];
    }
    else
@@ -81,7 +81,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mEndReason(NotSpecified)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);
-   assert(mDum.mInviteSessionHandler);
+   resip_assert(mDum.mInviteSessionHandler);
 }
 
 InviteSession::~InviteSession()
@@ -155,18 +155,18 @@ InviteSession::getProposedRemoteOfferAnswer() const
 bool
 InviteSession::hasLocalSdp() const
 {
-   assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
+   resip_assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
    return (mCurrentLocalOfferAnswer.get());
 }
 
 const SdpContents&
 InviteSession::getLocalSdp() const
 {
-   assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
+   resip_assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
    if(mCurrentLocalOfferAnswer.get())
    {
       const SdpContents* sdp = dynamic_cast<const SdpContents*>(mCurrentLocalOfferAnswer.get());
-      assert(sdp);
+      resip_assert(sdp);
       return *sdp;
    }
    else
@@ -178,18 +178,18 @@ InviteSession::getLocalSdp() const
 bool
 InviteSession::hasRemoteSdp() const
 {
-   assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
+   resip_assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
    return (mCurrentRemoteOfferAnswer.get());
 }
 
 const SdpContents&
 InviteSession::getRemoteSdp() const
 {
-   assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
+   resip_assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
    if(mCurrentRemoteOfferAnswer.get())
    {
       const SdpContents* sdp = dynamic_cast<const SdpContents*>(mCurrentRemoteOfferAnswer.get());
-      assert(sdp);
+      resip_assert(sdp);
       return *sdp;
    }
    else
@@ -201,18 +201,18 @@ InviteSession::getRemoteSdp() const
 bool
 InviteSession::hasProposedRemoteSdp() const
 {
-   assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
+   resip_assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
    return (mProposedRemoteOfferAnswer.get());
 }
 
 const SdpContents&
 InviteSession::getProposedRemoteSdp() const
 {
-   assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
+   resip_assert(!mDum.mInviteSessionHandler->isGenericOfferAnswer());
    if(mProposedRemoteOfferAnswer.get())
    {
       const SdpContents* sdp = dynamic_cast<const SdpContents*>(mProposedRemoteOfferAnswer.get());
-      assert(sdp);
+      resip_assert(sdp);
       return *sdp;
    }
    else
@@ -450,7 +450,7 @@ InviteSession::provideOffer(const Contents& offer,
          break;
 
       case ReceivedReinviteNoOffer:
-         assert(!mProposedRemoteOfferAnswer.get());
+         resip_assert(!mProposedRemoteOfferAnswer.get());
          transition(ReceivedReinviteSentOffer);
          mDialog.makeResponse(*mInvite200, *mLastRemoteSessionModification, 200);
          handleSessionTimerRequest(*mInvite200, *mLastRemoteSessionModification);
@@ -716,7 +716,7 @@ InviteSession::end(EndReason reason)
          break;
 
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -785,7 +785,7 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
          break;
       }
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -1004,7 +1004,7 @@ InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::auto_
    else
    {
       WarningLog (<< "Can't refer before Connected");
-      assert(0);
+      resip_assert(0);
       throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
    }
 }
@@ -1220,7 +1220,7 @@ InviteSession::dispatch(const SipMessage& msg)
          break;
       case Undefined:
       default:
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -1266,7 +1266,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
             else if(mState == WaitingToOffer || 
                     mState == UAS_WaitingToOffer)
             {
-               assert(mProposedLocalOfferAnswer.get());
+               resip_assert(mProposedLocalOfferAnswer.get());
                mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
                if(!isTerminated())  
                {
@@ -1434,7 +1434,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnUpdateRejected:
       case On200Update:
          WarningLog (<< "DUM delivered an UPDATE response in an incorrect state " << endl << msg);
-         assert(0);
+         resip_assert(0);
          break;
 
       case OnAck:
@@ -1915,7 +1915,7 @@ InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
-      assert(mProposedLocalOfferAnswer.get());
+      resip_assert(mProposedLocalOfferAnswer.get());
       mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
       provideProposedOffer(); 
    }
@@ -2054,7 +2054,7 @@ InviteSession::dispatchOthers(const SipMessage& msg)
                      << " to the InviteSession in state: " << toData(mState)
                      << endl
                      << msg);
-         assert(0);
+         resip_assert(0);
          break;
    }
 }
@@ -2062,8 +2062,8 @@ InviteSession::dispatchOthers(const SipMessage& msg)
 void
 InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
 {
-   assert(msg.isRequest());
-   assert(msg.header(h_CSeq).method() == INVITE);
+   resip_assert(msg.isRequest());
+   resip_assert(msg.header(h_CSeq).method() == INVITE);
 
    // If we get an INVITE request from the wire and we are not in
    // Connected state, reject the request and send a BYE
@@ -2080,7 +2080,7 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
 void
 InviteSession::dispatchPrack(const SipMessage& msg)
 {
-   assert(msg.header(h_CSeq).method() == PRACK);
+   resip_assert(msg.header(h_CSeq).method() == PRACK);
    if(msg.isRequest())
    {
       SharedPtr<SipMessage> rsp(new SipMessage);
@@ -2102,7 +2102,7 @@ void
 InviteSession::dispatchCancel(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   assert(msg.header(h_CSeq).method() == CANCEL);
+   resip_assert(msg.header(h_CSeq).method() == CANCEL);
    if(msg.isRequest())
    {
       SharedPtr<SipMessage> rsp(new SipMessage);
@@ -2118,7 +2118,7 @@ InviteSession::dispatchCancel(const SipMessage& msg)
    else
    {
       WarningLog (<< "DUM let me send a CANCEL at an incorrect state " << endl << msg);
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -2159,7 +2159,7 @@ InviteSession::dispatchBye(const SipMessage& msg)
    else
    {
       WarningLog (<< "DUM let me send a BYE at an incorrect state " << endl << msg);
-      assert(0);
+      resip_assert(0);
    }
 }
 
@@ -2189,7 +2189,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
    }
    else
    {
-      assert(mNitState == NitProceeding);
+      resip_assert(mNitState == NitProceeding);
       //!dcm! -- toss away 1xx to an info?
       if (msg.header(h_StatusLine).statusCode() >= 300)
       {
@@ -2336,7 +2336,7 @@ InviteSession::dispatchMessage(const SipMessage& msg)
    }
    else
    {
-      assert(mNitState == NitProceeding);
+      resip_assert(mNitState == NitProceeding);
       //!dcm! -- toss away 1xx to an message?
       if (msg.header(h_StatusLine).statusCode() >= 300)
       {
@@ -2505,7 +2505,7 @@ InviteSession::startSessionTimer()
 void
 InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 {
-   assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE);
+   resip_assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE);
 
    // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
    if (msg.exists(h_PAssertedIdentities))
@@ -2555,7 +2555,7 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 void
 InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage& request)
 {
-   assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE);
+   resip_assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE);
 
    // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
    if (request.exists(h_PAssertedIdentities))
@@ -2736,7 +2736,7 @@ InviteSession::toData(State state)
       case UAS_WaitingToRequestOffer:
          return "UAS_WaitingToRequestOffer";
    }
-   assert(0);
+   resip_assert(0);
    return "Undefined";
 }
 
@@ -2837,7 +2837,7 @@ InviteSession::setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, cons
 void
 InviteSession::setOfferAnswer(SipMessage& msg, const Contents* offerAnswer)
 {
-   assert(offerAnswer);
+   resip_assert(offerAnswer);
    msg.setContents(offerAnswer);
 }
 
@@ -3062,7 +3062,7 @@ InviteSession::sendAck(const Contents *answer)
       source = mLastLocalSessionModification;
    }
 
-   assert(mAcks.count(source->getTransactionId()) == 0);
+   resip_assert(mAcks.count(source->getTransactionId()) == 0);
 
    mDialog.makeRequest(*ack, ACK);
 
@@ -3136,7 +3136,7 @@ InviteSession::getEncryptionLevel(const SipMessage& msg)
 void 
 InviteSession::setCurrentLocalOfferAnswer(const SipMessage& msg)
 {
-   assert(mProposedLocalOfferAnswer.get());
+   resip_assert(mProposedLocalOfferAnswer.get());
    if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))
    {
       if (DialogUsageManager::Encrypt == getEncryptionLevel(msg) || DialogUsageManager::SignAndEncrypt == getEncryptionLevel(msg))
@@ -3171,7 +3171,7 @@ InviteSession::flowTerminated()
 void 
 InviteSession::referNoSub(const SipMessage& msg)
 {
-   assert(msg.isRequest() && msg.header(h_CSeq).method()==REFER);
+   resip_assert(msg.isRequest() && msg.header(h_CSeq).method()==REFER);
    mLastReferNoSubRequest = msg;
    mDum.mInviteSessionHandler->onReferNoSub(getSessionHandle(), mLastReferNoSubRequest);
 }

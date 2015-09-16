@@ -39,7 +39,7 @@ AmIResponsible::process(RequestContext& context)
 
    // There should be no Routes on the request at this point, if there was a route, then
    // the StrictRouteFixup monkey would have routed to it already
-   assert (!request.exists(h_Routes) || 
+   resip_assert (!request.exists(h_Routes) || 
            request.header(h_Routes).empty());
   
    // Topmost route had a flow-token; this is our problem

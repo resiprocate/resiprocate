@@ -16,10 +16,10 @@ Data SignatureContext::computeSignature(const vector<Data> toBeSigned)
    
    const EVP_MD *digest_ptr=EVP_get_digestbyname(mProfile.signatureDigest().c_str());
    
-   assert(digest_ptr!=0);
+   resip_assert(digest_ptr!=0);
    
    if(!EVP_SignInit(md,digest_ptr))
-      assert(0); // This should not fail
+      resip_assert(0); // This should not fail
    
    for(unsigned int i=0;i<toBeSigned.size();i++)
    {

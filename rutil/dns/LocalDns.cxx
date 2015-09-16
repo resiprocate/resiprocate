@@ -101,7 +101,7 @@ void LocalDns::message(const char* file, unsigned char* buf, int& len)
    len = 0;
    ifstream fs;
    fs.open(file, ios_base::binary | ios_base::in);
-   assert(fs.is_open());
+   resip_assert(fs.is_open());
    
    unsigned char* p = buf;
    
@@ -124,9 +124,9 @@ LocalDns::localCallback(void *arg, int status, unsigned char *abuf, int alen)
    unsigned char msg[1024];
    int len = 0;
    map<Data, Data>::iterator it = files.find(mTarget);
-   assert(it != files.end());
+   resip_assert(it != files.end());
    message(it->second.c_str(), msg, len);   
-   assert(0 != len);
+   resip_assert(0 != len);
    getHandler(arg)->handleDnsRaw(makeRawResult(arg, 0, msg, len));
    Payload* p = reinterpret_cast<Payload*>(arg);
    delete p;

@@ -99,8 +99,8 @@ class ParseBuffer
       ParseBuffer& operator=(const ParseBuffer& other);
       void reset(const char* pos)
       {
-         assert( mBuff <= mEnd);
-         assert( (pos >= mBuff) && (pos <= mEnd) );
+         resip_assert( mBuff <= mEnd);
+         resip_assert( (pos >= mBuff) && (pos <= mEnd) );
          mPosition = pos;
       }
 

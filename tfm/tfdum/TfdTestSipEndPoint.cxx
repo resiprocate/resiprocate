@@ -34,7 +34,7 @@ void
 TfdTestSipEndPoint::removeConnections()
 {
    DebugLog(<< "TfdTestSipEndPoint::removeConnections");
-   assert(dynamic_cast<TfdTcpTransport*>(mTransport));
+   resip_assert(dynamic_cast<TfdTcpTransport*>(mTransport));
    dynamic_cast<TfdTcpTransport*>(mTransport)->removeConnections();
 }      
 

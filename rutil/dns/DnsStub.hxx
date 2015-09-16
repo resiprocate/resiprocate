@@ -236,7 +236,7 @@ class DnsStub : public ExternalDnsHandler
                                     const DnsResourceRecordsByPtr& src,
                                     DnsResultSink* sink)
             {
-               assert(sink);
+               resip_assert(sink);
                DNSResult<typename QueryType::Type>  result;
                for (unsigned int i = 0; i < src.size(); ++i)
                {

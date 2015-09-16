@@ -22,7 +22,7 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
    if (!masterProfile)
    {
       returnCode = 500;
-      assert(0);
+      resip_assert(0);
       return;
    }
 
@@ -68,7 +68,7 @@ ServerRegistrationHandler::getContactExpires(const NameAddr &contact, SharedPtr<
    if (!masterProfile)
    {
       returnCode = 500;
-      assert(0);
+      resip_assert(0);
       return;
    }
    

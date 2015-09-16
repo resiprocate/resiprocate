@@ -64,7 +64,7 @@ OpenSSLInit::OpenSSLInit()
 	SSL_library_init();
 	SSL_load_error_strings();
 	OpenSSL_add_all_algorithms();
-	assert(EVP_des_ede3_cbc());
+	resip_assert(EVP_des_ede3_cbc());
    mInitialized = true;
 }
 
@@ -100,10 +100,10 @@ unsigned long
 resip_OpenSSLInit_threadIdFunction()
 {
 #if defined(WIN32)
-   assert(0);
+   resip_assert(0);
 #else
 #ifndef _POSIX_THREADS
-   assert(0);
+   resip_assert(0);
 #endif
    unsigned long ret;
    ret= (unsigned long)pthread_self();

@@ -112,7 +112,7 @@ LocationServer::process(RequestContext& context)
 #endif
          context.getResponseContext().addTargetBatch(batch, false /* high priority */);
          //ResponseContext should be consuming the vector
-         assert(batch.empty());
+         resip_assert(batch.empty());
       }
    }
    else

@@ -20,7 +20,7 @@ public:
 
    virtual Message* clone() const
    {
-      assert(false);
+      resip_assert(false);
       return NULL;
    }
 

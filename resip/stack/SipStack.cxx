@@ -117,7 +117,7 @@ SipStack::SipStack(Security* pSecurity,
 #ifdef USE_SSL
       pSecurity->preload();
 #else
-      assert(0);
+      resip_assert(0);
 #endif
    }
    
@@ -172,7 +172,7 @@ SipStack::init(const SipStackOptions& options)
    mSecurity->preload();
 #else
    mSecurity = 0;
-   assert(options.mSecurity==0);
+   resip_assert(options.mSecurity==0);
 #endif
 
    if(options.mAsyncProcessHandler)
@@ -280,7 +280,7 @@ SipStack::shutdown()
 
    {
       Lock lock(mShutdownMutex);
-      assert(!mShuttingDown);
+      resip_assert(!mShuttingDown);
       mShuttingDown = true;
    }
 
@@ -327,7 +327,7 @@ SipStack::addTransport( TransportType protocol,
                         SharedPtr<WsCookieContextFactory> wsCookieContextFactory,
                         const Data& netNs)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
 
    // If address is specified, ensure it is valid
    if(!ipInterface.empty())
@@ -676,7 +676,7 @@ SipStack::addAlias(const Data& domain, int port)
    int portToUse = (port == 0) ? Symbols::DefaultSipPort : port;
 
    DebugLog (<< "Adding domain alias: " << domain << ":" << portToUse);
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
 
    Lock lock(mDomainsMutex);
    mDomains[domain + ":" + Data(portToUse)]++;
@@ -694,7 +694,7 @@ SipStack::removeAlias(const Data& domain, int port)
    int portToUse = (port == 0) ? Symbols::DefaultSipPort : port;
 
    DebugLog (<< "Removing domain alias: " << domain << ":" << portToUse);
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
 
    Lock lock(mDomainsMutex);
    DomainsMap::iterator it = mDomains.find(domain + ":" + Data(portToUse));
@@ -721,7 +721,7 @@ SipStack::getHostname()
    {
       ErrLog(<< "gethostname failed with return " << err << " Returning "
             "\"localhost\"");
-      assert(0);
+      resip_assert(0);
       return "localhost";
    }
    
@@ -733,10 +733,10 @@ SipStack::getHostname()
       ErrLog( << "gethostbyname failed - name server is probably down" );
       return "localhost";
    }
-   assert( hostEnt );
+   resip_assert( hostEnt );
 
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
-   assert( addr );
+   resip_assert( addr );
 
    // if you change this, please #def old version for windows
    char* addrA = inet_ntoa( *addr );
@@ -758,7 +758,7 @@ SipStack::getHostAddress()
    {
       ErrLog(<< "gethostname failed with return " << err << " Returning "
             "\"127.0.0.1\"");
-      assert(0);
+      resip_assert(0);
       return "127.0.0.1";
    }
    
@@ -766,7 +766,7 @@ SipStack::getHostAddress()
    if(!hostEnt)
    {
       ErrLog(<< "gethostbyname failed, returning \"127.0.0.1\"");
-      assert(0);
+      resip_assert(0);
       return "127.0.0.1";
    }
    
@@ -775,7 +775,7 @@ SipStack::getHostAddress()
    {
       ErrLog(<< "gethostbyname returned a hostent* with an empty h_addr_list,"
                " returning \"127.0.0.1\"");
-      assert(0);
+      resip_assert(0);
       return "127.0.0.1";
    }
    
@@ -860,7 +860,7 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser*
 void
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
 
    if (tu) msg->setTransactionUser(tu);
    msg->setDestination(destination);
@@ -889,7 +889,7 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
 void
 SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUser* tu)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
 
    SipMessage* toSend = static_cast<SipMessage*>(msg.clone());
    if (tu) toSend->setTransactionUser(tu);
@@ -911,14 +911,14 @@ SipStack::checkAsyncProcessHandler()
 void
 SipStack::post(std::auto_ptr<ApplicationMessage> message)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
    mTuSelector.add(message.release(), TimeLimitFifo<Message>::InternalElement);
 }
 
 void
 SipStack::post(const ApplicationMessage& message)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
    Message* toPost = message.clone();
    mTuSelector.add(toPost, TimeLimitFifo<Message>::InternalElement);
 }
@@ -927,7 +927,7 @@ void
 SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater,
                TransactionUser* tu)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
    postMS(message, secondsLater*1000, tu);
 }
 
@@ -935,7 +935,7 @@ void
 SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
                  TransactionUser* tu)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
    Message* toPost = message.clone();
    if (tu) toPost->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
@@ -959,7 +959,7 @@ SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu)
 {
-   assert(!mShuttingDown);
+   resip_assert(!mShuttingDown);
    if (tu) message->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
    mAppTimers.add(ms, message.release());

@@ -155,7 +155,7 @@ resip::Data
 DialogEventExpect::explainMismatch(boost::shared_ptr<Event> event) const
 {
    DialogEventHandlerEvent* dumEvent = dynamic_cast<DialogEventHandlerEvent*>(event.get());
-   assert(dumEvent);
+   resip_assert(dumEvent);
    //boost::shared_ptr<SipMessage> msg = dumEvent->getMessage();
 
    return mMismatchComplaints;

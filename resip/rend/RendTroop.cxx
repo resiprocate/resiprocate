@@ -117,8 +117,8 @@ RendExpireTracker::RendExpireTracker(RendTimeUs now, resip::Data desc,
                                      unsigned secsPerBucket, unsigned numBuckets) :
    mDesc(desc) 
 {
-   assert( secsPerBucket >= 1 );
-   assert( numBuckets >= 1 );
+   resip_assert( secsPerBucket >= 1 );
+   resip_assert( numBuckets >= 1 );
    mSecsPerBucket = secsPerBucket;
    mNumBuckets = numBuckets;
    mEpoch = now;
@@ -136,7 +136,7 @@ RendExpireTracker::~RendExpireTracker()
 void
 RendExpireTracker::pushDlg(RendSession& sess, RendTimeUs when_abs) 
 {
-   assert( when_abs >= mEpoch );
+   resip_assert( when_abs >= mEpoch );
    RendTimeUs when = when_abs - mEpoch;
    unsigned bIdx = REND_US2S(when) / mSecsPerBucket;
    if ( bIdx < mHeadIdx ) 
@@ -163,7 +163,7 @@ RendExpireTracker::pushDlg(RendSession& sess, RendTimeUs when_abs)
 RendSession*
 RendExpireTracker::popDlg(RendTimeUs now_abs)
 {
-   assert( now_abs >= mEpoch );
+   resip_assert( now_abs >= mEpoch );
    RendTimeUs now = now_abs - mEpoch;
    unsigned nowIdx = REND_US2S(now) / mSecsPerBucket;
    if ( nowIdx < mHeadIdx ) 
@@ -266,7 +266,7 @@ RendTroopBase::releaseDlgs()
    for ( ; moodIdx < REND_SM_MAX; moodIdx++) 
    {
       RendSessionMoodChain& chain = mMoods[moodIdx].mChain;
-      assert( chain.size()==0 );
+      resip_assert( chain.size()==0 );
    }
 }
 
@@ -374,7 +374,7 @@ RendTroopBase::setSessionMood(RendTimeUs now, RendSession& sess,
             <<" cat="<<mCat
             <<" sess="<<fmtr
             <<" newpr="<<pendReason);
-         assert( 0 );
+         resip_assert( 0 );
       }
       mood = sess.mPendReason==REND_PR_Close 
          ?  REND_SM_Recycle : REND_SM_Open;
@@ -394,7 +394,7 @@ RendTroopBase::setSessionMood(RendTimeUs now, RendSession& sess,
 
    if ( mood == REND_SM_PendNotify ) 
    {
-      assert(sess.mPendReason!=0);	// must have reason from before
+      resip_assert(sess.mPendReason!=0);	// must have reason from before
    } 
    else 
    {
@@ -419,9 +419,9 @@ void
 RendTroopBase::spliceMoodList(RendTimeUs now, RendSessionMood fromMood,
                               RendSessionMood toMood, RendPendReason pendReason) 
 {
-   assert(toMood!=REND_SM_None);
-   assert(fromMood!=REND_SM_None);
-   assert(toMood!=fromMood);
+   resip_assert(toMood!=REND_SM_None);
+   resip_assert(fromMood!=REND_SM_None);
+   resip_assert(toMood!=fromMood);
    RendSessionMoodChain& chain = mMoods[fromMood].mChain;
    RendSessionMoodChain::iterator it = chain.begin();
    for ( ; it != chain.end(); ++it) 
@@ -457,7 +457,7 @@ RendTroopBase::startMoodChange(RendTimeUs now, RendSession& sess, RendSessionMoo
       case REND_PR_Close:
          cnt = startDlgClose(now, sess); 
          break;
-      default: assert(0);
+      default: resip_assert(0);
       }
       return cnt;
    }
@@ -474,7 +474,7 @@ RendTroopBase::startMoodChange(RendTimeUs now, RendSession& sess, RendSessionMoo
       } 
       else 
       {
-         assert(0);
+         resip_assert(0);
       }
       return 0;
    }
@@ -487,11 +487,11 @@ RendTroopBase::startMoodChange(RendTimeUs now, RendSession& sess, RendSessionMoo
    case REND_SM_Idle:
       if ( fromMood==REND_SM_Recycle ) 
       {
-         assert(dlg);
+         resip_assert(dlg);
          dlg->relDlgState();
          // wondering if something with SharedPtr logic is messed up
          // and we are killing dialog object, not just clearing state
-         assert( dlg == sess.mDlgPtr.get() );
+         resip_assert( dlg == sess.mDlgPtr.get() );
          setSessionMood(now, sess, REND_SM_Idle);
       } 
       else 
@@ -504,7 +504,7 @@ RendTroopBase::startMoodChange(RendTimeUs now, RendSession& sess, RendSessionMoo
       CritLog(<<"Illegal session mood change:"
               <<" fromMood="<<RendSessionMoodFmt(fromMood)<<"."<<fromMood
               <<" toMood="<<RendSessionMoodFmt(toMood)<<"."<<toMood);
-      assert(0);
+      resip_assert(0);
    }
    return cnt;
 }
@@ -524,9 +524,9 @@ RendTroopBase::changeDlgCnt(RendTimeUs now, int numDlgs, RendSessionMood fromMoo
    RendSessionMoodChain::iterator it = chain.begin();
    for ( ; it != chain.end() && dcnt < numDlgs; loopcnt++) 
    {
-      assert( loopcnt < 100000 );
+      resip_assert( loopcnt < 100000 );
       RendSession& sess = *it;
-      assert( sess.mMood == fromMood );
+      resip_assert( sess.mMood == fromMood );
       ++it; // do it now before sess moves lists
       DebugLog(<<"ChangeDlg"
          <<" idx="<<sess.mSessionIdx
@@ -550,8 +550,8 @@ RendTroopBase::renewDlgCnt(RendTimeUs now, int numDlgs)
          break;
       // better be open and ready to expire 
       // (should have been removed from tracker when closed)
-      assert( sess->mExpireAbsTime != 0 );
-      assert( sess->mMood != REND_SM_Idle );
+      resip_assert( sess->mExpireAbsTime != 0 );
+      resip_assert( sess->mMood != REND_SM_Idle );
       RendSessionFmtr fmtr(now, *sess);
       InfoLog(<<"RenewDlg sess="<<fmtr);
       startDlgOpen(now, *sess, REND_PR_Renew);
@@ -566,7 +566,7 @@ RendTroopBase::checkAge(RendTimeUs now, RendHandleMoodFnc handler,
 {
    RendHandleMoodCxt cxt(now, mCat, this);
    // assert below is critical, but reflects current usage
-   assert( mood==REND_SM_PendReq || mood==REND_SM_PendNotify );
+   resip_assert( mood==REND_SM_PendReq || mood==REND_SM_PendNotify );
    RendSessionMoodChain& chain = mMoods[mood].mChain;
    RendSessionMoodChain::iterator it = chain.begin();
    int maxAge = 0;
@@ -579,7 +579,7 @@ RendTroopBase::checkAge(RendTimeUs now, RendHandleMoodFnc handler,
       // RendDlgAcctKey key = cvtIdxToKey(sess.mSessionIdx);
       ++totCnt;
       int age = sess.getLastMoodSecs(now);
-      assert( age >= 0 );
+      resip_assert( age >= 0 );
 
       if ( age > maxAge )
          maxAge = age;
@@ -686,8 +686,8 @@ RendTroopBase::adjustAllDlgs(RendTimeUs now, RendHandleMoodFnc handler, int maxW
    }
 
    int totWork = 0;
-   assert( mAdjustIdx >= 0 );
-   assert( maxWork > 0 );
+   resip_assert( mAdjustIdx >= 0 );
+   resip_assert( maxWork > 0 );
    RendHandleMoodCxt cxt(now, mCat, this);
    for ( ; (unsigned)mAdjustIdx < mDlgVec.size() && maxWork > 0; mAdjustIdx++) 
    {
@@ -709,7 +709,7 @@ RendTroopBase::adjustAllDlgs(RendTimeUs now, RendHandleMoodFnc handler, int maxW
          InfoLog(<<"TroopAdjust: key="<<cxt.mKey
             <<" from="<<RendSessionMoodFmt(sess.mMood)
             <<" to="<<RendSessionMoodFmt(newMood));
-         assert(cnt==1);
+         resip_assert(cnt==1);
          ++totWork;
          --maxWork;
       }
@@ -725,11 +725,11 @@ RendTroopBase::checkGoalMood(RendTimeUs now, RendSession& sess, const RendDlgAcc
    {
       // NOTE: This code is no longer used; moved into TroopPub
       int ndlgs = mToSlice.getDlgLen();
-      assert( mOpenToIdxBase < ndlgs );
+      resip_assert( mOpenToIdxBase < ndlgs );
       int idx = (key.mToIdx - mOpenToIdxBase + ndlgs) % ndlgs;
       return idx >= 0 && idx < mOpenToIdxLen ? REND_SM_Open : REND_SM_Idle;
    }
-   assert(0);	// subclass should define this
+   resip_assert(0);	// subclass should define this
    return REND_SM_None;
 }
 #endif
@@ -795,7 +795,7 @@ RendTroopBase::validate(RendTimeUs now)
          break;
 
       default:
-         assert(0);
+         resip_assert(0);
       }
    }
 
@@ -813,10 +813,10 @@ RendTroopBase::validate(RendTimeUs now)
       for ( ; it != chain.end(); ++it) 
       {
          ++cnt;
-         assert( cnt < 1000000 );
-         assert( it->mMood == mood );
+         resip_assert( cnt < 1000000 );
+         resip_assert( it->mMood == mood );
       }
-      assert( cnt == chain.size() );
+      resip_assert( cnt == chain.size() );
    }
 
    // RendSessionMoodChain& chain = mMoodChains[fromMood];
@@ -882,7 +882,7 @@ RendTroopBase::prepareDlgs()
       {
          CritLog(<<"Key mapping error: " <<" idxIn="<<didx <<" key="<<key <<" idxOut="<<didx2);
       }
-      assert( didx2 == didx );
+      resip_assert( didx2 == didx );
    }
 
    mRpt.mMaxSessions = mMaxSessions;
@@ -899,14 +899,14 @@ RendTroopBase::cvtIdxToKey(RendSessionIdx idx)
    RendAcctIdx toIdx = mToSlice.mapDlgIdx(remidx);
    RendAcctIdx fromIdx = mFromSlice.mapDlgIdx(remidx);
    RendAcctIdx repIdx = mRepeatSlice.mapDlgIdx(remidx);
-   assert( remidx==0 );
+   resip_assert( remidx==0 );
    return RendDlgAcctKey(mCat,fromIdx,toIdx,repIdx);
 }
 
 RendSessionIdx
 RendTroopBase::cvtKeyToIdx(const RendDlgAcctKey& key)
 {
-   assert( key.mCat==mCat || key.mCat==0 );
+   resip_assert( key.mCat==mCat || key.mCat==0 );
    // mMaxSessions = mToSlice.getDlgLen() * mFromSlice.getDlgLen() * mRepeatSlice.getDlgLen();
    if ( key.mCat!=mCat 
       || !mRepeatSlice.checkIdx(key.mRepeatIdx)
@@ -946,7 +946,7 @@ RendTroopBase::startDlgCmd(RendTimeUs now, RendSession& sess,
                            RendTroopDlg *dlg, int expSecs, RendPendReason pendReason)
 {
    int sts = dlg->sendNextCmd(expSecs, /*retry*/0);
-   assert( sts==1 );	// could be busy, we don't handle this yet
+   resip_assert( sts==1 );	// could be busy, we don't handle this yet
    setSessionMood(now, sess, REND_SM_PendReq, pendReason);
    return sts;
 }
@@ -957,7 +957,7 @@ RendTroopBase::startDlgOpen(RendTimeUs now, RendSession& sess, RendPendReason pe
    RendTroopDlg *dlg = getDlg(sess);
    if ( dlg==NULL )
    {
-      assert( pendReason==REND_PR_Open || pendReason==REND_PR_OpenOrModify );
+      resip_assert( pendReason==REND_PR_Open || pendReason==REND_PR_OpenOrModify );
       pendReason = REND_PR_Open;
       RendDlgAcctKey key = cvtIdxToKey(sess.mSessionIdx);
       dlg = createNewDlg(key);
@@ -966,13 +966,13 @@ RendTroopBase::startDlgOpen(RendTimeUs now, RendSession& sess, RendPendReason pe
    {
       // either brand-new (above) or previous released
       // let's hope all prior state was properly released!
-      assert( pendReason==REND_PR_Open || pendReason==REND_PR_OpenOrModify );
+      resip_assert( pendReason==REND_PR_Open || pendReason==REND_PR_OpenOrModify );
       pendReason = REND_PR_Open;
       bindDlg(sess, dlg);
    } 
    else if ( dlg->mState == REND_DS_Closing || dlg->mState==REND_DS_Closed ) 
    {
-      assert(0);
+      resip_assert(0);
    } 
    else 
    {
@@ -982,7 +982,7 @@ RendTroopBase::startDlgOpen(RendTimeUs now, RendSession& sess, RendPendReason pe
       } 
       else 
       {
-         assert( pendReason==REND_PR_Modify || pendReason==REND_PR_Renew );
+         resip_assert( pendReason==REND_PR_Modify || pendReason==REND_PR_Renew );
       }
    }
    int expSecs = getScatterExpires();
@@ -993,9 +993,9 @@ int
 RendTroopBase::startDlgClose(RendTimeUs now, RendSession& sess)
 {
    RendTroopDlg *dlg = getDlg(sess);
-   assert(dlg);
+   resip_assert(dlg);
    // XXX: Below might not be true due to race; fix later
-   assert(dlg->mState == REND_DS_Established);
+   resip_assert(dlg->mState == REND_DS_Established);
    int expSecs = 0;
    // InfoLog(<<"closing dialog idx="<<sess.mSessionIdx);
    return startDlgCmd(now, sess, dlg, expSecs, REND_PR_Close);
@@ -1091,7 +1091,7 @@ RendTroopDlg::handleSessResponse(RendTimeUs now, RendSession& sess,
             <<" code="<<rspCode
             <<" reason="<<rsp->header(resip::h_StatusLine).reason()
             <<" warn="<<mLastRspWarnings);
-         assert(sess.getPendReason()!=REND_PR_Open); 
+         resip_assert(sess.getPendReason()!=REND_PR_Open); 
          troop.mCntMgr.inc(REND_CntCode_ReqFailRsp, troop.getDlgCat());
          troop.setSessionMood(now, sess, getPostRspMood(now, sess, false),
             REND_PR_BadRspRenew);
@@ -1099,7 +1099,7 @@ RendTroopDlg::handleSessResponse(RendTimeUs now, RendSession& sess,
       }
       int serverExpire = getRspExpire(*rsp);
       // we don't yet handle the polling SUBSCRIBE (E=0)
-      assert( serverExpire > 1 );
+      resip_assert( serverExpire > 1 );
       if ( sess.getPendReason() == REND_PR_Open ) 
       {
          ++troop.mRpt.mOpenGoodCnt;
@@ -1110,7 +1110,7 @@ RendTroopDlg::handleSessResponse(RendTimeUs now, RendSession& sess,
       } 
       else 
       {
-         assert(0);
+         resip_assert(0);
       }
       troop.mCntMgr.inc(REND_CntCode_ReqGood, troop.getDlgCat());
       troop.addMoodDur(sess.mMood, mRspRecvTime - mReqSendTime);
@@ -1133,16 +1133,16 @@ RendTroopDlg::handleSessResponse(RendTimeUs now, RendSession& sess,
    } 
    else if ( mState==REND_DS_Closed ) 
    {
-      assert( sess.getPendReason() == REND_PR_Close );
+      resip_assert( sess.getPendReason() == REND_PR_Close );
       ++troop.mRpt.mCloseGoodCnt;
-      assert( rspCode >= 200 && rspCode < 299 );
+      resip_assert( rspCode >= 200 && rspCode < 299 );
       troop.addMoodDur(sess.mMood, mRspRecvTime - mReqSendTime);
       RendSessionMood toMood = getPostRspMood(now, sess, true);
       troop.setSessionMood(now, sess, toMood);
    } 
    else if ( mState==REND_DS_Closing ) 
    {
-      assert( sess.getPendReason() == REND_PR_Close );
+      resip_assert( sess.getPendReason() == REND_PR_Close );
       ++troop.mRpt.mCloseFailCnt;
       troop.setSessionMood(now, sess, getPostRspMood(now, sess, false),
          REND_PR_BadRspClose);
@@ -1153,7 +1153,7 @@ RendTroopDlg::handleSessResponse(RendTimeUs now, RendSession& sess,
          " while mood pending,"
          <<" code=" <<mLastRspCode
          );
-      assert(0);
+      resip_assert(0);
    }
 }
 

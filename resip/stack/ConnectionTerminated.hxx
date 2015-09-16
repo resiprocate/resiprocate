@@ -17,8 +17,8 @@ class ConnectionTerminated : public TransactionMessage
          mFlow(flow)
       {
       }
-      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
-      virtual bool isClientTransaction() const { assert(0); return false; }
+      virtual const Data& getTransactionId() const { resip_assert(0); return Data::Empty; }
+      virtual bool isClientTransaction() const { resip_assert(0); return false; }
       virtual Message* clone() const { return new ConnectionTerminated(mFlow); }
       virtual EncodeStream& encode(EncodeStream& strm) const { return encodeBrief(strm); }
       virtual EncodeStream& encodeBrief(EncodeStream& str) const 

@@ -28,7 +28,7 @@ class NotifyIChatCallRequestCmd : public resip::DumCommand
       {
          mServer.notifyIChatCallRequestImpl(mTo, mFrom);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " NotifyIChatCallRequestCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
@@ -46,7 +46,7 @@ class NotifyIChatCallCancelledCmd : public resip::DumCommand
       {
          mServer.notifyIChatCallCancelledImpl(mHandle);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " NotifyIChatCallCancelledCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
@@ -63,7 +63,7 @@ class NotifyIChatCallProceedingCmd : public resip::DumCommand
       {
          mServer.notifyIChatCallProceedingImpl(mHandle, mTo);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " NotifyIChatCallProceedingCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
@@ -81,7 +81,7 @@ class NotifyIChatCallFailedCmd : public resip::DumCommand
       {
          mServer.notifyIChatCallFailedImpl(mHandle, mStatusCode);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " NotifyIChatCallFailedCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
@@ -99,7 +99,7 @@ class ContinueIChatCallCmd : public resip::DumCommand
       {
          mServer.continueIChatCallImpl(mHandle, mRemoteIPPortListBlob);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " ContinueIChatCallCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
@@ -117,7 +117,7 @@ class SipRegisterJabberUserCmd : public resip::DumCommand
       {
          mServer.sipRegisterJabberUserImpl(mJidToRegister);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " SipRegisterJabberUserCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
@@ -134,7 +134,7 @@ class SipUnregisterJabberUserCmd : public resip::DumCommand
       {
          mServer.sipUnregisterJabberUserImpl(mJidToUnregister);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " SipUnregisterJabberUserCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:

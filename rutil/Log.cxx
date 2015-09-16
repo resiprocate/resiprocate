@@ -1,6 +1,6 @@
 #include "rutil/Socket.hxx"
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -28,7 +28,11 @@ const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
+#ifndef WIN32
 int Log::mSyslogFacility = LOG_DAEMON;
+#else
+int Log::mSyslogFacility = -1;
+#endif
 unsigned int Log::MaxLineCount = 0; // no limit by default
 unsigned int Log::MaxByteCount = 0; // no limit by default
 
@@ -249,12 +253,14 @@ Log::initialize(Type type, Level level, const Data& appName,
       mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
       if(mSyslogFacility == -1)
       {
+#ifndef WIN32
+         mSyslogFacility = LOG_DAEMON;
          if(type == Log::Syslog)
          {
             syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
          }
+#endif
          std::cerr << "invalid syslog facility name specified: " << syslogFacilityName.c_str() << std::endl;
-         mSyslogFacility = LOG_DAEMON;
       }
    }
  
@@ -603,7 +609,7 @@ Log::getThreadSetting()
       Lock lock(_mutex);
       ThreadIf::Id thread = ThreadIf::selfId();
       HashMap<ThreadIf::Id, pair<ThreadSetting, bool> >::iterator res = Log::mThreadToLevel.find(thread);
-      assert(res != Log::mThreadToLevel.end());
+      resip_assert(res != Log::mThreadToLevel.end());
       if (res->second.second)
       {
          setting->mLevel = res->second.first.mLevel;
@@ -634,7 +640,7 @@ void
 Log::setThreadSetting(ThreadSetting info)
 {
 #ifndef LOG_ENABLE_THREAD_SETTING
-   assert(0);
+   resip_assert(0);
 #else
    //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
    ThreadIf::Id thread = ThreadIf::selfId();
@@ -660,7 +666,7 @@ Log::setServiceLevel(int service, Level l)
    Lock lock(_mutex);
    Log::mServiceToLevel[service] = l;
 #ifndef LOG_ENABLE_THREAD_SETTING
-   assert(0);
+   resip_assert(0);
 #else
    set<ThreadIf::Id>& threads = Log::mServiceToThreads[service];
    for (set<ThreadIf::Id>::iterator i = threads.begin(); i != threads.end(); i++)
@@ -835,7 +841,7 @@ void Log::LocalLoggerMap::decreaseUseCount(Log::LocalLoggerId loggerId)
    if (it != mLoggerInstancesMap.end())
    {
       it->second.second--;
-      assert(it->second.second >= 0);
+      resip_assert(it->second.second >= 0);
    }
 }
 
@@ -954,7 +960,7 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
          mLineCount++;
          return *mLogger;
       default:
-         assert(0);
+         resip_assert(0);
          return std::cout;
    }
 }

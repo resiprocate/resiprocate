@@ -81,7 +81,7 @@ class DialogSet
       /// Abandon this dialog set, but keep the AppDialogSet around
       void appDissociate()
       {
-         assert(mAppDialogSet);
+         resip_assert(mAppDialogSet);
          mAppDialogSet = 0;
       }
       friend class AppDialogSet;

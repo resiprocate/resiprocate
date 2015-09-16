@@ -28,7 +28,7 @@ class BindHandle : public ActionBase
          mHandle = k->getHandle();
       }
 
-      virtual void operator()() { assert(0); }
+      virtual void operator()() { resip_assert(0); }
 
       virtual resip::Data toString() const { return mActionName; }
 
@@ -59,12 +59,12 @@ class BindHandleInvite : public ActionBase
          boost::shared_ptr<T1> k = boost::dynamic_pointer_cast<T1, Event>(event);
          StackLog(<< "Binding invite session  handle... handle Id is " << k->getHandle().getId());
          mHandle = k->getHandle();
-         assert(mHandle.isValid());
+         resip_assert(mHandle.isValid());
          mSessionHandle = mHandle->getSessionHandle();
-         assert(mSessionHandle.isValid());
+         resip_assert(mSessionHandle.isValid());
       }
 
-      virtual void operator()() { assert(0); }
+      virtual void operator()() { resip_assert(0); }
 
       virtual resip::Data toString() const { return mActionName; }
 

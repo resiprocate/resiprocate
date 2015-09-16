@@ -1,0 +1,180 @@
+#!/usr/bin/python
+# -*- coding: latin-1 -*-
+
+# Usage:
+#
+#   Run this script periodically from cron to update the reTurn users.txt
+#   file.  It reads values from a PostgreSQL table and writes them
+#   to the users file.  If it detects that the file has changed, it
+#   sends a HUP signal to reTurn so that it will reload the users file.
+#
+#   A configuration file can be specified on the command line, it
+#   may define the following parameters:
+#
+#        psql_conninfo         A PostgreSQL conninfo string
+#
+#        Example:
+#          psql_conninfo='dbname=repro'     # will use UNIX domain socket
+#          psql_conninfo='dbname=repro host=localhost user=repro password=foo'
+#
+#        dest_file             The file to write the user data into
+#
+#        Example:
+#          dest_file='/var/cache/reTurn/users.txt'
+#
+#        auth_user_alt         TURN user strings will be 'user@domain'
+#                              rather than just 'user'
+#
+#        Example:
+#          auth_user_alt=True
+#
+#        custom_query          Specify a custom query returning the username,
+#                              realm and password hash (HA1)
+#
+#        Example:
+#          custom_query='SELECT user,realm,ha1 FROM sip_users'
+#   
+#        pid_file              If defined, a HUP signal is sent to this
+#                              PID to tell reTurn to reload the users file.
+#                              If not defined, the script will try to use
+#                              systemctl to send the HUP signal.  systemctl
+#                              is only available on platforms using systemd.
+#
+#        Example:
+#          pid_file='/var/run/reTurnServer/reTurnServer.pid'
+#
+#        systemd_service_name  Define the systemd unit file name to be
+#                              sent the HUP signal when the users file
+#                              changes.  Default: resiprocate-turn-server
+#
+#        Example:
+#          systemd_service_name='resiprocate-turn-server-dev'
+#
+#   The configuration file can be specified as the first command line
+#   argument.  If not specified, the script will look for the file
+#   /etc/reTurn/psql-user-extract.config by default.
+#
+# Debian/Ubuntu requirements:
+#
+#     apt-get install python-psycopg2
+#
+# RPM requirements:
+#
+#     yum install python-psycopg2
+#
+
+import hashlib
+import os
+import psycopg2
+import tempfile
+import signal
+import sys
+
+# Default configuration values, the values in the config file
+# will override them:
+pid_file = None
+auth_user_alt = False
+custom_query = None
+systemd_service_name = 'resiprocate-turn-server'
+
+# Default configuration filename, override by specifying a filename
+# on the command line:
+default_cfg_file = '/etc/reTurn/psql-user-extract.config'
+
+# Program entry point / start here
+if __name__ == '__main__':
+
+    ###### read configuration file
+    cfg_file = default_cfg_file
+    if len(sys.argv) > 1:
+        cfg_file = sys.argv[1]
+    execfile(cfg_file)
+
+    ###### startup, connect to Postgres
+    conn = psycopg2.connect(psql_conninfo)
+    cur = conn.cursor()
+
+    work_dir = os.path.dirname(dest_file)
+    t = tempfile.NamedTemporaryFile(dir=work_dir, delete=False)
+
+    ###### run the query
+    if custom_query:
+        cur.execute(custom_query)
+    elif not auth_user_alt:
+        cur.execute("SELECT username, domain, passwordHash FROM users ORDER BY domain, username")
+    else:
+        cur.execute("SELECT username, domain, passwordHashAlt FROM users ORDER BY domain, username")
+
+    ###### process the results
+    for row in cur:
+        username = row[0]
+        domain = row[1]
+        ha1 = row[2]
+        auth_user = username
+        if auth_user_alt:
+            auth_user = "%s@%s" % (username, domain)
+        t.write("%s:%s:%s:authorized\n" % (auth_user, ha1, domain))
+
+    ###### close database connection and temporary file
+    cur.close()
+    conn.close()
+
+    t.close()
+
+    ###### check if the users file has changed
+    move_file = True
+    if os.path.exists(dest_file):
+        # must check if file has changed
+        move_file = False
+        new_md5 = hashlib.md5(open(t.name, 'rb').read()).digest()
+        old_md5 = hashlib.md5(open(dest_file, 'rb').read()).digest()
+        if new_md5 != old_md5:
+            move_file= True
+
+    ###### if it has changed, send HUP to the reTurnServer process
+    if move_file:
+        os.rename(t.name, dest_file)
+        os.chmod(dest_file, 0640)
+        os.system( 'chgrp return %s' % (dest_file,))
+        if pid_file:
+            reTurnPid = int(open(pid_file, 'rb').read())
+            os.kill(reTurnPid, signal.SIGHUP)
+        else:
+            os.system("systemctl kill -s HUP --kill-who=main %s.service" % (systemd_service_name))
+    else:
+        os.unlink(t.name)
+
+# ====================================================================
+#
+# Copyright 2014 Daniel Pocock.  All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+#
+# 3. Neither the name of the author(s) nor the names of any contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR(S) OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+# ====================================================================
+

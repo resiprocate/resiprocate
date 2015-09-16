@@ -29,7 +29,7 @@ class ClickToCallCmd  : public resip::DumCommand
       {
          mServer.clickToCallImpl(mInitiator, mDestination, mAnchorCall, mXmlRpcInfo);
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " ClickToCallCmd: "; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:

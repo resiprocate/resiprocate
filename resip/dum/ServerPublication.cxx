@@ -97,7 +97,7 @@ ServerPublication::end()
 void 
 ServerPublication::dispatch(const SipMessage& msg)
 {
-   assert(msg.isRequest());
+   resip_assert(msg.isRequest());
    ServerPublicationHandler* handler = mDum.getServerPublicationHandler(mEventType);
    mLastRequest = msg;
    mExpires = 3600; //bad
@@ -186,7 +186,7 @@ ServerPublication::dispatch(const DumTimeout& msg)
 void 
 ServerPublication::send(SharedPtr<SipMessage> response)
 {
-   assert(response->isResponse());
+   resip_assert(response->isResponse());
    response->header(h_SIPETag).value() = mEtag;
    mDum.send(response);
    if (response->header(h_StatusLine).statusCode() >= 300)

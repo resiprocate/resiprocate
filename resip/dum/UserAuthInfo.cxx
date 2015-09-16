@@ -1,5 +1,5 @@
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "resip/dum/UserAuthInfo.hxx"
 #include "rutil/Data.hxx"
@@ -98,7 +98,7 @@ UserAuthInfo::brief() const
 resip::Message* 
 UserAuthInfo::clone() const
 {
-   assert(false); return NULL;
+   resip_assert(false); return NULL;
 }
 
 EncodeStream& 

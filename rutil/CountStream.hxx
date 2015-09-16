@@ -39,7 +39,7 @@ class CountBuffer :
       virtual void flushbuf(void){}
       virtual size_t readbuf(char *buf, size_t count)
       {
-         assert(0);
+         resip_assert(0);
          return 0;
       }
 

@@ -72,7 +72,7 @@ ChordTopology::newConnectionFormed( const NodeId& node, bool inbound )
       }
 
       // go and add this to the finger table
-      assert(mFingerTable.find(node) == mFingerTable.end());
+      resip_assert(mFingerTable.find(node) == mFingerTable.end());
       mFingerTable.insert(node);
    }
 }
@@ -193,7 +193,7 @@ ChordTopology::consume(LeaveReq& msg)
    DebugLog(<< "received LEAVE req from: ?");
 
    // if this is in the prev/next table, remove it and send updates 
-   assert(0);
+   resip_assert(0);
 
    std::auto_ptr<Message> leaveAns(msg.makeLeaveResponse());
    mDispatcher.send(leaveAns, *this);
@@ -240,12 +240,12 @@ ChordTopology::consume(LeaveAns& msg)
 const NodeId& 
 ChordTopology::findNextHop( const NodeId& node )
 {
-   assert( !isResponsible(node) );  
+   resip_assert( !isResponsible(node) );  
    
    if(mFingerTable.size() == 0)
    {
       // return the next pointer and increment around slowly 
-      assert( mNextTable.size() > 0 );
+      resip_assert( mNextTable.size() > 0 );
       DebugLog(<< "findNextHop returning (from next table): " << mNextTable[0]);
 
       // TODO - deal with case wehre there is no next 
@@ -291,7 +291,7 @@ ChordTopology::findNextHop( const DestinationId& did )
    }
    else
    {
-      assert(false);
+      resip_assert(false);
       static NodeId none;
       return none;
    }
@@ -365,7 +365,7 @@ ChordTopology::isResponsible( const DestinationId& did ) const
    }
    else
    {
-      assert(false);
+      resip_assert(false);
       return false;
    }
 }
@@ -416,7 +416,7 @@ ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNext
    // This function takes a list of nodes and merges them into next and prev
    // tables. If anything changes, it sends updates 
 
-   assert( nodes.size() > 0 );
+   resip_assert( nodes.size() > 0 );
    bool changed=false;
    
    for (unsigned int n=0; n<nodes.size(); n++ )
@@ -472,7 +472,7 @@ ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNext
 bool 
 ChordTopology::addNewFingers(const std::vector<NodeId>& nodes)
 {
-   assert( nodes.size() > 0 );
+   resip_assert( nodes.size() > 0 );
    bool changed=false;
 
    // iterate through finger table and check if we are actually adding new nodes
@@ -494,7 +494,7 @@ ChordTopology::addNewFingers(const std::vector<NodeId>& nodes)
 void 
 ChordTopology::buildFingerTable()
 {
-   assert(mProfile.numInitialFingers() <= 127);
+   resip_assert(mProfile.numInitialFingers() <= 127);
    for(unsigned int i = 0; i < mProfile.numInitialFingers(); i++)
    {
       NodeId fingerNodeId = mProfile.nodeId().add2Pow(127-i);
@@ -600,13 +600,13 @@ ChordTopology::candidatesCollected(UInt64 tid,
          else
          {
             // Response not of expected type
-            assert(false);
+            resip_assert(false);
          }
       }
       else
       {
          // Response not found
-         assert(false);
+         resip_assert(false);
       }
    }
 }

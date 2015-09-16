@@ -1,5 +1,5 @@
 #include "p2p/ChordUpdate.hxx"
-#include <assert.h>
+#include "rutil/ResipAssert.h"
 
 using namespace p2p;
 using namespace s2c;
@@ -44,21 +44,21 @@ ChordUpdate::clear()
 const std::vector<NodeId> &
 ChordUpdate::getFingers()
 {
-	assert(mUpdateType == Full);
+	resip_assert(mUpdateType == Full);
 	return mFingers;
 }
 
 const std::vector<NodeId> &
 ChordUpdate::getSuccessors()
 {
-	assert(mUpdateType == Neighbors || mUpdateType == Full);
+	resip_assert(mUpdateType == Neighbors || mUpdateType == Full);
 	return mSuccessors;
 }
 
 const std::vector<NodeId> &
 ChordUpdate::getPredecessors()
 {
-	assert(mUpdateType == Neighbors || mUpdateType == Full);
+	resip_assert(mUpdateType == Neighbors || mUpdateType == Full);
 	return mPredecessors;	
 }
 

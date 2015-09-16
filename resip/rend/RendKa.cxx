@@ -133,31 +133,31 @@ RendKaMgr::~RendKaMgr()
       CritLog(<<"KeepAlive destruction while still active conns="<<numConns
          <<" keys="<<numKeys);
    }
-   assert( numConns==0 && numKeys==0 );
+   resip_assert( numConns==0 && numKeys==0 );
    RendKaAssoc* kanet;
    while ( (kanet=tmrQueuePop(0, NULL)) != NULL ) 
    {
       // verify connection already removed
-      assert( kanet->mRefCnt == 0 );
+      resip_assert( kanet->mRefCnt == 0 );
       delete kanet;
    }
-   assert( mTmrHead==NULL );
+   resip_assert( mTmrHead==NULL );
 }
 
 void
 RendKaMgr::tmrQueueAppend(RendTimeUs now, RendKaAssoc* kanet) 
 {
-   assert( kanet->mTmrNext==NULL );
-   assert( mKaIvalSecs >= 1 );
+   resip_assert( kanet->mTmrNext==NULL );
+   resip_assert( mKaIvalSecs >= 1 );
    kanet->mTmrExpireUs = now + 1000000*mKaIvalSecs;
    if ( mTmrTail==NULL ) 
    {
-      assert( mTmrHead == NULL );
+      resip_assert( mTmrHead == NULL );
       mTmrHead = mTmrTail = kanet;
    } 
    else 
    {
-      assert( mTmrHead != NULL );
+      resip_assert( mTmrHead != NULL );
       mTmrTail->mTmrNext = kanet;
       mTmrTail = kanet;
    }
@@ -177,7 +177,7 @@ RendKaMgr::tmrQueuePop(RendTimeUs now, RendTimeUs *nextTime)
       kanet = mTmrHead;
       if ( kanet == mTmrTail ) 
       {
-         assert( kanet->mTmrNext == NULL );
+         resip_assert( kanet->mTmrNext == NULL );
          mTmrHead = mTmrTail = NULL;
       } 
       else 
@@ -218,7 +218,7 @@ RendKaMgr::addConn(RendTimeUs now, const resip::Tuple& target)
    if ( mKaIvalSecs==0 )
       return 0;
 
-   assert( target.mFlowKey );
+   resip_assert( target.mFlowKey );
    RendKaAssoc kanet1(target);
 
    RendKaConns::iterator itc = mKaConns.find(&kanet1);
@@ -252,20 +252,20 @@ RendKaMgr::addConn(RendTimeUs now, const resip::Tuple& target)
 void
 RendKaMgr::delConn(RendLocalKey key) 
 {
-   assert(key);
+   resip_assert(key);
    RendKaKeys::iterator itk = mKaKeys.find(key);
-   assert ( itk != mKaKeys.end() );
+   resip_assert ( itk != mKaKeys.end() );
    RendKaAssoc *kanet = itk->second;
-   assert( kanet );
-   assert( kanet->mLocalKey == key );
-   assert( kanet->mRefCnt > 0 );
+   resip_assert( kanet );
+   resip_assert( kanet->mLocalKey == key );
+   resip_assert( kanet->mRefCnt > 0 );
    --(mStats.mNumCurSession);
    if ( --(kanet->mRefCnt) == 0 ) 
    {
       mKaKeys.erase( itk);
       RendKaConns::iterator itc = mKaConns.find(kanet);
-      assert( itc != mKaConns.end() );
-      assert( *itc == kanet );
+      resip_assert( itc != mKaConns.end() );
+      resip_assert( *itc == kanet );
       mKaConns.erase( itc);
       // NO: delete kanet; -- will delete it in tmrPop!
    }
@@ -284,8 +284,8 @@ RendKaMgr::sendKaMsg(RendKaAssoc *kanet)
       resip::Via via;
       mKaMsg->header(resip::h_Vias).push_back(via);
    }
-   assert( kanet->mTarget.mTransportKey != 0 );
-   assert( kanet->mTarget.mFlowKey != 0 );
+   resip_assert( kanet->mTarget.mTransportKey != 0 );
+   resip_assert( kanet->mTarget.mFlowKey != 0 );
    // below makes clone of message
    mStack.sendTo(*mKaMsg, kanet->mTarget);
    ++(mStats.mSentMsgCnt);
@@ -301,8 +301,8 @@ RendKaMgr::processTimers(RendTimeUs now)
    while ( (kanet=tmrQueuePop(now, &nextTime)) != NULL ) 
    {
       // assert( kanet->mLocalKey != lastKey ); lastKey = kanet->mLocalKey;
-      assert( cnt < 50000 ); ++cnt;
-      assert( kanet->mRefCnt >= 0 );
+      resip_assert( cnt < 50000 ); ++cnt;
+      resip_assert( kanet->mRefCnt >= 0 );
       if ( kanet->mRefCnt==0 ) 
       {
          delete kanet;

@@ -826,7 +826,7 @@ void
 RemoteParticipant::provideOffer(bool postOfferAccept)
 {
    std::auto_ptr<SdpContents> offer(new SdpContents);
-   assert(mInviteSessionHandle.isValid());
+   resip_assert(mInviteSessionHandle.isValid());
    
    buildSdpOffer(mLocalHold, *offer);
 
@@ -838,7 +838,7 @@ bool
 RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert)
 {
    auto_ptr<SdpContents> answer(new SdpContents);
-   assert(mInviteSessionHandle.isValid());
+   resip_assert(mInviteSessionHandle.isValid());
    bool answerOk = buildSdpAnswer(offer, *answer);
 
    if(answerOk)
@@ -893,7 +893,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
             break;
          }
       }
-      assert(audioMedium);
+      resip_assert(audioMedium);
 
       // Add any codecs from our capabilities that may not be in current local sdp - since endpoint may have changed and may now be capable 
       // of handling codecs that it previously could not (common when endpoint is a B2BUA).
@@ -950,7 +950,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 
       // Assumes there is only 1 media stream in session caps and it the audio one
       audioMedium = &offer.session().media().front();
-      assert(audioMedium);
+      resip_assert(audioMedium);
 
       // Set the local RTP Port
       audioMedium->port() = mDialogSet.getLocalRTPPort();
@@ -1300,13 +1300,13 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
 
       // Set local port in answer
       // for now we only allow 1 audio media
-      assert(answer.session().media().size() == 1);
+      resip_assert(answer.session().media().size() == 1);
       SdpContents::Session::Medium& mediaSessionCaps = profile->sessionCaps().session().media().front();
-      assert(mediaSessionCaps.name() == "audio");
-      assert(mediaSessionCaps.codecs().size() > 0);
+      resip_assert(mediaSessionCaps.name() == "audio");
+      resip_assert(mediaSessionCaps.codecs().size() > 0);
 
       // Copy t= field from sdp (RFC3264)
-      assert(answer.session().getTimes().size() > 0);
+      resip_assert(answer.session().getTimes().size() > 0);
       if(offer.session().getTimes().size() >= 1)
       {
          answer.session().getTimes().clear();
@@ -1602,7 +1602,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    bool supportedCryptoSuite = false;
    bool supportedFingerprint = false;
 
-   assert(localSdp);
+   resip_assert(localSdp);
 
    /*
    InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", localSdp=" << localSdp);
@@ -2068,7 +2068,7 @@ void
 RemoteParticipant::onProvisional(ClientInviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onProvisional: handle=" << mHandle << ", " << msg.brief());
-   assert(msg.header(h_StatusLine).responseCode() != 100);
+   resip_assert(msg.header(h_StatusLine).responseCode() != 100);
 
    if(!mDialogSet.isStaleFork(getDialogId()))
    {
@@ -2150,7 +2150,7 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
       InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to a timeout");
       break;
    default:
-      assert(false);
+      resip_assert(false);
       break;
    }
    unsigned int statusCode = 0;
@@ -2284,7 +2284,7 @@ void
 RemoteParticipant::onOfferRequestRejected(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onOfferRequestRejected: handle=" << mHandle << ", " << msg.brief());
-   assert(0);  // We never send a request for an offer (ie. Invite with no SDP)
+   resip_assert(0);  // We never send a request for an offer (ie. Invite with no SDP)
 }
 
 void
@@ -2325,14 +2325,14 @@ void
 RemoteParticipant::onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onInfoSuccess: handle=" << mHandle << ", " << msg.brief());
-   assert(0);  // We never send an info request
+   resip_assert(0);  // We never send an info request
 }
 
 void
 RemoteParticipant::onInfoFailure(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onInfoFailure: handle=" << mHandle << ", " << msg.brief());
-   assert(0);  // We never send an info request
+   resip_assert(0);  // We never send an info request
 }
 
 void

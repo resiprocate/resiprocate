@@ -39,7 +39,7 @@ OutboundTargetHandler::process(RequestContext & rc)
       const resip::Data& tid=sip->getTransactionId();
       DebugLog(<<"Looking for tid " << tid);
       Target* target = rsp.getTarget(tid);
-      assert(target);
+      resip_assert(target);
       OutboundTarget* ot = dynamic_cast<OutboundTarget*>(target);
       if(ot)
       {

@@ -42,7 +42,7 @@ ServerOutOfDialogReq::end()
 void 
 ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 {
-   assert(msg.isRequest());
+   resip_assert(msg.isRequest());
 
    OutOfDialogHandler *pHandler = mDum.getOutOfDialogHandler(msg.header(h_CSeq).method());
    if(pHandler != NULL)
@@ -97,7 +97,7 @@ ServerOutOfDialogReq::answerOptions()
 void 
 ServerOutOfDialogReq::send(SharedPtr<SipMessage> response)
 {
-   assert(response->isResponse());
+   resip_assert(response->isResponse());
    mDum.send(response);
    delete this;
 }

@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "resip/dum/ChallengeInfo.hxx"
 #include "resip/dum/DumFeature.hxx"
@@ -65,7 +65,7 @@ ServerAuthManager::process(Message* msg)
    {
       InfoLog(<< "ServerAuth got ChallengeInfo " << challengeInfo->brief());
       MessageMap::iterator it = mMessages.find(challengeInfo->getTransactionId());
-      assert(it != mMessages.end());
+      resip_assert(it != mMessages.end());
       std::auto_ptr<SipMessage> sipMsg(it->second);
       mMessages.erase(it);
 
@@ -120,10 +120,10 @@ ServerAuthManager::process(Message* msg)
 SipMessage*
 ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 {
-   assert(userAuth);
+   resip_assert(userAuth);
 
    MessageMap::iterator it = mMessages.find(userAuth->getTransactionId());
-   assert(it != mMessages.end());
+   resip_assert(it != mMessages.end());
    SipMessage* requestWithAuth = it->second;
    mMessages.erase(it);
 

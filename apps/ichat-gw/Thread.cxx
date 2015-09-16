@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include "Thread.hxx"
 
@@ -13,7 +13,7 @@ using namespace std;
 typedef unsigned(__stdcall *THREAD_START_ROUTINE)(void*);
 #endif
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <iostream>
 
 extern "C"
@@ -24,10 +24,10 @@ __stdcall
 #endif
 threadWrapper( void* parm )
 {
-   assert( parm );
+   resip_assert( parm );
    Thread* t = static_cast < Thread* > ( parm );
 
-   assert( t );
+   resip_assert( t );
    t->thread();
 #ifdef WIN32
    _endthreadex(0);
@@ -54,7 +54,7 @@ Thread::~Thread()
 void
 Thread::run()
 {
-   assert(mId == 0);
+   resip_assert(mId == 0);
 
 #if defined(WIN32)
    mThread =
@@ -68,13 +68,13 @@ Thread::run()
          0, //DWORD dwCreationFlags,                     // creation flags
          &mId// LPDWORD lpThreadId                         // pointer to receive thread ID
          );
-   assert( mThread != 0 );
+   resip_assert( mThread != 0 );
 #else
    // spawn the thread
    if ( int retval = pthread_create( &mId, 0, threadWrapper, this) )
    {
       std::cerr << "Failed to spawn thread: " << retval << std::endl;
-      assert(0);
+      resip_assert(0);
    }
 #endif
 }
@@ -118,7 +118,7 @@ Thread::join()
       if ( r != 0 )
       {
          cerr << "Internal error: pthread_join() returned " << r << endl;
-         assert(0);
+         resip_assert(0);
       }
    }
    

@@ -18,14 +18,14 @@ Data getFullFilename()
 {
 #ifdef WIN32
    char *home_drive = getenv("HOMEDRIVE");
-   assert(home_drive); // FIXME
+   resip_assert(home_drive); // FIXME
    char *home_path = getenv("HOMEPATH");
-   assert(home_path); // FIXME
+   resip_assert(home_path); // FIXME
    Data full_filename(string(home_drive) + string(home_dir) + string("\sipdial\sipdial.cfg"));
    return full_filename;
 #else   
    char *home_dir = getenv("HOME");
-   assert(home_dir); // FIXME
+   resip_assert(home_dir); // FIXME
    Data full_filename(string(home_dir) + string("/.sipdial/sipdial.cfg"));
    return full_filename;
 #endif

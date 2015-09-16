@@ -202,7 +202,7 @@ GeoProximityTargetSorter::process(RequestContext &rc)
       if(rsp.getCandidateTransactionMap().size() >= 2)
       {
          // This is the first run, no Targets should be active yet
-         assert(rsp.hasCandidateTransactions() && 
+         resip_assert(rsp.hasCandidateTransactions() && 
                !rsp.hasActiveTransactions() &&
                !rsp.hasTerminatedTransactions());
 
@@ -244,7 +244,7 @@ GeoProximityTargetSorter::process(RequestContext &rc)
             inner=outer->begin();
             for(; inner != outer->end(); inner++)
             {
-               assert(rsp.isCandidate(*inner));
+               resip_assert(rsp.isCandidate(*inner));
                Target* target = rsp.getTarget(*inner);
                if(target)
                {
@@ -312,7 +312,7 @@ GeoProximityTargetSorter::process(RequestContext &rc)
 void 
 GeoProximityTargetSorter::getClientGeoLocation(const SipMessage& request, double& latitude, double& longitude)
 {
-   assert(request.isRequest());
+   resip_assert(request.isRequest());
 
    // First check to see if x-repro-geolocation parameter is on Contact header
    if(request.exists(h_Contacts) && request.header(h_Contacts).size() >= 1)

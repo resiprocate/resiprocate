@@ -57,7 +57,7 @@ void
 repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
 {
    DebugLog(<< "Adding new " << mName << " to chain: " << *(rp.get()));
-   assert(!mChainReady);
+   resip_assert(!mChainReady);
    rp->pushAddress((short)mChain.size());
    rp->pushAddress(mAddress);
    rp->setChainType(mType);
@@ -72,7 +72,7 @@ repro::ProcessorChain::process(RequestContext &rc)
    if(!mChainReady)
    {
       onChainComplete();
-      assert(mChainReady);
+      resip_assert(mChainReady);
    }
 
    processor_action_t action;

@@ -62,7 +62,7 @@ struct GenericIPAddress
             return sizeof(sockaddr_in6);
          }
 #endif
-         assert(0);
+         resip_assert(0);
          return 0;
       }
       
@@ -104,7 +104,7 @@ struct GenericIPAddress
                return (v6Address.sin6_port == addr.v6Address.sin6_port &&
                      memcmp(&v6Address.sin6_addr, &addr.v6Address.sin6_addr, sizeof(in6_addr)) == 0);
 #else
-               assert(0);
+               resip_assert(0);
 		         return false;
 #endif
             }

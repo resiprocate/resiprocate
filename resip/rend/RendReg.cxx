@@ -79,7 +79,7 @@ public:
       : RendTroopDlg(tu, acctIdx, acctIdx), mTroop(troop), mRegId(regId) 
    { 
       mFlags |= REND_DlgF_KeepAlive;
-      assert(acctIdx>=0); 
+      resip_assert(acctIdx>=0); 
    }
    virtual resip::SipMessage*	makeNextReq();
 

@@ -78,7 +78,7 @@ protected:
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
-   resip::SharedPtr<MediaInterface> getMediaInterface() const { assert(mMediaInterface); return mMediaInterface; }
+   resip::SharedPtr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
 
 private: 
    ConversationHandle mHandle;

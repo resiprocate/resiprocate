@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include <cstdio>
 #include <cstring>
 #include <errno.h>
@@ -108,7 +108,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
       clog << "Opened port " << port << " with fd " << fd << endl;
    }
    
-   assert( fd != INVALID_SOCKET  );
+   resip_assert( fd != INVALID_SOCKET  );
 	
    return fd;
 }
@@ -119,10 +119,10 @@ getMessage( resip::Socket fd, char* buf, int* len,
             UInt32* srcIp, unsigned short* srcPort,
             bool verbose)
 {
-   assert( fd != INVALID_SOCKET );
+   resip_assert( fd != INVALID_SOCKET );
 	
    int originalSize = *len;
-   assert( originalSize > 0 );
+   resip_assert( originalSize > 0 );
    
    struct sockaddr_in from;
    int fromLen = sizeof(from);
@@ -188,20 +188,20 @@ sendMessage( resip::Socket fd, char* buf, int l,
              unsigned int dstIp, unsigned short dstPort,
              bool verbose)
 {
-   assert( fd != INVALID_SOCKET );
+   resip_assert( fd != INVALID_SOCKET );
     
    int s;
    if ( dstPort == 0 )
    {
       // sending on a connected port 
-      assert( dstIp == 0 );
+      resip_assert( dstIp == 0 );
 		
       s = send(fd,buf,l,0);
    }
    else
    {
-      assert( dstIp != 0 );
-      assert( dstPort != 0 );
+      resip_assert( dstIp != 0 );
+      resip_assert( dstPort != 0 );
         
       struct sockaddr_in to;
       int toLen = sizeof(to);

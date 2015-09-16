@@ -441,10 +441,10 @@ RendPubSubEvent::release()
 void
 RendPubSubEvent::setSize(unsigned numAcct, unsigned numPubRpt, unsigned numSubRpt) 
 {
-   assert( numAcct >= 1 );
-   assert( numPubRpt >= 1 );
-   assert( numSubRpt >= 1 );
-   assert( numSubRpt < 32 );
+   resip_assert( numAcct >= 1 );
+   resip_assert( numPubRpt >= 1 );
+   resip_assert( numSubRpt >= 1 );
+   resip_assert( numSubRpt < 32 );
 
    mNumPubAccts = mNumSubAccts = numAcct;
    mNumPubRpts = numPubRpt;
@@ -470,8 +470,8 @@ RendPubSubEvent::setSize(unsigned numAcct, unsigned numPubRpt, unsigned numSubRp
 inline RendEventPubPosture*
 RendPubSubEvent::getPosture(unsigned pubAcctIdx, unsigned pubRptIdx) const
 {
-   assert( pubAcctIdx < mNumPubAccts );
-   assert( pubRptIdx < mNumPubRpts );
+   resip_assert( pubAcctIdx < mNumPubAccts );
+   resip_assert( pubRptIdx < mNumPubRpts );
    RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
    return posture;
 }
@@ -479,8 +479,8 @@ RendPubSubEvent::getPosture(unsigned pubAcctIdx, unsigned pubRptIdx) const
 unsigned
 RendPubSubEvent::getPidfSn(unsigned pubAcctIdx, unsigned pubRptIdx) const 
 {
-   assert( pubAcctIdx < mNumPubAccts );
-   assert( pubRptIdx < mNumPubRpts );
+   resip_assert( pubAcctIdx < mNumPubAccts );
+   resip_assert( pubRptIdx < mNumPubRpts );
    RendEventPubPosture *posture = &mPosture[pubAcctIdx*mNumPubRpts+pubRptIdx];
    // TBD: could check to see if expired
    return posture->mExpireAbsSecs==0 ? 0 : posture->mPidfSn;
@@ -491,7 +491,7 @@ RendPubSubEvent::setWatchable(unsigned pubAcctIdx, unsigned pubRptIdx,
                               bool isWatchable) 
 {
    RendEventPubPosture *posture = getPosture(pubAcctIdx, pubRptIdx);
-   assert(isWatchable==false);
+   resip_assert(isWatchable==false);
    posture->mWatchable = isWatchable;
    posture->mPendCnt = -1;	// not sure needed
 }
@@ -523,7 +523,7 @@ unsigned
 RendPubSubEvent::countWatchers(unsigned pubAcctIdx) 
 {
    // watch[pubAcct][subAcct][subRpt] = bool
-   assert( pubAcctIdx < mNumPubAccts );
+   resip_assert( pubAcctIdx < mNumPubAccts );
    unsigned watchCnt = 0;
    unsigned subAcctIdx;
    UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
@@ -539,9 +539,9 @@ RendPubSubEvent::getWatching(unsigned pubAcctIdx, unsigned subAcctIdx,
                              unsigned subRptIdx) 
 {
    // watch[pubAcct][subAcct][subRpt] = bool
-   assert( pubAcctIdx < mNumPubAccts );
-   assert( subAcctIdx < mNumSubAccts );
-   assert( subRptIdx < 32 );
+   resip_assert( pubAcctIdx < mNumPubAccts );
+   resip_assert( subAcctIdx < mNumSubAccts );
+   resip_assert( subRptIdx < 32 );
    UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
    return (*watchBase & (1<<subRptIdx)) ? true : false;
 }
@@ -552,9 +552,9 @@ RendPubSubEvent::setWatching(RendTimeUs now,
                              unsigned subRptIdx, bool isWatching, bool notifyPub) 
 {
    // watch[pubAcct][subAcct][subRpt] = bool
-   assert( pubAcctIdx < mNumPubAccts );
-   assert( subAcctIdx < mNumSubAccts );
-   assert( subRptIdx < mNumSubRpts );
+   resip_assert( pubAcctIdx < mNumPubAccts );
+   resip_assert( subAcctIdx < mNumSubAccts );
+   resip_assert( subRptIdx < mNumSubRpts );
    UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
    UInt32 subMask = 1<<subRptIdx;
    if ( ((*watchBase)&subMask) ^ (isWatching?subMask:0) ) 
@@ -602,8 +602,8 @@ RendPubSubEvent::checkPublish(unsigned pubAcctIdx, unsigned pubRptIdx)
 {
    // ready[pubAcct][pubRpt][subAcct][subRpt] = bool
    // watch[pubAcct][subAcct][subRpt] = bool
-   assert( pubAcctIdx < mNumPubAccts );
-   assert( pubRptIdx < mNumPubRpts );
+   resip_assert( pubAcctIdx < mNumPubAccts );
+   resip_assert( pubRptIdx < mNumPubRpts );
    UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
    UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    unsigned subIdx;
@@ -696,8 +696,8 @@ RendPubSubEvent::recordNotifyTup(RendTimeUs now,
                                  unsigned pubPidfSn) 
 {
    RendEventPubPosture *posture = getPosture(pubAcctIdx,pubRptIdx);
-   assert( subAcctIdx < mNumSubAccts );
-   assert( subRptIdx < mNumSubRpts );
+   resip_assert( subAcctIdx < mNumSubAccts );
+   resip_assert( subRptIdx < mNumSubRpts );
    // TBD: could check to see if expired
    if ( posture->mPidfSn == pubPidfSn && posture->mExpireAbsSecs > 0 ) 
    {
@@ -860,7 +860,7 @@ RendPubSubEvent::countPendingTuples()
                    <<" cachePend="<<cachePend
                    <<" countPend="<<posture->mPendCnt);
             dumpPub(pubAcctIdx, pubRptIdx);
-            assert(0);
+            resip_assert(0);
          }
 #endif
          pendCnt += posture->mPendCnt;
@@ -912,7 +912,7 @@ public:
    RendPubDlg(RendPubTroop& troop, RendTu& tu, RendAcctIdx acctIdx, int rptIdx) 
       : RendTroopDlg(tu, acctIdx, acctIdx), mTroop(troop), mRepeatIdx(rptIdx)
    { 
-      assert(acctIdx>=0); 
+      resip_assert(acctIdx>=0); 
       mFlags |= REND_DlgF_ETagDlg;
    }
    virtual RendTroopBase& getTroop() { return mTroop; }
@@ -938,9 +938,9 @@ RendPubTroop::checkGoalMood(RendHandleMoodCxt& cxt)
 {
    RendSession& sess = *cxt.mSess;
 
-   assert(mOpenToIdxBase >= 0 && mOpenToIdxLen >= 0);
+   resip_assert(mOpenToIdxBase >= 0 && mOpenToIdxLen >= 0);
    int ndlgs = mToSlice.getDlgLen();
-   assert( mOpenToIdxBase < ndlgs );
+   resip_assert( mOpenToIdxBase < ndlgs );
    int idx = (cxt.mKey.mToIdx - mOpenToIdxBase + ndlgs) % ndlgs;
    bool doPub = idx >= 0 && idx < mOpenToIdxLen;
 
@@ -1053,7 +1053,7 @@ RendPubTroop::handleNotifyDone(RendTimeUs now, unsigned sessionIdx,
                                RendTimeUs absPubTime, bool isNotify) 
 {
    RendSession* sess = getSession(sessionIdx);
-   assert( sess );
+   resip_assert( sess );
 
    if ( sess->mMood != REND_SM_PendNotify )
       return; // we don't care any right now
@@ -1084,7 +1084,7 @@ RendPubDlg::makeNextReq()
       snprintf(noteBuf, sizeof(noteBuf), "%010u.%05u.%010u", 
          mToAcctIdx+1, mRepeatIdx+1, mPidfSn+1);
 #endif
-      assert( strlen(noteBuf)==27 );
+      resip_assert( strlen(noteBuf)==27 );
       resip::Data body;
       {
          resip::DataStream strm(body);
@@ -1126,8 +1126,8 @@ to see that we got any message at all.
 RendSessionMood
 RendPubDlg::getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood)
 {
-   assert( sess.mMood == REND_SM_PendReq );
-   assert( sess.getPendReason() != 0 );
+   resip_assert( sess.mMood == REND_SM_PendReq );
+   resip_assert( sess.getPendReason() != 0 );
    if ( isGood ) 
    {
       if ( ! mTroop.mEventInfo.checkPublish(mToAcctIdx, mRepeatIdx) ) 
@@ -1182,7 +1182,7 @@ public:
               int rptIdx) 
       : RendTroopDlg(tu, fromIdx, toIdx), mTroop(troop), mRepeatIdx(rptIdx)
    { 
-      assert(toIdx>=0); 	// why is this here
+      resip_assert(toIdx>=0); 	// why is this here
       mFlags |= REND_DlgF_StdDlg|REND_DlgF_KeepAlive;
       mGotNotify = false;
       mTryRenew = false;
@@ -1240,7 +1240,7 @@ RendSubTroop::checkGoalMood(RendHandleMoodCxt& cxt)
          return REND_SM_Wave;
       }
       RendSubDlg *sdlg = getSubDlg(sess);
-      assert(sdlg);
+      resip_assert(sdlg);
       if ( sdlg->mTryRenew )
       {
          cxt.mNewPendReason = REND_PR_Renew;
@@ -1284,7 +1284,7 @@ RendSubDlg::getPostRspMood(RendTimeUs now, RendSession& sess, bool isGood)
 {
    if ( isGood )
    {
-      assert( sess.mMood == REND_SM_PendReq );
+      resip_assert( sess.mMood == REND_SM_PendReq );
       if ( sess.getPendReason()==REND_PR_Close ) 
       {
          // unset watchable so PUBs don't wait for NOTIFYs
@@ -1409,7 +1409,7 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
       ofs += 5+1; // skip rpt
       pubPidfSn = strtoul(body.data()+ofs, NULL, 10);
       ofs += 10+1+8; // skip SN & tail tag
-      assert( signext == ofs );
+      resip_assert( signext == ofs );
 
       if ( pubAcctIdx==0 || pubAcctRpt==0 || pubPidfSn==0 ) 
       {
@@ -1608,7 +1608,7 @@ RendPres1Sketch::getTroopReportCore(RendTimeUs now, RendTroopReport& rpt)
    case REND_SKETCH_WS_LOOP_PAUSE: nm = "pause";	break;
    default: 
       CritLog(<<"Bogus work state="<<mWorkState);
-      assert(0);
+      resip_assert(0);
    }
    rpt.mWaveStateStr = nm;
 
@@ -1741,18 +1741,18 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt)
       if (sess.mMood==REND_SM_PendNotify) 
       {
          RendPubDlg* pdlg = mPubTroop.getPubDlg(sess);
-         assert( pdlg );
+         resip_assert( pdlg );
          bool readyB = mEventInfo.checkPublish(pdlg->mToAcctIdx, pdlg->mRepeatIdx);
          if ( readyB ) 
          {
             // something went wrong: this shouldn't be pending!
             ErrLog(<<"PubCheckPend: Lost NOTIFY tracking: pending PUB shouldn't be pending:"<<cxt.mKey);
-            assert(0);
+            resip_assert(0);
             return REND_SM_GROUP_ByPendReason;
          }
          RendTupDetail detail;
          mEventInfo.checkPublishDetail(cxt.mNow, pdlg->mToAcctIdx, pdlg->mRepeatIdx, detail);
-         assert( detail.mPendCnt > 0 );
+         resip_assert( detail.mPendCnt > 0 );
          mCntMgr.inc(REND_CntCode_ReqStaleNot, REND_DlgCat_Pub);
          mCntMgr.add(REND_CntCode_TupStaleNot, REND_DlgCat_Pub, detail.mPendCnt);
          RendDlgAcctKey subKey = detail.toSubKey();
@@ -1763,7 +1763,7 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt)
                <<" key="<<cxt.mKey
                <<" tup="<<detail
                <<" subkey="<<subKey);
-            assert(0);
+            resip_assert(0);
             return REND_SM_GROUP_ByPendReason;
          }
          RendSessionFmtr pubFmtr(cxt.mNow, sess);
@@ -1820,7 +1820,7 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt)
          return REND_SM_GROUP_ByPendReason;
       }
 
-      assert(sess.mMood==REND_SM_PendReq);
+      resip_assert(sess.mMood==REND_SM_PendReq);
       mCntMgr.inc(REND_CntCode_ReqStaleRsp, REND_DlgCat_Pub);
       cxt.mNewPendReason = REND_PR_CheckAge;
       return REND_SM_Recycle;
@@ -1829,7 +1829,7 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt)
    if (cxt.mTroop->getDlgCat()==REND_DlgCat_Sub )
    {
       RendSubDlg* sdlg = mSubTroop.getSubDlg(sess);
-      assert(sdlg);
+      resip_assert(sdlg);
       WarningLog(<<"Stale SUB "
                  <<(sess.mMood==REND_SM_PendNotify?"NOTIFY":"request")
                  <<": giving up:"
@@ -1844,7 +1844,7 @@ RendPres1Sketch::handleTooOld3(RendHandleMoodCxt &cxt)
       cxt.mNewPendReason = REND_PR_CheckAge;
       return REND_SM_Recycle;
    }
-   assert(0);
+   resip_assert(0);
    return REND_SM_None;
 }
 
@@ -1945,7 +1945,7 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork)
 
       if ( mNextWorkState ) 
       {
-         assert( mWorkState != mNextWorkState );
+         resip_assert( mWorkState != mNextWorkState );
          int curPend = getSessionMoodCnt(REND_SM_GROUP_Pend);
          if ( curPend > 0 ) 
          {
@@ -2135,9 +2135,9 @@ RendPres1Sketch::doWorkChunk(RendTimeUs now, int minWork, int maxWork)
          break;
 
       default:
-         assert(0);
+         resip_assert(0);
       }
-      assert( curState == mWorkState );
+      resip_assert( curState == mWorkState );
 
       minWork -= numWork; // not used?
       maxWork -= numWork;

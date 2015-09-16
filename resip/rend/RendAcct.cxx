@@ -35,7 +35,7 @@ RendAcctMgrSimple::getAuthFromPattern(int acctIdx, const resip::Data& realm,
                                       resip::Data& passVal) 
 {
 
-   assert(acctIdx>=0);
+   resip_assert(acctIdx>=0);
    userVal = mAuthUserPat.eval(acctIdx+mAcctBase);
    passVal = mAuthPassPat.eval(acctIdx+mAcctBase);
 }

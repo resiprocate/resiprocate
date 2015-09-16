@@ -67,18 +67,12 @@ class ServerSubscription : public BaseSubscription
       void terminateSubscription(ServerSubscriptionHandler* handler);
 
       Data mSubscriber;
-
-//      const Contents* mCurrentEventDocument;
-      SipMessage mLastSubscribe;
-
       UInt32 mExpires;
 
       // disabled
       ServerSubscription(const ServerSubscription&);
       ServerSubscription& operator=(const ServerSubscription&);
       UInt64 mAbsoluteExpiry;      
-
-      bool mDeleteSubscription;
 };
  
 }

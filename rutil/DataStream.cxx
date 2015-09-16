@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include <cassert>
+#include "rutil/ResipAssert.h"
 #include "rutil/DataStream.hxx"
 #include "rutil/Data.hxx"
 
@@ -42,7 +42,7 @@ size_t DataBuffer::readbuf(char *buf, size_t count)
 
    if (!buf)
    {
-      assert(0);
+      resip_assert(0);
       return 0;
    }
 
@@ -140,7 +140,7 @@ oDataStream::oDataStream(Data& str)
    EncodeStream(this)
 {
    // don't call this with a read-only buffer!
-   assert(str.mShareEnum != Data::Share);
+   resip_assert(str.mShareEnum != Data::Share);
 }
 
 oDataStream::~oDataStream()
@@ -170,7 +170,7 @@ DataStream::DataStream(Data& str)
 #endif
 {
    // don't call this with a read-only buffer!
-   assert(str.mShareEnum != Data::Share);
+   resip_assert(str.mShareEnum != Data::Share);
 }
 
 DataStream::~DataStream()

@@ -1,4 +1,4 @@
-#include <cassert>
+#include "rutil/ResipAssert.h"
 
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
@@ -27,13 +27,13 @@ XmlRpcConnection::XmlRpcConnection(XmlRpcServerBase& server, resip::Socket sock)
    mNextRequestId(1),
    mSock(sock)
 {
-	assert(mSock > 0);
+	resip_assert(mSock > 0);
 }
 
 
 XmlRpcConnection::~XmlRpcConnection()
 {
-   assert(mSock > 0);
+   resip_assert(mSock > 0);
 #ifdef WIN32
    closesocket(mSock); 
 #else

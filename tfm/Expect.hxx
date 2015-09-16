@@ -11,13 +11,13 @@ class EventMatcher
    public:
       virtual bool isMatch(boost::shared_ptr<Event> event)
       {
-         assert(0);
+         resip_assert(0);
          return false;
       }
 
       virtual resip::Data getMsgTypeString() const
       {
-         assert(0);
+         resip_assert(0);
          return "";
       }
 

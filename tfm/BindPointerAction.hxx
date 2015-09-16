@@ -24,12 +24,12 @@ class BindPointerAction : public ActionBase
          boost::shared_ptr<E> e
             = boost::dynamic_pointer_cast<E, Event>(event);
 
-         assert(e.get());
+         resip_assert(e.get());
 
          mPtr->bind(e);
       }
 
-      virtual void operator()() { assert(0); }
+      virtual void operator()() { resip_assert(0); }
 
       virtual resip::Data toString() const { return mActionName; }
 

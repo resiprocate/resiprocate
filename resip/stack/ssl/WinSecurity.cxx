@@ -74,7 +74,7 @@ certStoreTypes(  WinSecurity::MsCertStoreType pType )
       default:
       {
          ErrLog( << "Some unknown certificate store type requested" << (int)(pType) );
-         assert(0);
+         resip_assert(0);
       }
    }
    return storeUnknown;
@@ -127,7 +127,7 @@ WinSecurity::openSystemCertStore(const Data& name)
    if (NULL == storeName)
    {
       ErrLog( << " Invalid store name");
-      assert(0);
+      resip_assert(0);
       return NULL;
    }
    //mStoreHandle = ::CertOpenStore(
@@ -145,7 +145,7 @@ WinSecurity::openSystemCertStore(const Data& name)
    if(NULL == mStoreHandle)
    {
       ErrLog( << name.c_str() << " system certificate store cannot be openned");
-      assert(0);
+      resip_assert(0);
       return NULL;
    }
    InfoLog( << name.c_str() << " System certificate store opened");

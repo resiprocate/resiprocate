@@ -48,7 +48,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mServerPagerMessage(0)
 {
    setUserProfile(creator->getUserProfile());
-   assert(!creator->getLastRequest()->isExternal());
+   resip_assert(!creator->getLastRequest()->isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
 
@@ -69,8 +69,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientPagerMessage(0),
    mServerPagerMessage(0)
 {
-   assert(request.isRequest());
-   assert(request.isExternal());
+   resip_assert(request.isRequest());
+   resip_assert(request.isExternal());
    mDum.mMergedRequests.insert(mMergeKey);
    if (request.header(h_RequestLine).method() == INVITE)
    {
@@ -338,18 +338,18 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         ErrLog(<<"Response came in, but no AppDialogSet! Dropping this is very"
+         ErrLog(<<"Response came in, but no AppDialogSet! Dropping this is very "
                   "likely to cause leaks, but continuing to process it is "
                   "likely to cause a core. Taking the lesser of two evils...");
       }
       return;
    }
 
-   assert(msg.isRequest() || msg.isResponse());
+   resip_assert(msg.isRequest() || msg.isResponse());
 
    if (mState == WaitingToEnd)
    {
-      assert(mDialogs.empty());
+      resip_assert(mDialogs.empty());
       if (msg.isResponse())         
       {
          int code = msg.header(h_StatusLine).statusCode();
@@ -451,7 +451,7 @@ DialogSet::dispatch(const SipMessage& msg)
    }
    else if(mState == Cancelling)
    {
-      assert(mDialogs.empty());
+      resip_assert(mDialogs.empty());
       if (msg.isResponse())         
       {
          int code = msg.header(h_StatusLine).statusCode();
@@ -571,7 +571,7 @@ DialogSet::dispatch(const SipMessage& msg)
                      request.header(h_Requires).find(Token("norefersub"))))// out of dialog & noReferSub=true
             {
                DebugLog(<< "out of dialog refer request with norefersub");
-               assert(mServerOutOfDialogRequest == 0);
+               resip_assert(mServerOutOfDialogRequest == 0);
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
                return;
@@ -593,7 +593,7 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                // unsolicited - not allowed but commonly implemented
                // by large companies with a bridge as their logo
-               assert(mServerOutOfDialogRequest == 0);
+               resip_assert(mServerOutOfDialogRequest == 0);
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
                return;
@@ -601,7 +601,7 @@ DialogSet::dispatch(const SipMessage& msg)
             break;
 
          case PUBLISH:
-            assert(false); // handled in DialogUsageManager
+            resip_assert(false); // handled in DialogUsageManager
             return;
             
          case REGISTER:
@@ -627,7 +627,7 @@ DialogSet::dispatch(const SipMessage& msg)
             // !jf! move this to DialogUsageManager
             DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );
             // only can be one ServerOutOfDialogReq at a time
-            assert(mServerOutOfDialogRequest == 0);
+            resip_assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
             return;
@@ -822,7 +822,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-            ErrLog(<< "Can’t create a dialog, on a UAS response.");
+            ErrLog(<< "Can't create a dialog, on a UAS response.");
             return;
          }
 
@@ -897,7 +897,7 @@ DialogSet::dispatch(const SipMessage& msg)
          return;
       }
 
-      assert(mState != WaitingToEnd);
+      resip_assert(mState != WaitingToEnd);
       DebugLog ( << "### Calling CreateAppDialog ###: " << std::endl << std::endl <<msg);
       AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
       dialog->mAppDialog = appDialog;
@@ -960,38 +960,63 @@ DialogSet::end()
          break;         
       case ReceivedProvisional:
       {
-         assert (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE);
-         mState = Terminating;
-         // !jf! this should be made exception safe
-         SharedPtr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
-         mDum.send(cancel);
+         if (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE)
+         {
+            mState = Terminating;
+            // !jf! this should be made exception safe
+            SharedPtr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
+            mDum.send(cancel);
 
-         if (mDum.mDialogEventStateManager)
-         {
-            mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
-         }
-
-         if (mDialogs.empty())
-         {
-            mState = Cancelling;
-         }
-         else
-         {
-            //need to lag and do last element ouside of look as this DialogSet will be
-            //deleted if all dialogs are destroyed
-            for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+            if (mDum.mDialogEventStateManager)
             {
-               try
+               mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
+            }
+
+            if (mDialogs.empty())
+            {
+               mState = Cancelling;
+            }
+            else
+            {
+               //need to lag and do last element ouside of look as this DialogSet will be
+               //deleted if all dialogs are destroyed
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
                {
-                  it->second->cancel();
-               }
-               catch(UsageUseException& e)
-               {
-                  InfoLog (<< "Caught: " << e);
+                  try
+                  {
+                     it->second->cancel();
+                  }
+                  catch (UsageUseException& e)
+                  {
+                     InfoLog(<< "Caught: " << e);
+                  }
                }
             }
          }
-      }            
+         else
+         {
+            // Non-Invite Dialogset
+            if (mDialogs.empty())
+            {
+               mState = WaitingToEnd;
+            }
+            else
+            {
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+               {
+                  try
+                  {
+                     it->second->end();
+                  }
+                  catch (UsageUseException& e)
+                  {
+                     InfoLog(<< "Caught: " << e);
+                  }
+               }
+               mState = Terminating;
+            }
+         }
+      }
       break;         
       case Established:
       {
@@ -1061,7 +1086,7 @@ ClientRegistration*
 DialogSet::makeClientRegistration(const SipMessage& response)
 {
    BaseCreator* creator = getCreator();
-   assert(creator);
+   resip_assert(creator);
    return new ClientRegistration(mDum, *this, creator->getLastRequest());
 }
 
@@ -1069,7 +1094,7 @@ ClientPublication*
 DialogSet::makeClientPublication(const SipMessage& response)
 {
    BaseCreator* creator = getCreator();
-   assert(creator);
+   resip_assert(creator);
    return new ClientPublication(mDum, *this, creator->getLastRequest());
 }
 
@@ -1077,7 +1102,7 @@ ClientOutOfDialogReq*
 DialogSet::makeClientOutOfDialogReq(const SipMessage& response)
 {
    BaseCreator* creator = getCreator();
-   assert(creator);
+   resip_assert(creator);
    return new ClientOutOfDialogReq(mDum, *this, *creator->getLastRequest());
 }
 
@@ -1140,7 +1165,7 @@ DialogSet::getUserProfile() const
 void
 DialogSet::setUserProfile(SharedPtr<UserProfile> userProfile)
 {
-   assert(userProfile.get());
+   resip_assert(userProfile.get());
    mUserProfile = userProfile;
 }
 
