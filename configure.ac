@@ -249,7 +249,7 @@ AC_SUBST([reproplugindir])
 reproplugindir='${pkglibdir}/repro/plugins'
 
 AC_SUBST([returnpkglibdir])
-returnpkglibdir'${pkglibdir}/reTurnServer'
+returnpkglibdir='${pkglibdir}/reTurnServer'
 
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
