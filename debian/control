@@ -105,8 +105,8 @@ Package: repro
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser
-Recommends: apache2-utils, openssl, stun-server | turn-server
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl
+Recommends: apache2-utils, stun-server | turn-server
 Suggests: jscommunicator-web-phone
 Provides: sip-router
 Description: reSIProcate SIP stack - lightweight SIP proxy daemon
