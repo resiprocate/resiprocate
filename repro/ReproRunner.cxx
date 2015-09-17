@@ -691,13 +691,14 @@ ReproRunner::createSipStack()
       cipherList = ciphers;
    }
    Data certPath = mProxyConfig->getConfigData("CertificatePath", Data::Empty);
+   Data dHParamsFilename = mProxyConfig->getConfigData("TlsDHParamsFilename", Data::Empty);
    if(certPath.empty())
    {
-      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
+      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
    else
    {
-      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
+      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);

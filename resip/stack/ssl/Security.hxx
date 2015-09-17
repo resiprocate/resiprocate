@@ -90,7 +90,7 @@ class BaseSecurity
       static long OpenSSLCTXSetOptions;
       static long OpenSSLCTXClearOptions;
 
-      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      BaseSecurity(const CipherList& cipherSuite = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty, const Data& dHParamsFilename = Data::Empty);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library
@@ -227,6 +227,7 @@ class BaseSecurity
 
       CipherList mCipherList;
       Data mDefaultPrivateKeyPassPhrase;
+      Data mDHParamsFilename;
 
       // root cert list
       X509List       mRootCerts;
@@ -258,13 +259,15 @@ class BaseSecurity
       // match with wildcards
       static int matchHostNameWithWildcards(const Data& certificateName, const Data& domainName);
       static bool mAllowWildcardCertificates;
+
+      void setDHParams(SSL_CTX* ctx);
 };
 
 class Security : public BaseSecurity
 {
    public:
-      Security(const Data& pathToCerts, const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
-      Security(const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty);
+      Security(const Data& pathToCerts, const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty, const Data& dHParamsFilename = Data::Empty);
+      Security(const CipherList& = StrongestSuite, const Data& defaultPrivateKeyPassPhrase = Data::Empty, const Data& dHParamsFilename = Data::Empty);
 
       void addCADirectory(const Data& caDirectory);
       void addCAFile(const Data& caFile);
