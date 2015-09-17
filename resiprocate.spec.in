@@ -166,6 +166,7 @@ sed -i \
  -e 's!^LogLevel = INFO$!LogLevel = DEBUG!' \
  -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
  -e 's!^LogFileMaxBytes = 5242880!LogFileMaxBytes = 0!' \
+ -e 's!^TlsDHParamsFilename = dh2048.pem!TlsTempDhFilename = %{_sysconfdir}/repro/dh2048.pem!' \
  -e 's!^HttpAdminUserFile = users.txt$!HttpAdminUserFile = %{_sysconfdir}/repro/users.txt!' \
  -e 's!^#PluginDirectory = /usr/lib/repro/plugins$!PluginDirectory = %{_libdir}/@PACKAGE@/repro/plugins!' \
  -e 's!^#RunAsUser = repro$!RunAsUser = repro!' \
@@ -222,6 +223,7 @@ if [ $1 -eq 1 ] ; then
     /sbin/chkconfig --add repro
 fi
 %endif
+test -e %{_sysconfdir}/repro/dh2048.pem || /usr/bin/openssl dhparam -outform PEM -out %{_sysconfdir}/repro/dh2048.pem 2048
 
 %post turn-server
 %if %use_systemd
@@ -333,6 +335,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0750,repro,repro) %dir %{_sharedstatedir}/repro
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/repro.config
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/users.txt
+%attr(0640,root,repro) %config(noreplace) %config(missingok) %{_sysconfdir}/repro/dh2048.pem
 %if %use_systemd
 %{_unitdir}/repro.service
 %else
