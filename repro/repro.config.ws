@@ -255,15 +255,15 @@ HttpAdminUserFile = users.txt
 # If left blank it will bind to all adapters.
 CommandBindAddress =
 
-# Port on which to listen for and send XML RPC messaging used in command processing 
+# Port on which to listen for and send XML RPC messaging used in command processing
 # 0 to disable (default: 5081)
 CommandPort = 5081
 
-# Port on which to listen for and send XML RPC messaging used in registration/publication sync 
+# Port on which to listen for and send XML RPC messaging used in registration/publication sync
 # process - 0 to disable (default: 0)
 RegSyncPort = 0
 
-# Port on which to connect to RegSync peer for registration/publication sync 
+# Port on which to connect to RegSync peer for registration/publication sync
 # process - 0 to use same value RegSyncPort (default: 0)
 RemoteRegSyncPort = 0
 
