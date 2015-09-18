@@ -49,7 +49,7 @@ install() {
     if [ ! -e ${DH_PARAM_FILE} ];
     then
         /usr/bin/openssl dhparam -outform PEM -out ${DH_PARAM_FILE} 2048
-        chown root:repro ${DH_PARAM_FILE}
+        chown root:${REPRO_GROUP} ${DH_PARAM_FILE}
         chmod 0640 ${DH_PARAM_FILE}
     fi
 }
