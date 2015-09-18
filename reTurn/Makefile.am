@@ -1,6 +1,6 @@
 # $Id$
 
-EXTRA_DIST = dh512.pem server.pem
+EXTRA_DIST = dh2048.pem server.pem
 EXTRA_DIST += pkg
 EXTRA_DIST += README.txt
 EXTRA_DIST += *.sln
