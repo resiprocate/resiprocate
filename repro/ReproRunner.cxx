@@ -198,10 +198,11 @@ public:
         else if (dbType == "postgresql")
         {
 #ifdef USE_POSTGRESQL
+            Data postgreSQLConnInfo = dbConfig.getConfigData("ConnInfo", Data::Empty);
             Data postgreSQLServer = dbConfig.getConfigData("Host", Data::Empty);
-            if (!postgreSQLServer.empty())
+            if (!postgreSQLConnInfo.empty() || !postgreSQLServer.empty())
             {
-                return new PostgreSqlDb(postgreSQLServer,
+                return new PostgreSqlDb(postgreSQLConnInfo, postgreSQLServer,
                     dbConfig.getConfigData("User", Data::Empty),
                     dbConfig.getConfigData("Password", Data::Empty),
                     dbConfig.getConfigData("DatabaseName", Data::Empty),
