@@ -385,7 +385,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/clicktocall
 
 %changelog
-* Sat Nov 24 2012 Daniel Pocock <daniel@pocock.com.au> - @VERSION@-1
+* Sat Nov 24 2012 Daniel Pocock <daniel@pocock.pro> - @VERSION@-1
 - Produce multiple packages for stack/libs, daemons, sipdialer
 - Initial build based on autotools
 
