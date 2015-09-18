@@ -59,12 +59,14 @@ class PostgreSQLInitializer
 };
 static PostgreSQLInitializer g_PostgreSQLInitializer;
 
-PostgreSqlDb::PostgreSqlDb(const Data& server, 
+PostgreSqlDb::PostgreSqlDb(const Data& connInfo,
+                 const Data& server,
                  const Data& user, 
                  const Data& password, 
                  const Data& databaseName, 
                  unsigned int port, 
                  const Data& customUserAuthQuery) :
+   mDBConnInfo(connInfo),
    mDBServer(server),
    mDBUser(user),
    mDBPassword(password),
@@ -138,13 +140,32 @@ PostgreSqlDb::connectToDatabase() const
    resip_assert(mConn == 0);
    resip_assert(isConnected() == false);
 
-   Data conninfo = "host=" + mDBServer + " " +
-                   "port=" + Data((UInt32)mDBPort) + " " +
-                   "dbname=" + mDBName + " " +
-                   "user=" + mDBUser + " " +
-                   "password=" + mDBPassword;
-   DebugLog(<<"Trying to connect to PostgreSQL server with conninfo string: " << conninfo);
-   mConn = PQconnectdb(conninfo.c_str());
+   Data connInfo(mDBConnInfo);
+   if(!mDBServer.empty())
+   {
+      connInfo = connInfo + " host=" + mDBServer;
+   }
+   if(mDBPort > 0)
+   {
+      connInfo = connInfo + " port=" + Data((UInt32)mDBPort);
+   }
+   if(!mDBName.empty())
+   {
+      connInfo = connInfo + " dbname=" + mDBName;
+   }
+   if(!mDBUser.empty())
+   {
+      connInfo = connInfo + " user=" + mDBUser;
+   }
+   Data connInfoLogString = connInfo;
+   if(!mDBPassword.empty())
+   {
+      connInfo = connInfo + " password=" + mDBPassword;
+      connInfoLogString = connInfoLogString + " password=<hidden>";
+   }
+
+   DebugLog(<<"Trying to connect to PostgreSQL server with conninfo string: " << connInfoLogString);
+   mConn = PQconnectdb(connInfo.c_str());
 
    int rc = PQstatus(mConn);
    if (rc != CONNECTION_OK)

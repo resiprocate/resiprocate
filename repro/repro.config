@@ -444,6 +444,19 @@ Database1Path = ./
 #Database1Type = MySQL
 #Database1Type = PostgreSQL
 
+# A PostgreSQL conninfo string, leave blank if you prefer to specify the
+# hostname, port and other details individually.  repro will combine
+# the conninfo string you specify here (if any) with individual details
+# you specify using the Host, Port, DatabaseName, Username and Password
+# to create the complete conninfo string used for the connection.
+# You may want to leave all the other parameters blank and just specify
+# a conninfo string.  You can also choose to leave the password out of
+# the conninfo string and include it from another file with restricted
+# read permissions.  If you specify a password as part of the conninfo
+# string it may appear in logs, if you specify it using the Password
+# parameter then it should be suppressed in logs.
+#Database1ConnInfo = host=localhost port=5432 dbname=repro user=repro
+
 # The hostname running SQL server to connect to, leave blank to use BerkelyDB.
 # The value of host may be either a host name or an IP address. If host is "localhost",
 # a connection to the local host is assumed. For Windows, the client connects using a
