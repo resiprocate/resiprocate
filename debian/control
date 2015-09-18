@@ -145,7 +145,7 @@ Package: resiprocate-turn-server-psql
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends}, ${misc:Depends}, resiprocate-turn-server, python-psycopg2
+Depends: ${shlibs:Depends}, ${misc:Depends}, resiprocate-turn-server, python, python-psycopg2
 Description: reSIProcate SIP stack - ICE/TURN server
  reTurn is the TURN server developed as part of the reSIProcate project.
  TURN (RFC 5766) provides a standardised solution for VoIP applications
