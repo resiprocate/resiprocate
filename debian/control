@@ -161,7 +161,7 @@ Description: reSIProcate SIP stack - ICE/TURN server
  in first class C++.  It is intended for use in other applications,
  such as the repro SIP proxy.
  .
- This packages provides a Python script to synchronize the reTurn
+ This package provides a Python script to synchronize the reTurn
  users.txt file from a PostgreSQL table.
 
 Package: sipdialer
