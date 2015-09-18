@@ -122,8 +122,7 @@ Package: resiprocate-turn-server
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser
-Recommends: openssl
+Depends: libresiprocate-1.10 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl
 Suggests: sip-router, xmpp-server, jscommunicator-web-phone
 Provides: stun-server, turn-server
 Description: reSIProcate SIP stack - ICE/TURN server

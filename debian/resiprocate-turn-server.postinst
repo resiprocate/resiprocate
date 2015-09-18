@@ -44,12 +44,13 @@ install() {
                "$RETURN_USER" || exit 1
     fi
 
-    #DH_PARAM_FILE=/etc/reTurn/dh2048.pem
-    #if [ ! -f ${DH_PARAM_FILE} ];
-    #then
-    #    echo "Generating DH parameters..."
-    #    openssl dhparam -outform PEM -out ${DH_PARAM_FILE} 2048 > /dev/null
-    #fi
+    DH_PARAM_FILE=/etc/reTurn/dh2048.pem
+    if [ ! -e ${DH_PARAM_FILE} ];
+    then
+        /usr/bin/openssl dhparam -outform PEM -out ${DH_PARAM_FILE} 2048
+        chown root:${RETURN_GROUP} ${DH_PARAM_FILE}
+        chmod 0640 ${DH_PARAM_FILE}
+    fi
 
     chown ${RETURN_USER}:${RETURN_GROUP} /var/log/reTurnServer
     chmod 0750 /var/log/reTurnServer
