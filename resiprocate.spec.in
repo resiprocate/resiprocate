@@ -239,6 +239,12 @@ if [ $1 -eq 1 ] ; then
     /sbin/chkconfig --add resiprocate-turn-server
 fi
 %endif
+if [ ! -e %{_sysconfdir}/reTurn/dh2048.pem ] ;
+then
+  /usr/bin/openssl dhparam -outform PEM -out %{_sysconfdir}/reTurn/dh2048.pem 2048
+  chown root:return %{_sysconfdir}/reTurn/dh2048.pem
+  chmod 0640 %{_sysconfdir}/reTurn/dh2048.pem
+fi
 
 %preun repro
 %if %use_systemd
@@ -358,6 +364,7 @@ rm -rf $RPM_BUILD_ROOT
 %files turn-server
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/reTurnServer.config
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/users.txt
+%config(missingok) %ghost %{_sysconfdir}/reTurn/dh2048.pem
 %dir %{_libdir}/@PACKAGE@/reTurnServer
 %if %use_systemd
 %{_unitdir}/resiprocate-turn-server.service
