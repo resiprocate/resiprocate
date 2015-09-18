@@ -327,6 +327,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/resip/stack/*.hxx
 %{_includedir}/resip/stack/ssl/*.hxx
 %{_includedir}/rutil/*.hxx
+%{_includedir}/rutil/*.h
 %{_includedir}/rutil/*/*.hxx
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libdum.so
