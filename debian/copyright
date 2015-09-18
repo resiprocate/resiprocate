@@ -54,11 +54,11 @@ Comment:
 
 Files: b2bua/* apps/sipdial/*
 Copyright: 2012, Daniel Pocock <daniel@pocock.com.au>
-License: BSD
+License: BSD-3-clause
 
 Files: apps/sipdial/MacOS/*
 Copyright: 2007, Marcus Mueller and Helge Hess
-License: BSD
+License: BSD-3-clause
 
 Files: rutil/dns/ares/*
 Copyright: 1998, Massachusetts Institute of Technology
@@ -70,11 +70,11 @@ License: BSD-SIPSpectrum
 
 Files: p2p/*
 Copyright: 2008, Various contributors to the Resiprocate project
-License: BSD
+License: BSD-3-clause
 
 Files: p2p/s2c/s2c/*
 Copyright: 2008, RTFM, Inc
-License: BSD
+License: BSD-3-clause
 
 Files: reflow/* resip/recon/*
 Copyright: 2007-2008, Plantronics, Inc.
@@ -83,7 +83,7 @@ License: BSD-Plantronics and BSD-SIPSpectrum
 Files: reTurn/*
 Copyright: 2007-2008, Plantronics, Inc.
            2011-2012, Daniel Pocock
-License: BSD-Plantronics and BSD
+License: BSD-Plantronics and BSD-3-clause
 
 Files: tfm/*
 Copyright: 2005, PurpleComm, Inc.
@@ -137,7 +137,7 @@ License: Vovida
  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  DAMAGE.
 
-License: BSD
+License: BSD-3-clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
  are met:
