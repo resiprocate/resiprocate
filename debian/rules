@@ -28,6 +28,7 @@ LDFLAGS += -lcares
 CFG_ARGS := --with-ssl \
 		--with-popt \
 		--with-mysql \
+		--with-postgresql \
 		--with-apps \
 		--enable-ipv6 \
 		--enable-dtls \
