@@ -31,7 +31,7 @@ CPPFLAGS += -DUSE_IPV6
 #CPPFLAGS += -DHAVE_EPOLL
 
 %:
-	dh $@ --builddirectory=.
+	dh $@ --builddirectory=.  --with autoreconf
 
 override_dh_install:
 	dh_install
