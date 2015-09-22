@@ -6,8 +6,8 @@ Uploaders: Daniel Pocock <daniel@pocock.pro>
 Build-Depends: debhelper (>= 9.0.0), autotools-dev, dpkg-dev (>= 1.16.1~), librecon-1.9-dev (>= 1.9.6), libsipxtapi-dev (>= 3.3.0~test17)
 Homepage: https://github.com/resiprocate/reConServer
 Standards-Version: 3.9.6
-Vcs-Git: git://git.debian.org/pkg-voip/reconserver.git
-Vcs-Browser: http://git.debian.org/?p=pkg-voip/reconserver.git;a=summary
+Vcs-Git: git://anonscm.debian.org/pkg-voip/reconserver.git
+Vcs-Browser: https://anonscm.debian.org/cgit/pkg-voip/reconserver.git
 
 Package: reconserver
 Section: net
