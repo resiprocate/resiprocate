@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Debian VoIP Team <pkg-voip-maintainers@lists.alioth.debian.org>
 Uploaders: Daniel Pocock <daniel@pocock.pro>
-Build-Depends: debhelper (>= 9.0.0), autotools-dev, dpkg-dev (>= 1.16.1~), librecon-1.9-dev (>= 1.9.6), libsipxtapi-dev (>= 3.3.0~test17)
+Build-Depends: debhelper (>= 9.0.0), autotools-dev, dpkg-dev (>= 1.16.1~), librecon-dev, libsipxtapi-dev (>= 3.3.0~test17)
 Homepage: https://github.com/resiprocate/reConServer
 Standards-Version: 3.9.6
 Vcs-Git: git://anonscm.debian.org/pkg-voip/reconserver.git
@@ -13,7 +13,7 @@ Package: reconserver
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, librecon-1.9 (>= 1.9.6), libsipxtapi (>= 3.3.0~test17)
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, libsipxtapi (>= 3.3.0~test17)
 Description: lightweight SIP conferencing service
  reConServer is the SIP conferencing server developed by the
  reSIProcate community.  It provides a lightweight, easy to configure
