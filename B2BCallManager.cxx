@@ -34,8 +34,7 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
          resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
          if(hType == resip::Headers::UNKNOWN)
          {
-            std::auto_ptr<ExtensionHeader> h(new ExtensionHeader(headerName.c_str()));
-            mReplicatedHeaders.push_back(h);
+            mReplicatedHeaders.push_back(headerName.c_str());
             InfoLog(<<"Will replicate header '"<<headerName<<"'");
          }
          else
@@ -100,10 +99,10 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    const Uri& reqUri = msg.header(h_RequestLine).uri();
    NameAddr newDest("sip:" + reqUri.user() + '@' + mB2BUANextHop);
    std::multimap<Data,Data> extraHeaders;
-   std::vector<std::auto_ptr<resip::ExtensionHeader> >::const_iterator it = mReplicatedHeaders.begin();
+   std::vector<resip::Data>::const_iterator it = mReplicatedHeaders.begin();
    for( ; it != mReplicatedHeaders.end(); it++)
    {
-      ExtensionHeader& h = **it;
+      const ExtensionHeader h(*it);
       if(msg.exists(h))
       {
          // Replicate the header and value into the outgoing INVITE
