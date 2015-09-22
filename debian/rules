@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+
+DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+#DEB_DH_INSTALL_ARGS := --sourcedir=debian/tmp
+
+# Since 1.9.0~beta2-1, the reSIProcate packages have been built
+# without this flag to we comment it out now too:
+#CPPFLAGS += -DRESIP_FIXED_POINT
+# this is just temporary, reSIProcate 1.9.x should not need this:
+CPPFLAGS += -I/usr/include/sipxtapi
+# these are also temporary, should be implemented in reSIProcate's build system, for sipXtapi
+# with librecon:
+CPPFLAGS += -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS
+CPPFLAGS += -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20
+CXXFLAGS += -fpermissive
+
+# reSIProcate ABI is dependent on the compile flags
+# this should be fixed in v1.9
+# for now, we must emulate the compile flags that were used to
+# build reSIProcate on Debian
+CPPFLAGS += -DRESIP_TOOLCHAIN_GNU
+#CPPFLAGS += -DRESIP_OSTYPE_LINUX
+#CPPFLAGS += -DRESIP_ARCH_X86_64
+#CPPFLAGS += -DHAVE_sockaddr_in_len
+CPPFLAGS += -DUSE_CARES
+CPPFLAGS += -DUSE_SSL
+CPPFLAGS += -DUSE_IPV6
+#CPPFLAGS += -DHAVE_EPOLL
+
+%:
+	dh $@ --builddirectory=.
+
+override_dh_install:
+	dh_install
+	sed -i \
+	    -e 's/^KeyboardInput = true/KeyboardInput = false/' \
+	        debian/reconserver/etc/reConServer/reConServer.config
+

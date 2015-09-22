@@ -1,0 +1,2 @@
+# false positive, maybe because adduser command split over multiple lines
+reconserver binary: maintainer-script-should-not-use-adduser-system-without-home

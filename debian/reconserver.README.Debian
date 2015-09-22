@@ -1,0 +1,16 @@
+
+Quick start
+-----------
+
+After installing the package, the daemon starts.
+
+Adapt /etc/reConServer/reConServer.config to your needs
+
+Typically, you do the following:
+
+a) create an account for reConServer in your SIP proxy.
+b) add the account details to /etc/reConServer/reConServer.config
+c) service reconserver restart
+d) users now dial the number/account assigned to reConServer
+   and they all end up in the same room by default
+
