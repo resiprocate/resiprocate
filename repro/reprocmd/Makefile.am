@@ -1,6 +1,6 @@
 # $Id$
 
-EXTRA_DIST = reprocmd_10_0.vcxproj reprocmd_10_0.vcxproj.filters
+EXTRA_DIST = *.vcxproj *.vcxproj.filters
 EXTRA_DIST += *.vcproj
 
 #AM_CXXFLAGS = -DUSE_ARES

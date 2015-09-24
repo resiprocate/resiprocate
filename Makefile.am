@@ -30,10 +30,7 @@ endif
 
 #EXTRA_DIST = build-contrib.sh
 
-EXTRA_DIST = reSIProcate_10_0.sln
-#EXTRA_DIST += reSIProcate_7_1.sln
-EXTRA_DIST += reSIProcate_8_0.sln
-EXTRA_DIST += reSIProcate_9_0.sln
+EXTRA_DIST = *.sln
 
 EXTRA_DIST += resiprocate.spec
 

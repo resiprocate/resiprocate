@@ -5,7 +5,7 @@ EXTRA_DIST += pkg
 EXTRA_DIST += README.txt
 EXTRA_DIST += *.sln
 EXTRA_DIST += *.vcproj
-EXTRA_DIST += reTurnServer_10_0.vcxproj reTurnServer_10_0.vcxproj.filters
+EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += reTurnServer.config
 EXTRA_DIST += users.txt
 
