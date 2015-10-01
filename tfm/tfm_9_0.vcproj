@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost_1_34_1;..\contrib\db\build_windows;.."
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost;..\contrib\db\build_windows;.."
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_IPV6"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost_1_34_1;..\contrib\db\build_windows;.."
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost;..\contrib\db\build_windows;.."
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_IPV6"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -170,7 +170,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost_1_34_1;..\contrib\db\build_windows;..;..\contrib\OpenSSL\include"
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost;..\contrib\db\build_windows;..;..\contrib\OpenSSL\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_IPV6;USE_SSL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -235,7 +235,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost_1_34_1;..\contrib\db\build_windows;..;..\contrib\OpenSSL\include"
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;..\contrib\cppunit\include;&quot;..\contrib\Netxx-0.3.2\include\&quot;;..\contrib\boost;..\contrib\db\build_windows;..;..\contrib\OpenSSL\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_IPV6;USE_SSL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
