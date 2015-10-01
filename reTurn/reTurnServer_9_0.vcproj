@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../contrib/asio;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../"
+				AdditionalIncludeDirectories="../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\contrib\openssl\out32.dbg\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32.dbg\ssleay32.lib&quot;"
+				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\contrib\OpenSSL\lib\VC\static\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\OpenSSL\lib\VC\static\ssleay32MDd.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -121,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../contrib/asio;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../"
+				AdditionalIncludeDirectories="../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
@@ -141,7 +141,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\contrib\openssl\out32\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32\ssleay32.lib&quot;"
+				AdditionalDependencies="winmm.lib &quot;$(ProjectDir)..\contrib\OpenSSL\lib\VC\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\OpenSSL\lib\VC\static\ssleay32MD.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -268,6 +268,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TurnAllocationManager.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TurnManager.cxx"
 				>
 			</File>
@@ -375,6 +379,10 @@
 			</File>
 			<File
 				RelativePath=".\TurnAllocationKey.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TurnAllocationManager.hxx"
 				>
 			</File>
 			<File
