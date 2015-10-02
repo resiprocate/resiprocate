@@ -1,6 +1,6 @@
 
 
-AUTOMAKE_OPTIONS = foreign dist-tarZ
+AUTOMAKE_OPTIONS = foreign dist-zip
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = rutil
