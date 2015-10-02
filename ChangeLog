@@ -1,4 +1,17 @@
-= Release Notes v 1.9 =
+= Release Notes v 1.10 =
+==1.10.0 Changes==
+repro: added a full presence server
+resip/stack: WebSocket authentication may now use URL parameters instead of cookies
+repro: added support for PostgreSQL and indexed database definitions
+repro: can include multiple files into repro.config using Include
+resip/stack: TLS: perfect forward secrecy (PFS) support using DH or ECDH
+resip/stack: TLS compatibility and cipher strength improvements
+resip/stack: TLS: support for passphrases used to encrypt private key files for domain certificates
+rutil: better Syslog support (now sets severity correctly)
+rutil: allow customization of assert() behavior using resip_assert(), improves diagnosis of crashes
+resip/stack: added Poll(WSAPoll) implementation for event loop - allows Windows to support thousands of TCP connections instead of only ~60 (FD_SETSIZE)
+resip/stack: added ability to remove transports at runtime
+resip/stack: added netns (linux network namespace) support to stack
 ==1.9.11 Changes==
 resip/stack: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
 repro: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
