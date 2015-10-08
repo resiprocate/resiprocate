@@ -24,9 +24,7 @@ fi
 if [ ! -d .git ];
 then
   echo "ERROR:"
-  echo "Please run this script from a git-svn workspace"
-  echo "Using git-svn simplifies this process because SVN creates many"
-  echo ".svn metadata directories throughout the source tree."
+  echo "Please run this script from a git workspace"
   echo "Operation failed."
   exit 1
 fi
@@ -60,9 +58,12 @@ fi
 
 RESIP_VERSION=`./configure -V | grep '^resiprocate configure' | cut -f3 -d' '`
 
-CONTRIB_TARBALL=resiprocate-contrib-${RESIP_VERSION}.tar.gz
+CONTRIB_PREFIX=resiprocate-contrib-${RESIP_VERSION}
+CONTRIB_TARBALL=${CONTRIB_PREFIX}.tar.gz
+CONTRIB_ZIP=${CONTRIB_PREFIX}.zip
 
 echo "Building tarball ${CONTRIB_TARBALL}..."
 
 tar czf "${CONTRIB_TARBALL}" contrib
+zip -r ${CONTRIB_ZIP} contrib
 

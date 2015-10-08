@@ -1,7 +1,6 @@
 
-EXTRA_DIST = tfdum_9_0.vcproj
-EXTRA_DIST += tfdum_10_0.vcxproj
-EXTRA_DIST += tfdum_10_0.vcxproj.filters
+EXTRA_DIST = *.vcproj
+EXTRA_DIST += *.vcxproj *.vcxproj.filters
 
 TESTS = TestLamba
 # dumTests becomes stuck waiting for user input, not suitable for 

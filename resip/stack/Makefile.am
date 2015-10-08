@@ -13,7 +13,7 @@ EXTRA_DIST += MonthHash.gperf
 EXTRA_DIST += ParameterHash.gperf
 EXTRA_DIST += parametersA.gperf
 EXTRA_DIST += Readme-Compliance.txt
-EXTRA_DIST += resiprocate_10_0.vcxproj resiprocate_10_0.vcxproj.filters
+EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += *.vcproj
 EXTRA_DIST += ssl/WinSecurity.cxx
 

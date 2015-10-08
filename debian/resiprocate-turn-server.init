@@ -33,13 +33,15 @@ fi
 DAEMON_OPTS="/etc/reTurn/reTurnServer.config --Daemonize=true --PidFile=${PIDFILE}"
 
 if [ ! -d "$PIDFILE_DIR" ];then
+	log_daemon_message "$NAME creating directory for PID file: $PIDFILE_DIR"
 	mkdir -p "$PIDFILE_DIR"
-    chown $USER:$GROUP "$PIDFILE_DIR"
+	chown $USER:$GROUP "$PIDFILE_DIR"
 fi
 
 if [ ! -d "$LOG_DIR" ];then
+	log_daemon_message "$NAME creating directory for logs: $LOG_DIR"
         mkdir -p "$LOG_DIR"
-    chown $USER:$GROUP "$LOG_DIR"
+	chown $USER:$GROUP "$LOG_DIR"
 fi
 
 set -e
@@ -47,42 +49,46 @@ set -e
 case "$1" in
   start)
 	log_daemon_msg "Starting $DESC ($NAME)" $BIN
-	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS
+	if start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS ;
+	then
+		log_end_msg 0
+	else
+		log_end_msg 1
+	fi
 	;;
   stop)
 	log_daemon_msg "Stopping $DESC ($NAME)" $BIN
-	start-stop-daemon --stop --quiet --oknodo --user $USER --pidfile $PIDFILE --exec $DAEMON
+	if start-stop-daemon --stop --quiet --oknodo --user $USER --pidfile $PIDFILE --exec $DAEMON ;
+	then
+	    log_end_msg 0
+	else
+	    log_end_msg 1
+	fi
 	;;
   status)
-	echo -n "Status $DESC: "
-	PID=$(cat $PIDFILE)
-	kill -0 $PID
-	rc=$?
-	# Check exit code
-	if [ "$rc" -ne 0 ]
+	if [ -e $PIDFILE ];
 	then
-		echo "$NAME is NOT running."
-		exit 7
+		status_of_proc -p $PIDFILE $DAEMON "$NAME process" && exit 0 || exit $?
 	else
-		echo "$NAME is running with PID: $PID"
+		log_daemon_msg "$NAME Process is not running"
+		log_end_msg 0
 	fi
 	;;
   reload|force-reload)
 	log_daemon_msg "Reloading $DESC ($NAME)" $BIN
 	if [ -f "$PIDFILE" ] ; then
-		start-stop-daemon --stop --signal HUP --quiet --pidfile $PIDFILE || rc=$?
+		start-stop-daemon --stop --signal HUP --quiet --pidfile $PIDFILE --name $BIN || rc=$?
+	else
+		log_failure_msg "$NAME can't find PID file $PIDFILE"
 	fi
 	;;
   restart)
-	log_daemon_msg "Restarting $DESC ($NAME)" $BIN
-	start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE --exec $DAEMON
-	sleep 1
-	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS
+	$0 stop && sleep 2 && $0 start
 	;;
   *)
 	N=/etc/init.d/$NAME
 	echo "Usage: $N {start|stop|status|restart|reload|force-reload}" >&2
-	exit 1
+	exit 2
 	;;
 esac
 

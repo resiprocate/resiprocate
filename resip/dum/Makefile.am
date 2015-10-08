@@ -1,7 +1,7 @@
 # $Id$
 
 EXTRA_DIST = Doxyfile
-EXTRA_DIST += dum_10_0.vcxproj dum_10_0.vcxproj.filters
+EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += *.vcproj
 EXTRA_DIST += doc
 

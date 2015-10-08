@@ -585,6 +585,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SqlDb.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\StaticRegStore.cxx"
 				>
 			</File>
@@ -684,10 +688,6 @@
 			</File>
 			<File
 				RelativePath=".\stateAgents\CertSubscriptionHandler.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\ChainTraverser.hxx"
 				>
 			</File>
 			<File
@@ -860,6 +860,10 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleTargetHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SqlDb.hxx"
 				>
 			</File>
 			<File
