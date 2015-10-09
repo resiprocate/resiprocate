@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "..\rutil\rutil_12_0.vcxproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnServer", "reTurnServer_12_0.vcxproj", "{EFA91988-1A0C-4739-9FF1-7471E933515C}"
