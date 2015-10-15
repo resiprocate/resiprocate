@@ -224,6 +224,39 @@ Security::loadCAFile(const Data& _file)
 void
 Security::preload()
 {
+   int count = 0;
+#ifndef WIN32
+   // We only do this for UNIX platforms at present
+   // If no other source of trusted roots exists,
+   // and if mPath is a file, check if it is a root certificate
+   // or a collection of root certificates
+   struct stat s;
+   Data fileName(mPath);
+   if(fileName.postfix("/"))
+   {
+      fileName.truncate(fileName.size() - 1);
+   }
+   if(fileName.size() > 0)
+   {
+      StackLog(<<"calling stat() for " << fileName);
+      if(stat(fileName.c_str(), &s) < 0)
+      {
+         ErrLog(<<"Error calling stat() for " << fileName.c_str()
+                << ": " << strerror(errno));
+      }
+      else
+      {
+         if(!S_ISDIR(s.st_mode))
+         {
+            WarningLog(<<"mPath argument is a file rather than a directory, "
+                         "treating mPath as a file of trusted root certificates");
+            loadCAFile(fileName);
+            count++;
+         }
+      }
+   }
+#endif
+
    FileSystem::Directory dir(mPath);
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
@@ -276,9 +309,21 @@ Security::preload()
          if(attemptedToLoad)
          {
             InfoLog(<<"Successfully loaded " << fileName );
+            count++;
          }
       }
    }
+   InfoLog(<<"Files loaded by prefix: " << count);
+
+   if(count == 0 && mCADirectories.empty() && mCAFiles.empty())
+   {
+      // If no other source of trusted roots exists,
+      // assume mPath was meant to be in mCADirectories
+      WarningLog(<<"No root certificates found using legacy prefixes, "
+                   "treating mPath as a normal directory of root certs");
+      loadCADirectory(mPath);
+   }
+
    std::list<Data>::iterator it_d = mCADirectories.begin();
    for (; it_d != mCADirectories.end(); ++it_d)
    {
