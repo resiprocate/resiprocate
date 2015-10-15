@@ -188,6 +188,40 @@ Security::addCAFile(const Data& caFile)
 }
 
 void
+Security::loadCADirectory(const Data& _dir)
+{
+   FileSystem::Directory dir(_dir);
+   FileSystem::Directory::iterator it(dir);
+   for (; it != dir.end(); ++it)
+   {
+      if(!it.is_directory())
+      {
+         Data name = *it;
+         Data fileName = _dir + name;
+         addCAFile(fileName);
+      }
+   }
+}
+
+void
+Security::loadCAFile(const Data& _file)
+{
+   try
+   {
+      addRootCertPEM(Data::fromFile(_file));
+      InfoLog(<<"Successfully loaded " << _file);
+   }
+   catch (Exception& e)
+   {
+      ErrLog(<< "Some problem reading " << _file << ": " << e);
+   }
+   catch (...)
+   {
+      ErrLog(<< "Some problem reading " << _file);
+   }
+}
+
+void
 Security::preload()
 {
    FileSystem::Directory dir(mPath);
@@ -248,36 +282,13 @@ Security::preload()
    std::list<Data>::iterator it_d = mCADirectories.begin();
    for (; it_d != mCADirectories.end(); ++it_d)
    {
-      const Data _dir = *it_d;
-      FileSystem::Directory dir(_dir);
-      FileSystem::Directory::iterator it(dir);
-      for (; it != dir.end(); ++it)
-      {
-         if(!it.is_directory())
-         {
-            Data name = *it;
-            Data fileName = _dir + name;
-            addCAFile(fileName);
-         }
-      }
+      loadCADirectory(*it_d);
    }
+
    std::list<Data>::iterator it_f = mCAFiles.begin();
    for (; it_f != mCAFiles.end(); ++it_f)
    {
-      const Data _file = *it_f;
-      try
-      {
-         addRootCertPEM(Data::fromFile(_file));
-         InfoLog(<<"Successfully loaded " << _file);
-      }
-      catch (Exception& e)
-      {
-         ErrLog(<< "Some problem reading " << _file << ": " << e);
-      }
-      catch (...)
-      {
-         ErrLog(<< "Some problem reading " << _file);
-      }
+      loadCAFile(*it_f);
    }
 }
 
