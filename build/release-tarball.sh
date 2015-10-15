@@ -35,6 +35,7 @@ autoreconf --install && \
                 PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
               --with-tfm \
               --with-apps \
+              --with-telepathy \
               --with-ichat-gw \
               --with-recon \
               --with-p2p && \
