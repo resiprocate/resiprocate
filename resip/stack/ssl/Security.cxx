@@ -315,7 +315,7 @@ Security::preload()
    }
    InfoLog(<<"Files loaded by prefix: " << count);
 
-   if(count == 0 && mCADirectories.empty() && mCAFiles.empty())
+   if(count == 0 && mCADirectories.empty() && mCAFiles.empty() && mPath.size() > 0)
    {
       // If no other source of trusted roots exists,
       // assume mPath was meant to be in mCADirectories
