@@ -49,6 +49,20 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdown(false)
 {
+#if defined(USE_SSL)
+   const std::vector<Data>& rootCertDirectories = mProfile->rootCertDirectories();
+   std::vector<Data>::const_iterator ci = rootCertDirectories.begin();
+   for(;ci != rootCertDirectories.end();ci++)
+   {
+      mSecurity->loadCADirectory(*ci);
+   }
+   const std::vector<Data>& rootCertBundles = mProfile->rootCertBundles();
+   ci = rootCertBundles.begin();
+   for(;ci != rootCertBundles.end();ci++)
+   {
+      mSecurity->loadCAFile(*ci);
+   }
+#endif
    resip_assert(mConversationManager);
    mConversationManager->setUserAgent(this);
 
