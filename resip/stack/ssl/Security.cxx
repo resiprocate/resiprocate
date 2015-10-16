@@ -198,7 +198,7 @@ Security::loadCADirectory(const Data& _dir)
       {
          Data name = *it;
          Data fileName = _dir + name;
-         addCAFile(fileName);
+         loadCAFile(fileName);
       }
    }
 }
