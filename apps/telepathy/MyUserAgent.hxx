@@ -22,7 +22,7 @@
   #include "config.h"
 #endif
 
-#include <recon/UserAgent.hxx>
+#include <resip/recon/UserAgent.hxx>
 
 #include "Connection.hxx"
 

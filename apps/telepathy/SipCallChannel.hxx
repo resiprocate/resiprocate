@@ -26,7 +26,7 @@
 #include <TelepathyQt/BaseCall>
 #include <TelepathyQt/Types>
 
-#include <recon/ConversationManager.hxx>
+#include <resip/recon/ConversationManager.hxx>
 
 #include "Connection.hxx"
 

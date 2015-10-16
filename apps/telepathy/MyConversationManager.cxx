@@ -23,7 +23,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <recon/ReconSubsystem.hxx>
+#include <resip/recon/ReconSubsystem.hxx>
 
 // Test Prompts for cache testing
 #include "playback_prompt.h"

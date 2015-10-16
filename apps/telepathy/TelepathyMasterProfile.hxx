@@ -18,7 +18,7 @@
 #ifndef TelepathyMasterProfile_hxx
 #define TelepathyMasterProfile_hxx
 
-#include <recon/UserAgentMasterProfile.hxx>
+#include "resip/recon/UserAgentMasterProfile.hxx"
 
 #include "TelepathyParameters.hxx"
 

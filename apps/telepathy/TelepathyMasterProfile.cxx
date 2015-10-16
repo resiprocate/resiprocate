@@ -26,7 +26,7 @@
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <recon/ReconSubsystem.hxx>
+#include <resip/recon/ReconSubsystem.hxx>
 
 #include "MyMessageDecorator.hxx"
 

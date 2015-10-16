@@ -18,7 +18,7 @@
 #ifndef TelepathyConversationProfile_hxx
 #define TelepathyConversationProfile_hxx
 
-#include <recon/ConversationProfile.hxx>
+#include <resip/recon/ConversationProfile.hxx>
 
 #include <QVariant>
 

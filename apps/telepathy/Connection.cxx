@@ -20,8 +20,8 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/BaseException.hxx>
 
-#include <recon/UserAgent.hxx>
-#include <recon/ReconSubsystem.hxx>
+#include <resip/recon/UserAgent.hxx>
+#include <resip/recon/ReconSubsystem.hxx>
 
 
 #include "MyConversationManager.hxx"

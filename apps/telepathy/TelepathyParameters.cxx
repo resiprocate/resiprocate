@@ -21,7 +21,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <recon/ReconSubsystem.hxx>
+#include <resip/recon/ReconSubsystem.hxx>
 
 #include "TelepathyParameters.hxx"
 

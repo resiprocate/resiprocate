@@ -25,7 +25,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <recon/SipXHelper.hxx>
+#include <resip/recon/SipXHelper.hxx>
 
 
 #include "Protocol.hxx"
