@@ -775,11 +775,11 @@ NeverStripProxyAuthorizationHeaders = false
 #    header of each SIP message on the TlsConnection
 # Examples:
 # Cert 1:
-#    common name = daniel@pocock.com.au
-#    => From: <daniel@pocock.com.au> is the only value that will pass
+#    common name = daniel@pocock.pro
+#    => From: <daniel@pocock.pro> is the only value that will pass
 # Cert 2:
-#    subjectAltName = pocock.com.au
-#    => From: <<anything>@pocock.com.au> will be accepted
+#    subjectAltName = pocock.pro
+#    => From: <<anything>@pocock.pro> will be accepted
 # Typically, case 1 is for a real client connection (e.g. Jitsi), case 2
 # (whole domain) is for federated SIP proxy-to-proxy communication (RFC 5922)
 EnableCertificateAuthenticator = false
