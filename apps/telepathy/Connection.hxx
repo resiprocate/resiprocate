@@ -26,7 +26,7 @@
 #include <memory>
 
 #include <rutil/ThreadIf.hxx>
-#include <recon/UserAgent.hxx>
+#include <resip/recon/UserAgent.hxx>
 
 #include <TelepathyQt/BaseConnection>
 #include <TelepathyQt/BaseChannel>
