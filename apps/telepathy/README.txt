@@ -80,3 +80,24 @@ All reSIProcate, sipXtapi and Qt logging appears on stdout and stderr
 Once the process is running, open the account settings in a Telepathy
 application such as GNOME Empathy and add the SIP account.
 
+Important note about the audio device
+-------------------------------------
+
+As this code currently depends on the media stack from sipXapi, it is
+using the /dev/dsp audio device from OSS.
+
+To use this device, you need to
+a) make sure you have loaded the kernel module snd_pcm_oss, you
+   may need to install a package such as
+      apt-get install oss-compat
+b) make sure your user has read/write access on /dev/dsp or make
+   sure your user account is in a group that has access to /dev/dsp.
+   On some systems, you simply need to add your user to the group "audio"
+c) be careful if other applications are using /dev/dsp
+
+This code is currently in a proof-of-concept state, it is known
+that audio system support needs to be improved for a proper release.
+This may be achieved through linking with libjingle or another API
+instead of sipXtapi.
+
+
