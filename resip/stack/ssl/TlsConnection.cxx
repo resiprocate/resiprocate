@@ -57,7 +57,7 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
                               Socket fd, Security* security, 
                               bool server, Data domain,  SecurityTypes::SSLType sslType ,
                               Compression &compression) :
-   Connection(transport,tuple, fd, compression),
+   Connection(transport,tuple, fd, compression, server),
    mServer(server),
    mSecurity(security),
    mSslType( sslType ),

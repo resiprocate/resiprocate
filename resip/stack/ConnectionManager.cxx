@@ -24,7 +24,7 @@ UInt64 ConnectionManager::MinimumGcHeadroom = 0;
 bool ConnectionManager::EnableAgressiveGc = false;
 
 ConnectionManager::ConnectionManager() : 
-   mHead(0,Tuple(),0,Compression::Disabled),
+   mHead(0,Tuple(),0,Compression::Disabled, false),
    mWriteHead(ConnectionWriteList::makeList(&mHead)),
    mReadHead(ConnectionReadList::makeList(&mHead)),
    mLRUHead(ConnectionLruList::makeList(&mHead)),
@@ -214,7 +214,7 @@ ConnectionManager::addConnection(Connection* connection)
 void
 ConnectionManager::removeConnection(Connection* connection)
 {
-   //DebugLog (<< "ConnectionManager::removeConnection()");
+   DebugLog (<< "ConnectionManager::removeConnection()");
 
    mIdMap.erase(connection->mWho.mFlowKey);
    mAddrMap.erase(connection->mWho);

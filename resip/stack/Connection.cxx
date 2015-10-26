@@ -32,15 +32,17 @@ volatile bool Connection::mEnablePostConnectSocketFuncCall = false;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
-                       Compression &compression)
+                       Compression &compression,
+                       bool isServer)
    : ConnectionBase(transport,who,compression),
      mFirstWriteAfterConnectedPending(false),
      mInWritable(false),
      mFlowTimerEnabled(false),
-     mPollItemHandle(0)
+     mPollItemHandle(0),
+     mIsServer(isServer)
 {
    mWho.mFlowKey=(FlowKey)socket;
-   InfoLog (<< "Connection::Connection: new connection created to who: " << mWho);
+   InfoLog (<< "Connection::Connection: new connection created to who: " << mWho << ", is server = " << mIsServer);
 
    if(transport && isWebSocket(transport->transport()))
    {
@@ -537,6 +539,8 @@ Connection::processPollEvent(FdPollEventMask mask) {
       performReads();
    }
 }
+
+bool Connection::isServer()const{ return mIsServer; }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

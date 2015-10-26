@@ -50,7 +50,7 @@ Connection*
 TcpTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    resip_assert(this);
-   Connection* conn = new TcpConnection(this, who, fd, mCompression);
+   Connection* conn = new TcpConnection(this, who, fd, mCompression, server);
    return conn;
 }
 

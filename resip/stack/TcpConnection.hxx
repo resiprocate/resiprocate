@@ -11,7 +11,7 @@ class Tuple;
 class TcpConnection : public Connection
 {
    public:
-      TcpConnection( Transport* transport, const Tuple& who, Socket fd, Compression &compression);
+      TcpConnection( Transport* transport, const Tuple& who, Socket fd, Compression &compression, bool isServer);
       
       int read( char* buf, const int count );
       int write( const char* buf, const int count );
