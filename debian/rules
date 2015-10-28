@@ -33,7 +33,7 @@ CFG_ARGS := --with-ssl \
 		--with-apps \
 		--enable-ipv6 \
 		--enable-dtls \
-		--with-freeradius \
+		--with-radcli \
 		--with-repro \
 		--enable-repro-plugins \
 		--with-python \
