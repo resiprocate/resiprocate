@@ -23,7 +23,7 @@ LOG_DIR=/var/log/reTurnServer
 . /lib/lsb/init-functions
 
 test -x $DAEMON || exit 1
-umask 002
+umask 022
 
 # Include defaults if available
 if [ -f /etc/default/$NAME ] ; then

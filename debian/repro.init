@@ -25,7 +25,7 @@ KILL_SPEC=TERM/20/KILL/5
 . /lib/lsb/init-functions
 
 test -x $DAEMON || exit 1
-umask 002
+umask 022
 
 # Include defaults if available
 if [ -f /etc/default/$NAME ] ; then
