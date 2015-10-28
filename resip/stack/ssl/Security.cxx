@@ -188,8 +188,75 @@ Security::addCAFile(const Data& caFile)
 }
 
 void
+Security::loadCADirectory(const Data& _dir)
+{
+   FileSystem::Directory dir(_dir);
+   FileSystem::Directory::iterator it(dir);
+   for (; it != dir.end(); ++it)
+   {
+      if(!it.is_directory())
+      {
+         Data name = *it;
+         Data fileName = _dir + name;
+         loadCAFile(fileName);
+      }
+   }
+}
+
+void
+Security::loadCAFile(const Data& _file)
+{
+   try
+   {
+      addRootCertPEM(Data::fromFile(_file));
+      InfoLog(<<"Successfully loaded " << _file);
+   }
+   catch (Exception& e)
+   {
+      ErrLog(<< "Some problem reading " << _file << ": " << e);
+   }
+   catch (...)
+   {
+      ErrLog(<< "Some problem reading " << _file);
+   }
+}
+
+void
 Security::preload()
 {
+   int count = 0;
+#ifndef WIN32
+   // We only do this for UNIX platforms at present
+   // If no other source of trusted roots exists,
+   // and if mPath is a file, check if it is a root certificate
+   // or a collection of root certificates
+   struct stat s;
+   Data fileName(mPath);
+   if(fileName.postfix("/"))
+   {
+      fileName.truncate(fileName.size() - 1);
+   }
+   if(fileName.size() > 0)
+   {
+      StackLog(<<"calling stat() for " << fileName);
+      if(stat(fileName.c_str(), &s) < 0)
+      {
+         ErrLog(<<"Error calling stat() for " << fileName.c_str()
+                << ": " << strerror(errno));
+      }
+      else
+      {
+         if(!S_ISDIR(s.st_mode))
+         {
+            WarningLog(<<"mPath argument is a file rather than a directory, "
+                         "treating mPath as a file of trusted root certificates");
+            loadCAFile(fileName);
+            count++;
+         }
+      }
+   }
+#endif
+
    FileSystem::Directory dir(mPath);
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
@@ -242,42 +309,31 @@ Security::preload()
          if(attemptedToLoad)
          {
             InfoLog(<<"Successfully loaded " << fileName );
+            count++;
          }
       }
    }
+   InfoLog(<<"Files loaded by prefix: " << count);
+
+   if(count == 0 && mCADirectories.empty() && mCAFiles.empty() && mPath.size() > 0)
+   {
+      // If no other source of trusted roots exists,
+      // assume mPath was meant to be in mCADirectories
+      WarningLog(<<"No root certificates found using legacy prefixes, "
+                   "treating mPath as a normal directory of root certs");
+      loadCADirectory(mPath);
+   }
+
    std::list<Data>::iterator it_d = mCADirectories.begin();
    for (; it_d != mCADirectories.end(); ++it_d)
    {
-      const Data _dir = *it_d;
-      FileSystem::Directory dir(_dir);
-      FileSystem::Directory::iterator it(dir);
-      for (; it != dir.end(); ++it)
-      {
-         if(!it.is_directory())
-         {
-            Data name = *it;
-            Data fileName = _dir + name;
-            addCAFile(fileName);
-         }
-      }
+      loadCADirectory(*it_d);
    }
+
    std::list<Data>::iterator it_f = mCAFiles.begin();
    for (; it_f != mCAFiles.end(); ++it_f)
    {
-      const Data _file = *it_f;
-      try
-      {
-         addRootCertPEM(Data::fromFile(_file));
-         InfoLog(<<"Successfully loaded " << _file);
-      }
-      catch (Exception& e)
-      {
-         ErrLog(<< "Some problem reading " << _file << ": " << e);
-      }
-      catch (...)
-      {
-         ErrLog(<< "Some problem reading " << _file);
-      }
+      loadCAFile(*it_f);
    }
 }
 

@@ -272,6 +272,8 @@ class Security : public BaseSecurity
       void addCADirectory(const Data& caDirectory);
       void addCAFile(const Data& caFile);
 
+      void loadCADirectory(const Data& directoryName);
+      void loadCAFile(const Data& fileName);
       virtual void preload();
       virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, 
                                        const Data& privateKeyFilename, const Data& privateKeyPassPhrase);

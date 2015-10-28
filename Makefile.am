@@ -12,10 +12,6 @@ if BUILD_TFM
 SUBDIRS += tfm
 endif
 
-if BUILD_APPS
-SUBDIRS += apps
-endif
-
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
 SUBDIRS += reTurn
@@ -26,6 +22,10 @@ endif
 if BUILD_P2P
 SUBDIRS += p2p/s2c/s2c p2p
 endif
+endif
+
+if BUILD_APPS
+SUBDIRS += apps
 endif
 
 #EXTRA_DIST = build-contrib.sh

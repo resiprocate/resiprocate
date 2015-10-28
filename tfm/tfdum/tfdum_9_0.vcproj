@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_IPV6"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
@@ -191,7 +191,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre;..\..\contrib\OpenSSL\include"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;..\..\contrib\OpenSSL\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -268,7 +268,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost_1_34_1;..\..\contrib\pcre;..\..\contrib\OpenSSL\include"
+				AdditionalIncludeDirectories="..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;..\..\contrib\OpenSSL\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"

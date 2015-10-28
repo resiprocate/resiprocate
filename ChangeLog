@@ -1,4 +1,8 @@
 = Release Notes v 1.10 =
+==1.10.1 Changes==
+resip/stack: TLS: make the path argument of the Security class constructor more versatile
+rutil, dum: RADIUS: support for radcli instead of freeradius-client
+build: add more Visual Studio artifacts
 ==1.10.0 Changes==
 repro: added a full presence server
 resip/stack: WebSocket authentication may now use URL parameters instead of cookies

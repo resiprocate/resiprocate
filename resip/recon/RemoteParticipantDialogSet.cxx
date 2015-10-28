@@ -119,8 +119,9 @@ RemoteParticipantDialogSet::getLocalRTPPort()
       }
 
       OsStatus ret;
+      Data connectionAddr = profile->sessionCaps().session().connection().getAddress();
       // Create localBinding Tuple - note:  transport may be changed depending on NAT traversal mode
-      StunTuple localBinding(StunTuple::UDP, asio::ip::address::from_string(profile->sessionCaps().session().connection().getAddress().c_str()), mLocalRTPPort); 
+      StunTuple localBinding(StunTuple::UDP, asio::ip::address::from_string(connectionAddr.c_str()), mLocalRTPPort);
 
       switch(profile->natTraversalMode())
       {
@@ -203,7 +204,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
       else
       {
          ret = getMediaInterface()->getInterface()->createConnection(mMediaConnectionId,
-                                                     profile->sessionCaps().session().connection().getAddress().c_str(),
+                                                     connectionAddr.c_str(),
                                                      mLocalRTPPort);
          mRtpTuple = localBinding;  // Just treat media stream as immediately ready using the localBinding in the SDP
       }
