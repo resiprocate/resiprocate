@@ -1,3 +1,9 @@
+resiprocate (1:1.10.1-2) unstable; urgency=high
+
+  * init scripts: Change default umask from 002 to 022
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 29 Oct 2015 20:34:59 +0100
+
 resiprocate (1:1.10.1-1) unstable; urgency=high
 
   * New upstream release.
