@@ -45,7 +45,7 @@ Connection*
 WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    resip_assert(this);
-   Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator);
+   Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator, server);
    return conn;
 }
 
