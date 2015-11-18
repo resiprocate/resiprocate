@@ -273,6 +273,10 @@ MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) 
          {
             ErrLog( << "MySQL fetch row failed: error=" << rc << ": " << mysql_error(mConn));
          }
+         else
+         {
+            DebugLog(<<"singleResultQuery: no rows returned by query");
+         }
       }
       mysql_free_result(result);
    }
