@@ -263,7 +263,7 @@ PostgreSqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fie
    {
       if(result == 0)
       {
-         ErrLog("singleResultQuery: query failed, rc = " << rc);
+         ErrLog(<<"singleResultQuery: query failed, rc = " << rc);
          return rc;
       }
 
