@@ -98,10 +98,21 @@ TransactionUser::isMyDomain(const Data& domain) const
    return mDomainList.count(Data(domain).lowercase()) > 0;
 }
 
-void TransactionUser::addDomain(const Data& domain)
+void 
+TransactionUser::addDomain(const Data& domain)
 {
    // Domain search should be case insensitive - store in lowercase only
    mDomainList.insert(Data(domain).lowercase());  
+}
+
+void 
+TransactionUser::removeDomain(const Data& domain)
+{
+   DomainList::iterator it = mDomainList.find(Data(domain).lowercase());
+   if (it != mDomainList.end())
+   {
+      mDomainList.erase(it);
+   }
 }
 
 EncodeStream& 
