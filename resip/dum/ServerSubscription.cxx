@@ -392,18 +392,21 @@ ServerSubscription::makeNotify()
 void
 ServerSubscription::end(TerminateReason reason, const Contents* document, int retryAfter)
 {
-   mSubscriptionState = Terminated;
-   makeNotify();
-   mLastRequest->header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);   
-   if (document)
+   if (mSubscriptionState != Terminated)  // NoOp if called twice or already ending
    {
-      mLastRequest->setContents(document);
+      mSubscriptionState = Terminated;
+      makeNotify();
+      mLastRequest->header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);
+      if (document)
+      {
+         mLastRequest->setContents(document);
+      }
+      if (retryAfter != 0)
+      {
+         mLastRequest->header(h_SubscriptionState).param(p_retryAfter) = retryAfter;
+      }
+      send(mLastRequest);
    }
-   if (retryAfter != 0)
-   {
-        mLastRequest->header(h_SubscriptionState).param(p_retryAfter) = retryAfter;
-   }
-   send(mLastRequest);
 }
 
 void

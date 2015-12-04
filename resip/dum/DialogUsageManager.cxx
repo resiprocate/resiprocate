@@ -2458,6 +2458,32 @@ DialogUsageManager::applyToAllClientSubscriptions(ClientSubscriptionFunctor* fun
    }
 }
 
+void 
+DialogUsageManager::endAllServerSubscriptions(TerminateReason reason)
+{
+   // Make a copy of the map - since calling end can cause an immediate delete this on the subscription and thus cause
+   // the object to remove itself from the mServerSubscriptions map, messing up our iterator
+   ServerSubscriptions tempSubscriptions = mServerSubscriptions;
+   ServerSubscriptions::iterator it = tempSubscriptions.begin();
+   for (; it != tempSubscriptions.end(); it++)
+   {
+      it->second->end(reason);
+   }
+}
+
+void 
+DialogUsageManager::endAllServerPublications()
+{
+   // Make a copy of the map - since calling end can cause an immediate delete this on the publication and thus cause
+   // the object to remove itself from the mServerPublications map, messing up our iterator
+   ServerPublications tempPublications = mServerPublications;
+   ServerPublications::iterator it = tempPublications.begin();
+   for (; it != tempPublications.end(); it++)
+   {
+      it->second->end();
+   }
+}
+
 void
 DialogUsageManager::registerForConnectionTermination(Postable* listener)
 {
