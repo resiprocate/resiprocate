@@ -9,3 +9,5 @@ autoreconf --install
 # users but we want to regenerate them as part of every CI build
 rm resip/stack/gen/*
 
+ls -l /usr/include/asio.hpp
+
