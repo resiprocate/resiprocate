@@ -69,7 +69,7 @@ ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately)
 }
 
 bool
-ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately)
+ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
 {
    if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
@@ -90,7 +90,7 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
    
    if(beginImmediately)
    {
-      if(isDuplicate(target.get()))
+      if (checkDuplicates && isDuplicate(target.get()))
       {
          return false;
       }
