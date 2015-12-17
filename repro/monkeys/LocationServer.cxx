@@ -32,7 +32,7 @@ LocationServer::process(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
    // UserInfoMessage is used to look for existence of user if we cannot find
-   // them in the Regisration Database.  This code handles the asynchronous
+   // them in the Registration Database.  This code handles the asynchronous
    // lookup.
    UserInfoMessage *userInfo = dynamic_cast<UserInfoMessage*>(context.getCurrentEvent());
    if(userInfo && userInfo->getOriginatorAddress() == getAddress())  // Ensure we generated the UserInfo - it could be from the Digest Authenticator
@@ -96,7 +96,7 @@ LocationServer::process(RequestContext& context)
       for(o=outboundBatch.begin(); o!=outboundBatch.end(); ++o)
       {
          o->second.sort(OutboundTarget::instanceCompare);  // Orders records by lastUpdate time
-         OutboundTarget* ot = new OutboundTarget(o->first, o->second);
+         OutboundTarget* ot = new OutboundTarget(inputUri.toString(), o->second);
          batch.push_back(ot);
       }
       
