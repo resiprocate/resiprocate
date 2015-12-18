@@ -76,7 +76,8 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       volatile static bool mHostFileLookupOnlyMode;
 
       FdPollGrp*	mPollGrp;
-      std::vector<AresDnsPollItem*> mPollItems;
+      typedef std::vector<std::pair<AresDnsPollItem*, AresDnsPollItem*> > PollItems;
+      PollItems mPollItems;  // first item is for UDP socket, 2nd is for TCP socket
 
 };
 

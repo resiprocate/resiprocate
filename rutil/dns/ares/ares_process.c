@@ -231,7 +231,7 @@ static void write_tcp_data_core(ares_channel channel, int server_idx,
     }
     if ( server->qhead==NULL && channel->poll_cb_func ) {
         (*(channel->poll_cb_func))( channel->poll_cb_data, channel, server_idx,
-	  server->tcp_socket, ARES_POLLACTION_WRITEOFF);
+	  server->tcp_socket, 1, ARES_POLLACTION_WRITEOFF);
     }
 }
 
@@ -609,7 +609,7 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	  if ( channel->poll_cb_func ) {
 	      // printf("ares_send_q: pollopen tcp fd=%d\n", server->tcp_socket);
 	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel,
-		query->server, server->tcp_socket, ARES_POLLACTION_OPEN);
+		query->server, server->tcp_socket, 1, ARES_POLLACTION_OPEN);
 	  }
 	}
       sendreq = malloc(sizeof(struct send_request));
@@ -637,7 +637,7 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	  if ( channel->poll_cb_func )
               (*(channel->poll_cb_func))( channel->poll_cb_data,
 	        channel, query->server,
-		server->tcp_socket, ARES_POLLACTION_WRITEON);
+		server->tcp_socket, 1, ARES_POLLACTION_WRITEON);
 #endif
         }
     }
@@ -655,7 +655,7 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	  if ( channel->poll_cb_func ) {
 	      // printf("ares_send_q: pollopen udp fd=%d\n", server->udp_socket);
 	      (*(channel->poll_cb_func))( channel->poll_cb_data, channel,
-	      	query->server, server->udp_socket, ARES_POLLACTION_OPEN);
+	      	query->server, server->udp_socket, 0, ARES_POLLACTION_OPEN);
 	  }
 	}
       if (send(server->udp_socket, query->qbuf, query->qlen, 0) == -1)

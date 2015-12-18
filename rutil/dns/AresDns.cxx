@@ -46,10 +46,10 @@ namespace resip
 class AresDnsPollItem : public FdPollItemBase
 {
   public:
-   AresDnsPollItem(FdPollGrp *grp, int fd, AresDns& aresObj,
+   AresDnsPollItem(FdPollGrp *grp, int fd, int using_tcp, AresDns& aresObj,
      ares_channel chan, int server_idx)
      : FdPollItemBase(grp, fd, FPEM_Read), mAres(aresObj),
-       mChannel(chan), mFd(fd), mServerIdx(server_idx)
+       mChannel(chan), mFd(fd), mUsingTcp(using_tcp), mServerIdx(server_idx)
    {
    }
 
@@ -72,10 +72,11 @@ class AresDnsPollItem : public FdPollItemBase
    ares_channel	mChannel;
    int mFd;
    int mServerIdx;
+   int mUsingTcp;
 
    static void socket_poll_cb(void *cb_data,
                               ares_channel channel, int server_idx,
-	                      int fd, ares_poll_action_t act);
+	                           int fd, int using_tcp, ares_poll_action_t act);
 };
 
 };
@@ -101,28 +102,43 @@ AresDnsPollItem::processPollEvent(FdPollEventMask mask)
 void
 AresDnsPollItem::socket_poll_cb(void *cb_data,
   	ares_channel channel, int server_idx,
-  	int fd, ares_poll_action_t act)
+  	int fd, int using_tcp, ares_poll_action_t act)
 {
    AresDns *ares = static_cast<AresDns*>(cb_data);
    //assert( ares );
    FdPollGrp *grp = ares->mPollGrp;
    //assert( grp );
-   AresDnsPollItem *olditem = ares->mPollItems.at(server_idx);
+   AresDnsPollItem *olditem = using_tcp == 0 ? ares->mPollItems.at(server_idx).first : ares->mPollItems.at(server_idx).second;
    if ( olditem )
    {
       resip_assert( olditem->mChannel==channel );
       resip_assert( olditem->mServerIdx==server_idx );
+      resip_assert( olditem->mUsingTcp==using_tcp );
    }
    switch ( act )
    {
    case ARES_POLLACTION_OPEN:
-      resip_assert( olditem==NULL );
+      resip_assert( !olditem );
       resip_assert( fd!=INVALID_SOCKET );
-      ares->mPollItems[server_idx] = new AresDnsPollItem( grp, fd, *ares, channel, server_idx);
+      if (using_tcp == 0)
+      {
+         ares->mPollItems[server_idx].first = new AresDnsPollItem(grp, fd, using_tcp, *ares, channel, server_idx);
+      }
+      else
+      {
+         ares->mPollItems[server_idx].second = new AresDnsPollItem(grp, fd, using_tcp, *ares, channel, server_idx);
+      }
       break;
    case ARES_POLLACTION_CLOSE:
       resip_assert( olditem );
-      ares->mPollItems[server_idx] = NULL;
+      if (using_tcp == 0)
+      {
+         ares->mPollItems[server_idx].first = NULL;
+      }
+      else
+      {
+         ares->mPollItems[server_idx].second = NULL;
+      }
       delete olditem;	// destructor removes from poll
       break;
    case ARES_POLLACTION_WRITEON:
@@ -162,12 +178,15 @@ AresDns::setPollGrp(FdPollGrp *grp)
       mPollGrp->registerFdSetIOObserver(*this);
    }
 #else
-   for(std::vector<AresDnsPollItem*>::iterator i=mPollItems.begin();
-         i!=mPollItems.end(); ++i)
+   for (PollItems::iterator i = mPollItems.begin(); i!=mPollItems.end(); ++i)
    {
-      if(*i)
+      if(i->first)
       {
-         (*i)->resetPollGrp(grp);
+         i->first->resetPollGrp(grp);
+      }
+      if (i->second)
+      {
+         i->second->resetPollGrp(grp);
       }
    }
    mPollGrp = grp;
@@ -200,7 +219,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
       // Ensure vector starts empty, since init may be called more than once
       mPollItems.clear(); 
       // expand vector to hold {nservers} and init to NULLAr
-      mPollItems.insert( mPollItems.end(), mChannel->nservers, (AresDnsPollItem*)0);
+      mPollItems.insert(mPollItems.end(), mChannel->nservers, std::make_pair((AresDnsPollItem*)0, (AresDnsPollItem*)0));
       // tell ares to let us know when things change
       ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
    }
