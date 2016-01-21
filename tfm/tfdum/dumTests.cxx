@@ -72,6 +72,7 @@ static const int Seconds = 1000;
 static const int CallTimeout = 40 * 1000;
 static const int TimeOut = 5000;
 static const int Owner491 = 5000;
+static const int NonOwner491 = 3000;
 
 const Data transport("udp");
 static NameAddr localhost;
@@ -160,7 +161,8 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testReInviteIpChange);
       CPPUNIT_TEST(testRegisterBasicWithoutRinstance);
       CPPUNIT_TEST(testReinviteLateMedia);
-      CPPUNIT_TEST(testReinviteRejected); 
+      CPPUNIT_TEST(testReinviteRejected);
+      CPPUNIT_TEST(testReinviteRejected491); 
       CPPUNIT_TEST(testTransferNoReferSub);
       CPPUNIT_TEST(testTransferNoReferSubWithoutReferSubHeaderIn202);
       CPPUNIT_TEST(testInviteBasicSuccess);
@@ -2560,6 +2562,81 @@ class DumTestCase : public DumFixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
+         Seq(regJason.end(),
+             regJason.expect(Register_Removed, *TestEndPoint::AlwaysTruePred, WaitForRegistration, regJason.noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+      void testReinviteRejected491()
+      {
+         WarningLog(<< "testReinviteRejected491");
+ 
+         TestClientRegistration regDerek(derek);
+         TestClientRegistration regJason(jason);
+ 
+         Seq(derek->registerUa(),
+             derek->expect(Register_Success, regDerek, dumFrom(proxy), WaitForRegistration, derek->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+ 
+         Seq(jason->registerUa(),
+             jason->expect(Register_Success, regJason, dumFrom(proxy), WaitForRegistration, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+ 
+         TestClientInviteSession uac(derek);
+         TestServerInviteSession uas(jason);
+         
+         // Establish the call
+         Seq(derek->invite(jason->getAor(), standardOffer),
+             jason->expect(Invite_NewServerSession, uas, dumFrom(*derek), WaitForCommand, jason->noAction()),
+             uas.expect(Invite_Offer, dumFrom(*derek), WaitForCommand,
+                        chain(uas.provisional(180), uas.provideAnswer(*standardAnswer), uas.accept(200))),
+ 
+             And(Sub(uas.expect(Invite_Connected, dumFrom(*derek), WaitForCommand, uas.noAction())),
+                 Sub(derek->expect(Invite_NewClientSession, uac, dumFrom(*jason), WaitForCommand, derek->noAction()),
+                     uac.expect(Invite_Provisional, dumFrom(*jason), WaitForCommand, uac.noAction()),
+                     uac.expect(Invite_Answer, dumFrom(*jason), WaitForCommand, uac.noAction()),
+                     uac.expect(Invite_Connected, dumFrom(*jason), WaitForCommand, uac.noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+ 
+         // Test a 491 being received in a ClientInviteSession
+         //
+         // uac reoffers with INVITE, uas rejects with 491 then uas expects
+         // another INVITE and answers. Note that Owner491 == 5 seconds, to
+         // give the new INVITE enough time (RFC 3261, Section 14.1).
+         Seq(uac.provideOffer(*standardOffer),
+             uas.expect(Invite_Offer, dumFrom(*derek), WaitForCommand, uas.reject(491)),
+             uas.expect(Invite_Offer, dumFrom(*derek), Owner491, uas.reject(491)),
+             uas.expect(Invite_Offer, dumFrom(*derek), Owner491, uas.provideAnswer(*standardAnswer)),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+ 
+         // Test a 491 being received in a ServerInviteSession
+         //
+         // uas reoffers with INVITE, uac rejects with 491 then uac expects
+         // another INVITE and answers. Note that NonOwner491 == 3 seconds, to
+         // give the new INVITE enough time (RFC 3261, Section 14.1).
+         Seq(uas.provideOffer(*standardOffer),
+             uac.expect(Invite_Offer, dumFrom(*jason), WaitForCommand, uac.reject(491)),
+             uac.expect(Invite_Offer, dumFrom(*jason), NonOwner491, uac.reject(491)),
+             uac.expect(Invite_Offer, dumFrom(*jason), NonOwner491, uac.provideAnswer(*standardAnswer)),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+ 
+         Seq(uac.end(),
+             And(Sub(uac.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, derek->noAction())),
+                 Sub(uas.expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, jason->noAction()))),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+ 
+         Seq(regDerek.end(),
+             regDerek.expect(Register_Removed, *TestEndPoint::AlwaysTruePred, WaitForRegistration, regDerek.noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+ 
          Seq(regJason.end(),
              regJason.expect(Register_Removed, *TestEndPoint::AlwaysTruePred, WaitForRegistration, regJason.noAction()),
              WaitForEndOfTest);
