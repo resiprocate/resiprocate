@@ -933,6 +933,10 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
          mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);  // increments CSeq
          send(mLastLocalSessionModification);
       }
+      else
+      {
+         InviteSession::dispatch(timeout);
+      }
    }
    else
    {
