@@ -121,7 +121,7 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
   ares_channel channel;
   int i, status;
   struct server_state *server;
-#ifdef WIN32
+#if defined(WIN32) && !defined(_M_ARM)
 	{
 		HKEY hKey;  
 		char hostpath[256];

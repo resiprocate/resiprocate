@@ -810,7 +810,7 @@ stunRand()
       UInt64 tick;
 		
 #if defined(WIN32) 
-#if !defined(UNDER_CE) && !defined(__GNUC__) && !defined(_WIN64)
+#if !defined(UNDER_CE) && !defined(__GNUC__) && !defined(_WIN64) && !defined(_M_ARM)
       volatile unsigned int lowtick=0,hightick=0;
       __asm
          {
