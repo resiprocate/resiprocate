@@ -1960,11 +1960,11 @@ stunSendTest( resip::Socket myFd, StunAddress4& dest,
 	
    bool changePort=false;
    bool changeIP=false;
-   bool discard=false;
 	
    switch (testNum)
    {
       case 1:
+      case 5:
       case 10:
       case 11:
          break;
@@ -1977,9 +1977,6 @@ stunSendTest( resip::Socket myFd, StunAddress4& dest,
          break;
       case 4:
          changeIP=true;
-         break;
-      case 5:
-         discard=true;
          break;
       default:
          cerr << "Test " << testNum <<" is unknown\n";
@@ -2147,7 +2144,6 @@ stunNatType( StunAddress4& dest,
     
    bool respTestI=false;
    bool isNat=true;
-   StunAddress4 testIchangedAddr;
    StunAddress4 testImappedAddr;
    bool respTestI2=false; 
    bool mappedIpSame = true;
@@ -2287,8 +2283,6 @@ stunNatType( StunAddress4& dest,
                         if ( !respTestI )
                         {
 									
-                           testIchangedAddr.addr = resp.changedAddress.ipv4.addr;
-                           testIchangedAddr.port = resp.changedAddress.ipv4.port;
                            testImappedAddr.addr = resp.mappedAddress.ipv4.addr;
                            testImappedAddr.port = resp.mappedAddress.ipv4.port;
 			
@@ -2536,7 +2530,6 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
    }
 	
    StunAddress4 mappedAddr = resp.mappedAddress.ipv4;
-   StunAddress4 changedAddr = resp.changedAddress.ipv4;
 	
    //clog << "--- stunOpenSocket --- " << endl;
    //clog << "\treq  id=" << req.id << endl;
@@ -2631,7 +2624,6 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
       }
 		
       mappedAddr[i] = resp.mappedAddress.ipv4;
-      StunAddress4 changedAddr = resp.changedAddress.ipv4;
    }
 	
    if (verbose)

@@ -74,9 +74,11 @@ static char *try_config(char *s, char *opt);
 static const char *try_option(const char *p, const char *q, const char *opt);
 static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
+#ifdef WIN32
 static int find_server(struct server_state *servers, int nservers, struct in_addr addr);
 #ifdef USE_IPV6
 static int find_server6(struct server_state *servers, int nservers, struct in6_addr addr);
+#endif
 #endif
 
 static int	inet_pton4(const char *src, u_char *dst);
@@ -1176,6 +1178,7 @@ static void natural_mask(struct apattern *pat)
     pat->mask.s_addr = htonl(IN_CLASSC_NET);
 }
 
+#ifdef WIN32
 /*
  * Finds a V4 addr in list of servers.
  * return:
@@ -1226,6 +1229,7 @@ static int find_server6(struct server_state *servers, int nservers, struct in6_a
    }
    return (i < nservers ? i : -1);
 }
+#endif
 #endif
 
 #define  NS_INT16SZ   2
