@@ -148,6 +148,12 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBufferPos += 4;
             bytesRead -= 4;
             onDoubleCRLF();
+            // skip trailing null bytes
+            while (bytesRead && mBuffer[mBufferPos] == '\0')
+            {
+               mBufferPos++;
+               bytesRead--;
+            }
             if (bytesRead)
             {
                goto start;
@@ -165,6 +171,12 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             mBufferPos += 2;
             bytesRead -= 2;
             onSingleCRLF();
+            // skip trailing null bytes
+            while (bytesRead && mBuffer[mBufferPos] == '\0')
+            {
+               mBufferPos++;
+               bytesRead--;
+            }
             if (bytesRead)
             {
                goto start;
