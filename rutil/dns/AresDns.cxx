@@ -71,8 +71,8 @@ class AresDnsPollItem : public FdPollItemBase
    AresDns&	mAres;
    ares_channel	mChannel;
    int mFd;
-   int mServerIdx;
    int mUsingTcp;
+   int mServerIdx;
 
    static void socket_poll_cb(void *cb_data,
                               ares_channel channel, int server_idx,
