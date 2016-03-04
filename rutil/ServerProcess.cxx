@@ -135,7 +135,7 @@ bool
 ServerProcess::isAlreadyRunning()
 {
 #ifndef __linux__
-   WarningLog(<<"can't check if process already running on this platform (not implemented yet)");
+   //WarningLog(<<"can't check if process already running on this platform (not implemented yet)");
    return false;
 #else
    if(mPidFile.size() == 0)
