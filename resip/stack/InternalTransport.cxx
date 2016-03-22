@@ -151,10 +151,10 @@ InternalTransport::bind()
    }
 
    // If we bound to port 0, then query OS for assigned port number
-   if(mTuple.getPort() == 0)
+   if (mTuple.getPort() == 0)
    {
-      socklen_t len = sizeof(mTuple.getMutableSockaddr());
-      if(::getsockname(mFd, &mTuple.getMutableSockaddr(), &len) == SOCKET_ERROR)
+      socklen_t len = mTuple.length();
+      if (::getsockname(mFd, &mTuple.getMutableSockaddr(), &len) == SOCKET_ERROR)
       {
          int e = getErrno();
          ErrLog (<<"getsockname failed, error=" << e);
