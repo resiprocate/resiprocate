@@ -267,7 +267,7 @@ Log::initialize(Type type, Level level, const Data& appName,
    if (type == Syslog)
    {
        std::cerr << "syslog not supported on windows, using cout!" << std::endl;
-       type == Cout;
+       type = Cout;
    }
 #endif
 
