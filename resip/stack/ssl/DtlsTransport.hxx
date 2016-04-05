@@ -43,7 +43,7 @@ class DtlsMessage;
 
 class DtlsTransport : public UdpTransport
 {
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))  // !slg! not sure if this works on __INTEL_COMPILER 
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))  // !slg! not sure if this works on __INTEL_COMPILER 
    struct sockaddr_in_hash_compare
    {
       enum { bucket_size = 4, min_buckets = 8 };
@@ -139,7 +139,7 @@ class DtlsTransport : public UdpTransport
 
    private:
 
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))
       typedef HashMap<struct sockaddr_in, 
                       SSL*, 
                       DtlsTransport::sockaddr_in_hash_compare> DtlsConnectionMap;
