@@ -3,10 +3,10 @@ Version:    @VERSION@
 Summary:    GeoIP is a C library finds the location of an IP address.
 Release:    1
 Group:	    System Environment/Libraries
-URL:	    http://www.maxmind.com/app/c
-Vendor:	    MaxMind LLC
-Source0:    http://www.maxmind.com/download/geoip/api/c/GeoIP-%{version}.tar.gz
-License:    GPL
+URL:	    http://dev.maxmind.com/geoip/downloadable
+Vendor:	    MaxMind, Inc.
+Source0:    http://www.maxmind.com/download/geoip/api/c/GeoIP-latest.tar.gz
+License:    LGPLv2.1+
 BuildRoot:  %{_tmppath}/%{name}-%{version}-root
 
 %description
@@ -14,12 +14,8 @@ GeoIP is a C library that enables the user to find geographical and
 network information of an IP address.
 Included is a free GeoLite Country database
 that is updated at the beginning of every month.
-To download the latest free GeoLite Country database, go to:
-http://www.maxmind.com/app/geoip_country
-
-There is also a free city-level geolocation database, GeoLite City,
-available from:
-http://www.maxmind.com/app/geolitecity
+To download the latest free GeoLite databases, go to:
+http://dev.maxmind.com/geoip/geolite
 
 %package devel
 Summary: GeoIP headers, libraries
@@ -52,7 +48,7 @@ chmod 755 $RPM_BUILD_ROOT/%{_libdir}/*
 
 %files
 %defattr(-,root,root)
-%doc AUTHORS COPYING ChangeLog README TODO
+%doc AUTHORS COPYING ChangeLog README.md TODO
 %attr(0755,root,root) %{_libdir}/*.so.*.*
 %{_bindir}/*
 %{_sysconfdir}/*
@@ -67,10 +63,10 @@ chmod 755 $RPM_BUILD_ROOT/%{_libdir}/*
 %{_libdir}/*.la
 
 %changelog
-* Fri Apr 14 2006 Thomas Mather <tjmather@maxmind.com>
+* Fri Apr 14 2006 Thomas Mather <support@maxmind.com>
 - Updated description to reference free GeoLite City database
 
-* Thu Jul  7 2005 Thomas Mather <tjmather@maxmind.com>
+* Thu Jul  7 2005 Thomas Mather <support@maxmind.com>
 - Updated description to reflect monthly updates for free country database.
 
 * Mon Sep  8 2003 Dr. Peter Bieringer

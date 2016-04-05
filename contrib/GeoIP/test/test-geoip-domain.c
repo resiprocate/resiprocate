@@ -1,5 +1,5 @@
 /* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 2; tab-width: 2 -*- */
-/* test-geoip-netspeed.c
+/* test-geoip-org.c
  *
  * Copyright (C) 2016 MaxMind, Inc.
  *
@@ -18,43 +18,52 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+
 #include "GeoIP.h"
 
-int main(int argc, char *argv[])
+static const char * _mk_NA( const char * p )
+{
+    return p ? p : "N/A";
+}
+
+int
+main(int argc, char *argv[])
 {
     FILE *f;
     GeoIP *gi;
-    int netspeed;
+    char *domain;
     char host[50];
+    char **ret;
 
-    gi = GeoIP_open("../data/GeoIPNetSpeed.dat", GEOIP_STANDARD);
+    gi = GeoIP_open("../data/GeoIPDomain.dat", GEOIP_INDEX_CACHE);
 
     if (gi == NULL) {
         fprintf(stderr, "Error opening database\n");
         exit(1);
     }
 
-    f = fopen("netspeed_test.txt", "r");
+    f = fopen("domain_test.txt", "r");
 
     if (f == NULL) {
-        fprintf(stderr, "Error opening netspeed_test.txt\n");
+        fprintf(stderr, "Error opening domain_test.txt\n");
         exit(1);
     }
 
+    printf("IP\tdomain\tnetmask\tbeginIp\tendIp\n");
     while (fscanf(f, "%s", host) != EOF) {
-        netspeed = GeoIP_id_by_name(gi, (const char *)host);
-        if (netspeed == GEOIP_UNKNOWN_SPEED) {
-            printf("%s\tUnknown\n", host);
-        } else if (netspeed == GEOIP_DIALUP_SPEED) {
-            printf("%s\tDialup\n", host);
-        } else if (netspeed == GEOIP_CABLEDSL_SPEED) {
-            printf("%s\tCable/DSL\n", host);
-        } else if (netspeed == GEOIP_CORPORATE_SPEED) {
-            printf("%s\tCorporate\n", host);
+        domain = GeoIP_name_by_name(gi, (const char *)host);
+
+        if (domain != NULL) {
+            ret = GeoIP_range_by_ip(gi, (const char *)host);
+
+            printf("%s\t%s\t%d\t%s\t%s\n", host, _mk_NA(
+                       domain), GeoIP_last_netmask(gi), ret[0], ret[1]);
+            GeoIP_range_by_ip_delete(ret);
+            free(domain);
         }
     }
+
     fclose(f);
     GeoIP_delete(gi);
-
     return 0;
 }

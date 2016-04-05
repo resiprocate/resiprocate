@@ -185,7 +185,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\libGeoIP\md5.c"
+				RelativePath=".\libGeoIP\pread.c"
+				>
+			</File>
+			<File
+				RelativePath=".\libGeoIP\GeoIP_deprecated.c"
 				>
 			</File>
 			<File
@@ -219,11 +223,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\libGeoIP\md5.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libGeoIP\types.h"
+				RelativePath=".\libGeoIP\pread.h"
 				>
 			</File>
 		</Filter>

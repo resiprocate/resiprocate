@@ -353,7 +353,8 @@
   <ItemGroup>
     <ClCompile Include="libGeoIP\GeoIP.c" />
     <ClCompile Include="libGeoIP\GeoIPCity.c" />
-    <ClCompile Include="libGeoIP\md5.c" />
+    <ClCompile Include="libGeoIP\GeoIP_deprecated.c" />
+    <ClCompile Include="libGeoIP\pread.c" />
     <ClCompile Include="libGeoIP\regionName.c" />
     <ClCompile Include="libGeoIP\timeZone.c" />
   </ItemGroup>
@@ -362,8 +363,7 @@
     <ClInclude Include="libGeoIP\GeoIP_internal.h" />
     <ClInclude Include="libGeoIP\GeoIPCity.h" />
     <ClInclude Include="libGeoIP\global.h" />
-    <ClInclude Include="libGeoIP\md5.h" />
-    <ClInclude Include="libGeoIP\types.h" />
+    <ClInclude Include="libGeoIP\pread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
