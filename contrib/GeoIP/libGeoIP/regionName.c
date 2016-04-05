@@ -1,12780 +1,10389 @@
+#include "GeoIP.h"
 #include <string.h>
 #include <stdio.h>
 
+
+static const char * get_region_name_AD(int region_code)
+{
+    switch(region_code) {
+    case 3:
+        return "Encamp";
+    case 4:
+        return "La Massana";
+    case 5:
+        return "Ordino";
+    case 6:
+        return "Sant Julia de Loria";
+    case 7:
+        return "Andorra la Vella";
+    case 8:
+        return "Escaldes-Engordany";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Abu Dhabi";
+    case 2:
+        return "Ajman";
+    case 3:
+        return "Dubai";
+    case 4:
+        return "Fujairah";
+    case 5:
+        return "Ras Al Khaimah";
+    case 6:
+        return "Sharjah";
+    case 7:
+        return "Umm Al Quwain";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AF(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Badakhshan";
+    case 2:
+        return "Badghis";
+    case 3:
+        return "Baghlan";
+    case 5:
+        return "Bamian";
+    case 6:
+        return "Farah";
+    case 7:
+        return "Faryab";
+    case 8:
+        return "Ghazni";
+    case 9:
+        return "Ghowr";
+    case 10:
+        return "Helmand";
+    case 11:
+        return "Herat";
+    case 13:
+        return "Kabol";
+    case 14:
+        return "Kapisa";
+    case 17:
+        return "Lowgar";
+    case 18:
+        return "Nangarhar";
+    case 19:
+        return "Nimruz";
+    case 23:
+        return "Kandahar";
+    case 24:
+        return "Kondoz";
+    case 26:
+        return "Takhar";
+    case 27:
+        return "Vardak";
+    case 28:
+        return "Zabol";
+    case 29:
+        return "Paktika";
+    case 30:
+        return "Balkh";
+    case 31:
+        return "Jowzjan";
+    case 32:
+        return "Samangan";
+    case 33:
+        return "Sar-e Pol";
+    case 34:
+        return "Konar";
+    case 35:
+        return "Laghman";
+    case 36:
+        return "Paktia";
+    case 37:
+        return "Khowst";
+    case 38:
+        return "Nurestan";
+    case 39:
+        return "Oruzgan";
+    case 40:
+        return "Parvan";
+    case 41:
+        return "Daykondi";
+    case 42:
+        return "Panjshir";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AG(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Barbuda";
+    case 3:
+        return "Saint George";
+    case 4:
+        return "Saint John";
+    case 5:
+        return "Saint Mary";
+    case 6:
+        return "Saint Paul";
+    case 7:
+        return "Saint Peter";
+    case 8:
+        return "Saint Philip";
+    case 9:
+        return "Redonda";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AL(int region_code)
+{
+    switch(region_code) {
+    case 40:
+        return "Berat";
+    case 41:
+        return "Diber";
+    case 42:
+        return "Durres";
+    case 43:
+        return "Elbasan";
+    case 44:
+        return "Fier";
+    case 45:
+        return "Gjirokaster";
+    case 46:
+        return "Korce";
+    case 47:
+        return "Kukes";
+    case 48:
+        return "Lezhe";
+    case 49:
+        return "Shkoder";
+    case 50:
+        return "Tirane";
+    case 51:
+        return "Vlore";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aragatsotn";
+    case 2:
+        return "Ararat";
+    case 3:
+        return "Armavir";
+    case 4:
+        return "Geghark'unik'";
+    case 5:
+        return "Kotayk'";
+    case 6:
+        return "Lorri";
+    case 7:
+        return "Shirak";
+    case 8:
+        return "Syunik'";
+    case 9:
+        return "Tavush";
+    case 10:
+        return "Vayots' Dzor";
+    case 11:
+        return "Yerevan";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Benguela";
+    case 2:
+        return "Bie";
+    case 3:
+        return "Cabinda";
+    case 4:
+        return "Cuando Cubango";
+    case 5:
+        return "Cuanza Norte";
+    case 6:
+        return "Cuanza Sul";
+    case 7:
+        return "Cunene";
+    case 8:
+        return "Huambo";
+    case 9:
+        return "Huila";
+    case 12:
+        return "Malanje";
+    case 13:
+        return "Namibe";
+    case 14:
+        return "Moxico";
+    case 15:
+        return "Uige";
+    case 16:
+        return "Zaire";
+    case 17:
+        return "Lunda Norte";
+    case 18:
+        return "Lunda Sul";
+    case 19:
+        return "Bengo";
+    case 20:
+        return "Luanda";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Buenos Aires";
+    case 2:
+        return "Catamarca";
+    case 3:
+        return "Chaco";
+    case 4:
+        return "Chubut";
+    case 5:
+        return "Cordoba";
+    case 6:
+        return "Corrientes";
+    case 7:
+        return "Distrito Federal";
+    case 8:
+        return "Entre Rios";
+    case 9:
+        return "Formosa";
+    case 10:
+        return "Jujuy";
+    case 11:
+        return "La Pampa";
+    case 12:
+        return "La Rioja";
+    case 13:
+        return "Mendoza";
+    case 14:
+        return "Misiones";
+    case 15:
+        return "Neuquen";
+    case 16:
+        return "Rio Negro";
+    case 17:
+        return "Salta";
+    case 18:
+        return "San Juan";
+    case 19:
+        return "San Luis";
+    case 20:
+        return "Santa Cruz";
+    case 21:
+        return "Santa Fe";
+    case 22:
+        return "Santiago del Estero";
+    case 23:
+        return "Tierra del Fuego";
+    case 24:
+        return "Tucuman";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AT(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Burgenland";
+    case 2:
+        return "Karnten";
+    case 3:
+        return "Niederosterreich";
+    case 4:
+        return "Oberosterreich";
+    case 5:
+        return "Salzburg";
+    case 6:
+        return "Steiermark";
+    case 7:
+        return "Tirol";
+    case 8:
+        return "Vorarlberg";
+    case 9:
+        return "Wien";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AU(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Australian Capital Territory";
+    case 2:
+        return "New South Wales";
+    case 3:
+        return "Northern Territory";
+    case 4:
+        return "Queensland";
+    case 5:
+        return "South Australia";
+    case 6:
+        return "Tasmania";
+    case 7:
+        return "Victoria";
+    case 8:
+        return "Western Australia";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_AZ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Abseron";
+    case 2:
+        return "Agcabadi";
+    case 3:
+        return "Agdam";
+    case 4:
+        return "Agdas";
+    case 5:
+        return "Agstafa";
+    case 6:
+        return "Agsu";
+    case 7:
+        return "Ali Bayramli";
+    case 8:
+        return "Astara";
+    case 9:
+        return "Baki";
+    case 10:
+        return "Balakan";
+    case 11:
+        return "Barda";
+    case 12:
+        return "Beylaqan";
+    case 13:
+        return "Bilasuvar";
+    case 14:
+        return "Cabrayil";
+    case 15:
+        return "Calilabad";
+    case 16:
+        return "Daskasan";
+    case 17:
+        return "Davaci";
+    case 18:
+        return "Fuzuli";
+    case 19:
+        return "Gadabay";
+    case 20:
+        return "Ganca";
+    case 21:
+        return "Goranboy";
+    case 22:
+        return "Goycay";
+    case 23:
+        return "Haciqabul";
+    case 24:
+        return "Imisli";
+    case 25:
+        return "Ismayilli";
+    case 26:
+        return "Kalbacar";
+    case 27:
+        return "Kurdamir";
+    case 28:
+        return "Lacin";
+    case 29:
+        return "Lankaran";
+    case 30:
+        return "Lankaran";
+    case 31:
+        return "Lerik";
+    case 32:
+        return "Masalli";
+    case 33:
+        return "Mingacevir";
+    case 34:
+        return "Naftalan";
+    case 35:
+        return "Naxcivan";
+    case 36:
+        return "Neftcala";
+    case 37:
+        return "Oguz";
+    case 38:
+        return "Qabala";
+    case 39:
+        return "Qax";
+    case 40:
+        return "Qazax";
+    case 41:
+        return "Qobustan";
+    case 42:
+        return "Quba";
+    case 43:
+        return "Qubadli";
+    case 44:
+        return "Qusar";
+    case 45:
+        return "Saatli";
+    case 46:
+        return "Sabirabad";
+    case 47:
+        return "Saki";
+    case 48:
+        return "Saki";
+    case 49:
+        return "Salyan";
+    case 50:
+        return "Samaxi";
+    case 51:
+        return "Samkir";
+    case 52:
+        return "Samux";
+    case 53:
+        return "Siyazan";
+    case 54:
+        return "Sumqayit";
+    case 55:
+        return "Susa";
+    case 56:
+        return "Susa";
+    case 57:
+        return "Tartar";
+    case 58:
+        return "Tovuz";
+    case 59:
+        return "Ucar";
+    case 60:
+        return "Xacmaz";
+    case 61:
+        return "Xankandi";
+    case 62:
+        return "Xanlar";
+    case 63:
+        return "Xizi";
+    case 64:
+        return "Xocali";
+    case 65:
+        return "Xocavand";
+    case 66:
+        return "Yardimli";
+    case 67:
+        return "Yevlax";
+    case 68:
+        return "Yevlax";
+    case 69:
+        return "Zangilan";
+    case 70:
+        return "Zaqatala";
+    case 71:
+        return "Zardab";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Federation of Bosnia and Herzegovina";
+    case 3:
+        return "Brcko District";
+    case 2:
+        return "Republika Srpska";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BB(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Christ Church";
+    case 2:
+        return "Saint Andrew";
+    case 3:
+        return "Saint George";
+    case 4:
+        return "Saint James";
+    case 5:
+        return "Saint John";
+    case 6:
+        return "Saint Joseph";
+    case 7:
+        return "Saint Lucy";
+    case 8:
+        return "Saint Michael";
+    case 9:
+        return "Saint Peter";
+    case 10:
+        return "Saint Philip";
+    case 11:
+        return "Saint Thomas";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BD(int region_code)
+{
+    switch(region_code) {
+    case 81:
+        return "Dhaka";
+    case 82:
+        return "Khulna";
+    case 83:
+        return "Rajshahi";
+    case 84:
+        return "Chittagong";
+    case 85:
+        return "Barisal";
+    case 86:
+        return "Sylhet";
+    case 87:
+        return "Rangpur";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Antwerpen";
+    case 3:
+        return "Hainaut";
+    case 4:
+        return "Liege";
+    case 5:
+        return "Limburg";
+    case 6:
+        return "Luxembourg";
+    case 7:
+        return "Namur";
+    case 8:
+        return "Oost-Vlaanderen";
+    case 9:
+        return "West-Vlaanderen";
+    case 10:
+        return "Brabant Wallon";
+    case 11:
+        return "Brussels Hoofdstedelijk Gewest";
+    case 12:
+        return "Vlaams-Brabant";
+    case 13:
+        return "Flanders";
+    case 14:
+        return "Wallonia";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BF(int region_code)
+{
+    switch(region_code) {
+    case 15:
+        return "Bam";
+    case 19:
+        return "Boulkiemde";
+    case 20:
+        return "Ganzourgou";
+    case 21:
+        return "Gnagna";
+    case 28:
+        return "Kouritenga";
+    case 33:
+        return "Oudalan";
+    case 34:
+        return "Passore";
+    case 36:
+        return "Sanguie";
+    case 40:
+        return "Soum";
+    case 42:
+        return "Tapoa";
+    case 44:
+        return "Zoundweogo";
+    case 45:
+        return "Bale";
+    case 46:
+        return "Banwa";
+    case 47:
+        return "Bazega";
+    case 48:
+        return "Bougouriba";
+    case 49:
+        return "Boulgou";
+    case 50:
+        return "Gourma";
+    case 51:
+        return "Houet";
+    case 52:
+        return "Ioba";
+    case 53:
+        return "Kadiogo";
+    case 54:
+        return "Kenedougou";
+    case 55:
+        return "Komoe";
+    case 56:
+        return "Komondjari";
+    case 57:
+        return "Kompienga";
+    case 58:
+        return "Kossi";
+    case 59:
+        return "Koulpelogo";
+    case 60:
+        return "Kourweogo";
+    case 61:
+        return "Leraba";
+    case 62:
+        return "Loroum";
+    case 63:
+        return "Mouhoun";
+    case 64:
+        return "Namentenga";
+    case 65:
+        return "Naouri";
+    case 66:
+        return "Nayala";
+    case 67:
+        return "Noumbiel";
+    case 68:
+        return "Oubritenga";
+    case 69:
+        return "Poni";
+    case 70:
+        return "Sanmatenga";
+    case 71:
+        return "Seno";
+    case 72:
+        return "Sissili";
+    case 73:
+        return "Sourou";
+    case 74:
+        return "Tuy";
+    case 75:
+        return "Yagha";
+    case 76:
+        return "Yatenga";
+    case 77:
+        return "Ziro";
+    case 78:
+        return "Zondoma";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BG(int region_code)
+{
+    switch(region_code) {
+    case 33:
+        return "Mikhaylovgrad";
+    case 38:
+        return "Blagoevgrad";
+    case 39:
+        return "Burgas";
+    case 40:
+        return "Dobrich";
+    case 41:
+        return "Gabrovo";
+    case 42:
+        return "Grad Sofiya";
+    case 43:
+        return "Khaskovo";
+    case 44:
+        return "Kurdzhali";
+    case 45:
+        return "Kyustendil";
+    case 46:
+        return "Lovech";
+    case 47:
+        return "Montana";
+    case 48:
+        return "Pazardzhik";
+    case 49:
+        return "Pernik";
+    case 50:
+        return "Pleven";
+    case 51:
+        return "Plovdiv";
+    case 52:
+        return "Razgrad";
+    case 53:
+        return "Ruse";
+    case 54:
+        return "Shumen";
+    case 55:
+        return "Silistra";
+    case 56:
+        return "Sliven";
+    case 57:
+        return "Smolyan";
+    case 58:
+        return "Sofiya";
+    case 59:
+        return "Stara Zagora";
+    case 60:
+        return "Turgovishte";
+    case 61:
+        return "Varna";
+    case 62:
+        return "Veliko Turnovo";
+    case 63:
+        return "Vidin";
+    case 64:
+        return "Vratsa";
+    case 65:
+        return "Yambol";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BH(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Al Hadd";
+    case 2:
+        return "Al Manamah";
+    case 5:
+        return "Jidd Hafs";
+    case 6:
+        return "Sitrah";
+    case 8:
+        return "Al Mintaqah al Gharbiyah";
+    case 9:
+        return "Mintaqat Juzur Hawar";
+    case 10:
+        return "Al Mintaqah ash Shamaliyah";
+    case 11:
+        return "Al Mintaqah al Wusta";
+    case 12:
+        return "Madinat";
+    case 13:
+        return "Ar Rifa";
+    case 14:
+        return "Madinat Hamad";
+    case 15:
+        return "Al Muharraq";
+    case 16:
+        return "Al Asimah";
+    case 17:
+        return "Al Janubiyah";
+    case 18:
+        return "Ash Shamaliyah";
+    case 19:
+        return "Al Wusta";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BI(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Bujumbura";
+    case 9:
+        return "Bubanza";
+    case 10:
+        return "Bururi";
+    case 11:
+        return "Cankuzo";
+    case 12:
+        return "Cibitoke";
+    case 13:
+        return "Gitega";
+    case 14:
+        return "Karuzi";
+    case 15:
+        return "Kayanza";
+    case 16:
+        return "Kirundo";
+    case 17:
+        return "Makamba";
+    case 18:
+        return "Muyinga";
+    case 19:
+        return "Ngozi";
+    case 20:
+        return "Rutana";
+    case 21:
+        return "Ruyigi";
+    case 22:
+        return "Muramvya";
+    case 23:
+        return "Mwaro";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BJ(int region_code)
+{
+    switch(region_code) {
+    case 7:
+        return "Alibori";
+    case 8:
+        return "Atakora";
+    case 9:
+        return "Atlanyique";
+    case 10:
+        return "Borgou";
+    case 11:
+        return "Collines";
+    case 12:
+        return "Kouffo";
+    case 13:
+        return "Donga";
+    case 14:
+        return "Littoral";
+    case 15:
+        return "Mono";
+    case 16:
+        return "Oueme";
+    case 17:
+        return "Plateau";
+    case 18:
+        return "Zou";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Devonshire";
+    case 2:
+        return "Hamilton";
+    case 3:
+        return "Hamilton";
+    case 4:
+        return "Paget";
+    case 5:
+        return "Pembroke";
+    case 6:
+        return "Saint George";
+    case 7:
+        return "Saint George's";
+    case 8:
+        return "Sandys";
+    case 9:
+        return "Smiths";
+    case 10:
+        return "Southampton";
+    case 11:
+        return "Warwick";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BN(int region_code)
+{
+    switch(region_code) {
+    case 7:
+        return "Alibori";
+    case 8:
+        return "Belait";
+    case 9:
+        return "Brunei and Muara";
+    case 10:
+        return "Temburong";
+    case 11:
+        return "Collines";
+    case 12:
+        return "Kouffo";
+    case 13:
+        return "Donga";
+    case 14:
+        return "Littoral";
+    case 15:
+        return "Tutong";
+    case 16:
+        return "Oueme";
+    case 17:
+        return "Plateau";
+    case 18:
+        return "Zou";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Chuquisaca";
+    case 2:
+        return "Cochabamba";
+    case 3:
+        return "El Beni";
+    case 4:
+        return "La Paz";
+    case 5:
+        return "Oruro";
+    case 6:
+        return "Pando";
+    case 7:
+        return "Potosi";
+    case 8:
+        return "Santa Cruz";
+    case 9:
+        return "Tarija";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Acre";
+    case 2:
+        return "Alagoas";
+    case 3:
+        return "Amapa";
+    case 4:
+        return "Amazonas";
+    case 5:
+        return "Bahia";
+    case 6:
+        return "Ceara";
+    case 7:
+        return "Distrito Federal";
+    case 8:
+        return "Espirito Santo";
+    case 11:
+        return "Mato Grosso do Sul";
+    case 13:
+        return "Maranhao";
+    case 14:
+        return "Mato Grosso";
+    case 15:
+        return "Minas Gerais";
+    case 16:
+        return "Para";
+    case 17:
+        return "Paraiba";
+    case 18:
+        return "Parana";
+    case 20:
+        return "Piaui";
+    case 21:
+        return "Rio de Janeiro";
+    case 22:
+        return "Rio Grande do Norte";
+    case 23:
+        return "Rio Grande do Sul";
+    case 24:
+        return "Rondonia";
+    case 25:
+        return "Roraima";
+    case 26:
+        return "Santa Catarina";
+    case 27:
+        return "Sao Paulo";
+    case 28:
+        return "Sergipe";
+    case 29:
+        return "Goias";
+    case 30:
+        return "Pernambuco";
+    case 31:
+        return "Tocantins";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BS(int region_code)
+{
+    switch(region_code) {
+    case 5:
+        return "Bimini";
+    case 6:
+        return "Cat Island";
+    case 10:
+        return "Exuma";
+    case 13:
+        return "Inagua";
+    case 15:
+        return "Long Island";
+    case 16:
+        return "Mayaguana";
+    case 18:
+        return "Ragged Island";
+    case 22:
+        return "Harbour Island";
+    case 23:
+        return "New Providence";
+    case 24:
+        return "Acklins and Crooked Islands";
+    case 25:
+        return "Freeport";
+    case 26:
+        return "Fresh Creek";
+    case 27:
+        return "Governor's Harbour";
+    case 28:
+        return "Green Turtle Cay";
+    case 29:
+        return "High Rock";
+    case 30:
+        return "Kemps Bay";
+    case 31:
+        return "Marsh Harbour";
+    case 32:
+        return "Nichollstown and Berry Islands";
+    case 33:
+        return "Rock Sound";
+    case 34:
+        return "Sandy Point";
+    case 35:
+        return "San Salvador and Rum Cay";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BT(int region_code)
+{
+    switch(region_code) {
+    case 5:
+        return "Bumthang";
+    case 6:
+        return "Chhukha";
+    case 7:
+        return "Chirang";
+    case 8:
+        return "Daga";
+    case 9:
+        return "Geylegphug";
+    case 10:
+        return "Ha";
+    case 11:
+        return "Lhuntshi";
+    case 12:
+        return "Mongar";
+    case 13:
+        return "Paro";
+    case 14:
+        return "Pemagatsel";
+    case 15:
+        return "Punakha";
+    case 16:
+        return "Samchi";
+    case 17:
+        return "Samdrup";
+    case 18:
+        return "Shemgang";
+    case 19:
+        return "Tashigang";
+    case 20:
+        return "Thimphu";
+    case 21:
+        return "Tongsa";
+    case 22:
+        return "Wangdi Phodrang";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BW(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Central";
+    case 3:
+        return "Ghanzi";
+    case 4:
+        return "Kgalagadi";
+    case 5:
+        return "Kgatleng";
+    case 6:
+        return "Kweneng";
+    case 8:
+        return "North-East";
+    case 9:
+        return "South-East";
+    case 10:
+        return "Southern";
+    case 11:
+        return "North-West";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BY(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Brestskaya Voblasts'";
+    case 2:
+        return "Homyel'skaya Voblasts'";
+    case 3:
+        return "Hrodzyenskaya Voblasts'";
+    case 4:
+        return "Minsk";
+    case 5:
+        return "Minskaya Voblasts'";
+    case 6:
+        return "Mahilyowskaya Voblasts'";
+    case 7:
+        return "Vitsyebskaya Voblasts'";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_BZ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Belize";
+    case 2:
+        return "Cayo";
+    case 3:
+        return "Corozal";
+    case 4:
+        return "Orange Walk";
+    case 5:
+        return "Stann Creek";
+    case 6:
+        return "Toledo";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CA(int region_code)
+{
+    switch(region_code) {
+    case 849:
+        return "Alberta";
+    case 893:
+        return "British Columbia";
+    case 1365:
+        return "Manitoba";
+    case 1408:
+        return "New Brunswick";
+    case 1418:
+        return "Newfoundland";
+    case 1425:
+        return "Nova Scotia";
+    case 1426:
+        return "Northwest Territories";
+    case 1427:
+        return "Nunavut";
+    case 1463:
+        return "Ontario";
+    case 1497:
+        return "Prince Edward Island";
+    case 1538:
+        return "Quebec";
+    case 1632:
+        return "Saskatchewan";
+    case 1899:
+        return "Yukon Territory";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CD(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bandundu";
+    case 2:
+        return "Equateur";
+    case 4:
+        return "Kasai-Oriental";
+    case 5:
+        return "Katanga";
+    case 6:
+        return "Kinshasa";
+    case 8:
+        return "Bas-Congo";
+    case 9:
+        return "Orientale";
+    case 10:
+        return "Maniema";
+    case 11:
+        return "Nord-Kivu";
+    case 12:
+        return "Sud-Kivu";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CF(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bamingui-Bangoran";
+    case 2:
+        return "Basse-Kotto";
+    case 3:
+        return "Haute-Kotto";
+    case 4:
+        return "Mambere-Kadei";
+    case 5:
+        return "Haut-Mbomou";
+    case 6:
+        return "Kemo";
+    case 7:
+        return "Lobaye";
+    case 8:
+        return "Mbomou";
+    case 9:
+        return "Nana-Mambere";
+    case 11:
+        return "Ouaka";
+    case 12:
+        return "Ouham";
+    case 13:
+        return "Ouham-Pende";
+    case 14:
+        return "Cuvette-Ouest";
+    case 15:
+        return "Nana-Grebizi";
+    case 16:
+        return "Sangha-Mbaere";
+    case 17:
+        return "Ombella-Mpoko";
+    case 18:
+        return "Bangui";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CG(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bouenza";
+    case 4:
+        return "Kouilou";
+    case 5:
+        return "Lekoumou";
+    case 6:
+        return "Likouala";
+    case 7:
+        return "Niari";
+    case 8:
+        return "Plateaux";
+    case 10:
+        return "Sangha";
+    case 11:
+        return "Pool";
+    case 12:
+        return "Brazzaville";
+    case 13:
+        return "Cuvette";
+    case 14:
+        return "Cuvette-Ouest";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CH(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aargau";
+    case 2:
+        return "Ausser-Rhoden";
+    case 3:
+        return "Basel-Landschaft";
+    case 4:
+        return "Basel-Stadt";
+    case 5:
+        return "Bern";
+    case 6:
+        return "Fribourg";
+    case 7:
+        return "Geneve";
+    case 8:
+        return "Glarus";
+    case 9:
+        return "Graubunden";
+    case 10:
+        return "Inner-Rhoden";
+    case 11:
+        return "Luzern";
+    case 12:
+        return "Neuchatel";
+    case 13:
+        return "Nidwalden";
+    case 14:
+        return "Obwalden";
+    case 15:
+        return "Sankt Gallen";
+    case 16:
+        return "Schaffhausen";
+    case 17:
+        return "Schwyz";
+    case 18:
+        return "Solothurn";
+    case 19:
+        return "Thurgau";
+    case 20:
+        return "Ticino";
+    case 21:
+        return "Uri";
+    case 22:
+        return "Valais";
+    case 23:
+        return "Vaud";
+    case 24:
+        return "Zug";
+    case 25:
+        return "Zurich";
+    case 26:
+        return "Jura";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CI(int region_code)
+{
+    switch(region_code) {
+    case 74:
+        return "Agneby";
+    case 75:
+        return "Bafing";
+    case 76:
+        return "Bas-Sassandra";
+    case 77:
+        return "Denguele";
+    case 78:
+        return "Dix-Huit Montagnes";
+    case 79:
+        return "Fromager";
+    case 80:
+        return "Haut-Sassandra";
+    case 81:
+        return "Lacs";
+    case 82:
+        return "Lagunes";
+    case 83:
+        return "Marahoue";
+    case 84:
+        return "Moyen-Cavally";
+    case 85:
+        return "Moyen-Comoe";
+    case 86:
+        return "N'zi-Comoe";
+    case 87:
+        return "Savanes";
+    case 88:
+        return "Sud-Bandama";
+    case 89:
+        return "Sud-Comoe";
+    case 90:
+        return "Vallee du Bandama";
+    case 91:
+        return "Worodougou";
+    case 92:
+        return "Zanzan";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CL(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Valparaiso";
+    case 2:
+        return "Aisen del General Carlos Ibanez del Campo";
+    case 3:
+        return "Antofagasta";
+    case 4:
+        return "Araucania";
+    case 5:
+        return "Atacama";
+    case 6:
+        return "Bio-Bio";
+    case 7:
+        return "Coquimbo";
+    case 8:
+        return "Libertador General Bernardo O'Higgins";
+    case 9:
+        return "Los Lagos";
+    case 10:
+        return "Magallanes y de la Antartica Chilena";
+    case 11:
+        return "Maule";
+    case 12:
+        return "Region Metropolitana";
+    case 13:
+        return "Tarapaca";
+    case 14:
+        return "Los Lagos";
+    case 15:
+        return "Tarapaca";
+    case 16:
+        return "Arica y Parinacota";
+    case 17:
+        return "Los Rios";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CM(int region_code)
+{
+    switch(region_code) {
+    case 4:
+        return "Est";
+    case 5:
+        return "Littoral";
+    case 7:
+        return "Nord-Ouest";
+    case 8:
+        return "Ouest";
+    case 9:
+        return "Sud-Ouest";
+    case 10:
+        return "Adamaoua";
+    case 11:
+        return "Centre";
+    case 12:
+        return "Extreme-Nord";
+    case 13:
+        return "Nord";
+    case 14:
+        return "Sud";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Anhui";
+    case 2:
+        return "Zhejiang";
+    case 3:
+        return "Jiangxi";
+    case 4:
+        return "Jiangsu";
+    case 5:
+        return "Jilin";
+    case 6:
+        return "Qinghai";
+    case 7:
+        return "Fujian";
+    case 8:
+        return "Heilongjiang";
+    case 9:
+        return "Henan";
+    case 10:
+        return "Hebei";
+    case 11:
+        return "Hunan";
+    case 12:
+        return "Hubei";
+    case 13:
+        return "Xinjiang";
+    case 14:
+        return "Xizang";
+    case 15:
+        return "Gansu";
+    case 16:
+        return "Guangxi";
+    case 18:
+        return "Guizhou";
+    case 19:
+        return "Liaoning";
+    case 20:
+        return "Nei Mongol";
+    case 21:
+        return "Ningxia";
+    case 22:
+        return "Beijing";
+    case 23:
+        return "Shanghai";
+    case 24:
+        return "Shanxi";
+    case 25:
+        return "Shandong";
+    case 26:
+        return "Shaanxi";
+    case 28:
+        return "Tianjin";
+    case 29:
+        return "Yunnan";
+    case 30:
+        return "Guangdong";
+    case 31:
+        return "Hainan";
+    case 32:
+        return "Sichuan";
+    case 33:
+        return "Chongqing";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Amazonas";
+    case 2:
+        return "Antioquia";
+    case 3:
+        return "Arauca";
+    case 4:
+        return "Atlantico";
+    case 8:
+        return "Caqueta";
+    case 9:
+        return "Cauca";
+    case 10:
+        return "Cesar";
+    case 11:
+        return "Choco";
+    case 12:
+        return "Cordoba";
+    case 14:
+        return "Guaviare";
+    case 15:
+        return "Guainia";
+    case 16:
+        return "Huila";
+    case 17:
+        return "La Guajira";
+    case 19:
+        return "Meta";
+    case 20:
+        return "Narino";
+    case 21:
+        return "Norte de Santander";
+    case 22:
+        return "Putumayo";
+    case 23:
+        return "Quindio";
+    case 24:
+        return "Risaralda";
+    case 25:
+        return "San Andres y Providencia";
+    case 26:
+        return "Santander";
+    case 27:
+        return "Sucre";
+    case 28:
+        return "Tolima";
+    case 29:
+        return "Valle del Cauca";
+    case 30:
+        return "Vaupes";
+    case 31:
+        return "Vichada";
+    case 32:
+        return "Casanare";
+    case 33:
+        return "Cundinamarca";
+    case 34:
+        return "Distrito Especial";
+    case 35:
+        return "Bolivar";
+    case 36:
+        return "Boyaca";
+    case 37:
+        return "Caldas";
+    case 38:
+        return "Magdalena";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Alajuela";
+    case 2:
+        return "Cartago";
+    case 3:
+        return "Guanacaste";
+    case 4:
+        return "Heredia";
+    case 6:
+        return "Limon";
+    case 7:
+        return "Puntarenas";
+    case 8:
+        return "San Jose";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CU(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Pinar del Rio";
+    case 2:
+        return "Ciudad de la Habana";
+    case 3:
+        return "Matanzas";
+    case 4:
+        return "Isla de la Juventud";
+    case 5:
+        return "Camaguey";
+    case 7:
+        return "Ciego de Avila";
+    case 8:
+        return "Cienfuegos";
+    case 9:
+        return "Granma";
+    case 10:
+        return "Guantanamo";
+    case 11:
+        return "La Habana";
+    case 12:
+        return "Holguin";
+    case 13:
+        return "Las Tunas";
+    case 14:
+        return "Sancti Spiritus";
+    case 15:
+        return "Santiago de Cuba";
+    case 16:
+        return "Villa Clara";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CV(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Boa Vista";
+    case 2:
+        return "Brava";
+    case 4:
+        return "Maio";
+    case 5:
+        return "Paul";
+    case 7:
+        return "Ribeira Grande";
+    case 8:
+        return "Sal";
+    case 10:
+        return "Sao Nicolau";
+    case 11:
+        return "Sao Vicente";
+    case 13:
+        return "Mosteiros";
+    case 14:
+        return "Praia";
+    case 15:
+        return "Santa Catarina";
+    case 16:
+        return "Santa Cruz";
+    case 17:
+        return "Sao Domingos";
+    case 18:
+        return "Sao Filipe";
+    case 19:
+        return "Sao Miguel";
+    case 20:
+        return "Tarrafal";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CY(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Famagusta";
+    case 2:
+        return "Kyrenia";
+    case 3:
+        return "Larnaca";
+    case 4:
+        return "Nicosia";
+    case 5:
+        return "Limassol";
+    case 6:
+        return "Paphos";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_CZ(int region_code)
+{
+    switch(region_code) {
+    case 52:
+        return "Hlavni mesto Praha";
+    case 78:
+        return "Jihomoravsky kraj";
+    case 79:
+        return "Jihocesky kraj";
+    case 80:
+        return "Vysocina";
+    case 81:
+        return "Karlovarsky kraj";
+    case 82:
+        return "Kralovehradecky kraj";
+    case 83:
+        return "Liberecky kraj";
+    case 84:
+        return "Olomoucky kraj";
+    case 85:
+        return "Moravskoslezsky kraj";
+    case 86:
+        return "Pardubicky kraj";
+    case 87:
+        return "Plzensky kraj";
+    case 88:
+        return "Stredocesky kraj";
+    case 89:
+        return "Ustecky kraj";
+    case 90:
+        return "Zlinsky kraj";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_DE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Baden-Wurttemberg";
+    case 2:
+        return "Bayern";
+    case 3:
+        return "Bremen";
+    case 4:
+        return "Hamburg";
+    case 5:
+        return "Hessen";
+    case 6:
+        return "Niedersachsen";
+    case 7:
+        return "Nordrhein-Westfalen";
+    case 8:
+        return "Rheinland-Pfalz";
+    case 9:
+        return "Saarland";
+    case 10:
+        return "Schleswig-Holstein";
+    case 11:
+        return "Brandenburg";
+    case 12:
+        return "Mecklenburg-Vorpommern";
+    case 13:
+        return "Sachsen";
+    case 14:
+        return "Sachsen-Anhalt";
+    case 15:
+        return "Thuringen";
+    case 16:
+        return "Berlin";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_DJ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ali Sabieh";
+    case 4:
+        return "Obock";
+    case 5:
+        return "Tadjoura";
+    case 6:
+        return "Dikhil";
+    case 7:
+        return "Djibouti";
+    case 8:
+        return "Arta";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_DK(int region_code)
+{
+    switch(region_code) {
+    case 17:
+        return "Hovedstaden";
+    case 18:
+        return "Midtjylland";
+    case 19:
+        return "Nordjylland";
+    case 20:
+        return "Sjelland";
+    case 21:
+        return "Syddanmark";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_DM(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Saint Andrew";
+    case 3:
+        return "Saint David";
+    case 4:
+        return "Saint George";
+    case 5:
+        return "Saint John";
+    case 6:
+        return "Saint Joseph";
+    case 7:
+        return "Saint Luke";
+    case 8:
+        return "Saint Mark";
+    case 9:
+        return "Saint Patrick";
+    case 10:
+        return "Saint Paul";
+    case 11:
+        return "Saint Peter";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_DO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Azua";
+    case 2:
+        return "Baoruco";
+    case 3:
+        return "Barahona";
+    case 4:
+        return "Dajabon";
+    case 5:
+        return "Distrito Nacional";
+    case 6:
+        return "Duarte";
+    case 8:
+        return "Espaillat";
+    case 9:
+        return "Independencia";
+    case 10:
+        return "La Altagracia";
+    case 11:
+        return "Elias Pina";
+    case 12:
+        return "La Romana";
+    case 14:
+        return "Maria Trinidad Sanchez";
+    case 15:
+        return "Monte Cristi";
+    case 16:
+        return "Pedernales";
+    case 17:
+        return "Peravia";
+    case 18:
+        return "Puerto Plata";
+    case 19:
+        return "Salcedo";
+    case 20:
+        return "Samana";
+    case 21:
+        return "Sanchez Ramirez";
+    case 23:
+        return "San Juan";
+    case 24:
+        return "San Pedro De Macoris";
+    case 25:
+        return "Santiago";
+    case 26:
+        return "Santiago Rodriguez";
+    case 27:
+        return "Valverde";
+    case 28:
+        return "El Seibo";
+    case 29:
+        return "Hato Mayor";
+    case 30:
+        return "La Vega";
+    case 31:
+        return "Monsenor Nouel";
+    case 32:
+        return "Monte Plata";
+    case 33:
+        return "San Cristobal";
+    case 34:
+        return "Distrito Nacional";
+    case 35:
+        return "Peravia";
+    case 36:
+        return "San Jose de Ocoa";
+    case 37:
+        return "Santo Domingo";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_DZ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Alger";
+    case 3:
+        return "Batna";
+    case 4:
+        return "Constantine";
+    case 6:
+        return "Medea";
+    case 7:
+        return "Mostaganem";
+    case 9:
+        return "Oran";
+    case 10:
+        return "Saida";
+    case 12:
+        return "Setif";
+    case 13:
+        return "Tiaret";
+    case 14:
+        return "Tizi Ouzou";
+    case 15:
+        return "Tlemcen";
+    case 18:
+        return "Bejaia";
+    case 19:
+        return "Biskra";
+    case 20:
+        return "Blida";
+    case 21:
+        return "Bouira";
+    case 22:
+        return "Djelfa";
+    case 23:
+        return "Guelma";
+    case 24:
+        return "Jijel";
+    case 25:
+        return "Laghouat";
+    case 26:
+        return "Mascara";
+    case 27:
+        return "M'sila";
+    case 29:
+        return "Oum el Bouaghi";
+    case 30:
+        return "Sidi Bel Abbes";
+    case 31:
+        return "Skikda";
+    case 33:
+        return "Tebessa";
+    case 34:
+        return "Adrar";
+    case 35:
+        return "Ain Defla";
+    case 36:
+        return "Ain Temouchent";
+    case 37:
+        return "Annaba";
+    case 38:
+        return "Bechar";
+    case 39:
+        return "Bordj Bou Arreridj";
+    case 40:
+        return "Boumerdes";
+    case 41:
+        return "Chlef";
+    case 42:
+        return "El Bayadh";
+    case 43:
+        return "El Oued";
+    case 44:
+        return "El Tarf";
+    case 45:
+        return "Ghardaia";
+    case 46:
+        return "Illizi";
+    case 47:
+        return "Khenchela";
+    case 48:
+        return "Mila";
+    case 49:
+        return "Naama";
+    case 50:
+        return "Ouargla";
+    case 51:
+        return "Relizane";
+    case 52:
+        return "Souk Ahras";
+    case 53:
+        return "Tamanghasset";
+    case 54:
+        return "Tindouf";
+    case 55:
+        return "Tipaza";
+    case 56:
+        return "Tissemsilt";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_EC(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Galapagos";
+    case 2:
+        return "Azuay";
+    case 3:
+        return "Bolivar";
+    case 4:
+        return "Canar";
+    case 5:
+        return "Carchi";
+    case 6:
+        return "Chimborazo";
+    case 7:
+        return "Cotopaxi";
+    case 8:
+        return "El Oro";
+    case 9:
+        return "Esmeraldas";
+    case 10:
+        return "Guayas";
+    case 11:
+        return "Imbabura";
+    case 12:
+        return "Loja";
+    case 13:
+        return "Los Rios";
+    case 14:
+        return "Manabi";
+    case 15:
+        return "Morona-Santiago";
+    case 17:
+        return "Pastaza";
+    case 18:
+        return "Pichincha";
+    case 19:
+        return "Tungurahua";
+    case 20:
+        return "Zamora-Chinchipe";
+    case 22:
+        return "Sucumbios";
+    case 23:
+        return "Napo";
+    case 24:
+        return "Orellana";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_EE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Harjumaa";
+    case 2:
+        return "Hiiumaa";
+    case 3:
+        return "Ida-Virumaa";
+    case 4:
+        return "Jarvamaa";
+    case 5:
+        return "Jogevamaa";
+    case 6:
+        return "Kohtla-Jarve";
+    case 7:
+        return "Laanemaa";
+    case 8:
+        return "Laane-Virumaa";
+    case 9:
+        return "Narva";
+    case 10:
+        return "Parnu";
+    case 11:
+        return "Parnumaa";
+    case 12:
+        return "Polvamaa";
+    case 13:
+        return "Raplamaa";
+    case 14:
+        return "Saaremaa";
+    case 15:
+        return "Sillamae";
+    case 16:
+        return "Tallinn";
+    case 17:
+        return "Tartu";
+    case 18:
+        return "Tartumaa";
+    case 19:
+        return "Valgamaa";
+    case 20:
+        return "Viljandimaa";
+    case 21:
+        return "Vorumaa";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_EG(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ad Daqahliyah";
+    case 2:
+        return "Al Bahr al Ahmar";
+    case 3:
+        return "Al Buhayrah";
+    case 4:
+        return "Al Fayyum";
+    case 5:
+        return "Al Gharbiyah";
+    case 6:
+        return "Al Iskandariyah";
+    case 7:
+        return "Al Isma'iliyah";
+    case 8:
+        return "Al Jizah";
+    case 9:
+        return "Al Minufiyah";
+    case 10:
+        return "Al Minya";
+    case 11:
+        return "Al Qahirah";
+    case 12:
+        return "Al Qalyubiyah";
+    case 13:
+        return "Al Wadi al Jadid";
+    case 14:
+        return "Ash Sharqiyah";
+    case 15:
+        return "As Suways";
+    case 16:
+        return "Aswan";
+    case 17:
+        return "Asyut";
+    case 18:
+        return "Bani Suwayf";
+    case 19:
+        return "Bur Sa'id";
+    case 20:
+        return "Dumyat";
+    case 21:
+        return "Kafr ash Shaykh";
+    case 22:
+        return "Matruh";
+    case 23:
+        return "Qina";
+    case 24:
+        return "Suhaj";
+    case 26:
+        return "Janub Sina'";
+    case 27:
+        return "Shamal Sina'";
+    case 28:
+        return "Al Uqsur";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ER(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Anseba";
+    case 2:
+        return "Debub";
+    case 3:
+        return "Debubawi K'eyih Bahri";
+    case 4:
+        return "Gash Barka";
+    case 5:
+        return "Ma'akel";
+    case 6:
+        return "Semenawi K'eyih Bahri";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ES(int region_code)
+{
+    switch(region_code) {
+    case 7:
+        return "Islas Baleares";
+    case 27:
+        return "La Rioja";
+    case 29:
+        return "Madrid";
+    case 31:
+        return "Murcia";
+    case 32:
+        return "Navarra";
+    case 34:
+        return "Asturias";
+    case 39:
+        return "Cantabria";
+    case 51:
+        return "Andalucia";
+    case 52:
+        return "Aragon";
+    case 53:
+        return "Canarias";
+    case 54:
+        return "Castilla-La Mancha";
+    case 55:
+        return "Castilla y Leon";
+    case 56:
+        return "Catalonia";
+    case 57:
+        return "Extremadura";
+    case 58:
+        return "Galicia";
+    case 59:
+        return "Pais Vasco";
+    case 60:
+        return "Comunidad Valenciana";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ET(int region_code)
+{
+    switch(region_code) {
+    case 44:
+        return "Adis Abeba";
+    case 45:
+        return "Afar";
+    case 46:
+        return "Amara";
+    case 47:
+        return "Binshangul Gumuz";
+    case 48:
+        return "Dire Dawa";
+    case 49:
+        return "Gambela Hizboch";
+    case 50:
+        return "Hareri Hizb";
+    case 51:
+        return "Oromiya";
+    case 52:
+        return "Sumale";
+    case 53:
+        return "Tigray";
+    case 54:
+        return "YeDebub Biheroch Bihereseboch na Hizboch";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_FI(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aland";
+    case 6:
+        return "Lapland";
+    case 8:
+        return "Oulu";
+    case 13:
+        return "Southern Finland";
+    case 14:
+        return "Eastern Finland";
+    case 15:
+        return "Western Finland";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_FJ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Central";
+    case 2:
+        return "Eastern";
+    case 3:
+        return "Northern";
+    case 4:
+        return "Rotuma";
+    case 5:
+        return "Western";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_FM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Kosrae";
+    case 2:
+        return "Pohnpei";
+    case 3:
+        return "Chuuk";
+    case 4:
+        return "Yap";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_FR(int region_code)
+{
+    switch(region_code) {
+    case 97:
+        return "Aquitaine";
+    case 98:
+        return "Auvergne";
+    case 99:
+        return "Basse-Normandie";
+    case 832:
+        return "Bourgogne";
+    case 833:
+        return "Bretagne";
+    case 834:
+        return "Centre";
+    case 835:
+        return "Champagne-Ardenne";
+    case 836:
+        return "Corse";
+    case 837:
+        return "Franche-Comte";
+    case 838:
+        return "Haute-Normandie";
+    case 839:
+        return "Ile-de-France";
+    case 840:
+        return "Languedoc-Roussillon";
+    case 875:
+        return "Limousin";
+    case 876:
+        return "Lorraine";
+    case 877:
+        return "Midi-Pyrenees";
+    case 878:
+        return "Nord-Pas-de-Calais";
+    case 879:
+        return "Pays de la Loire";
+    case 880:
+        return "Picardie";
+    case 881:
+        return "Poitou-Charentes";
+    case 882:
+        return "Provence-Alpes-Cote d'Azur";
+    case 883:
+        return "Rhone-Alpes";
+    case 918:
+        return "Alsace";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Estuaire";
+    case 2:
+        return "Haut-Ogooue";
+    case 3:
+        return "Moyen-Ogooue";
+    case 4:
+        return "Ngounie";
+    case 5:
+        return "Nyanga";
+    case 6:
+        return "Ogooue-Ivindo";
+    case 7:
+        return "Ogooue-Lolo";
+    case 8:
+        return "Ogooue-Maritime";
+    case 9:
+        return "Woleu-Ntem";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GB(int region_code)
+{
+    switch(region_code) {
+    case 832:
+        return "Barking and Dagenham";
+    case 833:
+        return "Barnet";
+    case 834:
+        return "Barnsley";
+    case 835:
+        return "Bath and North East Somerset";
+    case 836:
+        return "Bedfordshire";
+    case 837:
+        return "Bexley";
+    case 838:
+        return "Birmingham";
+    case 839:
+        return "Blackburn with Darwen";
+    case 840:
+        return "Blackpool";
+    case 875:
+        return "Bolton";
+    case 876:
+        return "Bournemouth";
+    case 877:
+        return "Bracknell Forest";
+    case 878:
+        return "Bradford";
+    case 879:
+        return "Brent";
+    case 880:
+        return "Brighton and Hove";
+    case 881:
+        return "Bristol, City of";
+    case 882:
+        return "Bromley";
+    case 883:
+        return "Buckinghamshire";
+    case 918:
+        return "Bury";
+    case 919:
+        return "Calderdale";
+    case 920:
+        return "Cambridgeshire";
+    case 921:
+        return "Camden";
+    case 922:
+        return "Cheshire";
+    case 923:
+        return "Cornwall";
+    case 924:
+        return "Coventry";
+    case 925:
+        return "Croydon";
+    case 926:
+        return "Cumbria";
+    case 961:
+        return "Darlington";
+    case 962:
+        return "Derby";
+    case 963:
+        return "Derbyshire";
+    case 964:
+        return "Devon";
+    case 965:
+        return "Doncaster";
+    case 966:
+        return "Dorset";
+    case 967:
+        return "Dudley";
+    case 968:
+        return "Durham";
+    case 969:
+        return "Ealing";
+    case 1004:
+        return "East Riding of Yorkshire";
+    case 1005:
+        return "East Sussex";
+    case 1006:
+        return "Enfield";
+    case 1007:
+        return "Essex";
+    case 1008:
+        return "Gateshead";
+    case 1009:
+        return "Gloucestershire";
+    case 1010:
+        return "Greenwich";
+    case 1011:
+        return "Hackney";
+    case 1012:
+        return "Halton";
+    case 1047:
+        return "Hammersmith and Fulham";
+    case 1048:
+        return "Hampshire";
+    case 1049:
+        return "Haringey";
+    case 1050:
+        return "Harrow";
+    case 1051:
+        return "Hartlepool";
+    case 1052:
+        return "Havering";
+    case 1053:
+        return "Herefordshire";
+    case 1054:
+        return "Hertford";
+    case 1055:
+        return "Hillingdon";
+    case 1090:
+        return "Hounslow";
+    case 1091:
+        return "Isle of Wight";
+    case 1092:
+        return "Islington";
+    case 1093:
+        return "Kensington and Chelsea";
+    case 1094:
+        return "Kent";
+    case 1095:
+        return "Kingston upon Hull, City of";
+    case 1096:
+        return "Kingston upon Thames";
+    case 1097:
+        return "Kirklees";
+    case 1098:
+        return "Knowsley";
+    case 1133:
+        return "Lambeth";
+    case 1134:
+        return "Lancashire";
+    case 1135:
+        return "Leeds";
+    case 1136:
+        return "Leicester";
+    case 1137:
+        return "Leicestershire";
+    case 1138:
+        return "Lewisham";
+    case 1139:
+        return "Lincolnshire";
+    case 1140:
+        return "Liverpool";
+    case 1141:
+        return "London, City of";
+    case 1176:
+        return "Luton";
+    case 1177:
+        return "Manchester";
+    case 1178:
+        return "Medway";
+    case 1179:
+        return "Merton";
+    case 1180:
+        return "Middlesbrough";
+    case 1181:
+        return "Milton Keynes";
+    case 1182:
+        return "Newcastle upon Tyne";
+    case 1183:
+        return "Newham";
+    case 1184:
+        return "Norfolk";
+    case 1219:
+        return "Northamptonshire";
+    case 1220:
+        return "North East Lincolnshire";
+    case 1221:
+        return "North Lincolnshire";
+    case 1222:
+        return "North Somerset";
+    case 1223:
+        return "North Tyneside";
+    case 1224:
+        return "Northumberland";
+    case 1225:
+        return "North Yorkshire";
+    case 1226:
+        return "Nottingham";
+    case 1227:
+        return "Nottinghamshire";
+    case 1262:
+        return "Oldham";
+    case 1263:
+        return "Oxfordshire";
+    case 1264:
+        return "Peterborough";
+    case 1265:
+        return "Plymouth";
+    case 1266:
+        return "Poole";
+    case 1267:
+        return "Portsmouth";
+    case 1268:
+        return "Reading";
+    case 1269:
+        return "Redbridge";
+    case 1270:
+        return "Redcar and Cleveland";
+    case 1305:
+        return "Richmond upon Thames";
+    case 1306:
+        return "Rochdale";
+    case 1307:
+        return "Rotherham";
+    case 1308:
+        return "Rutland";
+    case 1309:
+        return "Salford";
+    case 1310:
+        return "Shropshire";
+    case 1311:
+        return "Sandwell";
+    case 1312:
+        return "Sefton";
+    case 1313:
+        return "Sheffield";
+    case 1348:
+        return "Slough";
+    case 1349:
+        return "Solihull";
+    case 1350:
+        return "Somerset";
+    case 1351:
+        return "Southampton";
+    case 1352:
+        return "Southend-on-Sea";
+    case 1353:
+        return "South Gloucestershire";
+    case 1354:
+        return "South Tyneside";
+    case 1355:
+        return "Southwark";
+    case 1356:
+        return "Staffordshire";
+    case 1391:
+        return "St. Helens";
+    case 1392:
+        return "Stockport";
+    case 1393:
+        return "Stockton-on-Tees";
+    case 1394:
+        return "Stoke-on-Trent";
+    case 1395:
+        return "Suffolk";
+    case 1396:
+        return "Sunderland";
+    case 1397:
+        return "Surrey";
+    case 1398:
+        return "Sutton";
+    case 1399:
+        return "Swindon";
+    case 1434:
+        return "Tameside";
+    case 1435:
+        return "Telford and Wrekin";
+    case 1436:
+        return "Thurrock";
+    case 1437:
+        return "Torbay";
+    case 1438:
+        return "Tower Hamlets";
+    case 1439:
+        return "Trafford";
+    case 1440:
+        return "Wakefield";
+    case 1441:
+        return "Walsall";
+    case 1442:
+        return "Waltham Forest";
+    case 1477:
+        return "Wandsworth";
+    case 1478:
+        return "Warrington";
+    case 1479:
+        return "Warwickshire";
+    case 1480:
+        return "West Berkshire";
+    case 1481:
+        return "Westminster";
+    case 1482:
+        return "West Sussex";
+    case 1483:
+        return "Wigan";
+    case 1484:
+        return "Wiltshire";
+    case 1485:
+        return "Windsor and Maidenhead";
+    case 1520:
+        return "Wirral";
+    case 1521:
+        return "Wokingham";
+    case 1522:
+        return "Wolverhampton";
+    case 1523:
+        return "Worcestershire";
+    case 1524:
+        return "York";
+    case 1525:
+        return "Antrim";
+    case 1526:
+        return "Ards";
+    case 1527:
+        return "Armagh";
+    case 1528:
+        return "Ballymena";
+    case 1563:
+        return "Ballymoney";
+    case 1564:
+        return "Banbridge";
+    case 1565:
+        return "Belfast";
+    case 1566:
+        return "Carrickfergus";
+    case 1567:
+        return "Castlereagh";
+    case 1568:
+        return "Coleraine";
+    case 1569:
+        return "Cookstown";
+    case 1570:
+        return "Craigavon";
+    case 1571:
+        return "Down";
+    case 1606:
+        return "Dungannon";
+    case 1607:
+        return "Fermanagh";
+    case 1608:
+        return "Larne";
+    case 1609:
+        return "Limavady";
+    case 1610:
+        return "Lisburn";
+    case 1611:
+        return "Derry";
+    case 1612:
+        return "Magherafelt";
+    case 1613:
+        return "Moyle";
+    case 1614:
+        return "Newry and Mourne";
+    case 1649:
+        return "Newtownabbey";
+    case 1650:
+        return "North Down";
+    case 1651:
+        return "Omagh";
+    case 1652:
+        return "Strabane";
+    case 1653:
+        return "Aberdeen City";
+    case 1654:
+        return "Aberdeenshire";
+    case 1655:
+        return "Angus";
+    case 1656:
+        return "Argyll and Bute";
+    case 1657:
+        return "Scottish Borders, The";
+    case 1692:
+        return "Clackmannanshire";
+    case 1693:
+        return "Dumfries and Galloway";
+    case 1694:
+        return "Dundee City";
+    case 1695:
+        return "East Ayrshire";
+    case 1696:
+        return "East Dunbartonshire";
+    case 1697:
+        return "East Lothian";
+    case 1698:
+        return "East Renfrewshire";
+    case 1699:
+        return "Edinburgh, City of";
+    case 1700:
+        return "Falkirk";
+    case 1735:
+        return "Fife";
+    case 1736:
+        return "Glasgow City";
+    case 1737:
+        return "Highland";
+    case 1738:
+        return "Inverclyde";
+    case 1739:
+        return "Midlothian";
+    case 1740:
+        return "Moray";
+    case 1741:
+        return "North Ayrshire";
+    case 1742:
+        return "North Lanarkshire";
+    case 1743:
+        return "Orkney";
+    case 1778:
+        return "Perth and Kinross";
+    case 1779:
+        return "Renfrewshire";
+    case 1780:
+        return "Shetland Islands";
+    case 1781:
+        return "South Ayrshire";
+    case 1782:
+        return "South Lanarkshire";
+    case 1783:
+        return "Stirling";
+    case 1784:
+        return "West Dunbartonshire";
+    case 1785:
+        return "Eilean Siar";
+    case 1786:
+        return "West Lothian";
+    case 1821:
+        return "Isle of Anglesey";
+    case 1822:
+        return "Blaenau Gwent";
+    case 1823:
+        return "Bridgend";
+    case 1824:
+        return "Caerphilly";
+    case 1825:
+        return "Cardiff";
+    case 1826:
+        return "Ceredigion";
+    case 1827:
+        return "Carmarthenshire";
+    case 1828:
+        return "Conwy";
+    case 1829:
+        return "Denbighshire";
+    case 1864:
+        return "Flintshire";
+    case 1865:
+        return "Gwynedd";
+    case 1866:
+        return "Merthyr Tydfil";
+    case 1867:
+        return "Monmouthshire";
+    case 1868:
+        return "Neath Port Talbot";
+    case 1869:
+        return "Newport";
+    case 1870:
+        return "Pembrokeshire";
+    case 1871:
+        return "Powys";
+    case 1872:
+        return "Rhondda Cynon Taff";
+    case 1907:
+        return "Swansea";
+    case 1908:
+        return "Torfaen";
+    case 1909:
+        return "Vale of Glamorgan, The";
+    case 1910:
+        return "Wrexham";
+    case 1911:
+        return "Bedfordshire";
+    case 1912:
+        return "Central Bedfordshire";
+    case 1913:
+        return "Cheshire East";
+    case 1914:
+        return "Cheshire West and Chester";
+    case 1915:
+        return "Isles of Scilly";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GD(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Saint Andrew";
+    case 2:
+        return "Saint David";
+    case 3:
+        return "Saint George";
+    case 4:
+        return "Saint John";
+    case 5:
+        return "Saint Mark";
+    case 6:
+        return "Saint Patrick";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Abashis Raioni";
+    case 2:
+        return "Abkhazia";
+    case 3:
+        return "Adigenis Raioni";
+    case 4:
+        return "Ajaria";
+    case 5:
+        return "Akhalgoris Raioni";
+    case 6:
+        return "Akhalk'alak'is Raioni";
+    case 7:
+        return "Akhalts'ikhis Raioni";
+    case 8:
+        return "Akhmetis Raioni";
+    case 9:
+        return "Ambrolauris Raioni";
+    case 10:
+        return "Aspindzis Raioni";
+    case 11:
+        return "Baghdat'is Raioni";
+    case 12:
+        return "Bolnisis Raioni";
+    case 13:
+        return "Borjomis Raioni";
+    case 14:
+        return "Chiat'ura";
+    case 15:
+        return "Ch'khorotsqus Raioni";
+    case 16:
+        return "Ch'okhatauris Raioni";
+    case 17:
+        return "Dedop'listsqaros Raioni";
+    case 18:
+        return "Dmanisis Raioni";
+    case 19:
+        return "Dushet'is Raioni";
+    case 20:
+        return "Gardabanis Raioni";
+    case 21:
+        return "Gori";
+    case 22:
+        return "Goris Raioni";
+    case 23:
+        return "Gurjaanis Raioni";
+    case 24:
+        return "Javis Raioni";
+    case 25:
+        return "K'arelis Raioni";
+    case 26:
+        return "Kaspis Raioni";
+    case 27:
+        return "Kharagaulis Raioni";
+    case 28:
+        return "Khashuris Raioni";
+    case 29:
+        return "Khobis Raioni";
+    case 30:
+        return "Khonis Raioni";
+    case 31:
+        return "K'ut'aisi";
+    case 32:
+        return "Lagodekhis Raioni";
+    case 33:
+        return "Lanch'khut'is Raioni";
+    case 34:
+        return "Lentekhis Raioni";
+    case 35:
+        return "Marneulis Raioni";
+    case 36:
+        return "Martvilis Raioni";
+    case 37:
+        return "Mestiis Raioni";
+    case 38:
+        return "Mts'khet'is Raioni";
+    case 39:
+        return "Ninotsmindis Raioni";
+    case 40:
+        return "Onis Raioni";
+    case 41:
+        return "Ozurget'is Raioni";
+    case 42:
+        return "P'ot'i";
+    case 43:
+        return "Qazbegis Raioni";
+    case 44:
+        return "Qvarlis Raioni";
+    case 45:
+        return "Rust'avi";
+    case 46:
+        return "Sach'kheris Raioni";
+    case 47:
+        return "Sagarejos Raioni";
+    case 48:
+        return "Samtrediis Raioni";
+    case 49:
+        return "Senakis Raioni";
+    case 50:
+        return "Sighnaghis Raioni";
+    case 51:
+        return "T'bilisi";
+    case 52:
+        return "T'elavis Raioni";
+    case 53:
+        return "T'erjolis Raioni";
+    case 54:
+        return "T'et'ritsqaros Raioni";
+    case 55:
+        return "T'ianet'is Raioni";
+    case 56:
+        return "Tqibuli";
+    case 57:
+        return "Ts'ageris Raioni";
+    case 58:
+        return "Tsalenjikhis Raioni";
+    case 59:
+        return "Tsalkis Raioni";
+    case 60:
+        return "Tsqaltubo";
+    case 61:
+        return "Vanis Raioni";
+    case 62:
+        return "Zestap'onis Raioni";
+    case 63:
+        return "Zugdidi";
+    case 64:
+        return "Zugdidis Raioni";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GH(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Greater Accra";
+    case 2:
+        return "Ashanti";
+    case 3:
+        return "Brong-Ahafo";
+    case 4:
+        return "Central";
+    case 5:
+        return "Eastern";
+    case 6:
+        return "Northern";
+    case 8:
+        return "Volta";
+    case 9:
+        return "Western";
+    case 10:
+        return "Upper East";
+    case 11:
+        return "Upper West";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GL(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Nordgronland";
+    case 2:
+        return "Ostgronland";
+    case 3:
+        return "Vestgronland";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Banjul";
+    case 2:
+        return "Lower River";
+    case 3:
+        return "Central River";
+    case 4:
+        return "Upper River";
+    case 5:
+        return "Western";
+    case 7:
+        return "North Bank";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Beyla";
+    case 2:
+        return "Boffa";
+    case 3:
+        return "Boke";
+    case 4:
+        return "Conakry";
+    case 5:
+        return "Dabola";
+    case 6:
+        return "Dalaba";
+    case 7:
+        return "Dinguiraye";
+    case 9:
+        return "Faranah";
+    case 10:
+        return "Forecariah";
+    case 11:
+        return "Fria";
+    case 12:
+        return "Gaoual";
+    case 13:
+        return "Gueckedou";
+    case 15:
+        return "Kerouane";
+    case 16:
+        return "Kindia";
+    case 17:
+        return "Kissidougou";
+    case 18:
+        return "Koundara";
+    case 19:
+        return "Kouroussa";
+    case 21:
+        return "Macenta";
+    case 22:
+        return "Mali";
+    case 23:
+        return "Mamou";
+    case 25:
+        return "Pita";
+    case 27:
+        return "Telimele";
+    case 28:
+        return "Tougue";
+    case 29:
+        return "Yomou";
+    case 30:
+        return "Coyah";
+    case 31:
+        return "Dubreka";
+    case 32:
+        return "Kankan";
+    case 33:
+        return "Koubia";
+    case 34:
+        return "Labe";
+    case 35:
+        return "Lelouma";
+    case 36:
+        return "Lola";
+    case 37:
+        return "Mandiana";
+    case 38:
+        return "Nzerekore";
+    case 39:
+        return "Siguiri";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GQ(int region_code)
+{
+    switch(region_code) {
+    case 3:
+        return "Annobon";
+    case 4:
+        return "Bioko Norte";
+    case 5:
+        return "Bioko Sur";
+    case 6:
+        return "Centro Sur";
+    case 7:
+        return "Kie-Ntem";
+    case 8:
+        return "Litoral";
+    case 9:
+        return "Wele-Nzas";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Evros";
+    case 2:
+        return "Rodhopi";
+    case 3:
+        return "Xanthi";
+    case 4:
+        return "Drama";
+    case 5:
+        return "Serrai";
+    case 6:
+        return "Kilkis";
+    case 7:
+        return "Pella";
+    case 8:
+        return "Florina";
+    case 9:
+        return "Kastoria";
+    case 10:
+        return "Grevena";
+    case 11:
+        return "Kozani";
+    case 12:
+        return "Imathia";
+    case 13:
+        return "Thessaloniki";
+    case 14:
+        return "Kavala";
+    case 15:
+        return "Khalkidhiki";
+    case 16:
+        return "Pieria";
+    case 17:
+        return "Ioannina";
+    case 18:
+        return "Thesprotia";
+    case 19:
+        return "Preveza";
+    case 20:
+        return "Arta";
+    case 21:
+        return "Larisa";
+    case 22:
+        return "Trikala";
+    case 23:
+        return "Kardhitsa";
+    case 24:
+        return "Magnisia";
+    case 25:
+        return "Kerkira";
+    case 26:
+        return "Levkas";
+    case 27:
+        return "Kefallinia";
+    case 28:
+        return "Zakinthos";
+    case 29:
+        return "Fthiotis";
+    case 30:
+        return "Evritania";
+    case 31:
+        return "Aitolia kai Akarnania";
+    case 32:
+        return "Fokis";
+    case 33:
+        return "Voiotia";
+    case 34:
+        return "Evvoia";
+    case 35:
+        return "Attiki";
+    case 36:
+        return "Argolis";
+    case 37:
+        return "Korinthia";
+    case 38:
+        return "Akhaia";
+    case 39:
+        return "Ilia";
+    case 40:
+        return "Messinia";
+    case 41:
+        return "Arkadhia";
+    case 42:
+        return "Lakonia";
+    case 43:
+        return "Khania";
+    case 44:
+        return "Rethimni";
+    case 45:
+        return "Iraklion";
+    case 46:
+        return "Lasithi";
+    case 47:
+        return "Dhodhekanisos";
+    case 48:
+        return "Samos";
+    case 49:
+        return "Kikladhes";
+    case 50:
+        return "Khios";
+    case 51:
+        return "Lesvos";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GT(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Alta Verapaz";
+    case 2:
+        return "Baja Verapaz";
+    case 3:
+        return "Chimaltenango";
+    case 4:
+        return "Chiquimula";
+    case 5:
+        return "El Progreso";
+    case 6:
+        return "Escuintla";
+    case 7:
+        return "Guatemala";
+    case 8:
+        return "Huehuetenango";
+    case 9:
+        return "Izabal";
+    case 10:
+        return "Jalapa";
+    case 11:
+        return "Jutiapa";
+    case 12:
+        return "Peten";
+    case 13:
+        return "Quetzaltenango";
+    case 14:
+        return "Quiche";
+    case 15:
+        return "Retalhuleu";
+    case 16:
+        return "Sacatepequez";
+    case 17:
+        return "San Marcos";
+    case 18:
+        return "Santa Rosa";
+    case 19:
+        return "Solola";
+    case 20:
+        return "Suchitepequez";
+    case 21:
+        return "Totonicapan";
+    case 22:
+        return "Zacapa";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GW(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bafata";
+    case 2:
+        return "Quinara";
+    case 4:
+        return "Oio";
+    case 5:
+        return "Bolama";
+    case 6:
+        return "Cacheu";
+    case 7:
+        return "Tombali";
+    case 10:
+        return "Gabu";
+    case 11:
+        return "Bissau";
+    case 12:
+        return "Biombo";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_GY(int region_code)
+{
+    switch(region_code) {
+    case 10:
+        return "Barima-Waini";
+    case 11:
+        return "Cuyuni-Mazaruni";
+    case 12:
+        return "Demerara-Mahaica";
+    case 13:
+        return "East Berbice-Corentyne";
+    case 14:
+        return "Essequibo Islands-West Demerara";
+    case 15:
+        return "Mahaica-Berbice";
+    case 16:
+        return "Pomeroon-Supenaam";
+    case 17:
+        return "Potaro-Siparuni";
+    case 18:
+        return "Upper Demerara-Berbice";
+    case 19:
+        return "Upper Takutu-Upper Essequibo";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_HN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Atlantida";
+    case 2:
+        return "Choluteca";
+    case 3:
+        return "Colon";
+    case 4:
+        return "Comayagua";
+    case 5:
+        return "Copan";
+    case 6:
+        return "Cortes";
+    case 7:
+        return "El Paraiso";
+    case 8:
+        return "Francisco Morazan";
+    case 9:
+        return "Gracias a Dios";
+    case 10:
+        return "Intibuca";
+    case 11:
+        return "Islas de la Bahia";
+    case 12:
+        return "La Paz";
+    case 13:
+        return "Lempira";
+    case 14:
+        return "Ocotepeque";
+    case 15:
+        return "Olancho";
+    case 16:
+        return "Santa Barbara";
+    case 17:
+        return "Valle";
+    case 18:
+        return "Yoro";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_HR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bjelovarsko-Bilogorska";
+    case 2:
+        return "Brodsko-Posavska";
+    case 3:
+        return "Dubrovacko-Neretvanska";
+    case 4:
+        return "Istarska";
+    case 5:
+        return "Karlovacka";
+    case 6:
+        return "Koprivnicko-Krizevacka";
+    case 7:
+        return "Krapinsko-Zagorska";
+    case 8:
+        return "Licko-Senjska";
+    case 9:
+        return "Medimurska";
+    case 10:
+        return "Osjecko-Baranjska";
+    case 11:
+        return "Pozesko-Slavonska";
+    case 12:
+        return "Primorsko-Goranska";
+    case 13:
+        return "Sibensko-Kninska";
+    case 14:
+        return "Sisacko-Moslavacka";
+    case 15:
+        return "Splitsko-Dalmatinska";
+    case 16:
+        return "Varazdinska";
+    case 17:
+        return "Viroviticko-Podravska";
+    case 18:
+        return "Vukovarsko-Srijemska";
+    case 19:
+        return "Zadarska";
+    case 20:
+        return "Zagrebacka";
+    case 21:
+        return "Grad Zagreb";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_HT(int region_code)
+{
+    switch(region_code) {
+    case 3:
+        return "Nord-Ouest";
+    case 6:
+        return "Artibonite";
+    case 7:
+        return "Centre";
+    case 9:
+        return "Nord";
+    case 10:
+        return "Nord-Est";
+    case 11:
+        return "Ouest";
+    case 12:
+        return "Sud";
+    case 13:
+        return "Sud-Est";
+    case 14:
+        return "Grand' Anse";
+    case 15:
+        return "Nippes";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_HU(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bacs-Kiskun";
+    case 2:
+        return "Baranya";
+    case 3:
+        return "Bekes";
+    case 4:
+        return "Borsod-Abauj-Zemplen";
+    case 5:
+        return "Budapest";
+    case 6:
+        return "Csongrad";
+    case 7:
+        return "Debrecen";
+    case 8:
+        return "Fejer";
+    case 9:
+        return "Gyor-Moson-Sopron";
+    case 10:
+        return "Hajdu-Bihar";
+    case 11:
+        return "Heves";
+    case 12:
+        return "Komarom-Esztergom";
+    case 13:
+        return "Miskolc";
+    case 14:
+        return "Nograd";
+    case 15:
+        return "Pecs";
+    case 16:
+        return "Pest";
+    case 17:
+        return "Somogy";
+    case 18:
+        return "Szabolcs-Szatmar-Bereg";
+    case 19:
+        return "Szeged";
+    case 20:
+        return "Jasz-Nagykun-Szolnok";
+    case 21:
+        return "Tolna";
+    case 22:
+        return "Vas";
+    case 23:
+        return "Veszprem";
+    case 24:
+        return "Zala";
+    case 25:
+        return "Gyor";
+    case 26:
+        return "Bekescsaba";
+    case 27:
+        return "Dunaujvaros";
+    case 28:
+        return "Eger";
+    case 29:
+        return "Hodmezovasarhely";
+    case 30:
+        return "Kaposvar";
+    case 31:
+        return "Kecskemet";
+    case 32:
+        return "Nagykanizsa";
+    case 33:
+        return "Nyiregyhaza";
+    case 34:
+        return "Sopron";
+    case 35:
+        return "Szekesfehervar";
+    case 36:
+        return "Szolnok";
+    case 37:
+        return "Szombathely";
+    case 38:
+        return "Tatabanya";
+    case 39:
+        return "Veszprem";
+    case 40:
+        return "Zalaegerszeg";
+    case 41:
+        return "Salgotarjan";
+    case 42:
+        return "Szekszard";
+    case 43:
+        return "Erd";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ID(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aceh";
+    case 2:
+        return "Bali";
+    case 3:
+        return "Bengkulu";
+    case 4:
+        return "Jakarta Raya";
+    case 5:
+        return "Jambi";
+    case 7:
+        return "Jawa Tengah";
+    case 8:
+        return "Jawa Timur";
+    case 10:
+        return "Yogyakarta";
+    case 11:
+        return "Kalimantan Barat";
+    case 12:
+        return "Kalimantan Selatan";
+    case 13:
+        return "Kalimantan Tengah";
+    case 14:
+        return "Kalimantan Timur";
+    case 15:
+        return "Lampung";
+    case 17:
+        return "Nusa Tenggara Barat";
+    case 18:
+        return "Nusa Tenggara Timur";
+    case 21:
+        return "Sulawesi Tengah";
+    case 22:
+        return "Sulawesi Tenggara";
+    case 24:
+        return "Sumatera Barat";
+    case 26:
+        return "Sumatera Utara";
+    case 28:
+        return "Maluku";
+    case 29:
+        return "Maluku Utara";
+    case 30:
+        return "Jawa Barat";
+    case 31:
+        return "Sulawesi Utara";
+    case 32:
+        return "Sumatera Selatan";
+    case 33:
+        return "Banten";
+    case 34:
+        return "Gorontalo";
+    case 35:
+        return "Kepulauan Bangka Belitung";
+    case 36:
+        return "Papua";
+    case 37:
+        return "Riau";
+    case 38:
+        return "Sulawesi Selatan";
+    case 39:
+        return "Irian Jaya Barat";
+    case 40:
+        return "Kepulauan Riau";
+    case 41:
+        return "Sulawesi Barat";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_IE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Carlow";
+    case 2:
+        return "Cavan";
+    case 3:
+        return "Clare";
+    case 4:
+        return "Cork";
+    case 6:
+        return "Donegal";
+    case 7:
+        return "Dublin";
+    case 10:
+        return "Galway";
+    case 11:
+        return "Kerry";
+    case 12:
+        return "Kildare";
+    case 13:
+        return "Kilkenny";
+    case 14:
+        return "Leitrim";
+    case 15:
+        return "Laois";
+    case 16:
+        return "Limerick";
+    case 18:
+        return "Longford";
+    case 19:
+        return "Louth";
+    case 20:
+        return "Mayo";
+    case 21:
+        return "Meath";
+    case 22:
+        return "Monaghan";
+    case 23:
+        return "Offaly";
+    case 24:
+        return "Roscommon";
+    case 25:
+        return "Sligo";
+    case 26:
+        return "Tipperary";
+    case 27:
+        return "Waterford";
+    case 29:
+        return "Westmeath";
+    case 30:
+        return "Wexford";
+    case 31:
+        return "Wicklow";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_IL(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "HaDarom";
+    case 2:
+        return "HaMerkaz";
+    case 3:
+        return "HaZafon";
+    case 4:
+        return "Hefa";
+    case 5:
+        return "Tel Aviv";
+    case 6:
+        return "Yerushalayim";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_IN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Andaman and Nicobar Islands";
+    case 2:
+        return "Andhra Pradesh";
+    case 3:
+        return "Assam";
+    case 5:
+        return "Chandigarh";
+    case 6:
+        return "Dadra and Nagar Haveli";
+    case 7:
+        return "Delhi";
+    case 9:
+        return "Gujarat";
+    case 10:
+        return "Haryana";
+    case 11:
+        return "Himachal Pradesh";
+    case 12:
+        return "Jammu and Kashmir";
+    case 13:
+        return "Kerala";
+    case 14:
+        return "Lakshadweep";
+    case 16:
+        return "Maharashtra";
+    case 17:
+        return "Manipur";
+    case 18:
+        return "Meghalaya";
+    case 19:
+        return "Karnataka";
+    case 20:
+        return "Nagaland";
+    case 21:
+        return "Orissa";
+    case 22:
+        return "Puducherry";
+    case 23:
+        return "Punjab";
+    case 24:
+        return "Rajasthan";
+    case 25:
+        return "Tamil Nadu";
+    case 26:
+        return "Tripura";
+    case 28:
+        return "West Bengal";
+    case 29:
+        return "Sikkim";
+    case 30:
+        return "Arunachal Pradesh";
+    case 31:
+        return "Mizoram";
+    case 32:
+        return "Daman and Diu";
+    case 33:
+        return "Goa";
+    case 34:
+        return "Bihar";
+    case 35:
+        return "Madhya Pradesh";
+    case 36:
+        return "Uttar Pradesh";
+    case 37:
+        return "Chhattisgarh";
+    case 38:
+        return "Jharkhand";
+    case 39:
+        return "Uttarakhand";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_IQ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Al Anbar";
+    case 2:
+        return "Al Basrah";
+    case 3:
+        return "Al Muthanna";
+    case 4:
+        return "Al Qadisiyah";
+    case 5:
+        return "As Sulaymaniyah";
+    case 6:
+        return "Babil";
+    case 7:
+        return "Baghdad";
+    case 8:
+        return "Dahuk";
+    case 9:
+        return "Dhi Qar";
+    case 10:
+        return "Diyala";
+    case 11:
+        return "Arbil";
+    case 12:
+        return "Karbala'";
+    case 13:
+        return "At Ta'mim";
+    case 14:
+        return "Maysan";
+    case 15:
+        return "Ninawa";
+    case 16:
+        return "Wasit";
+    case 17:
+        return "An Najaf";
+    case 18:
+        return "Salah ad Din";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_IR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Azarbayjan-e Bakhtari";
+    case 3:
+        return "Chahar Mahall va Bakhtiari";
+    case 4:
+        return "Sistan va Baluchestan";
+    case 5:
+        return "Kohkiluyeh va Buyer Ahmadi";
+    case 7:
+        return "Fars";
+    case 8:
+        return "Gilan";
+    case 9:
+        return "Hamadan";
+    case 10:
+        return "Ilam";
+    case 11:
+        return "Hormozgan";
+    case 12:
+        return "Kerman";
+    case 13:
+        return "Bakhtaran";
+    case 15:
+        return "Khuzestan";
+    case 16:
+        return "Kordestan";
+    case 17:
+        return "Mazandaran";
+    case 18:
+        return "Semnan Province";
+    case 19:
+        return "Markazi";
+    case 21:
+        return "Zanjan";
+    case 22:
+        return "Bushehr";
+    case 23:
+        return "Lorestan";
+    case 24:
+        return "Markazi";
+    case 25:
+        return "Semnan";
+    case 26:
+        return "Tehran";
+    case 27:
+        return "Zanjan";
+    case 28:
+        return "Esfahan";
+    case 29:
+        return "Kerman";
+    case 30:
+        return "Khorasan";
+    case 31:
+        return "Yazd";
+    case 32:
+        return "Ardabil";
+    case 33:
+        return "East Azarbaijan";
+    case 34:
+        return "Markazi";
+    case 35:
+        return "Mazandaran";
+    case 36:
+        return "Zanjan";
+    case 37:
+        return "Golestan";
+    case 38:
+        return "Qazvin";
+    case 39:
+        return "Qom";
+    case 40:
+        return "Yazd";
+    case 41:
+        return "Khorasan-e Janubi";
+    case 42:
+        return "Khorasan-e Razavi";
+    case 43:
+        return "Khorasan-e Shemali";
+    case 44:
+        return "Alborz";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_IS(int region_code)
+{
+    switch(region_code) {
+    case 3:
+        return "Arnessysla";
+    case 5:
+        return "Austur-Hunavatnssysla";
+    case 6:
+        return "Austur-Skaftafellssysla";
+    case 7:
+        return "Borgarfjardarsysla";
+    case 9:
+        return "Eyjafjardarsysla";
+    case 10:
+        return "Gullbringusysla";
+    case 15:
+        return "Kjosarsysla";
+    case 17:
+        return "Myrasysla";
+    case 20:
+        return "Nordur-Mulasysla";
+    case 21:
+        return "Nordur-Tingeyjarsysla";
+    case 23:
+        return "Rangarvallasysla";
+    case 28:
+        return "Skagafjardarsysla";
+    case 29:
+        return "Snafellsnes- og Hnappadalssysla";
+    case 30:
+        return "Strandasysla";
+    case 31:
+        return "Sudur-Mulasysla";
+    case 32:
+        return "Sudur-Tingeyjarsysla";
+    case 34:
+        return "Vestur-Bardastrandarsysla";
+    case 35:
+        return "Vestur-Hunavatnssysla";
+    case 36:
+        return "Vestur-Isafjardarsysla";
+    case 37:
+        return "Vestur-Skaftafellssysla";
+    case 38:
+        return "Austurland";
+    case 39:
+        return "Hofuoborgarsvaoio";
+    case 40:
+        return "Norourland Eystra";
+    case 41:
+        return "Norourland Vestra";
+    case 42:
+        return "Suourland";
+    case 43:
+        return "Suournes";
+    case 44:
+        return "Vestfiroir";
+    case 45:
+        return "Vesturland";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_IT(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Abruzzi";
+    case 2:
+        return "Basilicata";
+    case 3:
+        return "Calabria";
+    case 4:
+        return "Campania";
+    case 5:
+        return "Emilia-Romagna";
+    case 6:
+        return "Friuli-Venezia Giulia";
+    case 7:
+        return "Lazio";
+    case 8:
+        return "Liguria";
+    case 9:
+        return "Lombardia";
+    case 10:
+        return "Marche";
+    case 11:
+        return "Molise";
+    case 12:
+        return "Piemonte";
+    case 13:
+        return "Puglia";
+    case 14:
+        return "Sardegna";
+    case 15:
+        return "Sicilia";
+    case 16:
+        return "Toscana";
+    case 17:
+        return "Trentino-Alto Adige";
+    case 18:
+        return "Umbria";
+    case 19:
+        return "Valle d'Aosta";
+    case 20:
+        return "Veneto";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_JM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Clarendon";
+    case 2:
+        return "Hanover";
+    case 4:
+        return "Manchester";
+    case 7:
+        return "Portland";
+    case 8:
+        return "Saint Andrew";
+    case 9:
+        return "Saint Ann";
+    case 10:
+        return "Saint Catherine";
+    case 11:
+        return "Saint Elizabeth";
+    case 12:
+        return "Saint James";
+    case 13:
+        return "Saint Mary";
+    case 14:
+        return "Saint Thomas";
+    case 15:
+        return "Trelawny";
+    case 16:
+        return "Westmoreland";
+    case 17:
+        return "Kingston";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_JO(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Al Balqa'";
+    case 9:
+        return "Al Karak";
+    case 12:
+        return "At Tafilah";
+    case 15:
+        return "Al Mafraq";
+    case 16:
+        return "Amman";
+    case 17:
+        return "Az Zaraqa";
+    case 18:
+        return "Irbid";
+    case 19:
+        return "Ma'an";
+    case 20:
+        return "Ajlun";
+    case 21:
+        return "Al Aqabah";
+    case 22:
+        return "Jarash";
+    case 23:
+        return "Madaba";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_JP(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aichi";
+    case 2:
+        return "Akita";
+    case 3:
+        return "Aomori";
+    case 4:
+        return "Chiba";
+    case 5:
+        return "Ehime";
+    case 6:
+        return "Fukui";
+    case 7:
+        return "Fukuoka";
+    case 8:
+        return "Fukushima";
+    case 9:
+        return "Gifu";
+    case 10:
+        return "Gumma";
+    case 11:
+        return "Hiroshima";
+    case 12:
+        return "Hokkaido";
+    case 13:
+        return "Hyogo";
+    case 14:
+        return "Ibaraki";
+    case 15:
+        return "Ishikawa";
+    case 16:
+        return "Iwate";
+    case 17:
+        return "Kagawa";
+    case 18:
+        return "Kagoshima";
+    case 19:
+        return "Kanagawa";
+    case 20:
+        return "Kochi";
+    case 21:
+        return "Kumamoto";
+    case 22:
+        return "Kyoto";
+    case 23:
+        return "Mie";
+    case 24:
+        return "Miyagi";
+    case 25:
+        return "Miyazaki";
+    case 26:
+        return "Nagano";
+    case 27:
+        return "Nagasaki";
+    case 28:
+        return "Nara";
+    case 29:
+        return "Niigata";
+    case 30:
+        return "Oita";
+    case 31:
+        return "Okayama";
+    case 32:
+        return "Osaka";
+    case 33:
+        return "Saga";
+    case 34:
+        return "Saitama";
+    case 35:
+        return "Shiga";
+    case 36:
+        return "Shimane";
+    case 37:
+        return "Shizuoka";
+    case 38:
+        return "Tochigi";
+    case 39:
+        return "Tokushima";
+    case 40:
+        return "Tokyo";
+    case 41:
+        return "Tottori";
+    case 42:
+        return "Toyama";
+    case 43:
+        return "Wakayama";
+    case 44:
+        return "Yamagata";
+    case 45:
+        return "Yamaguchi";
+    case 46:
+        return "Yamanashi";
+    case 47:
+        return "Okinawa";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Central";
+    case 2:
+        return "Coast";
+    case 3:
+        return "Eastern";
+    case 5:
+        return "Nairobi Area";
+    case 6:
+        return "North-Eastern";
+    case 7:
+        return "Nyanza";
+    case 8:
+        return "Rift Valley";
+    case 9:
+        return "Western";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KG(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bishkek";
+    case 2:
+        return "Chuy";
+    case 3:
+        return "Jalal-Abad";
+    case 4:
+        return "Naryn";
+    case 5:
+        return "Osh";
+    case 6:
+        return "Talas";
+    case 7:
+        return "Ysyk-Kol";
+    case 8:
+        return "Osh";
+    case 9:
+        return "Batken";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KH(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Batdambang";
+    case 2:
+        return "Kampong Cham";
+    case 3:
+        return "Kampong Chhnang";
+    case 4:
+        return "Kampong Speu";
+    case 5:
+        return "Kampong Thum";
+    case 6:
+        return "Kampot";
+    case 7:
+        return "Kandal";
+    case 8:
+        return "Koh Kong";
+    case 9:
+        return "Kracheh";
+    case 10:
+        return "Mondulkiri";
+    case 11:
+        return "Phnum Penh";
+    case 12:
+        return "Pursat";
+    case 13:
+        return "Preah Vihear";
+    case 14:
+        return "Prey Veng";
+    case 15:
+        return "Ratanakiri Kiri";
+    case 16:
+        return "Siem Reap";
+    case 17:
+        return "Stung Treng";
+    case 18:
+        return "Svay Rieng";
+    case 19:
+        return "Takeo";
+    case 22:
+        return "Phnum Penh";
+    case 23:
+        return "Ratanakiri";
+    case 25:
+        return "Banteay Meanchey";
+    case 28:
+        return "Preah Seihanu";
+    case 29:
+        return "Batdambang";
+    case 30:
+        return "Pailin";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KI(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Gilbert Islands";
+    case 2:
+        return "Line Islands";
+    case 3:
+        return "Phoenix Islands";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Anjouan";
+    case 2:
+        return "Grande Comore";
+    case 3:
+        return "Moheli";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Christ Church Nichola Town";
+    case 2:
+        return "Saint Anne Sandy Point";
+    case 3:
+        return "Saint George Basseterre";
+    case 4:
+        return "Saint George Gingerland";
+    case 5:
+        return "Saint James Windward";
+    case 6:
+        return "Saint John Capisterre";
+    case 7:
+        return "Saint John Figtree";
+    case 8:
+        return "Saint Mary Cayon";
+    case 9:
+        return "Saint Paul Capisterre";
+    case 10:
+        return "Saint Paul Charlestown";
+    case 11:
+        return "Saint Peter Basseterre";
+    case 12:
+        return "Saint Thomas Lowland";
+    case 13:
+        return "Saint Thomas Middle Island";
+    case 15:
+        return "Trinity Palmetto Point";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KP(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Chagang-do";
+    case 3:
+        return "Hamgyong-namdo";
+    case 6:
+        return "Hwanghae-namdo";
+    case 7:
+        return "Hwanghae-bukto";
+    case 8:
+        return "Kaesong-si";
+    case 9:
+        return "Kangwon-do";
+    case 11:
+        return "P'yongan-bukto";
+    case 12:
+        return "P'yongyang-si";
+    case 13:
+        return "Yanggang-do";
+    case 14:
+        return "Namp'o-si";
+    case 15:
+        return "P'yongan-namdo";
+    case 17:
+        return "Hamgyong-bukto";
+    case 18:
+        return "Najin Sonbong-si";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Cheju-do";
+    case 3:
+        return "Cholla-bukto";
+    case 5:
+        return "Ch'ungch'ong-bukto";
+    case 6:
+        return "Kangwon-do";
+    case 10:
+        return "Pusan-jikhalsi";
+    case 11:
+        return "Seoul-t'ukpyolsi";
+    case 12:
+        return "Inch'on-jikhalsi";
+    case 13:
+        return "Kyonggi-do";
+    case 14:
+        return "Kyongsang-bukto";
+    case 15:
+        return "Taegu-jikhalsi";
+    case 16:
+        return "Cholla-namdo";
+    case 17:
+        return "Ch'ungch'ong-namdo";
+    case 18:
+        return "Kwangju-jikhalsi";
+    case 19:
+        return "Taejon-jikhalsi";
+    case 20:
+        return "Kyongsang-namdo";
+    case 21:
+        return "Ulsan-gwangyoksi";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KW(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Al Ahmadi";
+    case 2:
+        return "Al Kuwayt";
+    case 5:
+        return "Al Jahra";
+    case 7:
+        return "Al Farwaniyah";
+    case 8:
+        return "Hawalli";
+    case 9:
+        return "Mubarak al Kabir";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KY(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Creek";
+    case 2:
+        return "Eastern";
+    case 3:
+        return "Midland";
+    case 4:
+        return "South Town";
+    case 5:
+        return "Spot Bay";
+    case 6:
+        return "Stake Bay";
+    case 7:
+        return "West End";
+    case 8:
+        return "Western";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_KZ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Almaty";
+    case 2:
+        return "Almaty City";
+    case 3:
+        return "Aqmola";
+    case 4:
+        return "Aqtobe";
+    case 5:
+        return "Astana";
+    case 6:
+        return "Atyrau";
+    case 7:
+        return "West Kazakhstan";
+    case 8:
+        return "Bayqonyr";
+    case 9:
+        return "Mangghystau";
+    case 10:
+        return "South Kazakhstan";
+    case 11:
+        return "Pavlodar";
+    case 12:
+        return "Qaraghandy";
+    case 13:
+        return "Qostanay";
+    case 14:
+        return "Qyzylorda";
+    case 15:
+        return "East Kazakhstan";
+    case 16:
+        return "North Kazakhstan";
+    case 17:
+        return "Zhambyl";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Attapu";
+    case 2:
+        return "Champasak";
+    case 3:
+        return "Houaphan";
+    case 4:
+        return "Khammouan";
+    case 5:
+        return "Louang Namtha";
+    case 7:
+        return "Oudomxai";
+    case 8:
+        return "Phongsali";
+    case 9:
+        return "Saravan";
+    case 10:
+        return "Savannakhet";
+    case 11:
+        return "Vientiane";
+    case 13:
+        return "Xaignabouri";
+    case 14:
+        return "Xiangkhoang";
+    case 17:
+        return "Louangphrabang";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LB(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Beqaa";
+    case 2:
+        return "Al Janub";
+    case 3:
+        return "Liban-Nord";
+    case 4:
+        return "Beyrouth";
+    case 5:
+        return "Mont-Liban";
+    case 6:
+        return "Liban-Sud";
+    case 7:
+        return "Nabatiye";
+    case 8:
+        return "Beqaa";
+    case 9:
+        return "Liban-Nord";
+    case 10:
+        return "Aakk,r";
+    case 11:
+        return "Baalbek-Hermel";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LC(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Anse-la-Raye";
+    case 2:
+        return "Dauphin";
+    case 3:
+        return "Castries";
+    case 4:
+        return "Choiseul";
+    case 5:
+        return "Dennery";
+    case 6:
+        return "Gros-Islet";
+    case 7:
+        return "Laborie";
+    case 8:
+        return "Micoud";
+    case 9:
+        return "Soufriere";
+    case 10:
+        return "Vieux-Fort";
+    case 11:
+        return "Praslin";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LI(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Balzers";
+    case 2:
+        return "Eschen";
+    case 3:
+        return "Gamprin";
+    case 4:
+        return "Mauren";
+    case 5:
+        return "Planken";
+    case 6:
+        return "Ruggell";
+    case 7:
+        return "Schaan";
+    case 8:
+        return "Schellenberg";
+    case 9:
+        return "Triesen";
+    case 10:
+        return "Triesenberg";
+    case 11:
+        return "Vaduz";
+    case 21:
+        return "Gbarpolu";
+    case 22:
+        return "River Gee";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LK(int region_code)
+{
+    switch(region_code) {
+    case 29:
+        return "Central";
+    case 30:
+        return "North Central";
+    case 32:
+        return "North Western";
+    case 33:
+        return "Sabaragamuwa";
+    case 34:
+        return "Southern";
+    case 35:
+        return "Uva";
+    case 36:
+        return "Western";
+    case 37:
+        return "Eastern";
+    case 38:
+        return "Northern";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bong";
+    case 4:
+        return "Grand Cape Mount";
+    case 5:
+        return "Lofa";
+    case 6:
+        return "Maryland";
+    case 7:
+        return "Monrovia";
+    case 9:
+        return "Nimba";
+    case 10:
+        return "Sino";
+    case 11:
+        return "Grand Bassa";
+    case 12:
+        return "Grand Cape Mount";
+    case 13:
+        return "Maryland";
+    case 14:
+        return "Montserrado";
+    case 17:
+        return "Margibi";
+    case 18:
+        return "River Cess";
+    case 19:
+        return "Grand Gedeh";
+    case 20:
+        return "Lofa";
+    case 21:
+        return "Gbarpolu";
+    case 22:
+        return "River Gee";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LS(int region_code)
+{
+    switch(region_code) {
+    case 10:
+        return "Berea";
+    case 11:
+        return "Butha-Buthe";
+    case 12:
+        return "Leribe";
+    case 13:
+        return "Mafeteng";
+    case 14:
+        return "Maseru";
+    case 15:
+        return "Mohales Hoek";
+    case 16:
+        return "Mokhotlong";
+    case 17:
+        return "Qachas Nek";
+    case 18:
+        return "Quthing";
+    case 19:
+        return "Thaba-Tseka";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LT(int region_code)
+{
+    switch(region_code) {
+    case 56:
+        return "Alytaus Apskritis";
+    case 57:
+        return "Kauno Apskritis";
+    case 58:
+        return "Klaipedos Apskritis";
+    case 59:
+        return "Marijampoles Apskritis";
+    case 60:
+        return "Panevezio Apskritis";
+    case 61:
+        return "Siauliu Apskritis";
+    case 62:
+        return "Taurages Apskritis";
+    case 63:
+        return "Telsiu Apskritis";
+    case 64:
+        return "Utenos Apskritis";
+    case 65:
+        return "Vilniaus Apskritis";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LU(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Diekirch";
+    case 2:
+        return "Grevenmacher";
+    case 3:
+        return "Luxembourg";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LV(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aizkraukles";
+    case 2:
+        return "Aluksnes";
+    case 3:
+        return "Balvu";
+    case 4:
+        return "Bauskas";
+    case 5:
+        return "Cesu";
+    case 6:
+        return "Daugavpils";
+    case 7:
+        return "Daugavpils";
+    case 8:
+        return "Dobeles";
+    case 9:
+        return "Gulbenes";
+    case 10:
+        return "Jekabpils";
+    case 11:
+        return "Jelgava";
+    case 12:
+        return "Jelgavas";
+    case 13:
+        return "Jurmala";
+    case 14:
+        return "Kraslavas";
+    case 15:
+        return "Kuldigas";
+    case 16:
+        return "Liepaja";
+    case 17:
+        return "Liepajas";
+    case 18:
+        return "Limbazu";
+    case 19:
+        return "Ludzas";
+    case 20:
+        return "Madonas";
+    case 21:
+        return "Ogres";
+    case 22:
+        return "Preilu";
+    case 23:
+        return "Rezekne";
+    case 24:
+        return "Rezeknes";
+    case 25:
+        return "Riga";
+    case 26:
+        return "Rigas";
+    case 27:
+        return "Saldus";
+    case 28:
+        return "Talsu";
+    case 29:
+        return "Tukuma";
+    case 30:
+        return "Valkas";
+    case 31:
+        return "Valmieras";
+    case 32:
+        return "Ventspils";
+    case 33:
+        return "Ventspils";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_LY(int region_code)
+{
+    switch(region_code) {
+    case 3:
+        return "Al Aziziyah";
+    case 5:
+        return "Al Jufrah";
+    case 8:
+        return "Al Kufrah";
+    case 13:
+        return "Ash Shati'";
+    case 30:
+        return "Murzuq";
+    case 34:
+        return "Sabha";
+    case 41:
+        return "Tarhunah";
+    case 42:
+        return "Tubruq";
+    case 45:
+        return "Zlitan";
+    case 47:
+        return "Ajdabiya";
+    case 48:
+        return "Al Fatih";
+    case 49:
+        return "Al Jabal al Akhdar";
+    case 50:
+        return "Al Khums";
+    case 51:
+        return "An Nuqat al Khams";
+    case 52:
+        return "Awbari";
+    case 53:
+        return "Az Zawiyah";
+    case 54:
+        return "Banghazi";
+    case 55:
+        return "Darnah";
+    case 56:
+        return "Ghadamis";
+    case 57:
+        return "Gharyan";
+    case 58:
+        return "Misratah";
+    case 59:
+        return "Sawfajjin";
+    case 60:
+        return "Surt";
+    case 61:
+        return "Tarabulus";
+    case 62:
+        return "Yafran";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MA(int region_code)
+{
+    switch(region_code) {
+    case 45:
+        return "Grand Casablanca";
+    case 46:
+        return "Fes-Boulemane";
+    case 47:
+        return "Marrakech-Tensift-Al Haouz";
+    case 48:
+        return "Meknes-Tafilalet";
+    case 49:
+        return "Rabat-Sale-Zemmour-Zaer";
+    case 50:
+        return "Chaouia-Ouardigha";
+    case 51:
+        return "Doukkala-Abda";
+    case 52:
+        return "Gharb-Chrarda-Beni Hssen";
+    case 53:
+        return "Guelmim-Es Smara";
+    case 54:
+        return "Oriental";
+    case 55:
+        return "Souss-Massa-Dr,a";
+    case 56:
+        return "Tadla-Azilal";
+    case 57:
+        return "Tanger-Tetouan";
+    case 58:
+        return "Taza-Al Hoceima-Taounate";
+    case 59:
+        return "La,youne-Boujdour-Sakia El Hamra";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MC(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "La Condamine";
+    case 2:
+        return "Monaco";
+    case 3:
+        return "Monte-Carlo";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MD(int region_code)
+{
+    switch(region_code) {
+    case 51:
+        return "Gagauzia";
+    case 57:
+        return "Chisinau";
+    case 58:
+        return "Stinga Nistrului";
+    case 59:
+        return "Anenii Noi";
+    case 60:
+        return "Balti";
+    case 61:
+        return "Basarabeasca";
+    case 62:
+        return "Bender";
+    case 63:
+        return "Briceni";
+    case 64:
+        return "Cahul";
+    case 65:
+        return "Cantemir";
+    case 66:
+        return "Calarasi";
+    case 67:
+        return "Causeni";
+    case 68:
+        return "Cimislia";
+    case 69:
+        return "Criuleni";
+    case 70:
+        return "Donduseni";
+    case 71:
+        return "Drochia";
+    case 72:
+        return "Dubasari";
+    case 73:
+        return "Edinet";
+    case 74:
+        return "Falesti";
+    case 75:
+        return "Floresti";
+    case 76:
+        return "Glodeni";
+    case 77:
+        return "Hincesti";
+    case 78:
+        return "Ialoveni";
+    case 79:
+        return "Leova";
+    case 80:
+        return "Nisporeni";
+    case 81:
+        return "Ocnita";
+    case 82:
+        return "Orhei";
+    case 83:
+        return "Rezina";
+    case 84:
+        return "Riscani";
+    case 85:
+        return "Singerei";
+    case 86:
+        return "Soldanesti";
+    case 87:
+        return "Soroca";
+    case 88:
+        return "Stefan-Voda";
+    case 89:
+        return "Straseni";
+    case 90:
+        return "Taraclia";
+    case 91:
+        return "Telenesti";
+    case 92:
+        return "Ungheni";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MG(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Antsiranana";
+    case 2:
+        return "Fianarantsoa";
+    case 3:
+        return "Mahajanga";
+    case 4:
+        return "Toamasina";
+    case 5:
+        return "Antananarivo";
+    case 6:
+        return "Toliara";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MK(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aracinovo";
+    case 2:
+        return "Bac";
+    case 3:
+        return "Belcista";
+    case 4:
+        return "Berovo";
+    case 5:
+        return "Bistrica";
+    case 6:
+        return "Bitola";
+    case 7:
+        return "Blatec";
+    case 8:
+        return "Bogdanci";
+    case 9:
+        return "Bogomila";
+    case 10:
+        return "Bogovinje";
+    case 11:
+        return "Bosilovo";
+    case 12:
+        return "Brvenica";
+    case 13:
+        return "Cair";
+    case 14:
+        return "Capari";
+    case 15:
+        return "Caska";
+    case 16:
+        return "Cegrane";
+    case 17:
+        return "Centar";
+    case 18:
+        return "Centar Zupa";
+    case 19:
+        return "Cesinovo";
+    case 20:
+        return "Cucer-Sandevo";
+    case 21:
+        return "Debar";
+    case 22:
+        return "Delcevo";
+    case 23:
+        return "Delogozdi";
+    case 24:
+        return "Demir Hisar";
+    case 25:
+        return "Demir Kapija";
+    case 26:
+        return "Dobrusevo";
+    case 27:
+        return "Dolna Banjica";
+    case 28:
+        return "Dolneni";
+    case 29:
+        return "Dorce Petrov";
+    case 30:
+        return "Drugovo";
+    case 31:
+        return "Dzepciste";
+    case 32:
+        return "Gazi Baba";
+    case 33:
+        return "Gevgelija";
+    case 34:
+        return "Gostivar";
+    case 35:
+        return "Gradsko";
+    case 36:
+        return "Ilinden";
+    case 37:
+        return "Izvor";
+    case 38:
+        return "Jegunovce";
+    case 39:
+        return "Kamenjane";
+    case 40:
+        return "Karbinci";
+    case 41:
+        return "Karpos";
+    case 42:
+        return "Kavadarci";
+    case 43:
+        return "Kicevo";
+    case 44:
+        return "Kisela Voda";
+    case 45:
+        return "Klecevce";
+    case 46:
+        return "Kocani";
+    case 47:
+        return "Konce";
+    case 48:
+        return "Kondovo";
+    case 49:
+        return "Konopiste";
+    case 50:
+        return "Kosel";
+    case 51:
+        return "Kratovo";
+    case 52:
+        return "Kriva Palanka";
+    case 53:
+        return "Krivogastani";
+    case 54:
+        return "Krusevo";
+    case 55:
+        return "Kuklis";
+    case 56:
+        return "Kukurecani";
+    case 57:
+        return "Kumanovo";
+    case 58:
+        return "Labunista";
+    case 59:
+        return "Lipkovo";
+    case 60:
+        return "Lozovo";
+    case 61:
+        return "Lukovo";
+    case 62:
+        return "Makedonska Kamenica";
+    case 63:
+        return "Makedonski Brod";
+    case 64:
+        return "Mavrovi Anovi";
+    case 65:
+        return "Meseista";
+    case 66:
+        return "Miravci";
+    case 67:
+        return "Mogila";
+    case 68:
+        return "Murtino";
+    case 69:
+        return "Negotino";
+    case 70:
+        return "Negotino-Polosko";
+    case 71:
+        return "Novaci";
+    case 72:
+        return "Novo Selo";
+    case 73:
+        return "Oblesevo";
+    case 74:
+        return "Ohrid";
+    case 75:
+        return "Orasac";
+    case 76:
+        return "Orizari";
+    case 77:
+        return "Oslomej";
+    case 78:
+        return "Pehcevo";
+    case 79:
+        return "Petrovec";
+    case 80:
+        return "Plasnica";
+    case 81:
+        return "Podares";
+    case 82:
+        return "Prilep";
+    case 83:
+        return "Probistip";
+    case 84:
+        return "Radovis";
+    case 85:
+        return "Rankovce";
+    case 86:
+        return "Resen";
+    case 87:
+        return "Rosoman";
+    case 88:
+        return "Rostusa";
+    case 89:
+        return "Samokov";
+    case 90:
+        return "Saraj";
+    case 91:
+        return "Sipkovica";
+    case 92:
+        return "Sopiste";
+    case 93:
+        return "Sopotnica";
+    case 94:
+        return "Srbinovo";
+    case 95:
+        return "Staravina";
+    case 96:
+        return "Star Dojran";
+    case 97:
+        return "Staro Nagoricane";
+    case 98:
+        return "Stip";
+    case 99:
+        return "Struga";
+    case 832:
+        return "Strumica";
+    case 833:
+        return "Studenicani";
+    case 834:
+        return "Suto Orizari";
+    case 835:
+        return "Sveti Nikole";
+    case 836:
+        return "Tearce";
+    case 837:
+        return "Tetovo";
+    case 838:
+        return "Topolcani";
+    case 839:
+        return "Valandovo";
+    case 840:
+        return "Vasilevo";
+    case 875:
+        return "Veles";
+    case 876:
+        return "Velesta";
+    case 877:
+        return "Vevcani";
+    case 878:
+        return "Vinica";
+    case 879:
+        return "Vitoliste";
+    case 880:
+        return "Vranestica";
+    case 881:
+        return "Vrapciste";
+    case 882:
+        return "Vratnica";
+    case 883:
+        return "Vrutok";
+    case 918:
+        return "Zajas";
+    case 919:
+        return "Zelenikovo";
+    case 920:
+        return "Zelino";
+    case 921:
+        return "Zitose";
+    case 922:
+        return "Zletovo";
+    case 923:
+        return "Zrnovci";
+    case 925:
+        return "Cair";
+    case 926:
+        return "Caska";
+    case 962:
+        return "Debar";
+    case 963:
+        return "Demir Hisar";
+    case 964:
+        return "Gostivar";
+    case 965:
+        return "Jegunovce";
+    case 966:
+        return "Kavadarci";
+    case 967:
+        return "Kumanovo";
+    case 968:
+        return "Makedonski Brod";
+    case 1005:
+        return "Ohrid";
+    case 1006:
+        return "Prilep";
+    case 1008:
+        return "Dojran";
+    case 1009:
+        return "Struga";
+    case 1010:
+        return "Strumica";
+    case 1011:
+        return "Tetovo";
+    case 1012:
+        return "Valandovo";
+    case 1047:
+        return "Veles";
+    case 1048:
+        return "Aerodrom";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ML(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bamako";
+    case 3:
+        return "Kayes";
+    case 4:
+        return "Mopti";
+    case 5:
+        return "Segou";
+    case 6:
+        return "Sikasso";
+    case 7:
+        return "Koulikoro";
+    case 8:
+        return "Tombouctou";
+    case 9:
+        return "Gao";
+    case 10:
+        return "Kidal";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Rakhine State";
+    case 2:
+        return "Chin State";
+    case 3:
+        return "Irrawaddy";
+    case 4:
+        return "Kachin State";
+    case 5:
+        return "Karan State";
+    case 6:
+        return "Kayah State";
+    case 7:
+        return "Magwe";
+    case 8:
+        return "Mandalay";
+    case 9:
+        return "Pegu";
+    case 10:
+        return "Sagaing";
+    case 11:
+        return "Shan State";
+    case 12:
+        return "Tenasserim";
+    case 13:
+        return "Mon State";
+    case 14:
+        return "Rangoon";
+    case 17:
+        return "Yangon";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Arhangay";
+    case 2:
+        return "Bayanhongor";
+    case 3:
+        return "Bayan-Olgiy";
+    case 5:
+        return "Darhan";
+    case 6:
+        return "Dornod";
+    case 7:
+        return "Dornogovi";
+    case 8:
+        return "Dundgovi";
+    case 9:
+        return "Dzavhan";
+    case 10:
+        return "Govi-Altay";
+    case 11:
+        return "Hentiy";
+    case 12:
+        return "Hovd";
+    case 13:
+        return "Hovsgol";
+    case 14:
+        return "Omnogovi";
+    case 15:
+        return "Ovorhangay";
+    case 16:
+        return "Selenge";
+    case 17:
+        return "Suhbaatar";
+    case 18:
+        return "Tov";
+    case 19:
+        return "Uvs";
+    case 20:
+        return "Ulaanbaatar";
+    case 21:
+        return "Bulgan";
+    case 22:
+        return "Erdenet";
+    case 23:
+        return "Darhan-Uul";
+    case 24:
+        return "Govisumber";
+    case 25:
+        return "Orhon";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ilhas";
+    case 2:
+        return "Macau";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Hodh Ech Chargui";
+    case 2:
+        return "Hodh El Gharbi";
+    case 3:
+        return "Assaba";
+    case 4:
+        return "Gorgol";
+    case 5:
+        return "Brakna";
+    case 6:
+        return "Trarza";
+    case 7:
+        return "Adrar";
+    case 8:
+        return "Dakhlet Nouadhibou";
+    case 9:
+        return "Tagant";
+    case 10:
+        return "Guidimaka";
+    case 11:
+        return "Tiris Zemmour";
+    case 12:
+        return "Inchiri";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MS(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Saint Anthony";
+    case 2:
+        return "Saint Georges";
+    case 3:
+        return "Saint Peter";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MU(int region_code)
+{
+    switch(region_code) {
+    case 12:
+        return "Black River";
+    case 13:
+        return "Flacq";
+    case 14:
+        return "Grand Port";
+    case 15:
+        return "Moka";
+    case 16:
+        return "Pamplemousses";
+    case 17:
+        return "Plaines Wilhems";
+    case 18:
+        return "Port Louis";
+    case 19:
+        return "Riviere du Rempart";
+    case 20:
+        return "Savanne";
+    case 21:
+        return "Agalega Islands";
+    case 22:
+        return "Cargados Carajos";
+    case 23:
+        return "Rodrigues";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MV(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Seenu";
+    case 5:
+        return "Laamu";
+    case 30:
+        return "Alifu";
+    case 31:
+        return "Baa";
+    case 32:
+        return "Dhaalu";
+    case 33:
+        return "Faafu ";
+    case 34:
+        return "Gaafu Alifu";
+    case 35:
+        return "Gaafu Dhaalu";
+    case 36:
+        return "Haa Alifu";
+    case 37:
+        return "Haa Dhaalu";
+    case 38:
+        return "Kaafu";
+    case 39:
+        return "Lhaviyani";
+    case 40:
+        return "Maale";
+    case 41:
+        return "Meemu";
+    case 42:
+        return "Gnaviyani";
+    case 43:
+        return "Noonu";
+    case 44:
+        return "Raa";
+    case 45:
+        return "Shaviyani";
+    case 46:
+        return "Thaa";
+    case 47:
+        return "Vaavu";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MW(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Chikwawa";
+    case 3:
+        return "Chiradzulu";
+    case 4:
+        return "Chitipa";
+    case 5:
+        return "Thyolo";
+    case 6:
+        return "Dedza";
+    case 7:
+        return "Dowa";
+    case 8:
+        return "Karonga";
+    case 9:
+        return "Kasungu";
+    case 11:
+        return "Lilongwe";
+    case 12:
+        return "Mangochi";
+    case 13:
+        return "Mchinji";
+    case 15:
+        return "Mzimba";
+    case 16:
+        return "Ntcheu";
+    case 17:
+        return "Nkhata Bay";
+    case 18:
+        return "Nkhotakota";
+    case 19:
+        return "Nsanje";
+    case 20:
+        return "Ntchisi";
+    case 21:
+        return "Rumphi";
+    case 22:
+        return "Salima";
+    case 23:
+        return "Zomba";
+    case 24:
+        return "Blantyre";
+    case 25:
+        return "Mwanza";
+    case 26:
+        return "Balaka";
+    case 27:
+        return "Likoma";
+    case 28:
+        return "Machinga";
+    case 29:
+        return "Mulanje";
+    case 30:
+        return "Phalombe";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MX(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aguascalientes";
+    case 2:
+        return "Baja California";
+    case 3:
+        return "Baja California Sur";
+    case 4:
+        return "Campeche";
+    case 5:
+        return "Chiapas";
+    case 6:
+        return "Chihuahua";
+    case 7:
+        return "Coahuila de Zaragoza";
+    case 8:
+        return "Colima";
+    case 9:
+        return "Distrito Federal";
+    case 10:
+        return "Durango";
+    case 11:
+        return "Guanajuato";
+    case 12:
+        return "Guerrero";
+    case 13:
+        return "Hidalgo";
+    case 14:
+        return "Jalisco";
+    case 15:
+        return "Mexico";
+    case 16:
+        return "Michoacan de Ocampo";
+    case 17:
+        return "Morelos";
+    case 18:
+        return "Nayarit";
+    case 19:
+        return "Nuevo Leon";
+    case 20:
+        return "Oaxaca";
+    case 21:
+        return "Puebla";
+    case 22:
+        return "Queretaro de Arteaga";
+    case 23:
+        return "Quintana Roo";
+    case 24:
+        return "San Luis Potosi";
+    case 25:
+        return "Sinaloa";
+    case 26:
+        return "Sonora";
+    case 27:
+        return "Tabasco";
+    case 28:
+        return "Tamaulipas";
+    case 29:
+        return "Tlaxcala";
+    case 30:
+        return "Veracruz-Llave";
+    case 31:
+        return "Yucatan";
+    case 32:
+        return "Zacatecas";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MY(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Johor";
+    case 2:
+        return "Kedah";
+    case 3:
+        return "Kelantan";
+    case 4:
+        return "Melaka";
+    case 5:
+        return "Negeri Sembilan";
+    case 6:
+        return "Pahang";
+    case 7:
+        return "Perak";
+    case 8:
+        return "Perlis";
+    case 9:
+        return "Pulau Pinang";
+    case 11:
+        return "Sarawak";
+    case 12:
+        return "Selangor";
+    case 13:
+        return "Terengganu";
+    case 14:
+        return "Kuala Lumpur";
+    case 15:
+        return "Labuan";
+    case 16:
+        return "Sabah";
+    case 17:
+        return "Putrajaya";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_MZ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Cabo Delgado";
+    case 2:
+        return "Gaza";
+    case 3:
+        return "Inhambane";
+    case 4:
+        return "Maputo";
+    case 5:
+        return "Sofala";
+    case 6:
+        return "Nampula";
+    case 7:
+        return "Niassa";
+    case 8:
+        return "Tete";
+    case 9:
+        return "Zambezia";
+    case 10:
+        return "Manica";
+    case 11:
+        return "Maputo";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bethanien";
+    case 2:
+        return "Caprivi Oos";
+    case 3:
+        return "Boesmanland";
+    case 4:
+        return "Gobabis";
+    case 5:
+        return "Grootfontein";
+    case 6:
+        return "Kaokoland";
+    case 7:
+        return "Karibib";
+    case 8:
+        return "Keetmanshoop";
+    case 9:
+        return "Luderitz";
+    case 10:
+        return "Maltahohe";
+    case 11:
+        return "Okahandja";
+    case 12:
+        return "Omaruru";
+    case 13:
+        return "Otjiwarongo";
+    case 14:
+        return "Outjo";
+    case 15:
+        return "Owambo";
+    case 16:
+        return "Rehoboth";
+    case 17:
+        return "Swakopmund";
+    case 18:
+        return "Tsumeb";
+    case 20:
+        return "Karasburg";
+    case 21:
+        return "Windhoek";
+    case 22:
+        return "Damaraland";
+    case 23:
+        return "Hereroland Oos";
+    case 24:
+        return "Hereroland Wes";
+    case 25:
+        return "Kavango";
+    case 26:
+        return "Mariental";
+    case 27:
+        return "Namaland";
+    case 28:
+        return "Caprivi";
+    case 29:
+        return "Erongo";
+    case 30:
+        return "Hardap";
+    case 31:
+        return "Karas";
+    case 32:
+        return "Kunene";
+    case 33:
+        return "Ohangwena";
+    case 34:
+        return "Okavango";
+    case 35:
+        return "Omaheke";
+    case 36:
+        return "Omusati";
+    case 37:
+        return "Oshana";
+    case 38:
+        return "Oshikoto";
+    case 39:
+        return "Otjozondjupa";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Agadez";
+    case 2:
+        return "Diffa";
+    case 3:
+        return "Dosso";
+    case 4:
+        return "Maradi";
+    case 5:
+        return "Niamey";
+    case 6:
+        return "Tahoua";
+    case 7:
+        return "Zinder";
+    case 8:
+        return "Niamey";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NG(int region_code)
+{
+    switch(region_code) {
+    case 5:
+        return "Lagos";
+    case 11:
+        return "Federal Capital Territory";
+    case 16:
+        return "Ogun";
+    case 21:
+        return "Akwa Ibom";
+    case 22:
+        return "Cross River";
+    case 23:
+        return "Kaduna";
+    case 24:
+        return "Katsina";
+    case 25:
+        return "Anambra";
+    case 26:
+        return "Benue";
+    case 27:
+        return "Borno";
+    case 28:
+        return "Imo";
+    case 29:
+        return "Kano";
+    case 30:
+        return "Kwara";
+    case 31:
+        return "Niger";
+    case 32:
+        return "Oyo";
+    case 35:
+        return "Adamawa";
+    case 36:
+        return "Delta";
+    case 37:
+        return "Edo";
+    case 39:
+        return "Jigawa";
+    case 40:
+        return "Kebbi";
+    case 41:
+        return "Kogi";
+    case 42:
+        return "Osun";
+    case 43:
+        return "Taraba";
+    case 44:
+        return "Yobe";
+    case 45:
+        return "Abia";
+    case 46:
+        return "Bauchi";
+    case 47:
+        return "Enugu";
+    case 48:
+        return "Ondo";
+    case 49:
+        return "Plateau";
+    case 50:
+        return "Rivers";
+    case 51:
+        return "Sokoto";
+    case 52:
+        return "Bayelsa";
+    case 53:
+        return "Ebonyi";
+    case 54:
+        return "Ekiti";
+    case 55:
+        return "Gombe";
+    case 56:
+        return "Nassarawa";
+    case 57:
+        return "Zamfara";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NI(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Boaco";
+    case 2:
+        return "Carazo";
+    case 3:
+        return "Chinandega";
+    case 4:
+        return "Chontales";
+    case 5:
+        return "Esteli";
+    case 6:
+        return "Granada";
+    case 7:
+        return "Jinotega";
+    case 8:
+        return "Leon";
+    case 9:
+        return "Madriz";
+    case 10:
+        return "Managua";
+    case 11:
+        return "Masaya";
+    case 12:
+        return "Matagalpa";
+    case 13:
+        return "Nueva Segovia";
+    case 14:
+        return "Rio San Juan";
+    case 15:
+        return "Rivas";
+    case 16:
+        return "Zelaya";
+    case 17:
+        return "Autonoma Atlantico Norte";
+    case 18:
+        return "Region Autonoma Atlantico Sur";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NL(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Drenthe";
+    case 2:
+        return "Friesland";
+    case 3:
+        return "Gelderland";
+    case 4:
+        return "Groningen";
+    case 5:
+        return "Limburg";
+    case 6:
+        return "Noord-Brabant";
+    case 7:
+        return "Noord-Holland";
+    case 9:
+        return "Utrecht";
+    case 10:
+        return "Zeeland";
+    case 11:
+        return "Zuid-Holland";
+    case 15:
+        return "Overijssel";
+    case 16:
+        return "Flevoland";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Akershus";
+    case 2:
+        return "Aust-Agder";
+    case 4:
+        return "Buskerud";
+    case 5:
+        return "Finnmark";
+    case 6:
+        return "Hedmark";
+    case 7:
+        return "Hordaland";
+    case 8:
+        return "More og Romsdal";
+    case 9:
+        return "Nordland";
+    case 10:
+        return "Nord-Trondelag";
+    case 11:
+        return "Oppland";
+    case 12:
+        return "Oslo";
+    case 13:
+        return "Ostfold";
+    case 14:
+        return "Rogaland";
+    case 15:
+        return "Sogn og Fjordane";
+    case 16:
+        return "Sor-Trondelag";
+    case 17:
+        return "Telemark";
+    case 18:
+        return "Troms";
+    case 19:
+        return "Vest-Agder";
+    case 20:
+        return "Vestfold";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NP(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bagmati";
+    case 2:
+        return "Bheri";
+    case 3:
+        return "Dhawalagiri";
+    case 4:
+        return "Gandaki";
+    case 5:
+        return "Janakpur";
+    case 6:
+        return "Karnali";
+    case 7:
+        return "Kosi";
+    case 8:
+        return "Lumbini";
+    case 9:
+        return "Mahakali";
+    case 10:
+        return "Mechi";
+    case 11:
+        return "Narayani";
+    case 12:
+        return "Rapti";
+    case 13:
+        return "Sagarmatha";
+    case 14:
+        return "Seti";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NR(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Aiwo";
+    case 2:
+        return "Anabar";
+    case 3:
+        return "Anetan";
+    case 4:
+        return "Anibare";
+    case 5:
+        return "Baiti";
+    case 6:
+        return "Boe";
+    case 7:
+        return "Buada";
+    case 8:
+        return "Denigomodu";
+    case 9:
+        return "Ewa";
+    case 10:
+        return "Ijuw";
+    case 11:
+        return "Meneng";
+    case 12:
+        return "Nibok";
+    case 13:
+        return "Uaboe";
+    case 14:
+        return "Yaren";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_NZ(int region_code)
+{
+    switch(region_code) {
+    case 10:
+        return "Chatham Islands";
+    case 1010:
+        return "Auckland";
+    case 1011:
+        return "Bay of Plenty";
+    case 1012:
+        return "Canterbury";
+    case 1047:
+        return "Gisborne";
+    case 1048:
+        return "Hawke's Bay";
+    case 1049:
+        return "Manawatu-Wanganui";
+    case 1050:
+        return "Marlborough";
+    case 1051:
+        return "Nelson";
+    case 1052:
+        return "Northland";
+    case 1053:
+        return "Otago";
+    case 1054:
+        return "Southland";
+    case 1055:
+        return "Taranaki";
+    case 1090:
+        return "Waikato";
+    case 1091:
+        return "Wellington";
+    case 1092:
+        return "West Coast";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_OM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ad Dakhiliyah";
+    case 2:
+        return "Al Batinah";
+    case 3:
+        return "Al Wusta";
+    case 4:
+        return "Ash Sharqiyah";
+    case 5:
+        return "Az Zahirah";
+    case 6:
+        return "Masqat";
+    case 7:
+        return "Musandam";
+    case 8:
+        return "Zufar";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bocas del Toro";
+    case 2:
+        return "Chiriqui";
+    case 3:
+        return "Cocle";
+    case 4:
+        return "Colon";
+    case 5:
+        return "Darien";
+    case 6:
+        return "Herrera";
+    case 7:
+        return "Los Santos";
+    case 8:
+        return "Panama";
+    case 9:
+        return "San Blas";
+    case 10:
+        return "Veraguas";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Amazonas";
+    case 2:
+        return "Ancash";
+    case 3:
+        return "Apurimac";
+    case 4:
+        return "Arequipa";
+    case 5:
+        return "Ayacucho";
+    case 6:
+        return "Cajamarca";
+    case 7:
+        return "Callao";
+    case 8:
+        return "Cusco";
+    case 9:
+        return "Huancavelica";
+    case 10:
+        return "Huanuco";
+    case 11:
+        return "Ica";
+    case 12:
+        return "Junin";
+    case 13:
+        return "La Libertad";
+    case 14:
+        return "Lambayeque";
+    case 15:
+        return "Lima";
+    case 16:
+        return "Loreto";
+    case 17:
+        return "Madre de Dios";
+    case 18:
+        return "Moquegua";
+    case 19:
+        return "Pasco";
+    case 20:
+        return "Piura";
+    case 21:
+        return "Puno";
+    case 22:
+        return "San Martin";
+    case 23:
+        return "Tacna";
+    case 24:
+        return "Tumbes";
+    case 25:
+        return "Ucayali";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PG(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Central";
+    case 2:
+        return "Gulf";
+    case 3:
+        return "Milne Bay";
+    case 4:
+        return "Northern";
+    case 5:
+        return "Southern Highlands";
+    case 6:
+        return "Western";
+    case 7:
+        return "North Solomons";
+    case 8:
+        return "Chimbu";
+    case 9:
+        return "Eastern Highlands";
+    case 10:
+        return "East New Britain";
+    case 11:
+        return "East Sepik";
+    case 12:
+        return "Madang";
+    case 13:
+        return "Manus";
+    case 14:
+        return "Morobe";
+    case 15:
+        return "New Ireland";
+    case 16:
+        return "Western Highlands";
+    case 17:
+        return "West New Britain";
+    case 18:
+        return "Sandaun";
+    case 19:
+        return "Enga";
+    case 20:
+        return "National Capital";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PH(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Abra";
+    case 2:
+        return "Agusan del Norte";
+    case 3:
+        return "Agusan del Sur";
+    case 4:
+        return "Aklan";
+    case 5:
+        return "Albay";
+    case 6:
+        return "Antique";
+    case 7:
+        return "Bataan";
+    case 8:
+        return "Batanes";
+    case 9:
+        return "Batangas";
+    case 10:
+        return "Benguet";
+    case 11:
+        return "Bohol";
+    case 12:
+        return "Bukidnon";
+    case 13:
+        return "Bulacan";
+    case 14:
+        return "Cagayan";
+    case 15:
+        return "Camarines Norte";
+    case 16:
+        return "Camarines Sur";
+    case 17:
+        return "Camiguin";
+    case 18:
+        return "Capiz";
+    case 19:
+        return "Catanduanes";
+    case 20:
+        return "Cavite";
+    case 21:
+        return "Cebu";
+    case 22:
+        return "Basilan";
+    case 23:
+        return "Eastern Samar";
+    case 24:
+        return "Davao";
+    case 25:
+        return "Davao del Sur";
+    case 26:
+        return "Davao Oriental";
+    case 27:
+        return "Ifugao";
+    case 28:
+        return "Ilocos Norte";
+    case 29:
+        return "Ilocos Sur";
+    case 30:
+        return "Iloilo";
+    case 31:
+        return "Isabela";
+    case 32:
+        return "Kalinga-Apayao";
+    case 33:
+        return "Laguna";
+    case 34:
+        return "Lanao del Norte";
+    case 35:
+        return "Lanao del Sur";
+    case 36:
+        return "La Union";
+    case 37:
+        return "Leyte";
+    case 38:
+        return "Marinduque";
+    case 39:
+        return "Masbate";
+    case 40:
+        return "Mindoro Occidental";
+    case 41:
+        return "Mindoro Oriental";
+    case 42:
+        return "Misamis Occidental";
+    case 43:
+        return "Misamis Oriental";
+    case 44:
+        return "Mountain";
+    case 45:
+        return "Negros Occidental";
+    case 46:
+        return "Negros Oriental";
+    case 47:
+        return "Nueva Ecija";
+    case 48:
+        return "Nueva Vizcaya";
+    case 49:
+        return "Palawan";
+    case 50:
+        return "Pampanga";
+    case 51:
+        return "Pangasinan";
+    case 53:
+        return "Rizal";
+    case 54:
+        return "Romblon";
+    case 55:
+        return "Samar";
+    case 56:
+        return "Maguindanao";
+    case 57:
+        return "North Cotabato";
+    case 58:
+        return "Sorsogon";
+    case 59:
+        return "Southern Leyte";
+    case 60:
+        return "Sulu";
+    case 61:
+        return "Surigao del Norte";
+    case 62:
+        return "Surigao del Sur";
+    case 63:
+        return "Tarlac";
+    case 64:
+        return "Zambales";
+    case 65:
+        return "Zamboanga del Norte";
+    case 66:
+        return "Zamboanga del Sur";
+    case 67:
+        return "Northern Samar";
+    case 68:
+        return "Quirino";
+    case 69:
+        return "Siquijor";
+    case 70:
+        return "South Cotabato";
+    case 71:
+        return "Sultan Kudarat";
+    case 72:
+        return "Tawitawi";
+    case 832:
+        return "Angeles";
+    case 833:
+        return "Bacolod";
+    case 834:
+        return "Bago";
+    case 835:
+        return "Baguio";
+    case 836:
+        return "Bais";
+    case 837:
+        return "Basilan City";
+    case 838:
+        return "Batangas City";
+    case 839:
+        return "Butuan";
+    case 840:
+        return "Cabanatuan";
+    case 875:
+        return "Cadiz";
+    case 876:
+        return "Cagayan de Oro";
+    case 877:
+        return "Calbayog";
+    case 878:
+        return "Caloocan";
+    case 879:
+        return "Canlaon";
+    case 880:
+        return "Cavite City";
+    case 881:
+        return "Cebu City";
+    case 882:
+        return "Cotabato";
+    case 883:
+        return "Dagupan";
+    case 918:
+        return "Danao";
+    case 919:
+        return "Dapitan";
+    case 920:
+        return "Davao City";
+    case 921:
+        return "Dipolog";
+    case 922:
+        return "Dumaguete";
+    case 923:
+        return "General Santos";
+    case 924:
+        return "Gingoog";
+    case 925:
+        return "Iligan";
+    case 926:
+        return "Iloilo City";
+    case 961:
+        return "Iriga";
+    case 962:
+        return "La Carlota";
+    case 963:
+        return "Laoag";
+    case 964:
+        return "Lapu-Lapu";
+    case 965:
+        return "Legaspi";
+    case 966:
+        return "Lipa";
+    case 967:
+        return "Lucena";
+    case 968:
+        return "Mandaue";
+    case 969:
+        return "Manila";
+    case 1004:
+        return "Marawi";
+    case 1005:
+        return "Naga";
+    case 1006:
+        return "Olongapo";
+    case 1007:
+        return "Ormoc";
+    case 1008:
+        return "Oroquieta";
+    case 1009:
+        return "Ozamis";
+    case 1010:
+        return "Pagadian";
+    case 1011:
+        return "Palayan";
+    case 1012:
+        return "Pasay";
+    case 1047:
+        return "Puerto Princesa";
+    case 1048:
+        return "Quezon City";
+    case 1049:
+        return "Roxas";
+    case 1050:
+        return "San Carlos";
+    case 1051:
+        return "San Carlos";
+    case 1052:
+        return "San Jose";
+    case 1053:
+        return "San Pablo";
+    case 1054:
+        return "Silay";
+    case 1055:
+        return "Surigao";
+    case 1090:
+        return "Tacloban";
+    case 1091:
+        return "Tagaytay";
+    case 1092:
+        return "Tagbilaran";
+    case 1093:
+        return "Tangub";
+    case 1094:
+        return "Toledo";
+    case 1095:
+        return "Trece Martires";
+    case 1096:
+        return "Zamboanga";
+    case 1097:
+        return "Aurora";
+    case 1134:
+        return "Quezon";
+    case 1135:
+        return "Negros Occidental";
+    case 1141:
+        return "Biliran";
+    case 1181:
+        return "Compostela Valley";
+    case 1182:
+        return "Davao del Norte";
+    case 1221:
+        return "Guimaras";
+    case 1222:
+        return "Himamaylan";
+    case 1225:
+        return "Kalinga";
+    case 1262:
+        return "Las Pinas";
+    case 1266:
+        return "Malabon";
+    case 1267:
+        return "Malaybalay";
+    case 1308:
+        return "Muntinlupa";
+    case 1309:
+        return "Navotas";
+    case 1311:
+        return "Paranaque";
+    case 1313:
+        return "Passi";
+    case 1477:
+        return "Zambales";
+    case 1352:
+        return "San Jose del Monte";
+    case 1353:
+        return "San Juan";
+    case 1355:
+        return "Santiago";
+    case 1356:
+        return "Sarangani";
+    case 1391:
+        return "Sipalay";
+    case 1393:
+        return "Surigao del Norte";
+    case 1478:
+        return "Zamboanga";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PK(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Federally Administered Tribal Areas";
+    case 2:
+        return "Balochistan";
+    case 3:
+        return "North-West Frontier";
+    case 4:
+        return "Punjab";
+    case 5:
+        return "Sindh";
+    case 6:
+        return "Azad Kashmir";
+    case 7:
+        return "Northern Areas";
+    case 8:
+        return "Islamabad";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PL(int region_code)
+{
+    switch(region_code) {
+    case 72:
+        return "Dolnoslaskie";
+    case 73:
+        return "Kujawsko-Pomorskie";
+    case 74:
+        return "Lodzkie";
+    case 75:
+        return "Lubelskie";
+    case 76:
+        return "Lubuskie";
+    case 77:
+        return "Malopolskie";
+    case 78:
+        return "Mazowieckie";
+    case 79:
+        return "Opolskie";
+    case 80:
+        return "Podkarpackie";
+    case 81:
+        return "Podlaskie";
+    case 82:
+        return "Pomorskie";
+    case 83:
+        return "Slaskie";
+    case 84:
+        return "Swietokrzyskie";
+    case 85:
+        return "Warminsko-Mazurskie";
+    case 86:
+        return "Wielkopolskie";
+    case 87:
+        return "Zachodniopomorskie";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PS(int region_code)
+{
+    switch(region_code) {
+    case 1131:
+        return "Gaza";
+    case 1798:
+        return "West Bank";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PT(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Aveiro";
+    case 3:
+        return "Beja";
+    case 4:
+        return "Braga";
+    case 5:
+        return "Braganca";
+    case 6:
+        return "Castelo Branco";
+    case 7:
+        return "Coimbra";
+    case 8:
+        return "Evora";
+    case 9:
+        return "Faro";
+    case 10:
+        return "Madeira";
+    case 11:
+        return "Guarda";
+    case 13:
+        return "Leiria";
+    case 14:
+        return "Lisboa";
+    case 16:
+        return "Portalegre";
+    case 17:
+        return "Porto";
+    case 18:
+        return "Santarem";
+    case 19:
+        return "Setubal";
+    case 20:
+        return "Viana do Castelo";
+    case 21:
+        return "Vila Real";
+    case 22:
+        return "Viseu";
+    case 23:
+        return "Azores";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_PY(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Alto Parana";
+    case 2:
+        return "Amambay";
+    case 4:
+        return "Caaguazu";
+    case 5:
+        return "Caazapa";
+    case 6:
+        return "Central";
+    case 7:
+        return "Concepcion";
+    case 8:
+        return "Cordillera";
+    case 10:
+        return "Guaira";
+    case 11:
+        return "Itapua";
+    case 12:
+        return "Misiones";
+    case 13:
+        return "Neembucu";
+    case 15:
+        return "Paraguari";
+    case 16:
+        return "Presidente Hayes";
+    case 17:
+        return "San Pedro";
+    case 19:
+        return "Canindeyu";
+    case 22:
+        return "Asuncion";
+    case 23:
+        return "Alto Paraguay";
+    case 24:
+        return "Boqueron";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_QA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ad Dawhah";
+    case 2:
+        return "Al Ghuwariyah";
+    case 3:
+        return "Al Jumaliyah";
+    case 4:
+        return "Al Khawr";
+    case 5:
+        return "Al Wakrah Municipality";
+    case 6:
+        return "Ar Rayyan";
+    case 8:
+        return "Madinat ach Shamal";
+    case 9:
+        return "Umm Salal";
+    case 10:
+        return "Al Wakrah";
+    case 11:
+        return "Jariyan al Batnah";
+    case 12:
+        return "Umm Sa'id";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_RO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Alba";
+    case 2:
+        return "Arad";
+    case 3:
+        return "Arges";
+    case 4:
+        return "Bacau";
+    case 5:
+        return "Bihor";
+    case 6:
+        return "Bistrita-Nasaud";
+    case 7:
+        return "Botosani";
+    case 8:
+        return "Braila";
+    case 9:
+        return "Brasov";
+    case 10:
+        return "Bucuresti";
+    case 11:
+        return "Buzau";
+    case 12:
+        return "Caras-Severin";
+    case 13:
+        return "Cluj";
+    case 14:
+        return "Constanta";
+    case 15:
+        return "Covasna";
+    case 16:
+        return "Dambovita";
+    case 17:
+        return "Dolj";
+    case 18:
+        return "Galati";
+    case 19:
+        return "Gorj";
+    case 20:
+        return "Harghita";
+    case 21:
+        return "Hunedoara";
+    case 22:
+        return "Ialomita";
+    case 23:
+        return "Iasi";
+    case 25:
+        return "Maramures";
+    case 26:
+        return "Mehedinti";
+    case 27:
+        return "Mures";
+    case 28:
+        return "Neamt";
+    case 29:
+        return "Olt";
+    case 30:
+        return "Prahova";
+    case 31:
+        return "Salaj";
+    case 32:
+        return "Satu Mare";
+    case 33:
+        return "Sibiu";
+    case 34:
+        return "Suceava";
+    case 35:
+        return "Teleorman";
+    case 36:
+        return "Timis";
+    case 37:
+        return "Tulcea";
+    case 38:
+        return "Vaslui";
+    case 39:
+        return "Valcea";
+    case 40:
+        return "Vrancea";
+    case 41:
+        return "Calarasi";
+    case 42:
+        return "Giurgiu";
+    case 43:
+        return "Ilfov";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_RS(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Kosovo";
+    case 2:
+        return "Vojvodina";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_RU(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Adygeya, Republic of";
+    case 2:
+        return "Aginsky Buryatsky AO";
+    case 3:
+        return "Gorno-Altay";
+    case 4:
+        return "Altaisky krai";
+    case 5:
+        return "Amur";
+    case 6:
+        return "Arkhangel'sk";
+    case 7:
+        return "Astrakhan'";
+    case 8:
+        return "Bashkortostan";
+    case 9:
+        return "Belgorod";
+    case 10:
+        return "Bryansk";
+    case 11:
+        return "Buryat";
+    case 12:
+        return "Chechnya";
+    case 13:
+        return "Chelyabinsk";
+    case 14:
+        return "Chita";
+    case 15:
+        return "Chukot";
+    case 16:
+        return "Chuvashia";
+    case 17:
+        return "Dagestan";
+    case 18:
+        return "Evenk";
+    case 19:
+        return "Ingush";
+    case 20:
+        return "Irkutsk";
+    case 21:
+        return "Ivanovo";
+    case 22:
+        return "Kabardin-Balkar";
+    case 23:
+        return "Kaliningrad";
+    case 24:
+        return "Kalmyk";
+    case 25:
+        return "Kaluga";
+    case 26:
+        return "Kamchatka";
+    case 27:
+        return "Karachay-Cherkess";
+    case 28:
+        return "Karelia";
+    case 29:
+        return "Kemerovo";
+    case 30:
+        return "Khabarovsk";
+    case 31:
+        return "Khakass";
+    case 32:
+        return "Khanty-Mansiy";
+    case 33:
+        return "Kirov";
+    case 34:
+        return "Komi";
+    case 36:
+        return "Koryak";
+    case 37:
+        return "Kostroma";
+    case 38:
+        return "Krasnodar";
+    case 39:
+        return "Krasnoyarsk";
+    case 40:
+        return "Kurgan";
+    case 41:
+        return "Kursk";
+    case 42:
+        return "Leningrad";
+    case 43:
+        return "Lipetsk";
+    case 44:
+        return "Magadan";
+    case 45:
+        return "Mariy-El";
+    case 46:
+        return "Mordovia";
+    case 47:
+        return "Moskva";
+    case 48:
+        return "Moscow City";
+    case 49:
+        return "Murmansk";
+    case 50:
+        return "Nenets";
+    case 51:
+        return "Nizhegorod";
+    case 52:
+        return "Novgorod";
+    case 53:
+        return "Novosibirsk";
+    case 54:
+        return "Omsk";
+    case 55:
+        return "Orenburg";
+    case 56:
+        return "Orel";
+    case 57:
+        return "Penza";
+    case 58:
+        return "Perm'";
+    case 59:
+        return "Primor'ye";
+    case 60:
+        return "Pskov";
+    case 61:
+        return "Rostov";
+    case 62:
+        return "Ryazan'";
+    case 63:
+        return "Sakha";
+    case 64:
+        return "Sakhalin";
+    case 65:
+        return "Samara";
+    case 66:
+        return "Saint Petersburg City";
+    case 67:
+        return "Saratov";
+    case 68:
+        return "North Ossetia";
+    case 69:
+        return "Smolensk";
+    case 70:
+        return "Stavropol'";
+    case 71:
+        return "Sverdlovsk";
+    case 72:
+        return "Tambovskaya oblast";
+    case 73:
+        return "Tatarstan";
+    case 74:
+        return "Taymyr";
+    case 75:
+        return "Tomsk";
+    case 76:
+        return "Tula";
+    case 77:
+        return "Tver'";
+    case 78:
+        return "Tyumen'";
+    case 79:
+        return "Tuva";
+    case 80:
+        return "Udmurt";
+    case 81:
+        return "Ul'yanovsk";
+    case 83:
+        return "Vladimir";
+    case 84:
+        return "Volgograd";
+    case 85:
+        return "Vologda";
+    case 86:
+        return "Voronezh";
+    case 87:
+        return "Yamal-Nenets";
+    case 88:
+        return "Yaroslavl'";
+    case 89:
+        return "Yevrey";
+    case 90:
+        return "Permskiy Kray";
+    case 91:
+        return "Krasnoyarskiy Kray";
+    case 92:
+        return "Kamchatskiy Kray";
+    case 93:
+        return "Zabaykal'skiy Kray";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_RW(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Butare";
+    case 6:
+        return "Gitarama";
+    case 7:
+        return "Kibungo";
+    case 9:
+        return "Kigali";
+    case 11:
+        return "Est";
+    case 12:
+        return "Kigali";
+    case 13:
+        return "Nord";
+    case 14:
+        return "Ouest";
+    case 15:
+        return "Sud";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SA(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Al Bahah";
+    case 5:
+        return "Al Madinah";
+    case 6:
+        return "Ash Sharqiyah";
+    case 8:
+        return "Al Qasim";
+    case 10:
+        return "Ar Riyad";
+    case 11:
+        return "Asir Province";
+    case 13:
+        return "Ha'il";
+    case 14:
+        return "Makkah";
+    case 15:
+        return "Al Hudud ash Shamaliyah";
+    case 16:
+        return "Najran";
+    case 17:
+        return "Jizan";
+    case 19:
+        return "Tabuk";
+    case 20:
+        return "Al Jawf";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SB(int region_code)
+{
+    switch(region_code) {
+    case 3:
+        return "Malaita";
+    case 6:
+        return "Guadalcanal";
+    case 7:
+        return "Isabel";
+    case 8:
+        return "Makira";
+    case 9:
+        return "Temotu";
+    case 10:
+        return "Central";
+    case 11:
+        return "Western";
+    case 12:
+        return "Choiseul";
+    case 13:
+        return "Rennell and Bellona";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SC(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Anse aux Pins";
+    case 2:
+        return "Anse Boileau";
+    case 3:
+        return "Anse Etoile";
+    case 4:
+        return "Anse Louis";
+    case 5:
+        return "Anse Royale";
+    case 6:
+        return "Baie Lazare";
+    case 7:
+        return "Baie Sainte Anne";
+    case 8:
+        return "Beau Vallon";
+    case 9:
+        return "Bel Air";
+    case 10:
+        return "Bel Ombre";
+    case 11:
+        return "Cascade";
+    case 12:
+        return "Glacis";
+    case 13:
+        return "Grand' Anse";
+    case 14:
+        return "Grand' Anse";
+    case 15:
+        return "La Digue";
+    case 16:
+        return "La Riviere Anglaise";
+    case 17:
+        return "Mont Buxton";
+    case 18:
+        return "Mont Fleuri";
+    case 19:
+        return "Plaisance";
+    case 20:
+        return "Pointe La Rue";
+    case 21:
+        return "Port Glaud";
+    case 22:
+        return "Saint Louis";
+    case 23:
+        return "Takamaka";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SD(int region_code)
+{
+    switch(region_code) {
+    case 27:
+        return "Al Wusta";
+    case 28:
+        return "Al Istiwa'iyah";
+    case 29:
+        return "Al Khartum";
+    case 30:
+        return "Ash Shamaliyah";
+    case 31:
+        return "Ash Sharqiyah";
+    case 32:
+        return "Bahr al Ghazal";
+    case 33:
+        return "Darfur";
+    case 34:
+        return "Kurdufan";
+    case 35:
+        return "Upper Nile";
+    case 40:
+        return "Al Wahadah State";
+    case 44:
+        return "Central Equatoria State";
+    case 49:
+        return "Southern Darfur";
+    case 50:
+        return "Southern Kordofan";
+    case 52:
+        return "Kassala";
+    case 53:
+        return "River Nile";
+    case 55:
+        return "Northern Darfur";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SE(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Blekinge Lan";
+    case 3:
+        return "Gavleborgs Lan";
+    case 5:
+        return "Gotlands Lan";
+    case 6:
+        return "Hallands Lan";
+    case 7:
+        return "Jamtlands Lan";
+    case 8:
+        return "Jonkopings Lan";
+    case 9:
+        return "Kalmar Lan";
+    case 10:
+        return "Dalarnas Lan";
+    case 12:
+        return "Kronobergs Lan";
+    case 14:
+        return "Norrbottens Lan";
+    case 15:
+        return "Orebro Lan";
+    case 16:
+        return "Ostergotlands Lan";
+    case 18:
+        return "Sodermanlands Lan";
+    case 21:
+        return "Uppsala Lan";
+    case 22:
+        return "Varmlands Lan";
+    case 23:
+        return "Vasterbottens Lan";
+    case 24:
+        return "Vasternorrlands Lan";
+    case 25:
+        return "Vastmanlands Lan";
+    case 26:
+        return "Stockholms Lan";
+    case 27:
+        return "Skane Lan";
+    case 28:
+        return "Vastra Gotaland";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SH(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ascension";
+    case 2:
+        return "Saint Helena";
+    case 3:
+        return "Tristan da Cunha";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SI(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ajdovscina Commune";
+    case 2:
+        return "Beltinci Commune";
+    case 3:
+        return "Bled Commune";
+    case 4:
+        return "Bohinj Commune";
+    case 5:
+        return "Borovnica Commune";
+    case 6:
+        return "Bovec Commune";
+    case 7:
+        return "Brda Commune";
+    case 8:
+        return "Brezice Commune";
+    case 9:
+        return "Brezovica Commune";
+    case 11:
+        return "Celje Commune";
+    case 12:
+        return "Cerklje na Gorenjskem Commune";
+    case 13:
+        return "Cerknica Commune";
+    case 14:
+        return "Cerkno Commune";
+    case 15:
+        return "Crensovci Commune";
+    case 16:
+        return "Crna na Koroskem Commune";
+    case 17:
+        return "Crnomelj Commune";
+    case 19:
+        return "Divaca Commune";
+    case 20:
+        return "Dobrepolje Commune";
+    case 22:
+        return "Dol pri Ljubljani Commune";
+    case 24:
+        return "Dornava Commune";
+    case 25:
+        return "Dravograd Commune";
+    case 26:
+        return "Duplek Commune";
+    case 27:
+        return "Gorenja vas-Poljane Commune";
+    case 28:
+        return "Gorisnica Commune";
+    case 29:
+        return "Gornja Radgona Commune";
+    case 30:
+        return "Gornji Grad Commune";
+    case 31:
+        return "Gornji Petrovci Commune";
+    case 32:
+        return "Grosuplje Commune";
+    case 34:
+        return "Hrastnik Commune";
+    case 35:
+        return "Hrpelje-Kozina Commune";
+    case 36:
+        return "Idrija Commune";
+    case 37:
+        return "Ig Commune";
+    case 38:
+        return "Ilirska Bistrica Commune";
+    case 39:
+        return "Ivancna Gorica Commune";
+    case 40:
+        return "Izola-Isola Commune";
+    case 42:
+        return "Jursinci Commune";
+    case 44:
+        return "Kanal Commune";
+    case 45:
+        return "Kidricevo Commune";
+    case 46:
+        return "Kobarid Commune";
+    case 47:
+        return "Kobilje Commune";
+    case 49:
+        return "Komen Commune";
+    case 50:
+        return "Koper-Capodistria Urban Commune";
+    case 51:
+        return "Kozje Commune";
+    case 52:
+        return "Kranj Commune";
+    case 53:
+        return "Kranjska Gora Commune";
+    case 54:
+        return "Krsko Commune";
+    case 55:
+        return "Kungota Commune";
+    case 57:
+        return "Lasko Commune";
+    case 61:
+        return "Ljubljana Urban Commune";
+    case 62:
+        return "Ljubno Commune";
+    case 64:
+        return "Logatec Commune";
+    case 66:
+        return "Loski Potok Commune";
+    case 68:
+        return "Lukovica Commune";
+    case 71:
+        return "Medvode Commune";
+    case 72:
+        return "Menges Commune";
+    case 73:
+        return "Metlika Commune";
+    case 74:
+        return "Mezica Commune";
+    case 76:
+        return "Mislinja Commune";
+    case 77:
+        return "Moravce Commune";
+    case 78:
+        return "Moravske Toplice Commune";
+    case 79:
+        return "Mozirje Commune";
+    case 80:
+        return "Murska Sobota Urban Commune";
+    case 81:
+        return "Muta Commune";
+    case 82:
+        return "Naklo Commune";
+    case 83:
+        return "Nazarje Commune";
+    case 84:
+        return "Nova Gorica Urban Commune";
+    case 86:
+        return "Odranci Commune";
+    case 87:
+        return "Ormoz Commune";
+    case 88:
+        return "Osilnica Commune";
+    case 89:
+        return "Pesnica Commune";
+    case 91:
+        return "Pivka Commune";
+    case 92:
+        return "Podcetrtek Commune";
+    case 94:
+        return "Postojna Commune";
+    case 97:
+        return "Puconci Commune";
+    case 98:
+        return "Race-Fram Commune";
+    case 99:
+        return "Radece Commune";
+    case 832:
+        return "Radenci Commune";
+    case 833:
+        return "Radlje ob Dravi Commune";
+    case 834:
+        return "Radovljica Commune";
+    case 837:
+        return "Rogasovci Commune";
+    case 838:
+        return "Rogaska Slatina Commune";
+    case 839:
+        return "Rogatec Commune";
+    case 875:
+        return "Semic Commune";
+    case 876:
+        return "Sencur Commune";
+    case 877:
+        return "Sentilj Commune";
+    case 878:
+        return "Sentjernej Commune";
+    case 880:
+        return "Sevnica Commune";
+    case 881:
+        return "Sezana Commune";
+    case 882:
+        return "Skocjan Commune";
+    case 883:
+        return "Skofja Loka Commune";
+    case 918:
+        return "Skofljica Commune";
+    case 919:
+        return "Slovenj Gradec Urban Commune";
+    case 921:
+        return "Slovenske Konjice Commune";
+    case 922:
+        return "Smarje pri Jelsah Commune";
+    case 923:
+        return "Smartno ob Paki Commune";
+    case 924:
+        return "Sostanj Commune";
+    case 925:
+        return "Starse Commune";
+    case 926:
+        return "Store Commune";
+    case 961:
+        return "Sveti Jurij Commune";
+    case 962:
+        return "Tolmin Commune";
+    case 963:
+        return "Trbovlje Commune";
+    case 964:
+        return "Trebnje Commune";
+    case 965:
+        return "Trzic Commune";
+    case 966:
+        return "Turnisce Commune";
+    case 967:
+        return "Velenje Urban Commune";
+    case 968:
+        return "Velike Lasce Commune";
+    case 1004:
+        return "Vipava Commune";
+    case 1005:
+        return "Vitanje Commune";
+    case 1006:
+        return "Vodice Commune";
+    case 1008:
+        return "Vrhnika Commune";
+    case 1009:
+        return "Vuzenica Commune";
+    case 1010:
+        return "Zagorje ob Savi Commune";
+    case 1012:
+        return "Zavrc Commune";
+    case 1047:
+        return "Zelezniki Commune";
+    case 1048:
+        return "Ziri Commune";
+    case 1049:
+        return "Zrece Commune";
+    case 1050:
+        return "Benedikt Commune";
+    case 1051:
+        return "Bistrica ob Sotli Commune";
+    case 1052:
+        return "Bloke Commune";
+    case 1053:
+        return "Braslovce Commune";
+    case 1054:
+        return "Cankova Commune";
+    case 1055:
+        return "Cerkvenjak Commune";
+    case 1090:
+        return "Destrnik Commune";
+    case 1091:
+        return "Dobje Commune";
+    case 1092:
+        return "Dobrna Commune";
+    case 1093:
+        return "Dobrova-Horjul-Polhov Gradec Commune";
+    case 1094:
+        return "Dobrovnik-Dobronak Commune";
+    case 1095:
+        return "Dolenjske Toplice Commune";
+    case 1096:
+        return "Domzale Commune";
+    case 1097:
+        return "Grad Commune";
+    case 1098:
+        return "Hajdina Commune";
+    case 1133:
+        return "Hoce-Slivnica Commune";
+    case 1134:
+        return "Hodos-Hodos Commune";
+    case 1135:
+        return "Horjul Commune";
+    case 1136:
+        return "Jesenice Commune";
+    case 1137:
+        return "Jezersko Commune";
+    case 1138:
+        return "Kamnik Commune";
+    case 1139:
+        return "Kocevje Commune";
+    case 1140:
+        return "Komenda Commune";
+    case 1141:
+        return "Kostel Commune";
+    case 1176:
+        return "Krizevci Commune";
+    case 1177:
+        return "Kuzma Commune";
+    case 1178:
+        return "Lenart Commune";
+    case 1179:
+        return "Lendava-Lendva Commune";
+    case 1180:
+        return "Litija Commune";
+    case 1181:
+        return "Ljutomer Commune";
+    case 1182:
+        return "Loska Dolina Commune";
+    case 1183:
+        return "Lovrenc na Pohorju Commune";
+    case 1184:
+        return "Luce Commune";
+    case 1219:
+        return "Majsperk Commune";
+    case 1220:
+        return "Maribor Commune";
+    case 1221:
+        return "Markovci Commune";
+    case 1222:
+        return "Miklavz na Dravskem polju Commune";
+    case 1223:
+        return "Miren-Kostanjevica Commune";
+    case 1224:
+        return "Mirna Pec Commune";
+    case 1225:
+        return "Novo mesto Urban Commune";
+    case 1226:
+        return "Oplotnica Commune";
+    case 1227:
+        return "Piran-Pirano Commune";
+    case 1262:
+        return "Podlehnik Commune";
+    case 1263:
+        return "Podvelka Commune";
+    case 1264:
+        return "Polzela Commune";
+    case 1265:
+        return "Prebold Commune";
+    case 1266:
+        return "Preddvor Commune";
+    case 1267:
+        return "Prevalje Commune";
+    case 1268:
+        return "Ptuj Urban Commune";
+    case 1269:
+        return "Ravne na Koroskem Commune";
+    case 1270:
+        return "Razkrizje Commune";
+    case 1305:
+        return "Ribnica Commune";
+    case 1306:
+        return "Ribnica na Pohorju Commune";
+    case 1307:
+        return "Ruse Commune";
+    case 1308:
+        return "Salovci Commune";
+    case 1309:
+        return "Selnica ob Dravi Commune";
+    case 1310:
+        return "Sempeter-Vrtojba Commune";
+    case 1311:
+        return "Sentjur pri Celju Commune";
+    case 1312:
+        return "Slovenska Bistrica Commune";
+    case 1313:
+        return "Smartno pri Litiji Commune";
+    case 1348:
+        return "Sodrazica Commune";
+    case 1349:
+        return "Solcava Commune";
+    case 1350:
+        return "Sveta Ana Commune";
+    case 1351:
+        return "Sveti Andraz v Slovenskih goricah Commune";
+    case 1352:
+        return "Tabor Commune";
+    case 1353:
+        return "Tisina Commune";
+    case 1354:
+        return "Trnovska vas Commune";
+    case 1355:
+        return "Trzin Commune";
+    case 1356:
+        return "Velika Polana Commune";
+    case 1391:
+        return "Verzej Commune";
+    case 1392:
+        return "Videm Commune";
+    case 1393:
+        return "Vojnik Commune";
+    case 1394:
+        return "Vransko Commune";
+    case 1395:
+        return "Zalec Commune";
+    case 1396:
+        return "Zetale Commune";
+    case 1397:
+        return "Zirovnica Commune";
+    case 1398:
+        return "Zuzemberk Commune";
+    case 1399:
+        return "Apace Commune";
+    case 1434:
+        return "Cirkulane Commune";
+    case 1435:
+        return "Gorje";
+    case 1436:
+        return "Kostanjevica na Krki";
+    case 1437:
+        return "Log-Dragomer";
+    case 1438:
+        return "Makole";
+    case 1439:
+        return "Mirna";
+    case 1440:
+        return "Mokronog-Trebelno";
+    case 1441:
+        return "Poljcane";
+    case 1442:
+        return "Recica ob Savinji";
+    case 1477:
+        return "Rence-Vogrsko";
+    case 1478:
+        return "Sentrupert";
+    case 1479:
+        return "Smarjesk Toplice";
+    case 1480:
+        return "Sredisce ob Dravi";
+    case 1481:
+        return "Straza";
+    case 1483:
+        return "Sveti Jurij v Slovenskih Goricah";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SK(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Banska Bystrica";
+    case 2:
+        return "Bratislava";
+    case 3:
+        return "Kosice";
+    case 4:
+        return "Nitra";
+    case 5:
+        return "Presov";
+    case 6:
+        return "Trencin";
+    case 7:
+        return "Trnava";
+    case 8:
+        return "Zilina";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SL(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Eastern";
+    case 2:
+        return "Northern";
+    case 3:
+        return "Southern";
+    case 4:
+        return "Western Area";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Acquaviva";
+    case 2:
+        return "Chiesanuova";
+    case 3:
+        return "Domagnano";
+    case 4:
+        return "Faetano";
+    case 5:
+        return "Fiorentino";
+    case 6:
+        return "Borgo Maggiore";
+    case 7:
+        return "San Marino";
+    case 8:
+        return "Monte Giardino";
+    case 9:
+        return "Serravalle";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Dakar";
+    case 3:
+        return "Diourbel";
+    case 5:
+        return "Tambacounda";
+    case 7:
+        return "Thies";
+    case 9:
+        return "Fatick";
+    case 10:
+        return "Kaolack";
+    case 11:
+        return "Kolda";
+    case 12:
+        return "Ziguinchor";
+    case 13:
+        return "Louga";
+    case 14:
+        return "Saint-Louis";
+    case 15:
+        return "Matam";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Bakool";
+    case 2:
+        return "Banaadir";
+    case 3:
+        return "Bari";
+    case 4:
+        return "Bay";
+    case 5:
+        return "Galguduud";
+    case 6:
+        return "Gedo";
+    case 7:
+        return "Hiiraan";
+    case 8:
+        return "Jubbada Dhexe";
+    case 9:
+        return "Jubbada Hoose";
+    case 10:
+        return "Mudug";
+    case 11:
+        return "Nugaal";
+    case 12:
+        return "Sanaag";
+    case 13:
+        return "Shabeellaha Dhexe";
+    case 14:
+        return "Shabeellaha Hoose";
+    case 16:
+        return "Woqooyi Galbeed";
+    case 18:
+        return "Nugaal";
+    case 19:
+        return "Togdheer";
+    case 20:
+        return "Woqooyi Galbeed";
+    case 21:
+        return "Awdal";
+    case 22:
+        return "Sool";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SR(int region_code)
+{
+    switch(region_code) {
+    case 10:
+        return "Brokopondo";
+    case 11:
+        return "Commewijne";
+    case 12:
+        return "Coronie";
+    case 13:
+        return "Marowijne";
+    case 14:
+        return "Nickerie";
+    case 15:
+        return "Para";
+    case 16:
+        return "Paramaribo";
+    case 17:
+        return "Saramacca";
+    case 18:
+        return "Sipaliwini";
+    case 19:
+        return "Wanica";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SS(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Central Equatoria";
+    case 2:
+        return "Eastern Equatoria";
+    case 3:
+        return "Jonglei";
+    case 4:
+        return "Lakes";
+    case 5:
+        return "Northern Bahr el Ghazal";
+    case 6:
+        return "Unity";
+    case 7:
+        return "Upper Nile";
+    case 8:
+        return "Warrap";
+    case 9:
+        return "Western Bahr el Ghazal";
+    case 10:
+        return "Western Equatoria";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ST(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Principe";
+    case 2:
+        return "Sao Tome";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SV(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ahuachapan";
+    case 2:
+        return "Cabanas";
+    case 3:
+        return "Chalatenango";
+    case 4:
+        return "Cuscatlan";
+    case 5:
+        return "La Libertad";
+    case 6:
+        return "La Paz";
+    case 7:
+        return "La Union";
+    case 8:
+        return "Morazan";
+    case 9:
+        return "San Miguel";
+    case 10:
+        return "San Salvador";
+    case 11:
+        return "Santa Ana";
+    case 12:
+        return "San Vicente";
+    case 13:
+        return "Sonsonate";
+    case 14:
+        return "Usulutan";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SY(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Al Hasakah";
+    case 2:
+        return "Al Ladhiqiyah";
+    case 3:
+        return "Al Qunaytirah";
+    case 4:
+        return "Ar Raqqah";
+    case 5:
+        return "As Suwayda'";
+    case 6:
+        return "Dar";
+    case 7:
+        return "Dayr az Zawr";
+    case 8:
+        return "Rif Dimashq";
+    case 9:
+        return "Halab";
+    case 10:
+        return "Hamah";
+    case 11:
+        return "Hims";
+    case 12:
+        return "Idlib";
+    case 13:
+        return "Dimashq";
+    case 14:
+        return "Tartus";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_SZ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Hhohho";
+    case 2:
+        return "Lubombo";
+    case 3:
+        return "Manzini";
+    case 4:
+        return "Shiselweni";
+    case 5:
+        return "Praslin";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TD(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Batha";
+    case 2:
+        return "Biltine";
+    case 3:
+        return "Borkou-Ennedi-Tibesti";
+    case 4:
+        return "Chari-Baguirmi";
+    case 5:
+        return "Guera";
+    case 6:
+        return "Kanem";
+    case 7:
+        return "Lac";
+    case 8:
+        return "Logone Occidental";
+    case 9:
+        return "Logone Oriental";
+    case 10:
+        return "Mayo-Kebbi";
+    case 11:
+        return "Moyen-Chari";
+    case 12:
+        return "Ouaddai";
+    case 13:
+        return "Salamat";
+    case 14:
+        return "Tandjile";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TG(int region_code)
+{
+    switch(region_code) {
+    case 22:
+        return "Centrale";
+    case 23:
+        return "Kara";
+    case 24:
+        return "Maritime";
+    case 25:
+        return "Plateaux";
+    case 26:
+        return "Savanes";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TH(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Mae Hong Son";
+    case 2:
+        return "Chiang Mai";
+    case 3:
+        return "Chiang Rai";
+    case 4:
+        return "Nan";
+    case 5:
+        return "Lamphun";
+    case 6:
+        return "Lampang";
+    case 7:
+        return "Phrae";
+    case 8:
+        return "Tak";
+    case 9:
+        return "Sukhothai";
+    case 10:
+        return "Uttaradit";
+    case 11:
+        return "Kamphaeng Phet";
+    case 12:
+        return "Phitsanulok";
+    case 13:
+        return "Phichit";
+    case 14:
+        return "Phetchabun";
+    case 15:
+        return "Uthai Thani";
+    case 16:
+        return "Nakhon Sawan";
+    case 17:
+        return "Nong Khai";
+    case 18:
+        return "Loei";
+    case 20:
+        return "Sakon Nakhon";
+    case 21:
+        return "Nakhon Phanom";
+    case 22:
+        return "Khon Kaen";
+    case 23:
+        return "Kalasin";
+    case 24:
+        return "Maha Sarakham";
+    case 25:
+        return "Roi Et";
+    case 26:
+        return "Chaiyaphum";
+    case 27:
+        return "Nakhon Ratchasima";
+    case 28:
+        return "Buriram";
+    case 29:
+        return "Surin";
+    case 30:
+        return "Sisaket";
+    case 31:
+        return "Narathiwat";
+    case 32:
+        return "Chai Nat";
+    case 33:
+        return "Sing Buri";
+    case 34:
+        return "Lop Buri";
+    case 35:
+        return "Ang Thong";
+    case 36:
+        return "Phra Nakhon Si Ayutthaya";
+    case 37:
+        return "Saraburi";
+    case 38:
+        return "Nonthaburi";
+    case 39:
+        return "Pathum Thani";
+    case 40:
+        return "Krung Thep";
+    case 41:
+        return "Phayao";
+    case 42:
+        return "Samut Prakan";
+    case 43:
+        return "Nakhon Nayok";
+    case 44:
+        return "Chachoengsao";
+    case 45:
+        return "Prachin Buri";
+    case 46:
+        return "Chon Buri";
+    case 47:
+        return "Rayong";
+    case 48:
+        return "Chanthaburi";
+    case 49:
+        return "Trat";
+    case 50:
+        return "Kanchanaburi";
+    case 51:
+        return "Suphan Buri";
+    case 52:
+        return "Ratchaburi";
+    case 53:
+        return "Nakhon Pathom";
+    case 54:
+        return "Samut Songkhram";
+    case 55:
+        return "Samut Sakhon";
+    case 56:
+        return "Phetchaburi";
+    case 57:
+        return "Prachuap Khiri Khan";
+    case 58:
+        return "Chumphon";
+    case 59:
+        return "Ranong";
+    case 60:
+        return "Surat Thani";
+    case 61:
+        return "Phangnga";
+    case 62:
+        return "Phuket";
+    case 63:
+        return "Krabi";
+    case 64:
+        return "Nakhon Si Thammarat";
+    case 65:
+        return "Trang";
+    case 66:
+        return "Phatthalung";
+    case 67:
+        return "Satun";
+    case 68:
+        return "Songkhla";
+    case 69:
+        return "Pattani";
+    case 70:
+        return "Yala";
+    case 71:
+        return "Ubon Ratchathani";
+    case 72:
+        return "Yasothon";
+    case 73:
+        return "Nakhon Phanom";
+    case 74:
+        return "Prachin Buri";
+    case 75:
+        return "Ubon Ratchathani";
+    case 76:
+        return "Udon Thani";
+    case 77:
+        return "Amnat Charoen";
+    case 78:
+        return "Mukdahan";
+    case 79:
+        return "Nong Bua Lamphu";
+    case 80:
+        return "Sa Kaeo";
+    case 81:
+        return "Bueng Kan";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TJ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Kuhistoni Badakhshon";
+    case 2:
+        return "Khatlon";
+    case 3:
+        return "Sughd";
+    case 4:
+        return "Dushanbe";
+    case 5:
+        return "Nohiyahoi Tobei Jumhuri";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TL(int region_code)
+{
+    switch(region_code) {
+    case 6:
+        return "Dili";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ahal";
+    case 2:
+        return "Balkan";
+    case 3:
+        return "Dashoguz";
+    case 4:
+        return "Lebap";
+    case 5:
+        return "Mary";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TN(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Kasserine";
+    case 3:
+        return "Kairouan";
+    case 6:
+        return "Jendouba";
+    case 10:
+        return "Qafsah";
+    case 14:
+        return "El Kef";
+    case 15:
+        return "Al Mahdia";
+    case 16:
+        return "Al Munastir";
+    case 17:
+        return "Bajah";
+    case 18:
+        return "Bizerte";
+    case 19:
+        return "Nabeul";
+    case 22:
+        return "Siliana";
+    case 23:
+        return "Sousse";
+    case 27:
+        return "Ben Arous";
+    case 28:
+        return "Madanin";
+    case 29:
+        return "Gabes";
+    case 31:
+        return "Kebili";
+    case 32:
+        return "Sfax";
+    case 33:
+        return "Sidi Bou Zid";
+    case 34:
+        return "Tataouine";
+    case 35:
+        return "Tozeur";
+    case 36:
+        return "Tunis";
+    case 37:
+        return "Zaghouan";
+    case 38:
+        return "Aiana";
+    case 39:
+        return "Manouba";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TO(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Ha";
+    case 2:
+        return "Tongatapu";
+    case 3:
+        return "Vava";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TR(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Adiyaman";
+    case 3:
+        return "Afyonkarahisar";
+    case 4:
+        return "Agri";
+    case 5:
+        return "Amasya";
+    case 7:
+        return "Antalya";
+    case 8:
+        return "Artvin";
+    case 9:
+        return "Aydin";
+    case 10:
+        return "Balikesir";
+    case 11:
+        return "Bilecik";
+    case 12:
+        return "Bingol";
+    case 13:
+        return "Bitlis";
+    case 14:
+        return "Bolu";
+    case 15:
+        return "Burdur";
+    case 16:
+        return "Bursa";
+    case 17:
+        return "Canakkale";
+    case 19:
+        return "Corum";
+    case 20:
+        return "Denizli";
+    case 21:
+        return "Diyarbakir";
+    case 22:
+        return "Edirne";
+    case 23:
+        return "Elazig";
+    case 24:
+        return "Erzincan";
+    case 25:
+        return "Erzurum";
+    case 26:
+        return "Eskisehir";
+    case 28:
+        return "Giresun";
+    case 31:
+        return "Hatay";
+    case 32:
+        return "Mersin";
+    case 33:
+        return "Isparta";
+    case 34:
+        return "Istanbul";
+    case 35:
+        return "Izmir";
+    case 37:
+        return "Kastamonu";
+    case 38:
+        return "Kayseri";
+    case 39:
+        return "Kirklareli";
+    case 40:
+        return "Kirsehir";
+    case 41:
+        return "Kocaeli";
+    case 43:
+        return "Kutahya";
+    case 44:
+        return "Malatya";
+    case 45:
+        return "Manisa";
+    case 46:
+        return "Kahramanmaras";
+    case 48:
+        return "Mugla";
+    case 49:
+        return "Mus";
+    case 50:
+        return "Nevsehir";
+    case 52:
+        return "Ordu";
+    case 53:
+        return "Rize";
+    case 54:
+        return "Sakarya";
+    case 55:
+        return "Samsun";
+    case 57:
+        return "Sinop";
+    case 58:
+        return "Sivas";
+    case 59:
+        return "Tekirdag";
+    case 60:
+        return "Tokat";
+    case 61:
+        return "Trabzon";
+    case 62:
+        return "Tunceli";
+    case 63:
+        return "Sanliurfa";
+    case 64:
+        return "Usak";
+    case 65:
+        return "Van";
+    case 66:
+        return "Yozgat";
+    case 68:
+        return "Ankara";
+    case 69:
+        return "Gumushane";
+    case 70:
+        return "Hakkari";
+    case 71:
+        return "Konya";
+    case 72:
+        return "Mardin";
+    case 73:
+        return "Nigde";
+    case 74:
+        return "Siirt";
+    case 75:
+        return "Aksaray";
+    case 76:
+        return "Batman";
+    case 77:
+        return "Bayburt";
+    case 78:
+        return "Karaman";
+    case 79:
+        return "Kirikkale";
+    case 80:
+        return "Sirnak";
+    case 81:
+        return "Adana";
+    case 82:
+        return "Cankiri";
+    case 83:
+        return "Gaziantep";
+    case 84:
+        return "Kars";
+    case 85:
+        return "Zonguldak";
+    case 86:
+        return "Ardahan";
+    case 87:
+        return "Bartin";
+    case 88:
+        return "Igdir";
+    case 89:
+        return "Karabuk";
+    case 90:
+        return "Kilis";
+    case 91:
+        return "Osmaniye";
+    case 92:
+        return "Yalova";
+    case 93:
+        return "Duzce";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TT(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Arima";
+    case 2:
+        return "Caroni";
+    case 3:
+        return "Mayaro";
+    case 4:
+        return "Nariva";
+    case 5:
+        return "Port-of-Spain";
+    case 6:
+        return "Saint Andrew";
+    case 7:
+        return "Saint David";
+    case 8:
+        return "Saint George";
+    case 9:
+        return "Saint Patrick";
+    case 10:
+        return "San Fernando";
+    case 11:
+        return "Tobago";
+    case 12:
+        return "Victoria";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TW(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Fu-chien";
+    case 2:
+        return "Kao-hsiung";
+    case 3:
+        return "T'ai-pei";
+    case 4:
+        return "T'ai-wan";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_TZ(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Pwani";
+    case 3:
+        return "Dodoma";
+    case 4:
+        return "Iringa";
+    case 5:
+        return "Kigoma";
+    case 6:
+        return "Kilimanjaro";
+    case 7:
+        return "Lindi";
+    case 8:
+        return "Mara";
+    case 9:
+        return "Mbeya";
+    case 10:
+        return "Morogoro";
+    case 11:
+        return "Mtwara";
+    case 12:
+        return "Mwanza";
+    case 13:
+        return "Pemba North";
+    case 14:
+        return "Ruvuma";
+    case 15:
+        return "Shinyanga";
+    case 16:
+        return "Singida";
+    case 17:
+        return "Tabora";
+    case 18:
+        return "Tanga";
+    case 19:
+        return "Kagera";
+    case 20:
+        return "Pemba South";
+    case 21:
+        return "Zanzibar Central";
+    case 22:
+        return "Zanzibar North";
+    case 23:
+        return "Dar es Salaam";
+    case 24:
+        return "Rukwa";
+    case 25:
+        return "Zanzibar Urban";
+    case 26:
+        return "Arusha";
+    case 27:
+        return "Manyara";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_UA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Cherkas'ka Oblast'";
+    case 2:
+        return "Chernihivs'ka Oblast'";
+    case 3:
+        return "Chernivets'ka Oblast'";
+    case 4:
+        return "Dnipropetrovs'ka Oblast'";
+    case 5:
+        return "Donets'ka Oblast'";
+    case 6:
+        return "Ivano-Frankivs'ka Oblast'";
+    case 7:
+        return "Kharkivs'ka Oblast'";
+    case 8:
+        return "Khersons'ka Oblast'";
+    case 9:
+        return "Khmel'nyts'ka Oblast'";
+    case 10:
+        return "Kirovohrads'ka Oblast'";
+    case 11:
+        return "Krym";
+    case 12:
+        return "Kyyiv";
+    case 13:
+        return "Kyyivs'ka Oblast'";
+    case 14:
+        return "Luhans'ka Oblast'";
+    case 15:
+        return "L'vivs'ka Oblast'";
+    case 16:
+        return "Mykolayivs'ka Oblast'";
+    case 17:
+        return "Odes'ka Oblast'";
+    case 18:
+        return "Poltavs'ka Oblast'";
+    case 19:
+        return "Rivnens'ka Oblast'";
+    case 20:
+        return "Sevastopol'";
+    case 21:
+        return "Sums'ka Oblast'";
+    case 22:
+        return "Ternopil's'ka Oblast'";
+    case 23:
+        return "Vinnyts'ka Oblast'";
+    case 24:
+        return "Volyns'ka Oblast'";
+    case 25:
+        return "Zakarpats'ka Oblast'";
+    case 26:
+        return "Zaporiz'ka Oblast'";
+    case 27:
+        return "Zhytomyrs'ka Oblast'";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_UG(int region_code)
+{
+    switch(region_code) {
+    case 26:
+        return "Apac";
+    case 28:
+        return "Bundibugyo";
+    case 29:
+        return "Bushenyi";
+    case 30:
+        return "Gulu";
+    case 31:
+        return "Hoima";
+    case 33:
+        return "Jinja";
+    case 36:
+        return "Kalangala";
+    case 37:
+        return "Kampala";
+    case 38:
+        return "Kamuli";
+    case 39:
+        return "Kapchorwa";
+    case 40:
+        return "Kasese";
+    case 41:
+        return "Kibale";
+    case 42:
+        return "Kiboga";
+    case 43:
+        return "Kisoro";
+    case 45:
+        return "Kotido";
+    case 46:
+        return "Kumi";
+    case 47:
+        return "Lira";
+    case 50:
+        return "Masindi";
+    case 52:
+        return "Mbarara";
+    case 56:
+        return "Mubende";
+    case 58:
+        return "Nebbi";
+    case 59:
+        return "Ntungamo";
+    case 60:
+        return "Pallisa";
+    case 61:
+        return "Rakai";
+    case 65:
+        return "Adjumani";
+    case 66:
+        return "Bugiri";
+    case 67:
+        return "Busia";
+    case 69:
+        return "Katakwi";
+    case 70:
+        return "Luwero";
+    case 71:
+        return "Masaka";
+    case 72:
+        return "Moyo";
+    case 73:
+        return "Nakasongola";
+    case 74:
+        return "Sembabule";
+    case 76:
+        return "Tororo";
+    case 77:
+        return "Arua";
+    case 78:
+        return "Iganga";
+    case 79:
+        return "Kabarole";
+    case 80:
+        return "Kaberamaido";
+    case 81:
+        return "Kamwenge";
+    case 82:
+        return "Kanungu";
+    case 83:
+        return "Kayunga";
+    case 84:
+        return "Kitgum";
+    case 85:
+        return "Kyenjojo";
+    case 86:
+        return "Mayuge";
+    case 87:
+        return "Mbale";
+    case 88:
+        return "Moroto";
+    case 89:
+        return "Mpigi";
+    case 90:
+        return "Mukono";
+    case 91:
+        return "Nakapiripirit";
+    case 92:
+        return "Pader";
+    case 93:
+        return "Rukungiri";
+    case 94:
+        return "Sironko";
+    case 95:
+        return "Soroti";
+    case 96:
+        return "Wakiso";
+    case 97:
+        return "Yumbe";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_US(int region_code)
+{
+    switch(region_code) {
+    case 848:
+        return "Armed Forces Americas";
+    case 852:
+        return "Armed Forces Europe, Middle East, & Canada";
+    case 858:
+        return "Alaska";
+    case 859:
+        return "Alabama";
+    case 863:
+        return "Armed Forces Pacific";
+    case 865:
+        return "Arkansas";
+    case 866:
+        return "American Samoa";
+    case 873:
+        return "Arizona";
+    case 934:
+        return "California";
+    case 948:
+        return "Colorado";
+    case 953:
+        return "Connecticut";
+    case 979:
+        return "District of Columbia";
+    case 981:
+        return "Delaware";
+    case 1074:
+        return "Florida";
+    case 1075:
+        return "Federated States of Micronesia";
+    case 1106:
+        return "Georgia";
+    case 1126:
+        return "Guam";
+    case 1157:
+        return "Hawaii";
+    case 1192:
+        return "Iowa";
+    case 1195:
+        return "Idaho";
+    case 1203:
+        return "Illinois";
+    case 1205:
+        return "Indiana";
+    case 1296:
+        return "Kansas";
+    case 1302:
+        return "Kentucky";
+    case 1321:
+        return "Louisiana";
+    case 1364:
+        return "Massachusetts";
+    case 1367:
+        return "Maryland";
+    case 1368:
+        return "Maine";
+    case 1371:
+        return "Marshall Islands";
+    case 1372:
+        return "Michigan";
+    case 1377:
+        return "Minnesota";
+    case 1378:
+        return "Missouri";
+    case 1379:
+        return "Northern Mariana Islands";
+    case 1382:
+        return "Mississippi";
+    case 1383:
+        return "Montana";
+    case 1409:
+        return "North Carolina";
+    case 1410:
+        return "North Dakota";
+    case 1411:
+        return "Nebraska";
+    case 1414:
+        return "New Hampshire";
+    case 1416:
+        return "New Jersey";
+    case 1419:
+        return "New Mexico";
+    case 1428:
+        return "Nevada";
+    case 1431:
+        return "New York";
+    case 1457:
+        return "Ohio";
+    case 1460:
+        return "Oklahoma";
+    case 1467:
+        return "Oregon";
+    case 1493:
+        return "Pennsylvania";
+    case 1515:
+        return "Palau";
+    case 1587:
+        return "Rhode Island";
+    case 1624:
+        return "South Carolina";
+    case 1625:
+        return "South Dakota";
+    case 1678:
+        return "Tennessee";
+    case 1688:
+        return "Texas";
+    case 1727:
+        return "Utah";
+    case 1751:
+        return "Virginia";
+    case 1759:
+        return "Virgin Islands";
+    case 1770:
+        return "Vermont";
+    case 1794:
+        return "Washington";
+    case 1802:
+        return "Wisconsin";
+    case 1815:
+        return "West Virginia";
+    case 1818:
+        return "Wyoming";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_UY(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Artigas";
+    case 2:
+        return "Canelones";
+    case 3:
+        return "Cerro Largo";
+    case 4:
+        return "Colonia";
+    case 5:
+        return "Durazno";
+    case 6:
+        return "Flores";
+    case 7:
+        return "Florida";
+    case 8:
+        return "Lavalleja";
+    case 9:
+        return "Maldonado";
+    case 10:
+        return "Montevideo";
+    case 11:
+        return "Paysandu";
+    case 12:
+        return "Rio Negro";
+    case 13:
+        return "Rivera";
+    case 14:
+        return "Rocha";
+    case 15:
+        return "Salto";
+    case 16:
+        return "San Jose";
+    case 17:
+        return "Soriano";
+    case 18:
+        return "Tacuarembo";
+    case 19:
+        return "Treinta y Tres";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_UZ(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Andijon";
+    case 2:
+        return "Bukhoro";
+    case 3:
+        return "Farghona";
+    case 4:
+        return "Jizzakh";
+    case 5:
+        return "Khorazm";
+    case 6:
+        return "Namangan";
+    case 7:
+        return "Nawoiy";
+    case 8:
+        return "Qashqadaryo";
+    case 9:
+        return "Qoraqalpoghiston";
+    case 10:
+        return "Samarqand";
+    case 11:
+        return "Sirdaryo";
+    case 12:
+        return "Surkhondaryo";
+    case 13:
+        return "Toshkent";
+    case 14:
+        return "Toshkent";
+    case 15:
+        return "Jizzax";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_VC(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Charlotte";
+    case 2:
+        return "Saint Andrew";
+    case 3:
+        return "Saint David";
+    case 4:
+        return "Saint George";
+    case 5:
+        return "Saint Patrick";
+    case 6:
+        return "Grenadines";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_VE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Amazonas";
+    case 2:
+        return "Anzoategui";
+    case 3:
+        return "Apure";
+    case 4:
+        return "Aragua";
+    case 5:
+        return "Barinas";
+    case 6:
+        return "Bolivar";
+    case 7:
+        return "Carabobo";
+    case 8:
+        return "Cojedes";
+    case 9:
+        return "Delta Amacuro";
+    case 11:
+        return "Falcon";
+    case 12:
+        return "Guarico";
+    case 13:
+        return "Lara";
+    case 14:
+        return "Merida";
+    case 15:
+        return "Miranda";
+    case 16:
+        return "Monagas";
+    case 17:
+        return "Nueva Esparta";
+    case 18:
+        return "Portuguesa";
+    case 19:
+        return "Sucre";
+    case 20:
+        return "Tachira";
+    case 21:
+        return "Trujillo";
+    case 22:
+        return "Yaracuy";
+    case 23:
+        return "Zulia";
+    case 24:
+        return "Dependencias Federales";
+    case 25:
+        return "Distrito Federal";
+    case 26:
+        return "Vargas";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_VN(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "An Giang";
+    case 3:
+        return "Ben Tre";
+    case 5:
+        return "Cao Bang";
+    case 9:
+        return "Dong Thap";
+    case 13:
+        return "Hai Phong";
+    case 20:
+        return "Ho Chi Minh";
+    case 21:
+        return "Kien Giang";
+    case 23:
+        return "Lam Dong";
+    case 24:
+        return "Long An";
+    case 30:
+        return "Quang Ninh";
+    case 32:
+        return "Son La";
+    case 33:
+        return "Tay Ninh";
+    case 34:
+        return "Thanh Hoa";
+    case 35:
+        return "Thai Binh";
+    case 37:
+        return "Tien Giang";
+    case 39:
+        return "Lang Son";
+    case 43:
+        return "Dong Nai";
+    case 44:
+        return "Ha Noi";
+    case 45:
+        return "Ba Ria-Vung Tau";
+    case 46:
+        return "Binh Dinh";
+    case 47:
+        return "Binh Thuan";
+    case 49:
+        return "Gia Lai";
+    case 50:
+        return "Ha Giang";
+    case 52:
+        return "Ha Tinh";
+    case 53:
+        return "Hoa Binh";
+    case 54:
+        return "Khanh Hoa";
+    case 55:
+        return "Kon Tum";
+    case 58:
+        return "Nghe An";
+    case 59:
+        return "Ninh Binh";
+    case 60:
+        return "Ninh Thuan";
+    case 61:
+        return "Phu Yen";
+    case 62:
+        return "Quang Binh";
+    case 63:
+        return "Quang Ngai";
+    case 64:
+        return "Quang Tri";
+    case 65:
+        return "Soc Trang";
+    case 66:
+        return "Thua Thien-Hue";
+    case 67:
+        return "Tra Vinh";
+    case 68:
+        return "Tuyen Quang";
+    case 69:
+        return "Vinh Long";
+    case 70:
+        return "Yen Bai";
+    case 71:
+        return "Bac Giang";
+    case 72:
+        return "Bac Kan";
+    case 73:
+        return "Bac Lieu";
+    case 74:
+        return "Bac Ninh";
+    case 75:
+        return "Binh Duong";
+    case 76:
+        return "Binh Phuoc";
+    case 77:
+        return "Ca Mau";
+    case 78:
+        return "Da Nang";
+    case 79:
+        return "Hai Duong";
+    case 80:
+        return "Ha Nam";
+    case 81:
+        return "Hung Yen";
+    case 82:
+        return "Nam Dinh";
+    case 83:
+        return "Phu Tho";
+    case 84:
+        return "Quang Nam";
+    case 85:
+        return "Thai Nguyen";
+    case 86:
+        return "Vinh Phuc";
+    case 87:
+        return "Can Tho";
+    case 88:
+        return "Dac Lak";
+    case 89:
+        return "Lai Chau";
+    case 90:
+        return "Lao Cai";
+    case 91:
+        return "Dak Nong";
+    case 92:
+        return "Dien Bien";
+    case 93:
+        return "Hau Giang";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_VU(int region_code)
+{
+    switch(region_code) {
+    case 5:
+        return "Ambrym";
+    case 6:
+        return "Aoba";
+    case 7:
+        return "Torba";
+    case 8:
+        return "Efate";
+    case 9:
+        return "Epi";
+    case 10:
+        return "Malakula";
+    case 11:
+        return "Paama";
+    case 12:
+        return "Pentecote";
+    case 13:
+        return "Sanma";
+    case 14:
+        return "Shepherd";
+    case 15:
+        return "Tafea";
+    case 16:
+        return "Malampa";
+    case 17:
+        return "Penama";
+    case 18:
+        return "Shefa";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_WS(int region_code)
+{
+    switch(region_code) {
+    case 2:
+        return "Aiga-i-le-Tai";
+    case 3:
+        return "Atua";
+    case 4:
+        return "Fa";
+    case 5:
+        return "Gaga";
+    case 6:
+        return "Va";
+    case 7:
+        return "Gagaifomauga";
+    case 8:
+        return "Palauli";
+    case 9:
+        return "Satupa";
+    case 10:
+        return "Tuamasaga";
+    case 11:
+        return "Vaisigano";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_YE(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Abyan";
+    case 2:
+        return "Adan";
+    case 3:
+        return "Al Mahrah";
+    case 4:
+        return "Hadramawt";
+    case 5:
+        return "Shabwah";
+    case 6:
+        return "Lahij";
+    case 7:
+        return "Al Bayda'";
+    case 8:
+        return "Al Hudaydah";
+    case 9:
+        return "Al Jawf";
+    case 10:
+        return "Al Mahwit";
+    case 11:
+        return "Dhamar";
+    case 12:
+        return "Hajjah";
+    case 13:
+        return "Ibb";
+    case 14:
+        return "Ma'rib";
+    case 15:
+        return "Sa'dah";
+    case 16:
+        return "San'a'";
+    case 17:
+        return "Taizz";
+    case 18:
+        return "Ad Dali";
+    case 19:
+        return "Amran";
+    case 20:
+        return "Al Bayda'";
+    case 21:
+        return "Al Jawf";
+    case 22:
+        return "Hajjah";
+    case 23:
+        return "Ibb";
+    case 24:
+        return "Lahij";
+    case 25:
+        return "Taizz";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ZA(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "North-Western Province";
+    case 2:
+        return "KwaZulu-Natal";
+    case 3:
+        return "Free State";
+    case 5:
+        return "Eastern Cape";
+    case 6:
+        return "Gauteng";
+    case 7:
+        return "Mpumalanga";
+    case 8:
+        return "Northern Cape";
+    case 9:
+        return "Limpopo";
+    case 10:
+        return "North-West";
+    case 11:
+        return "Western Cape";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ZM(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Western";
+    case 2:
+        return "Central";
+    case 3:
+        return "Eastern";
+    case 4:
+        return "Luapula";
+    case 5:
+        return "Northern";
+    case 6:
+        return "North-Western";
+    case 7:
+        return "Southern";
+    case 8:
+        return "Copperbelt";
+    case 9:
+        return "Lusaka";
+    default:
+        return NULL;
+    }
+}
+
+static const char * get_region_name_ZW(int region_code)
+{
+    switch(region_code) {
+    case 1:
+        return "Manicaland";
+    case 2:
+        return "Midlands";
+    case 3:
+        return "Mashonaland Central";
+    case 4:
+        return "Mashonaland East";
+    case 5:
+        return "Mashonaland West";
+    case 6:
+        return "Matabeleland North";
+    case 7:
+        return "Matabeleland South";
+    case 8:
+        return "Masvingo";
+    case 9:
+        return "Bulawayo";
+    case 10:
+        return "Harare";
+    default:
+        return NULL;
+    }
+}
+
 const char * GeoIP_region_name_by_code(const char * country_code,const char * region_code) {
-  const char * name = NULL;
-  int region_code2 = -1;
-  if (region_code == NULL) { return NULL; }
+    int region_code2 = -1;
+    if (region_code == NULL) { return NULL; }
 
-  if (   ((region_code[0] >= 48) && (region_code[0] < (48 + 10)))
-      && ((region_code[1] >= 48) && (region_code[1] < (48 + 10)))
-  ) {
+    if (   ((region_code[0] >= 48) && (region_code[0] < (48 + 10)))
+        && ((region_code[1] >= 48) && (region_code[1] < (48 + 10)))
+    ) {
 
-    /* only numbers, that shorten the large switch statements */
-    region_code2 = (region_code[0] - 48) * 10 + region_code[1] - 48;
-  }
+        /* only numbers, that shortens the large switch statements */
+        region_code2 = (region_code[0] - 48) * 10 + region_code[1] - 48;
+    }
 
-  else if (    (    ((region_code[0] >= 65) && (region_code[0] < (65 + 26)))
-                 || ((region_code[0] >= 48) && (region_code[0] < (48 + 10))))
-            && (    ((region_code[1] >= 65) && (region_code[1] < (65 + 26)))
-                 || ((region_code[1] >= 48) && (region_code[1] < (48 + 10))))
-  ) {
+    else if (    (    ((region_code[0] >= 65) && (region_code[0] < (65 + 26)))
+                   || ((region_code[0] >= 48) && (region_code[0] < (48 + 10))))
+              && (    ((region_code[1] >= 65) && (region_code[1] < (65 + 26)))
+                   || ((region_code[1] >= 48) && (region_code[1] < (48 + 10))))
+    ) {
 
-    region_code2 = (region_code[0] - 48) * (65 + 26 - 48) + region_code[1] - 48 + 100;
-  }
+        region_code2 = (region_code[0] - 48) * (65 + 26 - 48) + region_code[1] - 48 + 100;
+    }
 
-  if (region_code2 == -1) {return NULL;}
+    if (region_code2 == -1) {return NULL;}
 
-  if (strcmp(country_code,"CA") == 0) {
-    switch (region_code2) {
-      case 849:
-      name = "Alberta";
-      break;
-      case 893:
-      name = "British Columbia";
-      break;
-      case 1365:
-      name = "Manitoba";
-      break;
-      case 1408:
-      name = "New Brunswick";
-      break;
-      case 1418:
-      name = "Newfoundland";
-      break;
-      case 1425:
-      name = "Nova Scotia";
-      break;
-      case 1427:
-      name = "Nunavut";
-      break;
-      case 1463:
-      name = "Ontario";
-      break;
-      case 1497:
-      name = "Prince Edward Island";
-      break;
-      case 1538:
-      name = "Quebec";
-      break;
-      case 1632:
-      name = "Saskatchewan";
-      break;
-      case 1426:
-      name = "Northwest Territories";
-      break;
-      case 1899:
-      name = "Yukon Territory";
-      break;
-    }
-  }
-  if (strcmp(country_code,"US") == 0) {
-    switch (region_code2) {
-      case 848:
-      name = "Armed Forces Americas";
-      break;
-      case 852:
-      name = "Armed Forces Europe, Middle East, & Canada";
-      break;
-      case 858:
-      name = "Alaska";
-      break;
-      case 859:
-      name = "Alabama";
-      break;
-      case 863:
-      name = "Armed Forces Pacific";
-      break;
-      case 865:
-      name = "Arkansas";
-      break;
-      case 866:
-      name = "American Samoa";
-      break;
-      case 873:
-      name = "Arizona";
-      break;
-      case 934:
-      name = "California";
-      break;
-      case 948:
-      name = "Colorado";
-      break;
-      case 953:
-      name = "Connecticut";
-      break;
-      case 979:
-      name = "District of Columbia";
-      break;
-      case 981:
-      name = "Delaware";
-      break;
-      case 1074:
-      name = "Florida";
-      break;
-      case 1075:
-      name = "Federated States of Micronesia";
-      break;
-      case 1106:
-      name = "Georgia";
-      break;
-      case 1126:
-      name = "Guam";
-      break;
-      case 1157:
-      name = "Hawaii";
-      break;
-      case 1192:
-      name = "Iowa";
-      break;
-      case 1195:
-      name = "Idaho";
-      break;
-      case 1203:
-      name = "Illinois";
-      break;
-      case 1205:
-      name = "Indiana";
-      break;
-      case 1296:
-      name = "Kansas";
-      break;
-      case 1302:
-      name = "Kentucky";
-      break;
-      case 1321:
-      name = "Louisiana";
-      break;
-      case 1364:
-      name = "Massachusetts";
-      break;
-      case 1367:
-      name = "Maryland";
-      break;
-      case 1368:
-      name = "Maine";
-      break;
-      case 1371:
-      name = "Marshall Islands";
-      break;
-      case 1372:
-      name = "Michigan";
-      break;
-      case 1377:
-      name = "Minnesota";
-      break;
-      case 1378:
-      name = "Missouri";
-      break;
-      case 1379:
-      name = "Northern Mariana Islands";
-      break;
-      case 1382:
-      name = "Mississippi";
-      break;
-      case 1383:
-      name = "Montana";
-      break;
-      case 1409:
-      name = "North Carolina";
-      break;
-      case 1410:
-      name = "North Dakota";
-      break;
-      case 1411:
-      name = "Nebraska";
-      break;
-      case 1414:
-      name = "New Hampshire";
-      break;
-      case 1416:
-      name = "New Jersey";
-      break;
-      case 1419:
-      name = "New Mexico";
-      break;
-      case 1428:
-      name = "Nevada";
-      break;
-      case 1431:
-      name = "New York";
-      break;
-      case 1457:
-      name = "Ohio";
-      break;
-      case 1460:
-      name = "Oklahoma";
-      break;
-      case 1467:
-      name = "Oregon";
-      break;
-      case 1493:
-      name = "Pennsylvania";
-      break;
-      case 1510:
-      name = "Puerto Rico";
-      break;
-      case 1515:
-      name = "Palau";
-      break;
-      case 1587:
-      name = "Rhode Island";
-      break;
-      case 1624:
-      name = "South Carolina";
-      break;
-      case 1625:
-      name = "South Dakota";
-      break;
-      case 1678:
-      name = "Tennessee";
-      break;
-      case 1688:
-      name = "Texas";
-      break;
-      case 1727:
-      name = "Utah";
-      break;
-      case 1751:
-      name = "Virginia";
-      break;
-      case 1759:
-      name = "Virgin Islands";
-      break;
-      case 1770:
-      name = "Vermont";
-      break;
-      case 1794:
-      name = "Washington";
-      break;
-      case 1815:
-      name = "West Virginia";
-      break;
-      case 1802:
-      name = "Wisconsin";
-      break;
-      case 1818:
-      name = "Wyoming";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AD") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Canillo";
-      break;
-      case 3:
-      name = "Encamp";
-      break;
-      case 4:
-      name = "La Massana";
-      break;
-      case 5:
-      name = "Ordino";
-      break;
-      case 6:
-      name = "Sant Julia de Loria";
-      break;
-      case 7:
-      name = "Andorra la Vella";
-      break;
-      case 8:
-      name = "Escaldes-Engordany";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Abu Dhabi";
-      break;
-      case 2:
-      name = "Ajman";
-      break;
-      case 3:
-      name = "Dubai";
-      break;
-      case 4:
-      name = "Fujairah";
-      break;
-      case 5:
-      name = "Ras Al Khaimah";
-      break;
-      case 6:
-      name = "Sharjah";
-      break;
-      case 7:
-      name = "Umm Al Quwain";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AF") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Badakhshan";
-      break;
-      case 2:
-      name = "Badghis";
-      break;
-      case 3:
-      name = "Baghlan";
-      break;
-      case 5:
-      name = "Bamian";
-      break;
-      case 6:
-      name = "Farah";
-      break;
-      case 7:
-      name = "Faryab";
-      break;
-      case 8:
-      name = "Ghazni";
-      break;
-      case 9:
-      name = "Ghowr";
-      break;
-      case 10:
-      name = "Helmand";
-      break;
-      case 11:
-      name = "Herat";
-      break;
-      case 13:
-      name = "Kabol";
-      break;
-      case 14:
-      name = "Kapisa";
-      break;
-      case 17:
-      name = "Lowgar";
-      break;
-      case 18:
-      name = "Nangarhar";
-      break;
-      case 19:
-      name = "Nimruz";
-      break;
-      case 23:
-      name = "Kandahar";
-      break;
-      case 24:
-      name = "Kondoz";
-      break;
-      case 26:
-      name = "Takhar";
-      break;
-      case 27:
-      name = "Vardak";
-      break;
-      case 28:
-      name = "Zabol";
-      break;
-      case 29:
-      name = "Paktika";
-      break;
-      case 30:
-      name = "Balkh";
-      break;
-      case 31:
-      name = "Jowzjan";
-      break;
-      case 32:
-      name = "Samangan";
-      break;
-      case 33:
-      name = "Sar-e Pol";
-      break;
-      case 34:
-      name = "Konar";
-      break;
-      case 35:
-      name = "Laghman";
-      break;
-      case 36:
-      name = "Paktia";
-      break;
-      case 37:
-      name = "Khowst";
-      break;
-      case 38:
-      name = "Nurestan";
-      break;
-      case 39:
-      name = "Oruzgan";
-      break;
-      case 40:
-      name = "Parvan";
-      break;
-      case 41:
-      name = "Daykondi";
-      break;
-      case 42:
-      name = "Panjshir";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AG") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Barbuda";
-      break;
-      case 3:
-      name = "Saint George";
-      break;
-      case 4:
-      name = "Saint John";
-      break;
-      case 5:
-      name = "Saint Mary";
-      break;
-      case 6:
-      name = "Saint Paul";
-      break;
-      case 7:
-      name = "Saint Peter";
-      break;
-      case 8:
-      name = "Saint Philip";
-      break;
-      case 9:
-      name = "Redonda";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AL") == 0) {
-    switch (region_code2) {
-      case 40:
-      name = "Berat";
-      break;
-      case 41:
-      name = "Diber";
-      break;
-      case 42:
-      name = "Durres";
-      break;
-      case 43:
-      name = "Elbasan";
-      break;
-      case 44:
-      name = "Fier";
-      break;
-      case 45:
-      name = "Gjirokaster";
-      break;
-      case 46:
-      name = "Korce";
-      break;
-      case 47:
-      name = "Kukes";
-      break;
-      case 48:
-      name = "Lezhe";
-      break;
-      case 49:
-      name = "Shkoder";
-      break;
-      case 50:
-      name = "Tirane";
-      break;
-      case 51:
-      name = "Vlore";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aragatsotn";
-      break;
-      case 2:
-      name = "Ararat";
-      break;
-      case 3:
-      name = "Armavir";
-      break;
-      case 4:
-      name = "Geghark'unik'";
-      break;
-      case 5:
-      name = "Kotayk'";
-      break;
-      case 6:
-      name = "Lorri";
-      break;
-      case 7:
-      name = "Shirak";
-      break;
-      case 8:
-      name = "Syunik'";
-      break;
-      case 9:
-      name = "Tavush";
-      break;
-      case 10:
-      name = "Vayots' Dzor";
-      break;
-      case 11:
-      name = "Yerevan";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Benguela";
-      break;
-      case 2:
-      name = "Bie";
-      break;
-      case 3:
-      name = "Cabinda";
-      break;
-      case 4:
-      name = "Cuando Cubango";
-      break;
-      case 5:
-      name = "Cuanza Norte";
-      break;
-      case 6:
-      name = "Cuanza Sul";
-      break;
-      case 7:
-      name = "Cunene";
-      break;
-      case 8:
-      name = "Huambo";
-      break;
-      case 9:
-      name = "Huila";
-      break;
-      case 12:
-      name = "Malanje";
-      break;
-      case 13:
-      name = "Namibe";
-      break;
-      case 14:
-      name = "Moxico";
-      break;
-      case 15:
-      name = "Uige";
-      break;
-      case 16:
-      name = "Zaire";
-      break;
-      case 17:
-      name = "Lunda Norte";
-      break;
-      case 18:
-      name = "Lunda Sul";
-      break;
-      case 19:
-      name = "Bengo";
-      break;
-      case 20:
-      name = "Luanda";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Buenos Aires";
-      break;
-      case 2:
-      name = "Catamarca";
-      break;
-      case 3:
-      name = "Chaco";
-      break;
-      case 4:
-      name = "Chubut";
-      break;
-      case 5:
-      name = "Cordoba";
-      break;
-      case 6:
-      name = "Corrientes";
-      break;
-      case 7:
-      name = "Distrito Federal";
-      break;
-      case 8:
-      name = "Entre Rios";
-      break;
-      case 9:
-      name = "Formosa";
-      break;
-      case 10:
-      name = "Jujuy";
-      break;
-      case 11:
-      name = "La Pampa";
-      break;
-      case 12:
-      name = "La Rioja";
-      break;
-      case 13:
-      name = "Mendoza";
-      break;
-      case 14:
-      name = "Misiones";
-      break;
-      case 15:
-      name = "Neuquen";
-      break;
-      case 16:
-      name = "Rio Negro";
-      break;
-      case 17:
-      name = "Salta";
-      break;
-      case 18:
-      name = "San Juan";
-      break;
-      case 19:
-      name = "San Luis";
-      break;
-      case 20:
-      name = "Santa Cruz";
-      break;
-      case 21:
-      name = "Santa Fe";
-      break;
-      case 22:
-      name = "Santiago del Estero";
-      break;
-      case 23:
-      name = "Tierra del Fuego";
-      break;
-      case 24:
-      name = "Tucuman";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AT") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Burgenland";
-      break;
-      case 2:
-      name = "Karnten";
-      break;
-      case 3:
-      name = "Niederosterreich";
-      break;
-      case 4:
-      name = "Oberosterreich";
-      break;
-      case 5:
-      name = "Salzburg";
-      break;
-      case 6:
-      name = "Steiermark";
-      break;
-      case 7:
-      name = "Tirol";
-      break;
-      case 8:
-      name = "Vorarlberg";
-      break;
-      case 9:
-      name = "Wien";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AU") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Australian Capital Territory";
-      break;
-      case 2:
-      name = "New South Wales";
-      break;
-      case 3:
-      name = "Northern Territory";
-      break;
-      case 4:
-      name = "Queensland";
-      break;
-      case 5:
-      name = "South Australia";
-      break;
-      case 6:
-      name = "Tasmania";
-      break;
-      case 7:
-      name = "Victoria";
-      break;
-      case 8:
-      name = "Western Australia";
-      break;
-    }
-  }
-  if (strcmp(country_code,"AZ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Abseron";
-      break;
-      case 2:
-      name = "Agcabadi";
-      break;
-      case 3:
-      name = "Agdam";
-      break;
-      case 4:
-      name = "Agdas";
-      break;
-      case 5:
-      name = "Agstafa";
-      break;
-      case 6:
-      name = "Agsu";
-      break;
-      case 7:
-      name = "Ali Bayramli";
-      break;
-      case 8:
-      name = "Astara";
-      break;
-      case 9:
-      name = "Baki";
-      break;
-      case 10:
-      name = "Balakan";
-      break;
-      case 11:
-      name = "Barda";
-      break;
-      case 12:
-      name = "Beylaqan";
-      break;
-      case 13:
-      name = "Bilasuvar";
-      break;
-      case 14:
-      name = "Cabrayil";
-      break;
-      case 15:
-      name = "Calilabad";
-      break;
-      case 16:
-      name = "Daskasan";
-      break;
-      case 17:
-      name = "Davaci";
-      break;
-      case 18:
-      name = "Fuzuli";
-      break;
-      case 19:
-      name = "Gadabay";
-      break;
-      case 20:
-      name = "Ganca";
-      break;
-      case 21:
-      name = "Goranboy";
-      break;
-      case 22:
-      name = "Goycay";
-      break;
-      case 23:
-      name = "Haciqabul";
-      break;
-      case 24:
-      name = "Imisli";
-      break;
-      case 25:
-      name = "Ismayilli";
-      break;
-      case 26:
-      name = "Kalbacar";
-      break;
-      case 27:
-      name = "Kurdamir";
-      break;
-      case 28:
-      name = "Lacin";
-      break;
-      case 29:
-      name = "Lankaran";
-      break;
-      case 30:
-      name = "Lankaran";
-      break;
-      case 31:
-      name = "Lerik";
-      break;
-      case 32:
-      name = "Masalli";
-      break;
-      case 33:
-      name = "Mingacevir";
-      break;
-      case 34:
-      name = "Naftalan";
-      break;
-      case 35:
-      name = "Naxcivan";
-      break;
-      case 36:
-      name = "Neftcala";
-      break;
-      case 37:
-      name = "Oguz";
-      break;
-      case 38:
-      name = "Qabala";
-      break;
-      case 39:
-      name = "Qax";
-      break;
-      case 40:
-      name = "Qazax";
-      break;
-      case 41:
-      name = "Qobustan";
-      break;
-      case 42:
-      name = "Quba";
-      break;
-      case 43:
-      name = "Qubadli";
-      break;
-      case 44:
-      name = "Qusar";
-      break;
-      case 45:
-      name = "Saatli";
-      break;
-      case 46:
-      name = "Sabirabad";
-      break;
-      case 47:
-      name = "Saki";
-      break;
-      case 48:
-      name = "Saki";
-      break;
-      case 49:
-      name = "Salyan";
-      break;
-      case 50:
-      name = "Samaxi";
-      break;
-      case 51:
-      name = "Samkir";
-      break;
-      case 52:
-      name = "Samux";
-      break;
-      case 53:
-      name = "Siyazan";
-      break;
-      case 54:
-      name = "Sumqayit";
-      break;
-      case 55:
-      name = "Susa";
-      break;
-      case 56:
-      name = "Susa";
-      break;
-      case 57:
-      name = "Tartar";
-      break;
-      case 58:
-      name = "Tovuz";
-      break;
-      case 59:
-      name = "Ucar";
-      break;
-      case 60:
-      name = "Xacmaz";
-      break;
-      case 61:
-      name = "Xankandi";
-      break;
-      case 62:
-      name = "Xanlar";
-      break;
-      case 63:
-      name = "Xizi";
-      break;
-      case 64:
-      name = "Xocali";
-      break;
-      case 65:
-      name = "Xocavand";
-      break;
-      case 66:
-      name = "Yardimli";
-      break;
-      case 67:
-      name = "Yevlax";
-      break;
-      case 68:
-      name = "Yevlax";
-      break;
-      case 69:
-      name = "Zangilan";
-      break;
-      case 70:
-      name = "Zaqatala";
-      break;
-      case 71:
-      name = "Zardab";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Federation of Bosnia and Herzegovina";
-      break;
-      case 2:
-      name = "Republika Srpska";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BB") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Christ Church";
-      break;
-      case 2:
-      name = "Saint Andrew";
-      break;
-      case 3:
-      name = "Saint George";
-      break;
-      case 4:
-      name = "Saint James";
-      break;
-      case 5:
-      name = "Saint John";
-      break;
-      case 6:
-      name = "Saint Joseph";
-      break;
-      case 7:
-      name = "Saint Lucy";
-      break;
-      case 8:
-      name = "Saint Michael";
-      break;
-      case 9:
-      name = "Saint Peter";
-      break;
-      case 10:
-      name = "Saint Philip";
-      break;
-      case 11:
-      name = "Saint Thomas";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BD") == 0) {
-    switch (region_code2) {
-      case 81:
-      name = "Dhaka";
-      break;
-      case 82:
-      name = "Khulna";
-      break;
-      case 83:
-      name = "Rajshahi";
-      break;
-      case 84:
-      name = "Chittagong";
-      break;
-      case 85:
-      name = "Barisal";
-      break;
-      case 86:
-      name = "Sylhet";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Antwerpen";
-      break;
-      case 3:
-      name = "Hainaut";
-      break;
-      case 4:
-      name = "Liege";
-      break;
-      case 5:
-      name = "Limburg";
-      break;
-      case 6:
-      name = "Luxembourg";
-      break;
-      case 7:
-      name = "Namur";
-      break;
-      case 8:
-      name = "Oost-Vlaanderen";
-      break;
-      case 9:
-      name = "West-Vlaanderen";
-      break;
-      case 10:
-      name = "Brabant Wallon";
-      break;
-      case 11:
-      name = "Brussels Hoofdstedelijk Gewest";
-      break;
-      case 12:
-      name = "Vlaams-Brabant";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BF") == 0) {
-    switch (region_code2) {
-      case 15:
-      name = "Bam";
-      break;
-      case 19:
-      name = "Boulkiemde";
-      break;
-      case 20:
-      name = "Ganzourgou";
-      break;
-      case 21:
-      name = "Gnagna";
-      break;
-      case 28:
-      name = "Kouritenga";
-      break;
-      case 33:
-      name = "Oudalan";
-      break;
-      case 34:
-      name = "Passore";
-      break;
-      case 36:
-      name = "Sanguie";
-      break;
-      case 40:
-      name = "Soum";
-      break;
-      case 42:
-      name = "Tapoa";
-      break;
-      case 44:
-      name = "Zoundweogo";
-      break;
-      case 45:
-      name = "Bale";
-      break;
-      case 46:
-      name = "Banwa";
-      break;
-      case 47:
-      name = "Bazega";
-      break;
-      case 48:
-      name = "Bougouriba";
-      break;
-      case 49:
-      name = "Boulgou";
-      break;
-      case 50:
-      name = "Gourma";
-      break;
-      case 51:
-      name = "Houet";
-      break;
-      case 52:
-      name = "Ioba";
-      break;
-      case 53:
-      name = "Kadiogo";
-      break;
-      case 54:
-      name = "Kenedougou";
-      break;
-      case 55:
-      name = "Komoe";
-      break;
-      case 56:
-      name = "Komondjari";
-      break;
-      case 57:
-      name = "Kompienga";
-      break;
-      case 58:
-      name = "Kossi";
-      break;
-      case 59:
-      name = "Koulpelogo";
-      break;
-      case 60:
-      name = "Kourweogo";
-      break;
-      case 61:
-      name = "Leraba";
-      break;
-      case 62:
-      name = "Loroum";
-      break;
-      case 63:
-      name = "Mouhoun";
-      break;
-      case 64:
-      name = "Namentenga";
-      break;
-      case 65:
-      name = "Naouri";
-      break;
-      case 66:
-      name = "Nayala";
-      break;
-      case 67:
-      name = "Noumbiel";
-      break;
-      case 68:
-      name = "Oubritenga";
-      break;
-      case 69:
-      name = "Poni";
-      break;
-      case 70:
-      name = "Sanmatenga";
-      break;
-      case 71:
-      name = "Seno";
-      break;
-      case 72:
-      name = "Sissili";
-      break;
-      case 73:
-      name = "Sourou";
-      break;
-      case 74:
-      name = "Tuy";
-      break;
-      case 75:
-      name = "Yagha";
-      break;
-      case 76:
-      name = "Yatenga";
-      break;
-      case 77:
-      name = "Ziro";
-      break;
-      case 78:
-      name = "Zondoma";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BG") == 0) {
-    switch (region_code2) {
-      case 33:
-      name = "Mikhaylovgrad";
-      break;
-      case 38:
-      name = "Blagoevgrad";
-      break;
-      case 39:
-      name = "Burgas";
-      break;
-      case 40:
-      name = "Dobrich";
-      break;
-      case 41:
-      name = "Gabrovo";
-      break;
-      case 42:
-      name = "Grad Sofiya";
-      break;
-      case 43:
-      name = "Khaskovo";
-      break;
-      case 44:
-      name = "Kurdzhali";
-      break;
-      case 45:
-      name = "Kyustendil";
-      break;
-      case 46:
-      name = "Lovech";
-      break;
-      case 47:
-      name = "Montana";
-      break;
-      case 48:
-      name = "Pazardzhik";
-      break;
-      case 49:
-      name = "Pernik";
-      break;
-      case 50:
-      name = "Pleven";
-      break;
-      case 51:
-      name = "Plovdiv";
-      break;
-      case 52:
-      name = "Razgrad";
-      break;
-      case 53:
-      name = "Ruse";
-      break;
-      case 54:
-      name = "Shumen";
-      break;
-      case 55:
-      name = "Silistra";
-      break;
-      case 56:
-      name = "Sliven";
-      break;
-      case 57:
-      name = "Smolyan";
-      break;
-      case 58:
-      name = "Sofiya";
-      break;
-      case 59:
-      name = "Stara Zagora";
-      break;
-      case 60:
-      name = "Turgovishte";
-      break;
-      case 61:
-      name = "Varna";
-      break;
-      case 62:
-      name = "Veliko Turnovo";
-      break;
-      case 63:
-      name = "Vidin";
-      break;
-      case 64:
-      name = "Vratsa";
-      break;
-      case 65:
-      name = "Yambol";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BH") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Al Hadd";
-      break;
-      case 2:
-      name = "Al Manamah";
-      break;
-      case 5:
-      name = "Jidd Hafs";
-      break;
-      case 6:
-      name = "Sitrah";
-      break;
-      case 8:
-      name = "Al Mintaqah al Gharbiyah";
-      break;
-      case 9:
-      name = "Mintaqat Juzur Hawar";
-      break;
-      case 10:
-      name = "Al Mintaqah ash Shamaliyah";
-      break;
-      case 11:
-      name = "Al Mintaqah al Wusta";
-      break;
-      case 12:
-      name = "Madinat";
-      break;
-      case 13:
-      name = "Ar Rifa";
-      break;
-      case 14:
-      name = "Madinat Hamad";
-      break;
-      case 15:
-      name = "Al Muharraq";
-      break;
-      case 16:
-      name = "Al Asimah";
-      break;
-      case 17:
-      name = "Al Janubiyah";
-      break;
-      case 18:
-      name = "Ash Shamaliyah";
-      break;
-      case 19:
-      name = "Al Wusta";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BI") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Bujumbura";
-      break;
-      case 9:
-      name = "Bubanza";
-      break;
-      case 10:
-      name = "Bururi";
-      break;
-      case 11:
-      name = "Cankuzo";
-      break;
-      case 12:
-      name = "Cibitoke";
-      break;
-      case 13:
-      name = "Gitega";
-      break;
-      case 14:
-      name = "Karuzi";
-      break;
-      case 15:
-      name = "Kayanza";
-      break;
-      case 16:
-      name = "Kirundo";
-      break;
-      case 17:
-      name = "Makamba";
-      break;
-      case 18:
-      name = "Muyinga";
-      break;
-      case 19:
-      name = "Ngozi";
-      break;
-      case 20:
-      name = "Rutana";
-      break;
-      case 21:
-      name = "Ruyigi";
-      break;
-      case 22:
-      name = "Muramvya";
-      break;
-      case 23:
-      name = "Mwaro";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BJ") == 0) {
-    switch (region_code2) {
-      case 7:
-      name = "Alibori";
-      break;
-      case 8:
-      name = "Atakora";
-      break;
-      case 9:
-      name = "Atlanyique";
-      break;
-      case 10:
-      name = "Borgou";
-      break;
-      case 11:
-      name = "Collines";
-      break;
-      case 12:
-      name = "Kouffo";
-      break;
-      case 13:
-      name = "Donga";
-      break;
-      case 14:
-      name = "Littoral";
-      break;
-      case 15:
-      name = "Mono";
-      break;
-      case 16:
-      name = "Oueme";
-      break;
-      case 17:
-      name = "Plateau";
-      break;
-      case 18:
-      name = "Zou";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Devonshire";
-      break;
-      case 2:
-      name = "Hamilton";
-      break;
-      case 3:
-      name = "Hamilton";
-      break;
-      case 4:
-      name = "Paget";
-      break;
-      case 5:
-      name = "Pembroke";
-      break;
-      case 6:
-      name = "Saint George";
-      break;
-      case 7:
-      name = "Saint George's";
-      break;
-      case 8:
-      name = "Sandys";
-      break;
-      case 9:
-      name = "Smiths";
-      break;
-      case 10:
-      name = "Southampton";
-      break;
-      case 11:
-      name = "Warwick";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BN") == 0) {
-    switch (region_code2) {
-      case 7:
-      name = "Alibori";
-      break;
-      case 8:
-      name = "Belait";
-      break;
-      case 9:
-      name = "Brunei and Muara";
-      break;
-      case 10:
-      name = "Temburong";
-      break;
-      case 11:
-      name = "Collines";
-      break;
-      case 12:
-      name = "Kouffo";
-      break;
-      case 13:
-      name = "Donga";
-      break;
-      case 14:
-      name = "Littoral";
-      break;
-      case 15:
-      name = "Tutong";
-      break;
-      case 16:
-      name = "Oueme";
-      break;
-      case 17:
-      name = "Plateau";
-      break;
-      case 18:
-      name = "Zou";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Chuquisaca";
-      break;
-      case 2:
-      name = "Cochabamba";
-      break;
-      case 3:
-      name = "El Beni";
-      break;
-      case 4:
-      name = "La Paz";
-      break;
-      case 5:
-      name = "Oruro";
-      break;
-      case 6:
-      name = "Pando";
-      break;
-      case 7:
-      name = "Potosi";
-      break;
-      case 8:
-      name = "Santa Cruz";
-      break;
-      case 9:
-      name = "Tarija";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Acre";
-      break;
-      case 2:
-      name = "Alagoas";
-      break;
-      case 3:
-      name = "Amapa";
-      break;
-      case 4:
-      name = "Amazonas";
-      break;
-      case 5:
-      name = "Bahia";
-      break;
-      case 6:
-      name = "Ceara";
-      break;
-      case 7:
-      name = "Distrito Federal";
-      break;
-      case 8:
-      name = "Espirito Santo";
-      break;
-      case 11:
-      name = "Mato Grosso do Sul";
-      break;
-      case 13:
-      name = "Maranhao";
-      break;
-      case 14:
-      name = "Mato Grosso";
-      break;
-      case 15:
-      name = "Minas Gerais";
-      break;
-      case 16:
-      name = "Para";
-      break;
-      case 17:
-      name = "Paraiba";
-      break;
-      case 18:
-      name = "Parana";
-      break;
-      case 20:
-      name = "Piaui";
-      break;
-      case 21:
-      name = "Rio de Janeiro";
-      break;
-      case 22:
-      name = "Rio Grande do Norte";
-      break;
-      case 23:
-      name = "Rio Grande do Sul";
-      break;
-      case 24:
-      name = "Rondonia";
-      break;
-      case 25:
-      name = "Roraima";
-      break;
-      case 26:
-      name = "Santa Catarina";
-      break;
-      case 27:
-      name = "Sao Paulo";
-      break;
-      case 28:
-      name = "Sergipe";
-      break;
-      case 29:
-      name = "Goias";
-      break;
-      case 30:
-      name = "Pernambuco";
-      break;
-      case 31:
-      name = "Tocantins";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BS") == 0) {
-    switch (region_code2) {
-      case 5:
-      name = "Bimini";
-      break;
-      case 6:
-      name = "Cat Island";
-      break;
-      case 10:
-      name = "Exuma";
-      break;
-      case 13:
-      name = "Inagua";
-      break;
-      case 15:
-      name = "Long Island";
-      break;
-      case 16:
-      name = "Mayaguana";
-      break;
-      case 18:
-      name = "Ragged Island";
-      break;
-      case 22:
-      name = "Harbour Island";
-      break;
-      case 23:
-      name = "New Providence";
-      break;
-      case 24:
-      name = "Acklins and Crooked Islands";
-      break;
-      case 25:
-      name = "Freeport";
-      break;
-      case 26:
-      name = "Fresh Creek";
-      break;
-      case 27:
-      name = "Governor's Harbour";
-      break;
-      case 28:
-      name = "Green Turtle Cay";
-      break;
-      case 29:
-      name = "High Rock";
-      break;
-      case 30:
-      name = "Kemps Bay";
-      break;
-      case 31:
-      name = "Marsh Harbour";
-      break;
-      case 32:
-      name = "Nichollstown and Berry Islands";
-      break;
-      case 33:
-      name = "Rock Sound";
-      break;
-      case 34:
-      name = "Sandy Point";
-      break;
-      case 35:
-      name = "San Salvador and Rum Cay";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BT") == 0) {
-    switch (region_code2) {
-      case 5:
-      name = "Bumthang";
-      break;
-      case 6:
-      name = "Chhukha";
-      break;
-      case 7:
-      name = "Chirang";
-      break;
-      case 8:
-      name = "Daga";
-      break;
-      case 9:
-      name = "Geylegphug";
-      break;
-      case 10:
-      name = "Ha";
-      break;
-      case 11:
-      name = "Lhuntshi";
-      break;
-      case 12:
-      name = "Mongar";
-      break;
-      case 13:
-      name = "Paro";
-      break;
-      case 14:
-      name = "Pemagatsel";
-      break;
-      case 15:
-      name = "Punakha";
-      break;
-      case 16:
-      name = "Samchi";
-      break;
-      case 17:
-      name = "Samdrup";
-      break;
-      case 18:
-      name = "Shemgang";
-      break;
-      case 19:
-      name = "Tashigang";
-      break;
-      case 20:
-      name = "Thimphu";
-      break;
-      case 21:
-      name = "Tongsa";
-      break;
-      case 22:
-      name = "Wangdi Phodrang";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BW") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Central";
-      break;
-      case 3:
-      name = "Ghanzi";
-      break;
-      case 4:
-      name = "Kgalagadi";
-      break;
-      case 5:
-      name = "Kgatleng";
-      break;
-      case 6:
-      name = "Kweneng";
-      break;
-      case 8:
-      name = "North-East";
-      break;
-      case 9:
-      name = "South-East";
-      break;
-      case 10:
-      name = "Southern";
-      break;
-      case 11:
-      name = "North-West";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BY") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Brestskaya Voblasts'";
-      break;
-      case 2:
-      name = "Homyel'skaya Voblasts'";
-      break;
-      case 3:
-      name = "Hrodzyenskaya Voblasts'";
-      break;
-      case 4:
-      name = "Minsk";
-      break;
-      case 5:
-      name = "Minskaya Voblasts'";
-      break;
-      case 6:
-      name = "Mahilyowskaya Voblasts'";
-      break;
-      case 7:
-      name = "Vitsyebskaya Voblasts'";
-      break;
-    }
-  }
-  if (strcmp(country_code,"BZ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Belize";
-      break;
-      case 2:
-      name = "Cayo";
-      break;
-      case 3:
-      name = "Corozal";
-      break;
-      case 4:
-      name = "Orange Walk";
-      break;
-      case 5:
-      name = "Stann Creek";
-      break;
-      case 6:
-      name = "Toledo";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CD") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bandundu";
-      break;
-      case 2:
-      name = "Equateur";
-      break;
-      case 4:
-      name = "Kasai-Oriental";
-      break;
-      case 5:
-      name = "Katanga";
-      break;
-      case 6:
-      name = "Kinshasa";
-      break;
-      case 8:
-      name = "Bas-Congo";
-      break;
-      case 9:
-      name = "Orientale";
-      break;
-      case 10:
-      name = "Maniema";
-      break;
-      case 11:
-      name = "Nord-Kivu";
-      break;
-      case 12:
-      name = "Sud-Kivu";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CF") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bamingui-Bangoran";
-      break;
-      case 2:
-      name = "Basse-Kotto";
-      break;
-      case 3:
-      name = "Haute-Kotto";
-      break;
-      case 4:
-      name = "Mambere-Kadei";
-      break;
-      case 5:
-      name = "Haut-Mbomou";
-      break;
-      case 6:
-      name = "Kemo";
-      break;
-      case 7:
-      name = "Lobaye";
-      break;
-      case 8:
-      name = "Mbomou";
-      break;
-      case 9:
-      name = "Nana-Mambere";
-      break;
-      case 11:
-      name = "Ouaka";
-      break;
-      case 12:
-      name = "Ouham";
-      break;
-      case 13:
-      name = "Ouham-Pende";
-      break;
-      case 14:
-      name = "Cuvette-Ouest";
-      break;
-      case 15:
-      name = "Nana-Grebizi";
-      break;
-      case 16:
-      name = "Sangha-Mbaere";
-      break;
-      case 17:
-      name = "Ombella-Mpoko";
-      break;
-      case 18:
-      name = "Bangui";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CG") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bouenza";
-      break;
-      case 4:
-      name = "Kouilou";
-      break;
-      case 5:
-      name = "Lekoumou";
-      break;
-      case 6:
-      name = "Likouala";
-      break;
-      case 7:
-      name = "Niari";
-      break;
-      case 8:
-      name = "Plateaux";
-      break;
-      case 10:
-      name = "Sangha";
-      break;
-      case 11:
-      name = "Pool";
-      break;
-      case 12:
-      name = "Brazzaville";
-      break;
-      case 13:
-      name = "Cuvette";
-      break;
-      case 14:
-      name = "Cuvette-Ouest";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CH") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aargau";
-      break;
-      case 2:
-      name = "Ausser-Rhoden";
-      break;
-      case 3:
-      name = "Basel-Landschaft";
-      break;
-      case 4:
-      name = "Basel-Stadt";
-      break;
-      case 5:
-      name = "Bern";
-      break;
-      case 6:
-      name = "Fribourg";
-      break;
-      case 7:
-      name = "Geneve";
-      break;
-      case 8:
-      name = "Glarus";
-      break;
-      case 9:
-      name = "Graubunden";
-      break;
-      case 10:
-      name = "Inner-Rhoden";
-      break;
-      case 11:
-      name = "Luzern";
-      break;
-      case 12:
-      name = "Neuchatel";
-      break;
-      case 13:
-      name = "Nidwalden";
-      break;
-      case 14:
-      name = "Obwalden";
-      break;
-      case 15:
-      name = "Sankt Gallen";
-      break;
-      case 16:
-      name = "Schaffhausen";
-      break;
-      case 17:
-      name = "Schwyz";
-      break;
-      case 18:
-      name = "Solothurn";
-      break;
-      case 19:
-      name = "Thurgau";
-      break;
-      case 20:
-      name = "Ticino";
-      break;
-      case 21:
-      name = "Uri";
-      break;
-      case 22:
-      name = "Valais";
-      break;
-      case 23:
-      name = "Vaud";
-      break;
-      case 24:
-      name = "Zug";
-      break;
-      case 25:
-      name = "Zurich";
-      break;
-      case 26:
-      name = "Jura";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CI") == 0) {
-    switch (region_code2) {
-      case 74:
-      name = "Agneby";
-      break;
-      case 75:
-      name = "Bafing";
-      break;
-      case 76:
-      name = "Bas-Sassandra";
-      break;
-      case 77:
-      name = "Denguele";
-      break;
-      case 78:
-      name = "Dix-Huit Montagnes";
-      break;
-      case 79:
-      name = "Fromager";
-      break;
-      case 80:
-      name = "Haut-Sassandra";
-      break;
-      case 81:
-      name = "Lacs";
-      break;
-      case 82:
-      name = "Lagunes";
-      break;
-      case 83:
-      name = "Marahoue";
-      break;
-      case 84:
-      name = "Moyen-Cavally";
-      break;
-      case 85:
-      name = "Moyen-Comoe";
-      break;
-      case 86:
-      name = "N'zi-Comoe";
-      break;
-      case 87:
-      name = "Savanes";
-      break;
-      case 88:
-      name = "Sud-Bandama";
-      break;
-      case 89:
-      name = "Sud-Comoe";
-      break;
-      case 90:
-      name = "Vallee du Bandama";
-      break;
-      case 91:
-      name = "Worodougou";
-      break;
-      case 92:
-      name = "Zanzan";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CL") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Valparaiso";
-      break;
-      case 2:
-      name = "Aisen del General Carlos Ibanez del Campo";
-      break;
-      case 3:
-      name = "Antofagasta";
-      break;
-      case 4:
-      name = "Araucania";
-      break;
-      case 5:
-      name = "Atacama";
-      break;
-      case 6:
-      name = "Bio-Bio";
-      break;
-      case 7:
-      name = "Coquimbo";
-      break;
-      case 8:
-      name = "Libertador General Bernardo O'Higgins";
-      break;
-      case 9:
-      name = "Los Lagos";
-      break;
-      case 10:
-      name = "Magallanes y de la Antartica Chilena";
-      break;
-      case 11:
-      name = "Maule";
-      break;
-      case 12:
-      name = "Region Metropolitana";
-      break;
-      case 13:
-      name = "Tarapaca";
-      break;
-      case 14:
-      name = "Los Lagos";
-      break;
-      case 15:
-      name = "Tarapaca";
-      break;
-      case 16:
-      name = "Arica y Parinacota";
-      break;
-      case 17:
-      name = "Los Rios";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CM") == 0) {
-    switch (region_code2) {
-      case 4:
-      name = "Est";
-      break;
-      case 5:
-      name = "Littoral";
-      break;
-      case 7:
-      name = "Nord-Ouest";
-      break;
-      case 8:
-      name = "Ouest";
-      break;
-      case 9:
-      name = "Sud-Ouest";
-      break;
-      case 10:
-      name = "Adamaoua";
-      break;
-      case 11:
-      name = "Centre";
-      break;
-      case 12:
-      name = "Extreme-Nord";
-      break;
-      case 13:
-      name = "Nord";
-      break;
-      case 14:
-      name = "Sud";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Anhui";
-      break;
-      case 2:
-      name = "Zhejiang";
-      break;
-      case 3:
-      name = "Jiangxi";
-      break;
-      case 4:
-      name = "Jiangsu";
-      break;
-      case 5:
-      name = "Jilin";
-      break;
-      case 6:
-      name = "Qinghai";
-      break;
-      case 7:
-      name = "Fujian";
-      break;
-      case 8:
-      name = "Heilongjiang";
-      break;
-      case 9:
-      name = "Henan";
-      break;
-      case 10:
-      name = "Hebei";
-      break;
-      case 11:
-      name = "Hunan";
-      break;
-      case 12:
-      name = "Hubei";
-      break;
-      case 13:
-      name = "Xinjiang";
-      break;
-      case 14:
-      name = "Xizang";
-      break;
-      case 15:
-      name = "Gansu";
-      break;
-      case 16:
-      name = "Guangxi";
-      break;
-      case 18:
-      name = "Guizhou";
-      break;
-      case 19:
-      name = "Liaoning";
-      break;
-      case 20:
-      name = "Nei Mongol";
-      break;
-      case 21:
-      name = "Ningxia";
-      break;
-      case 22:
-      name = "Beijing";
-      break;
-      case 23:
-      name = "Shanghai";
-      break;
-      case 24:
-      name = "Shanxi";
-      break;
-      case 25:
-      name = "Shandong";
-      break;
-      case 26:
-      name = "Shaanxi";
-      break;
-      case 28:
-      name = "Tianjin";
-      break;
-      case 29:
-      name = "Yunnan";
-      break;
-      case 30:
-      name = "Guangdong";
-      break;
-      case 31:
-      name = "Hainan";
-      break;
-      case 32:
-      name = "Sichuan";
-      break;
-      case 33:
-      name = "Chongqing";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Amazonas";
-      break;
-      case 2:
-      name = "Antioquia";
-      break;
-      case 3:
-      name = "Arauca";
-      break;
-      case 4:
-      name = "Atlantico";
-      break;
-      case 5:
-      name = "Bolivar Department";
-      break;
-      case 6:
-      name = "Boyaca Department";
-      break;
-      case 7:
-      name = "Caldas Department";
-      break;
-      case 8:
-      name = "Caqueta";
-      break;
-      case 9:
-      name = "Cauca";
-      break;
-      case 10:
-      name = "Cesar";
-      break;
-      case 11:
-      name = "Choco";
-      break;
-      case 12:
-      name = "Cordoba";
-      break;
-      case 14:
-      name = "Guaviare";
-      break;
-      case 15:
-      name = "Guainia";
-      break;
-      case 16:
-      name = "Huila";
-      break;
-      case 17:
-      name = "La Guajira";
-      break;
-      case 18:
-      name = "Magdalena Department";
-      break;
-      case 19:
-      name = "Meta";
-      break;
-      case 20:
-      name = "Narino";
-      break;
-      case 21:
-      name = "Norte de Santander";
-      break;
-      case 22:
-      name = "Putumayo";
-      break;
-      case 23:
-      name = "Quindio";
-      break;
-      case 24:
-      name = "Risaralda";
-      break;
-      case 25:
-      name = "San Andres y Providencia";
-      break;
-      case 26:
-      name = "Santander";
-      break;
-      case 27:
-      name = "Sucre";
-      break;
-      case 28:
-      name = "Tolima";
-      break;
-      case 29:
-      name = "Valle del Cauca";
-      break;
-      case 30:
-      name = "Vaupes";
-      break;
-      case 31:
-      name = "Vichada";
-      break;
-      case 32:
-      name = "Casanare";
-      break;
-      case 33:
-      name = "Cundinamarca";
-      break;
-      case 34:
-      name = "Distrito Especial";
-      break;
-      case 35:
-      name = "Bolivar";
-      break;
-      case 36:
-      name = "Boyaca";
-      break;
-      case 37:
-      name = "Caldas";
-      break;
-      case 38:
-      name = "Magdalena";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Alajuela";
-      break;
-      case 2:
-      name = "Cartago";
-      break;
-      case 3:
-      name = "Guanacaste";
-      break;
-      case 4:
-      name = "Heredia";
-      break;
-      case 6:
-      name = "Limon";
-      break;
-      case 7:
-      name = "Puntarenas";
-      break;
-      case 8:
-      name = "San Jose";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CU") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Pinar del Rio";
-      break;
-      case 2:
-      name = "Ciudad de la Habana";
-      break;
-      case 3:
-      name = "Matanzas";
-      break;
-      case 4:
-      name = "Isla de la Juventud";
-      break;
-      case 5:
-      name = "Camaguey";
-      break;
-      case 7:
-      name = "Ciego de Avila";
-      break;
-      case 8:
-      name = "Cienfuegos";
-      break;
-      case 9:
-      name = "Granma";
-      break;
-      case 10:
-      name = "Guantanamo";
-      break;
-      case 11:
-      name = "La Habana";
-      break;
-      case 12:
-      name = "Holguin";
-      break;
-      case 13:
-      name = "Las Tunas";
-      break;
-      case 14:
-      name = "Sancti Spiritus";
-      break;
-      case 15:
-      name = "Santiago de Cuba";
-      break;
-      case 16:
-      name = "Villa Clara";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CV") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Boa Vista";
-      break;
-      case 2:
-      name = "Brava";
-      break;
-      case 4:
-      name = "Maio";
-      break;
-      case 5:
-      name = "Paul";
-      break;
-      case 7:
-      name = "Ribeira Grande";
-      break;
-      case 8:
-      name = "Sal";
-      break;
-      case 10:
-      name = "Sao Nicolau";
-      break;
-      case 11:
-      name = "Sao Vicente";
-      break;
-      case 13:
-      name = "Mosteiros";
-      break;
-      case 14:
-      name = "Praia";
-      break;
-      case 15:
-      name = "Santa Catarina";
-      break;
-      case 16:
-      name = "Santa Cruz";
-      break;
-      case 17:
-      name = "Sao Domingos";
-      break;
-      case 18:
-      name = "Sao Filipe";
-      break;
-      case 19:
-      name = "Sao Miguel";
-      break;
-      case 20:
-      name = "Tarrafal";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CY") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Famagusta";
-      break;
-      case 2:
-      name = "Kyrenia";
-      break;
-      case 3:
-      name = "Larnaca";
-      break;
-      case 4:
-      name = "Nicosia";
-      break;
-      case 5:
-      name = "Limassol";
-      break;
-      case 6:
-      name = "Paphos";
-      break;
-    }
-  }
-  if (strcmp(country_code,"CZ") == 0) {
-    switch (region_code2) {
-      case 52:
-      name = "Hlavni mesto Praha";
-      break;
-      case 78:
-      name = "Jihomoravsky kraj";
-      break;
-      case 79:
-      name = "Jihocesky kraj";
-      break;
-      case 80:
-      name = "Vysocina";
-      break;
-      case 81:
-      name = "Karlovarsky kraj";
-      break;
-      case 82:
-      name = "Kralovehradecky kraj";
-      break;
-      case 83:
-      name = "Liberecky kraj";
-      break;
-      case 84:
-      name = "Olomoucky kraj";
-      break;
-      case 85:
-      name = "Moravskoslezsky kraj";
-      break;
-      case 86:
-      name = "Pardubicky kraj";
-      break;
-      case 87:
-      name = "Plzensky kraj";
-      break;
-      case 88:
-      name = "Stredocesky kraj";
-      break;
-      case 89:
-      name = "Ustecky kraj";
-      break;
-      case 90:
-      name = "Zlinsky kraj";
-      break;
-    }
-  }
-  if (strcmp(country_code,"DE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Baden-Wurttemberg";
-      break;
-      case 2:
-      name = "Bayern";
-      break;
-      case 3:
-      name = "Bremen";
-      break;
-      case 4:
-      name = "Hamburg";
-      break;
-      case 5:
-      name = "Hessen";
-      break;
-      case 6:
-      name = "Niedersachsen";
-      break;
-      case 7:
-      name = "Nordrhein-Westfalen";
-      break;
-      case 8:
-      name = "Rheinland-Pfalz";
-      break;
-      case 9:
-      name = "Saarland";
-      break;
-      case 10:
-      name = "Schleswig-Holstein";
-      break;
-      case 11:
-      name = "Brandenburg";
-      break;
-      case 12:
-      name = "Mecklenburg-Vorpommern";
-      break;
-      case 13:
-      name = "Sachsen";
-      break;
-      case 14:
-      name = "Sachsen-Anhalt";
-      break;
-      case 15:
-      name = "Thuringen";
-      break;
-      case 16:
-      name = "Berlin";
-      break;
-    }
-  }
-  if (strcmp(country_code,"DJ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ali Sabieh";
-      break;
-      case 4:
-      name = "Obock";
-      break;
-      case 5:
-      name = "Tadjoura";
-      break;
-      case 6:
-      name = "Dikhil";
-      break;
-      case 7:
-      name = "Djibouti";
-      break;
-      case 8:
-      name = "Arta";
-      break;
-    }
-  }
-  if (strcmp(country_code,"DK") == 0) {
-    switch (region_code2) {
-      case 17:
-      name = "Hovedstaden";
-      break;
-      case 18:
-      name = "Midtjylland";
-      break;
-      case 19:
-      name = "Nordjylland";
-      break;
-      case 20:
-      name = "Sjelland";
-      break;
-      case 21:
-      name = "Syddanmark";
-      break;
-    }
-  }
-  if (strcmp(country_code,"DM") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Saint Andrew";
-      break;
-      case 3:
-      name = "Saint David";
-      break;
-      case 4:
-      name = "Saint George";
-      break;
-      case 5:
-      name = "Saint John";
-      break;
-      case 6:
-      name = "Saint Joseph";
-      break;
-      case 7:
-      name = "Saint Luke";
-      break;
-      case 8:
-      name = "Saint Mark";
-      break;
-      case 9:
-      name = "Saint Patrick";
-      break;
-      case 10:
-      name = "Saint Paul";
-      break;
-      case 11:
-      name = "Saint Peter";
-      break;
-    }
-  }
-  if (strcmp(country_code,"DO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Azua";
-      break;
-      case 2:
-      name = "Baoruco";
-      break;
-      case 3:
-      name = "Barahona";
-      break;
-      case 4:
-      name = "Dajabon";
-      break;
-      case 5:
-      name = "Distrito Nacional";
-      break;
-      case 6:
-      name = "Duarte";
-      break;
-      case 8:
-      name = "Espaillat";
-      break;
-      case 9:
-      name = "Independencia";
-      break;
-      case 10:
-      name = "La Altagracia";
-      break;
-      case 11:
-      name = "Elias Pina";
-      break;
-      case 12:
-      name = "La Romana";
-      break;
-      case 14:
-      name = "Maria Trinidad Sanchez";
-      break;
-      case 15:
-      name = "Monte Cristi";
-      break;
-      case 16:
-      name = "Pedernales";
-      break;
-      case 17:
-      name = "Peravia";
-      break;
-      case 18:
-      name = "Puerto Plata";
-      break;
-      case 19:
-      name = "Salcedo";
-      break;
-      case 20:
-      name = "Samana";
-      break;
-      case 21:
-      name = "Sanchez Ramirez";
-      break;
-      case 23:
-      name = "San Juan";
-      break;
-      case 24:
-      name = "San Pedro De Macoris";
-      break;
-      case 25:
-      name = "Santiago";
-      break;
-      case 26:
-      name = "Santiago Rodriguez";
-      break;
-      case 27:
-      name = "Valverde";
-      break;
-      case 28:
-      name = "El Seibo";
-      break;
-      case 29:
-      name = "Hato Mayor";
-      break;
-      case 30:
-      name = "La Vega";
-      break;
-      case 31:
-      name = "Monsenor Nouel";
-      break;
-      case 32:
-      name = "Monte Plata";
-      break;
-      case 33:
-      name = "San Cristobal";
-      break;
-      case 34:
-      name = "Distrito Nacional";
-      break;
-      case 35:
-      name = "Peravia";
-      break;
-      case 36:
-      name = "San Jose de Ocoa";
-      break;
-      case 37:
-      name = "Santo Domingo";
-      break;
-    }
-  }
-  if (strcmp(country_code,"DZ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Alger";
-      break;
-      case 3:
-      name = "Batna";
-      break;
-      case 4:
-      name = "Constantine";
-      break;
-      case 6:
-      name = "Medea";
-      break;
-      case 7:
-      name = "Mostaganem";
-      break;
-      case 9:
-      name = "Oran";
-      break;
-      case 10:
-      name = "Saida";
-      break;
-      case 12:
-      name = "Setif";
-      break;
-      case 13:
-      name = "Tiaret";
-      break;
-      case 14:
-      name = "Tizi Ouzou";
-      break;
-      case 15:
-      name = "Tlemcen";
-      break;
-      case 18:
-      name = "Bejaia";
-      break;
-      case 19:
-      name = "Biskra";
-      break;
-      case 20:
-      name = "Blida";
-      break;
-      case 21:
-      name = "Bouira";
-      break;
-      case 22:
-      name = "Djelfa";
-      break;
-      case 23:
-      name = "Guelma";
-      break;
-      case 24:
-      name = "Jijel";
-      break;
-      case 25:
-      name = "Laghouat";
-      break;
-      case 26:
-      name = "Mascara";
-      break;
-      case 27:
-      name = "M'sila";
-      break;
-      case 29:
-      name = "Oum el Bouaghi";
-      break;
-      case 30:
-      name = "Sidi Bel Abbes";
-      break;
-      case 31:
-      name = "Skikda";
-      break;
-      case 33:
-      name = "Tebessa";
-      break;
-      case 34:
-      name = "Adrar";
-      break;
-      case 35:
-      name = "Ain Defla";
-      break;
-      case 36:
-      name = "Ain Temouchent";
-      break;
-      case 37:
-      name = "Annaba";
-      break;
-      case 38:
-      name = "Bechar";
-      break;
-      case 39:
-      name = "Bordj Bou Arreridj";
-      break;
-      case 40:
-      name = "Boumerdes";
-      break;
-      case 41:
-      name = "Chlef";
-      break;
-      case 42:
-      name = "El Bayadh";
-      break;
-      case 43:
-      name = "El Oued";
-      break;
-      case 44:
-      name = "El Tarf";
-      break;
-      case 45:
-      name = "Ghardaia";
-      break;
-      case 46:
-      name = "Illizi";
-      break;
-      case 47:
-      name = "Khenchela";
-      break;
-      case 48:
-      name = "Mila";
-      break;
-      case 49:
-      name = "Naama";
-      break;
-      case 50:
-      name = "Ouargla";
-      break;
-      case 51:
-      name = "Relizane";
-      break;
-      case 52:
-      name = "Souk Ahras";
-      break;
-      case 53:
-      name = "Tamanghasset";
-      break;
-      case 54:
-      name = "Tindouf";
-      break;
-      case 55:
-      name = "Tipaza";
-      break;
-      case 56:
-      name = "Tissemsilt";
-      break;
-    }
-  }
-  if (strcmp(country_code,"EC") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Galapagos";
-      break;
-      case 2:
-      name = "Azuay";
-      break;
-      case 3:
-      name = "Bolivar";
-      break;
-      case 4:
-      name = "Canar";
-      break;
-      case 5:
-      name = "Carchi";
-      break;
-      case 6:
-      name = "Chimborazo";
-      break;
-      case 7:
-      name = "Cotopaxi";
-      break;
-      case 8:
-      name = "El Oro";
-      break;
-      case 9:
-      name = "Esmeraldas";
-      break;
-      case 10:
-      name = "Guayas";
-      break;
-      case 11:
-      name = "Imbabura";
-      break;
-      case 12:
-      name = "Loja";
-      break;
-      case 13:
-      name = "Los Rios";
-      break;
-      case 14:
-      name = "Manabi";
-      break;
-      case 15:
-      name = "Morona-Santiago";
-      break;
-      case 17:
-      name = "Pastaza";
-      break;
-      case 18:
-      name = "Pichincha";
-      break;
-      case 19:
-      name = "Tungurahua";
-      break;
-      case 20:
-      name = "Zamora-Chinchipe";
-      break;
-      case 22:
-      name = "Sucumbios";
-      break;
-      case 23:
-      name = "Napo";
-      break;
-      case 24:
-      name = "Orellana";
-      break;
-    }
-  }
-  if (strcmp(country_code,"EE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Harjumaa";
-      break;
-      case 2:
-      name = "Hiiumaa";
-      break;
-      case 3:
-      name = "Ida-Virumaa";
-      break;
-      case 4:
-      name = "Jarvamaa";
-      break;
-      case 5:
-      name = "Jogevamaa";
-      break;
-      case 6:
-      name = "Kohtla-Jarve";
-      break;
-      case 7:
-      name = "Laanemaa";
-      break;
-      case 8:
-      name = "Laane-Virumaa";
-      break;
-      case 9:
-      name = "Narva";
-      break;
-      case 10:
-      name = "Parnu";
-      break;
-      case 11:
-      name = "Parnumaa";
-      break;
-      case 12:
-      name = "Polvamaa";
-      break;
-      case 13:
-      name = "Raplamaa";
-      break;
-      case 14:
-      name = "Saaremaa";
-      break;
-      case 15:
-      name = "Sillamae";
-      break;
-      case 16:
-      name = "Tallinn";
-      break;
-      case 17:
-      name = "Tartu";
-      break;
-      case 18:
-      name = "Tartumaa";
-      break;
-      case 19:
-      name = "Valgamaa";
-      break;
-      case 20:
-      name = "Viljandimaa";
-      break;
-      case 21:
-      name = "Vorumaa";
-      break;
-    }
-  }
-  if (strcmp(country_code,"EG") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ad Daqahliyah";
-      break;
-      case 2:
-      name = "Al Bahr al Ahmar";
-      break;
-      case 3:
-      name = "Al Buhayrah";
-      break;
-      case 4:
-      name = "Al Fayyum";
-      break;
-      case 5:
-      name = "Al Gharbiyah";
-      break;
-      case 6:
-      name = "Al Iskandariyah";
-      break;
-      case 7:
-      name = "Al Isma'iliyah";
-      break;
-      case 8:
-      name = "Al Jizah";
-      break;
-      case 9:
-      name = "Al Minufiyah";
-      break;
-      case 10:
-      name = "Al Minya";
-      break;
-      case 11:
-      name = "Al Qahirah";
-      break;
-      case 12:
-      name = "Al Qalyubiyah";
-      break;
-      case 13:
-      name = "Al Wadi al Jadid";
-      break;
-      case 14:
-      name = "Ash Sharqiyah";
-      break;
-      case 15:
-      name = "As Suways";
-      break;
-      case 16:
-      name = "Aswan";
-      break;
-      case 17:
-      name = "Asyut";
-      break;
-      case 18:
-      name = "Bani Suwayf";
-      break;
-      case 19:
-      name = "Bur Sa'id";
-      break;
-      case 20:
-      name = "Dumyat";
-      break;
-      case 21:
-      name = "Kafr ash Shaykh";
-      break;
-      case 22:
-      name = "Matruh";
-      break;
-      case 23:
-      name = "Qina";
-      break;
-      case 24:
-      name = "Suhaj";
-      break;
-      case 26:
-      name = "Janub Sina'";
-      break;
-      case 27:
-      name = "Shamal Sina'";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ER") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Anseba";
-      break;
-      case 2:
-      name = "Debub";
-      break;
-      case 3:
-      name = "Debubawi K'eyih Bahri";
-      break;
-      case 4:
-      name = "Gash Barka";
-      break;
-      case 5:
-      name = "Ma'akel";
-      break;
-      case 6:
-      name = "Semenawi K'eyih Bahri";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ES") == 0) {
-    switch (region_code2) {
-      case 7:
-      name = "Islas Baleares";
-      break;
-      case 27:
-      name = "La Rioja";
-      break;
-      case 29:
-      name = "Madrid";
-      break;
-      case 31:
-      name = "Murcia";
-      break;
-      case 32:
-      name = "Navarra";
-      break;
-      case 34:
-      name = "Asturias";
-      break;
-      case 39:
-      name = "Cantabria";
-      break;
-      case 51:
-      name = "Andalucia";
-      break;
-      case 52:
-      name = "Aragon";
-      break;
-      case 53:
-      name = "Canarias";
-      break;
-      case 54:
-      name = "Castilla-La Mancha";
-      break;
-      case 55:
-      name = "Castilla y Leon";
-      break;
-      case 56:
-      name = "Catalonia";
-      break;
-      case 57:
-      name = "Extremadura";
-      break;
-      case 58:
-      name = "Galicia";
-      break;
-      case 59:
-      name = "Pais Vasco";
-      break;
-      case 60:
-      name = "Comunidad Valenciana";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ET") == 0) {
-    switch (region_code2) {
-      case 44:
-      name = "Adis Abeba";
-      break;
-      case 45:
-      name = "Afar";
-      break;
-      case 46:
-      name = "Amara";
-      break;
-      case 47:
-      name = "Binshangul Gumuz";
-      break;
-      case 48:
-      name = "Dire Dawa";
-      break;
-      case 49:
-      name = "Gambela Hizboch";
-      break;
-      case 50:
-      name = "Hareri Hizb";
-      break;
-      case 51:
-      name = "Oromiya";
-      break;
-      case 52:
-      name = "Sumale";
-      break;
-      case 53:
-      name = "Tigray";
-      break;
-      case 54:
-      name = "YeDebub Biheroch Bihereseboch na Hizboch";
-      break;
-    }
-  }
-  if (strcmp(country_code,"FI") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aland";
-      break;
-      case 6:
-      name = "Lapland";
-      break;
-      case 8:
-      name = "Oulu";
-      break;
-      case 13:
-      name = "Southern Finland";
-      break;
-      case 14:
-      name = "Eastern Finland";
-      break;
-      case 15:
-      name = "Western Finland";
-      break;
-    }
-  }
-  if (strcmp(country_code,"FJ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Central";
-      break;
-      case 2:
-      name = "Eastern";
-      break;
-      case 3:
-      name = "Northern";
-      break;
-      case 4:
-      name = "Rotuma";
-      break;
-      case 5:
-      name = "Western";
-      break;
-    }
-  }
-  if (strcmp(country_code,"FM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Kosrae";
-      break;
-      case 2:
-      name = "Pohnpei";
-      break;
-      case 3:
-      name = "Chuuk";
-      break;
-      case 4:
-      name = "Yap";
-      break;
-    }
-  }
-  if (strcmp(country_code,"FR") == 0) {
-    switch (region_code2) {
-      case 97:
-      name = "Aquitaine";
-      break;
-      case 98:
-      name = "Auvergne";
-      break;
-      case 99:
-      name = "Basse-Normandie";
-      break;
-      case 832:
-      name = "Bourgogne";
-      break;
-      case 833:
-      name = "Bretagne";
-      break;
-      case 834:
-      name = "Centre";
-      break;
-      case 835:
-      name = "Champagne-Ardenne";
-      break;
-      case 836:
-      name = "Corse";
-      break;
-      case 837:
-      name = "Franche-Comte";
-      break;
-      case 838:
-      name = "Haute-Normandie";
-      break;
-      case 839:
-      name = "Ile-de-France";
-      break;
-      case 840:
-      name = "Languedoc-Roussillon";
-      break;
-      case 875:
-      name = "Limousin";
-      break;
-      case 876:
-      name = "Lorraine";
-      break;
-      case 877:
-      name = "Midi-Pyrenees";
-      break;
-      case 878:
-      name = "Nord-Pas-de-Calais";
-      break;
-      case 879:
-      name = "Pays de la Loire";
-      break;
-      case 880:
-      name = "Picardie";
-      break;
-      case 881:
-      name = "Poitou-Charentes";
-      break;
-      case 882:
-      name = "Provence-Alpes-Cote d'Azur";
-      break;
-      case 883:
-      name = "Rhone-Alpes";
-      break;
-      case 918:
-      name = "Alsace";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Estuaire";
-      break;
-      case 2:
-      name = "Haut-Ogooue";
-      break;
-      case 3:
-      name = "Moyen-Ogooue";
-      break;
-      case 4:
-      name = "Ngounie";
-      break;
-      case 5:
-      name = "Nyanga";
-      break;
-      case 6:
-      name = "Ogooue-Ivindo";
-      break;
-      case 7:
-      name = "Ogooue-Lolo";
-      break;
-      case 8:
-      name = "Ogooue-Maritime";
-      break;
-      case 9:
-      name = "Woleu-Ntem";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GB") == 0) {
-    switch (region_code2) {
-      case 832:
-      name = "Barking and Dagenham";
-      break;
-      case 833:
-      name = "Barnet";
-      break;
-      case 834:
-      name = "Barnsley";
-      break;
-      case 835:
-      name = "Bath and North East Somerset";
-      break;
-      case 836:
-      name = "Bedfordshire";
-      break;
-      case 837:
-      name = "Bexley";
-      break;
-      case 838:
-      name = "Birmingham";
-      break;
-      case 839:
-      name = "Blackburn with Darwen";
-      break;
-      case 840:
-      name = "Blackpool";
-      break;
-      case 875:
-      name = "Bolton";
-      break;
-      case 876:
-      name = "Bournemouth";
-      break;
-      case 877:
-      name = "Bracknell Forest";
-      break;
-      case 878:
-      name = "Bradford";
-      break;
-      case 879:
-      name = "Brent";
-      break;
-      case 880:
-      name = "Brighton and Hove";
-      break;
-      case 881:
-      name = "Bristol, City of";
-      break;
-      case 882:
-      name = "Bromley";
-      break;
-      case 883:
-      name = "Buckinghamshire";
-      break;
-      case 918:
-      name = "Bury";
-      break;
-      case 919:
-      name = "Calderdale";
-      break;
-      case 920:
-      name = "Cambridgeshire";
-      break;
-      case 921:
-      name = "Camden";
-      break;
-      case 922:
-      name = "Cheshire";
-      break;
-      case 923:
-      name = "Cornwall";
-      break;
-      case 924:
-      name = "Coventry";
-      break;
-      case 925:
-      name = "Croydon";
-      break;
-      case 926:
-      name = "Cumbria";
-      break;
-      case 961:
-      name = "Darlington";
-      break;
-      case 962:
-      name = "Derby";
-      break;
-      case 963:
-      name = "Derbyshire";
-      break;
-      case 964:
-      name = "Devon";
-      break;
-      case 965:
-      name = "Doncaster";
-      break;
-      case 966:
-      name = "Dorset";
-      break;
-      case 967:
-      name = "Dudley";
-      break;
-      case 968:
-      name = "Durham";
-      break;
-      case 969:
-      name = "Ealing";
-      break;
-      case 1004:
-      name = "East Riding of Yorkshire";
-      break;
-      case 1005:
-      name = "East Sussex";
-      break;
-      case 1006:
-      name = "Enfield";
-      break;
-      case 1007:
-      name = "Essex";
-      break;
-      case 1008:
-      name = "Gateshead";
-      break;
-      case 1009:
-      name = "Gloucestershire";
-      break;
-      case 1010:
-      name = "Greenwich";
-      break;
-      case 1011:
-      name = "Hackney";
-      break;
-      case 1012:
-      name = "Halton";
-      break;
-      case 1047:
-      name = "Hammersmith and Fulham";
-      break;
-      case 1048:
-      name = "Hampshire";
-      break;
-      case 1049:
-      name = "Haringey";
-      break;
-      case 1050:
-      name = "Harrow";
-      break;
-      case 1051:
-      name = "Hartlepool";
-      break;
-      case 1052:
-      name = "Havering";
-      break;
-      case 1053:
-      name = "Herefordshire";
-      break;
-      case 1054:
-      name = "Hertford";
-      break;
-      case 1055:
-      name = "Hillingdon";
-      break;
-      case 1090:
-      name = "Hounslow";
-      break;
-      case 1091:
-      name = "Isle of Wight";
-      break;
-      case 1092:
-      name = "Islington";
-      break;
-      case 1093:
-      name = "Kensington and Chelsea";
-      break;
-      case 1094:
-      name = "Kent";
-      break;
-      case 1095:
-      name = "Kingston upon Hull, City of";
-      break;
-      case 1096:
-      name = "Kingston upon Thames";
-      break;
-      case 1097:
-      name = "Kirklees";
-      break;
-      case 1098:
-      name = "Knowsley";
-      break;
-      case 1133:
-      name = "Lambeth";
-      break;
-      case 1134:
-      name = "Lancashire";
-      break;
-      case 1135:
-      name = "Leeds";
-      break;
-      case 1136:
-      name = "Leicester";
-      break;
-      case 1137:
-      name = "Leicestershire";
-      break;
-      case 1138:
-      name = "Lewisham";
-      break;
-      case 1139:
-      name = "Lincolnshire";
-      break;
-      case 1140:
-      name = "Liverpool";
-      break;
-      case 1141:
-      name = "London, City of";
-      break;
-      case 1176:
-      name = "Luton";
-      break;
-      case 1177:
-      name = "Manchester";
-      break;
-      case 1178:
-      name = "Medway";
-      break;
-      case 1179:
-      name = "Merton";
-      break;
-      case 1180:
-      name = "Middlesbrough";
-      break;
-      case 1181:
-      name = "Milton Keynes";
-      break;
-      case 1182:
-      name = "Newcastle upon Tyne";
-      break;
-      case 1183:
-      name = "Newham";
-      break;
-      case 1184:
-      name = "Norfolk";
-      break;
-      case 1219:
-      name = "Northamptonshire";
-      break;
-      case 1220:
-      name = "North East Lincolnshire";
-      break;
-      case 1221:
-      name = "North Lincolnshire";
-      break;
-      case 1222:
-      name = "North Somerset";
-      break;
-      case 1223:
-      name = "North Tyneside";
-      break;
-      case 1224:
-      name = "Northumberland";
-      break;
-      case 1225:
-      name = "North Yorkshire";
-      break;
-      case 1226:
-      name = "Nottingham";
-      break;
-      case 1227:
-      name = "Nottinghamshire";
-      break;
-      case 1262:
-      name = "Oldham";
-      break;
-      case 1263:
-      name = "Oxfordshire";
-      break;
-      case 1264:
-      name = "Peterborough";
-      break;
-      case 1265:
-      name = "Plymouth";
-      break;
-      case 1266:
-      name = "Poole";
-      break;
-      case 1267:
-      name = "Portsmouth";
-      break;
-      case 1268:
-      name = "Reading";
-      break;
-      case 1269:
-      name = "Redbridge";
-      break;
-      case 1270:
-      name = "Redcar and Cleveland";
-      break;
-      case 1305:
-      name = "Richmond upon Thames";
-      break;
-      case 1306:
-      name = "Rochdale";
-      break;
-      case 1307:
-      name = "Rotherham";
-      break;
-      case 1308:
-      name = "Rutland";
-      break;
-      case 1309:
-      name = "Salford";
-      break;
-      case 1310:
-      name = "Shropshire";
-      break;
-      case 1311:
-      name = "Sandwell";
-      break;
-      case 1312:
-      name = "Sefton";
-      break;
-      case 1313:
-      name = "Sheffield";
-      break;
-      case 1348:
-      name = "Slough";
-      break;
-      case 1349:
-      name = "Solihull";
-      break;
-      case 1350:
-      name = "Somerset";
-      break;
-      case 1351:
-      name = "Southampton";
-      break;
-      case 1352:
-      name = "Southend-on-Sea";
-      break;
-      case 1353:
-      name = "South Gloucestershire";
-      break;
-      case 1354:
-      name = "South Tyneside";
-      break;
-      case 1355:
-      name = "Southwark";
-      break;
-      case 1356:
-      name = "Staffordshire";
-      break;
-      case 1391:
-      name = "St. Helens";
-      break;
-      case 1392:
-      name = "Stockport";
-      break;
-      case 1393:
-      name = "Stockton-on-Tees";
-      break;
-      case 1394:
-      name = "Stoke-on-Trent";
-      break;
-      case 1395:
-      name = "Suffolk";
-      break;
-      case 1396:
-      name = "Sunderland";
-      break;
-      case 1397:
-      name = "Surrey";
-      break;
-      case 1398:
-      name = "Sutton";
-      break;
-      case 1399:
-      name = "Swindon";
-      break;
-      case 1434:
-      name = "Tameside";
-      break;
-      case 1435:
-      name = "Telford and Wrekin";
-      break;
-      case 1436:
-      name = "Thurrock";
-      break;
-      case 1437:
-      name = "Torbay";
-      break;
-      case 1438:
-      name = "Tower Hamlets";
-      break;
-      case 1439:
-      name = "Trafford";
-      break;
-      case 1440:
-      name = "Wakefield";
-      break;
-      case 1441:
-      name = "Walsall";
-      break;
-      case 1442:
-      name = "Waltham Forest";
-      break;
-      case 1477:
-      name = "Wandsworth";
-      break;
-      case 1478:
-      name = "Warrington";
-      break;
-      case 1479:
-      name = "Warwickshire";
-      break;
-      case 1480:
-      name = "West Berkshire";
-      break;
-      case 1481:
-      name = "Westminster";
-      break;
-      case 1482:
-      name = "West Sussex";
-      break;
-      case 1483:
-      name = "Wigan";
-      break;
-      case 1484:
-      name = "Wiltshire";
-      break;
-      case 1485:
-      name = "Windsor and Maidenhead";
-      break;
-      case 1520:
-      name = "Wirral";
-      break;
-      case 1521:
-      name = "Wokingham";
-      break;
-      case 1522:
-      name = "Wolverhampton";
-      break;
-      case 1523:
-      name = "Worcestershire";
-      break;
-      case 1524:
-      name = "York";
-      break;
-      case 1525:
-      name = "Antrim";
-      break;
-      case 1526:
-      name = "Ards";
-      break;
-      case 1527:
-      name = "Armagh";
-      break;
-      case 1528:
-      name = "Ballymena";
-      break;
-      case 1563:
-      name = "Ballymoney";
-      break;
-      case 1564:
-      name = "Banbridge";
-      break;
-      case 1565:
-      name = "Belfast";
-      break;
-      case 1566:
-      name = "Carrickfergus";
-      break;
-      case 1567:
-      name = "Castlereagh";
-      break;
-      case 1568:
-      name = "Coleraine";
-      break;
-      case 1569:
-      name = "Cookstown";
-      break;
-      case 1570:
-      name = "Craigavon";
-      break;
-      case 1571:
-      name = "Down";
-      break;
-      case 1606:
-      name = "Dungannon";
-      break;
-      case 1607:
-      name = "Fermanagh";
-      break;
-      case 1608:
-      name = "Larne";
-      break;
-      case 1609:
-      name = "Limavady";
-      break;
-      case 1610:
-      name = "Lisburn";
-      break;
-      case 1611:
-      name = "Derry";
-      break;
-      case 1612:
-      name = "Magherafelt";
-      break;
-      case 1613:
-      name = "Moyle";
-      break;
-      case 1614:
-      name = "Newry and Mourne";
-      break;
-      case 1649:
-      name = "Newtownabbey";
-      break;
-      case 1650:
-      name = "North Down";
-      break;
-      case 1651:
-      name = "Omagh";
-      break;
-      case 1652:
-      name = "Strabane";
-      break;
-      case 1653:
-      name = "Aberdeen City";
-      break;
-      case 1654:
-      name = "Aberdeenshire";
-      break;
-      case 1655:
-      name = "Angus";
-      break;
-      case 1656:
-      name = "Argyll and Bute";
-      break;
-      case 1657:
-      name = "Scottish Borders, The";
-      break;
-      case 1692:
-      name = "Clackmannanshire";
-      break;
-      case 1693:
-      name = "Dumfries and Galloway";
-      break;
-      case 1694:
-      name = "Dundee City";
-      break;
-      case 1695:
-      name = "East Ayrshire";
-      break;
-      case 1696:
-      name = "East Dunbartonshire";
-      break;
-      case 1697:
-      name = "East Lothian";
-      break;
-      case 1698:
-      name = "East Renfrewshire";
-      break;
-      case 1699:
-      name = "Edinburgh, City of";
-      break;
-      case 1700:
-      name = "Falkirk";
-      break;
-      case 1735:
-      name = "Fife";
-      break;
-      case 1736:
-      name = "Glasgow City";
-      break;
-      case 1737:
-      name = "Highland";
-      break;
-      case 1738:
-      name = "Inverclyde";
-      break;
-      case 1739:
-      name = "Midlothian";
-      break;
-      case 1740:
-      name = "Moray";
-      break;
-      case 1741:
-      name = "North Ayrshire";
-      break;
-      case 1742:
-      name = "North Lanarkshire";
-      break;
-      case 1743:
-      name = "Orkney";
-      break;
-      case 1778:
-      name = "Perth and Kinross";
-      break;
-      case 1779:
-      name = "Renfrewshire";
-      break;
-      case 1780:
-      name = "Shetland Islands";
-      break;
-      case 1781:
-      name = "South Ayrshire";
-      break;
-      case 1782:
-      name = "South Lanarkshire";
-      break;
-      case 1783:
-      name = "Stirling";
-      break;
-      case 1784:
-      name = "West Dunbartonshire";
-      break;
-      case 1785:
-      name = "Eilean Siar";
-      break;
-      case 1786:
-      name = "West Lothian";
-      break;
-      case 1821:
-      name = "Isle of Anglesey";
-      break;
-      case 1822:
-      name = "Blaenau Gwent";
-      break;
-      case 1823:
-      name = "Bridgend";
-      break;
-      case 1824:
-      name = "Caerphilly";
-      break;
-      case 1825:
-      name = "Cardiff";
-      break;
-      case 1826:
-      name = "Ceredigion";
-      break;
-      case 1827:
-      name = "Carmarthenshire";
-      break;
-      case 1828:
-      name = "Conwy";
-      break;
-      case 1829:
-      name = "Denbighshire";
-      break;
-      case 1864:
-      name = "Flintshire";
-      break;
-      case 1865:
-      name = "Gwynedd";
-      break;
-      case 1866:
-      name = "Merthyr Tydfil";
-      break;
-      case 1867:
-      name = "Monmouthshire";
-      break;
-      case 1868:
-      name = "Neath Port Talbot";
-      break;
-      case 1869:
-      name = "Newport";
-      break;
-      case 1870:
-      name = "Pembrokeshire";
-      break;
-      case 1871:
-      name = "Powys";
-      break;
-      case 1872:
-      name = "Rhondda Cynon Taff";
-      break;
-      case 1907:
-      name = "Swansea";
-      break;
-      case 1908:
-      name = "Torfaen";
-      break;
-      case 1909:
-      name = "Vale of Glamorgan, The";
-      break;
-      case 1910:
-      name = "Wrexham";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GD") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Saint Andrew";
-      break;
-      case 2:
-      name = "Saint David";
-      break;
-      case 3:
-      name = "Saint George";
-      break;
-      case 4:
-      name = "Saint John";
-      break;
-      case 5:
-      name = "Saint Mark";
-      break;
-      case 6:
-      name = "Saint Patrick";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Abashis Raioni";
-      break;
-      case 2:
-      name = "Abkhazia";
-      break;
-      case 3:
-      name = "Adigenis Raioni";
-      break;
-      case 4:
-      name = "Ajaria";
-      break;
-      case 5:
-      name = "Akhalgoris Raioni";
-      break;
-      case 6:
-      name = "Akhalk'alak'is Raioni";
-      break;
-      case 7:
-      name = "Akhalts'ikhis Raioni";
-      break;
-      case 8:
-      name = "Akhmetis Raioni";
-      break;
-      case 9:
-      name = "Ambrolauris Raioni";
-      break;
-      case 10:
-      name = "Aspindzis Raioni";
-      break;
-      case 11:
-      name = "Baghdat'is Raioni";
-      break;
-      case 12:
-      name = "Bolnisis Raioni";
-      break;
-      case 13:
-      name = "Borjomis Raioni";
-      break;
-      case 14:
-      name = "Chiat'ura";
-      break;
-      case 15:
-      name = "Ch'khorotsqus Raioni";
-      break;
-      case 16:
-      name = "Ch'okhatauris Raioni";
-      break;
-      case 17:
-      name = "Dedop'listsqaros Raioni";
-      break;
-      case 18:
-      name = "Dmanisis Raioni";
-      break;
-      case 19:
-      name = "Dushet'is Raioni";
-      break;
-      case 20:
-      name = "Gardabanis Raioni";
-      break;
-      case 21:
-      name = "Gori";
-      break;
-      case 22:
-      name = "Goris Raioni";
-      break;
-      case 23:
-      name = "Gurjaanis Raioni";
-      break;
-      case 24:
-      name = "Javis Raioni";
-      break;
-      case 25:
-      name = "K'arelis Raioni";
-      break;
-      case 26:
-      name = "Kaspis Raioni";
-      break;
-      case 27:
-      name = "Kharagaulis Raioni";
-      break;
-      case 28:
-      name = "Khashuris Raioni";
-      break;
-      case 29:
-      name = "Khobis Raioni";
-      break;
-      case 30:
-      name = "Khonis Raioni";
-      break;
-      case 31:
-      name = "K'ut'aisi";
-      break;
-      case 32:
-      name = "Lagodekhis Raioni";
-      break;
-      case 33:
-      name = "Lanch'khut'is Raioni";
-      break;
-      case 34:
-      name = "Lentekhis Raioni";
-      break;
-      case 35:
-      name = "Marneulis Raioni";
-      break;
-      case 36:
-      name = "Martvilis Raioni";
-      break;
-      case 37:
-      name = "Mestiis Raioni";
-      break;
-      case 38:
-      name = "Mts'khet'is Raioni";
-      break;
-      case 39:
-      name = "Ninotsmindis Raioni";
-      break;
-      case 40:
-      name = "Onis Raioni";
-      break;
-      case 41:
-      name = "Ozurget'is Raioni";
-      break;
-      case 42:
-      name = "P'ot'i";
-      break;
-      case 43:
-      name = "Qazbegis Raioni";
-      break;
-      case 44:
-      name = "Qvarlis Raioni";
-      break;
-      case 45:
-      name = "Rust'avi";
-      break;
-      case 46:
-      name = "Sach'kheris Raioni";
-      break;
-      case 47:
-      name = "Sagarejos Raioni";
-      break;
-      case 48:
-      name = "Samtrediis Raioni";
-      break;
-      case 49:
-      name = "Senakis Raioni";
-      break;
-      case 50:
-      name = "Sighnaghis Raioni";
-      break;
-      case 51:
-      name = "T'bilisi";
-      break;
-      case 52:
-      name = "T'elavis Raioni";
-      break;
-      case 53:
-      name = "T'erjolis Raioni";
-      break;
-      case 54:
-      name = "T'et'ritsqaros Raioni";
-      break;
-      case 55:
-      name = "T'ianet'is Raioni";
-      break;
-      case 56:
-      name = "Tqibuli";
-      break;
-      case 57:
-      name = "Ts'ageris Raioni";
-      break;
-      case 58:
-      name = "Tsalenjikhis Raioni";
-      break;
-      case 59:
-      name = "Tsalkis Raioni";
-      break;
-      case 60:
-      name = "Tsqaltubo";
-      break;
-      case 61:
-      name = "Vanis Raioni";
-      break;
-      case 62:
-      name = "Zestap'onis Raioni";
-      break;
-      case 63:
-      name = "Zugdidi";
-      break;
-      case 64:
-      name = "Zugdidis Raioni";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GH") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Greater Accra";
-      break;
-      case 2:
-      name = "Ashanti";
-      break;
-      case 3:
-      name = "Brong-Ahafo";
-      break;
-      case 4:
-      name = "Central";
-      break;
-      case 5:
-      name = "Eastern";
-      break;
-      case 6:
-      name = "Northern";
-      break;
-      case 8:
-      name = "Volta";
-      break;
-      case 9:
-      name = "Western";
-      break;
-      case 10:
-      name = "Upper East";
-      break;
-      case 11:
-      name = "Upper West";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GL") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Nordgronland";
-      break;
-      case 2:
-      name = "Ostgronland";
-      break;
-      case 3:
-      name = "Vestgronland";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Banjul";
-      break;
-      case 2:
-      name = "Lower River";
-      break;
-      case 3:
-      name = "Central River";
-      break;
-      case 4:
-      name = "Upper River";
-      break;
-      case 5:
-      name = "Western";
-      break;
-      case 7:
-      name = "North Bank";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Beyla";
-      break;
-      case 2:
-      name = "Boffa";
-      break;
-      case 3:
-      name = "Boke";
-      break;
-      case 4:
-      name = "Conakry";
-      break;
-      case 5:
-      name = "Dabola";
-      break;
-      case 6:
-      name = "Dalaba";
-      break;
-      case 7:
-      name = "Dinguiraye";
-      break;
-      case 9:
-      name = "Faranah";
-      break;
-      case 10:
-      name = "Forecariah";
-      break;
-      case 11:
-      name = "Fria";
-      break;
-      case 12:
-      name = "Gaoual";
-      break;
-      case 13:
-      name = "Gueckedou";
-      break;
-      case 15:
-      name = "Kerouane";
-      break;
-      case 16:
-      name = "Kindia";
-      break;
-      case 17:
-      name = "Kissidougou";
-      break;
-      case 18:
-      name = "Koundara";
-      break;
-      case 19:
-      name = "Kouroussa";
-      break;
-      case 21:
-      name = "Macenta";
-      break;
-      case 22:
-      name = "Mali";
-      break;
-      case 23:
-      name = "Mamou";
-      break;
-      case 25:
-      name = "Pita";
-      break;
-      case 27:
-      name = "Telimele";
-      break;
-      case 28:
-      name = "Tougue";
-      break;
-      case 29:
-      name = "Yomou";
-      break;
-      case 30:
-      name = "Coyah";
-      break;
-      case 31:
-      name = "Dubreka";
-      break;
-      case 32:
-      name = "Kankan";
-      break;
-      case 33:
-      name = "Koubia";
-      break;
-      case 34:
-      name = "Labe";
-      break;
-      case 35:
-      name = "Lelouma";
-      break;
-      case 36:
-      name = "Lola";
-      break;
-      case 37:
-      name = "Mandiana";
-      break;
-      case 38:
-      name = "Nzerekore";
-      break;
-      case 39:
-      name = "Siguiri";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GQ") == 0) {
-    switch (region_code2) {
-      case 3:
-      name = "Annobon";
-      break;
-      case 4:
-      name = "Bioko Norte";
-      break;
-      case 5:
-      name = "Bioko Sur";
-      break;
-      case 6:
-      name = "Centro Sur";
-      break;
-      case 7:
-      name = "Kie-Ntem";
-      break;
-      case 8:
-      name = "Litoral";
-      break;
-      case 9:
-      name = "Wele-Nzas";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Evros";
-      break;
-      case 2:
-      name = "Rodhopi";
-      break;
-      case 3:
-      name = "Xanthi";
-      break;
-      case 4:
-      name = "Drama";
-      break;
-      case 5:
-      name = "Serrai";
-      break;
-      case 6:
-      name = "Kilkis";
-      break;
-      case 7:
-      name = "Pella";
-      break;
-      case 8:
-      name = "Florina";
-      break;
-      case 9:
-      name = "Kastoria";
-      break;
-      case 10:
-      name = "Grevena";
-      break;
-      case 11:
-      name = "Kozani";
-      break;
-      case 12:
-      name = "Imathia";
-      break;
-      case 13:
-      name = "Thessaloniki";
-      break;
-      case 14:
-      name = "Kavala";
-      break;
-      case 15:
-      name = "Khalkidhiki";
-      break;
-      case 16:
-      name = "Pieria";
-      break;
-      case 17:
-      name = "Ioannina";
-      break;
-      case 18:
-      name = "Thesprotia";
-      break;
-      case 19:
-      name = "Preveza";
-      break;
-      case 20:
-      name = "Arta";
-      break;
-      case 21:
-      name = "Larisa";
-      break;
-      case 22:
-      name = "Trikala";
-      break;
-      case 23:
-      name = "Kardhitsa";
-      break;
-      case 24:
-      name = "Magnisia";
-      break;
-      case 25:
-      name = "Kerkira";
-      break;
-      case 26:
-      name = "Levkas";
-      break;
-      case 27:
-      name = "Kefallinia";
-      break;
-      case 28:
-      name = "Zakinthos";
-      break;
-      case 29:
-      name = "Fthiotis";
-      break;
-      case 30:
-      name = "Evritania";
-      break;
-      case 31:
-      name = "Aitolia kai Akarnania";
-      break;
-      case 32:
-      name = "Fokis";
-      break;
-      case 33:
-      name = "Voiotia";
-      break;
-      case 34:
-      name = "Evvoia";
-      break;
-      case 35:
-      name = "Attiki";
-      break;
-      case 36:
-      name = "Argolis";
-      break;
-      case 37:
-      name = "Korinthia";
-      break;
-      case 38:
-      name = "Akhaia";
-      break;
-      case 39:
-      name = "Ilia";
-      break;
-      case 40:
-      name = "Messinia";
-      break;
-      case 41:
-      name = "Arkadhia";
-      break;
-      case 42:
-      name = "Lakonia";
-      break;
-      case 43:
-      name = "Khania";
-      break;
-      case 44:
-      name = "Rethimni";
-      break;
-      case 45:
-      name = "Iraklion";
-      break;
-      case 46:
-      name = "Lasithi";
-      break;
-      case 47:
-      name = "Dhodhekanisos";
-      break;
-      case 48:
-      name = "Samos";
-      break;
-      case 49:
-      name = "Kikladhes";
-      break;
-      case 50:
-      name = "Khios";
-      break;
-      case 51:
-      name = "Lesvos";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GT") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Alta Verapaz";
-      break;
-      case 2:
-      name = "Baja Verapaz";
-      break;
-      case 3:
-      name = "Chimaltenango";
-      break;
-      case 4:
-      name = "Chiquimula";
-      break;
-      case 5:
-      name = "El Progreso";
-      break;
-      case 6:
-      name = "Escuintla";
-      break;
-      case 7:
-      name = "Guatemala";
-      break;
-      case 8:
-      name = "Huehuetenango";
-      break;
-      case 9:
-      name = "Izabal";
-      break;
-      case 10:
-      name = "Jalapa";
-      break;
-      case 11:
-      name = "Jutiapa";
-      break;
-      case 12:
-      name = "Peten";
-      break;
-      case 13:
-      name = "Quetzaltenango";
-      break;
-      case 14:
-      name = "Quiche";
-      break;
-      case 15:
-      name = "Retalhuleu";
-      break;
-      case 16:
-      name = "Sacatepequez";
-      break;
-      case 17:
-      name = "San Marcos";
-      break;
-      case 18:
-      name = "Santa Rosa";
-      break;
-      case 19:
-      name = "Solola";
-      break;
-      case 20:
-      name = "Suchitepequez";
-      break;
-      case 21:
-      name = "Totonicapan";
-      break;
-      case 22:
-      name = "Zacapa";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GW") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bafata";
-      break;
-      case 2:
-      name = "Quinara";
-      break;
-      case 4:
-      name = "Oio";
-      break;
-      case 5:
-      name = "Bolama";
-      break;
-      case 6:
-      name = "Cacheu";
-      break;
-      case 7:
-      name = "Tombali";
-      break;
-      case 10:
-      name = "Gabu";
-      break;
-      case 11:
-      name = "Bissau";
-      break;
-      case 12:
-      name = "Biombo";
-      break;
-    }
-  }
-  if (strcmp(country_code,"GY") == 0) {
-    switch (region_code2) {
-      case 10:
-      name = "Barima-Waini";
-      break;
-      case 11:
-      name = "Cuyuni-Mazaruni";
-      break;
-      case 12:
-      name = "Demerara-Mahaica";
-      break;
-      case 13:
-      name = "East Berbice-Corentyne";
-      break;
-      case 14:
-      name = "Essequibo Islands-West Demerara";
-      break;
-      case 15:
-      name = "Mahaica-Berbice";
-      break;
-      case 16:
-      name = "Pomeroon-Supenaam";
-      break;
-      case 17:
-      name = "Potaro-Siparuni";
-      break;
-      case 18:
-      name = "Upper Demerara-Berbice";
-      break;
-      case 19:
-      name = "Upper Takutu-Upper Essequibo";
-      break;
-    }
-  }
-  if (strcmp(country_code,"HN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Atlantida";
-      break;
-      case 2:
-      name = "Choluteca";
-      break;
-      case 3:
-      name = "Colon";
-      break;
-      case 4:
-      name = "Comayagua";
-      break;
-      case 5:
-      name = "Copan";
-      break;
-      case 6:
-      name = "Cortes";
-      break;
-      case 7:
-      name = "El Paraiso";
-      break;
-      case 8:
-      name = "Francisco Morazan";
-      break;
-      case 9:
-      name = "Gracias a Dios";
-      break;
-      case 10:
-      name = "Intibuca";
-      break;
-      case 11:
-      name = "Islas de la Bahia";
-      break;
-      case 12:
-      name = "La Paz";
-      break;
-      case 13:
-      name = "Lempira";
-      break;
-      case 14:
-      name = "Ocotepeque";
-      break;
-      case 15:
-      name = "Olancho";
-      break;
-      case 16:
-      name = "Santa Barbara";
-      break;
-      case 17:
-      name = "Valle";
-      break;
-      case 18:
-      name = "Yoro";
-      break;
-    }
-  }
-  if (strcmp(country_code,"HR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bjelovarsko-Bilogorska";
-      break;
-      case 2:
-      name = "Brodsko-Posavska";
-      break;
-      case 3:
-      name = "Dubrovacko-Neretvanska";
-      break;
-      case 4:
-      name = "Istarska";
-      break;
-      case 5:
-      name = "Karlovacka";
-      break;
-      case 6:
-      name = "Koprivnicko-Krizevacka";
-      break;
-      case 7:
-      name = "Krapinsko-Zagorska";
-      break;
-      case 8:
-      name = "Licko-Senjska";
-      break;
-      case 9:
-      name = "Medimurska";
-      break;
-      case 10:
-      name = "Osjecko-Baranjska";
-      break;
-      case 11:
-      name = "Pozesko-Slavonska";
-      break;
-      case 12:
-      name = "Primorsko-Goranska";
-      break;
-      case 13:
-      name = "Sibensko-Kninska";
-      break;
-      case 14:
-      name = "Sisacko-Moslavacka";
-      break;
-      case 15:
-      name = "Splitsko-Dalmatinska";
-      break;
-      case 16:
-      name = "Varazdinska";
-      break;
-      case 17:
-      name = "Viroviticko-Podravska";
-      break;
-      case 18:
-      name = "Vukovarsko-Srijemska";
-      break;
-      case 19:
-      name = "Zadarska";
-      break;
-      case 20:
-      name = "Zagrebacka";
-      break;
-      case 21:
-      name = "Grad Zagreb";
-      break;
-    }
-  }
-  if (strcmp(country_code,"HT") == 0) {
-    switch (region_code2) {
-      case 3:
-      name = "Nord-Ouest";
-      break;
-      case 6:
-      name = "Artibonite";
-      break;
-      case 7:
-      name = "Centre";
-      break;
-      case 9:
-      name = "Nord";
-      break;
-      case 10:
-      name = "Nord-Est";
-      break;
-      case 11:
-      name = "Ouest";
-      break;
-      case 12:
-      name = "Sud";
-      break;
-      case 13:
-      name = "Sud-Est";
-      break;
-      case 14:
-      name = "Grand' Anse";
-      break;
-      case 15:
-      name = "Nippes";
-      break;
-    }
-  }
-  if (strcmp(country_code,"HU") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bacs-Kiskun";
-      break;
-      case 2:
-      name = "Baranya";
-      break;
-      case 3:
-      name = "Bekes";
-      break;
-      case 4:
-      name = "Borsod-Abauj-Zemplen";
-      break;
-      case 5:
-      name = "Budapest";
-      break;
-      case 6:
-      name = "Csongrad";
-      break;
-      case 7:
-      name = "Debrecen";
-      break;
-      case 8:
-      name = "Fejer";
-      break;
-      case 9:
-      name = "Gyor-Moson-Sopron";
-      break;
-      case 10:
-      name = "Hajdu-Bihar";
-      break;
-      case 11:
-      name = "Heves";
-      break;
-      case 12:
-      name = "Komarom-Esztergom";
-      break;
-      case 13:
-      name = "Miskolc";
-      break;
-      case 14:
-      name = "Nograd";
-      break;
-      case 15:
-      name = "Pecs";
-      break;
-      case 16:
-      name = "Pest";
-      break;
-      case 17:
-      name = "Somogy";
-      break;
-      case 18:
-      name = "Szabolcs-Szatmar-Bereg";
-      break;
-      case 19:
-      name = "Szeged";
-      break;
-      case 20:
-      name = "Jasz-Nagykun-Szolnok";
-      break;
-      case 21:
-      name = "Tolna";
-      break;
-      case 22:
-      name = "Vas";
-      break;
-      case 23:
-      name = "Veszprem";
-      break;
-      case 24:
-      name = "Zala";
-      break;
-      case 25:
-      name = "Gyor";
-      break;
-      case 26:
-      name = "Bekescsaba";
-      break;
-      case 27:
-      name = "Dunaujvaros";
-      break;
-      case 28:
-      name = "Eger";
-      break;
-      case 29:
-      name = "Hodmezovasarhely";
-      break;
-      case 30:
-      name = "Kaposvar";
-      break;
-      case 31:
-      name = "Kecskemet";
-      break;
-      case 32:
-      name = "Nagykanizsa";
-      break;
-      case 33:
-      name = "Nyiregyhaza";
-      break;
-      case 34:
-      name = "Sopron";
-      break;
-      case 35:
-      name = "Szekesfehervar";
-      break;
-      case 36:
-      name = "Szolnok";
-      break;
-      case 37:
-      name = "Szombathely";
-      break;
-      case 38:
-      name = "Tatabanya";
-      break;
-      case 39:
-      name = "Veszprem";
-      break;
-      case 40:
-      name = "Zalaegerszeg";
-      break;
-      case 41:
-      name = "Salgotarjan";
-      break;
-      case 42:
-      name = "Szekszard";
-      break;
-      case 43:
-      name = "Erd";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ID") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aceh";
-      break;
-      case 2:
-      name = "Bali";
-      break;
-      case 3:
-      name = "Bengkulu";
-      break;
-      case 4:
-      name = "Jakarta Raya";
-      break;
-      case 5:
-      name = "Jambi";
-      break;
-      case 6:
-      name = "Jawa Barat";
-      break;
-      case 7:
-      name = "Jawa Tengah";
-      break;
-      case 8:
-      name = "Jawa Timur";
-      break;
-      case 9:
-      name = "Papua";
-      break;
-      case 10:
-      name = "Yogyakarta";
-      break;
-      case 11:
-      name = "Kalimantan Barat";
-      break;
-      case 12:
-      name = "Kalimantan Selatan";
-      break;
-      case 13:
-      name = "Kalimantan Tengah";
-      break;
-      case 14:
-      name = "Kalimantan Timur";
-      break;
-      case 15:
-      name = "Lampung";
-      break;
-      case 16:
-      name = "Maluku";
-      break;
-      case 17:
-      name = "Nusa Tenggara Barat";
-      break;
-      case 18:
-      name = "Nusa Tenggara Timur";
-      break;
-      case 19:
-      name = "Riau";
-      break;
-      case 20:
-      name = "Sulawesi Selatan";
-      break;
-      case 21:
-      name = "Sulawesi Tengah";
-      break;
-      case 22:
-      name = "Sulawesi Tenggara";
-      break;
-      case 23:
-      name = "Sulawesi Utara";
-      break;
-      case 24:
-      name = "Sumatera Barat";
-      break;
-      case 25:
-      name = "Sumatera Selatan";
-      break;
-      case 26:
-      name = "Sumatera Utara";
-      break;
-      case 28:
-      name = "Maluku";
-      break;
-      case 29:
-      name = "Maluku Utara";
-      break;
-      case 30:
-      name = "Jawa Barat";
-      break;
-      case 31:
-      name = "Sulawesi Utara";
-      break;
-      case 32:
-      name = "Sumatera Selatan";
-      break;
-      case 33:
-      name = "Banten";
-      break;
-      case 34:
-      name = "Gorontalo";
-      break;
-      case 35:
-      name = "Kepulauan Bangka Belitung";
-      break;
-      case 36:
-      name = "Papua";
-      break;
-      case 37:
-      name = "Riau";
-      break;
-      case 38:
-      name = "Sulawesi Selatan";
-      break;
-      case 39:
-      name = "Irian Jaya Barat";
-      break;
-      case 40:
-      name = "Kepulauan Riau";
-      break;
-      case 41:
-      name = "Sulawesi Barat";
-      break;
-    }
-  }
-  if (strcmp(country_code,"IE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Carlow";
-      break;
-      case 2:
-      name = "Cavan";
-      break;
-      case 3:
-      name = "Clare";
-      break;
-      case 4:
-      name = "Cork";
-      break;
-      case 6:
-      name = "Donegal";
-      break;
-      case 7:
-      name = "Dublin";
-      break;
-      case 10:
-      name = "Galway";
-      break;
-      case 11:
-      name = "Kerry";
-      break;
-      case 12:
-      name = "Kildare";
-      break;
-      case 13:
-      name = "Kilkenny";
-      break;
-      case 14:
-      name = "Leitrim";
-      break;
-      case 15:
-      name = "Laois";
-      break;
-      case 16:
-      name = "Limerick";
-      break;
-      case 18:
-      name = "Longford";
-      break;
-      case 19:
-      name = "Louth";
-      break;
-      case 20:
-      name = "Mayo";
-      break;
-      case 21:
-      name = "Meath";
-      break;
-      case 22:
-      name = "Monaghan";
-      break;
-      case 23:
-      name = "Offaly";
-      break;
-      case 24:
-      name = "Roscommon";
-      break;
-      case 25:
-      name = "Sligo";
-      break;
-      case 26:
-      name = "Tipperary";
-      break;
-      case 27:
-      name = "Waterford";
-      break;
-      case 29:
-      name = "Westmeath";
-      break;
-      case 30:
-      name = "Wexford";
-      break;
-      case 31:
-      name = "Wicklow";
-      break;
-    }
-  }
-  if (strcmp(country_code,"IL") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "HaDarom";
-      break;
-      case 2:
-      name = "HaMerkaz";
-      break;
-      case 3:
-      name = "HaZafon";
-      break;
-      case 4:
-      name = "Hefa";
-      break;
-      case 5:
-      name = "Tel Aviv";
-      break;
-      case 6:
-      name = "Yerushalayim";
-      break;
-    }
-  }
-  if (strcmp(country_code,"IN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Andaman and Nicobar Islands";
-      break;
-      case 2:
-      name = "Andhra Pradesh";
-      break;
-      case 3:
-      name = "Assam";
-      break;
-      case 5:
-      name = "Chandigarh";
-      break;
-      case 6:
-      name = "Dadra and Nagar Haveli";
-      break;
-      case 7:
-      name = "Delhi";
-      break;
-      case 9:
-      name = "Gujarat";
-      break;
-      case 10:
-      name = "Haryana";
-      break;
-      case 11:
-      name = "Himachal Pradesh";
-      break;
-      case 12:
-      name = "Jammu and Kashmir";
-      break;
-      case 13:
-      name = "Kerala";
-      break;
-      case 14:
-      name = "Lakshadweep";
-      break;
-      case 16:
-      name = "Maharashtra";
-      break;
-      case 17:
-      name = "Manipur";
-      break;
-      case 18:
-      name = "Meghalaya";
-      break;
-      case 19:
-      name = "Karnataka";
-      break;
-      case 20:
-      name = "Nagaland";
-      break;
-      case 21:
-      name = "Orissa";
-      break;
-      case 22:
-      name = "Puducherry";
-      break;
-      case 23:
-      name = "Punjab";
-      break;
-      case 24:
-      name = "Rajasthan";
-      break;
-      case 25:
-      name = "Tamil Nadu";
-      break;
-      case 26:
-      name = "Tripura";
-      break;
-      case 28:
-      name = "West Bengal";
-      break;
-      case 29:
-      name = "Sikkim";
-      break;
-      case 30:
-      name = "Arunachal Pradesh";
-      break;
-      case 31:
-      name = "Mizoram";
-      break;
-      case 32:
-      name = "Daman and Diu";
-      break;
-      case 33:
-      name = "Goa";
-      break;
-      case 34:
-      name = "Bihar";
-      break;
-      case 35:
-      name = "Madhya Pradesh";
-      break;
-      case 36:
-      name = "Uttar Pradesh";
-      break;
-      case 37:
-      name = "Chhattisgarh";
-      break;
-      case 38:
-      name = "Jharkhand";
-      break;
-      case 39:
-      name = "Uttarakhand";
-      break;
-    }
-  }
-  if (strcmp(country_code,"IQ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Al Anbar";
-      break;
-      case 2:
-      name = "Al Basrah";
-      break;
-      case 3:
-      name = "Al Muthanna";
-      break;
-      case 4:
-      name = "Al Qadisiyah";
-      break;
-      case 5:
-      name = "As Sulaymaniyah";
-      break;
-      case 6:
-      name = "Babil";
-      break;
-      case 7:
-      name = "Baghdad";
-      break;
-      case 8:
-      name = "Dahuk";
-      break;
-      case 9:
-      name = "Dhi Qar";
-      break;
-      case 10:
-      name = "Diyala";
-      break;
-      case 11:
-      name = "Arbil";
-      break;
-      case 12:
-      name = "Karbala'";
-      break;
-      case 13:
-      name = "At Ta'mim";
-      break;
-      case 14:
-      name = "Maysan";
-      break;
-      case 15:
-      name = "Ninawa";
-      break;
-      case 16:
-      name = "Wasit";
-      break;
-      case 17:
-      name = "An Najaf";
-      break;
-      case 18:
-      name = "Salah ad Din";
-      break;
-    }
-  }
-  if (strcmp(country_code,"IR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Azarbayjan-e Bakhtari";
-      break;
-      case 3:
-      name = "Chahar Mahall va Bakhtiari";
-      break;
-      case 4:
-      name = "Sistan va Baluchestan";
-      break;
-      case 5:
-      name = "Kohkiluyeh va Buyer Ahmadi";
-      break;
-      case 7:
-      name = "Fars";
-      break;
-      case 8:
-      name = "Gilan";
-      break;
-      case 9:
-      name = "Hamadan";
-      break;
-      case 10:
-      name = "Ilam";
-      break;
-      case 11:
-      name = "Hormozgan";
-      break;
-      case 12:
-      name = "Kerman";
-      break;
-      case 13:
-      name = "Bakhtaran";
-      break;
-      case 15:
-      name = "Khuzestan";
-      break;
-      case 16:
-      name = "Kordestan";
-      break;
-      case 17:
-      name = "Mazandaran";
-      break;
-      case 18:
-      name = "Semnan Province";
-      break;
-      case 19:
-      name = "Markazi";
-      break;
-      case 21:
-      name = "Zanjan";
-      break;
-      case 22:
-      name = "Bushehr";
-      break;
-      case 23:
-      name = "Lorestan";
-      break;
-      case 24:
-      name = "Markazi";
-      break;
-      case 25:
-      name = "Semnan";
-      break;
-      case 26:
-      name = "Tehran";
-      break;
-      case 27:
-      name = "Zanjan";
-      break;
-      case 28:
-      name = "Esfahan";
-      break;
-      case 29:
-      name = "Kerman";
-      break;
-      case 30:
-      name = "Khorasan";
-      break;
-      case 31:
-      name = "Yazd";
-      break;
-      case 32:
-      name = "Ardabil";
-      break;
-      case 33:
-      name = "East Azarbaijan";
-      break;
-      case 34:
-      name = "Markazi";
-      break;
-      case 35:
-      name = "Mazandaran";
-      break;
-      case 36:
-      name = "Zanjan";
-      break;
-      case 37:
-      name = "Golestan";
-      break;
-      case 38:
-      name = "Qazvin";
-      break;
-      case 39:
-      name = "Qom";
-      break;
-      case 40:
-      name = "Yazd";
-      break;
-      case 41:
-      name = "Khorasan-e Janubi";
-      break;
-      case 42:
-      name = "Khorasan-e Razavi";
-      break;
-      case 43:
-      name = "Khorasan-e Shemali";
-      break;
-    }
-  }
-  if (strcmp(country_code,"IS") == 0) {
-    switch (region_code2) {
-      case 3:
-      name = "Arnessysla";
-      break;
-      case 5:
-      name = "Austur-Hunavatnssysla";
-      break;
-      case 6:
-      name = "Austur-Skaftafellssysla";
-      break;
-      case 7:
-      name = "Borgarfjardarsysla";
-      break;
-      case 9:
-      name = "Eyjafjardarsysla";
-      break;
-      case 10:
-      name = "Gullbringusysla";
-      break;
-      case 15:
-      name = "Kjosarsysla";
-      break;
-      case 17:
-      name = "Myrasysla";
-      break;
-      case 20:
-      name = "Nordur-Mulasysla";
-      break;
-      case 21:
-      name = "Nordur-Tingeyjarsysla";
-      break;
-      case 23:
-      name = "Rangarvallasysla";
-      break;
-      case 28:
-      name = "Skagafjardarsysla";
-      break;
-      case 29:
-      name = "Snafellsnes- og Hnappadalssysla";
-      break;
-      case 30:
-      name = "Strandasysla";
-      break;
-      case 31:
-      name = "Sudur-Mulasysla";
-      break;
-      case 32:
-      name = "Sudur-Tingeyjarsysla";
-      break;
-      case 34:
-      name = "Vestur-Bardastrandarsysla";
-      break;
-      case 35:
-      name = "Vestur-Hunavatnssysla";
-      break;
-      case 36:
-      name = "Vestur-Isafjardarsysla";
-      break;
-      case 37:
-      name = "Vestur-Skaftafellssysla";
-      break;
-      case 40:
-      name = "Norourland Eystra";
-      break;
-      case 41:
-      name = "Norourland Vestra";
-      break;
-      case 42:
-      name = "Suourland";
-      break;
-      case 43:
-      name = "Suournes";
-      break;
-      case 44:
-      name = "Vestfiroir";
-      break;
-      case 45:
-      name = "Vesturland";
-      break;
-    }
-  }
-  if (strcmp(country_code,"IT") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Abruzzi";
-      break;
-      case 2:
-      name = "Basilicata";
-      break;
-      case 3:
-      name = "Calabria";
-      break;
-      case 4:
-      name = "Campania";
-      break;
-      case 5:
-      name = "Emilia-Romagna";
-      break;
-      case 6:
-      name = "Friuli-Venezia Giulia";
-      break;
-      case 7:
-      name = "Lazio";
-      break;
-      case 8:
-      name = "Liguria";
-      break;
-      case 9:
-      name = "Lombardia";
-      break;
-      case 10:
-      name = "Marche";
-      break;
-      case 11:
-      name = "Molise";
-      break;
-      case 12:
-      name = "Piemonte";
-      break;
-      case 13:
-      name = "Puglia";
-      break;
-      case 14:
-      name = "Sardegna";
-      break;
-      case 15:
-      name = "Sicilia";
-      break;
-      case 16:
-      name = "Toscana";
-      break;
-      case 17:
-      name = "Trentino-Alto Adige";
-      break;
-      case 18:
-      name = "Umbria";
-      break;
-      case 19:
-      name = "Valle d'Aosta";
-      break;
-      case 20:
-      name = "Veneto";
-      break;
-    }
-  }
-  if (strcmp(country_code,"JM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Clarendon";
-      break;
-      case 2:
-      name = "Hanover";
-      break;
-      case 4:
-      name = "Manchester";
-      break;
-      case 7:
-      name = "Portland";
-      break;
-      case 8:
-      name = "Saint Andrew";
-      break;
-      case 9:
-      name = "Saint Ann";
-      break;
-      case 10:
-      name = "Saint Catherine";
-      break;
-      case 11:
-      name = "Saint Elizabeth";
-      break;
-      case 12:
-      name = "Saint James";
-      break;
-      case 13:
-      name = "Saint Mary";
-      break;
-      case 14:
-      name = "Saint Thomas";
-      break;
-      case 15:
-      name = "Trelawny";
-      break;
-      case 16:
-      name = "Westmoreland";
-      break;
-      case 17:
-      name = "Kingston";
-      break;
-    }
-  }
-  if (strcmp(country_code,"JO") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Al Balqa'";
-      break;
-      case 7:
-      name = "Ma";
-      break;
-      case 9:
-      name = "Al Karak";
-      break;
-      case 10:
-      name = "Al Mafraq";
-      break;
-      case 11:
-      name = "Amman Governorate";
-      break;
-      case 12:
-      name = "At Tafilah";
-      break;
-      case 13:
-      name = "Az Zarqa";
-      break;
-      case 14:
-      name = "Irbid";
-      break;
-      case 16:
-      name = "Amman";
-      break;
-    }
-  }
-  if (strcmp(country_code,"JP") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aichi";
-      break;
-      case 2:
-      name = "Akita";
-      break;
-      case 3:
-      name = "Aomori";
-      break;
-      case 4:
-      name = "Chiba";
-      break;
-      case 5:
-      name = "Ehime";
-      break;
-      case 6:
-      name = "Fukui";
-      break;
-      case 7:
-      name = "Fukuoka";
-      break;
-      case 8:
-      name = "Fukushima";
-      break;
-      case 9:
-      name = "Gifu";
-      break;
-      case 10:
-      name = "Gumma";
-      break;
-      case 11:
-      name = "Hiroshima";
-      break;
-      case 12:
-      name = "Hokkaido";
-      break;
-      case 13:
-      name = "Hyogo";
-      break;
-      case 14:
-      name = "Ibaraki";
-      break;
-      case 15:
-      name = "Ishikawa";
-      break;
-      case 16:
-      name = "Iwate";
-      break;
-      case 17:
-      name = "Kagawa";
-      break;
-      case 18:
-      name = "Kagoshima";
-      break;
-      case 19:
-      name = "Kanagawa";
-      break;
-      case 20:
-      name = "Kochi";
-      break;
-      case 21:
-      name = "Kumamoto";
-      break;
-      case 22:
-      name = "Kyoto";
-      break;
-      case 23:
-      name = "Mie";
-      break;
-      case 24:
-      name = "Miyagi";
-      break;
-      case 25:
-      name = "Miyazaki";
-      break;
-      case 26:
-      name = "Nagano";
-      break;
-      case 27:
-      name = "Nagasaki";
-      break;
-      case 28:
-      name = "Nara";
-      break;
-      case 29:
-      name = "Niigata";
-      break;
-      case 30:
-      name = "Oita";
-      break;
-      case 31:
-      name = "Okayama";
-      break;
-      case 32:
-      name = "Osaka";
-      break;
-      case 33:
-      name = "Saga";
-      break;
-      case 34:
-      name = "Saitama";
-      break;
-      case 35:
-      name = "Shiga";
-      break;
-      case 36:
-      name = "Shimane";
-      break;
-      case 37:
-      name = "Shizuoka";
-      break;
-      case 38:
-      name = "Tochigi";
-      break;
-      case 39:
-      name = "Tokushima";
-      break;
-      case 40:
-      name = "Tokyo";
-      break;
-      case 41:
-      name = "Tottori";
-      break;
-      case 42:
-      name = "Toyama";
-      break;
-      case 43:
-      name = "Wakayama";
-      break;
-      case 44:
-      name = "Yamagata";
-      break;
-      case 45:
-      name = "Yamaguchi";
-      break;
-      case 46:
-      name = "Yamanashi";
-      break;
-      case 47:
-      name = "Okinawa";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Central";
-      break;
-      case 2:
-      name = "Coast";
-      break;
-      case 3:
-      name = "Eastern";
-      break;
-      case 5:
-      name = "Nairobi Area";
-      break;
-      case 6:
-      name = "North-Eastern";
-      break;
-      case 7:
-      name = "Nyanza";
-      break;
-      case 8:
-      name = "Rift Valley";
-      break;
-      case 9:
-      name = "Western";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KG") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bishkek";
-      break;
-      case 2:
-      name = "Chuy";
-      break;
-      case 3:
-      name = "Jalal-Abad";
-      break;
-      case 4:
-      name = "Naryn";
-      break;
-      case 5:
-      name = "Osh";
-      break;
-      case 6:
-      name = "Talas";
-      break;
-      case 7:
-      name = "Ysyk-Kol";
-      break;
-      case 8:
-      name = "Osh";
-      break;
-      case 9:
-      name = "Batken";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KH") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Batdambang";
-      break;
-      case 2:
-      name = "Kampong Cham";
-      break;
-      case 3:
-      name = "Kampong Chhnang";
-      break;
-      case 4:
-      name = "Kampong Speu";
-      break;
-      case 5:
-      name = "Kampong Thum";
-      break;
-      case 6:
-      name = "Kampot";
-      break;
-      case 7:
-      name = "Kandal";
-      break;
-      case 8:
-      name = "Koh Kong";
-      break;
-      case 9:
-      name = "Kracheh";
-      break;
-      case 10:
-      name = "Mondulkiri";
-      break;
-      case 11:
-      name = "Phnum Penh";
-      break;
-      case 12:
-      name = "Pursat";
-      break;
-      case 13:
-      name = "Preah Vihear";
-      break;
-      case 14:
-      name = "Prey Veng";
-      break;
-      case 15:
-      name = "Ratanakiri Kiri";
-      break;
-      case 16:
-      name = "Siem Reap";
-      break;
-      case 17:
-      name = "Stung Treng";
-      break;
-      case 18:
-      name = "Svay Rieng";
-      break;
-      case 19:
-      name = "Takeo";
-      break;
-      case 25:
-      name = "Banteay Meanchey";
-      break;
-      case 29:
-      name = "Batdambang";
-      break;
-      case 30:
-      name = "Pailin";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KI") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Gilbert Islands";
-      break;
-      case 2:
-      name = "Line Islands";
-      break;
-      case 3:
-      name = "Phoenix Islands";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Anjouan";
-      break;
-      case 2:
-      name = "Grande Comore";
-      break;
-      case 3:
-      name = "Moheli";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Christ Church Nichola Town";
-      break;
-      case 2:
-      name = "Saint Anne Sandy Point";
-      break;
-      case 3:
-      name = "Saint George Basseterre";
-      break;
-      case 4:
-      name = "Saint George Gingerland";
-      break;
-      case 5:
-      name = "Saint James Windward";
-      break;
-      case 6:
-      name = "Saint John Capisterre";
-      break;
-      case 7:
-      name = "Saint John Figtree";
-      break;
-      case 8:
-      name = "Saint Mary Cayon";
-      break;
-      case 9:
-      name = "Saint Paul Capisterre";
-      break;
-      case 10:
-      name = "Saint Paul Charlestown";
-      break;
-      case 11:
-      name = "Saint Peter Basseterre";
-      break;
-      case 12:
-      name = "Saint Thomas Lowland";
-      break;
-      case 13:
-      name = "Saint Thomas Middle Island";
-      break;
-      case 15:
-      name = "Trinity Palmetto Point";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KP") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Chagang-do";
-      break;
-      case 3:
-      name = "Hamgyong-namdo";
-      break;
-      case 6:
-      name = "Hwanghae-namdo";
-      break;
-      case 7:
-      name = "Hwanghae-bukto";
-      break;
-      case 8:
-      name = "Kaesong-si";
-      break;
-      case 9:
-      name = "Kangwon-do";
-      break;
-      case 11:
-      name = "P'yongan-bukto";
-      break;
-      case 12:
-      name = "P'yongyang-si";
-      break;
-      case 13:
-      name = "Yanggang-do";
-      break;
-      case 14:
-      name = "Namp'o-si";
-      break;
-      case 15:
-      name = "P'yongan-namdo";
-      break;
-      case 17:
-      name = "Hamgyong-bukto";
-      break;
-      case 18:
-      name = "Najin Sonbong-si";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Cheju-do";
-      break;
-      case 3:
-      name = "Cholla-bukto";
-      break;
-      case 5:
-      name = "Ch'ungch'ong-bukto";
-      break;
-      case 6:
-      name = "Kangwon-do";
-      break;
-      case 10:
-      name = "Pusan-jikhalsi";
-      break;
-      case 11:
-      name = "Seoul-t'ukpyolsi";
-      break;
-      case 12:
-      name = "Inch'on-jikhalsi";
-      break;
-      case 13:
-      name = "Kyonggi-do";
-      break;
-      case 14:
-      name = "Kyongsang-bukto";
-      break;
-      case 15:
-      name = "Taegu-jikhalsi";
-      break;
-      case 16:
-      name = "Cholla-namdo";
-      break;
-      case 17:
-      name = "Ch'ungch'ong-namdo";
-      break;
-      case 18:
-      name = "Kwangju-jikhalsi";
-      break;
-      case 19:
-      name = "Taejon-jikhalsi";
-      break;
-      case 20:
-      name = "Kyongsang-namdo";
-      break;
-      case 21:
-      name = "Ulsan-gwangyoksi";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KW") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Al Ahmadi";
-      break;
-      case 2:
-      name = "Al Kuwayt";
-      break;
-      case 5:
-      name = "Al Jahra";
-      break;
-      case 7:
-      name = "Al Farwaniyah";
-      break;
-      case 8:
-      name = "Hawalli";
-      break;
-      case 9:
-      name = "Mubarak al Kabir";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KY") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Creek";
-      break;
-      case 2:
-      name = "Eastern";
-      break;
-      case 3:
-      name = "Midland";
-      break;
-      case 4:
-      name = "South Town";
-      break;
-      case 5:
-      name = "Spot Bay";
-      break;
-      case 6:
-      name = "Stake Bay";
-      break;
-      case 7:
-      name = "West End";
-      break;
-      case 8:
-      name = "Western";
-      break;
-    }
-  }
-  if (strcmp(country_code,"KZ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Almaty";
-      break;
-      case 2:
-      name = "Almaty City";
-      break;
-      case 3:
-      name = "Aqmola";
-      break;
-      case 4:
-      name = "Aqtobe";
-      break;
-      case 5:
-      name = "Astana";
-      break;
-      case 6:
-      name = "Atyrau";
-      break;
-      case 7:
-      name = "West Kazakhstan";
-      break;
-      case 8:
-      name = "Bayqonyr";
-      break;
-      case 9:
-      name = "Mangghystau";
-      break;
-      case 10:
-      name = "South Kazakhstan";
-      break;
-      case 11:
-      name = "Pavlodar";
-      break;
-      case 12:
-      name = "Qaraghandy";
-      break;
-      case 13:
-      name = "Qostanay";
-      break;
-      case 14:
-      name = "Qyzylorda";
-      break;
-      case 15:
-      name = "East Kazakhstan";
-      break;
-      case 16:
-      name = "North Kazakhstan";
-      break;
-      case 17:
-      name = "Zhambyl";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Attapu";
-      break;
-      case 2:
-      name = "Champasak";
-      break;
-      case 3:
-      name = "Houaphan";
-      break;
-      case 4:
-      name = "Khammouan";
-      break;
-      case 5:
-      name = "Louang Namtha";
-      break;
-      case 7:
-      name = "Oudomxai";
-      break;
-      case 8:
-      name = "Phongsali";
-      break;
-      case 9:
-      name = "Saravan";
-      break;
-      case 10:
-      name = "Savannakhet";
-      break;
-      case 11:
-      name = "Vientiane";
-      break;
-      case 13:
-      name = "Xaignabouri";
-      break;
-      case 14:
-      name = "Xiangkhoang";
-      break;
-      case 17:
-      name = "Louangphrabang";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LB") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Beqaa";
-      break;
-      case 2:
-      name = "Al Janub";
-      break;
-      case 3:
-      name = "Liban-Nord";
-      break;
-      case 4:
-      name = "Beyrouth";
-      break;
-      case 5:
-      name = "Mont-Liban";
-      break;
-      case 6:
-      name = "Liban-Sud";
-      break;
-      case 7:
-      name = "Nabatiye";
-      break;
-      case 8:
-      name = "Beqaa";
-      break;
-      case 9:
-      name = "Liban-Nord";
-      break;
-      case 10:
-      name = "Aakk,r";
-      break;
-      case 11:
-      name = "Baalbek-Hermel";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LC") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Anse-la-Raye";
-      break;
-      case 2:
-      name = "Dauphin";
-      break;
-      case 3:
-      name = "Castries";
-      break;
-      case 4:
-      name = "Choiseul";
-      break;
-      case 5:
-      name = "Dennery";
-      break;
-      case 6:
-      name = "Gros-Islet";
-      break;
-      case 7:
-      name = "Laborie";
-      break;
-      case 8:
-      name = "Micoud";
-      break;
-      case 9:
-      name = "Soufriere";
-      break;
-      case 10:
-      name = "Vieux-Fort";
-      break;
-      case 11:
-      name = "Praslin";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LI") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Balzers";
-      break;
-      case 2:
-      name = "Eschen";
-      break;
-      case 3:
-      name = "Gamprin";
-      break;
-      case 4:
-      name = "Mauren";
-      break;
-      case 5:
-      name = "Planken";
-      break;
-      case 6:
-      name = "Ruggell";
-      break;
-      case 7:
-      name = "Schaan";
-      break;
-      case 8:
-      name = "Schellenberg";
-      break;
-      case 9:
-      name = "Triesen";
-      break;
-      case 10:
-      name = "Triesenberg";
-      break;
-      case 11:
-      name = "Vaduz";
-      break;
-      case 21:
-      name = "Gbarpolu";
-      break;
-      case 22:
-      name = "River Gee";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LK") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Amparai";
-      break;
-      case 2:
-      name = "Anuradhapura";
-      break;
-      case 3:
-      name = "Badulla";
-      break;
-      case 4:
-      name = "Batticaloa";
-      break;
-      case 6:
-      name = "Galle";
-      break;
-      case 7:
-      name = "Hambantota";
-      break;
-      case 9:
-      name = "Kalutara";
-      break;
-      case 10:
-      name = "Kandy";
-      break;
-      case 11:
-      name = "Kegalla";
-      break;
-      case 12:
-      name = "Kurunegala";
-      break;
-      case 14:
-      name = "Matale";
-      break;
-      case 15:
-      name = "Matara";
-      break;
-      case 16:
-      name = "Moneragala";
-      break;
-      case 17:
-      name = "Nuwara Eliya";
-      break;
-      case 18:
-      name = "Polonnaruwa";
-      break;
-      case 19:
-      name = "Puttalam";
-      break;
-      case 20:
-      name = "Ratnapura";
-      break;
-      case 21:
-      name = "Trincomalee";
-      break;
-      case 23:
-      name = "Colombo";
-      break;
-      case 24:
-      name = "Gampaha";
-      break;
-      case 25:
-      name = "Jaffna";
-      break;
-      case 26:
-      name = "Mannar";
-      break;
-      case 27:
-      name = "Mullaittivu";
-      break;
-      case 28:
-      name = "Vavuniya";
-      break;
-      case 29:
-      name = "Central";
-      break;
-      case 30:
-      name = "North Central";
-      break;
-      case 31:
-      name = "Northern";
-      break;
-      case 32:
-      name = "North Western";
-      break;
-      case 33:
-      name = "Sabaragamuwa";
-      break;
-      case 34:
-      name = "Southern";
-      break;
-      case 35:
-      name = "Uva";
-      break;
-      case 36:
-      name = "Western";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bong";
-      break;
-      case 4:
-      name = "Grand Cape Mount";
-      break;
-      case 5:
-      name = "Lofa";
-      break;
-      case 6:
-      name = "Maryland";
-      break;
-      case 7:
-      name = "Monrovia";
-      break;
-      case 9:
-      name = "Nimba";
-      break;
-      case 10:
-      name = "Sino";
-      break;
-      case 11:
-      name = "Grand Bassa";
-      break;
-      case 12:
-      name = "Grand Cape Mount";
-      break;
-      case 13:
-      name = "Maryland";
-      break;
-      case 14:
-      name = "Montserrado";
-      break;
-      case 17:
-      name = "Margibi";
-      break;
-      case 18:
-      name = "River Cess";
-      break;
-      case 19:
-      name = "Grand Gedeh";
-      break;
-      case 20:
-      name = "Lofa";
-      break;
-      case 21:
-      name = "Gbarpolu";
-      break;
-      case 22:
-      name = "River Gee";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LS") == 0) {
-    switch (region_code2) {
-      case 10:
-      name = "Berea";
-      break;
-      case 11:
-      name = "Butha-Buthe";
-      break;
-      case 12:
-      name = "Leribe";
-      break;
-      case 13:
-      name = "Mafeteng";
-      break;
-      case 14:
-      name = "Maseru";
-      break;
-      case 15:
-      name = "Mohales Hoek";
-      break;
-      case 16:
-      name = "Mokhotlong";
-      break;
-      case 17:
-      name = "Qachas Nek";
-      break;
-      case 18:
-      name = "Quthing";
-      break;
-      case 19:
-      name = "Thaba-Tseka";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LT") == 0) {
-    switch (region_code2) {
-      case 56:
-      name = "Alytaus Apskritis";
-      break;
-      case 57:
-      name = "Kauno Apskritis";
-      break;
-      case 58:
-      name = "Klaipedos Apskritis";
-      break;
-      case 59:
-      name = "Marijampoles Apskritis";
-      break;
-      case 60:
-      name = "Panevezio Apskritis";
-      break;
-      case 61:
-      name = "Siauliu Apskritis";
-      break;
-      case 62:
-      name = "Taurages Apskritis";
-      break;
-      case 63:
-      name = "Telsiu Apskritis";
-      break;
-      case 64:
-      name = "Utenos Apskritis";
-      break;
-      case 65:
-      name = "Vilniaus Apskritis";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LU") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Diekirch";
-      break;
-      case 2:
-      name = "Grevenmacher";
-      break;
-      case 3:
-      name = "Luxembourg";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LV") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aizkraukles";
-      break;
-      case 2:
-      name = "Aluksnes";
-      break;
-      case 3:
-      name = "Balvu";
-      break;
-      case 4:
-      name = "Bauskas";
-      break;
-      case 5:
-      name = "Cesu";
-      break;
-      case 6:
-      name = "Daugavpils";
-      break;
-      case 7:
-      name = "Daugavpils";
-      break;
-      case 8:
-      name = "Dobeles";
-      break;
-      case 9:
-      name = "Gulbenes";
-      break;
-      case 10:
-      name = "Jekabpils";
-      break;
-      case 11:
-      name = "Jelgava";
-      break;
-      case 12:
-      name = "Jelgavas";
-      break;
-      case 13:
-      name = "Jurmala";
-      break;
-      case 14:
-      name = "Kraslavas";
-      break;
-      case 15:
-      name = "Kuldigas";
-      break;
-      case 16:
-      name = "Liepaja";
-      break;
-      case 17:
-      name = "Liepajas";
-      break;
-      case 18:
-      name = "Limbazu";
-      break;
-      case 19:
-      name = "Ludzas";
-      break;
-      case 20:
-      name = "Madonas";
-      break;
-      case 21:
-      name = "Ogres";
-      break;
-      case 22:
-      name = "Preilu";
-      break;
-      case 23:
-      name = "Rezekne";
-      break;
-      case 24:
-      name = "Rezeknes";
-      break;
-      case 25:
-      name = "Riga";
-      break;
-      case 26:
-      name = "Rigas";
-      break;
-      case 27:
-      name = "Saldus";
-      break;
-      case 28:
-      name = "Talsu";
-      break;
-      case 29:
-      name = "Tukuma";
-      break;
-      case 30:
-      name = "Valkas";
-      break;
-      case 31:
-      name = "Valmieras";
-      break;
-      case 32:
-      name = "Ventspils";
-      break;
-      case 33:
-      name = "Ventspils";
-      break;
-    }
-  }
-  if (strcmp(country_code,"LY") == 0) {
-    switch (region_code2) {
-      case 3:
-      name = "Al Aziziyah";
-      break;
-      case 5:
-      name = "Al Jufrah";
-      break;
-      case 8:
-      name = "Al Kufrah";
-      break;
-      case 13:
-      name = "Ash Shati'";
-      break;
-      case 30:
-      name = "Murzuq";
-      break;
-      case 34:
-      name = "Sabha";
-      break;
-      case 41:
-      name = "Tarhunah";
-      break;
-      case 42:
-      name = "Tubruq";
-      break;
-      case 45:
-      name = "Zlitan";
-      break;
-      case 47:
-      name = "Ajdabiya";
-      break;
-      case 48:
-      name = "Al Fatih";
-      break;
-      case 49:
-      name = "Al Jabal al Akhdar";
-      break;
-      case 50:
-      name = "Al Khums";
-      break;
-      case 51:
-      name = "An Nuqat al Khams";
-      break;
-      case 52:
-      name = "Awbari";
-      break;
-      case 53:
-      name = "Az Zawiyah";
-      break;
-      case 54:
-      name = "Banghazi";
-      break;
-      case 55:
-      name = "Darnah";
-      break;
-      case 56:
-      name = "Ghadamis";
-      break;
-      case 57:
-      name = "Gharyan";
-      break;
-      case 58:
-      name = "Misratah";
-      break;
-      case 59:
-      name = "Sawfajjin";
-      break;
-      case 60:
-      name = "Surt";
-      break;
-      case 61:
-      name = "Tarabulus";
-      break;
-      case 62:
-      name = "Yafran";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MA") == 0) {
-    switch (region_code2) {
-      case 45:
-      name = "Grand Casablanca";
-      break;
-      case 46:
-      name = "Fes-Boulemane";
-      break;
-      case 47:
-      name = "Marrakech-Tensift-Al Haouz";
-      break;
-      case 48:
-      name = "Meknes-Tafilalet";
-      break;
-      case 49:
-      name = "Rabat-Sale-Zemmour-Zaer";
-      break;
-      case 50:
-      name = "Chaouia-Ouardigha";
-      break;
-      case 51:
-      name = "Doukkala-Abda";
-      break;
-      case 52:
-      name = "Gharb-Chrarda-Beni Hssen";
-      break;
-      case 53:
-      name = "Guelmim-Es Smara";
-      break;
-      case 54:
-      name = "Oriental";
-      break;
-      case 55:
-      name = "Souss-Massa-Dr,a";
-      break;
-      case 56:
-      name = "Tadla-Azilal";
-      break;
-      case 57:
-      name = "Tanger-Tetouan";
-      break;
-      case 58:
-      name = "Taza-Al Hoceima-Taounate";
-      break;
-      case 59:
-      name = "La,youne-Boujdour-Sakia El Hamra";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MC") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "La Condamine";
-      break;
-      case 2:
-      name = "Monaco";
-      break;
-      case 3:
-      name = "Monte-Carlo";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MD") == 0) {
-    switch (region_code2) {
-      case 51:
-      name = "Gagauzia";
-      break;
-      case 57:
-      name = "Chisinau";
-      break;
-      case 58:
-      name = "Stinga Nistrului";
-      break;
-      case 59:
-      name = "Anenii Noi";
-      break;
-      case 60:
-      name = "Balti";
-      break;
-      case 61:
-      name = "Basarabeasca";
-      break;
-      case 62:
-      name = "Bender";
-      break;
-      case 63:
-      name = "Briceni";
-      break;
-      case 64:
-      name = "Cahul";
-      break;
-      case 65:
-      name = "Cantemir";
-      break;
-      case 66:
-      name = "Calarasi";
-      break;
-      case 67:
-      name = "Causeni";
-      break;
-      case 68:
-      name = "Cimislia";
-      break;
-      case 69:
-      name = "Criuleni";
-      break;
-      case 70:
-      name = "Donduseni";
-      break;
-      case 71:
-      name = "Drochia";
-      break;
-      case 72:
-      name = "Dubasari";
-      break;
-      case 73:
-      name = "Edinet";
-      break;
-      case 74:
-      name = "Falesti";
-      break;
-      case 75:
-      name = "Floresti";
-      break;
-      case 76:
-      name = "Glodeni";
-      break;
-      case 77:
-      name = "Hincesti";
-      break;
-      case 78:
-      name = "Ialoveni";
-      break;
-      case 79:
-      name = "Leova";
-      break;
-      case 80:
-      name = "Nisporeni";
-      break;
-      case 81:
-      name = "Ocnita";
-      break;
-      case 83:
-      name = "Rezina";
-      break;
-      case 84:
-      name = "Riscani";
-      break;
-      case 85:
-      name = "Singerei";
-      break;
-      case 86:
-      name = "Soldanesti";
-      break;
-      case 87:
-      name = "Soroca";
-      break;
-      case 88:
-      name = "Stefan-Voda";
-      break;
-      case 89:
-      name = "Straseni";
-      break;
-      case 90:
-      name = "Taraclia";
-      break;
-      case 91:
-      name = "Telenesti";
-      break;
-      case 92:
-      name = "Ungheni";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MG") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Antsiranana";
-      break;
-      case 2:
-      name = "Fianarantsoa";
-      break;
-      case 3:
-      name = "Mahajanga";
-      break;
-      case 4:
-      name = "Toamasina";
-      break;
-      case 5:
-      name = "Antananarivo";
-      break;
-      case 6:
-      name = "Toliara";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MK") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aracinovo";
-      break;
-      case 2:
-      name = "Bac";
-      break;
-      case 3:
-      name = "Belcista";
-      break;
-      case 4:
-      name = "Berovo";
-      break;
-      case 5:
-      name = "Bistrica";
-      break;
-      case 6:
-      name = "Bitola";
-      break;
-      case 7:
-      name = "Blatec";
-      break;
-      case 8:
-      name = "Bogdanci";
-      break;
-      case 9:
-      name = "Bogomila";
-      break;
-      case 10:
-      name = "Bogovinje";
-      break;
-      case 11:
-      name = "Bosilovo";
-      break;
-      case 12:
-      name = "Brvenica";
-      break;
-      case 13:
-      name = "Cair";
-      break;
-      case 14:
-      name = "Capari";
-      break;
-      case 15:
-      name = "Caska";
-      break;
-      case 16:
-      name = "Cegrane";
-      break;
-      case 17:
-      name = "Centar";
-      break;
-      case 18:
-      name = "Centar Zupa";
-      break;
-      case 19:
-      name = "Cesinovo";
-      break;
-      case 20:
-      name = "Cucer-Sandevo";
-      break;
-      case 21:
-      name = "Debar";
-      break;
-      case 22:
-      name = "Delcevo";
-      break;
-      case 23:
-      name = "Delogozdi";
-      break;
-      case 24:
-      name = "Demir Hisar";
-      break;
-      case 25:
-      name = "Demir Kapija";
-      break;
-      case 26:
-      name = "Dobrusevo";
-      break;
-      case 27:
-      name = "Dolna Banjica";
-      break;
-      case 28:
-      name = "Dolneni";
-      break;
-      case 29:
-      name = "Dorce Petrov";
-      break;
-      case 30:
-      name = "Drugovo";
-      break;
-      case 31:
-      name = "Dzepciste";
-      break;
-      case 32:
-      name = "Gazi Baba";
-      break;
-      case 33:
-      name = "Gevgelija";
-      break;
-      case 34:
-      name = "Gostivar";
-      break;
-      case 35:
-      name = "Gradsko";
-      break;
-      case 36:
-      name = "Ilinden";
-      break;
-      case 37:
-      name = "Izvor";
-      break;
-      case 38:
-      name = "Jegunovce";
-      break;
-      case 39:
-      name = "Kamenjane";
-      break;
-      case 40:
-      name = "Karbinci";
-      break;
-      case 41:
-      name = "Karpos";
-      break;
-      case 42:
-      name = "Kavadarci";
-      break;
-      case 43:
-      name = "Kicevo";
-      break;
-      case 44:
-      name = "Kisela Voda";
-      break;
-      case 45:
-      name = "Klecevce";
-      break;
-      case 46:
-      name = "Kocani";
-      break;
-      case 47:
-      name = "Konce";
-      break;
-      case 48:
-      name = "Kondovo";
-      break;
-      case 49:
-      name = "Konopiste";
-      break;
-      case 50:
-      name = "Kosel";
-      break;
-      case 51:
-      name = "Kratovo";
-      break;
-      case 52:
-      name = "Kriva Palanka";
-      break;
-      case 53:
-      name = "Krivogastani";
-      break;
-      case 54:
-      name = "Krusevo";
-      break;
-      case 55:
-      name = "Kuklis";
-      break;
-      case 56:
-      name = "Kukurecani";
-      break;
-      case 57:
-      name = "Kumanovo";
-      break;
-      case 58:
-      name = "Labunista";
-      break;
-      case 59:
-      name = "Lipkovo";
-      break;
-      case 60:
-      name = "Lozovo";
-      break;
-      case 61:
-      name = "Lukovo";
-      break;
-      case 62:
-      name = "Makedonska Kamenica";
-      break;
-      case 63:
-      name = "Makedonski Brod";
-      break;
-      case 64:
-      name = "Mavrovi Anovi";
-      break;
-      case 65:
-      name = "Meseista";
-      break;
-      case 66:
-      name = "Miravci";
-      break;
-      case 67:
-      name = "Mogila";
-      break;
-      case 68:
-      name = "Murtino";
-      break;
-      case 69:
-      name = "Negotino";
-      break;
-      case 70:
-      name = "Negotino-Polosko";
-      break;
-      case 71:
-      name = "Novaci";
-      break;
-      case 72:
-      name = "Novo Selo";
-      break;
-      case 73:
-      name = "Oblesevo";
-      break;
-      case 74:
-      name = "Ohrid";
-      break;
-      case 75:
-      name = "Orasac";
-      break;
-      case 76:
-      name = "Orizari";
-      break;
-      case 77:
-      name = "Oslomej";
-      break;
-      case 78:
-      name = "Pehcevo";
-      break;
-      case 79:
-      name = "Petrovec";
-      break;
-      case 80:
-      name = "Plasnica";
-      break;
-      case 81:
-      name = "Podares";
-      break;
-      case 82:
-      name = "Prilep";
-      break;
-      case 83:
-      name = "Probistip";
-      break;
-      case 84:
-      name = "Radovis";
-      break;
-      case 85:
-      name = "Rankovce";
-      break;
-      case 86:
-      name = "Resen";
-      break;
-      case 87:
-      name = "Rosoman";
-      break;
-      case 88:
-      name = "Rostusa";
-      break;
-      case 89:
-      name = "Samokov";
-      break;
-      case 90:
-      name = "Saraj";
-      break;
-      case 91:
-      name = "Sipkovica";
-      break;
-      case 92:
-      name = "Sopiste";
-      break;
-      case 93:
-      name = "Sopotnica";
-      break;
-      case 94:
-      name = "Srbinovo";
-      break;
-      case 95:
-      name = "Staravina";
-      break;
-      case 96:
-      name = "Star Dojran";
-      break;
-      case 97:
-      name = "Staro Nagoricane";
-      break;
-      case 98:
-      name = "Stip";
-      break;
-      case 99:
-      name = "Struga";
-      break;
-      case 832:
-      name = "Strumica";
-      break;
-      case 833:
-      name = "Studenicani";
-      break;
-      case 834:
-      name = "Suto Orizari";
-      break;
-      case 835:
-      name = "Sveti Nikole";
-      break;
-      case 836:
-      name = "Tearce";
-      break;
-      case 837:
-      name = "Tetovo";
-      break;
-      case 838:
-      name = "Topolcani";
-      break;
-      case 839:
-      name = "Valandovo";
-      break;
-      case 840:
-      name = "Vasilevo";
-      break;
-      case 875:
-      name = "Veles";
-      break;
-      case 876:
-      name = "Velesta";
-      break;
-      case 877:
-      name = "Vevcani";
-      break;
-      case 878:
-      name = "Vinica";
-      break;
-      case 879:
-      name = "Vitoliste";
-      break;
-      case 880:
-      name = "Vranestica";
-      break;
-      case 881:
-      name = "Vrapciste";
-      break;
-      case 882:
-      name = "Vratnica";
-      break;
-      case 883:
-      name = "Vrutok";
-      break;
-      case 918:
-      name = "Zajas";
-      break;
-      case 919:
-      name = "Zelenikovo";
-      break;
-      case 920:
-      name = "Zelino";
-      break;
-      case 921:
-      name = "Zitose";
-      break;
-      case 922:
-      name = "Zletovo";
-      break;
-      case 923:
-      name = "Zrnovci";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ML") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bamako";
-      break;
-      case 3:
-      name = "Kayes";
-      break;
-      case 4:
-      name = "Mopti";
-      break;
-      case 5:
-      name = "Segou";
-      break;
-      case 6:
-      name = "Sikasso";
-      break;
-      case 7:
-      name = "Koulikoro";
-      break;
-      case 8:
-      name = "Tombouctou";
-      break;
-      case 9:
-      name = "Gao";
-      break;
-      case 10:
-      name = "Kidal";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Rakhine State";
-      break;
-      case 2:
-      name = "Chin State";
-      break;
-      case 3:
-      name = "Irrawaddy";
-      break;
-      case 4:
-      name = "Kachin State";
-      break;
-      case 5:
-      name = "Karan State";
-      break;
-      case 6:
-      name = "Kayah State";
-      break;
-      case 7:
-      name = "Magwe";
-      break;
-      case 8:
-      name = "Mandalay";
-      break;
-      case 9:
-      name = "Pegu";
-      break;
-      case 10:
-      name = "Sagaing";
-      break;
-      case 11:
-      name = "Shan State";
-      break;
-      case 12:
-      name = "Tenasserim";
-      break;
-      case 13:
-      name = "Mon State";
-      break;
-      case 14:
-      name = "Rangoon";
-      break;
-      case 17:
-      name = "Yangon";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Arhangay";
-      break;
-      case 2:
-      name = "Bayanhongor";
-      break;
-      case 3:
-      name = "Bayan-Olgiy";
-      break;
-      case 5:
-      name = "Darhan";
-      break;
-      case 6:
-      name = "Dornod";
-      break;
-      case 7:
-      name = "Dornogovi";
-      break;
-      case 8:
-      name = "Dundgovi";
-      break;
-      case 9:
-      name = "Dzavhan";
-      break;
-      case 10:
-      name = "Govi-Altay";
-      break;
-      case 11:
-      name = "Hentiy";
-      break;
-      case 12:
-      name = "Hovd";
-      break;
-      case 13:
-      name = "Hovsgol";
-      break;
-      case 14:
-      name = "Omnogovi";
-      break;
-      case 15:
-      name = "Ovorhangay";
-      break;
-      case 16:
-      name = "Selenge";
-      break;
-      case 17:
-      name = "Suhbaatar";
-      break;
-      case 18:
-      name = "Tov";
-      break;
-      case 19:
-      name = "Uvs";
-      break;
-      case 20:
-      name = "Ulaanbaatar";
-      break;
-      case 21:
-      name = "Bulgan";
-      break;
-      case 22:
-      name = "Erdenet";
-      break;
-      case 23:
-      name = "Darhan-Uul";
-      break;
-      case 24:
-      name = "Govisumber";
-      break;
-      case 25:
-      name = "Orhon";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ilhas";
-      break;
-      case 2:
-      name = "Macau";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Hodh Ech Chargui";
-      break;
-      case 2:
-      name = "Hodh El Gharbi";
-      break;
-      case 3:
-      name = "Assaba";
-      break;
-      case 4:
-      name = "Gorgol";
-      break;
-      case 5:
-      name = "Brakna";
-      break;
-      case 6:
-      name = "Trarza";
-      break;
-      case 7:
-      name = "Adrar";
-      break;
-      case 8:
-      name = "Dakhlet Nouadhibou";
-      break;
-      case 9:
-      name = "Tagant";
-      break;
-      case 10:
-      name = "Guidimaka";
-      break;
-      case 11:
-      name = "Tiris Zemmour";
-      break;
-      case 12:
-      name = "Inchiri";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MS") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Saint Anthony";
-      break;
-      case 2:
-      name = "Saint Georges";
-      break;
-      case 3:
-      name = "Saint Peter";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MU") == 0) {
-    switch (region_code2) {
-      case 12:
-      name = "Black River";
-      break;
-      case 13:
-      name = "Flacq";
-      break;
-      case 14:
-      name = "Grand Port";
-      break;
-      case 15:
-      name = "Moka";
-      break;
-      case 16:
-      name = "Pamplemousses";
-      break;
-      case 17:
-      name = "Plaines Wilhems";
-      break;
-      case 18:
-      name = "Port Louis";
-      break;
-      case 19:
-      name = "Riviere du Rempart";
-      break;
-      case 20:
-      name = "Savanne";
-      break;
-      case 21:
-      name = "Agalega Islands";
-      break;
-      case 22:
-      name = "Cargados Carajos";
-      break;
-      case 23:
-      name = "Rodrigues";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MV") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Seenu";
-      break;
-      case 5:
-      name = "Laamu";
-      break;
-      case 30:
-      name = "Alifu";
-      break;
-      case 31:
-      name = "Baa";
-      break;
-      case 32:
-      name = "Dhaalu";
-      break;
-      case 33:
-      name = "Faafu ";
-      break;
-      case 34:
-      name = "Gaafu Alifu";
-      break;
-      case 35:
-      name = "Gaafu Dhaalu";
-      break;
-      case 36:
-      name = "Haa Alifu";
-      break;
-      case 37:
-      name = "Haa Dhaalu";
-      break;
-      case 38:
-      name = "Kaafu";
-      break;
-      case 39:
-      name = "Lhaviyani";
-      break;
-      case 40:
-      name = "Maale";
-      break;
-      case 41:
-      name = "Meemu";
-      break;
-      case 42:
-      name = "Gnaviyani";
-      break;
-      case 43:
-      name = "Noonu";
-      break;
-      case 44:
-      name = "Raa";
-      break;
-      case 45:
-      name = "Shaviyani";
-      break;
-      case 46:
-      name = "Thaa";
-      break;
-      case 47:
-      name = "Vaavu";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MW") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Chikwawa";
-      break;
-      case 3:
-      name = "Chiradzulu";
-      break;
-      case 4:
-      name = "Chitipa";
-      break;
-      case 5:
-      name = "Thyolo";
-      break;
-      case 6:
-      name = "Dedza";
-      break;
-      case 7:
-      name = "Dowa";
-      break;
-      case 8:
-      name = "Karonga";
-      break;
-      case 9:
-      name = "Kasungu";
-      break;
-      case 11:
-      name = "Lilongwe";
-      break;
-      case 12:
-      name = "Mangochi";
-      break;
-      case 13:
-      name = "Mchinji";
-      break;
-      case 15:
-      name = "Mzimba";
-      break;
-      case 16:
-      name = "Ntcheu";
-      break;
-      case 17:
-      name = "Nkhata Bay";
-      break;
-      case 18:
-      name = "Nkhotakota";
-      break;
-      case 19:
-      name = "Nsanje";
-      break;
-      case 20:
-      name = "Ntchisi";
-      break;
-      case 21:
-      name = "Rumphi";
-      break;
-      case 22:
-      name = "Salima";
-      break;
-      case 23:
-      name = "Zomba";
-      break;
-      case 24:
-      name = "Blantyre";
-      break;
-      case 25:
-      name = "Mwanza";
-      break;
-      case 26:
-      name = "Balaka";
-      break;
-      case 27:
-      name = "Likoma";
-      break;
-      case 28:
-      name = "Machinga";
-      break;
-      case 29:
-      name = "Mulanje";
-      break;
-      case 30:
-      name = "Phalombe";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MX") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aguascalientes";
-      break;
-      case 2:
-      name = "Baja California";
-      break;
-      case 3:
-      name = "Baja California Sur";
-      break;
-      case 4:
-      name = "Campeche";
-      break;
-      case 5:
-      name = "Chiapas";
-      break;
-      case 6:
-      name = "Chihuahua";
-      break;
-      case 7:
-      name = "Coahuila de Zaragoza";
-      break;
-      case 8:
-      name = "Colima";
-      break;
-      case 9:
-      name = "Distrito Federal";
-      break;
-      case 10:
-      name = "Durango";
-      break;
-      case 11:
-      name = "Guanajuato";
-      break;
-      case 12:
-      name = "Guerrero";
-      break;
-      case 13:
-      name = "Hidalgo";
-      break;
-      case 14:
-      name = "Jalisco";
-      break;
-      case 15:
-      name = "Mexico";
-      break;
-      case 16:
-      name = "Michoacan de Ocampo";
-      break;
-      case 17:
-      name = "Morelos";
-      break;
-      case 18:
-      name = "Nayarit";
-      break;
-      case 19:
-      name = "Nuevo Leon";
-      break;
-      case 20:
-      name = "Oaxaca";
-      break;
-      case 21:
-      name = "Puebla";
-      break;
-      case 22:
-      name = "Queretaro de Arteaga";
-      break;
-      case 23:
-      name = "Quintana Roo";
-      break;
-      case 24:
-      name = "San Luis Potosi";
-      break;
-      case 25:
-      name = "Sinaloa";
-      break;
-      case 26:
-      name = "Sonora";
-      break;
-      case 27:
-      name = "Tabasco";
-      break;
-      case 28:
-      name = "Tamaulipas";
-      break;
-      case 29:
-      name = "Tlaxcala";
-      break;
-      case 30:
-      name = "Veracruz-Llave";
-      break;
-      case 31:
-      name = "Yucatan";
-      break;
-      case 32:
-      name = "Zacatecas";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MY") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Johor";
-      break;
-      case 2:
-      name = "Kedah";
-      break;
-      case 3:
-      name = "Kelantan";
-      break;
-      case 4:
-      name = "Melaka";
-      break;
-      case 5:
-      name = "Negeri Sembilan";
-      break;
-      case 6:
-      name = "Pahang";
-      break;
-      case 7:
-      name = "Perak";
-      break;
-      case 8:
-      name = "Perlis";
-      break;
-      case 9:
-      name = "Pulau Pinang";
-      break;
-      case 11:
-      name = "Sarawak";
-      break;
-      case 12:
-      name = "Selangor";
-      break;
-      case 13:
-      name = "Terengganu";
-      break;
-      case 14:
-      name = "Kuala Lumpur";
-      break;
-      case 15:
-      name = "Labuan";
-      break;
-      case 16:
-      name = "Sabah";
-      break;
-      case 17:
-      name = "Putrajaya";
-      break;
-    }
-  }
-  if (strcmp(country_code,"MZ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Cabo Delgado";
-      break;
-      case 2:
-      name = "Gaza";
-      break;
-      case 3:
-      name = "Inhambane";
-      break;
-      case 4:
-      name = "Maputo";
-      break;
-      case 5:
-      name = "Sofala";
-      break;
-      case 6:
-      name = "Nampula";
-      break;
-      case 7:
-      name = "Niassa";
-      break;
-      case 8:
-      name = "Tete";
-      break;
-      case 9:
-      name = "Zambezia";
-      break;
-      case 10:
-      name = "Manica";
-      break;
-      case 11:
-      name = "Maputo";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bethanien";
-      break;
-      case 2:
-      name = "Caprivi Oos";
-      break;
-      case 3:
-      name = "Boesmanland";
-      break;
-      case 4:
-      name = "Gobabis";
-      break;
-      case 5:
-      name = "Grootfontein";
-      break;
-      case 6:
-      name = "Kaokoland";
-      break;
-      case 7:
-      name = "Karibib";
-      break;
-      case 8:
-      name = "Keetmanshoop";
-      break;
-      case 9:
-      name = "Luderitz";
-      break;
-      case 10:
-      name = "Maltahohe";
-      break;
-      case 11:
-      name = "Okahandja";
-      break;
-      case 12:
-      name = "Omaruru";
-      break;
-      case 13:
-      name = "Otjiwarongo";
-      break;
-      case 14:
-      name = "Outjo";
-      break;
-      case 15:
-      name = "Owambo";
-      break;
-      case 16:
-      name = "Rehoboth";
-      break;
-      case 17:
-      name = "Swakopmund";
-      break;
-      case 18:
-      name = "Tsumeb";
-      break;
-      case 20:
-      name = "Karasburg";
-      break;
-      case 21:
-      name = "Windhoek";
-      break;
-      case 22:
-      name = "Damaraland";
-      break;
-      case 23:
-      name = "Hereroland Oos";
-      break;
-      case 24:
-      name = "Hereroland Wes";
-      break;
-      case 25:
-      name = "Kavango";
-      break;
-      case 26:
-      name = "Mariental";
-      break;
-      case 27:
-      name = "Namaland";
-      break;
-      case 28:
-      name = "Caprivi";
-      break;
-      case 29:
-      name = "Erongo";
-      break;
-      case 30:
-      name = "Hardap";
-      break;
-      case 31:
-      name = "Karas";
-      break;
-      case 32:
-      name = "Kunene";
-      break;
-      case 33:
-      name = "Ohangwena";
-      break;
-      case 34:
-      name = "Okavango";
-      break;
-      case 35:
-      name = "Omaheke";
-      break;
-      case 36:
-      name = "Omusati";
-      break;
-      case 37:
-      name = "Oshana";
-      break;
-      case 38:
-      name = "Oshikoto";
-      break;
-      case 39:
-      name = "Otjozondjupa";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Agadez";
-      break;
-      case 2:
-      name = "Diffa";
-      break;
-      case 3:
-      name = "Dosso";
-      break;
-      case 4:
-      name = "Maradi";
-      break;
-      case 5:
-      name = "Niamey";
-      break;
-      case 6:
-      name = "Tahoua";
-      break;
-      case 7:
-      name = "Zinder";
-      break;
-      case 8:
-      name = "Niamey";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NG") == 0) {
-    switch (region_code2) {
-      case 5:
-      name = "Lagos";
-      break;
-      case 11:
-      name = "Federal Capital Territory";
-      break;
-      case 16:
-      name = "Ogun";
-      break;
-      case 21:
-      name = "Akwa Ibom";
-      break;
-      case 22:
-      name = "Cross River";
-      break;
-      case 23:
-      name = "Kaduna";
-      break;
-      case 24:
-      name = "Katsina";
-      break;
-      case 25:
-      name = "Anambra";
-      break;
-      case 26:
-      name = "Benue";
-      break;
-      case 27:
-      name = "Borno";
-      break;
-      case 28:
-      name = "Imo";
-      break;
-      case 29:
-      name = "Kano";
-      break;
-      case 30:
-      name = "Kwara";
-      break;
-      case 31:
-      name = "Niger";
-      break;
-      case 32:
-      name = "Oyo";
-      break;
-      case 35:
-      name = "Adamawa";
-      break;
-      case 36:
-      name = "Delta";
-      break;
-      case 37:
-      name = "Edo";
-      break;
-      case 39:
-      name = "Jigawa";
-      break;
-      case 40:
-      name = "Kebbi";
-      break;
-      case 41:
-      name = "Kogi";
-      break;
-      case 42:
-      name = "Osun";
-      break;
-      case 43:
-      name = "Taraba";
-      break;
-      case 44:
-      name = "Yobe";
-      break;
-      case 45:
-      name = "Abia";
-      break;
-      case 46:
-      name = "Bauchi";
-      break;
-      case 47:
-      name = "Enugu";
-      break;
-      case 48:
-      name = "Ondo";
-      break;
-      case 49:
-      name = "Plateau";
-      break;
-      case 50:
-      name = "Rivers";
-      break;
-      case 51:
-      name = "Sokoto";
-      break;
-      case 52:
-      name = "Bayelsa";
-      break;
-      case 53:
-      name = "Ebonyi";
-      break;
-      case 54:
-      name = "Ekiti";
-      break;
-      case 55:
-      name = "Gombe";
-      break;
-      case 56:
-      name = "Nassarawa";
-      break;
-      case 57:
-      name = "Zamfara";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NI") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Boaco";
-      break;
-      case 2:
-      name = "Carazo";
-      break;
-      case 3:
-      name = "Chinandega";
-      break;
-      case 4:
-      name = "Chontales";
-      break;
-      case 5:
-      name = "Esteli";
-      break;
-      case 6:
-      name = "Granada";
-      break;
-      case 7:
-      name = "Jinotega";
-      break;
-      case 8:
-      name = "Leon";
-      break;
-      case 9:
-      name = "Madriz";
-      break;
-      case 10:
-      name = "Managua";
-      break;
-      case 11:
-      name = "Masaya";
-      break;
-      case 12:
-      name = "Matagalpa";
-      break;
-      case 13:
-      name = "Nueva Segovia";
-      break;
-      case 14:
-      name = "Rio San Juan";
-      break;
-      case 15:
-      name = "Rivas";
-      break;
-      case 16:
-      name = "Zelaya";
-      break;
-      case 17:
-      name = "Autonoma Atlantico Norte";
-      break;
-      case 18:
-      name = "Region Autonoma Atlantico Sur";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NL") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Drenthe";
-      break;
-      case 2:
-      name = "Friesland";
-      break;
-      case 3:
-      name = "Gelderland";
-      break;
-      case 4:
-      name = "Groningen";
-      break;
-      case 5:
-      name = "Limburg";
-      break;
-      case 6:
-      name = "Noord-Brabant";
-      break;
-      case 7:
-      name = "Noord-Holland";
-      break;
-      case 8:
-      name = "Overijssel";
-      break;
-      case 9:
-      name = "Utrecht";
-      break;
-      case 10:
-      name = "Zeeland";
-      break;
-      case 11:
-      name = "Zuid-Holland";
-      break;
-      case 15:
-      name = "Overijssel";
-      break;
-      case 16:
-      name = "Flevoland";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Akershus";
-      break;
-      case 2:
-      name = "Aust-Agder";
-      break;
-      case 4:
-      name = "Buskerud";
-      break;
-      case 5:
-      name = "Finnmark";
-      break;
-      case 6:
-      name = "Hedmark";
-      break;
-      case 7:
-      name = "Hordaland";
-      break;
-      case 8:
-      name = "More og Romsdal";
-      break;
-      case 9:
-      name = "Nordland";
-      break;
-      case 10:
-      name = "Nord-Trondelag";
-      break;
-      case 11:
-      name = "Oppland";
-      break;
-      case 12:
-      name = "Oslo";
-      break;
-      case 13:
-      name = "Ostfold";
-      break;
-      case 14:
-      name = "Rogaland";
-      break;
-      case 15:
-      name = "Sogn og Fjordane";
-      break;
-      case 16:
-      name = "Sor-Trondelag";
-      break;
-      case 17:
-      name = "Telemark";
-      break;
-      case 18:
-      name = "Troms";
-      break;
-      case 19:
-      name = "Vest-Agder";
-      break;
-      case 20:
-      name = "Vestfold";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NP") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bagmati";
-      break;
-      case 2:
-      name = "Bheri";
-      break;
-      case 3:
-      name = "Dhawalagiri";
-      break;
-      case 4:
-      name = "Gandaki";
-      break;
-      case 5:
-      name = "Janakpur";
-      break;
-      case 6:
-      name = "Karnali";
-      break;
-      case 7:
-      name = "Kosi";
-      break;
-      case 8:
-      name = "Lumbini";
-      break;
-      case 9:
-      name = "Mahakali";
-      break;
-      case 10:
-      name = "Mechi";
-      break;
-      case 11:
-      name = "Narayani";
-      break;
-      case 12:
-      name = "Rapti";
-      break;
-      case 13:
-      name = "Sagarmatha";
-      break;
-      case 14:
-      name = "Seti";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NR") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Aiwo";
-      break;
-      case 2:
-      name = "Anabar";
-      break;
-      case 3:
-      name = "Anetan";
-      break;
-      case 4:
-      name = "Anibare";
-      break;
-      case 5:
-      name = "Baiti";
-      break;
-      case 6:
-      name = "Boe";
-      break;
-      case 7:
-      name = "Buada";
-      break;
-      case 8:
-      name = "Denigomodu";
-      break;
-      case 9:
-      name = "Ewa";
-      break;
-      case 10:
-      name = "Ijuw";
-      break;
-      case 11:
-      name = "Meneng";
-      break;
-      case 12:
-      name = "Nibok";
-      break;
-      case 13:
-      name = "Uaboe";
-      break;
-      case 14:
-      name = "Yaren";
-      break;
-    }
-  }
-  if (strcmp(country_code,"NZ") == 0) {
-    switch (region_code2) {
-      case 10:
-      name = "Chatham Islands";
-      break;
-      case 1010:
-      name = "Auckland";
-      break;
-      case 1011:
-      name = "Bay of Plenty";
-      break;
-      case 1012:
-      name = "Canterbury";
-      break;
-      case 1047:
-      name = "Gisborne";
-      break;
-      case 1048:
-      name = "Hawke's Bay";
-      break;
-      case 1049:
-      name = "Manawatu-Wanganui";
-      break;
-      case 1050:
-      name = "Marlborough";
-      break;
-      case 1051:
-      name = "Nelson";
-      break;
-      case 1052:
-      name = "Northland";
-      break;
-      case 1053:
-      name = "Otago";
-      break;
-      case 1054:
-      name = "Southland";
-      break;
-      case 1055:
-      name = "Taranaki";
-      break;
-      case 1090:
-      name = "Waikato";
-      break;
-      case 1091:
-      name = "Wellington";
-      break;
-      case 1092:
-      name = "West Coast";
-      break;
-    }
-  }
-  if (strcmp(country_code,"OM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ad Dakhiliyah";
-      break;
-      case 2:
-      name = "Al Batinah";
-      break;
-      case 3:
-      name = "Al Wusta";
-      break;
-      case 4:
-      name = "Ash Sharqiyah";
-      break;
-      case 5:
-      name = "Az Zahirah";
-      break;
-      case 6:
-      name = "Masqat";
-      break;
-      case 7:
-      name = "Musandam";
-      break;
-      case 8:
-      name = "Zufar";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bocas del Toro";
-      break;
-      case 2:
-      name = "Chiriqui";
-      break;
-      case 3:
-      name = "Cocle";
-      break;
-      case 4:
-      name = "Colon";
-      break;
-      case 5:
-      name = "Darien";
-      break;
-      case 6:
-      name = "Herrera";
-      break;
-      case 7:
-      name = "Los Santos";
-      break;
-      case 8:
-      name = "Panama";
-      break;
-      case 9:
-      name = "San Blas";
-      break;
-      case 10:
-      name = "Veraguas";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Amazonas";
-      break;
-      case 2:
-      name = "Ancash";
-      break;
-      case 3:
-      name = "Apurimac";
-      break;
-      case 4:
-      name = "Arequipa";
-      break;
-      case 5:
-      name = "Ayacucho";
-      break;
-      case 6:
-      name = "Cajamarca";
-      break;
-      case 7:
-      name = "Callao";
-      break;
-      case 8:
-      name = "Cusco";
-      break;
-      case 9:
-      name = "Huancavelica";
-      break;
-      case 10:
-      name = "Huanuco";
-      break;
-      case 11:
-      name = "Ica";
-      break;
-      case 12:
-      name = "Junin";
-      break;
-      case 13:
-      name = "La Libertad";
-      break;
-      case 14:
-      name = "Lambayeque";
-      break;
-      case 15:
-      name = "Lima";
-      break;
-      case 16:
-      name = "Loreto";
-      break;
-      case 17:
-      name = "Madre de Dios";
-      break;
-      case 18:
-      name = "Moquegua";
-      break;
-      case 19:
-      name = "Pasco";
-      break;
-      case 20:
-      name = "Piura";
-      break;
-      case 21:
-      name = "Puno";
-      break;
-      case 22:
-      name = "San Martin";
-      break;
-      case 23:
-      name = "Tacna";
-      break;
-      case 24:
-      name = "Tumbes";
-      break;
-      case 25:
-      name = "Ucayali";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PG") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Central";
-      break;
-      case 2:
-      name = "Gulf";
-      break;
-      case 3:
-      name = "Milne Bay";
-      break;
-      case 4:
-      name = "Northern";
-      break;
-      case 5:
-      name = "Southern Highlands";
-      break;
-      case 6:
-      name = "Western";
-      break;
-      case 7:
-      name = "North Solomons";
-      break;
-      case 8:
-      name = "Chimbu";
-      break;
-      case 9:
-      name = "Eastern Highlands";
-      break;
-      case 10:
-      name = "East New Britain";
-      break;
-      case 11:
-      name = "East Sepik";
-      break;
-      case 12:
-      name = "Madang";
-      break;
-      case 13:
-      name = "Manus";
-      break;
-      case 14:
-      name = "Morobe";
-      break;
-      case 15:
-      name = "New Ireland";
-      break;
-      case 16:
-      name = "Western Highlands";
-      break;
-      case 17:
-      name = "West New Britain";
-      break;
-      case 18:
-      name = "Sandaun";
-      break;
-      case 19:
-      name = "Enga";
-      break;
-      case 20:
-      name = "National Capital";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PH") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Abra";
-      break;
-      case 2:
-      name = "Agusan del Norte";
-      break;
-      case 3:
-      name = "Agusan del Sur";
-      break;
-      case 4:
-      name = "Aklan";
-      break;
-      case 5:
-      name = "Albay";
-      break;
-      case 6:
-      name = "Antique";
-      break;
-      case 7:
-      name = "Bataan";
-      break;
-      case 8:
-      name = "Batanes";
-      break;
-      case 9:
-      name = "Batangas";
-      break;
-      case 10:
-      name = "Benguet";
-      break;
-      case 11:
-      name = "Bohol";
-      break;
-      case 12:
-      name = "Bukidnon";
-      break;
-      case 13:
-      name = "Bulacan";
-      break;
-      case 14:
-      name = "Cagayan";
-      break;
-      case 15:
-      name = "Camarines Norte";
-      break;
-      case 16:
-      name = "Camarines Sur";
-      break;
-      case 17:
-      name = "Camiguin";
-      break;
-      case 18:
-      name = "Capiz";
-      break;
-      case 19:
-      name = "Catanduanes";
-      break;
-      case 20:
-      name = "Cavite";
-      break;
-      case 21:
-      name = "Cebu";
-      break;
-      case 22:
-      name = "Basilan";
-      break;
-      case 23:
-      name = "Eastern Samar";
-      break;
-      case 24:
-      name = "Davao";
-      break;
-      case 25:
-      name = "Davao del Sur";
-      break;
-      case 26:
-      name = "Davao Oriental";
-      break;
-      case 27:
-      name = "Ifugao";
-      break;
-      case 28:
-      name = "Ilocos Norte";
-      break;
-      case 29:
-      name = "Ilocos Sur";
-      break;
-      case 30:
-      name = "Iloilo";
-      break;
-      case 31:
-      name = "Isabela";
-      break;
-      case 32:
-      name = "Kalinga-Apayao";
-      break;
-      case 33:
-      name = "Laguna";
-      break;
-      case 34:
-      name = "Lanao del Norte";
-      break;
-      case 35:
-      name = "Lanao del Sur";
-      break;
-      case 36:
-      name = "La Union";
-      break;
-      case 37:
-      name = "Leyte";
-      break;
-      case 38:
-      name = "Marinduque";
-      break;
-      case 39:
-      name = "Masbate";
-      break;
-      case 40:
-      name = "Mindoro Occidental";
-      break;
-      case 41:
-      name = "Mindoro Oriental";
-      break;
-      case 42:
-      name = "Misamis Occidental";
-      break;
-      case 43:
-      name = "Misamis Oriental";
-      break;
-      case 44:
-      name = "Mountain";
-      break;
-      case 45:
-      name = "Negros Occidental";
-      break;
-      case 46:
-      name = "Negros Oriental";
-      break;
-      case 47:
-      name = "Nueva Ecija";
-      break;
-      case 48:
-      name = "Nueva Vizcaya";
-      break;
-      case 49:
-      name = "Palawan";
-      break;
-      case 50:
-      name = "Pampanga";
-      break;
-      case 51:
-      name = "Pangasinan";
-      break;
-      case 53:
-      name = "Rizal";
-      break;
-      case 54:
-      name = "Romblon";
-      break;
-      case 55:
-      name = "Samar";
-      break;
-      case 56:
-      name = "Maguindanao";
-      break;
-      case 57:
-      name = "North Cotabato";
-      break;
-      case 58:
-      name = "Sorsogon";
-      break;
-      case 59:
-      name = "Southern Leyte";
-      break;
-      case 60:
-      name = "Sulu";
-      break;
-      case 61:
-      name = "Surigao del Norte";
-      break;
-      case 62:
-      name = "Surigao del Sur";
-      break;
-      case 63:
-      name = "Tarlac";
-      break;
-      case 64:
-      name = "Zambales";
-      break;
-      case 65:
-      name = "Zamboanga del Norte";
-      break;
-      case 66:
-      name = "Zamboanga del Sur";
-      break;
-      case 67:
-      name = "Northern Samar";
-      break;
-      case 68:
-      name = "Quirino";
-      break;
-      case 69:
-      name = "Siquijor";
-      break;
-      case 70:
-      name = "South Cotabato";
-      break;
-      case 71:
-      name = "Sultan Kudarat";
-      break;
-      case 72:
-      name = "Tawitawi";
-      break;
-      case 832:
-      name = "Angeles";
-      break;
-      case 833:
-      name = "Bacolod";
-      break;
-      case 834:
-      name = "Bago";
-      break;
-      case 835:
-      name = "Baguio";
-      break;
-      case 836:
-      name = "Bais";
-      break;
-      case 837:
-      name = "Basilan City";
-      break;
-      case 838:
-      name = "Batangas City";
-      break;
-      case 839:
-      name = "Butuan";
-      break;
-      case 840:
-      name = "Cabanatuan";
-      break;
-      case 875:
-      name = "Cadiz";
-      break;
-      case 876:
-      name = "Cagayan de Oro";
-      break;
-      case 877:
-      name = "Calbayog";
-      break;
-      case 878:
-      name = "Caloocan";
-      break;
-      case 879:
-      name = "Canlaon";
-      break;
-      case 880:
-      name = "Cavite City";
-      break;
-      case 881:
-      name = "Cebu City";
-      break;
-      case 882:
-      name = "Cotabato";
-      break;
-      case 883:
-      name = "Dagupan";
-      break;
-      case 918:
-      name = "Danao";
-      break;
-      case 919:
-      name = "Dapitan";
-      break;
-      case 920:
-      name = "Davao City";
-      break;
-      case 921:
-      name = "Dipolog";
-      break;
-      case 922:
-      name = "Dumaguete";
-      break;
-      case 923:
-      name = "General Santos";
-      break;
-      case 924:
-      name = "Gingoog";
-      break;
-      case 925:
-      name = "Iligan";
-      break;
-      case 926:
-      name = "Iloilo City";
-      break;
-      case 961:
-      name = "Iriga";
-      break;
-      case 962:
-      name = "La Carlota";
-      break;
-      case 963:
-      name = "Laoag";
-      break;
-      case 964:
-      name = "Lapu-Lapu";
-      break;
-      case 965:
-      name = "Legaspi";
-      break;
-      case 966:
-      name = "Lipa";
-      break;
-      case 967:
-      name = "Lucena";
-      break;
-      case 968:
-      name = "Mandaue";
-      break;
-      case 969:
-      name = "Manila";
-      break;
-      case 1004:
-      name = "Marawi";
-      break;
-      case 1005:
-      name = "Naga";
-      break;
-      case 1006:
-      name = "Olongapo";
-      break;
-      case 1007:
-      name = "Ormoc";
-      break;
-      case 1008:
-      name = "Oroquieta";
-      break;
-      case 1009:
-      name = "Ozamis";
-      break;
-      case 1010:
-      name = "Pagadian";
-      break;
-      case 1011:
-      name = "Palayan";
-      break;
-      case 1012:
-      name = "Pasay";
-      break;
-      case 1047:
-      name = "Puerto Princesa";
-      break;
-      case 1048:
-      name = "Quezon City";
-      break;
-      case 1049:
-      name = "Roxas";
-      break;
-      case 1050:
-      name = "San Carlos";
-      break;
-      case 1051:
-      name = "San Carlos";
-      break;
-      case 1052:
-      name = "San Jose";
-      break;
-      case 1053:
-      name = "San Pablo";
-      break;
-      case 1054:
-      name = "Silay";
-      break;
-      case 1055:
-      name = "Surigao";
-      break;
-      case 1090:
-      name = "Tacloban";
-      break;
-      case 1091:
-      name = "Tagaytay";
-      break;
-      case 1092:
-      name = "Tagbilaran";
-      break;
-      case 1093:
-      name = "Tangub";
-      break;
-      case 1094:
-      name = "Toledo";
-      break;
-      case 1095:
-      name = "Trece Martires";
-      break;
-      case 1096:
-      name = "Zamboanga";
-      break;
-      case 1097:
-      name = "Aurora";
-      break;
-      case 1134:
-      name = "Quezon";
-      break;
-      case 1135:
-      name = "Negros Occidental";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PK") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Federally Administered Tribal Areas";
-      break;
-      case 2:
-      name = "Balochistan";
-      break;
-      case 3:
-      name = "North-West Frontier";
-      break;
-      case 4:
-      name = "Punjab";
-      break;
-      case 5:
-      name = "Sindh";
-      break;
-      case 6:
-      name = "Azad Kashmir";
-      break;
-      case 7:
-      name = "Northern Areas";
-      break;
-      case 8:
-      name = "Islamabad";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PL") == 0) {
-    switch (region_code2) {
-      case 72:
-      name = "Dolnoslaskie";
-      break;
-      case 73:
-      name = "Kujawsko-Pomorskie";
-      break;
-      case 74:
-      name = "Lodzkie";
-      break;
-      case 75:
-      name = "Lubelskie";
-      break;
-      case 76:
-      name = "Lubuskie";
-      break;
-      case 77:
-      name = "Malopolskie";
-      break;
-      case 78:
-      name = "Mazowieckie";
-      break;
-      case 79:
-      name = "Opolskie";
-      break;
-      case 80:
-      name = "Podkarpackie";
-      break;
-      case 81:
-      name = "Podlaskie";
-      break;
-      case 82:
-      name = "Pomorskie";
-      break;
-      case 83:
-      name = "Slaskie";
-      break;
-      case 84:
-      name = "Swietokrzyskie";
-      break;
-      case 85:
-      name = "Warminsko-Mazurskie";
-      break;
-      case 86:
-      name = "Wielkopolskie";
-      break;
-      case 87:
-      name = "Zachodniopomorskie";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PS") == 0) {
-    switch (region_code2) {
-      case 1131:
-      name = "Gaza";
-      break;
-      case 1798:
-      name = "West Bank";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PT") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Aveiro";
-      break;
-      case 3:
-      name = "Beja";
-      break;
-      case 4:
-      name = "Braga";
-      break;
-      case 5:
-      name = "Braganca";
-      break;
-      case 6:
-      name = "Castelo Branco";
-      break;
-      case 7:
-      name = "Coimbra";
-      break;
-      case 8:
-      name = "Evora";
-      break;
-      case 9:
-      name = "Faro";
-      break;
-      case 10:
-      name = "Madeira";
-      break;
-      case 11:
-      name = "Guarda";
-      break;
-      case 13:
-      name = "Leiria";
-      break;
-      case 14:
-      name = "Lisboa";
-      break;
-      case 16:
-      name = "Portalegre";
-      break;
-      case 17:
-      name = "Porto";
-      break;
-      case 18:
-      name = "Santarem";
-      break;
-      case 19:
-      name = "Setubal";
-      break;
-      case 20:
-      name = "Viana do Castelo";
-      break;
-      case 21:
-      name = "Vila Real";
-      break;
-      case 22:
-      name = "Viseu";
-      break;
-      case 23:
-      name = "Azores";
-      break;
-    }
-  }
-  if (strcmp(country_code,"PY") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Alto Parana";
-      break;
-      case 2:
-      name = "Amambay";
-      break;
-      case 3:
-      name = "Boqueron";
-      break;
-      case 4:
-      name = "Caaguazu";
-      break;
-      case 5:
-      name = "Caazapa";
-      break;
-      case 6:
-      name = "Central";
-      break;
-      case 7:
-      name = "Concepcion";
-      break;
-      case 8:
-      name = "Cordillera";
-      break;
-      case 10:
-      name = "Guaira";
-      break;
-      case 11:
-      name = "Itapua";
-      break;
-      case 12:
-      name = "Misiones";
-      break;
-      case 13:
-      name = "Neembucu";
-      break;
-      case 15:
-      name = "Paraguari";
-      break;
-      case 16:
-      name = "Presidente Hayes";
-      break;
-      case 17:
-      name = "San Pedro";
-      break;
-      case 19:
-      name = "Canindeyu";
-      break;
-      case 20:
-      name = "Chaco";
-      break;
-      case 21:
-      name = "Nueva Asuncion";
-      break;
-      case 23:
-      name = "Alto Paraguay";
-      break;
-    }
-  }
-  if (strcmp(country_code,"QA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ad Dawhah";
-      break;
-      case 2:
-      name = "Al Ghuwariyah";
-      break;
-      case 3:
-      name = "Al Jumaliyah";
-      break;
-      case 4:
-      name = "Al Khawr";
-      break;
-      case 5:
-      name = "Al Wakrah Municipality";
-      break;
-      case 6:
-      name = "Ar Rayyan";
-      break;
-      case 8:
-      name = "Madinat ach Shamal";
-      break;
-      case 9:
-      name = "Umm Salal";
-      break;
-      case 10:
-      name = "Al Wakrah";
-      break;
-      case 11:
-      name = "Jariyan al Batnah";
-      break;
-      case 12:
-      name = "Umm Sa'id";
-      break;
-    }
-  }
-  if (strcmp(country_code,"RO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Alba";
-      break;
-      case 2:
-      name = "Arad";
-      break;
-      case 3:
-      name = "Arges";
-      break;
-      case 4:
-      name = "Bacau";
-      break;
-      case 5:
-      name = "Bihor";
-      break;
-      case 6:
-      name = "Bistrita-Nasaud";
-      break;
-      case 7:
-      name = "Botosani";
-      break;
-      case 8:
-      name = "Braila";
-      break;
-      case 9:
-      name = "Brasov";
-      break;
-      case 10:
-      name = "Bucuresti";
-      break;
-      case 11:
-      name = "Buzau";
-      break;
-      case 12:
-      name = "Caras-Severin";
-      break;
-      case 13:
-      name = "Cluj";
-      break;
-      case 14:
-      name = "Constanta";
-      break;
-      case 15:
-      name = "Covasna";
-      break;
-      case 16:
-      name = "Dambovita";
-      break;
-      case 17:
-      name = "Dolj";
-      break;
-      case 18:
-      name = "Galati";
-      break;
-      case 19:
-      name = "Gorj";
-      break;
-      case 20:
-      name = "Harghita";
-      break;
-      case 21:
-      name = "Hunedoara";
-      break;
-      case 22:
-      name = "Ialomita";
-      break;
-      case 23:
-      name = "Iasi";
-      break;
-      case 25:
-      name = "Maramures";
-      break;
-      case 26:
-      name = "Mehedinti";
-      break;
-      case 27:
-      name = "Mures";
-      break;
-      case 28:
-      name = "Neamt";
-      break;
-      case 29:
-      name = "Olt";
-      break;
-      case 30:
-      name = "Prahova";
-      break;
-      case 31:
-      name = "Salaj";
-      break;
-      case 32:
-      name = "Satu Mare";
-      break;
-      case 33:
-      name = "Sibiu";
-      break;
-      case 34:
-      name = "Suceava";
-      break;
-      case 35:
-      name = "Teleorman";
-      break;
-      case 36:
-      name = "Timis";
-      break;
-      case 37:
-      name = "Tulcea";
-      break;
-      case 38:
-      name = "Vaslui";
-      break;
-      case 39:
-      name = "Valcea";
-      break;
-      case 40:
-      name = "Vrancea";
-      break;
-      case 41:
-      name = "Calarasi";
-      break;
-      case 42:
-      name = "Giurgiu";
-      break;
-      case 43:
-      name = "Ilfov";
-      break;
-    }
-  }
-  if (strcmp(country_code,"RS") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Kosovo";
-      break;
-      case 2:
-      name = "Vojvodina";
-      break;
-    }
-  }
-  if (strcmp(country_code,"RU") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Adygeya, Republic of";
-      break;
-      case 2:
-      name = "Aginsky Buryatsky AO";
-      break;
-      case 3:
-      name = "Gorno-Altay";
-      break;
-      case 4:
-      name = "Altaisky krai";
-      break;
-      case 5:
-      name = "Amur";
-      break;
-      case 6:
-      name = "Arkhangel'sk";
-      break;
-      case 7:
-      name = "Astrakhan'";
-      break;
-      case 8:
-      name = "Bashkortostan";
-      break;
-      case 9:
-      name = "Belgorod";
-      break;
-      case 10:
-      name = "Bryansk";
-      break;
-      case 11:
-      name = "Buryat";
-      break;
-      case 12:
-      name = "Chechnya";
-      break;
-      case 13:
-      name = "Chelyabinsk";
-      break;
-      case 14:
-      name = "Chita";
-      break;
-      case 15:
-      name = "Chukot";
-      break;
-      case 16:
-      name = "Chuvashia";
-      break;
-      case 17:
-      name = "Dagestan";
-      break;
-      case 18:
-      name = "Evenk";
-      break;
-      case 19:
-      name = "Ingush";
-      break;
-      case 20:
-      name = "Irkutsk";
-      break;
-      case 21:
-      name = "Ivanovo";
-      break;
-      case 22:
-      name = "Kabardin-Balkar";
-      break;
-      case 23:
-      name = "Kaliningrad";
-      break;
-      case 24:
-      name = "Kalmyk";
-      break;
-      case 25:
-      name = "Kaluga";
-      break;
-      case 26:
-      name = "Kamchatka";
-      break;
-      case 27:
-      name = "Karachay-Cherkess";
-      break;
-      case 28:
-      name = "Karelia";
-      break;
-      case 29:
-      name = "Kemerovo";
-      break;
-      case 30:
-      name = "Khabarovsk";
-      break;
-      case 31:
-      name = "Khakass";
-      break;
-      case 32:
-      name = "Khanty-Mansiy";
-      break;
-      case 33:
-      name = "Kirov";
-      break;
-      case 34:
-      name = "Komi";
-      break;
-      case 35:
-      name = "Komi-Permyak";
-      break;
-      case 36:
-      name = "Koryak";
-      break;
-      case 37:
-      name = "Kostroma";
-      break;
-      case 38:
-      name = "Krasnodar";
-      break;
-      case 39:
-      name = "Krasnoyarsk";
-      break;
-      case 40:
-      name = "Kurgan";
-      break;
-      case 41:
-      name = "Kursk";
-      break;
-      case 42:
-      name = "Leningrad";
-      break;
-      case 43:
-      name = "Lipetsk";
-      break;
-      case 44:
-      name = "Magadan";
-      break;
-      case 45:
-      name = "Mariy-El";
-      break;
-      case 46:
-      name = "Mordovia";
-      break;
-      case 47:
-      name = "Moskva";
-      break;
-      case 48:
-      name = "Moscow City";
-      break;
-      case 49:
-      name = "Murmansk";
-      break;
-      case 50:
-      name = "Nenets";
-      break;
-      case 51:
-      name = "Nizhegorod";
-      break;
-      case 52:
-      name = "Novgorod";
-      break;
-      case 53:
-      name = "Novosibirsk";
-      break;
-      case 54:
-      name = "Omsk";
-      break;
-      case 55:
-      name = "Orenburg";
-      break;
-      case 56:
-      name = "Orel";
-      break;
-      case 57:
-      name = "Penza";
-      break;
-      case 58:
-      name = "Perm'";
-      break;
-      case 59:
-      name = "Primor'ye";
-      break;
-      case 60:
-      name = "Pskov";
-      break;
-      case 61:
-      name = "Rostov";
-      break;
-      case 62:
-      name = "Ryazan'";
-      break;
-      case 63:
-      name = "Sakha";
-      break;
-      case 64:
-      name = "Sakhalin";
-      break;
-      case 65:
-      name = "Samara";
-      break;
-      case 66:
-      name = "Saint Petersburg City";
-      break;
-      case 67:
-      name = "Saratov";
-      break;
-      case 68:
-      name = "North Ossetia";
-      break;
-      case 69:
-      name = "Smolensk";
-      break;
-      case 70:
-      name = "Stavropol'";
-      break;
-      case 71:
-      name = "Sverdlovsk";
-      break;
-      case 72:
-      name = "Tambovskaya oblast";
-      break;
-      case 73:
-      name = "Tatarstan";
-      break;
-      case 74:
-      name = "Taymyr";
-      break;
-      case 75:
-      name = "Tomsk";
-      break;
-      case 76:
-      name = "Tula";
-      break;
-      case 77:
-      name = "Tver'";
-      break;
-      case 78:
-      name = "Tyumen'";
-      break;
-      case 79:
-      name = "Tuva";
-      break;
-      case 80:
-      name = "Udmurt";
-      break;
-      case 81:
-      name = "Ul'yanovsk";
-      break;
-      case 82:
-      name = "Ust-Orda Buryat";
-      break;
-      case 83:
-      name = "Vladimir";
-      break;
-      case 84:
-      name = "Volgograd";
-      break;
-      case 85:
-      name = "Vologda";
-      break;
-      case 86:
-      name = "Voronezh";
-      break;
-      case 87:
-      name = "Yamal-Nenets";
-      break;
-      case 88:
-      name = "Yaroslavl'";
-      break;
-      case 89:
-      name = "Yevrey";
-      break;
-      case 90:
-      name = "Permskiy Kray";
-      break;
-      case 91:
-      name = "Krasnoyarskiy Kray";
-      break;
-      case 942:
-      name = "Chechnya Republic";
-      break;
-    }
-  }
-  if (strcmp(country_code,"RW") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Butare";
-      break;
-      case 6:
-      name = "Gitarama";
-      break;
-      case 7:
-      name = "Kibungo";
-      break;
-      case 9:
-      name = "Kigali";
-      break;
-      case 11:
-      name = "Est";
-      break;
-      case 12:
-      name = "Kigali";
-      break;
-      case 13:
-      name = "Nord";
-      break;
-      case 14:
-      name = "Ouest";
-      break;
-      case 15:
-      name = "Sud";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SA") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Al Bahah";
-      break;
-      case 3:
-      name = "Al Jawf";
-      break;
-      case 5:
-      name = "Al Madinah";
-      break;
-      case 6:
-      name = "Ash Sharqiyah";
-      break;
-      case 8:
-      name = "Al Qasim";
-      break;
-      case 9:
-      name = "Al Qurayyat";
-      break;
-      case 10:
-      name = "Ar Riyad";
-      break;
-      case 13:
-      name = "Ha'il";
-      break;
-      case 14:
-      name = "Makkah";
-      break;
-      case 15:
-      name = "Al Hudud ash Shamaliyah";
-      break;
-      case 16:
-      name = "Najran";
-      break;
-      case 17:
-      name = "Jizan";
-      break;
-      case 19:
-      name = "Tabuk";
-      break;
-      case 20:
-      name = "Al Jawf";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SB") == 0) {
-    switch (region_code2) {
-      case 3:
-      name = "Malaita";
-      break;
-      case 6:
-      name = "Guadalcanal";
-      break;
-      case 7:
-      name = "Isabel";
-      break;
-      case 8:
-      name = "Makira";
-      break;
-      case 9:
-      name = "Temotu";
-      break;
-      case 10:
-      name = "Central";
-      break;
-      case 11:
-      name = "Western";
-      break;
-      case 12:
-      name = "Choiseul";
-      break;
-      case 13:
-      name = "Rennell and Bellona";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SC") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Anse aux Pins";
-      break;
-      case 2:
-      name = "Anse Boileau";
-      break;
-      case 3:
-      name = "Anse Etoile";
-      break;
-      case 4:
-      name = "Anse Louis";
-      break;
-      case 5:
-      name = "Anse Royale";
-      break;
-      case 6:
-      name = "Baie Lazare";
-      break;
-      case 7:
-      name = "Baie Sainte Anne";
-      break;
-      case 8:
-      name = "Beau Vallon";
-      break;
-      case 9:
-      name = "Bel Air";
-      break;
-      case 10:
-      name = "Bel Ombre";
-      break;
-      case 11:
-      name = "Cascade";
-      break;
-      case 12:
-      name = "Glacis";
-      break;
-      case 13:
-      name = "Grand' Anse";
-      break;
-      case 14:
-      name = "Grand' Anse";
-      break;
-      case 15:
-      name = "La Digue";
-      break;
-      case 16:
-      name = "La Riviere Anglaise";
-      break;
-      case 17:
-      name = "Mont Buxton";
-      break;
-      case 18:
-      name = "Mont Fleuri";
-      break;
-      case 19:
-      name = "Plaisance";
-      break;
-      case 20:
-      name = "Pointe La Rue";
-      break;
-      case 21:
-      name = "Port Glaud";
-      break;
-      case 22:
-      name = "Saint Louis";
-      break;
-      case 23:
-      name = "Takamaka";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SD") == 0) {
-    switch (region_code2) {
-      case 27:
-      name = "Al Wusta";
-      break;
-      case 28:
-      name = "Al Istiwa'iyah";
-      break;
-      case 29:
-      name = "Al Khartum";
-      break;
-      case 30:
-      name = "Ash Shamaliyah";
-      break;
-      case 31:
-      name = "Ash Sharqiyah";
-      break;
-      case 32:
-      name = "Bahr al Ghazal";
-      break;
-      case 33:
-      name = "Darfur";
-      break;
-      case 34:
-      name = "Kurdufan";
-      break;
-      case 35:
-      name = "Upper Nile";
-      break;
-      case 40:
-      name = "Al Wahadah State";
-      break;
-      case 44:
-      name = "Central Equatoria State";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SE") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Blekinge Lan";
-      break;
-      case 3:
-      name = "Gavleborgs Lan";
-      break;
-      case 5:
-      name = "Gotlands Lan";
-      break;
-      case 6:
-      name = "Hallands Lan";
-      break;
-      case 7:
-      name = "Jamtlands Lan";
-      break;
-      case 8:
-      name = "Jonkopings Lan";
-      break;
-      case 9:
-      name = "Kalmar Lan";
-      break;
-      case 10:
-      name = "Dalarnas Lan";
-      break;
-      case 12:
-      name = "Kronobergs Lan";
-      break;
-      case 14:
-      name = "Norrbottens Lan";
-      break;
-      case 15:
-      name = "Orebro Lan";
-      break;
-      case 16:
-      name = "Ostergotlands Lan";
-      break;
-      case 18:
-      name = "Sodermanlands Lan";
-      break;
-      case 21:
-      name = "Uppsala Lan";
-      break;
-      case 22:
-      name = "Varmlands Lan";
-      break;
-      case 23:
-      name = "Vasterbottens Lan";
-      break;
-      case 24:
-      name = "Vasternorrlands Lan";
-      break;
-      case 25:
-      name = "Vastmanlands Lan";
-      break;
-      case 26:
-      name = "Stockholms Lan";
-      break;
-      case 27:
-      name = "Skane Lan";
-      break;
-      case 28:
-      name = "Vastra Gotaland";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SH") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ascension";
-      break;
-      case 2:
-      name = "Saint Helena";
-      break;
-      case 3:
-      name = "Tristan da Cunha";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SI") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ajdovscina";
-      break;
-      case 2:
-      name = "Beltinci";
-      break;
-      case 3:
-      name = "Bled";
-      break;
-      case 4:
-      name = "Bohinj";
-      break;
-      case 5:
-      name = "Borovnica";
-      break;
-      case 6:
-      name = "Bovec";
-      break;
-      case 7:
-      name = "Brda";
-      break;
-      case 8:
-      name = "Brezice";
-      break;
-      case 9:
-      name = "Brezovica";
-      break;
-      case 11:
-      name = "Celje";
-      break;
-      case 12:
-      name = "Cerklje na Gorenjskem";
-      break;
-      case 13:
-      name = "Cerknica";
-      break;
-      case 14:
-      name = "Cerkno";
-      break;
-      case 15:
-      name = "Crensovci";
-      break;
-      case 16:
-      name = "Crna na Koroskem";
-      break;
-      case 17:
-      name = "Crnomelj";
-      break;
-      case 19:
-      name = "Divaca";
-      break;
-      case 20:
-      name = "Dobrepolje";
-      break;
-      case 22:
-      name = "Dol pri Ljubljani";
-      break;
-      case 24:
-      name = "Dornava";
-      break;
-      case 25:
-      name = "Dravograd";
-      break;
-      case 26:
-      name = "Duplek";
-      break;
-      case 27:
-      name = "Gorenja Vas-Poljane";
-      break;
-      case 28:
-      name = "Gorisnica";
-      break;
-      case 29:
-      name = "Gornja Radgona";
-      break;
-      case 30:
-      name = "Gornji Grad";
-      break;
-      case 31:
-      name = "Gornji Petrovci";
-      break;
-      case 32:
-      name = "Grosuplje";
-      break;
-      case 34:
-      name = "Hrastnik";
-      break;
-      case 35:
-      name = "Hrpelje-Kozina";
-      break;
-      case 36:
-      name = "Idrija";
-      break;
-      case 37:
-      name = "Ig";
-      break;
-      case 38:
-      name = "Ilirska Bistrica";
-      break;
-      case 39:
-      name = "Ivancna Gorica";
-      break;
-      case 40:
-      name = "Izola-Isola";
-      break;
-      case 42:
-      name = "Jursinci";
-      break;
-      case 44:
-      name = "Kanal";
-      break;
-      case 45:
-      name = "Kidricevo";
-      break;
-      case 46:
-      name = "Kobarid";
-      break;
-      case 47:
-      name = "Kobilje";
-      break;
-      case 49:
-      name = "Komen";
-      break;
-      case 50:
-      name = "Koper-Capodistria";
-      break;
-      case 51:
-      name = "Kozje";
-      break;
-      case 52:
-      name = "Kranj";
-      break;
-      case 53:
-      name = "Kranjska Gora";
-      break;
-      case 54:
-      name = "Krsko";
-      break;
-      case 55:
-      name = "Kungota";
-      break;
-      case 57:
-      name = "Lasko";
-      break;
-      case 61:
-      name = "Ljubljana";
-      break;
-      case 62:
-      name = "Ljubno";
-      break;
-      case 64:
-      name = "Logatec";
-      break;
-      case 66:
-      name = "Loski Potok";
-      break;
-      case 68:
-      name = "Lukovica";
-      break;
-      case 71:
-      name = "Medvode";
-      break;
-      case 72:
-      name = "Menges";
-      break;
-      case 73:
-      name = "Metlika";
-      break;
-      case 74:
-      name = "Mezica";
-      break;
-      case 76:
-      name = "Mislinja";
-      break;
-      case 77:
-      name = "Moravce";
-      break;
-      case 78:
-      name = "Moravske Toplice";
-      break;
-      case 79:
-      name = "Mozirje";
-      break;
-      case 80:
-      name = "Murska Sobota";
-      break;
-      case 81:
-      name = "Muta";
-      break;
-      case 82:
-      name = "Naklo";
-      break;
-      case 83:
-      name = "Nazarje";
-      break;
-      case 84:
-      name = "Nova Gorica";
-      break;
-      case 86:
-      name = "Odranci";
-      break;
-      case 87:
-      name = "Ormoz";
-      break;
-      case 88:
-      name = "Osilnica";
-      break;
-      case 89:
-      name = "Pesnica";
-      break;
-      case 91:
-      name = "Pivka";
-      break;
-      case 92:
-      name = "Podcetrtek";
-      break;
-      case 94:
-      name = "Postojna";
-      break;
-      case 97:
-      name = "Puconci";
-      break;
-      case 98:
-      name = "Racam";
-      break;
-      case 99:
-      name = "Radece";
-      break;
-      case 832:
-      name = "Radenci";
-      break;
-      case 833:
-      name = "Radlje ob Dravi";
-      break;
-      case 834:
-      name = "Radovljica";
-      break;
-      case 837:
-      name = "Rogasovci";
-      break;
-      case 838:
-      name = "Rogaska Slatina";
-      break;
-      case 839:
-      name = "Rogatec";
-      break;
-      case 875:
-      name = "Semic";
-      break;
-      case 876:
-      name = "Sencur";
-      break;
-      case 877:
-      name = "Sentilj";
-      break;
-      case 878:
-      name = "Sentjernej";
-      break;
-      case 880:
-      name = "Sevnica";
-      break;
-      case 881:
-      name = "Sezana";
-      break;
-      case 882:
-      name = "Skocjan";
-      break;
-      case 883:
-      name = "Skofja Loka";
-      break;
-      case 918:
-      name = "Skofljica";
-      break;
-      case 919:
-      name = "Slovenj Gradec";
-      break;
-      case 921:
-      name = "Slovenske Konjice";
-      break;
-      case 922:
-      name = "Smarje pri Jelsah";
-      break;
-      case 923:
-      name = "Smartno ob Paki";
-      break;
-      case 924:
-      name = "Sostanj";
-      break;
-      case 925:
-      name = "Starse";
-      break;
-      case 926:
-      name = "Store";
-      break;
-      case 961:
-      name = "Sveti Jurij";
-      break;
-      case 962:
-      name = "Tolmin";
-      break;
-      case 963:
-      name = "Trbovlje";
-      break;
-      case 964:
-      name = "Trebnje";
-      break;
-      case 965:
-      name = "Trzic";
-      break;
-      case 966:
-      name = "Turnisce";
-      break;
-      case 967:
-      name = "Velenje";
-      break;
-      case 968:
-      name = "Velike Lasce";
-      break;
-      case 1004:
-      name = "Vipava";
-      break;
-      case 1005:
-      name = "Vitanje";
-      break;
-      case 1006:
-      name = "Vodice";
-      break;
-      case 1008:
-      name = "Vrhnika";
-      break;
-      case 1009:
-      name = "Vuzenica";
-      break;
-      case 1010:
-      name = "Zagorje ob Savi";
-      break;
-      case 1012:
-      name = "Zavrc";
-      break;
-      case 1047:
-      name = "Zelezniki";
-      break;
-      case 1048:
-      name = "Ziri";
-      break;
-      case 1049:
-      name = "Zrece";
-      break;
-      case 1093:
-      name = "Dobrova-Horjul-Polhov Gradec";
-      break;
-      case 1096:
-      name = "Domzale";
-      break;
-      case 1136:
-      name = "Jesenice";
-      break;
-      case 1138:
-      name = "Kamnik";
-      break;
-      case 1139:
-      name = "Kocevje";
-      break;
-      case 1177:
-      name = "Kuzma";
-      break;
-      case 1178:
-      name = "Lenart";
-      break;
-      case 1180:
-      name = "Litija";
-      break;
-      case 1181:
-      name = "Ljutomer";
-      break;
-      case 1182:
-      name = "Loska Dolina";
-      break;
-      case 1184:
-      name = "Luce";
-      break;
-      case 1219:
-      name = "Majsperk";
-      break;
-      case 1220:
-      name = "Maribor";
-      break;
-      case 1223:
-      name = "Miren-Kostanjevica";
-      break;
-      case 1225:
-      name = "Novo Mesto";
-      break;
-      case 1227:
-      name = "Piran";
-      break;
-      case 1266:
-      name = "Preddvor";
-      break;
-      case 1268:
-      name = "Ptuj";
-      break;
-      case 1305:
-      name = "Ribnica";
-      break;
-      case 1307:
-      name = "Ruse";
-      break;
-      case 1311:
-      name = "Sentjur pri Celju";
-      break;
-      case 1312:
-      name = "Slovenska Bistrica";
-      break;
-      case 1392:
-      name = "Videm";
-      break;
-      case 1393:
-      name = "Vojnik";
-      break;
-      case 1395:
-      name = "Zalec";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SK") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Banska Bystrica";
-      break;
-      case 2:
-      name = "Bratislava";
-      break;
-      case 3:
-      name = "Kosice";
-      break;
-      case 4:
-      name = "Nitra";
-      break;
-      case 5:
-      name = "Presov";
-      break;
-      case 6:
-      name = "Trencin";
-      break;
-      case 7:
-      name = "Trnava";
-      break;
-      case 8:
-      name = "Zilina";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SL") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Eastern";
-      break;
-      case 2:
-      name = "Northern";
-      break;
-      case 3:
-      name = "Southern";
-      break;
-      case 4:
-      name = "Western Area";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Acquaviva";
-      break;
-      case 2:
-      name = "Chiesanuova";
-      break;
-      case 3:
-      name = "Domagnano";
-      break;
-      case 4:
-      name = "Faetano";
-      break;
-      case 5:
-      name = "Fiorentino";
-      break;
-      case 6:
-      name = "Borgo Maggiore";
-      break;
-      case 7:
-      name = "San Marino";
-      break;
-      case 8:
-      name = "Monte Giardino";
-      break;
-      case 9:
-      name = "Serravalle";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Dakar";
-      break;
-      case 3:
-      name = "Diourbel";
-      break;
-      case 5:
-      name = "Tambacounda";
-      break;
-      case 7:
-      name = "Thies";
-      break;
-      case 9:
-      name = "Fatick";
-      break;
-      case 10:
-      name = "Kaolack";
-      break;
-      case 11:
-      name = "Kolda";
-      break;
-      case 12:
-      name = "Ziguinchor";
-      break;
-      case 13:
-      name = "Louga";
-      break;
-      case 14:
-      name = "Saint-Louis";
-      break;
-      case 15:
-      name = "Matam";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Bakool";
-      break;
-      case 2:
-      name = "Banaadir";
-      break;
-      case 3:
-      name = "Bari";
-      break;
-      case 4:
-      name = "Bay";
-      break;
-      case 5:
-      name = "Galguduud";
-      break;
-      case 6:
-      name = "Gedo";
-      break;
-      case 7:
-      name = "Hiiraan";
-      break;
-      case 8:
-      name = "Jubbada Dhexe";
-      break;
-      case 9:
-      name = "Jubbada Hoose";
-      break;
-      case 10:
-      name = "Mudug";
-      break;
-      case 11:
-      name = "Nugaal";
-      break;
-      case 12:
-      name = "Sanaag";
-      break;
-      case 13:
-      name = "Shabeellaha Dhexe";
-      break;
-      case 14:
-      name = "Shabeellaha Hoose";
-      break;
-      case 16:
-      name = "Woqooyi Galbeed";
-      break;
-      case 18:
-      name = "Nugaal";
-      break;
-      case 19:
-      name = "Togdheer";
-      break;
-      case 20:
-      name = "Woqooyi Galbeed";
-      break;
-      case 21:
-      name = "Awdal";
-      break;
-      case 22:
-      name = "Sool";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SR") == 0) {
-    switch (region_code2) {
-      case 10:
-      name = "Brokopondo";
-      break;
-      case 11:
-      name = "Commewijne";
-      break;
-      case 12:
-      name = "Coronie";
-      break;
-      case 13:
-      name = "Marowijne";
-      break;
-      case 14:
-      name = "Nickerie";
-      break;
-      case 15:
-      name = "Para";
-      break;
-      case 16:
-      name = "Paramaribo";
-      break;
-      case 17:
-      name = "Saramacca";
-      break;
-      case 18:
-      name = "Sipaliwini";
-      break;
-      case 19:
-      name = "Wanica";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ST") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Principe";
-      break;
-      case 2:
-      name = "Sao Tome";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SV") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ahuachapan";
-      break;
-      case 2:
-      name = "Cabanas";
-      break;
-      case 3:
-      name = "Chalatenango";
-      break;
-      case 4:
-      name = "Cuscatlan";
-      break;
-      case 5:
-      name = "La Libertad";
-      break;
-      case 6:
-      name = "La Paz";
-      break;
-      case 7:
-      name = "La Union";
-      break;
-      case 8:
-      name = "Morazan";
-      break;
-      case 9:
-      name = "San Miguel";
-      break;
-      case 10:
-      name = "San Salvador";
-      break;
-      case 11:
-      name = "Santa Ana";
-      break;
-      case 12:
-      name = "San Vicente";
-      break;
-      case 13:
-      name = "Sonsonate";
-      break;
-      case 14:
-      name = "Usulutan";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SY") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Al Hasakah";
-      break;
-      case 2:
-      name = "Al Ladhiqiyah";
-      break;
-      case 3:
-      name = "Al Qunaytirah";
-      break;
-      case 4:
-      name = "Ar Raqqah";
-      break;
-      case 5:
-      name = "As Suwayda'";
-      break;
-      case 6:
-      name = "Dar";
-      break;
-      case 7:
-      name = "Dayr az Zawr";
-      break;
-      case 8:
-      name = "Rif Dimashq";
-      break;
-      case 9:
-      name = "Halab";
-      break;
-      case 10:
-      name = "Hamah";
-      break;
-      case 11:
-      name = "Hims";
-      break;
-      case 12:
-      name = "Idlib";
-      break;
-      case 13:
-      name = "Dimashq";
-      break;
-      case 14:
-      name = "Tartus";
-      break;
-    }
-  }
-  if (strcmp(country_code,"SZ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Hhohho";
-      break;
-      case 2:
-      name = "Lubombo";
-      break;
-      case 3:
-      name = "Manzini";
-      break;
-      case 4:
-      name = "Shiselweni";
-      break;
-      case 5:
-      name = "Praslin";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TD") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Batha";
-      break;
-      case 2:
-      name = "Biltine";
-      break;
-      case 3:
-      name = "Borkou-Ennedi-Tibesti";
-      break;
-      case 4:
-      name = "Chari-Baguirmi";
-      break;
-      case 5:
-      name = "Guera";
-      break;
-      case 6:
-      name = "Kanem";
-      break;
-      case 7:
-      name = "Lac";
-      break;
-      case 8:
-      name = "Logone Occidental";
-      break;
-      case 9:
-      name = "Logone Oriental";
-      break;
-      case 10:
-      name = "Mayo-Kebbi";
-      break;
-      case 11:
-      name = "Moyen-Chari";
-      break;
-      case 12:
-      name = "Ouaddai";
-      break;
-      case 13:
-      name = "Salamat";
-      break;
-      case 14:
-      name = "Tandjile";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TG") == 0) {
-    switch (region_code2) {
-      case 22:
-      name = "Centrale";
-      break;
-      case 23:
-      name = "Kara";
-      break;
-      case 24:
-      name = "Maritime";
-      break;
-      case 25:
-      name = "Plateaux";
-      break;
-      case 26:
-      name = "Savanes";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TH") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Mae Hong Son";
-      break;
-      case 2:
-      name = "Chiang Mai";
-      break;
-      case 3:
-      name = "Chiang Rai";
-      break;
-      case 4:
-      name = "Nan";
-      break;
-      case 5:
-      name = "Lamphun";
-      break;
-      case 6:
-      name = "Lampang";
-      break;
-      case 7:
-      name = "Phrae";
-      break;
-      case 8:
-      name = "Tak";
-      break;
-      case 9:
-      name = "Sukhothai";
-      break;
-      case 10:
-      name = "Uttaradit";
-      break;
-      case 11:
-      name = "Kamphaeng Phet";
-      break;
-      case 12:
-      name = "Phitsanulok";
-      break;
-      case 13:
-      name = "Phichit";
-      break;
-      case 14:
-      name = "Phetchabun";
-      break;
-      case 15:
-      name = "Uthai Thani";
-      break;
-      case 16:
-      name = "Nakhon Sawan";
-      break;
-      case 17:
-      name = "Nong Khai";
-      break;
-      case 18:
-      name = "Loei";
-      break;
-      case 20:
-      name = "Sakon Nakhon";
-      break;
-      case 21:
-      name = "Nakhon Phanom";
-      break;
-      case 22:
-      name = "Khon Kaen";
-      break;
-      case 23:
-      name = "Kalasin";
-      break;
-      case 24:
-      name = "Maha Sarakham";
-      break;
-      case 25:
-      name = "Roi Et";
-      break;
-      case 26:
-      name = "Chaiyaphum";
-      break;
-      case 27:
-      name = "Nakhon Ratchasima";
-      break;
-      case 28:
-      name = "Buriram";
-      break;
-      case 29:
-      name = "Surin";
-      break;
-      case 30:
-      name = "Sisaket";
-      break;
-      case 31:
-      name = "Narathiwat";
-      break;
-      case 32:
-      name = "Chai Nat";
-      break;
-      case 33:
-      name = "Sing Buri";
-      break;
-      case 34:
-      name = "Lop Buri";
-      break;
-      case 35:
-      name = "Ang Thong";
-      break;
-      case 36:
-      name = "Phra Nakhon Si Ayutthaya";
-      break;
-      case 37:
-      name = "Saraburi";
-      break;
-      case 38:
-      name = "Nonthaburi";
-      break;
-      case 39:
-      name = "Pathum Thani";
-      break;
-      case 40:
-      name = "Krung Thep";
-      break;
-      case 41:
-      name = "Phayao";
-      break;
-      case 42:
-      name = "Samut Prakan";
-      break;
-      case 43:
-      name = "Nakhon Nayok";
-      break;
-      case 44:
-      name = "Chachoengsao";
-      break;
-      case 45:
-      name = "Prachin Buri";
-      break;
-      case 46:
-      name = "Chon Buri";
-      break;
-      case 47:
-      name = "Rayong";
-      break;
-      case 48:
-      name = "Chanthaburi";
-      break;
-      case 49:
-      name = "Trat";
-      break;
-      case 50:
-      name = "Kanchanaburi";
-      break;
-      case 51:
-      name = "Suphan Buri";
-      break;
-      case 52:
-      name = "Ratchaburi";
-      break;
-      case 53:
-      name = "Nakhon Pathom";
-      break;
-      case 54:
-      name = "Samut Songkhram";
-      break;
-      case 55:
-      name = "Samut Sakhon";
-      break;
-      case 56:
-      name = "Phetchaburi";
-      break;
-      case 57:
-      name = "Prachuap Khiri Khan";
-      break;
-      case 58:
-      name = "Chumphon";
-      break;
-      case 59:
-      name = "Ranong";
-      break;
-      case 60:
-      name = "Surat Thani";
-      break;
-      case 61:
-      name = "Phangnga";
-      break;
-      case 62:
-      name = "Phuket";
-      break;
-      case 63:
-      name = "Krabi";
-      break;
-      case 64:
-      name = "Nakhon Si Thammarat";
-      break;
-      case 65:
-      name = "Trang";
-      break;
-      case 66:
-      name = "Phatthalung";
-      break;
-      case 67:
-      name = "Satun";
-      break;
-      case 68:
-      name = "Songkhla";
-      break;
-      case 69:
-      name = "Pattani";
-      break;
-      case 70:
-      name = "Yala";
-      break;
-      case 71:
-      name = "Ubon Ratchathani";
-      break;
-      case 72:
-      name = "Yasothon";
-      break;
-      case 73:
-      name = "Nakhon Phanom";
-      break;
-      case 75:
-      name = "Ubon Ratchathani";
-      break;
-      case 76:
-      name = "Udon Thani";
-      break;
-      case 77:
-      name = "Amnat Charoen";
-      break;
-      case 78:
-      name = "Mukdahan";
-      break;
-      case 79:
-      name = "Nong Bua Lamphu";
-      break;
-      case 80:
-      name = "Sa Kaeo";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TJ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Kuhistoni Badakhshon";
-      break;
-      case 2:
-      name = "Khatlon";
-      break;
-      case 3:
-      name = "Sughd";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ahal";
-      break;
-      case 2:
-      name = "Balkan";
-      break;
-      case 3:
-      name = "Dashoguz";
-      break;
-      case 4:
-      name = "Lebap";
-      break;
-      case 5:
-      name = "Mary";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TN") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Kasserine";
-      break;
-      case 3:
-      name = "Kairouan";
-      break;
-      case 6:
-      name = "Jendouba";
-      break;
-      case 10:
-      name = "Qafsah";
-      break;
-      case 14:
-      name = "El Kef";
-      break;
-      case 15:
-      name = "Al Mahdia";
-      break;
-      case 16:
-      name = "Al Munastir";
-      break;
-      case 17:
-      name = "Bajah";
-      break;
-      case 18:
-      name = "Bizerte";
-      break;
-      case 19:
-      name = "Nabeul";
-      break;
-      case 22:
-      name = "Siliana";
-      break;
-      case 23:
-      name = "Sousse";
-      break;
-      case 27:
-      name = "Ben Arous";
-      break;
-      case 28:
-      name = "Madanin";
-      break;
-      case 29:
-      name = "Gabes";
-      break;
-      case 31:
-      name = "Kebili";
-      break;
-      case 32:
-      name = "Sfax";
-      break;
-      case 33:
-      name = "Sidi Bou Zid";
-      break;
-      case 34:
-      name = "Tataouine";
-      break;
-      case 35:
-      name = "Tozeur";
-      break;
-      case 36:
-      name = "Tunis";
-      break;
-      case 37:
-      name = "Zaghouan";
-      break;
-      case 38:
-      name = "Aiana";
-      break;
-      case 39:
-      name = "Manouba";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TO") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Ha";
-      break;
-      case 2:
-      name = "Tongatapu";
-      break;
-      case 3:
-      name = "Vava";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TR") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Adiyaman";
-      break;
-      case 3:
-      name = "Afyonkarahisar";
-      break;
-      case 4:
-      name = "Agri";
-      break;
-      case 5:
-      name = "Amasya";
-      break;
-      case 7:
-      name = "Antalya";
-      break;
-      case 8:
-      name = "Artvin";
-      break;
-      case 9:
-      name = "Aydin";
-      break;
-      case 10:
-      name = "Balikesir";
-      break;
-      case 11:
-      name = "Bilecik";
-      break;
-      case 12:
-      name = "Bingol";
-      break;
-      case 13:
-      name = "Bitlis";
-      break;
-      case 14:
-      name = "Bolu";
-      break;
-      case 15:
-      name = "Burdur";
-      break;
-      case 16:
-      name = "Bursa";
-      break;
-      case 17:
-      name = "Canakkale";
-      break;
-      case 19:
-      name = "Corum";
-      break;
-      case 20:
-      name = "Denizli";
-      break;
-      case 21:
-      name = "Diyarbakir";
-      break;
-      case 22:
-      name = "Edirne";
-      break;
-      case 23:
-      name = "Elazig";
-      break;
-      case 24:
-      name = "Erzincan";
-      break;
-      case 25:
-      name = "Erzurum";
-      break;
-      case 26:
-      name = "Eskisehir";
-      break;
-      case 28:
-      name = "Giresun";
-      break;
-      case 31:
-      name = "Hatay";
-      break;
-      case 32:
-      name = "Mersin";
-      break;
-      case 33:
-      name = "Isparta";
-      break;
-      case 34:
-      name = "Istanbul";
-      break;
-      case 35:
-      name = "Izmir";
-      break;
-      case 37:
-      name = "Kastamonu";
-      break;
-      case 38:
-      name = "Kayseri";
-      break;
-      case 39:
-      name = "Kirklareli";
-      break;
-      case 40:
-      name = "Kirsehir";
-      break;
-      case 41:
-      name = "Kocaeli";
-      break;
-      case 43:
-      name = "Kutahya";
-      break;
-      case 44:
-      name = "Malatya";
-      break;
-      case 45:
-      name = "Manisa";
-      break;
-      case 46:
-      name = "Kahramanmaras";
-      break;
-      case 48:
-      name = "Mugla";
-      break;
-      case 49:
-      name = "Mus";
-      break;
-      case 50:
-      name = "Nevsehir";
-      break;
-      case 52:
-      name = "Ordu";
-      break;
-      case 53:
-      name = "Rize";
-      break;
-      case 54:
-      name = "Sakarya";
-      break;
-      case 55:
-      name = "Samsun";
-      break;
-      case 57:
-      name = "Sinop";
-      break;
-      case 58:
-      name = "Sivas";
-      break;
-      case 59:
-      name = "Tekirdag";
-      break;
-      case 60:
-      name = "Tokat";
-      break;
-      case 61:
-      name = "Trabzon";
-      break;
-      case 62:
-      name = "Tunceli";
-      break;
-      case 63:
-      name = "Sanliurfa";
-      break;
-      case 64:
-      name = "Usak";
-      break;
-      case 65:
-      name = "Van";
-      break;
-      case 66:
-      name = "Yozgat";
-      break;
-      case 68:
-      name = "Ankara";
-      break;
-      case 69:
-      name = "Gumushane";
-      break;
-      case 70:
-      name = "Hakkari";
-      break;
-      case 71:
-      name = "Konya";
-      break;
-      case 72:
-      name = "Mardin";
-      break;
-      case 73:
-      name = "Nigde";
-      break;
-      case 74:
-      name = "Siirt";
-      break;
-      case 75:
-      name = "Aksaray";
-      break;
-      case 76:
-      name = "Batman";
-      break;
-      case 77:
-      name = "Bayburt";
-      break;
-      case 78:
-      name = "Karaman";
-      break;
-      case 79:
-      name = "Kirikkale";
-      break;
-      case 80:
-      name = "Sirnak";
-      break;
-      case 81:
-      name = "Adana";
-      break;
-      case 82:
-      name = "Cankiri";
-      break;
-      case 83:
-      name = "Gaziantep";
-      break;
-      case 84:
-      name = "Kars";
-      break;
-      case 85:
-      name = "Zonguldak";
-      break;
-      case 86:
-      name = "Ardahan";
-      break;
-      case 87:
-      name = "Bartin";
-      break;
-      case 88:
-      name = "Igdir";
-      break;
-      case 89:
-      name = "Karabuk";
-      break;
-      case 90:
-      name = "Kilis";
-      break;
-      case 91:
-      name = "Osmaniye";
-      break;
-      case 92:
-      name = "Yalova";
-      break;
-      case 93:
-      name = "Duzce";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TT") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Arima";
-      break;
-      case 2:
-      name = "Caroni";
-      break;
-      case 3:
-      name = "Mayaro";
-      break;
-      case 4:
-      name = "Nariva";
-      break;
-      case 5:
-      name = "Port-of-Spain";
-      break;
-      case 6:
-      name = "Saint Andrew";
-      break;
-      case 7:
-      name = "Saint David";
-      break;
-      case 8:
-      name = "Saint George";
-      break;
-      case 9:
-      name = "Saint Patrick";
-      break;
-      case 10:
-      name = "San Fernando";
-      break;
-      case 11:
-      name = "Tobago";
-      break;
-      case 12:
-      name = "Victoria";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TW") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Fu-chien";
-      break;
-      case 2:
-      name = "Kao-hsiung";
-      break;
-      case 3:
-      name = "T'ai-pei";
-      break;
-      case 4:
-      name = "T'ai-wan";
-      break;
-    }
-  }
-  if (strcmp(country_code,"TZ") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Pwani";
-      break;
-      case 3:
-      name = "Dodoma";
-      break;
-      case 4:
-      name = "Iringa";
-      break;
-      case 5:
-      name = "Kigoma";
-      break;
-      case 6:
-      name = "Kilimanjaro";
-      break;
-      case 7:
-      name = "Lindi";
-      break;
-      case 8:
-      name = "Mara";
-      break;
-      case 9:
-      name = "Mbeya";
-      break;
-      case 10:
-      name = "Morogoro";
-      break;
-      case 11:
-      name = "Mtwara";
-      break;
-      case 12:
-      name = "Mwanza";
-      break;
-      case 13:
-      name = "Pemba North";
-      break;
-      case 14:
-      name = "Ruvuma";
-      break;
-      case 15:
-      name = "Shinyanga";
-      break;
-      case 16:
-      name = "Singida";
-      break;
-      case 17:
-      name = "Tabora";
-      break;
-      case 18:
-      name = "Tanga";
-      break;
-      case 19:
-      name = "Kagera";
-      break;
-      case 20:
-      name = "Pemba South";
-      break;
-      case 21:
-      name = "Zanzibar Central";
-      break;
-      case 22:
-      name = "Zanzibar North";
-      break;
-      case 23:
-      name = "Dar es Salaam";
-      break;
-      case 24:
-      name = "Rukwa";
-      break;
-      case 25:
-      name = "Zanzibar Urban";
-      break;
-      case 26:
-      name = "Arusha";
-      break;
-      case 27:
-      name = "Manyara";
-      break;
-    }
-  }
-  if (strcmp(country_code,"UA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Cherkas'ka Oblast'";
-      break;
-      case 2:
-      name = "Chernihivs'ka Oblast'";
-      break;
-      case 3:
-      name = "Chernivets'ka Oblast'";
-      break;
-      case 4:
-      name = "Dnipropetrovs'ka Oblast'";
-      break;
-      case 5:
-      name = "Donets'ka Oblast'";
-      break;
-      case 6:
-      name = "Ivano-Frankivs'ka Oblast'";
-      break;
-      case 7:
-      name = "Kharkivs'ka Oblast'";
-      break;
-      case 8:
-      name = "Khersons'ka Oblast'";
-      break;
-      case 9:
-      name = "Khmel'nyts'ka Oblast'";
-      break;
-      case 10:
-      name = "Kirovohrads'ka Oblast'";
-      break;
-      case 11:
-      name = "Krym";
-      break;
-      case 12:
-      name = "Kyyiv";
-      break;
-      case 13:
-      name = "Kyyivs'ka Oblast'";
-      break;
-      case 14:
-      name = "Luhans'ka Oblast'";
-      break;
-      case 15:
-      name = "L'vivs'ka Oblast'";
-      break;
-      case 16:
-      name = "Mykolayivs'ka Oblast'";
-      break;
-      case 17:
-      name = "Odes'ka Oblast'";
-      break;
-      case 18:
-      name = "Poltavs'ka Oblast'";
-      break;
-      case 19:
-      name = "Rivnens'ka Oblast'";
-      break;
-      case 20:
-      name = "Sevastopol'";
-      break;
-      case 21:
-      name = "Sums'ka Oblast'";
-      break;
-      case 22:
-      name = "Ternopil's'ka Oblast'";
-      break;
-      case 23:
-      name = "Vinnyts'ka Oblast'";
-      break;
-      case 24:
-      name = "Volyns'ka Oblast'";
-      break;
-      case 25:
-      name = "Zakarpats'ka Oblast'";
-      break;
-      case 26:
-      name = "Zaporiz'ka Oblast'";
-      break;
-      case 27:
-      name = "Zhytomyrs'ka Oblast'";
-      break;
-    }
-  }
-  if (strcmp(country_code,"UG") == 0) {
-    switch (region_code2) {
-      case 26:
-      name = "Apac";
-      break;
-      case 28:
-      name = "Bundibugyo";
-      break;
-      case 29:
-      name = "Bushenyi";
-      break;
-      case 30:
-      name = "Gulu";
-      break;
-      case 31:
-      name = "Hoima";
-      break;
-      case 33:
-      name = "Jinja";
-      break;
-      case 36:
-      name = "Kalangala";
-      break;
-      case 37:
-      name = "Kampala";
-      break;
-      case 38:
-      name = "Kamuli";
-      break;
-      case 39:
-      name = "Kapchorwa";
-      break;
-      case 40:
-      name = "Kasese";
-      break;
-      case 41:
-      name = "Kibale";
-      break;
-      case 42:
-      name = "Kiboga";
-      break;
-      case 43:
-      name = "Kisoro";
-      break;
-      case 45:
-      name = "Kotido";
-      break;
-      case 46:
-      name = "Kumi";
-      break;
-      case 47:
-      name = "Lira";
-      break;
-      case 50:
-      name = "Masindi";
-      break;
-      case 52:
-      name = "Mbarara";
-      break;
-      case 56:
-      name = "Mubende";
-      break;
-      case 58:
-      name = "Nebbi";
-      break;
-      case 59:
-      name = "Ntungamo";
-      break;
-      case 60:
-      name = "Pallisa";
-      break;
-      case 61:
-      name = "Rakai";
-      break;
-      case 65:
-      name = "Adjumani";
-      break;
-      case 66:
-      name = "Bugiri";
-      break;
-      case 67:
-      name = "Busia";
-      break;
-      case 69:
-      name = "Katakwi";
-      break;
-      case 70:
-      name = "Luwero";
-      break;
-      case 71:
-      name = "Masaka";
-      break;
-      case 72:
-      name = "Moyo";
-      break;
-      case 73:
-      name = "Nakasongola";
-      break;
-      case 74:
-      name = "Sembabule";
-      break;
-      case 76:
-      name = "Tororo";
-      break;
-      case 77:
-      name = "Arua";
-      break;
-      case 78:
-      name = "Iganga";
-      break;
-      case 79:
-      name = "Kabarole";
-      break;
-      case 80:
-      name = "Kaberamaido";
-      break;
-      case 81:
-      name = "Kamwenge";
-      break;
-      case 82:
-      name = "Kanungu";
-      break;
-      case 83:
-      name = "Kayunga";
-      break;
-      case 84:
-      name = "Kitgum";
-      break;
-      case 85:
-      name = "Kyenjojo";
-      break;
-      case 86:
-      name = "Mayuge";
-      break;
-      case 87:
-      name = "Mbale";
-      break;
-      case 88:
-      name = "Moroto";
-      break;
-      case 89:
-      name = "Mpigi";
-      break;
-      case 90:
-      name = "Mukono";
-      break;
-      case 91:
-      name = "Nakapiripirit";
-      break;
-      case 92:
-      name = "Pader";
-      break;
-      case 93:
-      name = "Rukungiri";
-      break;
-      case 94:
-      name = "Sironko";
-      break;
-      case 95:
-      name = "Soroti";
-      break;
-      case 96:
-      name = "Wakiso";
-      break;
-      case 97:
-      name = "Yumbe";
-      break;
-    }
-  }
-  if (strcmp(country_code,"UY") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Artigas";
-      break;
-      case 2:
-      name = "Canelones";
-      break;
-      case 3:
-      name = "Cerro Largo";
-      break;
-      case 4:
-      name = "Colonia";
-      break;
-      case 5:
-      name = "Durazno";
-      break;
-      case 6:
-      name = "Flores";
-      break;
-      case 7:
-      name = "Florida";
-      break;
-      case 8:
-      name = "Lavalleja";
-      break;
-      case 9:
-      name = "Maldonado";
-      break;
-      case 10:
-      name = "Montevideo";
-      break;
-      case 11:
-      name = "Paysandu";
-      break;
-      case 12:
-      name = "Rio Negro";
-      break;
-      case 13:
-      name = "Rivera";
-      break;
-      case 14:
-      name = "Rocha";
-      break;
-      case 15:
-      name = "Salto";
-      break;
-      case 16:
-      name = "San Jose";
-      break;
-      case 17:
-      name = "Soriano";
-      break;
-      case 18:
-      name = "Tacuarembo";
-      break;
-      case 19:
-      name = "Treinta y Tres";
-      break;
-    }
-  }
-  if (strcmp(country_code,"UZ") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Andijon";
-      break;
-      case 2:
-      name = "Bukhoro";
-      break;
-      case 3:
-      name = "Farghona";
-      break;
-      case 4:
-      name = "Jizzakh";
-      break;
-      case 5:
-      name = "Khorazm";
-      break;
-      case 6:
-      name = "Namangan";
-      break;
-      case 7:
-      name = "Nawoiy";
-      break;
-      case 8:
-      name = "Qashqadaryo";
-      break;
-      case 9:
-      name = "Qoraqalpoghiston";
-      break;
-      case 10:
-      name = "Samarqand";
-      break;
-      case 11:
-      name = "Sirdaryo";
-      break;
-      case 12:
-      name = "Surkhondaryo";
-      break;
-      case 13:
-      name = "Toshkent";
-      break;
-      case 14:
-      name = "Toshkent";
-      break;
-    }
-  }
-  if (strcmp(country_code,"VC") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Charlotte";
-      break;
-      case 2:
-      name = "Saint Andrew";
-      break;
-      case 3:
-      name = "Saint David";
-      break;
-      case 4:
-      name = "Saint George";
-      break;
-      case 5:
-      name = "Saint Patrick";
-      break;
-      case 6:
-      name = "Grenadines";
-      break;
-    }
-  }
-  if (strcmp(country_code,"VE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Amazonas";
-      break;
-      case 2:
-      name = "Anzoategui";
-      break;
-      case 3:
-      name = "Apure";
-      break;
-      case 4:
-      name = "Aragua";
-      break;
-      case 5:
-      name = "Barinas";
-      break;
-      case 6:
-      name = "Bolivar";
-      break;
-      case 7:
-      name = "Carabobo";
-      break;
-      case 8:
-      name = "Cojedes";
-      break;
-      case 9:
-      name = "Delta Amacuro";
-      break;
-      case 11:
-      name = "Falcon";
-      break;
-      case 12:
-      name = "Guarico";
-      break;
-      case 13:
-      name = "Lara";
-      break;
-      case 14:
-      name = "Merida";
-      break;
-      case 15:
-      name = "Miranda";
-      break;
-      case 16:
-      name = "Monagas";
-      break;
-      case 17:
-      name = "Nueva Esparta";
-      break;
-      case 18:
-      name = "Portuguesa";
-      break;
-      case 19:
-      name = "Sucre";
-      break;
-      case 20:
-      name = "Tachira";
-      break;
-      case 21:
-      name = "Trujillo";
-      break;
-      case 22:
-      name = "Yaracuy";
-      break;
-      case 23:
-      name = "Zulia";
-      break;
-      case 24:
-      name = "Dependencias Federales";
-      break;
-      case 25:
-      name = "Distrito Federal";
-      break;
-      case 26:
-      name = "Vargas";
-      break;
-    }
-  }
-  if (strcmp(country_code,"VN") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "An Giang";
-      break;
-      case 3:
-      name = "Ben Tre";
-      break;
-      case 5:
-      name = "Cao Bang";
-      break;
-      case 9:
-      name = "Dong Thap";
-      break;
-      case 13:
-      name = "Hai Phong";
-      break;
-      case 20:
-      name = "Ho Chi Minh";
-      break;
-      case 21:
-      name = "Kien Giang";
-      break;
-      case 23:
-      name = "Lam Dong";
-      break;
-      case 24:
-      name = "Long An";
-      break;
-      case 30:
-      name = "Quang Ninh";
-      break;
-      case 32:
-      name = "Son La";
-      break;
-      case 33:
-      name = "Tay Ninh";
-      break;
-      case 34:
-      name = "Thanh Hoa";
-      break;
-      case 35:
-      name = "Thai Binh";
-      break;
-      case 37:
-      name = "Tien Giang";
-      break;
-      case 39:
-      name = "Lang Son";
-      break;
-      case 43:
-      name = "An Giang";
-      break;
-      case 44:
-      name = "Dac Lac";
-      break;
-      case 45:
-      name = "Dong Nai";
-      break;
-      case 46:
-      name = "Dong Thap";
-      break;
-      case 47:
-      name = "Kien Giang";
-      break;
-      case 49:
-      name = "Song Be";
-      break;
-      case 50:
-      name = "Vinh Phu";
-      break;
-      case 51:
-      name = "Ha Noi";
-      break;
-      case 52:
-      name = "Ho Chi Minh";
-      break;
-      case 53:
-      name = "Ba Ria-Vung Tau";
-      break;
-      case 54:
-      name = "Binh Dinh";
-      break;
-      case 55:
-      name = "Binh Thuan";
-      break;
-      case 58:
-      name = "Ha Giang";
-      break;
-      case 59:
-      name = "Ha Tay";
-      break;
-      case 60:
-      name = "Ha Tinh";
-      break;
-      case 61:
-      name = "Hoa Binh";
-      break;
-      case 62:
-      name = "Khanh Hoa";
-      break;
-      case 63:
-      name = "Kon Tum";
-      break;
-      case 64:
-      name = "Quang Tri";
-      break;
-      case 65:
-      name = "Nam Ha";
-      break;
-      case 66:
-      name = "Nghe An";
-      break;
-      case 67:
-      name = "Ninh Binh";
-      break;
-      case 68:
-      name = "Ninh Thuan";
-      break;
-      case 69:
-      name = "Phu Yen";
-      break;
-      case 70:
-      name = "Quang Binh";
-      break;
-      case 71:
-      name = "Quang Ngai";
-      break;
-      case 72:
-      name = "Quang Tri";
-      break;
-      case 73:
-      name = "Soc Trang";
-      break;
-      case 74:
-      name = "Thua Thien";
-      break;
-      case 75:
-      name = "Tra Vinh";
-      break;
-      case 76:
-      name = "Tuyen Quang";
-      break;
-      case 77:
-      name = "Vinh Long";
-      break;
-      case 78:
-      name = "Da Nang";
-      break;
-      case 79:
-      name = "Hai Duong";
-      break;
-      case 80:
-      name = "Ha Nam";
-      break;
-      case 81:
-      name = "Hung Yen";
-      break;
-      case 82:
-      name = "Nam Dinh";
-      break;
-      case 83:
-      name = "Phu Tho";
-      break;
-      case 84:
-      name = "Quang Nam";
-      break;
-      case 85:
-      name = "Thai Nguyen";
-      break;
-      case 86:
-      name = "Vinh Puc Province";
-      break;
-      case 87:
-      name = "Can Tho";
-      break;
-      case 88:
-      name = "Dak Lak";
-      break;
-      case 89:
-      name = "Lai Chau";
-      break;
-      case 90:
-      name = "Lao Cai";
-      break;
-      case 91:
-      name = "Dak Nong";
-      break;
-      case 92:
-      name = "Dien Bien";
-      break;
-      case 93:
-      name = "Hau Giang";
-      break;
-    }
-  }
-  if (strcmp(country_code,"VU") == 0) {
-    switch (region_code2) {
-      case 5:
-      name = "Ambrym";
-      break;
-      case 6:
-      name = "Aoba";
-      break;
-      case 7:
-      name = "Torba";
-      break;
-      case 8:
-      name = "Efate";
-      break;
-      case 9:
-      name = "Epi";
-      break;
-      case 10:
-      name = "Malakula";
-      break;
-      case 11:
-      name = "Paama";
-      break;
-      case 12:
-      name = "Pentecote";
-      break;
-      case 13:
-      name = "Sanma";
-      break;
-      case 14:
-      name = "Shepherd";
-      break;
-      case 15:
-      name = "Tafea";
-      break;
-      case 16:
-      name = "Malampa";
-      break;
-      case 17:
-      name = "Penama";
-      break;
-      case 18:
-      name = "Shefa";
-      break;
-    }
-  }
-  if (strcmp(country_code,"WS") == 0) {
-    switch (region_code2) {
-      case 2:
-      name = "Aiga-i-le-Tai";
-      break;
-      case 3:
-      name = "Atua";
-      break;
-      case 4:
-      name = "Fa";
-      break;
-      case 5:
-      name = "Gaga";
-      break;
-      case 6:
-      name = "Va";
-      break;
-      case 7:
-      name = "Gagaifomauga";
-      break;
-      case 8:
-      name = "Palauli";
-      break;
-      case 9:
-      name = "Satupa";
-      break;
-      case 10:
-      name = "Tuamasaga";
-      break;
-      case 11:
-      name = "Vaisigano";
-      break;
-    }
-  }
-  if (strcmp(country_code,"YE") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Abyan";
-      break;
-      case 2:
-      name = "Adan";
-      break;
-      case 3:
-      name = "Al Mahrah";
-      break;
-      case 4:
-      name = "Hadramawt";
-      break;
-      case 5:
-      name = "Shabwah";
-      break;
-      case 6:
-      name = "Al Ghaydah";
-      break;
-      case 8:
-      name = "Al Hudaydah";
-      break;
-      case 10:
-      name = "Al Mahwit";
-      break;
-      case 11:
-      name = "Dhamar";
-      break;
-      case 14:
-      name = "Ma'rib";
-      break;
-      case 15:
-      name = "Sa";
-      break;
-      case 16:
-      name = "San";
-      break;
-      case 20:
-      name = "Al Bayda'";
-      break;
-      case 21:
-      name = "Al Jawf";
-      break;
-      case 22:
-      name = "Hajjah";
-      break;
-      case 23:
-      name = "Ibb";
-      break;
-      case 24:
-      name = "Lahij";
-      break;
-      case 25:
-      name = "Ta";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ZA") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "North-Western Province";
-      break;
-      case 2:
-      name = "KwaZulu-Natal";
-      break;
-      case 3:
-      name = "Free State";
-      break;
-      case 5:
-      name = "Eastern Cape";
-      break;
-      case 6:
-      name = "Gauteng";
-      break;
-      case 7:
-      name = "Mpumalanga";
-      break;
-      case 8:
-      name = "Northern Cape";
-      break;
-      case 9:
-      name = "Limpopo";
-      break;
-      case 10:
-      name = "North-West";
-      break;
-      case 11:
-      name = "Western Cape";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ZM") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Western";
-      break;
-      case 2:
-      name = "Central";
-      break;
-      case 3:
-      name = "Eastern";
-      break;
-      case 4:
-      name = "Luapula";
-      break;
-      case 5:
-      name = "Northern";
-      break;
-      case 6:
-      name = "North-Western";
-      break;
-      case 7:
-      name = "Southern";
-      break;
-      case 8:
-      name = "Copperbelt";
-      break;
-      case 9:
-      name = "Lusaka";
-      break;
-    }
-  }
-  if (strcmp(country_code,"ZW") == 0) {
-    switch (region_code2) {
-      case 1:
-      name = "Manicaland";
-      break;
-      case 2:
-      name = "Midlands";
-      break;
-      case 3:
-      name = "Mashonaland Central";
-      break;
-      case 4:
-      name = "Mashonaland East";
-      break;
-      case 5:
-      name = "Mashonaland West";
-      break;
-      case 6:
-      name = "Matabeleland North";
-      break;
-      case 7:
-      name = "Matabeleland South";
-      break;
-      case 8:
-      name = "Masvingo";
-      break;
-      case 9:
-      name = "Bulawayo";
-      break;
-      case 10:
-      name = "Harare";
-      break;
-    }
-  }
-  return name;
+    if (strcmp(country_code,"AD") == 0) {
+        return get_region_name_AD(region_code2);
+    }
+    if (strcmp(country_code,"AE") == 0) {
+        return get_region_name_AE(region_code2);
+    }
+    if (strcmp(country_code,"AF") == 0) {
+        return get_region_name_AF(region_code2);
+    }
+    if (strcmp(country_code,"AG") == 0) {
+        return get_region_name_AG(region_code2);
+    }
+    if (strcmp(country_code,"AL") == 0) {
+        return get_region_name_AL(region_code2);
+    }
+    if (strcmp(country_code,"AM") == 0) {
+        return get_region_name_AM(region_code2);
+    }
+    if (strcmp(country_code,"AO") == 0) {
+        return get_region_name_AO(region_code2);
+    }
+    if (strcmp(country_code,"AR") == 0) {
+        return get_region_name_AR(region_code2);
+    }
+    if (strcmp(country_code,"AT") == 0) {
+        return get_region_name_AT(region_code2);
+    }
+    if (strcmp(country_code,"AU") == 0) {
+        return get_region_name_AU(region_code2);
+    }
+    if (strcmp(country_code,"AZ") == 0) {
+        return get_region_name_AZ(region_code2);
+    }
+    if (strcmp(country_code,"BA") == 0) {
+        return get_region_name_BA(region_code2);
+    }
+    if (strcmp(country_code,"BB") == 0) {
+        return get_region_name_BB(region_code2);
+    }
+    if (strcmp(country_code,"BD") == 0) {
+        return get_region_name_BD(region_code2);
+    }
+    if (strcmp(country_code,"BE") == 0) {
+        return get_region_name_BE(region_code2);
+    }
+    if (strcmp(country_code,"BF") == 0) {
+        return get_region_name_BF(region_code2);
+    }
+    if (strcmp(country_code,"BG") == 0) {
+        return get_region_name_BG(region_code2);
+    }
+    if (strcmp(country_code,"BH") == 0) {
+        return get_region_name_BH(region_code2);
+    }
+    if (strcmp(country_code,"BI") == 0) {
+        return get_region_name_BI(region_code2);
+    }
+    if (strcmp(country_code,"BJ") == 0) {
+        return get_region_name_BJ(region_code2);
+    }
+    if (strcmp(country_code,"BM") == 0) {
+        return get_region_name_BM(region_code2);
+    }
+    if (strcmp(country_code,"BN") == 0) {
+        return get_region_name_BN(region_code2);
+    }
+    if (strcmp(country_code,"BO") == 0) {
+        return get_region_name_BO(region_code2);
+    }
+    if (strcmp(country_code,"BR") == 0) {
+        return get_region_name_BR(region_code2);
+    }
+    if (strcmp(country_code,"BS") == 0) {
+        return get_region_name_BS(region_code2);
+    }
+    if (strcmp(country_code,"BT") == 0) {
+        return get_region_name_BT(region_code2);
+    }
+    if (strcmp(country_code,"BW") == 0) {
+        return get_region_name_BW(region_code2);
+    }
+    if (strcmp(country_code,"BY") == 0) {
+        return get_region_name_BY(region_code2);
+    }
+    if (strcmp(country_code,"BZ") == 0) {
+        return get_region_name_BZ(region_code2);
+    }
+    if (strcmp(country_code,"CA") == 0) {
+        return get_region_name_CA(region_code2);
+    }
+    if (strcmp(country_code,"CD") == 0) {
+        return get_region_name_CD(region_code2);
+    }
+    if (strcmp(country_code,"CF") == 0) {
+        return get_region_name_CF(region_code2);
+    }
+    if (strcmp(country_code,"CG") == 0) {
+        return get_region_name_CG(region_code2);
+    }
+    if (strcmp(country_code,"CH") == 0) {
+        return get_region_name_CH(region_code2);
+    }
+    if (strcmp(country_code,"CI") == 0) {
+        return get_region_name_CI(region_code2);
+    }
+    if (strcmp(country_code,"CL") == 0) {
+        return get_region_name_CL(region_code2);
+    }
+    if (strcmp(country_code,"CM") == 0) {
+        return get_region_name_CM(region_code2);
+    }
+    if (strcmp(country_code,"CN") == 0) {
+        return get_region_name_CN(region_code2);
+    }
+    if (strcmp(country_code,"CO") == 0) {
+        return get_region_name_CO(region_code2);
+    }
+    if (strcmp(country_code,"CR") == 0) {
+        return get_region_name_CR(region_code2);
+    }
+    if (strcmp(country_code,"CU") == 0) {
+        return get_region_name_CU(region_code2);
+    }
+    if (strcmp(country_code,"CV") == 0) {
+        return get_region_name_CV(region_code2);
+    }
+    if (strcmp(country_code,"CY") == 0) {
+        return get_region_name_CY(region_code2);
+    }
+    if (strcmp(country_code,"CZ") == 0) {
+        return get_region_name_CZ(region_code2);
+    }
+    if (strcmp(country_code,"DE") == 0) {
+        return get_region_name_DE(region_code2);
+    }
+    if (strcmp(country_code,"DJ") == 0) {
+        return get_region_name_DJ(region_code2);
+    }
+    if (strcmp(country_code,"DK") == 0) {
+        return get_region_name_DK(region_code2);
+    }
+    if (strcmp(country_code,"DM") == 0) {
+        return get_region_name_DM(region_code2);
+    }
+    if (strcmp(country_code,"DO") == 0) {
+        return get_region_name_DO(region_code2);
+    }
+    if (strcmp(country_code,"DZ") == 0) {
+        return get_region_name_DZ(region_code2);
+    }
+    if (strcmp(country_code,"EC") == 0) {
+        return get_region_name_EC(region_code2);
+    }
+    if (strcmp(country_code,"EE") == 0) {
+        return get_region_name_EE(region_code2);
+    }
+    if (strcmp(country_code,"EG") == 0) {
+        return get_region_name_EG(region_code2);
+    }
+    if (strcmp(country_code,"ER") == 0) {
+        return get_region_name_ER(region_code2);
+    }
+    if (strcmp(country_code,"ES") == 0) {
+        return get_region_name_ES(region_code2);
+    }
+    if (strcmp(country_code,"ET") == 0) {
+        return get_region_name_ET(region_code2);
+    }
+    if (strcmp(country_code,"FI") == 0) {
+        return get_region_name_FI(region_code2);
+    }
+    if (strcmp(country_code,"FJ") == 0) {
+        return get_region_name_FJ(region_code2);
+    }
+    if (strcmp(country_code,"FM") == 0) {
+        return get_region_name_FM(region_code2);
+    }
+    if (strcmp(country_code,"FR") == 0) {
+        return get_region_name_FR(region_code2);
+    }
+    if (strcmp(country_code,"GA") == 0) {
+        return get_region_name_GA(region_code2);
+    }
+    if (strcmp(country_code,"GB") == 0) {
+        return get_region_name_GB(region_code2);
+    }
+    if (strcmp(country_code,"GD") == 0) {
+        return get_region_name_GD(region_code2);
+    }
+    if (strcmp(country_code,"GE") == 0) {
+        return get_region_name_GE(region_code2);
+    }
+    if (strcmp(country_code,"GH") == 0) {
+        return get_region_name_GH(region_code2);
+    }
+    if (strcmp(country_code,"GL") == 0) {
+        return get_region_name_GL(region_code2);
+    }
+    if (strcmp(country_code,"GM") == 0) {
+        return get_region_name_GM(region_code2);
+    }
+    if (strcmp(country_code,"GN") == 0) {
+        return get_region_name_GN(region_code2);
+    }
+    if (strcmp(country_code,"GQ") == 0) {
+        return get_region_name_GQ(region_code2);
+    }
+    if (strcmp(country_code,"GR") == 0) {
+        return get_region_name_GR(region_code2);
+    }
+    if (strcmp(country_code,"GT") == 0) {
+        return get_region_name_GT(region_code2);
+    }
+    if (strcmp(country_code,"GW") == 0) {
+        return get_region_name_GW(region_code2);
+    }
+    if (strcmp(country_code,"GY") == 0) {
+        return get_region_name_GY(region_code2);
+    }
+    if (strcmp(country_code,"HN") == 0) {
+        return get_region_name_HN(region_code2);
+    }
+    if (strcmp(country_code,"HR") == 0) {
+        return get_region_name_HR(region_code2);
+    }
+    if (strcmp(country_code,"HT") == 0) {
+        return get_region_name_HT(region_code2);
+    }
+    if (strcmp(country_code,"HU") == 0) {
+        return get_region_name_HU(region_code2);
+    }
+    if (strcmp(country_code,"ID") == 0) {
+        return get_region_name_ID(region_code2);
+    }
+    if (strcmp(country_code,"IE") == 0) {
+        return get_region_name_IE(region_code2);
+    }
+    if (strcmp(country_code,"IL") == 0) {
+        return get_region_name_IL(region_code2);
+    }
+    if (strcmp(country_code,"IN") == 0) {
+        return get_region_name_IN(region_code2);
+    }
+    if (strcmp(country_code,"IQ") == 0) {
+        return get_region_name_IQ(region_code2);
+    }
+    if (strcmp(country_code,"IR") == 0) {
+        return get_region_name_IR(region_code2);
+    }
+    if (strcmp(country_code,"IS") == 0) {
+        return get_region_name_IS(region_code2);
+    }
+    if (strcmp(country_code,"IT") == 0) {
+        return get_region_name_IT(region_code2);
+    }
+    if (strcmp(country_code,"JM") == 0) {
+        return get_region_name_JM(region_code2);
+    }
+    if (strcmp(country_code,"JO") == 0) {
+        return get_region_name_JO(region_code2);
+    }
+    if (strcmp(country_code,"JP") == 0) {
+        return get_region_name_JP(region_code2);
+    }
+    if (strcmp(country_code,"KE") == 0) {
+        return get_region_name_KE(region_code2);
+    }
+    if (strcmp(country_code,"KG") == 0) {
+        return get_region_name_KG(region_code2);
+    }
+    if (strcmp(country_code,"KH") == 0) {
+        return get_region_name_KH(region_code2);
+    }
+    if (strcmp(country_code,"KI") == 0) {
+        return get_region_name_KI(region_code2);
+    }
+    if (strcmp(country_code,"KM") == 0) {
+        return get_region_name_KM(region_code2);
+    }
+    if (strcmp(country_code,"KN") == 0) {
+        return get_region_name_KN(region_code2);
+    }
+    if (strcmp(country_code,"KP") == 0) {
+        return get_region_name_KP(region_code2);
+    }
+    if (strcmp(country_code,"KR") == 0) {
+        return get_region_name_KR(region_code2);
+    }
+    if (strcmp(country_code,"KW") == 0) {
+        return get_region_name_KW(region_code2);
+    }
+    if (strcmp(country_code,"KY") == 0) {
+        return get_region_name_KY(region_code2);
+    }
+    if (strcmp(country_code,"KZ") == 0) {
+        return get_region_name_KZ(region_code2);
+    }
+    if (strcmp(country_code,"LA") == 0) {
+        return get_region_name_LA(region_code2);
+    }
+    if (strcmp(country_code,"LB") == 0) {
+        return get_region_name_LB(region_code2);
+    }
+    if (strcmp(country_code,"LC") == 0) {
+        return get_region_name_LC(region_code2);
+    }
+    if (strcmp(country_code,"LI") == 0) {
+        return get_region_name_LI(region_code2);
+    }
+    if (strcmp(country_code,"LK") == 0) {
+        return get_region_name_LK(region_code2);
+    }
+    if (strcmp(country_code,"LR") == 0) {
+        return get_region_name_LR(region_code2);
+    }
+    if (strcmp(country_code,"LS") == 0) {
+        return get_region_name_LS(region_code2);
+    }
+    if (strcmp(country_code,"LT") == 0) {
+        return get_region_name_LT(region_code2);
+    }
+    if (strcmp(country_code,"LU") == 0) {
+        return get_region_name_LU(region_code2);
+    }
+    if (strcmp(country_code,"LV") == 0) {
+        return get_region_name_LV(region_code2);
+    }
+    if (strcmp(country_code,"LY") == 0) {
+        return get_region_name_LY(region_code2);
+    }
+    if (strcmp(country_code,"MA") == 0) {
+        return get_region_name_MA(region_code2);
+    }
+    if (strcmp(country_code,"MC") == 0) {
+        return get_region_name_MC(region_code2);
+    }
+    if (strcmp(country_code,"MD") == 0) {
+        return get_region_name_MD(region_code2);
+    }
+    if (strcmp(country_code,"MG") == 0) {
+        return get_region_name_MG(region_code2);
+    }
+    if (strcmp(country_code,"MK") == 0) {
+        return get_region_name_MK(region_code2);
+    }
+    if (strcmp(country_code,"ML") == 0) {
+        return get_region_name_ML(region_code2);
+    }
+    if (strcmp(country_code,"MM") == 0) {
+        return get_region_name_MM(region_code2);
+    }
+    if (strcmp(country_code,"MN") == 0) {
+        return get_region_name_MN(region_code2);
+    }
+    if (strcmp(country_code,"MO") == 0) {
+        return get_region_name_MO(region_code2);
+    }
+    if (strcmp(country_code,"MR") == 0) {
+        return get_region_name_MR(region_code2);
+    }
+    if (strcmp(country_code,"MS") == 0) {
+        return get_region_name_MS(region_code2);
+    }
+    if (strcmp(country_code,"MU") == 0) {
+        return get_region_name_MU(region_code2);
+    }
+    if (strcmp(country_code,"MV") == 0) {
+        return get_region_name_MV(region_code2);
+    }
+    if (strcmp(country_code,"MW") == 0) {
+        return get_region_name_MW(region_code2);
+    }
+    if (strcmp(country_code,"MX") == 0) {
+        return get_region_name_MX(region_code2);
+    }
+    if (strcmp(country_code,"MY") == 0) {
+        return get_region_name_MY(region_code2);
+    }
+    if (strcmp(country_code,"MZ") == 0) {
+        return get_region_name_MZ(region_code2);
+    }
+    if (strcmp(country_code,"NA") == 0) {
+        return get_region_name_NA(region_code2);
+    }
+    if (strcmp(country_code,"NE") == 0) {
+        return get_region_name_NE(region_code2);
+    }
+    if (strcmp(country_code,"NG") == 0) {
+        return get_region_name_NG(region_code2);
+    }
+    if (strcmp(country_code,"NI") == 0) {
+        return get_region_name_NI(region_code2);
+    }
+    if (strcmp(country_code,"NL") == 0) {
+        return get_region_name_NL(region_code2);
+    }
+    if (strcmp(country_code,"NO") == 0) {
+        return get_region_name_NO(region_code2);
+    }
+    if (strcmp(country_code,"NP") == 0) {
+        return get_region_name_NP(region_code2);
+    }
+    if (strcmp(country_code,"NR") == 0) {
+        return get_region_name_NR(region_code2);
+    }
+    if (strcmp(country_code,"NZ") == 0) {
+        return get_region_name_NZ(region_code2);
+    }
+    if (strcmp(country_code,"OM") == 0) {
+        return get_region_name_OM(region_code2);
+    }
+    if (strcmp(country_code,"PA") == 0) {
+        return get_region_name_PA(region_code2);
+    }
+    if (strcmp(country_code,"PE") == 0) {
+        return get_region_name_PE(region_code2);
+    }
+    if (strcmp(country_code,"PG") == 0) {
+        return get_region_name_PG(region_code2);
+    }
+    if (strcmp(country_code,"PH") == 0) {
+        return get_region_name_PH(region_code2);
+    }
+    if (strcmp(country_code,"PK") == 0) {
+        return get_region_name_PK(region_code2);
+    }
+    if (strcmp(country_code,"PL") == 0) {
+        return get_region_name_PL(region_code2);
+    }
+    if (strcmp(country_code,"PS") == 0) {
+        return get_region_name_PS(region_code2);
+    }
+    if (strcmp(country_code,"PT") == 0) {
+        return get_region_name_PT(region_code2);
+    }
+    if (strcmp(country_code,"PY") == 0) {
+        return get_region_name_PY(region_code2);
+    }
+    if (strcmp(country_code,"QA") == 0) {
+        return get_region_name_QA(region_code2);
+    }
+    if (strcmp(country_code,"RO") == 0) {
+        return get_region_name_RO(region_code2);
+    }
+    if (strcmp(country_code,"RS") == 0) {
+        return get_region_name_RS(region_code2);
+    }
+    if (strcmp(country_code,"RU") == 0) {
+        return get_region_name_RU(region_code2);
+    }
+    if (strcmp(country_code,"RW") == 0) {
+        return get_region_name_RW(region_code2);
+    }
+    if (strcmp(country_code,"SA") == 0) {
+        return get_region_name_SA(region_code2);
+    }
+    if (strcmp(country_code,"SB") == 0) {
+        return get_region_name_SB(region_code2);
+    }
+    if (strcmp(country_code,"SC") == 0) {
+        return get_region_name_SC(region_code2);
+    }
+    if (strcmp(country_code,"SD") == 0) {
+        return get_region_name_SD(region_code2);
+    }
+    if (strcmp(country_code,"SE") == 0) {
+        return get_region_name_SE(region_code2);
+    }
+    if (strcmp(country_code,"SH") == 0) {
+        return get_region_name_SH(region_code2);
+    }
+    if (strcmp(country_code,"SI") == 0) {
+        return get_region_name_SI(region_code2);
+    }
+    if (strcmp(country_code,"SK") == 0) {
+        return get_region_name_SK(region_code2);
+    }
+    if (strcmp(country_code,"SL") == 0) {
+        return get_region_name_SL(region_code2);
+    }
+    if (strcmp(country_code,"SM") == 0) {
+        return get_region_name_SM(region_code2);
+    }
+    if (strcmp(country_code,"SN") == 0) {
+        return get_region_name_SN(region_code2);
+    }
+    if (strcmp(country_code,"SO") == 0) {
+        return get_region_name_SO(region_code2);
+    }
+    if (strcmp(country_code,"SR") == 0) {
+        return get_region_name_SR(region_code2);
+    }
+    if (strcmp(country_code,"SS") == 0) {
+        return get_region_name_SS(region_code2);
+    }
+    if (strcmp(country_code,"ST") == 0) {
+        return get_region_name_ST(region_code2);
+    }
+    if (strcmp(country_code,"SV") == 0) {
+        return get_region_name_SV(region_code2);
+    }
+    if (strcmp(country_code,"SY") == 0) {
+        return get_region_name_SY(region_code2);
+    }
+    if (strcmp(country_code,"SZ") == 0) {
+        return get_region_name_SZ(region_code2);
+    }
+    if (strcmp(country_code,"TD") == 0) {
+        return get_region_name_TD(region_code2);
+    }
+    if (strcmp(country_code,"TG") == 0) {
+        return get_region_name_TG(region_code2);
+    }
+    if (strcmp(country_code,"TH") == 0) {
+        return get_region_name_TH(region_code2);
+    }
+    if (strcmp(country_code,"TJ") == 0) {
+        return get_region_name_TJ(region_code2);
+    }
+    if (strcmp(country_code,"TL") == 0) {
+        return get_region_name_TL(region_code2);
+    }
+    if (strcmp(country_code,"TM") == 0) {
+        return get_region_name_TM(region_code2);
+    }
+    if (strcmp(country_code,"TN") == 0) {
+        return get_region_name_TN(region_code2);
+    }
+    if (strcmp(country_code,"TO") == 0) {
+        return get_region_name_TO(region_code2);
+    }
+    if (strcmp(country_code,"TR") == 0) {
+        return get_region_name_TR(region_code2);
+    }
+    if (strcmp(country_code,"TT") == 0) {
+        return get_region_name_TT(region_code2);
+    }
+    if (strcmp(country_code,"TW") == 0) {
+        return get_region_name_TW(region_code2);
+    }
+    if (strcmp(country_code,"TZ") == 0) {
+        return get_region_name_TZ(region_code2);
+    }
+    if (strcmp(country_code,"UA") == 0) {
+        return get_region_name_UA(region_code2);
+    }
+    if (strcmp(country_code,"UG") == 0) {
+        return get_region_name_UG(region_code2);
+    }
+    if (strcmp(country_code,"US") == 0) {
+        return get_region_name_US(region_code2);
+    }
+    if (strcmp(country_code,"UY") == 0) {
+        return get_region_name_UY(region_code2);
+    }
+    if (strcmp(country_code,"UZ") == 0) {
+        return get_region_name_UZ(region_code2);
+    }
+    if (strcmp(country_code,"VC") == 0) {
+        return get_region_name_VC(region_code2);
+    }
+    if (strcmp(country_code,"VE") == 0) {
+        return get_region_name_VE(region_code2);
+    }
+    if (strcmp(country_code,"VN") == 0) {
+        return get_region_name_VN(region_code2);
+    }
+    if (strcmp(country_code,"VU") == 0) {
+        return get_region_name_VU(region_code2);
+    }
+    if (strcmp(country_code,"WS") == 0) {
+        return get_region_name_WS(region_code2);
+    }
+    if (strcmp(country_code,"YE") == 0) {
+        return get_region_name_YE(region_code2);
+    }
+    if (strcmp(country_code,"ZA") == 0) {
+        return get_region_name_ZA(region_code2);
+    }
+    if (strcmp(country_code,"ZM") == 0) {
+        return get_region_name_ZM(region_code2);
+    }
+    if (strcmp(country_code,"ZW") == 0) {
+        return get_region_name_ZW(region_code2);
+    }
+    return NULL;
 }

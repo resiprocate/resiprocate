@@ -1,0 +1,35 @@
+sudo: false
+
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+before_script:
+  - ./bootstrap
+  - CFLAGS="-Wall -Wextra -Werror -Wno-unused-parameter" ./configure
+  - make
+script:
+  - make check
+
+notifications:
+  email:
+    recipients:
+      - dev-ci@maxmind.com
+    on_success: change
+    on_failure: always
+
+env:
+  global:
+    secure: "bMDurejTvGTXwVcD/fTij5xkhqOzwHSFQHxP1tLGBfemvRQ/FgX2E2M8rWaD\nKbgKCgTSNB7fKtAvkFP+uteJ3/RY4HrQxlkY4/lG6tqlYJDCyLjxC0LLU5GE\nhfW0iiu9ozNtJzQ2A2O3mgTUmN4+ay25VMTfoAYALvT67qpW+NM="
+
+addons:
+  coverity_scan:
+    project:
+      name: "maxmind/geoip-api-c"
+      description: "Build submitted via Travis CI"
+    notification_email: dev-ci@maxmind.com
+    build_command_prepend: "./configure; make clean"
+    build_command:   "make -j 4"
+    branch_pattern: .*coverity.*

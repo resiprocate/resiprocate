@@ -1,11 +1,15 @@
-INCLUDES = -Wall -ansi
+AM_CPPFLAGS = -Wall -ansi
+ACLOCAL_AMFLAGS = -I m4
+
+AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS =		\
 	libGeoIP	\
 	apps		\
-	conf		\
-	data		\
 	test		\
 	man
 
-EXTRA_DIST = README.OSX READMEwin32static.txt README.MinGW READMEwin32.txt GeoIPWinDLL.patch TODO bootstrap GeoIP.spec GeoIP.spec.in Makefile.netware Makefile.vc Makefile.win32 get_ver.awk geoip.ico
+pkgconfigdir = $(libdir)/pkgconfig/
+nodist_pkgconfig_DATA = geoip.pc
+
+EXTRA_DIST = LICENSE NEWS.md README.md README.OSX bootstrap GeoIP.spec GeoIP.spec.in Makefile.vc get_ver.awk geoip.ico geoip.pc.in data/GeoIP.dat
