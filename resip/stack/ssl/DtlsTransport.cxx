@@ -706,7 +706,7 @@ void
 DtlsTransport::_mapDebug( const char *where, const char *action, SSL *ssl )
 {
    fprintf( stderr, "%s: %s\t%p\n", where, action, ssl ) ;
-   fprintf( stderr, "map sizet = %d\n", mDtlsConnections.size() ) ;
+   fprintf( stderr, "map sizet = %d\n", (unsigned int)mDtlsConnections.size() ) ;
 }
 
 void
