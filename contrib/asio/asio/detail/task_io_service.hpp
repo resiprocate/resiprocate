@@ -2,7 +2,7 @@
 // detail/task_io_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -23,6 +23,7 @@
 #include "asio/io_service.hpp"
 #include "asio/detail/atomic_count.hpp"
 #include "asio/detail/call_stack.hpp"
+#include "asio/detail/event.hpp"
 #include "asio/detail/mutex.hpp"
 #include "asio/detail/op_queue.hpp"
 #include "asio/detail/reactor_fwd.hpp"
@@ -118,7 +119,7 @@ public:
   ASIO_DECL void abandon_operations(op_queue<operation>& ops);
 
 private:
-  // Structure containing information about an idle thread.
+  // Structure containing thread-specific data.
   typedef task_io_service_thread_info thread_info;
 
   // Enqueue the given operation following a failed attempt to dispatch the
@@ -135,12 +136,6 @@ private:
 
   // Stop the task and all idle threads.
   ASIO_DECL void stop_all_threads(mutex::scoped_lock& lock);
-
-  // Wakes a single idle thread and unlocks the mutex. Returns true if an idle
-  // thread was found. If there is no idle thread, returns false and leaves the
-  // mutex locked.
-  ASIO_DECL bool wake_one_idle_thread_and_unlock(
-      mutex::scoped_lock& lock);
 
   // Wake a single idle thread, or the task, and always unlock the mutex.
   ASIO_DECL void wake_one_thread_and_unlock(
@@ -159,6 +154,9 @@ private:
 
   // Mutex to protect access to internal data.
   mutable mutex mutex_;
+
+  // Event to wake up blocked threads.
+  event wakeup_event_;
 
   // The task to be run by this service.
   reactor* task_;
@@ -186,9 +184,6 @@ private:
 
   // Per-thread call stack to track the state of each thread in the io_service.
   typedef call_stack<task_io_service, thread_info> thread_call_stack;
-
-  // The threads that are currently idle.
-  thread_info* first_idle_thread_;
 };
 
 } // namespace detail
