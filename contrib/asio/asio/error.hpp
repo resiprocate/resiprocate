@@ -2,7 +2,7 @@
 // error.hpp
 // ~~~~~~~~~
 //
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,6 +17,7 @@
 
 #include "asio/detail/config.hpp"
 #include "asio/error_code.hpp"
+#include "asio/system_error.hpp"
 #if defined(ASIO_WINDOWS) \
   || defined(__CYGWIN__) \
   || defined(ASIO_WINDOWS_RUNTIME)
@@ -144,6 +145,11 @@ enum basic_errors
 
   /// Protocol not available.
   no_protocol_option = ASIO_SOCKET_ERROR(ENOPROTOOPT),
+
+  /// No such device.
+  no_such_device = ASIO_WIN_OR_POSIX(
+      ASIO_NATIVE_ERROR(ERROR_BAD_UNIT),
+      ASIO_NATIVE_ERROR(ENODEV)),
 
   /// Transport endpoint is not connected.
   not_connected = ASIO_SOCKET_ERROR(ENOTCONN),
