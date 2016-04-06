@@ -392,7 +392,7 @@
     <ClCompile Include="TestClient.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\reTurnClient_10_0.vcxproj">
+    <ProjectReference Include="..\reTurnClient_12_0.vcxproj">
       <Project>{67b5906c-5c9d-4d09-ac7e-af71d72175f8}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>

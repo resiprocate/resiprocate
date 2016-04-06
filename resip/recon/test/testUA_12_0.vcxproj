@@ -270,11 +270,11 @@
       <Project>{f3bca14e-f24d-4570-833e-8c20c4c393f7}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\contrib\pcre\pcre_10_0.vcxproj">
+    <ProjectReference Include="..\..\..\contrib\pcre\pcre_12_0.vcxproj">
       <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\contrib\srtp\srtp10.vcxproj">
+    <ProjectReference Include="..\..\..\contrib\srtp\srtp12.vcxproj">
       <Project>{eef031cb-fed8-451e-a471-91ec8d4f6750}</Project>
       <Private>true</Private>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -282,30 +282,30 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\reflow\reflow_10_0.vcxproj">
+    <ProjectReference Include="..\..\..\reflow\reflow_12_0.vcxproj">
       <Project>{d2ab531b-86ac-43dd-a330-9809b4f1bb53}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\reTurn\client\reTurnClient_10_0.vcxproj">
+    <ProjectReference Include="..\..\..\reTurn\client\reTurnClient_12_0.vcxproj">
       <Project>{67b5906c-5c9d-4d09-ac7e-af71d72175f8}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\..\rutil\dns\ares\ares_12_0.vcxproj">
       <Project>{ce7cf5e0-cad1-49d6-95d1-143ded7b226e}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\rutil\rutil_10_0.vcxproj">
+    <ProjectReference Include="..\..\..\rutil\rutil_12_0.vcxproj">
       <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\dum\dum_10_0.vcxproj">
+    <ProjectReference Include="..\..\dum\dum_12_0.vcxproj">
       <Project>{31b0654f-e08e-405f-909f-80f86cb14b9d}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\stack\resiprocate_10_0.vcxproj">
+    <ProjectReference Include="..\..\stack\resiprocate_12_0.vcxproj">
       <Project>{2a8be839-6466-4001-b224-8f1c3168d04a}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\recon_10_0.vcxproj">
+    <ProjectReference Include="..\recon_12_0.vcxproj">
       <Project>{16cd976a-5d3b-4329-88ba-a32560cdfcc7}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
