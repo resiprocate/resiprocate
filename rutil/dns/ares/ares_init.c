@@ -792,7 +792,12 @@ static int init_by_defaults_windows_nameservers_getnetworkparams(ares_channel ch
       while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
       {
          struct in_addr addr;
-         addr.s_addr = inet_addr(pIPAddr->IpAddress.String);
+         /* TODO - add support for DNS servers specificied by v6 addresses */
+#if defined(_MSC_VER) && _MSC_VER >= 1900  /* removing compilation warning in VS2015 */
+         inet_pton(AF_INET, pIPAddr->IpAddress.String, &addr.s_addr);
+#else
+         addr.s_addr = inet_addr(pIPAddr->IpAddress.String); 
+#endif
          // append unique only
          if (find_server(channel->servers, channel->nservers, addr) == -1)
          {
@@ -1152,7 +1157,12 @@ static int ip_addr(const char *s, int len, struct in_addr *addr)
   memcpy(ipbuf, s, len);
   ipbuf[len] = 0;
 
+#if defined(_MSC_VER) && _MSC_VER >= 1900  /* removing compilation warning in VS2015 */
+  inet_pton(AF_INET, ipbuf, &addr->s_addr);
+#else
   addr->s_addr = inet_addr(ipbuf);
+#endif
+
   if (addr->s_addr == INADDR_NONE && strcmp(ipbuf, "255.255.255.255") != 0)
     return -1;
   return 0;

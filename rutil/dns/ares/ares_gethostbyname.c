@@ -191,7 +191,12 @@ static int fake_hostent(const char *name, ares_host_callback callback,
     return 0;
 
   /* It looks like an IP address.  Figure out what IP address it is. */
+#if defined(_MSC_VER) && _MSC_VER >= 1900  /* removing compilation warning in VS2015 */
+  inet_pton(AF_INET, name, &addr.s_addr);
+#else
   addr.s_addr = inet_addr(name);
+#endif
+
   if (addr.s_addr == INADDR_NONE)
     {
       callback(arg, ARES_EBADNAME, NULL);
