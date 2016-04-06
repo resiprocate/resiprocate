@@ -23,7 +23,16 @@ class TransactionMap
      
   private:
 
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))  // !slg! not sure if this works on __INTEL_COMPILER 
+     // We treat branch parameters as case insensitive (RFC3261):
+     // 7.3.1 Header Field Format
+     // ....
+     //    When comparing header fields, field names are always case-
+     //    insensitive.Unless otherwise stated in the definition of a
+     //    particular header field, field values, parameter names, and parameter
+     //    values are case-insensitive.Tokens are always case-insensitive.
+     //    Unless specified otherwise, values expressed as quoted strings are
+     //    case-sensitive.
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))  // !slg! not sure if this works on __INTEL_COMPILER 
       /**
          @internal
       */
@@ -83,7 +92,7 @@ class TransactionMap
       // .bwc. If rutil/HashMap.hxx fails to find a hash_map impl for the 
       // platform we're using, it will #define HashMap to a std::map, which
       // takes different template args. We try to compensate for this here.
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310) && (_MSC_VER < 1900))
      typedef HashMap<Data, TransactionState*, BranchCompare> Map;
 #elif defined(HASH_MAP_NAMESPACE)
      typedef HashMap<Data, TransactionState*, BranchHasher, BranchEqual> Map;
