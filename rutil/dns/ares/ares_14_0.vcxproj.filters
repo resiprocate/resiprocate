@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="ares_timeout.c" />
+    <ClCompile Include="ares__close_sockets.c" />
+    <ClCompile Include="ares__get_hostent.c" />
+    <ClCompile Include="ares__read_line.c" />
+    <ClCompile Include="ares_destroy.c" />
+    <ClCompile Include="ares_expand_name.c" />
+    <ClCompile Include="ares_fds.c" />
+    <ClCompile Include="ares_free_errmem.c" />
+    <ClCompile Include="ares_free_hostent.c" />
+    <ClCompile Include="ares_free_string.c" />
+    <ClCompile Include="ares_gethostbyaddr.c" />
+    <ClCompile Include="ares_gethostbyname.c" />
+    <ClCompile Include="ares_init.c" />
+    <ClCompile Include="ares_local.c" />
+    <ClCompile Include="ares_mkquery.c" />
+    <ClCompile Include="ares_parse_a_reply.c" />
+    <ClCompile Include="ares_parse_ptr_reply.c" />
+    <ClCompile Include="ares_process.c" />
+    <ClCompile Include="ares_query.c" />
+    <ClCompile Include="ares_search.c" />
+    <ClCompile Include="ares_send.c" />
+    <ClCompile Include="ares_strerror.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ares.h" />
+    <ClInclude Include="ares_compat.h" />
+    <ClInclude Include="ares_dns.h" />
+    <ClInclude Include="ares_local.h" />
+    <ClInclude Include="ares_private.h" />
+  </ItemGroup>
+</Project>
