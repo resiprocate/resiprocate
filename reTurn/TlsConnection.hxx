@@ -1,6 +1,8 @@
 #ifndef TLS_CONNECTION_HXX
 #define TLS_CONNECTION_HXX
 
+#ifdef USE_SSL
+
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 #include <boost/array.hpp>
@@ -68,6 +70,7 @@ private:
 }
 
 #endif 
+#endif
 
 
 /* ====================================================================

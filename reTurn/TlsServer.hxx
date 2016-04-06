@@ -1,6 +1,8 @@
 #ifndef TLS_SERVER_HXX
 #define TLS_SERVER_HXX
 
+#ifdef USE_SSL
+
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 #include <string>
@@ -49,7 +51,7 @@ private:
 }
 
 #endif 
-
+#endif
 
 /* ====================================================================
 
