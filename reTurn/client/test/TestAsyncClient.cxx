@@ -5,7 +5,9 @@
 #include <iostream>
 #include <string>
 #include <asio.hpp>
+#ifdef USE_SSL
 #include <asio/ssl.hpp>
+#endif
 #include <rutil/ThreadIf.hxx>
 
 #include "../../StunTuple.hxx"
@@ -278,16 +280,20 @@ int main(int argc, char* argv[])
     asio::io_service ioService;
     MyTurnAsyncSocketHandler handler;
 
+#ifdef USE_SSL
     // Setup SSL context
     asio::ssl::context sslContext(ioService, asio::ssl::context::tlsv1);
     // Enable certificate validation
     sslContext.set_verify_mode(asio::ssl::context::verify_peer |   // Verify the peer.
                                asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
     sslContext.load_verify_file("ca.pem");
+#endif
 
     boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
     //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
+#ifdef USE_SSL
     //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::address::from_string(address.c_str()), 0));
+#endif
     //port=5349;
 
     handler.setTurnAsyncSocket(turnSocket.get());
