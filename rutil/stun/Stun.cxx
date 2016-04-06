@@ -1133,7 +1133,12 @@ stunParseHostName( char* peerName,
    if ( isdigit( host[0] ) )
    {
       // assume it is a ip address 
-      unsigned long a = inet_addr(host);
+#if defined(_MSC_VER) && _MSC_VER >= 1900  /* removing compilation warning in VS2015 */
+       unsigned long a = 0;
+       inet_pton(AF_INET, host, &a);
+#else
+       unsigned long a = inet_addr(host);
+#endif
       //cerr << "a=0x" << hex << a << dec << endl;
 		
       ip = ntohl( a );
