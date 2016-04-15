@@ -55,7 +55,7 @@ int ares__get_hostent(FILE *fp, struct hostent **host)
 	continue;
       *p = 0;
       /* TODO - add suppport for V6 addresses in hosts file */
-#if defined(_MSC_VER) && _MSC_VER >= 1900  /* removing compilation warning in VS2015 */
+#if defined(_MSC_VER) && _MSC_VER >= 1800  /* removing compilation warning in VS2013+ */
       inet_pton(AF_INET, line, &addr.s_addr);
 #else
       addr.s_addr = inet_addr(line);
