@@ -1133,7 +1133,7 @@ stunParseHostName( char* peerName,
    if ( isdigit( host[0] ) )
    {
       // assume it is a ip address 
-#if defined(_MSC_VER) && _MSC_VER >= 1900  /* removing compilation warning in VS2015 */
+#if defined(_MSC_VER) && _MSC_VER >= 1800  /* removing compilation warning in VS2013+ */
        unsigned long a = 0;
        inet_pton(AF_INET, host, &a);
 #else
