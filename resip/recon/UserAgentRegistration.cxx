@@ -55,6 +55,17 @@ UserAgentRegistration::end()
    }
 }
 
+bool 
+UserAgentRegistration::forceRefresh()
+{
+    if (mRegistrationHandle.isValid())
+    {
+       mRegistrationHandle->requestRefresh();
+       return true;
+    }
+    return false;
+}
+
 const NameAddrs& 
 UserAgentRegistration::getContactAddresses()
 {
@@ -69,6 +80,13 @@ UserAgentRegistration::getContactAddresses()
    }
 }
 
+const Tuple&
+UserAgentRegistration::getLastServerTuple()
+{
+    return mLastServerTuple;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Registration Handler ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,6 +94,7 @@ void
 UserAgentRegistration::onSuccess(ClientRegistrationHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onSuccess(ClientRegistrationHandle): " << msg.brief());
+   mLastServerTuple = msg.getSource();
    if(!mEnded)
    {
       mRegistrationHandle = h;
@@ -98,7 +117,8 @@ void
 UserAgentRegistration::onFailure(ClientRegistrationHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onFailure(ClientRegistrationHandle): " << msg.brief());
-   if(!mEnded)
+   mLastServerTuple = msg.getSource();
+   if (!mEnded)
    {
       mRegistrationHandle = h;
    }
@@ -120,12 +140,14 @@ void
 UserAgentRegistration::onRemoved(ClientRegistrationHandle h, const SipMessage&msg)
 {
    InfoLog(<< "onRemoved(ClientRegistrationHandle): " << msg.brief());
+   mLastServerTuple = msg.getSource();
 }
 
 int 
 UserAgentRegistration::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg)
 {
    InfoLog(<< "onRequestRetry(ClientRegistrationHandle): " << msg.brief());
+   mLastServerTuple = msg.getSource();
    return -1;  // Let Profile retry setting take effect
 }
 
@@ -133,6 +155,7 @@ UserAgentRegistration::onRequestRetry(ClientRegistrationHandle h, int retryMinim
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2016, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
