@@ -337,7 +337,7 @@ public:
 
    /**
      This is used for attended transfer scenarios where both participants 
-     are no longer managed by the conversation manager  � for SIP this will 
+     are no longer managed by the conversation manager - for SIP this will 
      send a REFER with embedded Replaces header.  Note:  Replace option cannot 
      be used with early dialogs in SIP.  
 
