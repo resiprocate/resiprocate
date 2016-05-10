@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
 #ifndef TLS_CONNECTION_HXX
 #define TLS_CONNECTION_HXX
 
