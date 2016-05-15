@@ -1,4 +1,12 @@
 = Release Notes v 1.10 =
+==1.10.2 Changes==
+changes to support Windows 10 IOT ARM (RaspPi2)
+VS2015 build support
+cleanup some warnings
+rutil: fix ARM / GCC 6 build issue with signed char[]
+resip/stack: fix issue with ACK/non-200 transport selection for client transactions over WSS transports
+repro: SQL backends: singleResultQuery: distinguish error from empty result set
+repro: fix for OutboundTargets added by LocationServer - first parameter should be an AOR and not an instance Id
 ==1.10.1 Changes==
 resip/stack: TLS: make the path argument of the Security class constructor more versatile
 rutil, dum: RADIUS: support for radcli instead of freeradius-client
