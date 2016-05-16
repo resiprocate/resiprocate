@@ -1,7 +1,7 @@
 /* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 2; tab-width: 2 -*- */
 /* test-geoip-isp.c
  *
- * Copyright (C) 2006 MaxMind LLC
+ * Copyright (C) 2016 MaxMind, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,46 +20,43 @@
 
 #include "GeoIP.h"
 
-static const char * _mk_NA( const char * p ){
- return p ? p : "N/A";
+static const char *_mk_NA(const char *p)
+{
+    return p ? p : "N/A";
 }
 
-int main (int argc, char* argv[]) {
-	FILE *f;
-	GeoIP * gi;
-        char * org;
-	int generate = 0;
-	char host[50];
+int main(int argc, char *argv[])
+{
+    FILE *f;
+    GeoIP *gi;
+    char *org;
+    char host[50];
 
-	if (argc == 2)
-		if (!strcmp(argv[1],"gen"))
-			generate = 1;
+    gi = GeoIP_open("../data/GeoIPISP.dat", GEOIP_STANDARD);
 
-	gi = GeoIP_open("../data/GeoIPISP.dat", GEOIP_STANDARD);
+    if (gi == NULL) {
+        fprintf(stderr, "Error opening database\n");
+        exit(1);
+    }
 
-	if (gi == NULL) {
-		fprintf(stderr, "Error opening database\n");
-		exit(1);
-	}
+    f = fopen("isp_test.txt", "r");
 
-	f = fopen("isp_test.txt","r");
+    if (f == NULL) {
+        fprintf(stderr, "Error opening isp_test.txt\n");
+        exit(1);
+    }
 
-	if (f == NULL) {
-		fprintf(stderr, "Error opening isp_test.txt\n");
-		exit(1);
-	}
+    while (fscanf(f, "%s", host) != EOF) {
+        org = GeoIP_org_by_name(gi, (const char *)host);
 
-	while (fscanf(f, "%s", host) != EOF) {
-		org = GeoIP_org_by_name (gi, (const char *)host);
+        if (org != NULL) {
+            printf("%s\t%s\n", host, _mk_NA(org));
+            free(org);
+        }
+    }
 
-		if (org != NULL) {
-			printf("%s\t%s\n", host, _mk_NA(org));
-			free(org);
-		}
-	}
+    fclose(f);
+    GeoIP_delete(gi);
 
-	fclose(f);
-	GeoIP_delete(gi);
-
-	return 0;
+    return 0;
 }

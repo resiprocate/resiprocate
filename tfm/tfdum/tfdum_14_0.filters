@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="TfdTestSipEndPoint.cxx" />
+    <ClCompile Include="DialogEventExpect.cxx" />
+    <ClCompile Include="DumEvent.cxx" />
+    <ClCompile Include="DumExpect.cxx" />
+    <ClCompile Include="DumFixture.cxx" />
+    <ClCompile Include="dumTests.cxx" />
+    <ClCompile Include="DumUaAction.cxx" />
+    <ClCompile Include="DumUserAgent.cxx" />
+    <ClCompile Include="TestClientPagerMessage.cxx" />
+    <ClCompile Include="TestClientPublication.cxx" />
+    <ClCompile Include="TestClientRegistration.cxx" />
+    <ClCompile Include="TestClientSubscription.cxx" />
+    <ClCompile Include="TestDialogEvent.cxx" />
+    <ClCompile Include="TestInviteSession.cxx" />
+    <ClCompile Include="TestServerOutOfDialogReq.cxx" />
+    <ClCompile Include="TestServerPagerMessage.cxx" />
+    <ClCompile Include="TestServerSubscription.cxx" />
+    <ClCompile Include="TestUsage.cxx" />
+    <ClCompile Include="TfdTcpTransport.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BindHandle.hxx" />
+    <ClInclude Include="ClientPagerMessageEvent.hxx" />
+    <ClInclude Include="ClientPublicationEvent.hxx" />
+    <ClInclude Include="ClientRegistrationEvent.hxx" />
+    <ClInclude Include="ClientSubscriptionEvent.hxx" />
+    <ClInclude Include="DialogEventExpect.hxx" />
+    <ClInclude Include="DialogEventHandlerEvent.hxx" />
+    <ClInclude Include="DumEvent.hxx" />
+    <ClInclude Include="DumExpect.hxx" />
+    <ClInclude Include="DumFixture.hxx" />
+    <ClInclude Include="DumUaAction.hxx" />
+    <ClInclude Include="DumUserAgent.hxx" />
+    <ClInclude Include="InviteSessionEvent.hxx" />
+    <ClInclude Include="ServerOutOfDialogReqEvent.hxx" />
+    <ClInclude Include="ServerSubscriptionEvent.hxx" />
+    <ClInclude Include="TestClientPagerMessage.hxx" />
+    <ClInclude Include="TestClientPublication.hxx" />
+    <ClInclude Include="TestClientRegistration.hxx" />
+    <ClInclude Include="TestClientSubscription.hxx" />
+    <ClInclude Include="TestDialogEvent.hxx" />
+    <ClInclude Include="TestInviteSession.hxx" />
+    <ClInclude Include="TestServerOutOfDialogReq.hxx" />
+    <ClInclude Include="TestServerPagerMessage.hxx" />
+    <ClInclude Include="TestServerSubscription.hxx" />
+    <ClInclude Include="TestUsage.hxx" />
+    <ClInclude Include="TestUserAgent.hxx" />
+    <ClInclude Include="TfdTcpTransport.hxx" />
+    <ClInclude Include="TfdTestSipEndPoint.hxx" />
+  </ItemGroup>
+</Project>

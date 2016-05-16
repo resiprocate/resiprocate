@@ -26,10 +26,28 @@
 ## export CFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk $GEOIP_ARCH"
 
 # here we go for leopard and snow leopard
-export GEOIP_ARCH='-arch i386 -arch x86_64 -arch ppc'
-export MACOSX_DEPLOYMENT_TARGET=10.5
+#export GEOIP_ARCH='-arch i386 -arch x86_64 -arch ppc'
+#export MACOSX_DEPLOYMENT_TARGET=10.5
+#export LDFLAGS=$GEOIP_ARCH
+#export CFLAGS="-g -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk $GEOIP_ARCH"
+#./configure --disable-dependency-tracking
+#perl -i.bak -pe'/^archive_cmds=/ and !/\bGEOIP_ARCH\b/ and s/-dynamiclib\b/-dynamiclib \\\$(GEOIP_ARCH)/' ./libtool
+#make
+
+# and this is lion with the new xcode
+#P=`xcode-select -print-path`
+#export GEOIP_ARCH='-arch i386 -arch x86_64'
+#export MACOSX_DEPLOYMENT_TARGET=10.7
+#export LDFLAGS=$GEOIP_ARCH
+#export CFLAGS="-g -mmacosx-version-min=10.7 -isysroot $P/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk $GEOIP_ARCH"
+#./configure --disable-dependency-tracking
+#make
+
+# and this is lion with the new xcode
+P=`xcode-select -print-path`
+export GEOIP_ARCH='-arch x86_64'
+export MACOSX_DEPLOYMENT_TARGET=10.9
 export LDFLAGS=$GEOIP_ARCH
-export CFLAGS="-g -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk $GEOIP_ARCH"
+export CFLAGS="-g -mmacosx-version-min=10.9 -isysroot $P/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk $GEOIP_ARCH"
 ./configure --disable-dependency-tracking
-perl -i.bak -pe'/^archive_cmds=/ and !/\bGEOIP_ARCH\b/ and s/-dynamiclib\b/-dynamiclib \\\$(GEOIP_ARCH)/' ./libtool
 make

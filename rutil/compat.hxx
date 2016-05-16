@@ -144,8 +144,11 @@ typedef char           Int8;
 typedef short          Int16;
 typedef int            Int32;
 #else
-# On Apple platforms, MacTypes.h should provide the types:
+// On Apple platforms, MacTypes.h should provide the types:
 #include <MacTypes.h>
+typedef SInt8          Int8;
+typedef SInt16         Int16;
+typedef SInt32         Int32;
 #endif
 
 #if defined( TARGET_OS_IPHONE )

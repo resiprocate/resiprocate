@@ -76,6 +76,7 @@ ServerSubscription::accept(int statusCode)
 {
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;
+   Helper::getResponseCodeReason(statusCode, mLastResponse->header(h_StatusLine).reason());
    mLastResponse->header(h_Expires).value() = mExpires;
    return mLastResponse;
 }
@@ -89,6 +90,7 @@ ServerSubscription::reject(int statusCode)
    }
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;
+   Helper::getResponseCodeReason(statusCode, mLastResponse->header(h_StatusLine).reason());
    mLastResponse->remove(h_Contacts);  // Remove any contact header for non-success response
    return mLastResponse;
 }
@@ -392,18 +394,21 @@ ServerSubscription::makeNotify()
 void
 ServerSubscription::end(TerminateReason reason, const Contents* document, int retryAfter)
 {
-   mSubscriptionState = Terminated;
-   makeNotify();
-   mLastRequest->header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);   
-   if (document)
+   if (mSubscriptionState != Terminated)  // NoOp if called twice or already ending
    {
-      mLastRequest->setContents(document);
+      mSubscriptionState = Terminated;
+      makeNotify();
+      mLastRequest->header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);
+      if (document)
+      {
+         mLastRequest->setContents(document);
+      }
+      if (retryAfter != 0)
+      {
+         mLastRequest->header(h_SubscriptionState).param(p_retryAfter) = retryAfter;
+      }
+      send(mLastRequest);
    }
-   if (retryAfter != 0)
-   {
-        mLastRequest->header(h_SubscriptionState).param(p_retryAfter) = retryAfter;
-   }
-   send(mLastRequest);
 }
 
 void

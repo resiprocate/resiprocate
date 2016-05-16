@@ -747,7 +747,6 @@ Dialog::dispatch(const SipMessage& msg)
 
          case SUBSCRIBE:
          {
-            int code = response.header(h_StatusLine).statusCode();
             ClientSubscription* client = findMatchingClientSub(response);
             if (client)
             {

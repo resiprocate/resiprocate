@@ -54,6 +54,10 @@ class DNSResult
          {
             for (typename std::vector<T>::const_iterator i=records.begin(); i != records.end(); ++i)
             {
+               if (i != records.begin())
+               {
+                  strm << ", ";
+               }
                i->dump(strm);
             }
          }

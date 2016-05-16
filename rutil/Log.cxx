@@ -125,7 +125,9 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
    else if (isEqualNoCase(typed, "cerr")) type = Log::Cerr;
    else if (isEqualNoCase(typed, "file")) type = Log::File;
+#ifndef WIN32
    else type = Log::Syslog;
+#endif
    
    Level level = Log::Info;
    level = toLevel(leveld);
@@ -248,22 +250,27 @@ Log::initialize(Type type, Level level, const Data& appName,
 #endif
    mAppName = pb.position();
 
-   if(!syslogFacilityName.empty())
+#ifndef WIN32
+   if (!syslogFacilityName.empty())
    {
       mSyslogFacility = parseSyslogFacilityName(syslogFacilityName);
       if(mSyslogFacility == -1)
       {
-#ifndef WIN32
          mSyslogFacility = LOG_DAEMON;
          if(type == Log::Syslog)
          {
             syslog(LOG_DAEMON | LOG_ERR, "invalid syslog facility name specified (%s), falling back to LOG_DAEMON", syslogFacilityName.c_str());
          }
-#endif
-         std::cerr << "invalid syslog facility name specified: " << syslogFacilityName.c_str() << std::endl;
       }
    }
- 
+#else
+   if (type == Syslog)
+   {
+       std::cerr << "syslog not supported on windows, using cout!" << std::endl;
+       type = Cout;
+   }
+#endif
+
    char buffer[1024];  
    gethostname(buffer, sizeof(buffer));
    mHostname = buffer;
@@ -567,8 +574,13 @@ Log::timestamp(Data& res)
    snprintf(msbuf, 5, ".%3.3ld", long(tv.tv_usec / 1000));
 
    int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
+#if defined(WIN32) && defined(_M_ARM)
+   // There is a bug under ARM with strncat - we use strcat instead - buffer is plenty large accomdate our timestamp, no
+   // real need to be safe here anyway.
+   strcat(datebuf, msbuf);
+#else
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
-
+#endif
    datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
                                        thereby leaving its last character at
                                        the end, instead of a null terminator */

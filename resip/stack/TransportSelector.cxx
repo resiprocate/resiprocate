@@ -675,7 +675,7 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
    source = Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), 
       via.transport().empty() ? target.getType() : toTransportType(via.transport()), // Transport type is pre-populated in via, lock to it
       Data::Empty, target.getNetNs());
-   DebugLog(<< "source: " << source);
+   DebugLog(<< "TransportSelector::findTransportByVia: source: " << source);
 
    if ( target.mFlowKey!=0 && (source.getPort()==0 || source.isAnyInterface()) )
    {
@@ -715,7 +715,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    const Via& via = msg->header(h_Vias).front();
 
    // this case should be handled already for UDP and TCP targets
-   resip_assert( (!(msg->isRequest() && !via.sentHost().empty())) || (target.getType() == TLS || target.getType() == DTLS) );
+   resip_assert((!(msg->isRequest() && !via.sentHost().empty())) || isSecure(target.getType()));
    if (1)
    {
       Tuple source(target);
@@ -909,7 +909,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          Alternatively, we might not have the transport to start with. However,
          given a connection id, we will be able to find the Connection we
          should use, we can get the Transport we want. If we have no connection
-         id, but we know we are using TLS or DTLS and have a tls hostname, we
+         id, but we know we are using TLS, DTLS or WSS and have a tls hostname, we
          can use the hostname to find the appropriate transport. If all else
          fails, we must resort to the connected UDP trick to fill out source,
          which in turn is used to look up a matching transport.
@@ -1482,9 +1482,9 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 
    if(msg && 
       !msg->getTlsDomain().empty() && 
-      (search.getType()==TLS || search.getType()==DTLS))
+      isSecure(search.getType()))
    {
-      // We should not be willing to attempt sending on a TLS/DTLS transport 
+      // We should not be willing to attempt sending on a TLS/DTLS/WSS transport 
       // that does not have the cert we're attempting to use, even if the 
       // IP/port/proto match. If we have not specified which identity we want
       // to use, then proceed with the code below.
@@ -1573,8 +1573,8 @@ TransportSelector::findTransportBySource(Tuple& search, const SipMessage* msg) c
 Transport*
 TransportSelector::findTlsTransport(const Data& domainname, TransportType type, IpVersion version) const
 {
-   resip_assert(type==TLS || type==DTLS);
-   DebugLog (<< "Searching for " << ((type==TLS) ? "TLS" : "DTLS") << " transport for domain='"
+   resip_assert(isSecure(type));
+   DebugLog(<< "Searching for " << toData(type) << " transport for domain='"
                   << domainname << "'" << " have " << mTlsTransports.size());
 
    if (domainname == Data::Empty)

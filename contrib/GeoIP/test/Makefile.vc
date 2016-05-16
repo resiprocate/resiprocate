@@ -9,7 +9,7 @@ CFLAGS=-DWIN32 -MD -nologo
  
 GEOIPINC = -I..\libGeoIP 
  
-CC1 = $(COMPILER) $(CFLAGS) $(GEOIPINC) 
+CC1 = $(COMPILER) $(CFLAGS) $(GEOIPINC) -DSRCDIR=\"../\"
  
 GEOIPLIB = ..\libGeoIP\GeoIP.lib 
  

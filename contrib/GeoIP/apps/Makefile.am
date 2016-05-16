@@ -1,13 +1,9 @@
-INCLUDES = 	\
-	-I$(top_srcdir)/libGeoIP		\
-	-Wall
-
-AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\" -Wall
+AM_CPPFLAGS = -I$(top_srcdir)/libGeoIP -DSYSCONFDIR=\"$(sysconfdir)\" -Wall
 
 DEPS = $(top_builddir)/libGeoIP/libGeoIP.la
 LDADDS = $(top_builddir)/libGeoIP/libGeoIP.la
 
-bin_PROGRAMS = geoiplookup geoiplookup6 geoipupdate
+bin_PROGRAMS = geoiplookup geoiplookup6
 
 geoiplookup_SOURCES = geoiplookup.c
 geoiplookup_LDFLAGS =
@@ -19,8 +15,4 @@ geoiplookup6_LDFLAGS =
 geoiplookup6_DEPENDENCIES = $(top_builddir)/libGeoIP/libGeoIP.la
 geoiplookup6_LDADD = $(top_builddir)/libGeoIP/libGeoIP.la
 
-geoipupdate_SOURCES = geoipupdate.c
-geoipupdate_LDFLAGS =
-geoipupdate_DEPENDENCIES = $(top_builddir)/libGeoIP/libGeoIP.la $(top_builddir)/libGeoIP/libGeoIPUpdate.la
-geoipupdate_LDADD = $(top_builddir)/libGeoIP/libGeoIPUpdate.la $(top_builddir)/libGeoIP/libGeoIP.la
-EXTRA_DIST = geoipupdate-pureperl.pl Makefile.vc
+EXTRA_DIST = Makefile.vc

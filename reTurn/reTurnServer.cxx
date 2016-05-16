@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
 #include <iostream>
 #include <csignal>
 #include <string>
@@ -104,7 +108,9 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
       boost::shared_ptr<reTurn::TcpServer> tcpTurnServer;
+#ifdef USE_SSL
       boost::shared_ptr<reTurn::TlsServer> tlsTurnServer;
+#endif
       boost::shared_ptr<reTurn::UdpServer> a1p2StunUdpServer;
       boost::shared_ptr<reTurn::UdpServer> a2p1StunUdpServer;
       boost::shared_ptr<reTurn::UdpServer> a2p2StunUdpServer;
@@ -124,10 +130,12 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
       tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
+#ifdef USE_SSL
       if(reTurnConfig.mTlsTurnPort != 0)
       {
          tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort));
       }
+#endif
 
 #ifdef USE_IPV6
       udpV6TurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnV6Address, reTurnConfig.mTurnPort));
@@ -154,18 +162,22 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
 
       udpTurnServer->start();
       tcpTurnServer->start();
+#ifdef USE_SSL
       if(tlsTurnServer)
       {
          tlsTurnServer->start();
       }
+#endif
 
 #ifdef USE_IPV6
       udpV6TurnServer->start();
       tcpV6TurnServer->start();
+#ifdef USE_SSL
       if(tlsV6TurnServer)
       {
          tlsV6TurnServer->start();
       }
+#endif
 #endif
 
       // Drop privileges (can do this now that sockets are bound)

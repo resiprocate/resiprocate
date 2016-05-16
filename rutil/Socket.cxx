@@ -70,8 +70,7 @@ resip::configureConnectedSocket(Socket fd)
    if ( ::setsockopt ( fd, SOL_SOCKET, SO_NOSIGPIPE, (const char*)&on, sizeof(on)) )
    {
       int e = getErrno();
-      ErrorLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strerror(e));
-      error(e);
+      ErrLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strerror(e));
       return false;
    }
 #endif

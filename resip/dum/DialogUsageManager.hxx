@@ -347,6 +347,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void applyToAllClientSubscriptions(ClientSubscriptionFunctor*);
       void applyToAllServerSubscriptions(ServerSubscriptionFunctor*);
 
+      void endAllServerSubscriptions(TerminateReason reason = Deactivated);
+      void endAllServerPublications();
+
       /// Note:  Implementations of Postable must delete the message passed via post
       void registerForConnectionTermination(Postable*);
       void unRegisterForConnectionTermination(Postable*);

@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\Accept.cxx" />
+    <ClCompile Include="src\StreamServer.cxx" />
+    <ClCompile Include="src\Address.cxx" />
+    <ClCompile Include="src\Datagram.cxx" />
+    <ClCompile Include="src\DatagramServer.cxx" />
+    <ClCompile Include="src\inet6.cxx" />
+    <ClCompile Include="src\OSError.cxx" />
+    <ClCompile Include="src\Peer.cxx" />
+    <ClCompile Include="src\Probe.cxx" />
+    <ClCompile Include="src\Probe_select.cxx" />
+    <ClCompile Include="src\RecvFrom.cxx" />
+    <ClCompile Include="src\Resolve_gethostbyname.cxx" />
+    <ClCompile Include="src\Resolve_getservbyname.cxx" />
+    <ClCompile Include="src\ServerBase.cxx" />
+    <ClCompile Include="src\SockAddr.cxx" />
+    <ClCompile Include="src\Socket.cxx" />
+    <ClCompile Include="src\SockOpt.cxx" />
+    <ClCompile Include="src\Stream.cxx" />
+    <ClCompile Include="src\StreamBase.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Accept.h" />
+    <ClInclude Include="include\Netxx\Types.h" />
+    <ClInclude Include="include\Netxx\Address.h" />
+    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\compat.h" />
+    <ClInclude Include="include\Netxx\Datagram.h" />
+    <ClInclude Include="include\Netxx\DatagramServer.h" />
+    <ClInclude Include="src\inet6.h" />
+    <ClInclude Include="include\Netxx\Netbuf.h" />
+    <ClInclude Include="src\OSError.h" />
+    <ClInclude Include="include\Netxx\Peer.h" />
+    <ClInclude Include="include\Netxx\Probe.h" />
+    <ClInclude Include="src\Probe_impl.h" />
+    <ClInclude Include="include\Netxx\ProbeInfo.h" />
+    <ClInclude Include="src\RecvFrom.h" />
+    <ClInclude Include="src\Resolve.h" />
+    <ClInclude Include="src\ServerBase.h" />
+    <ClInclude Include="src\SockAddr.h" />
+    <ClInclude Include="src\Socket.h" />
+    <ClInclude Include="include\Netxx\SockOpt.h" />
+    <ClInclude Include="include\Netxx\Stream.h" />
+    <ClInclude Include="include\Netxx\StreamBase.h" />
+    <ClInclude Include="include\Netxx\StreamServer.h" />
+    <ClInclude Include="src\TLS_Context_pimpl.h" />
+    <ClInclude Include="src\TLS_tls_pimpl.h" />
+  </ItemGroup>
+</Project>
