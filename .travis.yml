@@ -7,7 +7,7 @@ env:
 before_install:
  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ trusty main universe"
  - sudo apt-get update -qq
- - sudo apt-get install -qq debian-archive-keyring gperf libasio-dev libboost-dev libc-ares-dev libdb++-dev libpopt-dev libssl-dev perl libmysqlclient-dev libpq-dev libfreeradius-client-dev libcppunit-dev autotools-dev libpcre3-dev libxerces-c-dev curl libcajun-dev python-cxx-dev libsipxtapi-dev libsrtp-dev
+ - sudo apt-get install -qq gperf libasio-dev libboost-dev libc-ares-dev libdb++-dev libpopt-dev libssl-dev perl libmysqlclient-dev libpq-dev libfreeradius-client-dev libcppunit-dev autotools-dev libpcre3-dev libxerces-c-dev curl libcajun-dev python-cxx-dev libsipxtapi-dev libsrtp-dev
  - sudo add-apt-repository -y "deb http://http.debian.net/debian/ jessie main"
  - sudo apt-get update -qq
  - sudo apt-get install -qq --force-yes libfreeradius-client-dev libsipxtapi-dev
