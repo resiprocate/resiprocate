@@ -89,6 +89,10 @@ using the /dev/dsp audio device from OSS.
 If OSS support isn't available in your system or if the /dev/dsp device
 node is used by another process, you may see errors like:
 
+ERR |  | telepathy-resiprocate | USERAGENT |
+| SipXHelper.cxx:47 | SIPxua:MpMedia:
+MprFromInputDevice::doProcessFrame - Couldn't get device sample rate
+from input device manager!  Device - "Unknown device" deviceId: 1
 
 If you are using the PulseAudio sound system (it is installed by
 default on many Linux systems), you can use the padsp utility
