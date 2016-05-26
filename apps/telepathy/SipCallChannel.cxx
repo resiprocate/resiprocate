@@ -109,6 +109,10 @@ SipCallChannel::onHangupComplete(bool status)
    if (!status) {
       InfoLog(<<"onHangupComplete, status = false");
    }
+   InfoLog(<<"onHangupComplete, status = false");
+   //TODO call ends for this participant
+   recon::ConversationHandle convHandle; //= TODO obtain convHandle somehow
+   mConnection->getConversationManager().destroyConversation(convHandle);
 }
 
 void
@@ -123,6 +127,7 @@ void
 SipCallChannel::onHangup(uint reason, const QString &detailedReason, const QString &message, Tp::DBusError* error)
 {
    mConnection->getConversationManager().destroyParticipant(mParticipantHandle);
+   emit hangupComplete(true);
 }
 
 void
