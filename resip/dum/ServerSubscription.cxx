@@ -76,6 +76,7 @@ ServerSubscription::accept(int statusCode)
 {
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;
+   Helper::getResponseCodeReason(statusCode, mLastResponse->header(h_StatusLine).reason());
    mLastResponse->header(h_Expires).value() = mExpires;
    return mLastResponse;
 }
@@ -89,6 +90,7 @@ ServerSubscription::reject(int statusCode)
    }
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;
+   Helper::getResponseCodeReason(statusCode, mLastResponse->header(h_StatusLine).reason());
    mLastResponse->remove(h_Contacts);  // Remove any contact header for non-success response
    return mLastResponse;
 }
