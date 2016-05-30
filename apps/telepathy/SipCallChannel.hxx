@@ -53,7 +53,9 @@ private Q_SLOTS:
    void onAnswerComplete(bool success);
    void onHangupComplete(bool success);
 
-
+signals:
+   void hangupComplete(bool status);
+   
 private:
    bool mIncoming;
    Connection* mConnection;
@@ -72,5 +74,3 @@ private:
 }
 
 #endif
-
-
