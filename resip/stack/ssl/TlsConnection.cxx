@@ -156,6 +156,7 @@ TlsConnection::~TlsConnection()
                // WANT_READ or WANT_WRITE can arise for bi-directional shutdown on
                // non-blocking sockets, safe to ignore
 <<<<<<< HEAD
+<<<<<<< HEAD
                StackLog( << "Got TLS shutdown error condition of " << err << " " << errortostringSSL(err) );
             }
             break;
@@ -168,6 +169,13 @@ TlsConnection::~TlsConnection()
          default:
             ErrLog(<< "Unexpected error in SSL_shutdown "<< errfun_2(err) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+               StackLog( << "Got TLS shutdown error condition of " << err << " " << errortostringSSL(err) );
+            }
+            break;
+         default:
+            ErrLog(<< "Unexpected error in SSL_shutdown "<< errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             handleOpenSSLErrorQueue(ret, err, "SSL_shutdown");
       }
    }
@@ -234,23 +242,32 @@ TlsConnection::checkState()
       {
          case SSL_ERROR_WANT_READ:
 <<<<<<< HEAD
+<<<<<<< HEAD
             StackLog( << "TLS handshake want read" << errortostringSSL(err) );
 =======
             StackLog( << "TLS handshake want read" << errfun_2(err) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            StackLog( << "TLS handshake want read" << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             mHandShakeWantsRead = true;
             return mTlsState;
 
          case SSL_ERROR_WANT_WRITE:
 <<<<<<< HEAD
+<<<<<<< HEAD
             StackLog( << "TLS handshake want write" << errortostringSSL(err) );
 =======
             StackLog( << "TLS handshake want write" << errfun_2(err) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            StackLog( << "TLS handshake want write" << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             ensureWritable();
             return mTlsState;
 
          case SSL_ERROR_ZERO_RETURN:
+<<<<<<< HEAD
 <<<<<<< HEAD
             StackLog( << "TLS connection closed cleanly" << errortostringSSL(err) );
             return mTlsState;
@@ -264,24 +281,39 @@ TlsConnection::checkState()
          case SSL_ERROR_WANT_CONNECT:
             StackLog( << "BIO not connected, try later" << errfun_2(err) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            StackLog( << "TLS connection closed cleanly" << errortostringSSL(err) );
+            return mTlsState;
+
+         case SSL_ERROR_WANT_CONNECT:
+            StackLog( << "BIO not connected, try later" << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             return mTlsState;
 
 #if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
          case SSL_ERROR_WANT_ACCEPT:
 <<<<<<< HEAD
+<<<<<<< HEAD
             StackLog( << "TLS connection want accept" << errortostringSSL(err) );
 =======
             StackLog( << "TLS connection want accept" << errfun_2(err) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            StackLog( << "TLS connection want accept" << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             return mTlsState;
 #endif
 
          case SSL_ERROR_WANT_X509_LOOKUP:
 <<<<<<< HEAD
+<<<<<<< HEAD
             DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP" << errortostringSSL(err) );
 =======
             DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP" << errfun_2(err) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP" << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             return mTlsState;
 
          default:
@@ -299,10 +331,14 @@ TlsConnection::checkState()
                      return mTlsState;
                }
 <<<<<<< HEAD
+<<<<<<< HEAD
                ErrLog( << "socket error " << errortostringOS(e) );
 =======
                ErrLog( << "socket error " << errfun_1(e) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+               ErrLog( << "socket error " << errortostringOS(e) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
                Transport::error(e);
                if(e == 0)
                {
@@ -329,10 +365,14 @@ TlsConnection::checkState()
                         break;
                      default:
 <<<<<<< HEAD
+<<<<<<< HEAD
                         ErrLog(<<"peer certificate validation failure: " << errortostringX509(verifyErrorCode));    //X509_verify_cert_error_string(verifyErrorCode));
 =======
                         ErrLog(<<"peer certificate validation failure: " << errfun_3(verifyErrorCode));    //X509_verify_cert_error_string(verifyErrorCode));
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+                        ErrLog(<<"peer certificate validation failure: " << errortostringX509(verifyErrorCode));    //X509_verify_cert_error_string(verifyErrorCode));
+>>>>>>> 6b51be0... Update TlsConnection.cxx
                         DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
                         break;
                   }
@@ -358,10 +398,14 @@ TlsConnection::checkState()
             else
             {
 <<<<<<< HEAD
+<<<<<<< HEAD
                DebugLog(<<"unrecognised/unhandled SSL_get_error result: " << errortostringSSL(err) );
 =======
                DebugLog(<<"unrecognised/unhandled SSL_get_error result: " << errfun_2(err) );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+               DebugLog(<<"unrecognised/unhandled SSL_get_error result: " << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             }
             ErrLog( << "TLS handshake failed ");
             handleOpenSSLErrorQueue(ok, err, "SSL_do_handshake");
@@ -493,20 +537,28 @@ TlsConnection::read(char* buf, int count )
          case SSL_ERROR_NONE:
          {
 <<<<<<< HEAD
+<<<<<<< HEAD
             StackLog( << "Got TLS read got condition of " << errortostringSSL(err)  );
 =======
             StackLog( << "Got TLS read got condition of " << errfun_2(err)  );
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            StackLog( << "Got TLS read got condition of " << errortostringSSL(err)  );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             return 0;
          }
          break;
          case SSL_ERROR_ZERO_RETURN:
          {
 <<<<<<< HEAD
+<<<<<<< HEAD
             DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errortostringSSL(err));
 =======
             DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errfun_2(err));
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errortostringSSL(err));
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             return -1;
          }
          break;
@@ -595,6 +647,7 @@ TlsConnection::write( const char* buf, int count )
          {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             StackLog( << "Got TLS write got condition of " << errortostringSSL(err) );
 =======
             StackLog( << "Got TLS write got condition of " << errfun_2(err));
@@ -602,11 +655,15 @@ TlsConnection::write( const char* buf, int count )
 =======
             StackLog( << "Got TLS write got condition of " << errfun_2(err) );
 >>>>>>> 5cba191... Update TlsConnection.cxx
+=======
+            StackLog( << "Got TLS write got condition of " << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             return 0;
          }
          break;
          case SSL_ERROR_ZERO_RETURN:
          {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
             DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errortostringSSL(err) );
@@ -616,6 +673,9 @@ TlsConnection::write( const char* buf, int count )
 =======
             DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errfun_2(err) );
 >>>>>>> 5cba191... Update TlsConnection.cxx
+=======
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errortostringSSL(err) );
+>>>>>>> 6b51be0... Update TlsConnection.cxx
             return -1;
          }
          break;
