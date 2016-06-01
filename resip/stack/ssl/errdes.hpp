@@ -1,9 +1,15 @@
-// Below (line 9-144) error messages are associated with system calls and some library function.
-// Please read http://www.cl.cam.ac.uk/cgi-bin/manpage?3+errno and http://stackoverflow.com/questions/503878/how-to-know-what-the-errno-means
+/* 
+This header file contains error message associated with error number/code from following functions :
+-> SSL_ERROR_SYSCALL  [http://www.cl.cam.ac.uk/cgi-bin/manpage?3+errno]    
+-> SSL_get_error [https://www.openssl.org/docs/manmaster/ssl/SSL_get_error.html]
+-> X509_verify_cert_error_string(verifyErrorCode) [https://www.openssl.org/docs/manmaster/crypto/X509_STORE_CTX_get_error.html]
+
+At present this header file only contains error messages that are called from TlsConnection.cxx file.
+*/
 
 /*  Q. Why strerror(int errno) is not used ? (http://www.cplusplus.com/reference/cstring/strerror/)
-    A. If error code is 22, strerror(int errno) will print "Invalid argument". But this is not so convenient, instead of using this
-       I have created function 'errfunc(int errno)' which will print error description in the format "EINVAL (Invalid argument)" 
+    A. If error code is 22, strerror(int errno) will print "Invalid argument". But this is not so convenient, instead of using this function,
+       I have created function 'errfunc_x(int errno)' which will print error description in the format "EINVAL (Invalid argument)" 
        which is more easy to read and understand.
  */
 
