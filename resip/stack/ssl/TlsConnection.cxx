@@ -594,20 +594,28 @@ TlsConnection::write( const char* buf, int count )
          case SSL_ERROR_NONE:
          {
 <<<<<<< HEAD
+<<<<<<< HEAD
             StackLog( << "Got TLS write got condition of " << errortostringSSL(err) );
 =======
             StackLog( << "Got TLS write got condition of " << errfun_2(err));
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            StackLog( << "Got TLS write got condition of " << errfun_2(err) );
+>>>>>>> 5cba191... Update TlsConnection.cxx
             return 0;
          }
          break;
          case SSL_ERROR_ZERO_RETURN:
          {
 <<<<<<< HEAD
+<<<<<<< HEAD
             DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errortostringSSL(err) );
 =======
             DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errfun_2(err)););
 >>>>>>> 5467c8b... Update TlsConnection.cxx
+=======
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)" << errfun_2(err) );
+>>>>>>> 5cba191... Update TlsConnection.cxx
             return -1;
          }
          break;
