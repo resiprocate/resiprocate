@@ -17,7 +17,7 @@ At present this header file only contains error messages that are called from Tl
 
 /*           Below are the error description from SSL_ERROR_SYSCALL [http://www.cl.cam.ac.uk/cgi-bin/manpage?3+errno]            */
 
-static char* messages_1[] = {
+static char* messagesOS[] = {
 /*0               0   */  "No error",
 /*EPERM           1   */  "EPERM (Operation not permitted)",
 /*ENOENT          2   */  "ENOENT (No such file or directory)",
@@ -153,12 +153,12 @@ static char* messages_1[] = {
 /*ERFKILL         132 */  "ERFKILL (Operation not possible due to RF-kill)",
 /*EHWPOISON       133 */  "EHWPOISON (Memory page has hardware error)",
 };
-static const int NUM_MESSAGES_1 = sizeof(messages_1)/sizeof(messages_1[0]);
+static const int NUM_MESSAGES_OS = sizeof(messagesOS)/sizeof(messagesOS[0]);
 
-extern "C" char* errfun_1(int errnum_1)
+extern "C" char* errortostringOS(int errnumOS)
 {
-   if (errnum_1 < NUM_MESSAGES_1)
-      return messages_1[errnum_1];
+   if (errnumOS < NUM_MESSAGES_OS)
+      return messagesOS[errnumOS];
    return "Unknown error";
 }
 
@@ -166,7 +166,7 @@ extern "C" char* errfun_1(int errnum_1)
 
 /*           Below are the error description from SSL_get_error [https://www.openssl.org/docs/manmaster/ssl/SSL_get_error.html]             */
 
-static char* messages_2[] = {
+static char* messagesSSL[] = {
 /*  0  */  "SSL_ERROR_NONE",
 /*  1  */  "SSL_ERROR_SSL",
 /*  2  */  "SSL_ERROR_WANT_READ",
@@ -177,12 +177,12 @@ static char* messages_2[] = {
 /*  7  */  "SSL_ERROR_WANT_CONNECT",
 /*  8  */  "SSL_ERROR_WANT_ACCEPT",
 };
-static const int NUM_MESSAGES_2 = sizeof(messages_2)/sizeof(messages_2[0]);
+static const int NUM_MESSAGES_SSL = sizeof(messagesSSL)/sizeof(messagesSSL[0]);
 
-extern "C" char* errfun_2(int errnum_2)
+extern "C" char* errortostringSSL(int errnumSSL)
 {
-   if (errnum_2 < NUM_MESSAGES_2)
-      return messages_2[errnum_2];
+   if (errnumSSL < NUM_MESSAGES_SSL)
+      return messagesSSL[errnumSSL];
    return "Unknown error";
 }
 
@@ -190,7 +190,7 @@ extern "C" char* errfun_2(int errnum_2)
 
 /*           Below are the error description from X509_verify_cert_error_string(verifyErrorCode) [https://www.openssl.org/docs/manmaster/crypto/X509_STORE_CTX_get_error.html]             */
 
-static char* messages_3[] = {
+static char* messagesX509[] = {
 /*  0  */  "X509_V_OK",
 /*  1  */  "illegal error (for uninitialized values, to avoid X509_V_OK)",
 /*  2  */  "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
@@ -247,12 +247,12 @@ static char* messages_3[] = {
 /*  53 */  "X509_V_ERR_UNSUPPORTED_NAME_SYNTAX",
 /*  54 */  "X509_V_ERR_CRL_PATH_VALIDATION_ERROR",
 };
-static const int NUM_MESSAGES_3 = sizeof(messages_3)/sizeof(messages_3[0]);
+static const int NUM_MESSAGES_X509 = sizeof(messagesX509)/sizeof(messagesX509[0]);
 
-extern "C" char* errfun_3(int errnum_3)
+extern "C" char* errortostringX509(int errnumX509)
 {
-   if (errnum_3 < NUM_MESSAGES_3)
-      return messages_3[errnum_3];
+   if (errnumX509 < NUM_MESSAGES_X509)
+      return messagesX509[errnumX509];
    return "Unknown error";
 }
 
