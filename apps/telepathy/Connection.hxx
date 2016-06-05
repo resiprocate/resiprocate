@@ -19,7 +19,7 @@
 #define CONNECTION_HXX
 
 #if defined(HAVE_CONFIG_H)
-  #include "config.h"
+#include "config.h"
 #endif
 
 
@@ -39,53 +39,73 @@
 
 namespace tr {
 
-class MyConversationManager;
-class MyUserAgent;
+  class MyConversationManager;
+  class MyUserAgent;
+  
+  class Connection : public Tp::BaseConnection
+  {
+    Q_OBJECT
+  public:
+    Connection(const QDBusConnection &dbusConnection,
+	       const QString &cmName, const QString &protocolName,
+	       const QVariantMap &parameters);
 
-class Connection : public Tp::BaseConnection
-{
-   Q_OBJECT
-public:
-   Connection(const QDBusConnection &dbusConnection,
-            const QString &cmName, const QString &protocolName,
-            const QVariantMap &parameters);
+    MyConversationManager& getConversationManager() { return *myConversationManager.get(); };
 
-   MyConversationManager& getConversationManager() { return *myConversationManager.get(); };
+    Tp::ContactAttributesMap getContactListAttributes(const QStringList &interfaces, bool hold, Tp::DBusError *error);
+  
+    void requestSubscription(const Tp::UIntList &handles, const QString &message, Tp::DBusError *error);
+    void removeContacts(const Tp::UIntList &handles, Tp::DBusError *error);
+    Tp::AliasMap getAliases(const Tp::UIntList& handles, Tp::DBusError *error);
+    void setAliases(const Tp::AliasMap &aliases, Tp::DBusError *error);
+    void getContactsFromFile(Tp::DBusError *error);
+    void setContactsInFile();
+    void deleteContacts(const QStringList& contacts);
+    Tp::SimpleStatusSpecMap getSimpleStatusSpecMap();
+    Tp::SimpleContactPresences getPresences(const Tp::UIntList &handles);
+    Tp::SimplePresence getPresence(uint handle);
 
-private:
-   uint setPresence(const QString &status, const QString &message, Tp::DBusError *error);
-       QStringList inspectHandles(uint handleType, const Tp::UIntList &handles, Tp::DBusError *error);
-   Tp::UIntList requestHandles(uint handleType, const QStringList &identifiers, Tp::DBusError *error);
-   Tp::BaseChannelPtr createChannel(const QVariantMap &request, Tp::DBusError *error);
-   Tp::ContactAttributesMap getContactAttributes(const Tp::UIntList &handles, const QStringList &ifaces, Tp::DBusError *error);
-   uint ensureHandle(const QString& identifier);
+    
+  private:
+    uint setPresence(const QString &status, const QString &message, Tp::DBusError *error);
+    QStringList inspectHandles(uint handleType, const Tp::UIntList &handles, Tp::DBusError *error);
+    Tp::UIntList requestHandles(uint handleType, const QStringList &identifiers, Tp::DBusError *error);
+    Tp::BaseChannelPtr createChannel(const QVariantMap &request, Tp::DBusError *error);
+    Tp::ContactAttributesMap getContactAttributes(const Tp::UIntList &handles, const QStringList &ifaces, Tp::DBusError *error);
+    uint ensureHandle(const QString& identifier);
+					      
+					      
+  private slots:
+    void doConnect(Tp::DBusError *error);
+    void onConnected();
+    void doDisconnect();
+    void setStatusSlot(uint newStatus, uint reason);
+    void onIncomingCall(const QString & caller, uint callHandle);
 
 
-private slots:
-   void doConnect(Tp::DBusError *error);
-   void onConnected();
-   void doDisconnect();
-   void setStatusSlot(uint newStatus, uint reason);
-   void onIncomingCall(const QString & caller, uint callHandle);
+  private:
+    resip::SharedPtr<TelepathyMasterProfile> mUAProfile;
+    resip::SharedPtr<TelepathyConversationProfile> mConversationProfile;
+    tr::MyUserAgent* ua;
+    std::auto_ptr<MyConversationManager> myConversationManager;
 
+    Tp::BaseConnectionContactsInterfacePtr mContactsInterface;
+    Tp::BaseConnectionAliasingInterfacePtr mAliasingInterface;
+    Tp::BaseConnectionSimplePresenceInterfacePtr mSimplePresenceInterface;
+    Tp::BaseConnectionContactListInterfacePtr mContactListInterface;
+    Tp::BaseConnectionRequestsInterfacePtr mRequestsInterface;
 
-private:
-   resip::SharedPtr<TelepathyMasterProfile> mUAProfile;
-   resip::SharedPtr<TelepathyConversationProfile> mConversationProfile;
-   tr::MyUserAgent* ua;
-   std::auto_ptr<MyConversationManager> myConversationManager;
-
-   Tp::BaseConnectionContactsInterfacePtr mContactsInterface;
-   Tp::BaseConnectionSimplePresenceInterfacePtr mSimplePresenceInterface;
-   Tp::BaseConnectionContactListInterfacePtr mContactListInterface;
-   Tp::BaseConnectionRequestsInterfacePtr mRequestsInterface;
-
-   long nextHandleId;
-   QMap<uint, QString> mHandles;
-   QMap<QString, uint> mIdentifiers;
-
-   Tp::SimplePresence mSelfPresence;
-};
+    long nextHandleId;
+    QMap<uint, QString> mHandles;
+    QMap<QString, uint> mIdentifiers;
+    Tp::AliasMap mAliases;
+    
+    Tp::SimpleStatusSpecMap statusMap;
+    Tp::SimplePresence mSelfPresence;
+    Tp::SimpleContactPresences mPresences;
+    
+    QString fileWithContacts;
+  };
 
 }
 
