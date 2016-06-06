@@ -41,15 +41,17 @@ MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterf
         mLocalAudioEnabled(localAudioEnabled),
         mAutoAnswerEnabled(autoAnswerEnabled),
         mConnection(connection)
-{ 
+{
+  QObject::connect(this,SIGNAL(participantDestroyed(recon::ParticipantHandle)),this,SLOT(onParticipantDestroyed(recon::ParticipantHandle)));
+  QObject::connect(this,SIGNAL(conversationDestroyed(recon::ConversationHandle)),this,SLOT(onConversationDestroyed(recon::ConversationHandle)));
 }
 
 void
 MyConversationManager::startup()
-{      
+{
    if(mLocalAudioEnabled)
    {
-      // Create initial local participant and conversation  
+      // Create initial local participant and conversation
       ParticipantHandle ph = createLocalParticipant();
       DebugLog(<<"createLocalParticipant returned handle " << ph);
       addParticipant(createConversation(), ph);
@@ -75,7 +77,7 @@ MyConversationManager::startup()
       resip::Data buffer(Data::Share, (const char *)record_prompt, sizeof(record_prompt));
       resip::Data name("record");
       addBufferToMediaResourceCache(name, buffer, 0);
-   }      
+   }
 }
 
 ConversationHandle
@@ -111,28 +113,24 @@ MyConversationManager::createLocalParticipant()
 }
 void
 MyConversationManager::destroyParticipant(ParticipantHandle partHandle) {
-   ConversationManager::destroyParticipant(partHandle);
-   // TODO emit SIGNAL for SLOT onParticipantDestroyed() or make sure that callback is registered and is being called
+    ConversationManager::destroyParticipant(partHandle);
+   emit participantDestroyed(partHandle);
 }
 void
 MyConversationManager::destroyConversation(ConversationHandle convHandle) {
    ConversationManager::destroyConversation(convHandle);
-   // TODO emit SIGNAL for SLOT onConversationDestroyed() or make sure that callback is registered and is being called
-
+   emit conversationDestroyed(convHandle);
 }
 void
 MyConversationManager::onConversationDestroyed(ConversationHandle convHandle)
 {
    InfoLog(<< "onConversationDestroyed: handle=" << convHandle);
    mConversationHandles.remove(convHandle);
-   // TODO this is a SLOT for the SIGNAL emitted by destroyConversation() or this is invoked via normal callback registration.
-   // TODO destroy all participants in the conversation
 }
 
 void
 MyConversationManager::onParticipantDestroyed(ParticipantHandle partHandle)
 {
-   //TODO this is a SLOT for the SIGNAL emitted by destroyParticipant() or this is invoked via normal callback registration.
    InfoLog(<< "onParticipantDestroyed: handle=" << partHandle);
    // Remove from whatever list it is in
    mRemoteParticipantHandles.remove(partHandle);
@@ -185,21 +183,20 @@ MyConversationManager::onRequestOutgoingParticipant(ParticipantHandle partHandle
       addParticipant(convHandle, partHandle);
    }*/
 }
- 
+
 void
 MyConversationManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
-   //TODO add code to respond to SIP Bye and send 200 OK in response
    destroyParticipant(partHandle);
-   //TODO if there are no more remoteParticipants, i.e the last remoteParticipant hung up, then destroyConversation()
    if(mRemoteParticipantHandles.size()==0){
-      ConversationHandle convHandle; // = TODO fetch convHandle
+     recon::ConversationHandle convHandle;
+      // TODO get convHandle here somehow
       destroyConversation(convHandle);
    }
 
 }
- 
+
 void
 MyConversationManager::onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
 {
@@ -207,7 +204,7 @@ MyConversationManager::onParticipantProceeding(ParticipantHandle partHandle, con
 }
 
 void
-MyConversationManager::onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
+MyConversationManager::onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle,
                                    ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
 {
    InfoLog(<< "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
@@ -221,7 +218,7 @@ MyConversationManager::onParticipantAlerting(ParticipantHandle partHandle, const
 {
    InfoLog(<< "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
 }
-    
+
 void
 MyConversationManager::onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
 {
@@ -288,4 +285,3 @@ MyConversationManager::displayInfo()
       InfoLog(<< output);
    }
 }
-

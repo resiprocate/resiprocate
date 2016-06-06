@@ -34,11 +34,12 @@ using namespace tr;
 using namespace resip;
 using namespace recon;
 
-SipCallChannel::SipCallChannel(bool incoming, Connection* connection, QString peer, uint targetHandle, ParticipantHandle participantHandle)
+SipCallChannel::SipCallChannel(bool incoming, Connection* connection, QString peer, uint targetHandle, ConversationHandle conversationHandle, ParticipantHandle participantHandle)
    : mIncoming(incoming),
      mConnection(connection),
      mPeer(peer),
      mTargetHandle(targetHandle),
+     mConversationHandle(conversationHandle),
      mParticipantHandle(participantHandle)
 {
    mBaseChannel = Tp::BaseChannel::create(mConnection, TP_QT_IFACE_CHANNEL_TYPE_CALL, Tp::HandleTypeContact, targetHandle);
@@ -109,10 +110,10 @@ SipCallChannel::onHangupComplete(bool status)
    if (!status) {
       InfoLog(<<"onHangupComplete, status = false");
    }
-   InfoLog(<<"onHangupComplete, status = false");
-   //TODO call ends for this participant
-   recon::ConversationHandle convHandle; //= TODO obtain convHandle somehow
-   mConnection->getConversationManager().destroyConversation(convHandle);
+   else {
+   InfoLog(<<"onHangupComplete, status = true");
+   mConnection->getConversationManager().destroyConversation(mConversationHandle);
+   }
 }
 
 void

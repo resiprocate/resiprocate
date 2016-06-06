@@ -68,6 +68,10 @@ public:
    virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
    virtual void displayInfo();
 
+Q_SIGNALS:
+void conversationDestroyed(recon::ConversationHandle convHandle);
+void participantDestroyed(recon::ParticipantHandle partHandle);
+
 protected:
    std::list<recon::ConversationHandle> mConversationHandles;
    std::list<recon::ParticipantHandle> mLocalParticipantHandles;
