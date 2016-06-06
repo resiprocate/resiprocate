@@ -13,6 +13,8 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Errdes.hxx"
 
+#include "Errdes.hxx"
+
 #include <vector>
 
 using namespace resip;
