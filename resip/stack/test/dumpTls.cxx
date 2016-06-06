@@ -33,6 +33,8 @@
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/Errdes.hxx"
 
+#include "Errdes.hxx"
+
 using namespace resip;
 using namespace std;
 
