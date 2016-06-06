@@ -63,6 +63,8 @@
 #include <sys/types.h>
 #include "rutil/Errdes.hxx"
 
+#include "Errdes.hxx"
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
