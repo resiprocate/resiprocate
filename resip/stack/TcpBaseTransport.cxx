@@ -12,6 +12,8 @@
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "rutil/Errdes.hxx"
 
+#include "Errdes.hxx"
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
