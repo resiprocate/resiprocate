@@ -21,6 +21,7 @@
 #include "rutil/ParseBuffer.hxx"
 
 #include "Resolver.hxx"
+
 #include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
