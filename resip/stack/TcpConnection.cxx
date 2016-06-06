@@ -8,6 +8,8 @@
 #include "resip/stack/Tuple.hxx"
 #include "rutil/Errdes.hxx"
 
+#include "Errdes.hxx"
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
