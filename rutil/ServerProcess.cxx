@@ -20,6 +20,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Errdes.hxx"
 
+#include "Errdes.hxx"
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
 using namespace resip;
