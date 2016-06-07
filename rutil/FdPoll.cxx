@@ -13,7 +13,6 @@
 #  include <sys/epoll.h>
 #endif
 
-
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
