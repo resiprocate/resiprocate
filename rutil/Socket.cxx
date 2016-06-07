@@ -13,6 +13,8 @@
 #include <sys/resource.h>	// for getrlimit()
 #endif
 
+#include "Errdes.hxx"
+
 using namespace resip;
 using namespace std;
 
