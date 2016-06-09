@@ -1,3 +1,4 @@
+
 /* 
 This header file contains functions that will return error message associated with error number/code from following functions :
 
@@ -14,7 +15,6 @@ This header file contains functions that will return error message associated wi
  */
 
 /*----------------END-------------------END-------------------END-------------------END---------------------END-------------------END----------*/
-
 
 #ifndef ERRDES_HXX
 #define ERRDES_HXX
@@ -264,4 +264,8 @@ static inline char* errortostringX509(int errnumX509)
 
 /*----------------END-------------------END-------------------END-------------------END---------------------END-------------------END----------*/
 
+<<<<<<< HEAD
 #endif
+=======
+#endif
+>>>>>>> 45e1716... Create Errdes.hxx
