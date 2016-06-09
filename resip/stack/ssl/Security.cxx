@@ -55,8 +55,6 @@
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
 
-#include "Errdes.hxx"
-
 using namespace resip;
 using namespace std;
 
