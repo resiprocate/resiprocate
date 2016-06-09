@@ -60,8 +60,6 @@
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
 
-#include "Errdes.hxx"
-
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
 #include <osc/StateChanges.h>
