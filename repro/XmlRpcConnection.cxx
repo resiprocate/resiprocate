@@ -9,6 +9,7 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/ParseBuffer.hxx>
 
+#include "rutil/Errdes.hxx"
 #include "repro/XmlRpcServerBase.hxx"
 #include "repro/XmlRpcConnection.hxx"
 
@@ -187,7 +188,7 @@ XmlRpcConnection::processSomeWrites()
    {
       int e = getErrno();
       XmlRpcServerBase::logSocketError(e);
-      InfoLog (<< "XmlRpcConnection::processSomeWrites - failed write on " << mSock << " " << strerror(e));
+      InfoLog (<< "XmlRpcConnection::processSomeWrites - failed write on " << mSock << " " << strerror(e) << " error message from Errdes.hxx file : " << errortostringOS(e));
 
       return false;
    }

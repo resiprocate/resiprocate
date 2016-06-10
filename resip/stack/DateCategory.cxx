@@ -16,6 +16,8 @@
 #include "rutil/Socket.hxx"
 //#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
 
+#include "rutil/Errdes.hxx"
+
 using namespace resip;
 using namespace std;
 
@@ -91,7 +93,7 @@ DateCategory::DateCategory()
    if (now == ((time_t)-1))
    {
       int e = getErrno();
-      DebugLog (<< "Failed to get time: " << strerror(e));
+      DebugLog (<< "Failed to get time: " << errortostringOS(e));
       Transport::error(e);
       return;
    }
@@ -163,7 +165,7 @@ DateCategory::setDatetime(time_t datetime)
    if (gmtp == 0)
    {
         int e = getErrno();
-        DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+        DebugLog (<< "Failed to convert to gmt: " << errortostringOS(e));
         Transport::error(e);
         return false;
    }
@@ -172,7 +174,7 @@ DateCategory::setDatetime(time_t datetime)
   if (gmtime_r(&datetime, &gmt) == 0)
   {
      int e = getErrno();
-     DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+     DebugLog (<< "Failed to convert to gmt: " << errortostringOS(e));
      Transport::error(e);
      return false;
   }

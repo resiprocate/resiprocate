@@ -8,6 +8,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/Errdes.hxx"
 
 #include "repro/ReproVersion.hxx"
 #include "repro/HttpBase.hxx"
@@ -248,7 +249,7 @@ HttpConnection::processSomeReads()
             InfoLog (<< "Some other error");
             break;
       }
-      InfoLog (<< "Failed read on " << (int)mSock << " " << strerror(e));
+      InfoLog (<< "Failed read on " << (int)mSock << " " << errortostringOS(e));
       return false;
    }
    else if (bytesRead == 0)
@@ -366,7 +367,7 @@ HttpConnection::processSomeWrites()
    if (bytesWritten == INVALID_SOCKET)
    {
       int e = getErrno();
-      InfoLog (<< "HttpConnection failed write on " << mSock << " " << strerror(e));
+      InfoLog (<< "HttpConnection failed write on " << mSock << " " << strerror(e) << " error message from Errdes.hxx file : " << errortostringOS(e) );
 
       return false;
    }

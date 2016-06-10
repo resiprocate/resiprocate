@@ -11,6 +11,7 @@
 #include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
+#include "rutil/Errdes.hxx"
 
 #include <vector>
 
@@ -301,7 +302,7 @@ ConnectionManager::gc(UInt64 relThreshold, unsigned int maxToRemove)
       struct rlimit rlim;
       if(getrlimit(RLIMIT_NOFILE, &rlim) != 0)
       {
-         ErrLog(<<"Call to getrlimit() for RLIMIT_NOFILE failed: " << strerror(errno));
+         ErrLog(<<"Call to getrlimit() for RLIMIT_NOFILE failed: " << errortostringOS(errno));
       }
       else
       {

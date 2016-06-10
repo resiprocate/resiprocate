@@ -1,0 +1,1 @@
+usage: /home/udit/gsoc/resiprocate/resip/dum/test/.libs/lt-basicMessage sip:from user passwd realm sip:to [port]

@@ -1,0 +1,359 @@
+Sdp:
+SdpVersion: 1
+OrigUserName: 'Test'
+OrigSessionId: 8888
+OrigSessionVersion: 9999
+OrigNetType: IN
+OrigAddressType: IP4
+OrigUnicastAddr: '127.0.0.1'
+SessionName: 'SdpTestSession'
+SessionInformation: 'sample session information'
+SessionUri: 'http://www.sessionuri.com'
+EmailAddress: 'me@here.com'
+EmailAddress: 'you@there.com'
+PhoneNumber: '555-555-5555'
+PhoneNumber: '123-123-1234'
+Bandwidth: type=AS, bandwidth=5000
+Bandwidth: type=CT, bandwidth=100
+Time: start=100, stop=200
+TimeRepeat: interval=8, duration=800
+TimeRepeat: interval=9, duration=900, offset=20, offset=21
+Time: start=300, stop=400
+TimeZone: adjustment time=500, offset=600
+TimeZone: adjustment time=700, offset=800
+Category: 'sample sdp category'
+Keywords: 'sdp session description protocol'
+ToolNameAndVersion: 'sipX session description 1.0'
+ConferenceType: BROADCAST
+CharSet: 'UTF-8'
+IcePassiveOnlyMode: 1
+Group: semantics=LS, idTag=media1, idTag=media2
+Group: semantics=FID, idTag=fid1
+SessionLanguage: 'EN-US'
+DescriptionLanguage: 'FR-CN'
+MaximumPacketRate: 1.5
+
+MediaLine:
+Type: AUDIO
+TransportProtocol: RTP/AVP
+Title: 'G729a Audio Codec'
+Connection: netType=IN, addrType=IP4, addr=127.0.0.1, port=6000, ttl=90
+RTCP Connection: netType=IN, addrType=IP4, addr=127.0.0.1, port=6001, ttl=0
+Bandwidth: type=CT, bandwidth=10
+Encryption Key: method=BASE64, data='0123456789ABCD'
+Direction: SENDRECV
+PacketTime: 20
+MaxPacketTime: 60
+Orientation: LANDSCAPE
+DescriptionLanguage: 'English'
+Language: 'EN'
+FrameRate: 256
+Quality: 10
+TcpSetupAttrib: ACTPASS
+TcpConnectionAttrib: NEW
+Crypto: tag=1, suite=AES_CM_128_HMAC_SHA1_32
+        Key Param: method=INLINE, key=CyrptoKey, srtpLifetime=10000, srtpMkiValue=1, srtpMkiLength=5
+        kdr=64, encryptSrtp=1, encryptSrtcp=1, authSrtp=1, fecOrder=SRTP_FEC, wsh=32
+        fecKeyMethod=INLINE, fecKey=FECKEY, fecLifetime=200000, fecMkiValue=2, fecMkiLength=8
+Crypto: tag=2, suite=F8_128_HMAC_SHA1_80
+        Key Param: method=INLINE, key=CryptoKey2, srtpLifetime=0, srtpMkiValue=0, srtpMkiLength=0
+        kdr=0, encryptSrtp=1, encryptSrtcp=1, authSrtp=1, fecOrder=FEC_SRTP, wsh=0
+        sessParam=param1
+        sessParam=param2
+FingerPrint: type=MD5, 'this-is-a-finger-print'
+KeyManagement: type=MIKEY, 'this-is-some-key-management-data'
+PreConditionCurrentStatus: type=QOS, status=E2E, direction=SENDRECV
+PreConditionCurrentStatus: type=QOS, status=REMOTE, direction=RECV
+PreConditionConfirmStatus: type=QOS, status=E2E, direction=SENDRECV
+PreConditionConfirmStatus: type=QOS, status=REMOTE, direction=RECV
+PreConditionDesiredStatus: type=QOS, strength=MANDATORY, status=E2E, direction=SENDRECV
+PreConditionDesiredStatus: type=QOS, strength=OPTIONAL, status=REMOTE, direction=RECV
+MaximumPacketRate: 20
+Label: 'G711 Label'
+IdentificationTag: 'item1'
+IceUserFrag: 'ICEUSER'
+IcePassword: 'ICEPASSWORD'
+Remote Candidate: componentId=1, addr=127.0.0.1, port=5060
+Remote Candidate: componentId=2, addr=127.0.0.2, port=5061
+IceSupported: 1
+SdpCandidate: foundation=id2, id=1, transport=UDP, priority=101, addr=192.168.1.2, port=5060, type=RELAY, relatedAddr=127.0.0.3, relatedPort=5080, inUse=0
+SdpCandidate: foundation=id1, id=1, transport=UDP, priority=100, addr=127.0.0.1, port=6000, type=HOST, relatedAddr=, relatedPort=0, inUse=1
+SdpCandidate: foundation=id2, id=1, transport=UDP, priority=100, addr=127.0.0.1, port=6001, type=HOST, relatedAddr=, relatedPort=0, inUse=1
+SdpCandidate: foundation=id1, id=2, transport=UDP, priority=50, addr=127.0.0.1, port=6000, type=SRFLX, relatedAddr=, relatedPort=0, inUse=1
+PotentialMediaViewString: ''
+
+MediaLine:
+Type: 
+TransportProtocol: 
+SdpCodec: payloadId=19, mime=audio/G729, rate=8000, packetTime=20, numCh=1, fmtParam=annexb=no
+Title: ''
+Encryption Key: method=NONE, data=''
+Direction: NONE
+PacketTime: 0
+MaxPacketTime: 0
+Orientation: NONE
+DescriptionLanguage: ''
+Language: ''
+FrameRate: 0
+Quality: 0
+TcpSetupAttrib: NONE
+TcpConnectionAttrib: NONE
+FingerPrint: type=NONE, ''
+KeyManagement: type=NONE, ''
+MaximumPacketRate: 0
+Label: ''
+IdentificationTag: ''
+IceUserFrag: ''
+IcePassword: ''
+IceSupported: 0
+SdpCandidate: foundation=f1, id=2, transport=UDP, priority=101, addr=192.168.1.1, port=6001, type=HOST, relatedAddr=, relatedPort=0, inUse=0
+SdpCandidate: foundation=f1, id=1, transport=UDP, priority=100, addr=192.168.1.1, port=6000, type=HOST, relatedAddr=, relatedPort=0, inUse=0
+SdpCandidatePair:
+  Priority: 240518168779
+  State: FROZEN
+  Offerer: LOCAL
+  SdpCandidate: foundation=f1, id=2, transport=UDP, priority=101, addr=192.168.1.1, port=6001, type=HOST, relatedAddr=, relatedPort=0, inUse=0
+  SdpCandidate: foundation=a1, id=2, transport=UDP, priority=56, addr=192.168.1.1, port=2346, type=HOST, relatedAddr=, relatedPort=0, inUse=0
+SdpCandidatePair:
+  Priority: 236223201480
+  State: FROZEN
+  Offerer: REMOTE
+  SdpCandidate: foundation=f1, id=1, transport=UDP, priority=100, addr=192.168.1.1, port=6000, type=HOST, relatedAddr=, relatedPort=0, inUse=0
+  SdpCandidate: foundation=a1, id=1, transport=UDP, priority=55, addr=192.168.1.1, port=2345, type=HOST, relatedAddr=, relatedPort=0, inUse=0
+PotentialMediaViewString: ''
+
+
+
+Resip Sdp Helper Test:
+Sdp:
+SdpVersion: 0
+OrigUserName: '-'
+OrigSessionId: 333525334858460
+OrigSessionVersion: 333525334858460
+OrigNetType: IN
+OrigAddressType: IP4
+OrigUnicastAddr: '192.168.0.156'
+SessionName: 'test123'
+SessionInformation: ''
+SessionUri: ''
+EmailAddress: 'unknown@invalid.net'
+PhoneNumber: '+972 683 1000'
+Bandwidth: type=RR, bandwidth=0
+Bandwidth: type=RS, bandwidth=0
+Bandwidth: type=CT, bandwidth=10000
+Time: start=4058038202, stop=0
+Category: ''
+Keywords: ''
+ToolNameAndVersion: 'ResipParserTester'
+ConferenceType: NONE
+CharSet: ''
+IcePassiveOnlyMode: 0
+SessionLanguage: ''
+DescriptionLanguage: ''
+MaximumPacketRate: 0
+
+MediaLine:
+Type: audio
+TransportProtocol: RTP/AVP
+SdpCodec: payloadId=0, mime=audio/PCMU, rate=8000, packetTime=20000, numCh=1, fmtParam=annexb=no
+SdpCodec: payloadId=101, mime=audio/telephone-event, rate=8000, packetTime=20000, numCh=1, fmtParam=0-11
+Title: 'Audio Stream'
+Connection: netType=IN, addrType=IP4, addr=192.168.0.156, port=41466, ttl=100
+Connection: netType=IN, addrType=IP4, addr=192.168.0.157, port=41468, ttl=100
+Connection: netType=IN, addrType=IP4, addr=192.168.0.158, port=41470, ttl=100
+Connection: netType=IN, addrType=IP6, addr=FF15::101, port=41472, ttl=0
+Connection: netType=IN, addrType=IP6, addr=FF15::102, port=41474, ttl=0
+Connection: netType=IN, addrType=IP6, addr=FF15::103, port=41476, ttl=0
+Encryption Key: method=CLEAR, data='base64clearkey'
+Direction: SENDRECV
+PacketTime: 20
+MaxPacketTime: 40
+Orientation: NONE
+DescriptionLanguage: ''
+Language: ''
+FrameRate: 0
+Quality: 0
+TcpSetupAttrib: ACTIVE
+TcpConnectionAttrib: NONE
+Crypto: tag=1, suite=F8_128_HMAC_SHA1_80
+        Key Param: method=INLINE, key=MTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5QUJjZGVm, srtpLifetime=1048576, srtpMkiValue=1, srtpMkiLength=4
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=1048576, srtpMkiValue=2, srtpMkiLength=4
+        kdr=0, encryptSrtp=1, encryptSrtcp=1, authSrtp=1, fecOrder=FEC_SRTP, wsh=0
+FingerPrint: type=NONE, ''
+KeyManagement: type=NONE, ''
+MaximumPacketRate: 0
+Label: ''
+IdentificationTag: ''
+IceUserFrag: ''
+IcePassword: ''
+IceSupported: 0
+PotentialMediaViewString: ''
+
+MediaLine:
+Type: video
+TransportProtocol: RTP/AVP
+SdpCodec: payloadId=140, mime=video/vp71, rate=144000, packetTime=20000, numCh=1, fmtParam=CIF=1 QCIF=2 SQCIF
+Title: ''
+Connection: netType=IN, addrType=IP4, addr=127.0.0.1, port=21234, ttl=0
+RTCP Connection: netType=IN, addrType=IP4, addr=123.123.123.124, port=127, ttl=60
+Bandwidth: type=RR, bandwidth=1
+Bandwidth: type=RS, bandwidth=0
+Encryption Key: method=BASE64, data='base64key'
+Direction: INACTIVE
+PacketTime: 0
+MaxPacketTime: 0
+Orientation: NONE
+DescriptionLanguage: ''
+Language: ''
+FrameRate: 0
+Quality: 0
+TcpSetupAttrib: NONE
+TcpConnectionAttrib: NONE
+Crypto: tag=1, suite=AES_CM_128_HMAC_SHA1_80
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=0, srtpMkiValue=2, srtpMkiLength=18
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=21, srtpMkiValue=3, srtpMkiLength=4
+        kdr=23, encryptSrtp=0, encryptSrtcp=1, authSrtp=1, fecOrder=SRTP_FEC, wsh=0
+Crypto: tag=2, suite=AES_CM_128_HMAC_SHA1_32
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=1048576, srtpMkiValue=0, srtpMkiLength=0
+        kdr=0, encryptSrtp=1, encryptSrtcp=1, authSrtp=1, fecOrder=FEC_SRTP, wsh=60
+        fecKeyMethod=INLINE, fecKey=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, fecLifetime=1048576, fecMkiValue=2, fecMkiLength=4
+FingerPrint: type=SHA-1, '0123456789'
+KeyManagement: type=MIKEY, 'thisissomebase64data'
+PreConditionCurrentStatus: type=QOS, status=E2E, direction=SENDRECV
+PreConditionCurrentStatus: type=QOS, status=LOCAL, direction=SEND
+PreConditionConfirmStatus: type=QOS, status=E2E, direction=NONE
+PreConditionConfirmStatus: type=QOS, status=REMOTE, direction=RECV
+PreConditionDesiredStatus: type=QOS, strength=MANDATORY, status=E2E, direction=SENDRECV
+PreConditionDesiredStatus: type=QOS, strength=OPTIONAL, status=LOCAL, direction=SEND
+MaximumPacketRate: 0
+Label: ''
+IdentificationTag: ''
+IceUserFrag: ''
+IcePassword: ''
+Remote Candidate: componentId=1, addr=192.168.0.1, port=5060
+Remote Candidate: componentId=2, addr=192.168.0.1, port=5061
+Remote Candidate: componentId=3, addr=192.168.0.2, port=5063
+IceSupported: 1
+SdpCandidate: foundation=foundation3, id=3, transport=UDP, priority=100002, addr=123.123.123.124, port=127, type=NONE, relatedAddr=, relatedPort=0, name=value, name2=value2, inUse=1
+SdpCandidate: foundation=foundation3, id=3, transport=UDP, priority=100002, addr=192.168.0.2, port=6668, type=NONE, relatedAddr=127.0.0.9, relatedPort=0, name=value, name2=value2, inUse=0
+SdpCandidate: foundation=foundation3, id=3, transport=UDP, priority=100002, addr=192.168.0.2, port=6668, type=RELAY, relatedAddr=, relatedPort=0, inUse=0
+SdpCandidate: foundation=foundation2, id=2, transport=UDP, priority=100001, addr=192.168.0.1, port=6667, type=NONE, relatedAddr=127.0.0.9, relatedPort=6668, name=value, name2=value2, inUse=0
+SdpCandidate: foundation=foundation1, id=1, transport=UDP, priority=100000, addr=127.0.0.1, port=21234, type=HOST, relatedAddr=127.0.0.8, relatedPort=6667, name=value, name2=value2, inUse=1
+PotentialMediaViewString: ''
+
+Sdp:
+SdpVersion: 0
+OrigUserName: '-'
+OrigSessionId: 333525334858460
+OrigSessionVersion: 333525334858460
+OrigNetType: IN
+OrigAddressType: IP4
+OrigUnicastAddr: '192.168.0.156'
+SessionName: 'test123'
+SessionInformation: ''
+SessionUri: ''
+EmailAddress: 'unknown@invalid.net'
+PhoneNumber: '+972 683 1000'
+Bandwidth: type=RR, bandwidth=0
+Bandwidth: type=RS, bandwidth=0
+Bandwidth: type=CT, bandwidth=10000
+Time: start=4058038202, stop=0
+Category: ''
+Keywords: ''
+ToolNameAndVersion: 'ResipParserTester'
+ConferenceType: NONE
+CharSet: ''
+IcePassiveOnlyMode: 0
+SessionLanguage: ''
+DescriptionLanguage: ''
+MaximumPacketRate: 0
+
+MediaLine:
+Type: audio
+TransportProtocol: RTP/AVP
+SdpCodec: payloadId=0, mime=audio/PCMU, rate=8000, packetTime=20000, numCh=1, fmtParam=annexb=no
+SdpCodec: payloadId=101, mime=audio/telephone-event, rate=8000, packetTime=20000, numCh=1, fmtParam=0-11
+Title: 'Audio Stream'
+Connection: netType=IN, addrType=IP4, addr=192.168.0.156, port=41466, ttl=100
+Connection: netType=IN, addrType=IP4, addr=192.168.0.157, port=41468, ttl=100
+Connection: netType=IN, addrType=IP4, addr=192.168.0.158, port=41470, ttl=100
+Connection: netType=IN, addrType=IP6, addr=FF15::101, port=41472, ttl=0
+Connection: netType=IN, addrType=IP6, addr=FF15::102, port=41474, ttl=0
+Connection: netType=IN, addrType=IP6, addr=FF15::103, port=41476, ttl=0
+Encryption Key: method=CLEAR, data='base64clearkey'
+Direction: SENDRECV
+PacketTime: 20
+MaxPacketTime: 40
+Orientation: NONE
+DescriptionLanguage: ''
+Language: ''
+FrameRate: 0
+Quality: 0
+TcpSetupAttrib: ACTIVE
+TcpConnectionAttrib: NONE
+Crypto: tag=1, suite=F8_128_HMAC_SHA1_80
+        Key Param: method=INLINE, key=MTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5QUJjZGVm, srtpLifetime=1048576, srtpMkiValue=1, srtpMkiLength=4
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=1048576, srtpMkiValue=2, srtpMkiLength=4
+        kdr=0, encryptSrtp=1, encryptSrtcp=1, authSrtp=1, fecOrder=FEC_SRTP, wsh=0
+FingerPrint: type=NONE, ''
+KeyManagement: type=NONE, ''
+MaximumPacketRate: 0
+Label: ''
+IdentificationTag: ''
+IceUserFrag: ''
+IcePassword: ''
+IceSupported: 0
+PotentialMediaViewString: ''
+
+MediaLine:
+Type: video
+TransportProtocol: RTP/AVP
+SdpCodec: payloadId=140, mime=video/vp71, rate=144000, packetTime=20000, numCh=1, fmtParam=CIF=1 QCIF=2 SQCIF
+Title: ''
+Connection: netType=IN, addrType=IP4, addr=127.0.0.1, port=21234, ttl=0
+RTCP Connection: netType=IN, addrType=IP4, addr=123.123.123.124, port=127, ttl=60
+Bandwidth: type=RR, bandwidth=1
+Bandwidth: type=RS, bandwidth=0
+Encryption Key: method=BASE64, data='base64key'
+Direction: INACTIVE
+PacketTime: 0
+MaxPacketTime: 0
+Orientation: NONE
+DescriptionLanguage: ''
+Language: ''
+FrameRate: 0
+Quality: 0
+TcpSetupAttrib: NONE
+TcpConnectionAttrib: NONE
+Crypto: tag=1, suite=AES_CM_128_HMAC_SHA1_80
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=0, srtpMkiValue=2, srtpMkiLength=18
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=21, srtpMkiValue=3, srtpMkiLength=4
+        kdr=23, encryptSrtp=0, encryptSrtcp=1, authSrtp=1, fecOrder=SRTP_FEC, wsh=0
+Crypto: tag=2, suite=AES_CM_128_HMAC_SHA1_32
+        Key Param: method=INLINE, key=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, srtpLifetime=1048576, srtpMkiValue=0, srtpMkiLength=0
+        kdr=0, encryptSrtp=1, encryptSrtcp=1, authSrtp=1, fecOrder=FEC_SRTP, wsh=60
+        fecKeyMethod=INLINE, fecKey=QUJjZGVmMTIzNDU2Nzg5QUJDREUwMTIzNDU2Nzg5, fecLifetime=1048576, fecMkiValue=2, fecMkiLength=4
+FingerPrint: type=SHA-1, '0123456789'
+KeyManagement: type=MIKEY, 'thisissomebase64data'
+PreConditionCurrentStatus: type=QOS, status=E2E, direction=SENDRECV
+PreConditionCurrentStatus: type=QOS, status=LOCAL, direction=SEND
+PreConditionConfirmStatus: type=QOS, status=E2E, direction=NONE
+PreConditionConfirmStatus: type=QOS, status=REMOTE, direction=RECV
+PreConditionDesiredStatus: type=QOS, strength=MANDATORY, status=E2E, direction=SENDRECV
+PreConditionDesiredStatus: type=QOS, strength=OPTIONAL, status=LOCAL, direction=SEND
+MaximumPacketRate: 0
+Label: ''
+IdentificationTag: ''
+IceUserFrag: ''
+IcePassword: ''
+Remote Candidate: componentId=1, addr=192.168.0.1, port=5060
+Remote Candidate: componentId=2, addr=192.168.0.1, port=5061
+Remote Candidate: componentId=3, addr=192.168.0.2, port=5063
+IceSupported: 1
+SdpCandidate: foundation=foundation3, id=3, transport=UDP, priority=100002, addr=123.123.123.124, port=127, type=NONE, relatedAddr=, relatedPort=0, name=value, name2=value2, inUse=1
+SdpCandidate: foundation=foundation3, id=3, transport=UDP, priority=100002, addr=192.168.0.2, port=6668, type=NONE, relatedAddr=127.0.0.9, relatedPort=0, name=value, name2=value2, inUse=0
+SdpCandidate: foundation=foundation3, id=3, transport=UDP, priority=100002, addr=192.168.0.2, port=6668, type=RELAY, relatedAddr=, relatedPort=0, inUse=0
+SdpCandidate: foundation=foundation2, id=2, transport=UDP, priority=100001, addr=192.168.0.1, port=6667, type=NONE, relatedAddr=127.0.0.9, relatedPort=6668, name=value, name2=value2, inUse=0
+SdpCandidate: foundation=foundation1, id=1, transport=UDP, priority=100000, addr=127.0.0.1, port=21234, type=HOST, relatedAddr=127.0.0.8, relatedPort=6667, name=value, name2=value2, inUse=1
+PotentialMediaViewString: ''
+

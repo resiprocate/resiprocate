@@ -21,6 +21,7 @@
 #include "rutil/ParseBuffer.hxx"
 
 #include "Resolver.hxx"
+#include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
@@ -88,7 +89,7 @@ Resolver::Resolver(const Uri& uri) :
       Tuple tuple;
       if (inet_pton(AF_INET, mHost.c_str(), &tuple.ipv4.s_addr) <= 0)
       {
-         DebugLog( << "inet_pton failed to parse address: " << mHost << " " << strerror(errno));
+         DebugLog( << "inet_pton failed to parse address: " << mHost << " " << errortostringOS(errno));
          assert(0);
       }
       tuple.port = mPort;
@@ -129,7 +130,7 @@ Resolver::Resolver(const Data& host, int port, TransportType transport)
       Tuple tuple;
       if (inet_pton(AF_INET, mHost.c_str(), &tuple.ipv4.s_addr) <= 0)
       {
-         DebugLog( << "inet_pton failed to parse address: " << mHost << " " << strerror(errno));
+         DebugLog( << "inet_pton failed to parse address: " << mHost << " " << errortostringOS(errno));
          assert(0);
       }
       tuple.port = mPort;
@@ -231,7 +232,7 @@ Resolver::getHostName()
    char buffer[255];
    if (gethostname(buffer, sizeof(buffer)) < 0)
    {
-      InfoLog (<< "Failed gethostname() " << strerror(errno));
+      InfoLog (<< "Failed gethostname() " << errortostringOS(errno));
       return "localhost";
    }
    else

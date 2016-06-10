@@ -26,6 +26,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/WinCompat.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
@@ -143,10 +144,10 @@ DnsUtil::getLocalHostName()
 //       current hack (see the #define in .hxx) needs
 //       to be reworked.
             case WSANOTINITIALISED:
-               CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
+               CritLog( << "could not find local hostname because network not initialized:" << strerror(err) << " error message from Errdes.hxx file : " << errortostringOS(err));
                break;
             default:
-               CritLog( << "could not find local hostname:" << strerror(err) );
+               CritLog( << "could not find local hostname:" << strerror(err) << " error message from Errdes.hxx file : " << errortostringOS(err));
                break;
          }
          throw Exception("could not find local hostname",__FILE__,__LINE__);
@@ -206,7 +207,7 @@ DnsUtil::getLocalDomainName()
          if ( e != 0 )
          {
             int err = getErrno();
-            CritLog(<< "Couldn't find domainname: " << strerror(err));
+            CritLog(<< "Couldn't find domainname: " << strerror(err)  << " error message from Errdes.hxx file : " << errortostringOS(err));
             throw Exception(strerror(err), __FILE__,__LINE__);
          }
       }

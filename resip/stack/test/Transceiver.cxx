@@ -12,7 +12,7 @@
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Timer.hxx"
-
+#include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -116,7 +116,7 @@ Transceiver::receive(int waitMs)
          int e = errno;
          if ( err == -1 )
          {
-            InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+            InfoLog(<< "Error " << e << " " << errortostringOS(e) << " in select");
          }
          
          DebugLog(<<"Calling process in Transceiver::receive");

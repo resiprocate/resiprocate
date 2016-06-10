@@ -1,0 +1,356 @@
+DEBUG | 20160610-181701.207 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:1132 | BaseSecurity::BaseSecurity
+WARNING | 20160610-181701.208 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+DEBUG | 20160610-181701.208 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3080 | ECDH initialized
+WARNING | 20160610-181701.208 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+DEBUG | 20160610-181701.208 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3080 | ECDH initialized
+INFO | 20160610-181701.209 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | dns/AresDns.cxx:418 | DNS initialization: using c-ares v1.10.0
+INFO | 20160610-181701.209 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | dns/AresDns.cxx:427 | DNS initialization: found 1 name servers
+INFO | 20160610-181701.209 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | dns/AresDns.cxx:433 |  name server: 127.0.1.1
+DEBUG | 20160610-181701.209 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Compression.cxx:44 | COMPRESSION SUPPORT NOT COMPILED IN
+DEBUG | 20160610-181701.209 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Compression.cxx:47 | Compression configuration object created; algorithm = 0
+DEBUG | 20160610-181701.209 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:100 | No compression library available
+INFO | 20160610-181701.209 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:171 | local hostname does not contain a domain part udit
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:122 | Creating fd=10 V4/UDP
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:134 | Binding to 0.0.0.0
+INFO | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | UdpTransport.cxx:54 | Creating UDP transport host= port=17298 ipv4=1
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | UdpTransport.cxx:68 | No compression library available: Transport: [ V4 0.0.0.0:17298 UDP flowKey=10 ]
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: lo -> 127.0.0.1 flags=0x49
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:551 |   ignore because: interface is loopback
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: wlan0 -> 192.168.1.2 flags=0x1043
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:574 |   using this
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 127.0.0.1:17298
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 192.168.1.2:17298
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:222 | Adding transport: [ V4 0.0.0.0:17298 UDP transportKey=1 ]
+INFO | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:17298 UDP transportKey=1 ], key=1
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionBase.cxx:71 | ConnectionBase::ConnectionBase, who: [ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ] 0x2abc4c4fda00
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionBase.cxx:84 | No compression library available: 0x2abc4c4fda00
+INFO | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | Connection.cxx:45 | Connection::Connection: new connection created to who: [ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ], is server = 0
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionManager.cxx:35 | ConnectionManager::ConnectionManager() called 
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:122 | Creating fd=13 V4/TCP
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:134 | Binding to 0.0.0.0
+INFO | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TcpTransport.cxx:39 | Creating TCP transport host= port=17298 ipv4=1
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: lo -> 127.0.0.1 flags=0x49
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:551 |   ignore because: interface is loopback
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: wlan0 -> 192.168.1.2 flags=0x1043
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:574 |   using this
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 127.0.0.1:17298
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 192.168.1.2:17298
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:222 | Adding transport: [ V4 0.0.0.0:17298 TCP transportKey=2 ]
+INFO | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:17298 TCP transportKey=2 ], key=2
+DEBUG | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:1132 | BaseSecurity::BaseSecurity
+WARNING | 20160610-181701.210 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+DEBUG | 20160610-181701.211 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3080 | ECDH initialized
+WARNING | 20160610-181701.211 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+DEBUG | 20160610-181701.211 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:3080 | ECDH initialized
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | dns/AresDns.cxx:418 | DNS initialization: using c-ares v1.10.0
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | dns/AresDns.cxx:427 | DNS initialization: found 1 name servers
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | dns/AresDns.cxx:433 |  name server: 127.0.1.1
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Compression.cxx:44 | COMPRESSION SUPPORT NOT COMPILED IN
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Compression.cxx:47 | Compression configuration object created; algorithm = 0
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:100 | No compression library available
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:122 | Creating fd=21 V4/UDP
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:134 | Binding to 0.0.0.0
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | UdpTransport.cxx:54 | Creating UDP transport host= port=17299 ipv4=1
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | UdpTransport.cxx:68 | No compression library available: Transport: [ V4 0.0.0.0:17299 UDP flowKey=21 ]
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: lo -> 127.0.0.1 flags=0x49
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:551 |   ignore because: interface is loopback
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: wlan0 -> 192.168.1.2 flags=0x1043
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:574 |   using this
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 127.0.0.1:17299
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 192.168.1.2:17299
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:222 | Adding transport: [ V4 0.0.0.0:17299 UDP transportKey=1 ]
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:17299 UDP transportKey=1 ], key=1
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionBase.cxx:71 | ConnectionBase::ConnectionBase, who: [ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ] 0x2abc4c51c5d0
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionBase.cxx:84 | No compression library available: 0x2abc4c51c5d0
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | Connection.cxx:45 | Connection::Connection: new connection created to who: [ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ], is server = 0
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionManager.cxx:35 | ConnectionManager::ConnectionManager() called 
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:122 | Creating fd=24 V4/TCP
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:134 | Binding to 0.0.0.0
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TcpTransport.cxx:39 | Creating TCP transport host= port=17299 ipv4=1
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: lo -> 127.0.0.1 flags=0x49
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:551 |   ignore because: interface is loopback
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:541 | Considering: wlan0 -> 192.168.1.2 flags=0x1043
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsUtil.cxx:574 |   using this
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 127.0.0.1:17299
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:678 | Adding domain alias: 192.168.1.2:17299
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:222 | Adding transport: [ V4 0.0.0.0:17299 TCP transportKey=2 ]
+INFO | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:17299 TCP transportKey=2 ], key=2
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | BaseCreator.cxx:148 | BaseCreator::makeInitialRequest: 
+
+0x2abc4c51f710
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogSet.cxx:52 |  ************* Created DialogSet(UAC)  -- IplJTCC_HXIpsYLz0vZXzQ..-90b2f469*************
+DEBUG | 20160610-181701.212 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:990 | SEND: 
+
+MESSAGE sip:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/ ;branch=z9hG4bK-524287-1---f8db662b85d60675;rport
+Max-Forwards: 70
+Contact: <sip:>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=90b2f469
+Call-ID: IplJTCC_HXIpsYLz0vZXzQ..
+CSeq: 1 MESSAGE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogId.cxx:50 | DialogId::DialogId: IplJTCC_HXIpsYLz0vZXzQ..-90b2f469-
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1151 | Send: SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact= / 1 from(tu)
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:839 | SEND: SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact= / 1 from(tu)
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | BaseCreator.cxx:148 | BaseCreator::makeInitialRequest: 
+
+0x2abc4c523c30
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogSet.cxx:52 |  ************* Created DialogSet(UAC)  -- 5scGIES-6MfKDE3NO-OLYQ..-e5c92116*************
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:990 | SEND: 
+
+OPTIONS tel:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/ ;branch=z9hG4bK-524287-1---01e5de0e1bfb0e24;rport
+Max-Forwards: 70
+Contact: <sip:>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=e5c92116
+Call-ID: 5scGIES-6MfKDE3NO-OLYQ..
+CSeq: 1 OPTIONS
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogId.cxx:50 | DialogId::DialogId: 5scGIES-6MfKDE3NO-OLYQ..-e5c92116-
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1151 | Send: SipReq:  OPTIONS 127.0.0.1:17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact= / 1 from(tu)
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:839 | SEND: SipReq:  OPTIONS 127.0.0.1:17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact= / 1 from(tu)
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer F tid=f8db662b85d60675 ms=32000
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:557 | Looking up dns entries for sip:127.0.0.1:17299
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsResult.cxx:261 | DnsResult::lookup sip:127.0.0.1:17299
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer F tid=01e5de0e1bfb0e24 ms=32000
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:557 | Looking up dns entries for tel:127.0.0.1:17299
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsResult.cxx:261 | DnsResult::lookup tel:127.0.0.1:17299
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsResult.cxx:501 | Numeric result so return immediately: [ V4 127.0.0.1:17299 UDP targetDomain=127.0.0.1 ]
+DEBUG | 20160610-181701.213 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsResult.cxx:501 | Numeric result so return immediately: [ V4 127.0.0.1:17299 UDP targetDomain=127.0.0.1 ]
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer E1 tid=f8db662b85d60675 ms=500
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:936 | Found transport: [ V4 0.0.0.0:17298 UDP flowKey=10 transportKey=1 ]
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:122 | Creating fd=25 V4/UDP
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:872 | Looked up source for destination: [ V4 127.0.0.1:17299 UDP targetDomain=127.0.0.1 ] -> [ V4 127.0.0.1:0 UDP targetDomain=127.0.0.1 ] sent-by= sent-port=0
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:1289 | Transmitting to [ V4 127.0.0.1:17299 UDP targetDomain=127.0.0.1 transportKey=1 ] tlsDomain= via [ V4 127.0.0.1:17298 UDP targetDomain=127.0.0.1 ]
+
+MESSAGE sip:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---f8db662b85d60675;rport
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=90b2f469
+Call-ID: IplJTCC_HXIpsYLz0vZXzQ..
+CSeq: 1 MESSAGE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+sigcomp id=
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer E1 tid=01e5de0e1bfb0e24 ms=500
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:936 | Found transport: [ V4 0.0.0.0:17298 UDP flowKey=10 transportKey=1 ]
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:872 | Looked up source for destination: [ V4 127.0.0.1:17299 UDP targetDomain=127.0.0.1 ] -> [ V4 127.0.0.1:0 UDP targetDomain=127.0.0.1 ] sent-by= sent-port=0
+DEBUG | 20160610-181701.263 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:1289 | Transmitting to [ V4 127.0.0.1:17299 UDP targetDomain=127.0.0.1 transportKey=1 ] tlsDomain= via [ V4 127.0.0.1:17298 UDP targetDomain=127.0.0.1 ]
+
+OPTIONS tel:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---01e5de0e1bfb0e24;rport
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=e5c92116
+Call-ID: 5scGIES-6MfKDE3NO-OLYQ..
+CSeq: 1 OPTIONS
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+sigcomp id=
+DEBUG | 20160610-181701.264 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | Transport.cxx:392 | incoming from: [ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ]
+DEBUG | 20160610-181701.264 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | Transport.cxx:392 | incoming from: [ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ]
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TuSelector.cxx:189 | TuSelector::selectTransactionUser: Checking which TU message belongs to:
+
+MESSAGE sip:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---f8db662b85d60675;rport=17298
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=90b2f469
+Call-ID: IplJTCC_HXIpsYLz0vZXzQ..
+CSeq: 1 MESSAGE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionUser.cxx:83 | TransactionUser::isForMe: TU=DialogUsageManager, Checking rule... : SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact=127.0.0.1:17298 / 1 from(wire)
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionUser.cxx:86 | TransactionUser::isForMe: TU=DialogUsageManager, Match! : SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact=127.0.0.1:17298 / 1 from(wire)
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Helper.cxx:374 | Helper::makeResponse(SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact=127.0.0.1:17298 / 1 from(wire) code=100 reason=
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer Trying tid=f8db662b85d60675 ms=3500
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TuSelector.cxx:70 | Send to TU: DialogUsageManager size=0 
+
+MESSAGE sip:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---f8db662b85d60675;rport=17298
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=90b2f469
+Call-ID: IplJTCC_HXIpsYLz0vZXzQ..
+CSeq: 1 MESSAGE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TuSelector.cxx:189 | TuSelector::selectTransactionUser: Checking which TU message belongs to:
+
+OPTIONS tel:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---01e5de0e1bfb0e24;rport=17298
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=e5c92116
+Call-ID: 5scGIES-6MfKDE3NO-OLYQ..
+CSeq: 1 OPTIONS
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionUser.cxx:83 | TransactionUser::isForMe: TU=DialogUsageManager, Checking rule... : SipReq:  OPTIONS 127.0.0.1%3A17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact=127.0.0.1:17298 / 1 from(wire)
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionUser.cxx:86 | TransactionUser::isForMe: TU=DialogUsageManager, Match! : SipReq:  OPTIONS 127.0.0.1%3A17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact=127.0.0.1:17298 / 1 from(wire)
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Helper.cxx:374 | Helper::makeResponse(SipReq:  OPTIONS 127.0.0.1%3A17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact=127.0.0.1:17298 / 1 from(wire) code=100 reason=
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer Trying tid=01e5de0e1bfb0e24 ms=3500
+DEBUG | 20160610-181701.364 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TuSelector.cxx:70 | Send to TU: DialogUsageManager size=1 
+
+OPTIONS tel:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---01e5de0e1bfb0e24;rport=17298
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=e5c92116
+Call-ID: 5scGIES-6MfKDE3NO-OLYQ..
+CSeq: 1 OPTIONS
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1606 | Got: SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact=127.0.0.1:17298 / 1 from(wire)
+INFO | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1749 | Received an unsupported method: SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact=127.0.0.1:17298 / 1 from(wire)
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Helper.cxx:374 | Helper::makeResponse(SipReq:  MESSAGE 127.0.0.1:17299 tid=f8db662b85d60675 cseq=1 MESSAGE contact=127.0.0.1:17298 / 1 from(wire) code=405 reason=
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:822 | SEND: SipResp: 405 tid=f8db662b85d60675 cseq=1 MESSAGE / 1 from(tu)
+UAS: onInvalidMethod
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1626 | Failed RequestURI validation MESSAGE sip:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---f8db662b85d60675;rport=17298
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=90b2f469
+Call-ID: IplJTCC_HXIpsYLz0vZXzQ..
+CSeq: 1 MESSAGE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1606 | Got: SipReq:  OPTIONS 127.0.0.1%3A17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact=127.0.0.1:17298 / 1 from(wire)
+INFO | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1765 | Received an unsupported scheme: SipReq:  OPTIONS 127.0.0.1%3A17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact=127.0.0.1:17298 / 1 from(wire)
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP | 46988221876544 | Helper.cxx:374 | Helper::makeResponse(SipReq:  OPTIONS 127.0.0.1%3A17299 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS contact=127.0.0.1:17298 / 1 from(wire) code=416 reason=
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:822 | SEND: SipResp: 416 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS / 1 from(tu)
+UAS: onInvalidSchema
+DEBUG | 20160610-181701.415 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1626 | Failed RequestURI validation OPTIONS tel:127.0.0.1:17299 SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---01e5de0e1bfb0e24;rport=17298
+Max-Forwards: 70
+Contact: <sip:127.0.0.1:17298>
+To: <sip:127.0.0.1:17299>
+From: <sip:127.0.0.1:17298>;tag=e5c92116
+Call-ID: 5scGIES-6MfKDE3NO-OLYQ..
+CSeq: 1 OPTIONS
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.465 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer J tid=f8db662b85d60675 ms=32000
+DEBUG | 20160610-181701.465 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:1073 | Found transport: [ V4 0.0.0.0:17299 UDP flowKey=21 transportKey=1 ]
+DEBUG | 20160610-181701.465 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | InternalTransport.cxx:122 | Creating fd=26 V4/UDP
+DEBUG | 20160610-181701.465 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:872 | Looked up source for destination: [ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ] -> [ V4 127.0.0.1:0 UDP flowKey=21 transportKey=1 ] sent-by=127.0.0.1 sent-port=17298
+DEBUG | 20160610-181701.465 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:1289 | Transmitting to [ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ] tlsDomain= via [ V4 127.0.0.1:17299 UDP flowKey=21 transportKey=1 ]
+
+SIP/2.0 405 Method Not Allowed
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---f8db662b85d60675;rport=17298
+To: <sip:127.0.0.1:17299>;tag=73e72038
+From: <sip:127.0.0.1:17298>;tag=90b2f469
+Call-ID: IplJTCC_HXIpsYLz0vZXzQ..
+CSeq: 1 MESSAGE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+sigcomp id=
+DEBUG | 20160610-181701.465 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer J tid=01e5de0e1bfb0e24 ms=32000
+DEBUG | 20160610-181701.465 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:1073 | Found transport: [ V4 0.0.0.0:17299 UDP flowKey=21 transportKey=1 ]
+DEBUG | 20160610-181701.466 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:872 | Looked up source for destination: [ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ] -> [ V4 127.0.0.1:0 UDP flowKey=21 transportKey=1 ] sent-by=127.0.0.1 sent-port=17298
+DEBUG | 20160610-181701.466 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:1289 | Transmitting to [ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ] tlsDomain= via [ V4 127.0.0.1:17299 UDP flowKey=21 transportKey=1 ]
+
+SIP/2.0 416 Unsupported URI Scheme
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---01e5de0e1bfb0e24;rport=17298
+To: <sip:127.0.0.1:17299>;tag=837bd71d
+From: <sip:127.0.0.1:17298>;tag=e5c92116
+Call-ID: 5scGIES-6MfKDE3NO-OLYQ..
+CSeq: 1 OPTIONS
+Content-Length: 0
+
+sigcomp id=
+DEBUG | 20160610-181701.466 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | Transport.cxx:392 | incoming from: [ V4 127.0.0.1:17299 UDP flowKey=10 transportKey=1 ]
+DEBUG | 20160610-181701.466 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | Transport.cxx:392 | incoming from: [ V4 127.0.0.1:17299 UDP flowKey=10 transportKey=1 ]
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TuSelector.cxx:70 | Send to TU: DialogUsageManager size=0 
+
+SIP/2.0 405 Method Not Allowed
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---f8db662b85d60675;rport=17298
+To: <sip:127.0.0.1:17299>;tag=73e72038
+From: <sip:127.0.0.1:17298>;tag=90b2f469
+Call-ID: IplJTCC_HXIpsYLz0vZXzQ..
+CSeq: 1 MESSAGE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer K tid=f8db662b85d60675 ms=5000
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TuSelector.cxx:70 | Send to TU: DialogUsageManager size=1 
+
+SIP/2.0 416 Unsupported URI Scheme
+Via: SIP/2.0/UDP 127.0.0.1:17298;branch=z9hG4bK-524287-1---01e5de0e1bfb0e24;rport=17298
+To: <sip:127.0.0.1:17299>;tag=837bd71d
+From: <sip:127.0.0.1:17298>;tag=e5c92116
+Call-ID: 5scGIES-6MfKDE3NO-OLYQ..
+CSeq: 1 OPTIONS
+Content-Length: 0
+
+
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TimerQueue.cxx:50 | Adding timer: Timer K tid=01e5de0e1bfb0e24 ms=5000
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsResult.cxx:253 | Whitelisting 127.0.0.1(1): 127.0.0.1
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | DnsResult.cxx:253 | Whitelisting 127.0.0.1(1): 127.0.0.1
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DNS | 46988221876544 | dns/RRVip.cxx:128 | updating an existing vip: 127.0.0.1 with 127.0.0.1
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1606 | Got: SipResp: 405 tid=f8db662b85d60675 cseq=1 MESSAGE / 1 from(wire)
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:2156 | DialogUsageManager::processResponse: 
+
+SipResp: 405 tid=f8db662b85d60675 cseq=1 MESSAGE / 1 from(wire)
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogId.cxx:50 | DialogId::DialogId: IplJTCC_HXIpsYLz0vZXzQ..-90b2f469-73e72038
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:1606 | Got: SipResp: 416 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS / 1 from(wire)
+DEBUG | 20160610-181701.566 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:2156 | DialogUsageManager::processResponse: 
+
+SipResp: 416 tid=01e5de0e1bfb0e24 cseq=1 OPTIONS / 1 from(wire)
+DEBUG | 20160610-181701.567 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogId.cxx:50 | DialogId::DialogId: 5scGIES-6MfKDE3NO-OLYQ..-e5c92116-837bd71d
+DEBUG | 20160610-181701.567 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | ClientOutOfDialogReq.cxx:70 | ClientOutOfDialogReq::dispatch - handler not found for OPTIONS method response.
+DEBUG | 20160610-181701.567 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogSet.cxx:122 |  ********** DialogSet::~DialogSet: 5scGIES-6MfKDE3NO-OLYQ..-e5c92116*************
+DEBUG | 20160610-181701.813 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:158 | DialogUsageManager::mDialogSetMap has 1 DialogSets
+DEBUG | 20160610-181701.813 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogUsageManager.cxx:162 | DialgSetId:IplJTCC_HXIpsYLz0vZXzQ..-90b2f469
+DEBUG | 20160610-181701.813 | lt-testRequestValidationHandler | RESIP:DUM | 46988221876544 | DialogSet.cxx:122 |  ********** DialogSet::~DialogSet: IplJTCC_HXIpsYLz0vZXzQ..-90b2f469*************
+!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! 
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:223 | SipStack::~SipStack()
+WARNING | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionController.cxx:74 | On shutdown, there are Server TransactionStates remaining!
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionMap.cxx:18 | f8db662b85d60675 -> 0x2abc4c52aa90: tid=f8db662b85d60675 [ ServerNonInvite/Completed unreliable target=[ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ]]
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionMap.cxx:18 | 01e5de0e1bfb0e24 -> 0x2abc4c52a270: tid=01e5de0e1bfb0e24 [ ServerNonInvite/Completed unreliable target=[ V4 127.0.0.1:17298 UDP flowKey=21 transportKey=1 ]]
+INFO | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | UdpTransport.cxx:86 | Shutting down [ V4 0.0.0.0:17299 UDP flowKey=21 transportKey=1 ] tf=0 evt=1 stats: poll=4 txtry=2 txmsg=2 txfail=0 rxtry=2 rxmsg=2 rxka=0 rxtr=2
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TcpBaseTransport.cxx:58 | Shutting down [ V4 0.0.0.0:17299 TCP transportKey=2 ]
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionBase.cxx:115 | ConnectionBase::~ConnectionBase 0x2abc4c51c5d0
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:128 | Closing TransportSelector::mSocket[]
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:1198 | BaseSecurity::~BaseSecurity
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP | 46988221876544 | SipStack.cxx:223 | SipStack::~SipStack()
+WARNING | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionController.cxx:69 | On shutdown, there are Client TransactionStates remaining!
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionMap.cxx:18 | f8db662b85d60675 -> 0x2abc4c528130: tid=f8db662b85d60675 [ ClientNonInvite/Completed unreliable target=[ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ]]
+DEBUG | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSACTION | 46988221876544 | TransactionMap.cxx:18 | 01e5de0e1bfb0e24 -> 0x2abc4c529170: tid=01e5de0e1bfb0e24 [ ClientNonInvite/Completed unreliable target=[ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ]]
+INFO | 20160610-181701.814 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | UdpTransport.cxx:86 | Shutting down [ V4 0.0.0.0:17298 UDP flowKey=10 transportKey=1 ] tf=0 evt=1 stats: poll=4 txtry=2 txmsg=2 txfail=0 rxtry=2 rxmsg=2 rxka=0 rxtr=2
+DEBUG | 20160610-181701.815 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TcpBaseTransport.cxx:58 | Shutting down [ V4 0.0.0.0:17298 TCP transportKey=2 ]
+DEBUG | 20160610-181701.815 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | ConnectionBase.cxx:115 | ConnectionBase::~ConnectionBase 0x2abc4c4fda00
+DEBUG | 20160610-181701.815 | lt-testRequestValidationHandler | RESIP:TRANSPORT | 46988221876544 | TransportSelector.cxx:128 | Closing TransportSelector::mSocket[]
+DEBUG | 20160610-181701.815 | lt-testRequestValidationHandler | RESIP | 46988221876544 | ssl/Security.cxx:1198 | BaseSecurity::~BaseSecurity
