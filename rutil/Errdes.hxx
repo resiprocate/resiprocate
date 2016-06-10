@@ -1,4 +1,3 @@
-
 /* 
 This header file contains functions that will return error message associated with error number/code from following functions :
 
@@ -15,6 +14,8 @@ This header file contains functions that will return error message associated wi
  */
 
 /*----------------END-------------------END-------------------END-------------------END---------------------END-------------------END----------*/
+
+#pragma GCC diagnostic ignored "-Wwrite-strings"
 
 #ifndef ERRDES_HXX
 #define ERRDES_HXX
