@@ -41,7 +41,7 @@ namespace tr {
 
 class MyConversationManager;
 class MyUserAgent;
-  
+
 class Connection : public Tp::BaseConnection
 {
   Q_OBJECT

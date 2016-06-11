@@ -144,7 +144,7 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    const QString& account = parameters.value(QLatin1String("account")).toString();
    uint _self = ensureHandle(account);
    setSelfContact(_self, account);
-   
+
    setConnectCallback(Tp::memFun(this, &Connection::doConnect));
    setInspectHandlesCallback(Tp::memFun(this, &Connection::inspectHandles));
    setCreateChannelCallback(Tp::memFun(this, &Connection::createChannel));
