@@ -56,7 +56,7 @@ const bool DataHelper::isCharHex[256] =
 //must be lowercase for MD5
 static const char hexmap[] = "0123456789abcdef";
 
-static const char inversehexmap[] = {
+static const signed char inversehexmap[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,     // 0 - 
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,

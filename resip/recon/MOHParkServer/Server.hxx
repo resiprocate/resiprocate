@@ -56,8 +56,11 @@ public:
    void shutdown();
 
    recon::UserAgent* getMyUserAgent() { return mMyUserAgent; }
-   MOHManager& getMOHManager() { return mMOHManager; }
-   ParkManager& getParkManager() { return mParkManager; }
+
+   // Legacy API's that assume one set of settings for MOH and Park - return first defined MOH and ParkSettings
+   MOHManager& getMOHManager() { assert(mMOHManagerMap.size() != 0);  return *mMOHManagerMap.begin()->second; }
+   ParkManager& getParkManager() { assert(mParkManagerMap.size() != 0);  return *mParkManagerMap.begin()->second; }
+
    void getActiveCallsInfo(CallInfoList& callInfos);
 
    // Timer handler
@@ -90,8 +93,13 @@ private:
    bool mIsV6Avail;
    recon::UserAgent* mMyUserAgent;
    resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
-   MOHManager mMOHManager;
-   ParkManager mParkManager;
+
+   typedef std::map<unsigned long, MOHManager*> MOHManagerMap;
+   MOHManagerMap mMOHManagerMap;
+
+   typedef std::map<unsigned long, ParkManager*> ParkManagerMap;
+   ParkManagerMap mParkManagerMap;
+
    WebAdmin* mWebAdmin;
    WebAdminThread* mWebAdminThread;
 };
@@ -102,7 +110,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2010-2016, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

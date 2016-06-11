@@ -541,7 +541,6 @@
     <ClInclude Include="libGeoIP\GeoIP.h" />
     <ClInclude Include="libGeoIP\GeoIP_internal.h" />
     <ClInclude Include="libGeoIP\GeoIPCity.h" />
-    <ClInclude Include="libGeoIP\global.h" />
     <ClInclude Include="libGeoIP\pread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

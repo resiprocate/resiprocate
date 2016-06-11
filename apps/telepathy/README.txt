@@ -73,7 +73,7 @@ and everything will be configured.  Then run
 To run the connection manager from the source tree, start it
 from the command line:
 
-  $ apps/telepathy/resiprocate-telepathy
+  $ apps/telepathy/telepathy-resiprocate
 
 All reSIProcate, sipXtapi and Qt logging appears on stdout and stderr
 
@@ -86,7 +86,26 @@ Important note about the audio device
 As this code currently depends on the media stack from sipXapi, it is
 using the /dev/dsp audio device from OSS.
 
-To use this device, you need to
+If OSS support isn't available in your system or if the /dev/dsp device
+node is used by another process, you may see errors like:
+
+ERR |  | telepathy-resiprocate | USERAGENT |
+| SipXHelper.cxx:47 | SIPxua:MpMedia:
+MprFromInputDevice::doProcessFrame - Couldn't get device sample rate
+from input device manager!  Device - "Unknown device" deviceId: 1
+
+If you are using the PulseAudio sound system (it is installed by
+default on many Linux systems), you can use the padsp utility
+to simulate OSS device support:
+
+  $ padsp ./telepathy-resiprocate
+
+On Debian and Ubuntu systems, the padsp utility is in the package
+called pulseaudio-utils, you can install it with:
+
+  $ sudo apt-get install pulseaudio-utils
+
+If you don't have PulseAudio:
 a) make sure you have loaded the kernel module snd_pcm_oss, you
    may need to install a package such as
       apt-get install oss-compat
