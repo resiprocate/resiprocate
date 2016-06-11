@@ -62,6 +62,8 @@
 
 #include <sys/types.h>
 
+#include "resip/stack/UnknownParameterType.hxx"
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -1141,11 +1143,20 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                                           Tuple::inet_ntop(source) );
                   contact.uri().port() = transport->port();
 
+		  DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << " transport = " << *transport << std::endl);
+		  
                   if (transport->transport() != UDP && !contact.uri().exists(p_gr))
                   {
                      contact.uri().param(p_transport) = Tuple::toDataLower(transport->transport());
+		     DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << " p_transport = " << contact.uri().param(p_transport) << std::endl);
                   }
 
+		  contact.uri().param(UnknownParameterType("registering_acc")) = Data("ws_sip5060_net");
+		  
+		  DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << " contact uri = " << contact.uri() << std::endl);
+		  DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << " target = " << target << std::endl);
+
+		  
                   // Add comp=sigcomp to contact URI
                   // Also, If no +sip.instance on contact HEADER,
                   // add sigcomp-id="<urn>" to contact URI.
@@ -1170,9 +1181,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                      {
                         contact.uri().param(p_transport) = Tuple::toDataLower(target.getType());
                      }
+		     DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << "inside else p_transport = " << contact.uri().param(p_transport) << std::endl);
                      contact.uri().remove(p_addTransport);
                   }
                }
+	       DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << contact << std::endl);
             }
          }
 

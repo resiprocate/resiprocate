@@ -27,7 +27,7 @@ Via::Via()
 {
    // insert a branch in all Vias (default constructor)
    this->param(p_branch);
-   this->param(p_rport); // add the rport parameter by default as per rfc 3581
+   // this->param(p_rport); // add the rport parameter by default as per rfc 3581
 }
 
 Via::Via(const HeaderFieldValue& hfv, 
