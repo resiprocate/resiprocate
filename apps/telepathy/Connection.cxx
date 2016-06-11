@@ -30,12 +30,13 @@
 #include "Common.hxx"
 #include "SipCallChannel.hxx"
 
-
 using namespace recon;
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+
+static const QString c_fileWithContacts = QLatin1String("data.txt");
 
 tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString &cmName, const QString &protocolName, const QVariantMap &parameters)
    : Tp::BaseConnection(dbusConnection, cmName, protocolName, parameters),
@@ -93,25 +94,24 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    mSimplePresenceInterface->setSetPresenceCallback(Tp::memFun(this, &Connection::setPresence));
    plugInterface(Tp::AbstractConnectionInterfacePtr::dynamicCast(mSimplePresenceInterface));
 
-    /* Connection.Interface.ContactList */
-    mContactListInterface = Tp::BaseConnectionContactListInterface::create();
-    mContactListInterface->setContactListPersists(true);
-    mContactListInterface->setCanChangeContactList(true);
-    mContactListInterface->setDownloadAtConnection(true);
-    mContactListInterface->setGetContactListAttributesCallback(Tp::memFun(this, &Connection::getContactListAttributes));
-    mContactListInterface->setRequestSubscriptionCallback(Tp::memFun(this, &Connection::requestSubscription));
-    // mContactListInterface->setAuthorizePublicationCallback(Tp::memFun(this, &Connection::authorizePublication));
-    mContactListInterface->setRemoveContactsCallback(Tp::memFun(this, &Connection::removeContacts));
-    //mContactListInterface->setUnsubscribeCallback(Tp::memFun(this, &Connection::unsubscribe));
-    //mContactListInterface->setUnpublishCallback(Tp::memFun(this, &Connection::unpublish));
-    plugInterface(Tp::AbstractConnectionInterfacePtr::dynamicCast(mContactListInterface));
+   /* Connection.Interface.ContactList */
+   mContactListInterface = Tp::BaseConnectionContactListInterface::create();
+   mContactListInterface->setContactListPersists(true);
+   mContactListInterface->setCanChangeContactList(true);
+   mContactListInterface->setDownloadAtConnection(true);
+   mContactListInterface->setGetContactListAttributesCallback(Tp::memFun(this, &Connection::getContactListAttributes));
+   mContactListInterface->setRequestSubscriptionCallback(Tp::memFun(this, &Connection::requestSubscription));
+   // mContactListInterface->setAuthorizePublicationCallback(Tp::memFun(this, &Connection::authorizePublication));
+   mContactListInterface->setRemoveContactsCallback(Tp::memFun(this, &Connection::removeContacts));
+   //mContactListInterface->setUnsubscribeCallback(Tp::memFun(this, &Connection::unsubscribe));
+   //mContactListInterface->setUnpublishCallback(Tp::memFun(this, &Connection::unpublish));
+   plugInterface(Tp::AbstractConnectionInterfacePtr::dynamicCast(mContactListInterface));
 
-    /* Connection.Interface.Aliasing */
-    mAliasingInterface = Tp::BaseConnectionAliasingInterface::create();
-    mAliasingInterface->setGetAliasesCallback(Tp::memFun(this, &Connection::getAliases));
-    mAliasingInterface->setSetAliasesCallback(Tp::memFun(this, &Connection::setAliases));
-    plugInterface(Tp::AbstractConnectionInterfacePtr::dynamicCast(mAliasingInterface));
-
+   /* Connection.Interface.Aliasing */
+   mAliasingInterface = Tp::BaseConnectionAliasingInterface::create();
+   mAliasingInterface->setGetAliasesCallback(Tp::memFun(this, &Connection::getAliases));
+   mAliasingInterface->setSetAliasesCallback(Tp::memFun(this, &Connection::setAliases));
+   plugInterface(Tp::AbstractConnectionInterfacePtr::dynamicCast(mAliasingInterface));
     
    /* Connection.Interface.Requests */
    mRequestsInterface = Tp::BaseConnectionRequestsInterface::create(this);
@@ -144,7 +144,6 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    const QString& account = parameters.value(QLatin1String("account")).toString();
    uint _self = ensureHandle(account);
    setSelfContact(_self, account);
-
    
    setConnectCallback(Tp::memFun(this, &Connection::doConnect));
    setInspectHandlesCallback(Tp::memFun(this, &Connection::inspectHandles));
@@ -152,70 +151,84 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    setRequestHandlesCallback(Tp::memFun(this, &Connection::requestHandles));
    connect(this, SIGNAL(disconnected()), SLOT(doDisconnect()));
 }
-
   
 void
 tr::Connection::getContactsFromFile(Tp::DBusError *error)
 {
-  QFile file(fileWithContacts);
-
-  if(file.open(QFile::ReadOnly)){
-    QTextStream in(&file);
-    QString line = in.readLine();
-    Tp::AliasMap aliases;
-    while(!line.isNull()){
-      uint handle = ensureHandle(line.split(" ").at(0));
-      aliases[handle] = line.split(" ").at(1);
-      line = in.readLine();
-    }
-    setAliases(aliases, error);
-  } else{
-    file.open(QFile::WriteOnly);
-  }
-  
-  mContactListInterface->setContactListState(Tp::ContactListStateSuccess);
+   if (error->isValid()) {
+      return;
+   }
+   
+   QFile file(c_fileWithContacts);
+   
+   if(file.open(QFile::ReadOnly)){
+      QTextStream in(&file);
+      QString line = in.readLine();
+      Tp::AliasMap aliases;
+      while(!line.isNull()){
+         uint handle = ensureHandle(line.split(" ").at(0));
+         aliases[handle] = line.split(" ").at(1);
+         line = in.readLine();
+      }
+      setAliases(aliases, error);
+   } else{
+      file.open(QFile::WriteOnly);
+   }
+   
+   mContactListInterface->setContactListState(Tp::ContactListStateSuccess);
 }
 
 void
 tr::Connection::setContactsInFile()
 {
-  QFile file(fileWithContacts);
-
-  if(file.open(QIODevice::ReadWrite | QIODevice::Truncate)){
-    QTextStream stream(&file);
-    QMap<uint, QString>::iterator it;
-    for(it = mHandles.begin(); it != mHandles.end(); it++){
-      if(it.key() == selfHandle()) continue;
-      
-      stream << it.value() << " " << mAliases[it.key()] << endl;
-    }
-    file.close();
-  } else{
-    ErrLog(<<"couldn't write contacts to file" << endl);
-  }
+   QFile file(c_fileWithContacts);
+   
+   if(file.open(QIODevice::ReadWrite | QIODevice::Truncate)){
+      QTextStream stream(&file);
+      QMap<uint, QString>::iterator it;
+      for(it = mHandles.begin(); it != mHandles.end(); it++){
+         if(it.key() == selfHandle()) continue;
+         
+         stream << it.value() << " " << mAliases[it.key()] << endl;
+      }
+      file.close();
+   } else{
+      ErrLog(<<"couldn't write contacts to file" << endl);
+   }
 }
 
 Tp::AliasMap
 tr::Connection::getAliases(const Tp::UIntList& handles, Tp::DBusError *error)
 {
-  qDebug() << Q_FUNC_INFO << handles;
-
-  Tp::AliasMap aliases;
-  foreach (uint handle, handles) {
-    aliases[handle] = mAliases[handle];
+   if (error->isValid()) {
+      return Tp::AliasMap();
    }
 
-  return aliases;
+   qDebug() << Q_FUNC_INFO << handles;
+
+   Tp::AliasMap aliases;
+   Q_FOREACH(uint handle, handles) {
+      if (mAliases.find(handle) == mAliases.end()) {
+         error->set(TP_QT_ERROR_INVALID_HANDLE, QLatin1String("Invalid handle(s)"));
+      }
+      aliases[handle] = mAliases[handle];
+   }
+
+   return aliases;
 }
 
 void
 tr::Connection::setAliases(const Tp::AliasMap &aliases, Tp::DBusError *error)
 {
-  qDebug() << Q_FUNC_INFO << aliases;
+   if (error->isValid()) {
+      return;
+   }
+
+   qDebug() << Q_FUNC_INFO << aliases;
   
-  for(Tp::AliasMap::const_iterator it = aliases.begin(); it != aliases.end(); it++){
-    mAliases[it.key()] = it.value();
-  }
+   for(Tp::AliasMap::const_iterator it = aliases.begin(); it != aliases.end(); it++){
+      mAliases[it.key()] = it.value();
+   }
 
 }
 
@@ -223,81 +236,78 @@ void
 tr::Connection::deleteContacts(const QStringList& contacts)
 {
 
-  Tp::ContactSubscriptionMap changes;
-  Tp::HandleIdentifierMap identifiers;
-  Tp::HandleIdentifierMap removals;
-  Q_FOREACH(const QString &contact, contacts) {
-    uint id = mIdentifiers[contact];
-    removals[id] = contact;
-    
-    mIdentifiers.remove(contact);
-    mHandles.remove(id);
-  }
-  mContactListInterface->contactsChangedWithID(changes, identifiers, removals);
+   Tp::ContactSubscriptionMap changes;
+   Tp::HandleIdentifierMap identifiers;
+   Tp::HandleIdentifierMap removals;
+   Q_FOREACH(const QString &contact, contacts) {
+      uint id = mIdentifiers[contact];
+      removals[id] = contact;
+   }
+   mContactListInterface->contactsChangedWithID(changes, identifiers, removals);
   
-  setContactsInFile();
+   setContactsInFile();
 }
 
 
 Tp::ContactAttributesMap
 tr::Connection::getContactListAttributes(const QStringList &interfaces, bool hold, Tp::DBusError *error)
 {
-  Tp::UIntList handles = mHandles.keys();
-  handles.removeOne(selfHandle());
+   Tp::UIntList handles = mHandles.keys();
+   handles.removeOne(selfHandle());
 
-  StackLog(<<"getContactListAttributes()");
-  qDebug() << handles;
+   StackLog(<<"getContactListAttributes()");
+   qDebug() << handles;
   
-  return getContactAttributes(handles, interfaces, error);
+   return getContactAttributes(handles, interfaces, error);
 }
 
 void
 tr::Connection::requestSubscription(const Tp::UIntList &handles, const QString &message, Tp::DBusError *error)
 {
 
-  QStringList contacts = inspectHandles(Tp::HandleTypeContact, handles, error);
+   QStringList contacts = inspectHandles(Tp::HandleTypeContact, handles, error);
   
-  if (error->isValid()) {
-    return;
-  }
+   if (error->isValid()) {
+      return;
+   }
   
-  if(contacts.isEmpty()){
-    error->set(TP_QT_ERROR_INVALID_HANDLE, QLatin1String("Invalid handle(s)"));
-  }
+   if (contacts.isEmpty()) {
+      error->set(TP_QT_ERROR_INVALID_HANDLE, QLatin1String("Invalid handle(s)"));
+   }
 
-  Tp::ContactSubscriptionMap changes;
-  Tp::HandleIdentifierMap identifiers;
-  Tp::HandleIdentifierMap removals;
-  Q_FOREACH(const QString &contact, contacts) {
-    uint handle = ensureHandle(contact);
+   Tp::ContactSubscriptionMap changes;
+   Tp::HandleIdentifierMap identifiers;
+   Tp::HandleIdentifierMap removals;
+   Q_FOREACH(const QString &contact, contacts) {
+      uint handle = ensureHandle(contact);
     
-    Tp::ContactSubscriptions change;
-    change.publish = Tp::SubscriptionStateYes;
-    change.publishRequest = QString();
-    change.subscribe = Tp::SubscriptionStateUnknown;
+      Tp::ContactSubscriptions change;
+      change.publish = Tp::SubscriptionStateYes;
+      change.publishRequest = QString();
+      change.subscribe = Tp::SubscriptionStateUnknown;
       
-    changes[handle] = change;
-    identifiers[handle] = contact;
-  }
-  mContactListInterface->contactsChangedWithID(changes, identifiers, removals);
+      changes[handle] = change;
+      identifiers[handle] = contact;
+   }
+   mContactListInterface->contactsChangedWithID(changes, identifiers, removals);
     
-  setContactsInFile();
+   setContactsInFile();
 }
 
 void
 tr::Connection::removeContacts(const Tp::UIntList &handles, Tp::DBusError *error)
 {
-  QStringList contacts = inspectHandles(Tp::HandleTypeContact, handles, error);
+   QStringList contacts = inspectHandles(Tp::HandleTypeContact, handles, error);
 
-  if(error->isValid()){
-    return;
-  }
+   if (error->isValid()) {
+      return;
+   }
 
-  if(contacts.isEmpty()){
-    error->set(TP_QT_ERROR_INVALID_HANDLE, QLatin1String("Invalid handle(s)"));
-  }
+   if (contacts.isEmpty()) {
+      error->set(TP_QT_ERROR_INVALID_HANDLE, QLatin1String("Invalid handle(s)"));
+   }
   
-  deleteContacts(contacts);
+   deleteContacts(contacts);
 }
 
 
@@ -314,7 +324,6 @@ tr::Connection::doConnect(Tp::DBusError *error)
   
    mContactListInterface->setContactListState(Tp::ContactListStateWaiting);
    
-   fileWithContacts = QString::fromStdString("data.txt");
    getContactsFromFile(error);
 }
 
@@ -338,45 +347,45 @@ Tp::SimpleStatusSpecMap
 tr::Connection::getSimpleStatusSpecMap()
 {
 
-    Tp::SimpleStatusSpec spAvailable;
-    spAvailable.type = Tp::ConnectionPresenceTypeAvailable;
-    spAvailable.maySetOnSelf = true;
-    spAvailable.canHaveMessage = true;
+   Tp::SimpleStatusSpec spAvailable;
+   spAvailable.type = Tp::ConnectionPresenceTypeAvailable;
+   spAvailable.maySetOnSelf = true;
+   spAvailable.canHaveMessage = true;
+   
+   Tp::SimpleStatusSpec spBusy;
+   spBusy.type = Tp::ConnectionPresenceTypeBusy;
+   spBusy.maySetOnSelf = true;
+   spBusy.canHaveMessage = true;
+   
+   Tp::SimpleStatusSpec spAway;
+   spAway.type = Tp::ConnectionPresenceTypeAway;
+   spAway.maySetOnSelf = true;
+   spAway.canHaveMessage = true;
+   
+   Tp::SimpleStatusSpec spOffline;
+   spOffline.type = Tp::ConnectionPresenceTypeOffline;
+   spOffline.maySetOnSelf = true;
+   spOffline.canHaveMessage = true;
+   
+   
+   Tp::SimpleStatusSpec spHidden;
+   spHidden.type = Tp::ConnectionPresenceTypeHidden;
+   spHidden.maySetOnSelf = true;
+   spHidden.canHaveMessage = true;
+   
+   Tp::SimpleStatusSpec spUnknown;
+   spUnknown.type = Tp::ConnectionPresenceTypeUnknown;
+   spUnknown.maySetOnSelf = false;
+   spUnknown.canHaveMessage = true;
 
-    Tp::SimpleStatusSpec spBusy;
-    spBusy.type = Tp::ConnectionPresenceTypeBusy;
-    spBusy.maySetOnSelf = true;
-    spBusy.canHaveMessage = true;
-
-    Tp::SimpleStatusSpec spAway;
-    spAway.type = Tp::ConnectionPresenceTypeAway;
-    spAway.maySetOnSelf = true;
-    spAway.canHaveMessage = true;
-    
-    Tp::SimpleStatusSpec spOffline;
-    spOffline.type = Tp::ConnectionPresenceTypeOffline;
-    spOffline.maySetOnSelf = true;
-    spOffline.canHaveMessage = true;
-
-
-    Tp::SimpleStatusSpec spHidden;
-    spHidden.type = Tp::ConnectionPresenceTypeHidden;
-    spHidden.maySetOnSelf = true;
-    spHidden.canHaveMessage = true;
-
-    Tp::SimpleStatusSpec spUnknown;
-    spUnknown.type = Tp::ConnectionPresenceTypeUnknown;
-    spUnknown.maySetOnSelf = false;
-    spUnknown.canHaveMessage = true;
-
-    Tp::SimpleStatusSpecMap specs;
-    specs.insert(QLatin1String("available"), spAvailable);
-    specs.insert(QLatin1String("dnd"), spBusy);
-    specs.insert(QLatin1String("away"), spAway);
-    specs.insert(QLatin1String("offline"), spOffline);
-    specs.insert(QLatin1String("hidden"), spHidden);
-    specs.insert(QLatin1String("unknown"), spUnknown);
-    return specs;
+   Tp::SimpleStatusSpecMap specs;
+   specs.insert(QLatin1String("available"), spAvailable);
+   specs.insert(QLatin1String("dnd"), spBusy);
+   specs.insert(QLatin1String("away"), spAway);
+   specs.insert(QLatin1String("offline"), spOffline);
+   specs.insert(QLatin1String("hidden"), spHidden);
+   specs.insert(QLatin1String("unknown"), spUnknown);
+   return specs;
 }
 
 uint
@@ -384,42 +393,42 @@ tr::Connection::setPresence(const QString &status, const QString &message, Tp::D
 {
   // TODO: find out why message is always getting here empty
 
-  StackLog(<<"setPresence()");
+   StackLog(<<"setPresence()");
   
-  mSelfPresence.type = statusMap[status].type;
-  mSelfPresence.status = status;
-  if(statusMap[status].canHaveMessage){
-    mSelfPresence.statusMessage = message;
-  }
+   mSelfPresence.type = statusMap[status].type;
+   mSelfPresence.status = status;
+   if (statusMap[status].canHaveMessage) {
+      mSelfPresence.statusMessage = message;
+   }
 
-  qDebug() << "status = " << mSelfPresence.status << " type = " << mSelfPresence.type << " message = " << message;
+   qDebug() << "status = " << mSelfPresence.status << " type = " << mSelfPresence.type << " message = " << message;
 
-  return selfHandle();
+   return selfHandle();
 }
 
 Tp::SimpleContactPresences
 tr::Connection::getPresences(const Tp::UIntList &handles)
 {
-  StackLog(<<"getPresences()");
-
-  Tp::SimpleContactPresences presences;
-  foreach (uint handle, handles) {
-    presences[handle] = getPresence(handle);
-  }
+   StackLog(<<"getPresences()");
+   
+   Tp::SimpleContactPresences presences;
+   Q_FOREACH(uint handle, handles) {
+      presences[handle] = getPresence(handle);
+   }
   
-  return presences;
+   return presences;
 }
 
 Tp::SimplePresence
 tr::Connection::getPresence(uint handle)
 {
-  StackLog(<<"getPresence()");
-  if (!mPresences.contains(handle)) {
-    return Tp::SimplePresence();
-  }
-  qDebug() << "presence = " << mPresences.value(handle).status;
+   StackLog(<<"getPresence()");
+   if (!mPresences.contains(handle)) {
+      return Tp::SimplePresence();
+   }
+   qDebug() << "presence = " << mPresences.value(handle).status;
   
-  return mPresences.value(handle);
+   return mPresences.value(handle);
 }
 
 void
@@ -486,7 +495,7 @@ tr::Connection::inspectHandles(uint handleType, const Tp::UIntList &handles, Tp:
 
    QStringList result;
 
-   foreach (uint handle, handles) {
+   Q_FOREACH(uint handle, handles) {
       if(!mHandles.contains(handle)) {
          return QStringList();
       }
@@ -509,9 +518,7 @@ tr::Connection::requestHandles(uint handleType, const QStringList &identifiers, 
    }
 
    Q_FOREACH(const QString &identifier,  identifiers) {
-     ensureHandle(identifier);
-     if(mIdentifiers.find(identifier) != mIdentifiers.end())
-       result.append(mIdentifiers[identifier]);
+      result.append(ensureHandle(identifier));
    }
 
    return result;
@@ -605,11 +612,11 @@ tr::Connection::getContactAttributes(const Tp::UIntList &handles, const QStringL
 	qDebug() << "handle = " << handle << " inspectedHandle = " << inspectedHandle;
 
         if (ifaces.contains(TP_QT_IFACE_CONNECTION_INTERFACE_SIMPLE_PRESENCE)) {
-	  attributes[TP_QT_IFACE_CONNECTION_INTERFACE_SIMPLE_PRESENCE+"/presence"] = QVariant::fromValue(getPresence(handle));
+	    attributes[TP_QT_IFACE_CONNECTION_INTERFACE_SIMPLE_PRESENCE+"/presence"] = QVariant::fromValue(getPresence(handle));
         }
 
         if (ifaces.contains(TP_QT_IFACE_CONNECTION_INTERFACE_ALIASING)) {
-	  attributes[TP_QT_IFACE_CONNECTION_INTERFACE_ALIASING + QLatin1String("/alias")] = QVariant::fromValue(mAliases[handle]);
+            attributes[TP_QT_IFACE_CONNECTION_INTERFACE_ALIASING + QLatin1String("/alias")] = QVariant::fromValue(mAliases[handle]);
         }
 
         attributesMap[handle] = attributes;
