@@ -73,8 +73,8 @@ private:
    Tp::BaseChannelPtr createChannel(const QVariantMap &request, Tp::DBusError *error);
    Tp::ContactAttributesMap getContactAttributes(const Tp::UIntList &handles, const QStringList &ifaces, Tp::DBusError *error);
    uint ensureHandle(const QString& identifier);
-					      
-					      
+
+
 private slots:
    void doConnect(Tp::DBusError *error);
    void onConnected();
