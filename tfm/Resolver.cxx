@@ -145,7 +145,7 @@ Resolver::lookupARecords()
 #else
 
 #ifdef WIN32
-	result = gethostbyname(mHost.c_str());
+  result = gethostbyname(mHost.c_str());
     int ret = (result==0);
 #elif defined(__NetBSD__)
     //!dcm! -- not threadsafe

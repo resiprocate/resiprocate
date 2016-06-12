@@ -2618,7 +2618,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
       resip_assert( entry );
       
-      ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
+      ASN1_STRING*   s = X509_NAME_ENTRY_get_data(entry);
       resip_assert( s );
       
       int t = M_ASN1_STRING_type(s);
@@ -3077,8 +3077,8 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       {
          if (SSL_CTX_set_tmp_ecdh(ctx, ecdh))
          {
-	    DebugLog(<<"ECDH initialized");
-	 }
+       DebugLog(<<"ECDH initialized");
+    }
          else
          {
             WarningLog(<<"unable to initialize ECDH: SSL_CTX_set_tmp_ecdh failed");

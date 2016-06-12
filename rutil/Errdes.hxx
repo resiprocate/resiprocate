@@ -265,8 +265,4 @@ static inline char* errortostringX509(int errnumX509)
 
 /*----------------END-------------------END-------------------END-------------------END---------------------END-------------------END----------*/
 
-<<<<<<< HEAD
 #endif
-=======
-#endif
->>>>>>> 45e1716... Create Errdes.hxx

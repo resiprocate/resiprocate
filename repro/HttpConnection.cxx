@@ -32,7 +32,7 @@ HttpConnection::HttpConnection( HttpBase& base, Socket pSock ):
    mSock(pSock),
    mParsedRequest(false)
 {
-	resip_assert( mSock > 0 );
+   resip_assert( mSock > 0 );
 }
 
 

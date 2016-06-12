@@ -21,7 +21,6 @@
 #include "rutil/ParseBuffer.hxx"
 
 #include "Resolver.hxx"
-
 #include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
@@ -157,8 +156,8 @@ Resolver::lookupARecords()
 #else
 
 #if defined( WIN32 ) || defined( __APPLE__ ) || defined (__SUNPRO_CC) || defined(__FreeBSD__)
-	assert(0); // !cj! 
-	int ret = -1;
+   assert(0); // !cj! 
+   int ret = -1;
 #else
         int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
 #endif

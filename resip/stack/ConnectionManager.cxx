@@ -394,7 +394,7 @@ ConnectionManager::moveToFlowTimerLru(Connection *connection)
 void
 ConnectionManager::process(FdSet& fdset)
 {
-   resip_assert( mPollGrp==NULL );	// owner shouldn't call this if polling
+   resip_assert( mPollGrp==NULL );  // owner shouldn't call this if polling
 
    // process the write list
    for (ConnectionWriteList::iterator writeIter = mWriteHead->begin();

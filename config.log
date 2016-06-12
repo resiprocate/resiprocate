@@ -680,11 +680,7 @@ configure: failed program was:
 configure:15893: result: no
 configure:15970: checking for library containing ares_init
 configure:16001: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
-<<<<<<< HEAD
-/tmp/cc7bPBJn.o: In function `main':
-=======
-/tmp/ccqItd6q.o: In function `main':
->>>>>>> 1441b64... .plo files
+/tmp/cchs57ZJ.o: In function `main':
 /home/udit/gsoc/resiprocate/conftest.c:44: undefined reference to `ares_init'
 collect2: error: ld returned 1 exit status
 configure:16001: $? = 1
