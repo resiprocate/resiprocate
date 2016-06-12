@@ -4,11 +4,11 @@
 #include "rutil/Logger.hxx"
 
 #include "rutil/DataStream.hxx"
+#include "rutil/Errdes.hxx"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
 
 using namespace resip;
 using namespace std;
@@ -65,7 +65,7 @@ main(int argc, char *argv[])
     // send the test message to the stack
     int err = sendto(fd, message, strlen(message), 0, (struct sockaddr*) & sa, sizeof(sa));
 
-    DebugLog(<<"errno="<<errno);
+    DebugLog(<<"errno = "<< errno <<" error message : " << errortostringOS(errno) );
     
     assert (err == strlen(message));
 

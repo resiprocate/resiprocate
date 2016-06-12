@@ -6,10 +6,11 @@
 #include "rutil/compat.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Errdes.hxx"
 
 #ifndef WIN32
 #include <unistd.h>
-#include <sys/resource.h>	// for getrlimit()
+#include <sys/resource.h> // for getrlimit()
 #endif
 
 using namespace resip;
@@ -21,21 +22,21 @@ bool
 resip::makeSocketNonBlocking(Socket fd)
 {
 #if defined(WIN32)
-	unsigned long noBlock = 1;
-	int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
-	if ( errNoBlock != 0 )
-	{
-		return false;
-	}
+  unsigned long noBlock = 1;
+  int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
+  if ( errNoBlock != 0 )
+  {
+    return false;
+  }
 #else
-	int flags  = fcntl( fd, F_GETFL, 0);
-	int errNoBlock = fcntl(fd, F_SETFL, flags | O_NONBLOCK );
-	if ( errNoBlock != 0 ) // !cj! I may have messed up this line
-	{
-		return false;
-	}
+  int flags  = fcntl( fd, F_GETFL, 0);
+  int errNoBlock = fcntl(fd, F_SETFL, flags | O_NONBLOCK );
+  if ( errNoBlock != 0 ) // !cj! I may have messed up this line
+  {
+    return false;
+  }
 #endif
-	return true;
+  return true;
 }
 
 
@@ -43,21 +44,21 @@ bool
 resip::makeSocketBlocking(Socket fd)
 {
 #if defined(WIN32)
-	unsigned long noBlock = 0;
-	int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
-	if ( errNoBlock != 0 )
-	{
-		return false;
-	}
+  unsigned long noBlock = 0;
+  int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
+  if ( errNoBlock != 0 )
+  {
+    return false;
+  }
 #else
-	int flags  = fcntl( fd, F_GETFL, 0);
-	int errNoBlock = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK );
-	if ( errNoBlock != 0 ) // !cj! I may have messed up this line
-	{
-		return false;
-	}
+  int flags  = fcntl( fd, F_GETFL, 0);
+  int errNoBlock = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK );
+  if ( errNoBlock != 0 ) // !cj! I may have messed up this line
+  {
+    return false;
+  }
 #endif
-	return true;
+  return true;
 }
 
 
@@ -70,7 +71,7 @@ resip::configureConnectedSocket(Socket fd)
    if ( ::setsockopt ( fd, SOL_SOCKET, SO_NOSIGPIPE, (const char*)&on, sizeof(on)) )
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoption SO_NOSIGPIPE: " << errortostringOS(e));
       return false;
    }
 #endif
@@ -83,10 +84,10 @@ void
 resip::initNetwork()
 {
 #if defined(WIN32)
-	bool doneInit=false;
-	if( !doneInit )
-	{
-		doneInit=true;
+  bool doneInit=false;
+  if( !doneInit )
+  {
+    doneInit=true;
 
    WORD wVersionRequested = MAKEWORD( 2, 2 );
    WSADATA wsaData;
@@ -118,7 +119,7 @@ resip::initNetwork()
       resip_assert(0); // if this is failing, try a different version that 2.2, 1.0 or later will likely work
       exit(1);
    }
-	}
+  }
 #endif
 }
 
@@ -137,7 +138,7 @@ resip::closeSocket( Socket fd )
    int ret = ::close(fd);
    if (ret < 0)
    {
-      InfoLog (<< "Failed to shutdown socket " << fd << " : " << strerror(errno));
+      InfoLog (<< "Failed to shutdown socket " << fd << " : " << errortostringOS(errno));
    }
    return ret;
 }
@@ -167,36 +168,36 @@ resip::increaseLimitFds(unsigned int targetFds)
     struct rlimit lim;
 
     if (getrlimit(RLIMIT_NOFILE, &lim) < 0)
-	{
-	   CritLog(<<"getrlimit(NOFILE) failed: " << strerror(errno));
-	   return -1;
+  {
+     CritLog(<<"getrlimit(NOFILE) failed: " << errortostringOS(errno));
+     return -1;
     }
     if (lim.rlim_cur==RLIM_INFINITY || targetFds < lim.rlim_cur)
-	{
+  {
         return targetFds;
-	}
+  }
 
     int euid = geteuid();
     if (lim.rlim_max==RLIM_INFINITY || targetFds < lim.rlim_max)
-	{
-    	lim.rlim_cur=targetFds;
+  {
+      lim.rlim_cur=targetFds;
     }
-	else
-	{
-	   if (euid!=0)
-	   {
-	      CritLog(<<"Attempting to increase number of fds when not root. This probably wont work");
-	   }
+  else
+  {
+     if (euid!=0)
+     {
+        CritLog(<<"Attempting to increase number of fds when not root. This probably wont work");
+     }
        lim.rlim_cur=targetFds;
        lim.rlim_max=targetFds;
     }
 
     if (setrlimit(RLIMIT_NOFILE, &lim) < 0)
-	{
-	   CritLog(<<"setrlimit(NOFILE)=(c="<<lim.rlim_cur<<",m="<<lim.rlim_max
-	      <<",uid="<<euid<<") failed: " << strerror(errno));
-	   /* There is intermediate: could raise cur to max */
-	   return -1;
+  {
+     CritLog(<<"setrlimit(NOFILE)=(c="<<lim.rlim_cur<<",m="<<lim.rlim_max
+        <<",uid="<<euid<<") failed: " << errortostringOS(errno));
+     /* There is intermediate: could raise cur to max */
+     return -1;
     }
     return targetFds;
 #endif

@@ -19,6 +19,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "rutil/Logger.hxx"
 #include "tfm/Resolver.hxx"
+#include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
@@ -144,7 +145,7 @@ Resolver::lookupARecords()
 #else
 
 #ifdef WIN32
-	result = gethostbyname(mHost.c_str());
+  result = gethostbyname(mHost.c_str());
     int ret = (result==0);
 #elif defined(__NetBSD__)
     //!dcm! -- not threadsafe
@@ -308,7 +309,7 @@ Resolver::getHostName()
    char buffer[255];
    if (gethostname(buffer, sizeof(buffer)) < 0)
    {
-      InfoLog (<< "Failed gethostname() " << strerror(errno));
+      InfoLog (<< "Failed gethostname() " << errortostringOS(errno));
       return "localhost";
    }
    else

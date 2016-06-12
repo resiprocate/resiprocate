@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 
 #include "rutil/ResipAssert.h"
+#include "rutil/Errdes.hxx"
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -125,7 +127,7 @@ FileSystem::Directory::iterator::is_directory() const
    StackLog(<<"calling stat() for " << mDirent->d_name);
    if(stat(mFullFilename.c_str(), &s) < 0)
    {
-      ErrLog(<<"Error calling stat() for " << mFullFilename.c_str() << ": " << strerror(errno));
+      ErrLog(<<"Error calling stat() for " << mFullFilename.c_str() << ": " << strerror(errno) << " message from Errdes.hxx file : " << errortostringOS(errno) );
       throw Exception("stat() failed", __FILE__, __LINE__);
    }
    return S_ISDIR(s.st_mode);

@@ -15,6 +15,7 @@
 #include "AppSubsystem.hxx"
 #include "MediaRelay.hxx"
 #include <rutil/WinLeakCheck.hxx>
+#include "rutil/Errdes.hxx"
 
 using namespace gateway;
 using namespace resip;
@@ -31,7 +32,7 @@ using namespace std;
 typedef struct 
 {
    unsigned short versionExtPayloadTypeAndMarker;
-   unsigned short sequenceNumber;	
+   unsigned short sequenceNumber;   
    unsigned int timestamp;
    unsigned int ssrc;
 } RtpHeader;
@@ -171,7 +172,7 @@ MediaRelay::createRelaySocket(resip::Tuple& tuple)
    if ( fd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "MediaRelay::createRelaySocket - Failed to create socket: " << strerror(e));
+      ErrLog (<< "MediaRelay::createRelaySocket - Failed to create socket: " << strerror(e) << " error message from Errdes.hxx file: " << errortostringOS(e) );
       return INVALID_SOCKET;
    }
 
@@ -188,7 +189,7 @@ MediaRelay::createRelaySocket(resip::Tuple& tuple)
       }
       else
       {
-         ErrLog (<< "MediaRelay::createRelaySocket - Could not bind to " << tuple << ", error=" << e);
+         ErrLog (<< "MediaRelay::createRelaySocket - Could not bind to " << tuple << ", error = " << e << " error message from Errdes.hxx file: " << errortostringOS(e) );
       }
       return INVALID_SOCKET;
    }
@@ -200,7 +201,7 @@ MediaRelay::createRelaySocket(resip::Tuple& tuple)
       if(::getsockname(fd, &tuple.getMutableSockaddr(), &len) == SOCKET_ERROR)
       {
          int e = getErrno();
-         ErrLog (<<"MediaRelay::createRelaySocket - getsockname failed, error=" << e);
+         ErrLog (<<"MediaRelay::createRelaySocket - getsockname failed, error=" << e << " error message from Errdes.hxx file: " << errortostringOS(e) );
          return INVALID_SOCKET;
       }
    }
@@ -518,7 +519,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
          int err = getErrno();
          if ( err != EWOULDBLOCK  )
          {
-            ErrLog (<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", Error calling recvfrom: " << err);
+            ErrLog (<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", Error calling recvfrom: " << err << " error message: " << errortostringOS(err) );
          }
          buffer.reset();
       }
