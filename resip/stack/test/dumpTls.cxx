@@ -31,6 +31,7 @@
 #include "resip/stack/ShutdownMessage.hxx"
 
 #include "resip/stack/ssl/Security.hxx"
+#include "rutil/Errdes.hxx"
 
 using namespace resip;
 using namespace std;
@@ -89,11 +90,11 @@ main(int argc, char* argv[])
      // promise to not modify the strings. Thus shouldn't use static string
      // initializers above!
      int ret = execvp("ssldump",const_cast<char**>(args));
-     ErrLog(<< "Can't execvp: return is " << ret <<" errno is " << errno);
+     ErrLog(<< "Can't execvp: return is " << ret << " errno is " << errno << " err message is " << errortostringOS(errno) );
      exit(-1);
    }
 
-   DebugLog(<< "ssldump's pid is " << dumpPid);
+   DebugLog(<< "ssldump's pid is " << dumpPid << " err message is " << errortostringOS(dumpPid) );
  
    IpVersion version = V4;
    Data bindInterface;
@@ -197,7 +198,13 @@ main(int argc, char* argv[])
    {
      DebugLog( << "Trying to kill process id " << dumpPid);
      int ret = kill(dumpPid, SIGINT); // ssldump catches INT and does an fflush
+
+     if(ret == 0)                              //http://linux.die.net/man/3/kill
      DebugLog( << "Kill returned: " << ret);
+     else
+     {
+        DebugLog( << "Kill failed " << ret << " error number is " << errno <<" error message is " << errortostringOS(errno) )
+     }
    }
 
 

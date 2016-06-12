@@ -1,0 +1,133 @@
+Skipping registration (no arguments).
+WARNING | 20160610-181654.042 | lt-BasicCall | RESIP | 47525758359872 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+WARNING | 20160610-181654.043 | lt-BasicCall | RESIP | 47525758359872 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+INFO | 20160610-181654.044 | lt-BasicCall | RESIP:DNS | 47525758359872 | dns/AresDns.cxx:418 | DNS initialization: using c-ares v1.10.0
+INFO | 20160610-181654.044 | lt-BasicCall | RESIP:DNS | 47525758359872 | dns/AresDns.cxx:427 | DNS initialization: found 1 name servers
+INFO | 20160610-181654.044 | lt-BasicCall | RESIP:DNS | 47525758359872 | dns/AresDns.cxx:433 |  name server: 127.0.1.1
+INFO | 20160610-181654.045 | lt-BasicCall | RESIP:DNS | 47525758359872 | DnsUtil.cxx:171 | local hostname does not contain a domain part udit
+INFO | 20160610-181654.045 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | UdpTransport.cxx:54 | Creating UDP transport host= port=12005 ipv4=1
+INFO | 20160610-181654.045 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:12005 UDP transportKey=1 ], key=1
+INFO | 20160610-181654.045 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | Connection.cxx:45 | Connection::Connection: new connection created to who: [ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ], is server = 0
+INFO | 20160610-181654.045 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | TcpTransport.cxx:39 | Creating TCP transport host= port=12005 ipv4=1
+INFO | 20160610-181654.045 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:12005 TCP transportKey=2 ], key=2
+WARNING | 20160610-181654.046 | lt-BasicCall | RESIP | 47525758359872 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+WARNING | 20160610-181654.046 | lt-BasicCall | RESIP | 47525758359872 | ssl/Security.cxx:3023 | unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:DNS | 47525758359872 | dns/AresDns.cxx:418 | DNS initialization: using c-ares v1.10.0
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:DNS | 47525758359872 | dns/AresDns.cxx:427 | DNS initialization: found 1 name servers
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:DNS | 47525758359872 | dns/AresDns.cxx:433 |  name server: 127.0.1.1
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | UdpTransport.cxx:54 | Creating UDP transport host= port=12010 ipv4=1
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:12010 UDP transportKey=1 ], key=1
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | Connection.cxx:45 | Connection::Connection: new connection created to who: [ V4 0.0.0.0:0 UNKNOWN_TRANSPORT ], is server = 0
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | TcpTransport.cxx:39 | Creating TCP transport host= port=12010 ipv4=1
+INFO | 20160610-181654.047 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | TransportSelector.cxx:294 | TransportSelector::addTransport:  added transport for tuple=[ V4 0.0.0.0:12010 TCP transportKey=2 ], key=2
+UAC: Sending Options Request to UAS.
+UAC(OPTIONS): testAppDialogSet: created.
+UAC: Sending Invite Request to UAS.
+UAC(INVITE): testAppDialogSet: created.
+UAS(OPTIONS): testAppDialogSet: created.
+UAS(OPTIONS): testAppDialogSet: UAS UserProfile requested for msg: SipReq:  OPTIONS UAS@127.0.0.1:12010 tid=f927366487479f61 cseq=1 OPTIONS contact=UAC@127.0.0.1:12005 / 1 from(wire)
+UAS: ServerOutOfDialogReq-onReceivedRequest - SipReq:  OPTIONS UAS@127.0.0.1:12010 tid=f927366487479f61 cseq=1 OPTIONS contact=UAC@127.0.0.1:12005 / 1 from(wire)
+UAS: Sending 200 response to OPTIONS.
+UAS(INVITE): testAppDialogSet: created.
+UAS(INVITE): testAppDialogSet: UAS UserProfile requested for msg: SipReq:  INVITE UAS@127.0.0.1:12010 tid=d2e1d30935525749 cseq=1 INVITE contact=UAC@127.0.0.1:12005 / 1 from(wire)
+UAS(INVITE): testAppDialog: created.
+INFO | 20160610-181654.351 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition UAS_Start -> UAS_Offer
+UAS: ServerInviteSession-onNewSession - SipReq:  INVITE UAS@127.0.0.1:12010 tid=d2e1d30935525749 cseq=1 INVITE contact=UAC@127.0.0.1:12005 / 1 from(wire)
+UAS: Sending 180 response.
+INFO | 20160610-181654.352 | lt-BasicCall | RESIP:DUM | 47525758359872 | ServerInviteSession.cxx:140 | UAS_Offer: provisional(180)
+INFO | 20160610-181654.352 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition UAS_Offer -> UAS_EarlyOffer
+UAS: InviteSession-onOffer(SDP)
+UAS: Sending 200 response with SDP answer.
+INFO | 20160610-181654.352 | lt-BasicCall | RESIP:DUM | 47525758359872 | ServerInviteSession.cxx:396 | UAS_EarlyOffer: provideAnswer
+INFO | 20160610-181654.352 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition UAS_EarlyOffer -> UAS_EarlyProvidedAnswer
+INFO | 20160610-181654.352 | lt-BasicCall | RESIP:DUM | 47525758359872 | ServerInviteSession.cxx:658 | UAS_EarlyProvidedAnswer: accept(200)
+INFO | 20160610-181654.352 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition UAS_EarlyProvidedAnswer -> UAS_Accepted
+UAS: InviteSession-onConnected - SipResp: 200 tid=d2e1d30935525749 cseq=1 INVITE contact=UAS / 1 from(tu)
+INFO | 20160610-181654.352 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:1065 | info - queuing NIT:SipReq:  INFO UAC@127.0.0.1:12005 tid=d173506c965b4405 cseq=0 INFO contact=UAS / 0 from(tu)
+UAS(OPTIONS): testAppDialogSet: destroyed.
+UAC: ClientOutOfDialogReq-onSuccess - SipResp: 200 tid=f927366487479f61 cseq=1 OPTIONS contact=127.0.0.1:12010 / 1 from(wire)
+UAC(OPTIONS): testAppDialogSet: destroyed.
+UAC(INVITE): testAppDialog: created.
+INFO | 20160610-181654.454 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition UAC_Start -> UAC_Early
+UAC: ClientInviteSession-onNewSession - SipResp: 180 tid=d2e1d30935525749 cseq=1 INVITE contact=UAS@127.0.0.1:12010 / 1 from(wire)
+INFO | 20160610-181654.454 | lt-BasicCall | RESIP:DUM | 47525758359872 | ClientInviteSession.cxx:359 | UAC_Early: startStaleCallTimer
+UAC: ClientInviteSession-onProvisional - SipResp: 180 tid=d2e1d30935525749 cseq=1 INVITE contact=UAS@127.0.0.1:12010 / 1 from(wire)
+INFO | 20160610-181654.454 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition UAC_Early -> InviteSession::Connected
+INFO | 20160610-181654.455 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:3091 | Sending SipReq:  ACK UAS@127.0.0.1:12010 tid=41c6db567e809f7a cseq=1 ACK contact=UAC / 1 from(tu)
+UAC: InviteSession-onAnswer(SDP)
+UAC: ClientInviteSession-onConnected - SipResp: 200 tid=d2e1d30935525749 cseq=1 INVITE contact=UAS@127.0.0.1:12010 / 1 from(wire)
+Connected now - requestingOffer from UAS
+INFO | 20160610-181654.455 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::Connected -> InviteSession::SentReinviteNoOffer
+INFO | 20160610-181654.455 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2395 | InviteSession::SentReinviteNoOffer: startStaleReInviteTimer
+INFO | 20160610-181654.455 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:401 | Sending SipReq:  INVITE UAS@127.0.0.1:12010 tid=79dc534f3aee113b cseq=2 INVITE contact=UAC / 2 from(tu)
+INFO | 20160610-181654.455 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:1109 | Trying to send MESSAGE: 0x2b3973ff2a60
+INFO | 20160610-181654.455 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:1109 | Trying to send MESSAGE: 0x2b3974017690
+INFO | 20160610-181654.455 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:1118 | message - queuing NIT:SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=879a240f17391650 cseq=0 MESSAGE contact=UAC / 0 from(tu)
+INFO | 20160610-181654.506 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  INFO UAC@127.0.0.1:12005 tid=7abba96cfbfdfc4a cseq=2 INFO contact=UAS@127.0.0.1:12010 / 2 from(wire)
+INFO | 20160610-181654.506 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2184 | Received SipReq:  INFO UAC@127.0.0.1:12005 tid=7abba96cfbfdfc4a cseq=2 INFO contact=UAS@127.0.0.1:12010 / 2 from(wire)
+UAC: InviteSession-onInfo - SipReq:  INFO UAC@127.0.0.1:12005 tid=7abba96cfbfdfc4a cseq=2 INFO contact=UAS@127.0.0.1:12010 / 2 from(wire)
+INFO | 20160610-181654.607 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  ACK UAS@127.0.0.1:12010 tid=41c6db567e809f7a cseq=1 ACK contact=UAC@127.0.0.1:12005 / 1 from(wire)
+INFO | 20160610-181654.607 | lt-BasicCall | RESIP:DUM | 47525758359872 | ServerInviteSession.cxx:1037 | dispatchAccepted: SipReq:  ACK UAS@127.0.0.1:12010 tid=41c6db567e809f7a cseq=1 ACK contact=UAC@127.0.0.1:12005 / 1 from(wire)
+INFO | 20160610-181654.607 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition UAS_Accepted -> InviteSession::Connected
+INFO | 20160610-181654.607 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  INVITE UAS@127.0.0.1:12010 tid=05c83e5c92c33a2a cseq=2 INVITE contact=UAC@127.0.0.1:12005 / 2 from(wire)
+INFO | 20160610-181654.607 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::Connected -> InviteSession::ReceivedReinviteNoOffer
+UAS: InviteSession-onOfferRequired - SipReq:  INVITE UAS@127.0.0.1:12010 tid=05c83e5c92c33a2a cseq=2 INVITE contact=UAC@127.0.0.1:12005 / 2 from(wire)
+INFO | 20160610-181654.608 | lt-BasicCall | RESIP:DUM | 47525758359872 | ServerInviteSession.cxx:273 | InviteSession::ReceivedReinviteNoOffer: provideOffer
+INFO | 20160610-181654.608 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::ReceivedReinviteNoOffer -> InviteSession::ReceivedReinviteSentOffer
+INFO | 20160610-181654.608 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:460 | Sending SipResp: 200 tid=05c83e5c92c33a2a cseq=2 INVITE contact=UAS / 2 from(tu)
+INFO | 20160610-181654.658 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=9b1b2d6b3bb4f95e cseq=3 MESSAGE contact=UAC@127.0.0.1:12005 / 3 from(wire)
+INFO | 20160610-181654.658 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2330 | Received SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=9b1b2d6b3bb4f95e cseq=3 MESSAGE contact=UAC@127.0.0.1:12005 / 3 from(wire)
+UAS: InviteSession-onMessage - SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=9b1b2d6b3bb4f95e cseq=3 MESSAGE contact=UAC@127.0.0.1:12005 / 3 from(wire)
+UAS: InviteSession-onInfoSuccess - SipResp: 200 tid=7abba96cfbfdfc4a cseq=2 INFO contact=UAC@127.0.0.1:12005 / 2 from(wire)
+INFO | 20160610-181654.659 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:901 | checkNITQueue - sending queued NIT:SipReq:  INFO UAC@127.0.0.1:12005 tid=d173506c965b4405 cseq=3 INFO contact=UAS / 3 from(tu)
+INFO | 20160610-181654.659 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::SentReinviteNoOffer -> InviteSession::SentReinviteAnswered
+UAC: InviteSession-onOffer(SDP)
+INFO | 20160610-181654.659 | lt-BasicCall | RESIP:DUM | 47525758359872 | ClientInviteSession.cxx:131 | InviteSession::SentReinviteAnswered: provideAnswer
+INFO | 20160610-181654.659 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::SentReinviteAnswered -> InviteSession::Connected
+INFO | 20160610-181654.660 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:3091 | Sending SipReq:  ACK UAS@127.0.0.1:12010 tid=b8e6bf646a9e6e4e cseq=2 ACK contact=UAC / 2 from(tu)
+UAC: InviteSession-onMessageSuccess - SipResp: 200 tid=9b1b2d6b3bb4f95e cseq=3 MESSAGE / 3 from(wire)
+INFO | 20160610-181654.687 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:901 | checkNITQueue - sending queued NIT:SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=879a240f17391650 cseq=4 MESSAGE contact=UAC / 4 from(tu)
+INFO | 20160610-181654.738 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  INFO UAC@127.0.0.1:12005 tid=0e96cd68bcec7b58 cseq=3 INFO contact=UAS@127.0.0.1:12010 / 3 from(wire)
+INFO | 20160610-181654.738 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2184 | Received SipReq:  INFO UAC@127.0.0.1:12005 tid=0e96cd68bcec7b58 cseq=3 INFO contact=UAS@127.0.0.1:12010 / 3 from(wire)
+UAC: InviteSession-onInfo - SipReq:  INFO UAC@127.0.0.1:12005 tid=0e96cd68bcec7b58 cseq=3 INFO contact=UAS@127.0.0.1:12010 / 3 from(wire)
+INFO | 20160610-181654.789 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  ACK UAS@127.0.0.1:12010 tid=b8e6bf646a9e6e4e cseq=2 ACK contact=UAC@127.0.0.1:12005 / 2 from(wire)
+INFO | 20160610-181654.789 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::ReceivedReinviteSentOffer -> InviteSession::Connected
+UAS: InviteSession-onAnswer(SDP)
+INFO | 20160610-181654.839 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=0df4e2600f236a22 cseq=4 MESSAGE contact=UAC@127.0.0.1:12005 / 4 from(wire)
+INFO | 20160610-181654.839 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2330 | Received SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=0df4e2600f236a22 cseq=4 MESSAGE contact=UAC@127.0.0.1:12005 / 4 from(wire)
+UAS: InviteSession-onMessage - SipReq:  MESSAGE UAS@127.0.0.1:12010 tid=0df4e2600f236a22 cseq=4 MESSAGE contact=UAC@127.0.0.1:12005 / 4 from(wire)
+UAS: InviteSession-onInfoSuccess - SipResp: 200 tid=0e96cd68bcec7b58 cseq=3 INFO contact=UAC@127.0.0.1:12005 / 3 from(wire)
+UAC: InviteSession-onMessageSuccess - SipResp: 200 tid=0df4e2600f236a22 cseq=4 MESSAGE / 4 from(wire)
+UAS: Sending BYE.
+INFO | 20160610-181700.103 | lt-BasicCall | RESIP:DUM | 47525758359872 | ServerInviteSession.cxx:525 | InviteSession::Connected: end
+INFO | 20160610-181700.104 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:3114 | <sip:UAS@127.0.0.1:12010>;tag=3a371e1f Sending BYE 
+INFO | 20160610-181700.104 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::Connected -> InviteSession::Terminated
+UAS: InviteSession-onTerminated - 
+INFO | 20160610-181700.355 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:2024 | Handling in-dialog request: SipReq:  BYE UAC@127.0.0.1:12005 tid=9ed50e29d220b400 cseq=4 BYE contact=UAS@127.0.0.1:12010 / 4 from(wire)
+INFO | 20160610-181700.355 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2144 | Received SipReq:  BYE UAC@127.0.0.1:12005 tid=9ed50e29d220b400 cseq=4 BYE contact=UAS@127.0.0.1:12010 / 4 from(wire)
+INFO | 20160610-181700.355 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:2747 | Transition InviteSession::Connected -> InviteSession::Terminated
+UAC: InviteSession-onTerminated - SipReq:  BYE UAC@127.0.0.1:12005 tid=9ed50e29d220b400 cseq=4 BYE contact=UAS@127.0.0.1:12010 / 4 from(wire)
+UAC(INVITE): testAppDialog: destroyed.
+UAC(INVITE): testAppDialogSet: destroyed.
+INFO | 20160610-181700.406 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:270 | shutdown: dialogSets=1
+INFO | 20160610-181700.406 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:270 | shutdown: dialogSets=0
+INFO | 20160610-181700.406 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:255 | DialogUsageManager::onAllHandlesDestroyed: removing TU
+INFO | 20160610-181700.406 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TuSelector.cxx:48 | TransactionUserMessage::RequestShutdown TU: DialogUsageManager size=0
+INFO | 20160610-181700.406 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TuSelector.cxx:48 | TransactionUserMessage::RequestShutdown TU: DialogUsageManager size=0
+INFO | 20160610-181700.406 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TuSelector.cxx:52 | TransactionUserMessage::RemoveTransactionUser TU: DialogUsageManager size=0
+INFO | 20160610-181700.457 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:1349 | TU unregistered 
+UAC: onDumCanBeDeleted.
+INFO | 20160610-181700.457 | lt-BasicCall | RESIP:DUM | 47525758359872 | InviteSession.cxx:1998 | InviteSession::dispatchTerminated SipResp: 200 tid=9ed50e29d220b400 cseq=4 BYE contact=UAC@127.0.0.1:12005 / 4 from(wire)
+UAS(INVITE): testAppDialog: destroyed.
+UAS(INVITE): testAppDialogSet: destroyed.
+INFO | 20160610-181700.457 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:255 | DialogUsageManager::onAllHandlesDestroyed: removing TU
+INFO | 20160610-181700.457 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TuSelector.cxx:52 | TransactionUserMessage::RemoveTransactionUser TU: DialogUsageManager size=0
+INFO | 20160610-181700.507 | lt-BasicCall | RESIP:DUM | 47525758359872 | DialogUsageManager.cxx:1349 | TU unregistered 
+UAS: onDumCanBeDeleted.
+!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! 
+WARNING | 20160610-181700.507 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TransactionController.cxx:69 | On shutdown, there are Client TransactionStates remaining!
+WARNING | 20160610-181700.508 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TransactionController.cxx:74 | On shutdown, there are Server TransactionStates remaining!
+INFO | 20160610-181700.508 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | UdpTransport.cxx:86 | Shutting down [ V4 0.0.0.0:12010 UDP flowKey=21 transportKey=1 ] tf=0 evt=1 stats: poll=20 txtry=10 txmsg=10 txfail=0 rxtry=10 rxmsg=10 rxka=0 rxtr=10
+WARNING | 20160610-181700.508 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TransactionController.cxx:69 | On shutdown, there are Client TransactionStates remaining!
+WARNING | 20160610-181700.508 | lt-BasicCall | RESIP:TRANSACTION | 47525758359872 | TransactionController.cxx:74 | On shutdown, there are Server TransactionStates remaining!
+INFO | 20160610-181700.508 | lt-BasicCall | RESIP:TRANSPORT | 47525758359872 | UdpTransport.cxx:86 | Shutting down [ V4 0.0.0.0:12005 UDP flowKey=10 transportKey=1 ] tf=0 evt=1 stats: poll=20 txtry=10 txmsg=10 txfail=0 rxtry=10 rxmsg=10 rxka=0 rxtr=10

@@ -29,6 +29,7 @@
 #include "rutil/WinLeakCheck.hxx"
 
 #include "rutil/ssl/SHA1Stream.hxx"
+#include "rutil/Errdes.hxx"
 
 #if !defined(WIN32)
 #include <sys/types.h>
@@ -115,7 +116,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
    {
-      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
+      ErrLog(<< "Error when verifying peer's chain of certificates: " << errortostringX509(pInStore->error) << cBuf2 );
       DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
    }
  
@@ -242,7 +243,7 @@ Security::preload()
       if(stat(fileName.c_str(), &s) < 0)
       {
          ErrLog(<<"Error calling stat() for " << fileName.c_str()
-                << ": " << strerror(errno));
+                << ": " << errortostringOS(errno));
       }
       else
       {
@@ -2617,7 +2618,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
       resip_assert( entry );
       
-      ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
+      ASN1_STRING*   s = X509_NAME_ENTRY_get_data(entry);
       resip_assert( s );
       
       int t = M_ASN1_STRING_type(s);
@@ -3076,8 +3077,8 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       {
          if (SSL_CTX_set_tmp_ecdh(ctx, ecdh))
          {
-	    DebugLog(<<"ECDH initialized");
-	 }
+       DebugLog(<<"ECDH initialized");
+    }
          else
          {
             WarningLog(<<"unable to initialize ECDH: SSL_CTX_set_tmp_ecdh failed");

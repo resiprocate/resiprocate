@@ -1,0 +1,200 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define if building universal (internal helper macro) */
+#undef AC_APPLE_UNIVERSAL_BUILD
+
+/* BUILD_APPS */
+#undef BUILD_APPS
+
+/* BUILD_ICHAT_GW */
+#undef BUILD_ICHAT_GW
+
+/* BUILD_P2P */
+#undef BUILD_P2P
+
+/* BUILD_PYTHON */
+#undef BUILD_PYTHON
+
+/* BUILD_RECON */
+#undef BUILD_RECON
+
+/* BUILD_REND */
+#undef BUILD_REND
+
+/* BUILD_REPRO */
+#undef BUILD_REPRO
+
+/* BUILD_TELEPATHY_CM */
+#undef BUILD_TELEPATHY_CM
+
+/* BUILD_TFM */
+#undef BUILD_TFM
+
+/* Name of header for libdb */
+#undef DB_HEADER
+
+/* Define to 1 if you have the clock_gettime function and monotonic timer. */
+#undef HAVE_CLOCK_GETTIME_MONOTONIC
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* HAVE_EPOLL */
+#undef HAVE_EPOLL
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* HAVE_POPT_H */
+#undef HAVE_POPT_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <time.h> header file. */
+#undef HAVE_TIME_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define if sockaddr_in.sin_len exists */
+#undef HAVE_sockaddr_in_len
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
+/* Major OS version */
+#undef OS_MAJOR_VER
+
+/* Minor OS version */
+#undef OS_MINOR_VER
+
+/* Patch OS version */
+#undef OS_PATCH_VER
+
+/* Point OS version */
+#undef OS_POINT_VER
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* PEDANTIC_STACK */
+#undef PEDANTIC_STACK
+
+/* Host where package was configured */
+#undef REPRO_BUILD_HOST
+
+/* SVN revision */
+#undef REPRO_BUILD_REV
+
+/* REPRO_DSO_PLUGINS */
+#undef REPRO_DSO_PLUGINS
+
+/* Package version */
+#undef REPRO_RELEASE_VERSION
+
+/* RESIP_ASSERT_SYSLOG */
+#undef RESIP_ASSERT_SYSLOG
+
+/* RESIP_BIG_ENDIAN */
+#undef RESIP_BIG_ENDIAN
+
+/* RESIP_HAVE_FREERADIUS_CLIENT */
+#undef RESIP_HAVE_FREERADIUS_CLIENT
+
+/* RESIP_HAVE_RADCLI */
+#undef RESIP_HAVE_RADCLI
+
+/* Maximum SIP message size to try and parse (bytes) */
+#undef RESIP_SIP_MSG_MAX_BYTES
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+#undef TIME_WITH_SYS_TIME
+
+/* USE_ARES */
+#undef USE_ARES
+
+/* USE_CARES */
+#undef USE_CARES
+
+/* USE_DTLS */
+#undef USE_DTLS
+
+/* USE_IPV6 */
+#undef USE_IPV6
+
+/* USE_MAXMIND_GEOIP */
+#undef USE_MAXMIND_GEOIP
+
+/* USE_MYSQL */
+#undef USE_MYSQL
+
+/* USE_POSTGRESQL */
+#undef USE_POSTGRESQL
+
+/* USE_RADIUS_CLIENT */
+#undef USE_RADIUS_CLIENT
+
+/* USE_SIGCOMP */
+#undef USE_SIGCOMP
+
+/* USE_SSL */
+#undef USE_SSL
+
+/* Version number of package */
+#undef VERSION
+
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif

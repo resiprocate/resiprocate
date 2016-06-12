@@ -15,6 +15,7 @@
 #include "HttpConnection.hxx"
 #include "WebAdmin.hxx"
 #include <rutil/WinLeakCheck.hxx>
+#include "rutil/Errdes.hxx"
 
 using namespace clicktocall;
 using namespace resip;
@@ -62,7 +63,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if ( mFd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << strerror(e) <<" error message from Errdes.hxx file: " << errortostringOS(e) );
       sane = false;
       return;
    }
@@ -78,7 +79,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
 #endif
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e) <<" error message from Errdes.hxx file: " << errortostringOS(e) );
       sane = false;
       return;
    }
@@ -116,7 +117,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << strerror(e) <<" error message from Errdes.hxx file: " << errortostringOS(e) );
       sane = false;
       return;
    }
@@ -155,7 +156,7 @@ HttpBase::process(FdSet& fdset)
             case EWOULDBLOCK:
                return;
             default:
-               ErrLog(<< "Some error reading from socket: " << e);
+               ErrLog(<< "Some error reading from socket: "<< e <<", error message: " << errortostringOS(e) );
          }
          return;
       }
