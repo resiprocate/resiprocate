@@ -163,8 +163,7 @@ am__libdum_la_SOURCES_DIST = AppDialog.cxx AppDialogSet.cxx \
 	OutgoingEvent.cxx HttpProvider.cxx HttpGetMessage.cxx \
 	DumHelper.cxx MergedRequestRemovalCommand.cxx \
 	ssl/EncryptionManager.cxx
-am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = ssl/EncryptionManager.lo
+am__objects_1 = EncryptionManager.lo
 am_libdum_la_OBJECTS = AppDialog.lo AppDialogSet.lo \
 	AppDialogSetFactory.lo BaseCreator.lo BaseUsage.lo \
 	UserAuthInfo.lo BaseSubscription.lo ChallengeInfo.lo \
@@ -614,9 +613,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign resip/dum/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu resip/dum/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign resip/dum/Makefile
+	  $(AUTOMAKE) --gnu resip/dum/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -670,22 +669,12 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-ssl/$(am__dirstamp):
-	@$(MKDIR_P) ssl
-	@: > ssl/$(am__dirstamp)
-ssl/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ssl/$(DEPDIR)
-	@: > ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/EncryptionManager.lo: ssl/$(am__dirstamp) \
-	ssl/$(DEPDIR)/$(am__dirstamp)
 
 libdum.la: $(libdum_la_OBJECTS) $(libdum_la_DEPENDENCIES) $(EXTRA_libdum_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libdum_la_LINK) -rpath $(libdir) $(libdum_la_OBJECTS) $(libdum_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ssl/*.$(OBJEXT)
-	-rm -f ssl/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -725,6 +714,7 @@ distclean-compile:
 #include ./$(DEPDIR)/DumProcessHandler.Plo
 #include ./$(DEPDIR)/DumThread.Plo
 #include ./$(DEPDIR)/DumTimeout.Plo
+#include ./$(DEPDIR)/EncryptionManager.Plo
 #include ./$(DEPDIR)/EncryptionRequest.Plo
 #include ./$(DEPDIR)/Handle.Plo
 #include ./$(DEPDIR)/HandleException.Plo
@@ -770,38 +760,40 @@ distclean-compile:
 #include ./$(DEPDIR)/UserAuthInfo.Plo
 #include ./$(DEPDIR)/UserProfile.Plo
 #include ./$(DEPDIR)/WsCookieAuthManager.Plo
-#include ssl/$(DEPDIR)/EncryptionManager.Plo
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+EncryptionManager.lo: ssl/EncryptionManager.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT EncryptionManager.lo -MD -MP -MF $(DEPDIR)/EncryptionManager.Tpo -c -o EncryptionManager.lo `test -f 'ssl/EncryptionManager.cxx' || echo '$(srcdir)/'`ssl/EncryptionManager.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/EncryptionManager.Tpo $(DEPDIR)/EncryptionManager.Plo
+#	$(AM_V_CXX)source='ssl/EncryptionManager.cxx' object='EncryptionManager.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o EncryptionManager.lo `test -f 'ssl/EncryptionManager.cxx' || echo '$(srcdir)/'`ssl/EncryptionManager.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf ssl/.libs ssl/_libs
 install-nobase_dumincludeHEADERS: $(nobase_duminclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_duminclude_HEADERS)'; test -n "$(dumincludedir)" || list=; \
@@ -1015,8 +1007,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f ssl/$(DEPDIR)/$(am__dirstamp)
-	-rm -f ssl/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1027,7 +1017,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) ssl/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1073,7 +1063,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) ssl/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

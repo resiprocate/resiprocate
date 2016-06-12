@@ -125,7 +125,6 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libtfm_la_DEPENDENCIES = ../repro/librepro.la ../resip/dum/libdum.la \
 	../resip/stack/libresip.la ../rutil/librutil.la
-am__dirstamp = $(am__leading_dot)dirstamp
 am_libtfm_la_OBJECTS = ActionBase.lo CppTestSelector.lo \
 	StunEndPoint.lo StunServer.lo EndPoint.lo TfmHelper.lo \
 	Expect.lo StunEvent.lo TfmDns.lo CPTestProgressListener.lo \
@@ -136,9 +135,8 @@ am_libtfm_la_OBJECTS = ActionBase.lo CppTestSelector.lo \
 	Sequence.lo SequenceSet.lo SequenceSetThread.lo SipEvent.lo \
 	SipRawMessage.lo Source.lo TelnetClient.lo TestEndPoint.lo \
 	TestException.lo TestProxy.lo TestSipEndPoint.lo TestUser.lo \
-	TransportDriver.lo predicates/ExpectUtils.lo \
-	predicates/SubscribeExpired.lo predicates/SubscribeExpires.lo \
-	predicates/NotifyContents.lo
+	TransportDriver.lo ExpectUtils.lo SubscribeExpired.lo \
+	SubscribeExpires.lo NotifyContents.lo
 libtfm_la_OBJECTS = $(am_libtfm_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -522,9 +520,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tfm/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu tfm/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign tfm/Makefile
+	  $(AUTOMAKE) --gnu tfm/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -578,28 +576,12 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-predicates/$(am__dirstamp):
-	@$(MKDIR_P) predicates
-	@: > predicates/$(am__dirstamp)
-predicates/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) predicates/$(DEPDIR)
-	@: > predicates/$(DEPDIR)/$(am__dirstamp)
-predicates/ExpectUtils.lo: predicates/$(am__dirstamp) \
-	predicates/$(DEPDIR)/$(am__dirstamp)
-predicates/SubscribeExpired.lo: predicates/$(am__dirstamp) \
-	predicates/$(DEPDIR)/$(am__dirstamp)
-predicates/SubscribeExpires.lo: predicates/$(am__dirstamp) \
-	predicates/$(DEPDIR)/$(am__dirstamp)
-predicates/NotifyContents.lo: predicates/$(am__dirstamp) \
-	predicates/$(DEPDIR)/$(am__dirstamp)
 
 libtfm.la: $(libtfm_la_OBJECTS) $(libtfm_la_DEPENDENCIES) $(EXTRA_libtfm_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libtfm_la_LINK) -rpath $(libdir) $(libtfm_la_OBJECTS) $(libtfm_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f predicates/*.$(OBJEXT)
-	-rm -f predicates/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -620,6 +602,8 @@ distclean-compile:
 #include ./$(DEPDIR)/Expect.Plo
 #include ./$(DEPDIR)/ExpectAction.Plo
 #include ./$(DEPDIR)/ExpectActionEvent.Plo
+#include ./$(DEPDIR)/ExpectUtils.Plo
+#include ./$(DEPDIR)/NotifyContents.Plo
 #include ./$(DEPDIR)/Renderer.Plo
 #include ./$(DEPDIR)/Resolver.Plo
 #include ./$(DEPDIR)/RouteGuard.Plo
@@ -633,6 +617,8 @@ distclean-compile:
 #include ./$(DEPDIR)/StunEndPoint.Plo
 #include ./$(DEPDIR)/StunEvent.Plo
 #include ./$(DEPDIR)/StunServer.Plo
+#include ./$(DEPDIR)/SubscribeExpired.Plo
+#include ./$(DEPDIR)/SubscribeExpires.Plo
 #include ./$(DEPDIR)/TelnetClient.Plo
 #include ./$(DEPDIR)/TestEndPoint.Plo
 #include ./$(DEPDIR)/TestException.Plo
@@ -643,41 +629,61 @@ distclean-compile:
 #include ./$(DEPDIR)/TfmDns.Plo
 #include ./$(DEPDIR)/TfmHelper.Plo
 #include ./$(DEPDIR)/TransportDriver.Plo
-#include predicates/$(DEPDIR)/ExpectUtils.Plo
-#include predicates/$(DEPDIR)/NotifyContents.Plo
-#include predicates/$(DEPDIR)/SubscribeExpired.Plo
-#include predicates/$(DEPDIR)/SubscribeExpires.Plo
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+ExpectUtils.lo: predicates/ExpectUtils.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ExpectUtils.lo -MD -MP -MF $(DEPDIR)/ExpectUtils.Tpo -c -o ExpectUtils.lo `test -f 'predicates/ExpectUtils.cxx' || echo '$(srcdir)/'`predicates/ExpectUtils.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/ExpectUtils.Tpo $(DEPDIR)/ExpectUtils.Plo
+#	$(AM_V_CXX)source='predicates/ExpectUtils.cxx' object='ExpectUtils.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ExpectUtils.lo `test -f 'predicates/ExpectUtils.cxx' || echo '$(srcdir)/'`predicates/ExpectUtils.cxx
+
+SubscribeExpired.lo: predicates/SubscribeExpired.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SubscribeExpired.lo -MD -MP -MF $(DEPDIR)/SubscribeExpired.Tpo -c -o SubscribeExpired.lo `test -f 'predicates/SubscribeExpired.cxx' || echo '$(srcdir)/'`predicates/SubscribeExpired.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SubscribeExpired.Tpo $(DEPDIR)/SubscribeExpired.Plo
+#	$(AM_V_CXX)source='predicates/SubscribeExpired.cxx' object='SubscribeExpired.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SubscribeExpired.lo `test -f 'predicates/SubscribeExpired.cxx' || echo '$(srcdir)/'`predicates/SubscribeExpired.cxx
+
+SubscribeExpires.lo: predicates/SubscribeExpires.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SubscribeExpires.lo -MD -MP -MF $(DEPDIR)/SubscribeExpires.Tpo -c -o SubscribeExpires.lo `test -f 'predicates/SubscribeExpires.cxx' || echo '$(srcdir)/'`predicates/SubscribeExpires.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SubscribeExpires.Tpo $(DEPDIR)/SubscribeExpires.Plo
+#	$(AM_V_CXX)source='predicates/SubscribeExpires.cxx' object='SubscribeExpires.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SubscribeExpires.lo `test -f 'predicates/SubscribeExpires.cxx' || echo '$(srcdir)/'`predicates/SubscribeExpires.cxx
+
+NotifyContents.lo: predicates/NotifyContents.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT NotifyContents.lo -MD -MP -MF $(DEPDIR)/NotifyContents.Tpo -c -o NotifyContents.lo `test -f 'predicates/NotifyContents.cxx' || echo '$(srcdir)/'`predicates/NotifyContents.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/NotifyContents.Tpo $(DEPDIR)/NotifyContents.Plo
+#	$(AM_V_CXX)source='predicates/NotifyContents.cxx' object='NotifyContents.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o NotifyContents.lo `test -f 'predicates/NotifyContents.cxx' || echo '$(srcdir)/'`predicates/NotifyContents.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf predicates/.libs predicates/_libs
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -867,8 +873,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f predicates/$(DEPDIR)/$(am__dirstamp)
-	-rm -f predicates/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -879,7 +883,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) predicates/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -925,7 +929,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) predicates/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

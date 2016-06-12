@@ -154,8 +154,7 @@ am__librutil_la_SOURCES_DIST = AbstractFifo.cxx AndroidLogger.cxx \
 	dns/RRVip.cxx dns/QueryTypes.cxx dns/RROverlay.cxx \
 	stun/Stun.cxx stun/Udp.cxx ssl/OpenSSLInit.cxx \
 	ssl/SHA1Stream.cxx
-am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = ssl/OpenSSLInit.lo ssl/SHA1Stream.lo
+am__objects_1 = OpenSSLInit.lo SHA1Stream.lo
 am_librutil_la_OBJECTS = AbstractFifo.lo AndroidLogger.lo \
 	BaseException.lo Coders.lo Condition.lo ConfigParse.lo \
 	CountStream.lo ServerProcess.lo Data.lo DataStream.lo \
@@ -167,13 +166,11 @@ am_librutil_la_OBJECTS = AbstractFifo.lo AndroidLogger.lo \
 	RecursiveMutex.lo resipfaststreams.lo SelectInterruptor.lo \
 	Sha1.lo Socket.lo Subsystem.lo SysLogBuf.lo SysLogStream.lo \
 	ThreadIf.lo Time.lo Timer.lo TransportType.lo vmd5.lo \
-	XMLCursor.lo dns/AresDns.lo dns/DnsCnameRecord.lo \
-	dns/DnsAAAARecord.lo dns/DnsHostRecord.lo \
-	dns/DnsNaptrRecord.lo dns/DnsResourceRecord.lo \
-	dns/DnsSrvRecord.lo dns/DnsStub.lo dns/DnsThread.lo \
-	dns/ExternalDnsFactory.lo dns/RRCache.lo dns/RRList.lo \
-	dns/RRVip.lo dns/QueryTypes.lo dns/RROverlay.lo stun/Stun.lo \
-	stun/Udp.lo $(am__objects_1)
+	XMLCursor.lo AresDns.lo DnsCnameRecord.lo DnsAAAARecord.lo \
+	DnsHostRecord.lo DnsNaptrRecord.lo DnsResourceRecord.lo \
+	DnsSrvRecord.lo DnsStub.lo DnsThread.lo ExternalDnsFactory.lo \
+	RRCache.lo RRList.lo RRVip.lo QueryTypes.lo RROverlay.lo \
+	Stun.lo Udp.lo $(am__objects_1)
 librutil_la_OBJECTS = $(am_librutil_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -586,9 +583,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign rutil/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu rutil/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign rutil/Makefile
+	  $(AUTOMAKE) --gnu rutil/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -642,67 +639,19 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-dns/$(am__dirstamp):
-	@$(MKDIR_P) dns
-	@: > dns/$(am__dirstamp)
-dns/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) dns/$(DEPDIR)
-	@: > dns/$(DEPDIR)/$(am__dirstamp)
-dns/AresDns.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsCnameRecord.lo: dns/$(am__dirstamp) \
-	dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsAAAARecord.lo: dns/$(am__dirstamp) \
-	dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsHostRecord.lo: dns/$(am__dirstamp) \
-	dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsNaptrRecord.lo: dns/$(am__dirstamp) \
-	dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsResourceRecord.lo: dns/$(am__dirstamp) \
-	dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsSrvRecord.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsStub.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/DnsThread.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/ExternalDnsFactory.lo: dns/$(am__dirstamp) \
-	dns/$(DEPDIR)/$(am__dirstamp)
-dns/RRCache.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/RRList.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/RRVip.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/QueryTypes.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-dns/RROverlay.lo: dns/$(am__dirstamp) dns/$(DEPDIR)/$(am__dirstamp)
-stun/$(am__dirstamp):
-	@$(MKDIR_P) stun
-	@: > stun/$(am__dirstamp)
-stun/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) stun/$(DEPDIR)
-	@: > stun/$(DEPDIR)/$(am__dirstamp)
-stun/Stun.lo: stun/$(am__dirstamp) stun/$(DEPDIR)/$(am__dirstamp)
-stun/Udp.lo: stun/$(am__dirstamp) stun/$(DEPDIR)/$(am__dirstamp)
-ssl/$(am__dirstamp):
-	@$(MKDIR_P) ssl
-	@: > ssl/$(am__dirstamp)
-ssl/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ssl/$(DEPDIR)
-	@: > ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/OpenSSLInit.lo: ssl/$(am__dirstamp) ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/SHA1Stream.lo: ssl/$(am__dirstamp) ssl/$(DEPDIR)/$(am__dirstamp)
 
 librutil.la: $(librutil_la_OBJECTS) $(librutil_la_DEPENDENCIES) $(EXTRA_librutil_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(librutil_la_LINK) -rpath $(libdir) $(librutil_la_OBJECTS) $(librutil_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f dns/*.$(OBJEXT)
-	-rm -f dns/*.lo
-	-rm -f ssl/*.$(OBJEXT)
-	-rm -f ssl/*.lo
-	-rm -f stun/*.$(OBJEXT)
-	-rm -f stun/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
 #include ./$(DEPDIR)/AbstractFifo.Plo
 #include ./$(DEPDIR)/AndroidLogger.Plo
+#include ./$(DEPDIR)/AresDns.Plo
 #include ./$(DEPDIR)/BaseException.Plo
 #include ./$(DEPDIR)/Coders.Plo
 #include ./$(DEPDIR)/Condition.Plo
@@ -710,7 +659,16 @@ distclean-compile:
 #include ./$(DEPDIR)/CountStream.Plo
 #include ./$(DEPDIR)/Data.Plo
 #include ./$(DEPDIR)/DataStream.Plo
+#include ./$(DEPDIR)/DnsAAAARecord.Plo
+#include ./$(DEPDIR)/DnsCnameRecord.Plo
+#include ./$(DEPDIR)/DnsHostRecord.Plo
+#include ./$(DEPDIR)/DnsNaptrRecord.Plo
+#include ./$(DEPDIR)/DnsResourceRecord.Plo
+#include ./$(DEPDIR)/DnsSrvRecord.Plo
+#include ./$(DEPDIR)/DnsStub.Plo
+#include ./$(DEPDIR)/DnsThread.Plo
 #include ./$(DEPDIR)/DnsUtil.Plo
+#include ./$(DEPDIR)/ExternalDnsFactory.Plo
 #include ./$(DEPDIR)/FdPoll.Plo
 #include ./$(DEPDIR)/FileSystem.Plo
 #include ./$(DEPDIR)/GeneralCongestionManager.Plo
@@ -721,18 +679,26 @@ distclean-compile:
 #include ./$(DEPDIR)/MD5Stream.Plo
 #include ./$(DEPDIR)/Mutex.Plo
 #include ./$(DEPDIR)/NetNs.Plo
+#include ./$(DEPDIR)/OpenSSLInit.Plo
 #include ./$(DEPDIR)/ParseBuffer.Plo
 #include ./$(DEPDIR)/ParseException.Plo
 #include ./$(DEPDIR)/Poll.Plo
 #include ./$(DEPDIR)/PoolBase.Plo
+#include ./$(DEPDIR)/QueryTypes.Plo
 #include ./$(DEPDIR)/RADIUSDigestAuthenticator.Plo
+#include ./$(DEPDIR)/RRCache.Plo
+#include ./$(DEPDIR)/RRList.Plo
+#include ./$(DEPDIR)/RROverlay.Plo
+#include ./$(DEPDIR)/RRVip.Plo
 #include ./$(DEPDIR)/RWMutex.Plo
 #include ./$(DEPDIR)/Random.Plo
 #include ./$(DEPDIR)/RecursiveMutex.Plo
+#include ./$(DEPDIR)/SHA1Stream.Plo
 #include ./$(DEPDIR)/SelectInterruptor.Plo
 #include ./$(DEPDIR)/ServerProcess.Plo
 #include ./$(DEPDIR)/Sha1.Plo
 #include ./$(DEPDIR)/Socket.Plo
+#include ./$(DEPDIR)/Stun.Plo
 #include ./$(DEPDIR)/Subsystem.Plo
 #include ./$(DEPDIR)/SysLogBuf.Plo
 #include ./$(DEPDIR)/SysLogStream.Plo
@@ -740,61 +706,170 @@ distclean-compile:
 #include ./$(DEPDIR)/Time.Plo
 #include ./$(DEPDIR)/Timer.Plo
 #include ./$(DEPDIR)/TransportType.Plo
+#include ./$(DEPDIR)/Udp.Plo
 #include ./$(DEPDIR)/XMLCursor.Plo
 #include ./$(DEPDIR)/resipfaststreams.Plo
 #include ./$(DEPDIR)/vmd5.Plo
-#include dns/$(DEPDIR)/AresDns.Plo
-#include dns/$(DEPDIR)/DnsAAAARecord.Plo
-#include dns/$(DEPDIR)/DnsCnameRecord.Plo
-#include dns/$(DEPDIR)/DnsHostRecord.Plo
-#include dns/$(DEPDIR)/DnsNaptrRecord.Plo
-#include dns/$(DEPDIR)/DnsResourceRecord.Plo
-#include dns/$(DEPDIR)/DnsSrvRecord.Plo
-#include dns/$(DEPDIR)/DnsStub.Plo
-#include dns/$(DEPDIR)/DnsThread.Plo
-#include dns/$(DEPDIR)/ExternalDnsFactory.Plo
-#include dns/$(DEPDIR)/QueryTypes.Plo
-#include dns/$(DEPDIR)/RRCache.Plo
-#include dns/$(DEPDIR)/RRList.Plo
-#include dns/$(DEPDIR)/RROverlay.Plo
-#include dns/$(DEPDIR)/RRVip.Plo
-#include ssl/$(DEPDIR)/OpenSSLInit.Plo
-#include ssl/$(DEPDIR)/SHA1Stream.Plo
-#include stun/$(DEPDIR)/Stun.Plo
-#include stun/$(DEPDIR)/Udp.Plo
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+AresDns.lo: dns/AresDns.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT AresDns.lo -MD -MP -MF $(DEPDIR)/AresDns.Tpo -c -o AresDns.lo `test -f 'dns/AresDns.cxx' || echo '$(srcdir)/'`dns/AresDns.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/AresDns.Tpo $(DEPDIR)/AresDns.Plo
+#	$(AM_V_CXX)source='dns/AresDns.cxx' object='AresDns.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o AresDns.lo `test -f 'dns/AresDns.cxx' || echo '$(srcdir)/'`dns/AresDns.cxx
+
+DnsCnameRecord.lo: dns/DnsCnameRecord.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsCnameRecord.lo -MD -MP -MF $(DEPDIR)/DnsCnameRecord.Tpo -c -o DnsCnameRecord.lo `test -f 'dns/DnsCnameRecord.cxx' || echo '$(srcdir)/'`dns/DnsCnameRecord.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsCnameRecord.Tpo $(DEPDIR)/DnsCnameRecord.Plo
+#	$(AM_V_CXX)source='dns/DnsCnameRecord.cxx' object='DnsCnameRecord.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsCnameRecord.lo `test -f 'dns/DnsCnameRecord.cxx' || echo '$(srcdir)/'`dns/DnsCnameRecord.cxx
+
+DnsAAAARecord.lo: dns/DnsAAAARecord.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsAAAARecord.lo -MD -MP -MF $(DEPDIR)/DnsAAAARecord.Tpo -c -o DnsAAAARecord.lo `test -f 'dns/DnsAAAARecord.cxx' || echo '$(srcdir)/'`dns/DnsAAAARecord.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsAAAARecord.Tpo $(DEPDIR)/DnsAAAARecord.Plo
+#	$(AM_V_CXX)source='dns/DnsAAAARecord.cxx' object='DnsAAAARecord.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsAAAARecord.lo `test -f 'dns/DnsAAAARecord.cxx' || echo '$(srcdir)/'`dns/DnsAAAARecord.cxx
+
+DnsHostRecord.lo: dns/DnsHostRecord.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsHostRecord.lo -MD -MP -MF $(DEPDIR)/DnsHostRecord.Tpo -c -o DnsHostRecord.lo `test -f 'dns/DnsHostRecord.cxx' || echo '$(srcdir)/'`dns/DnsHostRecord.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsHostRecord.Tpo $(DEPDIR)/DnsHostRecord.Plo
+#	$(AM_V_CXX)source='dns/DnsHostRecord.cxx' object='DnsHostRecord.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsHostRecord.lo `test -f 'dns/DnsHostRecord.cxx' || echo '$(srcdir)/'`dns/DnsHostRecord.cxx
+
+DnsNaptrRecord.lo: dns/DnsNaptrRecord.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsNaptrRecord.lo -MD -MP -MF $(DEPDIR)/DnsNaptrRecord.Tpo -c -o DnsNaptrRecord.lo `test -f 'dns/DnsNaptrRecord.cxx' || echo '$(srcdir)/'`dns/DnsNaptrRecord.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsNaptrRecord.Tpo $(DEPDIR)/DnsNaptrRecord.Plo
+#	$(AM_V_CXX)source='dns/DnsNaptrRecord.cxx' object='DnsNaptrRecord.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsNaptrRecord.lo `test -f 'dns/DnsNaptrRecord.cxx' || echo '$(srcdir)/'`dns/DnsNaptrRecord.cxx
+
+DnsResourceRecord.lo: dns/DnsResourceRecord.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsResourceRecord.lo -MD -MP -MF $(DEPDIR)/DnsResourceRecord.Tpo -c -o DnsResourceRecord.lo `test -f 'dns/DnsResourceRecord.cxx' || echo '$(srcdir)/'`dns/DnsResourceRecord.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsResourceRecord.Tpo $(DEPDIR)/DnsResourceRecord.Plo
+#	$(AM_V_CXX)source='dns/DnsResourceRecord.cxx' object='DnsResourceRecord.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsResourceRecord.lo `test -f 'dns/DnsResourceRecord.cxx' || echo '$(srcdir)/'`dns/DnsResourceRecord.cxx
+
+DnsSrvRecord.lo: dns/DnsSrvRecord.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsSrvRecord.lo -MD -MP -MF $(DEPDIR)/DnsSrvRecord.Tpo -c -o DnsSrvRecord.lo `test -f 'dns/DnsSrvRecord.cxx' || echo '$(srcdir)/'`dns/DnsSrvRecord.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsSrvRecord.Tpo $(DEPDIR)/DnsSrvRecord.Plo
+#	$(AM_V_CXX)source='dns/DnsSrvRecord.cxx' object='DnsSrvRecord.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsSrvRecord.lo `test -f 'dns/DnsSrvRecord.cxx' || echo '$(srcdir)/'`dns/DnsSrvRecord.cxx
+
+DnsStub.lo: dns/DnsStub.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsStub.lo -MD -MP -MF $(DEPDIR)/DnsStub.Tpo -c -o DnsStub.lo `test -f 'dns/DnsStub.cxx' || echo '$(srcdir)/'`dns/DnsStub.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsStub.Tpo $(DEPDIR)/DnsStub.Plo
+#	$(AM_V_CXX)source='dns/DnsStub.cxx' object='DnsStub.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsStub.lo `test -f 'dns/DnsStub.cxx' || echo '$(srcdir)/'`dns/DnsStub.cxx
+
+DnsThread.lo: dns/DnsThread.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DnsThread.lo -MD -MP -MF $(DEPDIR)/DnsThread.Tpo -c -o DnsThread.lo `test -f 'dns/DnsThread.cxx' || echo '$(srcdir)/'`dns/DnsThread.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DnsThread.Tpo $(DEPDIR)/DnsThread.Plo
+#	$(AM_V_CXX)source='dns/DnsThread.cxx' object='DnsThread.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DnsThread.lo `test -f 'dns/DnsThread.cxx' || echo '$(srcdir)/'`dns/DnsThread.cxx
+
+ExternalDnsFactory.lo: dns/ExternalDnsFactory.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ExternalDnsFactory.lo -MD -MP -MF $(DEPDIR)/ExternalDnsFactory.Tpo -c -o ExternalDnsFactory.lo `test -f 'dns/ExternalDnsFactory.cxx' || echo '$(srcdir)/'`dns/ExternalDnsFactory.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/ExternalDnsFactory.Tpo $(DEPDIR)/ExternalDnsFactory.Plo
+#	$(AM_V_CXX)source='dns/ExternalDnsFactory.cxx' object='ExternalDnsFactory.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ExternalDnsFactory.lo `test -f 'dns/ExternalDnsFactory.cxx' || echo '$(srcdir)/'`dns/ExternalDnsFactory.cxx
+
+RRCache.lo: dns/RRCache.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT RRCache.lo -MD -MP -MF $(DEPDIR)/RRCache.Tpo -c -o RRCache.lo `test -f 'dns/RRCache.cxx' || echo '$(srcdir)/'`dns/RRCache.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/RRCache.Tpo $(DEPDIR)/RRCache.Plo
+#	$(AM_V_CXX)source='dns/RRCache.cxx' object='RRCache.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o RRCache.lo `test -f 'dns/RRCache.cxx' || echo '$(srcdir)/'`dns/RRCache.cxx
+
+RRList.lo: dns/RRList.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT RRList.lo -MD -MP -MF $(DEPDIR)/RRList.Tpo -c -o RRList.lo `test -f 'dns/RRList.cxx' || echo '$(srcdir)/'`dns/RRList.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/RRList.Tpo $(DEPDIR)/RRList.Plo
+#	$(AM_V_CXX)source='dns/RRList.cxx' object='RRList.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o RRList.lo `test -f 'dns/RRList.cxx' || echo '$(srcdir)/'`dns/RRList.cxx
+
+RRVip.lo: dns/RRVip.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT RRVip.lo -MD -MP -MF $(DEPDIR)/RRVip.Tpo -c -o RRVip.lo `test -f 'dns/RRVip.cxx' || echo '$(srcdir)/'`dns/RRVip.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/RRVip.Tpo $(DEPDIR)/RRVip.Plo
+#	$(AM_V_CXX)source='dns/RRVip.cxx' object='RRVip.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o RRVip.lo `test -f 'dns/RRVip.cxx' || echo '$(srcdir)/'`dns/RRVip.cxx
+
+QueryTypes.lo: dns/QueryTypes.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT QueryTypes.lo -MD -MP -MF $(DEPDIR)/QueryTypes.Tpo -c -o QueryTypes.lo `test -f 'dns/QueryTypes.cxx' || echo '$(srcdir)/'`dns/QueryTypes.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/QueryTypes.Tpo $(DEPDIR)/QueryTypes.Plo
+#	$(AM_V_CXX)source='dns/QueryTypes.cxx' object='QueryTypes.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o QueryTypes.lo `test -f 'dns/QueryTypes.cxx' || echo '$(srcdir)/'`dns/QueryTypes.cxx
+
+RROverlay.lo: dns/RROverlay.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT RROverlay.lo -MD -MP -MF $(DEPDIR)/RROverlay.Tpo -c -o RROverlay.lo `test -f 'dns/RROverlay.cxx' || echo '$(srcdir)/'`dns/RROverlay.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/RROverlay.Tpo $(DEPDIR)/RROverlay.Plo
+#	$(AM_V_CXX)source='dns/RROverlay.cxx' object='RROverlay.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o RROverlay.lo `test -f 'dns/RROverlay.cxx' || echo '$(srcdir)/'`dns/RROverlay.cxx
+
+Stun.lo: stun/Stun.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Stun.lo -MD -MP -MF $(DEPDIR)/Stun.Tpo -c -o Stun.lo `test -f 'stun/Stun.cxx' || echo '$(srcdir)/'`stun/Stun.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/Stun.Tpo $(DEPDIR)/Stun.Plo
+#	$(AM_V_CXX)source='stun/Stun.cxx' object='Stun.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Stun.lo `test -f 'stun/Stun.cxx' || echo '$(srcdir)/'`stun/Stun.cxx
+
+Udp.lo: stun/Udp.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Udp.lo -MD -MP -MF $(DEPDIR)/Udp.Tpo -c -o Udp.lo `test -f 'stun/Udp.cxx' || echo '$(srcdir)/'`stun/Udp.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/Udp.Tpo $(DEPDIR)/Udp.Plo
+#	$(AM_V_CXX)source='stun/Udp.cxx' object='Udp.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Udp.lo `test -f 'stun/Udp.cxx' || echo '$(srcdir)/'`stun/Udp.cxx
+
+OpenSSLInit.lo: ssl/OpenSSLInit.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT OpenSSLInit.lo -MD -MP -MF $(DEPDIR)/OpenSSLInit.Tpo -c -o OpenSSLInit.lo `test -f 'ssl/OpenSSLInit.cxx' || echo '$(srcdir)/'`ssl/OpenSSLInit.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/OpenSSLInit.Tpo $(DEPDIR)/OpenSSLInit.Plo
+#	$(AM_V_CXX)source='ssl/OpenSSLInit.cxx' object='OpenSSLInit.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o OpenSSLInit.lo `test -f 'ssl/OpenSSLInit.cxx' || echo '$(srcdir)/'`ssl/OpenSSLInit.cxx
+
+SHA1Stream.lo: ssl/SHA1Stream.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SHA1Stream.lo -MD -MP -MF $(DEPDIR)/SHA1Stream.Tpo -c -o SHA1Stream.lo `test -f 'ssl/SHA1Stream.cxx' || echo '$(srcdir)/'`ssl/SHA1Stream.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SHA1Stream.Tpo $(DEPDIR)/SHA1Stream.Plo
+#	$(AM_V_CXX)source='ssl/SHA1Stream.cxx' object='SHA1Stream.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SHA1Stream.lo `test -f 'ssl/SHA1Stream.cxx' || echo '$(srcdir)/'`ssl/SHA1Stream.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf dns/.libs dns/_libs
-	-rm -rf ssl/.libs ssl/_libs
-	-rm -rf stun/.libs stun/_libs
 install-nobase_rutilincludeHEADERS: $(nobase_rutilinclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_rutilinclude_HEADERS)'; test -n "$(rutilincludedir)" || list=; \
@@ -1008,12 +1083,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f dns/$(DEPDIR)/$(am__dirstamp)
-	-rm -f dns/$(am__dirstamp)
-	-rm -f ssl/$(DEPDIR)/$(am__dirstamp)
-	-rm -f ssl/$(am__dirstamp)
-	-rm -f stun/$(DEPDIR)/$(am__dirstamp)
-	-rm -f stun/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1024,7 +1093,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) dns/$(DEPDIR) ssl/$(DEPDIR) stun/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1070,7 +1139,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) dns/$(DEPDIR) ssl/$(DEPDIR) stun/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

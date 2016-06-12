@@ -183,12 +183,11 @@ am__librepro_la_SOURCES_DIST = RouteStore.cxx UserStore.cxx \
 	stateAgents/PrivateKeyPublicationHandler.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx MySqlDb.cxx \
 	PostgreSqlDb.cxx
-am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = stateAgents/librepro_la-CertServer.lo \
-	stateAgents/librepro_la-CertPublicationHandler.lo \
-	stateAgents/librepro_la-CertSubscriptionHandler.lo \
-	stateAgents/librepro_la-PrivateKeyPublicationHandler.lo \
-	stateAgents/librepro_la-PrivateKeySubscriptionHandler.lo
+am__objects_1 = librepro_la-CertServer.lo \
+	librepro_la-CertPublicationHandler.lo \
+	librepro_la-CertSubscriptionHandler.lo \
+	librepro_la-PrivateKeyPublicationHandler.lo \
+	librepro_la-PrivateKeySubscriptionHandler.lo
 am__objects_2 = librepro_la-MySqlDb.lo
 am__objects_3 = librepro_la-PostgreSqlDb.lo
 am_librepro_la_OBJECTS = librepro_la-RouteStore.lo \
@@ -219,29 +218,25 @@ am_librepro_la_OBJECTS = librepro_la-RouteStore.lo \
 	librepro_la-XmlRpcServerBase.lo librepro_la-Dispatcher.lo \
 	librepro_la-OutboundTarget.lo \
 	librepro_la-PersistentMessageQueue.lo \
-	librepro_la-QValueTarget.lo \
-	stateAgents/librepro_la-PresenceServer.lo \
-	stateAgents/librepro_la-PresencePublicationHandler.lo \
-	stateAgents/librepro_la-PresenceSubscriptionHandler.lo \
-	monkeys/librepro_la-CertificateAuthenticator.lo \
-	monkeys/librepro_la-DigestAuthenticator.lo \
-	monkeys/librepro_la-CookieAuthenticator.lo \
-	monkeys/librepro_la-StrictRouteFixup.lo \
-	monkeys/librepro_la-AmIResponsible.lo \
-	monkeys/librepro_la-IsTrustedNode.lo \
-	monkeys/librepro_la-ConstantLocationMonkey.lo \
-	monkeys/librepro_la-LocationServer.lo \
-	monkeys/librepro_la-OutboundTargetHandler.lo \
-	monkeys/librepro_la-RADIUSAuthenticator.lo \
-	monkeys/librepro_la-RecursiveRedirect.lo \
-	monkeys/librepro_la-SimpleStaticRoute.lo \
-	monkeys/librepro_la-StaticRoute.lo \
-	monkeys/librepro_la-QValueTargetHandler.lo \
-	monkeys/librepro_la-SimpleTargetHandler.lo \
-	monkeys/librepro_la-GeoProximityTargetSorter.lo \
-	monkeys/librepro_la-RequestFilter.lo \
-	monkeys/librepro_la-MessageSilo.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3)
+	librepro_la-QValueTarget.lo librepro_la-PresenceServer.lo \
+	librepro_la-PresencePublicationHandler.lo \
+	librepro_la-PresenceSubscriptionHandler.lo \
+	librepro_la-CertificateAuthenticator.lo \
+	librepro_la-DigestAuthenticator.lo \
+	librepro_la-CookieAuthenticator.lo \
+	librepro_la-StrictRouteFixup.lo librepro_la-AmIResponsible.lo \
+	librepro_la-IsTrustedNode.lo \
+	librepro_la-ConstantLocationMonkey.lo \
+	librepro_la-LocationServer.lo \
+	librepro_la-OutboundTargetHandler.lo \
+	librepro_la-RADIUSAuthenticator.lo \
+	librepro_la-RecursiveRedirect.lo \
+	librepro_la-SimpleStaticRoute.lo librepro_la-StaticRoute.lo \
+	librepro_la-QValueTargetHandler.lo \
+	librepro_la-SimpleTargetHandler.lo \
+	librepro_la-GeoProximityTargetSorter.lo \
+	librepro_la-RequestFilter.lo librepro_la-MessageSilo.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3)
 librepro_la_OBJECTS = $(am_librepro_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -660,9 +655,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign repro/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu repro/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign repro/Makefile
+	  $(AUTOMAKE) --gnu repro/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -716,77 +711,6 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-stateAgents/$(am__dirstamp):
-	@$(MKDIR_P) stateAgents
-	@: > stateAgents/$(am__dirstamp)
-stateAgents/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) stateAgents/$(DEPDIR)
-	@: > stateAgents/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-PresenceServer.lo:  \
-	stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-PresencePublicationHandler.lo:  \
-	stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-PresenceSubscriptionHandler.lo:  \
-	stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
-monkeys/$(am__dirstamp):
-	@$(MKDIR_P) monkeys
-	@: > monkeys/$(am__dirstamp)
-monkeys/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) monkeys/$(DEPDIR)
-	@: > monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-CertificateAuthenticator.lo:  \
-	monkeys/$(am__dirstamp) monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-DigestAuthenticator.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-CookieAuthenticator.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-StrictRouteFixup.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-AmIResponsible.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-IsTrustedNode.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-ConstantLocationMonkey.lo:  \
-	monkeys/$(am__dirstamp) monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-LocationServer.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-OutboundTargetHandler.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-RADIUSAuthenticator.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-RecursiveRedirect.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-SimpleStaticRoute.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-StaticRoute.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-QValueTargetHandler.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-SimpleTargetHandler.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-GeoProximityTargetSorter.lo:  \
-	monkeys/$(am__dirstamp) monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-RequestFilter.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-monkeys/librepro_la-MessageSilo.lo: monkeys/$(am__dirstamp) \
-	monkeys/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-CertServer.lo: stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-CertPublicationHandler.lo:  \
-	stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-CertSubscriptionHandler.lo:  \
-	stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-PrivateKeyPublicationHandler.lo:  \
-	stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
-stateAgents/librepro_la-PrivateKeySubscriptionHandler.lo:  \
-	stateAgents/$(am__dirstamp) \
-	stateAgents/$(DEPDIR)/$(am__dirstamp)
 
 librepro.la: $(librepro_la_OBJECTS) $(librepro_la_DEPENDENCIES) $(EXTRA_librepro_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(librepro_la_LINK) -rpath $(libdir) $(librepro_la_OBJECTS) $(librepro_la_LIBADD) $(LIBS)
@@ -846,10 +770,6 @@ repro$(EXEEXT): $(repro_OBJECTS) $(repro_DEPENDENCIES) $(EXTRA_repro_DEPENDENCIE
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f monkeys/*.$(OBJEXT)
-	-rm -f monkeys/*.lo
-	-rm -f stateAgents/*.$(OBJEXT)
-	-rm -f stateAgents/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -857,25 +777,46 @@ distclean-compile:
 #include ./$(DEPDIR)/librepro_la-AbstractDb.Plo
 #include ./$(DEPDIR)/librepro_la-AccountingCollector.Plo
 #include ./$(DEPDIR)/librepro_la-AclStore.Plo
+#include ./$(DEPDIR)/librepro_la-AmIResponsible.Plo
 #include ./$(DEPDIR)/librepro_la-BasicWsConnectionValidator.Plo
 #include ./$(DEPDIR)/librepro_la-BerkeleyDb.Plo
+#include ./$(DEPDIR)/librepro_la-CertPublicationHandler.Plo
+#include ./$(DEPDIR)/librepro_la-CertServer.Plo
+#include ./$(DEPDIR)/librepro_la-CertSubscriptionHandler.Plo
+#include ./$(DEPDIR)/librepro_la-CertificateAuthenticator.Plo
 #include ./$(DEPDIR)/librepro_la-CommandServer.Plo
 #include ./$(DEPDIR)/librepro_la-CommandServerThread.Plo
 #include ./$(DEPDIR)/librepro_la-ConfigStore.Plo
+#include ./$(DEPDIR)/librepro_la-ConstantLocationMonkey.Plo
+#include ./$(DEPDIR)/librepro_la-CookieAuthenticator.Plo
+#include ./$(DEPDIR)/librepro_la-DigestAuthenticator.Plo
 #include ./$(DEPDIR)/librepro_la-Dispatcher.Plo
 #include ./$(DEPDIR)/librepro_la-FilterStore.Plo
+#include ./$(DEPDIR)/librepro_la-GeoProximityTargetSorter.Plo
 #include ./$(DEPDIR)/librepro_la-HttpBase.Plo
 #include ./$(DEPDIR)/librepro_la-HttpConnection.Plo
+#include ./$(DEPDIR)/librepro_la-IsTrustedNode.Plo
+#include ./$(DEPDIR)/librepro_la-LocationServer.Plo
+#include ./$(DEPDIR)/librepro_la-MessageSilo.Plo
 #include ./$(DEPDIR)/librepro_la-MySqlDb.Plo
 #include ./$(DEPDIR)/librepro_la-OutboundTarget.Plo
+#include ./$(DEPDIR)/librepro_la-OutboundTargetHandler.Plo
 #include ./$(DEPDIR)/librepro_la-PersistentMessageQueue.Plo
 #include ./$(DEPDIR)/librepro_la-PostgreSqlDb.Plo
+#include ./$(DEPDIR)/librepro_la-PresencePublicationHandler.Plo
+#include ./$(DEPDIR)/librepro_la-PresenceServer.Plo
+#include ./$(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Plo
+#include ./$(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Plo
+#include ./$(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Plo
 #include ./$(DEPDIR)/librepro_la-Processor.Plo
 #include ./$(DEPDIR)/librepro_la-ProcessorChain.Plo
 #include ./$(DEPDIR)/librepro_la-Proxy.Plo
 #include ./$(DEPDIR)/librepro_la-ProxyConfig.Plo
 #include ./$(DEPDIR)/librepro_la-QValueTarget.Plo
+#include ./$(DEPDIR)/librepro_la-QValueTargetHandler.Plo
+#include ./$(DEPDIR)/librepro_la-RADIUSAuthenticator.Plo
 #include ./$(DEPDIR)/librepro_la-RRDecorator.Plo
+#include ./$(DEPDIR)/librepro_la-RecursiveRedirect.Plo
 #include ./$(DEPDIR)/librepro_la-RegSyncClient.Plo
 #include ./$(DEPDIR)/librepro_la-RegSyncServer.Plo
 #include ./$(DEPDIR)/librepro_la-RegSyncServerThread.Plo
@@ -887,12 +828,17 @@ distclean-compile:
 #include ./$(DEPDIR)/librepro_la-ReproTlsPeerAuthManager.Plo
 #include ./$(DEPDIR)/librepro_la-ReproVersion.Plo
 #include ./$(DEPDIR)/librepro_la-RequestContext.Plo
+#include ./$(DEPDIR)/librepro_la-RequestFilter.Plo
 #include ./$(DEPDIR)/librepro_la-ResponseContext.Plo
 #include ./$(DEPDIR)/librepro_la-RouteStore.Plo
 #include ./$(DEPDIR)/librepro_la-SiloStore.Plo
+#include ./$(DEPDIR)/librepro_la-SimpleStaticRoute.Plo
+#include ./$(DEPDIR)/librepro_la-SimpleTargetHandler.Plo
 #include ./$(DEPDIR)/librepro_la-SqlDb.Plo
 #include ./$(DEPDIR)/librepro_la-StaticRegStore.Plo
+#include ./$(DEPDIR)/librepro_la-StaticRoute.Plo
 #include ./$(DEPDIR)/librepro_la-Store.Plo
+#include ./$(DEPDIR)/librepro_la-StrictRouteFixup.Plo
 #include ./$(DEPDIR)/librepro_la-Target.Plo
 #include ./$(DEPDIR)/librepro_la-UserAuthGrabber.Plo
 #include ./$(DEPDIR)/librepro_la-UserStore.Plo
@@ -902,53 +848,24 @@ distclean-compile:
 #include ./$(DEPDIR)/librepro_la-XmlRpcConnection.Plo
 #include ./$(DEPDIR)/librepro_la-XmlRpcServerBase.Plo
 #include ./$(DEPDIR)/repro.Po
-#include monkeys/$(DEPDIR)/librepro_la-AmIResponsible.Plo
-#include monkeys/$(DEPDIR)/librepro_la-CertificateAuthenticator.Plo
-#include monkeys/$(DEPDIR)/librepro_la-ConstantLocationMonkey.Plo
-#include monkeys/$(DEPDIR)/librepro_la-CookieAuthenticator.Plo
-#include monkeys/$(DEPDIR)/librepro_la-DigestAuthenticator.Plo
-#include monkeys/$(DEPDIR)/librepro_la-GeoProximityTargetSorter.Plo
-#include monkeys/$(DEPDIR)/librepro_la-IsTrustedNode.Plo
-#include monkeys/$(DEPDIR)/librepro_la-LocationServer.Plo
-#include monkeys/$(DEPDIR)/librepro_la-MessageSilo.Plo
-#include monkeys/$(DEPDIR)/librepro_la-OutboundTargetHandler.Plo
-#include monkeys/$(DEPDIR)/librepro_la-QValueTargetHandler.Plo
-#include monkeys/$(DEPDIR)/librepro_la-RADIUSAuthenticator.Plo
-#include monkeys/$(DEPDIR)/librepro_la-RecursiveRedirect.Plo
-#include monkeys/$(DEPDIR)/librepro_la-RequestFilter.Plo
-#include monkeys/$(DEPDIR)/librepro_la-SimpleStaticRoute.Plo
-#include monkeys/$(DEPDIR)/librepro_la-SimpleTargetHandler.Plo
-#include monkeys/$(DEPDIR)/librepro_la-StaticRoute.Plo
-#include monkeys/$(DEPDIR)/librepro_la-StrictRouteFixup.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-CertPublicationHandler.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-CertServer.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-CertSubscriptionHandler.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-PresencePublicationHandler.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-PresenceServer.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Plo
-#include stateAgents/$(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Plo
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
@@ -1268,187 +1185,187 @@ librepro_la-QValueTarget.lo: QValueTarget.cxx
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-QValueTarget.lo `test -f 'QValueTarget.cxx' || echo '$(srcdir)/'`QValueTarget.cxx
 
-stateAgents/librepro_la-PresenceServer.lo: stateAgents/PresenceServer.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-PresenceServer.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-PresenceServer.Tpo -c -o stateAgents/librepro_la-PresenceServer.lo `test -f 'stateAgents/PresenceServer.cxx' || echo '$(srcdir)/'`stateAgents/PresenceServer.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-PresenceServer.Tpo stateAgents/$(DEPDIR)/librepro_la-PresenceServer.Plo
-#	$(AM_V_CXX)source='stateAgents/PresenceServer.cxx' object='stateAgents/librepro_la-PresenceServer.lo' libtool=yes 
+librepro_la-PresenceServer.lo: stateAgents/PresenceServer.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-PresenceServer.lo -MD -MP -MF $(DEPDIR)/librepro_la-PresenceServer.Tpo -c -o librepro_la-PresenceServer.lo `test -f 'stateAgents/PresenceServer.cxx' || echo '$(srcdir)/'`stateAgents/PresenceServer.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-PresenceServer.Tpo $(DEPDIR)/librepro_la-PresenceServer.Plo
+#	$(AM_V_CXX)source='stateAgents/PresenceServer.cxx' object='librepro_la-PresenceServer.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-PresenceServer.lo `test -f 'stateAgents/PresenceServer.cxx' || echo '$(srcdir)/'`stateAgents/PresenceServer.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-PresenceServer.lo `test -f 'stateAgents/PresenceServer.cxx' || echo '$(srcdir)/'`stateAgents/PresenceServer.cxx
 
-stateAgents/librepro_la-PresencePublicationHandler.lo: stateAgents/PresencePublicationHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-PresencePublicationHandler.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-PresencePublicationHandler.Tpo -c -o stateAgents/librepro_la-PresencePublicationHandler.lo `test -f 'stateAgents/PresencePublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresencePublicationHandler.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-PresencePublicationHandler.Tpo stateAgents/$(DEPDIR)/librepro_la-PresencePublicationHandler.Plo
-#	$(AM_V_CXX)source='stateAgents/PresencePublicationHandler.cxx' object='stateAgents/librepro_la-PresencePublicationHandler.lo' libtool=yes 
+librepro_la-PresencePublicationHandler.lo: stateAgents/PresencePublicationHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-PresencePublicationHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-PresencePublicationHandler.Tpo -c -o librepro_la-PresencePublicationHandler.lo `test -f 'stateAgents/PresencePublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresencePublicationHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-PresencePublicationHandler.Tpo $(DEPDIR)/librepro_la-PresencePublicationHandler.Plo
+#	$(AM_V_CXX)source='stateAgents/PresencePublicationHandler.cxx' object='librepro_la-PresencePublicationHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-PresencePublicationHandler.lo `test -f 'stateAgents/PresencePublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresencePublicationHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-PresencePublicationHandler.lo `test -f 'stateAgents/PresencePublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresencePublicationHandler.cxx
 
-stateAgents/librepro_la-PresenceSubscriptionHandler.lo: stateAgents/PresenceSubscriptionHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-PresenceSubscriptionHandler.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Tpo -c -o stateAgents/librepro_la-PresenceSubscriptionHandler.lo `test -f 'stateAgents/PresenceSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresenceSubscriptionHandler.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Tpo stateAgents/$(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Plo
-#	$(AM_V_CXX)source='stateAgents/PresenceSubscriptionHandler.cxx' object='stateAgents/librepro_la-PresenceSubscriptionHandler.lo' libtool=yes 
+librepro_la-PresenceSubscriptionHandler.lo: stateAgents/PresenceSubscriptionHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-PresenceSubscriptionHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Tpo -c -o librepro_la-PresenceSubscriptionHandler.lo `test -f 'stateAgents/PresenceSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresenceSubscriptionHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Tpo $(DEPDIR)/librepro_la-PresenceSubscriptionHandler.Plo
+#	$(AM_V_CXX)source='stateAgents/PresenceSubscriptionHandler.cxx' object='librepro_la-PresenceSubscriptionHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-PresenceSubscriptionHandler.lo `test -f 'stateAgents/PresenceSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresenceSubscriptionHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-PresenceSubscriptionHandler.lo `test -f 'stateAgents/PresenceSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PresenceSubscriptionHandler.cxx
 
-monkeys/librepro_la-CertificateAuthenticator.lo: monkeys/CertificateAuthenticator.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-CertificateAuthenticator.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-CertificateAuthenticator.Tpo -c -o monkeys/librepro_la-CertificateAuthenticator.lo `test -f 'monkeys/CertificateAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CertificateAuthenticator.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-CertificateAuthenticator.Tpo monkeys/$(DEPDIR)/librepro_la-CertificateAuthenticator.Plo
-#	$(AM_V_CXX)source='monkeys/CertificateAuthenticator.cxx' object='monkeys/librepro_la-CertificateAuthenticator.lo' libtool=yes 
+librepro_la-CertificateAuthenticator.lo: monkeys/CertificateAuthenticator.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-CertificateAuthenticator.lo -MD -MP -MF $(DEPDIR)/librepro_la-CertificateAuthenticator.Tpo -c -o librepro_la-CertificateAuthenticator.lo `test -f 'monkeys/CertificateAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CertificateAuthenticator.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-CertificateAuthenticator.Tpo $(DEPDIR)/librepro_la-CertificateAuthenticator.Plo
+#	$(AM_V_CXX)source='monkeys/CertificateAuthenticator.cxx' object='librepro_la-CertificateAuthenticator.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-CertificateAuthenticator.lo `test -f 'monkeys/CertificateAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CertificateAuthenticator.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-CertificateAuthenticator.lo `test -f 'monkeys/CertificateAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CertificateAuthenticator.cxx
 
-monkeys/librepro_la-DigestAuthenticator.lo: monkeys/DigestAuthenticator.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-DigestAuthenticator.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-DigestAuthenticator.Tpo -c -o monkeys/librepro_la-DigestAuthenticator.lo `test -f 'monkeys/DigestAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/DigestAuthenticator.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-DigestAuthenticator.Tpo monkeys/$(DEPDIR)/librepro_la-DigestAuthenticator.Plo
-#	$(AM_V_CXX)source='monkeys/DigestAuthenticator.cxx' object='monkeys/librepro_la-DigestAuthenticator.lo' libtool=yes 
+librepro_la-DigestAuthenticator.lo: monkeys/DigestAuthenticator.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-DigestAuthenticator.lo -MD -MP -MF $(DEPDIR)/librepro_la-DigestAuthenticator.Tpo -c -o librepro_la-DigestAuthenticator.lo `test -f 'monkeys/DigestAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/DigestAuthenticator.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-DigestAuthenticator.Tpo $(DEPDIR)/librepro_la-DigestAuthenticator.Plo
+#	$(AM_V_CXX)source='monkeys/DigestAuthenticator.cxx' object='librepro_la-DigestAuthenticator.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-DigestAuthenticator.lo `test -f 'monkeys/DigestAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/DigestAuthenticator.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-DigestAuthenticator.lo `test -f 'monkeys/DigestAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/DigestAuthenticator.cxx
 
-monkeys/librepro_la-CookieAuthenticator.lo: monkeys/CookieAuthenticator.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-CookieAuthenticator.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-CookieAuthenticator.Tpo -c -o monkeys/librepro_la-CookieAuthenticator.lo `test -f 'monkeys/CookieAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CookieAuthenticator.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-CookieAuthenticator.Tpo monkeys/$(DEPDIR)/librepro_la-CookieAuthenticator.Plo
-#	$(AM_V_CXX)source='monkeys/CookieAuthenticator.cxx' object='monkeys/librepro_la-CookieAuthenticator.lo' libtool=yes 
+librepro_la-CookieAuthenticator.lo: monkeys/CookieAuthenticator.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-CookieAuthenticator.lo -MD -MP -MF $(DEPDIR)/librepro_la-CookieAuthenticator.Tpo -c -o librepro_la-CookieAuthenticator.lo `test -f 'monkeys/CookieAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CookieAuthenticator.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-CookieAuthenticator.Tpo $(DEPDIR)/librepro_la-CookieAuthenticator.Plo
+#	$(AM_V_CXX)source='monkeys/CookieAuthenticator.cxx' object='librepro_la-CookieAuthenticator.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-CookieAuthenticator.lo `test -f 'monkeys/CookieAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CookieAuthenticator.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-CookieAuthenticator.lo `test -f 'monkeys/CookieAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/CookieAuthenticator.cxx
 
-monkeys/librepro_la-StrictRouteFixup.lo: monkeys/StrictRouteFixup.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-StrictRouteFixup.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-StrictRouteFixup.Tpo -c -o monkeys/librepro_la-StrictRouteFixup.lo `test -f 'monkeys/StrictRouteFixup.cxx' || echo '$(srcdir)/'`monkeys/StrictRouteFixup.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-StrictRouteFixup.Tpo monkeys/$(DEPDIR)/librepro_la-StrictRouteFixup.Plo
-#	$(AM_V_CXX)source='monkeys/StrictRouteFixup.cxx' object='monkeys/librepro_la-StrictRouteFixup.lo' libtool=yes 
+librepro_la-StrictRouteFixup.lo: monkeys/StrictRouteFixup.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-StrictRouteFixup.lo -MD -MP -MF $(DEPDIR)/librepro_la-StrictRouteFixup.Tpo -c -o librepro_la-StrictRouteFixup.lo `test -f 'monkeys/StrictRouteFixup.cxx' || echo '$(srcdir)/'`monkeys/StrictRouteFixup.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-StrictRouteFixup.Tpo $(DEPDIR)/librepro_la-StrictRouteFixup.Plo
+#	$(AM_V_CXX)source='monkeys/StrictRouteFixup.cxx' object='librepro_la-StrictRouteFixup.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-StrictRouteFixup.lo `test -f 'monkeys/StrictRouteFixup.cxx' || echo '$(srcdir)/'`monkeys/StrictRouteFixup.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-StrictRouteFixup.lo `test -f 'monkeys/StrictRouteFixup.cxx' || echo '$(srcdir)/'`monkeys/StrictRouteFixup.cxx
 
-monkeys/librepro_la-AmIResponsible.lo: monkeys/AmIResponsible.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-AmIResponsible.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-AmIResponsible.Tpo -c -o monkeys/librepro_la-AmIResponsible.lo `test -f 'monkeys/AmIResponsible.cxx' || echo '$(srcdir)/'`monkeys/AmIResponsible.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-AmIResponsible.Tpo monkeys/$(DEPDIR)/librepro_la-AmIResponsible.Plo
-#	$(AM_V_CXX)source='monkeys/AmIResponsible.cxx' object='monkeys/librepro_la-AmIResponsible.lo' libtool=yes 
+librepro_la-AmIResponsible.lo: monkeys/AmIResponsible.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-AmIResponsible.lo -MD -MP -MF $(DEPDIR)/librepro_la-AmIResponsible.Tpo -c -o librepro_la-AmIResponsible.lo `test -f 'monkeys/AmIResponsible.cxx' || echo '$(srcdir)/'`monkeys/AmIResponsible.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-AmIResponsible.Tpo $(DEPDIR)/librepro_la-AmIResponsible.Plo
+#	$(AM_V_CXX)source='monkeys/AmIResponsible.cxx' object='librepro_la-AmIResponsible.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-AmIResponsible.lo `test -f 'monkeys/AmIResponsible.cxx' || echo '$(srcdir)/'`monkeys/AmIResponsible.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-AmIResponsible.lo `test -f 'monkeys/AmIResponsible.cxx' || echo '$(srcdir)/'`monkeys/AmIResponsible.cxx
 
-monkeys/librepro_la-IsTrustedNode.lo: monkeys/IsTrustedNode.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-IsTrustedNode.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-IsTrustedNode.Tpo -c -o monkeys/librepro_la-IsTrustedNode.lo `test -f 'monkeys/IsTrustedNode.cxx' || echo '$(srcdir)/'`monkeys/IsTrustedNode.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-IsTrustedNode.Tpo monkeys/$(DEPDIR)/librepro_la-IsTrustedNode.Plo
-#	$(AM_V_CXX)source='monkeys/IsTrustedNode.cxx' object='monkeys/librepro_la-IsTrustedNode.lo' libtool=yes 
+librepro_la-IsTrustedNode.lo: monkeys/IsTrustedNode.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-IsTrustedNode.lo -MD -MP -MF $(DEPDIR)/librepro_la-IsTrustedNode.Tpo -c -o librepro_la-IsTrustedNode.lo `test -f 'monkeys/IsTrustedNode.cxx' || echo '$(srcdir)/'`monkeys/IsTrustedNode.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-IsTrustedNode.Tpo $(DEPDIR)/librepro_la-IsTrustedNode.Plo
+#	$(AM_V_CXX)source='monkeys/IsTrustedNode.cxx' object='librepro_la-IsTrustedNode.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-IsTrustedNode.lo `test -f 'monkeys/IsTrustedNode.cxx' || echo '$(srcdir)/'`monkeys/IsTrustedNode.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-IsTrustedNode.lo `test -f 'monkeys/IsTrustedNode.cxx' || echo '$(srcdir)/'`monkeys/IsTrustedNode.cxx
 
-monkeys/librepro_la-ConstantLocationMonkey.lo: monkeys/ConstantLocationMonkey.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-ConstantLocationMonkey.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-ConstantLocationMonkey.Tpo -c -o monkeys/librepro_la-ConstantLocationMonkey.lo `test -f 'monkeys/ConstantLocationMonkey.cxx' || echo '$(srcdir)/'`monkeys/ConstantLocationMonkey.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-ConstantLocationMonkey.Tpo monkeys/$(DEPDIR)/librepro_la-ConstantLocationMonkey.Plo
-#	$(AM_V_CXX)source='monkeys/ConstantLocationMonkey.cxx' object='monkeys/librepro_la-ConstantLocationMonkey.lo' libtool=yes 
+librepro_la-ConstantLocationMonkey.lo: monkeys/ConstantLocationMonkey.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-ConstantLocationMonkey.lo -MD -MP -MF $(DEPDIR)/librepro_la-ConstantLocationMonkey.Tpo -c -o librepro_la-ConstantLocationMonkey.lo `test -f 'monkeys/ConstantLocationMonkey.cxx' || echo '$(srcdir)/'`monkeys/ConstantLocationMonkey.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-ConstantLocationMonkey.Tpo $(DEPDIR)/librepro_la-ConstantLocationMonkey.Plo
+#	$(AM_V_CXX)source='monkeys/ConstantLocationMonkey.cxx' object='librepro_la-ConstantLocationMonkey.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-ConstantLocationMonkey.lo `test -f 'monkeys/ConstantLocationMonkey.cxx' || echo '$(srcdir)/'`monkeys/ConstantLocationMonkey.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-ConstantLocationMonkey.lo `test -f 'monkeys/ConstantLocationMonkey.cxx' || echo '$(srcdir)/'`monkeys/ConstantLocationMonkey.cxx
 
-monkeys/librepro_la-LocationServer.lo: monkeys/LocationServer.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-LocationServer.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-LocationServer.Tpo -c -o monkeys/librepro_la-LocationServer.lo `test -f 'monkeys/LocationServer.cxx' || echo '$(srcdir)/'`monkeys/LocationServer.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-LocationServer.Tpo monkeys/$(DEPDIR)/librepro_la-LocationServer.Plo
-#	$(AM_V_CXX)source='monkeys/LocationServer.cxx' object='monkeys/librepro_la-LocationServer.lo' libtool=yes 
+librepro_la-LocationServer.lo: monkeys/LocationServer.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-LocationServer.lo -MD -MP -MF $(DEPDIR)/librepro_la-LocationServer.Tpo -c -o librepro_la-LocationServer.lo `test -f 'monkeys/LocationServer.cxx' || echo '$(srcdir)/'`monkeys/LocationServer.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-LocationServer.Tpo $(DEPDIR)/librepro_la-LocationServer.Plo
+#	$(AM_V_CXX)source='monkeys/LocationServer.cxx' object='librepro_la-LocationServer.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-LocationServer.lo `test -f 'monkeys/LocationServer.cxx' || echo '$(srcdir)/'`monkeys/LocationServer.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-LocationServer.lo `test -f 'monkeys/LocationServer.cxx' || echo '$(srcdir)/'`monkeys/LocationServer.cxx
 
-monkeys/librepro_la-OutboundTargetHandler.lo: monkeys/OutboundTargetHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-OutboundTargetHandler.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-OutboundTargetHandler.Tpo -c -o monkeys/librepro_la-OutboundTargetHandler.lo `test -f 'monkeys/OutboundTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/OutboundTargetHandler.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-OutboundTargetHandler.Tpo monkeys/$(DEPDIR)/librepro_la-OutboundTargetHandler.Plo
-#	$(AM_V_CXX)source='monkeys/OutboundTargetHandler.cxx' object='monkeys/librepro_la-OutboundTargetHandler.lo' libtool=yes 
+librepro_la-OutboundTargetHandler.lo: monkeys/OutboundTargetHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-OutboundTargetHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-OutboundTargetHandler.Tpo -c -o librepro_la-OutboundTargetHandler.lo `test -f 'monkeys/OutboundTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/OutboundTargetHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-OutboundTargetHandler.Tpo $(DEPDIR)/librepro_la-OutboundTargetHandler.Plo
+#	$(AM_V_CXX)source='monkeys/OutboundTargetHandler.cxx' object='librepro_la-OutboundTargetHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-OutboundTargetHandler.lo `test -f 'monkeys/OutboundTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/OutboundTargetHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-OutboundTargetHandler.lo `test -f 'monkeys/OutboundTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/OutboundTargetHandler.cxx
 
-monkeys/librepro_la-RADIUSAuthenticator.lo: monkeys/RADIUSAuthenticator.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-RADIUSAuthenticator.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-RADIUSAuthenticator.Tpo -c -o monkeys/librepro_la-RADIUSAuthenticator.lo `test -f 'monkeys/RADIUSAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/RADIUSAuthenticator.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-RADIUSAuthenticator.Tpo monkeys/$(DEPDIR)/librepro_la-RADIUSAuthenticator.Plo
-#	$(AM_V_CXX)source='monkeys/RADIUSAuthenticator.cxx' object='monkeys/librepro_la-RADIUSAuthenticator.lo' libtool=yes 
+librepro_la-RADIUSAuthenticator.lo: monkeys/RADIUSAuthenticator.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-RADIUSAuthenticator.lo -MD -MP -MF $(DEPDIR)/librepro_la-RADIUSAuthenticator.Tpo -c -o librepro_la-RADIUSAuthenticator.lo `test -f 'monkeys/RADIUSAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/RADIUSAuthenticator.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-RADIUSAuthenticator.Tpo $(DEPDIR)/librepro_la-RADIUSAuthenticator.Plo
+#	$(AM_V_CXX)source='monkeys/RADIUSAuthenticator.cxx' object='librepro_la-RADIUSAuthenticator.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-RADIUSAuthenticator.lo `test -f 'monkeys/RADIUSAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/RADIUSAuthenticator.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-RADIUSAuthenticator.lo `test -f 'monkeys/RADIUSAuthenticator.cxx' || echo '$(srcdir)/'`monkeys/RADIUSAuthenticator.cxx
 
-monkeys/librepro_la-RecursiveRedirect.lo: monkeys/RecursiveRedirect.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-RecursiveRedirect.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-RecursiveRedirect.Tpo -c -o monkeys/librepro_la-RecursiveRedirect.lo `test -f 'monkeys/RecursiveRedirect.cxx' || echo '$(srcdir)/'`monkeys/RecursiveRedirect.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-RecursiveRedirect.Tpo monkeys/$(DEPDIR)/librepro_la-RecursiveRedirect.Plo
-#	$(AM_V_CXX)source='monkeys/RecursiveRedirect.cxx' object='monkeys/librepro_la-RecursiveRedirect.lo' libtool=yes 
+librepro_la-RecursiveRedirect.lo: monkeys/RecursiveRedirect.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-RecursiveRedirect.lo -MD -MP -MF $(DEPDIR)/librepro_la-RecursiveRedirect.Tpo -c -o librepro_la-RecursiveRedirect.lo `test -f 'monkeys/RecursiveRedirect.cxx' || echo '$(srcdir)/'`monkeys/RecursiveRedirect.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-RecursiveRedirect.Tpo $(DEPDIR)/librepro_la-RecursiveRedirect.Plo
+#	$(AM_V_CXX)source='monkeys/RecursiveRedirect.cxx' object='librepro_la-RecursiveRedirect.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-RecursiveRedirect.lo `test -f 'monkeys/RecursiveRedirect.cxx' || echo '$(srcdir)/'`monkeys/RecursiveRedirect.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-RecursiveRedirect.lo `test -f 'monkeys/RecursiveRedirect.cxx' || echo '$(srcdir)/'`monkeys/RecursiveRedirect.cxx
 
-monkeys/librepro_la-SimpleStaticRoute.lo: monkeys/SimpleStaticRoute.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-SimpleStaticRoute.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-SimpleStaticRoute.Tpo -c -o monkeys/librepro_la-SimpleStaticRoute.lo `test -f 'monkeys/SimpleStaticRoute.cxx' || echo '$(srcdir)/'`monkeys/SimpleStaticRoute.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-SimpleStaticRoute.Tpo monkeys/$(DEPDIR)/librepro_la-SimpleStaticRoute.Plo
-#	$(AM_V_CXX)source='monkeys/SimpleStaticRoute.cxx' object='monkeys/librepro_la-SimpleStaticRoute.lo' libtool=yes 
+librepro_la-SimpleStaticRoute.lo: monkeys/SimpleStaticRoute.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-SimpleStaticRoute.lo -MD -MP -MF $(DEPDIR)/librepro_la-SimpleStaticRoute.Tpo -c -o librepro_la-SimpleStaticRoute.lo `test -f 'monkeys/SimpleStaticRoute.cxx' || echo '$(srcdir)/'`monkeys/SimpleStaticRoute.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-SimpleStaticRoute.Tpo $(DEPDIR)/librepro_la-SimpleStaticRoute.Plo
+#	$(AM_V_CXX)source='monkeys/SimpleStaticRoute.cxx' object='librepro_la-SimpleStaticRoute.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-SimpleStaticRoute.lo `test -f 'monkeys/SimpleStaticRoute.cxx' || echo '$(srcdir)/'`monkeys/SimpleStaticRoute.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-SimpleStaticRoute.lo `test -f 'monkeys/SimpleStaticRoute.cxx' || echo '$(srcdir)/'`monkeys/SimpleStaticRoute.cxx
 
-monkeys/librepro_la-StaticRoute.lo: monkeys/StaticRoute.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-StaticRoute.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-StaticRoute.Tpo -c -o monkeys/librepro_la-StaticRoute.lo `test -f 'monkeys/StaticRoute.cxx' || echo '$(srcdir)/'`monkeys/StaticRoute.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-StaticRoute.Tpo monkeys/$(DEPDIR)/librepro_la-StaticRoute.Plo
-#	$(AM_V_CXX)source='monkeys/StaticRoute.cxx' object='monkeys/librepro_la-StaticRoute.lo' libtool=yes 
+librepro_la-StaticRoute.lo: monkeys/StaticRoute.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-StaticRoute.lo -MD -MP -MF $(DEPDIR)/librepro_la-StaticRoute.Tpo -c -o librepro_la-StaticRoute.lo `test -f 'monkeys/StaticRoute.cxx' || echo '$(srcdir)/'`monkeys/StaticRoute.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-StaticRoute.Tpo $(DEPDIR)/librepro_la-StaticRoute.Plo
+#	$(AM_V_CXX)source='monkeys/StaticRoute.cxx' object='librepro_la-StaticRoute.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-StaticRoute.lo `test -f 'monkeys/StaticRoute.cxx' || echo '$(srcdir)/'`monkeys/StaticRoute.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-StaticRoute.lo `test -f 'monkeys/StaticRoute.cxx' || echo '$(srcdir)/'`monkeys/StaticRoute.cxx
 
-monkeys/librepro_la-QValueTargetHandler.lo: monkeys/QValueTargetHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-QValueTargetHandler.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-QValueTargetHandler.Tpo -c -o monkeys/librepro_la-QValueTargetHandler.lo `test -f 'monkeys/QValueTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/QValueTargetHandler.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-QValueTargetHandler.Tpo monkeys/$(DEPDIR)/librepro_la-QValueTargetHandler.Plo
-#	$(AM_V_CXX)source='monkeys/QValueTargetHandler.cxx' object='monkeys/librepro_la-QValueTargetHandler.lo' libtool=yes 
+librepro_la-QValueTargetHandler.lo: monkeys/QValueTargetHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-QValueTargetHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-QValueTargetHandler.Tpo -c -o librepro_la-QValueTargetHandler.lo `test -f 'monkeys/QValueTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/QValueTargetHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-QValueTargetHandler.Tpo $(DEPDIR)/librepro_la-QValueTargetHandler.Plo
+#	$(AM_V_CXX)source='monkeys/QValueTargetHandler.cxx' object='librepro_la-QValueTargetHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-QValueTargetHandler.lo `test -f 'monkeys/QValueTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/QValueTargetHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-QValueTargetHandler.lo `test -f 'monkeys/QValueTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/QValueTargetHandler.cxx
 
-monkeys/librepro_la-SimpleTargetHandler.lo: monkeys/SimpleTargetHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-SimpleTargetHandler.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-SimpleTargetHandler.Tpo -c -o monkeys/librepro_la-SimpleTargetHandler.lo `test -f 'monkeys/SimpleTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/SimpleTargetHandler.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-SimpleTargetHandler.Tpo monkeys/$(DEPDIR)/librepro_la-SimpleTargetHandler.Plo
-#	$(AM_V_CXX)source='monkeys/SimpleTargetHandler.cxx' object='monkeys/librepro_la-SimpleTargetHandler.lo' libtool=yes 
+librepro_la-SimpleTargetHandler.lo: monkeys/SimpleTargetHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-SimpleTargetHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-SimpleTargetHandler.Tpo -c -o librepro_la-SimpleTargetHandler.lo `test -f 'monkeys/SimpleTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/SimpleTargetHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-SimpleTargetHandler.Tpo $(DEPDIR)/librepro_la-SimpleTargetHandler.Plo
+#	$(AM_V_CXX)source='monkeys/SimpleTargetHandler.cxx' object='librepro_la-SimpleTargetHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-SimpleTargetHandler.lo `test -f 'monkeys/SimpleTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/SimpleTargetHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-SimpleTargetHandler.lo `test -f 'monkeys/SimpleTargetHandler.cxx' || echo '$(srcdir)/'`monkeys/SimpleTargetHandler.cxx
 
-monkeys/librepro_la-GeoProximityTargetSorter.lo: monkeys/GeoProximityTargetSorter.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-GeoProximityTargetSorter.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-GeoProximityTargetSorter.Tpo -c -o monkeys/librepro_la-GeoProximityTargetSorter.lo `test -f 'monkeys/GeoProximityTargetSorter.cxx' || echo '$(srcdir)/'`monkeys/GeoProximityTargetSorter.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-GeoProximityTargetSorter.Tpo monkeys/$(DEPDIR)/librepro_la-GeoProximityTargetSorter.Plo
-#	$(AM_V_CXX)source='monkeys/GeoProximityTargetSorter.cxx' object='monkeys/librepro_la-GeoProximityTargetSorter.lo' libtool=yes 
+librepro_la-GeoProximityTargetSorter.lo: monkeys/GeoProximityTargetSorter.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-GeoProximityTargetSorter.lo -MD -MP -MF $(DEPDIR)/librepro_la-GeoProximityTargetSorter.Tpo -c -o librepro_la-GeoProximityTargetSorter.lo `test -f 'monkeys/GeoProximityTargetSorter.cxx' || echo '$(srcdir)/'`monkeys/GeoProximityTargetSorter.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-GeoProximityTargetSorter.Tpo $(DEPDIR)/librepro_la-GeoProximityTargetSorter.Plo
+#	$(AM_V_CXX)source='monkeys/GeoProximityTargetSorter.cxx' object='librepro_la-GeoProximityTargetSorter.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-GeoProximityTargetSorter.lo `test -f 'monkeys/GeoProximityTargetSorter.cxx' || echo '$(srcdir)/'`monkeys/GeoProximityTargetSorter.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-GeoProximityTargetSorter.lo `test -f 'monkeys/GeoProximityTargetSorter.cxx' || echo '$(srcdir)/'`monkeys/GeoProximityTargetSorter.cxx
 
-monkeys/librepro_la-RequestFilter.lo: monkeys/RequestFilter.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-RequestFilter.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-RequestFilter.Tpo -c -o monkeys/librepro_la-RequestFilter.lo `test -f 'monkeys/RequestFilter.cxx' || echo '$(srcdir)/'`monkeys/RequestFilter.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-RequestFilter.Tpo monkeys/$(DEPDIR)/librepro_la-RequestFilter.Plo
-#	$(AM_V_CXX)source='monkeys/RequestFilter.cxx' object='monkeys/librepro_la-RequestFilter.lo' libtool=yes 
+librepro_la-RequestFilter.lo: monkeys/RequestFilter.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-RequestFilter.lo -MD -MP -MF $(DEPDIR)/librepro_la-RequestFilter.Tpo -c -o librepro_la-RequestFilter.lo `test -f 'monkeys/RequestFilter.cxx' || echo '$(srcdir)/'`monkeys/RequestFilter.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-RequestFilter.Tpo $(DEPDIR)/librepro_la-RequestFilter.Plo
+#	$(AM_V_CXX)source='monkeys/RequestFilter.cxx' object='librepro_la-RequestFilter.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-RequestFilter.lo `test -f 'monkeys/RequestFilter.cxx' || echo '$(srcdir)/'`monkeys/RequestFilter.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-RequestFilter.lo `test -f 'monkeys/RequestFilter.cxx' || echo '$(srcdir)/'`monkeys/RequestFilter.cxx
 
-monkeys/librepro_la-MessageSilo.lo: monkeys/MessageSilo.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT monkeys/librepro_la-MessageSilo.lo -MD -MP -MF monkeys/$(DEPDIR)/librepro_la-MessageSilo.Tpo -c -o monkeys/librepro_la-MessageSilo.lo `test -f 'monkeys/MessageSilo.cxx' || echo '$(srcdir)/'`monkeys/MessageSilo.cxx
-#	$(AM_V_at)$(am__mv) monkeys/$(DEPDIR)/librepro_la-MessageSilo.Tpo monkeys/$(DEPDIR)/librepro_la-MessageSilo.Plo
-#	$(AM_V_CXX)source='monkeys/MessageSilo.cxx' object='monkeys/librepro_la-MessageSilo.lo' libtool=yes 
+librepro_la-MessageSilo.lo: monkeys/MessageSilo.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-MessageSilo.lo -MD -MP -MF $(DEPDIR)/librepro_la-MessageSilo.Tpo -c -o librepro_la-MessageSilo.lo `test -f 'monkeys/MessageSilo.cxx' || echo '$(srcdir)/'`monkeys/MessageSilo.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-MessageSilo.Tpo $(DEPDIR)/librepro_la-MessageSilo.Plo
+#	$(AM_V_CXX)source='monkeys/MessageSilo.cxx' object='librepro_la-MessageSilo.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o monkeys/librepro_la-MessageSilo.lo `test -f 'monkeys/MessageSilo.cxx' || echo '$(srcdir)/'`monkeys/MessageSilo.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-MessageSilo.lo `test -f 'monkeys/MessageSilo.cxx' || echo '$(srcdir)/'`monkeys/MessageSilo.cxx
 
-stateAgents/librepro_la-CertServer.lo: stateAgents/CertServer.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-CertServer.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-CertServer.Tpo -c -o stateAgents/librepro_la-CertServer.lo `test -f 'stateAgents/CertServer.cxx' || echo '$(srcdir)/'`stateAgents/CertServer.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-CertServer.Tpo stateAgents/$(DEPDIR)/librepro_la-CertServer.Plo
-#	$(AM_V_CXX)source='stateAgents/CertServer.cxx' object='stateAgents/librepro_la-CertServer.lo' libtool=yes 
+librepro_la-CertServer.lo: stateAgents/CertServer.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-CertServer.lo -MD -MP -MF $(DEPDIR)/librepro_la-CertServer.Tpo -c -o librepro_la-CertServer.lo `test -f 'stateAgents/CertServer.cxx' || echo '$(srcdir)/'`stateAgents/CertServer.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-CertServer.Tpo $(DEPDIR)/librepro_la-CertServer.Plo
+#	$(AM_V_CXX)source='stateAgents/CertServer.cxx' object='librepro_la-CertServer.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-CertServer.lo `test -f 'stateAgents/CertServer.cxx' || echo '$(srcdir)/'`stateAgents/CertServer.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-CertServer.lo `test -f 'stateAgents/CertServer.cxx' || echo '$(srcdir)/'`stateAgents/CertServer.cxx
 
-stateAgents/librepro_la-CertPublicationHandler.lo: stateAgents/CertPublicationHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-CertPublicationHandler.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-CertPublicationHandler.Tpo -c -o stateAgents/librepro_la-CertPublicationHandler.lo `test -f 'stateAgents/CertPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertPublicationHandler.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-CertPublicationHandler.Tpo stateAgents/$(DEPDIR)/librepro_la-CertPublicationHandler.Plo
-#	$(AM_V_CXX)source='stateAgents/CertPublicationHandler.cxx' object='stateAgents/librepro_la-CertPublicationHandler.lo' libtool=yes 
+librepro_la-CertPublicationHandler.lo: stateAgents/CertPublicationHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-CertPublicationHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-CertPublicationHandler.Tpo -c -o librepro_la-CertPublicationHandler.lo `test -f 'stateAgents/CertPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertPublicationHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-CertPublicationHandler.Tpo $(DEPDIR)/librepro_la-CertPublicationHandler.Plo
+#	$(AM_V_CXX)source='stateAgents/CertPublicationHandler.cxx' object='librepro_la-CertPublicationHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-CertPublicationHandler.lo `test -f 'stateAgents/CertPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertPublicationHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-CertPublicationHandler.lo `test -f 'stateAgents/CertPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertPublicationHandler.cxx
 
-stateAgents/librepro_la-CertSubscriptionHandler.lo: stateAgents/CertSubscriptionHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-CertSubscriptionHandler.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-CertSubscriptionHandler.Tpo -c -o stateAgents/librepro_la-CertSubscriptionHandler.lo `test -f 'stateAgents/CertSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertSubscriptionHandler.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-CertSubscriptionHandler.Tpo stateAgents/$(DEPDIR)/librepro_la-CertSubscriptionHandler.Plo
-#	$(AM_V_CXX)source='stateAgents/CertSubscriptionHandler.cxx' object='stateAgents/librepro_la-CertSubscriptionHandler.lo' libtool=yes 
+librepro_la-CertSubscriptionHandler.lo: stateAgents/CertSubscriptionHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-CertSubscriptionHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-CertSubscriptionHandler.Tpo -c -o librepro_la-CertSubscriptionHandler.lo `test -f 'stateAgents/CertSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertSubscriptionHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-CertSubscriptionHandler.Tpo $(DEPDIR)/librepro_la-CertSubscriptionHandler.Plo
+#	$(AM_V_CXX)source='stateAgents/CertSubscriptionHandler.cxx' object='librepro_la-CertSubscriptionHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-CertSubscriptionHandler.lo `test -f 'stateAgents/CertSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertSubscriptionHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-CertSubscriptionHandler.lo `test -f 'stateAgents/CertSubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/CertSubscriptionHandler.cxx
 
-stateAgents/librepro_la-PrivateKeyPublicationHandler.lo: stateAgents/PrivateKeyPublicationHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-PrivateKeyPublicationHandler.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Tpo -c -o stateAgents/librepro_la-PrivateKeyPublicationHandler.lo `test -f 'stateAgents/PrivateKeyPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeyPublicationHandler.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Tpo stateAgents/$(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Plo
-#	$(AM_V_CXX)source='stateAgents/PrivateKeyPublicationHandler.cxx' object='stateAgents/librepro_la-PrivateKeyPublicationHandler.lo' libtool=yes 
+librepro_la-PrivateKeyPublicationHandler.lo: stateAgents/PrivateKeyPublicationHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-PrivateKeyPublicationHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Tpo -c -o librepro_la-PrivateKeyPublicationHandler.lo `test -f 'stateAgents/PrivateKeyPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeyPublicationHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Tpo $(DEPDIR)/librepro_la-PrivateKeyPublicationHandler.Plo
+#	$(AM_V_CXX)source='stateAgents/PrivateKeyPublicationHandler.cxx' object='librepro_la-PrivateKeyPublicationHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-PrivateKeyPublicationHandler.lo `test -f 'stateAgents/PrivateKeyPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeyPublicationHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-PrivateKeyPublicationHandler.lo `test -f 'stateAgents/PrivateKeyPublicationHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeyPublicationHandler.cxx
 
-stateAgents/librepro_la-PrivateKeySubscriptionHandler.lo: stateAgents/PrivateKeySubscriptionHandler.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT stateAgents/librepro_la-PrivateKeySubscriptionHandler.lo -MD -MP -MF stateAgents/$(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Tpo -c -o stateAgents/librepro_la-PrivateKeySubscriptionHandler.lo `test -f 'stateAgents/PrivateKeySubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeySubscriptionHandler.cxx
-#	$(AM_V_at)$(am__mv) stateAgents/$(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Tpo stateAgents/$(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Plo
-#	$(AM_V_CXX)source='stateAgents/PrivateKeySubscriptionHandler.cxx' object='stateAgents/librepro_la-PrivateKeySubscriptionHandler.lo' libtool=yes 
+librepro_la-PrivateKeySubscriptionHandler.lo: stateAgents/PrivateKeySubscriptionHandler.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-PrivateKeySubscriptionHandler.lo -MD -MP -MF $(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Tpo -c -o librepro_la-PrivateKeySubscriptionHandler.lo `test -f 'stateAgents/PrivateKeySubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeySubscriptionHandler.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Tpo $(DEPDIR)/librepro_la-PrivateKeySubscriptionHandler.Plo
+#	$(AM_V_CXX)source='stateAgents/PrivateKeySubscriptionHandler.cxx' object='librepro_la-PrivateKeySubscriptionHandler.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o stateAgents/librepro_la-PrivateKeySubscriptionHandler.lo `test -f 'stateAgents/PrivateKeySubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeySubscriptionHandler.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -c -o librepro_la-PrivateKeySubscriptionHandler.lo `test -f 'stateAgents/PrivateKeySubscriptionHandler.cxx' || echo '$(srcdir)/'`stateAgents/PrivateKeySubscriptionHandler.cxx
 
 librepro_la-MySqlDb.lo: MySqlDb.cxx
 #	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(librepro_la_CXXFLAGS) $(CXXFLAGS) -MT librepro_la-MySqlDb.lo -MD -MP -MF $(DEPDIR)/librepro_la-MySqlDb.Tpo -c -o librepro_la-MySqlDb.lo `test -f 'MySqlDb.cxx' || echo '$(srcdir)/'`MySqlDb.cxx
@@ -1469,8 +1386,6 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf monkeys/.libs monkeys/_libs
-	-rm -rf stateAgents/.libs stateAgents/_libs
 install-man8: $(dist_man_MANS)
 	@$(NORMAL_INSTALL)
 	@list1=''; \
@@ -1727,10 +1642,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f monkeys/$(DEPDIR)/$(am__dirstamp)
-	-rm -f monkeys/$(am__dirstamp)
-	-rm -f stateAgents/$(DEPDIR)/$(am__dirstamp)
-	-rm -f stateAgents/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1741,7 +1652,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) monkeys/$(DEPDIR) stateAgents/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1787,7 +1698,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) monkeys/$(DEPDIR) stateAgents/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

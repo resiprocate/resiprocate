@@ -127,12 +127,9 @@ libpyroute_la_LIBADD =
 am_libpyroute_la_OBJECTS = libpyroute_la-PyRoutePlugin.lo \
 	libpyroute_la-PyRouteWorker.lo \
 	libpyroute_la-PyRouteProcessor.lo
-am__dirstamp = $(am__leading_dot)dirstamp
-nodist_libpyroute_la_OBJECTS =  \
-	$(PYCXX_SRCDIR)/libpyroute_la-cxxextensions.lo \
-	$(PYCXX_SRCDIR)/libpyroute_la-cxx_extensions.lo \
-	$(PYCXX_SRCDIR)/libpyroute_la-cxxsupport.lo \
-	$(PYCXX_SRCDIR)/../libpyroute_la-IndirectPythonInterface.lo
+nodist_libpyroute_la_OBJECTS = libpyroute_la-cxxextensions.lo \
+	libpyroute_la-cxx_extensions.lo libpyroute_la-cxxsupport.lo \
+	libpyroute_la-IndirectPythonInterface.lo
 libpyroute_la_OBJECTS = $(am_libpyroute_la_OBJECTS) \
 	$(nodist_libpyroute_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
@@ -390,9 +387,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign repro/plugins/pyroute/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu repro/plugins/pyroute/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign repro/plugins/pyroute/Makefile
+	  $(AUTOMAKE) --gnu repro/plugins/pyroute/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -446,103 +443,69 @@ clean-repropluginLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-$(PYCXX_SRCDIR)/$(am__dirstamp):
-	@$(MKDIR_P) $(PYCXX_SRCDIR)
-	@: > $(PYCXX_SRCDIR)/$(am__dirstamp)
-$(PYCXX_SRCDIR)/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) $(PYCXX_SRCDIR)/$(DEPDIR)
-	@: > $(PYCXX_SRCDIR)/$(DEPDIR)/$(am__dirstamp)
-$(PYCXX_SRCDIR)/libpyroute_la-cxxextensions.lo:  \
-	$(PYCXX_SRCDIR)/$(am__dirstamp) \
-	$(PYCXX_SRCDIR)/$(DEPDIR)/$(am__dirstamp)
-$(PYCXX_SRCDIR)/libpyroute_la-cxx_extensions.lo:  \
-	$(PYCXX_SRCDIR)/$(am__dirstamp) \
-	$(PYCXX_SRCDIR)/$(DEPDIR)/$(am__dirstamp)
-$(PYCXX_SRCDIR)/libpyroute_la-cxxsupport.lo:  \
-	$(PYCXX_SRCDIR)/$(am__dirstamp) \
-	$(PYCXX_SRCDIR)/$(DEPDIR)/$(am__dirstamp)
-$(PYCXX_SRCDIR)/../$(am__dirstamp):
-	@$(MKDIR_P) $(PYCXX_SRCDIR)/..
-	@: > $(PYCXX_SRCDIR)/../$(am__dirstamp)
-$(PYCXX_SRCDIR)/../$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) $(PYCXX_SRCDIR)/../$(DEPDIR)
-	@: > $(PYCXX_SRCDIR)/../$(DEPDIR)/$(am__dirstamp)
-$(PYCXX_SRCDIR)/../libpyroute_la-IndirectPythonInterface.lo:  \
-	$(PYCXX_SRCDIR)/../$(am__dirstamp) \
-	$(PYCXX_SRCDIR)/../$(DEPDIR)/$(am__dirstamp)
 
 libpyroute.la: $(libpyroute_la_OBJECTS) $(libpyroute_la_DEPENDENCIES) $(EXTRA_libpyroute_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libpyroute_la_LINK) -rpath $(reproplugindir) $(libpyroute_la_OBJECTS) $(libpyroute_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f $(PYCXX_SRCDIR)/*.$(OBJEXT)
-	-rm -f $(PYCXX_SRCDIR)/*.lo
-	-rm -f $(PYCXX_SRCDIR)/../*.$(OBJEXT)
-	-rm -f $(PYCXX_SRCDIR)/../*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
-#include $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxx_extensions.Plo
-#include $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxextensions.Plo
-#include $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxsupport.Plo
-#include $(PYCXX_SRCDIR)/../$(DEPDIR)/libpyroute_la-IndirectPythonInterface.Plo
+#include ./$(DEPDIR)/libpyroute_la-IndirectPythonInterface.Plo
 #include ./$(DEPDIR)/libpyroute_la-PyRoutePlugin.Plo
 #include ./$(DEPDIR)/libpyroute_la-PyRouteProcessor.Plo
 #include ./$(DEPDIR)/libpyroute_la-PyRouteWorker.Plo
+#include ./$(DEPDIR)/libpyroute_la-cxx_extensions.Plo
+#include ./$(DEPDIR)/libpyroute_la-cxxextensions.Plo
+#include ./$(DEPDIR)/libpyroute_la-cxxsupport.Plo
 
 .c.o:
-#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CC)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
 	$(AM_V_CC)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CC)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
 	$(AM_V_CC)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CC)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
 	$(AM_V_CC)$(LTCOMPILE) -c -o $@ $<
 
-$(PYCXX_SRCDIR)/libpyroute_la-cxxextensions.lo: $(PYCXX_SRCDIR)/cxxextensions.c
-#	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT $(PYCXX_SRCDIR)/libpyroute_la-cxxextensions.lo -MD -MP -MF $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxextensions.Tpo -c -o $(PYCXX_SRCDIR)/libpyroute_la-cxxextensions.lo `test -f '$(PYCXX_SRCDIR)/cxxextensions.c' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxextensions.c
-#	$(AM_V_at)$(am__mv) $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxextensions.Tpo $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxextensions.Plo
-#	$(AM_V_CC)source='$(PYCXX_SRCDIR)/cxxextensions.c' object='$(PYCXX_SRCDIR)/libpyroute_la-cxxextensions.lo' libtool=yes 
+libpyroute_la-cxxextensions.lo: $(PYCXX_SRCDIR)/cxxextensions.c
+#	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpyroute_la-cxxextensions.lo -MD -MP -MF $(DEPDIR)/libpyroute_la-cxxextensions.Tpo -c -o libpyroute_la-cxxextensions.lo `test -f '$(PYCXX_SRCDIR)/cxxextensions.c' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxextensions.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/libpyroute_la-cxxextensions.Tpo $(DEPDIR)/libpyroute_la-cxxextensions.Plo
+#	$(AM_V_CC)source='$(PYCXX_SRCDIR)/cxxextensions.c' object='libpyroute_la-cxxextensions.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
-	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o $(PYCXX_SRCDIR)/libpyroute_la-cxxextensions.lo `test -f '$(PYCXX_SRCDIR)/cxxextensions.c' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxextensions.c
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpyroute_la-cxxextensions.lo `test -f '$(PYCXX_SRCDIR)/cxxextensions.c' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxextensions.c
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
@@ -568,33 +531,31 @@ libpyroute_la-PyRouteProcessor.lo: PyRouteProcessor.cxx
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyroute_la-PyRouteProcessor.lo `test -f 'PyRouteProcessor.cxx' || echo '$(srcdir)/'`PyRouteProcessor.cxx
 
-$(PYCXX_SRCDIR)/libpyroute_la-cxx_extensions.lo: $(PYCXX_SRCDIR)/cxx_extensions.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT $(PYCXX_SRCDIR)/libpyroute_la-cxx_extensions.lo -MD -MP -MF $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxx_extensions.Tpo -c -o $(PYCXX_SRCDIR)/libpyroute_la-cxx_extensions.lo `test -f '$(PYCXX_SRCDIR)/cxx_extensions.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxx_extensions.cxx
-#	$(AM_V_at)$(am__mv) $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxx_extensions.Tpo $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxx_extensions.Plo
-#	$(AM_V_CXX)source='$(PYCXX_SRCDIR)/cxx_extensions.cxx' object='$(PYCXX_SRCDIR)/libpyroute_la-cxx_extensions.lo' libtool=yes 
+libpyroute_la-cxx_extensions.lo: $(PYCXX_SRCDIR)/cxx_extensions.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libpyroute_la-cxx_extensions.lo -MD -MP -MF $(DEPDIR)/libpyroute_la-cxx_extensions.Tpo -c -o libpyroute_la-cxx_extensions.lo `test -f '$(PYCXX_SRCDIR)/cxx_extensions.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxx_extensions.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/libpyroute_la-cxx_extensions.Tpo $(DEPDIR)/libpyroute_la-cxx_extensions.Plo
+#	$(AM_V_CXX)source='$(PYCXX_SRCDIR)/cxx_extensions.cxx' object='libpyroute_la-cxx_extensions.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o $(PYCXX_SRCDIR)/libpyroute_la-cxx_extensions.lo `test -f '$(PYCXX_SRCDIR)/cxx_extensions.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxx_extensions.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyroute_la-cxx_extensions.lo `test -f '$(PYCXX_SRCDIR)/cxx_extensions.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxx_extensions.cxx
 
-$(PYCXX_SRCDIR)/libpyroute_la-cxxsupport.lo: $(PYCXX_SRCDIR)/cxxsupport.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT $(PYCXX_SRCDIR)/libpyroute_la-cxxsupport.lo -MD -MP -MF $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxsupport.Tpo -c -o $(PYCXX_SRCDIR)/libpyroute_la-cxxsupport.lo `test -f '$(PYCXX_SRCDIR)/cxxsupport.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxsupport.cxx
-#	$(AM_V_at)$(am__mv) $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxsupport.Tpo $(PYCXX_SRCDIR)/$(DEPDIR)/libpyroute_la-cxxsupport.Plo
-#	$(AM_V_CXX)source='$(PYCXX_SRCDIR)/cxxsupport.cxx' object='$(PYCXX_SRCDIR)/libpyroute_la-cxxsupport.lo' libtool=yes 
+libpyroute_la-cxxsupport.lo: $(PYCXX_SRCDIR)/cxxsupport.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libpyroute_la-cxxsupport.lo -MD -MP -MF $(DEPDIR)/libpyroute_la-cxxsupport.Tpo -c -o libpyroute_la-cxxsupport.lo `test -f '$(PYCXX_SRCDIR)/cxxsupport.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxsupport.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/libpyroute_la-cxxsupport.Tpo $(DEPDIR)/libpyroute_la-cxxsupport.Plo
+#	$(AM_V_CXX)source='$(PYCXX_SRCDIR)/cxxsupport.cxx' object='libpyroute_la-cxxsupport.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o $(PYCXX_SRCDIR)/libpyroute_la-cxxsupport.lo `test -f '$(PYCXX_SRCDIR)/cxxsupport.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxsupport.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyroute_la-cxxsupport.lo `test -f '$(PYCXX_SRCDIR)/cxxsupport.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/cxxsupport.cxx
 
-$(PYCXX_SRCDIR)/../libpyroute_la-IndirectPythonInterface.lo: $(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
-#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT $(PYCXX_SRCDIR)/../libpyroute_la-IndirectPythonInterface.lo -MD -MP -MF $(PYCXX_SRCDIR)/../$(DEPDIR)/libpyroute_la-IndirectPythonInterface.Tpo -c -o $(PYCXX_SRCDIR)/../libpyroute_la-IndirectPythonInterface.lo `test -f '$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
-#	$(AM_V_at)$(am__mv) $(PYCXX_SRCDIR)/../$(DEPDIR)/libpyroute_la-IndirectPythonInterface.Tpo $(PYCXX_SRCDIR)/../$(DEPDIR)/libpyroute_la-IndirectPythonInterface.Plo
-#	$(AM_V_CXX)source='$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx' object='$(PYCXX_SRCDIR)/../libpyroute_la-IndirectPythonInterface.lo' libtool=yes 
+libpyroute_la-IndirectPythonInterface.lo: $(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libpyroute_la-IndirectPythonInterface.lo -MD -MP -MF $(DEPDIR)/libpyroute_la-IndirectPythonInterface.Tpo -c -o libpyroute_la-IndirectPythonInterface.lo `test -f '$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/libpyroute_la-IndirectPythonInterface.Tpo $(DEPDIR)/libpyroute_la-IndirectPythonInterface.Plo
+#	$(AM_V_CXX)source='$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx' object='libpyroute_la-IndirectPythonInterface.lo' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o $(PYCXX_SRCDIR)/../libpyroute_la-IndirectPythonInterface.lo `test -f '$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpyroute_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libpyroute_la-IndirectPythonInterface.lo `test -f '$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx' || echo '$(srcdir)/'`$(PYCXX_SRCDIR)/../IndirectPythonInterface.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
-	-rm -rf $(PYCXX_SRCDIR)/.libs $(PYCXX_SRCDIR)/_libs
-	-rm -rf $(PYCXX_SRCDIR)/../.libs $(PYCXX_SRCDIR)/../_libs
 	-rm -rf .libs _libs
 
 ID: $(am__tagged_files)
@@ -712,10 +673,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-test -z "$(PYCXX_SRCDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(PYCXX_SRCDIR)/$(DEPDIR)/$(am__dirstamp)
-	-test -z "$(PYCXX_SRCDIR)/$(am__dirstamp)" || rm -f $(PYCXX_SRCDIR)/$(am__dirstamp)
-	-test -z "$(PYCXX_SRCDIR)/../$(DEPDIR)/$(am__dirstamp)" || rm -f $(PYCXX_SRCDIR)/../$(DEPDIR)/$(am__dirstamp)
-	-test -z "$(PYCXX_SRCDIR)/../$(am__dirstamp)" || rm -f $(PYCXX_SRCDIR)/../$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -726,7 +683,7 @@ clean-am: clean-generic clean-libtool clean-repropluginLTLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf $(PYCXX_SRCDIR)/$(DEPDIR) $(PYCXX_SRCDIR)/../$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -772,7 +729,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf $(PYCXX_SRCDIR)/$(DEPDIR) $(PYCXX_SRCDIR)/../$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

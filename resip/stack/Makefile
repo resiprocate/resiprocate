@@ -185,13 +185,11 @@ am__libresip_la_SOURCES_DIST = Auth.cxx CSeqCategory.cxx CallId.cxx \
 	ssl/Security.cxx ssl/TlsBaseTransport.cxx \
 	ssl/TlsConnection.cxx ssl/TlsTransport.cxx \
 	ssl/WssTransport.cxx ssl/WssConnection.cxx
-am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = ssl/DtlsTransport.lo ssl/Security.lo \
-	ssl/TlsBaseTransport.lo ssl/TlsConnection.lo \
-	ssl/TlsTransport.lo ssl/WssTransport.lo \
-	ssl/WssConnection.lo
+am__objects_1 = DtlsTransport.lo Security.lo \
+	TlsBaseTransport.lo TlsConnection.lo \
+	TlsTransport.lo WssTransport.lo WssConnection.lo
 am_libresip_la_OBJECTS = Auth.lo CSeqCategory.lo CallId.lo Cookie.lo \
-	DateCategory.lo gen/DayOfWeekHash.lo DtmfPayloadContents.lo \
+	DateCategory.lo DayOfWeekHash.lo DtmfPayloadContents.lo \
 	ExpiresCategory.lo GenericUri.lo IntegerCategory.lo \
 	InteropHelper.lo UInt32Category.lo Mime.lo NameAddr.lo \
 	ParserCategories.lo RequestLine.lo StatusLine.lo \
@@ -205,19 +203,18 @@ am_libresip_la_OBJECTS = Auth.lo CSeqCategory.lo CallId.lo Cookie.lo \
 	ExtensionHeader.lo ExistsOrDataParameter.lo ExistsParameter.lo \
 	ExternalBodyContents.lo QValue.lo QValueParameter.lo \
 	GenericContents.lo GenericPidfContents.lo HeaderFieldValue.lo \
-	HeaderFieldValueList.lo gen/HeaderHash.lo HeaderTypes.lo \
+	HeaderFieldValueList.lo HeaderHash.lo HeaderTypes.lo \
 	Headers.lo Helper.lo IntegerParameter.lo UInt32Parameter.lo \
 	InternalTransport.lo LazyParser.lo Message.lo \
-	MessageWaitingContents.lo gen/MethodHash.lo MethodTypes.lo \
-	gen/MonthHash.lo MsgHeaderScanner.lo \
+	MessageWaitingContents.lo MethodHash.lo MethodTypes.lo \
+	MonthHash.lo MsgHeaderScanner.lo \
 	MultipartAlternativeContents.lo MultipartMixedContents.lo \
 	MultipartRelatedContents.lo MultipartSignedContents.lo \
-	NonceHelper.lo OctetContents.lo Parameter.lo \
-	gen/ParameterHash.lo ParameterTypes.lo ParserCategory.lo \
-	ParserContainerBase.lo Pidf.lo Pkcs7Contents.lo \
-	Pkcs8Contents.lo PlainContents.lo PrivacyCategory.lo \
-	QuotedDataParameter.lo RAckCategory.lo Rlmi.lo \
-	RportParameter.lo SERNonceHelper.lo SdpContents.lo \
+	NonceHelper.lo OctetContents.lo Parameter.lo ParameterHash.lo \
+	ParameterTypes.lo ParserCategory.lo ParserContainerBase.lo \
+	Pidf.lo Pkcs7Contents.lo Pkcs8Contents.lo PlainContents.lo \
+	PrivacyCategory.lo QuotedDataParameter.lo RAckCategory.lo \
+	Rlmi.lo RportParameter.lo SERNonceHelper.lo SdpContents.lo \
 	SecurityAttributes.lo Compression.lo SipFrag.lo SipMessage.lo \
 	SipStack.lo StackThread.lo InterruptableStackThread.lo \
 	EventStackThread.lo StatisticsHandler.lo StatisticsManager.lo \
@@ -751,9 +748,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign resip/stack/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu resip/stack/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign resip/stack/Makefile
+	  $(AUTOMAKE) --gnu resip/stack/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -807,46 +804,12 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-gen/$(am__dirstamp):
-	@$(MKDIR_P) gen
-	@: > gen/$(am__dirstamp)
-gen/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) gen/$(DEPDIR)
-	@: > gen/$(DEPDIR)/$(am__dirstamp)
-gen/DayOfWeekHash.lo: gen/$(am__dirstamp) \
-	gen/$(DEPDIR)/$(am__dirstamp)
-gen/HeaderHash.lo: gen/$(am__dirstamp) gen/$(DEPDIR)/$(am__dirstamp)
-gen/MethodHash.lo: gen/$(am__dirstamp) gen/$(DEPDIR)/$(am__dirstamp)
-gen/MonthHash.lo: gen/$(am__dirstamp) gen/$(DEPDIR)/$(am__dirstamp)
-gen/ParameterHash.lo: gen/$(am__dirstamp) \
-	gen/$(DEPDIR)/$(am__dirstamp)
-ssl/$(am__dirstamp):
-	@$(MKDIR_P) ssl
-	@: > ssl/$(am__dirstamp)
-ssl/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ssl/$(DEPDIR)
-	@: > ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/DtlsTransport.lo: ssl/$(am__dirstamp) \
-	ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/Security.lo: ssl/$(am__dirstamp) ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/TlsBaseTransport.lo: ssl/$(am__dirstamp) \
-	ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/TlsConnection.lo: ssl/$(am__dirstamp) \
-	ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/TlsTransport.lo: ssl/$(am__dirstamp) ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/WssTransport.lo: ssl/$(am__dirstamp) ssl/$(DEPDIR)/$(am__dirstamp)
-ssl/WssConnection.lo: ssl/$(am__dirstamp) \
-	ssl/$(DEPDIR)/$(am__dirstamp)
 
 libresip.la: $(libresip_la_OBJECTS) $(libresip_la_DEPENDENCIES) $(EXTRA_libresip_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libresip_la_LINK) -rpath $(libdir) $(libresip_la_OBJECTS) $(libresip_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f gen/*.$(OBJEXT)
-	-rm -f gen/*.lo
-	-rm -f ssl/*.$(OBJEXT)
-	-rm -f ssl/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -869,10 +832,12 @@ distclean-compile:
 #include ./$(DEPDIR)/CpimContents.Plo
 #include ./$(DEPDIR)/DataParameter.Plo
 #include ./$(DEPDIR)/DateCategory.Plo
+#include ./$(DEPDIR)/DayOfWeekHash.Plo
 #include ./$(DEPDIR)/DeprecatedDialog.Plo
 #include ./$(DEPDIR)/DnsInterface.Plo
 #include ./$(DEPDIR)/DnsResult.Plo
 #include ./$(DEPDIR)/DtlsMessage.Plo
+#include ./$(DEPDIR)/DtlsTransport.Plo
 #include ./$(DEPDIR)/DtmfPayloadContents.Plo
 #include ./$(DEPDIR)/Embedded.Plo
 #include ./$(DEPDIR)/EventStackThread.Plo
@@ -887,6 +852,7 @@ distclean-compile:
 #include ./$(DEPDIR)/GenericUri.Plo
 #include ./$(DEPDIR)/HeaderFieldValue.Plo
 #include ./$(DEPDIR)/HeaderFieldValueList.Plo
+#include ./$(DEPDIR)/HeaderHash.Plo
 #include ./$(DEPDIR)/HeaderTypes.Plo
 #include ./$(DEPDIR)/Headers.Plo
 #include ./$(DEPDIR)/Helper.Plo
@@ -901,8 +867,10 @@ distclean-compile:
 #include ./$(DEPDIR)/Message.Plo
 #include ./$(DEPDIR)/MessageFilterRule.Plo
 #include ./$(DEPDIR)/MessageWaitingContents.Plo
+#include ./$(DEPDIR)/MethodHash.Plo
 #include ./$(DEPDIR)/MethodTypes.Plo
 #include ./$(DEPDIR)/Mime.Plo
+#include ./$(DEPDIR)/MonthHash.Plo
 #include ./$(DEPDIR)/MsgHeaderScanner.Plo
 #include ./$(DEPDIR)/MultipartAlternativeContents.Plo
 #include ./$(DEPDIR)/MultipartMixedContents.Plo
@@ -912,6 +880,7 @@ distclean-compile:
 #include ./$(DEPDIR)/NonceHelper.Plo
 #include ./$(DEPDIR)/OctetContents.Plo
 #include ./$(DEPDIR)/Parameter.Plo
+#include ./$(DEPDIR)/ParameterHash.Plo
 #include ./$(DEPDIR)/ParameterTypes.Plo
 #include ./$(DEPDIR)/ParserCategories.Plo
 #include ./$(DEPDIR)/ParserCategory.Plo
@@ -930,6 +899,7 @@ distclean-compile:
 #include ./$(DEPDIR)/RportParameter.Plo
 #include ./$(DEPDIR)/SERNonceHelper.Plo
 #include ./$(DEPDIR)/SdpContents.Plo
+#include ./$(DEPDIR)/Security.Plo
 #include ./$(DEPDIR)/SecurityAttributes.Plo
 #include ./$(DEPDIR)/SipFrag.Plo
 #include ./$(DEPDIR)/SipMessage.Plo
@@ -949,6 +919,9 @@ distclean-compile:
 #include ./$(DEPDIR)/TimeAccumulate.Plo
 #include ./$(DEPDIR)/TimerMessage.Plo
 #include ./$(DEPDIR)/TimerQueue.Plo
+#include ./$(DEPDIR)/TlsBaseTransport.Plo
+#include ./$(DEPDIR)/TlsConnection.Plo
+#include ./$(DEPDIR)/TlsTransport.Plo
 #include ./$(DEPDIR)/Token.Plo
 #include ./$(DEPDIR)/TokenOrQuotedStringCategory.Plo
 #include ./$(DEPDIR)/TransactionController.Plo
@@ -978,51 +951,120 @@ distclean-compile:
 #include ./$(DEPDIR)/WsDecorator.Plo
 #include ./$(DEPDIR)/WsFrameExtractor.Plo
 #include ./$(DEPDIR)/WsTransport.Plo
+#include ./$(DEPDIR)/WssConnection.Plo
+#include ./$(DEPDIR)/WssTransport.Plo
 #include ./$(DEPDIR)/X509Contents.Plo
-#include gen/$(DEPDIR)/DayOfWeekHash.Plo
-#include gen/$(DEPDIR)/HeaderHash.Plo
-#include gen/$(DEPDIR)/MethodHash.Plo
-#include gen/$(DEPDIR)/MonthHash.Plo
-#include gen/$(DEPDIR)/ParameterHash.Plo
-#include ssl/$(DEPDIR)/DtlsTransport.Plo
-#include ssl/$(DEPDIR)/Security.Plo
-#include ssl/$(DEPDIR)/TlsBaseTransport.Plo
-#include ssl/$(DEPDIR)/TlsConnection.Plo
-#include ssl/$(DEPDIR)/TlsTransport.Plo
-#include ssl/$(DEPDIR)/WssConnection.Plo
-#include ssl/$(DEPDIR)/WssTransport.Plo
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+DayOfWeekHash.lo: gen/DayOfWeekHash.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DayOfWeekHash.lo -MD -MP -MF $(DEPDIR)/DayOfWeekHash.Tpo -c -o DayOfWeekHash.lo `test -f 'gen/DayOfWeekHash.cxx' || echo '$(srcdir)/'`gen/DayOfWeekHash.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DayOfWeekHash.Tpo $(DEPDIR)/DayOfWeekHash.Plo
+#	$(AM_V_CXX)source='gen/DayOfWeekHash.cxx' object='DayOfWeekHash.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DayOfWeekHash.lo `test -f 'gen/DayOfWeekHash.cxx' || echo '$(srcdir)/'`gen/DayOfWeekHash.cxx
+
+HeaderHash.lo: gen/HeaderHash.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT HeaderHash.lo -MD -MP -MF $(DEPDIR)/HeaderHash.Tpo -c -o HeaderHash.lo `test -f 'gen/HeaderHash.cxx' || echo '$(srcdir)/'`gen/HeaderHash.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/HeaderHash.Tpo $(DEPDIR)/HeaderHash.Plo
+#	$(AM_V_CXX)source='gen/HeaderHash.cxx' object='HeaderHash.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o HeaderHash.lo `test -f 'gen/HeaderHash.cxx' || echo '$(srcdir)/'`gen/HeaderHash.cxx
+
+MethodHash.lo: gen/MethodHash.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MethodHash.lo -MD -MP -MF $(DEPDIR)/MethodHash.Tpo -c -o MethodHash.lo `test -f 'gen/MethodHash.cxx' || echo '$(srcdir)/'`gen/MethodHash.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/MethodHash.Tpo $(DEPDIR)/MethodHash.Plo
+#	$(AM_V_CXX)source='gen/MethodHash.cxx' object='MethodHash.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MethodHash.lo `test -f 'gen/MethodHash.cxx' || echo '$(srcdir)/'`gen/MethodHash.cxx
+
+MonthHash.lo: gen/MonthHash.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT MonthHash.lo -MD -MP -MF $(DEPDIR)/MonthHash.Tpo -c -o MonthHash.lo `test -f 'gen/MonthHash.cxx' || echo '$(srcdir)/'`gen/MonthHash.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/MonthHash.Tpo $(DEPDIR)/MonthHash.Plo
+#	$(AM_V_CXX)source='gen/MonthHash.cxx' object='MonthHash.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o MonthHash.lo `test -f 'gen/MonthHash.cxx' || echo '$(srcdir)/'`gen/MonthHash.cxx
+
+ParameterHash.lo: gen/ParameterHash.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ParameterHash.lo -MD -MP -MF $(DEPDIR)/ParameterHash.Tpo -c -o ParameterHash.lo `test -f 'gen/ParameterHash.cxx' || echo '$(srcdir)/'`gen/ParameterHash.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/ParameterHash.Tpo $(DEPDIR)/ParameterHash.Plo
+#	$(AM_V_CXX)source='gen/ParameterHash.cxx' object='ParameterHash.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ParameterHash.lo `test -f 'gen/ParameterHash.cxx' || echo '$(srcdir)/'`gen/ParameterHash.cxx
+
+DtlsTransport.lo: ssl/DtlsTransport.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DtlsTransport.lo -MD -MP -MF $(DEPDIR)/DtlsTransport.Tpo -c -o DtlsTransport.lo `test -f 'ssl/DtlsTransport.cxx' || echo '$(srcdir)/'`ssl/DtlsTransport.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DtlsTransport.Tpo $(DEPDIR)/DtlsTransport.Plo
+#	$(AM_V_CXX)source='ssl/DtlsTransport.cxx' object='DtlsTransport.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DtlsTransport.lo `test -f 'ssl/DtlsTransport.cxx' || echo '$(srcdir)/'`ssl/DtlsTransport.cxx
+
+Security.lo: ssl/Security.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Security.lo -MD -MP -MF $(DEPDIR)/Security.Tpo -c -o Security.lo `test -f 'ssl/Security.cxx' || echo '$(srcdir)/'`ssl/Security.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/Security.Tpo $(DEPDIR)/Security.Plo
+#	$(AM_V_CXX)source='ssl/Security.cxx' object='Security.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Security.lo `test -f 'ssl/Security.cxx' || echo '$(srcdir)/'`ssl/Security.cxx
+
+TlsBaseTransport.lo: ssl/TlsBaseTransport.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT TlsBaseTransport.lo -MD -MP -MF $(DEPDIR)/TlsBaseTransport.Tpo -c -o TlsBaseTransport.lo `test -f 'ssl/TlsBaseTransport.cxx' || echo '$(srcdir)/'`ssl/TlsBaseTransport.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/TlsBaseTransport.Tpo $(DEPDIR)/TlsBaseTransport.Plo
+#	$(AM_V_CXX)source='ssl/TlsBaseTransport.cxx' object='TlsBaseTransport.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o TlsBaseTransport.lo `test -f 'ssl/TlsBaseTransport.cxx' || echo '$(srcdir)/'`ssl/TlsBaseTransport.cxx
+
+TlsConnection.lo: ssl/TlsConnection.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT TlsConnection.lo -MD -MP -MF $(DEPDIR)/TlsConnection.Tpo -c -o TlsConnection.lo `test -f 'ssl/TlsConnection.cxx' || echo '$(srcdir)/'`ssl/TlsConnection.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/TlsConnection.Tpo $(DEPDIR)/TlsConnection.Plo
+#	$(AM_V_CXX)source='ssl/TlsConnection.cxx' object='TlsConnection.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o TlsConnection.lo `test -f 'ssl/TlsConnection.cxx' || echo '$(srcdir)/'`ssl/TlsConnection.cxx
+
+TlsTransport.lo: ssl/TlsTransport.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT TlsTransport.lo -MD -MP -MF $(DEPDIR)/TlsTransport.Tpo -c -o TlsTransport.lo `test -f 'ssl/TlsTransport.cxx' || echo '$(srcdir)/'`ssl/TlsTransport.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/TlsTransport.Tpo $(DEPDIR)/TlsTransport.Plo
+#	$(AM_V_CXX)source='ssl/TlsTransport.cxx' object='TlsTransport.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o TlsTransport.lo `test -f 'ssl/TlsTransport.cxx' || echo '$(srcdir)/'`ssl/TlsTransport.cxx
+
+WssTransport.lo: ssl/WssTransport.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT WssTransport.lo -MD -MP -MF $(DEPDIR)/WssTransport.Tpo -c -o WssTransport.lo `test -f 'ssl/WssTransport.cxx' || echo '$(srcdir)/'`ssl/WssTransport.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/WssTransport.Tpo $(DEPDIR)/WssTransport.Plo
+#	$(AM_V_CXX)source='ssl/WssTransport.cxx' object='WssTransport.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o WssTransport.lo `test -f 'ssl/WssTransport.cxx' || echo '$(srcdir)/'`ssl/WssTransport.cxx
+
+WssConnection.lo: ssl/WssConnection.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT WssConnection.lo -MD -MP -MF $(DEPDIR)/WssConnection.Tpo -c -o WssConnection.lo `test -f 'ssl/WssConnection.cxx' || echo '$(srcdir)/'`ssl/WssConnection.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/WssConnection.Tpo $(DEPDIR)/WssConnection.Plo
+#	$(AM_V_CXX)source='ssl/WssConnection.cxx' object='WssConnection.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o WssConnection.lo `test -f 'ssl/WssConnection.cxx' || echo '$(srcdir)/'`ssl/WssConnection.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf gen/.libs gen/_libs
-	-rm -rf ssl/.libs ssl/_libs
 install-nobase_resipincludeHEADERS: $(nobase_resipinclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_resipinclude_HEADERS)'; test -n "$(resipincludedir)" || list=; \
@@ -1238,10 +1280,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f gen/$(DEPDIR)/$(am__dirstamp)
-	-rm -f gen/$(am__dirstamp)
-	-rm -f ssl/$(DEPDIR)/$(am__dirstamp)
-	-rm -f ssl/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1253,7 +1291,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) gen/$(DEPDIR) ssl/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1299,7 +1337,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) gen/$(DEPDIR) ssl/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

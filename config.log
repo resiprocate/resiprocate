@@ -56,22 +56,22 @@ configure:2947: checking whether make sets $(MAKE)
 configure:2969: result: yes
 configure:2998: checking whether make supports nested variables
 configure:3015: result: yes
-configure:3146: checking build system type
-configure:3160: result: x86_64-unknown-linux-gnu
-configure:3180: checking host system type
-configure:3193: result: x86_64-unknown-linux-gnu
-configure:3264: checking for gcc
-configure:3280: found /usr/bin/gcc
-configure:3291: result: gcc
-configure:3520: checking for C compiler version
-configure:3529: gcc --version >&5
+configure:3147: checking build system type
+configure:3161: result: x86_64-unknown-linux-gnu
+configure:3181: checking host system type
+configure:3194: result: x86_64-unknown-linux-gnu
+configure:3265: checking for gcc
+configure:3281: found /usr/bin/gcc
+configure:3292: result: gcc
+configure:3521: checking for C compiler version
+configure:3530: gcc --version >&5
 gcc (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4
 Copyright (C) 2013 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-configure:3540: $? = 0
-configure:3529: gcc -v >&5
+configure:3541: $? = 0
+configure:3530: gcc -v >&5
 Using built-in specs.
 COLLECT_GCC=gcc
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/4.8/lto-wrapper
@@ -79,71 +79,71 @@ Target: x86_64-linux-gnu
 Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.8.4-2ubuntu1~14.04.3' --with-bugurl=file:///usr/share/doc/gcc-4.8/README.Bugs --enable-languages=c,c++,java,go,d,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.8 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.8 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-libmudflap --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.8-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.8-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.8-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
 Thread model: posix
 gcc version 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.3) 
-configure:3540: $? = 0
-configure:3529: gcc -V >&5
+configure:3541: $? = 0
+configure:3530: gcc -V >&5
 gcc: error: unrecognized command line option '-V'
 gcc: fatal error: no input files
 compilation terminated.
-configure:3540: $? = 4
-configure:3529: gcc -qversion >&5
+configure:3541: $? = 4
+configure:3530: gcc -qversion >&5
 gcc: error: unrecognized command line option '-qversion'
 gcc: fatal error: no input files
 compilation terminated.
-configure:3540: $? = 4
-configure:3560: checking whether the C compiler works
-configure:3582: gcc -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
-configure:3586: $? = 0
-configure:3634: result: yes
-configure:3637: checking for C compiler default output file name
-configure:3639: result: a.out
-configure:3645: checking for suffix of executables
-configure:3652: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
-configure:3656: $? = 0
-configure:3678: result: 
-configure:3700: checking whether we are cross compiling
-configure:3708: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
-configure:3712: $? = 0
-configure:3719: ./conftest
-configure:3723: $? = 0
-configure:3738: result: no
-configure:3743: checking for suffix of object files
-configure:3765: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:3769: $? = 0
-configure:3790: result: o
-configure:3794: checking whether we are using the GNU C compiler
-configure:3813: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:3813: $? = 0
-configure:3822: result: yes
-configure:3831: checking whether gcc accepts -g
-configure:3851: gcc -c -g -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:3851: $? = 0
-configure:3892: result: yes
-configure:3909: checking for gcc option to accept ISO C89
-configure:3972: gcc  -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:3972: $? = 0
-configure:3985: result: none needed
-configure:4010: checking whether gcc understands -c and -o together
-configure:4032: gcc -c conftest.c -o conftest2.o
-configure:4035: $? = 0
-configure:4032: gcc -c conftest.c -o conftest2.o
-configure:4035: $? = 0
-configure:4047: result: yes
-configure:4075: checking for style of include used by make
-configure:4103: result: GNU
-configure:4129: checking dependency style of gcc
-configure:4240: result: none
-configure:4313: checking for g++
-configure:4329: found /usr/bin/g++
-configure:4340: result: g++
-configure:4367: checking for C++ compiler version
-configure:4376: g++ --version >&5
+configure:3541: $? = 4
+configure:3561: checking whether the C compiler works
+configure:3583: gcc -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
+configure:3587: $? = 0
+configure:3635: result: yes
+configure:3638: checking for C compiler default output file name
+configure:3640: result: a.out
+configure:3646: checking for suffix of executables
+configure:3653: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
+configure:3657: $? = 0
+configure:3679: result: 
+configure:3701: checking whether we are cross compiling
+configure:3709: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
+configure:3713: $? = 0
+configure:3720: ./conftest
+configure:3724: $? = 0
+configure:3739: result: no
+configure:3744: checking for suffix of object files
+configure:3766: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:3770: $? = 0
+configure:3791: result: o
+configure:3795: checking whether we are using the GNU C compiler
+configure:3814: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:3814: $? = 0
+configure:3823: result: yes
+configure:3832: checking whether gcc accepts -g
+configure:3852: gcc -c -g -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:3852: $? = 0
+configure:3893: result: yes
+configure:3910: checking for gcc option to accept ISO C89
+configure:3973: gcc  -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:3973: $? = 0
+configure:3986: result: none needed
+configure:4011: checking whether gcc understands -c and -o together
+configure:4033: gcc -c conftest.c -o conftest2.o
+configure:4036: $? = 0
+configure:4033: gcc -c conftest.c -o conftest2.o
+configure:4036: $? = 0
+configure:4048: result: yes
+configure:4076: checking for style of include used by make
+configure:4104: result: GNU
+configure:4130: checking dependency style of gcc
+configure:4241: result: none
+configure:4314: checking for g++
+configure:4330: found /usr/bin/g++
+configure:4341: result: g++
+configure:4368: checking for C++ compiler version
+configure:4377: g++ --version >&5
 g++ (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4
 Copyright (C) 2013 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-configure:4387: $? = 0
-configure:4376: g++ -v >&5
+configure:4388: $? = 0
+configure:4377: g++ -v >&5
 Using built-in specs.
 COLLECT_GCC=g++
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/4.8/lto-wrapper
@@ -151,117 +151,117 @@ Target: x86_64-linux-gnu
 Configured with: ../src/configure -v --with-pkgversion='Ubuntu 4.8.4-2ubuntu1~14.04.3' --with-bugurl=file:///usr/share/doc/gcc-4.8/README.Bugs --enable-languages=c,c++,java,go,d,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-4.8 --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --with-gxx-include-dir=/usr/include/c++/4.8 --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-gnu-unique-object --disable-libmudflap --enable-plugin --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-4.8-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-4.8-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-4.8-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --enable-objc-gc --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
 Thread model: posix
 gcc version 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.3) 
-configure:4387: $? = 0
-configure:4376: g++ -V >&5
+configure:4388: $? = 0
+configure:4377: g++ -V >&5
 g++: error: unrecognized command line option '-V'
 g++: fatal error: no input files
 compilation terminated.
-configure:4387: $? = 4
-configure:4376: g++ -qversion >&5
+configure:4388: $? = 4
+configure:4377: g++ -qversion >&5
 g++: error: unrecognized command line option '-qversion'
 g++: fatal error: no input files
 compilation terminated.
-configure:4387: $? = 4
-configure:4391: checking whether we are using the GNU C++ compiler
-configure:4410: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp >&5
-configure:4410: $? = 0
-configure:4419: result: yes
-configure:4428: checking whether g++ accepts -g
-configure:4448: g++ -c -g -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp >&5
-configure:4448: $? = 0
-configure:4489: result: yes
-configure:4514: checking dependency style of g++
-configure:4625: result: none
-configure:4689: checking how to print strings
-configure:4716: result: printf
-configure:4737: checking for a sed that does not truncate output
-configure:4801: result: /bin/sed
-configure:4819: checking for grep that handles long lines and -e
-configure:4877: result: /bin/grep
-configure:4882: checking for egrep
-configure:4944: result: /bin/grep -E
-configure:4949: checking for fgrep
-configure:5011: result: /bin/grep -F
-configure:5046: checking for ld used by gcc
-configure:5113: result: /usr/bin/ld
-configure:5120: checking if the linker (/usr/bin/ld) is GNU ld
-configure:5135: result: yes
-configure:5147: checking for BSD- or MS-compatible name lister (nm)
-configure:5196: result: /usr/bin/nm -B
-configure:5326: checking the name lister (/usr/bin/nm -B) interface
-configure:5333: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:5336: /usr/bin/nm -B "conftest.o"
-configure:5339: output
+configure:4388: $? = 4
+configure:4392: checking whether we are using the GNU C++ compiler
+configure:4411: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp >&5
+configure:4411: $? = 0
+configure:4420: result: yes
+configure:4429: checking whether g++ accepts -g
+configure:4449: g++ -c -g -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp >&5
+configure:4449: $? = 0
+configure:4490: result: yes
+configure:4515: checking dependency style of g++
+configure:4626: result: none
+configure:4690: checking how to print strings
+configure:4717: result: printf
+configure:4738: checking for a sed that does not truncate output
+configure:4802: result: /bin/sed
+configure:4820: checking for grep that handles long lines and -e
+configure:4878: result: /bin/grep
+configure:4883: checking for egrep
+configure:4945: result: /bin/grep -E
+configure:4950: checking for fgrep
+configure:5012: result: /bin/grep -F
+configure:5047: checking for ld used by gcc
+configure:5114: result: /usr/bin/ld
+configure:5121: checking if the linker (/usr/bin/ld) is GNU ld
+configure:5136: result: yes
+configure:5148: checking for BSD- or MS-compatible name lister (nm)
+configure:5197: result: /usr/bin/nm -B
+configure:5327: checking the name lister (/usr/bin/nm -B) interface
+configure:5334: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:5337: /usr/bin/nm -B "conftest.o"
+configure:5340: output
 0000000000000000 B some_variable
-configure:5346: result: BSD nm
-configure:5349: checking whether ln -s works
-configure:5353: result: yes
-configure:5361: checking the maximum length of command line arguments
-configure:5492: result: 1572864
-configure:5509: checking whether the shell understands some XSI constructs
-configure:5519: result: yes
-configure:5523: checking whether the shell understands "+="
-configure:5529: result: yes
-configure:5564: checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unknown-linux-gnu format
-configure:5604: result: func_convert_file_noop
-configure:5611: checking how to convert x86_64-unknown-linux-gnu file names to toolchain format
-configure:5631: result: func_convert_file_noop
-configure:5638: checking for /usr/bin/ld option to reload object files
-configure:5645: result: -r
-configure:5719: checking for objdump
-configure:5735: found /usr/bin/objdump
-configure:5746: result: objdump
-configure:5778: checking how to recognize dependent libraries
-configure:5976: result: pass_all
-configure:6061: checking for dlltool
-configure:6091: result: no
-configure:6121: checking how to associate runtime and link libraries
-configure:6148: result: printf %s\n
-configure:6209: checking for ar
-configure:6225: found /usr/bin/ar
-configure:6236: result: ar
-configure:6273: checking for archiver @FILE support
-configure:6290: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:6290: $? = 0
-configure:6293: ar cru libconftest.a @conftest.lst >&5
-configure:6296: $? = 0
-configure:6301: ar cru libconftest.a @conftest.lst >&5
+configure:5347: result: BSD nm
+configure:5350: checking whether ln -s works
+configure:5354: result: yes
+configure:5362: checking the maximum length of command line arguments
+configure:5493: result: 1572864
+configure:5510: checking whether the shell understands some XSI constructs
+configure:5520: result: yes
+configure:5524: checking whether the shell understands "+="
+configure:5530: result: yes
+configure:5565: checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unknown-linux-gnu format
+configure:5605: result: func_convert_file_noop
+configure:5612: checking how to convert x86_64-unknown-linux-gnu file names to toolchain format
+configure:5632: result: func_convert_file_noop
+configure:5639: checking for /usr/bin/ld option to reload object files
+configure:5646: result: -r
+configure:5720: checking for objdump
+configure:5736: found /usr/bin/objdump
+configure:5747: result: objdump
+configure:5779: checking how to recognize dependent libraries
+configure:5977: result: pass_all
+configure:6062: checking for dlltool
+configure:6092: result: no
+configure:6122: checking how to associate runtime and link libraries
+configure:6149: result: printf %s\n
+configure:6210: checking for ar
+configure:6226: found /usr/bin/ar
+configure:6237: result: ar
+configure:6274: checking for archiver @FILE support
+configure:6291: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:6291: $? = 0
+configure:6294: ar cru libconftest.a @conftest.lst >&5
+configure:6297: $? = 0
+configure:6302: ar cru libconftest.a @conftest.lst >&5
 ar: conftest.o: No such file or directory
-configure:6304: $? = 1
-configure:6316: result: @
-configure:6374: checking for strip
-configure:6390: found /usr/bin/strip
-configure:6401: result: strip
-configure:6473: checking for ranlib
-configure:6489: found /usr/bin/ranlib
-configure:6500: result: ranlib
-configure:6602: checking command to parse /usr/bin/nm -B output from gcc object
-configure:6722: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:6725: $? = 0
-configure:6729: /usr/bin/nm -B conftest.o \| sed -n -e 's/^.*[ ]\([ABCDGIRSTW][ABCDGIRSTW]*\)[ ][ ]*\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2 \2/p' | sed '/ __gnu_lto/d' \> conftest.nm
-configure:6732: $? = 0
-configure:6798: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c conftstm.o >&5
-configure:6801: $? = 0
-configure:6839: result: ok
-configure:6876: checking for sysroot
-configure:6906: result: no
-configure:6983: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:6986: $? = 0
-configure:7175: checking for mt
-configure:7191: found /bin/mt
-configure:7202: result: mt
-configure:7225: checking if mt is a manifest tool
-configure:7231: mt '-?'
-configure:7239: result: no
-configure:7881: checking how to run the C preprocessor
-configure:7912: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
-configure:7912: $? = 0
-configure:7926: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
+configure:6305: $? = 1
+configure:6317: result: @
+configure:6375: checking for strip
+configure:6391: found /usr/bin/strip
+configure:6402: result: strip
+configure:6474: checking for ranlib
+configure:6490: found /usr/bin/ranlib
+configure:6501: result: ranlib
+configure:6603: checking command to parse /usr/bin/nm -B output from gcc object
+configure:6723: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:6726: $? = 0
+configure:6730: /usr/bin/nm -B conftest.o \| sed -n -e 's/^.*[ ]\([ABCDGIRSTW][ABCDGIRSTW]*\)[ ][ ]*\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2 \2/p' | sed '/ __gnu_lto/d' \> conftest.nm
+configure:6733: $? = 0
+configure:6799: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c conftstm.o >&5
+configure:6802: $? = 0
+configure:6840: result: ok
+configure:6877: checking for sysroot
+configure:6907: result: no
+configure:6984: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:6987: $? = 0
+configure:7176: checking for mt
+configure:7192: found /bin/mt
+configure:7203: result: mt
+configure:7226: checking if mt is a manifest tool
+configure:7232: mt '-?'
+configure:7240: result: no
+configure:7882: checking how to run the C preprocessor
+configure:7913: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
+configure:7913: $? = 0
+configure:7927: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
 conftest.c:11:28: fatal error: ac_nonexistent.h: No such file or directory
  #include <ac_nonexistent.h>
                             ^
 compilation terminated.
-configure:7926: $? = 1
+configure:7927: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -274,15 +274,15 @@ configure: failed program was:
 | #define VERSION "1.10.0"
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:7951: result: gcc -E
-configure:7971: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
-configure:7971: $? = 0
-configure:7985: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
+configure:7952: result: gcc -E
+configure:7972: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
+configure:7972: $? = 0
+configure:7986: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c
 conftest.c:11:28: fatal error: ac_nonexistent.h: No such file or directory
  #include <ac_nonexistent.h>
                             ^
 compilation terminated.
-configure:7985: $? = 1
+configure:7986: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -295,106 +295,106 @@ configure: failed program was:
 | #define VERSION "1.10.0"
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:8014: checking for ANSI C header files
-configure:8034: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8034: $? = 0
-configure:8107: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
-configure:8107: $? = 0
-configure:8107: ./conftest
-configure:8107: $? = 0
-configure:8118: result: yes
-configure:8131: checking for sys/types.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for sys/stat.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for stdlib.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for string.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for memory.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for strings.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for inttypes.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for stdint.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8131: checking for unistd.h
-configure:8131: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8131: $? = 0
-configure:8131: result: yes
-configure:8145: checking for dlfcn.h
-configure:8145: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:8145: $? = 0
-configure:8145: result: yes
-configure:8362: checking for objdir
-configure:8377: result: .libs
-configure:8648: checking if gcc supports -fno-rtti -fno-exceptions
-configure:8666: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fno-rtti -fno-exceptions conftest.c >&5
+configure:8015: checking for ANSI C header files
+configure:8035: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8035: $? = 0
+configure:8108: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
+configure:8108: $? = 0
+configure:8108: ./conftest
+configure:8108: $? = 0
+configure:8119: result: yes
+configure:8132: checking for sys/types.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for sys/stat.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for stdlib.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for string.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for memory.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for strings.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for inttypes.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for stdint.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8132: checking for unistd.h
+configure:8132: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8132: $? = 0
+configure:8132: result: yes
+configure:8146: checking for dlfcn.h
+configure:8146: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:8146: $? = 0
+configure:8146: result: yes
+configure:8363: checking for objdir
+configure:8378: result: .libs
+configure:8649: checking if gcc supports -fno-rtti -fno-exceptions
+configure:8667: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fno-rtti -fno-exceptions conftest.c >&5
 cc1: warning: command line option '-fno-rtti' is valid for C++/ObjC++ but not for C [enabled by default]
-configure:8670: $? = 0
-configure:8683: result: no
-configure:9010: checking for gcc option to produce PIC
-configure:9017: result: -fPIC -DPIC
-configure:9025: checking if gcc PIC flag -fPIC -DPIC works
-configure:9043: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIC -DPIC -DPIC conftest.c >&5
-configure:9047: $? = 0
-configure:9060: result: yes
-configure:9089: checking if gcc static flag -static works
-configure:9117: result: no
-configure:9132: checking if gcc supports -c -o file.o
-configure:9153: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -o out/conftest2.o conftest.c >&5
-configure:9157: $? = 0
-configure:9179: result: yes
-configure:9187: checking if gcc supports -c -o file.o
-configure:9234: result: yes
-configure:9267: checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
-configure:10424: result: yes
-configure:10461: checking whether -lc should be explicitly linked in
-configure:10469: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:10472: $? = 0
-configure:10487: gcc -shared  -fPIC -DPIC conftest.o  -v -Wl,-soname -Wl,conftest -o conftest 2\>\&1 \| /bin/grep  -lc  \>/dev/null 2\>\&1
-configure:10490: $? = 0
-configure:10504: result: no
-configure:10664: checking dynamic linker characteristics
-configure:11164: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares -Wl,-rpath -Wl,/foo conftest.c  >&5
-configure:11164: $? = 0
-configure:11398: result: GNU/Linux ld.so
-configure:11505: checking how to hardcode library paths into programs
-configure:11530: result: immediate
-configure:12070: checking whether stripping libraries is possible
-configure:12075: result: yes
-configure:12110: checking if libtool supports shared libraries
-configure:12112: result: yes
-configure:12115: checking whether to build shared libraries
-configure:12136: result: yes
-configure:12139: checking whether to build static libraries
-configure:12143: result: yes
-configure:12166: checking how to run the C++ preprocessor
-configure:12193: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
-configure:12193: $? = 0
-configure:12207: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
+configure:8671: $? = 0
+configure:8684: result: no
+configure:9011: checking for gcc option to produce PIC
+configure:9018: result: -fPIC -DPIC
+configure:9026: checking if gcc PIC flag -fPIC -DPIC works
+configure:9044: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIC -DPIC -DPIC conftest.c >&5
+configure:9048: $? = 0
+configure:9061: result: yes
+configure:9090: checking if gcc static flag -static works
+configure:9118: result: no
+configure:9133: checking if gcc supports -c -o file.o
+configure:9154: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -o out/conftest2.o conftest.c >&5
+configure:9158: $? = 0
+configure:9180: result: yes
+configure:9188: checking if gcc supports -c -o file.o
+configure:9235: result: yes
+configure:9268: checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
+configure:10425: result: yes
+configure:10462: checking whether -lc should be explicitly linked in
+configure:10470: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:10473: $? = 0
+configure:10488: gcc -shared  -fPIC -DPIC conftest.o  -v -Wl,-soname -Wl,conftest -o conftest 2\>\&1 \| /bin/grep  -lc  \>/dev/null 2\>\&1
+configure:10491: $? = 0
+configure:10505: result: no
+configure:10665: checking dynamic linker characteristics
+configure:11165: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares -Wl,-rpath -Wl,/foo conftest.c  >&5
+configure:11165: $? = 0
+configure:11399: result: GNU/Linux ld.so
+configure:11506: checking how to hardcode library paths into programs
+configure:11531: result: immediate
+configure:12071: checking whether stripping libraries is possible
+configure:12076: result: yes
+configure:12111: checking if libtool supports shared libraries
+configure:12113: result: yes
+configure:12116: checking whether to build shared libraries
+configure:12137: result: yes
+configure:12140: checking whether to build static libraries
+configure:12144: result: yes
+configure:12167: checking how to run the C++ preprocessor
+configure:12194: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
+configure:12194: $? = 0
+configure:12208: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
 conftest.cpp:23:28: fatal error: ac_nonexistent.h: No such file or directory
  #include <ac_nonexistent.h>
                             ^
 compilation terminated.
-configure:12207: $? = 1
+configure:12208: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -419,15 +419,15 @@ configure: failed program was:
 | #define LT_OBJDIR ".libs/"
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:12232: result: g++ -E
-configure:12252: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
-configure:12252: $? = 0
-configure:12266: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
+configure:12233: result: g++ -E
+configure:12253: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
+configure:12253: $? = 0
+configure:12267: g++ -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp
 conftest.cpp:23:28: fatal error: ac_nonexistent.h: No such file or directory
  #include <ac_nonexistent.h>
                             ^
 compilation terminated.
-configure:12266: $? = 1
+configure:12267: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -452,44 +452,44 @@ configure: failed program was:
 | #define LT_OBJDIR ".libs/"
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:12435: checking for ld used by g++
-configure:12502: result: /usr/bin/ld -m elf_x86_64
-configure:12509: checking if the linker (/usr/bin/ld -m elf_x86_64) is GNU ld
-configure:12524: result: yes
-configure:12579: checking whether the g++ linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
-configure:13581: result: yes
-configure:13617: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp >&5
-configure:13620: $? = 0
-configure:14140: checking for g++ option to produce PIC
-configure:14147: result: -fPIC -DPIC
-configure:14155: checking if g++ PIC flag -fPIC -DPIC works
-configure:14173: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIC -DPIC -DPIC conftest.cpp >&5
-configure:14177: $? = 0
-configure:14190: result: yes
-configure:14213: checking if g++ static flag -static works
-configure:14241: result: no
-configure:14253: checking if g++ supports -c -o file.o
-configure:14274: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -o out/conftest2.o conftest.cpp >&5
-configure:14278: $? = 0
-configure:14300: result: yes
-configure:14305: checking if g++ supports -c -o file.o
-configure:14352: result: yes
-configure:14382: checking whether the g++ linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
-configure:14421: result: yes
-configure:14562: checking dynamic linker characteristics
-configure:15230: result: GNU/Linux ld.so
-configure:15283: checking how to hardcode library paths into programs
-configure:15308: result: immediate
-configure:15370: checking for a sed that does not truncate output
-configure:15434: result: /bin/sed
-configure:15440: checking whether make sets $(MAKE)
-configure:15462: result: yes
-configure:15514: checking for ranlib
-configure:15541: result: ranlib
-configure:15568: checking  for GNU warning flags
-configure:15573: result: yes
-configure:15662: checking whether byte ordering is bigendian
-configure:15677: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:12436: checking for ld used by g++
+configure:12503: result: /usr/bin/ld -m elf_x86_64
+configure:12510: checking if the linker (/usr/bin/ld -m elf_x86_64) is GNU ld
+configure:12525: result: yes
+configure:12580: checking whether the g++ linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
+configure:13582: result: yes
+configure:13618: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.cpp >&5
+configure:13621: $? = 0
+configure:14141: checking for g++ option to produce PIC
+configure:14148: result: -fPIC -DPIC
+configure:14156: checking if g++ PIC flag -fPIC -DPIC works
+configure:14174: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -fPIC -DPIC -DPIC conftest.cpp >&5
+configure:14178: $? = 0
+configure:14191: result: yes
+configure:14214: checking if g++ static flag -static works
+configure:14242: result: no
+configure:14254: checking if g++ supports -c -o file.o
+configure:14275: g++ -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -o out/conftest2.o conftest.cpp >&5
+configure:14279: $? = 0
+configure:14301: result: yes
+configure:14306: checking if g++ supports -c -o file.o
+configure:14353: result: yes
+configure:14383: checking whether the g++ linker (/usr/bin/ld -m elf_x86_64) supports shared libraries
+configure:14422: result: yes
+configure:14563: checking dynamic linker characteristics
+configure:15231: result: GNU/Linux ld.so
+configure:15284: checking how to hardcode library paths into programs
+configure:15309: result: immediate
+configure:15371: checking for a sed that does not truncate output
+configure:15435: result: /bin/sed
+configure:15441: checking whether make sets $(MAKE)
+configure:15463: result: yes
+configure:15515: checking for ranlib
+configure:15542: result: ranlib
+configure:15569: checking  for GNU warning flags
+configure:15574: result: yes
+configure:15663: checking whether byte ordering is bigendian
+configure:15678: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
 conftest.c:28:9: error: unknown type name 'not'
          not a universal capable compiler
          ^
@@ -497,7 +497,7 @@ conftest.c:28:15: error: expected '=', ',', ';', 'asm' or '__attribute__' before
          not a universal capable compiler
                ^
 conftest.c:28:15: error: unknown type name 'universal'
-configure:15677: $? = 1
+configure:15678: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -530,9 +530,9 @@ configure: failed program was:
 | 	     #endif
 | 	     typedef int dummy;
 | 
-configure:15722: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
-configure:15722: $? = 0
-configure:15740: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:15723: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
+configure:15723: $? = 0
+configure:15741: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS conftest.c >&5
 conftest.c: In function 'main':
 conftest.c:34:4: error: unknown type name 'not'
     not big endian
@@ -540,7 +540,7 @@ conftest.c:34:4: error: unknown type name 'not'
 conftest.c:34:12: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'endian'
     not big endian
             ^
-configure:15740: $? = 1
+configure:15741: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -581,9 +581,9 @@ configure: failed program was:
 |   ;
 |   return 0;
 | }
-configure:15868: result: no
-configure:15893: checking for struct sockaddr_in.sin_len
-configure:15893: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
+configure:15869: result: no
+configure:15894: checking for struct sockaddr_in.sin_len
+configure:15894: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
 conftest.c: In function 'main':
 conftest.c:33:12: error: 'struct sockaddr_in' has no member named 'sin_len'
  if (ac_aggr.sin_len)
@@ -591,7 +591,7 @@ conftest.c:33:12: error: 'struct sockaddr_in' has no member named 'sin_len'
 conftest.c:32:27: warning: variable 'ac_aggr' set but not used [-Wunused-but-set-variable]
  static struct sockaddr_in ac_aggr;
                            ^
-configure:15893: $? = 1
+configure:15894: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -630,7 +630,7 @@ configure: failed program was:
 |   ;
 |   return 0;
 | }
-configure:15893: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
+configure:15894: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
 conftest.c: In function 'main':
 conftest.c:33:19: error: 'struct sockaddr_in' has no member named 'sin_len'
  if (sizeof ac_aggr.sin_len)
@@ -638,7 +638,7 @@ conftest.c:33:19: error: 'struct sockaddr_in' has no member named 'sin_len'
 conftest.c:32:27: warning: variable 'ac_aggr' set but not used [-Wunused-but-set-variable]
  static struct sockaddr_in ac_aggr;
                            ^
-configure:15893: $? = 1
+configure:15894: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -677,13 +677,13 @@ configure: failed program was:
 |   ;
 |   return 0;
 | }
-configure:15893: result: no
-configure:15970: checking for library containing ares_init
-configure:16001: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
-/tmp/ccdVXliz.o: In function `main':
+configure:15894: result: no
+configure:15971: checking for library containing ares_init
+configure:16002: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c  >&5
+/tmp/ccc3lsqo.o: In function `main':
 /home/udit/gsoc/resiprocate/conftest.c:44: undefined reference to `ares_init'
 collect2: error: ld returned 1 exit status
-configure:16001: $? = 1
+configure:16002: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME "resiprocate"
@@ -732,87 +732,87 @@ configure: failed program was:
 |   ;
 |   return 0;
 | }
-configure:16001: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares   >&5
-configure:16001: $? = 0
-configure:16018: result: -lcares
-configure:16659: checking for pkg-config
-configure:16677: found /usr/bin/pkg-config
-configure:16689: result: /usr/bin/pkg-config
-configure:16714: checking pkg-config is at least version 0.9.0
-configure:16717: result: yes
-configure:16743: checking for DEPS_PYTHON
-configure:16828: result: yes
-configure:16870: checking for library containing gethostbyname
-configure:16901: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
-configure:16901: $? = 0
-configure:16918: result: none required
-configure:16926: checking for library containing socket
-configure:16957: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
-configure:16957: $? = 0
-configure:16974: result: none required
-configure:16984: checking whether time.h and sys/time.h may both be included
-configure:17004: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
-configure:17004: $? = 0
-configure:17011: result: yes
-configure:17023: checking for sys/types.h
-configure:17023: result: yes
-configure:17023: checking sys/time.h usability
-configure:17023: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
-configure:17023: $? = 0
-configure:17023: result: yes
-configure:17023: checking sys/time.h presence
-configure:17023: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c
-configure:17023: $? = 0
-configure:17023: result: yes
-configure:17023: checking for sys/time.h
-configure:17023: result: yes
-configure:17023: checking time.h usability
-configure:17023: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
-configure:17023: $? = 0
-configure:17023: result: yes
-configure:17023: checking time.h presence
-configure:17023: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c
-configure:17023: $? = 0
-configure:17023: result: yes
-configure:17023: checking for time.h
-configure:17023: result: yes
-configure:17033: checking for monotonic clock_gettime
-configure:17065: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
-configure:17065: $? = 0
-configure:17067: result: yes
-configure:17084: checking for clock_gettime in libraries
-configure:17127: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
-configure:17127: $? = 0
-configure:17148: result: no additional lib required
-configure:17166: checking if monotonic clock_gettime works
-configure:17210: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
-configure:17210: $? = 0
-configure:17210: ./conftest
-configure:17210: $? = 0
-configure:17212: result: yes
-configure:17246: checking linux/version.h usability
-configure:17246: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
-configure:17246: $? = 0
-configure:17246: result: yes
-configure:17246: checking linux/version.h presence
-configure:17246: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c
-configure:17246: $? = 0
-configure:17246: result: yes
-configure:17246: checking for linux/version.h
-configure:17246: result: yes
-configure:17252: checking for Linux epoll(7) interface
-configure:17278: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -DHAVE_LINUX_VERSION_H -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
+configure:16002: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares   >&5
+configure:16002: $? = 0
+configure:16019: result: -lcares
+configure:16660: checking for pkg-config
+configure:16678: found /usr/bin/pkg-config
+configure:16690: result: /usr/bin/pkg-config
+configure:16715: checking pkg-config is at least version 0.9.0
+configure:16718: result: yes
+configure:16744: checking for DEPS_PYTHON
+configure:16829: result: yes
+configure:16871: checking for library containing gethostbyname
+configure:16902: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
+configure:16902: $? = 0
+configure:16919: result: none required
+configure:16927: checking for library containing socket
+configure:16958: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
+configure:16958: $? = 0
+configure:16975: result: none required
+configure:16985: checking whether time.h and sys/time.h may both be included
+configure:17005: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
+configure:17005: $? = 0
+configure:17012: result: yes
+configure:17024: checking for sys/types.h
+configure:17024: result: yes
+configure:17024: checking sys/time.h usability
+configure:17024: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
+configure:17024: $? = 0
+configure:17024: result: yes
+configure:17024: checking sys/time.h presence
+configure:17024: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c
+configure:17024: $? = 0
+configure:17024: result: yes
+configure:17024: checking for sys/time.h
+configure:17024: result: yes
+configure:17024: checking time.h usability
+configure:17024: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
+configure:17024: $? = 0
+configure:17024: result: yes
+configure:17024: checking time.h presence
+configure:17024: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c
+configure:17024: $? = 0
+configure:17024: result: yes
+configure:17024: checking for time.h
+configure:17024: result: yes
+configure:17034: checking for monotonic clock_gettime
+configure:17066: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
+configure:17066: $? = 0
+configure:17068: result: yes
+configure:17085: checking for clock_gettime in libraries
+configure:17128: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
+configure:17128: $? = 0
+configure:17149: result: no additional lib required
+configure:17167: checking if monotonic clock_gettime works
+configure:17211: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
+configure:17211: $? = 0
+configure:17211: ./conftest
+configure:17211: $? = 0
+configure:17213: result: yes
+configure:17247: checking linux/version.h usability
+configure:17247: gcc -c -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c >&5
+configure:17247: $? = 0
+configure:17247: result: yes
+configure:17247: checking linux/version.h presence
+configure:17247: gcc -E -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU conftest.c
+configure:17247: $? = 0
+configure:17247: result: yes
+configure:17247: checking for linux/version.h
+configure:17247: result: yes
+configure:17253: checking for Linux epoll(7) interface
+configure:17279: gcc -o conftest -g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wno-deprecated -D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtNetwork -I/usr/include/qt4/QtDBus -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DRESIP_LARCH_ -D_REENTRANT -DRESIP_TOOLCHAIN_GNU -DHAVE_LINUX_VERSION_H -fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares conftest.c -lcares  >&5
 conftest.c: In function 'main':
 conftest.c:64:9: warning: variable 'rc' set but not used [-Wunused-but-set-variable]
  int fd, rc;
          ^
-configure:17278: $? = 0
-configure:17289: result: yes
-configure:17304: checking whether to enable maintainer-specific portions of Makefiles
-configure:17313: result: no
-configure:17437: checking that generated files are newer than configure
-configure:17443: result: done
-configure:17635: creating ./config.status
+configure:17279: $? = 0
+configure:17290: result: yes
+configure:17305: checking whether to enable maintainer-specific portions of Makefiles
+configure:17314: result: no
+configure:17438: checking that generated files are newer than configure
+configure:17444: result: done
+configure:17636: creating ./config.status
 
 ## ---------------------- ##
 ## Running config.status. ##

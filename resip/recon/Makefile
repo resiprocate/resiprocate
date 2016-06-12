@@ -128,7 +128,6 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 librecon_la_DEPENDENCIES = ../../reflow/libreflow.la \
 	../../reTurn/client/libreTurnClient.la ../dum/libdum.la \
 	../stack/libresip.la ../../rutil/librutil.la
-am__dirstamp = $(am__leading_dot)dirstamp
 am_librecon_la_OBJECTS = BridgeMixer.lo Conversation.lo \
 	ConversationManager.lo ConversationParticipantAssignment.lo \
 	ConversationProfile.lo DefaultDialogSet.lo DtmfEvent.lo \
@@ -139,9 +138,9 @@ am_librecon_la_OBJECTS = BridgeMixer.lo Conversation.lo \
 	RemoteParticipant.lo RemoteParticipantDialogSet.lo \
 	SipXHelper.lo UserAgent.lo UserAgentClientSubscription.lo \
 	UserAgentDialogSetFactory.lo UserAgentMasterProfile.lo \
-	UserAgentRegistration.lo UserAgentServerAuthManager.lo \
-	sdp/Sdp.lo sdp/SdpCandidate.lo sdp/SdpCandidatePair.lo \
-	sdp/SdpCodec.lo sdp/SdpHelperResip.lo sdp/SdpMediaLine.lo
+	UserAgentRegistration.lo UserAgentServerAuthManager.lo Sdp.lo \
+	SdpCandidate.lo SdpCandidatePair.lo SdpCodec.lo \
+	SdpHelperResip.lo SdpMediaLine.lo
 librecon_la_OBJECTS = $(am_librecon_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -489,9 +488,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign resip/recon/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu resip/recon/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign resip/recon/Makefile
+	  $(AUTOMAKE) --gnu resip/recon/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -545,28 +544,12 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-sdp/$(am__dirstamp):
-	@$(MKDIR_P) sdp
-	@: > sdp/$(am__dirstamp)
-sdp/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) sdp/$(DEPDIR)
-	@: > sdp/$(DEPDIR)/$(am__dirstamp)
-sdp/Sdp.lo: sdp/$(am__dirstamp) sdp/$(DEPDIR)/$(am__dirstamp)
-sdp/SdpCandidate.lo: sdp/$(am__dirstamp) sdp/$(DEPDIR)/$(am__dirstamp)
-sdp/SdpCandidatePair.lo: sdp/$(am__dirstamp) \
-	sdp/$(DEPDIR)/$(am__dirstamp)
-sdp/SdpCodec.lo: sdp/$(am__dirstamp) sdp/$(DEPDIR)/$(am__dirstamp)
-sdp/SdpHelperResip.lo: sdp/$(am__dirstamp) \
-	sdp/$(DEPDIR)/$(am__dirstamp)
-sdp/SdpMediaLine.lo: sdp/$(am__dirstamp) sdp/$(DEPDIR)/$(am__dirstamp)
 
 librecon.la: $(librecon_la_OBJECTS) $(librecon_la_DEPENDENCIES) $(EXTRA_librecon_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(librecon_la_LINK) -rpath $(libdir) $(librecon_la_OBJECTS) $(librecon_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f sdp/*.$(OBJEXT)
-	-rm -f sdp/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -590,6 +573,12 @@ distclean-compile:
 #include ./$(DEPDIR)/RelatedConversationSet.Plo
 #include ./$(DEPDIR)/RemoteParticipant.Plo
 #include ./$(DEPDIR)/RemoteParticipantDialogSet.Plo
+#include ./$(DEPDIR)/Sdp.Plo
+#include ./$(DEPDIR)/SdpCandidate.Plo
+#include ./$(DEPDIR)/SdpCandidatePair.Plo
+#include ./$(DEPDIR)/SdpCodec.Plo
+#include ./$(DEPDIR)/SdpHelperResip.Plo
+#include ./$(DEPDIR)/SdpMediaLine.Plo
 #include ./$(DEPDIR)/SipXHelper.Plo
 #include ./$(DEPDIR)/UserAgent.Plo
 #include ./$(DEPDIR)/UserAgentClientSubscription.Plo
@@ -597,43 +586,75 @@ distclean-compile:
 #include ./$(DEPDIR)/UserAgentMasterProfile.Plo
 #include ./$(DEPDIR)/UserAgentRegistration.Plo
 #include ./$(DEPDIR)/UserAgentServerAuthManager.Plo
-#include sdp/$(DEPDIR)/Sdp.Plo
-#include sdp/$(DEPDIR)/SdpCandidate.Plo
-#include sdp/$(DEPDIR)/SdpCandidatePair.Plo
-#include sdp/$(DEPDIR)/SdpCodec.Plo
-#include sdp/$(DEPDIR)/SdpHelperResip.Plo
-#include sdp/$(DEPDIR)/SdpMediaLine.Plo
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+Sdp.lo: sdp/Sdp.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Sdp.lo -MD -MP -MF $(DEPDIR)/Sdp.Tpo -c -o Sdp.lo `test -f 'sdp/Sdp.cxx' || echo '$(srcdir)/'`sdp/Sdp.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/Sdp.Tpo $(DEPDIR)/Sdp.Plo
+#	$(AM_V_CXX)source='sdp/Sdp.cxx' object='Sdp.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Sdp.lo `test -f 'sdp/Sdp.cxx' || echo '$(srcdir)/'`sdp/Sdp.cxx
+
+SdpCandidate.lo: sdp/SdpCandidate.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SdpCandidate.lo -MD -MP -MF $(DEPDIR)/SdpCandidate.Tpo -c -o SdpCandidate.lo `test -f 'sdp/SdpCandidate.cxx' || echo '$(srcdir)/'`sdp/SdpCandidate.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SdpCandidate.Tpo $(DEPDIR)/SdpCandidate.Plo
+#	$(AM_V_CXX)source='sdp/SdpCandidate.cxx' object='SdpCandidate.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SdpCandidate.lo `test -f 'sdp/SdpCandidate.cxx' || echo '$(srcdir)/'`sdp/SdpCandidate.cxx
+
+SdpCandidatePair.lo: sdp/SdpCandidatePair.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SdpCandidatePair.lo -MD -MP -MF $(DEPDIR)/SdpCandidatePair.Tpo -c -o SdpCandidatePair.lo `test -f 'sdp/SdpCandidatePair.cxx' || echo '$(srcdir)/'`sdp/SdpCandidatePair.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SdpCandidatePair.Tpo $(DEPDIR)/SdpCandidatePair.Plo
+#	$(AM_V_CXX)source='sdp/SdpCandidatePair.cxx' object='SdpCandidatePair.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SdpCandidatePair.lo `test -f 'sdp/SdpCandidatePair.cxx' || echo '$(srcdir)/'`sdp/SdpCandidatePair.cxx
+
+SdpCodec.lo: sdp/SdpCodec.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SdpCodec.lo -MD -MP -MF $(DEPDIR)/SdpCodec.Tpo -c -o SdpCodec.lo `test -f 'sdp/SdpCodec.cxx' || echo '$(srcdir)/'`sdp/SdpCodec.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SdpCodec.Tpo $(DEPDIR)/SdpCodec.Plo
+#	$(AM_V_CXX)source='sdp/SdpCodec.cxx' object='SdpCodec.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SdpCodec.lo `test -f 'sdp/SdpCodec.cxx' || echo '$(srcdir)/'`sdp/SdpCodec.cxx
+
+SdpHelperResip.lo: sdp/SdpHelperResip.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SdpHelperResip.lo -MD -MP -MF $(DEPDIR)/SdpHelperResip.Tpo -c -o SdpHelperResip.lo `test -f 'sdp/SdpHelperResip.cxx' || echo '$(srcdir)/'`sdp/SdpHelperResip.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SdpHelperResip.Tpo $(DEPDIR)/SdpHelperResip.Plo
+#	$(AM_V_CXX)source='sdp/SdpHelperResip.cxx' object='SdpHelperResip.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SdpHelperResip.lo `test -f 'sdp/SdpHelperResip.cxx' || echo '$(srcdir)/'`sdp/SdpHelperResip.cxx
+
+SdpMediaLine.lo: sdp/SdpMediaLine.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT SdpMediaLine.lo -MD -MP -MF $(DEPDIR)/SdpMediaLine.Tpo -c -o SdpMediaLine.lo `test -f 'sdp/SdpMediaLine.cxx' || echo '$(srcdir)/'`sdp/SdpMediaLine.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/SdpMediaLine.Tpo $(DEPDIR)/SdpMediaLine.Plo
+#	$(AM_V_CXX)source='sdp/SdpMediaLine.cxx' object='SdpMediaLine.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o SdpMediaLine.lo `test -f 'sdp/SdpMediaLine.cxx' || echo '$(srcdir)/'`sdp/SdpMediaLine.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf sdp/.libs sdp/_libs
 install-nobase_reconincludeHEADERS: $(nobase_reconinclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_reconinclude_HEADERS)'; test -n "$(reconincludedir)" || list=; \
@@ -847,8 +868,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f sdp/$(DEPDIR)/$(am__dirstamp)
-	-rm -f sdp/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -859,7 +878,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) sdp/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -905,7 +924,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) sdp/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

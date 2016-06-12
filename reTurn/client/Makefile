@@ -128,12 +128,11 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(libreTurnClientincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libreTurnClient_la_DEPENDENCIES = ../../rutil/librutil.la
-am__dirstamp = $(am__leading_dot)dirstamp
-am_libreTurnClient_la_OBJECTS = ../AsyncSocketBase.lo \
-	../AsyncTcpSocketBase.lo ../AsyncTlsSocketBase.lo \
-	../AsyncUdpSocketBase.lo ../ChannelManager.lo ../DataBuffer.lo \
-	../RemotePeer.lo ../ReTurnSubsystem.lo ../StunMessage.lo \
-	../StunTuple.lo TurnAsyncSocket.lo TurnAsyncSocketHandler.lo \
+am_libreTurnClient_la_OBJECTS = AsyncSocketBase.lo \
+	AsyncTcpSocketBase.lo AsyncTlsSocketBase.lo \
+	AsyncUdpSocketBase.lo ChannelManager.lo DataBuffer.lo \
+	RemotePeer.lo ReTurnSubsystem.lo StunMessage.lo StunTuple.lo \
+	TurnAsyncSocket.lo TurnAsyncSocketHandler.lo \
 	TurnAsyncTcpSocket.lo TurnAsyncTlsSocket.lo \
 	TurnAsyncUdpSocket.lo TurnSocket.lo TurnTcpSocket.lo \
 	TurnTlsSocket.lo TurnUdpSocket.lo
@@ -445,9 +444,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign reTurn/client/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu reTurn/client/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign reTurn/client/Makefile
+	  $(AUTOMAKE) --gnu reTurn/client/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -501,47 +500,26 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-../$(am__dirstamp):
-	@$(MKDIR_P) ..
-	@: > ../$(am__dirstamp)
-../$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ../$(DEPDIR)
-	@: > ../$(DEPDIR)/$(am__dirstamp)
-../AsyncSocketBase.lo: ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
-../AsyncTcpSocketBase.lo: ../$(am__dirstamp) \
-	../$(DEPDIR)/$(am__dirstamp)
-../AsyncTlsSocketBase.lo: ../$(am__dirstamp) \
-	../$(DEPDIR)/$(am__dirstamp)
-../AsyncUdpSocketBase.lo: ../$(am__dirstamp) \
-	../$(DEPDIR)/$(am__dirstamp)
-../ChannelManager.lo: ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
-../DataBuffer.lo: ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
-../RemotePeer.lo: ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
-../ReTurnSubsystem.lo: ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
-../StunMessage.lo: ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
-../StunTuple.lo: ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
 
 libreTurnClient.la: $(libreTurnClient_la_OBJECTS) $(libreTurnClient_la_DEPENDENCIES) $(EXTRA_libreTurnClient_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libreTurnClient_la_LINK) -rpath $(libdir) $(libreTurnClient_la_OBJECTS) $(libreTurnClient_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ../*.$(OBJEXT)
-	-rm -f ../*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
-#include ../$(DEPDIR)/AsyncSocketBase.Plo
-#include ../$(DEPDIR)/AsyncTcpSocketBase.Plo
-#include ../$(DEPDIR)/AsyncTlsSocketBase.Plo
-#include ../$(DEPDIR)/AsyncUdpSocketBase.Plo
-#include ../$(DEPDIR)/ChannelManager.Plo
-#include ../$(DEPDIR)/DataBuffer.Plo
-#include ../$(DEPDIR)/ReTurnSubsystem.Plo
-#include ../$(DEPDIR)/RemotePeer.Plo
-#include ../$(DEPDIR)/StunMessage.Plo
-#include ../$(DEPDIR)/StunTuple.Plo
+#include ./$(DEPDIR)/AsyncSocketBase.Plo
+#include ./$(DEPDIR)/AsyncTcpSocketBase.Plo
+#include ./$(DEPDIR)/AsyncTlsSocketBase.Plo
+#include ./$(DEPDIR)/AsyncUdpSocketBase.Plo
+#include ./$(DEPDIR)/ChannelManager.Plo
+#include ./$(DEPDIR)/DataBuffer.Plo
+#include ./$(DEPDIR)/ReTurnSubsystem.Plo
+#include ./$(DEPDIR)/RemotePeer.Plo
+#include ./$(DEPDIR)/StunMessage.Plo
+#include ./$(DEPDIR)/StunTuple.Plo
 #include ./$(DEPDIR)/TurnAsyncSocket.Plo
 #include ./$(DEPDIR)/TurnAsyncSocketHandler.Plo
 #include ./$(DEPDIR)/TurnAsyncTcpSocket.Plo
@@ -553,35 +531,101 @@ distclean-compile:
 #include ./$(DEPDIR)/TurnUdpSocket.Plo
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+AsyncSocketBase.lo: ../AsyncSocketBase.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT AsyncSocketBase.lo -MD -MP -MF $(DEPDIR)/AsyncSocketBase.Tpo -c -o AsyncSocketBase.lo `test -f '../AsyncSocketBase.cxx' || echo '$(srcdir)/'`../AsyncSocketBase.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/AsyncSocketBase.Tpo $(DEPDIR)/AsyncSocketBase.Plo
+#	$(AM_V_CXX)source='../AsyncSocketBase.cxx' object='AsyncSocketBase.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o AsyncSocketBase.lo `test -f '../AsyncSocketBase.cxx' || echo '$(srcdir)/'`../AsyncSocketBase.cxx
+
+AsyncTcpSocketBase.lo: ../AsyncTcpSocketBase.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT AsyncTcpSocketBase.lo -MD -MP -MF $(DEPDIR)/AsyncTcpSocketBase.Tpo -c -o AsyncTcpSocketBase.lo `test -f '../AsyncTcpSocketBase.cxx' || echo '$(srcdir)/'`../AsyncTcpSocketBase.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/AsyncTcpSocketBase.Tpo $(DEPDIR)/AsyncTcpSocketBase.Plo
+#	$(AM_V_CXX)source='../AsyncTcpSocketBase.cxx' object='AsyncTcpSocketBase.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o AsyncTcpSocketBase.lo `test -f '../AsyncTcpSocketBase.cxx' || echo '$(srcdir)/'`../AsyncTcpSocketBase.cxx
+
+AsyncTlsSocketBase.lo: ../AsyncTlsSocketBase.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT AsyncTlsSocketBase.lo -MD -MP -MF $(DEPDIR)/AsyncTlsSocketBase.Tpo -c -o AsyncTlsSocketBase.lo `test -f '../AsyncTlsSocketBase.cxx' || echo '$(srcdir)/'`../AsyncTlsSocketBase.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/AsyncTlsSocketBase.Tpo $(DEPDIR)/AsyncTlsSocketBase.Plo
+#	$(AM_V_CXX)source='../AsyncTlsSocketBase.cxx' object='AsyncTlsSocketBase.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o AsyncTlsSocketBase.lo `test -f '../AsyncTlsSocketBase.cxx' || echo '$(srcdir)/'`../AsyncTlsSocketBase.cxx
+
+AsyncUdpSocketBase.lo: ../AsyncUdpSocketBase.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT AsyncUdpSocketBase.lo -MD -MP -MF $(DEPDIR)/AsyncUdpSocketBase.Tpo -c -o AsyncUdpSocketBase.lo `test -f '../AsyncUdpSocketBase.cxx' || echo '$(srcdir)/'`../AsyncUdpSocketBase.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/AsyncUdpSocketBase.Tpo $(DEPDIR)/AsyncUdpSocketBase.Plo
+#	$(AM_V_CXX)source='../AsyncUdpSocketBase.cxx' object='AsyncUdpSocketBase.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o AsyncUdpSocketBase.lo `test -f '../AsyncUdpSocketBase.cxx' || echo '$(srcdir)/'`../AsyncUdpSocketBase.cxx
+
+ChannelManager.lo: ../ChannelManager.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ChannelManager.lo -MD -MP -MF $(DEPDIR)/ChannelManager.Tpo -c -o ChannelManager.lo `test -f '../ChannelManager.cxx' || echo '$(srcdir)/'`../ChannelManager.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/ChannelManager.Tpo $(DEPDIR)/ChannelManager.Plo
+#	$(AM_V_CXX)source='../ChannelManager.cxx' object='ChannelManager.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ChannelManager.lo `test -f '../ChannelManager.cxx' || echo '$(srcdir)/'`../ChannelManager.cxx
+
+DataBuffer.lo: ../DataBuffer.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DataBuffer.lo -MD -MP -MF $(DEPDIR)/DataBuffer.Tpo -c -o DataBuffer.lo `test -f '../DataBuffer.cxx' || echo '$(srcdir)/'`../DataBuffer.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DataBuffer.Tpo $(DEPDIR)/DataBuffer.Plo
+#	$(AM_V_CXX)source='../DataBuffer.cxx' object='DataBuffer.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DataBuffer.lo `test -f '../DataBuffer.cxx' || echo '$(srcdir)/'`../DataBuffer.cxx
+
+RemotePeer.lo: ../RemotePeer.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT RemotePeer.lo -MD -MP -MF $(DEPDIR)/RemotePeer.Tpo -c -o RemotePeer.lo `test -f '../RemotePeer.cxx' || echo '$(srcdir)/'`../RemotePeer.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/RemotePeer.Tpo $(DEPDIR)/RemotePeer.Plo
+#	$(AM_V_CXX)source='../RemotePeer.cxx' object='RemotePeer.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o RemotePeer.lo `test -f '../RemotePeer.cxx' || echo '$(srcdir)/'`../RemotePeer.cxx
+
+ReTurnSubsystem.lo: ../ReTurnSubsystem.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ReTurnSubsystem.lo -MD -MP -MF $(DEPDIR)/ReTurnSubsystem.Tpo -c -o ReTurnSubsystem.lo `test -f '../ReTurnSubsystem.cxx' || echo '$(srcdir)/'`../ReTurnSubsystem.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/ReTurnSubsystem.Tpo $(DEPDIR)/ReTurnSubsystem.Plo
+#	$(AM_V_CXX)source='../ReTurnSubsystem.cxx' object='ReTurnSubsystem.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ReTurnSubsystem.lo `test -f '../ReTurnSubsystem.cxx' || echo '$(srcdir)/'`../ReTurnSubsystem.cxx
+
+StunMessage.lo: ../StunMessage.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT StunMessage.lo -MD -MP -MF $(DEPDIR)/StunMessage.Tpo -c -o StunMessage.lo `test -f '../StunMessage.cxx' || echo '$(srcdir)/'`../StunMessage.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/StunMessage.Tpo $(DEPDIR)/StunMessage.Plo
+#	$(AM_V_CXX)source='../StunMessage.cxx' object='StunMessage.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o StunMessage.lo `test -f '../StunMessage.cxx' || echo '$(srcdir)/'`../StunMessage.cxx
+
+StunTuple.lo: ../StunTuple.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT StunTuple.lo -MD -MP -MF $(DEPDIR)/StunTuple.Tpo -c -o StunTuple.lo `test -f '../StunTuple.cxx' || echo '$(srcdir)/'`../StunTuple.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/StunTuple.Tpo $(DEPDIR)/StunTuple.Plo
+#	$(AM_V_CXX)source='../StunTuple.cxx' object='StunTuple.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o StunTuple.lo `test -f '../StunTuple.cxx' || echo '$(srcdir)/'`../StunTuple.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf ../.libs ../_libs
 install-nobase_libreTurnClientincludeHEADERS: $(nobase_libreTurnClientinclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_libreTurnClientinclude_HEADERS)'; test -n "$(libreTurnClientincludedir)" || list=; \
@@ -795,8 +839,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f ../$(DEPDIR)/$(am__dirstamp)
-	-rm -f ../$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -807,7 +849,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ../$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -853,7 +895,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ../$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

@@ -101,10 +101,9 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(ichat_gw_jcincludedir)"
 PROGRAMS = $(sbin_PROGRAMS)
-am__dirstamp = $(am__leading_dot)dirstamp
 am_ichat_gw_jc_OBJECTS = ichat-gw-jc.$(OBJEXT) IChatUser.$(OBJEXT) \
-	../IPCThread.$(OBJEXT) JabberComponent.$(OBJEXT) \
-	JabberUserDb.$(OBJEXT) ../Thread.$(OBJEXT)
+	IPCThread.$(OBJEXT) JabberComponent.$(OBJEXT) \
+	JabberUserDb.$(OBJEXT) Thread.$(OBJEXT)
 ichat_gw_jc_OBJECTS = $(am_ichat_gw_jc_OBJECTS)
 ichat_gw_jc_DEPENDENCIES = ../../../resip/dum/libdum.la \
 	../../../resip/stack/libresip.la ../../../rutil/librutil.la
@@ -415,9 +414,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign apps/ichat-gw/jabberconnector/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu apps/ichat-gw/jabberconnector/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign apps/ichat-gw/jabberconnector/Makefile
+	  $(AUTOMAKE) --gnu apps/ichat-gw/jabberconnector/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -485,15 +484,6 @@ clean-sbinPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-../$(am__dirstamp):
-	@$(MKDIR_P) ..
-	@: > ../$(am__dirstamp)
-../$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ../$(DEPDIR)
-	@: > ../$(DEPDIR)/$(am__dirstamp)
-../IPCThread.$(OBJEXT): ../$(am__dirstamp) \
-	../$(DEPDIR)/$(am__dirstamp)
-../Thread.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
 
 ichat-gw-jc$(EXEEXT): $(ichat_gw_jc_OBJECTS) $(ichat_gw_jc_DEPENDENCIES) $(EXTRA_ichat_gw_jc_DEPENDENCIES) 
 	@rm -f ichat-gw-jc$(EXEEXT)
@@ -501,41 +491,65 @@ ichat-gw-jc$(EXEEXT): $(ichat_gw_jc_OBJECTS) $(ichat_gw_jc_DEPENDENCIES) $(EXTRA
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ../*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-#include ../$(DEPDIR)/IPCThread.Po
-#include ../$(DEPDIR)/Thread.Po
 #include ./$(DEPDIR)/IChatUser.Po
+#include ./$(DEPDIR)/IPCThread.Po
 #include ./$(DEPDIR)/JabberComponent.Po
 #include ./$(DEPDIR)/JabberUserDb.Po
+#include ./$(DEPDIR)/Thread.Po
 #include ./$(DEPDIR)/ichat-gw-jc.Po
 
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+IPCThread.o: ../IPCThread.cxx
+#	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT IPCThread.o -MD -MP -MF $(DEPDIR)/IPCThread.Tpo -c -o IPCThread.o `test -f '../IPCThread.cxx' || echo '$(srcdir)/'`../IPCThread.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/IPCThread.Tpo $(DEPDIR)/IPCThread.Po
+#	$(AM_V_CXX)source='../IPCThread.cxx' object='IPCThread.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o IPCThread.o `test -f '../IPCThread.cxx' || echo '$(srcdir)/'`../IPCThread.cxx
+
+IPCThread.obj: ../IPCThread.cxx
+#	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT IPCThread.obj -MD -MP -MF $(DEPDIR)/IPCThread.Tpo -c -o IPCThread.obj `if test -f '../IPCThread.cxx'; then $(CYGPATH_W) '../IPCThread.cxx'; else $(CYGPATH_W) '$(srcdir)/../IPCThread.cxx'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/IPCThread.Tpo $(DEPDIR)/IPCThread.Po
+#	$(AM_V_CXX)source='../IPCThread.cxx' object='IPCThread.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o IPCThread.obj `if test -f '../IPCThread.cxx'; then $(CYGPATH_W) '../IPCThread.cxx'; else $(CYGPATH_W) '$(srcdir)/../IPCThread.cxx'; fi`
+
+Thread.o: ../Thread.cxx
+#	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Thread.o -MD -MP -MF $(DEPDIR)/Thread.Tpo -c -o Thread.o `test -f '../Thread.cxx' || echo '$(srcdir)/'`../Thread.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/Thread.Tpo $(DEPDIR)/Thread.Po
+#	$(AM_V_CXX)source='../Thread.cxx' object='Thread.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Thread.o `test -f '../Thread.cxx' || echo '$(srcdir)/'`../Thread.cxx
+
+Thread.obj: ../Thread.cxx
+#	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Thread.obj -MD -MP -MF $(DEPDIR)/Thread.Tpo -c -o Thread.obj `if test -f '../Thread.cxx'; then $(CYGPATH_W) '../Thread.cxx'; else $(CYGPATH_W) '$(srcdir)/../Thread.cxx'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/Thread.Tpo $(DEPDIR)/Thread.Po
+#	$(AM_V_CXX)source='../Thread.cxx' object='Thread.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Thread.obj `if test -f '../Thread.cxx'; then $(CYGPATH_W) '../Thread.cxx'; else $(CYGPATH_W) '$(srcdir)/../Thread.cxx'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -755,8 +769,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f ../$(DEPDIR)/$(am__dirstamp)
-	-rm -f ../$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -767,7 +779,7 @@ clean-am: clean-generic clean-libtool clean-sbinPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ../$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -813,7 +825,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ../$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

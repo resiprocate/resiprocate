@@ -129,12 +129,10 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libreflow_la_DEPENDENCIES = ../reTurn/client/libreTurnClient.la \
 	../rutil/librutil.la
-am__dirstamp = $(am__leading_dot)dirstamp
 am_libreflow_la_OBJECTS = FakeSelectSocketDescriptor.lo Flow.lo \
 	FlowDtlsSocketContext.lo FlowDtlsTimerContext.lo \
 	FlowManager.lo FlowManagerSubsystem.lo MediaStream.lo \
-	dtls_wrapper/DtlsTimer.lo dtls_wrapper/DtlsSocket.lo \
-	dtls_wrapper/DtlsFactory.lo dtls_wrapper/bf_dwrap.lo
+	DtlsTimer.lo DtlsSocket.lo DtlsFactory.lo bf_dwrap.lo
 libreflow_la_OBJECTS = $(am_libreflow_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -457,9 +455,9 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign reflow/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu reflow/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign reflow/Makefile
+	  $(AUTOMAKE) --gnu reflow/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -513,32 +511,19 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-dtls_wrapper/$(am__dirstamp):
-	@$(MKDIR_P) dtls_wrapper
-	@: > dtls_wrapper/$(am__dirstamp)
-dtls_wrapper/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) dtls_wrapper/$(DEPDIR)
-	@: > dtls_wrapper/$(DEPDIR)/$(am__dirstamp)
-dtls_wrapper/DtlsTimer.lo: dtls_wrapper/$(am__dirstamp) \
-	dtls_wrapper/$(DEPDIR)/$(am__dirstamp)
-dtls_wrapper/DtlsSocket.lo: dtls_wrapper/$(am__dirstamp) \
-	dtls_wrapper/$(DEPDIR)/$(am__dirstamp)
-dtls_wrapper/DtlsFactory.lo: dtls_wrapper/$(am__dirstamp) \
-	dtls_wrapper/$(DEPDIR)/$(am__dirstamp)
-dtls_wrapper/bf_dwrap.lo: dtls_wrapper/$(am__dirstamp) \
-	dtls_wrapper/$(DEPDIR)/$(am__dirstamp)
 
 libreflow.la: $(libreflow_la_OBJECTS) $(libreflow_la_DEPENDENCIES) $(EXTRA_libreflow_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libreflow_la_LINK) -rpath $(libdir) $(libreflow_la_OBJECTS) $(libreflow_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f dtls_wrapper/*.$(OBJEXT)
-	-rm -f dtls_wrapper/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
+#include ./$(DEPDIR)/DtlsFactory.Plo
+#include ./$(DEPDIR)/DtlsSocket.Plo
+#include ./$(DEPDIR)/DtlsTimer.Plo
 #include ./$(DEPDIR)/FakeSelectSocketDescriptor.Plo
 #include ./$(DEPDIR)/Flow.Plo
 #include ./$(DEPDIR)/FlowDtlsSocketContext.Plo
@@ -546,65 +531,83 @@ distclean-compile:
 #include ./$(DEPDIR)/FlowManager.Plo
 #include ./$(DEPDIR)/FlowManagerSubsystem.Plo
 #include ./$(DEPDIR)/MediaStream.Plo
-#include dtls_wrapper/$(DEPDIR)/DtlsFactory.Plo
-#include dtls_wrapper/$(DEPDIR)/DtlsSocket.Plo
-#include dtls_wrapper/$(DEPDIR)/DtlsTimer.Plo
-#include dtls_wrapper/$(DEPDIR)/bf_dwrap.Plo
+#include ./$(DEPDIR)/bf_dwrap.Plo
 
 .c.o:
-#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CC)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
 	$(AM_V_CC)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CC)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
 	$(AM_V_CC)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .c.lo:
-#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CC)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
 	$(AM_V_CC)$(LTCOMPILE) -c -o $@ $<
 
+bf_dwrap.lo: dtls_wrapper/bf_dwrap.c
+#	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bf_dwrap.lo -MD -MP -MF $(DEPDIR)/bf_dwrap.Tpo -c -o bf_dwrap.lo `test -f 'dtls_wrapper/bf_dwrap.c' || echo '$(srcdir)/'`dtls_wrapper/bf_dwrap.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/bf_dwrap.Tpo $(DEPDIR)/bf_dwrap.Plo
+#	$(AM_V_CC)source='dtls_wrapper/bf_dwrap.c' object='bf_dwrap.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bf_dwrap.lo `test -f 'dtls_wrapper/bf_dwrap.c' || echo '$(srcdir)/'`dtls_wrapper/bf_dwrap.c
+
 .cxx.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
 
 .cxx.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cxx.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
 #	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
 	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+
+DtlsTimer.lo: dtls_wrapper/DtlsTimer.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DtlsTimer.lo -MD -MP -MF $(DEPDIR)/DtlsTimer.Tpo -c -o DtlsTimer.lo `test -f 'dtls_wrapper/DtlsTimer.cxx' || echo '$(srcdir)/'`dtls_wrapper/DtlsTimer.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DtlsTimer.Tpo $(DEPDIR)/DtlsTimer.Plo
+#	$(AM_V_CXX)source='dtls_wrapper/DtlsTimer.cxx' object='DtlsTimer.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DtlsTimer.lo `test -f 'dtls_wrapper/DtlsTimer.cxx' || echo '$(srcdir)/'`dtls_wrapper/DtlsTimer.cxx
+
+DtlsSocket.lo: dtls_wrapper/DtlsSocket.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DtlsSocket.lo -MD -MP -MF $(DEPDIR)/DtlsSocket.Tpo -c -o DtlsSocket.lo `test -f 'dtls_wrapper/DtlsSocket.cxx' || echo '$(srcdir)/'`dtls_wrapper/DtlsSocket.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DtlsSocket.Tpo $(DEPDIR)/DtlsSocket.Plo
+#	$(AM_V_CXX)source='dtls_wrapper/DtlsSocket.cxx' object='DtlsSocket.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DtlsSocket.lo `test -f 'dtls_wrapper/DtlsSocket.cxx' || echo '$(srcdir)/'`dtls_wrapper/DtlsSocket.cxx
+
+DtlsFactory.lo: dtls_wrapper/DtlsFactory.cxx
+#	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT DtlsFactory.lo -MD -MP -MF $(DEPDIR)/DtlsFactory.Tpo -c -o DtlsFactory.lo `test -f 'dtls_wrapper/DtlsFactory.cxx' || echo '$(srcdir)/'`dtls_wrapper/DtlsFactory.cxx
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/DtlsFactory.Tpo $(DEPDIR)/DtlsFactory.Plo
+#	$(AM_V_CXX)source='dtls_wrapper/DtlsFactory.cxx' object='DtlsFactory.lo' libtool=yes 
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
+	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o DtlsFactory.lo `test -f 'dtls_wrapper/DtlsFactory.cxx' || echo '$(srcdir)/'`dtls_wrapper/DtlsFactory.cxx
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf dtls_wrapper/.libs dtls_wrapper/_libs
 install-nobase_reflowincludeHEADERS: $(nobase_reflowinclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_reflowinclude_HEADERS)'; test -n "$(reflowincludedir)" || list=; \
@@ -818,8 +821,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f dtls_wrapper/$(DEPDIR)/$(am__dirstamp)
-	-rm -f dtls_wrapper/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -830,7 +831,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) dtls_wrapper/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -876,7 +877,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) dtls_wrapper/$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
