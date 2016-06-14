@@ -190,9 +190,8 @@ MyConversationManager::onParticipantTerminated(ParticipantHandle partHandle, uns
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
    destroyParticipant(partHandle);
    if(mRemoteParticipantHandles.size()==0){
-     recon::ConversationHandle convHandle;
-      // TODO get convHandle here somehow
-      destroyConversation(convHandle);
+   destroyConversation(mConversationHandles.front());
+   conversationDestroyed(mConversationHandles.front());
    }
 
 }

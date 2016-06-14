@@ -103,7 +103,10 @@ SipCallChannel::baseChannel()
 {
    return mBaseChannel;
 }
-
+bool
+SipCallChannel::getIncoming(){
+  return mIncoming;
+}
 void
 SipCallChannel::onHangupComplete(bool status)
 {
@@ -127,6 +130,21 @@ SipCallChannel::onAnswerComplete(bool status)
 void
 SipCallChannel::onHangup(uint reason, const QString &detailedReason, const QString &message, Tp::DBusError* error)
 {
+  bool incoming = SipCallChannel::getIncoming();
+  QVariantMap stateDetails;
+  Tp::CallStateReason csreason;
+  csreason.actor =  0;
+  csreason.reason = Tp::CallStateChangeReasonUserRequested;
+  csreason.message="";
+  if (incoming)
+  {
+    csreason.DBusReason = "org.freedesktop.Telepathy.Error.Rejected";
+    mCallChannel->setCallState(Tp::CallStateEnded, 0, csreason, stateDetails);
+  }
+  else{
+    csreason.DBusReason = "org.freedesktop.Telepathy.Error.Cancelled";
+    mCallChannel->setCallState(Tp::CallStateEnded, 0, csreason, stateDetails);
+  }
    mConnection->getConversationManager().destroyParticipant(mParticipantHandle);
    emit hangupComplete(true);
 }

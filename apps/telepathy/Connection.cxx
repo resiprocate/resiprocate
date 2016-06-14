@@ -313,11 +313,10 @@ tr::Connection::createChannel(const QVariantMap &request, Tp::DBusError *error)
    baseChannel->setInitiatorHandle(initiatorHandle); */
 
    ParticipantHandle participantHandle = -1 ;
-   recon::ConversationHandle cHandle;
+   recon::ConversationHandle cHandle = 1;   // FIXME - hardcoded default value, should create new Conversation
    bool incoming = false;
    StackLog(<<"createChannel - channelType = " << channelType.toUtf8().constData() << " and contact = " << targetID.toUtf8().constData());
    if(channelType == TP_QT_IFACE_CHANNEL_TYPE_CALL) {
-      //recon::ConversationHandle cHandle = 1;   // FIXME - hardcoded default value, should create new Conversation
       cHandle = myConversationManager->createConversation();
       myConversationManager->createLocalParticipant();
       if(!request.contains("participantHandle"))

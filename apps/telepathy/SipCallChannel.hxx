@@ -41,7 +41,7 @@ class SipCallChannel : public QObject
 public:
    SipCallChannel(bool incoming, Connection* connection, QString peer, uint targetHandle, recon::ConversationHandle conversationHandle, recon::ParticipantHandle participantHandle);
    Tp::BaseChannelPtr baseChannel();
-
+   bool getIncoming();
    void onHangup(uint reason, const QString &detailedReason, const QString &message, Tp::DBusError* error);
    void onAccept(Tp::DBusError*);
    void onMuteStateChanged(const Tp::LocalMuteState &state, Tp::DBusError *error);
