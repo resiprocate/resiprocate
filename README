@@ -1,9 +1,11 @@
 
-To prepare your machine for building the project:
+To prepare your machine for building the project, you need to install
+the build dependencies.  On a Debian or Ubuntu system, you may use a
+command like this:
 
-# apt-get -t unstable install \
-     libresiprocate-1.8-dev librecon-1.8-dev libsipxtapi-dev \
-     libresiprocate-turn-client-1.8-dev
+$ sudo apt-get install \
+     libresiprocate-dev librecon-dev libsipxtapi-dev \
+     libresiprocate-turn-client-dev
 
 
 NOTE: You must have at least reSIProcate v1.8.10
