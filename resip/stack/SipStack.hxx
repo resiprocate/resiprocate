@@ -886,6 +886,12 @@ class SipStack : public FdSetIOObserver
       void getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler);
 
       /**
+           @brief Check if DnsServers list has changed, and if so reinitializes 
+                  the DNS resolver (ares).  Any lookups currenlty in progress will fail.
+      */
+      void reloadDnsServers();
+
+      /**
           @todo is this documented correctly? [!]
           @brief Enable Statistics Manager
           @details Enable Statistics Manager.  SIP Statistics will be collected and 
