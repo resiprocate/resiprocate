@@ -179,6 +179,7 @@ class DnsStub : public ExternalDnsHandler
       void getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler);
       void setDnsCacheTTL(int ttl);
       void setDnsCacheSize(int size);
+      void reloadDnsServers();
       bool checkDnsChange();
       bool supportedType(int);
 
@@ -425,6 +426,24 @@ class DnsStub : public ExternalDnsHandler
             DnsStub& mStub;
             std::pair<unsigned long, unsigned long> mKey;
             GetDnsCacheDumpHandler* mHandler;
+      };
+
+      void doReloadDnsServers();
+
+      class ReloadDnsServersCommand : public Command
+      {
+      public:
+          ReloadDnsServersCommand(DnsStub& stub)
+              : mStub(stub)
+          {}
+          ~ReloadDnsServersCommand() {}
+          void execute()
+          {
+              mStub.doReloadDnsServers();
+          }
+
+      private:
+          DnsStub& mStub;
       };
 
       SelectInterruptor mSelectInterruptor;

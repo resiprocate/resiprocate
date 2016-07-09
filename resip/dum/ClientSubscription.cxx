@@ -275,6 +275,7 @@ ClientSubscription::processNextNotify()
    }
 
    QueuedNotify* qn = mQueuedNotifies.front();
+   InfoLog(<< "mbellomo processNextNotify()");
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    resip_assert(handler);
 

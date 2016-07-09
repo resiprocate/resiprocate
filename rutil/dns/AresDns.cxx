@@ -201,49 +201,57 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
               unsigned int features)
 {
    mAdditionalNameservers = additionalNameservers;
-   mFeatures = features;
+   mSocketFunc = socketfunc;
 
-   int ret = internalInit(additionalNameservers,
-                          socketfunc,
-                          features,
-                          &mChannel,
-                          timeout,
-                          tries);
+   return init(timeout, tries, features);
+}
 
-   if (ret != Success)
-      return ret;
+int 
+AresDns::init(int dnsTimeout, int dnsTries, unsigned int features)
+{
+    mFeatures = features;
+
+    int ret = internalInit(mAdditionalNameservers,
+        mSocketFunc,
+        features,
+        &mChannel,
+        dnsTimeout,
+        dnsTries);
+
+    if (ret != Success)
+        return ret;
 
 #ifndef USE_CARES
-   if ( mPollGrp )
-   {
-      // Ensure vector starts empty, since init may be called more than once
-      mPollItems.clear(); 
-      // expand vector to hold {nservers} and init to NULLAr
-      mPollItems.insert(mPollItems.end(), mChannel->nservers, std::make_pair((AresDnsPollItem*)0, (AresDnsPollItem*)0));
-      // tell ares to let us know when things change
-      ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
-   }
+    if (mPollGrp)
+    {
+        // Ensure vector starts empty, since init may be called more than once
+        mPollItems.clear();
+        // expand vector to hold {nservers} and init to NULLAr
+        mPollItems.insert(mPollItems.end(), mChannel->nservers, std::make_pair((AresDnsPollItem*)0, (AresDnsPollItem*)0));
+        // tell ares to let us know when things change
+        ares_process_set_poll_cb(mChannel, AresDnsPollItem::socket_poll_cb, this);
+    }
 #endif
 
 #ifdef WIN32
-      // For windows OSs it is uncommon to run a local DNS server.  Therefor if there
-      // are no defined DNS servers in windows networking and ARES just returned the
-      // loopback address (ie. default localhost server / named)
-      // then put resip DNS resolution into hostfile lookup only mode
-      if(mChannel->nservers == 1 &&
-         mChannel->servers[0].default_localhost_server)
-      {
-         // enable hostfile only lookup mode
-         mHostFileLookupOnlyMode = true;
-      }
-      else
-      {
-         // disable hostfile only lookup mode
-         mHostFileLookupOnlyMode = false;
-      }
+    // For windows OSs it is uncommon to run a local DNS server.  Therefor if there
+    // are no defined DNS servers in windows networking and ARES just returned the
+    // loopback address (ie. default localhost server / named)
+    // then put resip DNS resolution into hostfile lookup only mode
+    if (mChannel->nservers == 1 &&
+        mChannel->servers[0].default_localhost_server)
+    {
+        // enable hostfile only lookup mode
+        mHostFileLookupOnlyMode = true;
+    }
+    else
+    {
+        // disable hostfile only lookup mode
+        mHostFileLookupOnlyMode = false;
+    }
 #endif
 
-   return Success;
+    return Success;
 }
 
 int
@@ -257,7 +265,8 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
    if(*channel)
    {
 #if defined(USE_ARES)
-      ares_destroy_suppress_callbacks(*channel);
+      // Sends ARES_EDESTRUCTION to callbacks so that all requests in progress fail
+      ares_destroy(*channel);
 #elif defined(USE_CARES)
       // Callbacks will be supressed by looking for the ARES_EDESTRUCTION
       // sentinel status

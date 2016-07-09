@@ -1967,7 +1967,30 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
       mProxy.getStack().clearDnsCache();
    }
 
-   s << "<h2>Settings</h2>" << endl <<
+   if (mHttpParams["action"] == "Reload DNS Servers")
+   {
+       mProxy.getStack().reloadDnsServers();
+   }
+
+   s << "<h2>DNS Cache</h2>" << endl;
+
+   // Get Dns Cache
+   {
+       Lock lock(mDnsCacheMutex);
+       mProxy.getStack().getDnsCacheDump(make_pair(0, 0), this);
+       // Retrieving DNS cache is asyncronous
+       // Use condition variable to wait for DNS results to be returned in onDnsCacheDumpRetrieved
+       mDnsCacheCondition.wait(mDnsCacheMutex);
+       s << "<pre>" << mDnsCache << "</pre>"
+         << endl;
+   }
+
+   s << "<form id=\"dnsButtons\" method=\"get\" action=\"settings.html\" name=\"dnsButtons\">" << endl
+       << "  <br><input type=\"submit\" name=\"action\" value=\"Clear DNS Cache\"/>" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Reload DNS Servers\"/>" << endl
+       << "</form>" << endl;
+
+   s << "<br><h2>Settings</h2>" << endl <<
         "<pre>" << mProxy.getConfig() << "</pre>";
 
    {
@@ -1990,40 +2013,24 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
         << endl;
    }
 
-   // Get Dns Cache
-   {
-      Lock lock(mDnsCacheMutex);
-      mProxy.getStack().getDnsCacheDump(make_pair(0, 0), this);
-      // Retrieving DNS cache is asyncronous
-      // Use condition variable to wait for DNS results to be returned in onDnsCacheDumpRetrieved
-      mDnsCacheCondition.wait(mDnsCacheMutex);
-      s << "<br>DNS Cache<br>"
-        << "<pre>" << mDnsCache << "</pre>"
-         << endl;
-   }
-
-   s << "<form id=\"clearDnsCache\" method=\"get\" action=\"settings.html\" name=\"clearDnsCache\">" << endl
-     << "  <br><input type=\"submit\" name=\"action\" value=\"Clear DNS Cache\"/>" << endl
-     << "</form>" << endl;
-
    s << "<form id=\"logLevel\" method=\"get\" action=\"logLevel.html\" name=\"logLevel\">" << endl
-     << "  <br>Change log level to: <select name=\"level\">" << endl
-     << "        <option value=\"NONE\"" << (Log::level() == Log::None ? " selected" : "") << ">NONE" << (Log::level() == Log::None ? " *" : "") << "</option>" << endl
-     << "        <option value=\"CRIT\"" << (Log::level() == Log::Crit ? " selected" : "") << ">CRIT" << (Log::level() == Log::Crit ? " *" : "") << "</option>" << endl
-     << "        <option value=\"ERR\"" << (Log::level() == Log::Err ? " selected" : "") << ">ERR" << (Log::level() == Log::Err ? " *" : "") << "</option>" << endl
-     << "        <option value=\"WARNING\"" << (Log::level() == Log::Warning ? " selected" : "") << ">WARNING" << (Log::level() == Log::Warning ? " *" : "") << "</option>" << endl
-     << "        <option value=\"INFO\"" << (Log::level() == Log::Info ? " selected" : "") << ">INFO" << (Log::level() == Log::Info ? " *" : "") << "</option>" << endl
-     << "        <option value=\"DEBUG\"" << (Log::level() == Log::Debug ? " selected" : "") << ">DEBUG" << (Log::level() == Log::Debug ? " *" : "") << "</option>" << endl
-     << "        <option value=\"STACK\"" << (Log::level() == Log::Stack ? " selected" : "") << ">STACK" << (Log::level() == Log::Stack ? " *" : "") << "</option>" << endl
-     << "       </select>" << endl
-     << "  <input type=\"submit\" name=\"action\" value=\"Set level\"/>" << endl
-     << "</form>" << endl;
+       << "  <br>Change log level to: <select name=\"level\">" << endl
+       << "        <option value=\"NONE\"" << (Log::level() == Log::None ? " selected" : "") << ">NONE" << (Log::level() == Log::None ? " *" : "") << "</option>" << endl
+       << "        <option value=\"CRIT\"" << (Log::level() == Log::Crit ? " selected" : "") << ">CRIT" << (Log::level() == Log::Crit ? " *" : "") << "</option>" << endl
+       << "        <option value=\"ERR\"" << (Log::level() == Log::Err ? " selected" : "") << ">ERR" << (Log::level() == Log::Err ? " *" : "") << "</option>" << endl
+       << "        <option value=\"WARNING\"" << (Log::level() == Log::Warning ? " selected" : "") << ">WARNING" << (Log::level() == Log::Warning ? " *" : "") << "</option>" << endl
+       << "        <option value=\"INFO\"" << (Log::level() == Log::Info ? " selected" : "") << ">INFO" << (Log::level() == Log::Info ? " *" : "") << "</option>" << endl
+       << "        <option value=\"DEBUG\"" << (Log::level() == Log::Debug ? " selected" : "") << ">DEBUG" << (Log::level() == Log::Debug ? " *" : "") << "</option>" << endl
+       << "        <option value=\"STACK\"" << (Log::level() == Log::Stack ? " selected" : "") << ">STACK" << (Log::level() == Log::Stack ? " *" : "") << "</option>" << endl
+       << "       </select>" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Set level\"/>" << endl
+       << "</form>" << endl;
 
-   if(mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0) != 0)
+   if (mProxy.getConfig().getConfigUnsignedShort("CommandPort", 0) != 0)
    {
-      s << "<form id=\"restartProxy\" method=\"get\" action=\"restart.html\" name=\"restart\">" << endl
-        << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
-        << "</form>" << endl;
+       s << "<form id=\"restartProxy\" method=\"get\" action=\"restart.html\" name=\"restart\">" << endl
+           << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
+           << "</form>" << endl;
    }
 }
 

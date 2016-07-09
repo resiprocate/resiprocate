@@ -81,6 +81,7 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    bool autoAnswerEnabled = false;
    myConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this));
    ua = new MyUserAgent(myConversationManager.get(), mUAProfile, *this);
+   InfoLog(<< "mbellomo Connection() ua = " << ua);
    myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), numCodecIds, codecIds, mConversationProfile->sessionCaps());
    ua->addConversationProfile(mConversationProfile);
 
@@ -184,6 +185,7 @@ tr::Connection::getContactsFromFile(Tp::DBusError *error)
 
 	 string strIdentifier = identifier.toUtf8().constData();
 	 string uri = "sip:" + strIdentifier;
+	 InfoLog(<< "mbellomo getContactsFromFile() ua = "<< ua);
 	 ua->createSubscription(Data("presence"), NameAddr(uri.c_str()), 3600, Mime("application", "pidf+xml"));
 	 
 	 line = in.readLine();

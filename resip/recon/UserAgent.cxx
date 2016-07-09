@@ -89,6 +89,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mDum.addClientSubscriptionHandler("refer", mConversationManager);
    mDum.addServerSubscriptionHandler("refer", mConversationManager);
 
+   InfoLog(<< "mbellomo UserAgent() this = " << this);
    //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    //mDum.addClientPublicationHandler(Symbols::Presence, this);
    //mDum.addOutOfDialogHandler(NOTIFY, this);
@@ -270,6 +271,7 @@ SubscriptionHandle
 UserAgent::createSubscription(const Data& eventType, const NameAddr& target, unsigned int subscriptionTime, const Mime& mimeType)
 {
    SubscriptionHandle handle = getNewSubscriptionHandle();
+   InfoLog(<<"mbellomo createSubscription() this = " << this);
    CreateSubscriptionCmd* cmd = new CreateSubscriptionCmd(this, handle, eventType, target, subscriptionTime, mimeType);
    mDum.post(cmd);
    return handle;
@@ -449,6 +451,7 @@ UserAgent::onSubscriptionTerminated(SubscriptionHandle handle, unsigned int stat
 void 
 UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
 {
+   InfoLog(<< "mbellomo onSubscriptionNotify() this is really sad...");
    // Default implementation is to do nothing - application should override this
 }
 
@@ -548,6 +551,7 @@ UserAgent::createSubscriptionImpl(SubscriptionHandle handle, const Data& eventTy
    if(!mDum.getClientSubscriptionHandler(eventType))
    {
       mDum.addClientSubscriptionHandler(eventType, this);
+      InfoLog(<<"mbellomo createSubscriptionImpl() eventType = " << eventType << " target = " << target << " this = " << this);
    }
    // Ensure that the request Mime type is supported in the dum profile
    if(!mProfile->isMimeTypeSupported(NOTIFY, mimeType))
