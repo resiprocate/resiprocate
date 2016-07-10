@@ -15,7 +15,6 @@ AC_SUBST(LIBTOOL_VERSION_RELEASE)
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
-
 m4_pattern_forbid([^PKG_])
 
 AC_CANONICAL_HOST
