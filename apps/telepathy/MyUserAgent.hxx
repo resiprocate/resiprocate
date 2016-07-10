@@ -37,7 +37,7 @@ public:
    MyUserAgent(recon::ConversationManager* conversationManager, resip::SharedPtr<recon::UserAgentMasterProfile> profile, Connection& connection);
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
    virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
-   virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, resip::Data& notifyData);
+   virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
    virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
    virtual void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response);
    virtual void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response);
@@ -45,6 +45,12 @@ public:
    virtual void thread();
    virtual void setStatus(uint newStatus, uint reason);
    virtual void stop();
+   
+private:
+   std::vector<resip::Pidf::Tuple> getTuplesFromXML(const resip::Data& notifyData);
+   
+signals:
+   void setContactStatus(const QString& identifier, const QString& status);
 
 private:
    tr::Connection& mConnection;

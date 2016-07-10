@@ -74,7 +74,7 @@ namespace tr {
       Tp::ContactAttributesMap getContactAttributes(const Tp::UIntList &handles, const QStringList &ifaces, Tp::DBusError *error);
       uint ensureHandle(const QString& identifier);
       void sendPresence(const QString& status);
-
+      // QString ensureStatus(const QString& tpStatus);
 
    private slots:
       void doConnect(Tp::DBusError *error);
@@ -82,7 +82,7 @@ namespace tr {
       void doDisconnect();
       void setStatusSlot(uint newStatus, uint reason);
       void onIncomingCall(const QString & caller, uint callHandle);
-
+      void setContactStatus(const QString& identifier, const QString& status);
 
    private:
       resip::SharedPtr<TelepathyMasterProfile> mUAProfile;
@@ -101,6 +101,9 @@ namespace tr {
       QMap<uint, QString> mHandles;
       QMap<QString, uint> mIdentifiers;
       Tp::AliasMap mAliases;
+
+      // QMap<QString, QString> mTpStatus;
+      // QMap<QString, QString> mResipStatus;
 
       Tp::SimpleStatusSpecMap statusMap;
       Tp::SimplePresence mSelfPresence;

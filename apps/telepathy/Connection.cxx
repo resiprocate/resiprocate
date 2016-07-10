@@ -36,8 +36,6 @@
 #include "Common.hxx"
 #include "SipCallChannel.hxx"
 
-#define CRLF "\r\n"
-
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -81,7 +79,6 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    bool autoAnswerEnabled = false;
    myConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this));
    ua = new MyUserAgent(myConversationManager.get(), mUAProfile, *this);
-   InfoLog(<< "mbellomo Connection() ua = " << ua);
    myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), numCodecIds, codecIds, mConversationProfile->sessionCaps());
    ua->addConversationProfile(mConversationProfile);
 
@@ -160,7 +157,34 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    setCreateChannelCallback(Tp::memFun(this, &Connection::createChannel));
    setRequestHandlesCallback(Tp::memFun(this, &Connection::requestHandles));
    connect(this, SIGNAL(disconnected()), SLOT(doDisconnect()));
+   connect(ua, SIGNAL(setContactStatus(const QString&, const QString&)),
+	   this, SLOT(setContactStatus(const QString&, const QString&)));
+
+   // This should be static but I could only initialize a map at declaration in c++11
+   // mTpStatus["offline"] = "Offline";
+   // mTpStatus["available"] = QString("Online");
+   // mTpStatus["away"] = QString("Away");
+   // mTpStatus["xa"] = QString("In a meeting");
+   // mTpStatus["dnd"] = QString("Busy (DND)");
+   // mTpStatus["hidden"] = QString("Invisible");
+
+   // Q_FOREACH (QString tpStatus, mTpStatus.keys())
+   // {
+   //    mResipStatus[mTpStatus.value(tpStatus)] = tpStatus;
+   // }
+
 }
+
+// QString
+// tr::Connection::ensureStatus(const QString& tpStatus)
+// {
+//    if(mTpStatus.find(tpStatus) == mTpStatus.end())
+//    {
+//       mTpStatus[tpStatus] = "Offline";
+//       mResipStatus["Offline"] = tpStatus;      
+//    }
+//    return mTpStatus[tpStatus];
+// }
 
 void
 tr::Connection::getContactsFromFile(Tp::DBusError *error)
@@ -185,7 +209,6 @@ tr::Connection::getContactsFromFile(Tp::DBusError *error)
 
 	 string strIdentifier = identifier.toUtf8().constData();
 	 string uri = "sip:" + strIdentifier;
-	 InfoLog(<< "mbellomo getContactsFromFile() ua = "<< ua);
 	 ua->createSubscription(Data("presence"), NameAddr(uri.c_str()), 3600, Mime("application", "pidf+xml"));
 	 
 	 line = in.readLine();
@@ -375,121 +398,30 @@ tr::Connection::onConnected()
    setPresence(QLatin1String("available"), QLatin1String(""), &error);
 
    presences[selfHandle()] = mSelfPresence;
-   // TODO: get presence from contacts
    mSimplePresenceInterface->setPresences(presences);
 }
 
-class ClientPubHandler : public ClientPublicationHandler {
-public:
-   ClientPubHandler() {}
-   virtual void onSuccess(ClientPublicationHandle cph, const SipMessage& status)
-   {
-      handle = cph;
-      InfoLog(<<"ClientPubHandler::onSuccess\n");
-   }
-   virtual void onRemove(ClientPublicationHandle cph, const SipMessage& status)
-   {
-      InfoLog(<<"ClientPubHandler::onRemove\n");
-      handle = ClientPublicationHandle();
-   }
-   virtual int onRequestRetry(ClientPublicationHandle cph, int retrySeconds, const SipMessage& status)
-   {
-      handle = cph;
-      InfoLog(<<"ClientPubHandler::onRequestRetry\n");
-      return 30;
-   }
-   virtual void onFailure(ClientPublicationHandle cph, const SipMessage& status)
-   {
-      InfoLog(<<"ClientPubHandler::onFailure\n");
-      handle = ClientPublicationHandle();
-   }
-   ClientPublicationHandle handle;
-};
-
 
 void
-tr::Connection::sendPresence(const QString &status)
+tr::Connection::setContactStatus(const QString& identifier, const QString& status)
 {
+   qDebug() << "setContactStatus() of " << identifier << " to " << status;
 
-   // bool first = true;
-   // string aor(argv[1]);
-   // string user(argv[2]);
-   // string passwd(argv[3]);
-   // string realm(argv[4]);
-   int port = 5060;
+   Tp::SimpleContactPresences newPresences;
+   uint handle = ensureHandle(identifier);
 
-   Data eventName("presence");
-   
-   // sip logic
-   // SharedPtr<MasterProfile> profile(new MasterProfile);   
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
-
-   SipStack clientStack;
-   DialogUsageManager clientDum(clientStack);
-   clientDum.addTransport(UDP, port);
-   clientDum.setMasterProfile(mProfile);
-
-   clientDum.setClientAuthManager(clientAuth);
-   clientDum.getMasterProfile()->addSupportedMethod(PUBLISH);
-   clientDum.getMasterProfile()->addSupportedMimeType(PUBLISH,Pidf::getStaticType());
-
-   ClientPubHandler cph;
-   clientDum.addClientPublicationHandler(eventName,&cph);
-
-   /////
-   // NameAddr naAor(aor.c_str());
-   string aor = mHandles[selfHandle()].toUtf8().constData();
-   aor = "sip:" + aor;
-   NameAddr naAor(aor.c_str());
-   // profile->setDefaultFrom(naAor);
-   // profile->setDigestCredential(realm.c_str(), user.c_str(), passwd.c_str());
-   
-   Pidf pidf;
-   // pidf.setSimpleStatus(true);
-   // pidf.setEntity(naAor.uri());
-   // pidf.setSimpleId(Random::getRandomHex(3));
-
-   Pidf::Tuple tuple;
-   tuple.status = true;
-   // tuple.id = "test id";
-   tuple.id = Random::getRandomHex(3);
-   tuple.contact = Data::from(aor);
-   tuple.contactPriority = (int)0;
-   // tuple.note = "Away";
-   tuple.note = status.toUtf8().constData();
-   tuple.attributes["displayname"] = "displayName";
-   tuple.attributes["status"] = "1";
-   pidf.getTuples().push_back(tuple);
-   InfoLog( << "Generated tuple: " << endl << tuple );
-
-
-   // Data txt(
-   //    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" CRLF
-   //    "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" " CRLF
-   //    "          xmlns:dm=\"urn:ietf:params:xml:ns:pidf:data-model\" " CRLF
-   //    "          xmlns:rpid=\"urn:ietf:params:xml:ns:pidf:rpid\" " CRLF
-   //    "        entity=\"sip:mateus1@ws.sip5060.net\">" CRLF
-   //    "  <dm:person id=\"p719\">" CRLF
-   //    "    <rpid:activities/>" CRLF
-   //    "  </dm:person>" CRLF
-   //    "  <tuple id=\"t8642\">" CRLF
-   //    "    <status>" CRLF
-   //    "      <basic>open</basic>" CRLF
-   //    "    </status>" CRLF
-   //    "    <contact>sip:mateus1@ws.sip5060.net</contact>" CRLF
-   //    "    <note>Online</note>" CRLF
-   //    "  </tuple>" CRLF
-   //    "</presence>" CRLF
-   //    );
-   // HeaderFieldValue hfv(txt.data(), txt.size());
-   // GenericPidfContents pidf(hfv, GenericPidfContents::getStaticType()); 
-
+   if( handle == selfHandle() )
    {
-      SharedPtr<SipMessage> pubMessage = clientDum.makePublication(naAor, mProfile, pidf, eventName, 120);
-      InfoLog( << "Generated publish: " << endl << *pubMessage );
-      clientDum.send( pubMessage );
+      return;
    }
 
+   Tp::SimplePresence presence;
+   presence.status = status;
+   presence.type = statusMap[status].type;
+
+   newPresences[handle] = presence;
+
+   mSimplePresenceInterface->setPresences(newPresences);
 }
 
 uint
@@ -498,7 +430,9 @@ tr::Connection::setPresence(const QString &status, const QString &message, Tp::D
    // TODO: find out why message is always getting here empty
 
    StackLog(<<"setPresence()");
-
+   // qDebug() << mTpStatus;
+   // qDebug() << mResipStatus;
+   
    mSelfPresence.type = statusMap[status].type;
    mSelfPresence.status = status;
    if ( statusMap[status].canHaveMessage )
@@ -506,9 +440,18 @@ tr::Connection::setPresence(const QString &status, const QString &message, Tp::D
       mSelfPresence.statusMessage = message;
    }
 
-   qDebug() << "status = " << mSelfPresence.status << " type = " << mSelfPresence.type << " message = " << message;
-   sendPresence(status);
 
+   QString identifier = mHandles[selfHandle()];
+   string strIdentifier = identifier.toUtf8().constData();
+   string uri = "sip:" + strIdentifier;
+   // QString resipStatusQt = ensureStatus(status);
+   // Data resipStatus(resipStatusQt.toUtf8().data());
+   Data resipStatus(status.toUtf8().data());
+
+   qDebug() << "status = " << mSelfPresence.status << " type = " << mSelfPresence.type << " message = " << message;
+
+   ua->createPublication(Data("presence"), NameAddr(uri.c_str()), resipStatus, 3600, Mime("application", "pidf+xml"));
+   
    return selfHandle();
 }
 

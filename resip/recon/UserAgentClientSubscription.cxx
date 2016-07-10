@@ -49,14 +49,11 @@ void
 UserAgentClientSubscription::notifyReceived(const Data& notifyData)
 {
    size_t hash = notifyData.hash();
-   InfoLog(<< "notifyReceived()" << std::endl << notifyData);
    if(hash != mLastNotifyHash)  // only call callback if body changed from last time
    {
-      InfoLog(<< "gotHERE");
       mLastNotifyHash = hash;
       mUserAgent.onSubscriptionNotify(mSubscriptionHandle, notifyData);
    }
-   InfoLog(<< "mbellomo finished");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,18 +79,14 @@ void
 UserAgentClientSubscription::onUpdateActive(ClientSubscriptionHandle h, const SipMessage& msg, bool outOfOrder)
 {
    InfoLog(<< "onUpdateActive(ClientSubscriptionHandle): handle=" << mSubscriptionHandle << ", " << msg.brief());
-
    h->acceptUpdate();
-   InfoLog(<< std::endl << std::endl << "SIP message = " << std::endl << msg);
    if(mEnded)
    {
-      InfoLog(<< "mEnded");
       h->end();
    }
    else if(msg.getContents())
    {
       const Data& bodyData = msg.getContents()->getBodyData();
-      InfoLog(<< "data = " << bodyData);
       notifyReceived(bodyData);
    }
 }

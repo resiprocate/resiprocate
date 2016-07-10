@@ -7,6 +7,7 @@
 #include "UserAgentCmds.hxx"
 #include "UserAgentServerAuthManager.hxx"
 #include "UserAgentClientSubscription.hxx"
+#include "UserAgentClientPublication.hxx"
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
@@ -17,10 +18,12 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
+#include <resip/stack/Contents.hxx>
 #include <resip/dum/ClientAuthManager.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerSubscription.hxx>
 #include <resip/dum/ClientRegistration.hxx>
+#include <resip/dum/PublicationHandler.hxx>
 #include <resip/dum/KeepAliveManager.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #if defined(USE_SSL)
@@ -89,7 +92,6 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mDum.addClientSubscriptionHandler("refer", mConversationManager);
    mDum.addServerSubscriptionHandler("refer", mConversationManager);
 
-   InfoLog(<< "mbellomo UserAgent() this = " << this);
    //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    //mDum.addClientPublicationHandler(Symbols::Presence, this);
    //mDum.addOutOfDialogHandler(NOTIFY, this);
@@ -133,6 +135,26 @@ UserAgent::unregisterSubscription(UserAgentClientSubscription *subscription)
 {
    mSubscriptions.erase(subscription->getSubscriptionHandle());
 }
+
+PublicationHandle
+UserAgent::getNewPublicationHandle()
+{
+   Lock lock(mPublicationHandleMutex);
+   return mCurrentPublicationHandle++;
+}
+
+void
+UserAgent::registerPublication(UserAgentClientPublication *publication)
+{
+   mPublications[publication->getPublicationHandle()] = publication;
+}
+
+void
+UserAgent::unregisterPublication(UserAgentClientPublication *publication)
+{
+   mPublications.erase(publication->getPublicationHandle());
+}
+
 
 ConversationProfileHandle 
 UserAgent::getNewConversationProfileHandle()
@@ -271,7 +293,6 @@ SubscriptionHandle
 UserAgent::createSubscription(const Data& eventType, const NameAddr& target, unsigned int subscriptionTime, const Mime& mimeType)
 {
    SubscriptionHandle handle = getNewSubscriptionHandle();
-   InfoLog(<<"mbellomo createSubscription() this = " << this);
    CreateSubscriptionCmd* cmd = new CreateSubscriptionCmd(this, handle, eventType, target, subscriptionTime, mimeType);
    mDum.post(cmd);
    return handle;
@@ -284,6 +305,22 @@ UserAgent::destroySubscription(SubscriptionHandle handle)
    mDum.post(cmd);
 }
 
+PublicationHandle
+UserAgent::createPublication(const Data& eventType, const NameAddr& target, const Data& status, unsigned int publicationTime, const Mime& mimeType)
+{
+   PublicationHandle handle = getNewPublicationHandle();
+   CreatePublicationCmd* cmd = new CreatePublicationCmd(this, handle, status, eventType, target, publicationTime, mimeType);
+   mDum.post(cmd);
+
+   return handle;   
+}
+
+void 
+UserAgent::destroyPublication(PublicationHandle handle)
+{
+   DestroyPublicationCmd* cmd = new DestroyPublicationCmd(this, handle);
+   mDum.post(cmd);
+}
 
 SharedPtr<ConversationProfile> 
 UserAgent::getDefaultOutgoingConversationProfile()
@@ -451,7 +488,6 @@ UserAgent::onSubscriptionTerminated(SubscriptionHandle handle, unsigned int stat
 void 
 UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
 {
-   InfoLog(<< "mbellomo onSubscriptionNotify() this is really sad...");
    // Default implementation is to do nothing - application should override this
 }
 
@@ -551,7 +587,6 @@ UserAgent::createSubscriptionImpl(SubscriptionHandle handle, const Data& eventTy
    if(!mDum.getClientSubscriptionHandler(eventType))
    {
       mDum.addClientSubscriptionHandler(eventType, this);
-      InfoLog(<<"mbellomo createSubscriptionImpl() eventType = " << eventType << " target = " << target << " this = " << this);
    }
    // Ensure that the request Mime type is supported in the dum profile
    if(!mProfile->isMimeTypeSupported(NOTIFY, mimeType))
@@ -568,6 +603,119 @@ UserAgent::destroySubscriptionImpl(SubscriptionHandle handle)
 {
    SubscriptionMap::iterator it = mSubscriptions.find(handle);
    if(it != mSubscriptions.end())
+   {
+      it->second->end();
+   }
+}
+
+class ClientPubHandler : public ClientPublicationHandler {
+public:
+   ClientPubHandler() {}
+   virtual void onSuccess(ClientPublicationHandle cph, const SipMessage& status)
+   {
+      InfoLog(<<"ClientPubHandler::onSuccess\n");
+      handle = cph;
+   }
+   virtual void onRemove(ClientPublicationHandle cph, const SipMessage& status)
+   {
+      InfoLog(<<"ClientPubHandler::onRemove\n");
+      handle = ClientPublicationHandle();
+   }
+   virtual int onRequestRetry(ClientPublicationHandle cph, int retrySeconds, const SipMessage& status)
+   {
+      handle = cph;
+      InfoLog(<<"ClientPubHandler::onRequestRetry\n");
+      return 30;
+   }
+   virtual void onFailure(ClientPublicationHandle cph, const SipMessage& status)
+   {
+      InfoLog(<<"ClientPubHandler::onFailure\n");
+      handle = ClientPublicationHandle();
+   }
+   ClientPublicationHandle handle;
+};
+
+void 
+UserAgent::createPublicationImpl(PublicationHandle handle, const Data& status, const Data& eventType, const NameAddr& target, unsigned int publicationTime, const Mime& mimeType)
+{
+   // Ensure we have a client publication handler for this event type
+   if(!mDum.getClientPublicationHandler(eventType))
+   {
+      ClientPubHandler* cph = new ClientPubHandler();
+      mDum.addClientPublicationHandler(eventType, cph);
+   }
+   // Ensure that the request Mime type is supported in the dum profile
+   if(!mProfile->isMimeTypeSupported(PUBLISH, mimeType))
+   {
+      mProfile->addSupportedMimeType(PUBLISH, mimeType);  
+   }
+
+   // Adding rpid defined at RFC 4480 https://tools.ietf.org/html/rfc4480#page-7
+   resip::GenericPidfContents gPidf;
+
+   resip::GenericPidfContents::Node* dm = new resip::GenericPidfContents::Node();
+   dm->mNamespacePrefix = Data("dm:");
+   dm->mTag = "person";
+   dm->mAttributes["id"] = Random::getRandomHex(3);
+
+   resip::GenericPidfContents::Node* rpid = new resip::GenericPidfContents::Node();
+   rpid->mNamespacePrefix = Data("rpid:");
+   rpid->mTag = "activities";
+   dm->mChildren.push_back(rpid);   
+
+   if(status != "available")
+   {
+      resip::GenericPidfContents::Node* st = new resip::GenericPidfContents::Node();
+      st->mNamespacePrefix = Data("rpid:");
+      if(status == "dnd")
+      {
+	 st->mTag = "busy";
+      }
+      else
+      {
+	 st->mTag = status;
+      }
+
+      rpid->mChildren.push_back(st);
+   }
+
+   
+   gPidf.getRootNodes().push_back(dm);
+   
+   InfoLog( << "generated gPidf : " << endl << gPidf );
+
+   Data note;
+   if(status == "dnd")
+   {
+      note = Data("Busy (DND)");
+   }
+   else if(status == "available")
+   {
+      note = Data("Online");
+   }
+   else if(status == "away")
+   {
+      note = Data("Away");
+   }
+   gPidf.setSimplePresenceTupleNode(Random::getRandomHex(3), true, Data::Empty, note, target.uri().getAorNoReally(), Data(1.0));
+   gPidf.setEntity(target.uri());
+   gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:data-model"), Data("dm"));
+   gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:rpid"), Data("rpid"));
+
+   HashMap<Data,Data> mp = gPidf.getNamespaces();
+   for(HashMap<Data,Data>::const_iterator kv = mp.begin(); kv != mp.end(); kv++){
+      InfoLog(<<" key = " << kv->first << " value = " << kv->second);
+   }
+   
+   UserAgentClientPublication *publication = new UserAgentClientPublication(*this, mDum, handle);
+   mDum.send(mDum.makePublication(target, getDefaultOutgoingConversationProfile(), gPidf, eventType, publicationTime, publication));
+}
+
+void 
+UserAgent::destroyPublicationImpl(PublicationHandle handle)
+{
+   PublicationMap::iterator it = mPublications.find(handle);
+   if(it != mPublications.end())
    {
       it->second->end();
    }

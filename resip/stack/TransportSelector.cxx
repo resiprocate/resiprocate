@@ -1150,10 +1150,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
 
 		  // contact.uri().param(UnknownParameterType("registering_acc")) = Data("ws_sip5060_net");
 		  
-		  DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << " contact uri = " << contact.uri() << std::endl);
-		  DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << " target = " << target << std::endl);
-
-		  
                   // Add comp=sigcomp to contact URI
                   // Also, If no +sip.instance on contact HEADER,
                   // add sigcomp-id="<urn>" to contact URI.
@@ -1181,7 +1177,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                      contact.uri().remove(p_addTransport);
                   }
                }
-	       DebugLog ( << "TransportSelector::transmit() " << std::endl << std::endl << contact << std::endl);
             }
          }
 

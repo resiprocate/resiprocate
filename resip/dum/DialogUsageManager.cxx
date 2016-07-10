@@ -424,7 +424,6 @@ DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
 void
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
-   InfoLog(<< "mbellomo addClientSubscriptionHandler() eventType = " << eventType << " handler = " << handler);
    resip_assert(handler);
    resip_assert(mClientSubscriptionHandlers.count(eventType) == 0);
    mClientSubscriptionHandlers[eventType] = handler;
@@ -2340,15 +2339,12 @@ ClientSubscriptionHandler*
 DialogUsageManager::getClientSubscriptionHandler(const Data& eventType)
 {
    map<Data, ClientSubscriptionHandler*>::iterator res = mClientSubscriptionHandlers.find(eventType);
-   InfoLog(<< "mbellomo getClientSubscriptionHandler() eventType = " << eventType);
    if (res != mClientSubscriptionHandlers.end())
    {
-      InfoLog(<< "found it = " << res->second);
       return res->second;
    }
    else
    {
-      InfoLog(<< "returning 0 ");
       return 0;
    }
 }
