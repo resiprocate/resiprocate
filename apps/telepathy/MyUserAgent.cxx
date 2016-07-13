@@ -50,7 +50,7 @@ tr::MyUserAgent::onSubscriptionTerminated(SubscriptionHandle handle, unsigned in
 }
 
 void
-tr::MyUserAgent::onSubscriptionNotify(SubscriptionHandle handle, Data& notifyData)
+tr::MyUserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
 {
    InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
 }

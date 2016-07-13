@@ -80,7 +80,7 @@ public:
       InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, Data& notifyData)
+   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
