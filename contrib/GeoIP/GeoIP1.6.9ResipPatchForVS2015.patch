@@ -1,0 +1,39 @@
+ contrib/GeoIP/libGeoIP/pread.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/contrib/GeoIP/libGeoIP/pread.c b/contrib/GeoIP/libGeoIP/pread.c
+index 2592c29..59b5661 100644
+--- a/contrib/GeoIP/libGeoIP/pread.c
++++ b/contrib/GeoIP/libGeoIP/pread.c
+@@ -26,22 +26,26 @@ static CRITICAL_SECTION preadsc;
+ 
+ #ifdef _MSC_VER
+ 
+-#pragma section(".CRT$XCU",read)
++ #pragma section(".CRT$XCU",read)
+ 
+-#define INITIALIZER(f)                                                  \
++ #define INITIALIZER2_(f,p)                                             \
+     static void __cdecl f(void);                                        \
+     __declspec(allocate(".CRT$XCU")) void(__cdecl * f ## _) (void) = f; \
++    __pragma(comment(linker,"/include:" p #f "_"))                      \
+     static void __cdecl f(void)
+-
++ #ifdef _WIN64
++ #define INITIALIZER(f) INITIALIZER2_(f,"")
++ #else
++ #define INITIALIZER(f) INITIALIZER2_(f,"_")
++ #endif
+ #elif defined(__GNUC__)
+ 
+-#define INITIALIZER(f)                                \
++ #define INITIALIZER(f)                               \
+     static void f(void) __attribute__((constructor)); \
+     static void f(void)
+ 
+ #endif
+ 
+-
+ #ifdef _WIN64
+ int pread(int fd, void *buf, unsigned int nbyte, __int64 offset)
+ {
