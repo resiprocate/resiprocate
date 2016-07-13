@@ -4,10 +4,10 @@ before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq gperf autotools-dev librecon-dev
 compiler:
-  - gcc
-  - clang
+ - gcc
+ - clang
 script:
-  - ./build/travis/bootstrap
-  - ./build/travis/configure
-  - ./build/travis/build
+ - ./build/travis/bootstrap
+ - ./build/travis/configure
+ - ./build/travis/build
 
