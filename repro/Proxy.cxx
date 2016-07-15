@@ -290,7 +290,7 @@ Proxy::thread()
                   
                   if (sip->method() == CANCEL)
                   {
-                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(tid);
+                     RequestContextMap::iterator i = mServerRequestContexts.find(tid);
 
                      if(i == mServerRequestContexts.end())
                      {
@@ -329,8 +329,7 @@ Proxy::thread()
                      }
                      
                      RequestContext* context=0;
-
-                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(tid);
+                     RequestContextMap::iterator i = mServerRequestContexts.find(tid);
                      
                      // .bwc. This might be an ACK/200, or a stray ACK/failure
                      if(i == mServerRequestContexts.end())
@@ -410,7 +409,7 @@ Proxy::thread()
                   InfoLog (<< "Looking up RequestContext tid=" << tid);
                
                   // TODO  is there a problem with a stray 200?
-                  HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(tid);
+                  RequestContextMap::iterator i = mClientRequestContexts.find(tid);
                   if (i != mClientRequestContexts.end())
                   {
                      try
@@ -436,7 +435,7 @@ Proxy::thread()
                Data tid(app->getTransactionId());
                tid.lowercase();
                DebugLog(<< "Trying to dispatch : " << *app );
-               HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(tid);
+               RequestContextMap::iterator i = mServerRequestContexts.find(tid);
                // the underlying RequestContext may not exist
                if (i != mServerRequestContexts.end())
                {
@@ -472,7 +471,7 @@ Proxy::thread()
                tid.lowercase();
                if (term->isClientTransaction())
                {
-                  HashMap<Data,RequestContext*>::iterator i=mClientRequestContexts.find(tid);
+                  RequestContextMap::iterator i = mClientRequestContexts.find(tid);
                   if (i != mClientRequestContexts.end())
                   {
                      try
@@ -492,7 +491,7 @@ Proxy::thread()
                }
                else 
                {
-                  HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(tid);
+                  RequestContextMap::iterator i = mServerRequestContexts.find(tid);
                   if (i != mServerRequestContexts.end())
                   {
                      try
@@ -512,6 +511,10 @@ Proxy::thread()
                }
                delete term;
             }
+            else
+            {
+               processUnknownMessage(msg);
+            }
          }
       }
       catch (BaseException& e)
@@ -524,6 +527,13 @@ Proxy::thread()
       }
    }
    InfoLog (<< "Proxy::thread exit");
+}
+
+void
+Proxy::processUnknownMessage(Message* msg)
+{
+   ErrLog(<< "Unknown/unprocessed message passed to proxy fifo (this will leak): " << *msg);
+   resip_assert(false);
 }
 
 void

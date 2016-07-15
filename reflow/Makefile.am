@@ -2,7 +2,7 @@
 
 EXTRA_DIST = ReadMe.txt
 EXTRA_DIST += *.vcproj
-EXTRA_DIST += reflow_10_0.vcxproj reflow_10_0.vcxproj.filters
+EXTRA_DIST += *.vcxproj *.vcxproj.filters
 
 SUBDIRS = .
 #SUBDIRS += dtls_wrapper/test

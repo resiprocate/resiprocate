@@ -83,7 +83,7 @@ class Token : public ParserCategory
       defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework-07 (removed in 08)");
       defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework-05 (renamed to auid in 06, which was then removed in 08)");
       defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework-11 (removed in 12)");
-      defineParam(require, "require", DataParameter, "RFC 5373");
+      defineParam(require, "require", ExistsParameter, "RFC 5373");
 
       defineParam(utranCellId3gpp, "utran-cell-id-3gpp", DataParameter, "RFC 3455"); // P-Access-Network-Info
       defineParam(cgi3gpp, "cgi-3gpp", DataParameter, "RFC 3455"); // P-Access-Network-Info

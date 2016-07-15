@@ -1213,6 +1213,12 @@ SipStack::getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCac
    mDnsStub->getDnsCacheDump(key, handler);
 }
 
+void 
+SipStack::reloadDnsServers()
+{
+   mDnsStub->reloadDnsServers();
+}
+
 volatile bool&
 SipStack::statisticsManagerEnabled()
 {

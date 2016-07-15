@@ -1,6 +1,6 @@
 
 
-AUTOMAKE_OPTIONS = foreign dist-tarZ
+AUTOMAKE_OPTIONS = foreign dist-zip
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = rutil
@@ -10,10 +10,6 @@ SUBDIRS += repro
 endif
 if BUILD_TFM
 SUBDIRS += tfm
-endif
-
-if BUILD_APPS
-SUBDIRS += apps
 endif
 
 # The Makefiles for these don't separate SSL stuff yet...
@@ -28,12 +24,13 @@ SUBDIRS += p2p/s2c/s2c p2p
 endif
 endif
 
+if BUILD_APPS
+SUBDIRS += apps
+endif
+
 #EXTRA_DIST = build-contrib.sh
 
-EXTRA_DIST = reSIProcate_10_0.sln
-#EXTRA_DIST += reSIProcate_7_1.sln
-EXTRA_DIST += reSIProcate_8_0.sln
-EXTRA_DIST += reSIProcate_9_0.sln
+EXTRA_DIST = *.sln
 
 EXTRA_DIST += resiprocate.spec
 

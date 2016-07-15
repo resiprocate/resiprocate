@@ -137,6 +137,21 @@ TLSConnectionMethod = SSLv23
 # not just for connections from the local users.
 TLSUseEmailAsSIP = false
 
+# TLS Diffie-Hellman (DH) parameters file (optional)
+#
+# If specified, Diffie-Hellman can be used to enable
+# Perfect Forward Secrecy (PFS) in those cases where the SIP proxy
+# is acting as a TLS server and when the client tries to use a crypto suite
+# involving Diffie-Hellman.
+# The SIP proxy also supports ECDH regardless of whether a DH parameter file
+# is available.
+#
+# The file can be generated with the command:
+#
+#     openssl dhparam -outform PEM -out dh2048.pem 2048
+#
+TlsDHParamsFilename = dh2048.pem
+
 # Alternate and more flexible method to specify transports to bind to.  If specified here
 # then IPAddress, and port settings above are ignored.
 # Transports MUST be numbered in sequential order, starting from 1.  Possible settings are:
@@ -240,15 +255,15 @@ HttpAdminUserFile = users.txt
 # If left blank it will bind to all adapters.
 CommandBindAddress =
 
-# Port on which to listen for and send XML RPC messaging used in command processing 
+# Port on which to listen for and send XML RPC messaging used in command processing
 # 0 to disable (default: 5081)
 CommandPort = 5081
 
-# Port on which to listen for and send XML RPC messaging used in registration/publication sync 
+# Port on which to listen for and send XML RPC messaging used in registration/publication sync
 # process - 0 to disable (default: 0)
 RegSyncPort = 0
 
-# Port on which to connect to RegSync peer for registration/publication sync 
+# Port on which to connect to RegSync peer for registration/publication sync
 # process - 0 to use same value RegSyncPort (default: 0)
 RemoteRegSyncPort = 0
 
@@ -428,6 +443,19 @@ Database1Path = ./
 #
 #Database1Type = MySQL
 #Database1Type = PostgreSQL
+
+# A PostgreSQL conninfo string, leave blank if you prefer to specify the
+# hostname, port and other details individually.  repro will combine
+# the conninfo string you specify here (if any) with individual details
+# you specify using the Host, Port, DatabaseName, Username and Password
+# to create the complete conninfo string used for the connection.
+# You may want to leave all the other parameters blank and just specify
+# a conninfo string.  You can also choose to leave the password out of
+# the conninfo string and include it from another file with restricted
+# read permissions.  If you specify a password as part of the conninfo
+# string it may appear in logs, if you specify it using the Password
+# parameter then it should be suppressed in logs.
+#Database1ConnInfo = host=localhost port=5432 dbname=repro user=repro
 
 # The hostname running SQL server to connect to, leave blank to use BerkelyDB.
 # The value of host may be either a host name or an IP address. If host is "localhost",
@@ -747,11 +775,11 @@ NeverStripProxyAuthorizationHeaders = false
 #    header of each SIP message on the TlsConnection
 # Examples:
 # Cert 1:
-#    common name = daniel@pocock.com.au
-#    => From: <daniel@pocock.com.au> is the only value that will pass
+#    common name = daniel@pocock.pro
+#    => From: <daniel@pocock.pro> is the only value that will pass
 # Cert 2:
-#    subjectAltName = pocock.com.au
-#    => From: <<anything>@pocock.com.au> will be accepted
+#    subjectAltName = pocock.pro
+#    => From: <<anything>@pocock.pro> will be accepted
 # Typically, case 1 is for a real client connection (e.g. Jitsi), case 2
 # (whole domain) is for federated SIP proxy-to-proxy communication (RFC 5922)
 EnableCertificateAuthenticator = false

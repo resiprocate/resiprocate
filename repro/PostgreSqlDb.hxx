@@ -17,7 +17,8 @@ namespace repro
 class PostgreSqlDb: public SqlDb
 {
    public:
-      PostgreSqlDb(const resip::Data& dbServer, 
+      PostgreSqlDb(const resip::Data& dbConnInfo,
+              const resip::Data& dbServer,
               const resip::Data& user, 
               const resip::Data& password, 
               const resip::Data& databaseName, 
@@ -59,6 +60,7 @@ class PostgreSqlDb: public SqlDb
       virtual int query(const resip::Data& queryCommand) const;
       resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const;
 
+      resip::Data mDBConnInfo;
       resip::Data mDBServer;
       resip::Data mDBUser;
       resip::Data mDBPassword;

@@ -1054,7 +1054,7 @@ TurnAsyncSocket::doSendFramed(boost::shared_ptr<DataBuffer>& data)
    }
    else if(mAsyncSocketBase.isConnected())
    {
-      DebugLog(<<"Sending to connected peer");
+      //DebugLog(<<"Sending to connected peer");
       sendToUnframed(mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort(), data);
    }
    else

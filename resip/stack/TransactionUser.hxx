@@ -71,8 +71,31 @@ class TransactionUser
          @note The comparison performed is case-sensitive; make sure you 
             lower-case everything you put in here.
          @todo Make this case-insensitive.
-      */
+         @warning This method is NOT thread-safe.  mDomainList is accessed from both the
+            thread that queues to the TU (iff a DomainIsMe MessageFilterRule is used)
+            and from within the TU itself.  The only way calling this is safe, is if you
+            can ensure both of these threads are not calling isMyDomain when you call
+            this method.  For example an application that does NOT use a DomainIsMe
+            MessageFilterRule and that posts the addDomain call to the TU processing
+            thread for execution there, will be thread safe.  This API is also safe to call
+            before any of the processing threads have been started.
+         */
       void addDomain(const Data& domain);
+
+      /**
+         @brief Removes a domain from the set of domains that this TransactionUser is
+            responsible for.
+         @note This API will lowercase the domain when searching for the domain to 
+            remove
+         @warning This method is NOT thread-safe.  mDomainList is accessed from both the
+            thread that queues to the TU (iff a DomainIsMe MessageFilterRule is used) 
+            and from within the TU itself.  The only way calling this is safe, is if you 
+            can ensure both of these threads are not calling isMyDomain when you call 
+            this method.  For example an application that does NOT use a DomainIsMe
+            MessageFilterRule and that posts the removeDomain call to the TU processing
+            thread (ie: DUMThread) for execution there, will be thread safe.
+      */
+      void removeDomain(const Data& domain);
 
       /**
          @brief Return the name of this TransactionUser. Used in encode().

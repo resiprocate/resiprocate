@@ -1,0 +1,4 @@
+
+The files in this directory are licensed under GPL 3 terms
+unless stated otherwise.
+

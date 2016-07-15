@@ -19,6 +19,15 @@
 #define OPENSSL_THREAD_DEFINES
 #include <openssl/opensslconf.h>
 
+#if  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)
+// OpenSSL builds use an older version of visual studio that require the following definition
+// Also will need to link with legacy_stdio_definitions.lib.  It's possible that future build of 
+// SL's windows OpenSSL binaries will be built with VS2015 and will not require this, however it shouldn't
+// hurt to be here.
+// http://stackoverflow.com/questions/30412951/unresolved-external-symbol-imp-fprintf-and-imp-iob-func-sdl2
+extern "C" { FILE __iob_func[3] = { *stdin,*stdout,*stderr }; }
+#endif
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;

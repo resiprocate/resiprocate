@@ -26,11 +26,13 @@ class AresDns : public ExternalDns, public FdSetIOObserver
 {
    friend class AresDnsPollItem;
    public:
-      AresDns() {mChannel = 0; mFeatures = 0; mPollGrp=NULL;}
+      AresDns() : mChannel(0), mSocketFunc(0), mFeatures(0), mPollGrp(NULL) { }
       virtual ~AresDns();
 
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, int timeout=0, int tries=0, unsigned int features=0);
+      // reinitializes with the same additionalNameservers and AfterSocketCreationFuncPtr as last call to init
+      virtual int init(int dnsTimeout = 0, int dnsTries = 0, unsigned int features = 0);
 
       int internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, unsigned int features=0, ares_channeldata** channel = 0, int timeout=0, int tries=0);
@@ -72,11 +74,13 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       static ExternalDnsHandler* getHandler(void* arg);
       struct ares_channeldata* mChannel;
       std::vector<GenericIPAddress> mAdditionalNameservers;
+      AfterSocketCreationFuncPtr mSocketFunc;
       unsigned int mFeatures;
       volatile static bool mHostFileLookupOnlyMode;
 
       FdPollGrp*	mPollGrp;
-      std::vector<AresDnsPollItem*> mPollItems;
+      typedef std::vector<std::pair<AresDnsPollItem*, AresDnsPollItem*> > PollItems;
+      PollItems mPollItems;  // first item is for UDP socket, 2nd is for TCP socket
 
 };
 

@@ -4,13 +4,33 @@ set -e
 
 # This scripts configures to build in a Debian environment
 
+if dpkg-query -s libradcli-dev >/dev/null 2>&1 ;
+then
+  RADIUS_LIB=--with-radcli
+elif dpkg-query -s libfreeradius-client-dev >/dev/null 2>&1 ;
+then
+  RADIUS_LIB=--with-freeradius
+else
+  echo "Please install libradcli-dev or libfreeradius-client-dev"
+  exit 1
+fi
+
 autoreconf --install
 
+# Qt libraries are required for the Telepathy Connection Manager
+QT_VERSION=qt4
+QT_LIB_PREFIX="/usr/include/${QT_VERSION}"
+QT_LIBS="-I${QT_LIB_PREFIX}"
+for lib in QtCore QtNetwork QtDBus ;
+do
+  QT_LIBS="${QT_LIBS} -I${QT_LIB_PREFIX}/${lib}"
+done
+
 CFLAGS='-g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security' \
-CPPFLAGS='-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS' \
+CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 ${QT_LIBS} -I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" \
 CXXFLAGS='-g -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive' \
 LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
-  ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls --with-freeradius --with-ssl \
+  ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls $RADIUS_LIB --with-ssl \
               --enable-assert-syslog \
               --with-c-ares \
               --with-mysql \
@@ -22,6 +42,7 @@ LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
                 DEPS_PYTHON_LIBS="`/usr/bin/python2.7-config --ldflags`" \
                 PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
               --with-apps \
+              --with-telepathy \
               --with-recon
 
 

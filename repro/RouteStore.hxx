@@ -33,11 +33,12 @@ class RouteStore
                     const resip::Data& event,
                     const resip::Data& matchingPattern,
                     const resip::Data& rewriteExpression,
-                    const int order );
+                    const short order );
       
       void eraseRoute(const resip::Data& method,
                       const resip::Data& event,
-                      const resip::Data& matchingPattern);
+                      const resip::Data& matchingPattern,
+                      const short order);
       void eraseRoute( const resip::Data& key );
 
       bool updateRoute( const resip::Data& originalKey,
@@ -45,7 +46,7 @@ class RouteStore
                         const resip::Data& event,
                         const resip::Data& matchingPattern,
                         const resip::Data& rewriteExpression,
-                        const int order );
+                        const short order );
       
       AbstractDb::RouteRecord getRouteRecord(const resip::Data& key);
       
@@ -61,7 +62,8 @@ class RouteStore
       
       Key buildKey(const resip::Data& method,
                    const resip::Data& event,
-                   const resip::Data& matchingPattern ) const;
+                   const resip::Data& matchingPattern,
+                   const short order) const;
 
       AbstractDb& mDb;  
 

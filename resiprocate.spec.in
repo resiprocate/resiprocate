@@ -166,6 +166,7 @@ sed -i \
  -e 's!^LogLevel = INFO$!LogLevel = DEBUG!' \
  -e 's!^LogFilename = repro.log$!LogFilename = %{_localstatedir}/log/repro/repro.log!' \
  -e 's!^LogFileMaxBytes = 5242880!LogFileMaxBytes = 0!' \
+ -e 's!^TlsDHParamsFilename = dh2048.pem!TlsDHParamsFilename = %{_sysconfdir}/repro/dh2048.pem!' \
  -e 's!^HttpAdminUserFile = users.txt$!HttpAdminUserFile = %{_sysconfdir}/repro/users.txt!' \
  -e 's!^#PluginDirectory = /usr/lib/repro/plugins$!PluginDirectory = %{_libdir}/@PACKAGE@/repro/plugins!' \
  -e 's!^#RunAsUser = repro$!RunAsUser = repro!' \
@@ -187,7 +188,7 @@ sed -i \
  -e 's!^#RunAsGroup = return!RunAsGroup = return!' \
  -e 's!^UserDatabaseFile = users.txt!UserDatabaseFile = %{_sysconfdir}/reTurn/users.txt!' \
  -e 's!^UserDatabaseHashedPasswords = false!UserDatabaseHashedPasswords = true!' \
- -e 's!^TlsTempDhFilename = dh512.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh512.pem!' \
+ -e 's!^TlsTempDhFilename = dh2048.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh2048.pem!' \
             %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
 install -m 0755 -d %{buildroot}%{_sharedstatedir}/repro
 rm -f %{buildroot}%{_libdir}/lib*.a
@@ -222,6 +223,12 @@ if [ $1 -eq 1 ] ; then
     /sbin/chkconfig --add repro
 fi
 %endif
+if [ ! -e %{_sysconfdir}/repro/dh2048.pem ] ;
+then
+  /usr/bin/openssl dhparam -outform PEM -out %{_sysconfdir}/repro/dh2048.pem 2048
+  chown root:repro %{_sysconfdir}/repro/dh2048.pem
+  chmod 0640 %{_sysconfdir}/repro/dh2048.pem
+fi
 
 %post turn-server
 %if %use_systemd
@@ -232,6 +239,12 @@ if [ $1 -eq 1 ] ; then
     /sbin/chkconfig --add resiprocate-turn-server
 fi
 %endif
+if [ ! -e %{_sysconfdir}/reTurn/dh2048.pem ] ;
+then
+  /usr/bin/openssl dhparam -outform PEM -out %{_sysconfdir}/reTurn/dh2048.pem 2048
+  chown root:return %{_sysconfdir}/reTurn/dh2048.pem
+  chmod 0640 %{_sysconfdir}/reTurn/dh2048.pem
+fi
 
 %preun repro
 %if %use_systemd
@@ -320,6 +333,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/resip/stack/*.hxx
 %{_includedir}/resip/stack/ssl/*.hxx
 %{_includedir}/rutil/*.hxx
+%{_includedir}/rutil/*.h
 %{_includedir}/rutil/*/*.hxx
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libdum.so
@@ -333,6 +347,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0750,repro,repro) %dir %{_sharedstatedir}/repro
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/repro.config
 %attr(0640,root,repro) %config(noreplace) %{_sysconfdir}/repro/users.txt
+%config(missingok) %ghost %{_sysconfdir}/repro/dh2048.pem
 %if %use_systemd
 %{_unitdir}/repro.service
 %else
@@ -349,6 +364,7 @@ rm -rf $RPM_BUILD_ROOT
 %files turn-server
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/reTurnServer.config
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/users.txt
+%config(missingok) %ghost %{_sysconfdir}/reTurn/dh2048.pem
 %dir %{_libdir}/@PACKAGE@/reTurnServer
 %if %use_systemd
 %{_unitdir}/resiprocate-turn-server.service
@@ -369,7 +385,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/clicktocall
 
 %changelog
-* Sat Nov 24 2012 Daniel Pocock <daniel@pocock.com.au> - @VERSION@-1
+* Sat Nov 24 2012 Daniel Pocock <daniel@pocock.pro> - @VERSION@-1
 - Produce multiple packages for stack/libs, daemons, sipdialer
 - Initial build based on autotools
 

@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="BridgeMixer.cxx" />
+    <ClCompile Include="Conversation.cxx" />
+    <ClCompile Include="ConversationManager.cxx" />
+    <ClCompile Include="ConversationParticipantAssignment.cxx" />
+    <ClCompile Include="ConversationProfile.cxx" />
+    <ClCompile Include="DefaultDialogSet.cxx" />
+    <ClCompile Include="DtmfEvent.cxx" />
+    <ClCompile Include="FlowManagerSipXSocket.cxx" />
+    <ClCompile Include="LocalParticipant.cxx" />
+    <ClCompile Include="MediaEvent.cxx" />
+    <ClCompile Include="MediaInterface.cxx" />
+    <ClCompile Include="MediaResourceCache.cxx" />
+    <ClCompile Include="MediaResourceParticipant.cxx" />
+    <ClCompile Include="MediaStreamEvent.cxx" />
+    <ClCompile Include="Participant.cxx" />
+    <ClCompile Include="ReconSubsystem.cxx" />
+    <ClCompile Include="RelatedConversationSet.cxx" />
+    <ClCompile Include="RemoteParticipant.cxx" />
+    <ClCompile Include="RemoteParticipantDialogSet.cxx" />
+    <ClCompile Include="sdp\Sdp.cxx" />
+    <ClCompile Include="sdp\SdpCandidate.cxx" />
+    <ClCompile Include="sdp\SdpCandidatePair.cxx" />
+    <ClCompile Include="sdp\SdpCodec.cxx" />
+    <ClCompile Include="sdp\SdpHelperResip.cxx" />
+    <ClCompile Include="sdp\SdpMediaLine.cxx" />
+    <ClCompile Include="UserAgent.cxx" />
+    <ClCompile Include="UserAgentClientSubscription.cxx" />
+    <ClCompile Include="UserAgentDialogSetFactory.cxx" />
+    <ClCompile Include="UserAgentMasterProfile.cxx" />
+    <ClCompile Include="UserAgentRegistration.cxx" />
+    <ClCompile Include="UserAgentServerAuthManager.cxx" />
+    <ClCompile Include="SipXHelper.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BridgeMixer.hxx" />
+    <ClInclude Include="UserAgentServerAuthManager.hxx" />
+    <ClInclude Include="Conversation.hxx" />
+    <ClInclude Include="ConversationManager.hxx" />
+    <ClInclude Include="ConversationManagerCmds.hxx" />
+    <ClInclude Include="ConversationParticipantAssignment.hxx" />
+    <ClInclude Include="ConversationProfile.hxx" />
+    <ClInclude Include="DefaultDialogSet.hxx" />
+    <ClInclude Include="DtmfEvent.hxx" />
+    <ClInclude Include="FlowManagerSipXSocket.hxx" />
+    <ClInclude Include="LocalParticipant.hxx" />
+    <ClInclude Include="MediaEvent.hxx" />
+    <ClInclude Include="MediaInterface.hxx" />
+    <ClInclude Include="MediaResourceCache.hxx" />
+    <ClInclude Include="MediaResourceParticipant.hxx" />
+    <ClInclude Include="MediaStreamEvent.hxx" />
+    <ClInclude Include="Participant.hxx" />
+    <ClInclude Include="ReconSubsystem.hxx" />
+    <ClInclude Include="RelatedConversationSet.hxx" />
+    <ClInclude Include="RemoteParticipant.hxx" />
+    <ClInclude Include="RemoteParticipantDialogSet.hxx" />
+    <ClInclude Include="sdp\Sdp.hxx" />
+    <ClInclude Include="sdp\SdpCandidate.hxx" />
+    <ClInclude Include="sdp\SdpCandidatePair.hxx" />
+    <ClInclude Include="sdp\SdpCodec.hxx" />
+    <ClInclude Include="sdp\SdpHelperResip.hxx" />
+    <ClInclude Include="sdp\SdpMediaLine.hxx" />
+    <ClInclude Include="UserAgent.hxx" />
+    <ClInclude Include="UserAgentClientSubscription.hxx" />
+    <ClInclude Include="UserAgentCmds.hxx" />
+    <ClInclude Include="UserAgentDialogSetFactory.hxx" />
+    <ClInclude Include="UserAgentMasterProfile.hxx" />
+    <ClInclude Include="UserAgentRegistration.hxx" />
+    <ClInclude Include="SipXHelper.hxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+</Project>

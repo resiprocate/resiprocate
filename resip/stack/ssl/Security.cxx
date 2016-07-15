@@ -144,8 +144,8 @@ BaseSecurity::CipherList BaseSecurity::StrongestSuite("HIGH:-COMPLEMENTOFDEFAULT
 long BaseSecurity::OpenSSLCTXSetOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 long BaseSecurity::OpenSSLCTXClearOptions = 0;
 
-Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) : 
-   BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase)
+Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :
+   BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase, dHParamsFilename)
 {
 #ifdef WIN32
    mPath = "C:\\sipCerts\\";
@@ -159,8 +159,8 @@ Security::Security(const CipherList& cipherSuite, const Data& defaultPrivateKeyP
 #endif
 }
 
-Security::Security(const Data& directory, const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) : 
-   BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase), 
+Security::Security(const Data& directory, const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :
+   BaseSecurity(cipherSuite, defaultPrivateKeyPassPhrase, dHParamsFilename),
    mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure out.
@@ -188,8 +188,75 @@ Security::addCAFile(const Data& caFile)
 }
 
 void
+Security::loadCADirectory(const Data& _dir)
+{
+   FileSystem::Directory dir(_dir);
+   FileSystem::Directory::iterator it(dir);
+   for (; it != dir.end(); ++it)
+   {
+      if(!it.is_directory())
+      {
+         Data name = *it;
+         Data fileName = _dir + name;
+         loadCAFile(fileName);
+      }
+   }
+}
+
+void
+Security::loadCAFile(const Data& _file)
+{
+   try
+   {
+      addRootCertPEM(Data::fromFile(_file));
+      InfoLog(<<"Successfully loaded " << _file);
+   }
+   catch (Exception& e)
+   {
+      ErrLog(<< "Some problem reading " << _file << ": " << e);
+   }
+   catch (...)
+   {
+      ErrLog(<< "Some problem reading " << _file);
+   }
+}
+
+void
 Security::preload()
 {
+   int count = 0;
+#ifndef WIN32
+   // We only do this for UNIX platforms at present
+   // If no other source of trusted roots exists,
+   // and if mPath is a file, check if it is a root certificate
+   // or a collection of root certificates
+   struct stat s;
+   Data fileName(mPath);
+   if(fileName.postfix("/"))
+   {
+      fileName.truncate(fileName.size() - 1);
+   }
+   if(fileName.size() > 0)
+   {
+      StackLog(<<"calling stat() for " << fileName);
+      if(stat(fileName.c_str(), &s) < 0)
+      {
+         ErrLog(<<"Error calling stat() for " << fileName.c_str()
+                << ": " << strerror(errno));
+      }
+      else
+      {
+         if(!S_ISDIR(s.st_mode))
+         {
+            WarningLog(<<"mPath argument is a file rather than a directory, "
+                         "treating mPath as a file of trusted root certificates");
+            loadCAFile(fileName);
+            count++;
+         }
+      }
+   }
+#endif
+
    FileSystem::Directory dir(mPath);
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
@@ -242,42 +309,31 @@ Security::preload()
          if(attemptedToLoad)
          {
             InfoLog(<<"Successfully loaded " << fileName );
+            count++;
          }
       }
    }
+   InfoLog(<<"Files loaded by prefix: " << count);
+
+   if(count == 0 && mCADirectories.empty() && mCAFiles.empty() && mPath.size() > 0)
+   {
+      // If no other source of trusted roots exists,
+      // assume mPath was meant to be in mCADirectories
+      WarningLog(<<"No root certificates found using legacy prefixes, "
+                   "treating mPath as a normal directory of root certs");
+      loadCADirectory(mPath);
+   }
+
    std::list<Data>::iterator it_d = mCADirectories.begin();
    for (; it_d != mCADirectories.end(); ++it_d)
    {
-      const Data _dir = *it_d;
-      FileSystem::Directory dir(_dir);
-      FileSystem::Directory::iterator it(dir);
-      for (; it != dir.end(); ++it)
-      {
-         if(!it.is_directory())
-         {
-            Data name = *it;
-            Data fileName = _dir + name;
-            addCAFile(fileName);
-         }
-      }
+      loadCADirectory(*it_d);
    }
+
    std::list<Data>::iterator it_f = mCAFiles.begin();
    for (; it_f != mCAFiles.end(); ++it_f)
    {
-      const Data _file = *it_f;
-      try
-      {
-         addRootCertPEM(Data::fromFile(_file));
-         InfoLog(<<"Successfully loaded " << _file);
-      }
-      catch (Exception& e)
-      {
-         ErrLog(<< "Some problem reading " << _file << ": " << e);
-      }
-      catch (...)
-      {
-         ErrLog(<< "Some problem reading " << _file);
-      }
+      loadCAFile(*it_f);
    }
 }
 
@@ -375,6 +431,7 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
 
    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
+   setDHParams(ctx);
    SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
 
@@ -1062,11 +1119,12 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 {
 }
 
-BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase) :
+BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPrivateKeyPassPhrase, const Data& dHParamsFilename) :
    mTlsCtx(0),
    mSslCtx(0),
    mCipherList(cipherSuite),
    mDefaultPrivateKeyPassPhrase(defaultPrivateKeyPassPhrase),
+   mDHParamsFilename(dHParamsFilename),
    mRootTlsCerts(0),
    mRootSslCerts(0)
 { 
@@ -1097,6 +1155,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
    resip_assert(ret);
+   setDHParams(mTlsCtx);
    SSL_CTX_set_options(mTlsCtx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(mTlsCtx, BaseSecurity::OpenSSLCTXClearOptions);
    
@@ -1107,6 +1166,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
    resip_assert(ret);
+   setDHParams(mSslCtx);
    SSL_CTX_set_options(mSslCtx, BaseSecurity::OpenSSLCTXSetOptions);
    SSL_CTX_clear_options(mSslCtx, BaseSecurity::OpenSSLCTXClearOptions);
 }
@@ -1417,7 +1477,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    }
    
    // Make sure that necessary algorithms exist:
-   resip_assert(EVP_sha1());
+   resip_assert(EVP_sha256());
 
 #if OPENSSL_VERSION_NUMBER < 0x00908000l
    RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
@@ -1499,7 +1559,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
-   ret = X509_sign(cert, privkey, EVP_sha1());
+   ret = X509_sign(cert, privkey, EVP_sha256());
    resip_assert(ret);
    
    addCertX509( UserCert, aor, cert, true /* write */ );
@@ -1513,7 +1573,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
 
    // form the multipart
    MultipartSignedContents* multi = new MultipartSignedContents;
-   multi->header(h_ContentType).param( p_micalg ) = "sha1";
+   multi->header(h_ContentType).param( p_micalg ) = "sha256";
    multi->header(h_ContentType).param( p_protocol ) = "application/pkcs7-signature";
 
    // add the main body to it
@@ -1776,7 +1836,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
 #if 1
-   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
+   int r = RSA_sign(NID_sha256, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
    if( r != 1 )
@@ -1864,7 +1924,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
 #if 1
-   int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.data(),
+   int ret = RSA_verify(NID_sha256, (unsigned char *)hashRes.data(),
                         (unsigned int)hashRes.size(), (unsigned char*)sig.data(), (unsigned int)sig.size(),
                         rsa);
 #else
@@ -2952,6 +3012,86 @@ EVP_PKEY*
 BaseSecurity::getUserPrivateKey( const Data& aor )
 {
    return mUserPrivateKeys.count(aor) ? mUserPrivateKeys[aor] : 0;
+}
+
+void
+BaseSecurity::setDHParams(SSL_CTX* ctx)
+{
+   if(mDHParamsFilename.empty())
+   {
+      WarningLog(<< "unable to load DH parameters (required for PFS): TlsDHParamsFilename not specified");
+   }
+   else
+   {
+      DebugLog(<< "attempting to read DH parameters from " << mDHParamsFilename);
+
+      BIO* bio = BIO_new_file(mDHParamsFilename.c_str(), "r");
+      if(bio == NULL)
+      {
+         WarningLog(<< "unable to load DH parameters (required for PFS): BIO_new_file failed to open file " << mDHParamsFilename);
+      }
+
+      DH* dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
+      if(dh == NULL)
+      {
+         WarningLog(<< "unable to load DH parameters (required for PFS): PEM_read_bio_DHparams failed for file " << mDHParamsFilename);
+      }
+      else
+      {
+         if(!SSL_CTX_set_tmp_dh(ctx, dh))
+         {
+            WarningLog(<< "unable to load DH parameters (required for PFS): SSL_CTX_set_tmp_dh failed for file " << mDHParamsFilename);
+         }
+         else
+         {
+            long options = SSL_OP_CIPHER_SERVER_PREFERENCE |
+#if !defined(OPENSSL_NO_ECDH) && OPENSSL_VERSION_NUMBER >= 0x10000000L
+                           SSL_OP_SINGLE_ECDH_USE |
+#endif
+                           SSL_OP_SINGLE_DH_USE;
+            options = SSL_CTX_set_options(ctx, options);
+            DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
+         }
+         DH_free(dh);
+      }
+      BIO_free(bio);
+   }
+
+#ifndef SSL_CTRL_SET_ECDH_AUTO
+#define SSL_CTRL_SET_ECDH_AUTO 94
+#endif
+
+   // FIXME: add WarningLog statements to the block below if it fails
+
+   /* SSL_CTX_set_ecdh_auto(ctx,on) requires OpenSSL 1.0.2 which wraps: */
+   if (SSL_CTX_ctrl(ctx, SSL_CTRL_SET_ECDH_AUTO, 1, NULL))
+   {
+      DebugLog(<<"ECDH initialized");
+   }
+   else
+   {
+#if !defined(OPENSSL_NO_ECDH) && OPENSSL_VERSION_NUMBER >= 0x10000000L
+      EC_KEY* ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+      if (ecdh != NULL)
+      {
+         if (SSL_CTX_set_tmp_ecdh(ctx, ecdh))
+         {
+	    DebugLog(<<"ECDH initialized");
+	 }
+         else
+         {
+            WarningLog(<<"unable to initialize ECDH: SSL_CTX_set_tmp_ecdh failed");
+         }
+         EC_KEY_free(ecdh);
+      }
+      else
+      {
+         WarningLog(<<"unable to initialize ECDH: EC_KEY_new_by_curve_name failed");
+      }
+#else
+      WarningLog(<<"unable to initialize ECDH: SSL_CTX_ctrl failed, OPENSSL_NO_ECDH defined or repro was compiled with an old OpenSSL version");
+#endif
+   }
 }
 
 #endif

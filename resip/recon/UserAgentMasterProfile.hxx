@@ -109,6 +109,28 @@ public:
    virtual const resip::Data certPath() const; 
 
    /**
+     Get/Set the locations where the SIP stack will look for X.509
+     trusted root certificates.
+
+     @note This MUST be called before the UserAgent is created
+
+     @return Data root cert directory location
+   */
+   virtual std::vector<resip::Data>& rootCertDirectories();
+   virtual const std::vector<resip::Data>& rootCertDirectories() const;
+
+   /**
+     Get/Set the names of files containing bundles of X.509 trusted
+     root certificates
+
+     @note This MUST be called before the UserAgent is created
+
+     @return Data cert path location
+   */
+   virtual std::vector<resip::Data>& rootCertBundles();
+   virtual const std::vector<resip::Data>& rootCertBundles() const;
+
+   /**
      Get/Set wether SIP message statistics are send to logging subsystem
 
      @return bool Set to true to enable statistics
@@ -151,6 +173,8 @@ public:
 
 private:            
    resip::Data mCertPath;
+   std::vector<resip::Data> mRootCertDirectories;
+   std::vector<resip::Data> mRootCertBundles;
    bool mStatisticsManagerEnabled;
    std::vector<TransportInfo> mTransports;
    std::vector<resip::Data> mEnumSuffixes;

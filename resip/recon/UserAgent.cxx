@@ -16,6 +16,7 @@
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
+#include <resip/stack/ConnectionTerminated.hxx>
 #include <resip/dum/ClientAuthManager.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerSubscription.hxx>
@@ -49,6 +50,20 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdown(false)
 {
+#if defined(USE_SSL)
+   const std::vector<Data>& rootCertDirectories = mProfile->rootCertDirectories();
+   std::vector<Data>::const_iterator ci = rootCertDirectories.begin();
+   for(;ci != rootCertDirectories.end();ci++)
+   {
+      mSecurity->loadCADirectory(*ci);
+   }
+   const std::vector<Data>& rootCertBundles = mProfile->rootCertBundles();
+   ci = rootCertBundles.begin();
+   for(;ci != rootCertBundles.end();ci++)
+   {
+      mSecurity->loadCAFile(*ci);
+   }
+#endif
    resip_assert(mConversationManager);
    mConversationManager->setUserAgent(this);
 
@@ -63,6 +78,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    // Install Handlers
    mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
+   mDum.registerForConnectionTermination(this);
    mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
    mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
    mDum.setRedirectHandler(mConversationManager);
@@ -299,7 +315,9 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
       for(naIt = contacts.begin(); naIt != contacts.end(); naIt++)
       {
          InfoLog( << "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri());
-         if((*naIt).uri() == requestUri)
+         if ((*naIt).uri() == requestUri &&             // uri's match 
+             (!requestUri.exists(p_rinstance) ||        // and request Uri doesn't have rinstance parameter OR 
+              ((*naIt).uri().exists(p_rinstance) && requestUri.param(p_rinstance) == (*naIt).uri().param(p_rinstance))))  // rinstance parameter matches
          {
             ConversationProfileMap::iterator conIt = mConversationProfiles.find(regIt->first);
             if(conIt != mConversationProfiles.end())
@@ -349,6 +367,29 @@ void
 UserAgent::onDumCanBeDeleted()
 {
    mDumShutdown = true;
+}
+
+void 
+UserAgent::post(resip::Message* pMsg)
+{
+    // This get's posted to from the Dum thread - so we have no threading concerns
+    ConnectionTerminated* pTerminated = dynamic_cast<ConnectionTerminated*>(pMsg);
+    if (pTerminated)
+    {
+        InfoLog(<< "ConnectionTerminated seen for " << pTerminated->getFlow()  << " refreshing registrations");
+
+        // Iterate through registrations and see if any match this connection.  If so, then force an immediate
+        // refresh so that we can detect server failure and re-register sooner.
+        RegistrationMap::iterator regIt;
+        for (regIt = mRegistrations.begin(); regIt != mRegistrations.end(); regIt++)
+        {
+            if (regIt->second->getLastServerTuple().getFlowKey() == pTerminated->getFlow().getFlowKey())
+            {
+                regIt->second->forceRefresh();
+            }
+        }
+    }
+    delete pMsg;
 }
 
 void
@@ -598,6 +639,8 @@ UserAgent::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const Si
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2016, SIP Spectrum, Inc.
+
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

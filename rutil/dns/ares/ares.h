@@ -128,7 +128,7 @@ typedef enum ares_poll_action {
 } ares_poll_action_t;
 struct ares_channeldata;
 typedef void (ares_poll_cb_func)(void *cb_data, struct ares_channeldata* chan, int sockidx,
-  int fd, ares_poll_action_t act);
+  int fd, int using_tcp, ares_poll_action_t act);
 
 #if defined(WIN32) || defined(sun)
 typedef unsigned char u_int8_t;

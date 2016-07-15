@@ -58,6 +58,8 @@ class ResponseContext
          @param beginImmediately Whether to immediately start a transaction 
             for this target.
 
+         @param checkDuplicates Whether to see if target exists already or not
+
          @returns If beginImmediately=false, true iff the Target was
          successfully added (could happen if a final response has already
          been forwarded). If beginImmediately=true, true iff a transaction
@@ -68,7 +70,7 @@ class ResponseContext
          @note Targets are not checked for duplicate uris until an attempt 
             is made to start them.
       */
-      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately=false);
+      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately = false, bool checkDuplicates = true);
 
       /**
          Adds a batch of Targets. 

@@ -1,5 +1,6 @@
 
-EXTRA_DIST = sanityTests.vcproj
+EXTRA_DIST = *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcproj
 
 TESTS = sanityTests
 

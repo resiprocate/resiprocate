@@ -9,7 +9,7 @@
 #
 # - at the moment, the supported platform for official bootstraps
 #
-#                Debian 7.0 (wheezy)
+#                Debian 8.0 (jessie)
 #
 # - to avoid errors about the `zip' and `compress' commands, run
 #   the following:
@@ -35,6 +35,7 @@ autoreconf --install && \
                 PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
               --with-tfm \
               --with-apps \
+              --with-telepathy \
               --with-ichat-gw \
               --with-recon \
               --with-p2p && \

@@ -26,10 +26,10 @@ void ares__close_poll(ares_channel channel, int server_idx) {
 	struct server_state *server = &channel->servers[server_idx];
 	if ( server->udp_socket!=-1 )
 	    (*(channel->poll_cb_func))( channel->poll_cb_data,
-		channel, server_idx, server->udp_socket, ARES_POLLACTION_CLOSE);
+		channel, server_idx, server->udp_socket, 0, ARES_POLLACTION_CLOSE);
 	if ( server->tcp_socket!=-1 )
 	    (*(channel->poll_cb_func))( channel->poll_cb_data,
-		channel, server_idx, server->udp_socket, ARES_POLLACTION_CLOSE);
+		channel, server_idx, server->tcp_socket, 1, ARES_POLLACTION_CLOSE);
     }
 }
 

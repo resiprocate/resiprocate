@@ -1,3 +1,9 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
+#ifdef USE_SSL
+
 #include "TlsServer.hxx"
 #include <boost/bind.hpp>
 #include <rutil/Data.hxx>
@@ -109,6 +115,8 @@ TlsServer::handleAccept(const asio::error_code& e)
 }
 
 }
+
+#endif
 
 /* ====================================================================
 

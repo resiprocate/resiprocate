@@ -31,17 +31,17 @@ GenericPidfContents::init()
 const GenericPidfContents GenericPidfContents::Empty;
 
 GenericPidfContents::GenericPidfContents()
-   : Contents(getStaticType()), mOnline(false), mSimplePresenceExtracted(false)
+   : Contents(getStaticType()), mSimplePresenceExtracted(false)
 {
 }
 
 GenericPidfContents::GenericPidfContents(const Mime& contentType)
-   : Contents(getStaticType()), mOnline(false), mSimplePresenceExtracted(false)
+   : Contents(getStaticType()), mSimplePresenceExtracted(false)
 {
 }
 
 GenericPidfContents::GenericPidfContents(const HeaderFieldValue& hfv, const Mime& contentsType)
-   : Contents(hfv, contentsType), mOnline(false), mSimplePresenceExtracted(false)
+   : Contents(hfv, contentsType), mSimplePresenceExtracted(false)
 {
 }
 
@@ -60,7 +60,7 @@ GenericPidfContents::operator=(const GenericPidfContents& rhs)
 }
  
 GenericPidfContents::GenericPidfContents(const GenericPidfContents& rhs)
-   : Contents(rhs), mOnline(false), mSimplePresenceExtracted(false)
+   : Contents(rhs), mSimplePresenceExtracted(false)
 {
    // merge in new stuff
    mergeNoCheckParse(rhs);
@@ -89,12 +89,12 @@ GenericPidfContents::reset()
 
 void GenericPidfContents::clearSimplePresenceInfo()
 {
-   mTupleId.clear();
-   mOnline = false;
-   mTimestamp.clear();
-   mNote.clear();
-   mContact.clear();
-   mContactPriority.clear();
+   SimplePresenceInfoList::iterator itSPList = mSimplePresenceInfoList.begin();
+   for (; itSPList != mSimplePresenceInfoList.end(); itSPList++)
+   {
+      delete *itSPList;
+   }
+   mSimplePresenceInfoList.clear();
    mSimplePresenceExtracted = false;
 }
 
@@ -511,6 +511,9 @@ GenericPidfContents::setSimplePresenceTupleNode(const Data& id,
                                                 const Data& contact,
                                                 const Data& contactPriority)
 {
+   // Make sure we have extract any existing simple presence info
+   extractSimplePresenceInfo();
+
    if (mNamespaces.empty())
    {
       // Add default namespace
@@ -601,15 +604,123 @@ GenericPidfContents::setSimplePresenceTupleNode(const Data& id,
       mRootNodes.push_back(tupleNode);
    }
 
-   // store info in members - note if you add simplePresence with different id's then 
-   // detail is lost here
-   mTupleId = id;
-   mOnline = online;
-   mTimestamp = timestamp;
-   mNote = note;
-   mContact = contact;
-   mContactPriority = contactPriority;
+   // store info in list - if TupleId exists already then update it, otherwise add new
+   foundExisting = false;   // reuse flag from above
+   SimplePresenceInfoList::iterator itSPList = mSimplePresenceInfoList.begin();
+   for (; itSPList != mSimplePresenceInfoList.end(); itSPList++)
+   {
+      if ((*itSPList)->mTupleId == id)
+      {
+         (*itSPList)->mOnline = online;
+         (*itSPList)->mTimestamp = timestamp;
+         (*itSPList)->mNote = note;
+         (*itSPList)->mContact = contact;
+         (*itSPList)->mContactPriority = contactPriority;
+         foundExisting = true;
+      }
+   }
+   if (!foundExisting)
+   {
+      SimplePresenceInfo* info = new SimplePresenceInfo;
+      info->mTupleId = id;
+      info->mOnline = online;
+      info->mTimestamp = timestamp;
+      info->mNote = note;
+      info->mContact = contact;
+      info->mContactPriority = contactPriority;
+      mSimplePresenceInfoList.push_back(info);
+   }
    mSimplePresenceExtracted = true;
+}
+
+const Data& 
+GenericPidfContents::getSimplePresenceTupleId()
+{ 
+   checkParsed(); 
+   extractSimplePresenceInfo(); 
+   if (mSimplePresenceInfoList.empty())
+   {
+      return Data::Empty;
+   }
+   else
+   {
+      return mSimplePresenceInfoList.front()->mTupleId;
+   }
+}
+
+const bool 
+GenericPidfContents::getSimplePresenceOnline()
+{ 
+   checkParsed(); 
+   extractSimplePresenceInfo(); 
+   if (mSimplePresenceInfoList.empty())
+   {
+      return false;
+   }
+   else
+   {
+      return mSimplePresenceInfoList.front()->mOnline;
+   }
+}
+
+const Data& 
+GenericPidfContents::getSimplePresenceTimestamp()
+{ 
+   checkParsed(); 
+   extractSimplePresenceInfo(); 
+   if (mSimplePresenceInfoList.empty())
+   {
+      return Data::Empty;
+   }
+   else
+   {
+      return mSimplePresenceInfoList.front()->mTimestamp;
+   }
+}
+
+const Data& 
+GenericPidfContents::getSimplePresenceNote()
+{ 
+   checkParsed(); 
+   extractSimplePresenceInfo(); 
+   if (mSimplePresenceInfoList.empty())
+   {
+      return Data::Empty;
+   }
+   else
+   {
+      return mSimplePresenceInfoList.front()->mNote;
+   }
+}
+
+const Data& 
+GenericPidfContents::getSimplePresenceContact()
+{ 
+   checkParsed(); 
+   extractSimplePresenceInfo(); 
+   if (mSimplePresenceInfoList.empty())
+   {
+      return Data::Empty;
+   }
+   else
+   {
+      return mSimplePresenceInfoList.front()->mContact;
+   }
+}
+
+const Data& 
+GenericPidfContents::getSimplePresenceContactPriority()
+{ 
+   checkParsed(); 
+   extractSimplePresenceInfo(); 
+   if (mSimplePresenceInfoList.empty())
+   {
+      return Data::Empty;
+   }
+   else
+   {
+      return mSimplePresenceInfoList.front()->mContactPriority;
+   }
 }
 
 void 
@@ -628,7 +739,8 @@ GenericPidfContents::extractSimplePresenceInfo()
             Node::AttributeMap::iterator itAttrib = (*itNode)->mAttributes.find("id");
             if (itAttrib != (*itNode)->mAttributes.end())
             {
-               mTupleId = itAttrib->second;
+               SimplePresenceInfo* info = new SimplePresenceInfo;
+               info->mTupleId = itAttrib->second;
                // iterate through children looking for nodes we want
                NodeList::const_iterator itTupleChild = (*itNode)->mChildren.begin();
                for (; itTupleChild != (*itNode)->mChildren.end(); itTupleChild++)
@@ -641,31 +753,33 @@ GenericPidfContents::extractSimplePresenceInfo()
                      {
                         if ((*itStatusChild)->mTag == "basic")
                         {
-                           mOnline = (*itStatusChild)->mValue == "open";
+                           info->mOnline = (*itStatusChild)->mValue == "open";
                            break;
                         }
                      }
                   }
-                  else if (mContact.empty() && (*itTupleChild)->mTag == "contact")
+                  else if (info->mContact.empty() && (*itTupleChild)->mTag == "contact")
                   {
-                     mContact = (*itTupleChild)->mValue;
+                     info->mContact = (*itTupleChild)->mValue;
                      Node::AttributeMap::iterator itAttrib = (*itTupleChild)->mAttributes.find("priority");
                      if (itAttrib != (*itTupleChild)->mAttributes.end())
                      {
-                        mContactPriority = itAttrib->second;
+                        info->mContactPriority = itAttrib->second;
                      }
                   }
-                  else if (mNote.empty() && (*itTupleChild)->mTag == "note")
+                  else if (info->mNote.empty() && (*itTupleChild)->mTag == "note")
                   {
-                     mNote = (*itTupleChild)->mValue;
+                     info->mNote = (*itTupleChild)->mValue;
                   }
-                  else if (mTimestamp.empty() && (*itTupleChild)->mTag == "timestamp")
+                  else if (info->mTimestamp.empty() && (*itTupleChild)->mTag == "timestamp")
                   {
-                     mTimestamp = (*itTupleChild)->mValue;
+                     info->mTimestamp = (*itTupleChild)->mValue;
                   }
                }
+               // Just push on the back, we could consider checking if the TupleId already exists before 
+               // adding, but we are assuming unique tupleid entries in the document for now.
+               mSimplePresenceInfoList.push_back(info);
             }
-            break;
          }
       }
       mSimplePresenceExtracted = true;

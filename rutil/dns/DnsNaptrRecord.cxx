@@ -155,7 +155,7 @@ bool DnsNaptrRecord::isSameValue(const Data& value) const
 EncodeStream&
 DnsNaptrRecord::dump(EncodeStream& strm) const
 {
-   strm << mName << " (NAPTR)--> o=" << mOrder << " p=" << mPreference;
+   strm << mName << " (NAPTR)--> o=" << mOrder << " p=" << mPreference << " s=" << mService;
    return strm;
 }
 

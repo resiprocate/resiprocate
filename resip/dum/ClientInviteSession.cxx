@@ -1424,7 +1424,6 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 void
 ClientInviteSession::dispatchReceivedUpdateEarly(const SipMessage& msg)
 {
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))

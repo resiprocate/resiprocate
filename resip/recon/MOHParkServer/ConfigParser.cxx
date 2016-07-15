@@ -22,20 +22,11 @@ namespace mohparkserver
 
 ConfigParser::ConfigParser(int argc, char** argv) : 
    // Defaults
-   mMOHUri("sip:moh@server.com"),
-   mMOHRegistrationTime(3600),
-   mMOHFilenameUrl("file:music.wav;repeat"),
-   mParkUri("sip:park@server.com"),
-   mParkRegistrationTime(3600),
-   mParkMOHFilenameUrl("file:music.wav;repeat"),
-   mParkOrbitRangeStart(6000),
-   mParkNumOrbits(10),
-   mParkOrbitRegistrationTime(3600),
-   mMaxParkTime(600),  // 600 seconds = 10 mins
    mUdpPort(0),
    mTcpPort(0),
    mTlsPort(0),
    mTlsDomain(DnsUtil::getLocalHostName()),
+   mCertificatePath("./certs"),
    mKeepAlives(true),
    mMediaPortRangeStart(50000),
    mMediaPortRangeSize(100),
@@ -57,27 +48,19 @@ ConfigParser::ConfigParser(int argc, char** argv) :
 
 ConfigParser::ConfigParser() : 
    // Defaults
-   mMOHUri("sip:moh@server.com"),
-   mMOHRegistrationTime(3600),
-   mMOHFilenameUrl("file:music.wav;repeat"),
-   mParkUri("sip:park@server.com"),
-   mParkRegistrationTime(3600),
-   mParkMOHFilenameUrl("file:music.wav;repeat"),
-   mParkOrbitRangeStart(6000),
-   mParkNumOrbits(10),
-   mParkOrbitRegistrationTime(3600),
-   mMaxParkTime(600),  // 600 seconds = 10 mins
    mUdpPort(0),
    mTcpPort(0),
    mTlsPort(0),
    mTlsDomain(DnsUtil::getLocalHostName()),
+   mCertificatePath("./certs"),
    mKeepAlives(true),
    mMediaPortRangeStart(50000),
    mMediaPortRangeSize(100),
    mHttpPort(5082),
    mLogLevel("INFO"),
    mLogFilename("mohparkserver.log"),
-   mLogFileMaxBytes(5000000)     // about 5Mb size
+   mLogFileMaxBytes(5000000),     // about 5Mb size
+   mSocketFunc(0)
 {
 }
 
@@ -106,6 +89,7 @@ ConfigParser::parseCommandLine(int argc, char** argv)
          cout << " -tp <port num> - local port number to use for TCP SIP messaging" << endl;
          cout << " -sp <port num> - local port number to use for TLS SIP messaging" << endl;
          cout << " -td <domain name> - domain name to use for TLS server connections" << endl;
+         cout << " -cp <certificate path> - path to load TLS certificates from" << endl;
          cout << " -nk - no keepalives, set this to disable sending of keepalives" << endl;
          cout << " -op <SIP URI> - URI of a proxy server to use a SIP outbound proxy" << endl;
          cout << " -l <NONE|ERR|WARNING|INFO|DEBUG|STACK> - logging level" << endl;
@@ -189,101 +173,109 @@ bool
 ConfigParser::processOption(const Data& name, const Data& value)
 {   
    bool result = true;
-   if(name == "mohuri")
+   if(name.prefix("moh") && name.size() > 4)
    {
-      result = assignNameAddr("MOH Uri", value, mMOHUri);
-   }
-   else if(name == "mohpassword")
-   {
-      mMOHPassword = value;
-   }
-   else if(name == "mohregistrationtime")
-   {
-      mMOHRegistrationTime = value.convertUnsignedLong();
-   }
-   else if(name == "mohfilename")
-   {
-      Uri url("file:music.wav;repeat");
-      Data urlData;
-      if(value.find("http://") != Data::npos || 
-         value.find("file:") != Data::npos)
+      unsigned int settingIndex = 0;
+      ParseBuffer pb(name);
+      pb.skipN(3);  // skip past "moh"
+      const char* anchor = pb.position();
+      while (!pb.eof() && *pb.position() >= '0' && *pb.position() <= '9')
       {
-         // URL was specified - add repeat parameter
-         urlData = value + ";repeat";         
+         pb.skipN(1);
       }
-      else
+      if (anchor != pb.position()) 
       {
-         urlData = "file:" + value + ";repeat";
-      }
-      try
+         settingIndex = pb.data(anchor).convertUnsignedLong();
+      } // else - There were no numbers following "moh" - theses are legacy settings - use a 0 index
+
+      anchor = pb.position();
+      pb.skipToEnd();
+      Data subToken = pb.data(anchor);
+      if (subToken == "uri")
       {
-         Uri temp(urlData);
-         url = temp;
+         result = assignNameAddr(name, value, mMOHSettingsMap[settingIndex].mUri);
       }
-      catch(BaseException& e)
+      else if (subToken == "password")
       {
-         cerr << "Invalid MOHFilename format=" << value << ": " << e << endl;
-         cerr << "Using " << url << " instead." << endl;
+         mMOHSettingsMap[settingIndex].mPassword = value;
       }
-      mMOHFilenameUrl = url;
-   }
-   else if(name == "parkuri")
-   {
-      result = assignNameAddr("Park Uri", value, mParkUri);
-   }
-   else if(name == "parkpassword")
-   {
-      mParkPassword = value;
-   }
-   else if(name == "parkregistrationtime")
-   {
-      mParkRegistrationTime = value.convertUnsignedLong();
-   }
-   else if(name == "parkmohfilename")
-   {
-      Uri url("file:music.wav;repeat");
-      Data urlData;
-      if(value.find("http://") != Data::npos || 
-         value.find("file:") != Data::npos)
+      else if (subToken == "registrationtime")
       {
-         // URL was specified - add repeat parameter
-         urlData = value + ";repeat";         
+         mMOHSettingsMap[settingIndex].mRegistrationTime = value.convertUnsignedLong();
       }
-      else
+      else if (subToken == "outboundproxy")
       {
-         urlData = "file:" + value + ";repeat";
+         result = assignNameAddr(name, value, mMOHSettingsMap[settingIndex].mOutboundProxy);
       }
-      try
+      else if (subToken == "filename")
       {
-         Uri temp(urlData);
-         url = temp;
+         result = assignMusicUrl(name, value, mMOHSettingsMap[settingIndex].mMOHFilenameUrl);
       }
-      catch(BaseException& e)
+   }
+   else if (name.prefix("park") && name.size() > 5)
+   {
+      unsigned int settingIndex = 0;
+      ParseBuffer pb(name);
+      pb.skipN(4);  // skip past "park"
+      const char* anchor = pb.position();
+      while (!pb.eof() && *pb.position() >= '0' && *pb.position() <= '9')
       {
-         cerr << "Invalid Park MOHFilename format=" << value << ": " << e << endl;
-         cerr << "Using " << url << " instead." << endl;
+         pb.skipN(1);
       }
-      mParkMOHFilenameUrl = url;
-   }
-   else if(name == "parkorbitrangestart")
-   {
-      mParkOrbitRangeStart = value.convertUnsignedLong();
-   }
-   else if(name == "parknumorbits")
-   {
-      mParkNumOrbits = value.convertUnsignedLong();
-   }
-   else if(name == "parkorbitregistrationtime")
-   {
-      mParkOrbitRegistrationTime = value.convertUnsignedLong();
-   }
-   else if(name == "parkorbitpassword")
-   {
-      mParkOrbitPassword = value;
+      if (anchor != pb.position())
+      {
+         settingIndex = pb.data(anchor).convertUnsignedLong();
+      } // else - There were no numbers following "moh" - theses are legacy settings - use a 0 index
+
+      anchor = pb.position();
+      pb.skipToEnd();
+      Data subToken = pb.data(anchor);
+      if (subToken == "uri")
+      {
+         result = assignNameAddr(name, value, mParkSettingsMap[settingIndex].mUri);
+      }
+      else if (subToken == "password")
+      {
+         mParkSettingsMap[settingIndex].mPassword = value;
+      }
+      else if (subToken == "registrationtime")
+      {
+         mParkSettingsMap[settingIndex].mRegistrationTime = value.convertUnsignedLong();
+      }
+      else if (subToken == "outboundproxy")
+      {
+         result = assignNameAddr(name, value, mParkSettingsMap[settingIndex].mOutboundProxy);
+      }
+      else if (subToken == "mohfilename")
+      {
+         result = assignMusicUrl(name, value, mParkSettingsMap[settingIndex].mMOHFilenameUrl);
+      }
+      else if (subToken == "orbitrangestart")
+      {
+         mParkSettingsMap[settingIndex].mOrbitRangeStart = value.convertUnsignedLong();
+      }
+      else if (subToken == "numorbits")
+      {
+         mParkSettingsMap[settingIndex].mNumOrbits = value.convertUnsignedLong();
+      }
+      else if (subToken == "orbitregistrationtime")
+      {
+         mParkSettingsMap[settingIndex].mOrbitRegistrationTime = value.convertUnsignedLong();
+      }
+      else if (subToken == "orbitpassword")
+      {
+         mParkSettingsMap[settingIndex].mOrbitPassword = value;
+      }
+      else if (subToken == "maxparktime")
+      {
+         mParkSettingsMap[settingIndex].mMaxParkTime = value.convertUnsignedLong();
+      }
    }
    else if(name == "maxparktime")
    {
-      mMaxParkTime = value.convertUnsignedLong();
+      // This is a legacy setting and was renamed to be ParkXMaxTime in newer version.  We still read old setting 
+      // for back compat purposes.
+      mParkSettingsMap[0].mMaxParkTime = value.convertUnsignedLong();
    }
    else if(name == "a" || name == "ipaddress")
    {
@@ -298,19 +290,23 @@ ConfigParser::processOption(const Data& name, const Data& value)
    }
    else if(name == "up" || name == "udpport")
    {
-      mUdpPort = (unsigned short)value.convertUnsignedLong();
+      mUdpPort = (unsigned short)value.convertInt();
    }
    else if(name == "tp" || name == "tcpport")
    {
-      mTcpPort = (unsigned short)value.convertUnsignedLong();
+      mTcpPort = (unsigned short)value.convertInt();
    }
    else if(name == "sp" || name == "tlsport")
    {
-      mTlsPort = (unsigned short)value.convertUnsignedLong();
+      mTlsPort = (unsigned short)value.convertInt();
    }
    else if(name == "td" || name == "tlsdomain")
    {
       mTlsDomain = value;
+   }
+   else if (name == "cp" || name == "certificatepath")
+   {
+       mCertificatePath = value;
    }
    else if(name == "keepalives")
    {
@@ -325,7 +321,7 @@ ConfigParser::processOption(const Data& name, const Data& value)
    }
    else if(name == "op" || name == "outboundproxy")
    {
-      result = assignNameAddr("outbound proxy", value, mOutboundProxy);
+      result = assignNameAddr("OutboundProxy", value, mOutboundProxy);
    }
    else if(name == "mediaportrangestart")
    {
@@ -365,23 +361,27 @@ ConfigParser::processOption(const Data& name, const Data& value)
 bool 
 ConfigParser::assignNameAddr(const Data& settingName, const Data& settingValue, NameAddr& nameAddr)
 {
-   try
+   if (!settingValue.empty() && settingValue.find("sip:") == Data::npos && settingValue.find("sips:") == Data::npos)
    {
-      if(!settingValue.empty())
-      {
-         NameAddr tempNameAddr(settingValue);
-         nameAddr = tempNameAddr;
-      }
-   }
-   catch(resip::BaseException& e)
-   {
-      // Try adding sip: to address to see if it will be valid
       try
       {
          NameAddr tempNameAddr(Data("sip:" + settingValue));
          nameAddr = tempNameAddr;
       }
-      catch(resip::BaseException&)
+      catch (resip::BaseException& e)
+      {
+         cerr << "Invalid " << settingName << " NameAddr format=" << settingValue << ": " << e << endl;
+         return false;
+      }
+   }
+   else if(!settingValue.empty())
+   {
+      try
+      {
+         NameAddr tempNameAddr(Data("sip:" + settingValue));
+         nameAddr = tempNameAddr;
+      }
+      catch (resip::BaseException& e)
       {
          cerr << "Invalid " << settingName << " NameAddr format=" << settingValue << ": " << e << endl;
          return false;
@@ -390,11 +390,39 @@ ConfigParser::assignNameAddr(const Data& settingName, const Data& settingValue, 
    return true;
 }
 
+bool ConfigParser::assignMusicUrl(const resip::Data& settingName, const resip::Data& settingValue, resip::Uri& url)
+{
+   Data urlData;
+   if (settingValue.find("http://") != Data::npos ||
+       settingValue.find("file:") != Data::npos)
+   {
+      // URL was specified - add repeat parameter
+      urlData = settingValue + ";repeat";
+   }
+   else
+   {
+      urlData = "file:" + settingValue + ";repeat";
+   }
+   try
+   {
+      Uri temp(urlData);
+      url = temp;
+   }
+   catch (BaseException& e)
+   {
+      cerr << "Invalid " << settingName << " Uri format=" << settingValue << ": " << e << endl;
+      cerr << "Using " << url << " instead." << endl;
+      url = Uri("file:music.wav;repeat");
+   }
+
+   return true;
+}
+
 }
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2010-2016, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

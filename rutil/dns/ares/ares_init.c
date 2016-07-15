@@ -74,9 +74,11 @@ static char *try_config(char *s, char *opt);
 static const char *try_option(const char *p, const char *q, const char *opt);
 static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
+#ifdef WIN32
 static int find_server(struct server_state *servers, int nservers, struct in_addr addr);
 #ifdef USE_IPV6
 static int find_server6(struct server_state *servers, int nservers, struct in6_addr addr);
+#endif
 #endif
 
 static int	inet_pton4(const char *src, u_char *dst);
@@ -121,7 +123,7 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
   ares_channel channel;
   int i, status;
   struct server_state *server;
-#ifdef WIN32
+#if defined(WIN32) && !defined(_M_ARM)
 	{
 		HKEY hKey;  
 		char hostpath[256];
@@ -790,7 +792,12 @@ static int init_by_defaults_windows_nameservers_getnetworkparams(ares_channel ch
       while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
       {
          struct in_addr addr;
-         addr.s_addr = inet_addr(pIPAddr->IpAddress.String);
+         /* TODO - add support for DNS servers specificied by v6 addresses */
+#if defined(_MSC_VER) && _MSC_VER >= 1800  /* removing compilation warning in VS2013+ */
+         inet_pton(AF_INET, pIPAddr->IpAddress.String, &addr.s_addr);
+#else
+         addr.s_addr = inet_addr(pIPAddr->IpAddress.String); 
+#endif
          // append unique only
          if (find_server(channel->servers, channel->nservers, addr) == -1)
          {
@@ -1150,7 +1157,12 @@ static int ip_addr(const char *s, int len, struct in_addr *addr)
   memcpy(ipbuf, s, len);
   ipbuf[len] = 0;
 
+#if defined(_MSC_VER) && _MSC_VER >= 1800  /* removing compilation warning in VS2013+ */
+  inet_pton(AF_INET, ipbuf, &addr->s_addr);
+#else
   addr->s_addr = inet_addr(ipbuf);
+#endif
+
   if (addr->s_addr == INADDR_NONE && strcmp(ipbuf, "255.255.255.255") != 0)
     return -1;
   return 0;
@@ -1176,6 +1188,7 @@ static void natural_mask(struct apattern *pat)
     pat->mask.s_addr = htonl(IN_CLASSC_NET);
 }
 
+#ifdef WIN32
 /*
  * Finds a V4 addr in list of servers.
  * return:
@@ -1226,6 +1239,7 @@ static int find_server6(struct server_state *servers, int nservers, struct in6_a
    }
    return (i < nservers ? i : -1);
 }
+#endif
 #endif
 
 #define  NS_INT16SZ   2

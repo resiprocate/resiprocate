@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="TurnUdpSocket.cxx" />
+    <ClCompile Include="..\AsyncSocketBase.cxx" />
+    <ClCompile Include="..\AsyncTcpSocketBase.cxx" />
+    <ClCompile Include="..\AsyncTlsSocketBase.cxx" />
+    <ClCompile Include="..\AsyncUdpSocketBase.cxx" />
+    <ClCompile Include="..\ChannelManager.cxx" />
+    <ClCompile Include="..\DataBuffer.cxx" />
+    <ClCompile Include="..\RemotePeer.cxx" />
+    <ClCompile Include="..\ReTurnSubsystem.cxx" />
+    <ClCompile Include="..\StunMessage.cxx" />
+    <ClCompile Include="..\StunTuple.cxx" />
+    <ClCompile Include="TurnAsyncSocket.cxx" />
+    <ClCompile Include="TurnAsyncSocketHandler.cxx" />
+    <ClCompile Include="TurnAsyncTcpSocket.cxx" />
+    <ClCompile Include="TurnAsyncTlsSocket.cxx" />
+    <ClCompile Include="TurnAsyncUdpSocket.cxx" />
+    <ClCompile Include="TurnSocket.cxx" />
+    <ClCompile Include="TurnTcpSocket.cxx" />
+    <ClCompile Include="TurnTlsSocket.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\AsyncSocketBase.hxx" />
+    <ClInclude Include="TurnUdpSocket.hxx" />
+    <ClInclude Include="..\AsyncSocketBaseHandler.hxx" />
+    <ClInclude Include="..\AsyncTcpSocketBase.hxx" />
+    <ClInclude Include="..\AsyncTlsSocketBase.hxx" />
+    <ClInclude Include="..\AsyncUdpSocketBase.hxx" />
+    <ClInclude Include="..\ChannelManager.hxx" />
+    <ClInclude Include="..\DataBuffer.hxx" />
+    <ClInclude Include="ErrorCode.hxx" />
+    <ClInclude Include="..\RemotePeer.hxx" />
+    <ClInclude Include="..\ReTurnSubsystem.hxx" />
+    <ClInclude Include="..\StunMessage.hxx" />
+    <ClInclude Include="..\StunTuple.hxx" />
+    <ClInclude Include="TurnAsyncSocket.hxx" />
+    <ClInclude Include="TurnAsyncSocketHandler.hxx" />
+    <ClInclude Include="TurnAsyncTcpSocket.hxx" />
+    <ClInclude Include="TurnAsyncTlsSocket.hxx" />
+    <ClInclude Include="TurnAsyncUdpSocket.hxx" />
+    <ClInclude Include="TurnSocket.hxx" />
+    <ClInclude Include="TurnTcpSocket.hxx" />
+    <ClInclude Include="TurnTlsSocket.hxx" />
+  </ItemGroup>
+</Project>

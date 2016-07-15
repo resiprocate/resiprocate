@@ -106,7 +106,7 @@ EOF
 # 
 #openssl req -newkey rsa:2048 -passin pass:password \
 #     -passout pass:password \
-#     -sha1 -x509 -keyout demoCA/private/cakey.pem \
+#     -sha256 -x509 -keyout demoCA/private/cakey.pem \
 #     -out demoCA/cacert.pem -days 3650 <<EOF
 #US
 #California

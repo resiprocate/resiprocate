@@ -100,6 +100,11 @@ ReproAuthenticatorFactory::loadCommonNameMappings()
       // Look for end of name
       pb.skipToOneOf("\t");
       pb.data(cn, anchor);
+      if(mCommonNameMappings.find(cn) != mCommonNameMappings.end())
+      {
+         ErrLog(<< "CN '" << cn << "' repeated in mappings file");
+         throw std::runtime_error("CN repeated in mappings file");
+      }
       pb.skipChar('\t');
 
       while(!pb.eof())

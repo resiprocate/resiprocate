@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.10.0~alpha3)
+AC_INIT(resiprocate,1.10.0)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -14,8 +14,7 @@ AC_SUBST(LIBTOOL_VERSION_RELEASE)
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE
-
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_pattern_forbid([^PKG_])
 
 AC_CANONICAL_HOST
@@ -124,7 +123,7 @@ AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,
 
 AC_DEFINE(REPRO_BUILD_REV, PACKAGE_VERSION, REPRO_BUILD_REV)
 AH_TEMPLATE([REPRO_BUILD_REV], [SVN revision])
-AC_DEFINE_UNQUOTED(REPRO_BUILD_HOST, "`hostname`", REPRO_BUILD_HOST)
+AC_DEFINE_UNQUOTED(REPRO_BUILD_HOST, "localhost", REPRO_BUILD_HOST)
 AH_TEMPLATE([REPRO_BUILD_HOST], [Host where package was configured])
 AC_DEFINE(REPRO_RELEASE_VERSION, PACKAGE_VERSION, REPRO_RELEASE_VERSION)
 AH_TEMPLATE([REPRO_RELEASE_VERSION], [Package version])
@@ -232,6 +231,12 @@ AC_ARG_WITH(freeradius,
   AC_DEFINE_UNQUOTED(RESIP_HAVE_FREERADIUS_CLIENT, , RESIP_HAVE_FREERADIUS_CLIENT)
  AC_SUBST(LIBRADIUS_LIBADD, "-lfreeradius-client")
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)])
+AC_ARG_WITH(radcli,
+[  --with-radcli           Link against radcli RADIUS client library],
+ [AC_DEFINE_UNQUOTED(USE_RADIUS_CLIENT, , USE_RADIUS_CLIENT)
+  AC_DEFINE_UNQUOTED(RESIP_HAVE_RADCLI, , RESIP_HAVE_RADCLI)
+ AC_SUBST(LIBRADIUS_LIBADD, "-lradcli")
+ AM_CONDITIONAL(USE_RADIUS_CLIENT, true)])
 
 AM_CONDITIONAL(BUILD_REPRO, false)
 AC_ARG_WITH(repro,
@@ -249,7 +254,7 @@ AC_SUBST([reproplugindir])
 reproplugindir='${pkglibdir}/repro/plugins'
 
 AC_SUBST([returnpkglibdir])
-returnpkglibdir'${pkglibdir}/reTurnServer'
+returnpkglibdir='${pkglibdir}/reTurnServer'
 
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
@@ -274,6 +279,12 @@ AC_ARG_WITH(ichat-gw,
 [  --with-ichat-gw         Build iChat gateway, links against gloox],
  [AC_DEFINE_UNQUOTED(BUILD_ICHAT_GW, , BUILD_ICHAT_GW)
  AM_CONDITIONAL(BUILD_ICHAT_GW, true)], )
+
+AM_CONDITIONAL(BUILD_TELEPATHY_CM, false)
+AC_ARG_WITH(telepathy,
+[  --with-telepathy        Build the Telepathy Connection Manager],
+ [AC_DEFINE_UNQUOTED(BUILD_TELEPATHY_CM, , BUILD_TELEPATHY_CM)
+ AM_CONDITIONAL(BUILD_TELEPATHY_CM, true)], )
 
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
@@ -347,6 +358,7 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
+	apps/telepathy/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \

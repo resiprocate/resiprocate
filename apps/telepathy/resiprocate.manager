@@ -1,0 +1,35 @@
+[ConnectionManager]
+BusName=org.freedesktop.Telepathy.ConnectionManager.resiprocate
+ObjectPath=/org/freedesktop/Telepathy/ConnectionManager/resiprocate
+Interfaces=
+
+[Protocol sip]
+param-alias=s required
+param-account=s required
+param-password=s secret required
+param-turn-server=s
+param-root-cert-path=s
+default-root-cert-path=/etc/ssl/certs
+RequestableChannelClasses=text-1on1-1;call1-1on1-2;call1-1on1-3;
+Interfaces=
+ConnectionInterfaces=org.freedesktop.Telepathy.Connection.Interface.Requests;org.freedesktop.Telepathy.Connection.Interface.Contacts;org.freedesktop.Telepathy.Connection.Interface.Aliasing;
+VCardField=x-sip
+EnglishName=SIP
+Icon=im-sip
+
+[text-1on1-1]
+org.freedesktop.Telepathy.Channel.ChannelType s=org.freedesktop.Telepathy.Channel.Type.Text
+org.freedesktop.Telepathy.Channel.TargetHandleType u=1
+allowed=org.freedesktop.Telepathy.Channel.TargetHandle;org.freedesktop.Telepathy.Channel.TargetID;
+
+[call1-1on1-2]
+org.freedesktop.Telepathy.Channel.Type.Call1.InitialAudio b=true
+org.freedesktop.Telepathy.Channel.ChannelType s=org.freedesktop.Telepathy.Channel.Type.Call1
+org.freedesktop.Telepathy.Channel.TargetHandleType u=1
+allowed=org.freedesktop.Telepathy.Channel.TargetHandle;org.freedesktop.Telepathy.Channel.TargetID;org.freedesktop.Telepathy.Channel.Type.Call1.InitialAudio;org.freedesktop.Telepathy.Channel.Type.Call1.InitialVideo;org.freedesktop.Telepathy.Channel.Type.Call1.InitialAudioName;org.freedesktop.Telepathy.Channel.Type.Call1.InitialVideoName;org.freedesktop.Telepathy.Channel.Type.Call1.InitialTransport;org.freedesktop.Telepathy.Channel.Interface.DTMF.InitialTones;
+
+[call1-1on1-3]
+org.freedesktop.Telepathy.Channel.Type.Call1.InitialVideo b=true
+org.freedesktop.Telepathy.Channel.ChannelType s=org.freedesktop.Telepathy.Channel.Type.Call1
+org.freedesktop.Telepathy.Channel.TargetHandleType u=1
+allowed=org.freedesktop.Telepathy.Channel.TargetHandle;org.freedesktop.Telepathy.Channel.TargetID;org.freedesktop.Telepathy.Channel.Type.Call1.InitialAudio;org.freedesktop.Telepathy.Channel.Type.Call1.InitialVideo;org.freedesktop.Telepathy.Channel.Type.Call1.InitialAudioName;org.freedesktop.Telepathy.Channel.Type.Call1.InitialVideoName;org.freedesktop.Telepathy.Channel.Type.Call1.InitialTransport;org.freedesktop.Telepathy.Channel.Interface.DTMF.InitialTones;

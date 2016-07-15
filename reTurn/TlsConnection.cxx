@@ -1,3 +1,9 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
+#ifdef USE_SSL
+
 #ifdef WIN32
 #pragma warning(disable : 4267)
 #endif
@@ -187,6 +193,7 @@ TlsConnection::onSendFailure(const asio::error_code& error)
 
 } 
 
+#endif
 
 /* ====================================================================
 

@@ -1,7 +1,7 @@
 #if !defined(ConfigParser_hxx)
 #define ConfigParser_hxx
 
-#include <list>
+#include <map>
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
 #include <resip/stack/NameAddr.hxx>
@@ -16,27 +16,36 @@ public:
    ConfigParser();  // If you use this constructor you must manually set all configuration values
    virtual ~ConfigParser();
    
-   void parseCommandLine(int argc, char** argv);
-   void parseConfigFile(const resip::Data& filename);
-   bool processOption(const resip::Data& name, const resip::Data& value);
-   bool assignNameAddr(const resip::Data& settingName, const resip::Data& settingValue, resip::NameAddr& nameAddr);
+   class MOHSettings
+   {
+   public:
+      MOHSettings() : mRegistrationTime(3600) {}
+      resip::NameAddr mUri;
+      resip::Data mPassword;
+      unsigned long mRegistrationTime;
+      resip::NameAddr mOutboundProxy;
+      resip::Uri mMOHFilenameUrl;
+   };
+   typedef std::map<unsigned long , MOHSettings> MOHSettingsMap;
+   MOHSettingsMap mMOHSettingsMap;
 
-   // MOH Settings
-   resip::NameAddr mMOHUri;
-   resip::Data mMOHPassword;
-   unsigned long mMOHRegistrationTime;
-   resip::Uri mMOHFilenameUrl;
-
-   // Park Settings
-   resip::NameAddr mParkUri;
-   resip::Data mParkPassword;
-   unsigned long mParkRegistrationTime;
-   resip::Uri mParkMOHFilenameUrl;
-   unsigned long mParkOrbitRangeStart;
-   unsigned long mParkNumOrbits;
-   unsigned long mParkOrbitRegistrationTime;
-   resip::Data mParkOrbitPassword;
-   unsigned long mMaxParkTime;
+   class ParkSettings
+   {
+   public:
+      ParkSettings() : mRegistrationTime(3600), mOrbitRangeStart(6000), mNumOrbits(10), mOrbitRegistrationTime(3600), mMaxParkTime(600) {}
+      resip::NameAddr mUri;
+      resip::Data mPassword;
+      unsigned long mRegistrationTime;
+      resip::NameAddr mOutboundProxy;
+      resip::Uri mMOHFilenameUrl;
+      unsigned long mOrbitRangeStart;
+      unsigned long mNumOrbits;
+      unsigned long mOrbitRegistrationTime;
+      resip::Data mOrbitPassword;
+      unsigned long mMaxParkTime;
+   };
+   typedef std::map<unsigned long, ParkSettings> ParkSettingsMap;
+   ParkSettingsMap mParkSettingsMap;
 
    // SIP Settings
    resip::Data mAddress;
@@ -45,6 +54,7 @@ public:
    unsigned short mTcpPort;
    unsigned short mTlsPort;
    resip::Data mTlsDomain;
+   resip::Data mCertificatePath;
    resip::NameAddr mOutboundProxy;
    bool mKeepAlives;
 
@@ -61,6 +71,13 @@ public:
 
    // Store pointer to after socket creation fn - can be used for QOS
    resip::AfterSocketCreationFuncPtr mSocketFunc;
+
+private:
+   void parseCommandLine(int argc, char** argv);
+   void parseConfigFile(const resip::Data& filename);
+   bool processOption(const resip::Data& name, const resip::Data& value);
+   bool assignNameAddr(const resip::Data& settingName, const resip::Data& settingValue, resip::NameAddr& nameAddr);
+   bool assignMusicUrl(const resip::Data& settingName, const resip::Data& settingValue, resip::Uri& url);
 };
  
 }
@@ -69,7 +86,8 @@ public:
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2010-2016, SIP Spectrum, Inc.
+
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

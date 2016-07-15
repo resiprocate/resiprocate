@@ -198,10 +198,11 @@ public:
         else if (dbType == "postgresql")
         {
 #ifdef USE_POSTGRESQL
+            Data postgreSQLConnInfo = dbConfig.getConfigData("ConnInfo", Data::Empty);
             Data postgreSQLServer = dbConfig.getConfigData("Host", Data::Empty);
-            if (!postgreSQLServer.empty())
+            if (!postgreSQLConnInfo.empty() || !postgreSQLServer.empty())
             {
-                return new PostgreSqlDb(postgreSQLServer,
+                return new PostgreSqlDb(postgreSQLConnInfo, postgreSQLServer,
                     dbConfig.getConfigData("User", Data::Empty),
                     dbConfig.getConfigData("Password", Data::Empty),
                     dbConfig.getConfigData("DatabaseName", Data::Empty),
@@ -691,13 +692,14 @@ ReproRunner::createSipStack()
       cipherList = ciphers;
    }
    Data certPath = mProxyConfig->getConfigData("CertificatePath", Data::Empty);
+   Data dHParamsFilename = mProxyConfig->getConfigData("TlsDHParamsFilename", Data::Empty);
    if(certPath.empty())
    {
-      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
+      security = new Security(cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
    else
    {
-      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty));
+      security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
    Data caDir;
    mProxyConfig->getConfigValue("CADirectory", caDir);

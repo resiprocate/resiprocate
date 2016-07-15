@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
 #ifdef WIN32
 #pragma warning(disable : 4267)
 #endif
@@ -5,7 +9,9 @@
 #include <iostream>
 #include <string>
 #include <asio.hpp>
+#ifdef USE_SSL
 #include <asio/ssl.hpp>
+#endif
 #include <rutil/ThreadIf.hxx>
 
 #include "../../StunTuple.hxx"
@@ -356,14 +362,18 @@ int main(int argc, char* argv[])
     asio::io_service ioService;
     MyTurnAsyncSocketHandler handler(ioService);
 
+#ifdef USE_SSL
     asio::ssl::context sslContext(ioService, asio::ssl::context::tlsv1);
     // Setup SSL context
     sslContext.set_verify_mode(asio::ssl::context::verify_peer);
     sslContext.load_verify_file("ca.pem");
+#endif
 
     boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
     //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
+#ifdef USE_SSL
     //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0)); port++;
+#endif
 
     handler.setTurnAsyncSocket(turnSocket.get());
 

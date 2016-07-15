@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
 #ifdef WIN32
 #pragma warning(disable : 4267)
 #endif
@@ -5,7 +9,9 @@
 #include <iostream>
 #include <string>
 #include <asio.hpp>
+#ifdef USE_SSL
 #include <asio/ssl.hpp>
+#endif
 #include <rutil/ThreadIf.hxx>
 #include <rutil/Logger.hxx>
 
@@ -99,6 +105,7 @@ int main(int argc, char* argv[])
       turnPeer.run();
 
 #ifndef NO_AUTHENTICATION
+#ifdef USE_SSL
       {  // Connect via TLS, get SharedSecret, and disconnect
          TurnTlsSocket tlsSocket(asio::ip::address::from_string("127.0.0.1"), 40001);
          rc = tlsSocket.requestSharedSecret(asio::ip::address::from_string(argv[1]), 
@@ -117,10 +124,13 @@ int main(int argc, char* argv[])
          << " Password=" << password
          << std::endl;
 #endif
+#endif
 
       TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
       //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+#ifdef USE_SSL
       //TurnTlsSocket turnSocket(false /* validateServerCertificateHostname */, asio::ip::address::from_string("127.0.0.1"), 0); 
+#endif
       //port=5349;
 
       // Connect to Stun/Turn Server

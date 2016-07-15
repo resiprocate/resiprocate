@@ -207,8 +207,8 @@ InMemorySyncPubDb::removeDocument(const Data& eventType, const Data& documentKey
                // ETag was found - remove it
                keyIt->second.erase(eTagIt);
             }
-            // Only pass sync as true if this update didn't just come from an inbound sync operation
-            invokeOnDocumentRemoved(!syncPublication /* sync? */, eventType, documentKey, eTag, lastUpdated);
+            // Only pass sync as true if this update just come from an inbound sync operation
+            invokeOnDocumentRemoved(syncPublication /* sync? */, eventType, documentKey, eTag, lastUpdated);
          }
       }
       // If there are no more eTags then remove entity
