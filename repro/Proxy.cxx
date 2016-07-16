@@ -620,14 +620,22 @@ void Proxy::removeTransportRecordRoute(unsigned int transportKey)
 }
 
 const resip::NameAddr& 
-Proxy::getRecordRoute(unsigned int transportKey) const
+Proxy::getRecordRoute(unsigned int transportKey, bool* transportSpecific) const
 {
    Lock lock(mTransportRecordRouteMutex);
    TransportRecordRouteMap::const_iterator it = mTransportRecordRoutes.find(transportKey);
    if(it != mTransportRecordRoutes.end())
    {
+      if(transportSpecific)
+      {
+         *transportSpecific = true;
+      }
       // Transport specific record-route found
       return it->second;
+   }
+   if (transportSpecific)
+   {
+       *transportSpecific = false;
    }
    return mRecordRoute;
 }

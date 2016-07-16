@@ -244,6 +244,7 @@ class ResponseContext
       void insertRecordRoute(resip::SipMessage& outgoing,
                              const resip::Tuple& receivedTransportTuple,
                              const resip::NameAddr& receivedTransportRecordRoute, 
+                             bool transportSpecificRecordRoute,
                              Target* target,
                              bool doPathInstead=false);
       resip::Data getInboundFlowToken(bool doPathInstead);

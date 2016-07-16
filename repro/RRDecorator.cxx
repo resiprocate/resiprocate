@@ -130,11 +130,17 @@ RRDecorator::singleRecordRoute(resip::SipMessage& request,
       }
       else
       {
-         // .bwc. It is safe to put ip+port+proto here, since we have an 
-         // existing flow to the next hop.
-         rt.uri().host()=resip::Tuple::inet_ntop(source);
-         rt.uri().port()=source.getPort();
-         rt.uri().param(resip::p_transport)=resip::Tuple::toDataLower(source.getType());
+         bool transportSpecificRecordRoute;
+         rt = mProxy.getRecordRoute(destination.mTransportKey, &transportSpecificRecordRoute);
+         // If record-route is not transport specific (ie: global record route setting), then generate appropriate one from source
+         if (!transportSpecificRecordRoute)
+         {
+            // .bwc. It is safe to put ip+port+proto here, since we have an 
+            // existing flow to the next hop.
+            rt.uri().host() = resip::Tuple::inet_ntop(source);
+            rt.uri().port() = source.getPort();
+            rt.uri().param(resip::p_transport) = resip::Tuple::toDataLower(source.getType());
+         }
       }
       // .bwc. If our target has an outbound flow to us, we need to put a flow
       // token in a Record-Route.

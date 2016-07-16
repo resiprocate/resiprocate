@@ -76,7 +76,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual bool isMyUri(const resip::Uri& uri) const;
       void addTransportRecordRoute(unsigned int transportKey, const resip::NameAddr& recordRoute);
       void removeTransportRecordRoute(unsigned int transportKey);
-      const resip::NameAddr& getRecordRoute(unsigned int transportKey) const;
+      const resip::NameAddr& getRecordRoute(unsigned int transportKey, bool* transportSpecific = 0) const;
       bool getRecordRouteForced() const { return mRecordRouteForced; }
       void setRecordRouteForced(bool forced) { mRecordRouteForced = forced; }
 
