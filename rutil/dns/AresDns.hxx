@@ -1,7 +1,7 @@
 #if !defined(RESIP_ARES_DNS_HXX)
 #define RESIP_ARES_DNS_HXX
 
-#include "rutil/FdSetIOObserver.hxx"
+#include "rutil/HashMap.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 
@@ -22,7 +22,7 @@ namespace resip
 class AresDnsPollItem;
 class FdPollGrp;
 
-class AresDns : public ExternalDns, public FdSetIOObserver
+class AresDns : public ExternalDns
 {
    friend class AresDnsPollItem;
    public:
@@ -35,7 +35,8 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       virtual int init(int dnsTimeout = 0, int dnsTries = 0, unsigned int features = 0);
 
       int internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
-                       AfterSocketCreationFuncPtr socketfunc, unsigned int features=0, ares_channeldata** channel = 0, int timeout=0, int tries=0);
+                       AfterSocketCreationFuncPtr socketfunc, unsigned int features=0,
+                       ares_channeldata** channel = 0, int timeout=0, int tries=0, bool useStateFunc=false);
 
       virtual bool checkDnsChange();
 
@@ -68,6 +69,7 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       // time_t mNow;
 
    private:
+      void clearPollItems();
 
       typedef std::pair<ExternalDnsHandler*, void*> Payload;
       static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
@@ -79,8 +81,8 @@ class AresDns : public ExternalDns, public FdSetIOObserver
       volatile static bool mHostFileLookupOnlyMode;
 
       FdPollGrp*	mPollGrp;
-      typedef std::vector<std::pair<AresDnsPollItem*, AresDnsPollItem*> > PollItems;
-      PollItems mPollItems;  // first item is for UDP socket, 2nd is for TCP socket
+      typedef HashMap<int, AresDnsPollItem*> PollItemsMap;
+      PollItemsMap mPollItems;
 
 };
 

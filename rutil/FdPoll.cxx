@@ -131,19 +131,14 @@ class FdPollImplFdSet : public FdPollGrp
       virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask);
       virtual void delPollItem(FdPollItemHandle handle);
 
-      virtual void registerFdSetIOObserver(FdSetIOObserver& observer);
-      virtual void unregisterFdSetIOObserver(FdSetIOObserver& observer);
-
       virtual bool waitAndProcess(int ms=0);
       virtual void buildFdSet(FdSet& fdSet);
       virtual bool processFdSet(FdSet& fdset);
 
    protected:
-      virtual unsigned int buildFdSetForObservers(FdSet& fdSet);
       void killCache(Socket fd);
 
       std::vector<FdPollItemFdSetInfo> mItems;
-      std::vector<FdSetIOObserver*> mFdSetObservers;
 
       /*
        * The ItemInfos are stored in a vector (above) that grows as needed.
@@ -269,28 +264,6 @@ FdPollImplFdSet::delPollItem(FdPollItemHandle handle)
    info.mEvMask = 0;
 }
 
-void 
-FdPollImplFdSet::registerFdSetIOObserver(FdSetIOObserver& observer)
-{
-   // .bwc. Could make this sorted. Probably not worth the trouble.
-   mFdSetObservers.push_back(&observer);
-}
-
-void 
-FdPollImplFdSet::unregisterFdSetIOObserver(FdSetIOObserver& observer)
-{
-   // .bwc. Could make this sorted. Probably not worth the trouble.
-   for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-         o!=mFdSetObservers.end();++o)
-   {
-      if(*o==&observer)
-      {
-         mFdSetObservers.erase(o);
-         return;
-      }
-   }
-}
-
 
 /**
     There is a boundary case:
@@ -332,7 +305,6 @@ FdPollImplFdSet::waitAndProcess(int ms)
 
    // Create copy; is cheaper than rebuilding from scratch every time.
    FdSet fdset(mSelectSet);
-   ms = resipMin(buildFdSetForObservers(fdset), (unsigned int)ms);
 
    // Step 2: Select on our built FdSet
    int numReady = fdset.selectMilliSeconds(ms);
@@ -387,23 +359,6 @@ FdPollImplFdSet::buildFdSet(FdSet& fdset)
       }
       prevIdxRef = &info.mNextIdx;
    }
-
-   // Allow any FdSetIOObservers a crack at the FdSet; we can't really optimize
-   // this part.
-   buildFdSetForObservers(fdset);
-}
-
-unsigned int
-FdPollImplFdSet::buildFdSetForObservers(FdSet& fdset)
-{
-   unsigned int ms=INT_MAX;
-   for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-         o!=mFdSetObservers.end();++o)
-   {
-      (*o)->buildFdSet(fdset);
-      ms = resipMin(ms, (*o)->getTimeTillNextProcessMS());
-   }
-   return ms;
 }
 
 bool
@@ -440,18 +395,6 @@ FdPollImplFdSet::processFdSet(FdSet& fdset)
       // WATCHOUT: {info} may have moved due to add during processItem()
       // set pointer using index, not {info}
       prevIdxRef = &mItems[itemIdx].mNextIdx;
-   }
-
-   // Step 3.1: Invoke callbacks on any FdSetIOObservers
-   for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-         o!=mFdSetObservers.end();++o)
-   {
-      // This is not strictly correct; we do not know if this observer actually
-      // put any FDs in the set, or if any of these FDs ended up being ready.
-      // Eventually, it would be nice to have process() return whether any 
-      // actual IO was performed.
-      didsomething=true;
-      (*o)->process(fdset);
    }
 
    return didsomething;
@@ -495,8 +438,6 @@ class FdPollImplPoll : public FdPollGrp
       virtual FdPollItemHandle addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *item);
       virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask);
       virtual void delPollItem(FdPollItemHandle handle);
-      virtual void registerFdSetIOObserver(FdSetIOObserver& observer);
-      virtual void unregisterFdSetIOObserver(FdSetIOObserver& observer);
 
       virtual bool waitAndProcess(int ms=0);
 
@@ -508,7 +449,6 @@ class FdPollImplPoll : public FdPollGrp
    protected:
       typedef std::map<Socket, FdPollItemPollInfo> FdPollItemPollInfoMap;
       FdPollItemPollInfoMap mItems; // indexed by fd/handle
-      std::vector<FdSetIOObserver*> mFdSetObservers;
 
       /*
        * This is temporary cache of pollfds. It is a member (and
@@ -640,87 +580,15 @@ FdPollImplPoll::delPollItem(FdPollItemHandle handle)
    }
 }
 
-void 
-FdPollImplPoll::registerFdSetIOObserver(FdSetIOObserver& observer)
-{
-   // .bwc. Could make this sorted. Probably not worth the trouble.
-   mFdSetObservers.push_back(&observer);
-}
-
-void 
-FdPollImplPoll::unregisterFdSetIOObserver(FdSetIOObserver& observer)
-{
-   // .bwc. Could make this sorted. Probably not worth the trouble.
-   for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-         o!=mFdSetObservers.end();++o)
-   {
-      if(*o==&observer)
-      {
-         mFdSetObservers.erase(o);
-         return;
-      }
-   }
-}
-
 bool
 FdPollImplPoll::waitAndProcess(int ms)
 {
-   int waitMs = ms;
-
    // Copy vector - cheaper than rebuilding from scratch each time
    // Need to copy, since vector cannot be changed while Poll is running.
    { // Scope for Lock
       Lock lock(mMutex);
       mPollFds = mPollFdCache;
       //InfoLog(<<"FdPollImplPoll::waitAndProcess() ms=" << ms << ", numFds " << mPollFds.size());
-   }
-   size_t observerStartIndex = mPollFds.size();  // record so we know if an observer Fd signalled from Poll or not
-   bool observerFdSignalled = false;
-   FdSet fdset; // for FdSet Observer processing
-
-   if(!mFdSetObservers.empty())
-   {
-      if(ms < 0)
-      {
-         ms=INT_MAX;
-         waitMs=INT_MAX;
-      }
-
-      // Warning; big fat hack. This is likely to be a tad inefficient, and this 
-      // is why we want to move away from FdSetIOObserver, at least in 
-      // conjunction with stuff that uses poll/epoll. The only holdout right now is
-      // the cares DNS code.
-      // Also, a fair bit of duplicated code here. 
-
-      // gather fds from mFdSetObservers
-      for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin(); o!=mFdSetObservers.end(); ++o)
-      {
-         (*o)->buildFdSet(fdset);
-         waitMs = resipMin((unsigned int)ms, (*o)->getTimeTillNextProcessMS());
-      }
-
-      // Get fd's into poll handle list - build up map of masks first
-      std::map<Socket, short> observerFds;
-      unsigned int i;
-      for(i = 0; i < fdset.read.fd_count; i++)
-      {
-          observerFds[fdset.read.fd_array[i]] |= POLLIN;
-      }
-      for(i = 0; i < fdset.write.fd_count; i++)
-      {
-          observerFds[fdset.write.fd_array[i]] |= POLLOUT;
-      }
-      // Note:  We don't need to ask for error signalling, POLLERR is an output mask only for revents member
-      
-      // Add items from map to mPollFds vector
-      std::map<Socket, short>::iterator it;
-      for(it = observerFds.begin(); it != observerFds.end(); it++)
-      {
-         pollfd pollFD;
-         pollFD.fd = it->first;
-         pollFD.events = it->second;
-         mPollFds.push_back(pollFD);
-      }
    }
 
    if(mPollFds.size() == 0)
@@ -733,9 +601,9 @@ FdPollImplPoll::waitAndProcess(int ms)
 
    pollfd *pollFDArray = &(mPollFds.front());
 #ifdef WIN32
-   int numReadyFDs = WSAPoll(pollFDArray, mPollFds.size(), waitMs);
+   int numReadyFDs = WSAPoll(pollFDArray, mPollFds.size(), ms);
 #else
-   int numReadyFDs = poll(pollFDArray, mPollFds.size(), waitMs);
+   int numReadyFDs = poll(pollFDArray, mPollFds.size(), ms);
 #endif
    if ( numReadyFDs < 0 )
    {
@@ -764,48 +632,15 @@ FdPollImplPoll::waitAndProcess(int ms)
             //InfoLog(<<"FdPollImplPoll::waitAndProcess() fd=" << pollFDArray[index].fd << " signalled, revent=" << revents);
 
             numReadyFDs--;
-            // array indexes below observerStartIndex are standard/non-observer fd's
-            if(index < observerStartIndex)
+            FdPollItemPollInfoMap::iterator it = mItems.find(pollFDArray[index].fd);
+            if(it != mItems.end())
             {
-               FdPollItemPollInfoMap::iterator it = mItems.find(pollFDArray[index].fd);
-               if(it != mItems.end())
-               {
-                  FdPollItemIf* pdPollItem = it->second.mItemObj;
-                  processItem(pdPollItem, CvtSysToUsrMask(revents));
-                  didsomething = true;
-               }
-            }
-            else
-            {
-                // And observer fd signalled - flag it
-                observerFdSignalled = true;
-                didsomething = true;
+               FdPollItemIf* pdPollItem = it->second.mItemObj;
+               processItem(pdPollItem, CvtSysToUsrMask(revents));
+               didsomething = true;
             }
          }
       }//for
-   }
-
-   // Do observer processing now (if required)
-   if(observerFdSignalled)
-   {
-      // Call select in order to get Fdset properly populated - use a wait 
-      // time of 0 since we know something has signalled from Poll call
-      int numReady = fdset.selectMilliSeconds(0);
-      if ( numReady < 0 )
-      {
-         int err = getErrno();
-         if (err != EINTR)
-         {
-            CritLog(<<"select() failed: "<<strerror(err));
-            resip_assert(0);     // .kw. not sure correct behavior...
-         }
-      }
-
-      // Process the observer fd's
-      for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin(); o!=mFdSetObservers.end(); ++o)
-      {
-         (*o)->process(fdset);
-      }
    }
 
    return didsomething;
@@ -855,8 +690,6 @@ class FdPollImplEpoll : public FdPollGrp
       virtual void              modPollItem(FdPollItemHandle handle,
                                   FdPollEventMask newMask);
       virtual void              delPollItem(FdPollItemHandle handle);
-      virtual void registerFdSetIOObserver(FdSetIOObserver& observer);
-      virtual void unregisterFdSetIOObserver(FdSetIOObserver& observer);
 
       virtual bool              waitAndProcess(int ms=0);
 
@@ -870,7 +703,6 @@ class FdPollImplEpoll : public FdPollGrp
       bool epollWait(int ms);
 
       std::vector<FdPollItemIf*>  mItems; // indexed by fd
-      std::vector<FdSetIOObserver*> mFdSetObservers;
       int                       mEPollFd;       // from epoll_create()
 
       /*
@@ -1005,28 +837,6 @@ FdPollImplEpoll::delPollItem(FdPollItemHandle handle)
    killCache(fd);
 }
 
-void 
-FdPollImplEpoll::registerFdSetIOObserver(FdSetIOObserver& observer)
-{
-   // .bwc. Could make this sorted. Probably not worth the trouble.
-   mFdSetObservers.push_back(&observer);
-}
-
-void 
-FdPollImplEpoll::unregisterFdSetIOObserver(FdSetIOObserver& observer)
-{
-   // .bwc. Could make this sorted. Probably not worth the trouble.
-   for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-         o!=mFdSetObservers.end();++o)
-   {
-      if(*o==&observer)
-      {
-         mFdSetObservers.erase(o);
-         return;
-      }
-   }
-}
-
 
 /**
     There is a boundary case:
@@ -1068,61 +878,9 @@ FdPollImplEpoll::killCache(int fd)
 bool
 FdPollImplEpoll::waitAndProcess(int ms)
 {
-   bool didSomething = false;
-   int waitMs = ms;
    resip_assert( mEvCache.size() > 0 );
 
-   if(!mFdSetObservers.empty())
-   {
-      if(ms < 0)
-      {
-         ms=INT_MAX;
-         waitMs=INT_MAX;
-      }
-
-      // Warning; big fat hack. This is likely to be a tad inefficient, and this 
-      // is why we want to move away from FdSetIOObserver, at least in 
-      // conjunction with stuff that uses epoll. The only holdout right now is
-      // the cares DNS code.
-      // Also, a fair bit of duplicated code here. 
-
-      FdSet fdset;
-      buildFdSet(fdset); // add our epoll fd, and fds from mFdSetObservers
-
-      for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-            o!=mFdSetObservers.end();++o)
-      {
-         ms = resipMin((unsigned int)ms, (*o)->getTimeTillNextProcessMS());
-      }
-
-      // Avoid waiting too much; this ends up overcompensating unless the 
-      // select() times out, but it is better than just setting to 0. We could 
-      // record the time taken by the select() call, but this would be more 
-      // expensive.
-      waitMs -= ms;
-
-      int numReady = fdset.selectMilliSeconds(ms);
-
-      // Should we still do this? If our epoll fd is not marked ready, should we
-      // do the epoll_wait below? I want to say no...
-      if ( numReady < 0 )
-      {
-         int err = getErrno();
-         if ( err!=EINTR )
-         {
-            CritLog(<<"select() failed: "<<strerror(err));
-            resip_assert(0);     // .kw. not sure correct behavior...
-         }
-         return false;
-      }
-      if ( numReady==0 )
-         return false;     // timer expired
-
-      didSomething |= processFdSet(fdset);
-   }
-
-   didSomething |= epollWait(waitMs);
-   return didSomething;
+   return epollWait(ms);
 }
 
 void
@@ -1133,38 +891,20 @@ FdPollImplEpoll::buildFdSet(FdSet& fdset)
    {
       fdset.setRead(fd);
    }
-   for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-         o!=mFdSetObservers.end();++o)
-   {
-      (*o)->buildFdSet(fdset);
-   }
 }
 
 bool
 FdPollImplEpoll::processFdSet(FdSet& fdset)
 {
-   bool didsomething=false;
-   for(std::vector<FdSetIOObserver*>::iterator o=mFdSetObservers.begin();
-         o!=mFdSetObservers.end();++o)
-   {
-      // This is not strictly correct; we do not know if this observer 
-      // actually put any FDs in the set, or if any of these FDs ended up 
-      // being ready.
-      // Eventually, it would be nice to have process() return whether any 
-      // actual IO was performed.
-      didsomething=true;
-      (*o)->process(fdset);
-   }
-
    int fd = getEPollFd();
    if (fd !=- 1 && fdset.readyToRead(fd))
    {
       epollWait(0);
    }
-   return didsomething;
+   return false;
 }
 
-bool 
+bool
 FdPollImplEpoll::epollWait(int waitMs)
 {
    bool maybeMore;
