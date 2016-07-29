@@ -3,6 +3,7 @@
 
 #include <boost/function.hpp>
 
+#include "InstantMessage.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
@@ -264,6 +265,11 @@ public:
    */
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);   
 
+   /**
+      Used to send a MESSAGE SIP message.
+    */
+   const char* sendMessage(const resip::NameAddr& destination, const resip::Data& msg, const resip::Mime& mimeType);
+
 protected:
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
@@ -347,6 +353,8 @@ private:
    resip::DialogUsageManager mDum;
    resip::InterruptableStackThread mStackThread;
    volatile bool mDumShutdown;
+
+   InstantMessage* mInstantMessage;
 };
  
 }
