@@ -48,6 +48,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         SipXHelper.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
+        UserAgentClientPublication.cxx \
         UserAgentDialogSetFactory.cxx \
         UserAgentMasterProfile.cxx \
         UserAgentRegistration.cxx \
@@ -84,6 +85,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         DefaultDialogSet.hxx \
         Participant.hxx \
         UserAgentClientSubscription.hxx \
+        UserAgentClientPublication.hxx \
         UserAgent.hxx \
         ConversationParticipantAssignment.hxx \
         RemoteParticipant.hxx \

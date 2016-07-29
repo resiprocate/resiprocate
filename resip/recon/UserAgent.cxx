@@ -7,6 +7,7 @@
 #include "UserAgentCmds.hxx"
 #include "UserAgentServerAuthManager.hxx"
 #include "UserAgentClientSubscription.hxx"
+#include "UserAgentClientPublication.hxx"
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
@@ -17,9 +18,13 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <resip/stack/ConnectionTerminated.hxx>
+#include <resip/stack/Pidf.hxx>
+#include <resip/stack/GenericPidfContents.hxx>
 #include <resip/dum/ClientAuthManager.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerSubscription.hxx>
+#include <resip/dum/ClientPublication.hxx>
+#include <resip/dum/ServerPublication.hxx>
 #include <resip/dum/ClientRegistration.hxx>
 #include <resip/dum/KeepAliveManager.hxx>
 #include <resip/dum/AppDialogSet.hxx>
@@ -27,6 +32,7 @@
 #include <resip/stack/ssl/Security.hxx>
 #endif
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Random.hxx>
 
 using namespace recon;
 using namespace resip;
@@ -131,6 +137,25 @@ void
 UserAgent::unregisterSubscription(UserAgentClientSubscription *subscription)
 {
    mSubscriptions.erase(subscription->getSubscriptionHandle());
+}
+
+PublicationHandle
+UserAgent::getNewPublicationHandle()
+{
+   Lock lock(mPublicationHandleMutex);
+   return mCurrentPublicationHandle++;
+}
+
+void
+UserAgent::registerPublication(UserAgentClientPublication *publication)
+{
+   mPublications[publication->getPublicationHandle()] = publication;
+}
+
+void
+UserAgent::unregisterPublication(UserAgentClientPublication *publication)
+{
+   mPublications.erase(publication->getPublicationHandle());
 }
 
 ConversationProfileHandle 
@@ -282,6 +307,22 @@ UserAgent::destroySubscription(SubscriptionHandle handle)
    mDum.post(cmd);
 }
 
+PublicationHandle
+UserAgent::createPublication(const Data& eventType, const NameAddr& target, const Data& status, unsigned int publicationTime, const Mime& mimeType)
+{
+   PublicationHandle handle = getNewPublicationHandle();
+   CreatePublicationCmd* cmd = new CreatePublicationCmd(this, handle, status, eventType, target, publicationTime, mimeType);
+   mDum.post(cmd);
+
+   return handle;   
+}
+
+void 
+UserAgent::destroyPublication(PublicationHandle handle)
+{
+   DestroyPublicationCmd* cmd = new DestroyPublicationCmd(this, handle);
+   mDum.post(cmd);
+}
 
 SharedPtr<ConversationProfile> 
 UserAgent::getDefaultOutgoingConversationProfile()
@@ -569,6 +610,74 @@ UserAgent::destroySubscriptionImpl(SubscriptionHandle handle)
    }
 }
 
+void 
+UserAgent::createPublicationImpl(PublicationHandle handle, const Data& status, const Data& eventType, const NameAddr& target, unsigned int publicationTime, const Mime& mimeType)
+{
+   // Ensure we have a client publication handler for this event type
+   if(!mDum.getClientPublicationHandler(eventType))
+   {
+      mDum.addClientPublicationHandler(eventType, this);
+   }
+
+   // Adding rpid defined at RFC 4480 https://tools.ietf.org/html/rfc4480#page-7
+   resip::GenericPidfContents gPidf;
+
+   resip::GenericPidfContents::Node* dm = new resip::GenericPidfContents::Node();
+   dm->mNamespacePrefix = Data("dm:");
+   dm->mTag = "person";
+   dm->mAttributes["id"] = Random::getRandomHex(3);
+
+   resip::GenericPidfContents::Node* rpid = new resip::GenericPidfContents::Node();
+   rpid->mNamespacePrefix = Data("rpid:");
+   rpid->mTag = "activities";
+   dm->mChildren.push_back(rpid);   
+
+   if(status != "available")
+   {
+      resip::GenericPidfContents::Node* st = new resip::GenericPidfContents::Node();
+      st->mNamespacePrefix = Data("rpid:");
+      st->mTag = status;
+      rpid->mChildren.push_back(st);
+   }
+   
+   resip::GenericPidfContents::NodeList rootNodes = gPidf.getRootNodes();
+   rootNodes.push_back(dm);
+   gPidf.setRootNodes(rootNodes);
+
+   Data note;
+   if(status == "dnd")
+   {
+      note = Data("Busy (DND)");
+   }
+   else if(status == "available")
+   {
+      note = Data("Online");
+   }
+   else if(status == "away")
+   {
+      note = Data("Away");
+   }
+   gPidf.setSimplePresenceTupleNode(Random::getRandomHex(3), true, Data::Empty, note, target.uri().getAorNoReally(), Data(1.0));
+   gPidf.setEntity(target.uri());
+   gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:data-model"), Data("dm"));
+   gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:rpid"), Data("rpid"));
+
+   DebugLog( << "generated final gPidf : " << endl << gPidf );
+   
+   UserAgentClientPublication *publication = new UserAgentClientPublication(*this, mDum, handle);
+   mDum.send(mDum.makePublication(target, getDefaultOutgoingConversationProfile(), gPidf, eventType, publicationTime, publication));
+}
+
+void 
+UserAgent::destroyPublicationImpl(PublicationHandle handle)
+{
+   PublicationMap::iterator it = mPublications.find(handle);
+   if(it != mPublications.end())
+   {
+      it->second->end();
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Registration Handler ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -635,6 +744,32 @@ UserAgent::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const Si
    return dynamic_cast<UserAgentClientSubscription *>(h->getAppDialogSet().get())->onRequestRetry(h, retryMinimum, msg);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ClientPublicationHandler ////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void
+UserAgent::onSuccess(ClientPublicationHandle h, const SipMessage& status)
+{
+   dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onSuccess(h, status);
+}
+
+void
+UserAgent::onRemove(ClientPublicationHandle h, const SipMessage& status)
+{
+   dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onRemove(h, status);
+}
+
+int
+UserAgent::onRequestRetry(ClientPublicationHandle h, int retrySeconds, const SipMessage& status)
+{
+   return dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onRequestRetry(h, retrySeconds, status);
+}
+
+void
+UserAgent::onFailure(ClientPublicationHandle h, const SipMessage& status)
+{
+   dynamic_cast<UserAgentClientPublication *>(h->getAppDialogSet().get())->onFailure(h, status);
+}
 
 /* ====================================================================
 
