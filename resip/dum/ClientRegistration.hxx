@@ -58,6 +58,9 @@ class ClientRegistration: public NonDialogUsage
       /** Calls removeMyBindings and ends usage when complete */
       virtual void end();
 
+      /** Returns true if a REGISTER request is currently pending and we are waiting for the SIP Response */
+      bool isRequestPending() { return mState != Registered && mState != RetryAdding && mState != RetryRefreshing; }
+
       /**
        * Provide asynchronous method access by using command
        */
