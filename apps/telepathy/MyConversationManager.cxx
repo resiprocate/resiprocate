@@ -28,6 +28,7 @@
 // Test Prompts for cache testing
 #include "playback_prompt.h"
 #include "record_prompt.h"
+#include "../../resip/recon/ConversationManager.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
@@ -40,15 +41,17 @@ MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterf
         mLocalAudioEnabled(localAudioEnabled),
         mAutoAnswerEnabled(autoAnswerEnabled),
         mConnection(connection)
-{ 
+{
+  QObject::connect(this,SIGNAL(participantDestroyed(recon::ParticipantHandle)),this,SLOT(onParticipantDestroyed(recon::ParticipantHandle)));
+  QObject::connect(this,SIGNAL(conversationDestroyed(recon::ConversationHandle)),this,SLOT(onConversationDestroyed(recon::ConversationHandle)));
 }
 
 void
 MyConversationManager::startup()
-{      
+{
    if(mLocalAudioEnabled)
    {
-      // Create initial local participant and conversation  
+      // Create initial local participant and conversation
       ParticipantHandle ph = createLocalParticipant();
       DebugLog(<<"createLocalParticipant returned handle " << ph);
       addParticipant(createConversation(), ph);
@@ -74,7 +77,7 @@ MyConversationManager::startup()
       resip::Data buffer(Data::Share, (const char *)record_prompt, sizeof(record_prompt));
       resip::Data name("record");
       addBufferToMediaResourceCache(name, buffer, 0);
-   }      
+   }
 }
 
 ConversationHandle
@@ -108,7 +111,16 @@ MyConversationManager::createLocalParticipant()
    mLocalParticipantHandles.push_back(partHandle);
    return partHandle;
 }
-
+void
+MyConversationManager::destroyParticipant(ParticipantHandle partHandle) {
+    ConversationManager::destroyParticipant(partHandle);
+   emit participantDestroyed(partHandle);
+}
+void
+MyConversationManager::destroyConversation(ConversationHandle convHandle) {
+   ConversationManager::destroyConversation(convHandle);
+   emit conversationDestroyed(convHandle);
+}
 void
 MyConversationManager::onConversationDestroyed(ConversationHandle convHandle)
 {
@@ -171,13 +183,19 @@ MyConversationManager::onRequestOutgoingParticipant(ParticipantHandle partHandle
       addParticipant(convHandle, partHandle);
    }*/
 }
- 
+
 void
 MyConversationManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
+   destroyParticipant(partHandle);
+   if(mRemoteParticipantHandles.size()==0){
+   destroyConversation(mConversationHandles.front());
+   conversationDestroyed(mConversationHandles.front());
+   }
+
 }
- 
+
 void
 MyConversationManager::onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
 {
@@ -185,7 +203,7 @@ MyConversationManager::onParticipantProceeding(ParticipantHandle partHandle, con
 }
 
 void
-MyConversationManager::onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
+MyConversationManager::onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle,
                                    ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
 {
    InfoLog(<< "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
@@ -199,7 +217,7 @@ MyConversationManager::onParticipantAlerting(ParticipantHandle partHandle, const
 {
    InfoLog(<< "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
 }
-    
+
 void
 MyConversationManager::onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
 {
@@ -266,4 +284,3 @@ MyConversationManager::displayInfo()
       InfoLog(<< output);
    }
 }
-

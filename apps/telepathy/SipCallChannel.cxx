@@ -34,11 +34,12 @@ using namespace tr;
 using namespace resip;
 using namespace recon;
 
-SipCallChannel::SipCallChannel(bool incoming, Connection* connection, QString peer, uint targetHandle, ParticipantHandle participantHandle)
+SipCallChannel::SipCallChannel(bool incoming, Connection* connection, QString peer, uint targetHandle, ConversationHandle conversationHandle, ParticipantHandle participantHandle)
    : mIncoming(incoming),
      mConnection(connection),
      mPeer(peer),
      mTargetHandle(targetHandle),
+     mConversationHandle(conversationHandle),
      mParticipantHandle(participantHandle)
 {
    mBaseChannel = Tp::BaseChannel::create(mConnection, TP_QT_IFACE_CHANNEL_TYPE_CALL, Tp::HandleTypeContact, targetHandle);
@@ -102,12 +103,19 @@ SipCallChannel::baseChannel()
 {
    return mBaseChannel;
 }
-
+bool
+SipCallChannel::getIncoming(){
+  return mIncoming;
+}
 void
 SipCallChannel::onHangupComplete(bool status)
 {
    if (!status) {
       InfoLog(<<"onHangupComplete, status = false");
+   }
+   else {
+   InfoLog(<<"onHangupComplete, status = true");
+   mConnection->getConversationManager().destroyConversation(mConversationHandle);
    }
 }
 
@@ -122,7 +130,23 @@ SipCallChannel::onAnswerComplete(bool status)
 void
 SipCallChannel::onHangup(uint reason, const QString &detailedReason, const QString &message, Tp::DBusError* error)
 {
+  bool incoming = SipCallChannel::getIncoming();
+  QVariantMap stateDetails;
+  Tp::CallStateReason csreason;
+  csreason.actor =  0;
+  csreason.reason = Tp::CallStateChangeReasonUserRequested;
+  csreason.message="";
+  if (incoming)
+  {
+    csreason.DBusReason = "org.freedesktop.Telepathy.Error.Rejected";
+    mCallChannel->setCallState(Tp::CallStateEnded, 0, csreason, stateDetails);
+  }
+  else{
+    csreason.DBusReason = "org.freedesktop.Telepathy.Error.Cancelled";
+    mCallChannel->setCallState(Tp::CallStateEnded, 0, csreason, stateDetails);
+  }
    mConnection->getConversationManager().destroyParticipant(mParticipantHandle);
+   emit hangupComplete(true);
 }
 
 void

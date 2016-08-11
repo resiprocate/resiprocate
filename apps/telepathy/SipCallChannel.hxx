@@ -39,9 +39,9 @@ class SipCallChannel : public QObject
 {
    Q_OBJECT
 public:
-   SipCallChannel(bool incoming, Connection* connection, QString peer, uint targetHandle, recon::ParticipantHandle participantHandle);
+   SipCallChannel(bool incoming, Connection* connection, QString peer, uint targetHandle, recon::ConversationHandle conversationHandle, recon::ParticipantHandle participantHandle);
    Tp::BaseChannelPtr baseChannel();
-
+   bool getIncoming();
    void onHangup(uint reason, const QString &detailedReason, const QString &message, Tp::DBusError* error);
    void onAccept(Tp::DBusError*);
    void onMuteStateChanged(const Tp::LocalMuteState &state, Tp::DBusError *error);
@@ -53,12 +53,16 @@ private Q_SLOTS:
    void onAnswerComplete(bool success);
    void onHangupComplete(bool success);
 
+Q_SIGNALS:
+   void hangupComplete(bool status);
+   void answerComplete(bool status);
 
 private:
    bool mIncoming;
    Connection* mConnection;
    QString mPeer;
    uint mTargetHandle;
+   recon::ConversationHandle mConversationHandle;
    recon::ParticipantHandle mParticipantHandle;
    QString mObjPath;
    Tp::BaseChannelPtr mBaseChannel;
@@ -72,5 +76,3 @@ private:
 }
 
 #endif
-
-

@@ -46,11 +46,13 @@ public:
    virtual ~MyConversationManager() {};
 
    virtual void startup();
-   
+
    virtual recon::ConversationHandle createConversation();
    virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = recon::ConversationManager::ForkSelectAutomatic);
    virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl);
    virtual recon::ParticipantHandle createLocalParticipant();
+   virtual void destroyParticipant(recon::ParticipantHandle partHandle);
+   virtual void destroyConversation(recon::ConversationHandle convHandle);
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
    virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle);
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
@@ -58,13 +60,17 @@ public:
    virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile);
    virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
    virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
-   virtual void onRelatedConversation(recon::ConversationHandle relatedConvHandle, recon::ParticipantHandle relatedPartHandle, 
+   virtual void onRelatedConversation(recon::ConversationHandle relatedConvHandle, recon::ParticipantHandle relatedPartHandle,
                                       recon::ConversationHandle origConvHandle, recon::ParticipantHandle origPartHandle);
    virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle);
    virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
    virtual void displayInfo();
+
+Q_SIGNALS:
+void conversationDestroyed(recon::ConversationHandle convHandle);
+void participantDestroyed(recon::ParticipantHandle partHandle);
 
 protected:
    std::list<recon::ConversationHandle> mConversationHandles;
@@ -79,4 +85,3 @@ protected:
 }
 
 #endif
-

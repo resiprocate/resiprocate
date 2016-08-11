@@ -5,7 +5,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -264,7 +264,7 @@ tr::Connection::requestHandles(uint handleType, const QStringList &identifiers, 
    }
 
    Q_FOREACH(const QString &identifier,  identifiers) {
-      ensureHandle(identifier);     
+      ensureHandle(identifier);
       result.append(mIdentifiers[identifier]);
    }
 
@@ -312,13 +312,13 @@ tr::Connection::createChannel(const QVariantMap &request, Tp::DBusError *error)
    baseChannel->setTargetID(targetID);
    baseChannel->setInitiatorHandle(initiatorHandle); */
 
-   ParticipantHandle participantHandle = -1;
+   ParticipantHandle participantHandle = -1 ;
+   recon::ConversationHandle cHandle = 1;   // FIXME - hardcoded default value, should create new Conversation
    bool incoming = false;
    StackLog(<<"createChannel - channelType = " << channelType.toUtf8().constData() << " and contact = " << targetID.toUtf8().constData());
    if(channelType == TP_QT_IFACE_CHANNEL_TYPE_CALL) {
-      recon::ConversationHandle cHandle = 1;   // FIXME - hardcoded default value, should create new Conversation
-      //recon::ConversationHandle cHandle = myConversationManager->createConversation();
-      //myConversationManager->createLocalParticipant();
+      cHandle = myConversationManager->createConversation();
+      myConversationManager->createLocalParticipant();
       if(!request.contains("participantHandle"))
       {
          // Outgoing call
@@ -338,7 +338,7 @@ tr::Connection::createChannel(const QVariantMap &request, Tp::DBusError *error)
 
    //return baseChannel;
 
-   SipCallChannel *channel = new SipCallChannel(incoming, this, targetID, targetHandle, participantHandle);
+   SipCallChannel *channel = new SipCallChannel(incoming, this, targetID, targetHandle, cHandle, participantHandle);
    channel->baseChannel()->setInitiatorHandle(initiatorHandle);
    return channel->baseChannel();
 }
@@ -364,5 +364,3 @@ tr::Connection::getContactAttributes(const Tp::UIntList &handles, const QStringL
     }
     return attributesMap;
 }
-
-
