@@ -44,17 +44,31 @@ class MyUserAgent;
 
 class Connection : public Tp::BaseConnection
 {
-   Q_OBJECT
+  Q_OBJECT
 public:
    Connection(const QDBusConnection &dbusConnection,
-            const QString &cmName, const QString &protocolName,
-            const QVariantMap &parameters);
+              const QString &cmName, const QString &protocolName,
+              const QVariantMap &parameters);
 
    MyConversationManager& getConversationManager() { return *myConversationManager.get(); };
 
+   Tp::ContactAttributesMap getContactListAttributes(const QStringList &interfaces, bool hold, Tp::DBusError *error);
+  
+   void requestSubscription(const Tp::UIntList &handles, const QString &message, Tp::DBusError *error);
+   void removeContacts(const Tp::UIntList &handles, Tp::DBusError *error);
+   Tp::AliasMap getAliases(const Tp::UIntList& handles, Tp::DBusError *error);
+   void setAliases(const Tp::AliasMap &aliases, Tp::DBusError *error);
+   void getContactsFromFile(Tp::DBusError *error);
+   void setContactsInFile();
+   void deleteContacts(const QStringList& contacts);
+   Tp::SimpleStatusSpecMap getSimpleStatusSpecMap();
+   Tp::SimpleContactPresences getPresences(const Tp::UIntList &handles);
+   Tp::SimplePresence getPresence(uint handle);
+
+    
 private:
    uint setPresence(const QString &status, const QString &message, Tp::DBusError *error);
-       QStringList inspectHandles(uint handleType, const Tp::UIntList &handles, Tp::DBusError *error);
+   QStringList inspectHandles(uint handleType, const Tp::UIntList &handles, Tp::DBusError *error);
    Tp::UIntList requestHandles(uint handleType, const QStringList &identifiers, Tp::DBusError *error);
    Tp::BaseChannelPtr createChannel(const QVariantMap &request, Tp::DBusError *error);
    Tp::ContactAttributesMap getContactAttributes(const Tp::UIntList &handles, const QStringList &ifaces, Tp::DBusError *error);
@@ -76,6 +90,7 @@ private:
    std::auto_ptr<MyConversationManager> myConversationManager;
 
    Tp::BaseConnectionContactsInterfacePtr mContactsInterface;
+   Tp::BaseConnectionAliasingInterfacePtr mAliasingInterface;
    Tp::BaseConnectionSimplePresenceInterfacePtr mSimplePresenceInterface;
    Tp::BaseConnectionContactListInterfacePtr mContactListInterface;
    Tp::BaseConnectionRequestsInterfacePtr mRequestsInterface;
@@ -83,8 +98,11 @@ private:
    long nextHandleId;
    QMap<uint, QString> mHandles;
    QMap<QString, uint> mIdentifiers;
-
+   Tp::AliasMap mAliases;
+   
+   Tp::SimpleStatusSpecMap statusMap;
    Tp::SimplePresence mSelfPresence;
+   Tp::SimpleContactPresences mPresences;
 };
 
 }
