@@ -62,6 +62,8 @@
 
 #include <sys/types.h>
 
+#include "resip/stack/UnknownParameterType.hxx"
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -1146,6 +1148,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
                      contact.uri().param(p_transport) = Tuple::toDataLower(transport->transport());
                   }
 
+		  // contact.uri().param(UnknownParameterType("registering_acc")) = Data("ws_sip5060_net");
+		  
                   // Add comp=sigcomp to contact URI
                   // Also, If no +sip.instance on contact HEADER,
                   // add sigcomp-id="<urn>" to contact URI.

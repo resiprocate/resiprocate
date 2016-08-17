@@ -133,6 +133,11 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       // Add ;ob parm to non-register requests - RFC5626 pg17
       mLastRequest->header(h_Contacts).front().uri().param(p_ob);
    }
+
+   if(method == SUBSCRIBE)
+   {
+      mLastRequest->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
+   }
       
    Via via;
    mLastRequest->header(h_Vias).push_front(via);
@@ -145,7 +150,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 
-   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << mLastRequest);
+   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << *mLastRequest);
 }
 
 
