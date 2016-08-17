@@ -44,6 +44,7 @@ librutil_la_SOURCES = \
 	ServerProcess.cxx \
 	Data.cxx \
 	DataStream.cxx \
+	Errdes.cxx \
 	DnsUtil.cxx \
 	FileSystem.cxx \
 	GeneralCongestionManager.cxx \
@@ -187,6 +188,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	SysLogBuf.hxx \
 	Inserter.hxx \
 	DataStream.hxx \
+	Errdes.hxx \
 	GenericIPAddress.hxx \
 	AbstractFifo.hxx \
 	AndroidLogger.hxx \
