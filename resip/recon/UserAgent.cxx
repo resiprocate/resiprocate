@@ -26,6 +26,9 @@
 #include <resip/dum/ClientPublication.hxx>
 #include <resip/dum/ServerPublication.hxx>
 #include <resip/dum/ClientRegistration.hxx>
+#include <resip/dum/ClientPagerMessage.hxx>
+#include <resip/dum/ServerPagerMessage.hxx>
+#include <resip/stack/PlainContents.hxx>
 #include <resip/dum/KeepAliveManager.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #if defined(USE_SSL)
@@ -94,6 +97,10 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mDum.addOutOfDialogHandler(REFER, mConversationManager);
    mDum.addClientSubscriptionHandler("refer", mConversationManager);
    mDum.addServerSubscriptionHandler("refer", mConversationManager);
+
+   InstantMessage* mInstantMessage = new recon::InstantMessage();
+   mDum.setServerPagerMessageHandler(mInstantMessage);
+   mDum.setClientPagerMessageHandler(mInstantMessage);
 
    //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    //mDum.addClientPublicationHandler(Symbols::Presence, this);
@@ -491,6 +498,24 @@ void
 UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
 {
    // Default implementation is to do nothing - application should override this
+}
+
+const char*
+UserAgent::sendMessage(const NameAddr& destination, const Data& msg, const Mime& mimeType)
+{
+   if(!mDum.getMasterProfile()->isMethodSupported(MESSAGE))
+   {
+      WarningLog (<< "MESSAGE method not detected in list of supported methods, adding it belatedly" );
+      mDum.getMasterProfile()->addSupportedMethod(MESSAGE);
+   }
+   
+   ClientPagerMessageHandle cpmh = mDum.makePagerMessage(destination);
+   auto_ptr<Contents> msgContent(new PlainContents(msg, mimeType));
+   cpmh.get()->page(msgContent);
+   SharedPtr<SipMessage> sipMessage = cpmh.get()->getMessageRequestSharedPtr();
+   mDum.send(sipMessage);
+
+   return sipMessage->header(h_CallId).value().c_str();
 }
 
 void 

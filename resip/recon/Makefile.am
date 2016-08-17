@@ -34,6 +34,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         DefaultDialogSet.cxx \
         DtmfEvent.cxx \
         FlowManagerSipXSocket.cxx \
+        InstantMessage.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
                 MediaInterface.cxx \
@@ -67,6 +68,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         RelatedConversationSet.hxx \
         UserAgentServerAuthManager.hxx \
         ConversationManagerCmds.hxx \
+        InstantMessage.hxx \
         UserAgentMasterProfile.hxx \
         RemoteParticipantDialogSet.hxx \
         SipXHelper.hxx \
