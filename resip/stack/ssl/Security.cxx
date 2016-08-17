@@ -27,6 +27,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/FileSystem.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Errdes.hxx"
 
 #include "rutil/ssl/SHA1Stream.hxx"
 
@@ -100,6 +101,10 @@ extern "C"
 static int 
 verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 {
+   NumericError search;
+   X509Error X509Obj;
+   X509Obj.CreateMappingErrorMsg();
+
    char cBuf1[257];
    char cBuf2[501];
    X509 *pErrCert;
@@ -115,7 +120,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
    {
-      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
+      ErrLog(<< "Error when verifying peer's chain of certificates: " << search.SearchErrorMsg(pInStore->error,X509ERROR) <<" "<< cBuf2 );
       DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
    }
  
@@ -230,6 +235,16 @@ Security::preload()
    // If no other source of trusted roots exists,
    // and if mPath is a file, check if it is a root certificate
    // or a collection of root certificates
+
+   NumericError search;
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif
+
    struct stat s;
    Data fileName(mPath);
    if(fileName.postfix("/"))
@@ -242,7 +257,7 @@ Security::preload()
       if(stat(fileName.c_str(), &s) < 0)
       {
          ErrLog(<<"Error calling stat() for " << fileName.c_str()
-                << ": " << strerror(errno));
+                << ": " << search.SearchErrorMsg(errno,OSERROR));
       }
       else
       {

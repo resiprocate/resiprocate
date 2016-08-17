@@ -1,5 +1,6 @@
 #include "rutil/ResipAssert.h"
 
+#include <rutil/Errdes.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
 #include <resip/stack/Symbols.hxx>
@@ -46,6 +47,15 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    nextConnection(0),
    mTuple(Data::Empty,port,ipVer,TCP,Data::Empty)
 {
+   NumericError search;
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif
+
    sane = true;
    
    for ( int i=0 ; i<MaxConnections; i++)
@@ -62,7 +72,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if ( mFd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << search.SearchErrorMsg(e,OSERROR) );
       sane = false;
       return;
    }
@@ -78,7 +88,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
 #endif
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << search.SearchErrorMsg(e,OSERROR) );
       sane = false;
       return;
    }
@@ -90,11 +100,11 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
       int e = getErrno();
       if ( e == EADDRINUSE )
       {
-         ErrLog (<< mTuple << " already in use ");
+         ErrLog (<< mTuple << " already in use : " << search.SearchErrorMsg(e,OSERROR) );
       }
       else
       {
-         ErrLog (<< "Could not bind to " << mTuple);
+         ErrLog (<< "Could not bind to " << mTuple << " Got error condition : " << search.SearchErrorMsg(e,OSERROR) );
       }
       sane = false;
       return;
@@ -116,7 +126,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << search.SearchErrorMsg(e,OSERROR) );
       sane = false;
       return;
    }
@@ -149,13 +159,22 @@ HttpBase::process(FdSet& fdset)
       Socket sock = accept( mFd, &peer, &peerLen);
       if ( sock == SOCKET_ERROR )
       {
+         NumericError search;
+#ifdef _WIN32
+            ErrnoError WinObj;
+            WinObj.CreateMappingErrorMsg();
+#elif __linux__
+            ErrnoError ErrornoObj;
+            ErrornoObj.CreateMappingErrorMsg();
+#endif
+
          int e = getErrno();
          switch (e)
          {
             case EWOULDBLOCK:
                return;
             default:
-               ErrLog(<< "Some error reading from socket: " << e);
+               ErrLog(<< "Some error reading from socket: " << search.SearchErrorMsg(e,OSERROR) );
          }
          return;
       }

@@ -18,6 +18,7 @@
 #include "rutil/ServerProcess.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
@@ -189,6 +190,17 @@ ServerProcess::isAlreadyRunning()
 void
 ServerProcess::daemonize()
 {
+   NumericError search;
+   OpenSSLError OpenSSLObj;
+   OpenSSLObj.CreateMappingErrorMsg();
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif 
+
 #ifdef WIN32
    // fork is not possible on Windows
    ErrLog(<<"Unable to fork/daemonize on Windows, please check the config");
@@ -198,7 +210,7 @@ ServerProcess::daemonize()
    if ((pid = fork()) < 0) 
    {
       // fork() failed
-      ErrLog(<<"fork() failed: "<<strerror(errno));
+      ErrLog(<<"fork() failed: "<< search.SearchErrorMsg(errno,OSERROR) );
       throw std::runtime_error(strerror(errno));
    }
    else if (pid != 0)
@@ -208,7 +220,7 @@ ServerProcess::daemonize()
    }
    if(chdir("/") < 0)
    {
-      ErrLog(<<"chdir() failed: "<<strerror(errno));
+      ErrLog(<<"chdir() failed: "<< search.SearchErrorMsg(errno,OSERROR) );
       throw std::runtime_error(strerror(errno));
    }
    // Nothing should be writing to stdout/stderr after this

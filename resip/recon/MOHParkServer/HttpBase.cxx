@@ -19,7 +19,7 @@
 #include "HttpConnection.hxx"
 #include "WebAdmin.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
+#include "rutil/Errdes.hxx"
 
 using namespace resip;
 using namespace mohparkserver;
@@ -51,6 +51,15 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    nextConnection(0),
    mTuple(Data::Empty,port,ipVer,TCP,Data::Empty)
 {
+   NumericError search;
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif 
+
    sane = true;
    
    for ( int i=0 ; i<MaxConnections; i++)
@@ -67,7 +76,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if ( mFd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << search.SearchErrorMsg(e,OSERROR) );
       sane = false;
       return;
    }
@@ -83,7 +92,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
 #endif
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << search.SearchErrorMsg(e,OSERROR) );
       sane = false;
       return;
    }
@@ -121,7 +130,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << search.SearchErrorMsg(e,OSERROR) );
       sane = false;
       return;
    }
@@ -146,6 +155,15 @@ HttpBase::buildFdSet(FdSet& fdset)
 void 
 HttpBase::process(FdSet& fdset)
 {
+   NumericError search;
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif 
+   
    if (fdset.readyToRead(mFd))
    {
       Tuple tuple(mTuple);
@@ -161,7 +179,7 @@ HttpBase::process(FdSet& fdset)
                // !jf! this can not be ready in some cases 
                return;
             default:
-               ErrLog(<< "Some error reading from socket: " << e);
+               ErrLog(<< "Some error reading from socket: " << search.SearchErrorMsg(e,OSERROR) );
                // .bwc. This is almost certainly a bad assert that a nefarious
                // endpoint could hit.
                // assert(0); // Transport::error(e);

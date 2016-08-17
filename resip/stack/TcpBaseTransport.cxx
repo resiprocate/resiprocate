@@ -9,6 +9,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/NetNs.hxx"
+#include "rutil/Errdes.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -67,6 +68,15 @@ TcpBaseTransport::~TcpBaseTransport()
 void
 TcpBaseTransport::init()
 {
+   NumericError search;
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif 
+
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_NOBIND)!=0 )
    {
       return;
@@ -82,7 +92,7 @@ TcpBaseTransport::init()
 #endif
    {
        int e = getErrno();
-       InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+       InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << search.SearchErrorMsg(e,OSERROR) );
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
@@ -98,7 +108,7 @@ TcpBaseTransport::init()
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << search.SearchErrorMsg(e,OSERROR) );
       error(e);
       // !cj! deal with errors
       throw Transport::Exception("Address already in use", __FILE__,__LINE__);
@@ -211,6 +221,15 @@ Connection*
 TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       TransportFailure::FailureReason &failReason, int &failSubCode)
 {
+   NumericError search;
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif
+
    // attempt to open
 #ifdef USE_NETNS
       NetNs::setNs(netNs());
@@ -221,7 +240,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
    if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
    {
       int err = getErrno();
-      InfoLog (<< "Failed to create a socket " << strerror(err));
+      InfoLog (<< "Failed to create a socket " << search.SearchErrorMsg(err,OSERROR) );
       error(err);
       if(mConnectionManager.gc(ConnectionManager::MinimumGcAge, 1) == 0)
       {
@@ -235,7 +254,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
       if ( sock == INVALID_SOCKET )
       {
          err = getErrno();
-         WarningLog( << "Error in finding free filedescriptor to use. " << strerror(err));
+         WarningLog( << "Error in finding free filedescriptor to use. " << search.SearchErrorMsg(err,OSERROR) );
          error(err);
          failReason = TransportFailure::TransportNoSocket;
          failSubCode = err;
@@ -255,7 +274,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
 #endif
    if(::bind(sock, sa, mTuple.length()) != 0)
    {
-      WarningLog( << "Error in binding to source interface address. " << strerror(errno));
+      WarningLog( << "Error in binding to source interface address. " << search.SearchErrorMsg(errno,OSERROR) );
       failReason = TransportFailure::Failure;
       failSubCode = errno;
       return NULL;
@@ -288,7 +307,7 @@ TcpBaseTransport::makeOutgoingConnection(const Tuple &dest,
          default:
          {
             // !jf! this has failed
-            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << strerror(err));
+            InfoLog( << "Error on TCP connect to " <<  dest << ", err=" << err << ": " << search.SearchErrorMsg(err,OSERROR) );
             error(err);
             //fdset.clear(sock);
             closeSocket(sock);

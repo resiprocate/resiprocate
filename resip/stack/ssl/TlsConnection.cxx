@@ -10,6 +10,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Errdes.hxx"
 
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
@@ -141,6 +142,11 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
 TlsConnection::~TlsConnection()
 {
 #if defined(USE_SSL)
+
+   NumericError search;
+   OpenSSLError OpenSSLObj;
+   OpenSSLObj.CreateMappingErrorMsg();
+
    ERR_clear_error();
    int ret = SSL_shutdown(mSsl);
    if(ret < 0)
@@ -154,11 +160,11 @@ TlsConnection::~TlsConnection()
             {
                // WANT_READ or WANT_WRITE can arise for bi-directional shutdown on
                // non-blocking sockets, safe to ignore
-               StackLog( << "Got TLS shutdown error condition of " << err  );
+               StackLog( << "Got TLS shutdown error condition of : " << search.SearchErrorMsg(err,SSLERROR) );
             }
             break;
          default:
-            ErrLog(<<"Unexpected error in SSL_shutdown");
+            ErrLog(<<"Unexpected error in SSL_shutdown : " << search.SearchErrorMsg(err,SSLERROR) );
             handleOpenSSLErrorQueue(ret, err, "SSL_shutdown");
       }
    }
@@ -183,6 +189,10 @@ TlsConnection::fromState(TlsConnection::TlsState s)
 TlsConnection::TlsState
 TlsConnection::checkState()
 {
+   NumericError search;
+   OpenSSLError OpenSSLObj;
+   OpenSSLObj.CreateMappingErrorMsg();
+
 #if defined(USE_SSL)
    //DebugLog(<<"state is " << fromTlsState(mTlsState));
 
@@ -229,36 +239,44 @@ TlsConnection::checkState()
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
-            StackLog( << "TLS handshake want read" );
+            StackLog( << "TLS handshake want read : " << search.SearchErrorMsg(err,SSLERROR) );
             mHandShakeWantsRead = true;
             return mTlsState;
 
          case SSL_ERROR_WANT_WRITE:
-            StackLog( << "TLS handshake want write" );
+            StackLog( << "TLS handshake want write : " << search.SearchErrorMsg(err,SSLERROR) );
             ensureWritable();
             return mTlsState;
 
          case SSL_ERROR_ZERO_RETURN:
-            StackLog( << "TLS connection closed cleanly");
+            StackLog( << "TLS connection closed cleanly : " << search.SearchErrorMsg(err,SSLERROR) );
             return mTlsState;
 
          case SSL_ERROR_WANT_CONNECT:
-            StackLog( << "BIO not connected, try later");
+            StackLog( << "BIO not connected, try later : " << search.SearchErrorMsg(err,SSLERROR) );
             return mTlsState;
 
 #if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
          case SSL_ERROR_WANT_ACCEPT:
-            StackLog( << "TLS connection want accept" );
+            StackLog( << "TLS connection want accept : " << search.SearchErrorMsg(err,SSLERROR) );
             return mTlsState;
 #endif
 
          case SSL_ERROR_WANT_X509_LOOKUP:
-            DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP");
+            DebugLog( << "Try later / SSL_ERROR_WANT_X509_LOOKUP : " << search.SearchErrorMsg(err,SSLERROR) );
             return mTlsState;
 
          default:
             if(err == SSL_ERROR_SYSCALL)
             {
+#ifdef _WIN32
+      				ErrnoError WinObj;
+      				WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      				ErrnoError ErrornoObj;
+      				ErrornoObj.CreateMappingErrorMsg();
+#endif
+   				   
                int e = getErrno();
                switch(e)
                {
@@ -267,10 +285,10 @@ TlsConnection::checkState()
 #if EAGAIN != EWOULDBLOCK
                   case EWOULDBLOCK:  // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
 #endif
-                     StackLog( << "try later");
+                     StackLog( << "try later : " << search.SearchErrorMsg(e,OSERROR) );
                      return mTlsState;
                }
-               ErrLog( << "socket error " << e);
+               ErrLog( << "socket error : " << search.SearchErrorMsg(e,OSERROR) );
                Transport::error(e);
                if(e == 0)
                {
@@ -284,6 +302,9 @@ TlsConnection::checkState()
             }
             else if (err == SSL_ERROR_SSL)
             {
+               X509Error X509Obj;
+               X509Obj.CreateMappingErrorMsg();
+
                mFailureReason = TransportFailure::CertValidationFailure;
                WarningLog(<<"SSL cipher or certificate failure SSL_ERROR_SSL");
                if(SSL_get_peer_certificate(mSsl))
@@ -293,10 +314,10 @@ TlsConnection::checkState()
                   switch(verifyErrorCode)
                   {
                      case X509_V_OK:
-                        DebugLog(<<"peer supplied a ceritifcate, but it has not been checked or it was checked successfully");
+                        DebugLog(<<"peer supplied a ceritifcate, but it has not been checked or it was checked successfully : " << search.SearchErrorMsg(verifyErrorCode,X509ERROR) );
                         break;
                      default:
-                        ErrLog(<<"peer certificate validation failure: " << X509_verify_cert_error_string(verifyErrorCode));
+                        ErrLog(<<"peer certificate validation failure : " << search.SearchErrorMsg(verifyErrorCode,X509ERROR) );
                         DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
                         break;
                   }
@@ -321,9 +342,9 @@ TlsConnection::checkState()
             }
             else
             {
-               DebugLog(<<"unrecognised/unhandled SSL_get_error result: " << err);
+               DebugLog(<<"unrecognised/unhandled SSL_get_error result : " << search.SearchErrorMsg(err,SSLERROR) );
             }
-            ErrLog( << "TLS handshake failed ");
+            ErrLog( << "TLS handshake failed : " << search.SearchErrorMsg(err,SSLERROR) );
             handleOpenSSLErrorQueue(ok, err, "SSL_do_handshake");
             mBio = NULL;
             mTlsState = Broken;
@@ -377,6 +398,10 @@ TlsConnection::checkState()
 int 
 TlsConnection::read(char* buf, int count )
 {
+   NumericError search;
+   OpenSSLError OpenSSLObj;
+   OpenSSLObj.CreateMappingErrorMsg();
+
 #if defined(USE_SSL)
    resip_assert( mSsl ); 
    resip_assert( buf );
@@ -452,13 +477,13 @@ TlsConnection::read(char* buf, int count )
          case SSL_ERROR_WANT_WRITE:
          case SSL_ERROR_NONE:
          {
-            StackLog( << "Got TLS read got condition of " << err  );
+            StackLog( << "Got TLS read got condition of : " << search.SearchErrorMsg(err,SSLERROR) );
             return 0;
          }
          break;
          case SSL_ERROR_ZERO_RETURN:
          {
-            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)");
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer) : " << search.SearchErrorMsg(err,SSLERROR) );
             return -1;
          }
          break;
@@ -512,6 +537,11 @@ int
 TlsConnection::write( const char* buf, int count )
 {
 #if defined(USE_SSL)
+
+   NumericError search;
+   OpenSSLError OpenSSLObj;
+   OpenSSLObj.CreateMappingErrorMsg();
+   
    resip_assert( mSsl );
    resip_assert( buf );
    int ret;
@@ -545,13 +575,13 @@ TlsConnection::write( const char* buf, int count )
          case SSL_ERROR_WANT_WRITE:
          case SSL_ERROR_NONE:
          {
-            StackLog( << "Got TLS write got condition of " << err  );
+            StackLog( << "Got TLS write got condition of : " << search.SearchErrorMsg(err,SSLERROR) );
             return 0;
          }
          break;
          case SSL_ERROR_ZERO_RETURN:
          {
-            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer)");
+            DebugLog( << "Got SSL_ERROR_ZERO_RETURN (TLS shutdown by peer) : " << search.SearchErrorMsg(err,SSLERROR) );
             return -1;
          }
          break;

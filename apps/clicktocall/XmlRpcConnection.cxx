@@ -1,5 +1,6 @@
 #include "rutil/ResipAssert.h"
 
+#include <rutil/Errdes.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
 #include <resip/stack/Symbols.hxx>
@@ -105,9 +106,18 @@ XmlRpcConnection::processSomeReads()
 
    if (bytesRead == INVALID_SOCKET)
    {
+      NumericError search;
+#ifdef _WIN32
+         ErrnoError WinObj;
+         WinObj.CreateMappingErrorMsg();
+#elif __linux__
+         ErrnoError ErrornoObj;
+         ErrornoObj.CreateMappingErrorMsg();
+#endif
+
       int e = getErrno();
       XmlRpcServerBase::logSocketError(e);
-      InfoLog (<< "XmlRpcConnection::processSomeReads: Failed read on " << (int)mSock);
+      InfoLog (<< "XmlRpcConnection::processSomeReads: Failed read on " << (int)mSock << " " << search.SearchErrorMsg(e,OSERROR) );
       return false;
    }
    else if(bytesRead == 0)
@@ -189,9 +199,18 @@ XmlRpcConnection::processSomeWrites()
 
    if (bytesWritten == INVALID_SOCKET)
    {
+      NumericError search;
+#ifdef _WIN32
+         ErrnoError WinObj;
+         WinObj.CreateMappingErrorMsg();
+#elif __linux__
+         ErrnoError ErrornoObj;
+         ErrornoObj.CreateMappingErrorMsg();
+#endif
+
       int e = getErrno();
       XmlRpcServerBase::logSocketError(e);
-      InfoLog (<< "XmlRpcConnection::processSomeWrites - failed write on " << mSock << " " << strerror(e));
+      InfoLog (<< "XmlRpcConnection::processSomeWrites - failed write on " << mSock << " " << search.SearchErrorMsg(e,OSERROR) );
 
       return false;
    }

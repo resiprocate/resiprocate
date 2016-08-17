@@ -14,6 +14,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Errdes.hxx"
 
 using namespace resip;
 using namespace std;
@@ -126,6 +127,15 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
 void
 InternalTransport::bind()
 {
+   NumericError search;
+#ifdef _WIN32
+      ErrnoError WinObj;
+      WinObj.CreateMappingErrorMsg();
+#elif __linux__
+      ErrnoError ErrornoObj;
+      ErrornoObj.CreateMappingErrorMsg();
+#endif   
+
 #ifdef USE_NETNS
    DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple) 
              << " in netns=\"" <<mTuple.getNetNs() << "\"");
@@ -139,13 +149,13 @@ InternalTransport::bind()
       if ( e == EADDRINUSE )
       {
          error(e);
-         ErrLog (<< mTuple << " already in use ");
+         ErrLog (<< mTuple << " already in use : " << search.SearchErrorMsg(e,OSERROR) );
          throw Transport::Exception("port already in use", __FILE__,__LINE__);
       }
       else
       {
          error(e);
-         ErrLog (<< "Could not bind to " << mTuple);
+         ErrLog (<< "Could not bind to " << mTuple << " " << search.SearchErrorMsg(e,OSERROR) );
          throw Transport::Exception("Could not use port", __FILE__,__LINE__);
       }
    }
@@ -157,7 +167,7 @@ InternalTransport::bind()
       if (::getsockname(mFd, &mTuple.getMutableSockaddr(), &len) == SOCKET_ERROR)
       {
          int e = getErrno();
-         ErrLog (<<"getsockname failed, error=" << e);
+         ErrLog (<<"getsockname failed, error=" << search.SearchErrorMsg(e,OSERROR) );
          throw Transport::Exception("Could not query port", __FILE__,__LINE__);
       }
    }
