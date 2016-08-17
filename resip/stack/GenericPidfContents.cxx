@@ -356,6 +356,13 @@ GenericPidfContents::merge(const GenericPidfContents& other)
    return mergeNoCheckParse(other);
 }
 
+void
+GenericPidfContents::setRootNodes(const NodeList& nodeList)
+{
+   mRootNodes.clear();
+   mRootNodes = nodeList;
+}
+
 const Data&
 GenericPidfContents::getSubNodeValue(Node* node, const Data& tag)
 {
