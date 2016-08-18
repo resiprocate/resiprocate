@@ -78,7 +78,7 @@ public:
                                 connected.  To enable this behavior call:
                                 Connection::setEnablePostConnectSocketFuncCall();
    */
-   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0);
+   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0, resip::SharedPtr<InstantMessage> instantMessage=resip::SharedPtr<InstantMessage>());
    virtual ~UserAgent();
 
    /**
@@ -373,6 +373,7 @@ private:
 
    ConversationManager* mConversationManager;
    resip::SharedPtr<UserAgentMasterProfile> mProfile;
+   resip::SharedPtr<InstantMessage> mInstantMessage;
    resip::Security* mSecurity;
    resip::SelectInterruptor mSelectInterruptor;
    resip::SipStack mStack;
@@ -380,7 +381,6 @@ private:
    resip::InterruptableStackThread mStackThread;
    volatile bool mDumShutdown;
 
-   InstantMessage* mInstantMessage;
 };
  
 }

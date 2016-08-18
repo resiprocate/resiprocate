@@ -43,12 +43,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc) : 
+UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc, SharedPtr<InstantMessage> instantMessage) : 
    mCurrentSubscriptionHandle(1),
    mCurrentConversationProfileHandle(1),
    mDefaultOutgoingConversationProfileHandle(0),
    mConversationManager(conversationManager),
    mProfile(profile),
+   mInstantMessage(instantMessage),
 #if defined(USE_SSL)
    mSecurity(new Security(profile->certPath())),
 #else
@@ -98,9 +99,13 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mDum.addClientSubscriptionHandler("refer", mConversationManager);
    mDum.addServerSubscriptionHandler("refer", mConversationManager);
 
-   InstantMessage* mInstantMessage = new recon::InstantMessage();
-   mDum.setServerPagerMessageHandler(mInstantMessage);
-   mDum.setClientPagerMessageHandler(mInstantMessage);
+   // If application didn't create an IM object, we use a default one
+   if(!mInstantMessage)
+   {
+      mInstantMessage = SharedPtr<InstantMessage>(new InstantMessage());
+   }
+   mDum.setServerPagerMessageHandler(mInstantMessage.get());
+   mDum.setClientPagerMessageHandler(mInstantMessage.get());
 
    //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    //mDum.addClientPublicationHandler(Symbols::Presence, this);
