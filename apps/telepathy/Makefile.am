@@ -38,9 +38,11 @@ telepathy_resiprocate_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 telepathy_resiprocate_SOURCES = Common.cxx \
 	Connection.cxx moc_Connection.cxx \
+	TextChannel.cxx moc_TextChannel.cxx \
 	MyConversationManager.cxx moc_MyConversationManager.cxx \
 	MyMessageDecorator.cxx \
 	MyUserAgent.cxx moc_MyUserAgent.cxx \
+	MyInstantMessage.cxx moc_MyInstantMessage.cxx \
 	Protocol.cxx moc_Protocol.cxx \
 	SipCallChannel.cxx moc_SipCallChannel.cxx \
 	TelepathyConversationProfile.cxx \
@@ -51,9 +53,11 @@ telepathy_resiprocate_SOURCES = Common.cxx \
 telepathy_resiprocateincludedir = $(includedir)/telepathy-resiprocate
 nobase_telepathy_resiprocateinclude_HEADERS = Common.hxx \
 	Connection.hxx \
+	TextChannel.hxx \
 	MyConversationManager.hxx \
 	MyMessageDecorator.hxx \
 	MyUserAgent.hxx \
+	MyInstantMessage.hxx \
 	SipCallChannel.hxx \
 	TelepathyConversationProfile.hxx \
 	TelepathyMasterProfile.hxx \

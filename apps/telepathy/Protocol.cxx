@@ -30,7 +30,7 @@
 
 using namespace tr;
 
-Protocol::Protocol(const QDBusConnection &dbusConnection, const QString &name)
+tr::Protocol::Protocol(const QDBusConnection &dbusConnection, const QString &name)
    : Tp::BaseProtocol(dbusConnection, name)
 {
    setRequestableChannelClasses(Tp::RequestableChannelClassSpecList() << Tp::RequestableChannelClassSpec::textChat() << Tp::RequestableChannelClassSpec::audioCall());
@@ -52,25 +52,25 @@ Protocol::Protocol(const QDBusConnection &dbusConnection, const QString &name)
    plugInterface(Tp::AbstractProtocolInterfacePtr::dynamicCast(mAddressingInterface));
 }
 
-Tp::BaseConnectionPtr Protocol::createConnection(const QVariantMap &parameters, Tp::DBusError *error)
+Tp::BaseConnectionPtr tr::Protocol::createConnection(const QVariantMap &parameters, Tp::DBusError *error)
 {
    Tp::BaseConnectionPtr newConnection = Tp::BaseConnection::create<tr::Connection>(QLatin1String("resiprocate"), name(), parameters);
 
    return newConnection;
 }
 
-QString Protocol::identifyAccount(const QVariantMap &parameters, Tp::DBusError *error)
+QString tr::Protocol::identifyAccount(const QVariantMap &parameters, Tp::DBusError *error)
 {
    return Tp::escapeAsIdentifier(parameters[QLatin1String("account")].toString());
 }
 
-QString Protocol::normalizeContact(const QString &contactId, Tp::DBusError *error)
+QString tr::Protocol::normalizeContact(const QString &contactId, Tp::DBusError *error)
 {
    // FIXME
    return contactId;
 }
 
-QString Protocol::normalizeVCardAddress(const QString &vcardField, const QString vcardAddress,
+QString tr::Protocol::normalizeVCardAddress(const QString &vcardField, const QString vcardAddress,
         Tp::DBusError *error)
 {
    // FIXME
@@ -78,7 +78,7 @@ QString Protocol::normalizeVCardAddress(const QString &vcardField, const QString
    return QString();
 }
 
-QString Protocol::normalizeContactUri(const QString &uri, Tp::DBusError *error)
+QString tr::Protocol::normalizeContactUri(const QString &uri, Tp::DBusError *error)
 {
    // FIXME
    error->set(QLatin1String("NormalizeContactUri.Error.Test"), QLatin1String(""));
