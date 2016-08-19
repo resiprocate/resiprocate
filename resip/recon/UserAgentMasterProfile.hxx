@@ -52,7 +52,7 @@ public:
                       resip::IpVersion version=resip::V4,
                       const resip::Data& ipInterface = resip::Data::Empty, 
                       const resip::Data& sipDomainname = resip::Data::Empty, // TLS only
-                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::TLSv1 );
+                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::SSLv23 );
 
    /**
      Gets a vector of the transports previously added.
