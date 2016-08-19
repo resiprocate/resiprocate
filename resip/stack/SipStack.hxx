@@ -330,7 +330,7 @@ class SipStack : public FdSetIOObserver
                               const Data& ipInterface = Data::Empty,
                               const Data& sipDomainname = Data::Empty, // only used for TLS based stuff
                               const Data& privateKeyPassPhrase = Data::Empty,
-                              SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+                              SecurityTypes::SSLType sslType = SecurityTypes::SSLv23,
                               unsigned transportFlags = 0,
                               const Data& certificateFilename = "", const Data& privateKeyFilename = "",
                               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
