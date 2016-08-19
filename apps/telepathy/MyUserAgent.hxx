@@ -31,6 +31,7 @@
 namespace tr {
 
 class Connection;
+class MyInstantMessage;
 
 class MyUserAgent : public QObject, public recon::UserAgent, public resip::ThreadIf
 {
