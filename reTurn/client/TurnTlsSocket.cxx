@@ -22,7 +22,7 @@ TurnTlsSocket::TurnTlsSocket(bool validateServerCertificateHostname,
                              const asio::ip::address& address, 
                              unsigned short port) : 
    TurnTcpSocket(address,port),
-   mSslContext(mIOService, asio::ssl::context::tlsv1),  // TLSv1.0
+   mSslContext(mIOService, asio::ssl::context::sslv23),  // SSLv23 (actually chooses TLS version dynamically)
    mSocket(mIOService, mSslContext),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
 {
