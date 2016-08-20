@@ -32,7 +32,7 @@ using namespace std;
 typedef struct 
 {
    unsigned short versionExtPayloadTypeAndMarker;
-   unsigned short sequenceNumber;   
+   unsigned short sequenceNumber;	
    unsigned int timestamp;
    unsigned int ssrc;
 } RtpHeader;

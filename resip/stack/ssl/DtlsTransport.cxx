@@ -170,6 +170,7 @@ DtlsTransport::_read( FdSet& fdset )
    {
       int err = getErrno() ;
       DebugLog ( << ErrnoError::SearchErrorMsg(err));
+
       if ( err != EAGAIN && err != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
       {
          error( err ) ;
@@ -780,4 +781,3 @@ DtlsTransport::_printSock( const struct sockaddr_in *sock )
  * <http://www.vovida.org/>.
  *
  */
- 

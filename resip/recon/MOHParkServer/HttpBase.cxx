@@ -270,4 +270,3 @@ bool HttpBase::isSane()
  * <http://www.vovida.org/>.
  *
  */
- 

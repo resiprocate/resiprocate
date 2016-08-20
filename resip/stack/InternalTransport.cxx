@@ -288,4 +288,3 @@ InternalTransport::poke()
  *
  * vi: set shiftwidth=3 expandtab:
  */
- 

@@ -145,7 +145,7 @@ Resolver::lookupARecords()
 #else
 
 #ifdef WIN32
-  result = gethostbyname(mHost.c_str());
+	result = gethostbyname(mHost.c_str());
     int ret = (result==0);
 #elif defined(__NetBSD__)
     //!dcm! -- not threadsafe
@@ -344,4 +344,3 @@ Resolver::getHostName()
   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-  

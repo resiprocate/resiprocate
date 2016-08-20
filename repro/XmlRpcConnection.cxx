@@ -28,7 +28,7 @@ XmlRpcConnection::XmlRpcConnection(XmlRpcServerBase& server, resip::Socket sock)
    mNextRequestId(1),
    mSock(sock)
 {
-   resip_assert(mSock > 0);
+	resip_assert(mSock > 0);
 }
 
 

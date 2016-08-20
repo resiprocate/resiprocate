@@ -270,4 +270,3 @@ ServerProcess::setPidFile(const Data& pidFile)
 /*
  * vi: set shiftwidth=3 expandtab:
  */
- 

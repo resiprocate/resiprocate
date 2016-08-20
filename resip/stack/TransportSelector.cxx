@@ -1681,4 +1681,3 @@ resip::operator<<(EncodeStream& ostrm, const TransportSelector::TlsTransportKey&
  *
  * vi: set shiftwidth=3 expandtab:
  */
- 

@@ -139,7 +139,7 @@ DnsUtil::getLocalHostName()
       {
          int err = getErrno();
          DebugLog ( << ErrnoError::SearchErrorMsg(err) );
-
+         
          switch (err)
          {
 // !RjS! This makes no sense for non-windows. The
@@ -468,7 +468,7 @@ DnsUtil::getInterfaces(const Data& matching)
    struct ifconf ifc;
 
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
-   resip_assert( s != INVALID_SOCKET );   // can run out of file descs
+   resip_assert( s != INVALID_SOCKET );	// can run out of file descs
    const int len = 100 * sizeof(struct ifreq);
    int maxRet = 40;
 
@@ -680,14 +680,14 @@ const char * inet_ntop6(const u_char *src, char *dst, size_t size);
 //adapted from freebsd inet_ntop.c(1.12) and inet_pton.c(1.5) for windows(non-compliant snprinf workaround)
 /* const char *
  * inet_ntop4(src, dst, size)
- * format an IPv4 address, more or less like inet_ntoa()
+ *	format an IPv4 address, more or less like inet_ntoa()
  * return:
- * `dst' (as a const)
+ *	`dst' (as a const)
  * notes:
- * (1) uses no statics
- * (2) takes a u_char* not an in_addr as input
+ *	(1) uses no statics
+ *	(2) takes a u_char* not an in_addr as input
  * author:
- * Paul Vixie, 1996.
+ *	Paul Vixie, 1996.
  */
 const char *
 DnsUtil::inet_ntop(int af, const void * __restrict src, char * __restrict dst,
@@ -730,9 +730,9 @@ inet_ntop4(const u_char *src, char *dst, size_t size)
 #ifdef USE_IPV6
 /* const char *
  * inet_ntop6(src, dst, size)
- * convert IPv6 binary address into presentation (printable) format
+ *	convert IPv6 binary address into presentation (printable) format
  * author:
- * Paul Vixie, 1996.
+ *	Paul Vixie, 1996.
  */
 
 const char *
@@ -752,8 +752,8 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
 
    /*
     * Preprocess:
-    * Copy the input (bytewise) array into a wordwise array.
-    * Find the longest run of 0x00's in src[] for :: shorthanding.
+    *	Copy the input (bytewise) array into a wordwise array.
+    *	Find the longest run of 0x00's in src[] for :: shorthanding.
     */
    memset(words, '\0', sizeof words);
    for (i = 0; i < NS_IN6ADDRSZ; i++)
@@ -823,21 +823,21 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
    return (dst);
 }
 
-static int  inet_pton6(const char *src, u_char *dst);
+static int	inet_pton6(const char *src, u_char *dst);
 #endif //USE_IPV6
 
-static int  inet_pton4(const char *src, u_char *dst);
+static int	inet_pton4(const char *src, u_char *dst);
 
 /* int
  * inet_pton(af, src, dst)
- * convert from presentation format (which usually means ASCII printable)
- * to network format (which is usually some kind of binary format).
+ *	convert from presentation format (which usually means ASCII printable)
+ *	to network format (which is usually some kind of binary format).
  * return:
- * 1 if the address was valid for the specified address family
- * 0 if the address wasn't valid (`dst' is untouched in this case)
- * -1 if some other error occurred (`dst' is untouched in this case, too)
+ *	1 if the address was valid for the specified address family
+ *	0 if the address wasn't valid (`dst' is untouched in this case)
+ *	-1 if some other error occurred (`dst' is untouched in this case, too)
  * author:
- * Paul Vixie, 1996.
+ *	Paul Vixie, 1996.
  */
 int
 DnsUtil::inet_pton(int af, const char* src, void* dst)
@@ -858,13 +858,13 @@ DnsUtil::inet_pton(int af, const char* src, void* dst)
 
 /* int
  * inet_pton4(src, dst)
- * like inet_aton() but without all the hexadecimal and shorthand.
+ *	like inet_aton() but without all the hexadecimal and shorthand.
  * return:
- * 1 if `src' is a valid dotted quad, else 0.
+ *	1 if `src' is a valid dotted quad, else 0.
  * notice:
- * does not touch `dst' unless it's returning 1.
+ *	does not touch `dst' unless it's returning 1.
  * author:
- * Paul Vixie, 1996.
+ *	Paul Vixie, 1996.
  */
 static const char digits[] = "0123456789";
 static int
@@ -909,16 +909,16 @@ inet_pton4(const char *src, u_char *dst)
 
 /* int
  * inet_pton6(src, dst)
- * convert presentation level address to network order binary form.
+ *	convert presentation level address to network order binary form.
  * return:
- * 1 if `src' is a valid [RFC1884 2.2] address, else 0.
+ *	1 if `src' is a valid [RFC1884 2.2] address, else 0.
  * notice:
- * (1) does not touch `dst' unless it's returning 1.
- * (2) :: in a full address is silently ignored.
+ *	(1) does not touch `dst' unless it's returning 1.
+ *	(2) :: in a full address is silently ignored.
  * credit:
- * inspired by Mark Andrews.
+ *	inspired by Mark Andrews.
  * author:
- * Paul Vixie, 1996.
+ *	Paul Vixie, 1996.
  */
 static const char xdigits_l[] = "0123456789abcdef",
                   xdigits_u[] = "0123456789ABCDEF";
@@ -973,7 +973,7 @@ inet_pton6(const char *src, u_char *dst)
           inet_pton4(curtok, tp) > 0) {
          tp += NS_INADDRSZ;
          saw_xdigit = 0;
-         break;   /* '\0' was seen by inet_pton4(). */
+         break;	/* '\0' was seen by inet_pton4(). */
       }
       return (0);
    }

@@ -431,7 +431,7 @@ TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
 void
 TcpBaseTransport::setRcvBufLen(int buflen)
 {
-   resip_assert(0);	// not implemented yet
+   resip_assert(0);  // not implemented yet
    // need to store away the length and use when setting up new connections
 }
 
@@ -487,4 +487,3 @@ TcpBaseTransport::setRcvBufLen(int buflen)
  *
  * vi: set shiftwidth=3 expandtab:
  */
- 

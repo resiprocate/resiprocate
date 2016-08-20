@@ -313,7 +313,7 @@ XmlRpcServerBase::logSocketError(int e)
          InfoLog (<<"Connection reset ");
          break;
 
-      case WSAEWOULDBLOCK:
+	   case WSAEWOULDBLOCK:
          DebugLog (<<"Would Block ");
          break;
 

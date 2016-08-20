@@ -420,4 +420,3 @@ HttpConnection::processSomeWrites()
  * <http://www.vovida.org/>.
  *
  */
- 
