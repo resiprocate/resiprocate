@@ -4,7 +4,6 @@
 
 #include "rutil/ResipAssert.h"
 
-#include <rutil/Errdes.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Socket.hxx>
 #include <resip/stack/Symbols.hxx>
@@ -13,6 +12,7 @@
 #include <resip/stack/Tuple.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/ParseBuffer.hxx>
+#include <rutil/Errdes.hxx>
 #include <resip/stack/Transport.hxx>
 
 #include "repro/XmlRpcServerBase.hxx"
@@ -30,15 +30,6 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    mTuple(ipAddr,port,ipVer,TCP,Data::Empty),
    mSane(true)
 {   
-   NumericError search;
-#ifdef _WIN32
-      ErrnoError WinObj;
-      WinObj.CreateMappingErrorMsg();
-#elif __linux__
-      ErrnoError ErrornoObj;
-      ErrornoObj.CreateMappingErrorMsg();
-#endif
-
 #ifdef USE_IPV6
    mFd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_STREAM, 0);
 #else
@@ -49,7 +40,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    {
       int e = getErrno();
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed to create socket: " << search.SearchErrorMsg(e,OSERROR) );
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed to create socket: " << ErrnoError::SearchErrorMsg(e) );
       mSane = false;
       return;
    }
@@ -66,7 +57,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    {
       int e = getErrno();
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << search.SearchErrorMsg(e,OSERROR) );
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << ErrnoError::SearchErrorMsg(e) );
       mSane = false;
       return;
    }
@@ -79,7 +70,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
       {
           int e = getErrno();
           logSocketError(e);
-          ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions IPV6_V6ONLY: " << search.SearchErrorMsg(e,OSERROR) );
+          ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions IPV6_V6ONLY: " << ErrnoError::SearchErrorMsg(e) );
           mSane = false;
           return;
       }
@@ -92,14 +83,15 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    if (::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR)
    {
       int e = getErrno();
+      DebugLog ( << ErrnoError::SearchErrorMsg(e) );
       logSocketError(e);
       if (e == EADDRINUSE)
       {
-         ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: " << mTuple << " already in use : " << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: " << mTuple << " already in use ");
       }
       else
       {
-         ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not bind to " << mTuple << "Got error condition : " << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not bind to " << mTuple << " " << ErrnoError::SearchErrorMsg(e) );
       }
       mSane = false;
       return;
@@ -109,8 +101,9 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    if (!ok)
    {
       int e = getErrno();
+      DebugLog ( << ErrnoError::SearchErrorMsg(e) );
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not make HTTP socket non-blocking " << port << "Got error condition : " << search.SearchErrorMsg(e,OSERROR) );
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not make HTTP socket non-blocking " << port);
       mSane = false;
       return;
    }
@@ -123,7 +116,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    if (e != 0)
    {
       int e = getErrno();
-      InfoLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed listen " << search.SearchErrorMsg(e,OSERROR) );
+      InfoLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed listen " << ErrnoError::SearchErrorMsg(e) );
       mSane = false;
       return;
    }
@@ -210,16 +203,8 @@ XmlRpcServerBase::process(FdSet& fdset)
       Socket sock = accept( mFd, &peer, &peerLen);
       if (sock == SOCKET_ERROR)
       {
-         NumericError search;
-#ifdef _WIN32
-            ErrnoError WinObj;
-            WinObj.CreateMappingErrorMsg();
-#elif __linux__
-            ErrnoError ErrornoObj;
-            ErrornoObj.CreateMappingErrorMsg();
-#endif
-
          int e = getErrno();
+         DebugLog ( << ErrnoError::SearchErrorMsg(e) );
          switch (e)
          {
             case EAGAIN:
@@ -229,7 +214,7 @@ XmlRpcServerBase::process(FdSet& fdset)
                return;
             default:
                logSocketError(e);
-               ErrLog(<< "XmlRpcServerBase::process: Some error reading from socket: " << search.SearchErrorMsg(e,OSERROR) );
+               ErrLog(<< "XmlRpcServerBase::process: Some error reading from socket: " << ErrnoError::SearchErrorMsg(e) );
          }
          return;
       }
@@ -309,132 +294,124 @@ XmlRpcServerBase::closeOldestConnection()
 void
 XmlRpcServerBase::logSocketError(int e)
 {
-   NumericError search;
-#ifdef _WIN32
-      ErrnoError WinObj;
-      WinObj.CreateMappingErrorMsg();
-#elif __linux__
-      ErrnoError ErrornoObj;
-      ErrornoObj.CreateMappingErrorMsg();
-#endif
-
+   DebugLog ( << ErrnoError::SearchErrorMsg(e) );
    switch (e)
    {
       case EAGAIN:
-         InfoLog (<< "No data ready to read" << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<< "No data ready to read" << ErrnoError::SearchErrorMsg(e));
          break;
       case EINTR:
-         InfoLog (<< "The call was interrupted by a signal before any data was read : " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<< "The call was interrupted by a signal before any data was read : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EIO:
-         InfoLog (<< "I/O error : " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<< "I/O error : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EBADF:
-         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EINVAL:
-         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EFAULT:
-         InfoLog (<< "buf is outside your accessible address space : " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<< "buf is outside your accessible address space : " << ErrnoError::SearchErrorMsg(e));
          break;
 
 #if defined(WIN32)
       case WSAENETDOWN: 
-         InfoLog (<<" The network subsystem has failed.  " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<" The network subsystem has failed.  ");
          break;
       case WSAEFAULT:
          InfoLog (<<" The buf or from parameters are not part of the user address space, "
-                   "or the fromlen parameter is too small to accommodate the peer address.  " << search.SearchErrorMsg(e,OSERROR) );
+                   "or the fromlen parameter is too small to accommodate the peer address.  ");
          break;
       case WSAEINTR: 
-         InfoLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  ");
          break;
       case WSAEINPROGRESS: 
          InfoLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the "
-                   "service provider is still processing a callback function.  " << search.SearchErrorMsg(e,OSERROR) );
+                   "service provider is still processing a callback function.  ");
          break;
       case WSAEINVAL: 
          InfoLog (<<" The socket has not been bound with bind, or an unknown flag was specified, "
                    "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
-                   "or (for byte stream-style sockets only) len was zero or negative.  " << search.SearchErrorMsg(e,OSERROR) );
+                   "or (for byte stream-style sockets only) len was zero or negative.  ");
          break;
       case WSAEISCONN : 
          InfoLog (<<"The socket is connected. This function is not permitted with a connected socket, "
-                  "whether the socket is connection-oriented or connectionless.  " << search.SearchErrorMsg(e,OSERROR) );
+                  "whether the socket is connection-oriented or connectionless.  ");
          break;
       case WSAENETRESET:
          InfoLog (<<" The connection has been broken due to the keep-alive activity "
-                  "detecting a failure while the operation was in progress.  " << search.SearchErrorMsg(e,OSERROR) );
+                  "detecting a failure while the operation was in progress.  ");
          break;
       case WSAENOTSOCK :
-         InfoLog (<<"The descriptor is not a socket.  " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<"The descriptor is not a socket.  ");
          break;
       case WSAEOPNOTSUPP:
          InfoLog (<<" MSG_OOB was specified, but the socket is not stream-style such as type "
                    "SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, "
-                   "or the socket is unidirectional and supports only send operations.  " << search.SearchErrorMsg(e,OSERROR) );
+                   "or the socket is unidirectional and supports only send operations.  ");
          break;
       case WSAESHUTDOWN:
          InfoLog (<<"The socket has been shut down; it is not possible to recvfrom on a socket after "
-                  "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  " << search.SearchErrorMsg(e,OSERROR) );
+                  "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  ");
          break;
       case WSAEMSGSIZE:
-         InfoLog (<<" The message was too large to fit into the specified buffer and was truncated.  " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<" The message was too large to fit into the specified buffer and was truncated.  ");
          break;
       case WSAETIMEDOUT: 
          InfoLog (<<" The connection has been dropped, because of a network failure or because the "
-                  "system on the other end went down without notice.  " << search.SearchErrorMsg(e,OSERROR) );
+                  "system on the other end went down without notice.  ");
          break;
       case WSAECONNRESET : 
-         InfoLog (<<"Connection reset " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<"Connection reset ");
          break;
 
-	   case WSAEWOULDBLOCK:
-         DebugLog (<<"Would Block " << search.SearchErrorMsg(e,OSERROR) );
+      case WSAEWOULDBLOCK:
+         DebugLog (<<"Would Block ");
          break;
 
       case WSAEHOSTUNREACH:
-         InfoLog (<<"A socket operation was attempted to an unreachable host " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<"A socket operation was attempted to an unreachable host ");
          break;
       case WSANOTINITIALISED:
          InfoLog (<<"Either the application has not called WSAStartup or WSAStartup failed. "
                   "The application may be accessing a socket that the current active task does not own (that is, trying to share a socket between tasks),"
-                  "or WSACleanup has been called too many times.  " << search.SearchErrorMsg(e,OSERROR) );
+                  "or WSACleanup has been called too many times.  ");
          break;
       case WSAEACCES:
-         InfoLog (<<"An attempt was made to access a socket in a way forbidden by its access permissions " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<"An attempt was made to access a socket in a way forbidden by its access permissions ");
          break;
       case WSAENOBUFS:
          InfoLog (<<"An operation on a socket could not be performed because the system lacked sufficient "
-                  "buffer space or because a queue was full" << search.SearchErrorMsg(e,OSERROR) );
+                  "buffer space or because a queue was full");
          break;
       case WSAENOTCONN:
          InfoLog (<<"A request to send or receive data was disallowed because the socket is not connected "
-                  "and (when sending on a datagram socket using sendto) no address was supplied" << search.SearchErrorMsg(e,OSERROR) );
+                  "and (when sending on a datagram socket using sendto) no address was supplied");
          break;
       case WSAECONNABORTED:
          InfoLog (<<"An established connection was aborted by the software in your host computer, possibly "
-                  "due to a data transmission time-out or protocol error" << search.SearchErrorMsg(e,OSERROR) );
+                  "due to a data transmission time-out or protocol error");
          break;
       case WSAEADDRNOTAVAIL:
          InfoLog (<<"The requested address is not valid in its context. This normally results from an attempt to "
-                  "bind to an address that is not valid for the local computer" << search.SearchErrorMsg(e,OSERROR) );
+                  "bind to an address that is not valid for the local computer");
          break;
       case WSAEAFNOSUPPORT:
-         InfoLog (<<"An address incompatible with the requested protocol was used" << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<"An address incompatible with the requested protocol was used");
          break;
       case WSAEDESTADDRREQ:
-         InfoLog (<<"A required address was omitted from an operation on a socket" << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<"A required address was omitted from an operation on a socket");
          break;
       case WSAENETUNREACH:
-         InfoLog (<<"A socket operation was attempted to an unreachable network" << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<<"A socket operation was attempted to an unreachable network");
          break;
 
 #endif
 
       default:
-         InfoLog (<< "Some other error (" << e << "): " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog (<< "Some other error (" << e << "): " << ErrnoError::SearchErrorMsg(e) );
          break;
    }
 }

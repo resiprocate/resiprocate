@@ -168,19 +168,10 @@ DtlsTransport::_read( FdSet& fdset )
                        &slen ) ;
    if ( len == SOCKET_ERROR )
    {
-      NumericError search;
-#ifdef _WIN32
-        ErrnoError WinObj;
-        WinObj.CreateMappingErrorMsg();
-#elif __linux__
-        ErrnoError ErrornoObj;
-        ErrornoObj.CreateMappingErrorMsg();
-#endif
-
       int err = getErrno() ;
+      DebugLog ( << ErrnoError::SearchErrorMsg(err));
       if ( err != EAGAIN && err != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
       {
-         DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,OSERROR) );
          error( err ) ;
       }
    }
@@ -252,17 +243,11 @@ DtlsTransport::_read( FdSet& fdset )
    if ( len <= 0 )
    {
       char errorString[1024];
-
-      NumericError search;
-      OpenSSLError OpenSSLObj;
-      OpenSSLObj.CreateMappingErrorMsg();
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err));
 
       switch( err )
       {
          case SSL_ERROR_NONE:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break ;
          case SSL_ERROR_SSL:
             {
@@ -271,25 +256,22 @@ DtlsTransport::_read( FdSet& fdset )
                          << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
                          << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
             }
             break ;
          case SSL_ERROR_WANT_READ:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break ;
          case SSL_ERROR_WANT_WRITE:
-            DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
             break ;
          case SSL_ERROR_SYSCALL:
             {
+               int e = getErrno();
+               DebugLog ( << ErrnoError::SearchErrorMsg(e));
+
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS read condition SSL_ERROR_SYSCALL on"
                          << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
                          << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
             }
             break ;
             /* connection closed */
@@ -300,20 +282,13 @@ DtlsTransport::_read( FdSet& fdset )
                          << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
                          << " port = " << ntohs(((struct sockaddr_in *)&peer)->sin_port)
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
 
                _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
             }
             break ;
          case SSL_ERROR_WANT_CONNECT:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break ;
          case SSL_ERROR_WANT_ACCEPT:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break ;
          default:
             break ;
@@ -556,23 +531,17 @@ void DtlsTransport::_write( FdSet& fdset )
 
    if ( count <= 0 )
    {
-      NumericError search;
-      OpenSSLError OpenSSLObj;
-      OpenSSLObj.CreateMappingErrorMsg();
-
       /* cache unqueued data */
       mSendData = sendData ;
 
       int err = SSL_get_error( ssl, count ) ;
 
       char errorString[1024];
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err));
 
       switch( err )
       {
          case SSL_ERROR_NONE:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          case SSL_ERROR_SSL:
             {
@@ -580,41 +549,26 @@ void DtlsTransport::_write( FdSet& fdset )
                DebugLog( << "Got DTLS write condition SSL_ERROR_SSL on "
                          << sendData->destination
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
             }
             break;
          case SSL_ERROR_WANT_READ:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-               retry = 1 ;
-            }
+            retry = 1 ;
             break;
          case SSL_ERROR_WANT_WRITE:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-               retry = 1 ;
-               fdset.setWrite(mFd);
-            }
+             retry = 1 ;
+             fdset.setWrite(mFd);
             break;
          case SSL_ERROR_SYSCALL:
             {
-#ifdef _WIN32
-                  ErrnoError WinObj;
-                  WinObj.CreateMappingErrorMsg();
-#elif __linux__
-                  ErrnoError ErrornoObj;
-                  ErrornoObj.CreateMappingErrorMsg();
-#endif  
-
                int e = getErrno();
                error(e);
+               DebugLog ( << ErrnoError::SearchErrorMsg(e));
 
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS write condition SSL_ERROR_SYSCALL "
                          << "Failed (" << e << ") sending to "
                          << sendData->destination
                          << " error = " << errorString );
-               DebugLog ( << "socket error : " << search.SearchErrorMsg(e,OSERROR) );
 
                fail(sendData->transactionId);
             }
@@ -625,20 +579,13 @@ void DtlsTransport::_write( FdSet& fdset )
                DebugLog( << "Got DTLS write condition SSL_ERROR_ZERO_RETURN on "
                          << sendData->destination
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
 
                _cleanupConnectionState( ssl, *((struct sockaddr_in *)&peer) ) ;
             }
             break ;
          case SSL_ERROR_WANT_CONNECT:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          case SSL_ERROR_WANT_ACCEPT:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          default:
             break ;
@@ -664,10 +611,6 @@ void DtlsTransport::_write( FdSet& fdset )
 void
 DtlsTransport::_doHandshake( void )
 {
-   NumericError search;
-   OpenSSLError OpenSSLObj;
-   OpenSSLObj.CreateMappingErrorMsg();
-
    DtlsMessage *msg = mHandshakePending.getNext() ;
    SSL *ssl = msg->getSsl() ;
 
@@ -681,38 +624,31 @@ DtlsTransport::_doHandshake( void )
       int err = SSL_get_error(ssl, ret);
 
       char errorString[1024];
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err));
 
       switch (err)
       {
          case SSL_ERROR_NONE:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          case SSL_ERROR_SSL:
             {
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS handshake code SSL_ERROR_SSL"
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
             }
             break;
          case SSL_ERROR_WANT_READ:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          case SSL_ERROR_WANT_WRITE:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          case SSL_ERROR_SYSCALL:
             {
+               int e = getErrno();
+               DebugLog ( << ErrnoError::SearchErrorMsg(e));
+               
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS handshake code SSL_ERROR_SYSCALL"
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
             }
             break;
          case SSL_ERROR_ZERO_RETURN:
@@ -720,18 +656,11 @@ DtlsTransport::_doHandshake( void )
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS handshake code SSL_ERROR_ZERO_RETURN"
                          << " error = " << errorString );
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
             }
             break;
          case SSL_ERROR_WANT_CONNECT:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          case SSL_ERROR_WANT_ACCEPT:
-            {
-               DebugLog ( << "Got error condition : " << search.SearchErrorMsg(err,SSLERROR) );
-            }
             break;
          default:
             break ;
@@ -851,3 +780,4 @@ DtlsTransport::_printSock( const struct sockaddr_in *sock )
  * <http://www.vovida.org/>.
  *
  */
+ 

@@ -1,11 +1,11 @@
 #include "tfm/TestRtp.hxx"
 #include "tfm/RtpEvent.hxx"
 
-#include "rutil/Errdes.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/Errdes.hxx"
 #include "resip/stack/SipMessage.hxx"
 
 #include "Expect.hxx"
@@ -190,17 +190,8 @@ TestRtp::openSocket(TransportType type)
 
    if( INVALID_SOCKET == fd )
    {
-      NumericError search;
-#ifdef _WIN32
-         ErrnoError WinObj;
-         WinObj.CreateMappingErrorMsg();
-#elif __linux__
-         ErrnoError ErrornoObj;
-         ErrornoObj.CreateMappingErrorMsg();
-#endif 
-      
       int e = getErrno();
-      InfoLog(<< "Failed to create socket: " << search.SearchErrorMsg(e,OSERROR) );
+      InfoLog(<< "Failed to create socket: " << ErrnoError::SearchErrorMsg(e) );
    }
 
    return fd;
@@ -366,6 +357,8 @@ TestRtp::bindSocket(resip::Socket fd, Tuple& addr)
    if( ::bind( fd, &addr.getMutableSockaddr(), addr.length()) == SOCKET_ERROR )
    {
       int e = getErrno();
+      DebugLog ( << ErrnoError::SearchErrorMsg(e) );
+
       if ( e == EADDRINUSE )
          ErrLog (<< "Address already in use " << addr);
       else
@@ -408,17 +401,8 @@ TestRtp::recvPacket(resip::Socket fd, Tuple& addr)
    int len = recvfrom(fd, buffer, MaxBufferSize, 0, &addr.getMutableSockaddr(), &slen);
    if ( len == SOCKET_ERROR )
    {
-      NumericError search;
-#ifdef _WIN32
-         ErrnoError WinObj;
-         WinObj.CreateMappingErrorMsg();
-#elif __linux__
-         ErrnoError ErrornoObj;
-         ErrornoObj.CreateMappingErrorMsg();
-#endif
-
       int e = getErrno();
-      InfoLog(<< "Socket read error: " << search.SearchErrorMsg(e,OSERROR) );
+      InfoLog(<< "Socket read error: " << ErrnoError::SearchErrorMsg(e) );
    }
 
    if (len == 0 || len == SOCKET_ERROR)
@@ -511,17 +495,8 @@ TestRtp::sendPacket(resip::Socket fd, Tuple& dest, const Data& data)
 
    if( count == (size_t)SOCKET_ERROR )
    {
-      NumericError search;
-#ifdef _WIN32
-         ErrnoError WinObj;
-         WinObj.CreateMappingErrorMsg();
-#elif __linux__
-         ErrnoError ErrornoObj;
-         ErrornoObj.CreateMappingErrorMsg();
-#endif
-
       int e = getErrno();
-      ErrLog(<< "Failed to send packet to " << dest << ": " << search.SearchErrorMsg(e,OSERROR) );
+      ErrLog(<< "Failed to send packet to " << dest << ": " << ErrnoError::SearchErrorMsg(e) );
    }
    else
    {

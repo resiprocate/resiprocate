@@ -5,7 +5,6 @@
 #include <map>
 #include <string>
 #include <errno.h>
-
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
 
@@ -13,10 +12,6 @@
 #include <winsock.h>
 #include <windows.h>
 #endif
-
-#define OSERROR 1
-#define SSLERROR 2
-#define X509ERROR 3
 
 using namespace std;
 
@@ -27,33 +22,35 @@ class AbstractError
 
 class NumericError : public AbstractError
 {
-public:
-	string SearchErrorMsg(int Error, int ClassCode);   // search error message associated with error number
+
 };
 
 class ErrnoError : public NumericError
 {
 public:
-	void CreateMappingErrorMsg();                      // function to create map of OS(windows and linux) errors
+	static void CreateMappingErrorMsg();
+	static string SearchErrorMsg(int Error);
 };
 
 class OpenSSLError : public NumericError
 {
 public:
-	void CreateMappingErrorMsg();                      // function to create map of OpenSSL errors
+	static void CreateMappingErrorMsg();
+	static string SearchErrorMsg(int Error);
 };
 
 class X509Error : public NumericError
 {
 public:
-	void CreateMappingErrorMsg();                      // function to create map of X509 errors
+	static void CreateMappingErrorMsg();
+	static string SearchErrorMsg(int Error);
 };
 
 #endif
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (C) 2016, Udit Raikwar <udit043.ur@gmail.com>  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

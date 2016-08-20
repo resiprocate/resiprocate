@@ -29,7 +29,6 @@
 #include "resip/stack/WsTransport.hxx"
 #include "resip/stack/Uri.hxx"
 
-#include "rutil/Errdes.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
@@ -37,6 +36,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/FdPoll.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Errdes.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #ifdef USE_NETNS
 #   include "rutil/NetNs.hxx"
@@ -596,14 +596,6 @@ bool isDgramTransport (TransportType type)
 Tuple
 TransportSelector::getFirstInterface(bool is_v4, TransportType type)
 {
-   NumericError search;
-#ifdef _WIN32
-      ErrnoError WinObj;
-      WinObj.CreateMappingErrorMsg();
-#elif __linux__
-      ErrnoError ErrornoObj;
-      ErrornoObj.CreateMappingErrorMsg();
-#endif 
 // !kh! both getaddrinfo() and IPv6 are not supported by cygwin, yet.
 #ifdef __CYGWIN__
    resip_assert(0);
@@ -616,7 +608,7 @@ TransportSelector::getFirstInterface(bool is_v4, TransportType type)
    {
       int e = getErrno();
       Transport::error( e );
-      InfoLog(<< "Can't query local hostname : [" << e << "] " << search.SearchErrorMsg(e,OSERROR) );
+      InfoLog(<< "Can't query local hostname : [" << e << "] " << ErrnoError::SearchErrorMsg(e) );
       throw Transport::Exception("Can't query local hostname", __FILE__, __LINE__);
    }
    InfoLog(<< "Local hostname is [" << hostname << "]");
@@ -719,15 +711,6 @@ TransportSelector::findTransportByVia(SipMessage* msg, const Tuple& target, Tupl
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
-   NumericError search;
-#ifdef _WIN32
-      ErrnoError WinObj;
-      WinObj.CreateMappingErrorMsg();
-#elif __linux__
-      ErrnoError ErrornoObj;
-      ErrornoObj.CreateMappingErrorMsg();
-#endif
-
    resip_assert(msg->exists(h_Vias));
    resip_assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
@@ -797,7 +780,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          int e = getErrno();
          Transport::error( e );
-         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << ErrnoError::SearchErrorMsg(e) );
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
 
@@ -807,7 +790,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          int e = getErrno();
          Transport::error(e);
-         InfoLog(<< "Can't determine name of socket " << target << " : " << search.SearchErrorMsg(e,OSERROR) );
+         InfoLog(<< "Can't determine name of socket " << target << " : " << ErrnoError::SearchErrorMsg(e) );
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
 
@@ -858,10 +841,11 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       if ( ret<0 )
       {
          int e =  getErrno();
+         DebugLog ( << ErrnoError::SearchErrorMsg(e) );
          //.dcm. OS X 10.5 workaround, we could #ifdef for specific OS X version.
          if  (!(e ==EAFNOSUPPORT || e == EADDRNOTAVAIL))
          {
-            ErrLog(<< "Can't disconnect socket :  " << search.SearchErrorMsg(e,OSERROR) );
+            ErrLog(<< "Can't disconnect socket :  " << ErrnoError::SearchErrorMsg(e) );
             Transport::error(e);
             throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
          }
@@ -1697,3 +1681,4 @@ resip::operator<<(EncodeStream& ostrm, const TransportSelector::TlsTransportKey&
  *
  * vi: set shiftwidth=3 expandtab:
  */
+ 

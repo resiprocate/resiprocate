@@ -145,7 +145,7 @@ Resolver::lookupARecords()
 #else
 
 #ifdef WIN32
-	result = gethostbyname(mHost.c_str());
+  result = gethostbyname(mHost.c_str());
     int ret = (result==0);
 #elif defined(__NetBSD__)
     //!dcm! -- not threadsafe
@@ -306,19 +306,10 @@ Resolver::isIpAddress(const resip::Data& data)
 resip::Data
 Resolver::getHostName()
 {
-   NumericError search;
-#ifdef _WIN32
-      ErrnoError WinObj;
-      WinObj.CreateMappingErrorMsg();
-#elif __linux__
-      ErrnoError ErrornoObj;
-      ErrornoObj.CreateMappingErrorMsg();
-#endif
-
    char buffer[255];
    if (gethostname(buffer, sizeof(buffer)) < 0)
    {
-      InfoLog (<< "Failed gethostname() " << search.SearchErrorMsg(errno,OSERROR) );
+      InfoLog (<< "Failed gethostname() " << ErrnoError::SearchErrorMsg(errno) );
       return "localhost";
    }
    else
@@ -353,3 +344,4 @@ Resolver::getHostName()
   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+  

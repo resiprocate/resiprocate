@@ -99,7 +99,7 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
    if ( fd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << ErrnoError::SearchErrorMsg(e));
       throw Transport::Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
 
@@ -111,7 +111,7 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
       if ( ::setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) )
       {
           int e = getErrno();
-          InfoLog (<< "Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
+          InfoLog (<< "Couldn't set sockoptions IPV6_V6ONLY: " << ErrnoError::SearchErrorMsg(e));
           error(e);
           throw Exception("Failed setsockopt", __FILE__,__LINE__);
       }
@@ -127,15 +127,6 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
 void
 InternalTransport::bind()
 {
-   NumericError search;
-#ifdef _WIN32
-      ErrnoError WinObj;
-      WinObj.CreateMappingErrorMsg();
-#elif __linux__
-      ErrnoError ErrornoObj;
-      ErrornoObj.CreateMappingErrorMsg();
-#endif   
-
 #ifdef USE_NETNS
    DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple) 
              << " in netns=\"" <<mTuple.getNetNs() << "\"");
@@ -146,16 +137,17 @@ InternalTransport::bind()
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {
       int e = getErrno();
+      DebugLog ( << ErrnoError::SearchErrorMsg(e) );
       if ( e == EADDRINUSE )
       {
          error(e);
-         ErrLog (<< mTuple << " already in use : " << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog (<< mTuple << " already in use ");
          throw Transport::Exception("port already in use", __FILE__,__LINE__);
       }
       else
       {
          error(e);
-         ErrLog (<< "Could not bind to " << mTuple << " " << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog (<< "Could not bind to " << mTuple);
          throw Transport::Exception("Could not use port", __FILE__,__LINE__);
       }
    }
@@ -167,7 +159,7 @@ InternalTransport::bind()
       if (::getsockname(mFd, &mTuple.getMutableSockaddr(), &len) == SOCKET_ERROR)
       {
          int e = getErrno();
-         ErrLog (<<"getsockname failed, error=" << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog (<<"getsockname failed, error=" << ErrnoError::SearchErrorMsg(e));
          throw Transport::Exception("Could not query port", __FILE__,__LINE__);
       }
    }
@@ -296,3 +288,4 @@ InternalTransport::poke()
  *
  * vi: set shiftwidth=3 expandtab:
  */
+ 

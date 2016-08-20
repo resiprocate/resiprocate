@@ -19,6 +19,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/Errdes.hxx"
 
 #include "Resolver.hxx"
 
@@ -88,7 +89,7 @@ Resolver::Resolver(const Uri& uri) :
       Tuple tuple;
       if (inet_pton(AF_INET, mHost.c_str(), &tuple.ipv4.s_addr) <= 0)
       {
-         DebugLog( << "inet_pton failed to parse address: " << mHost << " " << strerror(errno));
+         DebugLog( << "inet_pton failed to parse address: " << mHost << " " << ErrnoError::SearchErrorMsg(errno) );
          assert(0);
       }
       tuple.port = mPort;

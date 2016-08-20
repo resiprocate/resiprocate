@@ -13,6 +13,9 @@
 
 using namespace std;
 
+#define _GET_CODE(x) #x
+#define ERR_WITH_CODE(m, s) #m ": " s " (" _GET_CODE(m) ")"
+
 #ifdef _WIN32
 map <int, string> WinErrorMsg;
 #elif __linux__
@@ -22,349 +25,355 @@ map <int, string> OpenSSLErrorMsg;
 map <int, string> X509ErrorMsg;
 
 
-string NumericError::SearchErrorMsg(int Error, int ClassCode)
+string ErrnoError::SearchErrorMsg(int Error)
 {
-    string result;
-    switch(ClassCode)
-    {
-        case OSERROR:
-        {
+  string result;
+
 #ifdef _WIN32
-                result = WinErrorMsg[Error];
+    result = WinErrorMsg[Error];
 #elif __linux__
-                result = ErrornoErrorMsg[Error];
+    result = ErrornoErrorMsg[Error];
 #endif
-            break;
-        }
-        case SSLERROR:
-        result = OpenSSLErrorMsg[Error];
-        break;
-        case X509ERROR:
-        result = X509ErrorMsg[Error];
-        break;
-    }
-    if(result.length() == 0)
-        result = "Unknown error";
-    return result;
-};
+
+  if(result.length() == 0)
+    result = "Unknown error";
+  return result;
+}
+
+string OpenSSLError::SearchErrorMsg(int Error)
+{
+  string result;
+  result = OpenSSLErrorMsg[Error];
+
+  if(result.length() == 0)
+    result = "Unknown error";
+  return result;
+}
+
+string X509Error::SearchErrorMsg(int Error)
+{
+  string result;
+  result = X509ErrorMsg[Error];
+
+  if(result.length() == 0)
+    result = "Unknown error";
+  return result;
+}
 
 void ErrnoError::CreateMappingErrorMsg()
 {
-    
-#ifdef _WIN32                             // creating error mapping for windows system errors
+#ifdef _WIN32
 {
-  WinErrorMsg[WSA_INVALID_HANDLE]         = "WSA_INVALID_HANDLE 6 Specified event object handle is invalid.";
-  WinErrorMsg[WSA_NOT_ENOUGH_MEMORY]      = "WSA_NOT_ENOUGH_MEMORY 8 Insufficient memory available.";
-  WinErrorMsg[WSA_INVALID_PARAMETER]      = "WSA_INVALID_PARAMETER 87 One or more parameters are invalid.";
-  WinErrorMsg[WSA_OPERATION_ABORTED]      = "WSA_OPERATION_ABORTED 995 Overlapped operation aborted.";
-  WinErrorMsg[WSA_IO_INCOMPLETE]          = "WSA_IO_INCOMPLETE 996 Overlapped I/O event object not in signaled state.";
-  WinErrorMsg[SA_IO_PENDING]              = "SA_IO_PENDING 997 Overlapped operations will complete later.";
-  WinErrorMsg[WSAEINTR]                   = "WSAEINTR 10004 Interrupted function call.";
-  WinErrorMsg[WSAEBADF]                   = "WSAEBADF 10009 File handle is not valid.";
-  WinErrorMsg[WSAEACCES]                  = "WSAEACCES 10013 Permission denied.";
-  WinErrorMsg[WSAEFAULT]                  = "WSAEFAULT 10014 Bad address.";
-  WinErrorMsg[WSAEINVAL]                  = "WSAEINVAL 10022 Invalid argument.";
-  WinErrorMsg[WSAEMFILE]                  = "WSAEMFILE 10024 Too many open files.";
-  WinErrorMsg[WSAEWOULDBLOCK]             = "WSAEWOULDBLOCK 10035 Resource temporarily unavailable.";
-  WinErrorMsg[WSAEINPROGRESS]             = "WSAEINPROGRESS 10036 Operation now in progress.";
-  WinErrorMsg[WSAEALREADY]                = "WSAEALREADY 10037 Operation already in progress.";
-  WinErrorMsg[WSAENOTSOCK]                = "WSAENOTSOCK 10038 Socket operation on nonsocket.";
-  WinErrorMsg[WSAEDESTADDRREQ]            = "WSAEDESTADDRREQ 10039 Destination address required.";
-  WinErrorMsg[WSAEMSGSIZE]                = "WSAEMSGSIZE 10040 Message too long.";
-  WinErrorMsg[WSAEPROTOTYPE]              = "WSAEPROTOTYPE 10041 Protocol wrong type for socket.";
-  WinErrorMsg[WSAENOPROTOOPT]             = "WSAENOPROTOOPT 10042 Bad protocol option.";
-  WinErrorMsg[WSAEPROTONOSUPPORT]         = "WSAEPROTONOSUPPORT 10043 Protocol not supported.";
-  WinErrorMsg[WSAESOCKTNOSUPPORT]         = "WSAESOCKTNOSUPPORT 10044 Socket type not supported.";
-  WinErrorMsg[WSAEOPNOTSUPP]              = "WSAEOPNOTSUPP 10045 Operation not supported.";
-  WinErrorMsg[WSAEPFNOSUPPORT]            = "WSAEPFNOSUPPORT 10046 Protocol family not supported.";
-  WinErrorMsg[WSAEAFNOSUPPORT]            = "WSAEAFNOSUPPORT 10047 Address family not supported by protocol family.";
-  WinErrorMsg[WSAEADDRINUSE]              = "WSAEADDRINUSE 10048 Address already in use.";
-  WinErrorMsg[WSAEADDRNOTAVAIL]           = "WSAEADDRNOTAVAIL 10049 Cannot assign requested address.";
-  WinErrorMsg[WSAENETDOWN]                = "WSAENETDOWN 10050 Network is down.";
-  WinErrorMsg[WSAENETUNREACH]             = "WSAENETUNREACH 10051 Network is unreachable.";
-  WinErrorMsg[WSAENETRESET]               = "WSAENETRESET 10052 Network dropped connection on reset.";
-  WinErrorMsg[WSAECONNABORTED]            = "WSAECONNABORTED 10053 Software caused connection abort.";
-  WinErrorMsg[WSAECONNRESET]              = "WSAECONNRESET 10054 Connection reset by peer.";
-  WinErrorMsg[WSAENOBUFS]                 = "WSAENOBUFS 10055 No buffer space available.";
-  WinErrorMsg[WSAEISCONN]                 = "WSAEISCONN 10056 Socket is already connected.";
-  WinErrorMsg[WSAENOTCONN]                = "WSAENOTCONN 10057 Socket is not connected.";
-  WinErrorMsg[WSAESHUTDOWN]               = "WSAESHUTDOWN 10058 Cannot send after socket shutdown.",;
-  WinErrorMsg[WSAETOOMANYREFS]            = "WSAETOOMANYREFS 10059 Too many references.";
-  WinErrorMsg[WSAETIMEDOUT]               = "WSAETIMEDOUT 10060 Connection timed out.";
-  WinErrorMsg[WSAECONNREFUSED]            = "WSAECONNREFUSED 10061 Connection refused.";
-  WinErrorMsg[WSAELOOP]                   = "WSAELOOP 10062 Cannot translate name.";
-  WinErrorMsg[WSAENAMETOOLONG]            = "WSAENAMETOOLONG 10063 Name too long.";
-  WinErrorMsg[WSAEHOSTDOWN]               = "WSAEHOSTDOWN 10064 Host is down.";
-  WinErrorMsg[WSAEHOSTUNREACH]            = "WSAEHOSTUNREACH 10065 No route to host.";
-  WinErrorMsg[WSAENOTEMPTY]               = "WSAENOTEMPTY 10066 Directory not empty.";
-  WinErrorMsg[WSAEPROCLIM]                = "WSAEPROCLIM 10067 Too many processes.";
-  WinErrorMsg[WSAEUSERS]                  = "WSAEUSERS 10068 User quota exceeded.";
-  WinErrorMsg[WSAEDQUOT]                  = "WSAEDQUOT 10069 Disk quota exceeded.";
-  WinErrorMsg[WSAESTALE]                  = "WSAESTALE 10070 Stale file handle reference.";
-  WinErrorMsg[WSAEREMOTE]                 = "WSAEREMOTE 10071 Item is remote.";
-  WinErrorMsg[WSASYSNOTREADY]             = "WSASYSNOTREADY 10091 Network subsystem is unavailable.";
-  WinErrorMsg[WSAVERNOTSUPPORTED]         = "WSAVERNOTSUPPORTED 10092 Winsock.dll version out of range.";
-  WinErrorMsg[WSANOTINITIALISED]          = "WSANOTINITIALISED 10093 Successful WSAStartup not yet performed.";
-  WinErrorMsg[WSAEDISCON]                 = "WSAEDISCON 10101 Graceful shutdown in progress.";
-  WinErrorMsg[WSAENOMORE]                 = "WSAENOMORE 10102 No more results.";
-  WinErrorMsg[WSAECANCELLED]              = "WSAECANCELLED 10103 Call has been canceled.";
-  WinErrorMsg[WSAEINVALIDPROCTABLE]       = "WSAEINVALIDPROCTABLE 10104 Procedure call table is invalid.";
-  WinErrorMsg[WSAEINVALIDPROVIDER]        = "WSAEINVALIDPROVIDER 10105 Service provider is invalid.";
-  WinErrorMsg[WSAEPROVIDERFAILEDINIT]     = "WSAEPROVIDERFAILEDINIT 10106 Service provider failed to initialize.";
-  WinErrorMsg[WSASYSCALLFAILURE]          = "WSASYSCALLFAILURE 10107 System call failure.";
-  WinErrorMsg[WSASERVICE_NOT_FOUND]       = "WSASERVICE_NOT_FOUND 10108 Service not found.";
-  WinErrorMsg[WSATYPE_NOT_FOUND]          = "WSATYPE_NOT_FOUND 10109 Class type not found.";
-  WinErrorMsg[WSA_E_NO_MORE]              = "WSA_E_NO_MORE 10110 No more results.";
-  WinErrorMsg[WSA_E_CANCELLED]            = "WSA_E_CANCELLED 10111 Call was canceled.";
-  WinErrorMsg[WSAEREFUSED]                = "WSAEREFUSED 10112 Database query was refused.";
-  WinErrorMsg[WSAHOST_NOT_FOUND]          = "WSAHOST_NOT_FOUND 11001 Host not found.";
-  WinErrorMsg[WSATRY_AGAIN]               = "WSATRY_AGAIN 11002 Nonauthoritative host not found.";
-  WinErrorMsg[WSANO_RECOVERY]             = "WSANO_RECOVERY 11003 This is a nonrecoverable error.";
-  WinErrorMsg[WSANO_DATA]                 = "WSANO_DATA 11004 Valid name, no data record of requested type.";
-  WinErrorMsg[WSA_QOS_RECEIVERS]          = "WSA_QOS_RECEIVERS 11005 QoS receivers.";
-  WinErrorMsg[WSA_QOS_SENDERS]            = "WSA_QOS_SENDERS 11006 QoS senders.";
-  WinErrorMsg[WSA_QOS_NO_SENDERS]         = "WSA_QOS_NO_SENDERS 11007 No QoS senders.";
-  WinErrorMsg[WSA_QOS_NO_RECEIVERS]       = "WSA_QOS_NO_RECEIVERS 11008 QoS no receivers.";
-  WinErrorMsg[WSA_QOS_REQUEST_CONFIRMED]  = "WSA_QOS_REQUEST_CONFIRMED 11009 QoS request confirmed.";
-  WinErrorMsg[WSA_QOS_ADMISSION_FAILURE]  = "WSA_QOS_ADMISSION_FAILURE 11010 QoS admission error.";
-  WinErrorMsg[WSA_QOS_POLICY_FAILURE]     = "WSA_QOS_POLICY_FAILURE 11011 QoS policy failure.";
-  WinErrorMsg[WSA_QOS_BAD_STYLE]          = "WSA_QOS_BAD_STYLE 11012 QoS bad style.";
-  WinErrorMsg[WSA_QOS_BAD_OBJECT]         = "WSA_QOS_BAD_OBJECT 11013 QoS bad object.";
-  WinErrorMsg[WSA_QOS_TRAFFIC_CTRL_ERROR] = "WSA_QOS_TRAFFIC_CTRL_ERROR 11014 QoS traffic control error.";
-  WinErrorMsg[WSA_QOS_GENERIC_ERROR]      = "WSA_QOS_GENERIC_ERROR 11015 QoS generic error.";
-  WinErrorMsg[WSA_QOS_ESERVICETYPE]       = "WSA_QOS_ESERVICETYPE 11016 QoS service type error.";
-  WinErrorMsg[WSA_QOS_EFLOWSPEC]          = "WSA_QOS_EFLOWSPEC 11017 QoS flowspec error.";
-  WinErrorMsg[WSA_QOS_EPROVSPECBUF]       = "WSA_QOS_EPROVSPECBUF 11018 Invalid QoS provider buffer.";
-  WinErrorMsg[WSA_QOS_EFILTERSTYLE]       = "WSA_QOS_EFILTERSTYLE 11019 Invalid QoS filter style.";
-  WinErrorMsg[WSA_QOS_EFILTERTYPE]        = "WSA_QOS_EFILTERTYPE 11020 Invalid QoS filter type.";
-  WinErrorMsg[WSA_QOS_EFILTERCOUNT]       = "WSA_QOS_EFILTERCOUNT 11021 Incorrect QoS filter count.";
-  WinErrorMsg[WSA_QOS_EOBJLENGTH]         = "WSA_QOS_EOBJLENGTH 11022 Invalid QoS object length.";
-  WinErrorMsg[WSA_QOS_EFLOWCOUNT]         = "WSA_QOS_EFLOWCOUNT 11023 Incorrect QoS flow count.";
-  WinErrorMsg[WSA_QOS_EUNKOWNPSOBJ]       = "WSA_QOS_EUNKOWNPSOBJ 11024 Unrecognized QoS object.";
-  WinErrorMsg[WSA_QOS_EPOLICYOBJ]         = "WSA_QOS_EPOLICYOBJ 11025 Invalid QoS policy object.";
-  WinErrorMsg[WSA_QOS_EFLOWDESC]          = "WSA_QOS_EFLOWDESC 11026 Invalid QoS flow descriptor.";
-  WinErrorMsg[WSA_QOS_EPSFLOWSPEC]        = "WSA_QOS_EPSFLOWSPEC 11027 Invalid QoS provider-specific flowspec.";
-  WinErrorMsg[WSA_QOS_EPSFILTERSPEC]      = "WSA_QOS_EPSFILTERSPEC 11028 Invalid QoS provider-specific filterspec.";
-  WinErrorMsg[WSA_QOS_ESDMODEOBJ]         = "WSA_QOS_ESDMODEOBJ 11029 Invalid QoS shape discard mode object.";
-  WinErrorMsg[WSA_QOS_ESHAPERATEOBJ]      = "WSA_QOS_ESHAPERATEOBJ 11030 Invalid QoS shaping rate object.";
-  WinErrorMsg[WSA_QOS_RESERVED_PETYPE]    = "WSA_QOS_RESERVED_PETYPE 11031 Reserved policy QoS element type.";
+  WinErrorMsg[WSA_INVALID_HANDLE]         = ERR_WITH_CODE(WSA_INVALID_HANDLE, "Specified event object handle is invalid.");
+  WinErrorMsg[WSA_NOT_ENOUGH_MEMORY]      = ERR_WITH_CODE(WSA_NOT_ENOUGH_MEMORY, "Insufficient memory available.");
+  WinErrorMsg[WSA_INVALID_PARAMETER]      = ERR_WITH_CODE(WSA_INVALID_PARAMETER, "One or more parameters are invalid.");
+  WinErrorMsg[WSA_OPERATION_ABORTED]      = ERR_WITH_CODE(WSA_OPERATION_ABORTED, "Overlapped operation aborted.");
+  WinErrorMsg[WSA_IO_INCOMPLETE]          = ERR_WITH_CODE(WSA_IO_INCOMPLETE, "Overlapped I/O event object not in signaled state.");
+  WinErrorMsg[SA_IO_PENDING]              = ERR_WITH_CODE(SA_IO_PENDING, "Overlapped operations will complete later.");
+  WinErrorMsg[WSAEINTR]                   = ERR_WITH_CODE(WSAEINTR, "Interrupted function call.");
+  WinErrorMsg[WSAEBADF]                   = ERR_WITH_CODE(WSAEBADF, "File handle is not valid.");
+  WinErrorMsg[WSAEACCES]                  = ERR_WITH_CODE(WSAEACCES, "Permission denied.");
+  WinErrorMsg[WSAEFAULT]                  = ERR_WITH_CODE(WSAEFAULT, "Bad address.");
+  WinErrorMsg[WSAEINVAL]                  = ERR_WITH_CODE(WSAEINVAL, "Invalid argument.");
+  WinErrorMsg[WSAEMFILE]                  = ERR_WITH_CODE(WSAEMFILE, "Too many open files.");
+  WinErrorMsg[WSAEWOULDBLOCK]             = ERR_WITH_CODE(WSAEWOULDBLOCK, "Resource temporarily unavailable.");
+  WinErrorMsg[WSAEINPROGRESS]             = ERR_WITH_CODE(WSAEINPROGRESS, "Operation now in progress.");
+  WinErrorMsg[WSAEALREADY]                = ERR_WITH_CODE(WSAEALREADY, "Operation already in progress.");
+  WinErrorMsg[WSAENOTSOCK]                = ERR_WITH_CODE(WSAENOTSOCK, "Socket operation on nonsocket.");
+  WinErrorMsg[WSAEDESTADDRREQ]            = ERR_WITH_CODE(WSAEDESTADDRREQ, "Destination address required.");
+  WinErrorMsg[WSAEMSGSIZE]                = ERR_WITH_CODE(WSAEMSGSIZE, "Message too long.");
+  WinErrorMsg[WSAEPROTOTYPE]              = ERR_WITH_CODE(WSAEPROTOTYPE, "Protocol wrong type for socket.");
+  WinErrorMsg[WSAENOPROTOOPT]             = ERR_WITH_CODE(WSAENOPROTOOPT, "Bad protocol option.");
+  WinErrorMsg[WSAEPROTONOSUPPORT]         = ERR_WITH_CODE(WSAEPROTONOSUPPORT, "Protocol not supported.");
+  WinErrorMsg[WSAESOCKTNOSUPPORT]         = ERR_WITH_CODE(WSAESOCKTNOSUPPORT, "Socket type not supported.");
+  WinErrorMsg[WSAEOPNOTSUPP]              = ERR_WITH_CODE(WSAEOPNOTSUPP, "Operation not supported.");
+  WinErrorMsg[WSAEPFNOSUPPORT]            = ERR_WITH_CODE(WSAEPFNOSUPPORT, "Protocol family not supported.");
+  WinErrorMsg[WSAEAFNOSUPPORT]            = ERR_WITH_CODE(WSAEAFNOSUPPORT, "Address family not supported by protocol family.");
+  WinErrorMsg[WSAEADDRINUSE]              = ERR_WITH_CODE(WSAEADDRINUSE, "Address already in use.");
+  WinErrorMsg[WSAEADDRNOTAVAIL]           = ERR_WITH_CODE(WSAEADDRNOTAVAIL, "Cannot assign requested address.");
+  WinErrorMsg[WSAENETDOWN]                = ERR_WITH_CODE(WSAENETDOWN, "Network is down.");
+  WinErrorMsg[WSAENETUNREACH]             = ERR_WITH_CODE(WSAENETUNREACH, "Network is unreachable.");
+  WinErrorMsg[WSAENETRESET]               = ERR_WITH_CODE(WSAENETRESET, "Network dropped connection on reset.");
+  WinErrorMsg[WSAECONNABORTED]            = ERR_WITH_CODE(WSAECONNABORTED, "Software caused connection abort.");
+  WinErrorMsg[WSAECONNRESET]              = ERR_WITH_CODE(WSAECONNRESET, "Connection reset by peer.");
+  WinErrorMsg[WSAENOBUFS]                 = ERR_WITH_CODE(WSAENOBUFS, "No buffer space available.");
+  WinErrorMsg[WSAEISCONN]                 = ERR_WITH_CODE(WSAEISCONN, "Socket is already connected.");
+  WinErrorMsg[WSAENOTCONN]                = ERR_WITH_CODE(WSAENOTCONN, "Socket is not connected.");
+  WinErrorMsg[WSAESHUTDOWN]               = ERR_WITH_CODE(WSAESHUTDOWN, "Cannot send after socket shutdown.");
+  WinErrorMsg[WSAETOOMANYREFS]            = ERR_WITH_CODE(WSAETOOMANYREFS, "Too many references.");
+  WinErrorMsg[WSAETIMEDOUT]               = ERR_WITH_CODE(WSAETIMEDOUT, "Connection timed out.");
+  WinErrorMsg[WSAECONNREFUSED]            = ERR_WITH_CODE(WSAECONNREFUSED, "Connection refused.");
+  WinErrorMsg[WSAELOOP]                   = ERR_WITH_CODE(WSAELOOP, "Cannot translate name.");
+  WinErrorMsg[WSAENAMETOOLONG]            = ERR_WITH_CODE(WSAENAMETOOLONG, "Name too long.");
+  WinErrorMsg[WSAEHOSTDOWN]               = ERR_WITH_CODE(WSAEHOSTDOWN, "Host is down.");
+  WinErrorMsg[WSAEHOSTUNREACH]            = ERR_WITH_CODE(WSAEHOSTUNREACH, "No route to host.");
+  WinErrorMsg[WSAENOTEMPTY]               = ERR_WITH_CODE(WSAENOTEMPTY, "Directory not empty.");
+  WinErrorMsg[WSAEPROCLIM]                = ERR_WITH_CODE(WSAEPROCLIM, "Too many processes.");
+  WinErrorMsg[WSAEUSERS]                  = ERR_WITH_CODE(WSAEUSERS, "User quota exceeded.");
+  WinErrorMsg[WSAEDQUOT]                  = ERR_WITH_CODE(WSAEDQUOT, "Disk quota exceeded.");
+  WinErrorMsg[WSAESTALE]                  = ERR_WITH_CODE(WSAESTALE, "Stale file handle reference.");
+  WinErrorMsg[WSAEREMOTE]                 = ERR_WITH_CODE(WSAEREMOTE, "Item is remote.");
+  WinErrorMsg[WSASYSNOTREADY]             = ERR_WITH_CODE(WSASYSNOTREADY, "Network subsystem is unavailable.");
+  WinErrorMsg[WSAVERNOTSUPPORTED]         = ERR_WITH_CODE(WSAVERNOTSUPPORTED, "Winsock.dll version out of range.");
+  WinErrorMsg[WSANOTINITIALISED]          = ERR_WITH_CODE(WSANOTINITIALISED, "Successful WSAStartup not yet performed.");
+  WinErrorMsg[WSAEDISCON]                 = ERR_WITH_CODE(WSAEDISCON, "Graceful shutdown in progress.");
+  WinErrorMsg[WSAENOMORE]                 = ERR_WITH_CODE(WSAENOMORE, "No more results.");
+  WinErrorMsg[WSAECANCELLED]              = ERR_WITH_CODE(WSAECANCELLED, "Call has been canceled.");
+  WinErrorMsg[WSAEINVALIDPROCTABLE]       = ERR_WITH_CODE(WSAEINVALIDPROCTABLE, "Procedure call table is invalid.");
+  WinErrorMsg[WSAEINVALIDPROVIDER]        = ERR_WITH_CODE(WSAEINVALIDPROVIDER, "Service provider is invalid.");
+  WinErrorMsg[WSAEPROVIDERFAILEDINIT]     = ERR_WITH_CODE(WSAEPROVIDERFAILEDINIT, "Service provider failed to initialize.");
+  WinErrorMsg[WSASYSCALLFAILURE]          = ERR_WITH_CODE(WSASYSCALLFAILURE, "System call failure.");
+  WinErrorMsg[WSASERVICE_NOT_FOUND]       = ERR_WITH_CODE(WSASERVICE_NOT_FOUND, "Service not found.");
+  WinErrorMsg[WSATYPE_NOT_FOUND]          = ERR_WITH_CODE(WSATYPE_NOT_FOUND, "Class type not found.");
+  WinErrorMsg[WSA_E_NO_MORE]              = ERR_WITH_CODE(WSA_E_NO_MORE, "No more results.");
+  WinErrorMsg[WSA_E_CANCELLED]            = ERR_WITH_CODE(WSA_E_CANCELLED, "Call was canceled.");
+  WinErrorMsg[WSAEREFUSED]                = ERR_WITH_CODE(WSAEREFUSED, "Database query was refused.");
+  WinErrorMsg[WSAHOST_NOT_FOUND]          = ERR_WITH_CODE(WSAHOST_NOT_FOUND, "Host not found.");
+  WinErrorMsg[WSATRY_AGAIN]               = ERR_WITH_CODE(WSATRY_AGAIN, "Nonauthoritative host not found.");
+  WinErrorMsg[WSANO_RECOVERY]             = ERR_WITH_CODE(WSANO_RECOVERY, "This is a nonrecoverable error.");
+  WinErrorMsg[WSANO_DATA]                 = ERR_WITH_CODE(WSANO_DATA, "Valid name, no data record of requested type.");
+  WinErrorMsg[WSA_QOS_RECEIVERS]          = ERR_WITH_CODE(WSA_QOS_RECEIVERS, "QoS receivers.");
+  WinErrorMsg[WSA_QOS_SENDERS]            = ERR_WITH_CODE(WSA_QOS_SENDERS, "QoS senders.");
+  WinErrorMsg[WSA_QOS_NO_SENDERS]         = ERR_WITH_CODE(WSA_QOS_NO_SENDERS, "No QoS senders.");
+  WinErrorMsg[WSA_QOS_NO_RECEIVERS]       = ERR_WITH_CODE(WSA_QOS_NO_RECEIVERS, "QoS no receivers.");
+  WinErrorMsg[WSA_QOS_REQUEST_CONFIRMED]  = ERR_WITH_CODE(WSA_QOS_REQUEST_CONFIRMED, "QoS request confirmed.");
+  WinErrorMsg[WSA_QOS_ADMISSION_FAILURE]  = ERR_WITH_CODE(WSA_QOS_ADMISSION_FAILURE, "QoS admission error.");
+  WinErrorMsg[WSA_QOS_POLICY_FAILURE]     = ERR_WITH_CODE(WSA_QOS_POLICY_FAILURE, "QoS policy failure.");
+  WinErrorMsg[WSA_QOS_BAD_STYLE]          = ERR_WITH_CODE(WSA_QOS_BAD_STYLE, "QoS bad style.");
+  WinErrorMsg[WSA_QOS_BAD_OBJECT]         = ERR_WITH_CODE(WSA_QOS_BAD_OBJECT, "QoS bad object.");
+  WinErrorMsg[WSA_QOS_TRAFFIC_CTRL_ERROR] = ERR_WITH_CODE(WSA_QOS_TRAFFIC_CTRL_ERROR, "QoS traffic control error.");
+  WinErrorMsg[WSA_QOS_GENERIC_ERROR]      = ERR_WITH_CODE(WSA_QOS_GENERIC_ERROR, "QoS generic error.");
+  WinErrorMsg[WSA_QOS_ESERVICETYPE]       = ERR_WITH_CODE(WSA_QOS_ESERVICETYPE, "QoS service type error.");
+  WinErrorMsg[WSA_QOS_EFLOWSPEC]          = ERR_WITH_CODE(WSA_QOS_EFLOWSPEC, "QoS flowspec error.");
+  WinErrorMsg[WSA_QOS_EPROVSPECBUF]       = ERR_WITH_CODE(WSA_QOS_EPROVSPECBUF, "Invalid QoS provider buffer.");
+  WinErrorMsg[WSA_QOS_EFILTERSTYLE]       = ERR_WITH_CODE(WSA_QOS_EFILTERSTYLE, "Invalid QoS filter style.");
+  WinErrorMsg[WSA_QOS_EFILTERTYPE]        = ERR_WITH_CODE(WSA_QOS_EFILTERTYPE, "Invalid QoS filter type.");
+  WinErrorMsg[WSA_QOS_EFILTERCOUNT]       = ERR_WITH_CODE(WSA_QOS_EFILTERCOUNT, "Incorrect QoS filter count.");
+  WinErrorMsg[WSA_QOS_EOBJLENGTH]         = ERR_WITH_CODE(WSA_QOS_EOBJLENGTH, "Invalid QoS object length.");
+  WinErrorMsg[WSA_QOS_EFLOWCOUNT]         = ERR_WITH_CODE(WSA_QOS_EFLOWCOUNT, "Incorrect QoS flow count.");
+  WinErrorMsg[WSA_QOS_EUNKOWNPSOBJ]       = ERR_WITH_CODE(WSA_QOS_EUNKOWNPSOBJ, "Unrecognized QoS object.");
+  WinErrorMsg[WSA_QOS_EPOLICYOBJ]         = ERR_WITH_CODE(WSA_QOS_EPOLICYOBJ, "Invalid QoS policy object.");
+  WinErrorMsg[WSA_QOS_EFLOWDESC]          = ERR_WITH_CODE(WSA_QOS_EFLOWDESC, "Invalid QoS flow descriptor.");
+  WinErrorMsg[WSA_QOS_EPSFLOWSPEC]        = ERR_WITH_CODE(WSA_QOS_EPSFLOWSPEC, "Invalid QoS provider-specific flowspec.");
+  WinErrorMsg[WSA_QOS_EPSFILTERSPEC]      = ERR_WITH_CODE(WSA_QOS_EPSFILTERSPEC, "Invalid QoS provider-specific filterspec.");
+  WinErrorMsg[WSA_QOS_ESDMODEOBJ]         = ERR_WITH_CODE(WSA_QOS_ESDMODEOBJ, "Invalid QoS shape discard mode object.");
+  WinErrorMsg[WSA_QOS_ESHAPERATEOBJ]      = ERR_WITH_CODE(WSA_QOS_ESHAPERATEOBJ, "Invalid QoS shaping rate object.");
+  WinErrorMsg[WSA_QOS_RESERVED_PETYPE]    = ERR_WITH_CODE(WSA_QOS_RESERVED_PETYPE, "Reserved policy QoS element type.");
 };
 
-#elif __linux__                    // creating error mapping for linux system errors
+#elif __linux__
 {
-  ErrornoErrorMsg[EPERM]           = "EPERM (Operation not permitted) 1";
-  ErrornoErrorMsg[ENOENT]          = "ENOENT (No such file or directory) 2";
-  ErrornoErrorMsg[ESRCH]           = "ESRCH (No such process) 3";
-  ErrornoErrorMsg[EINTR]           = "EINTR (Interrupted system call) 4";
-  ErrornoErrorMsg[EIO]             = "EIO (Input/output error) 5";
-  ErrornoErrorMsg[ENXIO]           = "ENXIO (No such device or address) 6";
-  ErrornoErrorMsg[E2BIG]           = "E2BIG (Argument list too long) 7";
-  ErrornoErrorMsg[ENOEXEC]         = "ENOEXEC (Exec format error) 8";
-  ErrornoErrorMsg[EBADF]           = "EBADF (Bad file descriptor) 9";
-  ErrornoErrorMsg[ECHILD]          = "ECHILD (No child processes) 10";
-  ErrornoErrorMsg[EAGAIN]          = "EAGAIN (Resource temporarily unavailable) 11";
-  ErrornoErrorMsg[ENOMEM]          = "ENOMEM (Cannot allocate memory) 12";
-  ErrornoErrorMsg[EACCES]          = "EACCES (Permission denied) 13";
-  ErrornoErrorMsg[EFAULT]          = "EFAULT (Bad address) 14";
-  ErrornoErrorMsg[ENOTBLK]         = "ENOTBLK (Block device required) 15";
-  ErrornoErrorMsg[EBUSY]           = "EBUSY (Device or resource busy) 16";
-  ErrornoErrorMsg[EEXIST]          = "EEXIST (File exists) 17";
-  ErrornoErrorMsg[EXDEV]           = "EXDEV (Invalid cross-device link) 18";
-  ErrornoErrorMsg[ENODEV]          = "ENODEV (No such device) 19";
-  ErrornoErrorMsg[ENOTDIR]         = "ENOTDIR (Not a directory) 20";
-  ErrornoErrorMsg[EISDIR]          = "EISDIR (Is a directory) 21";
-  ErrornoErrorMsg[EINVAL]          = "EINVAL (Invalid argument) 22";
-  ErrornoErrorMsg[ENFILE]          = "ENFILE (Too many open files in system) 23";
-  ErrornoErrorMsg[EMFILE]          = "EMFILE (Too many open files) 24";
-  ErrornoErrorMsg[ENOTTY]          = "ENOTTY (Inappropriate ioctl for device) 25";
-  ErrornoErrorMsg[ETXTBSY]         = "ETXTBSY (Text file busy) 26";
-  ErrornoErrorMsg[EFBIG]           = "EFBIG (File too large) 27";
-  ErrornoErrorMsg[ENOSPC]          = "ENOSPC (No space left on device) 28";
-  ErrornoErrorMsg[ESPIPE]          = "ESPIPE (Illegal seek) 29";
-  ErrornoErrorMsg[EROFS]           = "EROFS (Read-only file system) 30";
-  ErrornoErrorMsg[EMLINK]          = "EMLINK (Too many links) 31";
-  ErrornoErrorMsg[EPIPE]           = "EPIPE (Broken pipe) 32";
-  ErrornoErrorMsg[EDOM]            = "EDOM (Numerical argument out of domain) 33";
-  ErrornoErrorMsg[ERANGE]          = "ERANGE (Numerical result out of range) 34";
-  ErrornoErrorMsg[EDEADLK]         = "EDEADLK (Resource deadlock avoided) 35";
-  ErrornoErrorMsg[ENAMETOOLONG]    = "ENAMETOOLONG (File name too long) 36";
-  ErrornoErrorMsg[ENOLCK]          = "ENOLCK (No locks available) 37";
-  ErrornoErrorMsg[ENOSYS]          = "ENOSYS (Function not implemented) 38";
-  ErrornoErrorMsg[ENOTEMPTY]       = "ENOTEMPTY (Directory not empty) 39";
-  ErrornoErrorMsg[ELOOP]           = "ELOOP (Too many levels of symbolic links) 40";
-  ErrornoErrorMsg[EWOULDBLOCK]     = "EWOULDBLOCK (Resource temporarily unavailable) 41";
-  ErrornoErrorMsg[ENOMSG]          = "ENOMSG (No message of desired type) 42";
-  ErrornoErrorMsg[EIDRM]           = "EIDRM (Identifier removed) 43";
-  ErrornoErrorMsg[ECHRNG]          = "ECHRNG (Channel number out of range) 44";
-  ErrornoErrorMsg[EL2NSYNC]        = "EL2NSYNC (Level 2 not synchronized) 45";
-  ErrornoErrorMsg[EL3HLT]          = "EL3HLT (Level 3 halted) 46";
-  ErrornoErrorMsg[EL3RST]          = "EL3RST (Level 3 reset) 47";
-  ErrornoErrorMsg[ELNRNG]          = "ELNRNG (Link number out of range) 48";
-  ErrornoErrorMsg[EUNATCH]         = "EUNATCH (Protocol driver not attached) 49";
-  ErrornoErrorMsg[ENOCSI]          = "ENOCSI (No CSI structure available) 50";
-  ErrornoErrorMsg[EL2HLT]          = "EL2HLT (Level 2 halted) 51";
-  ErrornoErrorMsg[EBADE]           = "EBADE (Invalid exchange) 52";
-  ErrornoErrorMsg[EBADR]           = "EBADR (Invalid request descriptor) 53";    
-  ErrornoErrorMsg[EXFULL]          = "EXFULL (Exchange full) 54";
-  ErrornoErrorMsg[ENOANO]          = "ENOANO (No anode) 55";
-  ErrornoErrorMsg[EBADRQC]         = "EBADRQC (Invalid request code) 56";
-  ErrornoErrorMsg[EBADSLT]         = "EBADSLT (Invalid slot) 57";
-  ErrornoErrorMsg[EDEADLOCK]       = "EDEADLOCK (Resource deadlock avoided) 58";
-  ErrornoErrorMsg[EBFONT]          = "EBFONT (Bad font file format) 59";
-  ErrornoErrorMsg[ENOSTR]          = "ENOSTR (Device not a stream) 60";
-  ErrornoErrorMsg[ENODATA]         = "ENODATA (No data available) 61";
-  ErrornoErrorMsg[ETIME]           = "ETIME (Timer expired) 62";
-  ErrornoErrorMsg[ENOSR]           = "ENOSR (Out of streams resources) 63";
-  ErrornoErrorMsg[ENONET]          = "ENONET (Machine is not on the network) 64";
-  ErrornoErrorMsg[ENOPKG]          = "ENOPKG (Package not installed) 65";
-  ErrornoErrorMsg[EREMOTE]         = "EREMOTE (Object is remote) 66";
-  ErrornoErrorMsg[ENOLINK]         = "ENOLINK (Link has been severed) 67";
-  ErrornoErrorMsg[EADV]            = "EADV (Advertise error) 68";
-  ErrornoErrorMsg[ESRMNT]          = "ESRMNT (Srmount error) 69";
-  ErrornoErrorMsg[ECOMM]           = "ECOMM (Communication error on send) 70";
-  ErrornoErrorMsg[EPROTO]          = "EPROTO (Protocol error) 71";
-  ErrornoErrorMsg[EMULTIHOP]       = "EMULTIHOP (Multihop attempted) 72";
-  ErrornoErrorMsg[EDOTDOT]         = "EDOTDOT (RFS specific error) 73";
-  ErrornoErrorMsg[EBADMSG]         = "EBADMSG (Bad message) 74";
-  ErrornoErrorMsg[EOVERFLOW]       = "EOVERFLOW (Value too large for defined data type) 75";
-  ErrornoErrorMsg[ENOTUNIQ]        = "ENOTUNIQ (Name not unique on network) 76";
-  ErrornoErrorMsg[EBADFD]          = "EBADFD (File descriptor in bad state) 77";
-  ErrornoErrorMsg[EREMCHG]         = "EREMCHG (Remote address changed) 78";
-  ErrornoErrorMsg[ELIBACC]         = "ELIBACC (Can not access a needed shared library) 79";
-  ErrornoErrorMsg[ELIBBAD]         = "ELIBBAD (Accessing a corrupted shared library) 80";
-  ErrornoErrorMsg[ELIBSCN]         = "ELIBSCN (.lib section in a.out corrupted) 81";
-  ErrornoErrorMsg[ELIBMAX]         = "ELIBMAX (Attempting to link in too many shared libraries) 82";
-  ErrornoErrorMsg[ELIBEXEC]        = "ELIBEXEC (Cannot exec a shared library directly) 83";
-  ErrornoErrorMsg[EILSEQ]          = "EILSEQ (Invalid or incomplete multibyte or wide character) 84";
-  ErrornoErrorMsg[ERESTART]        = "ERESTART (Interrupted system call should be restarted) 85";
-  ErrornoErrorMsg[ESTRPIPE]        = "ESTRPIPE (Streams pipe error) 86";
-  ErrornoErrorMsg[EUSERS]          = "EUSERS (Too many users) 87";
-  ErrornoErrorMsg[ENOTSOCK]        = "ENOTSOCK (Socket operation on non-socket) 88";
-  ErrornoErrorMsg[EDESTADDRREQ]    = "EDESTADDRREQ (Destination address required) 89";
-  ErrornoErrorMsg[EMSGSIZE]        = "EMSGSIZE (Message too long) 90";
-  ErrornoErrorMsg[EPROTOTYPE]      = "EPROTOTYPE (Protocol wrong type for socket) 91";
-  ErrornoErrorMsg[ENOPROTOOPT]     = "ENOPROTOOPT (Protocol not available) 92";
-  ErrornoErrorMsg[EPROTONOSUPPORT] = "EPROTONOSUPPORT (Protocol not supported) 93";
-  ErrornoErrorMsg[ESOCKTNOSUPPORT] = "ESOCKTNOSUPPORT (Socket type not supported) 94";
-  ErrornoErrorMsg[EOPNOTSUPP]      = "EOPNOTSUPP (Operation not supported) 95";
-  ErrornoErrorMsg[EPFNOSUPPORT]    = "EPFNOSUPPORT (Protocol family not supported) 96";
-  ErrornoErrorMsg[EAFNOSUPPORT]    = "EAFNOSUPPORT (Address family not supported by protocol) 97";
-  ErrornoErrorMsg[EADDRINUSE]      = "EADDRINUSE (Address already in use) 98";
-  ErrornoErrorMsg[EADDRNOTAVAIL]   = "EADDRNOTAVAIL (Cannot assign requested address) 99";
-  ErrornoErrorMsg[ENETDOWN]        = "ENETDOWN (Network is down) 100";
-  ErrornoErrorMsg[ENETUNREACH]     = "ENETUNREACH (Network is unreachable) 101";
-  ErrornoErrorMsg[ENETRESET]       = "ENETRESET (Network dropped connection on reset) 102";
-  ErrornoErrorMsg[ECONNABORTED]    = "ECONNABORTED (Software caused connection abort) 103";
-  ErrornoErrorMsg[ECONNRESET]      = "ECONNRESET (Connection reset by peer) 104";
-  ErrornoErrorMsg[ENOBUFS]         = "ENOBUFS (No buffer space available) 105";
-  ErrornoErrorMsg[EISCONN]         = "EISCONN (Transport endpoint is already connected) 106";
-  ErrornoErrorMsg[ENOTCONN]        = "ENOTCONN (Transport endpoint is not connected) 107";
-  ErrornoErrorMsg[ESHUTDOWN]       = "ESHUTDOWN (Cannot send after transport endpoint shutdown) 108";
-  ErrornoErrorMsg[ETOOMANYREFS]    = "ETOOMANYREFS (Too many references: cannot splice) 109";
-  ErrornoErrorMsg[ETIMEDOUT]       = "ETIMEDOUT (Connection timed out) 110";
-  ErrornoErrorMsg[ECONNREFUSED]    = "ECONNREFUSED (Connection refused) 111";
-  ErrornoErrorMsg[EHOSTDOWN]       = "EHOSTDOWN (Host is down) 112";
-  ErrornoErrorMsg[EHOSTUNREACH]    = "EHOSTUNREACH (No route to host) 113";
-  ErrornoErrorMsg[EALREADY]        = "EALREADY (Operation already in progress) 114";
-  ErrornoErrorMsg[EINPROGRESS]     = "EINPROGRESS (Operation now in progress) 115";
-  ErrornoErrorMsg[ESTALE]          = "ESTALE (Stale file handle) 116";
-  ErrornoErrorMsg[EUCLEAN]         = "EUCLEAN (Structure needs cleaning) 117";
-  ErrornoErrorMsg[ENOTNAM]         = "ENOTNAM (Not a XENIX named type file) 118";
-  ErrornoErrorMsg[ENAVAIL]         = "ENAVAIL (No XENIX semaphores available) 119";
-  ErrornoErrorMsg[EISNAM]          = "EISNAM (Is a named type file) 120";
-  ErrornoErrorMsg[EREMOTEIO]       = "EREMOTEIO (Remote I/O error) 121";
-  ErrornoErrorMsg[EDQUOT]          = "EDQUOT (Disk quota exceeded) 122";
-  ErrornoErrorMsg[ENOMEDIUM]       = "ENOMEDIUM (No medium found) 123";
-  ErrornoErrorMsg[EMEDIUMTYPE]     = "EMEDIUMTYPE (Wrong medium type) 124";
-  ErrornoErrorMsg[ECANCELED]       = "ECANCELED (Operation canceled) 125";
-  ErrornoErrorMsg[ENOKEY]          = "ENOKEY (Required key not available) 126";
-  ErrornoErrorMsg[EKEYEXPIRED]     = "EKEYEXPIRED (Key has expired) 127";
-  ErrornoErrorMsg[EKEYREVOKED]     = "EKEYREVOKED (Key has been revoked) 128";
-  ErrornoErrorMsg[EKEYREJECTED]    = "EKEYREJECTED (Key was rejected by service) 129";
-  ErrornoErrorMsg[EOWNERDEAD]      = "EOWNERDEAD (Owner died) 130";
-  ErrornoErrorMsg[ENOTRECOVERABLE] = "ENOTRECOVERABLE (State not recoverable) 131";
-  ErrornoErrorMsg[ERFKILL]         = "ERFKILL (Operation not possible due to RF-kill) 132";
-  ErrornoErrorMsg[EHWPOISON]       = "EHWPOISON (Memory page has hardware error) 133";
+  ErrornoErrorMsg[EPERM]           = ERR_WITH_CODE(EPERM, "Operation not permitted");
+  ErrornoErrorMsg[ENOENT]          = ERR_WITH_CODE(ENOENT, "No such file or directory");
+  ErrornoErrorMsg[ESRCH]           = ERR_WITH_CODE(ESRCH, "No such process");
+  ErrornoErrorMsg[EINTR]           = ERR_WITH_CODE(EINTR, "Interrupted system call");
+  ErrornoErrorMsg[EIO]             = ERR_WITH_CODE(EIO, "Input/output error");
+  ErrornoErrorMsg[ENXIO]           = ERR_WITH_CODE(ENXIO, "No such device or address");
+  ErrornoErrorMsg[E2BIG]           = ERR_WITH_CODE(E2BIG, "Argument list too long");
+  ErrornoErrorMsg[ENOEXEC]         = ERR_WITH_CODE(ENOEXEC, "Exec format error");
+  ErrornoErrorMsg[EBADF]           = ERR_WITH_CODE(EBADF, "Bad file descriptor");
+  ErrornoErrorMsg[ECHILD]          = ERR_WITH_CODE(ECHILD, "No child processes");
+  ErrornoErrorMsg[EAGAIN]          = ERR_WITH_CODE(EAGAIN, "Resource temporarily unavailable");
+  ErrornoErrorMsg[ENOMEM]          = ERR_WITH_CODE(ENOMEM, "Cannot allocate memory");
+  ErrornoErrorMsg[EACCES]          = ERR_WITH_CODE(EACCES, "Permission denied");
+  ErrornoErrorMsg[EFAULT]          = ERR_WITH_CODE(EFAULT, "Bad address");
+  ErrornoErrorMsg[ENOTBLK]         = ERR_WITH_CODE(ENOTBLK, "Block device required");
+  ErrornoErrorMsg[EBUSY]           = ERR_WITH_CODE(EBUSY, "Device or resource busy");
+  ErrornoErrorMsg[EEXIST]          = ERR_WITH_CODE(EEXIST, "File exists");
+  ErrornoErrorMsg[EXDEV]           = ERR_WITH_CODE(EXDEV, "Invalid cross-device link");
+  ErrornoErrorMsg[ENODEV]          = ERR_WITH_CODE(ENODEV, "No such device");
+  ErrornoErrorMsg[ENOTDIR]         = ERR_WITH_CODE(ENOTDIR, "Not a directory");
+  ErrornoErrorMsg[EISDIR]          = ERR_WITH_CODE(EISDIR, "Is a directory");
+  ErrornoErrorMsg[EINVAL]          = ERR_WITH_CODE(EINVAL, "Invalid argument");
+  ErrornoErrorMsg[ENFILE]          = ERR_WITH_CODE(ENFILE, "Too many open files in system");
+  ErrornoErrorMsg[EMFILE]          = ERR_WITH_CODE(EMFILE, "Too many open files");
+  ErrornoErrorMsg[ENOTTY]          = ERR_WITH_CODE(ENOTTY, "Inappropriate ioctl for device");
+  ErrornoErrorMsg[ETXTBSY]         = ERR_WITH_CODE(ETXTBSY, "Text file busy");
+  ErrornoErrorMsg[EFBIG]           = ERR_WITH_CODE(EFBIG, "File too large");
+  ErrornoErrorMsg[ENOSPC]          = ERR_WITH_CODE(ENOSPC, "No space left on device");
+  ErrornoErrorMsg[ESPIPE]          = ERR_WITH_CODE(ESPIPE, "Illegal seek");
+  ErrornoErrorMsg[EROFS]           = ERR_WITH_CODE(EROFS, "Read-only file system");
+  ErrornoErrorMsg[EMLINK]          = ERR_WITH_CODE(EMLINK, "Too many links");
+  ErrornoErrorMsg[EPIPE]           = ERR_WITH_CODE(EPIPE, "Broken pipe");
+  ErrornoErrorMsg[EDOM]            = ERR_WITH_CODE(EDOM, "Numerical argument out of domain");
+  ErrornoErrorMsg[ERANGE]          = ERR_WITH_CODE(ERANGE, "Numerical result out of range");
+  ErrornoErrorMsg[EDEADLK]         = ERR_WITH_CODE(EDEADLK, "Resource deadlock avoided");
+  ErrornoErrorMsg[ENAMETOOLONG]    = ERR_WITH_CODE(ENAMETOOLONG, "File name too long");
+  ErrornoErrorMsg[ENOLCK]          = ERR_WITH_CODE(ENOLCK, "No locks available");
+  ErrornoErrorMsg[ENOSYS]          = ERR_WITH_CODE(ENOSYS, "Function not implemented");
+  ErrornoErrorMsg[ENOTEMPTY]       = ERR_WITH_CODE(ENOTEMPTY, "Directory not empty");
+  ErrornoErrorMsg[ELOOP]           = ERR_WITH_CODE(ELOOP, "Too many levels of symbolic links");
+  ErrornoErrorMsg[EWOULDBLOCK]     = ERR_WITH_CODE(EWOULDBLOCK, "Resource temporarily unavailable");
+  ErrornoErrorMsg[ENOMSG]          = ERR_WITH_CODE(ENOMSG, "No message of desired type");
+  ErrornoErrorMsg[EIDRM]           = ERR_WITH_CODE(EIDRM, "Identifier removed");
+  ErrornoErrorMsg[ECHRNG]          = ERR_WITH_CODE(ECHRNG, "Channel number out of range");
+  ErrornoErrorMsg[EL2NSYNC]        = ERR_WITH_CODE(EL2NSYNC, "Level 2 not synchronized");
+  ErrornoErrorMsg[EL3HLT]          = ERR_WITH_CODE(EL3HLT, "Level 3 halted");
+  ErrornoErrorMsg[EL3RST]          = ERR_WITH_CODE(EL3RST, "Level 3 reset");
+  ErrornoErrorMsg[ELNRNG]          = ERR_WITH_CODE(ELNRNG, "Link number out of range");
+  ErrornoErrorMsg[EUNATCH]         = ERR_WITH_CODE(EUNATCH, "Protocol driver not attached");
+  ErrornoErrorMsg[ENOCSI]          = ERR_WITH_CODE(ENOCSI, "No CSI structure available");
+  ErrornoErrorMsg[EL2HLT]          = ERR_WITH_CODE(EL2HLT, "Level 2 halted");
+  ErrornoErrorMsg[EBADE]           = ERR_WITH_CODE(EBADE, "Invalid exchange");
+  ErrornoErrorMsg[EBADR]           = ERR_WITH_CODE(EBADR, "Invalid request descriptor");    
+  ErrornoErrorMsg[EXFULL]          = ERR_WITH_CODE(EXFULL, "Exchange full");
+  ErrornoErrorMsg[ENOANO]          = ERR_WITH_CODE(ENOANO, "No anode");
+  ErrornoErrorMsg[EBADRQC]         = ERR_WITH_CODE(EBADRQC, "Invalid request code");
+  ErrornoErrorMsg[EBADSLT]         = ERR_WITH_CODE(EBADSLT, "Invalid slot");
+  ErrornoErrorMsg[EDEADLOCK]       = ERR_WITH_CODE(EDEADLOCK, "Resource deadlock avoided");
+  ErrornoErrorMsg[EBFONT]          = ERR_WITH_CODE(EBFONT, "Bad font file format");
+  ErrornoErrorMsg[ENOSTR]          = ERR_WITH_CODE(ENOSTR, "Device not a stream");
+  ErrornoErrorMsg[ENODATA]         = ERR_WITH_CODE(ENODATA, "No data available");
+  ErrornoErrorMsg[ETIME]           = ERR_WITH_CODE(ETIME, "Timer expired");
+  ErrornoErrorMsg[ENOSR]           = ERR_WITH_CODE(ENOSR, "Out of streams resources");
+  ErrornoErrorMsg[ENONET]          = ERR_WITH_CODE(ENONET, "Machine is not on the network");
+  ErrornoErrorMsg[ENOPKG]          = ERR_WITH_CODE(ENOPKG, "Package not installed");
+  ErrornoErrorMsg[EREMOTE]         = ERR_WITH_CODE(EREMOTE, "Object is remote");
+  ErrornoErrorMsg[ENOLINK]         = ERR_WITH_CODE(ENOLINK, "Link has been severed");
+  ErrornoErrorMsg[EADV]            = ERR_WITH_CODE(EADV, "Advertise error");
+  ErrornoErrorMsg[ESRMNT]          = ERR_WITH_CODE(ESRMNT, "Srmount error");
+  ErrornoErrorMsg[ECOMM]           = ERR_WITH_CODE(ECOMM, "Communication error on send");
+  ErrornoErrorMsg[EPROTO]          = ERR_WITH_CODE(EPROTO, "Protocol error");
+  ErrornoErrorMsg[EMULTIHOP]       = ERR_WITH_CODE(EMULTIHOP, "Multihop attempted");
+  ErrornoErrorMsg[EDOTDOT]         = ERR_WITH_CODE(EDOTDOT, "RFS specific error");
+  ErrornoErrorMsg[EBADMSG]         = ERR_WITH_CODE(EBADMSG, "Bad message");
+  ErrornoErrorMsg[EOVERFLOW]       = ERR_WITH_CODE(EOVERFLOW, "Value too large for defined data type");
+  ErrornoErrorMsg[ENOTUNIQ]        = ERR_WITH_CODE(ENOTUNIQ, "Name not unique on network");
+  ErrornoErrorMsg[EBADFD]          = ERR_WITH_CODE(EBADFD, "File descriptor in bad state");
+  ErrornoErrorMsg[EREMCHG]         = ERR_WITH_CODE(EREMCHG, "Remote address changed");
+  ErrornoErrorMsg[ELIBACC]         = ERR_WITH_CODE(ELIBACC, "Can not access a needed shared library");
+  ErrornoErrorMsg[ELIBBAD]         = ERR_WITH_CODE(ELIBBAD, "Accessing a corrupted shared library");
+  ErrornoErrorMsg[ELIBSCN]         = ERR_WITH_CODE(ELIBSCN, ".lib section in a.out corrupted");
+  ErrornoErrorMsg[ELIBMAX]         = ERR_WITH_CODE(ELIBMAX, "(Attempting to link in too many shared libraries");
+  ErrornoErrorMsg[ELIBEXEC]        = ERR_WITH_CODE(ELIBEXEC, "(Cannot exec a shared library directly");
+  ErrornoErrorMsg[EILSEQ]          = ERR_WITH_CODE(EILSEQ, "Invalid or incomplete multibyte or wide character");
+  ErrornoErrorMsg[ERESTART]        = ERR_WITH_CODE(ERESTART, "Interrupted system call should be restarted");
+  ErrornoErrorMsg[ESTRPIPE]        = ERR_WITH_CODE(ESTRPIPE, "Streams pipe error");
+  ErrornoErrorMsg[EUSERS]          = ERR_WITH_CODE(EUSERS, "Too many users");
+  ErrornoErrorMsg[ENOTSOCK]        = ERR_WITH_CODE(ENOTSOCK, "Socket operation on non-socket");
+  ErrornoErrorMsg[EDESTADDRREQ]    = ERR_WITH_CODE(EDESTADDRREQ, "Destination address required");
+  ErrornoErrorMsg[EMSGSIZE]        = ERR_WITH_CODE(EMSGSIZE, "Message too long");
+  ErrornoErrorMsg[EPROTOTYPE]      = ERR_WITH_CODE(EPROTOTYPE, "Protocol wrong type for socket");
+  ErrornoErrorMsg[ENOPROTOOPT]     = ERR_WITH_CODE(ENOPROTOOPT, "Protocol not available");
+  ErrornoErrorMsg[EPROTONOSUPPORT] = ERR_WITH_CODE(EPROTONOSUPPORT, "Protocol not supported");
+  ErrornoErrorMsg[ESOCKTNOSUPPORT] = ERR_WITH_CODE(ESOCKTNOSUPPORT, "Socket type not supported");
+  ErrornoErrorMsg[EOPNOTSUPP]      = ERR_WITH_CODE(EOPNOTSUPP, "Operation not supported");
+  ErrornoErrorMsg[EPFNOSUPPORT]    = ERR_WITH_CODE(EPFNOSUPPORT, "Protocol family not supported");
+  ErrornoErrorMsg[EAFNOSUPPORT]    = ERR_WITH_CODE(EAFNOSUPPORT, "Address family not supported by protocol");
+  ErrornoErrorMsg[EADDRINUSE]      = ERR_WITH_CODE(EADDRINUSE, "Address already in use");
+  ErrornoErrorMsg[EADDRNOTAVAIL]   = ERR_WITH_CODE(EADDRNOTAVAIL, "Cannot assign requested address");
+  ErrornoErrorMsg[ENETDOWN]        = ERR_WITH_CODE(ENETDOWN, "Network is down");
+  ErrornoErrorMsg[ENETUNREACH]     = ERR_WITH_CODE(ENETUNREACH, "Network is unreachable");
+  ErrornoErrorMsg[ENETRESET]       = ERR_WITH_CODE(ENETRESET, "Network dropped connection on reset");
+  ErrornoErrorMsg[ECONNABORTED]    = ERR_WITH_CODE(ECONNABORTED, "Software caused connection abort");
+  ErrornoErrorMsg[ECONNRESET]      = ERR_WITH_CODE(ECONNRESET, "Connection reset by peer");
+  ErrornoErrorMsg[ENOBUFS]         = ERR_WITH_CODE(ENOBUFS, "No buffer space available");
+  ErrornoErrorMsg[EISCONN]         = ERR_WITH_CODE(EISCONN, "Transport endpoint is already connected");
+  ErrornoErrorMsg[ENOTCONN]        = ERR_WITH_CODE(ENOTCONN, "Transport endpoint is not connected");
+  ErrornoErrorMsg[ESHUTDOWN]       = ERR_WITH_CODE(ESHUTDOWN, "Cannot send after transport endpoint shutdown");
+  ErrornoErrorMsg[ETOOMANYREFS]    = ERR_WITH_CODE(ETOOMANYREFS, "Too many references: cannot splice");
+  ErrornoErrorMsg[ETIMEDOUT]       = ERR_WITH_CODE(ETIMEDOUT, "Connection timed out");
+  ErrornoErrorMsg[ECONNREFUSED]    = ERR_WITH_CODE(ECONNREFUSED, "Connection refused");
+  ErrornoErrorMsg[EHOSTDOWN]       = ERR_WITH_CODE(EHOSTDOWN, "Host is down");
+  ErrornoErrorMsg[EHOSTUNREACH]    = ERR_WITH_CODE(EHOSTUNREACH, "No route to host");
+  ErrornoErrorMsg[EALREADY]        = ERR_WITH_CODE(EALREADY, "Operation already in progress");
+  ErrornoErrorMsg[EINPROGRESS]     = ERR_WITH_CODE(EINPROGRESS, "Operation now in progress");
+  ErrornoErrorMsg[ESTALE]          = ERR_WITH_CODE(ESTALE, "Stale file handle");
+  ErrornoErrorMsg[EUCLEAN]         = ERR_WITH_CODE(EUCLEAN, "Structure needs cleaning");
+  ErrornoErrorMsg[ENOTNAM]         = ERR_WITH_CODE(ENOTNAM, "Not a XENIX named type file");
+  ErrornoErrorMsg[ENAVAIL]         = ERR_WITH_CODE(ENAVAIL, "No XENIX semaphores available");
+  ErrornoErrorMsg[EISNAM]          = ERR_WITH_CODE(EISNAM, "Is a named type file");
+  ErrornoErrorMsg[EREMOTEIO]       = ERR_WITH_CODE(EREMOTEIO, "Remote I/O error");
+  ErrornoErrorMsg[EDQUOT]          = ERR_WITH_CODE(EDQUOT, "Disk quota exceeded");
+  ErrornoErrorMsg[ENOMEDIUM]       = ERR_WITH_CODE(ENOMEDIUM, "No medium found");
+  ErrornoErrorMsg[EMEDIUMTYPE]     = ERR_WITH_CODE(EMEDIUMTYPE, "Wrong medium type");
+  ErrornoErrorMsg[ECANCELED]       = ERR_WITH_CODE(ECANCELED, "Operation canceled");
+  ErrornoErrorMsg[ENOKEY]          = ERR_WITH_CODE(ENOKEY, "Required key not available");
+  ErrornoErrorMsg[EKEYEXPIRED]     = ERR_WITH_CODE(EKEYEXPIRED, "Key has expired");
+  ErrornoErrorMsg[EKEYREVOKED]     = ERR_WITH_CODE(EKEYREVOKED, "Key has been revoked");
+  ErrornoErrorMsg[EKEYREJECTED]    = ERR_WITH_CODE(EKEYREJECTED, "Key was rejected by service");
+  ErrornoErrorMsg[EOWNERDEAD]      = ERR_WITH_CODE(EOWNERDEAD, "Owner died");
+  ErrornoErrorMsg[ENOTRECOVERABLE] = ERR_WITH_CODE(ENOTRECOVERABLE, "State not recoverable");
+  ErrornoErrorMsg[ERFKILL]         = ERR_WITH_CODE(ERFKILL, "Operation not possible due to RF-kill");
+  ErrornoErrorMsg[EHWPOISON]       = ERR_WITH_CODE(EHWPOISON, "Memory page has hardware error");
 };
-
 #endif
-
 };
 
-void OpenSSLError::CreateMappingErrorMsg()    // creating error mapping for OpenSSL errors
+void OpenSSLError::CreateMappingErrorMsg()
 {
-  OpenSSLErrorMsg[SSL_ERROR_NONE]             = "SSL_ERROR_NONE 0";
-  OpenSSLErrorMsg[SSL_ERROR_SSL]              = "SSL_ERROR_SSL 1";
-  OpenSSLErrorMsg[SSL_ERROR_WANT_READ]        = "SSL_ERROR_WANT_READ 2";
-  OpenSSLErrorMsg[SSL_ERROR_WANT_WRITE]       = "SSL_ERROR_WANT_WRITE 3";
-  OpenSSLErrorMsg[SSL_ERROR_WANT_X509_LOOKUP] = "SSL_ERROR_WANT_X509_LOOKUP 4";
-  OpenSSLErrorMsg[SSL_ERROR_SYSCALL]          = "SSL_ERROR_SYSCALL 5";
-  OpenSSLErrorMsg[SSL_ERROR_ZERO_RETURN]      = "SSL_ERROR_ZERO_RETURN 6";
-  OpenSSLErrorMsg[SSL_ERROR_WANT_CONNECT]     = "SSL_ERROR_WANT_CONNECT 7";
-  OpenSSLErrorMsg[SSL_ERROR_WANT_ACCEPT]      = "SSL_ERROR_WANT_ACCEPT 8";
+  OpenSSLErrorMsg[SSL_ERROR_NONE]             = ERR_WITH_CODE(SSL_ERROR_NONE, "The TLS/SSL I/O operation is completed.");
+  OpenSSLErrorMsg[SSL_ERROR_SSL]              = ERR_WITH_CODE(SSL_ERROR_SSL, "A failure in the SSL library occurred.");
+  OpenSSLErrorMsg[SSL_ERROR_WANT_READ]        = ERR_WITH_CODE(SSL_ERROR_WANT_READ, "Wait for the socket to be readable.");
+  OpenSSLErrorMsg[SSL_ERROR_WANT_WRITE]       = ERR_WITH_CODE(SSL_ERROR_WANT_WRITE, "Wait for the socket to be writeable.");
+  OpenSSLErrorMsg[SSL_ERROR_WANT_X509_LOOKUP] = ERR_WITH_CODE(SSL_ERROR_WANT_X509_LOOKUP, "Try later / SSL_ERROR_WANT_X509_LOOKUP");
+  OpenSSLErrorMsg[SSL_ERROR_SYSCALL]          = ERR_WITH_CODE(SSL_ERROR_SYSCALL, "Some I/O error occurred.");
+  OpenSSLErrorMsg[SSL_ERROR_ZERO_RETURN]      = ERR_WITH_CODE(SSL_ERROR_ZERO_RETURN, "The TLS/SSL connection has been closed.");
+  OpenSSLErrorMsg[SSL_ERROR_WANT_CONNECT]     = ERR_WITH_CODE(SSL_ERROR_WANT_CONNECT, "BIO not connected, try later.");
+  OpenSSLErrorMsg[SSL_ERROR_WANT_ACCEPT]      = ERR_WITH_CODE(SSL_ERROR_WANT_ACCEPT, "TLS/SSL connection want accept");
 };
 
-void X509Error::CreateMappingErrorMsg()       // creating error mapping for X509 errors
+void X509Error::CreateMappingErrorMsg()
 {
-  X509ErrorMsg[X509_V_OK]                                     = "X509_V_OK 0";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT]          = "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT 2";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_CRL]                  = "X509_V_ERR_UNABLE_TO_GET_CRL 3";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE]   = "X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE 4";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE]    = "X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE 5";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY] = "X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY 6";
-  X509ErrorMsg[X509_V_ERR_CERT_SIGNATURE_FAILURE]             = "X509_V_ERR_CERT_SIGNATURE_FAILURE 7";
-  X509ErrorMsg[X509_V_ERR_CRL_SIGNATURE_FAILURE]              = "X509_V_ERR_CRL_SIGNATURE_FAILURE 8";
-  X509ErrorMsg[X509_V_ERR_CERT_NOT_YET_VALID]                 = "X509_V_ERR_CERT_NOT_YET_VALID 9";
-  X509ErrorMsg[X509_V_ERR_CERT_HAS_EXPIRED]                   = "X509_V_ERR_CERT_HAS_EXPIRED 10";
-  X509ErrorMsg[X509_V_ERR_CRL_NOT_YET_VALID]                  = "X509_V_ERR_CRL_NOT_YET_VALID 11";
-  X509ErrorMsg[X509_V_ERR_CRL_HAS_EXPIRED]                    = "X509_V_ERR_CRL_HAS_EXPIRED 12";
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD]     = "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD 13";
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD]      = "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD 14";
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD]     = "X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD 15"; 
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD]     = "X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD 16";
-  X509ErrorMsg[X509_V_ERR_OUT_OF_MEM]                         = "X509_V_ERR_OUT_OF_MEM 17";
-  X509ErrorMsg[X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT]        = "X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT 18";
-  X509ErrorMsg[X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN]          = "X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY]  = "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY 20";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE]    = "X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE 21";
-  X509ErrorMsg[X509_V_ERR_CERT_CHAIN_TOO_LONG]                = "X509_V_ERR_CERT_CHAIN_TOO_LONG 22";
-  X509ErrorMsg[X509_V_ERR_CERT_REVOKED]                       = "X509_V_ERR_CERT_REVOKED 23";
-  X509ErrorMsg[X509_V_ERR_INVALID_CA]                         = "X509_V_ERR_INVALID_CA 24";
-  X509ErrorMsg[X509_V_ERR_PATH_LENGTH_EXCEEDED]               = "X509_V_ERR_PATH_LENGTH_EXCEEDED 25";
-  X509ErrorMsg[X509_V_ERR_INVALID_PURPOSE]                    = "X509_V_ERR_INVALID_PURPOSE 26";
-  X509ErrorMsg[X509_V_ERR_CERT_UNTRUSTED]                     = "X509_V_ERR_CERT_UNTRUSTED 27";
-  X509ErrorMsg[X509_V_ERR_CERT_REJECTED]                      = "X509_V_ERR_CERT_REJECTED 28";
-  X509ErrorMsg[X509_V_ERR_SUBJECT_ISSUER_MISMATCH]            = "X509_V_ERR_SUBJECT_ISSUER_MISMATCH 29";
-  X509ErrorMsg[X509_V_ERR_AKID_SKID_MISMATCH]                 = "X509_V_ERR_AKID_SKID_MISMATCH 30";
-  X509ErrorMsg[X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH]        = "X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH 31";
-  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_CERTSIGN]               = "X509_V_ERR_KEYUSAGE_NO_CERTSIGN 32";
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER]           = "X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER 33";
-  X509ErrorMsg[X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION]       = "X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION 34";
-  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_CRL_SIGN]               = "X509_V_ERR_KEYUSAGE_NO_CRL_SIGN 35";
-  X509ErrorMsg[X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION]   = "X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION 36";
-  X509ErrorMsg[X509_V_ERR_INVALID_NON_CA]                     = "X509_V_ERR_INVALID_NON_CA 37";
-  X509ErrorMsg[X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED]         = "X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED 38";
-  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE]      = "X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE 39";
-  X509ErrorMsg[X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED]     = "X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED 40";
-  X509ErrorMsg[X509_V_ERR_INVALID_EXTENSION]                  = "X509_V_ERR_INVALID_EXTENSION 41";
-  X509ErrorMsg[X509_V_ERR_INVALID_POLICY_EXTENSION]           = "X509_V_ERR_INVALID_POLICY_EXTENSION 42";
-  X509ErrorMsg[X509_V_ERR_NO_EXPLICIT_POLICY]                 = "X509_V_ERR_NO_EXPLICIT_POLICY 43";
-  X509ErrorMsg[X509_V_ERR_DIFFERENT_CRL_SCOPE]                = "X509_V_ERR_DIFFERENT_CRL_SCOPE 44";
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE]      = "X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE 45";
-  X509ErrorMsg[X509_V_ERR_UNNESTED_RESOURCE]                  = "X509_V_ERR_UNNESTED_RESOURCE 46";
-  X509ErrorMsg[X509_V_ERR_PERMITTED_VIOLATION]                = "X509_V_ERR_PERMITTED_VIOLATION 47";
-  X509ErrorMsg[X509_V_ERR_EXCLUDED_VIOLATION]                 = "X509_V_ERR_EXCLUDED_VIOLATION 48";
-  X509ErrorMsg[X509_V_ERR_SUBTREE_MINMAX]                     = "X509_V_ERR_SUBTREE_MINMAX 49";
-  X509ErrorMsg[X509_V_ERR_APPLICATION_VERIFICATION]           = "X509_V_ERR_APPLICATION_VERIFICATION 50";
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE]        = "X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE 51";
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX]      = "X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX 52";
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_NAME_SYNTAX]            = "X509_V_ERR_UNSUPPORTED_NAME_SYNTAX 53";
-  X509ErrorMsg[X509_V_ERR_CRL_PATH_VALIDATION_ERROR]          = "X509_V_ERR_CRL_PATH_VALIDATION_ERROR 54";
+  X509ErrorMsg[X509_V_OK]                                     = ERR_WITH_CODE(X509_V_OK, "The operation was successful.");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT]          = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT, "Issuer certificate of a looked up certificate could not be found.");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_CRL]                  = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_CRL, "The CRL of a certificate could not be found.");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE]   = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE, "The certificate signature could not be decrypted.");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE]    = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE, "The CRL signature could not be decrypted.");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY] = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY, "The public key in the certificate SubjectPublicKeyInfo could not be read.");
+  X509ErrorMsg[X509_V_ERR_CERT_SIGNATURE_FAILURE]             = ERR_WITH_CODE(X509_V_ERR_CERT_SIGNATURE_FAILURE, "The signature of the certificate is invalid.");
+  X509ErrorMsg[X509_V_ERR_CRL_SIGNATURE_FAILURE]              = ERR_WITH_CODE(X509_V_ERR_CRL_SIGNATURE_FAILURE, "The signature of the certificate is invalid.");
+  X509ErrorMsg[X509_V_ERR_CERT_NOT_YET_VALID]                 = ERR_WITH_CODE(X509_V_ERR_CERT_NOT_YET_VALID, "The certificate is not yet valid.");
+  X509ErrorMsg[X509_V_ERR_CERT_HAS_EXPIRED]                   = ERR_WITH_CODE(X509_V_ERR_CERT_HAS_EXPIRED, "The certificate has expired.");
+  X509ErrorMsg[X509_V_ERR_CRL_NOT_YET_VALID]                  = ERR_WITH_CODE(X509_V_ERR_CRL_NOT_YET_VALID, "The CRL is not yet valid.");
+  X509ErrorMsg[X509_V_ERR_CRL_HAS_EXPIRED]                    = ERR_WITH_CODE(X509_V_ERR_CRL_HAS_EXPIRED, "The CRL has expired.");
+  X509ErrorMsg[X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD]     = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD, "The certificate notBefore field contains an invalid time.");
+  X509ErrorMsg[X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD]      = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD, "The certificate notAfter field contains an invalid time.");
+  X509ErrorMsg[X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD]     = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD, "The CRL lastUpdate field contains an invalid time."); 
+  X509ErrorMsg[X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD]     = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD, "The CRL nextUpdate field contains an invalid time.");
+  X509ErrorMsg[X509_V_ERR_OUT_OF_MEM]                         = ERR_WITH_CODE(X509_V_ERR_OUT_OF_MEM, "An error occurred trying to allocate memory.");
+  X509ErrorMsg[X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT]        = ERR_WITH_CODE(X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, "certificate cannot be found in the list of trusted certificates.");
+  X509ErrorMsg[X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN]          = ERR_WITH_CODE(X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN, "root could not be found locally.");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY]  = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY, "The issuer certificate could not be found.");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE]    = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE, "No signatures could be verified.");
+  X509ErrorMsg[X509_V_ERR_CERT_CHAIN_TOO_LONG]                = ERR_WITH_CODE(X509_V_ERR_CERT_CHAIN_TOO_LONG, "The certificate chain length is greater than the supplied maximum depth.");
+  X509ErrorMsg[X509_V_ERR_CERT_REVOKED]                       = ERR_WITH_CODE(X509_V_ERR_CERT_REVOKED, "The certificate has been revoked.");
+  X509ErrorMsg[X509_V_ERR_INVALID_CA]                         = ERR_WITH_CODE(X509_V_ERR_INVALID_CA, "A CA certificate is invalid.");
+  X509ErrorMsg[X509_V_ERR_PATH_LENGTH_EXCEEDED]               = ERR_WITH_CODE(X509_V_ERR_PATH_LENGTH_EXCEEDED, "The basicConstraints pathlength parameter has been exceeded.");
+  X509ErrorMsg[X509_V_ERR_INVALID_PURPOSE]                    = ERR_WITH_CODE(X509_V_ERR_INVALID_PURPOSE, "The supplied certificate cannot be used for the specified purpose.");
+  X509ErrorMsg[X509_V_ERR_CERT_UNTRUSTED]                     = ERR_WITH_CODE(X509_V_ERR_CERT_UNTRUSTED, "the root CA is not marked as trusted for the specified purpose.");
+  X509ErrorMsg[X509_V_ERR_CERT_REJECTED]                      = ERR_WITH_CODE(X509_V_ERR_CERT_REJECTED, "The root CA is marked to reject the specified purpose.");
+  X509ErrorMsg[X509_V_ERR_SUBJECT_ISSUER_MISMATCH]            = ERR_WITH_CODE(X509_V_ERR_SUBJECT_ISSUER_MISMATCH, "");
+  X509ErrorMsg[X509_V_ERR_AKID_SKID_MISMATCH]                 = ERR_WITH_CODE(X509_V_ERR_AKID_SKID_MISMATCH, "");
+  X509ErrorMsg[X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH]        = ERR_WITH_CODE(X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH, "");
+  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_CERTSIGN]               = ERR_WITH_CODE(X509_V_ERR_KEYUSAGE_NO_CERTSIGN, "");
+  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER]           = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER, "Unable to get CRL issuer certificate.");
+  X509ErrorMsg[X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION]       = ERR_WITH_CODE(X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION, "Unhandled critical extension.");
+  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_CRL_SIGN]               = ERR_WITH_CODE(X509_V_ERR_KEYUSAGE_NO_CRL_SIGN, "Key usage does not include CRL signing.");
+  X509ErrorMsg[X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION]   = ERR_WITH_CODE(X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION, "Unhandled critical CRL extension.");
+  X509ErrorMsg[X509_V_ERR_INVALID_NON_CA]                     = ERR_WITH_CODE(X509_V_ERR_INVALID_NON_CA, "Invalid non-CA certificate has CA markings.");
+  X509ErrorMsg[X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED]         = ERR_WITH_CODE(X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED, "Proxy path length constraint exceeded.");
+  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE]      = ERR_WITH_CODE(X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE, "Key usage does not include digital signature.");
+  X509ErrorMsg[X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED]     = ERR_WITH_CODE(X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED, "Proxy certificates not allowed, please use -allow_proxy_certs.");
+  X509ErrorMsg[X509_V_ERR_INVALID_EXTENSION]                  = ERR_WITH_CODE(X509_V_ERR_INVALID_EXTENSION, "Invalid or inconsistent certificate extension.");
+  X509ErrorMsg[X509_V_ERR_INVALID_POLICY_EXTENSION]           = ERR_WITH_CODE(X509_V_ERR_INVALID_POLICY_EXTENSION, "Invalid or inconsistent certificate policy extension.");
+  X509ErrorMsg[X509_V_ERR_NO_EXPLICIT_POLICY]                 = ERR_WITH_CODE(X509_V_ERR_NO_EXPLICIT_POLICY, "No explicit policy.");
+  X509ErrorMsg[X509_V_ERR_DIFFERENT_CRL_SCOPE]                = ERR_WITH_CODE(X509_V_ERR_DIFFERENT_CRL_SCOPE, "Different CRL scope.");
+  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE]      = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE, "Unsupported extension feature.");
+  X509ErrorMsg[X509_V_ERR_UNNESTED_RESOURCE]                  = ERR_WITH_CODE(X509_V_ERR_UNNESTED_RESOURCE, "RFC 3779 resource not subset of parent's resources.");
+  X509ErrorMsg[X509_V_ERR_PERMITTED_VIOLATION]                = ERR_WITH_CODE(X509_V_ERR_PERMITTED_VIOLATION, "Permitted subtree violation.");
+  X509ErrorMsg[X509_V_ERR_EXCLUDED_VIOLATION]                 = ERR_WITH_CODE(X509_V_ERR_EXCLUDED_VIOLATION, "Excluded subtree violation.");
+  X509ErrorMsg[X509_V_ERR_SUBTREE_MINMAX]                     = ERR_WITH_CODE(X509_V_ERR_SUBTREE_MINMAX, "Name constraints minimum and maximum not supported.");
+  X509ErrorMsg[X509_V_ERR_APPLICATION_VERIFICATION]           = ERR_WITH_CODE(X509_V_ERR_APPLICATION_VERIFICATION, "Application verification failure.");
+  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE]        = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE, "Unsupported name constraint type.");
+  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX]      = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX, "Unsupported or invalid name constraint syntax.");
+  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_NAME_SYNTAX]            = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_NAME_SYNTAX, "Unsupported or invalid name syntax.");
+  X509ErrorMsg[X509_V_ERR_CRL_PATH_VALIDATION_ERROR]          = ERR_WITH_CODE(X509_V_ERR_CRL_PATH_VALIDATION_ERROR, "CRL path validation error.");
 };
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (C) 2016, Udit Raikwar <udit043.ur@gmail.com>  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -63,15 +63,6 @@ RegSyncClient::shutdown()
 void 
 RegSyncClient::thread()
 {
-   NumericError search;
-#ifdef _WIN32
-      ErrnoError WinObj;
-      WinObj.CreateMappingErrorMsg();
-#elif __linux__
-      ErrnoError ErrornoObj;
-      ErrornoObj.CreateMappingErrorMsg();
-#endif
-
    int rc;
 
    addrinfo* results;
@@ -103,7 +94,7 @@ RegSyncClient::thread()
       if(mSocketDesc < 0) 
       {
          int e = getErrno();
-         ErrLog(<< "RegSyncClient: cannot open socket, err=" << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog(<< "RegSyncClient: cannot open socket, err=" << ErrnoError::SearchErrorMsg(e) );
          mSocketDesc = 0;
          return;
       }
@@ -113,7 +104,7 @@ RegSyncClient::thread()
       if(rc < 0) 
       {
          int e = getErrno();
-         ErrLog(<<"RegSyncClient: error binding locally, err=" << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog(<<"RegSyncClient: error binding locally, err=" << ErrnoError::SearchErrorMsg(e) );
          closeSocket(mSocketDesc);
          mSocketDesc = 0;
          return;
@@ -124,7 +115,7 @@ RegSyncClient::thread()
       if(rc < 0) 
       {
          int e = getErrno();
-         if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort << ", err=" << search.SearchErrorMsg(e,OSERROR) );
+         if(!mShutdown) ErrLog(<< "RegSyncClient: error connecting to " << mAddress << ":" << mPort << ", err=" << ErrnoError::SearchErrorMsg(e) );
          closeSocket(mSocketDesc);
          mSocketDesc = 0;
          delaySeconds(30);
@@ -141,7 +132,7 @@ RegSyncClient::thread()
       if(rc < 0) 
       {
          int e = getErrno();
-         if(!mShutdown) ErrLog(<< "RegSyncClient: error sending, err=" << search.SearchErrorMsg(e,OSERROR) );
+         if(!mShutdown) ErrLog(<< "RegSyncClient: error sending, err=" << ErrnoError::SearchErrorMsg(e) );
          closeSocket(mSocketDesc);
          mSocketDesc = 0;
          continue;
@@ -152,7 +143,7 @@ RegSyncClient::thread()
       if (!ok)
       {
          int e = getErrno();
-         ErrLog(<< "RegSyncClient: Could not make HTTP socket non-blocking, err=" << search.SearchErrorMsg(e,OSERROR) );
+         ErrLog(<< "RegSyncClient: Could not make HTTP socket non-blocking, err=" << ErrnoError::SearchErrorMsg(e) );
          closeSocket(mSocketDesc);
          mSocketDesc = 0;
          continue;
@@ -173,7 +164,7 @@ RegSyncClient::thread()
             if(rc < 0) 
             {
                int e = getErrno();
-               if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving, err=" << search.SearchErrorMsg(e,OSERROR) );
+               if(!mShutdown) ErrLog(<< "RegSyncClient: error receiving, err=" << ErrnoError::SearchErrorMsg(e) );
                closeSocket(mSocketDesc);
                mSocketDesc = 0;
                break;
@@ -194,7 +185,7 @@ RegSyncClient::thread()
                // If send is blocking then we must have pending send data - so just ignore error - no need to keepalive
                if ( e != EAGAIN && e != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
                {
-                  if(!mShutdown) ErrLog(<< "RegSyncClient: error sending keepalive, err=" << search.SearchErrorMsg(e,OSERROR) );
+                  if(!mShutdown) ErrLog(<< "RegSyncClient: error sending keepalive, err=" << ErrnoError::SearchErrorMsg(e) );
                   closeSocket(mSocketDesc);
                   mSocketDesc = 0;
                   continue;
@@ -208,7 +199,7 @@ RegSyncClient::thread()
          else
          {
              int e = getErrno();
-             if(!mShutdown) ErrLog(<< "RegSyncClient: error calling select, err=" << search.SearchErrorMsg(e,OSERROR) );
+             if(!mShutdown) ErrLog(<< "RegSyncClient: error calling select, err=" << ErrnoError::SearchErrorMsg(e) );
              closeSocket(mSocketDesc);
              mSocketDesc = 0;
              break;
