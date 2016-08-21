@@ -7,6 +7,7 @@
 #include <WS2tcpip.h>
 #else
 #include <sys/fcntl.h>
+#include <unistd.h>
 #endif
 
 #include "IPCThread.hxx"
