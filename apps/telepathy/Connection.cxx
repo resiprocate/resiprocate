@@ -23,6 +23,7 @@
 #include <resip/recon/UserAgent.hxx>
 #include <resip/recon/ReconSubsystem.hxx>
 
+#include <TelepathyQt/RequestableChannelClassSpec>
 
 #include "MyConversationManager.hxx"
 
@@ -117,6 +118,9 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
     
    /* Connection.Interface.Requests */
    mRequestsInterface = Tp::BaseConnectionRequestsInterface::create(this);
+   mRequestsInterface->requestableChannelClasses = Tp::RequestableChannelClassList()
+      << Tp::RequestableChannelClassSpec::textChat().bareClass()
+      << Tp::RequestableChannelClassSpec::audioCall().bareClass();
    /* Fill requestableChannelClasses */
    Tp::RequestableChannelClass text;
    text.fixedProperties[TP_QT_IFACE_CHANNEL + QLatin1String(".ChannelType")] = TP_QT_IFACE_CHANNEL_TYPE_TEXT;
@@ -203,7 +207,7 @@ tr::Connection::setContactsInFile()
 {
    QFile file(c_fileWithContacts);
    
-   if( file.open(QIODevice::ReadWrite | QIODevice::Truncate) )
+   if( file.open(QIODevice::WriteOnly | QIODevice::Truncate) )
    {
       QTextStream stream(&file);
       QMap<uint, QString>::iterator it;
@@ -256,11 +260,15 @@ tr::Connection::setAliases(const Tp::AliasMap &aliases, Tp::DBusError *error)
    
    qDebug() << Q_FUNC_INFO << aliases;
    
+   Tp::AliasPairList aliasPairs;
    for ( Tp::AliasMap::const_iterator it = aliases.begin(); it != aliases.end(); it++ )
    {
       mAliases[it.key()] = it.value();
+      const Tp::AliasPair aliasChange = { it.key(), it.value() };
+      aliasPairs.push_back(aliasChange);
    }
    
+   mAliasingInterface->aliasesChanged(aliasPairs);
 }
 
 void
@@ -306,6 +314,7 @@ tr::Connection::requestSubscription(const Tp::UIntList &handles, const QString &
    if ( contacts.isEmpty() )
    {
       error->set(TP_QT_ERROR_INVALID_HANDLE, QLatin1String("Invalid handle(s)"));
+      return;
    }
 
    Tp::ContactSubscriptionMap changes;
