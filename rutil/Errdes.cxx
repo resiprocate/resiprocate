@@ -3,7 +3,6 @@
 #include <string>
 #include <errno.h>
 #include <openssl/ssl.h>
-#include <openssl/x509.h>
 #include "rutil/Errdes.hxx"
 
 #ifdef _WIN32
@@ -22,7 +21,6 @@ map <int, string> WinErrorMsg;
 map <int, string> ErrornoErrorMsg;
 #endif
 map <int, string> OpenSSLErrorMsg;
-map <int, string> X509ErrorMsg;
 
 
 string ErrnoError::SearchErrorMsg(int Error)
@@ -30,33 +28,33 @@ string ErrnoError::SearchErrorMsg(int Error)
   string result;
 
 #ifdef _WIN32
-    result = WinErrorMsg[Error];
+
+    if(WinErrorMsg.find(Error) != WinErrorMsg.end())
+      result = WinErrorMsg[Error];
+    else
+      result = "Unknown error";
+
 #elif __linux__
-    result = ErrornoErrorMsg[Error];
+
+    if(ErrornoErrorMsg.find(Error) != ErrornoErrorMsg.end())
+      result = ErrornoErrorMsg[Error];
+    else
+      result = "Unknown error";
+
 #endif
 
-  if(result.length() == 0)
-    result = "Unknown error";
   return result;
 }
 
 string OpenSSLError::SearchErrorMsg(int Error)
 {
   string result;
-  result = OpenSSLErrorMsg[Error];
 
-  if(result.length() == 0)
+  if(OpenSSLErrorMsg.find(Error) != OpenSSLErrorMsg.end())
+      result = OpenSSLErrorMsg[Error];
+  else
     result = "Unknown error";
-  return result;
-}
 
-string X509Error::SearchErrorMsg(int Error)
-{
-  string result;
-  result = X509ErrorMsg[Error];
-
-  if(result.length() == 0)
-    result = "Unknown error";
   return result;
 }
 
@@ -313,63 +311,6 @@ void OpenSSLError::CreateMappingErrorMsg()
   OpenSSLErrorMsg[SSL_ERROR_WANT_ACCEPT]      = ERR_WITH_CODE(SSL_ERROR_WANT_ACCEPT, "TLS/SSL connection want accept");
 };
 
-void X509Error::CreateMappingErrorMsg()
-{
-  X509ErrorMsg[X509_V_OK]                                     = ERR_WITH_CODE(X509_V_OK, "The operation was successful.");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT]          = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT, "Issuer certificate of a looked up certificate could not be found.");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_CRL]                  = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_CRL, "The CRL of a certificate could not be found.");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE]   = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE, "The certificate signature could not be decrypted.");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE]    = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE, "The CRL signature could not be decrypted.");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY] = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY, "The public key in the certificate SubjectPublicKeyInfo could not be read.");
-  X509ErrorMsg[X509_V_ERR_CERT_SIGNATURE_FAILURE]             = ERR_WITH_CODE(X509_V_ERR_CERT_SIGNATURE_FAILURE, "The signature of the certificate is invalid.");
-  X509ErrorMsg[X509_V_ERR_CRL_SIGNATURE_FAILURE]              = ERR_WITH_CODE(X509_V_ERR_CRL_SIGNATURE_FAILURE, "The signature of the certificate is invalid.");
-  X509ErrorMsg[X509_V_ERR_CERT_NOT_YET_VALID]                 = ERR_WITH_CODE(X509_V_ERR_CERT_NOT_YET_VALID, "The certificate is not yet valid.");
-  X509ErrorMsg[X509_V_ERR_CERT_HAS_EXPIRED]                   = ERR_WITH_CODE(X509_V_ERR_CERT_HAS_EXPIRED, "The certificate has expired.");
-  X509ErrorMsg[X509_V_ERR_CRL_NOT_YET_VALID]                  = ERR_WITH_CODE(X509_V_ERR_CRL_NOT_YET_VALID, "The CRL is not yet valid.");
-  X509ErrorMsg[X509_V_ERR_CRL_HAS_EXPIRED]                    = ERR_WITH_CODE(X509_V_ERR_CRL_HAS_EXPIRED, "The CRL has expired.");
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD]     = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD, "The certificate notBefore field contains an invalid time.");
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD]      = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD, "The certificate notAfter field contains an invalid time.");
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD]     = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD, "The CRL lastUpdate field contains an invalid time."); 
-  X509ErrorMsg[X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD]     = ERR_WITH_CODE(X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD, "The CRL nextUpdate field contains an invalid time.");
-  X509ErrorMsg[X509_V_ERR_OUT_OF_MEM]                         = ERR_WITH_CODE(X509_V_ERR_OUT_OF_MEM, "An error occurred trying to allocate memory.");
-  X509ErrorMsg[X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT]        = ERR_WITH_CODE(X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, "certificate cannot be found in the list of trusted certificates.");
-  X509ErrorMsg[X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN]          = ERR_WITH_CODE(X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN, "root could not be found locally.");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY]  = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY, "The issuer certificate could not be found.");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE]    = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE, "No signatures could be verified.");
-  X509ErrorMsg[X509_V_ERR_CERT_CHAIN_TOO_LONG]                = ERR_WITH_CODE(X509_V_ERR_CERT_CHAIN_TOO_LONG, "The certificate chain length is greater than the supplied maximum depth.");
-  X509ErrorMsg[X509_V_ERR_CERT_REVOKED]                       = ERR_WITH_CODE(X509_V_ERR_CERT_REVOKED, "The certificate has been revoked.");
-  X509ErrorMsg[X509_V_ERR_INVALID_CA]                         = ERR_WITH_CODE(X509_V_ERR_INVALID_CA, "A CA certificate is invalid.");
-  X509ErrorMsg[X509_V_ERR_PATH_LENGTH_EXCEEDED]               = ERR_WITH_CODE(X509_V_ERR_PATH_LENGTH_EXCEEDED, "The basicConstraints pathlength parameter has been exceeded.");
-  X509ErrorMsg[X509_V_ERR_INVALID_PURPOSE]                    = ERR_WITH_CODE(X509_V_ERR_INVALID_PURPOSE, "The supplied certificate cannot be used for the specified purpose.");
-  X509ErrorMsg[X509_V_ERR_CERT_UNTRUSTED]                     = ERR_WITH_CODE(X509_V_ERR_CERT_UNTRUSTED, "the root CA is not marked as trusted for the specified purpose.");
-  X509ErrorMsg[X509_V_ERR_CERT_REJECTED]                      = ERR_WITH_CODE(X509_V_ERR_CERT_REJECTED, "The root CA is marked to reject the specified purpose.");
-  X509ErrorMsg[X509_V_ERR_SUBJECT_ISSUER_MISMATCH]            = ERR_WITH_CODE(X509_V_ERR_SUBJECT_ISSUER_MISMATCH, "");
-  X509ErrorMsg[X509_V_ERR_AKID_SKID_MISMATCH]                 = ERR_WITH_CODE(X509_V_ERR_AKID_SKID_MISMATCH, "");
-  X509ErrorMsg[X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH]        = ERR_WITH_CODE(X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH, "");
-  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_CERTSIGN]               = ERR_WITH_CODE(X509_V_ERR_KEYUSAGE_NO_CERTSIGN, "");
-  X509ErrorMsg[X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER]           = ERR_WITH_CODE(X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER, "Unable to get CRL issuer certificate.");
-  X509ErrorMsg[X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION]       = ERR_WITH_CODE(X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION, "Unhandled critical extension.");
-  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_CRL_SIGN]               = ERR_WITH_CODE(X509_V_ERR_KEYUSAGE_NO_CRL_SIGN, "Key usage does not include CRL signing.");
-  X509ErrorMsg[X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION]   = ERR_WITH_CODE(X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION, "Unhandled critical CRL extension.");
-  X509ErrorMsg[X509_V_ERR_INVALID_NON_CA]                     = ERR_WITH_CODE(X509_V_ERR_INVALID_NON_CA, "Invalid non-CA certificate has CA markings.");
-  X509ErrorMsg[X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED]         = ERR_WITH_CODE(X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED, "Proxy path length constraint exceeded.");
-  X509ErrorMsg[X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE]      = ERR_WITH_CODE(X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE, "Key usage does not include digital signature.");
-  X509ErrorMsg[X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED]     = ERR_WITH_CODE(X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED, "Proxy certificates not allowed, please use -allow_proxy_certs.");
-  X509ErrorMsg[X509_V_ERR_INVALID_EXTENSION]                  = ERR_WITH_CODE(X509_V_ERR_INVALID_EXTENSION, "Invalid or inconsistent certificate extension.");
-  X509ErrorMsg[X509_V_ERR_INVALID_POLICY_EXTENSION]           = ERR_WITH_CODE(X509_V_ERR_INVALID_POLICY_EXTENSION, "Invalid or inconsistent certificate policy extension.");
-  X509ErrorMsg[X509_V_ERR_NO_EXPLICIT_POLICY]                 = ERR_WITH_CODE(X509_V_ERR_NO_EXPLICIT_POLICY, "No explicit policy.");
-  X509ErrorMsg[X509_V_ERR_DIFFERENT_CRL_SCOPE]                = ERR_WITH_CODE(X509_V_ERR_DIFFERENT_CRL_SCOPE, "Different CRL scope.");
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE]      = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE, "Unsupported extension feature.");
-  X509ErrorMsg[X509_V_ERR_UNNESTED_RESOURCE]                  = ERR_WITH_CODE(X509_V_ERR_UNNESTED_RESOURCE, "RFC 3779 resource not subset of parent's resources.");
-  X509ErrorMsg[X509_V_ERR_PERMITTED_VIOLATION]                = ERR_WITH_CODE(X509_V_ERR_PERMITTED_VIOLATION, "Permitted subtree violation.");
-  X509ErrorMsg[X509_V_ERR_EXCLUDED_VIOLATION]                 = ERR_WITH_CODE(X509_V_ERR_EXCLUDED_VIOLATION, "Excluded subtree violation.");
-  X509ErrorMsg[X509_V_ERR_SUBTREE_MINMAX]                     = ERR_WITH_CODE(X509_V_ERR_SUBTREE_MINMAX, "Name constraints minimum and maximum not supported.");
-  X509ErrorMsg[X509_V_ERR_APPLICATION_VERIFICATION]           = ERR_WITH_CODE(X509_V_ERR_APPLICATION_VERIFICATION, "Application verification failure.");
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE]        = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE, "Unsupported name constraint type.");
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX]      = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX, "Unsupported or invalid name constraint syntax.");
-  X509ErrorMsg[X509_V_ERR_UNSUPPORTED_NAME_SYNTAX]            = ERR_WITH_CODE(X509_V_ERR_UNSUPPORTED_NAME_SYNTAX, "Unsupported or invalid name syntax.");
-  X509ErrorMsg[X509_V_ERR_CRL_PATH_VALIDATION_ERROR]          = ERR_WITH_CODE(X509_V_ERR_CRL_PATH_VALIDATION_ERROR, "CRL path validation error.");
-};
 
 /* ====================================================================
  *

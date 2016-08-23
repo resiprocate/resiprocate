@@ -6,7 +6,6 @@
 #include <string>
 #include <errno.h>
 #include <openssl/ssl.h>
-#include <openssl/x509.h>
 
 #ifdef _WIN32
 #include <winsock.h>
@@ -33,13 +32,6 @@ public:
 };
 
 class OpenSSLError : public NumericError
-{
-public:
-	static void CreateMappingErrorMsg();
-	static string SearchErrorMsg(int Error);
-};
-
-class X509Error : public NumericError
 {
 public:
 	static void CreateMappingErrorMsg();

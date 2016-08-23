@@ -34,10 +34,9 @@ using namespace tr;
 
 int main(int argc, char *argv[])
 {
-   //Creating error map for OS, SSL and X509 error numbers
+   //Creating an error map for OS and SSL error numbers
    ErrnoError::CreateMappingErrorMsg();
    OpenSSLError::CreateMappingErrorMsg();
-   //X509Error::CreateMappingErrorMsg();
 
    QCoreApplication app(argc, argv);
    app.setApplicationName(QLatin1String("telepathy-resiprocate"));
