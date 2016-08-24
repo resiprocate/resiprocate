@@ -649,13 +649,28 @@ UserAgent::createPublicationImpl(PublicationHandle handle, const Data& status, c
       mDum.addClientPublicationHandler(eventType, this);
    }
 
+   Data note;
+   if(status == "dnd")
+   {
+      note = Data("Busy (DND)");
+   }
+   else if(status == "available")
+   {
+      note = Data("Online");
+   }
+   else if(status == "away")
+   {
+      note = Data("Away");
+   }
+
    // Adding rpid defined at RFC 4480 https://tools.ietf.org/html/rfc4480#page-7
    resip::GenericPidfContents gPidf;
+   gPidf.setSimplePresenceTupleNode(Data(string("ID-") + Random::getRandomHex(3).c_str()), true, Data::Empty, note, target.uri().getAorNoReally(), Data(1.0));
 
    resip::GenericPidfContents::Node* dm = new resip::GenericPidfContents::Node();
    dm->mNamespacePrefix = Data("dm:");
    dm->mTag = "person";
-   dm->mAttributes["id"] = Random::getRandomHex(3);
+   dm->mAttributes["id"] = Data(string("ID-") + Random::getRandomHex(3).c_str());
 
    resip::GenericPidfContents::Node* rpid = new resip::GenericPidfContents::Node();
    rpid->mNamespacePrefix = Data("rpid:");
@@ -674,20 +689,6 @@ UserAgent::createPublicationImpl(PublicationHandle handle, const Data& status, c
    rootNodes.push_back(dm);
    gPidf.setRootNodes(rootNodes);
 
-   Data note;
-   if(status == "dnd")
-   {
-      note = Data("Busy (DND)");
-   }
-   else if(status == "available")
-   {
-      note = Data("Online");
-   }
-   else if(status == "away")
-   {
-      note = Data("Away");
-   }
-   gPidf.setSimplePresenceTupleNode(Random::getRandomHex(3), true, Data::Empty, note, target.uri().getAorNoReally(), Data(1.0));
    gPidf.setEntity(target.uri());
    gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:data-model"), Data("dm"));
    gPidf.addNamespace(Data("urn:ietf:params:xml:ns:pidf:rpid"), Data("rpid"));
