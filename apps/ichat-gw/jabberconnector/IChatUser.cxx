@@ -28,7 +28,7 @@ IChatUser::updateResourceInfo(const std::string& resourceId, const gloox::Presen
    bool originalUnavailability = isUnavailable();
    if(resourceId.empty())
    {
-      if(presence == gloox::PresenceUnavailable)
+      if(presence.presence() == gloox::Presence::Unavailable)
       {
 	     // All resources are unanavaiable
          ResourceMap::iterator it = mResources.begin();
@@ -48,7 +48,7 @@ IChatUser::updateResourceInfo(const std::string& resourceId, const gloox::Presen
       ResourceMap::iterator it = mResources.find(resourceId);
       if(it != mResources.end())
       {
-         if(presence == gloox::PresenceUnavailable)
+         if(presence.presence() == gloox::Presence::Unavailable)
          {
             delete it->second;
             mResources.erase(it);
@@ -62,9 +62,9 @@ IChatUser::updateResourceInfo(const std::string& resourceId, const gloox::Presen
       }
       else
       {
-         if(presence != gloox::PresenceUnavailable)
+         if(presence.presence() != gloox::Presence::Unavailable)
          {
-            mResources[resourceId] = new ResourceInfo(presence, priority, avAvail);
+            mResources[resourceId] = new ResourceInfo(presence, mJID, priority, avAvail);
 		 }
       }
    }
@@ -101,11 +101,11 @@ IChatUser::getMostAvailableResourceItr()
          }
          else
          {
-            if(it->second->mPresence < itBestResource->second->mPresence)
+            if(it->second->mPresence.presence() < itBestResource->second->mPresence.presence())
             {
                itBestResource=it;
             }
-            else if(it->second->mPresence == itBestResource->second->mPresence)
+            else if(it->second->mPresence.presence() == itBestResource->second->mPresence.presence())
             {
                if(it->second->mPriority < itBestResource->second->mPriority)
                {
@@ -145,7 +145,7 @@ IChatUser::getMostAvailableResourceList(std::list<std::string>& resourceList)
       for(;it!=mResources.end();it++)
       {
          if(it->second->mAvAvail && 
-            it->second->mPresence == itBestResource->second->mPresence &&
+            it->second->mPresence.presence() == itBestResource->second->mPresence.presence() &&
             it->second->mPriority == itBestResource->second->mPriority)
          {
             resourceList.push_back(it->first);
