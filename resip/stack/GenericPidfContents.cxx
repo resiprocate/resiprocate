@@ -572,16 +572,6 @@ GenericPidfContents::setSimplePresenceTupleNode(const Data& id,
    statusNode->mChildren.push_back(basicNode);
    tupleNode->mChildren.push_back(statusNode);
 
-   // Add Note node if required
-   if (!note.empty())
-   {
-      Node* noteNode = new Node();
-      noteNode->mNamespacePrefix = mRootPidfNamespacePrefix;
-      noteNode->mTag = "note";
-      noteNode->mValue = note;
-      tupleNode->mChildren.push_back(noteNode);
-   }
-
    // Add Contact node if required
    if (!contact.empty())
    {
@@ -594,6 +584,16 @@ GenericPidfContents::setSimplePresenceTupleNode(const Data& id,
          contactNode->mAttributes["priority"] = contactPriority;
       }
       tupleNode->mChildren.push_back(contactNode);
+   }
+
+   // Add Note node if required
+   if (!note.empty())
+   {
+      Node* noteNode = new Node();
+      noteNode->mNamespacePrefix = mRootPidfNamespacePrefix;
+      noteNode->mTag = "note";
+      noteNode->mValue = note;
+      tupleNode->mChildren.push_back(noteNode);
    }
 
    // Add Timestamp node if required
