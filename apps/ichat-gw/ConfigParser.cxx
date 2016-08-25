@@ -366,6 +366,10 @@ ConfigParser::processOption(const Data& name, const Data& value)
    {
       mTLSPrivateKeyPassPhrase = value;
    }
+   else if(name == "ichatjabberconnectorpath")
+   {
+      mIchatJabberConnectorPath = value;
+   }
    else
    {
       result = false;
