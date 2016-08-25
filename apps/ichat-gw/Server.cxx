@@ -158,7 +158,7 @@ Server::Server(int argc, char** argv) :
    ConfigParser(argc, argv),
    mProfile(new MasterProfile),
 #if defined(USE_SSL)
-   mSecurity(new Security(".")),
+   mSecurity(new Security(Security::StrongestSuite, mTLSPrivateKeyPassPhrase, mTLSDHParamsFilename)),
 #else
    mSecurity(0),
 #endif
@@ -184,6 +184,12 @@ Server::Server(int argc, char** argv) :
       if(i!=0) dnsServersString += ", ";
       dnsServersString += Tuple(mDnsServers[i]).presentationFormat();
    }
+
+   // Make sure certificate material available before trying to instantiate Transport
+   if(!mTLSCertificate.empty()) {
+      mSecurity->addDomainCertPEM(mTlsDomain, Data::fromFile(mTLSCertificate));
+   }
+
    InfoLog( << "  Override DNS Servers = " << dnsServersString);
    InfoLog( << "  Gateway Identity = " << mGatewayIdentity);
    InfoLog( << "  SIP Port = " << mSipPort);
@@ -316,7 +322,7 @@ Server::Server(int argc, char** argv) :
    args[10] = mLogLevel.c_str();
    args[11] = 0;
    int result = posix_spawn(&pid,
-                            "ichat-gw-jc",
+                            "/home/balumenon96/resiprocate/apps/ichat-gw/jabberconnector/ichat-gw-jc", // FIXME - must find correct path at runtime
                             NULL /* file actions */,
                             NULL /* attr pointer */,
                             (char* const*)args /* argv */,
@@ -330,21 +336,24 @@ Server::Server(int argc, char** argv) :
 
    // Start Media Relay
    mMediaRelay = new MediaRelay(mIsV6Avail, mMediaRelayPortRangeMin, mMediaRelayPortRangeMax);
-
+   
+   SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+   SecurityTypes::SSLType sslType = SecurityTypes::SSLv23;
+   mSecurity->addCADirectory("/etc/ssl/certs"); // FIXME: add CADirectory parameter
    // Add transports
    try
    {
       UdpTransport* udpTransport = (UdpTransport*)mStack.addTransport(UDP, mSipPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress);
       udpTransport->setExternalUnknownDatagramHandler(this);  // Install handler to catch iChat pinhole messages
       mStack.addTransport(TCP, mSipPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress);
-      mStack.addTransport(TLS, mTlsPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress, mTlsDomain);
+      mStack.addTransport(TLS, mTlsPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress, mTlsDomain, mTLSPrivateKeyPassPhrase, sslType, 0, mTLSCertificate, mTLSPrivateKey, cvm, false);
       if(mAddress.empty() && mIsV6Avail)
       {
          // if address is empty (ie. all interfaces), then create V6 transports too
          udpTransport = (UdpTransport*)mStack.addTransport(UDP, mSipPort, V6, StunEnabled, mAddress);
          udpTransport->setExternalUnknownDatagramHandler(this);  // Install handler to catch iChat pinhole messages
          mStack.addTransport(TCP, mSipPort, V6, StunEnabled, mAddress);
-         mStack.addTransport(TLS, mTlsPort, V6, StunEnabled, mAddress, mTlsDomain);
+         mStack.addTransport(TLS, mTlsPort, V6, StunEnabled, mAddress, mTlsDomain, mTLSPrivateKeyPassPhrase, sslType, 0, mTLSCertificate, mTLSPrivateKey, cvm, false);
       }
    }
    catch (BaseException& e)
@@ -467,7 +476,7 @@ Server::Server(int argc, char** argv) :
 
    // Set AppDialogSetFactory
    auto_ptr<AppDialogSetFactory> dsf(new GatewayDialogSetFactory(*this));
-	mDum.setAppDialogSetFactory(dsf);
+   mDum.setAppDialogSetFactory(dsf);
 
 #if 0
    // Set UserAgentServerAuthManager
@@ -751,7 +760,7 @@ Server::checkSubscription(const std::string& to, const std::string& from)
    msg.addArg("sendSubscriptionResponse");
    msg.addArg(from.c_str());
    msg.addArg(to.c_str());   
-   msg.addArg(Data((UInt32)success).c_str());   
+   msg.addArg(Data((const char*)success).c_str());   
    mIPCThread->sendIPCMsg(msg);
 }
 
@@ -1496,4 +1505,3 @@ Server::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMe
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
-

@@ -350,6 +350,22 @@ ConfigParser::processOption(const Data& name, const Data& value)
    {
       mJabberControlUsername = value;
    }
+   else if(name == "tlsdhparamsfilename")
+   {
+      mTLSDHParamsFilename = value;
+   }
+   else if(name == "tlscertificate")
+   {
+      mTLSCertificate = value;
+   }
+   else if(name == "tlsprivateKey")
+   {
+      mTLSPrivateKey = value;
+   }
+   else if(name == "tlsprivatekeypassphrase")
+   {
+      mTLSPrivateKeyPassPhrase = value;
+   }
    else
    {
       result = false;
