@@ -760,7 +760,7 @@ Server::checkSubscription(const std::string& to, const std::string& from)
    msg.addArg("sendSubscriptionResponse");
    msg.addArg(from.c_str());
    msg.addArg(to.c_str());   
-   msg.addArg(Data((const char*)success).c_str());   
+   msg.addArg(Data((UInt32)success).c_str());   
    mIPCThread->sendIPCMsg(msg);
 }
 
