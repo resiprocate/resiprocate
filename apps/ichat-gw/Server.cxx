@@ -322,7 +322,7 @@ Server::Server(int argc, char** argv) :
    args[10] = mLogLevel.c_str();
    args[11] = 0;
    int result = posix_spawn(&pid,
-                            "/home/balumenon96/resiprocate/apps/ichat-gw/jabberconnector/ichat-gw-jc", // FIXME - must find correct path at runtime
+                            "ichat-gw-jc", 
                             NULL /* file actions */,
                             NULL /* attr pointer */,
                             (char* const*)args /* argv */,
