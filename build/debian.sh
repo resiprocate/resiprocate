@@ -41,6 +41,7 @@ LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
                 DEPS_PYTHON_CFLAGS="`/usr/bin/python2.7-config --cflags`" \
                 DEPS_PYTHON_LIBS="`/usr/bin/python2.7-config --ldflags`" \
                 PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
+              --with-apps \
               --with-telepathy \
               --with-ichat-gw \
               --with-recon
