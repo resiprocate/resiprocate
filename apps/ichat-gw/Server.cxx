@@ -283,7 +283,7 @@ Server::Server(int argc, char** argv) :
    // Start the Jabber Connector Process
 #ifdef _WIN32
    intptr_t result = _spawnl(_P_NOWAIT, 
-                             mIchatJabberConnectorPath.c_str().".exe", 
+                             mIchatJabberConnectorPath.c_str(), 
                              "ichat-gw",                               // argv[0]   Jabber connector uses this to check if launched from here or not
                              Data(mJabberConnectorIPCPort).c_str(),    // argv[1]   JabberConnector IPC Port
                              Data(mGatewayIPCPort).c_str(),            // argv[2]   Gateway IPC Port
