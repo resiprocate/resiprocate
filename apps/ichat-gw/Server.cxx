@@ -322,7 +322,7 @@ Server::Server(int argc, char** argv) :
    args[10] = mLogLevel.c_str();
    args[11] = 0;
    int result = posix_spawn(&pid,
-                            "ichat-gw-jc",
+                            mIchatJabberConnectorPath.c_str(),
                             NULL /* file actions */,
                             NULL /* attr pointer */,
                             (char* const*)args /* argv */,
