@@ -3,6 +3,7 @@
 #include "rutil/ResipAssert.h"
 
 #include "JabberComponent.hxx"
+#include <unistd.h>
 
 using namespace gateway;
 using namespace std;
