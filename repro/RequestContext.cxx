@@ -802,6 +802,13 @@ RequestContext::handleSelfAimedStrayAck(SipMessage* sip)
    InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");  
 }
 
+bool
+RequestContext::handleMissingResponseVias(resip::SipMessage* response)
+{
+   // Default behaviour is to not continue processing, this can be overridden
+   return false;
+}
+
 void
 RequestContext::cancelClientTransaction(const resip::Data& tid)
 {
@@ -964,7 +971,7 @@ RequestContext::sendResponse(SipMessage& msg)
                         " Via before modification (in orig request): " <<
                         mOriginalRequest->header(h_Vias).front());
          // .bwc. Compensate for malicous/broken UAS fiddling with Via stack.
-         msg.header(h_Vias).front()=mOriginalRequest->header(h_Vias).front();
+         msg.header(h_Vias).front() = mOriginalRequest->header(h_Vias).front();
       }
 
       DebugLog(<<"Ensuring orig tid matches tid of response: " <<

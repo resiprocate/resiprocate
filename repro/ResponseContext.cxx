@@ -990,20 +990,26 @@ ResponseContext::processResponse(SipMessage& response)
       {
          return;
       }
-      else if (response.header(h_StatusLine).statusCode() > 199)
+      else if (response.header(h_StatusLine).statusCode() != 100)
       {
-         InfoLog( << "Received final response, but can't forward as there are "
-                        "no more Vias. Considering this branch failed. " 
-                        << response.brief() );
-         // .bwc. Treat as server error.
-         terminateClientTransaction(mCurrentResponseTid);
-         return;
-      }
-      else if(response.header(h_StatusLine).statusCode() != 100)
-      {
-         InfoLog( << "Received provisional response, but can't forward as there"
-                     " are no more Vias. Ignoring. " << response.brief() );
-         return;
+         if (!mRequestContext.handleMissingResponseVias(&response))
+         {
+            // If handle MissingResponseVias returns false, then processing does not continue
+            if (response.header(h_StatusLine).statusCode() > 199)
+            {
+               InfoLog(<< "Received final response, but can't forward as there are "
+                  "no more Vias. Considering this branch failed. "
+                  << response.brief());
+               // .bwc. Treat as server error.
+               terminateClientTransaction(mCurrentResponseTid);
+            }
+            else
+            {
+               InfoLog(<< "Received provisional response, but can't forward as there"
+                  " are no more Vias. Ignoring. " << response.brief());
+            }
+            return;
+         }
       }
    }
    else // We have a second Via

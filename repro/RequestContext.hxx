@@ -37,6 +37,7 @@ class RequestContext
       virtual void process(std::auto_ptr<resip::ApplicationMessage> app);
       
       virtual void handleSelfAimedStrayAck(resip::SipMessage* sip);
+      virtual bool handleMissingResponseVias(resip::SipMessage* response);  // return true to continue processing
       virtual void cancelClientTransaction(const resip::Data& tid);
 
       /// Returns the SipMessage associated with the server transaction
