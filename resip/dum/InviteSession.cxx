@@ -307,6 +307,7 @@ InviteSession::isEarly() const
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateEarlyGlare:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_QueuedUpdate:
