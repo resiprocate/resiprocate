@@ -25,14 +25,17 @@
  *
 */
 
-#define USE_IPV6
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include "../../config.h"
-#include "../../src/xmlread.h"
+#include <netdb.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <pthread.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #ifdef USE_IPV6
 #include <netinet/ip6.h>
@@ -71,15 +74,7 @@ SSL_CTX *ctx;
 SSL_CTX* initCTX(void);
 #endif /* USE_SSL */
 
-int load_module(xml_node *config);
 void handler(int value);
-
-int send_hepv3 (rc_info_t *rcinfo, unsigned char *data, unsigned int len, unsigned int sendzip);
-int send_hepv2 (rc_info_t *rcinfo, unsigned char *data, unsigned int len);
-int send_data (void *buf, unsigned int len);
-int init_hepsocket_blocking (void);
-int init_hepsocket (void);
-int sigPipe(void);
 
 /* HEPv3 types */
 
