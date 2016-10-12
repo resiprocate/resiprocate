@@ -94,6 +94,7 @@ libresip_la_SOURCES = \
 	QValueParameter.cxx \
 	GenericContents.cxx \
 	GenericPidfContents.cxx \
+	HEPSipMessageLoggingHandler.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	gen/HeaderHash.cxx \
@@ -228,6 +229,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	BranchParameter.hxx \
 	CallId.hxx \
 	Cookie.hxx \
+	core_hep.h \
 	CancelableTimerQueue.hxx \
 	CancelClientInviteTransaction.hxx \
 	Compression.hxx \
@@ -261,6 +263,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	GenericContents.hxx \
 	GenericPidfContents.hxx \
 	GenericUri.hxx \
+	HEPSipMessageLoggingHandler.hxx \
 	HeaderFieldValue.hxx \
 	HeaderFieldValueList.hxx \
 	HeaderHash.hxx \
