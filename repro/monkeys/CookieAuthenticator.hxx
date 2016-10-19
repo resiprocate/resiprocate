@@ -22,7 +22,7 @@ namespace repro
       virtual processor_action_t process(RequestContext &);
       virtual void dump(EncodeStream &os) const;
 
-    private:
+    protected:
       std::auto_ptr<resip::ExtensionHeader> mWsCookieExtraHeader;
 
       bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
