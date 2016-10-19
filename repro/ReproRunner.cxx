@@ -792,7 +792,11 @@ ReproRunner::createSipStack()
    {
       int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
       int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
+#ifndef WIN32 // Does not currently build on windows - TODO
       mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(captureHost, capturePort, captureAgentID)));
+#else
+      CritLog(<< "HOMER Capture support is not currently implemented for Windows");
+#endif
    }
    else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
