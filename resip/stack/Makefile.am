@@ -276,6 +276,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	InteropHelper.hxx \
 	InterruptableStackThread.hxx \
 	InvalidContents.hxx \
+	InvokeAfterSocketCreationFunc.hxx \
 	KeepAliveMessage.hxx \
 	KeepAlivePong.hxx \
 	LazyParser.hxx \

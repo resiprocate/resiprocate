@@ -35,6 +35,8 @@ class TcpBaseTransport : public InternalTransport, public FdPollItemIf
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
       const ConnectionManager& getConnectionManager() const {return mConnectionManager;}
 
+      virtual void invokeAfterSocketCreationFunc() const;
+
    protected:
       /** Performs constructor activities that depend on virtual
        *  functions specified by derived classes.  Derived classes

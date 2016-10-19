@@ -1272,6 +1272,13 @@ SipStack::enableFlowTimer(const resip::Tuple& flow)
    mTransactionController->enableFlowTimer(flow);
 }
 
+void
+SipStack::invokeAfterSocketCreationFunc(TransportType type)
+{
+    // Stack is assummed to be running.  Need to queue invoke request for TransactionController Thread
+    mTransactionController->invokeAfterSocketCreationFunc(type);
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

@@ -153,6 +153,8 @@ class TransportSelector
          }
       }
 
+      void invokeAfterSocketCreationFunc(TransportType type);
+
       /**
          @internal - public only for stream operator access
       */

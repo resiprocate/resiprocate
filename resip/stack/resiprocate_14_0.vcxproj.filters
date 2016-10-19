@@ -319,6 +319,7 @@
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
     <ClInclude Include="TcpConnectState.hxx" />
+    <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">

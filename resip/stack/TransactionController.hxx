@@ -103,6 +103,9 @@ class TransactionController
       void enableFlowTimer(const resip::Tuple& flow);
 
       void setInterruptor(AsyncProcessHandler* handler);
+
+      void invokeAfterSocketCreationFunc(TransportType type);
+
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);

@@ -1399,6 +1399,23 @@ TransportSelector::enableFlowTimer(const resip::Tuple& flow)
    }
 }
 
+void 
+TransportSelector::invokeAfterSocketCreationFunc(TransportType type)
+{
+    for (TransportKeyMap::iterator it = mTransports.begin(); it != mTransports.end(); it++)
+    {
+        if (type == UNKNOWN_TRANSPORT || type == it->second->transport())
+        {
+            it->second->invokeAfterSocketCreationFunc();
+        }
+    }
+    if (type == UNKNOWN_TRANSPORT)
+    {
+        // !slg! TODO - invoke for DNS?
+        //mDns.
+    }
+}
+
 Transport*
 TransportSelector::findTransportByDest(const Tuple& target)
 {

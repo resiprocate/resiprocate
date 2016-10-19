@@ -701,6 +701,7 @@
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
+    <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="RemoveTransport.hxx" />

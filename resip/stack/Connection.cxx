@@ -541,7 +541,17 @@ Connection::processPollEvent(FdPollEventMask mask) {
    }
 }
 
-bool Connection::isServer()const{ return mIsServer; }
+bool 
+Connection::isServer() const
+{ 
+   return mIsServer; 
+}
+
+void 
+Connection::invokeAfterSocketCreationFunc() const
+{
+    mTransport->callSocketFunc(getSocket());
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

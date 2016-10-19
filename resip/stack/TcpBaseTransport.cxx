@@ -432,6 +432,14 @@ TcpBaseTransport::setRcvBufLen(int buflen)
    // need to store away the length and use when setting up new connections
 }
 
+void 
+TcpBaseTransport::invokeAfterSocketCreationFunc() const
+{
+    // Call for base socket
+    InternalTransport::invokeAfterSocketCreationFunc();
+    // Call for each connection
+    mConnectionManager.invokeAfterSocketCreationFunc();
+}
 
 
 /* ====================================================================

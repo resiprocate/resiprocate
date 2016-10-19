@@ -73,6 +73,7 @@ class FdPollGrp;
 class Transport : public FdSetIOObserver
 {
    public:
+
     class SipMessageLoggingHandler
       {
       public:
@@ -344,6 +345,7 @@ class Transport : public FdSetIOObserver
       virtual unsigned int getFifoSize() const=0;
 
       void callSocketFunc(Socket sock);
+      virtual void invokeAfterSocketCreationFunc() const = 0;  //used to invoke the after socket creation func immeidately for all existing sockets - can be used to modify QOS settings at runtime
 
       virtual void setCongestionManager(CongestionManager* manager)
       {
