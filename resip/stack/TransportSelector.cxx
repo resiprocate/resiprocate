@@ -299,6 +299,8 @@ TransportSelector::removeTransport(unsigned int transportKey)
    Transport* transportToRemove = 0;
 
    // Find transport in global map and remove it
+   // Note: it is important that this is map is removed from before rebuildAnyPortTransportMaps is called,
+   // since it uses this map.
    TransportKeyMap::iterator it = mTransports.find(transportKey);
    if(it != mTransports.end())
    {
@@ -315,10 +317,12 @@ TransportSelector::removeTransport(unsigned int transportKey)
       if(!isSecure(transportToRemove->transport()))
       {
          // Ensure transport is removed from all containers
-         mAnyInterfaceTransports.erase(transportToRemove->getTuple());
-         mAnyPortAnyInterfaceTransports.erase(transportToRemove->getTuple());
          mExactTransports.erase(transportToRemove->getTuple());
-         mAnyPortTransports.erase(transportToRemove->getTuple());
+         mAnyInterfaceTransports.erase(transportToRemove->getTuple());
+
+         // In the AnyPort maps 2 transports can end up overwriting each other in these maps - then when we remove one, there may be none left - even though we should have an
+         // entry.  The rebuilt method will dig through all transports again and rebuild these maps.
+         rebuildAnyPortTransportMaps();
       }
       else
       {
@@ -328,9 +332,19 @@ TransportSelector::removeTransport(unsigned int transportKey)
          mTlsTransports.erase(tlsKey);
       }
 
-      mTypeToTransportMap.erase(transportToRemove->getTuple());
+      // mTypeToTransportMap is a multimap - make sure to delete only this instance by looking up transportKey, instead of using 
+      // mTypeToTransportMap.erase(transportToRemove->getTuple()); which might end up deleting more than 1 transport
+      for (TypeToTransportMap::iterator itTypeToTransport = mTypeToTransportMap.begin(); itTypeToTransport != mTypeToTransportMap.end(); itTypeToTransport++)
+      {
+          if (itTypeToTransport->second->getKey() == transportKey)
+          {
+              mTypeToTransportMap.erase(itTypeToTransport);
+              break;
+          }
+      }
 
       // Remove transport types from Dns list of supported protocols
+      // Note:  DNS tracks use counts so that we will only remove this transport type if this is the last of the type to be removed
       mDns.removeTransportType(transportToRemove->transport(), transportToRemove->ipVersion());
 
       if (transportToRemove->shareStackProcessAndSelect())
@@ -355,6 +369,39 @@ TransportSelector::removeTransport(unsigned int transportKey)
          delete transportToRemove;
       }
    }
+}
+
+void
+TransportSelector::rebuildAnyPortTransportMaps()
+{
+    // These maps may contain less transports than what exist in the mTransports map, due to the fact that multiple transports can 
+    // match their index.  In these cases the last transport added that matchs the map compare function is the only one that ends 
+    // up in these maps.  Therefor we cannot just simply remove items and expect transprot selection to work as expects.  
+    // We will clear these maps here.  Iterate through the master transport list and rebuilt them back up.  This isn't very efficient,
+    // but it only occurs when a transport is removed.
+
+    mAnyPortTransports.clear();
+    mAnyPortAnyInterfaceTransports.clear();
+
+    for (TransportKeyMap::iterator it = mTransports.begin(); it != mTransports.end(); it++)
+    {
+        if (!isSecure(it->second->transport()))
+        {
+            // Store the transport in the ANY interface maps if the tuple specifies ANY
+            // interface. Store the transport in the specific interface maps if the tuple
+            // specifies an interface. See TransportSelector::findTransport.
+            if (it->second->interfaceName().empty() ||
+                it->second->getTuple().isAnyInterface() ||
+                it->second->hasSpecificContact())
+            {
+                mAnyPortAnyInterfaceTransports[it->second->getTuple()] = it->second;
+            }
+            else
+            {
+                mAnyPortTransports[it->second->getTuple()] = it->second;
+            }
+        }
+    }
 }
 
 void

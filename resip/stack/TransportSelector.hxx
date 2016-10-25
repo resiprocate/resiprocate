@@ -202,6 +202,7 @@ class TransportSelector
       Transport* findTransportByVia(SipMessage* msg, const Tuple& dest, Tuple& src) const;
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv) const;
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+      void rebuildAnyPortTransportMaps(void);
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
