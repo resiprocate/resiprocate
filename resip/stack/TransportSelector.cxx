@@ -299,8 +299,8 @@ TransportSelector::removeTransport(unsigned int transportKey)
    Transport* transportToRemove = 0;
 
    // Find transport in global map and remove it
-   // Note: it is important that this is map is removed from before rebuildAnyPortTransportMaps is called,
-   // since it uses this map.
+   // Note: it is important that this map is removed from before rebuildAnyPortTransportMaps is called,
+   // since rebuildAnyPortTransportMaps uses this map.
    TransportKeyMap::iterator it = mTransports.find(transportKey);
    if(it != mTransports.end())
    {
@@ -374,10 +374,10 @@ TransportSelector::removeTransport(unsigned int transportKey)
 void
 TransportSelector::rebuildAnyPortTransportMaps()
 {
-    // These maps may contain less transports than what exist in the mTransports map, due to the fact that multiple transports can 
-    // match their index.  In these cases the last transport added that matchs the map compare function is the only one that ends 
-    // up in these maps.  Therefor we cannot just simply remove items and expect transprot selection to work as expects.  
-    // We will clear these maps here.  Iterate through the master transport list and rebuilt them back up.  This isn't very efficient,
+    // These maps may contain less transports than what exists in the mTransports map, due to the fact that multiple transports can 
+    // have the same index.  In these cases the last transport added that matches the custom map compare function is the only one that ends 
+    // up in these maps.  Therefor we cannot just simply remove items and expect transprot selection to work as expected.  
+    // We will clear these maps here.  Iterate through the master transport list and rebuild them back up.  This isn't very efficient,
     // but it only occurs when a transport is removed.
 
     mAnyPortTransports.clear();
