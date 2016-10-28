@@ -105,6 +105,7 @@
     <ClCompile Include="DefaultDialogSet.cxx" />
     <ClCompile Include="DtmfEvent.cxx" />
     <ClCompile Include="FlowManagerSipXSocket.cxx" />
+    <ClCompile Include="InstantMessage.cxx" />
     <ClCompile Include="LocalParticipant.cxx" />
     <ClCompile Include="MediaEvent.cxx" />
     <ClCompile Include="MediaInterface.cxx" />
@@ -124,6 +125,7 @@
     <ClCompile Include="sdp\SdpHelperResip.cxx" />
     <ClCompile Include="sdp\SdpMediaLine.cxx" />
     <ClCompile Include="UserAgent.cxx" />
+    <ClCompile Include="UserAgentClientPublication.cxx" />
     <ClCompile Include="UserAgentClientSubscription.cxx" />
     <ClCompile Include="UserAgentDialogSetFactory.cxx" />
     <ClCompile Include="UserAgentMasterProfile.cxx" />
@@ -140,6 +142,7 @@
     <ClInclude Include="DefaultDialogSet.hxx" />
     <ClInclude Include="DtmfEvent.hxx" />
     <ClInclude Include="FlowManagerSipXSocket.hxx" />
+    <ClInclude Include="InstantMessage.hxx" />
     <ClInclude Include="LocalParticipant.hxx" />
     <ClInclude Include="MediaEvent.hxx" />
     <ClInclude Include="MediaInterface.hxx" />
@@ -159,6 +162,7 @@
     <ClInclude Include="sdp\SdpHelperResip.hxx" />
     <ClInclude Include="sdp\SdpMediaLine.hxx" />
     <ClInclude Include="UserAgent.hxx" />
+    <ClInclude Include="UserAgentClientPublication.hxx" />
     <ClInclude Include="UserAgentClientSubscription.hxx" />
     <ClInclude Include="UserAgentCmds.hxx" />
     <ClInclude Include="UserAgentDialogSetFactory.hxx" />
