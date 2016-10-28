@@ -47,7 +47,12 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
       std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(*(eventInfo->mReplacesId));
       if (it != mDialogIdToEventInfo.end())
       {
-         it->second->mReplaced = true;
+         // If the call to be replaced is early and it is a recipient, then it cannot get replaced (according to RFC3891)
+         // so we don't want to set the flag in this case.  Using inverted logic statement.
+         if (it->second->getState() != DialogEventInfo::Early || it->second->getDirection() != DialogEventInfo::Recipient)
+         {
+            it->second->mReplaced = true;
+         }
       }
    }
    if (invite.exists(h_ReferredBy) && 
@@ -184,6 +189,10 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
       // local or remote target might change due to an UPDATE or re-INVITE
       eventInfo->mLocalTarget = dialog.getLocalContact().uri();   // !slg! TODO - fix me - the Dialog stored local contact has an empty hostname so that the stack will fill it in
       eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
+
+      // Set the latest sdp
+      eventInfo->mLocalOfferAnswer = (is->hasLocalOfferAnswer() ? std::auto_ptr<Contents>(is->getLocalOfferAnswer().clone()) : std::auto_ptr<Contents>());
+      eventInfo->mRemoteOfferAnswer = (is->hasRemoteOfferAnswer() ? std::auto_ptr<Contents>(is->getRemoteOfferAnswer().clone()) : std::auto_ptr<Contents>());
 
       // for the dialog that got the 200 OK
       SharedPtr<ConfirmedDialogEvent> confirmedEvt(new ConfirmedDialogEvent(*eventInfo));
@@ -355,6 +364,34 @@ DialogEventStateManager::getDialogEventInfo() const
    for (; it != mDialogIdToEventInfo.end(); it++)
    {
       infos.push_back(*(it->second));
+   }
+   return infos;
+}
+
+DialogEventStateManager::DialogEventInfos 
+DialogEventStateManager::getDialogEventInfo(const Uri& entityUri, bool bMatchRemoteIdentityOnly) const
+{
+   DialogEventStateManager::DialogEventInfos infos;
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::const_iterator it = mDialogIdToEventInfo.begin();
+   for (; it != mDialogIdToEventInfo.end(); it++)
+   {
+      if (!bMatchRemoteIdentityOnly)
+      {
+         // Return all calls to or from the requested entity
+         if (it->second->getLocalIdentity().uri().getAOR(false) == entityUri.getAOR(false) ||
+            it->second->getRemoteIdentity().uri().getAOR(false) == entityUri.getAOR(false))
+         {
+            infos.push_back(*(it->second));
+         }
+      }
+      else
+      {
+         // Return only those dialogs whose remote identity matches the requested entity
+         if (it->second->getRemoteIdentity().uri().getAOR(false) == entityUri.getAOR(false))
+         {
+            infos.push_back(*(it->second));
+         }
+      }
    }
    return infos;
 }

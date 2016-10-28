@@ -632,6 +632,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          }
          send(response);
 
+         if (mDum.mDialogEventStateManager)
+         {
+            mDum.mDialogEventStateManager->onTerminated(mDialog, *response, InviteSessionHandler::Rejected);
+         }
+
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Rejected); 
          mDum.destroy(this);

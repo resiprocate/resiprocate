@@ -19,6 +19,7 @@ class DialogEventStateManager
    public:
    typedef std::vector<DialogEventInfo> DialogEventInfos;
    DialogEventInfos getDialogEventInfo() const;
+   DialogEventInfos getDialogEventInfo(const Uri& entityUri, bool bMatchRemoteIdentityOnly = false) const;
 
    virtual ~DialogEventStateManager();
 

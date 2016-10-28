@@ -974,12 +974,9 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
             if (mDialogEventStateManager)
             {
                Dialog* d = ds->findDialog(*msg);
-               if (d != 0)
+               if (d == 0)
                {
-                  mDialogEventStateManager->onConfirmed(*d, d->getInviteSession());
-               }
-               else
-               {
+                  // If we don't have a dialog yet and we are sending an INVITE, this is a new outbound (UAC) INVITE
                   mDialogEventStateManager->onTryingUac(*ds, *msg);
                }
             }
