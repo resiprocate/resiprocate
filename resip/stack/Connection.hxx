@@ -115,6 +115,8 @@ class Connection : public ConnectionBase,
       /* callback method of FdPollItemIf */
       virtual void processPollEvent(FdPollEventMask mask);
 
+      virtual void invokeAfterSocketCreationFunc() const;
+
    private:
       ConnectionManager& getConnectionManager() const;
       void removeFrontOutstandingSend();

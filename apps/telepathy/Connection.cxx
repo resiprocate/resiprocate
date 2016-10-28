@@ -489,6 +489,12 @@ tr::Connection::onMessageReceived(const resip::SipMessage& message)
       return;
    }
 
+   if ( message.header(h_ContentType) != Mime("text", "plain") )
+   {
+      qWarning() << "Ignoring a message of type " << message.header(h_ContentType).type().c_str() << "/" << message.header(h_ContentType).subType().c_str();
+      return;
+   }
+   
    TextChannelPtr textChannel = TextChannelPtr::dynamicCast(channel->interface(TP_QT_IFACE_CHANNEL_TYPE_TEXT));
 
    if ( !textChannel )

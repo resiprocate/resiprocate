@@ -320,6 +320,7 @@
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
     <ClInclude Include="TcpConnectState.hxx" />
+    <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
     <ClInclude Include="DialogInfoContents.hxx" />
   </ItemGroup>
   <ItemGroup>

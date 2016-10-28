@@ -1,42 +1,42 @@
-#if !defined(RESIP_COOKIE_AUTHENTICATOR_HXX)
-#define RESIP_COOKIE_AUTHENTICATOR_HXX
+#if !defined(RESIP_HEPSIPMESSAGELOGGINGHANDLER_HXX)
+#define RESIP_HEPSIPMESSAGELOGGINGHANDLER_HXX
 
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "resip/stack/Cookie.hxx"
-#include "resip/stack/ExtensionHeader.hxx"
-#include "resip/stack/WsCookieContext.hxx"
-#include "resip/stack/SipStack.hxx"
+#include "rutil/Socket.hxx"
 
-using namespace resip;
-
-namespace repro
+namespace resip
 {
-  class CookieAuthenticator : public Processor
-  {
-    public:
 
-      CookieAuthenticator(const Data& wsCookieAuthSharedSecret, const Data& wsCookieExtraHeaderName, resip::SipStack* stack);
-      ~CookieAuthenticator();
+class HEPSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
+{
+   public:
+      HEPSipMessageLoggingHandler(Data &captureHost, int capturePort, int captureAgentID);
+      virtual ~HEPSipMessageLoggingHandler();
+      virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg);
+      virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data);
+      virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg);
+   protected:
+      virtual void sendToHOMER(const Tuple& source, const Tuple& destination, const SipMessage &msg);
+      Data mCaptureHost;
+      int mCapturePort;
+      int mCaptureAgentID;
+   private:
+      Tuple mTuple;
+      Socket mSocket;
+};
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
-
-    protected:
-      std::auto_ptr<resip::ExtensionHeader> mWsCookieExtraHeader;
-
-      bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
-      bool authorizedForThisIdentity(const MethodTypes method, const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
-  };
 
 }
+
 #endif
 
 
 /* ====================================================================
- * BSD License
  *
- * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
+ * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -67,5 +67,6 @@ namespace repro
  * SUCH DAMAGE.
  *
  * ====================================================================
+ *
  *
  */

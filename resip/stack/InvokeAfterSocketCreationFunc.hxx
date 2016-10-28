@@ -1,42 +1,48 @@
-#if !defined(RESIP_COOKIE_AUTHENTICATOR_HXX)
-#define RESIP_COOKIE_AUTHENTICATOR_HXX
+#ifndef InvokeAfterSocketCreationFunc_Include_Guard
+#define InvokeAfterSocketCreationFunc_Include_Guard
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "resip/stack/Cookie.hxx"
-#include "resip/stack/ExtensionHeader.hxx"
-#include "resip/stack/WsCookieContext.hxx"
-#include "resip/stack/SipStack.hxx"
+#include "resip/stack/TransactionMessage.hxx"
+#include "resip/stack/Transport.hxx"
 
-using namespace resip;
-
-namespace repro
+namespace resip
 {
-  class CookieAuthenticator : public Processor
-  {
-    public:
+class InvokeAfterSocketCreationFunc : public TransactionMessage
+{
+   public:
+      explicit InvokeAfterSocketCreationFunc(TransportType type) : mTransportType(type)
+      {}
+      virtual ~InvokeAfterSocketCreationFunc(){}
 
-      CookieAuthenticator(const Data& wsCookieAuthSharedSecret, const Data& wsCookieExtraHeaderName, resip::SipStack* stack);
-      ~CookieAuthenticator();
+      virtual const Data& getTransactionId() const {return Data::Empty;}
+      virtual TransportType getTransportType() const { return mTransportType; }
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
+      virtual bool isClientTransaction() const {return true;}
+      virtual EncodeStream& encode(EncodeStream& strm) const
+      {
+         return strm << "InvokeAfterSocketCreationFunc: type=" << mTransportType;
+      }
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+      {
+         return strm << "InvokeAfterSocketCreationFunc: type=" << mTransportType;
+      }
 
-    protected:
-      std::auto_ptr<resip::ExtensionHeader> mWsCookieExtraHeader;
+      virtual Message* clone() const
+      {
+         resip_assert(false); return NULL;
+      }
 
-      bool cookieUriMatch(const resip::Uri &first, const resip::Uri &second);
-      bool authorizedForThisIdentity(const MethodTypes method, const WsCookieContext& wsCookieContext, resip::Uri &fromUri, resip::Uri &toUri);
-  };
+   protected:
+      TransportType mTransportType;
+}; // class InvokeAfterSocketCreationFunc
 
-}
-#endif
+} // namespace resip
 
+#endif // include guard
 
 /* ====================================================================
- * BSD License
  *
- * Copyright (c) 2013 Catalin Constantin Usurelu  All rights reserved.
+ * Copyright 2016 SIP Spectrum, Inc http://www.sipspectrum.com  
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -68,4 +74,6 @@ namespace repro
  *
  * ====================================================================
  *
+ *
  */
+

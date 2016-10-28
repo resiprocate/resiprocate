@@ -1247,9 +1247,11 @@ SipStack::dump(EncodeStream& strm)  const
    }
    strm << " ServerTransactionMap size=" << this->mTransactionController->mServerTransactionMap.size() << std::endl
         << " ClientTransactionMap size=" << this->mTransactionController->mClientTransactionMap.size() << std::endl
-        // !slg! TODO - There is technically a threading concern with the following three lines and the runtime addTransport call
-        << " Exact Transports=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
-        << " Any Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl
+        // !slg! TODO - There is technically a threading concern with the following three lines and the runtime addTransport or removeTransport call
+        << " Exact interface / Specific port=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
+        << " Any interface / Specific port=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl
+        << " Exact interface / Any port =" << Inserter(this->mTransactionController->mTransportSelector.mAnyPortTransports) << std::endl
+        << " Any interface / Any port=" << Inserter(this->mTransactionController->mTransportSelector.mAnyPortAnyInterfaceTransports) << std::endl
         << " TLS Transports=" << Inserter(this->mTransactionController->mTransportSelector.mTlsTransports) << std::endl;
    return strm;
 }
@@ -1270,6 +1272,13 @@ void
 SipStack::enableFlowTimer(const resip::Tuple& flow)
 {
    mTransactionController->enableFlowTimer(flow);
+}
+
+void
+SipStack::invokeAfterSocketCreationFunc(TransportType type)
+{
+    // Stack is assummed to be running.  Need to queue invoke request for TransactionController Thread
+    mTransactionController->invokeAfterSocketCreationFunc(type);
 }
 
 /* ====================================================================

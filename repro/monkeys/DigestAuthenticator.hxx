@@ -32,7 +32,7 @@ namespace repro
       virtual resip::Data getRealm(RequestContext &);
       virtual bool isMyRealm(RequestContext &, const resip::Data& realm);
       
-    private:
+    protected:
       Dispatcher* mAuthRequestDispatcher;
       resip::Data mStaticRealm;
       bool mNoIdentityHeaders;

@@ -34,6 +34,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/EventStackThread.hxx"
+#include "resip/stack/HEPSipMessageLoggingHandler.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
@@ -785,7 +786,19 @@ ReproRunner::createSipStack()
    mSipStack->setExternalStatsHandler(this);
 
    // Set Transport SipMessage Logging Handler - if enabled
-   if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
+   Data captureHost;
+   mProxyConfig->getConfigValue("CaptureHost", captureHost);
+   if(!captureHost.empty())
+   {
+      int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
+      int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
+#ifndef WIN32 // Does not currently build on windows - TODO
+      mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(captureHost, capturePort, captureAgentID)));
+#else
+      CritLog(<< "HOMER Capture support is not currently implemented for Windows");
+#endif
+   }
+   else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
        mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<ReproSipMessageLoggingHandler>(new ReproSipMessageLoggingHandler));
    }

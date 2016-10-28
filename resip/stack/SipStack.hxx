@@ -1054,6 +1054,15 @@ class SipStack : public FdSetIOObserver
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
+      // Will call the AfterSocketCreationFuncPtr that was provided at SIPStack creation
+      // time to all sockets that match the passed in type.  Use UNKNOWN_TRANSPORT
+      // in order to call for all transport types.
+      // The stack thread(s) must be running when this is called.
+      // Can be used to update QOS to a new value on existing sockets, without needing
+      // to restart the SipStack.
+      // Note:  DNS sockets are not currently supported
+      void invokeAfterSocketCreationFunc(TransportType type = UNKNOWN_TRANSPORT);
+
    private:
       /// Performs bulk of work of constructor.
       // WATCHOUT: can only be called once (just like constructor)

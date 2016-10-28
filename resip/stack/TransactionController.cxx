@@ -10,6 +10,7 @@
 #include "resip/stack/RemoveTransport.hxx"
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
+#include "resip/stack/InvokeAfterSocketCreationFunc.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
 #include "resip/stack/PollStatistics.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
@@ -290,6 +291,12 @@ void
 TransactionController::setInterruptor(AsyncProcessHandler* handler)
 {
    mStateMacFifo.setInterruptor(handler);
+}
+
+void
+TransactionController::invokeAfterSocketCreationFunc(TransportType type)
+{
+    mStateMacFifo.add(new InvokeAfterSocketCreationFunc(type));
 }
 
 /* ====================================================================

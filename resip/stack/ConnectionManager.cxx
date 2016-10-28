@@ -462,6 +462,15 @@ ConnectionManager::setPollGrp(FdPollGrp *grp)
     mPollGrp = grp;
 }
 
+void 
+ConnectionManager::invokeAfterSocketCreationFunc() const
+{
+    for (AddrMap::const_iterator it = mAddrMap.begin(); it != mAddrMap.end(); it++)
+    {
+        it->second->invokeAfterSocketCreationFunc();
+    }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
