@@ -15,6 +15,7 @@ all: \
 	testClient.obj testClient.exe \
  	testConnectionBase.obj testConnectionBase.exe \
  	testCorruption.obj testCorruption.exe \
+	testDialogInfoContents.obj testDialogInfoContents.exe \
 	testDigestAuthentication.obj testDigestAuthentication.exe \
 	testDtlsTransport.obj testDtlsTransport.exe \
 	testDns.obj testDns.exe \
@@ -69,6 +70,7 @@ run:
 	testApplicationSip.exe
 	testConnectionBase.exe
 	testCorruption.exe
+	testDialogInfoContents.exe
 	testDigestAuthentication.exe
 	testEmbedded.exe
 	testEmptyHeader.exe

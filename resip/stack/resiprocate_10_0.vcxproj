@@ -346,6 +346,7 @@
     <ClCompile Include="CSeqCategory.cxx" />
     <ClCompile Include="DataParameter.cxx" />
     <ClCompile Include="DateCategory.cxx" />
+    <ClCompile Include="DialogInfoContents.cxx" />
     <ClCompile Include="GenericPidfContents.cxx" />
     <ClCompile Include="gen\DayOfWeekHash.cxx" />
     <ClCompile Include="DeprecatedDialog.cxx" />
@@ -531,6 +532,7 @@
     <ClInclude Include="DataParameter.hxx" />
     <ClInclude Include="DateCategory.hxx" />
     <ClInclude Include="DeprecatedDialog.hxx" />
+    <ClInclude Include="DialogInfoContents.hxx" />
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
     <ClInclude Include="DnsResultMessage.hxx" />

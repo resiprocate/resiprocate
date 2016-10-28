@@ -81,6 +81,7 @@ libresip_la_SOURCES = \
 	CpimContents.cxx \
 	DataParameter.cxx \
 	DeprecatedDialog.cxx \
+	DialogInfoContents.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	DtlsMessage.cxx \
@@ -243,6 +244,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	DataParameter.hxx \
 	DateCategory.hxx \
 	DeprecatedDialog.hxx \
+	DialogInfoContents.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsResultMessage.hxx \
