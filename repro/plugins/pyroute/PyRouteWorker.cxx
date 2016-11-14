@@ -247,6 +247,13 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
       return true;
    }
 
+   // is it a string to replace the request URI?
+   if(response.isString())
+   {
+      work->mNewRequestUri = resip::Data(response.as_string());
+      return true;
+   }
+
    // If we get this far, the response should be a list of target URIs
    if(!response.isList())
    {

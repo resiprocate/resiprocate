@@ -36,6 +36,7 @@ class PyRouteWork : public ProcessorMessage
       resip::SipMessage& mMessage;
       int mResponseCode;
       resip::Data mResponseMessage;
+      resip::Data mNewRequestUri;
       std::vector<resip::Data> mTargets;
 
       virtual PyRouteWork* clone() const;
@@ -44,6 +45,7 @@ class PyRouteWork : public ProcessorMessage
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const;
 
       bool hasResponse() { return mResponseCode >= 0; };
+      bool updateRequestUri() { return !mNewRequestUri.empty(); };
 };
 
 class PyRouteWorker : public Worker

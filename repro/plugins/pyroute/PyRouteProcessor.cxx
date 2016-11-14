@@ -40,6 +40,12 @@ PyRouteProcessor::process(RequestContext &context)
          context.sendResponse(response);
          return Processor::SkipThisChain;
       }
+      else if(work->updateRequestUri())
+      {
+         SipMessage& msg = context.getOriginalRequest();
+         msg.header(resip::h_RequestLine).uri() = Uri(work->mNewRequestUri);
+         return Processor::Continue;
+      }
       for(
          std::vector<Data>::iterator i = work->mTargets.begin();
          i != work->mTargets.end();
