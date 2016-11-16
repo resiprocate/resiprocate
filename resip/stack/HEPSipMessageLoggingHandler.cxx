@@ -198,7 +198,7 @@ HEPSipMessageLoggingHandler::sendToHOMER(const Tuple& source, const Tuple& desti
       case UDP:
          hg->ip_proto.data = IPPROTO_UDP;
          break;
-#if(_WIN32_WINNT >= 0x0600)
+#if !defined(WIN32) || (defined(WIN32) && (_WIN32_WINNT >= 0x0600))
       case SCTP:
          hg->ip_proto.data = IPPROTO_SCTP;
          break;
