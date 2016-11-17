@@ -59,7 +59,8 @@ public:
         asio::ssl::context& sslContext,
         unsigned int componentId,
         const StunTuple& localBinding, 
-        MediaStream& mediaStream);
+        MediaStream& mediaStream,
+        bool forceCOMedia);
    ~Flow();
 
    void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
@@ -123,8 +124,12 @@ private:
    // MediaStream that this Flow belongs too
    MediaStream& mMediaStream;
 
+   // Use peer's RTP source IP instead of the peer's SDP connection IP
+   bool mForceCOMedia;
+
    // mTurnSocket has it's own threading protection
    boost::shared_ptr<TurnAsyncSocket> mTurnSocket;
+   bool mPrivatePeer;
 
    // These are only set once, then accessed - thus they do not require mutex protection
    UInt8 mAllocationProps;

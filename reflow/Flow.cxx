@@ -123,7 +123,8 @@ Flow::Flow(asio::io_service& ioService,
 #endif
            unsigned int componentId,
            const StunTuple& localBinding, 
-           MediaStream& mediaStream) 
+           MediaStream& mediaStream,
+           bool forceCOMedia)
   : mIOService(ioService),
 #ifdef USE_SSL
     mSslContext(sslContext),
@@ -131,6 +132,8 @@ Flow::Flow(asio::io_service& ioService,
     mComponentId(componentId),
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
+    mForceCOMedia(forceCOMedia),
+    mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
     mFlowState(Unconnected),
@@ -485,14 +488,28 @@ Flow::setActiveDestination(const char* address, unsigned short port)
 {
    if(mTurnSocket.get())
    {
+      asio::ip::address peerAddress = asio::ip::address::from_string(address);
+
+      if(peerAddress.is_v4())
+      {
+         asio::ip::address_v4::bytes_type _bytes = peerAddress.to_v4().to_bytes();
+
+         mPrivatePeer = _bytes[0] == 10 ||
+            (_bytes[0] == 172 && (_bytes[1] & 0xf0) == 16) ||
+            (_bytes[0] == 192 && _bytes[1] == 168);
+         DebugLog(<<"Peer address " << address << " private: " << (mPrivatePeer ? "true" : "false"));
+      }
+
       if(mMediaStream.mNatTraversalMode != MediaStream::TurnAllocation)
       {         
+         DebugLog(<<"Connecting socket to remote peer " << address << ":" << port);
          changeFlowState(Connecting);
          mTurnSocket->connect(address, port);
       }
       else
       {
-         mTurnSocket->setActiveDestination(asio::ip::address::from_string(address), port);
+         DebugLog(<<"Setting TURN destination to remote peer " << address << ":" << port);
+         mTurnSocket->setActiveDestination(peerAddress, port);
 
       }
    }
@@ -771,6 +788,16 @@ void
 Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
 {
    DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+
+   if(address != mTurnSocket->getConnectedAddress() || port != mTurnSocket->getConnectedPort())
+   {
+      if(mForceCOMedia && isReady() && mPrivatePeer)
+      {
+         DebugLog(<<"Peer with private IP " << mTurnSocket->getConnectedAddress() << ":" << mTurnSocket->getConnectedPort()
+                  << " appears to be sending from " << address << ":" << port);
+         setActiveDestination(address.to_string().c_str(), port);
+      }
+   }
 
 #ifdef USE_SSL
    // Check if packet is a dtls packet - if so then process it
