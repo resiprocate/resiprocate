@@ -835,6 +835,7 @@ ReConServerProcess::main (int argc, char** argv)
    ConversationProfile::SecureMediaMode secureMediaMode = reConServerConfig.getConfigSecureMediaMode("SecureMediaMode", ConversationProfile::NoSecureMedia);
    bool secureMediaRequired = reConServerConfig.isSecureMediaModeRequired();
    ConversationProfile::NatTraversalMode natTraversalMode = reConServerConfig.getConfigNatTraversalMode("NatTraversalMode", ConversationProfile::NoNatTraversal);
+   bool forceCOMedia = reConServerConfig.getConfigBool("ForceCOMedia", true);
    Data natTraversalServerHostname = reConServerConfig.getConfigData("NatTraversalServerHostname", "", true);
    unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 3478);
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
@@ -1163,6 +1164,7 @@ ReConServerProcess::main (int argc, char** argv)
 
    // Setup NatTraversal Settings
    conversationProfile->natTraversalMode() = natTraversalMode;
+   conversationProfile->forceCOMedia() = forceCOMedia;
    conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
    conversationProfile->natTraversalServerPort() = natTraversalServerPort;
    conversationProfile->stunUsername() = stunUsername;
