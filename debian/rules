@@ -47,7 +47,6 @@ CFG_ARGS := --with-ssl \
 		--enable-repro-plugins \
 		--with-python \
 		--with-c-ares \
-		--with-ichat-gw \
 		--enable-assert-syslog
 
 # on kfreebsd, sipxtapi is not available and recon can't be built
