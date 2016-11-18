@@ -27,6 +27,18 @@ UserAgentMasterProfile::UserAgentMasterProfile()
 #endif
 }
 
+void
+UserAgentMasterProfile::setTransportSipMessageLoggingHandler(SharedPtr<Transport::SipMessageLoggingHandler> handler)
+{
+   mTransportSipMessageLoggingHandler = handler;
+}
+
+const SharedPtr<Transport::SipMessageLoggingHandler>
+UserAgentMasterProfile::getTransportSipMessageLoggingHandler() const
+{
+   return mTransportSipMessageLoggingHandler;
+}
+
 void 
 UserAgentMasterProfile::addTransport( TransportType protocol,
                                       int port, 

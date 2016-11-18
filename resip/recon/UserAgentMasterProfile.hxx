@@ -1,9 +1,11 @@
 #if !defined(UserAgentMasterProfile_hxx)
 #define UserAgentMasterProfile_hxx
 
+#include <rutil/SharedPtr.hxx>
 #include <rutil/TransportType.hxx>
 #include <rutil/dns/DnsStub.hxx>
 #include <resip/stack/SecurityTypes.hxx> 
+#include <resip/stack/Transport.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <vector>
 
@@ -32,6 +34,10 @@ public:
       resip::Data mSipDomainname;
       resip::SecurityTypes::SSLType mSslType;
    };
+
+   void setTransportSipMessageLoggingHandler(resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> handler);
+
+   const resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> getTransportSipMessageLoggingHandler() const;
 
    /**
      Adds a network transport to use for send/receiving SIP messages.
@@ -176,6 +182,7 @@ private:
    std::vector<resip::Data> mRootCertDirectories;
    std::vector<resip::Data> mRootCertBundles;
    bool mStatisticsManagerEnabled;
+   resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
    std::vector<TransportInfo> mTransports;
    std::vector<resip::Data> mEnumSuffixes;
    resip::DnsStub::NameserverList mAdditionalDnsServers;

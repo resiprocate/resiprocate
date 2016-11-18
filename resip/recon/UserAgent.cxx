@@ -77,6 +77,8 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    resip_assert(mConversationManager);
    mConversationManager->setUserAgent(this);
 
+   mStack.setTransportSipMessageLoggingHandler(profile->getTransportSipMessageLoggingHandler());
+
    addTransports();
 
    // Set Enum Suffixes
