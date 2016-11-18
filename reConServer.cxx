@@ -56,6 +56,8 @@ int _kbhit() {
 #include <rutil/BaseException.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <resip/stack/HEPSipMessageLoggingHandler.hxx>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -851,6 +853,9 @@ ReConServerProcess::main (int argc, char** argv)
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
    Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
+   Data captureHost = reConServerConfig.getConfigData("CaptureHost", "");
+   int capturePort = reConServerConfig.getConfigInt("CapturePort", 9060);
+   int captureAgentID = reConServerConfig.getConfigInt("CaptureAgentID", 2002);
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
@@ -940,6 +945,11 @@ ReConServerProcess::main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
 
    SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+
+   if(!captureHost.empty())
+   {
+      profile->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(captureHost, capturePort, captureAgentID)));
+   }
 
    // Add transports
    if(udpPort)
