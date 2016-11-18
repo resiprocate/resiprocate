@@ -14,7 +14,6 @@ EXTRA_DIST += ParameterHash.gperf
 EXTRA_DIST += parametersA.gperf
 EXTRA_DIST += Readme-Compliance.txt
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += ssl/WinSecurity.cxx
 
 SUBDIRS = . test

@@ -1,7 +1,6 @@
 # $Id$
 
 EXTRA_DIST = *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)

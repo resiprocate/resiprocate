@@ -11,7 +11,6 @@ SUBDIRS += . test
 EXTRA_DIST = fixupGperf
 EXTRA_DIST += mainpage.doc
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += WinCompat.cxx
 EXTRA_DIST += msvc/*.h
 EXTRA_DIST += dns/LocalDns.cxx

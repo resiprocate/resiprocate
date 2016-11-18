@@ -2,7 +2,6 @@
 
 EXTRA_DIST = Doxyfile
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += doc
 
 SUBDIRS = . test

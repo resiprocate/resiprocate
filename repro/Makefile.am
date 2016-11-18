@@ -8,7 +8,6 @@ EXTRA_DIST += php
 EXTRA_DIST += README_MySQL.txt
 EXTRA_DIST += README_PostgreSQL.txt
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 #EXTRA_DIST += *.db
 EXTRA_DIST += VERSION
 EXTRA_DIST += webadmin

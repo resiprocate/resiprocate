@@ -1,7 +1,6 @@
 # $Id$
 
 EXTRA_DIST = readme.txt
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += *.sln
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += doc

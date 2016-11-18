@@ -32,7 +32,6 @@ man3_MANS = \
 	ares_search.3
 
 EXTRA_DIST = $(man3_MANS) adig.c ahost.c
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += *.vcxproj
 EXTRA_DIST += *.vcxproj.filters
 

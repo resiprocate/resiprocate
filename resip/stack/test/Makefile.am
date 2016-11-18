@@ -15,7 +15,6 @@ EXTRA_DIST += raw-tests.txt
 EXTRA_DIST += RSP-2 RSP-3
 EXTRA_DIST += runtests.sh
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += test.rc
 EXTRA_DIST += *.py
 EXTRA_DIST += torture-test.txt
