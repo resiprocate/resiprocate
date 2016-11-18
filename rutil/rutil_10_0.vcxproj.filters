@@ -60,6 +60,7 @@
     <ClCompile Include="vmd5.cxx" />
     <ClCompile Include="WinCompat.cxx" />
     <ClCompile Include="XMLCursor.cxx" />
+    <ClCompile Include="hep\ResipHep.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="XMLCursor.hxx" />
@@ -150,5 +151,6 @@
     <ClInclude Include="vthread.hxx" />
     <ClInclude Include="WinCompat.hxx" />
     <ClInclude Include="WinLeakCheck.hxx" />
+    <ClInclude Include="hep\ResipHep.hxx" />
   </ItemGroup>
 </Project>

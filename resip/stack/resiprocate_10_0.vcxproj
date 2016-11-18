@@ -376,6 +376,7 @@
     <ClCompile Include="Headers.cxx" />
     <ClCompile Include="HeaderTypes.cxx" />
     <ClCompile Include="Helper.cxx" />
+    <ClCompile Include="HEPSipMessageLoggingHandler.cxx" />
     <ClCompile Include="IntegerCategory.cxx" />
     <ClCompile Include="IntegerParameter.cxx" />
     <ClCompile Include="InternalTransport.cxx" />
@@ -539,6 +540,7 @@
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
+    <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="RemoveTransport.hxx" />

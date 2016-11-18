@@ -13,7 +13,7 @@ namespace resip
 class HEPSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
 {
    public:
-      HEPSipMessageLoggingHandler(Data &captureHost, int capturePort, int captureAgentID);
+      HEPSipMessageLoggingHandler(const Data &captureHost, int capturePort, int captureAgentID);
       virtual ~HEPSipMessageLoggingHandler();
       virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg);
       virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data);

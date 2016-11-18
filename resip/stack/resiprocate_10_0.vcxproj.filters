@@ -149,6 +149,7 @@
     <ClCompile Include="GenericPidfContents.cxx" />
     <ClCompile Include="TcpConnectState.cxx" />
     <ClCompile Include="DialogInfoContents.cxx" />
+    <ClCompile Include="HEPSipMessageLoggingHandler.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AddTransport.hxx" />
@@ -320,7 +321,9 @@
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
     <ClInclude Include="TcpConnectState.hxx" />
+    <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
     <ClInclude Include="DialogInfoContents.hxx" />
+    <ClInclude Include="HEPSipMessageLoggingHandler.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HeaderHash.gperf">

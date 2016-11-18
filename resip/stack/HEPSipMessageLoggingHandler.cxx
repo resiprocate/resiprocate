@@ -4,17 +4,17 @@
 
 #include <stdexcept>
 
-#include "resip/stack/core_hep.h"
 #include "resip/stack/HEPSipMessageLoggingHandler.hxx"
+#include "rutil/hep/ResipHep.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
-
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::NONE
 
 using namespace resip;
 using namespace std;
 
-HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(Data &captureHost, int capturePort, int captureAgentID)
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(const Data &captureHost, int capturePort, int captureAgentID)
    : mCaptureHost(captureHost), mCapturePort(capturePort), mCaptureAgentID(captureAgentID)
 {
 #ifdef USE_IPV6
@@ -27,7 +27,11 @@ HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(Data &captureHost, int 
    mSocket = ::socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
    int no = 0;
-   setsockopt(mSocket, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no));
+#if !defined(WIN32)
+   ::setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, &no, sizeof(no));
+#else
+   ::setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&no, sizeof(no));
+#endif
 
 #else
    struct sockaddr_in myaddr;
@@ -194,9 +198,11 @@ HEPSipMessageLoggingHandler::sendToHOMER(const Tuple& source, const Tuple& desti
       case UDP:
          hg->ip_proto.data = IPPROTO_UDP;
          break;
+#if !defined(WIN32) || (defined(WIN32) && (_WIN32_WINNT >= 0x0600))
       case SCTP:
          hg->ip_proto.data = IPPROTO_SCTP;
          break;
+#endif
       case WS:
       case WSS:
          hg->ip_proto.data = IPPROTO_TCP; // FIXME
@@ -222,7 +228,7 @@ HEPSipMessageLoggingHandler::sendToHOMER(const Tuple& source, const Tuple& desti
    hg->dst_port.data = htons(destination.getPort());
    hg->dst_port.chunk.length = htons(sizeof(hg->dst_port));
 
-   UInt64 now = ResipClock::getTimeMicroSec();
+   UInt64 now = hepUnixTimestamp();
 
    /* TIMESTAMP SEC */
    hg->time_sec.chunk.vendor_id = htons(0x0000);
@@ -271,6 +277,10 @@ HEPSipMessageLoggingHandler::sendToHOMER(const Tuple& source, const Tuple& desti
    if(sendto(mSocket, buf.data(), buf.size(), 0, &addr, mTuple.length()) < 0)
    {
       ErrLog(<<"sending to HOMER " << mTuple << " failed: " << strerror(errno));
+   }
+   else
+   {
+      DebugLog(<< "packet sent to HOMER " << mTuple);
    }
 }
 

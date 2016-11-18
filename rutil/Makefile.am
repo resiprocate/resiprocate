@@ -95,7 +95,9 @@ librutil_la_SOURCES = \
 	dns/RROverlay.cxx \
 	\
 	stun/Stun.cxx \
-	stun/Udp.cxx
+	stun/Udp.cxx \
+	\
+	hep/ResipHep.cxx
 
 if USE_SSL
 librutil_la_SOURCES += \
@@ -197,7 +199,8 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	StlPoolAllocator.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
-	ConsumerFifoBuffer.hxx
+	ConsumerFifoBuffer.hxx \
+	hep/ResipHep.hxx
 
 
 ##############################################################################
