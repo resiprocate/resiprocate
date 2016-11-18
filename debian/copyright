@@ -53,12 +53,16 @@ Comment:
  unlimited use rather than GPL.
 
 Files: b2bua/* apps/sipdial/*
-Copyright: 2012, Daniel Pocock <daniel@pocock.com.au>
+Copyright: 2012, Daniel Pocock http://danielpocock.com
 License: BSD-3-clause
 
 Files: apps/sipdial/MacOS/*
 Copyright: 2007, Marcus Mueller and Helge Hess
 License: BSD-3-clause
+
+Files: apps/telepathy/*
+Copyright: 2015, Daniel Pocock http://danielpocock.com
+License: GPL-3+
 
 Files: rutil/dns/ares/*
 Copyright: 1998, Massachusetts Institute of Technology
@@ -91,8 +95,10 @@ Copyright: 2005, PurpleComm, Inc.
 License: BSD-PurpleComm
 
 Files: debian/*
-Copyright: 2012, Daniel Pocock <daniel@pocock.com.au> and
+Copyright: 2012, Daniel Pocock http://danielpocock.com and
            2009, Gregor Jasny <gjasny@googlemail.com>
+License: GPL-3+
+
 License: GPL-3+
  On Debian systems, the full text of the GNU General Public
  License version 3 can be found in the file

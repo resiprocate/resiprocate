@@ -38,6 +38,7 @@ CFG_ARGS := --with-ssl \
 		--enable-repro-plugins \
 		--with-python \
 		--with-c-ares \
+		--with-ichat-gw \
 		--enable-assert-syslog
 
 # on kfreebsd, sipxtapi is not available and recon can't be built
@@ -46,6 +47,7 @@ CFG_ARGS := --with-ssl \
 # on sparc, libsrtp is not available (fails with a bus error during test cases)
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 CFG_ARGS += --with-recon
+CFG_ARGS += --with-telepathy
 endif
 
 PYVERSION=2.7
