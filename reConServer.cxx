@@ -848,6 +848,11 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned short mediaPortStart = reConServerConfig.getConfigUnsignedShort("MediaPortStart", 17384);
    Data tlsDomain = reConServerConfig.getConfigData("TLSDomain", DnsUtil::getLocalHostName(), true);
    NameAddr outboundProxy = reConServerConfig.getConfigNameAddr("OutboundProxyUri", NameAddr(), true);
+#ifdef PACKAGE_VERSION
+   Data serverText = reConServerConfig.getConfigData("ServerText", "reConServer " PACKAGE_VERSION);
+#else
+   Data serverText = reConServerConfig.getConfigData("ServerText", "reConServer");
+#endif
    uri = reConServerConfig.getConfigNameAddr("SIPUri", uri, true);
    Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
@@ -1090,7 +1095,7 @@ ReConServerProcess::main (int argc, char** argv)
       profile->setOutboundProxy(outboundProxy.uri());
    }
 
-   profile->setUserAgent("ConversationManager/reConServer");
+   profile->setUserAgent(serverText);
    profile->rtpPortRangeMin() = mediaPortStart;
    profile->rtpPortRangeMax() = mediaPortStart + 101; // Allows 100 media streams
 
