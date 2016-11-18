@@ -16,7 +16,7 @@ class StaticRoute: public Processor
       
       virtual processor_action_t process(RequestContext &);
       
-   private:
+   protected:
       RouteStore& mRouteStore;
       bool mNoChallenge;
       bool mParallelForkStaticRoutes;

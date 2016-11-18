@@ -3,6 +3,7 @@
 
 #include <boost/function.hpp>
 
+#include "InstantMessage.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
@@ -14,6 +15,7 @@
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <resip/dum/DumShutdownHandler.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
+#include <resip/dum/PublicationHandler.hxx>
 #include <rutil/SelectInterruptor.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/SharedPtr.hxx>
@@ -25,6 +27,7 @@ namespace recon
 class UserAgentShutdownCmd;
 class SetActiveConversationProfileCmd;
 class UserAgentClientSubscription;
+class UserAgentClientPublication;
 class UserAgentRegistration;
 
 /**
@@ -49,7 +52,9 @@ class UserAgentRegistration;
 
 class UserAgent : public resip::ClientRegistrationHandler,
                   public resip::ClientSubscriptionHandler,
-                  public resip::DumShutdownHandler
+                  public resip::ClientPublicationHandler,
+                  public resip::DumShutdownHandler,
+                  public resip::Postable
 {
 public:
 
@@ -73,7 +78,7 @@ public:
                                 connected.  To enable this behavior call:
                                 Connection::setEnablePostConnectSocketFuncCall();
    */
-   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0);
+   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0, resip::SharedPtr<InstantMessage> instantMessage=resip::SharedPtr<InstantMessage>());
    virtual ~UserAgent();
 
    /**
@@ -221,6 +226,9 @@ public:
    */
    void destroySubscription(SubscriptionHandle handle); 
 
+   PublicationHandle createPublication(const resip::Data& eventType, const resip::NameAddr& target, const resip::Data& status, unsigned int publicationTime, const resip::Mime& mimeType);
+   void destroyPublication(PublicationHandle handle);
+
    ////////////////////////////////////////////////////////////////////
    // UserAgent Handlers //////////////////////////////////////////////
    ////////////////////////////////////////////////////////////////////
@@ -263,9 +271,17 @@ public:
    */
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);   
 
+   /**
+      Used to send a MESSAGE SIP message.
+    */
+   const char* sendMessage(const resip::NameAddr& destination, const resip::Data& msg, const resip::Mime& mimeType);
+
 protected:
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
+
+   // Postable for Connection Terminated event
+   virtual void post(resip::Message* msg);
 
    // Registration Handler ////////////////////////////////////////////////////////
    virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
@@ -281,6 +297,12 @@ protected:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int  onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
+   // ClientPublicationHandler ///////////////////////////////////////////////////
+   virtual void onSuccess(resip::ClientPublicationHandle h, const resip::SipMessage& status);
+   virtual void onRemove(resip::ClientPublicationHandle h, const resip::SipMessage& status);
+   virtual int onRequestRetry(resip::ClientPublicationHandle h, int retrySeconds, const resip::SipMessage& status);
+   virtual void onFailure(resip::ClientPublicationHandle h, const resip::SipMessage& status);
+
 private:
    friend class ConversationManager;
    friend class UserAgentShutdownCmd;
@@ -290,6 +312,8 @@ private:
    friend class CreateSubscriptionCmd;
    friend class DestroySubscriptionCmd;
    friend class MediaResourceParticipant;
+   friend class CreatePublicationCmd;
+   friend class DestroyPublicationCmd;
 
    // Note:  In general the following fns are not thread safe and must be called from dum process 
    //        loop only
@@ -310,6 +334,8 @@ private:
    void destroyConversationProfileImpl(ConversationProfileHandle handle);
    void createSubscriptionImpl(SubscriptionHandle handle, const resip::Data& eventType, const resip::NameAddr& target, unsigned int subscriptionTime, const resip::Mime& mimeType);
    void destroySubscriptionImpl(SubscriptionHandle handle);
+   void createPublicationImpl(PublicationHandle handle, const resip::Data& status, const resip::Data& eventType, const resip::NameAddr& target, unsigned int publicationTime, const resip::Mime& mimeType);
+   void destroyPublicationImpl(PublicationHandle handle);
 
    // Subscription storage
    friend class UserAgentClientSubscription;
@@ -320,6 +346,16 @@ private:
    SubscriptionHandle getNewSubscriptionHandle();  // thread safe
    void registerSubscription(UserAgentClientSubscription *);
    void unregisterSubscription(UserAgentClientSubscription *);
+
+   // Publication storage
+   friend class UserAgentClientPublication;
+   typedef std::map<PublicationHandle, UserAgentClientPublication *> PublicationMap;
+   PublicationMap mPublications;
+   resip::Mutex mPublicationHandleMutex;
+   PublicationHandle mCurrentPublicationHandle;
+   PublicationHandle getNewPublicationHandle(); // thread safe
+   void registerPublication(UserAgentClientPublication *);
+   void unregisterPublication(UserAgentClientPublication *);
 
    // Conversation Profile Storage
    typedef std::map<ConversationProfileHandle, resip::SharedPtr<ConversationProfile> > ConversationProfileMap;
@@ -337,12 +373,14 @@ private:
 
    ConversationManager* mConversationManager;
    resip::SharedPtr<UserAgentMasterProfile> mProfile;
+   resip::SharedPtr<InstantMessage> mInstantMessage;
    resip::Security* mSecurity;
    resip::SelectInterruptor mSelectInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
    resip::InterruptableStackThread mStackThread;
    volatile bool mDumShutdown;
+
 };
  
 }
@@ -353,6 +391,8 @@ private:
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2016, SIP Spectrum, Inc.
+
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

@@ -68,6 +68,12 @@ DialogUsage::remoteTarget() const
    return mDialog.mRemoteTarget;
 }
 
+const NameAddrs&
+DialogUsage::getRouteSet() const
+{
+    return mDialog.mRouteSet;
+}
+
 const DialogId& 
 DialogUsage::getDialogId() const
 {

@@ -34,6 +34,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/EventStackThread.hxx"
+#include "resip/stack/HEPSipMessageLoggingHandler.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
@@ -785,7 +786,15 @@ ReproRunner::createSipStack()
    mSipStack->setExternalStatsHandler(this);
 
    // Set Transport SipMessage Logging Handler - if enabled
-   if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
+   Data captureHost;
+   mProxyConfig->getConfigValue("CaptureHost", captureHost);
+   if(!captureHost.empty())
+   {
+      int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
+      int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
+      mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(captureHost, capturePort, captureAgentID)));
+   }
+   else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
        mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<ReproSipMessageLoggingHandler>(new ReproSipMessageLoggingHandler));
    }
@@ -990,7 +999,7 @@ ReproRunner::createDatastore()
       resip_assert(!mRegistrationPersistenceManager);
       mRegistrationPersistenceManager = new InMemorySyncRegDb(mRegSyncPort ? 86400 /* 24 hours */ : 0 /* removeLingerSecs */);  // !slg! could make linger time a setting
       resip_assert(!mPublicationPersistenceManager);
-      mPublicationPersistenceManager = new InMemorySyncPubDb((mRegSyncPort && mProxyConfig->getConfigBool("EnablePublicationRepication", false)) ? true : false);
+      mPublicationPersistenceManager = new InMemorySyncPubDb((mRegSyncPort && mProxyConfig->getConfigBool("EnablePublicationReplication", false)) ? true : false);
    }
    resip_assert(mRegistrationPersistenceManager);
    resip_assert(mPublicationPersistenceManager);
@@ -1386,7 +1395,7 @@ ReproRunner::createRegSync()
    resip_assert(!mRegSyncServerThread);
    if(mRegSyncPort != 0)
    {
-      bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationRepication", false);
+      bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationReplication", false);
       std::list<RegSyncServer*> regSyncServerList;
       if(mUseV4) 
       {

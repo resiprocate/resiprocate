@@ -47,6 +47,8 @@ class ConnectionManager
       void buildFdSet(FdSet& fdset);
       void process(FdSet& fdset);
 
+      virtual void invokeAfterSocketCreationFunc() const;
+
    private:
       void addToWritable(Connection* conn); // add the specified conn to end
       void removeFromWritable(Connection* conn); // remove the current mWriteMark

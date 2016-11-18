@@ -6,6 +6,7 @@
 #include "ActiveCallInfo.hxx"
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
+#include "ConfigParser.hxx"
 
 namespace resip
 {
@@ -23,7 +24,7 @@ public:
    ParkManager(Server& server);
    virtual ~ParkManager(); 
 
-   void startup();
+   void startup(ConfigParser::ParkSettings& settings);
    void initializeConversationProfile(const resip::NameAddr& uri, const resip::Data& password, unsigned long registrationTime, const resip::NameAddr& outboundProxy);
    void initializeOrbitConversationProfiles(unsigned long orbitStart, unsigned long numOrbits, const resip::NameAddr& uri, const resip::Data& password, unsigned long registrationTime, const resip::NameAddr& outboundProxy);
    void initializeParkSettings(unsigned long maxParkTime, const resip::Uri& musicFilename);
@@ -35,7 +36,7 @@ public:
    bool removeParticipant(recon::ParticipantHandle participantHandle);
    void getActiveCallsInfo(CallInfoList& callInfos);
 
-   void onMaxParkTimeout(recon::ParticipantHandle participantHandle);
+   bool onMaxParkTimeout(recon::ParticipantHandle participantHandle);
 
 private:
    resip::Mutex mMutex;
@@ -70,7 +71,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2011, SIP Spectrum, Inc.
+ Copyright (c) 2011-2016, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

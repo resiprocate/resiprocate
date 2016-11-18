@@ -46,7 +46,8 @@ public:
                                   const char* natTraversalServerHostname = 0, 
                                   unsigned short natTraversalServerPort = 0, 
                                   const char* stunUsername = 0,
-                                  const char* stunPassword = 0);
+                                  const char* stunPassword = 0,
+                                  bool forceCOMedia = false);
 
    void initializeDtlsFactory(const char* certAor);
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }

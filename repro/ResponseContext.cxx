@@ -69,7 +69,7 @@ ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately)
 }
 
 bool
-ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately)
+ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
 {
    if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
@@ -90,7 +90,7 @@ ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmedi
    
    if(beginImmediately)
    {
-      if(isDuplicate(target.get()))
+      if (checkDuplicates && isDuplicate(target.get()))
       {
          return false;
       }
@@ -523,7 +523,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    // stuff.
 
    // only add record route if configured to do so
-   const NameAddr& receivedTransportRecordRoute = mRequestContext.mProxy.getRecordRoute(orig.getSource().mTransportKey);
+   bool transportSpecificRecordRoute;
+   const NameAddr& receivedTransportRecordRoute = mRequestContext.mProxy.getRecordRoute(orig.getSource().mTransportKey, &transportSpecificRecordRoute);
    if(!receivedTransportRecordRoute.uri().host().empty())
    {
       if (!inDialog &&  // only for dialog-creating request
@@ -534,6 +535,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
          insertRecordRoute(request,
                            orig.getReceivedTransportTuple(),
                            receivedTransportRecordRoute,
+                           transportSpecificRecordRoute,
                            target);
       }
       else if(request.method()==REGISTER)
@@ -541,6 +543,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
          insertRecordRoute(request,
                            orig.getReceivedTransportTuple(),
                            receivedTransportRecordRoute,
+                           transportSpecificRecordRoute,
                            target,
                            true /* do Path instead */);
       }
@@ -596,6 +599,7 @@ void
 ResponseContext::insertRecordRoute(SipMessage& outgoing,
                                    const resip::Tuple& receivedTransportTuple,
                                    const resip::NameAddr& receivedTransportRecordRoute, 
+                                   bool transportSpecificRecordRoute,
                                    Target* target,
                                    bool doPathInstead)
 {
@@ -624,16 +628,18 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
          }
          else
          {
-            if(receivedTransportTuple.isAnyInterface())
+            if(receivedTransportTuple.isAnyInterface() || transportSpecificRecordRoute)
             {
                rt = receivedTransportRecordRoute;
             }
             else
             {
+               // If record-route is not transport specific (ie: global record route setting), then generate appropriate one from source
+               // as long as we are not bound to INADDR_ANY
                rt.uri().host()=resip::Tuple::inet_ntop(receivedTransportTuple);
+               rt.uri().port() = receivedTransportTuple.getPort();
+               rt.uri().param(resip::p_transport) = resip::Tuple::toDataLower(receivedTransportTuple.getType());
             }
-            rt.uri().port() = receivedTransportTuple.getPort();
-            rt.uri().param(resip::p_transport) = resip::Tuple::toDataLower(receivedTransportTuple.getType());
          }
          rt.uri().user() = inboundFlowToken;
       }
@@ -984,20 +990,26 @@ ResponseContext::processResponse(SipMessage& response)
       {
          return;
       }
-      else if (response.header(h_StatusLine).statusCode() > 199)
+      else if (response.header(h_StatusLine).statusCode() != 100)
       {
-         InfoLog( << "Received final response, but can't forward as there are "
-                        "no more Vias. Considering this branch failed. " 
-                        << response.brief() );
-         // .bwc. Treat as server error.
-         terminateClientTransaction(mCurrentResponseTid);
-         return;
-      }
-      else if(response.header(h_StatusLine).statusCode() != 100)
-      {
-         InfoLog( << "Received provisional response, but can't forward as there"
-                     " are no more Vias. Ignoring. " << response.brief() );
-         return;
+         if (!mRequestContext.handleMissingResponseVias(&response))
+         {
+            // If handle MissingResponseVias returns false, then processing does not continue
+            if (response.header(h_StatusLine).statusCode() > 199)
+            {
+               InfoLog(<< "Received final response, but can't forward as there are "
+                  "no more Vias. Considering this branch failed. "
+                  << response.brief());
+               // .bwc. Treat as server error.
+               terminateClientTransaction(mCurrentResponseTid);
+            }
+            else
+            {
+               InfoLog(<< "Received provisional response, but can't forward as there"
+                  " are no more Vias. Ignoring. " << response.brief());
+            }
+            return;
+         }
       }
    }
    else // We have a second Via

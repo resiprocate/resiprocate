@@ -24,6 +24,7 @@ ConversationProfile::ConversationProfile() :
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
+   mForceCOMedia(true),
    mNatTraversalServerPort(0)
 {
 }
@@ -39,6 +40,7 @@ ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
+   mForceCOMedia(true),
    mNatTraversalServerPort(0)
 {
 }

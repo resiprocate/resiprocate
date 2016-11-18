@@ -14,6 +14,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::MOHPARKSERVER
 
+#define MOHLOG_PREFIX << "MOHManager[" << mMOHUri << "] "
+
 static const resip::ExtensionParameter p_automaton("automaton");
 static const resip::ExtensionParameter p_byeless("+sip.byeless");
 static const resip::ExtensionParameter p_rendering("+sip.rendering");
@@ -33,19 +35,23 @@ MOHManager::~MOHManager()
 }
 
 void
-MOHManager::startup()
+MOHManager::startup(ConfigParser::MOHSettings& settings)
 {
    // Initialize settings
-   initializeSettings(mServer.mConfig.mMOHFilenameUrl);
+   initializeSettings(settings.mMOHFilenameUrl);
 
-   // Setup ConversationProfile
-   initializeConversationProfile(mServer.mConfig.mMOHUri, mServer.mConfig.mMOHPassword, mServer.mConfig.mMOHRegistrationTime, mServer.mConfig.mOutboundProxy);
+   // Setup ConversationProfile - If MOH setting specific outbound proxy is not specified, then use global 
+   // outbound proxy setting.
+   initializeConversationProfile(settings.mUri, settings.mPassword, settings.mRegistrationTime, 
+      !settings.mOutboundProxy.uri().host().empty() ? settings.mOutboundProxy : mServer.mConfig.mOutboundProxy);
 
    // Create an initial conversation and start music
    ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);   
-   mServer.createMediaResourceParticipant(convHandle, mServer.mConfig.mMOHFilenameUrl);  // Play Music
+   mServer.createMediaResourceParticipant(convHandle, settings.mMOHFilenameUrl);  // Play Music
    mConversations[convHandle];
    mMusicFilenameChanged = false;
+
+   InfoLog(MOHLOG_PREFIX << "startup: MOHFilenameUrl=" << settings.mMOHFilenameUrl);
 }
 
 void 
@@ -78,6 +84,7 @@ MOHManager::initializeConversationProfile(const NameAddr& uri, const Data& passw
    mohConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(mohConversationProfile->sessionCaps());
    mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(mohConversationProfile);
+   mMOHUri = uri;
 }
 
 void 
@@ -109,17 +116,17 @@ MOHManager::shutdown(bool shuttingDownServer)
    Lock lock(mMutex);
    // Destroy all conversations
    ConversationMap::iterator it = mConversations.begin();
-   for(; it != mConversations.end(); it++)
+   for (; it != mConversations.end(); it++)
    {
       // Clean up participant memory
       ParticipantMap::iterator partIt = it->second.begin();
-      for(;partIt!= it->second.end(); partIt++)
+      for (; partIt != it->second.end(); partIt++)
       {
          delete partIt->second;
       }
       it->second.clear();
 
-       mServer.destroyConversation(it->first);
+      mServer.destroyConversation(it->first);
    }
    mConversations.clear();
 
@@ -132,6 +139,7 @@ MOHManager::shutdown(bool shuttingDownServer)
        mServer.mMyUserAgent->destroyConversationProfile(mConversationProfileHandle);
        mConversationProfileHandle = 0;
    }
+   InfoLog(MOHLOG_PREFIX << "shutdown");
 }
 
 bool 
@@ -162,10 +170,14 @@ MOHManager::addParticipant(ParticipantHandle participantHandle, const Uri& heldU
    if(!conversationToUse)
    {
       conversationToUse = mServer.createConversation(true /* broadcast only*/);
-      InfoLog(<< "MOHManager::addParticipant created new conversation for music on hold, id=" << conversationToUse);
+      InfoLog(MOHLOG_PREFIX << "addParticipant: created new conversation for music on hold, id=" << conversationToUse);
 
       // Play Music
       mServer.createMediaResourceParticipant(conversationToUse, mMusicFilename);
+   }
+   else
+   {
+       InfoLog(MOHLOG_PREFIX << "addParticipant: using existing conversation for music on hold, id=" << conversationToUse);
    }
 
    resip_assert(conversationToUse);
@@ -187,7 +199,7 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
       ParticipantMap::iterator partIt = it->second.find(participantHandle);
       if(partIt != it->second.end())
       {
-         InfoLog(<< "MOHManager::removeParticipant found in conversation id=" << it->first << ", size=" << it->second.size());
+         InfoLog(MOHLOG_PREFIX << "removeParticipant: found in conversation id=" << it->first << ", size=" << it->second.size());
 
          // Found! Remove from conversation
          delete partIt->second;
@@ -204,7 +216,7 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
                // Remove Conversation from Map
                mConversations.erase(it);
 
-               InfoLog(<< "MOHManager::removeParticipant last participant in conversation, destroying conversation, num conversations now=" << mConversations.size());
+               InfoLog(MOHLOG_PREFIX << "removeParticipant: last participant in conversation, destroying conversation, num conversations now=" << mConversations.size());
             }
             else if(mConversations.size() == 1 && mMusicFilenameChanged)  // If the initial conversation is empty, and the music filename setting changed, then restart it
             {
@@ -244,7 +256,7 @@ MOHManager::getActiveCallsInfo(CallInfoList& callInfos)
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2010-2016, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

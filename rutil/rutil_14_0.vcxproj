@@ -450,6 +450,7 @@
     <ClCompile Include="FileSystem.cxx" />
     <ClCompile Include="GeneralCongestionManager.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
+    <ClCompile Include="hep\ResipHep.cxx" />
     <ClCompile Include="KeyValueStore.cxx" />
     <ClCompile Include="dns\LocalDns.cxx" />
     <ClCompile Include="Lock.cxx" />
@@ -537,6 +538,7 @@
     <ClInclude Include="GenericIPAddress.hxx" />
     <ClInclude Include="HashMap.hxx" />
     <ClInclude Include="HeapInstanceCounter.hxx" />
+    <ClInclude Include="hep\ResipHep.hxx" />
     <ClInclude Include="KeyValueStore.hxx" />
     <ClInclude Include="Inserter.hxx" />
     <ClInclude Include="IntrusiveListElement.hxx" />
@@ -589,7 +591,7 @@
     <ClInclude Include="XMLCursor.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="dns\ares\ares_12_0.vcxproj">
+    <ProjectReference Include="dns\ares\ares_14_0.vcxproj">
       <Project>{ce7cf5e0-cad1-49d6-95d1-143ded7b226e}</Project>
     </ProjectReference>
   </ItemGroup>

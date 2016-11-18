@@ -18,7 +18,7 @@ namespace reTurn {
 TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
-  mContext(ioService, asio::ssl::context::tlsv1),  // TLSv1.0
+  mContext(ioService, asio::ssl::context::sslv23),  // SSLv23 (actually chooses TLS version dynamically)
   mConnectionManager(),
   mRequestHandler(requestHandler)
 {

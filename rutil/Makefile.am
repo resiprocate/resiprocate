@@ -11,7 +11,6 @@ SUBDIRS += . test
 EXTRA_DIST = fixupGperf
 EXTRA_DIST += mainpage.doc
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += WinCompat.cxx
 EXTRA_DIST += msvc/*.h
 EXTRA_DIST += dns/LocalDns.cxx
@@ -95,7 +94,9 @@ librutil_la_SOURCES = \
 	dns/RROverlay.cxx \
 	\
 	stun/Stun.cxx \
-	stun/Udp.cxx
+	stun/Udp.cxx \
+	\
+	hep/ResipHep.cxx
 
 if USE_SSL
 librutil_la_SOURCES += \
@@ -197,7 +198,8 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	StlPoolAllocator.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
-	ConsumerFifoBuffer.hxx
+	ConsumerFifoBuffer.hxx \
+	hep/ResipHep.hxx
 
 
 ##############################################################################

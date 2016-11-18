@@ -6,6 +6,7 @@
 #include "ActiveCallInfo.hxx"
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
+#include "ConfigParser.hxx"
 
 namespace mohparkserver
 {
@@ -27,7 +28,7 @@ public:
    MOHManager(Server& server);
    virtual ~MOHManager(); 
 
-   void startup();
+   void startup(ConfigParser::MOHSettings& settings);
    void initializeConversationProfile(const resip::NameAddr& uri, const resip::Data& password, unsigned long registrationTime, const resip::NameAddr& outboundProxy);
    void initializeSettings(const resip::Uri& musicFilename);
 
@@ -42,6 +43,7 @@ private:
    resip::Mutex mMutex;
    Server& mServer;
    volatile recon::ConversationProfileHandle mConversationProfileHandle;
+   resip::NameAddr mMOHUri;  // The main AOR we are registing as 
    resip::Uri mMusicFilename;
    volatile bool mMusicFilenameChanged;
 
@@ -56,7 +58,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2010-2016, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

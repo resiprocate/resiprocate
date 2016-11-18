@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.10.2)
+AC_INIT(resiprocate,1.11.0~alpha1)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -14,8 +14,7 @@ AC_SUBST(LIBTOOL_VERSION_RELEASE)
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE
-
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_pattern_forbid([^PKG_])
 
 AC_CANONICAL_HOST
@@ -281,6 +280,12 @@ AC_ARG_WITH(ichat-gw,
  [AC_DEFINE_UNQUOTED(BUILD_ICHAT_GW, , BUILD_ICHAT_GW)
  AM_CONDITIONAL(BUILD_ICHAT_GW, true)], )
 
+AM_CONDITIONAL(BUILD_TELEPATHY_CM, false)
+AC_ARG_WITH(telepathy,
+[  --with-telepathy        Build the Telepathy Connection Manager],
+ [AC_DEFINE_UNQUOTED(BUILD_TELEPATHY_CM, , BUILD_TELEPATHY_CM)
+ AM_CONDITIONAL(BUILD_TELEPATHY_CM, true)], )
+
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
 [  --with-recon            Build recon, links against sipX],
@@ -353,6 +358,7 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
+	apps/telepathy/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \

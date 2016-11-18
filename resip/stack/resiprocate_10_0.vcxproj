@@ -346,6 +346,7 @@
     <ClCompile Include="CSeqCategory.cxx" />
     <ClCompile Include="DataParameter.cxx" />
     <ClCompile Include="DateCategory.cxx" />
+    <ClCompile Include="DialogInfoContents.cxx" />
     <ClCompile Include="GenericPidfContents.cxx" />
     <ClCompile Include="gen\DayOfWeekHash.cxx" />
     <ClCompile Include="DeprecatedDialog.cxx" />
@@ -375,6 +376,7 @@
     <ClCompile Include="Headers.cxx" />
     <ClCompile Include="HeaderTypes.cxx" />
     <ClCompile Include="Helper.cxx" />
+    <ClCompile Include="HEPSipMessageLoggingHandler.cxx" />
     <ClCompile Include="IntegerCategory.cxx" />
     <ClCompile Include="IntegerParameter.cxx" />
     <ClCompile Include="InternalTransport.cxx" />
@@ -531,12 +533,14 @@
     <ClInclude Include="DataParameter.hxx" />
     <ClInclude Include="DateCategory.hxx" />
     <ClInclude Include="DeprecatedDialog.hxx" />
+    <ClInclude Include="DialogInfoContents.hxx" />
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
     <ClInclude Include="DnsResultMessage.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="DtmfPayloadContents.hxx" />
     <ClInclude Include="GenericPidfContents.hxx" />
+    <ClInclude Include="InvokeAfterSocketCreationFunc.hxx" />
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="RemoveTransport.hxx" />

@@ -32,8 +32,10 @@ class UserAgentRegistration : public resip::AppDialogSet
 
       ConversationProfileHandle getConversationProfileHandle();
       virtual void end();
+      virtual bool forceRefresh();
 
       const resip::NameAddrs& getContactAddresses();
+      const resip::Tuple& getLastServerTuple();
 
       // Registration Handler ////////////////////////////////////////////////////////
       virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
@@ -47,6 +49,7 @@ class UserAgentRegistration : public resip::AppDialogSet
       ConversationProfileHandle mConversationProfileHandle;
       bool mEnded;
       resip::ClientRegistrationHandle mRegistrationHandle;  
+      resip::Tuple mLastServerTuple;
 };
 
 }
@@ -57,6 +60,8 @@ class UserAgentRegistration : public resip::AppDialogSet
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2016, SIP Spectrum, Inc.
+
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

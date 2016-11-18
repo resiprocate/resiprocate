@@ -54,6 +54,15 @@ public:
    unsigned int mJabberServerPingDuration;
    resip::Data mJabberControlUsername;
 
+   // TLS specific settings
+   resip::Data mTLSDHParamsFilename;
+   resip::Data mTLSCertificate;
+   resip::Data mTLSPrivateKey;
+   resip::Data mTLSPrivateKeyPassPhrase;
+
+   // iChat Jabber Connector file path
+   resip::Data mIchatJabberConnectorPath;
+   
 private:
    void parseCommandLine(int argc, char** argv);
    void parseConfigFile(const resip::Data& filename);

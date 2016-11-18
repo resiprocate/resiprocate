@@ -38,6 +38,7 @@ main(int argc, char** argv)
       pidf.setEntity(Uri("sip:entity@domain"));
       pidf.setSimplePresenceTupleNode("1234", true, "2005-05-30T22:00:29Z", "Online and ready to go", "sip:entity@domain", "0.8");
       cout << pidf << endl;
+      assert(pidf.getSimplePresenceList().size() == 1);
       assert(pidf.getEntity() == Uri("sip:entity@domain"));
       assert(pidf.getNamespaces().size() == 1);
       assert(pidf.getRootPidfNamespacePrefix().empty());
@@ -50,6 +51,7 @@ main(int argc, char** argv)
       assert(pidf.getSimplePresenceContactPriority() == "0.8");
       pidf.setSimplePresenceTupleNode("1234", false, "2005-05-30T22:00:30Z", "Offline", "sip:entity2@domain", "0.7");
       cout << pidf << endl;
+      assert(pidf.getSimplePresenceList().size() == 1);
       assert(pidf.getEntity() == Uri("sip:entity@domain"));
       assert(pidf.getNamespaces().size() == 1);
       assert(pidf.getRootPidfNamespacePrefix().empty());
@@ -129,6 +131,7 @@ main(int argc, char** argv)
                assert(pidf->getSimplePresenceNote() == Data::Empty);
                assert(pidf->getSimplePresenceContact() == Data::Empty);
                assert(pidf->getSimplePresenceContactPriority() == Data::Empty);
+               assert(pidf->getSimplePresenceList().size() == 1);
                cout << *pidf << endl;
            }
            else
@@ -193,6 +196,7 @@ main(int argc, char** argv)
        assert(pidf.getSimplePresenceNote() == Data::Empty);
        assert(pidf.getSimplePresenceContact() == Data::Empty);
        assert(pidf.getSimplePresenceContactPriority() == Data::Empty);
+       assert(pidf.getSimplePresenceList().size() == 1);
        cout << pidf << endl;
    }
 
@@ -234,6 +238,7 @@ main(int argc, char** argv)
        assert(pidf.getSimplePresenceNote() == Data::Empty);
        assert(pidf.getSimplePresenceContact() == "sip:2002@blitzzgod.com");
        assert(pidf.getSimplePresenceContactPriority() == "1.00");
+       assert(pidf.getSimplePresenceList().size() == 1);
        cout << pidf << endl;
    }
 
@@ -290,6 +295,7 @@ main(int argc, char** argv)
        assert(pidf.getSimplePresenceNote() == "Online");
        assert(pidf.getSimplePresenceContact() == "sip:2002@blitzzgod.com");
        assert(pidf.getSimplePresenceContactPriority() == Data::Empty);
+       assert(pidf.getSimplePresenceList().size() == 1);
        cout << pidf << endl;
    }
 
@@ -332,6 +338,7 @@ main(int argc, char** argv)
        assert(pidf.getSimplePresenceNote() == Data::Empty);
        assert(pidf.getSimplePresenceContact() == "tel:+09012345678");
        assert(pidf.getSimplePresenceContactPriority() == "0.8");
+       assert(pidf.getSimplePresenceList().size() == 1);
        cout << pidf << endl;
    }
 
@@ -390,6 +397,7 @@ main(int argc, char** argv)
        assert(pidf.getRootNodes().back()->mChildren.front()->mValue == "idle");
        assert(pidf.getRootNodes().back()->mChildren.back()->mTag == "deviceID");
        assert(pidf.getRootNodes().back()->mChildren.back()->mValue == "mac:8asd7d7d70");
+       assert(pidf.getSimplePresenceList().size() == 1);
        cout << pidf << endl;
    }
 
@@ -459,6 +467,13 @@ main(int argc, char** argv)
        assert(pidf.getSimplePresenceNote() == Data::Empty);
        assert(pidf.getSimplePresenceContact() == "im:someone@mobile.example.net");
        assert(pidf.getSimplePresenceContactPriority() == "0.8");
+       assert(pidf.getSimplePresenceList().size() == 2);
+       assert(pidf.getSimplePresenceList().back()->mTupleId == "bs78");
+       assert(pidf.getSimplePresenceList().back()->mOnline == false);
+       assert(pidf.getSimplePresenceList().back()->mTimestamp == "2005-05-30T22:00:29Z");
+       assert(pidf.getSimplePresenceList().back()->mNote == Data::Empty);
+       assert(pidf.getSimplePresenceList().back()->mContact == "im:assistant@example.com");
+       assert(pidf.getSimplePresenceList().back()->mContactPriority == "0.1");
        cout << pidf << endl;
    }
 
@@ -562,6 +577,13 @@ main(int argc, char** argv)
        assert(pidf.getSimplePresenceNote() == "Don't Disturb Please!");
        assert(pidf.getSimplePresenceContact() == "im:someone@mobile.example.net");
        assert(pidf.getSimplePresenceContactPriority() == "0.8");
+       assert(pidf.getSimplePresenceList().size() == 3);
+       assert(pidf.getSimplePresenceList().back()->mTupleId == "eg92n8");
+       assert(pidf.getSimplePresenceList().back()->mOnline == true);
+       assert(pidf.getSimplePresenceList().back()->mTimestamp == Data::Empty);
+       assert(pidf.getSimplePresenceList().back()->mNote == Data::Empty);
+       assert(pidf.getSimplePresenceList().back()->mContact == "mailto:someone@example.com");
+       assert(pidf.getSimplePresenceList().back()->mContactPriority == "1.0");
        cout << pidf << endl;
    }
 
@@ -713,24 +735,28 @@ main(int argc, char** argv)
          assert(pidf1.getNamespaces().size() == 4);
          assert(pidf1.getRootPidfNamespacePrefix().empty());
          assert(pidf1.getRootNodes().size() == 2);
+         assert(pidf1.getSimplePresenceList().size() == 1);
 
          pidf2.checkParsed();
          assert(pidf2.getEntity() == Uri("pres:5000@blitzzgod.com"));
          assert(pidf2.getNamespaces().size() == 3);
          assert(pidf2.getRootPidfNamespacePrefix().empty());
          assert(pidf2.getRootNodes().size() == 2);
+         assert(pidf2.getSimplePresenceList().size() == 1);
 
          pidf3.checkParsed();
          assert(pidf3.getEntity() == Uri("pres:5000@blitzzgod.com"));
          assert(pidf3.getNamespaces().size() == 1);
          assert(pidf3.getRootPidfNamespacePrefix() == "impp:");
          assert(pidf3.getRootNodes().size() == 1);
+         assert(pidf3.getSimplePresenceList().size() == 1);
 
          pidf4.checkParsed();
          assert(pidf4.getEntity() == Uri("pres:5000@blitzzgod.com"));
          assert(pidf4.getNamespaces().size() == 4);
          assert(pidf4.getRootPidfNamespacePrefix().empty());
          assert(pidf4.getRootNodes().size() == 6);
+         assert(pidf4.getSimplePresenceList().size() == 3);
 
          cout << merged << endl;
          assert(merged.getEntity() == Uri("sip:5000@blitzzgod.com"));
@@ -762,6 +788,13 @@ main(int argc, char** argv)
          assert(merged.getSimplePresenceNote() == Data::Empty);
          assert(merged.getSimplePresenceContact() == "mailto:secretary@example.com");
          assert(merged.getSimplePresenceContactPriority() == "1.0");
+         assert(merged.getSimplePresenceList().size() == 5);
+         assert(merged.getSimplePresenceList().back()->mTupleId == "eg92n8");
+         assert(merged.getSimplePresenceList().back()->mOnline == true);
+         assert(merged.getSimplePresenceList().back()->mTimestamp == Data::Empty);
+         assert(merged.getSimplePresenceList().back()->mNote == Data::Empty);
+         assert(merged.getSimplePresenceList().back()->mContact == "mailto:someone@example.com");
+         assert(merged.getSimplePresenceList().back()->mContactPriority == "1.0");
       }
       catch (BaseException& e)
       {

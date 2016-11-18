@@ -46,14 +46,14 @@ unsigned int DnsStub::mDnsFeatures = 0;
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsHostRecord>& rr)
 {
-   DebugLog (<< rr);
+   DebugLog(<< "Host(A) Result: " << rr);
 }
 
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsAAAARecord>& rr)
 {
 #if defined(USE_IPV6)
-   DebugLog (<< rr);
+   DebugLog(<< "Host(AAAA) Result: " << rr);
 #else
    ErrLog(<< "Something called "
             "DnsResultSink::onLogDnsResult(const DNSResult<DnsAAAARecord>& rr)"
@@ -64,19 +64,19 @@ DnsResultSink::onLogDnsResult(const DNSResult<DnsAAAARecord>& rr)
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsSrvRecord>& rr)
 {
-   DebugLog (<< rr);
+   DebugLog(<< "SRV Result: " << rr);
 }
 
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsNaptrRecord>& rr)
 {
-   DebugLog (<< rr);
+   DebugLog(<< "NAPTR Result: " << rr);
 }
 
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsCnameRecord>& rr)
 {
-   DebugLog (<< rr);
+   DebugLog(<< "CNAME Result: " << rr);
 }
 
 DnsStub::DnsStub(const NameserverList& additional,
@@ -862,6 +862,25 @@ DnsStub::doGetDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCa
    Data dnsCacheDump;
    mRRCache.getCacheDump(dnsCacheDump);
    handler->onDnsCacheDumpRetrieved(key, dnsCacheDump);
+}
+
+void
+DnsStub::reloadDnsServers()
+{
+    ReloadDnsServersCommand* command = new ReloadDnsServersCommand(*this);
+    queueCommand(command);
+}
+
+void
+DnsStub::doReloadDnsServers()
+{
+    bool changed = mDnsProvider->checkDnsChange();
+    if (changed) 
+    {
+        doClearDnsCache();
+
+        mDnsProvider->init(mDnsTimeout, mDnsTries, mDnsFeatures);
+    }
 }
 
 void

@@ -71,6 +71,7 @@ public:
       EncodeStream& encode(EncodeStream& str, Data indent) const;
    };
    const NodeList& getRootNodes() const { checkParsed(); return mRootNodes; }
+   void setRootNodes(const NodeList& nodeList);
 
    // Helpers for users of this class
    static const Data& getSubNodeValue(Node* node, const Data& tag);
@@ -85,12 +86,30 @@ public:
                                    const Data& contact = Data::Empty,
                                    const Data& contactPriority = Data::Empty);
 
-   const Data& getSimplePresenceTupleId() { checkParsed(); extractSimplePresenceInfo(); return mTupleId; }
-   const bool getSimplePresenceOnline() { checkParsed(); extractSimplePresenceInfo(); return mOnline; }
-   const Data& getSimplePresenceTimestamp() { checkParsed(); extractSimplePresenceInfo(); return mTimestamp; }
-   const Data& getSimplePresenceNote() { checkParsed(); extractSimplePresenceInfo(); return mNote; }
-   const Data& getSimplePresenceContact() { checkParsed(); extractSimplePresenceInfo(); return mContact; }
-   const Data& getSimplePresenceContactPriority() { checkParsed(); extractSimplePresenceInfo(); return mContactPriority; }
+   // Use these methods to get simple presence info from a document that only contains one Tuple.
+   // If multiple tuples are in this document, then these API's will only return data from the first
+   // Tuple in the document.  If you require access to the simple presence of all tuples, then use the
+   // getSimplePresenceList API below.
+   const Data& getSimplePresenceTupleId();
+   const bool getSimplePresenceOnline();
+   const Data& getSimplePresenceTimestamp();
+   const Data& getSimplePresenceNote();
+   const Data& getSimplePresenceContact();
+   const Data& getSimplePresenceContactPriority();
+
+   class SimplePresenceInfo
+   {
+   public:
+      SimplePresenceInfo() : mOnline(false) {}
+      Data mTupleId;
+      bool mOnline;
+      Data mTimestamp;
+      Data mNote;
+      Data mContact;
+      Data mContactPriority;
+   };
+   typedef std::list<SimplePresenceInfo*> SimplePresenceInfoList;  // Use pointers to avoid copying when adding
+   const SimplePresenceInfoList& getSimplePresenceList() { checkParsed(); extractSimplePresenceInfo(); return mSimplePresenceInfoList; }
 
    static bool init();
 
@@ -104,12 +123,7 @@ private:
    Uri mEntity;
 
    // Simple Presence Info
-   Data mTupleId;
-   bool mOnline;
-   Data mTimestamp;
-   Data mNote;
-   Data mContact;
-   Data mContactPriority;
+   SimplePresenceInfoList mSimplePresenceInfoList;
    bool mSimplePresenceExtracted;
 
    NodeList mRootNodes;

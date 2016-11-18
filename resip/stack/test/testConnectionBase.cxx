@@ -50,7 +50,8 @@ class FakeTCPTransport : public Transport
       virtual bool hasDataToSend() const { assert(0); return false; }
       virtual void setPollGrp(FdPollGrp* grp) { assert(0); }
       virtual unsigned int getFifoSize() const { assert(0); return 0; }
-
+      virtual void invokeAfterSocketCreationFunc() const {}
+	  
       virtual void send(std::auto_ptr<SendData> data) { assert(0); }
       void flush() {mStateMachineFifo.flush();}
 };
@@ -80,6 +81,7 @@ class FakeWSTransport : public Transport
       virtual bool hasDataToSend() const { assert(0); return false; }
       virtual void setPollGrp(FdPollGrp* grp) { assert(0); }
       virtual unsigned int getFifoSize() const { assert(0); return 0; }
+      virtual void invokeAfterSocketCreationFunc() const {}
 
       virtual void send(std::auto_ptr<SendData> data) { assert(0); }
       void flush() { mStateMachineFifo.flush(); }

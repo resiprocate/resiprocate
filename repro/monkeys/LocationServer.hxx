@@ -23,7 +23,7 @@ namespace repro
 
       virtual processor_action_t process(RequestContext &);
 
-    private:
+    protected:
       resip::RegistrationPersistenceManager& mStore;
       Dispatcher* mUserInfoDispatcher;
   };

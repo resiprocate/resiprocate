@@ -235,6 +235,15 @@ InternalTransport::poke()
    }
 }
 
+void 
+InternalTransport::invokeAfterSocketCreationFunc() const
+{
+    if (mSocketFunc)
+    {
+        mSocketFunc(mFd, transport(), __FILE__, __LINE__);
+    }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

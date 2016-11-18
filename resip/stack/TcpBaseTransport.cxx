@@ -186,8 +186,15 @@ TcpBaseTransport::processListen()
          mSocketFunc(sock, transport(), __FILE__, __LINE__);
       }
 
-      if(!mConnectionManager.findConnection(tuple))
+      Connection* c = mConnectionManager.findConnection(tuple);
+      if(!c)
       {
+         createConnection(tuple, sock, true);
+      }
+      else if(false == c->isServer())
+      {
+         InfoLog( << "Have client connection for " << tuple << ", but got server one, recreate connection" );
+         delete c;
          createConnection(tuple, sock, true);
       }
       else
@@ -425,6 +432,14 @@ TcpBaseTransport::setRcvBufLen(int buflen)
    // need to store away the length and use when setting up new connections
 }
 
+void 
+TcpBaseTransport::invokeAfterSocketCreationFunc() const
+{
+    // Call for base socket
+    InternalTransport::invokeAfterSocketCreationFunc();
+    // Call for each connection
+    mConnectionManager.invokeAfterSocketCreationFunc();
+}
 
 
 /* ====================================================================

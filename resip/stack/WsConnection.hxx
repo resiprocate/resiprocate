@@ -18,7 +18,8 @@ class WsConnection :  public TcpConnection, public WsConnectionBase
       WsConnection(Transport* transport,
                    const Tuple& who, Socket fd,
                    Compression &compression,
-                   SharedPtr<WsConnectionValidator> wsConnectionValidator);
+                   SharedPtr<WsConnectionValidator> wsConnectionValidator,
+                   bool isServer);
 
    private:
       /// No default c'tor

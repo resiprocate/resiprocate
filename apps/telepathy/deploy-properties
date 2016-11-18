@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cp resiprocate.manager /usr/share/telepathy/managers
+
+cp resiprocate.service /usr/share/dbus-1/services/org.freedesktop.Telepathy.ConnectionManager.resiprocate.service
+

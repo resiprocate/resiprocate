@@ -28,7 +28,8 @@ RouteStore::RouteStore(AbstractDb& db):
    while ( !key.empty() )
    {
       RouteOp route;
-      route.routeRecord =  mDb.getRoute(key);
+      route.routeRecord = mDb.getRoute(key);
+
       route.key = key;
       route.preq = 0;
       
@@ -53,7 +54,26 @@ RouteStore::RouteStore(AbstractDb& db):
       mRouteOperators.insert( route );
 
       key = mDb.nextRouteKey();
-   } 
+   }
+   // Now that everything is read in - see if we need to upgrade any entries
+   // if route key is old and doesn't contain order, then upgrade it in db
+   for (RouteOpList::iterator it = mRouteOperators.begin(); it != mRouteOperators.end();)
+   {
+      if (!it->key.prefix(";"))
+      {
+         // This will delete, gen a new key and add - essentially updating the key to the new format
+         AbstractDb::RouteRecord rec = it->routeRecord;  // Need to use copies, since this method deletes the original data
+         updateRoute(it->key, rec.mMethod, rec.mEvent, rec.mMatchingPattern, rec.mRewriteExpression, rec.mOrder);
+         // Iterator is now invalidated - reset to begin() - yes this is inefficient, but it only happens once on upgrade
+         it = mRouteOperators.begin();
+      }
+      else
+      {
+         it++;
+      }
+   }
+
+   // Initialize cursor to the start
    mCursor = mRouteOperators.begin();
 }
 
@@ -81,13 +101,13 @@ RouteStore::addRoute(const resip::Data& method,
                      const resip::Data& event,
                      const resip::Data& matchingPattern,
                      const resip::Data& rewriteExpression,
-                     const int order )
+                     const short order )
 { 
    InfoLog( << "Add route" );
    
    RouteOp route;
 
-   Key key = buildKey(method, event, matchingPattern);
+   Key key = buildKey(method, event, matchingPattern, order);
    
    if(findKey(key)) return false;
 
@@ -97,7 +117,7 @@ RouteStore::addRoute(const resip::Data& method,
    route.routeRecord.mRewriteExpression =  rewriteExpression;
    route.routeRecord.mOrder = order;
 
-   if(!mDb.addRoute(key , route.routeRecord))
+   if(!mDb.addRoute(key, route.routeRecord))
    {
       return false;
    }
@@ -150,9 +170,10 @@ RouteStore::getRoutes() const
 void 
 RouteStore::eraseRoute(const resip::Data& method,
                        const resip::Data& event,
-                       const resip::Data& matchingPattern)
+                       const resip::Data& matchingPattern,
+                       const short order)
 {
-   Key key = buildKey(method, event, matchingPattern);
+   Key key = buildKey(method, event, matchingPattern, order);
    eraseRoute(key);
 }
 
@@ -194,12 +215,12 @@ RouteStore::eraseRoute(const resip::Data& key )
 
 
 bool
-RouteStore::updateRoute( const resip::Data& originalKey, 
-                         const resip::Data& method,
-                         const resip::Data& event,
-                         const resip::Data& matchingPattern,
-                         const resip::Data& rewriteExpression,
-                         const int order )
+RouteStore::updateRoute(const resip::Data& originalKey, 
+                        const resip::Data& method,
+                        const resip::Data& event,
+                        const resip::Data& matchingPattern,
+                        const resip::Data& rewriteExpression,
+                        const short order)
 {
    eraseRoute(originalKey);
    return addRoute(method, event, matchingPattern, rewriteExpression, order);
@@ -282,7 +303,7 @@ RouteStore::getRouteRecord(const resip::Data& key)
 RouteStore::UriList 
 RouteStore::process(const resip::Uri& ruri, 
                     const resip::Data& method, 
-                    const resip::Data& event )
+                    const resip::Data& event)
 {
    RouteStore::UriList targetSet;
    if(mRouteOperators.empty()) return targetSet;  // If there are no routes bail early to save a few cycles (size check is atomic enough, we don't need a lock)
@@ -412,11 +433,15 @@ RouteStore::process(const resip::Uri& ruri,
 RouteStore::Key 
 RouteStore::buildKey(const resip::Data& method,
                      const resip::Data& event,
-                     const resip::Data& matchingPattern ) const
+                     const resip::Data& matchingPattern,
+                     const short order) const
 {  
-   // missing mOrder
-   // Data pKey = Data(order) + ":" + method + ":" + event + ":" + matchingPattern;
-   Data pKey = method+":"+event+":"+matchingPattern; 
+   // note:  Using ; at the start so we can tell if the key is the old format or not. 
+   // Old format keys did not contain the order in the key and thus wouldn't allow 
+   // multiple entries with the same method,event and matchingPattern.  This is desirable in 
+   // cases where you want multiple destinations for a particular route.
+   // Old Format:  Data pKey = method+":"+event+":"+matchingPattern;
+   Data pKey = ";" + Data((Int32)order) + ":" + method + " : " + event + " : " + matchingPattern;
    return pKey;
 }
 

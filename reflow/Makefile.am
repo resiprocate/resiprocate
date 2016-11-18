@@ -1,7 +1,6 @@
 # $Id$
 
 EXTRA_DIST = ReadMe.txt
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 
 SUBDIRS = .

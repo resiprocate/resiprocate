@@ -1,7 +1,6 @@
 
 EXTRA_DIST = ca.pem
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 
 LDADD = ../libreTurnClient.la
 LDADD += ../../../rutil/librutil.la

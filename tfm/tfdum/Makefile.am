@@ -1,6 +1,5 @@
 
-EXTRA_DIST = *.vcproj
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST = *.vcxproj *.vcxproj.filters
 
 TESTS = TestLamba
 # dumTests becomes stuck waiting for user input, not suitable for 

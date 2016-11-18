@@ -69,7 +69,8 @@ public:
                const char* natTraversalServerHostname = 0, 
                unsigned short natTraversalServerPort = 0, 
                const char* stunUsername = 0,
-               const char* stunPassword = 0); 
+               const char* stunPassword = 0,
+               bool forceCOMedia = false); 
    virtual ~MediaStream();
 
    Flow* getRtpFlow() { return mRtpFlow; }
@@ -105,6 +106,7 @@ protected:
    unsigned short mNatTraversalServerPort;
    resip::Data mStunUsername;
    resip::Data mStunPassword;
+   bool mForceCOMedia;
 
 private:
    // Note: these member variables are set at creation time and never changed, thus

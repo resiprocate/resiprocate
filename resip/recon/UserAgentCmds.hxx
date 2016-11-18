@@ -172,6 +172,59 @@ class DestroySubscriptionCmd  : public resip::DumCommand
       SubscriptionHandle mHandle;
 };
 
+class CreatePublicationCmd  : public resip::DumCommand
+{
+   public:  
+      CreatePublicationCmd(UserAgent* userAgent,
+			   PublicationHandle handle,
+			   const resip::Data& status,
+			   const resip::Data& eventType, 
+			   const resip::NameAddr& target, 
+			   unsigned int publicationTime, 
+			   const resip::Mime& mimeType)
+         : mUserAgent(userAgent),
+           mHandle(handle),
+           mStatus(status),
+           mEventType(eventType),
+           mTarget(target),
+           mPublicationTime(publicationTime),
+           mMimeType(mimeType) {}
+      virtual void executeCommand()
+      {
+         mUserAgent->createPublicationImpl(mHandle, mStatus, mEventType, mTarget, mPublicationTime, mMimeType);
+      }
+      resip::Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " CreatePublicationCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      UserAgent* mUserAgent;
+      PublicationHandle mHandle;
+      resip::Data mStatus;
+      resip::Data mEventType;
+      resip::NameAddr mTarget;
+      unsigned int mPublicationTime;
+      resip::Mime mMimeType;
+};
+
+class DestroyPublicationCmd  : public resip::DumCommand
+{
+   public:  
+      DestroyPublicationCmd(UserAgent* userAgent,
+                            PublicationHandle handle)
+         : mUserAgent(userAgent),
+           mHandle(handle) {}
+      virtual void executeCommand()
+      {
+         mUserAgent->destroyPublicationImpl(mHandle);
+      }
+      resip::Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyPublicationCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      UserAgent* mUserAgent;
+      PublicationHandle mHandle;
+};
+
 }
 
 #endif

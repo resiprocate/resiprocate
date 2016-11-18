@@ -76,7 +76,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual bool isMyUri(const resip::Uri& uri) const;
       void addTransportRecordRoute(unsigned int transportKey, const resip::NameAddr& recordRoute);
       void removeTransportRecordRoute(unsigned int transportKey);
-      const resip::NameAddr& getRecordRoute(unsigned int transportKey) const;
+      const resip::NameAddr& getRecordRoute(unsigned int transportKey, bool* transportSpecific = 0) const;
       bool getRecordRouteForced() const { return mRecordRouteForced; }
       void setRecordRouteForced(bool forced) { mRecordRouteForced = forced; }
 
@@ -110,10 +110,11 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       void doSessionAccounting(const resip::SipMessage& sip, bool received, RequestContext& context);
       void doRegistrationAccounting(repro::AccountingCollector::RegistrationEvent regEvent, const resip::SipMessage& sip);
 
+      virtual void processUnknownMessage(resip::Message* msg);
+
    protected:
       virtual const resip::Data& name() const;
 
-   private:
       resip::SipStack& mStack;
       ProxyConfig& mConfig;
       resip::NameAddr mRecordRoute;
@@ -139,8 +140,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
           TransactionTerminated events from the stack will be passed to the
           RequestContext
       */
-      HashMap<resip::Data, RequestContext*> mClientRequestContexts;
-      HashMap<resip::Data, RequestContext*> mServerRequestContexts;
+      typedef HashMap<resip::Data, RequestContext*> RequestContextMap;
+      RequestContextMap mClientRequestContexts;
+      RequestContextMap mServerRequestContexts;
       
       UserStore &mUserStore;
       std::set<resip::Data> mSupportedOptions;

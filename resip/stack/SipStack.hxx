@@ -330,7 +330,7 @@ class SipStack : public FdSetIOObserver
                               const Data& ipInterface = Data::Empty,
                               const Data& sipDomainname = Data::Empty, // only used for TLS based stuff
                               const Data& privateKeyPassPhrase = Data::Empty,
-                              SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+                              SecurityTypes::SSLType sslType = SecurityTypes::SSLv23,
                               unsigned transportFlags = 0,
                               const Data& certificateFilename = "", const Data& privateKeyFilename = "",
                               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
@@ -886,6 +886,12 @@ class SipStack : public FdSetIOObserver
       void getDnsCacheDump(std::pair<unsigned long, unsigned long> key, GetDnsCacheDumpHandler* handler);
 
       /**
+           @brief Check if DnsServers list has changed, and if so reinitializes 
+                  the DNS resolver (ares).  Any lookups currenlty in progress will fail.
+      */
+      void reloadDnsServers();
+
+      /**
           @todo is this documented correctly? [!]
           @brief Enable Statistics Manager
           @details Enable Statistics Manager.  SIP Statistics will be collected and 
@@ -1047,6 +1053,15 @@ class SipStack : public FdSetIOObserver
 
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
+
+      // Will call the AfterSocketCreationFuncPtr that was provided at SIPStack creation
+      // time to all sockets that match the passed in type.  Use UNKNOWN_TRANSPORT
+      // in order to call for all transport types.
+      // The stack thread(s) must be running when this is called.
+      // Can be used to update QOS to a new value on existing sockets, without needing
+      // to restart the SipStack.
+      // Note:  DNS sockets are not currently supported
+      void invokeAfterSocketCreationFunc(TransportType type = UNKNOWN_TRANSPORT);
 
    private:
       /// Performs bulk of work of constructor.

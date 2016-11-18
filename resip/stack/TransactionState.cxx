@@ -9,6 +9,7 @@
 #include "resip/stack/TerminateFlow.hxx"
 #include "resip/stack/EnableFlowTimer.hxx"
 #include "resip/stack/ZeroOutStatistics.hxx"
+#include "resip/stack/InvokeAfterSocketCreationFunc.hxx"
 #include "resip/stack/PollStatistics.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/KeepAlivePong.hxx"
@@ -477,6 +478,12 @@ TransactionState::process(TransactionController& controller,
          controller.mTransportSelector.removeTransport(removeTransport->getTransportKey());
          delete removeTransport;
          return;
+      }
+
+      InvokeAfterSocketCreationFunc* invokeAfterSocketCreationFunc = dynamic_cast<InvokeAfterSocketCreationFunc*>(message);
+      if(invokeAfterSocketCreationFunc)
+      {
+          controller.mTransportSelector.invokeAfterSocketCreationFunc(invokeAfterSocketCreationFunc->getTransportType());
       }
    }
    

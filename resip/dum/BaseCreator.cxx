@@ -145,7 +145,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 
-   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << mLastRequest);
+   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << *mLastRequest);
 }
 
 

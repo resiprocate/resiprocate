@@ -80,6 +80,9 @@ class InternalTransport : public Transport
             mCongestionManager->registerFifo(&mTxFifo);
          }
       }
+
+      virtual void invokeAfterSocketCreationFunc() const;
+
    protected:
       friend class SipStack;
 

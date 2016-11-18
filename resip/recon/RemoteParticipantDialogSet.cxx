@@ -192,7 +192,8 @@ RemoteParticipantDialogSet::getLocalRTPPort()
                      profile->natTraversalServerHostname().c_str(), 
                      profile->natTraversalServerPort(), 
                      profile->stunUsername().c_str(), 
-                     profile->stunPassword().c_str()); 
+                     profile->stunPassword().c_str(),
+                     profile->forceCOMedia()); 
 
          // New Remote Participant - create media Interface connection
          mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow(), mConversationManager.mSipXTOSValue);

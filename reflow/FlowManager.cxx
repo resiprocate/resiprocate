@@ -161,7 +161,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const char* natTraversalServerHostname, 
                                unsigned short natTraversalServerPort, 
                                const char* stunUsername,
-                               const char* stunPassword)
+                               const char* stunPassword,
+                               bool forceCOMedia)
 {
    MediaStream* newMediaStream = 0;
    if(rtcpEnabled)
@@ -181,7 +182,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
                                        stunUsername, 
-                                       stunPassword);
+                                       stunPassword,
+                                       forceCOMedia);
    }
    else
    {
@@ -200,7 +202,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
                                        stunUsername, 
-                                       stunPassword);
+                                       stunPassword,
+                                       forceCOMedia);
    }
    return newMediaStream;
 }

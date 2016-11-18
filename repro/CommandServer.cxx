@@ -401,7 +401,7 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
    UInt32 rcvBufLen = 0;
    bool stunEnabled = false;
    Data sipDomainname;
-   SecurityTypes::SSLType sslType = SecurityTypes::TLSv1;
+   SecurityTypes::SSLType sslType = SecurityTypes::SSLv23;
    UInt32 transportFlags = 0;
    Data certificateFilename;
    Data privateKeyFilename;

@@ -41,6 +41,9 @@ class ExternalDns
                        int dnsTries = 0,
                        unsigned int features = 0) = 0; // bit mask of Features
 
+      // reinitializes with the same additionalNameservers and AfterSocketCreationFuncPtr as last call to init
+      virtual int init(int dnsTimeout = 0, int dnsTries = 0, unsigned int features = 0) = 0;  
+
       //returns 'true' only is there are changes in the DNS server list
       virtual bool checkDnsChange() = 0;
 

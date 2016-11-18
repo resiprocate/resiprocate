@@ -307,6 +307,7 @@ InviteSession::isEarly() const
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateEarlyGlare:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_QueuedUpdate:
@@ -562,6 +563,11 @@ InviteSession::provideAnswer(const Contents& answer)
          DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
          startRetransmit200Timer();
+         if (mDum.mDialogEventStateManager)
+         {
+             // New Offer/Answer - generate a new confirmed callback with updated SDP
+             mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+         }
          break;
 
       case ReceivedUpdate: // same as ReceivedReinvite case.
@@ -577,6 +583,11 @@ InviteSession::provideAnswer(const Contents& answer)
          InfoLog (<< "Sending " << response->brief());
          DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
          send(response);
+         if (mDum.mDialogEventStateManager)
+         {
+             // New Offer/Answer - generate a new confirmed callback with updated SDP
+             mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+         }
          break;
       }
 
@@ -586,6 +597,11 @@ InviteSession::provideAnswer(const Contents& answer)
 
          mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
+         if (mDum.mDialogEventStateManager)
+         {
+             // New Offer/Answer - generate a new confirmed callback with updated SDP
+             mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+         }
          break;
 
       default:
@@ -1480,6 +1496,11 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             setCurrentLocalOfferAnswer(msg);
 
             mCurrentRemoteOfferAnswer = offerAnswer; 
+            if (mDum.mDialogEventStateManager)
+            {
+                // New Offer/Answer - generate a new confirmed callback with updated SDP
+                mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+            }
             handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
          }
          else if(mProposedLocalOfferAnswer.get()) 
@@ -1577,12 +1598,22 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
             if (*mCurrentRemoteOfferAnswer != *offerAnswer)
             {
                mCurrentRemoteOfferAnswer = offerAnswer; 
+               if (mDum.mDialogEventStateManager)
+               {
+                   // New Offer/Answer - generate a new confirmed callback with updated SDP
+                   mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+               }
                handler->onRemoteAnswerChanged(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
             }
          }
          else
          {
             mCurrentRemoteOfferAnswer = offerAnswer; 
+            if (mDum.mDialogEventStateManager)
+            {
+                // New Offer/Answer - generate a new confirmed callback with updated SDP
+                mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+            }
             handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
          }
          
@@ -1768,6 +1799,11 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
+         if (mDum.mDialogEventStateManager)
+         {
+             // New Offer/Answer - generate a new confirmed callback with updated SDP
+             mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+         }
          handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
          break;         
       case OnAck:
