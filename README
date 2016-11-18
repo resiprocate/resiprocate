@@ -1,9 +1,11 @@
 
-To prepare your machine for building the project:
+To prepare your machine for building the project, you need to install
+the build dependencies.  On a Debian or Ubuntu system, you may use a
+command like this:
 
-# apt-get -t unstable install \
-     libresiprocate-1.8-dev librecon-1.8-dev libsipxtapi-dev \
-     libresiprocate-turn-client-1.8-dev
+$ sudo apt-get install \
+     libresiprocate-dev librecon-dev libsipxtapi-dev \
+     libresiprocate-turn-client-dev
 
 
 NOTE: You must have at least reSIProcate v1.8.10
@@ -12,6 +14,7 @@ To build this project, note that CPPFLAGS are necessary:
 
 $ git clone $REPOSITORY
 $ cd reConServer
+$ autoreconf --install
 $ ./configure CPPFLAGS="-I/usr/include/sipxtapi -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=10 -D__pingtel_on_posix__ -D_linux -D_REENTRANT -D_FILE_OFFSET_BITS=64 -DRESIP_TOOLCHAIN_GNU -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DHAVE_sockaddr_in_len -DUSE_CARES -DUSE_SSL -DUSE_IPV6 -DHAVE_EPOLL"
 $ autoreconf --install
 $ make

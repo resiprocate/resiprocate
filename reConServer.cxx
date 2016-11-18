@@ -56,6 +56,8 @@ int _kbhit() {
 #include <rutil/BaseException.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <resip/stack/HEPSipMessageLoggingHandler.hxx>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -99,7 +101,7 @@ public:
       InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, Data& notifyData)
+   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
@@ -835,6 +837,7 @@ ReConServerProcess::main (int argc, char** argv)
    ConversationProfile::SecureMediaMode secureMediaMode = reConServerConfig.getConfigSecureMediaMode("SecureMediaMode", ConversationProfile::NoSecureMedia);
    bool secureMediaRequired = reConServerConfig.isSecureMediaModeRequired();
    ConversationProfile::NatTraversalMode natTraversalMode = reConServerConfig.getConfigNatTraversalMode("NatTraversalMode", ConversationProfile::NoNatTraversal);
+   bool forceCOMedia = reConServerConfig.getConfigBool("ForceCOMedia", true);
    Data natTraversalServerHostname = reConServerConfig.getConfigData("NatTraversalServerHostname", "", true);
    unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 3478);
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
@@ -845,11 +848,19 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned short mediaPortStart = reConServerConfig.getConfigUnsignedShort("MediaPortStart", 17384);
    Data tlsDomain = reConServerConfig.getConfigData("TLSDomain", DnsUtil::getLocalHostName(), true);
    NameAddr outboundProxy = reConServerConfig.getConfigNameAddr("OutboundProxyUri", NameAddr(), true);
+#ifdef PACKAGE_VERSION
+   Data serverText = reConServerConfig.getConfigData("ServerText", "reConServer " PACKAGE_VERSION);
+#else
+   Data serverText = reConServerConfig.getConfigData("ServerText", "reConServer");
+#endif
    uri = reConServerConfig.getConfigNameAddr("SIPUri", uri, true);
    Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
    Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
+   Data captureHost = reConServerConfig.getConfigData("CaptureHost", "");
+   int capturePort = reConServerConfig.getConfigInt("CapturePort", 9060);
+   int captureAgentID = reConServerConfig.getConfigInt("CaptureAgentID", 2002);
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
@@ -939,6 +950,11 @@ ReConServerProcess::main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
 
    SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+
+   if(!captureHost.empty())
+   {
+      profile->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(captureHost, capturePort, captureAgentID)));
+   }
 
    // Add transports
    if(udpPort)
@@ -1079,7 +1095,7 @@ ReConServerProcess::main (int argc, char** argv)
       profile->setOutboundProxy(outboundProxy.uri());
    }
 
-   profile->setUserAgent("ConversationManager/reConServer");
+   profile->setUserAgent(serverText);
    profile->rtpPortRangeMin() = mediaPortStart;
    profile->rtpPortRangeMax() = mediaPortStart + 101; // Allows 100 media streams
 
@@ -1163,6 +1179,7 @@ ReConServerProcess::main (int argc, char** argv)
 
    // Setup NatTraversal Settings
    conversationProfile->natTraversalMode() = natTraversalMode;
+   conversationProfile->forceCOMedia() = forceCOMedia;
    conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
    conversationProfile->natTraversalServerPort() = natTraversalServerPort;
    conversationProfile->stunUsername() = stunUsername;

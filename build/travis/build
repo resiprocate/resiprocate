@@ -2,5 +2,7 @@
 
 set -e
 
+make
+
 make check
 
