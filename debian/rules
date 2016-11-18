@@ -30,6 +30,7 @@ CPPFLAGS += -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS
 CPPFLAGS += -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20
 CPPFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS
 CPPFLAGS += ${QT_LIBS}
+CPPFLAGS += -I/usr/include/telepathy-${QT_VERSION}
 CXXFLAGS += -fpermissive
 CXXFLAGS += -I/usr/include/postgresql
 LDFLAGS += -lcares
