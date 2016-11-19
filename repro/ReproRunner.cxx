@@ -1722,24 +1722,19 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                      {
                         if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
                         {
+                           NameAddr rr;
                            if(isSecure(tt))
                            {
-                              NameAddr rr;
                               rr.uri().host()=tlsDomain;
-                              rr.uri().port()=port;
-                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                            }
                            else
                            {
-                              NameAddr rr;
                               rr.uri().host()=ipAddr;
-                              rr.uri().port()=port;
-                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                            }
+                           rr.uri().port()=port;
+                           rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
+                           mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
+                           InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                         }
                         else
                         {
