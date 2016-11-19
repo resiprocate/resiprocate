@@ -135,6 +135,7 @@ libresip_la_SOURCES = \
 	SdpContents.cxx \
 	SecurityAttributes.cxx \
 	Compression.cxx \
+	SipConfigParse.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
@@ -324,6 +325,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	SendData.hxx \
 	SERNonceHelper.hxx \
 	ShutdownMessage.hxx \
+	SipConfigParse.hxx \
 	SipFrag.hxx \
 	SipMessage.hxx \
 	SipStack.hxx \

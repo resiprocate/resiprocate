@@ -88,7 +88,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
-#define DEFAULT_TLS_METHOD "SSLv23"
+#define DEFAULT_TLS_METHOD SecurityTypes::SSLv23
 #endif
 
 #if defined(USE_MYSQL)
@@ -1612,7 +1612,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             it++)
          {
             int idx = it->first;
-            ConfigParse& tc = it->second;
+            SipConfigParse tc(it->second);
             Data transportPrefix = "Transport" + idx;
             DebugLog(<< "checking values for transport: " << idx);
             Data interfaceSettings = tc.getConfigData("Interface", Data::Empty, true);
@@ -1650,24 +1650,11 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                Data tlsCertificate = tc.getConfigData("TlsCertificate", Data::Empty);
                Data tlsPrivateKey = tc.getConfigData("TlsPrivateKey", Data::Empty);
                Data tlsPrivateKeyPassPhrase = tc.getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
-               Data tlsCVMValue = tc.getConfigData("TlsClientVerification", "NONE");
-               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+               SecurityTypes::TlsClientVerificationMode cvm = tc.getConfigClientVerificationMode("TlsClientVerification", SecurityTypes::None);
                SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
 #ifdef USE_SSL
-               sslType = Security::parseSSLType(tc.getConfigData("TlsConnectionMethod", DEFAULT_TLS_METHOD));
+               sslType = tc.getConfigSSLType("TlsConnectionMethod", DEFAULT_TLS_METHOD);
 #endif
-               if(isEqualNoCase(tlsCVMValue, "Optional"))
-               {
-                  cvm = SecurityTypes::Optional;
-               }
-               else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
-               {
-                  cvm = SecurityTypes::Mandatory;
-               }
-               else if(!isEqualNoCase(tlsCVMValue, "None"))
-               {
-                  CritLog(<< "Unknown TLS client verification mode found in " << transportPrefix << "TlsClientVerification setting: " << tlsCVMValue);
-               }
 
 #ifdef USE_SSL
                // Make sure certificate material available before trying to instantiate Transport
@@ -1787,24 +1774,11 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", Data::Empty);
          Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", Data::Empty);
          Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
-         Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
-         SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+         SecurityTypes::TlsClientVerificationMode cvm = mProxyConfig->getConfigClientVerificationMode("TLSClientVerification", SecurityTypes::None);
          SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
 #ifdef USE_SSL
-         sslType = Security::parseSSLType(mProxyConfig->getConfigData("TLSConnectionMethod", DEFAULT_TLS_METHOD));
+         sslType = mProxyConfig->getConfigSSLType("TLSConnectionMethod", DEFAULT_TLS_METHOD);
 #endif
-         if(isEqualNoCase(tlsCVMValue, "Optional"))
-         {
-            cvm = SecurityTypes::Optional;
-         }
-         else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
-         {
-            cvm = SecurityTypes::Mandatory;
-         }
-         else if(!isEqualNoCase(tlsCVMValue, "None"))
-         {
-            CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
-         }
 
 #ifdef USE_SSL
          // Make sure certificate material available before trying to instantiate Transport
