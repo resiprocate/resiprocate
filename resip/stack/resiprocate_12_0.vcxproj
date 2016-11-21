@@ -725,6 +725,7 @@
     <ClInclude Include="Headers.hxx" />
     <ClInclude Include="HeaderTypes.hxx" />
     <ClInclude Include="Helper.hxx" />
+    <ClInclude Include="HEPSipMessageLoggingHandler.hxx" />
     <ClInclude Include="IntegerCategory.hxx" />
     <ClInclude Include="IntegerParameter.hxx" />
     <ClInclude Include="InternalTransport.hxx" />
