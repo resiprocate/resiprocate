@@ -28,15 +28,9 @@ HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(const Data &captureHost
 
    int no = 0;
 #if !defined(WIN32)
-<<<<<<< HEAD
    ::setsockopt(mSocket, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no));
 #else
    ::setsockopt(mSocket, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&no, sizeof(no));
-=======
-   ::setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, &no, sizeof(no));
-#else
-   ::setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&no, sizeof(no));
->>>>>>> 515ac6f8adbb642d5ba6e845d18d5f25279143eb
 #endif
 
 #else
@@ -290,10 +284,6 @@ HEPSipMessageLoggingHandler::sendToHOMER(const Tuple& source, const Tuple& desti
 #else
       ErrLog(<< "sending to HOMER " << mTuple << " failed (" << e << "): " << strerror(e));
 #endif
-   }
-   else
-   {
-      DebugLog(<< "packet sent to HOMER " << mTuple);
    }
    else
    {
