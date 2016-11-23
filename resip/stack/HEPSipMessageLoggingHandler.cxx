@@ -28,9 +28,9 @@ HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(const Data &captureHost
 
    int no = 0;
 #if !defined(WIN32)
-   ::setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, &no, sizeof(no));
+   ::setsockopt(mSocket, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no));
 #else
-   ::setsockopt(mSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&no, sizeof(no));
+   ::setsockopt(mSocket, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&no, sizeof(no));
 #endif
 
 #else
@@ -42,6 +42,7 @@ HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(const Data &captureHost
 
    mSocket = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 #endif
+
    if(mSocket < 0)
    {
       ErrLog(<<"Failed to create socket");
@@ -276,7 +277,13 @@ HEPSipMessageLoggingHandler::sendToHOMER(const Tuple& source, const Tuple& desti
    const sockaddr& addr = mTuple.getSockaddr();
    if(sendto(mSocket, buf.data(), buf.size(), 0, &addr, mTuple.length()) < 0)
    {
-      ErrLog(<<"sending to HOMER " << mTuple << " failed: " << strerror(errno));
+      int e = getErrno();
+      Transport::error(e);
+#if defined(WIN32)
+      ErrLog(<< "sending to HOMER " << mTuple << " failed (" << e << ")");
+#else
+      ErrLog(<< "sending to HOMER " << mTuple << " failed (" << e << "): " << strerror(e));
+#endif
    }
    else
    {

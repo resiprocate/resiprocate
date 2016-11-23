@@ -32,7 +32,22 @@ LogFileMaxBytes = 5242880
 
 # Enable INFO level SIP Message Logging - outputs all SIP messages
 # sent and/or received to log file in an easy to read format
+# This option has no effect if logging to HOMER is enabled
+# by setting CaptureHost
 EnableSipMessageLogging = false
+
+# Specify the HOMER SIP capture server hostname
+# If CaptureHost is commented/not defined, there is no default value and
+# repro doesn't attempt to send any HEP packets.
+#CaptureHost = localhost
+
+# Specify the HOMER SIP capture server UDP port
+# If not defined, the default value, 9060, is used
+#CapturePort = 9060
+
+# Specify the HOMER Capture Agent ID
+# The default value is 2001
+CaptureAgentID = 2001
 
 ########################################################
 # Transport settings
@@ -222,7 +237,7 @@ DisableIPv4 = false
 
 # Comma separated list of IP addresses used for binding the HTTP configuration interface
 # and/or certificate server. If left blank it will bind to all adapters.
-HttpBindAddress =
+HttpBindAddress = 127.0.0.1, ::1
 
 # Port on which to run the HTTP configuration interface and/or certificate server 
 # 0 to disable (default: 5080)
@@ -253,7 +268,7 @@ HttpAdminUserFile = users.txt
 
 # Comma separated list of IP addresses used for binding the Command Server listeners.
 # If left blank it will bind to all adapters.
-CommandBindAddress =
+CommandBindAddress = 127.0.0.1, ::1
 
 # Port on which to listen for and send XML RPC messaging used in command processing
 # 0 to disable (default: 5081)

@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.11.0~alpha1)
+AC_INIT(resiprocate,1.11.0~alpha2)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -198,7 +198,7 @@ AM_CONDITIONAL(USE_MYSQL, false)
 AC_ARG_WITH(mysql,
 [  --with-mysql            Link against MySQL client libraries],
  [AC_DEFINE_UNQUOTED(USE_MYSQL, , USE_MYSQL)
- AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient_r")
+ AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
