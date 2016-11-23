@@ -1189,6 +1189,12 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       sdpcontainer::SdpMediaLine::CodecList::const_iterator itCodec = sdpMediaLine.getCodecs().begin();
       for(; itCodec != sdpMediaLine.getCodecs().end(); itCodec++)
       {
+         unsigned int itCodecRate = itCodec->getRate();
+         if(itCodec->getMimeSubtype() == "G722" && itCodecRate != 8000)
+         {
+            WarningLog(<<"Peer is advertising G.722 with rate " << itCodecRate << ", overriding to 8000 (see RFC 3551 s4.5.2)");
+            itCodecRate = 8000;
+         }
          std::list<SdpContents::Session::Codec>::iterator bestCapsCodecMatchIt = mediaSessionCaps.codecs().end();
          bool modeInOffer = itCodec->getFormatParameters().prefix("mode=");
 
@@ -1197,7 +1203,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
               capsCodecsIt != mediaSessionCaps.codecs().end(); capsCodecsIt++)
          {
             if(isEqualNoCase(capsCodecsIt->getName(), itCodec->getMimeSubtype()) &&
-               (unsigned int)capsCodecsIt->getRate() == itCodec->getRate())
+               (unsigned int)capsCodecsIt->getRate() == itCodecRate)
             {
                bool modeInCaps = capsCodecsIt->parameters().prefix("mode=");
                if(!modeInOffer && !modeInCaps)
