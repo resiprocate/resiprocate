@@ -596,7 +596,13 @@ ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsi
             sdpcodec->getEncodingName(mimeSubType);
             //mimeSubType.toUpper();
             
-            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getCodecPayloadFormat(), sdpcodec->getSampleRate());
+            int capabilityRate = sdpcodec->getSampleRate();
+            if(mimeSubType == "G722")
+            {
+               capabilityRate = 8000;
+            }
+
+            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getCodecPayloadFormat(), capabilityRate);
             if(sdpcodec->getNumChannels() > 1)
             {
                codec.encodingParameters() = Data(sdpcodec->getNumChannels());
