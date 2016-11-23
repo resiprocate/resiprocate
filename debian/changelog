@@ -1,3 +1,10 @@
+resiprocate (1:1.11.0~alpha2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Build against libssl1.0-dev (Closes: #828532)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 23 Nov 2016 20:58:46 +0100
+
 resiprocate (1:1.11.0~alpha1-1) unstable; urgency=medium
 
   * New upstream release.
