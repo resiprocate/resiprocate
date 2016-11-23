@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.11.0~alpha1)
+AC_INIT(resiprocate,1.11.0~alpha2)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
