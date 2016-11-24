@@ -873,25 +873,29 @@ ReConServerProcess::main (int argc, char** argv)
    ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
 
 
+   // build a list of codecs in priority order
+   // Used by ConversationManager::buildSessionCapabilities(...) to create
+   // our local SDP
    std::vector<unsigned int> _codecIds;
-   _codecIds.push_back(SdpCodec::SDP_CODEC_PCMU);           // 0 - pcmu
-   _codecIds.push_back(SdpCodec::SDP_CODEC_PCMA);           // 8 - pcma
-   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX);          // 96 - speex NB 8,000bps
-   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_15);       // 98 - speex NB 15,000bps
-   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_24);       // 99 - speex NB 24,600bps
-   _codecIds.push_back(SdpCodec::SDP_CODEC_L16_44100_MONO); // PCM 16 bit/sample 44100 samples/sec.
-   _codecIds.push_back(SdpCodec::SDP_CODEC_ILBC);           // 108 - iLBC
-   _codecIds.push_back(SdpCodec::SDP_CODEC_ILBC_20MS);      // 109 - Internet Low Bit Rate Codec, 20ms (RFC3951)
-   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_5);        // 97 - speex NB 5,950bps
-   _codecIds.push_back(SdpCodec::SDP_CODEC_GSM);            // 3 - GSM
-   if(enableG722)
-   {
-      _codecIds.push_back(SdpCodec::SDP_CODEC_G722);        // 9 - G.722
-   }
    if(enableOpus)
    {
       _codecIds.push_back(SdpCodec::SDP_CODEC_OPUS);        // Opus
    }
+   if(enableG722)
+   {
+      _codecIds.push_back(SdpCodec::SDP_CODEC_G722);        // 9 - G.722
+   }
+   _codecIds.push_back(SdpCodec::SDP_CODEC_ILBC);           // 108 - iLBC
+   _codecIds.push_back(SdpCodec::SDP_CODEC_ILBC_20MS);      // 109 - Internet Low Bit Rate Codec, 20ms (RFC3951)
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_24);       // 99 - speex NB 24,600bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_15);       // 98 - speex NB 15,000bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX);          // 96 - speex NB 8,000bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_5);        // 97 - speex NB 5,950bps
+   _codecIds.push_back(SdpCodec::SDP_CODEC_GSM);            // 3 - GSM
+   //_codecIds.push_back(SdpCodec::SDP_CODEC_L16_44100_MONO); // PCM 16 bit/sample 44100 samples/sec.
+   _codecIds.push_back(SdpCodec::SDP_CODEC_PCMU);           // 0 - pcmu
+   _codecIds.push_back(SdpCodec::SDP_CODEC_PCMA);           // 8 - pcma
+   _codecIds.push_back(SdpCodec::SDP_CODEC_G729);           // 18 - G.729
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
@@ -1136,12 +1140,6 @@ ReConServerProcess::main (int argc, char** argv)
 
    // Build Codecs and media offering
    SdpContents::Session::Medium medium("audio", port, 1, "RTP/AVP");
-   if(enableG722)
-   {
-      SdpContents::Session::Codec g722codec("G722", 8000);
-      g722codec.payloadType() = 9;  /* RFC3551 */ ;
-      medium.addCodec(g722codec);
-   }
    if(enableOpus)
    {
       // Note: the other constructors (e.g. g722 above) are
@@ -1152,19 +1150,28 @@ ReConServerProcess::main (int argc, char** argv)
       opuscodec.encodingParameters() = Data("2");
       medium.addCodec(opuscodec);
    }
+   if(enableG722)
+   {
+      SdpContents::Session::Codec g722codec("G722", 8000);
+      g722codec.payloadType() = 9;  /* RFC3551 */ ;
+      medium.addCodec(g722codec);
+   }
+   SdpContents::Session::Codec speexCodec("SPEEX", 8000);
+   speexCodec.payloadType() = 110;
+   speexCodec.parameters() = Data("mode=3");
+   medium.addCodec(speexCodec);
+   SdpContents::Session::Codec gsmCodec("GSM", 8000);
+   gsmCodec.payloadType() = 3;  /* RFC3551 */ ;
+   medium.addCodec(gsmCodec);
    SdpContents::Session::Codec g711ucodec("PCMU", 8000);
    g711ucodec.payloadType() = 0;  /* RFC3551 */ ;
    medium.addCodec(g711ucodec);
    SdpContents::Session::Codec g711acodec("PCMA", 8000);
    g711acodec.payloadType() = 8;  /* RFC3551 */ ;
    medium.addCodec(g711acodec);
-   SdpContents::Session::Codec speexCodec("SPEEX", 8000);
-   speexCodec.payloadType() = 110;  
-   speexCodec.parameters() = Data("mode=3");
-   medium.addCodec(speexCodec);
-   SdpContents::Session::Codec gsmCodec("GSM", 8000);
-   gsmCodec.payloadType() = 3;  /* RFC3551 */ ;
-   medium.addCodec(gsmCodec);
+   SdpContents::Session::Codec g729codec("G729", 8000);
+   g729codec.payloadType() = 18;  /* RFC3551 */ ;
+   medium.addCodec(g729codec);
    medium.addAttribute("ptime", Data(20));  // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
    medium.addAttribute("sendrecv");
 
