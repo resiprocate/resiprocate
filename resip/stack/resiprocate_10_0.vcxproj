@@ -427,6 +427,7 @@
     </ClCompile>
     <ClCompile Include="SecurityAttributes.cxx" />
     <ClCompile Include="SERNonceHelper.cxx" />
+    <ClCompile Include="SipConfigParse.cxx" />
     <ClCompile Include="SipFrag.cxx" />
     <ClCompile Include="SipMessage.cxx" />
     <ClCompile Include="SipStack.cxx" />
@@ -613,6 +614,7 @@
     <ClInclude Include="SendData.hxx" />
     <ClInclude Include="SERNonceHelper.hxx" />
     <ClInclude Include="ShutdownMessage.hxx" />
+    <ClInclude Include="SipConfigParse.hxx" />
     <ClInclude Include="SipFrag.hxx" />
     <ClInclude Include="SipMessage.hxx" />
     <ClInclude Include="SipStack.hxx" />
