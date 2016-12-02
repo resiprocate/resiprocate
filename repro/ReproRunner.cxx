@@ -88,7 +88,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/stack/ssl/Security.hxx"
-#define DEFAULT_TLS_METHOD "SSLv23"
+#define DEFAULT_TLS_METHOD SecurityTypes::SSLv23
 #endif
 
 #if defined(USE_MYSQL)
@@ -1589,10 +1589,9 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
    try
    {
       // Check if advanced transport settings are provided
-      std::set<Data> interfaceKeys;
-      mProxyConfig->getConfigIndexKeys("Transport", interfaceKeys);
-      DebugLog(<<"Found " << interfaceKeys.size() << " interface(s) defined in the advanced format");
-      if(!interfaceKeys.empty())
+      ConfigParse::NestedConfigMap m = mProxyConfig->getConfigNested("Transport");
+      DebugLog(<<"Found " << m.size() << " interface(s) defined in the advanced format");
+      if(!m.empty())
       {
          // Sample config file format for advanced transport settings
          // Transport1Interface = 192.168.1.106:5061
@@ -1608,23 +1607,15 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          allTransportsSpecifyRecordRoute = true;
 
          const char *anchor;
-         for(std::set<Data>::iterator it = interfaceKeys.begin();
-            it != interfaceKeys.end();
+         for(ConfigParse::NestedConfigMap::iterator it = m.begin();
+            it != m.end();
             it++)
          {
-            const Data& settingKeyBase = *it;
-            DebugLog(<< "checking values for transport: " << settingKeyBase);
-            Data interfaceSettingKey(settingKeyBase + "Interface");
-            Data interfaceSettings = mProxyConfig->getConfigData(interfaceSettingKey, Data::Empty, true);
-            Data typeSettingKey(settingKeyBase + "Type");
-            Data tlsDomainSettingKey(settingKeyBase + "TlsDomain");
-            Data tlsCertificateSettingKey(settingKeyBase + "TlsCertificate");
-            Data tlsPrivateKeySettingKey(settingKeyBase + "TlsPrivateKey");
-            Data tlsPrivateKeyPassPhraseKey(settingKeyBase + "TlsPrivateKeyPassPhrase");
-            Data tlsCVMSettingKey(settingKeyBase + "TlsClientVerification");
-            Data tlsConnectionMethodKey(settingKeyBase + "TlsConnectionMethod");
-            Data recordRouteUriSettingKey(settingKeyBase + "RecordRouteUri");
-            Data rcvBufSettingKey(settingKeyBase + "RcvBufLen");
+            int idx = it->first;
+            SipConfigParse tc(it->second);
+            Data transportPrefix = "Transport" + idx;
+            DebugLog(<< "checking values for transport: " << idx);
+            Data interfaceSettings = tc.getConfigData("Interface", Data::Empty, true);
 
             // Parse out interface settings
             ParseBuffer pb(interfaceSettings);
@@ -1643,40 +1634,27 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                pb.data(portData, anchor);
                if(!DnsUtil::isIpAddress(ipAddr))
                {
-                  CritLog(<< "Malformed IP-address found in " << interfaceSettingKey << " setting: " << ipAddr);
+                  CritLog(<< "Malformed IP-address found in " << transportPrefix << "Interface setting: " << ipAddr);
                }
                int port = portData.convertInt();
                if(port == 0)
                {
-                  CritLog(<< "Invalid port found in " << interfaceSettingKey << " setting: " << port);
+                  CritLog(<< "Invalid port found in " << transportPrefix << " setting: " << port);
                }
-               TransportType tt = Tuple::toTransport(mProxyConfig->getConfigData(typeSettingKey, "UDP"));
+               TransportType tt = Tuple::toTransport(tc.getConfigData("Type", "UDP"));
                if(tt == UNKNOWN_TRANSPORT)
                {
-                  CritLog(<< "Unknown transport type found in " << typeSettingKey << " setting: " << mProxyConfig->getConfigData(typeSettingKey, "UDP"));
+                  CritLog(<< "Unknown transport type found in " << transportPrefix << "Type setting: " << tc.getConfigData("Type", "UDP"));
                }
-               Data tlsDomain = mProxyConfig->getConfigData(tlsDomainSettingKey, Data::Empty);
-               Data tlsCertificate = mProxyConfig->getConfigData(tlsCertificateSettingKey, Data::Empty);
-               Data tlsPrivateKey = mProxyConfig->getConfigData(tlsPrivateKeySettingKey, Data::Empty);
-               Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData(tlsPrivateKeyPassPhraseKey, Data::Empty);
-               Data tlsCVMValue = mProxyConfig->getConfigData(tlsCVMSettingKey, "NONE");
-               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+               Data tlsDomain = tc.getConfigData("TlsDomain", Data::Empty);
+               Data tlsCertificate = tc.getConfigData("TlsCertificate", Data::Empty);
+               Data tlsPrivateKey = tc.getConfigData("TlsPrivateKey", Data::Empty);
+               Data tlsPrivateKeyPassPhrase = tc.getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
+               SecurityTypes::TlsClientVerificationMode cvm = tc.getConfigClientVerificationMode("TlsClientVerification", SecurityTypes::None);
                SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
 #ifdef USE_SSL
-               sslType = Security::parseSSLType(mProxyConfig->getConfigData(tlsConnectionMethodKey, DEFAULT_TLS_METHOD));
+               sslType = tc.getConfigSSLType("TlsConnectionMethod", DEFAULT_TLS_METHOD);
 #endif
-               if(isEqualNoCase(tlsCVMValue, "Optional"))
-               {
-                  cvm = SecurityTypes::Optional;
-               }
-               else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
-               {
-                  cvm = SecurityTypes::Mandatory;
-               }
-               else if(!isEqualNoCase(tlsCVMValue, "None"))
-               {
-                  CritLog(<< "Unknown TLS client verification mode found in " << tlsCVMSettingKey << " setting: " << tlsCVMValue);
-               }
 
 #ifdef USE_SSL
                // Make sure certificate material available before trying to instantiate Transport
@@ -1712,7 +1690,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
                if (t)
                {
-                  int rcvBufLen = mProxyConfig->getConfigInt(rcvBufSettingKey, 0);
+                  int rcvBufLen = tc.getConfigInt("RcvBufLen", 0);
                   if (rcvBufLen >0 )
                   {
 #if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
@@ -1724,31 +1702,26 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 #endif
                   }
 
-                  Data recordRouteUri = mProxyConfig->getConfigData(recordRouteUriSettingKey, Data::Empty);
+                  Data recordRouteUri = tc.getConfigData("RecordRouteUri", Data::Empty);
                   if(!recordRouteUri.empty())
                   {
                      try
                      {
                         if(isEqualNoCase(recordRouteUri, "auto")) // auto generated record route uri
                         {
+                           NameAddr rr;
                            if(isSecure(tt))
                            {
-                              NameAddr rr;
                               rr.uri().host()=tlsDomain;
-                              rr.uri().port()=port;
-                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                            }
                            else
                            {
-                              NameAddr rr;
                               rr.uri().host()=ipAddr;
-                              rr.uri().port()=port;
-                              rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
-                              mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
-                              InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                            }
+                           rr.uri().port()=port;
+                           rr.uri().param(resip::p_transport)=resip::Tuple::toDataLower(tt);
+                           mStartupTransportRecordRoutes[t->getKey()] = rr;  // Store to be added to Proxy after it is created
+                           InfoLog (<< "Transport specific record-route enabled (generated): " << rr);
                         }
                         else
                         {
@@ -1759,7 +1732,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
                      }
                      catch(BaseException& e)
                      {
-                        ErrLog (<< "Invalid uri provided in " << recordRouteUriSettingKey << " setting (ignoring): " << e);
+                        ErrLog (<< "Invalid uri provided in " << transportPrefix << "RecordRouteUri setting (ignoring): " << e);
                         allTransportsSpecifyRecordRoute = false;
                      }
                   }
@@ -1771,7 +1744,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
             }
             else
             {
-               CritLog(<< "Port not specified in " << interfaceSettingKey << " setting: expected format is <IPAddress>:<Port>");
+               CritLog(<< "Port not specified in " << transportPrefix << " setting: expected format is <IPAddress>:<Port>");
                return false;
             }
          }
@@ -1801,24 +1774,11 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          Data tlsCertificate = mProxyConfig->getConfigData("TLSCertificate", Data::Empty);
          Data tlsPrivateKey = mProxyConfig->getConfigData("TLSPrivateKey", Data::Empty);
          Data tlsPrivateKeyPassPhrase = mProxyConfig->getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
-         Data tlsCVMValue = mProxyConfig->getConfigData("TLSClientVerification", "NONE");
-         SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
+         SecurityTypes::TlsClientVerificationMode cvm = mProxyConfig->getConfigClientVerificationMode("TLSClientVerification", SecurityTypes::None);
          SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
 #ifdef USE_SSL
-         sslType = Security::parseSSLType(mProxyConfig->getConfigData("TLSConnectionMethod", DEFAULT_TLS_METHOD));
+         sslType = mProxyConfig->getConfigSSLType("TLSConnectionMethod", DEFAULT_TLS_METHOD);
 #endif
-         if(isEqualNoCase(tlsCVMValue, "Optional"))
-         {
-            cvm = SecurityTypes::Optional;
-         }
-         else if(isEqualNoCase(tlsCVMValue, "Mandatory"))
-         {
-            cvm = SecurityTypes::Mandatory;
-         }
-         else if(!isEqualNoCase(tlsCVMValue, "None"))
-         {
-            CritLog(<< "Unknown TLS client verification mode found in TLSClientVerification setting: " << tlsCVMValue);
-         }
 
 #ifdef USE_SSL
          // Make sure certificate material available before trying to instantiate Transport
