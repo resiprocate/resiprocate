@@ -348,6 +348,10 @@ TcpBaseTransport::processAllWriteRequests()
       {
          TransportFailure::FailureReason failCode = TransportFailure::Failure;
          int subCode = 0;
+         if(data->connectDestination.size())
+         {
+            data->destination = data->connectDestination[0];
+         }
          if((conn = makeOutgoingConnection(data->destination, failCode, subCode)) == 0)
          {
             DebugLog (<< "Failed to create connection: " << data->destination);

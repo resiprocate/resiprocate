@@ -1,6 +1,8 @@
 #ifndef RESIP_SendData_HXX
 #define RESIP_SendData_HXX
 
+#include <memory>
+
 #include "rutil/Data.hxx"
 #include "resip/stack/Tuple.hxx"
 
@@ -27,12 +29,14 @@ class SendData
                const Data& pdata,
                const Data& tid,
                const Data& scid,
-               bool isCompressed = false): 
+               bool isCompressed = false,
+               const std::vector<Tuple> cd = std::vector<Tuple>()):
          destination(dest),
          data(pdata),
          transactionId(tid),
          sigcompId(scid),
          isAlreadyCompressed(isCompressed),
+         connectDestination(cd),
          command(NoCommand)
       {
       }
@@ -68,6 +72,7 @@ class SendData
       Data transactionId;
       Data sigcompId;
       bool isAlreadyCompressed;
+      std::vector<Tuple> connectDestination;
 
       // .bwc. Used for special commands: ie. to close connections, and enable flow timers
       SendDataCommand command;

@@ -970,6 +970,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
       Data remoteSigcompId;
 
       Transport* transport=0;
+      std::vector<Tuple> connectDestination;
 
       if (msg->isRequest())
       {
@@ -1117,6 +1118,28 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          {
             source = transport->getTuple();
             DebugLog(<< "Found transport: " << source);
+
+            if(isReliable(transport->transport()))
+            {
+               // If the original connection has gone away, a new connection needs
+               // to be established but we must try to connect to the Via port
+               // and not the port the source port the peer used connecting to us
+               Tuple cd(target);
+               int port = msg->const_header(h_Vias).front().sentPort();
+               if (port <= 0 || port > 65535)
+               {
+                  if(isSecure(cd.getType()))
+                  {
+                     port = Symbols::DefaultSipsPort;
+                  }
+                  else
+                  {
+                     port = Symbols::DefaultSipPort;
+                  }
+               }
+               cd.setPort(port);
+               connectDestination.push_back(cd);
+            }
 
             // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
@@ -1314,7 +1337,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          std::auto_ptr<SendData> send(new SendData(target,
                                                    resip::Data::Empty,
                                                    msg->getTransactionId(),
-                                                   remoteSigcompId));
+                                                   remoteSigcompId,
+                                                   false,
+                                                   connectDestination));
 
          send->data.reserve(mAvgBufferSize + mAvgBufferSize/4);
 
