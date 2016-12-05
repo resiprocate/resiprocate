@@ -20,8 +20,8 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
    mB2BUANextHop = config.getConfigData("B2BUANextHop", "", true);
    if(mB2BUANextHop.size() == 0)
    {
-      ErrLog(<<"Please specify B2BUANextHop");
-      exit(1);
+      CritLog(<<"Please specify B2BUANextHop");
+      throw ConfigParse::Exception("Please specify B2BUANextHop", __FILE__, __LINE__);
    }
 
    std::set<Data> replicatedHeaderNames;
