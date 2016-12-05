@@ -38,6 +38,7 @@ int _kbhit() {
 }
 #endif
 
+#include "resip/stack/InteropHelper.hxx"
 #include "recon/UserAgent.hxx"
 #include "recon/ReconSubsystem.hxx"
 #include <recon/SipXHelper.hxx>
@@ -842,6 +843,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 3478);
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
    Data stunPassword = reConServerConfig.getConfigData("StunPassword", "", true);
+   bool addViaRport = reConServerConfig.getConfigBool("AddViaRport", true);
    unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPort", 5062);
    unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
@@ -1191,6 +1193,8 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->natTraversalServerPort() = natTraversalServerPort;
    conversationProfile->stunUsername() = stunUsername;
    conversationProfile->stunPassword() = stunPassword;
+   InteropHelper::setRportEnabled(addViaRport);
+   conversationProfile->setRportEnabled(addViaRport);
 
    // Secure Media Settings
    conversationProfile->secureMediaMode() = secureMediaMode;
