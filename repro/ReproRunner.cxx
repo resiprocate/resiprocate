@@ -841,6 +841,9 @@ ReproRunner::createSipStack()
       ConnectionManager::EnableAgressiveGc = true;
    }
 
+   // Decide whether or not to add rport to the Via header
+   InteropHelper::setRportEnabled(mProxyConfig->getConfigBool("AddViaRport", true));
+
    // Check Path and RecordRoute settings, print warning if features are enabled that
    // require record-routing and record-route uri(s) is not configured
    bool assumePath = mProxyConfig->getConfigBool("AssumePath", false);
@@ -1025,6 +1028,7 @@ ReproRunner::createDialogUsageManager()
    // Create Profile settings for DUM Instance that handles ServerRegistration,
    // and potentially certificate subscription server
    SharedPtr<MasterProfile> profile(new MasterProfile);
+   profile->setRportEnabled(InteropHelper::getRportEnabled());
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
 #ifdef USE_SSL
