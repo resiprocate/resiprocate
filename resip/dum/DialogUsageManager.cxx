@@ -946,7 +946,11 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
 
       if (msg->exists(h_Vias))
       {
-         if(!userProfile->getRportEnabled())
+         if(userProfile->getRportEnabled())
+         {
+            msg->header(h_Vias).front().param(p_rport);
+         }
+         else
          {
             msg->header(h_Vias).front().remove(p_rport);
          }

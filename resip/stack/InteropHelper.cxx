@@ -2,6 +2,7 @@
 
 namespace resip
 {
+bool InteropHelper::rport=true;
 int InteropHelper::theOutboundVersion=11;
 bool InteropHelper::isOutboundSupported=true;
 unsigned int InteropHelper::flowTimerSeconds=0;  // 0 = disabled

@@ -12,6 +12,9 @@ namespace resip
 class InteropHelper
 {
    public:
+      static bool getRportEnabled() {return rport;}
+      static void setRportEnabled(bool enable) {rport=enable;}
+
       static int getOutboundVersion() {return theOutboundVersion;}
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
       static bool getOutboundSupported() {return isOutboundSupported;}
@@ -83,6 +86,7 @@ class InteropHelper
       InteropHelper();
       ~InteropHelper();
       
+      static bool rport;
       static int theOutboundVersion;
       static bool isOutboundSupported;
       static unsigned int flowTimerSeconds;
