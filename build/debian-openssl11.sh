@@ -26,10 +26,16 @@ do
   QT_LIBS="${QT_LIBS} -I${QT_LIB_PREFIX}/${lib}"
 done
 
+OPENSSL_11="${HOME}/ws/openssl/debian/openssl-1.1.0c"
+# the location where OpenSSL 1.1 headers are placed by "make install"
+OPENSSL_11_INC="${OPENSSL_11}/debian/libssl-dev/usr/include"
+# the location where OpenSSL 1.1 libs are placed by "make install"
+OPENSSL_11_LIB="${OPENSSL_11}/debian/libssl1.1/usr/lib/x86_64-linux-gnu"
+
 CFLAGS='-g -O0 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security' \
-CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 ${QT_LIBS} -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" \
+CPPFLAGS="-D_FORTIFY_SOURCE=2 -I${OPENSSL_11_INC} -I/usr/include/telepathy-qt4 ${QT_LIBS} -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" \
 CXXFLAGS='-g -O0 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive' \
-LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
+LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares -L${OPENSSL_11_LIB}' \
   ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls $RADIUS_LIB --with-ssl \
               --enable-assert-syslog \
               --with-c-ares \

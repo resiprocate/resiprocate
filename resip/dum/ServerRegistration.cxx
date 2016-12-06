@@ -500,6 +500,13 @@ ServerRegistration::tryFlow(ContactInstanceRecord& rec,
                return true;
          }
       }
+
+      if(msg.header(h_Vias).size() > 1 && InteropHelper::getAssumeFirstHopSupportsFlowTokensEnabled())
+      {
+         rec.mUseFlowRouting = true;
+         rec.mReceivedFrom.onlyUseExistingConnection=false;
+         return true;
+      }
    }
    catch(resip::ParseBuffer::Exception&)
    {}

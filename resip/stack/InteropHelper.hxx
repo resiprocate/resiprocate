@@ -12,6 +12,9 @@ namespace resip
 class InteropHelper
 {
    public:
+      static bool getRportEnabled() {return rport;}
+      static void setRportEnabled(bool enable) {rport=enable;}
+
       static int getOutboundVersion() {return theOutboundVersion;}
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
       static bool getOutboundSupported() {return isOutboundSupported;}
@@ -71,10 +74,19 @@ class InteropHelper
       static bool getAssumeFirstHopSupportsOutboundEnabled(){return assumeFirstHopSupportsOutbound;}
       static void setAssumeFirstHopSupportsOutboundEnabled(bool enabled) {assumeFirstHopSupportsOutbound=enabled;}
 
+      // AssumeFirstHopSupportsOutbound only relaxes the Outbound logic for registrations from clients who send the
+      // instance-id and reg-id parameters.  If the registrations pass through an edge proxy or SBC with the
+      // useRRTokenHack or clientNATDetection hacks enabled before reaching the registration server,
+      // the registration server can also potentially accept registrations that have come through that proxy with Path headers.
+      // If this setting is enabled, repro will assume the first hop supports outbound or flow token hacks
+      // and will not reject registrations with the 439 error.
+      static bool getAssumeFirstHopSupportsFlowTokensEnabled(){return assumeFirstHopSupportsFlowTokens;}
+      static void setAssumeFirstHopSupportsFlowTokensEnabled(bool enabled) {assumeFirstHopSupportsFlowTokens=enabled;}
    private:
       InteropHelper();
       ~InteropHelper();
       
+      static bool rport;
       static int theOutboundVersion;
       static bool isOutboundSupported;
       static unsigned int flowTimerSeconds;
@@ -82,6 +94,7 @@ class InteropHelper
       static bool useRRTokenHack;
       static ClientNATDetectionMode clientNATDetection;
       static bool assumeFirstHopSupportsOutbound;
+      static bool assumeFirstHopSupportsFlowTokens;
 };
 }
 
