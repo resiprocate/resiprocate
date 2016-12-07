@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-SUBDIRS = .
+SUBDIRS = . data
 
 EXTRA_DIST = playback_prompt.wav
 EXTRA_DIST += record_prompt.wav
@@ -23,7 +23,7 @@ EXTRA_DIST += resiprocate.manager
 EXTRA_DIST += resiprocate.service
 
 #AM_CXXFLAGS = -DUSE_ARES
-AM_CPPFLAGS = -fPIC
+AM_CPPFLAGS = -fPIC $(QT5_CFLAGS) $(TP_QT5_CFLAGS)
 
 bin_PROGRAMS = telepathy-resiprocate
 telepathy_resiprocate_LDADD = ../../resip/recon/librecon.la
@@ -32,8 +32,7 @@ telepathy_resiprocate_LDADD += -lsipXsdp -lsipXmediaProcessing -lsipXmedia -lsip
 telepathy_resiprocate_LDADD += ../../resip/dum/libdum.la
 telepathy_resiprocate_LDADD += ../../resip/stack/libresip.la
 telepathy_resiprocate_LDADD += ../../rutil/librutil.la
-telepathy_resiprocate_LDADD += -ltelepathy-qt4 -ltelepathy-qt4-service
-telepathy_resiprocate_LDADD += -lQtDBus -lQtNetwork -lQtCore
+telepathy_resiprocate_LDADD += $(TP_QT5_LIBS) $(QT5_LIBS)
 telepathy_resiprocate_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
 telepathy_resiprocate_SOURCES = Common.cxx \
@@ -50,8 +49,7 @@ telepathy_resiprocate_SOURCES = Common.cxx \
 	TelepathyParameters.cxx \
 	telepathy-resiprocate.cxx
 
-telepathy_resiprocateincludedir = $(includedir)/telepathy-resiprocate
-nobase_telepathy_resiprocateinclude_HEADERS = Common.hxx \
+noinst_HEADERS = Common.hxx \
 	Connection.hxx \
 	TextChannel.hxx \
 	MyConversationManager.hxx \
