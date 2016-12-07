@@ -1111,12 +1111,14 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
             break;
 
          case Timer::TcpConnectTimer:
-             if (!mTcpConnectTimerStarted) // Ignore timer if we we connected (note: when we connect we set mTcpConnectTimerStarted to false)
+             if (mTcpConnectTimerStarted) // Ignore timer if we went connected (note: when we connect we set mTcpConnectTimerStarted to false)
              {
-                 delete msg;
-                 break;
+                 TransportFailure failure(mId, TransportFailure::ConnectionException);
+                 processTransportFailure(&failure);
              }
-             // else fallthrough 
+             delete msg;
+             break;
+
          case Timer::TimerF:
             if (mState == Trying || mState == Proceeding)
             {
@@ -1396,12 +1398,14 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             break;
 
          case Timer::TcpConnectTimer:
-             if (!mTcpConnectTimerStarted) // Ignore timer we we connected (note: when we connect we set mTcpConnectTimerStarted to false)
+             if (mTcpConnectTimerStarted) // Ignore timer if we went connected (note: when we connect we set mTcpConnectTimerStarted to false)
              {
-                 delete msg;
-                 break;
+                 TransportFailure failure(mId, TransportFailure::ConnectionException);
+                 processTransportFailure(&failure);
              }
-             // else fallthrough
+             delete msg;
+             break;
+
          case Timer::TimerB:
             if (mState == Calling)
             {
