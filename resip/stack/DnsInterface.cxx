@@ -32,13 +32,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsInterface::DnsInterface(DnsStub& dnsStub) : 
+DnsInterface::DnsInterface(DnsStub& dnsStub, bool useDnsVip) : 
    mUdpOnlyOnNumeric(false),
    mDnsStub(dnsStub)
 {
-#ifdef USE_DNS_VIP
-   mDnsStub.setResultTransform(&mVip);
-#endif
+   if (useDnsVip)
+   {
+      mDnsStub.setResultTransform(&mVip);
+   }
 }
 
 DnsInterface::~DnsInterface()

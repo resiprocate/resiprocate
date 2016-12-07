@@ -27,8 +27,7 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(SipStack& stack, 
-                              AsyncProcessHandler* handler);
+      TransactionController(SipStack& stack, AsyncProcessHandler* handler, bool useDnsVip);
       ~TransactionController();
 
       void process(int timeout=0);

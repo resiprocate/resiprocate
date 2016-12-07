@@ -96,6 +96,11 @@ class FdPollGrp;
           See EventStackThread. The SipStack does NOT take ownership;
           the application (or a helper such as EventStackSimpleMgr) must
           release this object after the SipStack is destructed.
+
+        mUseDnsVip
+           Set to true to enable Whitelisting of DNS entries.  A feature
+           that usually desired by UA's that want to stick to a known
+           good server / dns result.
 **/
 class SipStackOptions
 {
@@ -103,7 +108,8 @@ class SipStackOptions
       SipStackOptions()
          : mSecurity(0), mExtraNameserverList(0),
            mAsyncProcessHandler(0), mStateless(false),
-           mSocketFunc(0), mCompression(0), mPollGrp(0)
+           mSocketFunc(0), mCompression(0), mPollGrp(0),
+           mUseDnsVip(false)
       {
       }
 
@@ -114,6 +120,7 @@ class SipStackOptions
       AfterSocketCreationFuncPtr mSocketFunc;
       Compression *mCompression;
       FdPollGrp* mPollGrp;
+      bool mUseDnsVip;
 };
 
 
@@ -191,9 +198,14 @@ class SipStack : public FdSetIOObserver
                              SigComp. If set to 0, then SigComp compression
                              will be disabled.
 
-          @param pollGrp     Polling group to support file-io callbacks; if one 
-                              is not passed, one will be created. Ownership is 
-                              not taken.
+          @param pollGrp    Polling group to support file-io callbacks; if one 
+                            is not passed, one will be created. Ownership is 
+                            not taken.
+
+          @param useDnsVip
+                            Set to true to enable Whitelisting of DNS entries.  A feature
+                            that usually desired by UA's that want to stick to a known
+                            good server / dns result.
       */
       SipStack(Security* security=0,
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
@@ -201,7 +213,8 @@ class SipStack : public FdSetIOObserver
                bool stateless=false,
                AfterSocketCreationFuncPtr socketFunc = 0,
                Compression *compression = 0,
-               FdPollGrp* pollGrp = 0);
+               FdPollGrp* pollGrp = 0,
+               bool useDnsVip = false);
 
       virtual ~SipStack();
 
