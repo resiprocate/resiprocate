@@ -1,20 +1,15 @@
-#ifndef B2BCALLMANAGER_HXX
-#define B2BCALLMANAGER_HXX
-
-#include <os/OsIntTypes.h>
+#ifndef REGISTRATIONFORWARDER_HXX
+#define REGISTRATIONFORWARDER_HXX
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
-#include <memory>
-
-#include <resip/stack/ExtensionHeader.hxx>
-#include <rutil/Data.hxx>
-#include <recon/ConversationManager.hxx>
-
-#include "reConServerConfig.hxx"
-#include "MyConversationManager.hxx"
+#include "rutil/ConfigParse.hxx"
+#include "rutil/Data.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/TransactionUser.hxx"
 
 using namespace resip;
 
@@ -22,46 +17,43 @@ using namespace resip;
 namespace recon
 {
 
-class B2BCallManager : public MyConversationManager
+class RegistrationForwarder : public resip::TransactionUser
 {
-public:
+   public:
+      RegistrationForwarder(ConfigParse& cp, SipStack& stack);
+      virtual ~RegistrationForwarder();
 
-   B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config);
+      bool process(resip::Lockable* mutex = 0);
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up);
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg);
+      virtual const Data& name() const;
 
-protected:
-   virtual bool isSourceInternal(const SipMessage& msg);
+   private:
+      void internalProcess(std::auto_ptr<resip::Message>);
 
-   struct B2BCall
-   {
-      ConversationHandle conv;
-      ParticipantHandle a;
-      ParticipantHandle b;
-   };
+      SipStack& mStack;
 
-   Data mB2BUANextHop;
-   std::vector<Data> mInternalHosts;
-   std::vector<Data> mInternalTLSNames;
-   std::vector<Data> mReplicatedHeaders;
+      unsigned int mMaxExpiry;
+      Data mPath;
+      NameAddr mRegistrationRoute;
 
-   std::map<ConversationHandle,SharedPtr<B2BCall> > mCallsByConversation;
-   std::map<ParticipantHandle,SharedPtr<B2BCall> > mCallsByParticipant;
+      typedef enum
+      {
+         Running,
+         ShutdownRequested, // while ending usages
+         RemovingTransactionUser, // while removing TU from stack
+         Shutdown,  // after TU has been removed from stack
+         Destroying // while calling destructor
+      } ShutdownState;
+      ShutdownState mShutdownState;
 };
 
 }
 
 #endif
 
-
 /* ====================================================================
  *
- * Copyright 2014 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

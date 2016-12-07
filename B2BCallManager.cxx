@@ -5,6 +5,8 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <recon/ReconSubsystem.hxx>
@@ -20,8 +22,16 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
    mB2BUANextHop = config.getConfigData("B2BUANextHop", "", true);
    if(mB2BUANextHop.size() == 0)
    {
-      ErrLog(<<"Please specify B2BUANextHop");
-      exit(1);
+      CritLog(<<"Please specify B2BUANextHop");
+      throw ConfigParse::Exception("Please specify B2BUANextHop", __FILE__, __LINE__);
+   }
+
+   config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
+   config.getConfigValue("B2BUAInternalTLSNames", mInternalTLSNames);
+
+   if(mInternalHosts.empty() && mInternalTLSNames.empty())
+   {
+      WarningLog(<<"Neither B2BUAInternalHosts nor B2BUAInternalTLSNames specified");
    }
 
    std::set<Data> replicatedHeaderNames;
@@ -97,7 +107,20 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    call->conv = createConversation();
    addParticipant(call->conv, call->a);
    const Uri& reqUri = msg.header(h_RequestLine).uri();
-   NameAddr newDest("sip:" + reqUri.user() + '@' + mB2BUANextHop);
+   NameAddrs route;
+   if(isSourceInternal(msg))
+   {
+      DebugLog(<<"INVITE request from zone: internal");
+      Uri uri(msg.header(h_RequestLine).uri());
+      uri.param(p_lr);
+      route = msg.header(h_Routes);
+      route.pop_front();  // remove ourselves
+   }
+   else
+   {
+      DebugLog(<<"INVITE request from zone: external");
+      route.push_front(NameAddr(mB2BUANextHop));
+   }
    std::multimap<Data,Data> extraHeaders;
    std::vector<resip::Data>::const_iterator it = mReplicatedHeaders.begin();
    for( ; it != mReplicatedHeaders.end(); it++)
@@ -115,11 +138,10 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
       }
    }
    SharedPtr<UserProfile> profile(new ConversationProfile(conversationProfile));
-   NameAddr outgoingCaller = conversationProfile.getDefaultFrom();
-   outgoingCaller.uri().user() = msg.header(h_From).uri().user();
-   outgoingCaller.displayName() = msg.header(h_From).displayName();
+   NameAddr outgoingCaller = msg.header(h_From);
    profile->setDefaultFrom(outgoingCaller);
-   call->b = ConversationManager::createRemoteParticipant(call->conv, newDest, ForkSelectAutomatic, profile, extraHeaders);
+   profile->setServiceRoute(route);
+   call->b = ConversationManager::createRemoteParticipant(call->conv, NameAddr(reqUri), ForkSelectAutomatic, profile, extraHeaders);
    mCallsByConversation[call->conv] = call;
    mCallsByParticipant[call->a] = call;
    mCallsByParticipant[call->b] = call;
@@ -199,6 +221,31 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
    {
       WarningLog(<< "Participant " << partHandle << " connected, not known in any existing call");
    }
+}
+
+bool
+B2BCallManager::isSourceInternal(const SipMessage& msg)
+{
+   Data sourceAddr = Tuple::inet_ntop(msg.getSource());
+   if(std::find(mInternalHosts.begin(), mInternalHosts.end(), sourceAddr) != mInternalHosts.end())
+   {
+      DebugLog(<<"Matched internal host by IP: " << sourceAddr);
+      return true;
+   }
+
+   const std::list<Data>& peerNames = msg.getTlsPeerNames();
+   std::list<Data>::const_iterator it = peerNames.begin();
+   for( ; it != peerNames.end() ; it++)
+   {
+      const Data& peerName = *it;
+      if(std::find(mInternalTLSNames.begin(), mInternalTLSNames.end(), peerName) != mInternalTLSNames.end())
+      {
+         DebugLog(<<"Matched internal host by TLS name: " << peerName);
+      }
+   }
+
+   DebugLog(<<"Didn't match internal host for source " << sourceAddr);
+   return false;
 }
 
 

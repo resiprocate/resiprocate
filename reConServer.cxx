@@ -38,6 +38,7 @@ int _kbhit() {
 }
 #endif
 
+#include "resip/stack/InteropHelper.hxx"
 #include "recon/UserAgent.hxx"
 #include "recon/ReconSubsystem.hxx"
 #include <recon/SipXHelper.hxx>
@@ -49,6 +50,7 @@ int _kbhit() {
 #include "MyMessageDecorator.hxx"
 #include "MyConversationManager.hxx"
 #include "B2BCallManager.hxx"
+#include "RegistrationForwarder.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -88,8 +90,22 @@ signalHandler(int signo)
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
+      UserAgent(conversationManager, profile),
+      mMaxRegLoops(1000)
+   {
+      mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
+      MessageFilterRuleList ruleList;
+      MessageFilterRule::MethodList methodList;
+      methodList.push_back(resip::INVITE);
+      methodList.push_back(resip::CANCEL);
+      methodList.push_back(resip::BYE);
+      methodList.push_back(resip::ACK);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::Any,
+                                           methodList) );
+      getDialogUsageManager().setMessageFilterRuleList(ruleList);
+   }
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -105,6 +121,18 @@ public:
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
+
+   virtual void process(int timeoutMs)
+   {
+      // Keep calling process() as long as there appear to be messages
+      // available from the stack
+      for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
+
+      UserAgent::process(timeoutMs);
+   }
+private:
+   unsigned int mMaxRegLoops;
+   SharedPtr<RegistrationForwarder> mRegistrationForwarder;
 };
 
 int main(int argc, char** argv)
@@ -842,6 +870,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned short natTraversalServerPort = reConServerConfig.getConfigUnsignedShort("NatTraversalServerPort", 3478);
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
    Data stunPassword = reConServerConfig.getConfigData("StunPassword", "", true);
+   bool addViaRport = reConServerConfig.getConfigBool("AddViaRport", true);
    unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPort", 5062);
    unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
@@ -1191,6 +1220,8 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->natTraversalServerPort() = natTraversalServerPort;
    conversationProfile->stunUsername() = stunUsername;
    conversationProfile->stunPassword() = stunPassword;
+   InteropHelper::setRportEnabled(addViaRport);
+   conversationProfile->setRportEnabled(addViaRport);
 
    // Secure Media Settings
    conversationProfile->secureMediaMode() = secureMediaMode;
@@ -1213,7 +1244,7 @@ ReConServerProcess::main (int argc, char** argv)
          default:
             assert(0);
       }
-      MyUserAgent ua(myConversationManager.get(), profile);
+      MyUserAgent ua(reConServerConfig, myConversationManager.get(), profile);
       myConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
 
