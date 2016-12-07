@@ -1,3 +1,9 @@
+resiprocate (1:1.11.0~alpha4-2) unstable; urgency=medium
+
+  * Add missing build-dep vim-common for xxd binary.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 07 Dec 2016 17:46:42 +0100
+
 resiprocate (1:1.11.0~alpha4-1) unstable; urgency=medium
 
   * New upstream release.
