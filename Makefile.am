@@ -17,6 +17,8 @@ reConServer_SOURCES += MyConversationManager.cxx
 reConServer_SOURCES += MyConversationManager.hxx
 reConServer_SOURCES += MyMessageDecorator.cxx
 reConServer_SOURCES += MyMessageDecorator.hxx
+reConServer_SOURCES += RegistrationForwarder.cxx
+reConServer_SOURCES += RegistrationForwarder.hxx
 reConServer_SOURCES += playback_prompt.h
 reConServer_SOURCES += record_prompt.h
 

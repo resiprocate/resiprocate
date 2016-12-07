@@ -50,6 +50,7 @@ int _kbhit() {
 #include "MyMessageDecorator.hxx"
 #include "MyConversationManager.hxx"
 #include "B2BCallManager.hxx"
+#include "RegistrationForwarder.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -89,8 +90,22 @@ signalHandler(int signo)
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
+      UserAgent(conversationManager, profile),
+      mMaxRegLoops(1000)
+   {
+      mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
+      MessageFilterRuleList ruleList;
+      MessageFilterRule::MethodList methodList;
+      methodList.push_back(resip::INVITE);
+      methodList.push_back(resip::CANCEL);
+      methodList.push_back(resip::BYE);
+      methodList.push_back(resip::ACK);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::Any,
+                                           methodList) );
+      getDialogUsageManager().setMessageFilterRuleList(ruleList);
+   }
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -106,6 +121,18 @@ public:
    {
       InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
+
+   virtual void process(int timeoutMs)
+   {
+      // Keep calling process() as long as there appear to be messages
+      // available from the stack
+      for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
+
+      UserAgent::process(timeoutMs);
+   }
+private:
+   unsigned int mMaxRegLoops;
+   SharedPtr<RegistrationForwarder> mRegistrationForwarder;
 };
 
 int main(int argc, char** argv)
@@ -1217,7 +1244,7 @@ ReConServerProcess::main (int argc, char** argv)
          default:
             assert(0);
       }
-      MyUserAgent ua(myConversationManager.get(), profile);
+      MyUserAgent ua(reConServerConfig, myConversationManager.get(), profile);
       myConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
 
