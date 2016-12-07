@@ -98,7 +98,7 @@ public:
                       Application can do some work, but should call
                       process again ASAP.
    */
-   void process(int timeoutMs); // call this in a loop
+   virtual void process(int timeoutMs); // call this in a loop
 
    /**
      Used to initiate a shutdown of the useragent.  This function blocks 
