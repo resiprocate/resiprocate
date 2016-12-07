@@ -98,7 +98,7 @@ public:
                       Application can do some work, but should call
                       process again ASAP.
    */
-   void process(int timeoutMs); // call this in a loop
+   virtual void process(int timeoutMs); // call this in a loop
 
    /**
      Used to initiate a shutdown of the useragent.  This function blocks 
@@ -277,6 +277,9 @@ public:
    const char* sendMessage(const resip::NameAddr& destination, const resip::Data& msg, const resip::Mime& mimeType);
 
 protected:
+   resip::SipStack& getSipStack() { return mStack; };
+   resip::DialogUsageManager& getDialogUsageManager();
+
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
 
@@ -324,7 +327,6 @@ private:
    resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
    resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
    resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
-   resip::DialogUsageManager& getDialogUsageManager();
 
    void addTransports();
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
