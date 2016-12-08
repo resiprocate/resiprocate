@@ -7,6 +7,7 @@
 #include <resip/stack/SecurityTypes.hxx> 
 #include <resip/stack/Transport.hxx>
 #include <resip/dum/MasterProfile.hxx>
+#include <reflow/RTCPEventLoggingHandler.hxx>
 #include <vector>
 
 namespace recon
@@ -46,6 +47,10 @@ public:
    void setTransportSipMessageLoggingHandler(resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> handler);
 
    const resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> getTransportSipMessageLoggingHandler() const;
+
+   void setRTCPEventLoggingHandler(resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> handler);
+
+   const resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const;
 
    /**
      Adds a network transport to use for send/receiving SIP messages.
@@ -199,6 +204,7 @@ private:
    std::vector<resip::Data> mRootCertBundles;
    bool mStatisticsManagerEnabled;
    resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+   resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
    std::vector<TransportInfo> mTransports;
    std::vector<resip::Data> mEnumSuffixes;
    resip::DnsStub::NameserverList mAdditionalDnsServers;
