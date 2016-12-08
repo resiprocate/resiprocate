@@ -1,41 +1,47 @@
-#ifndef RECONSERVER_HXX 
-#define RECONSERVER_HXX 
+#ifndef MYUSERAGENT_HXX
+#define MYUSERAGENT_HXX
+
+#include <os/OsIntTypes.h>
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
-#include "rutil/Data.hxx"
-#include "recon/UserAgent.hxx"
-#include "rutil/ServerProcess.hxx"
+#include <rutil/ConfigParse.hxx>
+#include <rutil/Data.hxx>
+#include <rutil/SharedPtr.hxx>
+#include <recon/UserAgent.hxx>
 
-#include "MyConversationManager.hxx"
-#include "MyUserAgent.hxx"
+#include "B2BCallManager.hxx"
+#include "RegistrationForwarder.hxx"
 
 using namespace resip;
+
 
 namespace recon
 {
 
-class ReConServerProcess : public resip::ServerProcess
+class MyUserAgent : public UserAgent
 {
 public:
-   ReConServerProcess();
-   virtual ~ReConServerProcess();
+   MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile);
+   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
+   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);
+   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData);
+   virtual void process(int timeoutMs);
 
-   virtual int main(int argc, char** argv);
-   virtual void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
-   virtual void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
+private:
+   unsigned int mMaxRegLoops;
+   SharedPtr<RegistrationForwarder> mRegistrationForwarder;
 };
 
 }
 
 #endif
 
-
 /* ====================================================================
  *
- * Copyright 2013 Catalin Constantin Usurelu.  All rights reserved.
+ * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

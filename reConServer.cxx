@@ -87,54 +87,6 @@ signalHandler(int signo)
    finished = true;
 }
 
-class MyUserAgent : public UserAgent
-{
-public:
-   MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile),
-      mMaxRegLoops(1000)
-   {
-      mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
-      MessageFilterRuleList ruleList;
-      MessageFilterRule::MethodList methodList;
-      methodList.push_back(resip::INVITE);
-      methodList.push_back(resip::CANCEL);
-      methodList.push_back(resip::BYE);
-      methodList.push_back(resip::ACK);
-      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                           resip::MessageFilterRule::Any,
-                                           methodList) );
-      getDialogUsageManager().setMessageFilterRuleList(ruleList);
-   }
-
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
-   {
-      InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
-   }
-
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
-   {
-      InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
-   }
-
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
-   {
-      InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
-   }
-
-   virtual void process(int timeoutMs)
-   {
-      // Keep calling process() as long as there appear to be messages
-      // available from the stack
-      for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
-
-      UserAgent::process(timeoutMs);
-   }
-private:
-   unsigned int mMaxRegLoops;
-   SharedPtr<RegistrationForwarder> mRegistrationForwarder;
-};
-
 int main(int argc, char** argv)
 {
    ReConServerProcess proc;
