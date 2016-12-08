@@ -308,6 +308,8 @@ protected:
 
    // UserProfile selection for incoming and outgoing calls, override to customize
    resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
+   // Returns the ConversationProfile for a specific media address
+   resip::SharedPtr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
    virtual resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
    resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
 

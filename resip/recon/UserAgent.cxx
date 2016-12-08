@@ -353,6 +353,23 @@ UserAgent::getDefaultOutgoingConversationProfile()
    }
 }
 
+SharedPtr<ConversationProfile>
+UserAgent::getConversationProfileByMediaAddress(const resip::Data& mediaAddress)
+{
+   resip_assert(!mediaAddress.empty());
+
+   ConversationProfileMap::iterator conIt;
+   for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
+   {
+      SharedPtr<ConversationProfile> cp = conIt->second;
+      if(cp->sessionCaps().session().origin().getAddress() == mediaAddress)
+      {
+         return cp;
+      }
+   }
+   return SharedPtr<ConversationProfile>();
+}
+
 SharedPtr<ConversationProfile> 
 UserAgent::getIncomingConversationProfile(const SipMessage& msg)
 {
