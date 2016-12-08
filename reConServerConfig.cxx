@@ -31,7 +31,11 @@ ReConServerConfig::getConfigValue(const resip::Data& name, ConversationProfile::
    ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
    if(it != mConfigValues.end())
    {
-      if(isEqualNoCase(it->second, "Srtp"))
+      if(isEqualNoCase(it->second, "None"))
+      {
+         value = ConversationProfile::NoSecureMedia;
+      }
+      else if(isEqualNoCase(it->second, "Srtp"))
       {
          value = ConversationProfile::Srtp;
       }
