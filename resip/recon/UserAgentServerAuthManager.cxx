@@ -62,7 +62,7 @@ ServerAuthManager::AsyncBool
 UserAgentServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());
-   ConversationProfile* profile = mUserAgent.getIncomingConversationProfile(msg).get();
+   SharedPtr<ConversationProfile> profile = mUserAgent.getIncomingConversationProfile(msg);
 
    // We want to challenge OOD Refer requests and Invite Requests with Auto-Answer indications
    switch(msg.method())
