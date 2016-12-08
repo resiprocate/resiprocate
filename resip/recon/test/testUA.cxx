@@ -1279,10 +1279,10 @@ main (int argc, char** argv)
    SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
 
    // Add transports
-   profile->addTransport(UDP, sipPort, V4, address);
-   profile->addTransport(TCP, sipPort, V4, address);
+   profile->addTransport(UDP, sipPort, V4, StunDisabled, address);
+   profile->addTransport(TCP, sipPort, V4, StunDisabled, address);
 #ifdef USE_SSL
-   profile->addTransport(TLS, tlsPort, V4, address, tlsDomain);
+   profile->addTransport(TLS, tlsPort, V4, StunDisabled, address, tlsDomain);
 #endif
 
    // The following settings are used to avoid a kernel panic seen on an ARM embedded platform.

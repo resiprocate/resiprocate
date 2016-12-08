@@ -30,9 +30,17 @@ public:
       resip::TransportType mProtocol;
       int mPort;
       resip::IpVersion mIPVersion;
+      resip::StunSetting mStunEnabled;
       resip::Data mIPInterface;
       resip::Data mSipDomainname;
+      resip::Data mTlsPrivateKeyPassPhrase;
       resip::SecurityTypes::SSLType mSslType;
+      unsigned mTransportFlags;
+      resip::Data mTlsCertificate;
+      resip::Data mTlsPrivateKey;
+      resip::SecurityTypes::TlsClientVerificationMode mCvm;
+      bool mUseEmailAsSIP;
+      unsigned int mRcvBufLen;
    };
 
    void setTransportSipMessageLoggingHandler(resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> handler);
@@ -56,9 +64,17 @@ public:
    void addTransport( resip::TransportType protocol,
                       int port, 
                       resip::IpVersion version=resip::V4,
+                      resip::StunSetting stun=resip::StunDisabled,
                       const resip::Data& ipInterface = resip::Data::Empty, 
                       const resip::Data& sipDomainname = resip::Data::Empty, // TLS only
-                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::SSLv23 );
+                      const resip::Data& privateKeyPassPhrase = resip::Data::Empty,
+                      resip::SecurityTypes::SSLType sslType = resip::SecurityTypes::SSLv23,
+                      unsigned transportFlags = 0,
+                      const resip::Data& certificateFilename = resip::Data::Empty,
+                      const resip::Data& privateKeyFilename = resip::Data::Empty,
+                      resip::SecurityTypes::TlsClientVerificationMode cvm = resip::SecurityTypes::None,
+                      bool useEmailAsSIP = false,
+                      unsigned int rcvBufLen = 0);
 
    /**
      Gets a vector of the transports previously added.

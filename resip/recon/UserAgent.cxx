@@ -457,22 +457,47 @@ UserAgent::addTransports()
       const UserAgentMasterProfile::TransportInfo& ti = *i;
       try
       {
-         switch(ti.mProtocol)
-         {
 #ifdef USE_SSL
-         case TLS:
-#ifdef USE_DTLS
-         case DTLS:
+         // Make sure certificate material available before trying to instantiate Transport
+         if(isSecure(ti.mProtocol))
+         {
+            // FIXME: see comments about repro / CertificatePath
+            if(!ti.mTlsCertificate.empty())
+            {
+               mSecurity->addDomainCertPEM(ti.mSipDomainname, Data::fromFile(ti.mTlsCertificate));
+            }
+            if(!ti.mTlsPrivateKey.empty())
+            {
+               mSecurity->addDomainPrivateKeyPEM(ti.mSipDomainname, Data::fromFile(ti.mTlsPrivateKey), ti.mTlsPrivateKeyPassPhrase);
+            }
+         }
 #endif
-            mDum.addTransport(ti.mProtocol, ti.mPort, ti.mIPVersion, ti.mIPInterface, ti.mSipDomainname, Data::Empty, ti.mSslType);
-            break;
+         Transport *t = mStack.addTransport(ti.mProtocol,
+                                 ti.mPort,
+                                 ti.mIPVersion,
+                                 StunEnabled,
+                                 ti.mIPInterface,       // interface to bind to
+                                 ti.mSipDomainname,
+                                 ti.mTlsPrivateKeyPassPhrase,  // private key passphrase
+                                 ti.mSslType, // sslType
+                                 0,            // transport flags
+                                 ti.mTlsCertificate, ti.mTlsPrivateKey,
+                                 ti.mCvm,          // tls client verification mode
+                                 ti.mUseEmailAsSIP);
+
+         if (t)
+         {
+            int rcvBufLen = ti.mRcvBufLen;
+            if (rcvBufLen >0 )
+            {
+#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
+               // this new method is part of the epoll changeset,
+               // which isn't commited yet.
+               t->setRcvBufLen(rcvBufLen);
+#else
+               resip_assert(0);
 #endif
-         case UDP:
-         case TCP:
-            mDum.addTransport(ti.mProtocol, ti.mPort, ti.mIPVersion, ti.mIPInterface);
-            break;
-         default:
-            WarningLog (<< "Failed to add " << Tuple::toData(ti.mProtocol) << " transport - unsupported type");
+            }
          }
       }
       catch (BaseException& e)

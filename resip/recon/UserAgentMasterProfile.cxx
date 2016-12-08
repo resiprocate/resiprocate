@@ -43,9 +43,17 @@ void
 UserAgentMasterProfile::addTransport( TransportType protocol,
                                       int port, 
                                       IpVersion version,
+                                      StunSetting stun,
                                       const Data& ipInterface, 
                                       const Data& sipDomainname,
-                                      SecurityTypes::SSLType sslType)
+                                      const Data& privateKeyPassPhrase,
+                                      SecurityTypes::SSLType sslType,
+                                      unsigned transportFlags,
+                                      const Data& certificateFilename,
+                                      const Data& privateKeyFilename,
+                                      SecurityTypes::TlsClientVerificationMode cvm,
+                                      bool useEmailAsSIP,
+                                      unsigned int rcvBufLen)
 {
    TransportInfo info;
 
@@ -53,8 +61,16 @@ UserAgentMasterProfile::addTransport( TransportType protocol,
    info.mPort = port;
    info.mIPVersion = version;
    info.mIPInterface = ipInterface;
+   info.mStunEnabled = stun;
    info.mSipDomainname = sipDomainname;
+   info.mTlsPrivateKeyPassPhrase = privateKeyPassPhrase;
    info.mSslType = sslType;
+   info.mTransportFlags = transportFlags;
+   info.mTlsCertificate = certificateFilename;
+   info.mTlsPrivateKey = privateKeyFilename;
+   info.mCvm = cvm;
+   info.mUseEmailAsSIP = useEmailAsSIP;
+   info.mRcvBufLen = rcvBufLen;
 
    mTransports.push_back(info);
 }
