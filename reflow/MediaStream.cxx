@@ -37,7 +37,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                          unsigned short natTraversalServerPort, 
                          const char* stunUsername,
                          const char* stunPassword,
-                         bool forceCOMedia) :
+                         bool forceCOMedia,
+                         SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler) :
 #ifdef USE_SSL
    mDtlsFactory(dtlsFactory),
 #endif  
@@ -72,7 +73,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                            RTCP_COMPONENT_ID,
                            localRtcpBinding, 
                            *this,
-                           mForceCOMedia);
+                           mForceCOMedia,
+                           rtcpEventLoggingHandler);
 
       mRtpFlow->activateFlow(StunMessage::PropsPortPair);
 

@@ -183,7 +183,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerPort, 
                                        stunUsername, 
                                        stunPassword,
-                                       forceCOMedia);
+                                       forceCOMedia,
+                                       mRtcpEventLoggingHandler);
    }
    else
    {

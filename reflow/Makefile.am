@@ -40,6 +40,7 @@ nobase_reflowinclude_HEADERS = ErrorCode.hxx \
 	FlowManager.hxx \
 	FlowManagerSubsystem.hxx \
 	MediaStream.hxx \
+	RTCPEventLoggingHandler.hxx \
 	dtls_wrapper/bf_dwrap.h \
 	dtls_wrapper/DtlsFactory.hxx \
 	dtls_wrapper/DtlsSocket.hxx \

@@ -124,7 +124,8 @@ Flow::Flow(asio::io_service& ioService,
            unsigned int componentId,
            const StunTuple& localBinding, 
            MediaStream& mediaStream,
-           bool forceCOMedia)
+           bool forceCOMedia,
+           SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler)
   : mIOService(ioService),
 #ifdef USE_SSL
     mSslContext(sslContext),
@@ -133,6 +134,7 @@ Flow::Flow(asio::io_service& ioService,
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
     mForceCOMedia(forceCOMedia),
+    mRtcpEventLoggingHandler(rtcpEventLoggingHandler),
     mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
@@ -140,6 +142,12 @@ Flow::Flow(asio::io_service& ioService,
     mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE)
 {
    InfoLog(<< "Flow: flow created for " << mLocalBinding << "  ComponentId=" << mComponentId);
+
+   if(componentId != RTCP_COMPONENT_ID && mRtcpEventLoggingHandler.get())
+   {
+      ErrLog(<< "attempting to set an RTCPEventLoggingHandler for non-RTCP flow");
+      mRtcpEventLoggingHandler.reset();
+   }
 
    switch(mLocalBinding.getTransportType())
    {
@@ -293,6 +301,12 @@ Flow::rawSendTo(const asio::ip::address& address, unsigned short port, const cha
 bool
 Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address& address, unsigned short port)
 {
+   if(mRtcpEventLoggingHandler.get())
+   {
+      Data _buf(Data::Share, buffer, size);
+      StunTuple dest(mLocalBinding.getTransportType(), address, port);
+      mRtcpEventLoggingHandler->outboundEvent(mLocalBinding, dest, _buf);
+   }
    if(mMediaStream.mSRTPSessionOutCreated)
    {
       err_status_t status = mMediaStream.srtpProtect((void*)buffer, (int*)&size, mComponentId == RTCP_COMPONENT_ID);
@@ -478,6 +492,12 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       if(sourcePort)
       {
          *sourcePort = receivedData->mPort;
+      }
+      if(mRtcpEventLoggingHandler.get())
+      {
+         Data _buf(Data::Share, buffer, size);
+         StunTuple _source(mLocalBinding.getTransportType(), *sourceAddress, *sourcePort);
+         mRtcpEventLoggingHandler->inboundEvent(_source, mLocalBinding, _buf);
       }
    }
    return errorCode;
