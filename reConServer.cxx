@@ -990,20 +990,123 @@ ReConServerProcess::main (int argc, char** argv)
    }
 
    // Add transports
-   if(udpPort)
+   try
    {
-      profile->addTransport(UDP, udpPort, V4, address);
-   }
-   if(tcpPort)
-   {
-      profile->addTransport(TCP, tcpPort, V4, address);
-   }
+      bool useEmailAsSIP = reConServerConfig.getConfigBool("TLSUseEmailAsSIP", false);
+
+      // Check if advanced transport settings are provided
+      ConfigParse::NestedConfigMap m = reConServerConfig.getConfigNested("Transport");
+      DebugLog(<<"Found " << m.size() << " interface(s) defined in the advanced format");
+      if(!m.empty())
+      {
+         // Sample config file format for advanced transport settings
+         // Transport1Interface = 192.168.1.106:5061
+         // Transport1Type = TLS
+         // Transport1TlsDomain = sipdomain.com
+         // Transport1TlsCertificate = /etc/ssl/crt/sipdomain.com.pem
+         // Transport1TlsPrivateKey = /etc/ssl/private/sipdomain.com.pem
+         // Transport1TlsPrivateKeyPassPhrase = <pwd>
+         // Transport1TlsClientVerification = None
+         // Transport1RcvBufLen = 2000
+
+         const char *anchor;
+         for(ConfigParse::NestedConfigMap::iterator it = m.begin();
+            it != m.end();
+            it++)
+         {
+            int idx = it->first;
+            SipConfigParse tc(it->second);
+            Data transportPrefix = "Transport" + idx;
+            DebugLog(<< "checking values for transport: " << idx);
+            Data interfaceSettings = tc.getConfigData("Interface", Data::Empty, true);
+
+            // Parse out interface settings
+            ParseBuffer pb(interfaceSettings);
+            anchor = pb.position();
+            pb.skipToEnd();
+            pb.skipBackToChar(':');  // For IPv6 the last : should be the port
+            pb.skipBackChar();
+            if(!pb.eof())
+            {
+               Data ipAddr;
+               Data portData;
+               pb.data(ipAddr, anchor);
+               pb.skipChar();
+               anchor = pb.position();
+               pb.skipToEnd();
+               pb.data(portData, anchor);
+               if(!DnsUtil::isIpAddress(ipAddr))
+               {
+                  CritLog(<< "Malformed IP-address found in " << transportPrefix << "Interface setting: " << ipAddr);
+               }
+               int port = portData.convertInt();
+               if(port == 0)
+               {
+                  CritLog(<< "Invalid port found in " << transportPrefix << " setting: " << port);
+               }
+               TransportType tt = Tuple::toTransport(tc.getConfigData("Type", "UDP"));
+               if(tt == UNKNOWN_TRANSPORT)
+               {
+                  CritLog(<< "Unknown transport type found in " << transportPrefix << "Type setting: " << tc.getConfigData("Type", "UDP"));
+               }
+               Data tlsDomain = tc.getConfigData("TlsDomain", Data::Empty);
+               Data tlsCertificate = tc.getConfigData("TlsCertificate", Data::Empty);
+               Data tlsPrivateKey = tc.getConfigData("TlsPrivateKey", Data::Empty);
+               Data tlsPrivateKeyPassPhrase = tc.getConfigData("TlsPrivateKeyPassPhrase", Data::Empty);
+               SecurityTypes::TlsClientVerificationMode cvm = tc.getConfigClientVerificationMode("TlsClientVerification", SecurityTypes::None);
+               SecurityTypes::SSLType sslType = SecurityTypes::NoSSL;
 #ifdef USE_SSL
-   if(tlsPort)
-   {
-      profile->addTransport(TLS, tlsPort, V4, address, tlsDomain);
-   }
+               sslType = tc.getConfigSSLType("TlsConnectionMethod", SecurityTypes::SSLv23);
 #endif
+
+               int rcvBufLen = tc.getConfigInt("RcvBufLen", 0);
+
+               profile->addTransport(tt,
+                                 port,
+                                 DnsUtil::isIpV6Address(ipAddr) ? V6 : V4,
+                                 StunEnabled,
+                                 ipAddr,       // interface to bind to
+                                 tlsDomain,
+                                 tlsPrivateKeyPassPhrase,  // private key passphrase
+                                 sslType, // sslType
+                                 0,            // transport flags
+                                 tlsCertificate, tlsPrivateKey,
+                                 cvm,          // tls client verification mode
+                                 useEmailAsSIP, rcvBufLen);
+
+            }
+            else
+            {
+               CritLog(<< "Port not specified in " << transportPrefix << " setting: expected format is <IPAddress>:<Port>");
+               return false;
+            }
+         }
+      }
+      else
+      {
+         DebugLog(<<"Using legacy transport configuration");
+         if(udpPort)
+         {
+            profile->addTransport(UDP, udpPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
+         }
+         if(tcpPort)
+         {
+            profile->addTransport(TCP, tcpPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
+         }
+#ifdef USE_SSL
+         if(tlsPort)
+         {
+            profile->addTransport(TLS, tlsPort, V4, StunEnabled, address, tlsDomain, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
+         }
+#endif
+      }
+   }
+   catch (BaseException& e)
+   {
+      std::cerr << "Likely a port is already in use" << endl;
+      InfoLog (<< "Caught: " << e);
+      return false;
+   }
 
    // The following settings are used to avoid a kernel panic seen on an ARM embedded platform.
    // The kernel panic happens when either binding a udp socket to port 0 (OS selected),
