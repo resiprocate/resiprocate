@@ -306,6 +306,13 @@ protected:
    virtual int onRequestRetry(resip::ClientPublicationHandle h, int retrySeconds, const resip::SipMessage& status);
    virtual void onFailure(resip::ClientPublicationHandle h, const resip::SipMessage& status);
 
+   // UserProfile selection for incoming and outgoing calls, override to customize
+   resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
+   // Returns the ConversationProfile for a specific media address
+   resip::SharedPtr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
+   virtual resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
+   resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
+
 private:
    friend class ConversationManager;
    friend class UserAgentShutdownCmd;
@@ -324,9 +331,6 @@ private:
    friend class RemoteParticipant;
    friend class DefaultDialogSet;
    friend class RemoteParticipantDialogSet;
-   resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
-   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
-   resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
 
    void addTransports();
    void post(resip::ApplicationMessage& message, unsigned int ms=0);

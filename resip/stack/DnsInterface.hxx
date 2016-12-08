@@ -36,7 +36,7 @@ class DnsInterface
       // DnsResult be in the same thread that is processing the async results
       // since there is no locking on the DnsResult
       // Will throw DnsInterface::Exception if the Dns provider fails to initialize
-      DnsInterface(DnsStub& dnsStub);
+      DnsInterface(DnsStub& dnsStub, bool useDnsVip=false);
 
       virtual ~DnsInterface();
 

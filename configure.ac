@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.11.0~alpha4)
+AC_INIT(resiprocate,1.11.0~alpha5)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -284,7 +284,9 @@ AM_CONDITIONAL(BUILD_TELEPATHY_CM, false)
 AC_ARG_WITH(telepathy,
 [  --with-telepathy        Build the Telepathy Connection Manager],
  [AC_DEFINE_UNQUOTED(BUILD_TELEPATHY_CM, , BUILD_TELEPATHY_CM)
- AM_CONDITIONAL(BUILD_TELEPATHY_CM, true)], )
+ AM_CONDITIONAL(BUILD_TELEPATHY_CM, true)
+ PKG_CHECK_MODULES([QT5], [Qt5Core, Qt5DBus Qt5Network])
+ PKG_CHECK_MODULES([TP_QT5], [TelepathyQt5, TelepathyQt5Service])])
 
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
@@ -359,6 +361,7 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
 	apps/telepathy/Makefile \
+	apps/telepathy/data/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \

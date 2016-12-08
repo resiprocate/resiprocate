@@ -59,7 +59,7 @@ members are accessed from the TransactionController processing loop.
 class TransportSelector
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useDnsVip);
       virtual ~TransportSelector();
 
       /**

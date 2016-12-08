@@ -72,7 +72,8 @@ SipStack::SipStack(Security* pSecurity,
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression,
-                   FdPollGrp *pollGrp) :
+                   FdPollGrp *pollGrp,
+                   bool useDnsVip) :
 #ifdef WIN32
    // If PollGrp is not passed in, then EventStackThead isn't being used and application
    // is most likely implementing a select/process loop to drive the stack - in this case
@@ -99,7 +100,7 @@ SipStack::SipStack(Security* pSecurity,
    mTuSelector(mTUFifo),
    mAppTimers(mTuSelector),
    mStatsManager(*this),
-   mTransactionController(new TransactionController(*this, mAsyncProcessHandler)),
+   mTransactionController(new TransactionController(*this, mAsyncProcessHandler, useDnsVip)),
    mTransactionControllerThread(0),
    mTransportSelectorThread(0),
    mInternalThreadsRunning(false),
@@ -201,7 +202,7 @@ SipStack::init(const SipStackOptions& options)
 
    // WATCHOUT: the transaction controller constructor will
    // grab the security, DnsStub, compression and statsManager
-   mTransactionController = new TransactionController(*this, mAsyncProcessHandler);
+   mTransactionController = new TransactionController(*this, mAsyncProcessHandler, options.mUseDnsVip);
    mTransactionController->transportSelector().setPollGrp(mPollGrp);
    mTransactionControllerThread = 0;
    mTransportSelectorThread = 0;

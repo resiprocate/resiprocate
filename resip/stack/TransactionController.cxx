@@ -38,7 +38,8 @@ unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
 TransactionController::TransactionController(SipStack& stack, 
-                                                AsyncProcessHandler* handler) :
+                                             AsyncProcessHandler* handler,
+                                             bool useDnsVip) :
    mStack(stack),
    mDiscardStrayResponses(true),
    mFixBadDialogIdentifiers(true),
@@ -50,7 +51,8 @@ TransactionController::TransactionController(SipStack& stack,
    mTransportSelector(mStateMacFifo,
                       stack.getSecurity(),
                       stack.getDnsStub(),
-                      stack.getCompression()),
+                      stack.getCompression(),
+                      useDnsVip),
    mTimers(mTimerFifo),
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager),

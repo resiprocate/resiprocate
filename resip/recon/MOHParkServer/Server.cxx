@@ -208,27 +208,27 @@ Server::Server(ConfigParser& config) :
       }
       if(mConfig.mUdpPort != (unsigned short)-1)
       {
-         profile->addTransport(UDP, mConfig.mUdpPort, V4, mConfig.mAddress);
+         profile->addTransport(UDP, mConfig.mUdpPort, V4, StunDisabled, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(UDP, mConfig.mUdpPort, V6, mConfig.mAddress);
+            profile->addTransport(UDP, mConfig.mUdpPort, V6, StunDisabled, mConfig.mAddress);
          }
       }
       if(mConfig.mTcpPort != (unsigned short)-1)
       {
-         profile->addTransport(TCP, mConfig.mTcpPort, V4, mConfig.mAddress);
+         profile->addTransport(TCP, mConfig.mTcpPort, V4, StunDisabled, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(TCP, mConfig.mTcpPort, V6, mConfig.mAddress);
+            profile->addTransport(TCP, mConfig.mTcpPort, V6, StunDisabled, mConfig.mAddress);
          }
       }
 #ifdef USE_SSL
       if(mConfig.mTlsPort != (unsigned short)-1)
       {
-         profile->addTransport(TLS, mConfig.mTlsPort, V4, mConfig.mAddress, mConfig.mTlsDomain);
+         profile->addTransport(TLS, mConfig.mTlsPort, V4, StunDisabled, mConfig.mAddress, mConfig.mTlsDomain);
          if(mIsV6Avail)
          {
-            profile->addTransport(TLS, mConfig.mTlsPort, V6, mConfig.mAddress, mConfig.mTlsDomain);
+            profile->addTransport(TLS, mConfig.mTlsPort, V6, StunDisabled, mConfig.mAddress, mConfig.mTlsDomain);
          }
       }
 #endif

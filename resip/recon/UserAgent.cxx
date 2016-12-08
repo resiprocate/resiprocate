@@ -353,6 +353,23 @@ UserAgent::getDefaultOutgoingConversationProfile()
    }
 }
 
+SharedPtr<ConversationProfile>
+UserAgent::getConversationProfileByMediaAddress(const resip::Data& mediaAddress)
+{
+   resip_assert(!mediaAddress.empty());
+
+   ConversationProfileMap::iterator conIt;
+   for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
+   {
+      SharedPtr<ConversationProfile> cp = conIt->second;
+      if(cp->sessionCaps().session().origin().getAddress() == mediaAddress)
+      {
+         return cp;
+      }
+   }
+   return SharedPtr<ConversationProfile>();
+}
+
 SharedPtr<ConversationProfile> 
 UserAgent::getIncomingConversationProfile(const SipMessage& msg)
 {
@@ -454,30 +471,56 @@ UserAgent::addTransports()
    std::vector<UserAgentMasterProfile::TransportInfo>::const_iterator i;
    for(i = transports.begin(); i != transports.end(); i++)
    {
+      const UserAgentMasterProfile::TransportInfo& ti = *i;
       try
       {
-         switch((*i).mProtocol)
-         {
 #ifdef USE_SSL
-         case TLS:
-#ifdef USE_DTLS
-         case DTLS:
+         // Make sure certificate material available before trying to instantiate Transport
+         if(isSecure(ti.mProtocol))
+         {
+            // FIXME: see comments about repro / CertificatePath
+            if(!ti.mTlsCertificate.empty())
+            {
+               mSecurity->addDomainCertPEM(ti.mSipDomainname, Data::fromFile(ti.mTlsCertificate));
+            }
+            if(!ti.mTlsPrivateKey.empty())
+            {
+               mSecurity->addDomainPrivateKeyPEM(ti.mSipDomainname, Data::fromFile(ti.mTlsPrivateKey), ti.mTlsPrivateKeyPassPhrase);
+            }
+         }
 #endif
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface, (*i).mSipDomainname, Data::Empty, (*i).mSslType);
-            break;
+         Transport *t = mStack.addTransport(ti.mProtocol,
+                                 ti.mPort,
+                                 ti.mIPVersion,
+                                 StunEnabled,
+                                 ti.mIPInterface,       // interface to bind to
+                                 ti.mSipDomainname,
+                                 ti.mTlsPrivateKeyPassPhrase,  // private key passphrase
+                                 ti.mSslType, // sslType
+                                 0,            // transport flags
+                                 ti.mTlsCertificate, ti.mTlsPrivateKey,
+                                 ti.mCvm,          // tls client verification mode
+                                 ti.mUseEmailAsSIP);
+
+         if (t)
+         {
+            int rcvBufLen = ti.mRcvBufLen;
+            if (rcvBufLen >0 )
+            {
+#if defined(RESIP_SIPSTACK_HAVE_FDPOLL)
+               // this new method is part of the epoll changeset,
+               // which isn't commited yet.
+               t->setRcvBufLen(rcvBufLen);
+#else
+               resip_assert(0);
 #endif
-         case UDP:
-         case TCP:
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface);
-            break;
-         default:
-            WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport - unsupported type");
+            }
          }
       }
       catch (BaseException& e)
       {
          WarningLog (<< "Caught: " << e);
-         WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport on " << (*i).mPort);
+         WarningLog (<< "Failed to add " << Tuple::toData(ti.mProtocol) << " transport on " << ti.mPort);
       }
    }
 }
