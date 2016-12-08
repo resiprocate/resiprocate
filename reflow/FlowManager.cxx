@@ -61,7 +61,7 @@ private:
 FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
-   mSslContext(mIOService, asio::ssl::context::tlsv1),
+   mSslContext(mIOService, asio::ssl::context::sslv23),
    mClientCert(0),
    mClientKey(0),
    mDtlsFactory(0)
