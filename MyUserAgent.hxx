@@ -28,11 +28,16 @@ public:
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);
    virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData);
+   virtual resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
    virtual void process(int timeoutMs);
 
 private:
+   friend class B2BCallManager;
+
    unsigned int mMaxRegLoops;
    SharedPtr<RegistrationForwarder> mRegistrationForwarder;
+
+   B2BCallManager *getB2BCallManager();
 };
 
 }

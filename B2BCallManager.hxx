@@ -35,7 +35,10 @@ public:
    virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg);
    virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg);
 
+   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<ConversationProfile> defaultProfile);
+
 protected:
+   resip::SharedPtr<ConversationProfile> getInternalConversationProfile();
    virtual bool isSourceInternal(const SipMessage& msg);
 
    struct B2BCall
@@ -48,6 +51,7 @@ protected:
    Data mB2BUANextHop;
    std::vector<Data> mInternalHosts;
    std::vector<Data> mInternalTLSNames;
+   Data mInternalMediaAddress;
    std::vector<Data> mReplicatedHeaders;
 
    std::map<ConversationHandle,SharedPtr<B2BCall> > mCallsByConversation;

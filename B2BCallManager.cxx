@@ -11,6 +11,8 @@
 #include <rutil/Logger.hxx>
 #include <recon/ReconSubsystem.hxx>
 
+#include "MyUserAgent.hxx"
+
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 using namespace resip;
@@ -32,6 +34,12 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
    if(mInternalHosts.empty() && mInternalTLSNames.empty())
    {
       WarningLog(<<"Neither B2BUAInternalHosts nor B2BUAInternalTLSNames specified");
+   }
+
+   config.getConfigValue("B2BUAInternalMediaAddress", mInternalMediaAddress);
+   if(mInternalMediaAddress.empty())
+   {
+      WarningLog(<<"B2BUAInternalMediaAddress not specified, using same media address for internal and external zones");
    }
 
    std::set<Data> replicatedHeaderNames;
@@ -108,6 +116,7 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    addParticipant(call->conv, call->a);
    const Uri& reqUri = msg.header(h_RequestLine).uri();
    NameAddrs route;
+   SharedPtr<ConversationProfile> profile;
    if(isSourceInternal(msg))
    {
       DebugLog(<<"INVITE request from zone: internal");
@@ -115,11 +124,17 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
       uri.param(p_lr);
       route = msg.header(h_Routes);
       route.pop_front();  // remove ourselves
+      MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
+      resip_assert(ua);
+      SharedPtr<ConversationProfile> externalProfile = ua->getDefaultOutgoingConversationProfile();
+      profile.reset(new ConversationProfile(*externalProfile.get()));
    }
    else
    {
       DebugLog(<<"INVITE request from zone: external");
       route.push_front(NameAddr(mB2BUANextHop));
+      SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
+      profile.reset(new ConversationProfile(*internalProfile.get()));
    }
    std::multimap<Data,Data> extraHeaders;
    std::vector<resip::Data>::const_iterator it = mReplicatedHeaders.begin();
@@ -137,11 +152,11 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
          }
       }
    }
-   SharedPtr<UserProfile> profile(new ConversationProfile(conversationProfile));
    NameAddr outgoingCaller = msg.header(h_From);
    profile->setDefaultFrom(outgoingCaller);
    profile->setServiceRoute(route);
-   call->b = ConversationManager::createRemoteParticipant(call->conv, NameAddr(reqUri), ForkSelectAutomatic, profile, extraHeaders);
+   SharedPtr<UserProfile> _profile(profile);
+   call->b = ConversationManager::createRemoteParticipant(call->conv, NameAddr(reqUri), ForkSelectAutomatic, _profile, extraHeaders);
    mCallsByConversation[call->conv] = call;
    mCallsByParticipant[call->a] = call;
    mCallsByParticipant[call->b] = call;
@@ -221,6 +236,34 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
    {
       WarningLog(<< "Participant " << partHandle << " connected, not known in any existing call");
    }
+}
+
+resip::SharedPtr<ConversationProfile>
+B2BCallManager::getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<ConversationProfile> defaultProfile)
+{
+   DebugLog(<<"getIncomingConversationProfile: defaultProfile.get() == " << defaultProfile.get());
+   if(isSourceInternal(msg))
+   {
+      DebugLog(<<"getIncomingConversationProfile: returning profile for internal call leg");
+      return getInternalConversationProfile();
+   }
+   return defaultProfile;
+}
+
+resip::SharedPtr<ConversationProfile>
+B2BCallManager::getInternalConversationProfile()
+{
+   MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
+   resip_assert(ua);
+   if(!mInternalMediaAddress.empty())
+   {
+      SharedPtr<ConversationProfile> p = ua->getConversationProfileByMediaAddress(mInternalMediaAddress);
+      if(p.get())
+      {
+         return p;
+      }
+   }
+   return ua->getDefaultOutgoingConversationProfile();
 }
 
 bool

@@ -1303,6 +1303,23 @@ ReConServerProcess::main (int argc, char** argv)
       myConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
 
+      if(application == ReConServerConfig::B2BUA)
+      {
+         Data internalMediaAddress;
+         reConServerConfig.getConfigValue("B2BUAInternalMediaAddress", internalMediaAddress);
+         if(!internalMediaAddress.empty())
+         {
+            SharedPtr<ConversationProfile> internalProfile(new ConversationProfile(conversationProfile));
+            internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
+            myConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+            ua.addConversationProfile(internalProfile, false);
+         }
+         else
+         {
+            WarningLog(<<"B2BUAInternalMediaAddress not specified, using same media address for internal and external zones");
+         }
+      }
+
       //////////////////////////////////////////////////////////////////////////////
       // Startup and run...
       //////////////////////////////////////////////////////////////////////////////

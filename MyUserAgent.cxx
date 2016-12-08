@@ -10,6 +10,7 @@
 #include <resip/stack/MessageFilterRule.hxx>
 #include <recon/ReconSubsystem.hxx>
 
+#include "B2BCallManager.hxx"
 #include "MyUserAgent.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
@@ -54,6 +55,18 @@ MyUserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyD
    InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
 }
 
+resip::SharedPtr<ConversationProfile>
+MyUserAgent::getIncomingConversationProfile(const resip::SipMessage& msg)
+{
+   B2BCallManager *b2bcm = getB2BCallManager();
+   SharedPtr<ConversationProfile> defaultProfile = UserAgent::getIncomingConversationProfile(msg);
+   if(b2bcm)
+   {
+      return b2bcm->getIncomingConversationProfile(msg, defaultProfile);
+   }
+   return defaultProfile;
+}
+
 void
 MyUserAgent::process(int timeoutMs)
 {
@@ -62,6 +75,12 @@ MyUserAgent::process(int timeoutMs)
    for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
 
    UserAgent::process(timeoutMs);
+}
+
+B2BCallManager*
+MyUserAgent::getB2BCallManager()
+{
+   return dynamic_cast<B2BCallManager*>(getConversationManager());
 }
 
 /* ====================================================================
