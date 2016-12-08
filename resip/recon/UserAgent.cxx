@@ -454,30 +454,31 @@ UserAgent::addTransports()
    std::vector<UserAgentMasterProfile::TransportInfo>::const_iterator i;
    for(i = transports.begin(); i != transports.end(); i++)
    {
+      const UserAgentMasterProfile::TransportInfo& ti = *i;
       try
       {
-         switch((*i).mProtocol)
+         switch(ti.mProtocol)
          {
 #ifdef USE_SSL
          case TLS:
 #ifdef USE_DTLS
          case DTLS:
 #endif
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface, (*i).mSipDomainname, Data::Empty, (*i).mSslType);
+            mDum.addTransport(ti.mProtocol, ti.mPort, ti.mIPVersion, ti.mIPInterface, ti.mSipDomainname, Data::Empty, ti.mSslType);
             break;
 #endif
          case UDP:
          case TCP:
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface);
+            mDum.addTransport(ti.mProtocol, ti.mPort, ti.mIPVersion, ti.mIPInterface);
             break;
          default:
-            WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport - unsupported type");
+            WarningLog (<< "Failed to add " << Tuple::toData(ti.mProtocol) << " transport - unsupported type");
          }
       }
       catch (BaseException& e)
       {
          WarningLog (<< "Caught: " << e);
-         WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport on " << (*i).mPort);
+         WarningLog (<< "Failed to add " << Tuple::toData(ti.mProtocol) << " transport on " << ti.mPort);
       }
    }
 }
