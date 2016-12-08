@@ -22,47 +22,6 @@ ReConServerConfig::~ReConServerConfig()
 {
 }
 
-bool 
-ReConServerConfig::getConfigValue(const resip::Data& name, resip::NameAddr &value)
-{
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      try
-      {
-         if(!it->second.empty())
-         {
-            NameAddr tempuri(it->second);
-            value = tempuri;
-            return true;
-         }
-         else
-         {
-            value = NameAddr();
-            return true; 
-         }
-      }
-      catch(resip::BaseException& e)
-      {
-         cerr << "Invalid uri format: " << e << endl;
-         return false;
-      }
-   }
-   // Not found
-   return false;
-}
-
-resip::NameAddr
-ReConServerConfig::getConfigNameAddr(const resip::Data& name, const resip::NameAddr defaultValue,  bool useDefaultIfEmpty)
-{
-   resip::NameAddr ret(defaultValue);
-   if(getConfigValue(name, ret) && ret.uri().host().empty() && useDefaultIfEmpty)
-   {
-      return defaultValue;
-   }
-   return ret;
-}
 
 
 bool 

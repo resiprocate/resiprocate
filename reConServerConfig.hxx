@@ -10,11 +10,12 @@
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/BaseException.hxx>
+#include <resip/stack/SipConfigParse.hxx>
 #include <recon/UserAgent.hxx>
 
 namespace recon {
 
-class ReConServerConfig : public resip::ConfigParse
+class ReConServerConfig : public resip::SipConfigParse
 {
 public:
 
@@ -29,9 +30,6 @@ public:
 
    void printHelpText(int argc, char **argv);
    using resip::ConfigParse::getConfigValue;
-
-   bool getConfigValue(const resip::Data& name, resip::NameAddr &value);
-   resip::NameAddr getConfigNameAddr(const resip::Data& name, const resip::NameAddr defaultValue, bool useDefaultIfEmpty=false);
 
    bool getConfigValue(const resip::Data& name, ConversationProfile::SecureMediaMode &value);
    ConversationProfile::SecureMediaMode getConfigSecureMediaMode(const resip::Data& name, const ConversationProfile::SecureMediaMode defaultValue);
