@@ -44,7 +44,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conversationManager,        
-                                                       ConversationManager::ParticipantForkSelectMode forkSelectMode) :
+                                                       ConversationManager::ParticipantForkSelectMode forkSelectMode,
+                                                       SharedPtr<ConversationProfile> conversationProfile) :
    AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
    mConversationManager(conversationManager),
    mUACOriginalRemoteParticipant(0),
@@ -53,6 +54,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mLocalRTPPort(0),
    mAllocateLocalRTPPortFailed(false),
    mForkSelectMode(forkSelectMode),
+   mConversationProfile(conversationProfile),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
    mActiveRemoteParticipantHandle(0),
    mNatTraversalMode(flowmanager::MediaStream::NoNatTraversal),
@@ -113,6 +115,12 @@ RemoteParticipantDialogSet::getLocalRTPPort()
       ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getUserProfile().get());
       if(!profile)
       {
+         DebugLog(<<"no ConversationProfile in DialogSet::mUserProfile");
+         profile = mConversationProfile.get();
+      }
+      if(!profile)
+      {
+         DebugLog(<<"no ConversationProfile in RemoteParticipantDialogSet::mConversationProfile, falling back to default for UAC");
          profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
       }
 

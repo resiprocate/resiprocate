@@ -45,7 +45,8 @@ class RemoteParticipantDialogSet : public resip::AppDialogSet, private flowmanag
 {
 public:
    RemoteParticipantDialogSet(ConversationManager& conversationManager,        
-                              ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic);
+                              ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
+                              resip::SharedPtr<ConversationProfile> conversationProfile = resip::SharedPtr<ConversationProfile>());
 
    virtual ~RemoteParticipantDialogSet();
 
@@ -106,6 +107,7 @@ private:
    unsigned int mLocalRTPPort;
    bool mAllocateLocalRTPPortFailed;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
+   resip::SharedPtr<ConversationProfile> mConversationProfile;
    resip::DialogId mUACConnectedDialogId;
    ParticipantHandle mActiveRemoteParticipantHandle;
    std::map<resip::DialogId, RemoteParticipant*> mDialogs;
