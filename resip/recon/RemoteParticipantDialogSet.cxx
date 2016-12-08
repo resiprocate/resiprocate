@@ -97,7 +97,6 @@ RemoteParticipantDialogSet::getLocalRTPPort()
 {
    if(mLocalRTPPort == 0 && !mAllocateLocalRTPPortFailed)
    {
-      bool isUAC = false;
       mLocalRTPPort = mConversationManager.allocateRTPPort();
       if(mLocalRTPPort == 0)
       {
@@ -115,7 +114,6 @@ RemoteParticipantDialogSet::getLocalRTPPort()
       if(!profile)
       {
          profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
-         isUAC = true;
       }
 
       OsStatus ret;
