@@ -1,5 +1,5 @@
-#ifndef B2BCALLMANAGER_HXX
-#define B2BCALLMANAGER_HXX
+#ifndef MYUSERAGENT_HXX
+#define MYUSERAGENT_HXX
 
 #include <os/OsIntTypes.h>
 
@@ -7,14 +7,13 @@
   #include "config.h"
 #endif
 
-#include <memory>
-
-#include <resip/stack/ExtensionHeader.hxx>
+#include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
-#include <recon/ConversationManager.hxx>
+#include <rutil/SharedPtr.hxx>
+#include <recon/UserAgent.hxx>
 
-#include "reConServerConfig.hxx"
-#include "MyConversationManager.hxx"
+#include "B2BCallManager.hxx"
+#include "RegistrationForwarder.hxx"
 
 using namespace resip;
 
@@ -22,50 +21,32 @@ using namespace resip;
 namespace recon
 {
 
-class B2BCallManager : public MyConversationManager
+class MyUserAgent : public UserAgent
 {
 public:
+   MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile);
+   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
+   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);
+   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData);
+   virtual resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
+   virtual void process(int timeoutMs);
 
-   B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config);
+private:
+   friend class B2BCallManager;
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up);
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg);
+   unsigned int mMaxRegLoops;
+   SharedPtr<RegistrationForwarder> mRegistrationForwarder;
 
-   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<ConversationProfile> defaultProfile);
-
-protected:
-   resip::SharedPtr<ConversationProfile> getInternalConversationProfile();
-   virtual bool isSourceInternal(const SipMessage& msg);
-
-   struct B2BCall
-   {
-      ConversationHandle conv;
-      ParticipantHandle a;
-      ParticipantHandle b;
-   };
-
-   Data mB2BUANextHop;
-   std::vector<Data> mInternalHosts;
-   std::vector<Data> mInternalTLSNames;
-   Data mInternalMediaAddress;
-   std::vector<Data> mReplicatedHeaders;
-
-   std::map<ConversationHandle,SharedPtr<B2BCall> > mCallsByConversation;
-   std::map<ParticipantHandle,SharedPtr<B2BCall> > mCallsByParticipant;
+   B2BCallManager *getB2BCallManager();
 };
 
 }
 
 #endif
 
-
 /* ====================================================================
  *
- * Copyright 2014 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

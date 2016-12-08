@@ -10,10 +10,9 @@
 #include "rutil/ServerProcess.hxx"
 
 #include "MyConversationManager.hxx"
+#include "MyUserAgent.hxx"
 
 using namespace resip;
-
-class MyUserAgent;
 
 namespace recon
 {
