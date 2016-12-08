@@ -6,6 +6,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/hep/HepAgent.hxx"
 
 namespace resip
 {
@@ -13,19 +14,15 @@ namespace resip
 class HEPSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
 {
    public:
-      HEPSipMessageLoggingHandler(const Data &captureHost, int capturePort, int captureAgentID);
+      HEPSipMessageLoggingHandler(SharedPtr<HepAgent> agent);
       virtual ~HEPSipMessageLoggingHandler();
       virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg);
       virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data);
       virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg);
    protected:
       virtual void sendToHOMER(const Tuple& source, const Tuple& destination, const SipMessage &msg);
-      Data mCaptureHost;
-      int mCapturePort;
-      int mCaptureAgentID;
    private:
-      Tuple mTuple;
-      Socket mSocket;
+      SharedPtr<HepAgent> mHepAgent;
 };
 
 

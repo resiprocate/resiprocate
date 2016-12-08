@@ -97,6 +97,7 @@ librutil_la_SOURCES = \
 	stun/Stun.cxx \
 	stun/Udp.cxx \
 	\
+	hep/HepAgent.cxx \
 	hep/ResipHep.cxx
 
 if USE_SSL
@@ -200,6 +201,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
 	ConsumerFifoBuffer.hxx \
+	hep/HepAgent.hxx \
 	hep/ResipHep.hxx
 
 
