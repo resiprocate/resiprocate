@@ -46,6 +46,7 @@ librutil_la_SOURCES = \
 	DnsUtil.cxx \
 	FileSystem.cxx \
 	GeneralCongestionManager.cxx \
+	GenericIPAddress.cxx \
 	HeapInstanceCounter.cxx \
 	KeyValueStore.cxx \
 	Lock.cxx \
