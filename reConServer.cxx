@@ -1287,20 +1287,20 @@ ReConServerProcess::main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      std::auto_ptr<MyConversationManager> myConversationManager;
+      std::auto_ptr<MyConversationManager> conversationManager;
       switch(application)
       {
          case ReConServerConfig::None:
-            myConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+            conversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
-            myConversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig));
+            conversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig));
             break;
          default:
             assert(0);
       }
-      MyUserAgent ua(reConServerConfig, myConversationManager.get(), profile);
-      myConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      MyUserAgent ua(reConServerConfig, conversationManager.get(), profile);
+      conversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1311,7 +1311,7 @@ ReConServerProcess::main (int argc, char** argv)
          {
             SharedPtr<ConversationProfile> internalProfile(new ConversationProfile(conversationProfile));
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
-            myConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+            conversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
             ua.addConversationProfile(internalProfile, false);
          }
          else
@@ -1325,7 +1325,7 @@ ReConServerProcess::main (int argc, char** argv)
       //////////////////////////////////////////////////////////////////////////////
 
       ua.startup();
-      myConversationManager->startup();
+      conversationManager->startup();
 
       //ua.createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
 
@@ -1346,12 +1346,12 @@ ReConServerProcess::main (int argc, char** argv)
             {
 #ifdef WIN32
                input = _getch();
-               processKeyboard(input, *myConversationManager, ua);
+               processKeyboard(input, *conversationManager, ua);
 #else
                input = fgetc(stdin);
                fflush(stdin);
                //cout << "input: " << input << endl;
-               processKeyboard(input, *myConversationManager, ua);
+               processKeyboard(input, *conversationManager, ua);
 #endif
             }
          }
