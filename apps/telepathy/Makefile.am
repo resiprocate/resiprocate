@@ -35,15 +35,23 @@ telepathy_resiprocate_LDADD += ../../rutil/librutil.la
 telepathy_resiprocate_LDADD += $(TP_QT5_LIBS) $(QT5_LIBS)
 telepathy_resiprocate_LDADD += @LIBSSL_LIBADD@ @LIBPTHREAD_LIBADD@
 
+nodist_telepathy_resiprocate_SOURCES = moc_Connection.cxx \
+	moc_TextChannel.cxx \
+	moc_MyConversationManager.cxx \
+	moc_MyUserAgent.cxx \
+	moc_MyInstantMessage.cxx \
+	moc_Protocol.cxx \
+	moc_SipCallChannel.cxx
+
 telepathy_resiprocate_SOURCES = Common.cxx \
-	Connection.cxx moc_Connection.cxx \
-	TextChannel.cxx moc_TextChannel.cxx \
-	MyConversationManager.cxx moc_MyConversationManager.cxx \
+	Connection.cxx \
+	TextChannel.cxx \
+	MyConversationManager.cxx \
 	MyMessageDecorator.cxx \
-	MyUserAgent.cxx moc_MyUserAgent.cxx \
-	MyInstantMessage.cxx moc_MyInstantMessage.cxx \
-	Protocol.cxx moc_Protocol.cxx \
-	SipCallChannel.cxx moc_SipCallChannel.cxx \
+	MyUserAgent.cxx \
+	MyInstantMessage.cxx \
+	Protocol.cxx \
+	SipCallChannel.cxx \
 	TelepathyConversationProfile.cxx \
 	TelepathyMasterProfile.cxx \
 	TelepathyParameters.cxx \
