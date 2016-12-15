@@ -17,7 +17,6 @@ EXTRA_DIST += runtests.sh
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += test.rc
 EXTRA_DIST += *.py
-EXTRA_DIST += torture-test.txt
 EXTRA_DIST += yahoo.dns
 EXTRA_DIST += testTFSM-clientinvite
 EXTRA_DIST += testTFSM-clientnoninvite
