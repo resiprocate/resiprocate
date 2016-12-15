@@ -105,7 +105,7 @@ Package: repro
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl
+Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl, lsb-base
 Recommends: apache2-utils, turn-server | stun-server
 Suggests: jscommunicator-web-phone
 Provides: sip-router
@@ -122,7 +122,7 @@ Package: resiprocate-turn-server
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl
+Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl, lsb-base
 Suggests: sip-router, xmpp-server, jscommunicator-web-phone
 Provides: stun-server, turn-server
 Description: reSIProcate SIP stack - ICE/TURN server
