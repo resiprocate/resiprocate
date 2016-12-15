@@ -1,3 +1,9 @@
+resiprocate (1:1.11.0~alpha8-1) unstable; urgency=medium
+
+  * Resolve some more lintian issues.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 15 Dec 2016 21:52:51 +0100
+
 resiprocate (1:1.11.0~alpha7-1) unstable; urgency=medium
 
   * New upstream release.
