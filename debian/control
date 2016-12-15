@@ -3,7 +3,7 @@ Section: libs
 Priority: extra
 Maintainer: Debian VoIP Team <pkg-voip-maintainers@lists.alioth.debian.org>
 Uploaders: Daniel Pocock <daniel@pocock.pro>
-Build-Depends: debhelper (>= 9.0.0), gperf, libasio-dev, libboost-dev, libc-ares-dev (>= 1.6.0), libdb++-dev, libpopt-dev, libssl-dev (<< 1.1) | libssl1.0-dev (>= 1.0.0), perl, libmysqlclient-dev, libpq-dev, libradcli-dev, libcppunit-dev, autotools-dev, libpcre3-dev, dpkg-dev (>= 1.16.1~), libsipxtapi-dev (>= 3.3.0~test15) [linux-any], libsrtp-dev [linux-any], libcajun-dev, python-cxx-dev, dh-autoreconf, pkg-config, libtelepathy-qt5-dev (>= 0.9.6.1), libgloox-dev (>= 1.0.17), vim-common
+Build-Depends: debhelper (>= 9.0.0), gperf, libasio-dev, libboost-dev, libc-ares-dev (>= 1.6.0), libdb++-dev, libpopt-dev, libssl-dev (<< 1.1) | libssl1.0-dev (>= 1.0.0), perl, default-libmysqlclient-dev, libpq-dev, libradcli-dev, libcppunit-dev, autotools-dev, libpcre3-dev, dpkg-dev (>= 1.16.1~), libsipxtapi-dev (>= 3.3.0~test15) [linux-any], libsrtp-dev [linux-any], libcajun-dev, python-cxx-dev, dh-autoreconf, pkg-config, libtelepathy-qt5-dev (>= 0.9.6.1), libgloox-dev (>= 1.0.17), vim-common
 Homepage: http://www.resiprocate.org/
 Standards-Version: 3.9.8
 Vcs-Git: git://anonscm.debian.org/pkg-voip/resiprocate.git
