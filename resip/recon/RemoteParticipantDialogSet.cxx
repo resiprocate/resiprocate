@@ -628,6 +628,11 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
 {
    mNumDialogs++;
 
+   if(mFlowContext->getSipCallId().empty())
+   {
+      mFlowContext->setSipCallId(msg.header(h_CallId).value());
+   }
+
    if(mUACOriginalRemoteParticipant)  // UAC DialogSet
    {
       // Need to either return participant already created, or create a new one.
