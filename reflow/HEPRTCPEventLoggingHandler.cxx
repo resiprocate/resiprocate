@@ -58,6 +58,8 @@ HEPRTCPEventLoggingHandler::sendToHOMER(const StunTuple& source, const StunTuple
 
    Data json;
    DataStream stream(json);
+
+   StackLog(<<"RTCP packet type: " << msg->hdr.pt << " len " << (ntohs(msg->hdr.length)*2) << " bytes");
    
    stream << "{";
 
@@ -65,10 +67,10 @@ HEPRTCPEventLoggingHandler::sendToHOMER(const StunTuple& source, const StunTuple
    {
       case RTCP_SR:
          stream << "\"sender_information\":{"
-                << "\"ntp_timestamp_sec\":" << msg->r.sr.ntp_sec << ","
-                << "\"ntp_timestamp_usec\":" << msg->r.sr.ntp_frac << ","
+                << "\"ntp_timestamp_sec\":" << ntohl(msg->r.sr.ntp_sec) << ","
+                << "\"ntp_timestamp_usec\":" << ntohl(msg->r.sr.ntp_frac) << ","
                 << "\"octets\":" << ntohl(msg->r.sr.osent) << ","
-                << "\"rtp_timestamp\":" << msg->r.sr.rtp_ts << ","
+                << "\"rtp_timestamp\":" << ntohl(msg->r.sr.rtp_ts) << ","
                 << "\"packets\":" << ntohl(msg->r.sr.psent)
                 << "},";
          if(msg->hdr.count > 0)
