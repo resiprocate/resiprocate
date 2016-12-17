@@ -59,9 +59,11 @@ int _kbhit() {
 #include <rutil/WinLeakCheck.hxx>
 
 #include <resip/stack/HEPSipMessageLoggingHandler.hxx>
+#include <reflow/HEPRTCPEventLoggingHandler.hxx>
 
 using namespace recon;
 using namespace resip;
+using namespace flowmanager;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
@@ -938,7 +940,9 @@ ReConServerProcess::main (int argc, char** argv)
 
    if(!captureHost.empty())
    {
-      profile->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(captureHost, capturePort, captureAgentID)));
+      SharedPtr<HepAgent> agent(new HepAgent(captureHost, capturePort, captureAgentID));
+      profile->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(agent)));
+      profile->setRTCPEventLoggingHandler(SharedPtr<HEPRTCPEventLoggingHandler>(new HEPRTCPEventLoggingHandler(agent)));
    }
 
    // Add transports
