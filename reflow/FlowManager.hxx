@@ -7,6 +7,7 @@
 
 #include <rutil/SharedPtr.hxx>
 
+#include "FlowContext.hxx"
 #include "MediaStream.hxx"
 #include "FlowManagerException.hxx"
 #include "RTCPEventLoggingHandler.hxx"
@@ -50,7 +51,8 @@ public:
                                   unsigned short natTraversalServerPort = 0, 
                                   const char* stunUsername = 0,
                                   const char* stunPassword = 0,
-                                  bool forceCOMedia = false);
+                                  bool forceCOMedia = false,
+                                  resip::SharedPtr<FlowContext> context = resip::SharedPtr<FlowContext>());
 
    void initializeDtlsFactory(const char* certAor);
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }

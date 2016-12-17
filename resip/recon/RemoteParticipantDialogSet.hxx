@@ -10,6 +10,7 @@
 #include <resip/dum/SubscriptionHandler.hxx>
 
 // FlowManager Includes
+#include "reflow/FlowContext.hxx"
 #include "reflow/MediaStream.hxx"
 
 #include "ConversationManager.hxx"
@@ -108,6 +109,7 @@ private:
    bool mAllocateLocalRTPPortFailed;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
    resip::SharedPtr<ConversationProfile> mConversationProfile;
+   resip::SharedPtr<flowmanager::FlowContext> mFlowContext;
    resip::DialogId mUACConnectedDialogId;
    ParticipantHandle mActiveRemoteParticipantHandle;
    std::map<resip::DialogId, RemoteParticipant*> mDialogs;

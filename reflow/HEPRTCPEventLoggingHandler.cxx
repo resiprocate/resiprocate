@@ -35,19 +35,19 @@ HEPRTCPEventLoggingHandler::~HEPRTCPEventLoggingHandler()
 }
 
 void
-HEPRTCPEventLoggingHandler::outboundEvent(const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
+HEPRTCPEventLoggingHandler::outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
 {
-   sendToHOMER(source, destination, event);
+   sendToHOMER(context, source, destination, event);
 }
 
 void
-HEPRTCPEventLoggingHandler::inboundEvent(const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
+HEPRTCPEventLoggingHandler::inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
 {
-   sendToHOMER(source, destination, event);
+   sendToHOMER(context, source, destination, event);
 }
 
 void
-HEPRTCPEventLoggingHandler::sendToHOMER(const StunTuple& source, const StunTuple& destination, const Data& event)
+HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, const StunTuple& source, const StunTuple& destination, const Data& event)
 {
    GenericIPAddress _source, _destination;
 

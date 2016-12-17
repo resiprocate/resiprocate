@@ -37,6 +37,7 @@ nobase_reflowinclude_HEADERS = ErrorCode.hxx \
 	FlowDtlsSocketContext.hxx \
 	FlowDtlsTimerContext.hxx \
 	Flow.hxx \
+	FlowContext.hxx \
 	FlowManagerException.hxx \
 	FlowManager.hxx \
 	FlowManagerSubsystem.hxx \

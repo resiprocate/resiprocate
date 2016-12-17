@@ -125,7 +125,8 @@ Flow::Flow(asio::io_service& ioService,
            const StunTuple& localBinding, 
            MediaStream& mediaStream,
            bool forceCOMedia,
-           SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler)
+           SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
+           resip::SharedPtr<FlowContext> context)
   : mIOService(ioService),
 #ifdef USE_SSL
     mSslContext(sslContext),
@@ -135,6 +136,7 @@ Flow::Flow(asio::io_service& ioService,
     mMediaStream(mediaStream),
     mForceCOMedia(forceCOMedia),
     mRtcpEventLoggingHandler(rtcpEventLoggingHandler),
+    mFlowContext(context),
     mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
@@ -305,7 +307,7 @@ Flow::processSendData(char* buffer, unsigned int& size, const asio::ip::address&
    {
       Data _buf(Data::Share, buffer, size);
       StunTuple dest(mLocalBinding.getTransportType(), address, port);
-      mRtcpEventLoggingHandler->outboundEvent(mLocalBinding, dest, _buf);
+      mRtcpEventLoggingHandler->outboundEvent(mFlowContext, mLocalBinding, dest, _buf);
    }
    if(mMediaStream.mSRTPSessionOutCreated)
    {
@@ -497,7 +499,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
       {
          Data _buf(Data::Share, buffer, size);
          StunTuple _source(mLocalBinding.getTransportType(), *sourceAddress, *sourcePort);
-         mRtcpEventLoggingHandler->inboundEvent(_source, mLocalBinding, _buf);
+         mRtcpEventLoggingHandler->inboundEvent(mFlowContext, _source, mLocalBinding, _buf);
       }
    }
    return errorCode;

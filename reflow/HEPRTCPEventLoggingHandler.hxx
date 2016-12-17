@@ -16,10 +16,10 @@ class HEPRTCPEventLoggingHandler : public RTCPEventLoggingHandler
       HEPRTCPEventLoggingHandler(resip::SharedPtr<resip::HepAgent> agent);
       virtual ~HEPRTCPEventLoggingHandler();
 
-      virtual void outboundEvent(const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
-      virtual void inboundEvent(const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+      virtual void outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+      virtual void inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
    protected:
-      virtual void sendToHOMER(const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+      virtual void sendToHOMER(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
    private:
       resip::SharedPtr<resip::HepAgent> mHepAgent;
 };

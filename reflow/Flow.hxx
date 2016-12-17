@@ -25,6 +25,7 @@
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
 
+#include "FlowContext.hxx"
 #include "RTCPEventLoggingHandler.hxx"
 
 using namespace reTurn;
@@ -64,7 +65,8 @@ public:
         const StunTuple& localBinding, 
         MediaStream& mediaStream,
         bool forceCOMedia,
-        resip::SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = resip::SharedPtr<RTCPEventLoggingHandler>());
+        resip::SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = resip::SharedPtr<RTCPEventLoggingHandler>(),
+        resip::SharedPtr<FlowContext> context = resip::SharedPtr<FlowContext>());
    ~Flow();
 
    void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
@@ -133,6 +135,9 @@ private:
 
    // Logging handler, if set
    resip::SharedPtr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
+
+   // Flow context from application layer
+   resip::SharedPtr<FlowContext> mFlowContext;
 
    // mTurnSocket has it's own threading protection
    boost::shared_ptr<TurnAsyncSocket> mTurnSocket;

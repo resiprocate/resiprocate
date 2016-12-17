@@ -1,26 +1,26 @@
-#if !defined(RTCPEventLoggingHandler_hxx)
-#define RTCPEventLoggingHandler_hxx
+#if !defined(FlowContext_hxx)
+#define FlowContext_hxx
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
-#include <reTurn/StunTuple.hxx>
-
-#include "reflow/FlowContext.hxx"
 
 namespace flowmanager
 {
 
-class RTCPEventLoggingHandler
+class FlowContext
 {
    public:
-      virtual ~RTCPEventLoggingHandler() {};
+      FlowContext() {};
+      virtual ~FlowContext() {};
 
-      virtual void outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event) = 0;
-      virtual void inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event) = 0;
+      const resip::Data& getSipCallId() const { return mSipCallId; };
+      void setSipCallId(const resip::Data& sipCallId) { mSipCallId = sipCallId; };
+
+   private:
+      resip::Data mSipCallId;
 };
 
 }

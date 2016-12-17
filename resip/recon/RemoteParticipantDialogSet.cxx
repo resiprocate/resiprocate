@@ -55,6 +55,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mAllocateLocalRTPPortFailed(false),
    mForkSelectMode(forkSelectMode),
    mConversationProfile(conversationProfile),
+   mFlowContext(new FlowContext()),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
    mActiveRemoteParticipantHandle(0),
    mNatTraversalMode(flowmanager::MediaStream::NoNatTraversal),
@@ -200,7 +201,8 @@ RemoteParticipantDialogSet::getLocalRTPPort()
                      profile->natTraversalServerPort(), 
                      profile->stunUsername().c_str(), 
                      profile->stunPassword().c_str(),
-                     profile->forceCOMedia()); 
+                     profile->forceCOMedia(),
+                     mFlowContext);
 
          // New Remote Participant - create media Interface connection
          mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow(), mConversationManager.mSipXTOSValue);
