@@ -51,7 +51,8 @@ HEPSipMessageLoggingHandler::sendToHOMER(const Tuple& source, const Tuple& desti
 {
    mHepAgent->sendToHOMER<SipMessage>(source.getType(),
       source.toGenericIPAddress(), destination.toGenericIPAddress(),
-      HepAgent::SIP, msg);
+      HepAgent::SIP, msg,
+      msg.exists(h_CallId) ? msg.header(h_CallId).value() : Data::Empty);
 }
 
 /* ====================================================================

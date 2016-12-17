@@ -120,9 +120,16 @@ HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, c
    stream.flush();
    StackLog(<<"constructed RTCP JSON: " << json);
 
+   Data correlationId;
+   if(context.get())
+   {
+      correlationId = context->getSipCallId();
+   }
+
    mHepAgent->sendToHOMER<Data>(resip::UDP,
       _source, _destination,
-      HepAgent::RTCP_JSON, json);
+      HepAgent::RTCP_JSON, json,
+      correlationId);
 }
 
 /* ====================================================================

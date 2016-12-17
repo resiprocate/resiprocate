@@ -26,7 +26,7 @@ class HepAgent
       HepAgent(const Data &captureHost, int capturePort, int captureAgentID);
       virtual ~HepAgent();
       template <class T>
-      void sendToHOMER(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const HEPEventType eventType, const T& msg)
+      void sendToHOMER(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const HEPEventType eventType, const T& msg, const Data& correlationId)
       {
          struct hep_generic *hg;
          hep_chunk_ip4_t src_ip4, dst_ip4;
@@ -183,6 +183,20 @@ class HepAgent
          hg->capt_id.chunk.length = htons(sizeof(hg->capt_id));
 
          stream.flush();
+
+         /* Correlation ID */
+         if(!correlationId.empty())
+         {
+            StackLog(<<"adding correlation ID: " << correlationId);
+            hep_chunk_t correlation_chunk;
+            correlation_chunk.vendor_id = htons(0x0000);
+            correlation_chunk.type_id   = htons(0x0011);
+            correlation_chunk.length    = htons(sizeof(correlation_chunk) + correlationId.size());
+            chunk = Data(Data::Borrow, (char *)&correlation_chunk, sizeof(correlation_chunk));
+            stream << chunk;
+            stream << correlationId;
+            stream.flush();
+         }
 
          Data::size_type payloadChunkOffset = buf.size();
          payload_chunk.vendor_id = htons(0x0000);
