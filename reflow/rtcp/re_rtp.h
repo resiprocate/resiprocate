@@ -108,68 +108,14 @@ struct rtcp_msg {
 			uint32_t rtp_ts;      /**< RTP timestamp             */
 			uint32_t psent;       /**< RTP packets sent          */
 			uint32_t osent;       /**< RTP octets sent           */
-			struct rtcp_rr *rrv;  /**< Reception report blocks   */
+			struct rtcp_rr rrv[1];  /**< Reception report blocks   */
 		} sr;
 
 		/** Reception report (RR) */
 		struct {
 			uint32_t ssrc;        /**< Receiver generating report*/
-			struct rtcp_rr *rrv;  /**< Reception report blocks   */
+			struct rtcp_rr rrv[1];  /**< Reception report blocks   */
 		} rr;
-
-		/** Source Description (SDES) */
-		struct rtcp_sdes {
-			uint32_t src;         /**< First SSRC/CSRC           */
-			struct rtcp_sdes_item *itemv;  /**< SDES items       */
-			uint32_t n;           /**< Number of SDES items      */
-		} *sdesv;
-
-		/** BYE */
-		struct {
-			uint32_t *srcv;    /**< List of sources              */
-			char *reason;      /**< Reason for leaving (opt.)    */
-		} bye;
-
-		/** Application-defined (APP) */
-		struct {
-			uint32_t src;      /**< SSRC/CSRC                  */
-			char name[4];      /**< Name (ASCII)               */
-			uint8_t *data;     /**< Application data (32 bits) */
-			size_t data_len;   /**< Number of data bytes       */
-		} app;
-
-		/** Full INTRA-frame Request (FIR) packet */
-		struct {
-			uint32_t ssrc;  /**< SSRC for sender of this packet */
-		} fir;
-
-		/** Negative ACKnowledgements (NACK) packet */
-		struct {
-			uint32_t ssrc;  /**< SSRC for sender of this packet */
-			uint16_t fsn;   /**< First Sequence Number lost     */
-			uint16_t blp;   /**< Bitmask of lost packets        */
-		} nack;
-
-		/** Feedback (RTPFB or PSFB) packet */
-		struct {
-			uint32_t ssrc_packet;
-			uint32_t ssrc_media;
-			uint32_t n;
-			/** Feedback Control Information (FCI) */
-			union {
-				struct gnack {
-					uint16_t pid;
-					uint16_t blp;
-				} *gnackv;
-				struct sli {
-					uint16_t first;
-					uint16_t number;
-					uint8_t picid;
-				} *sliv;
-				struct mbuf *afb;
-				void *p;
-			} fci;
-		} fb;
 	} r;
 };
 
