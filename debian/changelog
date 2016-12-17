@@ -1,3 +1,9 @@
+resiprocate (1:1.11.0~alpha8-2) unstable; urgency=medium
+
+  * Put libssl1.0-dev ahead of libssl-dev
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 17 Dec 2016 14:00:50 +0100
+
 resiprocate (1:1.11.0~alpha8-1) unstable; urgency=medium
 
   * Resolve some more lintian issues.
