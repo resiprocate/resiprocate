@@ -30,10 +30,11 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
    config.getConfigValue("B2BUAInternalTLSNames", mInternalTLSNames);
+   mInternalAllPrivate = config.getConfigBool("B2BUAInternalAllPrivate", false);
 
-   if(mInternalHosts.empty() && mInternalTLSNames.empty())
+   if(mInternalHosts.empty() && mInternalTLSNames.empty() && !mInternalAllPrivate)
    {
-      WarningLog(<<"Neither B2BUAInternalHosts nor B2BUAInternalTLSNames specified");
+      WarningLog(<<"None of the options B2BUAInternalHosts, B2BUAInternalTLSNames or B2BUAInternalAllPrivate specified");
    }
 
    config.getConfigValue("B2BUAInternalMediaAddress", mInternalMediaAddress);
@@ -269,6 +270,12 @@ B2BCallManager::getInternalConversationProfile()
 bool
 B2BCallManager::isSourceInternal(const SipMessage& msg)
 {
+   if(mInternalAllPrivate && msg.getSource().isPrivateAddress())
+   {
+      DebugLog(<<"Matched internal host by IP in private network (RFC 1918 / RFC 4193)");
+      return true;
+   }
+
    Data sourceAddr = Tuple::inet_ntop(msg.getSource());
    if(std::find(mInternalHosts.begin(), mInternalHosts.end(), sourceAddr) != mInternalHosts.end())
    {
