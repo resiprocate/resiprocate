@@ -48,7 +48,7 @@ install() {
     DH_PARAM_FILE=/etc/repro/dh2048.pem
     if [ ! -e ${DH_PARAM_FILE} ];
     then
-        openssl dhparam -outform PEM -out ${DH_PARAM_FILE} 2048
+        RANDFILE=/dev/urandom openssl dhparam -outform PEM -out ${DH_PARAM_FILE} 2048
         chown root:${REPRO_GROUP} ${DH_PARAM_FILE}
         chmod 0640 ${DH_PARAM_FILE}
     fi
