@@ -15,8 +15,12 @@
 #include <srtp/srtp.h>
 #endif
 
+#include <rutil/SharedPtr.hxx>
+
 #include "dtls_wrapper/DtlsFactory.hxx"
+#include "FlowContext.hxx"
 #include "Flow.hxx"
+#include "RTCPEventLoggingHandler.hxx"
 
 using namespace reTurn;
 
@@ -70,7 +74,9 @@ public:
                unsigned short natTraversalServerPort = 0, 
                const char* stunUsername = 0,
                const char* stunPassword = 0,
-               bool forceCOMedia = false); 
+               bool forceCOMedia = false,
+               resip::SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = resip::SharedPtr<RTCPEventLoggingHandler>(),
+               resip::SharedPtr<FlowContext> context = resip::SharedPtr<FlowContext>());
    virtual ~MediaStream();
 
    Flow* getRtpFlow() { return mRtpFlow; }

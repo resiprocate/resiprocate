@@ -1,39 +1,36 @@
-#if !defined(RESIP_HEPSIPMESSAGELOGGINGHANDLER_HXX)
-#define RESIP_HEPSIPMESSAGELOGGINGHANDLER_HXX
+#if !defined(FlowContext_hxx)
+#define FlowContext_hxx
 
-#include "resip/stack/SipMessage.hxx"
-#include "resip/stack/Transport.hxx"
-#include "resip/stack/Tuple.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/hep/HepAgent.hxx"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-namespace resip
+#include <rutil/Data.hxx>
+
+namespace flowmanager
 {
 
-class HEPSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
+class FlowContext
 {
    public:
-      HEPSipMessageLoggingHandler(SharedPtr<HepAgent> agent);
-      virtual ~HEPSipMessageLoggingHandler();
-      virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg);
-      virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data);
-      virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg);
-   protected:
-      virtual void sendToHOMER(const Tuple& source, const Tuple& destination, const SipMessage &msg);
-   private:
-      SharedPtr<HepAgent> mHepAgent;
-};
+      FlowContext() {};
+      virtual ~FlowContext() {};
 
+      const resip::Data& getSipCallId() const { return mSipCallId; };
+      void setSipCallId(const resip::Data& sipCallId) { mSipCallId = sipCallId; };
+
+   private:
+      resip::Data mSipCallId;
+};
 
 }
 
 #endif
 
-
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright 2016 Daniel Pocock http://danielpocock.com
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -67,3 +64,4 @@ class HEPSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
  *
  *
  */
+

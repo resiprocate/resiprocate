@@ -78,6 +78,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mConversationManager->setUserAgent(this);
 
    mStack.setTransportSipMessageLoggingHandler(profile->getTransportSipMessageLoggingHandler());
+   mConversationManager->getFlowManager().setRTCPEventLoggingHandler(profile->getRTCPEventLoggingHandler());
 
    addTransports();
 

@@ -61,7 +61,7 @@ private:
 FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
-   mSslContext(mIOService, asio::ssl::context::tlsv1),
+   mSslContext(mIOService, asio::ssl::context::sslv23),
    mClientCert(0),
    mClientKey(0),
    mDtlsFactory(0)
@@ -162,7 +162,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                unsigned short natTraversalServerPort, 
                                const char* stunUsername,
                                const char* stunPassword,
-                               bool forceCOMedia)
+                               bool forceCOMedia,
+                               SharedPtr<FlowContext> context)
 {
    MediaStream* newMediaStream = 0;
    if(rtcpEnabled)
@@ -183,7 +184,9 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerPort, 
                                        stunUsername, 
                                        stunPassword,
-                                       forceCOMedia);
+                                       forceCOMedia,
+                                       mRtcpEventLoggingHandler,
+                                       context);
    }
    else
    {
@@ -203,7 +206,9 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerPort, 
                                        stunUsername, 
                                        stunPassword,
-                                       forceCOMedia);
+                                       forceCOMedia,
+                                       SharedPtr<RTCPEventLoggingHandler>(),
+                                       context);
    }
    return newMediaStream;
 }

@@ -30,6 +30,7 @@
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/GeneralCongestionManager.hxx"
 #include "rutil/TransportType.hxx"
+#include "rutil/hep/HepAgent.hxx"
 
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Compression.hxx"
@@ -792,7 +793,8 @@ ReproRunner::createSipStack()
    {
       int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
       int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
-      mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(captureHost, capturePort, captureAgentID)));
+      SharedPtr<HepAgent> agent(new HepAgent(captureHost, capturePort, captureAgentID));
+      mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(agent)));
    }
    else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
