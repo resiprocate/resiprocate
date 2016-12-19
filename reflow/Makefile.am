@@ -24,6 +24,7 @@ libreflow_la_SOURCES = FakeSelectSocketDescriptor.cxx \
         FlowDtlsTimerContext.cxx \
         FlowManager.cxx \
         FlowManagerSubsystem.cxx \
+	HEPRTCPEventLoggingHandler.cxx \
         MediaStream.cxx \
         dtls_wrapper/DtlsTimer.cxx \
         dtls_wrapper/DtlsSocket.cxx \
@@ -36,14 +37,18 @@ nobase_reflowinclude_HEADERS = ErrorCode.hxx \
 	FlowDtlsSocketContext.hxx \
 	FlowDtlsTimerContext.hxx \
 	Flow.hxx \
+	FlowContext.hxx \
 	FlowManagerException.hxx \
 	FlowManager.hxx \
 	FlowManagerSubsystem.hxx \
+	HEPRTCPEventLoggingHandler.hxx \
 	MediaStream.hxx \
+	RTCPEventLoggingHandler.hxx \
 	dtls_wrapper/bf_dwrap.h \
 	dtls_wrapper/DtlsFactory.hxx \
 	dtls_wrapper/DtlsSocket.hxx \
-	dtls_wrapper/DtlsTimer.hxx
+	dtls_wrapper/DtlsTimer.hxx \
+	rtcp/re_rtp.h
 
 ##############################################################################
 # 

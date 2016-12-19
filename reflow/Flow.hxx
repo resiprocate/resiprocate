@@ -8,6 +8,7 @@
 #include <map>
 #include <rutil/TimeLimitFifo.hxx>
 #include <rutil/Mutex.hxx>
+#include <rutil/SharedPtr.hxx>
 
 #ifdef WIN32
 #include <srtp.h>
@@ -23,6 +24,9 @@
 #include "reTurn/StunMessage.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
+
+#include "FlowContext.hxx"
+#include "RTCPEventLoggingHandler.hxx"
 
 using namespace reTurn;
 
@@ -60,7 +64,9 @@ public:
         unsigned int componentId,
         const StunTuple& localBinding, 
         MediaStream& mediaStream,
-        bool forceCOMedia);
+        bool forceCOMedia,
+        resip::SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = resip::SharedPtr<RTCPEventLoggingHandler>(),
+        resip::SharedPtr<FlowContext> context = resip::SharedPtr<FlowContext>());
    ~Flow();
 
    void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
@@ -126,6 +132,12 @@ private:
 
    // Use peer's RTP source IP instead of the peer's SDP connection IP
    bool mForceCOMedia;
+
+   // Logging handler, if set
+   resip::SharedPtr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
+
+   // Flow context from application layer
+   resip::SharedPtr<FlowContext> mFlowContext;
 
    // mTurnSocket has it's own threading protection
    boost::shared_ptr<TurnAsyncSocket> mTurnSocket;

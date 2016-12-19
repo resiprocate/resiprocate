@@ -1,28 +1,27 @@
-#if !defined(RESIP_HEPSIPMESSAGELOGGINGHANDLER_HXX)
-#define RESIP_HEPSIPMESSAGELOGGINGHANDLER_HXX
+#if !defined(RESIP_HEPRTCPEVENTLOGGINGHANDLER_HXX)
+#define RESIP_HEPRTCPEVENTLOGGINGHANDLER_HXX
 
-#include "resip/stack/SipMessage.hxx"
-#include "resip/stack/Transport.hxx"
-#include "resip/stack/Tuple.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/SharedPtr.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/hep/HepAgent.hxx"
+#include "reflow/RTCPEventLoggingHandler.hxx"
 
-namespace resip
+namespace flowmanager
 {
 
-class HEPSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
+class HEPRTCPEventLoggingHandler : public RTCPEventLoggingHandler
 {
    public:
-      HEPSipMessageLoggingHandler(SharedPtr<HepAgent> agent);
-      virtual ~HEPSipMessageLoggingHandler();
-      virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg);
-      virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data);
-      virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg);
+      HEPRTCPEventLoggingHandler(resip::SharedPtr<resip::HepAgent> agent);
+      virtual ~HEPRTCPEventLoggingHandler();
+
+      virtual void outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
+      virtual void inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
    protected:
-      virtual void sendToHOMER(const Tuple& source, const Tuple& destination, const SipMessage &msg);
+      virtual void sendToHOMER(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
    private:
-      SharedPtr<HepAgent> mHepAgent;
+      resip::SharedPtr<resip::HepAgent> mHepAgent;
 };
 
 

@@ -39,6 +39,18 @@ UserAgentMasterProfile::getTransportSipMessageLoggingHandler() const
    return mTransportSipMessageLoggingHandler;
 }
 
+void
+UserAgentMasterProfile::setRTCPEventLoggingHandler(SharedPtr<flowmanager::RTCPEventLoggingHandler> handler)
+{
+   mRTCPEventLoggingHandler = handler;
+}
+
+const SharedPtr<flowmanager::RTCPEventLoggingHandler>
+UserAgentMasterProfile::getRTCPEventLoggingHandler() const
+{
+   return mRTCPEventLoggingHandler;
+}
+
 void 
 UserAgentMasterProfile::addTransport( TransportType protocol,
                                       int port, 
