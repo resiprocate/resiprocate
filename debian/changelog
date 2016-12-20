@@ -1,3 +1,10 @@
+resiprocate (1:1.11.0~alpha10-1) unstable; urgency=medium
+
+  * New upstream release.
+  * OpenSSLInit: fix code to free compression methods (Closes: #848652)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Tue, 20 Dec 2016 20:03:48 +0100
+
 resiprocate (1:1.11.0~alpha9-1) unstable; urgency=medium
 
   * New upstream release.
