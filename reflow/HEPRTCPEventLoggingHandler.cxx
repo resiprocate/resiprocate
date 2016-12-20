@@ -46,6 +46,20 @@ HEPRTCPEventLoggingHandler::inboundEvent(resip::SharedPtr<FlowContext> context, 
    sendToHOMER(context, source, destination, event);
 }
 
+int32_t
+HEPRTCPEventLoggingHandler::ntoh_cpl(const void *x)
+{
+   unsigned char c[4];
+   uint32_t *v = reinterpret_cast<uint32_t *>(c);
+
+   memcpy(c, x, 4);
+
+   // replace the fraction lost (8 bits) by sign of the 24 bit value
+   c[0] = (c[1] & 0x80) ? 0xff : 0;
+
+   return (int32_t)(ntohl(*v));
+}
+
 void
 HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, const StunTuple& source, const StunTuple& destination, const Data& event)
 {
@@ -82,9 +96,9 @@ HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, c
                    << "{"
                       << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
                       << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
-                      << "\"fraction_lost\":" << ntohl(rr->fraction) << ","
+                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << ","  // 8 bits
                       << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
-                      << "\"packets_lost\":" << ntohl(rr->lost) << ","
+                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
                       << "\"lsr\":" << ntohl(rr->lsr) << ","
                       << "\"dlsr\":" << ntohl(rr->dlsr)
                    << "}"
@@ -102,9 +116,9 @@ HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, c
                    << "{"
                       << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
                       << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
-                      << "\"fraction_lost\":" << ntohl(rr->fraction) << ","
+                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << "," // 8 bits
                       << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
-                      << "\"packets_lost\":" << ntohl(rr->lost) << ","
+                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
                       << "\"lsr\":" << ntohl(rr->lsr) << ","
                       << "\"dlsr\":" << ntohl(rr->dlsr)
                    << "}"
