@@ -84,7 +84,12 @@ OpenSSLInit::~OpenSSLInit()
    EVP_cleanup();// Clean up data allocated during OpenSSL_add_all_algorithms
    CRYPTO_cleanup_all_ex_data();
    ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
-   sk_SSL_COMP_free (SSL_COMP_get_compression_methods()); 
+
+#if OPENSSL_VERSION_NUMBER < 0x01000200f
+   ErrLog(<<"Unable to free compression methods on OpenSSL < 1.0.2");
+#else
+   SSL_COMP_free_compression_methods();
+#endif
 
 //	CRYPTO_mem_leaks_fp(stderr);
 
