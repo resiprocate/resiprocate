@@ -1315,6 +1315,8 @@ ReConServerProcess::main (int argc, char** argv)
          {
             SharedPtr<ConversationProfile> internalProfile(new ConversationProfile(conversationProfile));
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
+            internalProfile->setDefaultFrom(uri);
+            internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
             conversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
             ua.addConversationProfile(internalProfile, false);
          }
