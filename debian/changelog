@@ -1,3 +1,9 @@
+reconserver (0.13.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Fri, 30 Dec 2016 15:38:06 +0100
+
 reconserver (0.13.1-1) unstable; urgency=medium
 
   * New upstream release.
