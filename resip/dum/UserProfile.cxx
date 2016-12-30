@@ -152,6 +152,7 @@ UserProfile::getDigestCredential( const Data& realm  )
    if(mDigestCredentials.empty())
    {
       // !jf! why not just throw here? 
+      WarningLog(<< "No digest credentials available");
       return emptyDigestCredential;
    }
 

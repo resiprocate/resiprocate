@@ -22,6 +22,8 @@ class HEPRTCPEventLoggingHandler : public RTCPEventLoggingHandler
       virtual void sendToHOMER(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event);
    private:
       resip::SharedPtr<resip::HepAgent> mHepAgent;
+
+      static int32_t ntoh_cpl(const void *x);
 };
 
 

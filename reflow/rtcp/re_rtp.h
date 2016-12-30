@@ -74,8 +74,9 @@ enum rtcp_psfb {
 /** Reception report block */
 struct rtcp_rr {
 	uint32_t ssrc;            /**< Data source being reported      */
-	unsigned int fraction:8;  /**< Fraction lost since last SR/RR  */
-	int lost:24;              /**< Cumul. no. pkts lost (signed!)  */
+	//unsigned int fraction:8;  /**< Fraction lost since last SR/RR  */
+	//int lost:24;              /**< Cumul. no. pkts lost (signed!)  */
+	uint32_t fraction_lost_32;/**< Combine the previous two fields */
 	uint32_t last_seq;        /**< Extended last seq. no. received */
 	uint32_t jitter;          /**< Interarrival jitter             */
 	uint32_t lsr;             /**< Last SR packet from this source */
