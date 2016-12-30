@@ -1,5 +1,5 @@
 
-AC_INIT(reConServer,0.13.1)
+AC_INIT(reConServer,0.13.2)
 AC_CONFIG_SRCDIR(reConServer.cxx)
 
 AC_CONFIG_AUX_DIR([build-aux])
