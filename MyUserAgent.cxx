@@ -31,6 +31,12 @@ MyUserAgent::MyUserAgent(ConfigParse& configParse, ConversationManager* conversa
    methodList.push_back(resip::CANCEL);
    methodList.push_back(resip::BYE);
    methodList.push_back(resip::ACK);
+   methodList.push_back(resip::REFER);
+   methodList.push_back(resip::SUBSCRIBE);
+   methodList.push_back(resip::NOTIFY);
+   methodList.push_back(resip::PUBLISH);
+   methodList.push_back(resip::OPTIONS);
+   methodList.push_back(resip::PRACK);
    ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                         resip::MessageFilterRule::Any,
                                         methodList) );
