@@ -21,13 +21,6 @@ using namespace recon;
 B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config)
    : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false)
 { 
-   mB2BUANextHop = config.getConfigData("B2BUANextHop", "", true);
-   if(mB2BUANextHop.size() == 0)
-   {
-      CritLog(<<"Please specify B2BUANextHop");
-      throw ConfigParse::Exception("Please specify B2BUANextHop", __FILE__, __LINE__);
-   }
-
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
    config.getConfigValue("B2BUAInternalTLSNames", mInternalTLSNames);
    mInternalAllPrivate = config.getConfigBool("B2BUAInternalAllPrivate", false);
@@ -116,24 +109,24 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    call->conv = createConversation();
    addParticipant(call->conv, call->a);
    const Uri& reqUri = msg.header(h_RequestLine).uri();
-   NameAddrs route;
    SharedPtr<ConversationProfile> profile;
    if(isSourceInternal(msg))
    {
       DebugLog(<<"INVITE request from zone: internal");
       Uri uri(msg.header(h_RequestLine).uri());
       uri.param(p_lr);
+      NameAddrs route;
       route = msg.header(h_Routes);
       route.pop_front();  // remove ourselves
       MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
       resip_assert(ua);
       SharedPtr<ConversationProfile> externalProfile = ua->getDefaultOutgoingConversationProfile();
       profile.reset(new ConversationProfile(*externalProfile.get()));
+      profile->setServiceRoute(route);
    }
    else
    {
       DebugLog(<<"INVITE request from zone: external");
-      route.push_front(NameAddr(mB2BUANextHop));
       SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
       profile.reset(new ConversationProfile(*internalProfile.get()));
    }
@@ -155,7 +148,6 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    }
    NameAddr outgoingCaller = msg.header(h_From);
    profile->setDefaultFrom(outgoingCaller);
-   profile->setServiceRoute(route);
    SharedPtr<UserProfile> _profile(profile);
    call->b = ConversationManager::createRemoteParticipant(call->conv, NameAddr(reqUri), ForkSelectAutomatic, _profile, extraHeaders);
    mCallsByConversation[call->conv] = call;

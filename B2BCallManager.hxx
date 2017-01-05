@@ -48,7 +48,6 @@ protected:
       ParticipantHandle b;
    };
 
-   Data mB2BUANextHop;
    std::vector<Data> mInternalHosts;
    std::vector<Data> mInternalTLSNames;
    bool mInternalAllPrivate;

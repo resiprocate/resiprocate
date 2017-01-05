@@ -1314,6 +1314,15 @@ ReConServerProcess::main (int argc, char** argv)
          if(!internalMediaAddress.empty())
          {
             SharedPtr<ConversationProfile> internalProfile(new ConversationProfile(conversationProfile));
+            Data b2BUANextHop = reConServerConfig.getConfigData("B2BUANextHop", "", true);
+            if(b2BUANextHop.empty())
+            {
+               CritLog(<<"Please specify B2BUANextHop");
+               throw ConfigParse::Exception("Please specify B2BUANextHop", __FILE__, __LINE__);
+            }
+            NameAddrs route;
+            route.push_front(NameAddr(b2BUANextHop));
+            internalProfile->setServiceRoute(route);
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
