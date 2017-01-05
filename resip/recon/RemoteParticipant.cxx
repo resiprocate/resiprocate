@@ -2357,8 +2357,11 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       // Figure out hold SDP before removing ourselves from the conversation
       bool holdSdp = mLocalHold;  
 
+      // Choose the appropriate ConversationProfile
+      SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+
       // Create new Participant - but use same participant handle
-      RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
+      RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
 
@@ -2369,7 +2372,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       participant->buildSdpOffer(holdSdp, offer);  
 
       // Build the Invite
-      SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), &offer, participantDialogSet);
+      SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, SharedPtr<UserProfile>(profile, resip::dynamic_cast_tag()), ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
       participantDialogSet->sendInvite(NewInviteMsg); 
 
       // Set RTP stack to listen
@@ -2391,8 +2394,11 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    // Figure out hold SDP before removing ourselves from the conversation
    bool holdSdp = mLocalHold;  
 
+   // Choose the appropriate ConversationProfile
+   SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+
    // Create new Participant - but use same participant handle
-   RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
+   RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
 
@@ -2403,7 +2409,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    participant->buildSdpOffer(holdSdp, offer);
 
    // Build the Invite
-   SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, mDialogSet.getUserProfile(), &offer, participantDialogSet);
+   SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, SharedPtr<UserProfile>(profile, resip::dynamic_cast_tag()), &offer, participantDialogSet);
    participantDialogSet->sendInvite(NewInviteMsg); 
 
    // Set RTP stack to listen
