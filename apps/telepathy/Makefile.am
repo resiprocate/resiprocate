@@ -71,7 +71,7 @@ noinst_HEADERS = Common.hxx \
 	Protocol.hxx
 
 moc_%.cxx:	%.hxx
-	moc $< -o $@
+	QT_SELECT=qt5 moc $< -o $@
 
 BUILT_SOURCES = playback_prompt.h record_prompt.h
 
