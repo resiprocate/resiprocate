@@ -6,6 +6,8 @@
 #endif
 
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -54,6 +56,13 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
             WarningLog(<<"Will not replicate header '"<<headerName<<"', only extension headers permitted");
          }
       }
+   }
+
+   Data usersFilename;
+   config.getConfigValue("B2BUAUsersFilename", usersFilename);
+   if(!usersFilename.empty());
+   {
+      loadUserCredentials(usersFilename);
    }
 }
 
@@ -129,6 +138,21 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
       DebugLog(<<"INVITE request from zone: external");
       SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
       profile.reset(new ConversationProfile(*internalProfile.get()));
+      // Look up the user in mUsers
+      const Data& callerUri = msg.header(h_From).uri().getAor();
+      // If found in mUsers, put the credentials into the profile
+      if(mUsers.find(callerUri) != mUsers.end())
+      {
+         const Data& callerUsername = msg.header(h_From).uri().user();
+         const Data& callerRealm = msg.header(h_From).uri().host();
+         DebugLog(<<"found credential for authenticating " << callerUri << " in realm " << callerRealm << " and added it to user profile");
+         profile->clearDigestCredentials();
+         profile->setDigestCredential(callerRealm, callerUsername, mUsers.find(callerUri)->second.mPassword);
+      }
+      else
+      {
+         DebugLog(<<"didn't find individual credential for authenticating " << callerUri);
+      }
    }
    std::multimap<Data,Data> extraHeaders;
    std::vector<resip::Data>::const_iterator it = mReplicatedHeaders.begin();
@@ -290,6 +314,69 @@ B2BCallManager::isSourceInternal(const SipMessage& msg)
    return false;
 }
 
+void
+B2BCallManager::loadUserCredentials(Data filename)
+{
+   if(!mUsers.empty())
+   {
+      WarningLog(<<"loadUserCredentials called but mUsers already populated");
+      return;
+   }
+
+   InfoLog(<< "trying to load user credentials from file " << filename);
+
+   std::ifstream usersFile(filename.c_str());
+   if(!usersFile)
+   {
+      ErrLog(<< "failed to open users file: " << filename << ", aborting");
+      throw std::runtime_error("Error opening/reading users file");
+   }
+
+   std::string sline;
+   while(getline(usersFile, sline))
+   {
+      Data line(sline);
+      Data uri;
+      Data password;
+      UserCredentials creds;
+      ParseBuffer pb(line);
+
+      pb.skipWhitespace();
+      const char * anchor = pb.position();
+      if(pb.eof() || *anchor == '#') continue;  // if line is a comment or blank then skip it
+
+      // Look for end of name
+      pb.skipToOneOf("\t");
+      pb.data(uri, anchor);
+      if(mUsers.find(uri) != mUsers.end())
+      {
+         ErrLog(<< "URI '" << uri << "' repeated in users file");
+         throw std::runtime_error("URI repeated in users file");
+      }
+      pb.skipChar('\t');
+
+      if(!pb.eof())
+      {
+         pb.skipWhitespace();
+         if(pb.eof())
+            break;
+
+         anchor = pb.position();
+         pb.skipToOneOf("\r\n ");
+         pb.data(password, anchor);
+         if(!password.empty())
+         {
+            creds.mUsername = uri;
+            creds.mPassword = password;
+            mUsers[uri] = creds;
+            DebugLog(<< "Loaded user URI '" << uri << "'");
+         }
+         if(!pb.eof())
+            pb.skipChar();
+      }
+   }
+   InfoLog(<<"Loaded " << mUsers.size() << " users");
+}
 
 /* ====================================================================
  *

@@ -37,9 +37,17 @@ public:
 
    resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<ConversationProfile> defaultProfile);
 
+   void loadUserCredentials(Data filename);
+
 protected:
    resip::SharedPtr<ConversationProfile> getInternalConversationProfile();
    virtual bool isSourceInternal(const SipMessage& msg);
+
+   struct UserCredentials
+   {
+      Data mUsername;
+      Data mPassword;
+   };
 
    struct B2BCall
    {
@@ -53,6 +61,8 @@ protected:
    bool mInternalAllPrivate;
    Data mInternalMediaAddress;
    std::vector<Data> mReplicatedHeaders;
+
+   std::map<Data,UserCredentials> mUsers;
 
    std::map<ConversationHandle,SharedPtr<B2BCall> > mCallsByConversation;
    std::map<ParticipantHandle,SharedPtr<B2BCall> > mCallsByParticipant;
