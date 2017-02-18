@@ -941,6 +941,25 @@ ReConServerProcess::main (int argc, char** argv)
 
    SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
 
+   Data certPath;
+   reConServerConfig.getConfigValue("CertificatePath", certPath);
+   if(!certPath.empty())
+   {
+      profile->certPath() = certPath;
+   }
+   Data caDir;
+   reConServerConfig.getConfigValue("CADirectory", caDir);
+   if(!caDir.empty())
+   {
+      profile->rootCertDirectories().push_back(caDir);
+   }
+   Data caFile;
+   reConServerConfig.getConfigValue("CAFile", caFile);
+   if(!caFile.empty())
+   {
+      profile->rootCertBundles().push_back(caFile);
+   }
+
    if(!captureHost.empty())
    {
       SharedPtr<HepAgent> agent(new HepAgent(captureHost, capturePort, captureAgentID));
