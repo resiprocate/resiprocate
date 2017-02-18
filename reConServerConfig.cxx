@@ -5,9 +5,9 @@
 
 #include "reConServerConfig.hxx"
 
-#include <recon/ReconSubsystem.hxx>
+#include <AppSubsystem.hxx>
 
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
 using namespace std;
 using namespace resip;

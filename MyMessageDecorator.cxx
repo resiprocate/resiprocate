@@ -7,11 +7,11 @@
 #include <resip/stack/SdpContents.hxx>
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/Tuple.hxx>
-#include <recon/ReconSubsystem.hxx>
+#include <AppSubsystem.hxx>
 
 #include "MyMessageDecorator.hxx"
 
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
 using namespace resip;
 using namespace reconserver;

@@ -40,7 +40,7 @@ int _kbhit() {
 
 #include "resip/stack/InteropHelper.hxx"
 #include "recon/UserAgent.hxx"
-#include "recon/ReconSubsystem.hxx"
+#include "AppSubsystem.hxx"
 #include <recon/SipXHelper.hxx>
 
 #include <os/OsSysLog.h>
@@ -68,7 +68,7 @@ using namespace resip;
 using namespace flowmanager;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
 void sleepSeconds(unsigned int seconds)
 {

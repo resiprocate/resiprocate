@@ -8,12 +8,12 @@
 #include <rutil/Logger.hxx>
 
 #include <resip/stack/MessageFilterRule.hxx>
-#include <recon/ReconSubsystem.hxx>
+#include <AppSubsystem.hxx>
 
 #include "B2BCallManager.hxx"
 #include "MyUserAgent.hxx"
 
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
 using namespace resip;
 using namespace recon;
