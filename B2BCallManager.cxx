@@ -119,7 +119,8 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    addParticipant(call->conv, call->a);
    const Uri& reqUri = msg.header(h_RequestLine).uri();
    SharedPtr<ConversationProfile> profile;
-   if(isSourceInternal(msg))
+   bool internalSource = isSourceInternal(msg);
+   if(internalSource)
    {
       DebugLog(<<"INVITE request from zone: internal");
       Uri uri(msg.header(h_RequestLine).uri());
@@ -154,7 +155,22 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
          DebugLog(<<"didn't find individual credential for authenticating " << callerUri);
       }
    }
+   static ExtensionHeader h_X_CID("X-CID");
    std::multimap<Data,Data> extraHeaders;
+   if(msg.exists(h_X_CID) && internalSource)
+   {
+      const ParserContainer<resip::StringCategory>& pc = msg.header(h_X_CID);
+      ParserContainer<StringCategory>::const_iterator v = pc.begin();
+      for( ; v != pc.end(); v++)
+      {
+         extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), v->value()));
+      }
+   }
+   else
+   {
+      // no correlation header exists in incoming message, copy A-leg Call-ID header to B-leg h_X_CID
+      extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), msg.header(h_CallId).value()));
+   }
    std::vector<resip::Data>::const_iterator it = mReplicatedHeaders.begin();
    for( ; it != mReplicatedHeaders.end(); it++)
    {
