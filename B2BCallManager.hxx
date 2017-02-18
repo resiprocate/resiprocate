@@ -11,6 +11,7 @@
 
 #include <resip/stack/ExtensionHeader.hxx>
 #include <rutil/Data.hxx>
+#include <rutil/Time.hxx>
 #include <recon/ConversationManager.hxx>
 
 #include "reConServerConfig.hxx"
@@ -19,11 +20,61 @@
 namespace reconserver
 {
 
+class B2BCall
+{
+public:
+   B2BCall(const recon::ConversationHandle& conv, const recon::ParticipantHandle& a, const recon::ParticipantHandle b, const resip::SipMessage& msg, const resip::Data& originZone, const resip::Data& destinationZone, const resip::Data& b2bCallID);
+
+   void onConnect() { mConnect = resip::ResipClock::getTimeMs(); };
+   void onFinish(const int responseCode = 200) { mFinish = resip::ResipClock::getTimeMs(); mResponseCode = responseCode; };
+
+   const recon::ConversationHandle& conversation() { return mConversation; };
+   const recon::ParticipantHandle& participantA() { return mPartA; };
+   const recon::ParticipantHandle& participantB() { return mPartB; };
+
+   const resip::Data& getOriginZone() const { return mOriginZone; };
+   const resip::Data& getDestinationZone() const { return mDestinationZone; };
+   const resip::Data& getB2BCallID() const { return mB2BCallID; };
+   const resip::Data& getCaller() const { return mCaller; };
+   const resip::Data& getCallee() const { return mCallee; };
+   int getResponseCode() const { return mResponseCode; };
+   const uint64_t& getStart() const { return mStart; };
+   const uint64_t& getConnect() const { return mConnect; };
+   bool answered() const { return mConnect != 0; };
+   const uint64_t& getFinish() const { return mFinish; };
+
+private:
+   const recon::ConversationHandle mConversation;
+   const recon::ParticipantHandle mPartA;
+   const recon::ParticipantHandle mPartB;
+
+   const resip::Data mOriginZone;
+   const resip::Data mDestinationZone;
+
+   const resip::Data mB2BCallID;
+
+   const resip::Data mCaller;
+   const resip::Data mCallee;
+
+   int mResponseCode;
+
+   // times are in milliseconds since the UNIX epoch
+   uint64_t mStart;
+   uint64_t mConnect;
+   uint64_t mFinish;
+};
+
+class B2BCallLogger
+{
+public:
+   virtual void log(resip::SharedPtr<B2BCall> call) = 0;
+};
+
 class B2BCallManager : public MyConversationManager
 {
 public:
 
-   B2BCallManager(recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config);
+   B2BCallManager(recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, resip::SharedPtr<B2BCallLogger> b2bCallLogger = resip::SharedPtr<B2BCallLogger>());
 
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
    virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
@@ -46,13 +97,7 @@ protected:
       resip::Data mPassword;
    };
 
-   struct B2BCall
-   {
-      recon::ConversationHandle conv;
-      recon::ParticipantHandle a;
-      recon::ParticipantHandle b;
-   };
-
+   resip::SharedPtr<B2BCallLogger> mB2BCallLogger;
    std::vector<resip::Data> mInternalHosts;
    std::vector<resip::Data> mInternalTLSNames;
    bool mInternalAllPrivate;

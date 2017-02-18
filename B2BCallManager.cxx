@@ -21,8 +21,25 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config)
-   : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false)
+B2BCall::B2BCall(const recon::ConversationHandle& conv, const recon::ParticipantHandle& a, const recon::ParticipantHandle b, const resip::SipMessage& msg, const resip::Data& originZone, const resip::Data& destinationZone, const resip::Data& b2bCallID)
+    : mConversation(conv),
+      mPartA(a),
+      mPartB(b),
+      mOriginZone(originZone),
+      mDestinationZone(destinationZone),
+      mB2BCallID(b2bCallID),
+      mCaller(msg.header(h_From).uri().getAor()),
+      mCallee(msg.header(h_RequestLine).uri().getAor()),
+      mResponseCode(-1),
+      mStart(ResipClock::getTimeMs()),
+      mConnect(0),
+      mFinish(0)
+{
+}
+
+B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, resip::SharedPtr<B2BCallLogger> b2bCallLogger)
+   : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
+     mB2BCallLogger(b2bCallLogger)
 { 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
    config.getConfigValue("B2BUAInternalTLSNames", mInternalTLSNames);
@@ -89,18 +106,18 @@ B2BCallManager::onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration
          return;
       }
       int target = 0;
-      if(partHandle == call->a)
+      if(partHandle == call->participantA())
       {
-         target = call->b;
+         target = call->participantB();
       }
-      else if(partHandle == call->b)
+      else if(partHandle == call->participantB())
       {
-         target = call->a;
+         target = call->participantA();
       }
       Data tone(Data("tone:") + buttons[dtmf] + Data(";duration=") + Data(duration) + Data(";participant-only=") + Data(target));
       Uri _tone(tone);
       StackLog(<< "sending tone to conversation: " << _tone);
-      ConversationManager::createMediaResourceParticipant(call->conv, _tone);
+      ConversationManager::createMediaResourceParticipant(call->conversation(), _tone);
    }
    else
    {
@@ -109,20 +126,22 @@ B2BCallManager::onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration
 }
 
 void
-B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
-   InfoLog(<< "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
-   mRemoteParticipantHandles.push_back(partHandle);
+   InfoLog(<< "onIncomingParticipant: handle=" << partHandleA << "auto=" << autoAnswer << " msg=" << msg.brief());
+   mRemoteParticipantHandles.push_back(partHandleA);
    // Create a new conversation for each new participant
-   SharedPtr<B2BCall> call(new B2BCall);
-   call->a = partHandle;
-   call->conv = createConversation();
-   addParticipant(call->conv, call->a);
+   ConversationHandle conv = createConversation();
+   addParticipant(conv, partHandleA);
    const Uri& reqUri = msg.header(h_RequestLine).uri();
    SharedPtr<ConversationProfile> profile;
    bool internalSource = isSourceInternal(msg);
+   Data originZoneName;
+   Data destinationZoneName;
    if(internalSource)
    {
+      originZoneName = "internal";
+      destinationZoneName = "external";
       DebugLog(<<"INVITE request from zone: internal");
       Uri uri(msg.header(h_RequestLine).uri());
       uri.param(p_lr);
@@ -138,6 +157,8 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    else
    {
       DebugLog(<<"INVITE request from zone: external");
+      originZoneName = "external";
+      destinationZoneName = "internal";
       SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
       profile.reset(new ConversationProfile(*internalProfile.get()));
       // Look up the user in mUsers
@@ -158,19 +179,22 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    }
    static ExtensionHeader h_X_CID("X-CID");
    std::multimap<Data,Data> extraHeaders;
+   Data b2bCallID;
    if(msg.exists(h_X_CID) && internalSource)
    {
       const ParserContainer<resip::StringCategory>& pc = msg.header(h_X_CID);
       ParserContainer<StringCategory>::const_iterator v = pc.begin();
       for( ; v != pc.end(); v++)
       {
-         extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), v->value()));
+         b2bCallID = v->value();
+         extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), b2bCallID));
       }
    }
    else
    {
       // no correlation header exists in incoming message, copy A-leg Call-ID header to B-leg h_X_CID
-      extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), msg.header(h_CallId).value()));
+      b2bCallID = msg.header(h_CallId).value();
+      extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), b2bCallID));
    }
    std::vector<resip::Data>::const_iterator it = mReplicatedHeaders.begin();
    for( ; it != mReplicatedHeaders.end(); it++)
@@ -190,10 +214,11 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMes
    NameAddr outgoingCaller = msg.header(h_From);
    profile->setDefaultFrom(outgoingCaller);
    SharedPtr<UserProfile> _profile(profile);
-   call->b = ConversationManager::createRemoteParticipant(call->conv, NameAddr(reqUri), ForkSelectAutomatic, _profile, extraHeaders);
-   mCallsByConversation[call->conv] = call;
-   mCallsByParticipant[call->a] = call;
-   mCallsByParticipant[call->b] = call;
+   ParticipantHandle partHandleB = ConversationManager::createRemoteParticipant(conv, NameAddr(reqUri), ForkSelectAutomatic, _profile, extraHeaders);
+   SharedPtr<B2BCall> call(new B2BCall(conv, partHandleA, partHandleB, msg, originZoneName, destinationZoneName, b2bCallID));
+   mCallsByConversation[call->conversation()] = call;
+   mCallsByParticipant[call->participantA()] = call;
+   mCallsByParticipant[call->participantB()] = call;
 }
 
 void
@@ -203,18 +228,23 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
       SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
-      if(partHandle == call->b)
+      if(partHandle == call->participantB())
       {
-         rejectParticipant(call->a, statusCode);
+         rejectParticipant(call->participantA(), statusCode);
       }
       else
       {
-         rejectParticipant(call->b, statusCode);
+         rejectParticipant(call->participantB(), statusCode);
       }
-      destroyConversation(call->conv);
-      mCallsByParticipant.erase(call->a);
-      mCallsByParticipant.erase(call->b);
-      mCallsByConversation.erase(call->conv);
+      destroyConversation(call->conversation());
+      mCallsByParticipant.erase(call->participantA());
+      mCallsByParticipant.erase(call->participantB());
+      mCallsByConversation.erase(call->conversation());
+      call->onFinish(statusCode);
+      if(mB2BCallLogger.get())
+      {
+         mB2BCallLogger->log(call);
+      }
    }
    else
    {
@@ -235,9 +265,9 @@ B2BCallManager::onParticipantAlerting(ParticipantHandle partHandle, const SipMes
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
       SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
-      if(call->b == partHandle)
+      if(call->participantB() == partHandle)
       {
-         alertParticipant(call->a, false);
+         alertParticipant(call->participantA(), false);
       }
       else
       {
@@ -257,9 +287,10 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
       SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
-      if(call->b == partHandle)
+      if(call->participantB() == partHandle)
       {
-         answerParticipant(call->a);
+         answerParticipant(call->participantA());
+         call->onConnect();
       }
       else
       {
