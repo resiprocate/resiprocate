@@ -15,27 +15,24 @@
 #include "B2BCallManager.hxx"
 #include "RegistrationForwarder.hxx"
 
-using namespace resip;
-
-
-namespace recon
+namespace reconserver
 {
 
-class MyUserAgent : public UserAgent
+class MyUserAgent : public recon::UserAgent
 {
 public:
-   MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile);
+   MyUserAgent(resip::ConfigParse& configParse, recon::ConversationManager* conversationManager, resip::SharedPtr<recon::UserAgentMasterProfile> profile);
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData);
-   virtual resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
+   virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
+   virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
+   virtual resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
    virtual void process(int timeoutMs);
 
 private:
    friend class B2BCallManager;
 
    unsigned int mMaxRegLoops;
-   SharedPtr<RegistrationForwarder> mRegistrationForwarder;
+   resip::SharedPtr<RegistrationForwarder> mRegistrationForwarder;
 
    B2BCallManager *getB2BCallManager();
 };

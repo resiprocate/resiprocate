@@ -17,6 +17,7 @@
 
 using namespace resip;
 using namespace recon;
+using namespace reconserver;
 using namespace std;
 
 

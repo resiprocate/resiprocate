@@ -19,6 +19,7 @@
 
 using namespace resip;
 using namespace recon;
+using namespace reconserver;
 
 B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config)
    : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false)

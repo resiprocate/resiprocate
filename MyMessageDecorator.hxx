@@ -8,10 +8,7 @@
 #include "rutil/Data.hxx"
 #include "resip/stack/MessageDecorator.hxx"
 
-using namespace resip;
-
-
-namespace recon
+namespace reconserver
 {
 
 class MyMessageDecorator : public resip::MessageDecorator
@@ -20,12 +17,12 @@ class MyMessageDecorator : public resip::MessageDecorator
       MyMessageDecorator();
       virtual ~MyMessageDecorator() {}
 
-      virtual void decorateMessage(SipMessage &msg,
-                                  const Tuple &source,
-                                  const Tuple &destination,
-                                  const Data& sigcompId);
-      virtual void rollbackMessage(SipMessage& msg) {};
-      virtual MessageDecorator* clone() const { return new MyMessageDecorator(); };
+      virtual void decorateMessage(resip::SipMessage &msg,
+                                  const resip::Tuple &source,
+                                  const resip::Tuple &destination,
+                                  const resip::Data& sigcompId);
+      virtual void rollbackMessage(resip::SipMessage& msg) {};
+      virtual resip::MessageDecorator* clone() const { return new MyMessageDecorator(); };
 
 };
 

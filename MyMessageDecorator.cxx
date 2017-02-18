@@ -14,7 +14,7 @@
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 using namespace resip;
-using namespace recon;
+using namespace reconserver;
 
 MyMessageDecorator::MyMessageDecorator()
 {

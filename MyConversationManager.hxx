@@ -10,46 +10,42 @@
 #include <rutil/Data.hxx>
 #include <recon/ConversationManager.hxx>
 
-
-using namespace resip;
-
-
-namespace recon
+namespace reconserver
 {
 
-class MyConversationManager : public ConversationManager
+class MyConversationManager : public recon::ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(bool localAudioEnabled, recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();
    
-   virtual ConversationHandle createConversation();
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl);
-   virtual ParticipantHandle createLocalParticipant();
-   virtual void onConversationDestroyed(ConversationHandle convHandle);
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle);
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up);
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile);
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
-                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle);
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle);
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode);
+   virtual recon::ConversationHandle createConversation();
+   virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
+   virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl);
+   virtual recon::ParticipantHandle createLocalParticipant();
+   virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
+   virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle);
+   virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
+   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
+   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile);
+   virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
+   virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onRelatedConversation(recon::ConversationHandle relatedConvHandle, recon::ParticipantHandle relatedPartHandle,
+                                      recon::ConversationHandle origConvHandle, recon::ParticipantHandle origPartHandle);
+   virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle);
+   virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
    virtual void displayInfo();
 
 protected:
-   std::list<ConversationHandle> mConversationHandles;
-   std::list<ParticipantHandle> mLocalParticipantHandles;
-   std::list<ParticipantHandle> mRemoteParticipantHandles;
-   std::list<ParticipantHandle> mMediaParticipantHandles;
+   std::list<recon::ConversationHandle> mConversationHandles;
+   std::list<recon::ParticipantHandle> mLocalParticipantHandles;
+   std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
+   std::list<recon::ParticipantHandle> mMediaParticipantHandles;
    bool mLocalAudioEnabled;
    bool mAutoAnswerEnabled;
 };

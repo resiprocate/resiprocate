@@ -61,6 +61,7 @@ int _kbhit() {
 #include <resip/stack/HEPSipMessageLoggingHandler.hxx>
 #include <reflow/HEPRTCPEventLoggingHandler.hxx>
 
+using namespace reconserver;
 using namespace recon;
 using namespace resip;
 using namespace flowmanager;

@@ -11,8 +11,9 @@
 
 using namespace std;
 using namespace resip;
+using namespace recon;
 
-namespace recon {
+namespace reconserver {
 
 ReConServerConfig::ReConServerConfig(): mSecureMediaRequired(false)
 {

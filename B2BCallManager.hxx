@@ -16,56 +16,53 @@
 #include "reConServerConfig.hxx"
 #include "MyConversationManager.hxx"
 
-using namespace resip;
-
-
-namespace recon
+namespace reconserver
 {
 
 class B2BCallManager : public MyConversationManager
 {
 public:
 
-   B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config);
+   B2BCallManager(recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config);
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up);
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg);
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg);
+   virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
+   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
+   virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
+   virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
 
-   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<ConversationProfile> defaultProfile);
+   resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<recon::ConversationProfile> defaultProfile);
 
-   void loadUserCredentials(Data filename);
+   void loadUserCredentials(resip::Data filename);
 
 protected:
-   resip::SharedPtr<ConversationProfile> getInternalConversationProfile();
-   virtual bool isSourceInternal(const SipMessage& msg);
+   resip::SharedPtr<recon::ConversationProfile> getInternalConversationProfile();
+   virtual bool isSourceInternal(const resip::SipMessage& msg);
 
    struct UserCredentials
    {
-      Data mUsername;
-      Data mPassword;
+      resip::Data mUsername;
+      resip::Data mPassword;
    };
 
    struct B2BCall
    {
-      ConversationHandle conv;
-      ParticipantHandle a;
-      ParticipantHandle b;
+      recon::ConversationHandle conv;
+      recon::ParticipantHandle a;
+      recon::ParticipantHandle b;
    };
 
-   std::vector<Data> mInternalHosts;
-   std::vector<Data> mInternalTLSNames;
+   std::vector<resip::Data> mInternalHosts;
+   std::vector<resip::Data> mInternalTLSNames;
    bool mInternalAllPrivate;
-   Data mInternalMediaAddress;
-   std::vector<Data> mReplicatedHeaders;
+   resip::Data mInternalMediaAddress;
+   std::vector<resip::Data> mReplicatedHeaders;
 
-   std::map<Data,UserCredentials> mUsers;
+   std::map<resip::Data,UserCredentials> mUsers;
 
-   std::map<ConversationHandle,SharedPtr<B2BCall> > mCallsByConversation;
-   std::map<ParticipantHandle,SharedPtr<B2BCall> > mCallsByParticipant;
+   std::map<recon::ConversationHandle,resip::SharedPtr<B2BCall> > mCallsByConversation;
+   std::map<recon::ParticipantHandle,resip::SharedPtr<B2BCall> > mCallsByParticipant;
 };
 
 }

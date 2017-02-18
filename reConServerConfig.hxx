@@ -13,7 +13,7 @@
 #include <resip/stack/SipConfigParse.hxx>
 #include <recon/UserAgent.hxx>
 
-namespace recon {
+namespace reconserver {
 
 class ReConServerConfig : public resip::SipConfigParse
 {
@@ -31,12 +31,12 @@ public:
    void printHelpText(int argc, char **argv);
    using resip::ConfigParse::getConfigValue;
 
-   bool getConfigValue(const resip::Data& name, ConversationProfile::SecureMediaMode &value);
-   ConversationProfile::SecureMediaMode getConfigSecureMediaMode(const resip::Data& name, const ConversationProfile::SecureMediaMode defaultValue);
+   bool getConfigValue(const resip::Data& name, recon::ConversationProfile::SecureMediaMode &value);
+   recon::ConversationProfile::SecureMediaMode getConfigSecureMediaMode(const resip::Data& name, const recon::ConversationProfile::SecureMediaMode defaultValue);
    bool isSecureMediaModeRequired();
 
-   bool getConfigValue(const resip::Data& name, ConversationProfile::NatTraversalMode &value);
-   ConversationProfile::NatTraversalMode getConfigNatTraversalMode(const resip::Data& name, const ConversationProfile::NatTraversalMode defaultValue);
+   bool getConfigValue(const resip::Data& name, recon::ConversationProfile::NatTraversalMode &value);
+   recon::ConversationProfile::NatTraversalMode getConfigNatTraversalMode(const resip::Data& name, const recon::ConversationProfile::NatTraversalMode defaultValue);
 
    bool getConfigValue(const resip::Data& name, Application& defaultValue);
    Application getConfigApplication(const resip::Data& name, const Application defaultValue);

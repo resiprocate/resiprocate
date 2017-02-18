@@ -12,9 +12,7 @@
 #include "MyConversationManager.hxx"
 #include "MyUserAgent.hxx"
 
-using namespace resip;
-
-namespace recon
+namespace reconserver
 {
 
 class ReConServerProcess : public resip::ServerProcess
@@ -24,7 +22,7 @@ public:
    virtual ~ReConServerProcess();
 
    virtual int main(int argc, char** argv);
-   virtual void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
+   virtual void processCommandLine(resip::Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
    virtual void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
 };
 

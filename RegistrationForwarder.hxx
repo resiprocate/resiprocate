@@ -11,30 +11,27 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TransactionUser.hxx"
 
-using namespace resip;
-
-
-namespace recon
+namespace reconserver
 {
 
 class RegistrationForwarder : public resip::TransactionUser
 {
    public:
-      RegistrationForwarder(ConfigParse& cp, SipStack& stack);
+      RegistrationForwarder(resip::ConfigParse& cp, resip::SipStack& stack);
       virtual ~RegistrationForwarder();
 
       bool process(resip::Lockable* mutex = 0);
 
-      virtual const Data& name() const;
+      virtual const resip::Data& name() const;
 
    private:
       void internalProcess(std::auto_ptr<resip::Message>);
 
-      SipStack& mStack;
+      resip::SipStack& mStack;
 
       unsigned int mMaxExpiry;
-      Data mPath;
-      NameAddr mRegistrationRoute;
+      resip::Data mPath;
+      resip::NameAddr mRegistrationRoute;
 
       typedef enum
       {
