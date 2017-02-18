@@ -50,6 +50,7 @@ int _kbhit() {
 #include "MyMessageDecorator.hxx"
 #include "MyConversationManager.hxx"
 #include "B2BCallManager.hxx"
+#include "CDRFile.hxx"
 #include "RegistrationForwarder.hxx"
 
 #include <rutil/Log.hxx>
@@ -842,6 +843,7 @@ ReConServerProcess::main (int argc, char** argv)
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
    Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
+   Data cdrLogFilename = reConServerConfig.getConfigData("CDRLogFile", "", true);
    Data captureHost = reConServerConfig.getConfigData("CaptureHost", "");
    int capturePort = reConServerConfig.getConfigInt("CapturePort", 9060);
    int captureAgentID = reConServerConfig.getConfigInt("CaptureAgentID", 2002);
@@ -1299,7 +1301,14 @@ ReConServerProcess::main (int argc, char** argv)
             conversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
-            conversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig));
+            {
+               SharedPtr<B2BCallLogger> b2bCallLogger;
+               if(!cdrLogFilename.empty())
+               {
+                  b2bCallLogger.reset(new CDRFile(cdrLogFilename));
+               }
+               conversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger));
+            }
             break;
          default:
             assert(0);
