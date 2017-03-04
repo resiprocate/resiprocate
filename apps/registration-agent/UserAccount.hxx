@@ -38,10 +38,14 @@ public:
    void activate();
    void deactivate();
 
+   void setContact(const resip::Data& newContact, const time_t expires = 0, const std::vector<resip::Data>& route = std::vector<resip::Data>());
+   void unSetContact();
+
    virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
    virtual void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response);
    virtual void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response);
    virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response);
+   virtual bool onRefreshRequired(resip::ClientRegistrationHandle, const resip::SipMessage& lastRequest);
 
    virtual void onLineRemoved(resip::SharedPtr<KeyedFileLine> sp);
    virtual void onLineChanged();
@@ -55,6 +59,9 @@ private:
    resip::DialogUsageManager& mDum;
    UserRegistrationClient *mUserRegistrationClient;
    resip::NameAddr mAor;
+   bool mContactOverride;   // when set, a changed Contact in the file is ignored
+                            // and it can only be changed through set/unset methods
+   time_t mExpires;         // if 0, keep refreshing
    resip::Data mContact;
    resip::Uri mContactUri;
    resip::Data mSecret;
@@ -73,6 +80,7 @@ private:
    State mState;
 
    resip::SharedPtr<resip::UserProfile> mProfile;
+   resip::NameAddrs mRoute;
 
    std::vector<resip::ClientRegistrationHandle> mHandles;
 };

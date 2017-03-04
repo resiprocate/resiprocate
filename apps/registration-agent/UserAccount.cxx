@@ -39,6 +39,8 @@ UserAccount::UserAccount(SharedPtr<KeyedFile> keyedFile, const Uri& aor, const v
    mDum(dum),
    mUserRegistrationClient(userRegistrationClient),
    mAor(aor),
+   mContactOverride(false),
+   mExpires(0),
    mState(UserAccount::Inactive)
 {
    readColumns();
@@ -56,8 +58,14 @@ UserAccount::~UserAccount()
 void
 UserAccount::readColumns()
 {
-   mContact = getParam(0);
-   mContactUri = Uri(mContact);
+   if(!mContactOverride)
+   {
+      mContact = getParam(0);
+      if(!mContact.empty())
+      {
+         mContactUri = Uri(mContact);
+      }
+   }
    mSecret = paramCount() > 1 ? getParam(1) : Data::Empty;
    mAuthUser = paramCount() > 2 ? getParam(2) : Data::Empty;
    if(mAuthUser.empty())
@@ -113,6 +121,30 @@ UserAccount::deactivate()
 }
 
 void
+UserAccount::setContact(const Data& newContact, const time_t expires, const std::vector<resip::Data>& route)
+{
+   deactivate();
+   mContactOverride = true;
+   mContact = newContact;
+   mContactUri = Uri(mContact);
+   mExpires = expires;
+   mRoute.clear();
+   for(std::vector<resip::Data>::const_iterator it = route.begin(); it != route.end(); it++)
+   {
+      mRoute.push_back(NameAddr(*it));
+   }
+   activate();
+}
+
+void
+UserAccount::unSetContact()
+{
+   mContactOverride = true;
+   deactivate();
+   mContact.clear();
+}
+
+void
 UserAccount::doRegistration()
 {
    SharedPtr<SipMessage> regMessage = mDum.makeRegistration(mAor, mProfile);
@@ -127,6 +159,8 @@ UserAccount::doRegistration()
    }
    regMessage->header(h_Contacts).clear();
    regMessage->header(h_Contacts).push_back(contact);
+   regMessage->header(h_Routes) = mRoute;
+
    mDum.sendCommand(regMessage);
 }
 
@@ -179,6 +213,27 @@ UserAccount::onRequestRetry(ClientRegistrationHandle h, int retrySeconds, const 
 {
    WarningLog ( << "ClientHandler:onRequestRetry, want to retry immediately");
    return 0;
+}
+
+bool
+UserAccount::onRefreshRequired(resip::ClientRegistrationHandle h, const resip::SipMessage& lastRequest)
+{
+   StackLog(<<"UserAccount::onRefreshRequired mExpires == " << mExpires);
+   if(mExpires == 0)
+   {
+      return true;
+   }
+   UInt64 now = Timer::getTimeSecs();
+   if(now > mExpires)
+   {
+      DebugLog(<<"now = " << now << " and contact expired at " << mExpires);
+      if(mState == Active)
+      {
+         mState = Inactive;
+      }
+      return false;
+   }
+   return true;
 }
 
 void

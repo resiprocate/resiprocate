@@ -30,6 +30,7 @@
 #endif
 
 #include "AppSubsystem.hxx"
+#include "CommandThread.hxx"
 #include "RegConfig.hxx"
 #include "UserRegistrationClient.hxx"
 #include "KeyedFile.hxx"
@@ -178,11 +179,23 @@ class MyClientRegistrationAgent : public ServerProcess
          rowHandler->setUserRegistrationClient(&clientHandler);
          kf->doReload();
 
+         Data brokerURL(cfg.getConfigData("BrokerURL", "", true));
+         SharedPtr<CommandThread> cmd;
+         if(!brokerURL.empty())
+         {
+            cmd.reset(new CommandThread(brokerURL.c_str()));
+            cmd->run();
+         }
+
          int n = 0;
          while ( true )
          {
             stack.process(100);
             while(clientDum.process());
+            if(cmd.get())
+            {
+               cmd->processQueue(clientHandler);
+            }
             if(mustReload)
             {
                kf->doReload();

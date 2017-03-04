@@ -1,43 +1,44 @@
-#ifndef USERREGISTRATIONCLIENT_HXX
-#define USERREGISTRATIONCLIENT_HXX
+#ifndef COMMANDTHREAD_HXX
+#define COMMANDTHREAD_HXX
 
-#include "resip/stack/SipMessage.hxx"
+#include <sstream>
+#include <string>
+
+#include "rutil/ThreadIf.hxx"
+#include "rutil/TimeLimitFifo.hxx"
 #include "resip/stack/Uri.hxx"
-#include "resip/dum/ClientRegistration.hxx"
-#include "resip/dum/RegistrationHandler.hxx"
-#include "resip/dum/UserProfile.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
-#include "KeyedFile.hxx"
-#include "UserAccount.hxx"
+#include <proton/messaging_handler.hpp>
+#include <proton/receiver.hpp>
+#include <proton/transport.hpp>
+
+#include "cajun/json/elements.h"
+
+#include "UserRegistrationClient.hxx"
 
 namespace registrationclient {
 
-class UserRegistrationClient : public resip::ClientRegistrationHandler
+class CommandThread : public resip::ThreadIf, proton::messaging_handler
 {
-
 public:
-   UserRegistrationClient(resip::SharedPtr<KeyedFile> keyedFile);
-   virtual ~UserRegistrationClient();
+   CommandThread(const std::string &u);
+   ~CommandThread();
 
-   void addUserAccount(const resip::Uri& aor, resip::SharedPtr<UserAccount> userAccount);
-   void removeUserAccount(const resip::Uri& aor);
+   void on_container_start(proton::container &c);
+   void on_receiver_open(proton::receiver &);
+   void on_receiver_close(proton::receiver &);
+   void on_transport_error(proton::transport &t);
+   void on_message(proton::delivery &d, proton::message &m);
 
-   void setContact(const resip::Uri& aor, const resip::Data& newContact, const time_t expires = 0, const std::vector<resip::Data>& route = std::vector<resip::Data>());
-   void unSetContact(const resip::Uri& aor);
+   virtual void thread();
 
-   virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
-   virtual void onRemoved(resip::ClientRegistrationHandle, const resip::SipMessage& response);
-   virtual void onFailure(resip::ClientRegistrationHandle, const resip::SipMessage& response);
-   virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response);
-   virtual bool onRefreshRequired(resip::ClientRegistrationHandle, const resip::SipMessage& lastRequest);
-
-protected:
-   resip::SharedPtr<UserAccount> userAccountForMessage(const resip::SipMessage& m);
-   resip::SharedPtr<UserAccount> userAccountForAoR(const resip::Uri& aor);
+   void processQueue(UserRegistrationClient& userRegistrationClient);
 
 private:
-   resip::SharedPtr<KeyedFile> mKeyedFile;
-   std::map<resip::Uri, resip::SharedPtr<UserAccount> > mAccounts;
+   std::string mUrl;
+   proton::receiver mReceiver;
+   resip::TimeLimitFifo<json::Object> mFifo;
 };
 
 } // namespace
@@ -46,7 +47,7 @@ private:
 
 /* ====================================================================
  *
- * Copyright 2012 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

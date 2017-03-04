@@ -32,6 +32,26 @@ UserRegistrationClient::removeUserAccount(const Uri& aor)
 }
 
 void
+UserRegistrationClient::setContact(const Uri& aor, const Data& newContact, const time_t expires, const vector<Data>& route)
+{
+   SharedPtr<UserAccount> userAccount = userAccountForAoR(aor);
+   if(userAccount.get())
+   {
+      userAccount->setContact(newContact, expires, route);
+   }
+}
+
+void
+UserRegistrationClient::unSetContact(const Uri& aor)
+{
+   SharedPtr<UserAccount> userAccount = userAccountForAoR(aor);
+   if(userAccount.get())
+   {
+      userAccount->unSetContact();
+   }
+}
+
+void
 UserRegistrationClient::onSuccess(ClientRegistrationHandle h, const SipMessage& response)
 {
    InfoLog( << "ClientHandler::onSuccess: " << endl );
@@ -78,10 +98,27 @@ UserRegistrationClient::onRequestRetry(ClientRegistrationHandle h, int retrySeco
    return 0;   // 0 - retry immediately
 }
 
+bool
+UserRegistrationClient::onRefreshRequired(ClientRegistrationHandle h, const resip::SipMessage& lastRequest)
+{
+   SharedPtr<UserAccount> userAccount = userAccountForMessage(lastRequest);
+   if(userAccount.get())
+   {
+      return userAccount->onRefreshRequired(h, lastRequest);
+   }
+   return true;
+}
+
 SharedPtr<UserAccount>
 UserRegistrationClient::userAccountForMessage(const resip::SipMessage& m)
 {
    Uri aor = m.header(h_To).uri();
+   return userAccountForAoR(aor);
+}
+
+SharedPtr<UserAccount>
+UserRegistrationClient::userAccountForAoR(const Uri& aor)
+{
    map<Uri, SharedPtr<UserAccount> >::iterator it = mAccounts.find(aor);
    if(it != mAccounts.end())
    {
