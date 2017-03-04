@@ -119,6 +119,7 @@ protected:
    RegSyncClient* mRegSyncClient;
    RegSyncServer* mRegSyncServerV4;
    RegSyncServer* mRegSyncServerV6;
+   RegSyncServer* mRegSyncServerAMQP;
    RegSyncServerThread* mRegSyncServerThread;
    std::list<CommandServer*> mCommandServerList;
    CommandServerThread* mCommandServerThread;

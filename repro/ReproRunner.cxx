@@ -255,6 +255,7 @@ ReproRunner::ReproRunner()
    , mRegSyncClient(0)
    , mRegSyncServerV4(0)
    , mRegSyncServerV6(0)
+   , mRegSyncServerAMQP(0)
    , mRegSyncServerThread(0)
    , mCommandServerThread(0)
    , mCongestionManager(0)
@@ -412,6 +413,10 @@ ReproRunner::run(int argc, char** argv)
    {
       mRegSyncClient->run();
    }
+   if(mRegSyncServerAMQP && mRegSyncServerAMQP->getThread().get())
+   {
+      mRegSyncServerAMQP->getThread()->run();
+   }
 
    mRunning = true;
 
@@ -445,6 +450,10 @@ ReproRunner::shutdown()
    if(mRegSyncClient)
    {
       mRegSyncClient->shutdown();
+   }
+   if(mRegSyncServerAMQP && mRegSyncServerAMQP->getThread().get())
+   {
+      mRegSyncServerAMQP->getThread()->shutdown();
    }
 
    // Wait for all threads to shutdown, and destroy objects
@@ -489,6 +498,10 @@ ReproRunner::shutdown()
    {
       mRegSyncClient->join();
    }
+   if(mRegSyncServerAMQP && mRegSyncServerAMQP->getThread().get())
+   {
+      mRegSyncServerAMQP->getThread()->join();
+   }
 
    mSipStack->setCongestionManager(0);
 
@@ -531,6 +544,7 @@ ReproRunner::cleanupObjects()
       mCommandServerList.clear();
    }
    delete mRegSyncServerThread; mRegSyncServerThread = 0;
+   delete mRegSyncServerAMQP; mRegSyncServerAMQP = 0;
    delete mRegSyncServerV6; mRegSyncServerV6 = 0;
    delete mRegSyncServerV4; mRegSyncServerV4 = 0;
    delete mRegSyncClient; mRegSyncClient = 0;
@@ -1399,10 +1413,11 @@ ReproRunner::createRegSync()
    resip_assert(!mRegSyncClient);
    resip_assert(!mRegSyncServerV4);
    resip_assert(!mRegSyncServerV6);
+   resip_assert(!mRegSyncServerAMQP);
    resip_assert(!mRegSyncServerThread);
+   bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationReplication", false);
    if(mRegSyncPort != 0)
    {
-      bool enablePublicationReplication = mProxyConfig->getConfigBool("EnablePublicationReplication", false);
       std::list<RegSyncServer*> regSyncServerList;
       if(mUseV4) 
       {
@@ -1434,6 +1449,13 @@ ReproRunner::createRegSync()
                                             regSyncPeerAddress, remoteRegSyncPort,
                                             enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
       }
+   }
+   Data regSyncBrokerTopic = mProxyConfig->getConfigData("RegSyncBrokerTopic", Data::Empty);
+   if(!regSyncBrokerTopic.empty())
+   {
+      mRegSyncServerAMQP = new RegSyncServer(dynamic_cast<InMemorySyncRegDb*>(mRegistrationPersistenceManager),
+                                              regSyncBrokerTopic,
+                                              enablePublicationReplication ? dynamic_cast<InMemorySyncPubDb*>(mPublicationPersistenceManager) : 0);
    }
 }
 

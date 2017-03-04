@@ -231,6 +231,12 @@ if USE_MAXMIND_GEOIP
 librepro_la_LIBADD += @LIBGEOIP_LIBADD@
 endif
 
+if BUILD_QPID_PROTON
+librepro_la_SOURCES += QpidProtonThread.cxx
+nobase_reproinclude_HEADERS += QpidProtonThread.hxx
+librepro_la_LIBADD += -lqpid-proton-cpp
+endif
+
 # reproInfo.hxx is created manually be other build systems
 # but here we just delegate to the autoconf generated config.h
 reproInfo.hxx:

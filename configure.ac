@@ -315,6 +315,12 @@ AC_ARG_WITH(python,
  fi
 ], )
 
+AM_CONDITIONAL(BUILD_QPID_PROTON, false)
+AC_ARG_WITH(qpid-proton,
+[  --with-qpid-proton      Build components requiring qpid-proton (AMQP)],
+ [AC_DEFINE_UNQUOTED(BUILD_QPID_PROTON, , BUILD_QPID_PROTON)
+ AM_CONDITIONAL(BUILD_QPID_PROTON, true)], )
+
 AM_CONDITIONAL(RESIP_ASSERT_SYSLOG, false)
 AC_ARG_ENABLE(assert-syslog,
 [  --enable-assert-syslog  Log assertion failures with Syslog],
