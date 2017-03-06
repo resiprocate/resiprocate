@@ -15,6 +15,13 @@ ClientRegistrationHandler::onFlowTerminated(ClientRegistrationHandle h)
    h->requestRefresh();
 }
 
+bool
+ClientRegistrationHandler::onRefreshRequired(ClientRegistrationHandle h, const SipMessage& lastRequest)
+{
+   InfoLog(<<"ClientRegistrationHandler::onRefreshRequired, returning true");
+   return true;
+}
+
 void
 ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<MasterProfile> masterProfile,
       UInt32 &expires, UInt32 &returnCode)

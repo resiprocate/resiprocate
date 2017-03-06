@@ -37,6 +37,11 @@ class ClientRegistrationHandler
       /// supports RFC5626 (outbound).
       /// Default implementation is to immediately re-Register in an attempt to form a new flow.
       virtual void onFlowTerminated(ClientRegistrationHandle);
+
+      /// Called before attempting to refresh a registration
+      /// Return true if the refresh should go ahead or false otherwise
+      /// Default implementation always returns true
+      virtual bool onRefreshRequired(ClientRegistrationHandle, const SipMessage& lastRequest);
 };
 
 class ServerRegistrationHandler
