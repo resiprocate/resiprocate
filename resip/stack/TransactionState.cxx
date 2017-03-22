@@ -1328,13 +1328,13 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      mNextTransmission->copyOutboundDecoratorsToStackFailureAck(*ack);
                      resetNextTransmission(ack);
                      sendCurrentToWire();
-                     if(mDnsResult)
-                     {
-                        mDnsResult->destroy();
-                        mDnsResult=0;
-                        mPendingOperation=None;
-                     }
                      sendToTU(sip); // don't delete msg
+                     if (mDnsResult)
+                     {
+                         mDnsResult->destroy();
+                         mDnsResult = 0;
+                         mPendingOperation = None;
+                     }
                   }
                   else if (mState == Completed)
                   {
