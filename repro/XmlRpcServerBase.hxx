@@ -8,6 +8,11 @@
 #include <rutil/Fifo.hxx>
 #include <resip/stack/Tuple.hxx>
 #include <rutil/SelectInterruptor.hxx>
+#include <rutil/SharedPtr.hxx>
+
+#ifdef BUILD_QPID_PROTON
+#include "repro/QpidProtonThread.hxx"
+#endif
 
 /// This Class is used to implement a primitive form of RPC using loose XML formatting.
 /// The XML formatting used is specific to this implementation and is NOT currently intended to 
@@ -49,6 +54,7 @@ class XmlRpcServerBase
       
 public:
    XmlRpcServerBase(int port, resip::IpVersion version, resip::Data ipAddr = resip::Data::Empty);
+   XmlRpcServerBase(const resip::Data& brokerUrl);
    virtual ~XmlRpcServerBase();
       
    void buildFdSet(resip::FdSet& fdset);
@@ -67,6 +73,8 @@ public:
    void sendEvent(unsigned int connectionId,
                   const resip::Data& eventData);
 
+   resip::SharedPtr<resip::ThreadIf> getThread();
+
 protected:
    virtual void handleRequest(unsigned int connectionId, 
                               unsigned int requestId, 
@@ -78,6 +86,12 @@ private:
    resip::Socket mFd;
    resip::Tuple mTuple;
    bool mSane;
+
+#ifdef BUILD_QPID_PROTON
+   resip::SharedPtr<QpidProtonThread> mQpidProtonThread;
+#else
+   resip::SharedPtr<ThreadIf> mQpidProtonThread;
+#endif
 
    typedef std::map<unsigned int, XmlRpcConnection*> ConnectionMap;
    ConnectionMap mConnections;

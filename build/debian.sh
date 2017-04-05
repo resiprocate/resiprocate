@@ -35,6 +35,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-apps \
               --with-telepathy \
               --with-ichat-gw \
-              --with-recon
+              --with-recon \
+              --with-qpid-proton
 
 

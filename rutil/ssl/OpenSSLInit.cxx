@@ -85,12 +85,10 @@ OpenSSLInit::~OpenSSLInit()
    CRYPTO_cleanup_all_ex_data();
    ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
 
-#if OPENSSL_VERSION_NUMBER < 0x01000200f
-   // can't use reSIProcate Logger here as it may no longer be in a sane state
-   std::cerr << "Warning: Unable to free compression methods on OpenSSL < 1.0.2" << std::endl;
-#else
-   SSL_COMP_free_compression_methods();
-#endif
+   // Warning: Unable to free compression methods on OpenSSL < 1.0.2
+   // For now we don't even try to free, see discussion in Debian bug #848652
+   // https://bugs.debian.org/848652
+   //SSL_COMP_free_compression_methods();
 
 //	CRYPTO_mem_leaks_fp(stderr);
 

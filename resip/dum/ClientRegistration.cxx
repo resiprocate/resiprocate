@@ -300,6 +300,14 @@ ClientRegistration::internalRequestRefresh(UInt32 expires)
       return;
    }
 
+   // check if refresh really required
+   if(!mDum.mClientRegistrationHandler->onRefreshRequired(getHandle(), *mLastRequest))
+   {
+      InfoLog (<< "application doesn't want to refresh " << *this);
+      end();
+      return;
+   }
+
    InfoLog (<< "requesting refresh of " << *this);
    
    mState = Refreshing;

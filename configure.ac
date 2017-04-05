@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.11.0~beta1)
+AC_INIT(resiprocate,1.11.0~beta2)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -314,6 +314,12 @@ AC_ARG_WITH(python,
   exit 1
  fi
 ], )
+
+AM_CONDITIONAL(BUILD_QPID_PROTON, false)
+AC_ARG_WITH(qpid-proton,
+[  --with-qpid-proton      Build components requiring qpid-proton (AMQP)],
+ [AC_DEFINE_UNQUOTED(BUILD_QPID_PROTON, , BUILD_QPID_PROTON)
+ AM_CONDITIONAL(BUILD_QPID_PROTON, true)], )
 
 AM_CONDITIONAL(RESIP_ASSERT_SYSLOG, false)
 AC_ARG_ENABLE(assert-syslog,

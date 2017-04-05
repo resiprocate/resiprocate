@@ -23,6 +23,9 @@ public:
                  int port, 
                  resip::IpVersion version,
                  resip::InMemorySyncPubDb* pubDb = 0);
+   RegSyncServer(resip::InMemorySyncRegDb* regDb,
+                 const resip::Data& brokerQueue,
+                 resip::InMemorySyncPubDb* pubDb = 0);
    virtual ~RegSyncServer();
 
    // thread safe

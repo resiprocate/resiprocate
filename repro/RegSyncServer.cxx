@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
 #include <sstream>
 
 #include <resip/stack/Symbols.hxx>
@@ -27,6 +31,23 @@ RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
                              IpVersion version,
                              resip::InMemorySyncPubDb* pubDb) :
    XmlRpcServerBase(port, version),
+   mRegDb(regDb),
+   mPubDb(pubDb)
+{
+   if (mRegDb)
+   {
+      mRegDb->addHandler(this);
+   }
+   if (mPubDb)
+   {
+      mPubDb->addHandler(this);
+   }
+}
+
+RegSyncServer::RegSyncServer(resip::InMemorySyncRegDb* regDb,
+                             const resip::Data& brokerQueue,
+                             resip::InMemorySyncPubDb* pubDb) :
+   XmlRpcServerBase(brokerQueue),
    mRegDb(regDb),
    mPubDb(pubDb)
 {
