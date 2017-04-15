@@ -1,4 +1,3 @@
-usr/lib/*/librepro-*.so*
 usr/lib/*/resiprocate/repro/plugins/*.so
 usr/sbin/repro
 usr/sbin/reprocmd
