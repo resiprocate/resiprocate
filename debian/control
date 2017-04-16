@@ -28,7 +28,8 @@ Architecture: any
 Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libc-ares-dev, libssl1.0-dev | libssl-dev (<< 1.1), libradcli-dev
 Provides: libresiprocate-dev
 Conflicts: libresiprocate-dev, libresiprocate-1.8-dev
-Replaces: libresiprocate-dev, libresiprocate-1.8-dev
+Replaces: libresiprocate-dev, libresiprocate-1.8-dev, repro (<< 1:1.11.0~beta1-2)
+Breaks: repro (<< 1:1.11.0~beta1-2)
 Description: reSIProcate SIP stack - development files
  reSIProcate is a framework that aims to fully implement the SIP protocol
  in first class C++.  It is intended for use in other applications,
