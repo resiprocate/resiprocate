@@ -148,6 +148,8 @@ class TransactionState : public DnsHandler
       Machine mMachine;
       State mState;
       bool mIsAbandoned; // TU doesn't care about this transaction anymore.
+      Tokens* mPendingCancelReasons; // Using a pointer to keep storage to a minimum when not needed
+      void setPendingCancelReasons(const Tokens* reasons);
       
       // Indicates that the message has been sent with a reliable protocol. Set
       // by the TransportSelector

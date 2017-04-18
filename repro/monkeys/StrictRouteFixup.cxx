@@ -35,13 +35,11 @@ StrictRouteFixup::~StrictRouteFixup()
 Processor::processor_action_t
 StrictRouteFixup::process(RequestContext& context)
 {
-   DebugLog(<< "Monkey handling request: " << *this 
-            << "; reqcontext = " << context);
+   DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
    resip::SipMessage& request = context.getOriginalRequest();
 
-   if (request.exists(h_Routes) &&
-       !request.header(h_Routes).empty())
+   if (request.exists(h_Routes) && !request.header(h_Routes).empty())
    {
       if(!request.header(h_Routes).front().isWellFormed())
       {
@@ -55,14 +53,14 @@ StrictRouteFixup::process(RequestContext& context)
       // Do any required session accounting
       context.getProxy().doSessionAccounting(request, true /* received */, context);
 
-      //Will cancel any active transactions (ideally there should be none)
-      //and terminate any pending transactions.
+      // Will cancel any active transactions (ideally there should be none)
+      // and terminate any pending transactions.
       context.getResponseContext().cancelAllClientTransactions();
       std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
       if(!context.getTopRoute().uri().user().empty())
       {
          resip::Tuple source(Tuple::makeTupleFromBinaryToken(context.getTopRoute().uri().user().base64decode(), Proxy::FlowTokenSalt));
-         if(!(source==resip::Tuple()))
+         if(!(source == resip::Tuple()))
          {
             // valid flow token
             target->rec().mReceivedFrom = source;
