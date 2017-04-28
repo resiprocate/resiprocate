@@ -1001,6 +1001,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq)
 
    if (mDialogSet.mUserProfile->isAnonymous())
    {
+      request.remove(h_Privacys);
       request.header(h_Privacys).push_back(PrivacyCategory(Symbols::id));
    }
 

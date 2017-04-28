@@ -121,7 +121,7 @@ const char* Symbols::Credential = "credential";
 
 const char* Symbols::SipProfile = "sip-profile";
 
-const char* Symbols::id = "id"; // from RFC 3323
+const char* Symbols::id = "id"; // from RFC 3325
 
 const char* Symbols::Gruu = "gruu";
 
