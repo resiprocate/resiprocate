@@ -160,6 +160,7 @@ class MyClientRegistrationAgent : public ServerProcess
          clientDum.getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
          // Retry every 60 seconds after a hard failure:
          clientDum.getMasterProfile()->setDefaultRegistrationRetryTime(60);
+         clientDum.getMasterProfile()->setUserAgent("reSIProcate registrationAgent");
 
          // keep alive test.
          auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
