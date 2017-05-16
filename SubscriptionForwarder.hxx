@@ -1,42 +1,49 @@
-#ifndef MYUSERAGENT_HXX
-#define MYUSERAGENT_HXX
-
-#include <os/OsIntTypes.h>
+#ifndef SUBSCRIPTIONFORWARDER_HXX
+#define SUBSCRIPTIONFORWARDER_HXX
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
 #endif
 
-#include <rutil/ConfigParse.hxx>
-#include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
-#include <recon/UserAgent.hxx>
-
-#include "B2BCallManager.hxx"
-#include "RegistrationForwarder.hxx"
-#include "SubscriptionForwarder.hxx"
+#include "rutil/ConfigParse.hxx"
+#include "rutil/Data.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/TransactionUser.hxx"
 
 namespace reconserver
 {
 
-class MyUserAgent : public recon::UserAgent
+class SubscriptionForwarder : public resip::TransactionUser
 {
-public:
-   MyUserAgent(resip::ConfigParse& configParse, recon::ConversationManager* conversationManager, resip::SharedPtr<recon::UserAgentMasterProfile> profile);
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
-   virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
-   virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
-   virtual resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
-   virtual void process(int timeoutMs);
+   public:
+      SubscriptionForwarder(resip::ConfigParse& cp, resip::SipStack& stack);
+      virtual ~SubscriptionForwarder();
 
-private:
-   friend class B2BCallManager;
+      bool process(resip::Lockable* mutex = 0);
 
-   unsigned int mMaxRegLoops;
-   resip::SharedPtr<RegistrationForwarder> mRegistrationForwarder;
-   resip::SharedPtr<SubscriptionForwarder> mSubscriptionForwarder;
+      virtual const resip::Data& name() const;
 
-   B2BCallManager *getB2BCallManager();
+   private:
+      void internalProcess(std::auto_ptr<resip::Message>);
+
+      resip::SipStack& mStack;
+
+      unsigned int mMaxExpiry;
+      resip::Data mPath;
+      resip::NameAddr mSubscriptionRoute;
+      bool mMissingEventHack;
+      bool mOverrideContactWithAor;
+
+      typedef enum
+      {
+         Running,
+         ShutdownRequested, // while ending usages
+         RemovingTransactionUser, // while removing TU from stack
+         Shutdown,  // after TU has been removed from stack
+         Destroying // while calling destructor
+      } ShutdownState;
+      ShutdownState mShutdownState;
 };
 
 }

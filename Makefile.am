@@ -25,6 +25,8 @@ reConServer_SOURCES += MyUserAgent.cxx
 reConServer_SOURCES += MyUserAgent.hxx
 reConServer_SOURCES += RegistrationForwarder.cxx
 reConServer_SOURCES += RegistrationForwarder.hxx
+reConServer_SOURCES += SubscriptionForwarder.cxx
+reConServer_SOURCES += SubscriptionForwarder.hxx
 reConServer_SOURCES += playback_prompt.h
 reConServer_SOURCES += record_prompt.h
 
