@@ -20,9 +20,11 @@ using namespace resip;
 using namespace std;
 
 QpidProtonThread::QpidProtonThread(const std::string &u)
-   : mUrl(u),
+   : mPending(0),
+     mUrl(u),
      mFifo(0, 0),
-     mReadyToSend(*this)
+     mReadyToSend(*this),
+     mReadyToShutdown(*this)
 {
 }
 
@@ -65,6 +67,17 @@ QpidProtonThread::on_sendable(proton::sender& s)
 }
 
 void
+QpidProtonThread::on_tracker_accept(proton::tracker &t)
+{
+   StackLog(<<"on_tracker_accept: mPending = " << --mPending);
+   if(isShutdown() && !mFifo.messageAvailable() && mPending == 0)
+   {
+      StackLog(<<"no more messages outstanding, shutting down");
+      mSender.container().stop();
+   }
+}
+
+void
 QpidProtonThread::thread()
 {
    while(!isShutdown())
@@ -103,6 +116,7 @@ QpidProtonThread::doSend()
          proton::message msg;
          msg.body(body->c_str());
          mSender.send(msg);
+         StackLog(<<"doSend: mPending = " << ++mPending);
       }
       catch(const std::exception& e)
       {
@@ -119,9 +133,31 @@ QpidProtonThread::doSend()
 void
 QpidProtonThread::shutdown()
 {
-   ThreadIf::shutdown();
+   if(isShutdown())
+   {
+      DebugLog(<<"shutdown already in progress!");
+      return;
+   }
    DebugLog(<<"trying to shutdown the Qpid Proton container");
-   mSender.close();  // FIXME: should we make sure all messages really sent first?
+   ThreadIf::shutdown();
+   if(!mFifo.messageAvailable() && mPending == 0)
+   {
+      StackLog(<<"no messages outstanding, shutting down immediately");
+      proton::returned<proton::connection> ts_c = proton::make_thread_safe(mSender.connection());
+      ts_c.get()->event_loop()->inject(mReadyToShutdown);
+   }
+   else
+   {
+      StackLog(<<"waiting to close connection, mFifo.size() = " << mFifo.size()
+               << " and mPending = " << mPending);
+   }
+}
+
+void
+QpidProtonThread::ready_to_shutdown::operator()()
+{
+   StackLog(<<"ready_to_shutdown::operator(): closing sender");
+   mThread.mSender.container().stop();
 }
 
 
