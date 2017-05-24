@@ -6,6 +6,7 @@
 #include <proton/delivery.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/connection.hpp>
+#include <proton/thread_safe.hpp>
 #include <proton/tracker.hpp>
 #include <proton/source_options.hpp>
 
@@ -20,7 +21,8 @@ using namespace std;
 
 QpidProtonThread::QpidProtonThread(const std::string &u)
    : mUrl(u),
-     mFifo(0, 0)
+     mFifo(0, 0),
+     mReadyToSend(*this)
 {
 }
 
@@ -58,28 +60,8 @@ QpidProtonThread::on_transport_error(proton::transport &t)
 void
 QpidProtonThread::on_sendable(proton::sender& s)
 {
-   try
-   {
-      if(mFifo.messageAvailable())
-      {
-         StackLog(<<"on_sendable called and the FIFO is not empty");
-         // FIXME: not really used right now as the other thread is not
-         // populating mFifo, it just calls mSender::send() directly
-         SharedPtr<Data> body(mFifo.getNext());
-         proton::message msg;
-         msg.body(body->c_str());
-         s.send(msg);
-      }
-      else
-      {
-         StackLog(<<"on_sendable called but the FIFO is empty");
-      }
-   }
-   catch(const std::exception& e)
-   {
-      ErrLog(<<"failed to send a message: " << e.what());
-      return;
-   }
+   StackLog(<<"on_sendable invoked");
+   doSend();
 }
 
 void
@@ -103,15 +85,35 @@ QpidProtonThread::thread()
 void
 QpidProtonThread::sendMessage(const resip::Data& msg)
 {
-   //mFifo.add(new Data(msg), TimeLimitFifo<Data>::InternalElement);
-   //StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
+   mFifo.add(new Data(msg), TimeLimitFifo<Data>::InternalElement);
+   proton::returned<proton::connection> ts_c = proton::make_thread_safe(mSender.connection());
+   ts_c.get()->event_loop()->inject(mReadyToSend);
+   StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
+}
 
-   // FIXME: is it safe to call send() here or do we need to put messages through
-   // mFifo and call send() from the container thread?
-   proton::message _msg;
-   _msg.body(msg.c_str());
-   mSender.send(_msg);
-   StackLog(<<"QpidProtonThread::sendMessage done");
+void
+QpidProtonThread::doSend()
+{
+   while(mSender.credit() && mFifo.messageAvailable())
+   {
+      try
+      {
+         StackLog(<<"doSend trying to send a message");
+         SharedPtr<Data> body(mFifo.getNext());
+         proton::message msg;
+         msg.body(body->c_str());
+         mSender.send(msg);
+      }
+      catch(const std::exception& e)
+      {
+         ErrLog(<<"failed to send a message: " << e.what());
+         return;
+      }
+   }
+   if(mFifo.messageAvailable())
+   {
+      StackLog(<<"doSend still has messages to send, but no credit remaining");
+   }
 }
 
 void

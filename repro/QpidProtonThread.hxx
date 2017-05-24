@@ -9,6 +9,7 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
+#include <proton/function.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/sender.hpp>
 #include <proton/transport.hpp>
@@ -31,11 +32,22 @@ public:
    virtual void shutdown();
 
    void sendMessage(const resip::Data& msg);
+   void doSend();
 
 private:
    std::string mUrl;
    proton::sender mSender;
    resip::TimeLimitFifo<resip::Data> mFifo;
+
+   class ready_to_send : public proton::void_function0
+   {
+   private:
+      QpidProtonThread& mThread;
+   public:
+      ready_to_send(QpidProtonThread& _thread) : mThread(_thread) {};
+      void operator()() { mThread.doSend(); };
+   };
+   ready_to_send mReadyToSend;
 };
 
 } // namespace
