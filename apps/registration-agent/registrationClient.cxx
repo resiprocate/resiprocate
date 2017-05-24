@@ -171,7 +171,13 @@ class MyClientRegistrationAgent : public ServerProcess
          }
 
          mainLoop();
-       }
+
+         if(mCmd.get())
+         {
+            mCmd->shutdown();
+            mCmd->join();
+         }
+      }
 
       void doWait()
       {

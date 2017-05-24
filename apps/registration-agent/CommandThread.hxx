@@ -9,6 +9,7 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
+#include <proton/function.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/receiver.hpp>
 #include <proton/transport.hpp>
@@ -32,13 +33,25 @@ public:
    void on_message(proton::delivery &d, proton::message &m);
 
    virtual void thread();
+   virtual void shutdown();
 
    void processQueue(UserRegistrationClient& userRegistrationClient);
 
 private:
+   unsigned int mRetryDelay;
    std::string mUrl;
    proton::receiver mReceiver;
    resip::TimeLimitFifo<json::Object> mFifo;
+
+   class ready_to_shutdown : public proton::void_function0
+   {
+   private:
+      CommandThread& mThread;
+   public:
+      ready_to_shutdown(CommandThread& _thread) : mThread(_thread) {};
+      void operator()();
+   };
+   ready_to_shutdown mReadyToShutdown;
 };
 
 } // namespace

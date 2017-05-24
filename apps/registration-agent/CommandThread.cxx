@@ -25,8 +25,10 @@ using namespace resip;
 using namespace std;
 
 CommandThread::CommandThread(const std::string &u)
-   : mUrl(u),
-     mFifo(0, 0)
+   : mRetryDelay(2000),
+     mUrl(u),
+     mFifo(0, 0),
+     mReadyToShutdown(*this)
 {
 }
 
@@ -56,6 +58,8 @@ void
 CommandThread::on_transport_error(proton::transport &t)
 {
    WarningLog(<<"transport closed unexpectedly, trying to re-establish connection");
+   StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart receiver");
+   sleepMs(mRetryDelay);
    t.connection().container().open_receiver(mUrl);
 }
 
@@ -136,7 +140,7 @@ CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
 void
 CommandThread::thread()
 {
-   while(!mShutdown)
+   while(!isShutdown())
    {
       try
       {
@@ -146,10 +150,35 @@ CommandThread::thread()
       {
          WarningLog(<<"CommandThread::thread container threw " << e.what());
       }
+      if(!isShutdown())
+      {
+         StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart container");
+         sleepMs(mRetryDelay);
+      }
    }
    InfoLog(<<"CommandThread::thread container stopped");
 }
 
+void
+CommandThread::shutdown()
+{
+   if(isShutdown())
+   {
+      DebugLog(<<"shutdown already in progress!");
+      return;
+   }
+   DebugLog(<<"trying to shutdown the Qpid Proton container");
+   ThreadIf::shutdown();
+   proton::returned<proton::connection> ts_c = proton::make_thread_safe(mReceiver.connection());
+   ts_c.get()->event_loop()->inject(mReadyToShutdown);
+}
+
+void
+CommandThread::ready_to_shutdown::operator()()
+{
+   StackLog(<<"ready_to_shutdown::operator(): closing sender");
+   mThread.mReceiver.container().stop();
+}
 
 /* ====================================================================
  *
