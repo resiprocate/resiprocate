@@ -20,7 +20,8 @@ using namespace resip;
 using namespace std;
 
 QpidProtonThread::QpidProtonThread(const std::string &u)
-   : mPending(0),
+   : mRetryDelay(2000),
+     mPending(0),
      mUrl(u),
      mFifo(0, 0),
      mReadyToSend(*this),
@@ -55,7 +56,9 @@ QpidProtonThread::on_sender_close(proton::sender &r)
 void
 QpidProtonThread::on_transport_error(proton::transport &t)
 {
-   WarningLog(<<"transport closed unexpectedly, trying to re-establish connection");
+   WarningLog(<<"transport closed unexpectedly, will try to re-establish connection");
+   StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart sender");
+   sleepMs(mRetryDelay);
    t.connection().container().open_sender(mUrl);
 }
 
@@ -91,6 +94,11 @@ QpidProtonThread::thread()
       {
          ErrLog(<<"Qpid Proton container stopped by exception: " << e.what());
       }
+      if(!isShutdown())
+      {
+         StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart container");
+         sleepMs(mRetryDelay);
+      }
    }
    DebugLog(<<"Qpid Proton thread finishing");
 }
@@ -107,6 +115,11 @@ QpidProtonThread::sendMessage(const resip::Data& msg)
 void
 QpidProtonThread::doSend()
 {
+   if(!mSender.active())
+   {
+      StackLog(<<"doSend: mSender.active() == false, not trying to send");
+      return;
+   }
    while(mSender.credit() && mFifo.messageAvailable())
    {
       try

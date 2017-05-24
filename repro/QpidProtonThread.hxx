@@ -37,6 +37,7 @@ public:
    void doSend();
 
 private:
+   unsigned int mRetryDelay;
    UInt64 mPending;
    std::string mUrl;
    proton::sender mSender;
