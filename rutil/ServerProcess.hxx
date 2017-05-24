@@ -14,8 +14,15 @@ public:
    ServerProcess();
    virtual ~ServerProcess();
 
+   void mainLoop();
+   void onSignal(int signo);
+
 protected:
-   /* The main subclass can call dropPrivileges() if
+   /* The main subclass can call installSignalHandler()
+      if it wants signals handled. */
+   void installSignalHandler();
+
+   /* The main subclass can call dropPrivileges()
       if and when it wants to drop root privileges */
    void dropPrivileges(const Data& runAsUser, const Data& runAsGroup);
 
@@ -30,8 +37,15 @@ protected:
    /* Filename of PID file, or empty string for no PID file */
    void setPidFile(const Data& pidFile);
 
+   virtual void doWait();
+   virtual void onLoop();
+
+   virtual void onReload();
+
 private:
    Data mPidFile;
+   bool mFinished;
+   bool mReceivedHUP;
 };
 
 }
