@@ -13,8 +13,7 @@ using namespace resip;
 using namespace std;
 
 UserAccountFileRowHandler::UserAccountFileRowHandler(DialogUsageManager& dum)
-   : mDum(dum),
-     mUserRegistrationClient(NULL)
+   : mDum(dum)
 {
 }
 
@@ -29,12 +28,12 @@ UserAccountFileRowHandler::onNewLine(SharedPtr<KeyedFile> keyedFile, const Data&
 }
 
 void
-UserAccountFileRowHandler::setUserRegistrationClient(UserRegistrationClient* userRegistrationClient)
+UserAccountFileRowHandler::setUserRegistrationClient(SharedPtr<UserRegistrationClient> userRegistrationClient)
 {
    mUserRegistrationClient = userRegistrationClient;
 }
 
-UserAccount::UserAccount(SharedPtr<KeyedFile> keyedFile, const Uri& aor, const vector<Data>& columns, DialogUsageManager& dum, UserRegistrationClient *userRegistrationClient) :
+UserAccount::UserAccount(SharedPtr<KeyedFile> keyedFile, const Uri& aor, const vector<Data>& columns, DialogUsageManager& dum, resip::SharedPtr<UserRegistrationClient> userRegistrationClient) :
    BasicKeyedFileLine(keyedFile, aor.getAor(), columns),
    mDum(dum),
    mUserRegistrationClient(userRegistrationClient),

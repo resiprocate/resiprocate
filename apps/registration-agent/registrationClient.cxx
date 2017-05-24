@@ -44,23 +44,6 @@ using namespace registrationclient;
 using namespace resip;
 using namespace std;
 
-volatile bool mustReload = false;
-
-static void
-signalHandler(int signo)
-{
-#ifndef WIN32
-   if(signo == SIGHUP)
-   {
-      InfoLog(<<"Received HUP signal, logger reset");
-      Log::reset();
-      mustReload = true;
-      return;
-   }
-#endif
-   WarningLog(<<"Unexpected signal, ignoring it: " << signo);
-}
-
 class MyClientRegistrationAgent : public ServerProcess
 {
    public:
@@ -69,6 +52,7 @@ class MyClientRegistrationAgent : public ServerProcess
 
       void run(int argc, char **argv)
       {
+         installSignalHandler();
          Data defaultConfigFile(DEFAULT_CONFIG_FILE);
          RegConfig cfg;
          try
@@ -92,13 +76,6 @@ class MyClientRegistrationAgent : public ServerProcess
          Data logLevel = cfg.getConfigData("LogLevel", "INFO", true);
          Data logFilename = cfg.getConfigData("LogFilename", "registrationClient.log", true);
          Log::initialize(loggingType, logLevel, argv[0], logFilename.c_str(), 0);
-#ifndef WIN32
-         if ( signal( SIGHUP, signalHandler ) == SIG_ERR )
-         {
-            ErrLog(<<"Couldn't install signal handler for SIGHUP");
-            exit(-1);
-         }
-#endif
 
          InfoLog(<<"Starting client registration agent");
 
@@ -138,33 +115,33 @@ class MyClientRegistrationAgent : public ServerProcess
          {
             security->addCAFile(caFile);
          }
-         SipStack stack(security);
+         mStack.reset(new SipStack(security));
 #else
-         SipStack stack;
+         mStack.reset(new SipStack());
 #endif
 
-         DialogUsageManager clientDum(stack);
+         mClientDum.reset(new DialogUsageManager(*mStack));
          SharedPtr<MasterProfile> profile(new MasterProfile);
          auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
 
-         stack.addTransport(UDP, 0, V4);
-         // stack.addTransport(UDP, 0, V6);
-         stack.addTransport(TCP, 0, V4);
-         // stack.addTransport(TCP, 0, V6);
+         mStack->addTransport(UDP, 0, V4);
+         // mStack->addTransport(UDP, 0, V6);
+         mStack->addTransport(TCP, 0, V4);
+         // mStack->addTransport(TCP, 0, V6);
 #ifdef USE_SSL
-         stack.addTransport(TLS, 0, V4);
-         // stack.addTransport(TLS, 0, V6);
+         mStack->addTransport(TLS, 0, V4);
+         // mStack->addTransport(TLS, 0, V6);
 #endif
-         clientDum.setMasterProfile(profile);
-         clientDum.setClientAuthManager(clientAuth);
-         clientDum.getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
+         mClientDum->setMasterProfile(profile);
+         mClientDum->setClientAuthManager(clientAuth);
+         mClientDum->getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
          // Retry every 60 seconds after a hard failure:
-         clientDum.getMasterProfile()->setDefaultRegistrationRetryTime(60);
-         clientDum.getMasterProfile()->setUserAgent("reSIProcate registrationAgent");
+         mClientDum->getMasterProfile()->setDefaultRegistrationRetryTime(60);
+         mClientDum->getMasterProfile()->setUserAgent("reSIProcate registrationAgent");
 
          // keep alive test.
          auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
-         clientDum.setKeepAliveManager(keepAlive);
+         mClientDum->setKeepAliveManager(keepAlive);
 
          profile->setRportEnabled(rport);
 
@@ -178,38 +155,50 @@ class MyClientRegistrationAgent : public ServerProcess
             profile->setOutboundProxy(_outboundProxy);
          }
 
-         SharedPtr<UserAccountFileRowHandler> rowHandler(new UserAccountFileRowHandler(clientDum));
-         SharedPtr<KeyedFile> kf(new KeyedFile(cfg.getConfigData("UserAccountFile", "users.txt", false), SharedPtr<KeyedFileRowHandler>(rowHandler, dynamic_cast_tag())));
-         kf->setSharedPtr(kf);
-         UserRegistrationClient clientHandler(kf);
-         clientDum.setClientRegistrationHandler(&clientHandler);
-         rowHandler->setUserRegistrationClient(&clientHandler);
-         kf->doReload();
+         SharedPtr<UserAccountFileRowHandler> rowHandler(new UserAccountFileRowHandler(*mClientDum));
+         mKeyedFile.reset(new KeyedFile(cfg.getConfigData("UserAccountFile", "users.txt", false), SharedPtr<KeyedFileRowHandler>(rowHandler, dynamic_cast_tag())));
+         mKeyedFile->setSharedPtr(mKeyedFile);
+         mClientHandler.reset(new UserRegistrationClient(mKeyedFile));
+         mClientDum->setClientRegistrationHandler(mClientHandler.get());
+         rowHandler->setUserRegistrationClient(mClientHandler);
+         mKeyedFile->doReload();
 
          Data brokerURL(cfg.getConfigData("BrokerURL", "", true));
-         SharedPtr<CommandThread> cmd;
          if(!brokerURL.empty())
          {
-            cmd.reset(new CommandThread(brokerURL.c_str()));
-            cmd->run();
+            mCmd.reset(new CommandThread(brokerURL.c_str()));
+            mCmd->run();
          }
 
-         int n = 0;
-         while ( true )
-         {
-            stack.process(100);
-            while(clientDum.process());
-            if(cmd.get())
-            {
-               cmd->processQueue(clientHandler);
-            }
-            if(mustReload)
-            {
-               kf->doReload();
-               mustReload = false;
-            }
-         }
+         mainLoop();
        }
+
+      void doWait()
+      {
+         mStack->process(100);
+      }
+
+      void onLoop()
+      {
+         while(mClientDum->process());
+         if(mCmd.get())
+         {
+            mCmd->processQueue(*mClientHandler);
+         }
+      }
+
+      void onReload()
+      {
+         mKeyedFile->doReload();
+      }
+
+   private:
+      SharedPtr<SipStack> mStack;
+      SharedPtr<DialogUsageManager> mClientDum;
+      SharedPtr<KeyedFile> mKeyedFile;
+      SharedPtr<UserRegistrationClient> mClientHandler;
+      SharedPtr<CommandThread> mCmd;
+
 };
 
 int

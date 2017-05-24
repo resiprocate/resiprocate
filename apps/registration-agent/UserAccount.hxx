@@ -19,20 +19,20 @@ class UserAccountFileRowHandler : public KeyedFileRowHandler
 public:
    UserAccountFileRowHandler(resip::DialogUsageManager& dum);
    virtual ~UserAccountFileRowHandler() {};
-   void setUserRegistrationClient(UserRegistrationClient* userRegistrationClient);
+   void setUserRegistrationClient(resip::SharedPtr<UserRegistrationClient> userRegistrationClient);
 
    virtual resip::SharedPtr<KeyedFileLine> onNewLine(resip::SharedPtr<KeyedFile> keyedFile, const resip::Data& key, const std::vector<resip::Data>& columns);
 
 private:
    resip::DialogUsageManager& mDum;
-   UserRegistrationClient *mUserRegistrationClient;
+   resip::SharedPtr<UserRegistrationClient> mUserRegistrationClient;
 };
 
 class UserAccount : public BasicKeyedFileLine
 {
 
 public:
-   UserAccount(resip::SharedPtr<KeyedFile> keyedFile, const resip::Uri& aor, const std::vector<resip::Data>& columns, resip::DialogUsageManager& dum, UserRegistrationClient *userRegistrationClient);
+   UserAccount(resip::SharedPtr<KeyedFile> keyedFile, const resip::Uri& aor, const std::vector<resip::Data>& columns, resip::DialogUsageManager& dum, resip::SharedPtr<UserRegistrationClient> userRegistrationClient);
    virtual ~UserAccount();
 
    void activate();
@@ -57,7 +57,7 @@ private:
    void doCleanup();
 
    resip::DialogUsageManager& mDum;
-   UserRegistrationClient *mUserRegistrationClient;
+   resip::SharedPtr<UserRegistrationClient> mUserRegistrationClient;
    resip::NameAddr mAor;
    bool mContactOverride;   // when set, a changed Contact in the file is ignored
                             // and it can only be changed through set/unset methods
