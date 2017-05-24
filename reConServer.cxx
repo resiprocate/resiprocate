@@ -760,30 +760,12 @@ void ReConServerProcess::processKeyboard(char input, MyConversationManager& myCo
 int 
 ReConServerProcess::main (int argc, char** argv)
 {
-#ifndef _WIN32
-   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
-   {
-      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
-      exit(-1);
-   }
-#endif
+   installSignalHandler();
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    resip::FindMemoryLeaks fml;
    {
 #endif
-
-   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGINT" << endl;
-      exit( -1 );
-   }
-
-   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGTERM" << endl;
-      exit( -1 );
-   }
 
    Data defaultConfigFilename("reConServer.config");
    ReConServerConfig reConServerConfig;
@@ -799,11 +781,11 @@ ReConServerProcess::main (int argc, char** argv)
 
    Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
    bool daemonize = reConServerConfig.getConfigBool("Daemonize", false);
-   bool keyboardInput = reConServerConfig.getConfigBool("KeyboardInput", !daemonize);
-   if(daemonize && keyboardInput)
+   mKeyboardInput = reConServerConfig.getConfigBool("KeyboardInput", !daemonize);
+   if(daemonize && mKeyboardInput)
    {
       ErrLog(<< "Ignoring KeyboardInput=true setting as we are running as a daemon");
-      keyboardInput = false;
+      mKeyboardInput = false;
    }
    setPidFile(pidFile);
    // Daemonize if necessary
@@ -929,7 +911,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
    InfoLog( << "  Daemonize = " << (daemonize ? "true" : "false"));
-   InfoLog( << "  KeyboardInput = " << (keyboardInput ? "true" : "false"));
+   InfoLog( << "  KeyboardInput = " << (mKeyboardInput ? "true" : "false"));
    InfoLog( << "  PidFile = " << pidFile);
    InfoLog( << "  Run as user = " << runAsUser);
    InfoLog( << "  Run as group = " << runAsGroup);
@@ -1313,11 +1295,10 @@ ReConServerProcess::main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      std::auto_ptr<MyConversationManager> conversationManager;
       switch(application)
       {
          case ReConServerConfig::None:
-            conversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+            mConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
             {
@@ -1326,15 +1307,15 @@ ReConServerProcess::main (int argc, char** argv)
                {
                   b2bCallLogger.reset(new CDRFile(cdrLogFilename));
                }
-               conversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger));
+               mConversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger));
             }
             break;
          default:
             assert(0);
       }
-      MyUserAgent ua(reConServerConfig, conversationManager.get(), profile);
-      conversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
-      ua.addConversationProfile(conversationProfile);
+      mUserAgent.reset(new MyUserAgent(reConServerConfig, mConversationManager.get(), profile));
+      mConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
       {
@@ -1355,8 +1336,8 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-            conversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
-            ua.addConversationProfile(internalProfile, false);
+            mConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+            mUserAgent->addConversationProfile(internalProfile, false);
          }
          else
          {
@@ -1368,10 +1349,10 @@ ReConServerProcess::main (int argc, char** argv)
       // Startup and run...
       //////////////////////////////////////////////////////////////////////////////
 
-      ua.startup();
-      conversationManager->startup();
+      mUserAgent->startup();
+      mConversationManager->startup();
 
-      //ua.createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
+      //mUserAgent->createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
 
       // Drop privileges (can do this now that sockets are bound)
       if(!runAsUser.empty())
@@ -1380,29 +1361,9 @@ ReConServerProcess::main (int argc, char** argv)
          dropPrivileges(runAsUser, runAsGroup);
       }
 
-      int input;
-      while(true)
-      {
-         ua.process(50);
-         if(keyboardInput)
-         {
-            while(_kbhit() != 0)
-            {
-#ifdef WIN32
-               input = _getch();
-               processKeyboard(input, *conversationManager, ua);
-#else
-               input = fgetc(stdin);
-               fflush(stdin);
-               //cout << "input: " << input << endl;
-               processKeyboard(input, *conversationManager, ua);
-#endif
-            }
-         }
-         if(finished) break;
-      }
+      mainLoop();
 
-      ua.shutdown();
+      mUserAgent->shutdown();
    }
    InfoLog(<< "reConServer is shutdown.");
    OsSysLog::shutdown();
@@ -1411,6 +1372,39 @@ ReConServerProcess::main (int argc, char** argv)
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
 } // end FML scope
 #endif
+}
+
+void
+ReConServerProcess::doWait()
+{
+   mUserAgent->process(50);
+}
+
+void
+ReConServerProcess::onLoop()
+{
+   if(mKeyboardInput)
+   {
+      int input;
+      while(_kbhit() != 0)
+      {
+#ifdef WIN32
+         input = _getch();
+         processKeyboard(input, *mConversationManager, *mUserAgent);
+#else
+         input = fgetc(stdin);
+         fflush(stdin);
+         //cout << "input: " << input << endl;
+         processKeyboard(input, *mConversationManager, *mUserAgent);
+#endif
+      }
+   }
+}
+
+void
+ReConServerProcess::onReload()
+{
+   StackLog(<<"ReConServerProcess::onReload invoked");
 }
 
 

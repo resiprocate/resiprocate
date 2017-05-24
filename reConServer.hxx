@@ -24,6 +24,16 @@ public:
    virtual int main(int argc, char** argv);
    virtual void processCommandLine(resip::Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
    virtual void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
+protected:
+   virtual void doWait();
+   virtual void onLoop();
+
+   virtual void onReload();
+
+private:
+   bool mKeyboardInput;
+   resip::SharedPtr<MyUserAgent> mUserAgent;
+   std::auto_ptr<MyConversationManager> mConversationManager;
 };
 
 }
