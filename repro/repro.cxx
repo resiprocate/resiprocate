@@ -17,25 +17,6 @@ using namespace repro;
 using namespace resip;
 using namespace std;
 
-static bool finished = false;
-static bool receivedHUP = false;
-
-static void
-signalHandler(int signo)
-{
-#ifndef _WIN32
-   if(signo == SIGHUP)
-   {
-      InfoLog(<<"Received HUP signal, logger reset");
-      Log::reset();
-      receivedHUP = true;
-      return;
-   }
-#endif
-   std::cerr << "Shutting down" << endl;
-   finished = true;
-}
-
 /*
    Extending Repro by adding custom processors to the chain is as easy as overriding one of the 
    ReproRunner class virtual methods:
@@ -104,32 +85,6 @@ signalHandler(int signo)
 int
 main(int argc, char** argv)
 {
-   // Install signal handlers
-#ifndef _WIN32
-   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
-   {
-      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
-      exit(-1);
-   }
-   if ( signal( SIGHUP, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGHUP" << endl;
-      exit( -1 );
-   }
-#endif
-
-   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGINT" << endl;
-      exit( -1 );
-   }
-
-   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGTERM" << endl;
-      exit( -1 );
-   }
-
    // Initialize network
    initNetwork();
 
@@ -144,16 +99,7 @@ main(int argc, char** argv)
       exit(-1);
    }
 
-   // Main program thread, just waits here for a signal to shutdown
-   while (!finished)
-   {
-      sleepMs(1000);
-      if(receivedHUP)
-      {
-         repro.onHUP();
-         receivedHUP = false;
-      }
-   }
+   repro.mainLoop();
 
    repro.shutdown();
 
