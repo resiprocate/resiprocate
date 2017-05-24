@@ -31,6 +31,7 @@ TESTS = \
 	testParseBuffer \
 	testRandomHex \
 	testRandomThread \
+	testSHA1Stream \
 	testThreadIf \
 	testXMLCursor
 
@@ -53,6 +54,7 @@ check_PROGRAMS = \
 	testParseBuffer \
 	testRandomHex \
 	testRandomThread \
+	testSHA1Stream \
 	testThreadIf \
 	testXMLCursor
 
@@ -74,6 +76,7 @@ testNetNs_SOURCES = testNetNs.cxx
 testParseBuffer_SOURCES = testParseBuffer.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
 testRandomThread_SOURCES = testRandomThread.cxx
+testSHA1Stream_SOURCES = testSHA1Stream.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
 
