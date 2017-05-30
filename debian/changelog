@@ -4,6 +4,18 @@ resiprocate (1:1.11.0~beta2-1) unstable; urgency=high
 
  -- Daniel Pocock <daniel@pocock.pro>  Wed, 05 Apr 2017 10:55:35 +0200
 
+resiprocate (1:1.11.0~beta1-3) unstable; urgency=high
+
+  * control file: add breaks/replaces for librepro.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 16 Apr 2017 10:15:56 +0200
+
+resiprocate (1:1.11.0~beta1-2) unstable; urgency=high
+
+  * Move librepro from repro.deb to libresiprocate.deb. (Closes: #856874)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 15 Apr 2017 11:06:10 +0200
+
 resiprocate (1:1.11.0~beta1-1) unstable; urgency=high
 
   * New upstream release.
