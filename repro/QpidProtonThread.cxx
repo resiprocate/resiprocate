@@ -6,6 +6,7 @@
 #include <proton/delivery.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/connection.hpp>
+#include <proton/thread_safe.hpp>
 #include <proton/tracker.hpp>
 #include <proton/source_options.hpp>
 
@@ -19,8 +20,12 @@ using namespace resip;
 using namespace std;
 
 QpidProtonThread::QpidProtonThread(const std::string &u)
-   : mUrl(u),
-     mFifo(0, 0)
+   : mRetryDelay(2000),
+     mPending(0),
+     mUrl(u),
+     mFifo(0, 0),
+     mReadyToSend(*this),
+     mReadyToShutdown(*this)
 {
 }
 
@@ -51,34 +56,27 @@ QpidProtonThread::on_sender_close(proton::sender &r)
 void
 QpidProtonThread::on_transport_error(proton::transport &t)
 {
-   WarningLog(<<"transport closed unexpectedly, trying to re-establish connection");
+   WarningLog(<<"transport closed unexpectedly, will try to re-establish connection");
+   StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart sender");
+   sleepMs(mRetryDelay);
    t.connection().container().open_sender(mUrl);
 }
 
 void
 QpidProtonThread::on_sendable(proton::sender& s)
 {
-   try
+   StackLog(<<"on_sendable invoked");
+   doSend();
+}
+
+void
+QpidProtonThread::on_tracker_accept(proton::tracker &t)
+{
+   StackLog(<<"on_tracker_accept: mPending = " << --mPending);
+   if(isShutdown() && !mFifo.messageAvailable() && mPending == 0)
    {
-      if(mFifo.messageAvailable())
-      {
-         StackLog(<<"on_sendable called and the FIFO is not empty");
-         // FIXME: not really used right now as the other thread is not
-         // populating mFifo, it just calls mSender::send() directly
-         SharedPtr<Data> body(mFifo.getNext());
-         proton::message msg;
-         msg.body(body->c_str());
-         s.send(msg);
-      }
-      else
-      {
-         StackLog(<<"on_sendable called but the FIFO is empty");
-      }
-   }
-   catch(const std::exception& e)
-   {
-      ErrLog(<<"failed to send a message: " << e.what());
-      return;
+      StackLog(<<"no more messages outstanding, shutting down");
+      mSender.container().stop();
    }
 }
 
@@ -96,6 +94,11 @@ QpidProtonThread::thread()
       {
          ErrLog(<<"Qpid Proton container stopped by exception: " << e.what());
       }
+      if(!isShutdown())
+      {
+         StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart container");
+         sleepMs(mRetryDelay);
+      }
    }
    DebugLog(<<"Qpid Proton thread finishing");
 }
@@ -103,23 +106,71 @@ QpidProtonThread::thread()
 void
 QpidProtonThread::sendMessage(const resip::Data& msg)
 {
-   //mFifo.add(new Data(msg), TimeLimitFifo<Data>::InternalElement);
-   //StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
+   mFifo.add(new Data(msg), TimeLimitFifo<Data>::InternalElement);
+   proton::returned<proton::connection> ts_c = proton::make_thread_safe(mSender.connection());
+   ts_c.get()->event_loop()->inject(mReadyToSend);
+   StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
+}
 
-   // FIXME: is it safe to call send() here or do we need to put messages through
-   // mFifo and call send() from the container thread?
-   proton::message _msg;
-   _msg.body(msg.c_str());
-   mSender.send(_msg);
-   StackLog(<<"QpidProtonThread::sendMessage done");
+void
+QpidProtonThread::doSend()
+{
+   if(!mSender.active())
+   {
+      StackLog(<<"doSend: mSender.active() == false, not trying to send");
+      return;
+   }
+   while(mSender.credit() && mFifo.messageAvailable())
+   {
+      try
+      {
+         StackLog(<<"doSend trying to send a message");
+         SharedPtr<Data> body(mFifo.getNext());
+         proton::message msg;
+         msg.body(body->c_str());
+         mSender.send(msg);
+         StackLog(<<"doSend: mPending = " << ++mPending);
+      }
+      catch(const std::exception& e)
+      {
+         ErrLog(<<"failed to send a message: " << e.what());
+         return;
+      }
+   }
+   if(mFifo.messageAvailable())
+   {
+      StackLog(<<"doSend still has messages to send, but no credit remaining");
+   }
 }
 
 void
 QpidProtonThread::shutdown()
 {
-   ThreadIf::shutdown();
+   if(isShutdown())
+   {
+      DebugLog(<<"shutdown already in progress!");
+      return;
+   }
    DebugLog(<<"trying to shutdown the Qpid Proton container");
-   mSender.close();  // FIXME: should we make sure all messages really sent first?
+   ThreadIf::shutdown();
+   if(!mFifo.messageAvailable() && mPending == 0)
+   {
+      StackLog(<<"no messages outstanding, shutting down immediately");
+      proton::returned<proton::connection> ts_c = proton::make_thread_safe(mSender.connection());
+      ts_c.get()->event_loop()->inject(mReadyToShutdown);
+   }
+   else
+   {
+      StackLog(<<"waiting to close connection, mFifo.size() = " << mFifo.size()
+               << " and mPending = " << mPending);
+   }
+}
+
+void
+QpidProtonThread::ready_to_shutdown::operator()()
+{
+   StackLog(<<"ready_to_shutdown::operator(): closing sender");
+   mThread.mSender.container().stop();
 }
 
 

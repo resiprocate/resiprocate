@@ -260,9 +260,9 @@ TransactionController::abandonServerTransaction(const Data& tid)
 }
 
 void 
-TransactionController::cancelClientInviteTransaction(const Data& tid)
+TransactionController::cancelClientInviteTransaction(const Data& tid, const resip::Tokens* reasons)
 {
-   mStateMacFifo.add(new CancelClientInviteTransaction(tid));
+   mStateMacFifo.add(new CancelClientInviteTransaction(tid, reasons));
 }
 
 void 

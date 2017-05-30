@@ -9,6 +9,7 @@
 #include <resip/stack/Tuple.hxx>
 #include <rutil/SelectInterruptor.hxx>
 #include <rutil/SharedPtr.hxx>
+#include <rutil/ThreadIf.hxx>
 
 #ifdef BUILD_QPID_PROTON
 #include "repro/QpidProtonThread.hxx"
@@ -90,7 +91,7 @@ private:
 #ifdef BUILD_QPID_PROTON
    resip::SharedPtr<QpidProtonThread> mQpidProtonThread;
 #else
-   resip::SharedPtr<ThreadIf> mQpidProtonThread;
+   resip::SharedPtr<resip::ThreadIf> mQpidProtonThread;
 #endif
 
    typedef std::map<unsigned int, XmlRpcConnection*> ConnectionMap;

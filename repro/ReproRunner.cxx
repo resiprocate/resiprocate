@@ -272,6 +272,8 @@ ReproRunner::run(int argc, char** argv)
 {
    if(mRunning) return false;
 
+   installSignalHandler();
+
    if(!mRestarting)
    {
       // Store original arc and argv - so we can reuse them on restart request
@@ -520,7 +522,7 @@ ReproRunner::restart()
 }
 
 void
-ReproRunner::onHUP()
+ReproRunner::onReload()
 {
    // Let the plugins know
    std::vector<Plugin*>::iterator it;
@@ -1077,7 +1079,8 @@ ReproRunner::createDialogUsageManager()
    resip::MessageFilterRuleList ruleList;
    bool registrarEnabled = !mProxyConfig->getConfigBool("DisableRegistrar", false);
    bool certServerEnabled = mProxyConfig->getConfigBool("EnableCertServer", false);
-   if (registrarEnabled || certServerEnabled)
+   bool presenceEnabled = mProxyConfig->getConfigBool("EnablePresenceServer", false);
+   if (registrarEnabled || certServerEnabled || presenceEnabled)
    {
       mDum = new DialogUsageManager(*mSipStack);
       mDum->setMasterProfile(profile);
@@ -1122,7 +1125,6 @@ ReproRunner::createDialogUsageManager()
 #endif
    }
 
-   bool presenceEnabled = mProxyConfig->getConfigBool("EnablePresenceServer", false);
    if (presenceEnabled)
    {
       resip_assert(mDum);
