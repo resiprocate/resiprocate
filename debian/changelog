@@ -1,8 +1,8 @@
-resiprocate (1:1.11.0~beta2-1) unstable; urgency=high
+resiprocate (1:1.11.0~beta3-1) unstable; urgency=high
 
   * New upstream release.
 
- -- Daniel Pocock <daniel@pocock.pro>  Wed, 05 Apr 2017 10:55:35 +0200
+ -- Daniel Pocock <daniel@pocock.pro>  Tue, 30 May 2017 16:06:49 +0200
 
 resiprocate (1:1.11.0~beta1-3) unstable; urgency=high
 
