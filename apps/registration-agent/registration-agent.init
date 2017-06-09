@@ -1,24 +1,24 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          registrationClient
+# Provides:          registrationAgent
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: registrationClient SIP client
-# Description:       registrationClient SIP registration client
+# Short-Description: registrationAgent SIP client
+# Description:       registrationAgent SIP registration client
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME=registrationClient
-BIN=registrationClient
+NAME=registrationAgent
+BIN=registrationAgent
 DESC="SIP registration client"
 DAEMON=/usr/sbin/$BIN
-USER=registration-client
-GROUP=registration-client
+USER=registration-agent
+GROUP=registration-agent
 PIDFILE="/var/run/$BIN/$NAME.pid"
 PIDFILE_DIR=`dirname $PIDFILE`
-LOG_DIR=/var/log/registrationClient
+LOG_DIR=/var/log/registrationAgent
 
 KILL_SPEC=TERM/20/KILL/5
 
@@ -32,7 +32,7 @@ if [ -f /etc/default/$NAME ] ; then
 	. /etc/default/$NAME
 fi
 
-DAEMON_OPTS="/etc/registrationClient/${NAME}.config --Daemonize=true --PidFile=${PIDFILE}"
+DAEMON_OPTS="/etc/registrationAgent/${NAME}.config --Daemonize=true --PidFile=${PIDFILE}"
 
 if [ ! -d "$PIDFILE_DIR" ];then
 	mkdir -p "$PIDFILE_DIR"
