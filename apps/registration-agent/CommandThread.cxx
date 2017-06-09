@@ -18,9 +18,9 @@
 using proton::receiver_options;
 using proton::source_options;
 
-#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONCLIENT
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
-using namespace registrationclient;
+using namespace registrationagent;
 using namespace resip;
 using namespace std;
 

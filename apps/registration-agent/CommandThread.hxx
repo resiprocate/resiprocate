@@ -18,7 +18,7 @@
 
 #include "UserRegistrationClient.hxx"
 
-namespace registrationclient {
+namespace registrationagent {
 
 class CommandThread : public resip::ThreadIf, proton::messaging_handler
 {

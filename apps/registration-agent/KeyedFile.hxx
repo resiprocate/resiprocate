@@ -6,7 +6,7 @@
 #include <rutil/Lock.hxx>
 #include <rutil/SharedPtr.hxx>
 
-namespace registrationclient {
+namespace registrationagent {
 
 class KeyedFile;
 

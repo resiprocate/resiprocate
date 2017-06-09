@@ -1,6 +1,6 @@
 #include "AppSubsystem.hxx"
 
-AppSubsystem AppSubsystem::REGISTRATIONCLIENT("REGISTRATIONCLIENT");
+AppSubsystem AppSubsystem::REGISTRATIONAGENT("REGISTRATIONAGENT");
 
 /* ====================================================================
  *

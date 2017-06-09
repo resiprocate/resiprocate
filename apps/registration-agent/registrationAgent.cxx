@@ -36,11 +36,11 @@
 #include "UserRegistrationClient.hxx"
 #include "KeyedFile.hxx"
 
-#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONCLIENT
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
-#define DEFAULT_CONFIG_FILE "registrationClient.config"
+#define DEFAULT_CONFIG_FILE "registrationAgent.config"
 
-using namespace registrationclient;
+using namespace registrationagent;
 using namespace resip;
 using namespace std;
 
@@ -74,7 +74,7 @@ class MyClientRegistrationAgent : public ServerProcess
 
          Data loggingType = cfg.getConfigData("LoggingType", "cout", true);
          Data logLevel = cfg.getConfigData("LogLevel", "INFO", true);
-         Data logFilename = cfg.getConfigData("LogFilename", "registrationClient.log", true);
+         Data logFilename = cfg.getConfigData("LogFilename", "registrationAgent.log", true);
          Log::initialize(loggingType, logLevel, argv[0], logFilename.c_str(), 0);
 
          InfoLog(<<"Starting client registration agent");

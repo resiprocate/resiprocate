@@ -1,5 +1,5 @@
-#ifndef USERREGISTRATIONCLIENT_HXX
-#define USERREGISTRATIONCLIENT_HXX
+#ifndef USERREGISTRATIONAGENT_HXX
+#define USERREGISTRATIONAGENT_HXX
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Uri.hxx"
@@ -10,7 +10,7 @@
 #include "KeyedFile.hxx"
 #include "UserAccount.hxx"
 
-namespace registrationclient {
+namespace registrationagent {
 
 class UserRegistrationClient : public resip::ClientRegistrationHandler
 {

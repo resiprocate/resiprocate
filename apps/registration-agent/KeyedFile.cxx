@@ -7,9 +7,9 @@
 #include "AppSubsystem.hxx"
 #include "KeyedFile.hxx"
 
-#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONCLIENT
+#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
-using namespace registrationclient;
+using namespace registrationagent;
 using namespace resip;
 using namespace std;
 

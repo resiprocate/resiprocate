@@ -10,7 +10,7 @@
 
 #include "KeyedFile.hxx"
 
-namespace registrationclient {
+namespace registrationagent {
 
 class UserRegistrationClient;
 

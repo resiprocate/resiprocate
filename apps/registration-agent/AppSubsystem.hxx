@@ -6,14 +6,14 @@
 
 /**
   This class is used in the logging subsystem to identify
-  logging messages generated from registrationClient.
+  logging messages generated from registrationAgent.
 */
 
 class AppSubsystem : public resip::Subsystem
 {
    public:
       // Add new systems below
-      static AppSubsystem REGISTRATIONCLIENT;
+      static AppSubsystem REGISTRATIONAGENT;
 
    private:
       explicit AppSubsystem(const char* rhs) : resip::Subsystem(rhs) {};

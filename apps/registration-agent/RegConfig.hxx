@@ -3,7 +3,7 @@
 
 #include <rutil/ConfigParse.hxx>
 
-namespace registrationclient {
+namespace registrationagent {
 
 class RegConfig : public resip::ConfigParse
 {
