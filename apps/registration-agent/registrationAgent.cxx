@@ -132,6 +132,16 @@ class MyClientRegistrationAgent : public ServerProcess
          mStack->addTransport(TLS, 0, V4);
          // mStack->addTransport(TLS, 0, V6);
 #endif
+
+         // Drop privileges (can do this now that sockets are bound)
+         Data runAsUser = cfg.getConfigData("RunAsUser", Data::Empty, true);
+         Data runAsGroup = cfg.getConfigData("RunAsGroup", Data::Empty, true);
+         if(!runAsUser.empty())
+         {
+            InfoLog( << "Trying to drop privileges, configured uid = " << runAsUser << " gid = " << runAsGroup);
+            dropPrivileges(runAsUser, runAsGroup);
+         }
+
          mClientDum->setMasterProfile(profile);
          mClientDum->setClientAuthManager(clientAuth);
          mClientDum->getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
