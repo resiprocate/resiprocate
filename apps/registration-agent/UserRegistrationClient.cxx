@@ -95,7 +95,7 @@ UserRegistrationClient::onRequestRetry(ClientRegistrationHandle h, int retrySeco
    {
       return userAccount->onRequestRetry(h, retrySeconds, response);
    }
-   return 0;   // 0 - retry immediately
+   return 30;
 }
 
 bool

@@ -210,8 +210,8 @@ UserAccount::onFailure(ClientRegistrationHandle h, const SipMessage& response)
 int
 UserAccount::onRequestRetry(ClientRegistrationHandle h, int retrySeconds, const SipMessage& response)
 {
-   WarningLog ( << "ClientHandler:onRequestRetry, want to retry immediately");
-   return 0;
+   WarningLog ( << "ClientHandler:onRequestRetry, want to retry");
+   return 30;
 }
 
 bool
