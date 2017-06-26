@@ -35,7 +35,7 @@ EXTRA_DIST = $(man3_MANS)
 EXTRA_DIST += *.vcxproj
 EXTRA_DIST += *.vcxproj.filters
 
-EXTRA_PROGRAMS = adig ahost aresfuzz
+EXTRA_PROGRAMS = adig ahost aresfuzz aresfuzzname
 
 adig_SOURCES = adig.c
 adig_LDADD = libresipares.la
@@ -47,6 +47,11 @@ aresfuzz_SOURCES = ares-test-fuzz.c
 aresfuzz_LDFLAGS = ${LIB_FUZZING_ENGINE}
 aresfuzz_LDADD = libresipares.la
 nodist_EXTRA_aresfuzz_SOURCES = dummy.cpp # Enforce C++ linking
+
+aresfuzzname_SOURCES = ares-test-fuzz-name.c
+aresfuzzname_LDFLAGS = ${LIB_FUZZING_ENGINE}
+aresfuzzname_LDADD = libresipares.la
+nodist_EXTRA_aresfuzzname_SOURCES = dummy.cpp # Enforce C++ linking
 
 #distclean: clean
 #	rm -f config.cache config.log config.status Makefile
