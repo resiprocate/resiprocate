@@ -31,16 +31,17 @@ man3_MANS = \
 	ares_free_errmem.3      ares_gethostbyname.3  ares_parse_a_reply.3  \
 	ares_search.3
 
-EXTRA_DIST = $(man3_MANS) adig.c ahost.c
+EXTRA_DIST = $(man3_MANS)
 EXTRA_DIST += *.vcxproj
 EXTRA_DIST += *.vcxproj.filters
 
-#adig: adig.o libares.a
-#	${CC} ${LDFLAGS} -o $@ adig.o libares.a ${LIBS}
+EXTRA_PROGRAMS = adig ahost
 
-#ahost: ahost.o libares.a
-#	${CC} ${LDFLAGS} -o $@ ahost.o libares.a ${LIBS}
+adig_SOURCES = adig.c
+adig_LDADD = libresipares.la
 
+ahost_SOURCES = ahost.c
+ahost_LDADD = libresipares.la
 
 #distclean: clean
 #	rm -f config.cache config.log config.status Makefile
