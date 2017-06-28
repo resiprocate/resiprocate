@@ -25,7 +25,8 @@ using namespace resip;
 using namespace std;
 
 CommandThread::CommandThread(const std::string &u)
-   : mRetryDelay(2000),
+   : mMaximumAge(60000),
+     mRetryDelay(2000),
      mUrl(u),
      mFifo(0, 0),
      mReadyToShutdown(*this)
@@ -66,6 +67,17 @@ CommandThread::on_transport_error(proton::transport &t)
 void
 CommandThread::on_message(proton::delivery &d, proton::message &m)
 {
+   const proton::timestamp::numeric_type& ct = m.creation_time().milliseconds();
+   StackLog(<<"message creation time (ms): " << ct);
+   if(ct > 0 && mMaximumAge > 0)
+   {
+      UInt64 threshold = ResipClock::getTimeMs() - mMaximumAge;
+      if(ct < threshold)
+      {
+         DebugLog(<<"dropping a message because it is too old: " << threshold - ct << "ms");
+         return;
+      }
+   }
    // get body as std::stringstream
    std::string _json;
    try
@@ -126,7 +138,15 @@ CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
             StackLog(<<"adding route element " << element.Value());
             route.push_back(Data(element.Value()));
          }
-         userRegistrationClient.setContact(Uri(aor), newContact, expires.Value(), route);
+         UInt64 now = ResipClock::getTimeSecs();
+         if(expires.Value() < now)
+         {
+            DebugLog(<<"dropping a command because expiry has already passed " << now - expires << " seconds ago");
+         }
+         else
+         {
+            userRegistrationClient.setContact(Uri(aor), newContact, expires.Value(), route);
+         }
       }
       else if(command == "unset_contact")
       {

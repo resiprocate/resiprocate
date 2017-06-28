@@ -38,6 +38,7 @@ public:
    void processQueue(UserRegistrationClient& userRegistrationClient);
 
 private:
+   UInt64 mMaximumAge;
    unsigned int mRetryDelay;
    std::string mUrl;
    proton::receiver mReceiver;
