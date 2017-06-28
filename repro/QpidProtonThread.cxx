@@ -66,7 +66,7 @@ void
 QpidProtonThread::on_sendable(proton::sender& s)
 {
    StackLog(<<"on_sendable invoked");
-   doSend();
+   //doSend();   // FIXME - thread safety issue discovered 2017-06-27
 }
 
 void
