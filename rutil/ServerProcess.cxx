@@ -18,18 +18,79 @@
 #include "rutil/ServerProcess.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Time.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
 using namespace resip;
 using namespace std;
 
-ServerProcess::ServerProcess() : mPidFile("")
+static ServerProcess* _instance = NULL;
+
+static void
+signalHandler(int signo)
 {
+   resip_assert(_instance);
+   _instance->onSignal(signo);
+}
+
+ServerProcess::ServerProcess() : mPidFile(""),
+   mFinished(false),
+   mReceivedHUP(false)
+{
+   resip_assert(!_instance);
+   _instance = this;
 }
 
 ServerProcess::~ServerProcess()
 {
+   _instance = NULL;
+}
+
+void
+ServerProcess::onSignal(int signo)
+{
+#ifndef _WIN32
+   if(signo == SIGHUP)
+   {
+      InfoLog(<<"Received HUP signal, logger reset");
+      Log::reset();
+      mReceivedHUP = true;
+      return;
+   }
+#endif
+   std::cerr << "Shutting down" << endl;
+   mFinished = true;
+}
+
+void
+ServerProcess::installSignalHandler()
+{
+   // Install signal handlers
+#ifndef _WIN32
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+   if ( signal( SIGHUP, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGHUP" << endl;
+      exit( -1 );
+   }
+#endif
+
+   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGINT" << endl;
+      exit( -1 );
+   }
+
+   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGTERM" << endl;
+      exit( -1 );
+   }
 }
 
 void
@@ -229,6 +290,38 @@ void
 ServerProcess::setPidFile(const Data& pidFile)
 {
    mPidFile = pidFile;
+}
+
+void
+ServerProcess::mainLoop()
+{
+   // Main program thread, just waits here for a signal to shutdown
+   while (!mFinished)
+   {
+      doWait();
+      if(mReceivedHUP)
+      {
+         onReload();
+         mReceivedHUP = false;
+      }
+      onLoop();
+   }
+}
+
+void
+ServerProcess::doWait()
+{
+   sleepMs(1000);
+}
+
+void
+ServerProcess::onLoop()
+{
+}
+
+void
+ServerProcess::onReload()
+{
 }
 
 /* ====================================================================

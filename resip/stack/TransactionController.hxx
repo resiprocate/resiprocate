@@ -95,7 +95,7 @@ class TransactionController
       }
 
       void abandonServerTransaction(const Data& tid);
-      void cancelClientInviteTransaction(const Data& tid);
+      void cancelClientInviteTransaction(const Data& tid, const resip::Tokens* reasons);
       void addTransport(std::auto_ptr<Transport> transport);
       void removeTransport(unsigned int transportKey);
       void terminateFlow(const resip::Tuple& flow);

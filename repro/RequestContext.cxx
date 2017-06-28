@@ -363,12 +363,12 @@ void
 RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
 {
    resip_assert(msg->isRequest());
-   if(msg->method()!=ACK)
+   if(msg->method() != ACK)
    {
       // !bwc! Somebody collided with an ACK/200. Send a failure response.
       SipMessage response;
       Helper::makeResponse(response,*msg,400);
-      response.header(h_StatusLine).reason()="Transaction-id collision";
+      response.header(h_StatusLine).reason() = "Transaction-id collision";
       send(response);
       return;
    }
@@ -810,9 +810,9 @@ RequestContext::handleMissingResponseVias(resip::SipMessage* response)
 }
 
 void
-RequestContext::cancelClientTransaction(const resip::Data& tid)
+RequestContext::cancelClientTransaction(const resip::Data& tid, const resip::Tokens* reasons)
 {
-   getProxy().getStack().cancelClientInviteTransaction(tid);
+   getProxy().getStack().cancelClientInviteTransaction(tid, reasons);
 }
 
 void

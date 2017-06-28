@@ -55,6 +55,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mMachine(m), 
    mState(s),
    mIsAbandoned(false),
+   mPendingCancelReasons(0),
    mIsReliable(true), // !jf! 
    mNextTransmission(0),
    mDnsResult(0),
@@ -104,7 +105,7 @@ TransactionState::handleInternalCancel(SipMessage* cancel,
    // Make sure the branch in the CANCEL matches the current 
    // branch of the INVITE, in case we have done a DNS failover (the transport 
    // sequences could be different by now)
-   cancel->header(h_Vias).front().param(p_branch)=clientInvite.mNextTransmission->const_header(h_Vias).front().param(p_branch);
+   cancel->header(h_Vias).front().param(p_branch) = clientInvite.mNextTransmission->const_header(h_Vias).front().param(p_branch);
    state->processClientNonInvite(cancel);
    // for the INVITE in case we never get a 487
    clientInvite.mController.mTimers.add(Timer::TimerCleanUp, clientInvite.mId, 128*Timer::T1);
@@ -162,6 +163,8 @@ TransactionState::~TransactionState()
    delete mMethodText;
    mNextTransmission = 0;
    mMethodText = 0;
+
+   setPendingCancelReasons(0);
 
    mState = Bogus;
 }
@@ -250,8 +253,7 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
             // to it, so that the cancel request can be treated as it's own transaction.  sip->getTransactionId()
             // will be the original tid from the wire and should match the tid of the INVITE request being 
             // cancelled.
-            TransactionState* matchingInvite = 
-               controller.mServerTransactionMap.find(sip->getTransactionId());
+            TransactionState* matchingInvite = controller.mServerTransactionMap.find(sip->getTransactionId());
             if (matchingInvite == 0)
             {
                InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
@@ -339,6 +341,12 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
                StackLog (<< *sip);
 
                matchingInvite->mIsAbandoned = true;
+               // If there are reason headers on the cancel we store them for use later when the 
+               // cancel is able to be sent out.
+               if (sip->exists(h_Reasons))
+               {
+                   matchingInvite->setPendingCancelReasons(&sip->header(h_Reasons));
+               }
                return false;
             }
             else if (matchingInvite->mState == Completed)
@@ -397,6 +405,27 @@ TransactionState::processSipMessageAsNew(SipMessage* sip, TransactionController&
    }
 
    return true;
+}
+
+void 
+TransactionState::setPendingCancelReasons(const Tokens* reasons)
+{
+    if (reasons)
+    {
+        if (mPendingCancelReasons)
+        {
+            *mPendingCancelReasons = *reasons;  // copy
+        }
+        else
+        {
+            mPendingCancelReasons = new Tokens(*reasons); // create and copy
+        }
+    }
+    else
+    {
+        delete mPendingCancelReasons;
+        mPendingCancelReasons = 0;
+    }
 }
 
 void
@@ -1242,6 +1271,11 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   if(mIsAbandoned)
                   {
                      SipMessage* cancel = Helper::makeCancel(*mNextTransmission);
+                     if (mPendingCancelReasons)
+                     {
+                         cancel->header(h_Reasons) = *mPendingCancelReasons;
+                         setPendingCancelReasons(0);  // release memory
+                     }
                      // Iterate through message decorators on the INVITE and see if any need to be copied to the CANCEL
                      mNextTransmission->copyOutboundDecoratorsToStackCancel(*cancel);
                      handleInternalCancel(cancel, *this);
@@ -1328,13 +1362,13 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      mNextTransmission->copyOutboundDecoratorsToStackFailureAck(*ack);
                      resetNextTransmission(ack);
                      sendCurrentToWire();
-                     if(mDnsResult)
-                     {
-                        mDnsResult->destroy();
-                        mDnsResult=0;
-                        mPendingOperation=None;
-                     }
                      sendToTU(sip); // don't delete msg
+                     if (mDnsResult)
+                     {
+                         mDnsResult->destroy();
+                         mDnsResult = 0;
+                         mPendingOperation = None;
+                     }
                   }
                   else if (mState == Completed)
                   {
@@ -1476,11 +1510,17 @@ TransactionState::processClientInvite(TransactionMessage* msg)
    }
    else if (isCancelClientTransaction(msg))
    {
+      CancelClientInviteTransaction* pCancelMsg = dynamic_cast<CancelClientInviteTransaction*>(msg);
+
       // TU wants to CANCEL this transaction. See if we can...
       if(mState==Proceeding)
       {
          // We can send the CANCEL now.
-         SipMessage* cancel=Helper::makeCancel(*mNextTransmission);
+         SipMessage* cancel = Helper::makeCancel(*mNextTransmission);
+         if (pCancelMsg->getReasons())
+         {
+             cancel->header(h_Reasons) = *pCancelMsg->getReasons();
+         }
          mNextTransmission->copyOutboundDecoratorsToStackCancel(*cancel);
          TransactionState::handleInternalCancel(cancel, *this);
       }
@@ -1488,6 +1528,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       {
          // We can't send the CANCEL yet, remember to.
          mIsAbandoned = true;
+         setPendingCancelReasons(pCancelMsg->getReasons());
       }
       delete msg;
    }

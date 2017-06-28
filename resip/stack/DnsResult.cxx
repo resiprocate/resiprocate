@@ -351,6 +351,7 @@ DnsResult::lookupInternal(const Uri& uri)
                mTransport = DTLS;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
+                  DebugLog(<<"transport " << toData(mTransport) << " not supported");
                   transition(Finished);
                   if (mHandler) mHandler->handle(this);
                   return;
@@ -373,6 +374,7 @@ DnsResult::lookupInternal(const Uri& uri)
                mHaveChosenTransport=true;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
+                  DebugLog(<<"transport " << toData(mTransport) << " not supported");
                   transition(Finished);
                   if (mHandler) mHandler->handle(this);
                   return;
@@ -394,6 +396,7 @@ DnsResult::lookupInternal(const Uri& uri)
          {
             if (!mInterface.isSupportedProtocol(mTransport))
             {
+               DebugLog(<<"transport " << toData(mTransport) << " not supported");
                transition(Finished);
                if (mHandler) mHandler->handle(this);
                return;

@@ -73,8 +73,8 @@ QValueTargetHandler::process(RequestContext &rc)
          //to try)
          if(mCancelBetweenForkGroups && rsp.hasCandidateTransactions())
          {
-            std::vector<resip::Data>& cancelTids=fc->mTransactionsToCancel;
-            for(i=cancelTids.begin();i!=cancelTids.end();i++)
+            std::vector<resip::Data>& cancelTids = fc->mTransactionsToCancel;
+            for(i = cancelTids.begin(); i != cancelTids.end(); i++)
             {
                //Calling cancelClientTransaction on an already cancelled
                //target is safe, and usually more efficient than checking

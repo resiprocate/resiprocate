@@ -7,6 +7,7 @@
 #include "repro/ProcessorChain.hxx"
 #include "repro/ResponseContext.hxx"
 #include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Token.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/TimerCMessage.hxx"
 #include "rutil/resipfaststreams.hxx"
@@ -38,7 +39,7 @@ class RequestContext
       
       virtual void handleSelfAimedStrayAck(resip::SipMessage* sip);
       virtual bool handleMissingResponseVias(resip::SipMessage* response);  // return true to continue processing
-      virtual void cancelClientTransaction(const resip::Data& tid);
+      virtual void cancelClientTransaction(const resip::Data& tid, const resip::Tokens* reasons = 0);
 
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();

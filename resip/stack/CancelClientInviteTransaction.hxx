@@ -3,6 +3,7 @@
 
 #include "resip/stack/TransactionMessage.hxx"
 #include "resip/stack/MessageDecorator.hxx"
+#include "resip/stack/Token.hxx"
 
 #include "rutil/Data.hxx"
 
@@ -11,13 +12,14 @@ namespace resip
 class CancelClientInviteTransaction : public TransactionMessage
 {
    public:
-      explicit CancelClientInviteTransaction(const resip::Data& tid) : mTid(tid) {}
-      virtual ~CancelClientInviteTransaction(){}
+      explicit CancelClientInviteTransaction(const Data& tid, const Tokens* reasons) : mTid(tid), mReasons(reasons ? new Tokens(*reasons) : 0) {}
+      virtual ~CancelClientInviteTransaction() { delete mReasons; }
 
 /////////////////// Must implement unless abstract ///
 
       virtual const Data& getTransactionId() const {return mTid;}
       virtual bool isClientTransaction() const {return true;}
+      virtual const Tokens* getReasons() const { return mReasons; }
       virtual EncodeStream& encode(EncodeStream& strm) const
       {
          return strm << "CancelClientInviteTransaction: " << mTid;
@@ -36,6 +38,7 @@ class CancelClientInviteTransaction : public TransactionMessage
 
    protected:
       const resip::Data mTid;
+      const Tokens* mReasons;   // Optional reason header to be added to any resulting CANCEL requests created can be specified.
 }; // class CancelClientInviteTransaction
 
 } // namespace resip

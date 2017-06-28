@@ -55,7 +55,7 @@ public:
    virtual bool run(int argc, char** argv);
    virtual void shutdown();
    virtual void restart();  // brings everydown and then backup again - leaves InMemoryRegistrationDb intact
-   virtual void onHUP();
+   virtual void onReload();
 
    virtual Proxy* getProxy() { return mProxy; }
 
@@ -119,6 +119,7 @@ protected:
    RegSyncClient* mRegSyncClient;
    RegSyncServer* mRegSyncServerV4;
    RegSyncServer* mRegSyncServerV6;
+   RegSyncServer* mRegSyncServerAMQP;
    RegSyncServerThread* mRegSyncServerThread;
    std::list<CommandServer*> mCommandServerList;
    CommandServerThread* mCommandServerThread;

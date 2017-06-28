@@ -976,9 +976,9 @@ SipStack::abandonServerTransaction(const Data& tid)
 }
 
 void
-SipStack::cancelClientInviteTransaction(const Data& tid)
+SipStack::cancelClientInviteTransaction(const Data& tid, const Tokens* reasons)
 {
-   mTransactionController->cancelClientInviteTransaction(tid);
+   mTransactionController->cancelClientInviteTransaction(tid, reasons);
 }
 
 bool

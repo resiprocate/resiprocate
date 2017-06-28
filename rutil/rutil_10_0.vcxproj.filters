@@ -61,6 +61,8 @@
     <ClCompile Include="WinCompat.cxx" />
     <ClCompile Include="XMLCursor.cxx" />
     <ClCompile Include="hep\ResipHep.cxx" />
+    <ClCompile Include="hep\HepAgent.cxx" />
+    <ClCompile Include="GenericIPAddress.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="XMLCursor.hxx" />
@@ -152,5 +154,6 @@
     <ClInclude Include="WinCompat.hxx" />
     <ClInclude Include="WinLeakCheck.hxx" />
     <ClInclude Include="hep\ResipHep.hxx" />
+    <ClInclude Include="hep\HepAgent.hxx" />
   </ItemGroup>
 </Project>

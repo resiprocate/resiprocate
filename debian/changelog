@@ -1,3 +1,9 @@
+resiprocate (1:1.11.0~beta4-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 28 Jun 2017 17:00:32 +0200
+
 resiprocate (1:1.11.0~beta1-3) unstable; urgency=high
 
   * control file: add breaks/replaces for librepro.
