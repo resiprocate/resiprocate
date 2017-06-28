@@ -7,6 +7,7 @@ Wants=network-online.target
 [Service]
 ExecStart=/usr/sbin/repro /etc/repro/repro.config --Daemonize=false
 ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
