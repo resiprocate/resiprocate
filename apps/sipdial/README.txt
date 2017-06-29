@@ -61,8 +61,34 @@ Using TLS
 
     callerUserAgentAddress = sips:mydeskphone@example.org
 
-Install in gconf:
------------------
+Installing in the Linux desktop
+-------------------------------
+
+Installing in the desktop makes sipdialer available as a possible handler
+for "sip:" and "tel:" URIs clicked in other desktop applications.
+
+When a desktop user clicks one of those URIs, for example, in a browser
+or in the GNOME Evolution address book, the desktop will offer the user
+a list of applications capable of handling the URI.  sipdialer will appear
+as an option in the chooser.
+
+sipdialer includes a desktop file and an icon.  These can be
+installed for a single user by copying the desktop file to the
+location ~/.local/share/applications/sipdialer.desktop
+or they can be installed for all users on the system by
+copying them to these locations:
+
+    /usr/share/applications/sipdialer.desktop
+    /usr/share/icons/hicolor/48x48/apps/sipdialer.png
+
+After installing these files, it may be necessary to run "update-menus"
+or a similar command.
+
+Install in gconf (legacy):
+--------------------------
+
+Modern Linux desktops use the desktop file (see above), this
+information is retained for legacy purposes.
   
 Use the shell scipt/commands below to register the dialer with gconf.
 gconf aware applications like Mozilla will then be able to use the dialer
