@@ -187,7 +187,8 @@ noinst_HEADERS = digcalc.hxx \
 	testIM.hxx \
 	TestSupport.hxx \
 	Transceiver.hxx \
-	tassert.h
+	tassert.h \
+	testPortOffset.hxx
 
 ##############################################################################
 # 
