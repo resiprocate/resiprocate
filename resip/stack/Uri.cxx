@@ -255,6 +255,12 @@ Uri::isEnumSearchable() const
    checkParsed();
    int digits = 0;
 
+   if(mScheme != Symbols::Tel)
+   {
+      StackLog(<< "not a tel Uri");
+      return false;
+   }
+
    if(mUser.size() < 4)
    {
       StackLog(<< "user part of Uri empty or too short for E.164");
