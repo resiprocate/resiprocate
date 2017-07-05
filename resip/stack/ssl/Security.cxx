@@ -2786,18 +2786,22 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    {
       return SSL_OP_CIPHER_SERVER_PREFERENCE;
    }
+#if defined SSL_OP_CISCO_ANYCONNECT
    if(optionName == "SSL_OP_CISCO_ANYCONNECT")
    {
       return SSL_OP_CISCO_ANYCONNECT;
    }
+#endif
    if(optionName == "SSL_OP_COOKIE_EXCHANGE")
    {
       return SSL_OP_COOKIE_EXCHANGE;
    }
+#if defined SSL_OP_CRYPTOPRO_TLSEXT_BUG
    if(optionName == "SSL_OP_CRYPTOPRO_TLSEXT_BUG")
    {
       return SSL_OP_CRYPTOPRO_TLSEXT_BUG;
    }
+#endif
    if(optionName == "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS")
    {
       return SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
@@ -2838,10 +2842,12 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    {
       return SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG;
    }
+#if defined SSL_OP_NO_COMPRESSION
    if(optionName == "SSL_OP_NO_COMPRESSION")
    {
       return SSL_OP_NO_COMPRESSION;
    }
+#endif
    if(optionName == "SSL_OP_NO_QUERY_MTU")
    {
       return SSL_OP_NO_QUERY_MTU;
