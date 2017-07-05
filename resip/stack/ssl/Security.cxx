@@ -2684,6 +2684,66 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
             DebugLog(<< "subjectAltName of cert has EMAIL type" );
       }
           
+      if (gen->type == GEN_IPADD)
+      {
+         // RFC 3280 "For IP Version 4, as specified in RFC 791, the octet string
+         // MUST contain exactly four octets.  For IP Version 6, as specified in
+         // RFC 1883, the octet string MUST contain exactly sixteen octets."
+         ASN1_OCTET_STRING* asn = gen->d.iPAddress;
+         if (asn->length == 4)
+         {
+            uint32_t ip = (asn->data[0] << 24) |
+                (asn->data[1] << 16) |
+                (asn->data[2] << 8) |
+                (asn->data[3]);
+
+            sockaddr_in sa;
+            sa.sin_family = AF_INET;
+            sa.sin_addr.s_addr = htonl(ip);
+
+            char addrStr[INET_ADDRSTRLEN];
+            if (inet_ntop(sa.sin_family, &(sa.sin_addr), addrStr, INET_ADDRSTRLEN) != NULL)
+            {
+                Data ipv4(addrStr);
+                PeerName peerName(SubjectAltName, ipv4);
+                peerNames.push_back(peerName);
+                InfoLog(<< "subjectAltName of TLS session cert contains IP ADDRESS <" << ipv4 << ">" );
+            }
+         }
+         else if (asn->length == 16)
+         {
+            sockaddr_in6 sa;
+            sa.sin6_family = AF_INET6;
+            sa.sin6_addr.s6_addr[0] = asn->data[0];
+            sa.sin6_addr.s6_addr[1] = asn->data[1];
+            sa.sin6_addr.s6_addr[2] = asn->data[2];
+            sa.sin6_addr.s6_addr[3] = asn->data[3];
+            sa.sin6_addr.s6_addr[4] = asn->data[4];
+            sa.sin6_addr.s6_addr[5] = asn->data[5];
+            sa.sin6_addr.s6_addr[6] = asn->data[6];
+            sa.sin6_addr.s6_addr[7] = asn->data[7];
+            sa.sin6_addr.s6_addr[8] = asn->data[8];
+            sa.sin6_addr.s6_addr[9] = asn->data[9];
+            sa.sin6_addr.s6_addr[10] = asn->data[10];
+            sa.sin6_addr.s6_addr[11] = asn->data[11];
+            sa.sin6_addr.s6_addr[12] = asn->data[12];
+            sa.sin6_addr.s6_addr[13] = asn->data[13];
+            sa.sin6_addr.s6_addr[14] = asn->data[14];
+            sa.sin6_addr.s6_addr[15] = asn->data[15];
+
+            char addrStr[INET6_ADDRSTRLEN];
+            if (inet_ntop(sa.sin6_family, &(sa.sin6_addr), addrStr, INET6_ADDRSTRLEN) != NULL)
+            {
+                Data ipv6(addrStr);
+                PeerName peerName(SubjectAltName, ipv6);
+                peerNames.push_back(peerName);
+                InfoLog(<< "subjectAltName of TLS session cert contains IP ADDRESS <" << ipv6 << ">" );
+            }
+         }
+         else
+            DebugLog(<< "subjectAltName of cert contains invalid IP ADDRESS" );
+      }
+
       if(gen->type == GEN_URI) 
       {
          ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
