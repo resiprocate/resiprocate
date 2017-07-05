@@ -175,7 +175,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
          {
             return true;
          }
-         switch (Helper::determineFailureMessageEffect(*mLastResponse))
+         switch (Helper::determineFailureMessageEffect(msg))
          {
             case Helper::TransactionTermination:
             case Helper::RetryAfter:
