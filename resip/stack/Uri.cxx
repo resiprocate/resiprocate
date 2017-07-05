@@ -787,13 +787,11 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 
    addPort = addPort && mPort!=0;
 
-   bool hostIsIpV6Address = false;
    if(!mHostCanonicalized)
    {
       if (DnsUtil::isIpV6Address(mHost))
       {
          mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
-         hostIsIpV6Address = true;
       }
       else
       {
@@ -831,7 +829,7 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
       }
    }
 
-   if(hostIsIpV6Address && addPort)
+   if(DnsUtil::isIpV6Address(mHost) && addPort)
    {
       aor += Symbols::LS_BRACKET;
       aor += mCanonicalHost;
