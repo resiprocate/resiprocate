@@ -1,11 +1,7 @@
 # $Id: $
 AUTOMAKE_OPTIONS = foreign
 
-#CFLAGS=@CFLAGS@ ${WARN_CFLAGS} ${ERROR_CFLAGS}
-
-#ALL_CFLAGS=${CPPFLAGS} ${CFLAGS} ${DEFS}
-
-#INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -I $(top_srcdir)
 
 lib_LTLIBRARIES = libresipares.la
 libresipares_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
