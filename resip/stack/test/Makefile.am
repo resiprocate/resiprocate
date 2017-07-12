@@ -190,6 +190,11 @@ noinst_HEADERS = digcalc.hxx \
 	tassert.h \
 	testPortOffset.hxx
 
+EXTRA_PROGRAMS = fuzzStack
+
+fuzzStack_SOURCES = fuzzStack.cxx TestSupport.cxx
+fuzzStack_LDFLAGS = ${LIB_FUZZING_ENGINE}
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
