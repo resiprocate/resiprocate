@@ -747,11 +747,7 @@ resip::operator==(const Data& lhs, const char* rhs)
    {
       return false;
    }
-   else
-   {
-      // make sure the string terminates at size
-      return (rhs[lhs.mSize] == 0);
-   }
+   return strlen(rhs) == lhs.mSize;
 }
 
 bool
