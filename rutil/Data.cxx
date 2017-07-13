@@ -368,8 +368,6 @@ Data::Data(Data &&data)
 // -2147483646
 static const int Int32MaxSize = 11;
 
-static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*Int32MaxSize;
-
 // 18446744073709551615
 static const int UInt64MaxSize = 20;
 
