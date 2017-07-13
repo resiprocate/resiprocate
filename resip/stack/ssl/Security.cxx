@@ -115,7 +115,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
    {
-      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
+      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(X509_STORE_CTX_get_error(pInStore)) << cBuf2 );
       DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
    }
  
@@ -1815,15 +1815,15 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    EVP_PKEY* pKey = k->second;
    resip_assert( pKey );
- 
-   if ( pKey->type !=  EVP_PKEY_RSA )
+
+   if ( EVP_PKEY_id(pKey) !=  EVP_PKEY_RSA )
    {
-      ErrLog( << "Private key (type=" << pKey->type <<"for " 
+      ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) <<"for "
               << signerDomain << " is not of type RSA" );
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
 
-   resip_assert( pKey->type ==  EVP_PKEY_RSA );
+   resip_assert( EVP_PKEY_id(pKey) ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
    unsigned char result[4096];
@@ -1920,7 +1920,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    EVP_PKEY* pKey = X509_get_pubkey( cert );
    resip_assert( pKey );
 
-   resip_assert( pKey->type ==  EVP_PKEY_RSA );
+   resip_assert( EVP_PKEY_id(pKey) ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
 #if 1
@@ -2620,9 +2620,9 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
       resip_assert( s );
       
-      int t = M_ASN1_STRING_type(s);
-      int l = M_ASN1_STRING_length(s);
-      unsigned char* d = M_ASN1_STRING_data(s);
+      int t = ASN1_STRING_type(s);
+      int l = ASN1_STRING_length(s);
+      unsigned char* d = ASN1_STRING_data(s);
       Data name(d,l);
       DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
       resip_assert( name.size() == (unsigned)l );
@@ -2964,7 +2964,8 @@ BaseSecurity::matchHostNameWithWildcards(const Data& certificateName, const Data
 bool
 BaseSecurity::isSelfSigned(const X509 *cert)
 {
-   int iRet = X509_NAME_cmp(cert->cert_info->issuer, cert->cert_info->subject);
+   X509 *mutableCert = const_cast<X509*>(cert);
+   int iRet = X509_NAME_cmp(X509_get_issuer_name(mutableCert), X509_get_subject_name(mutableCert));
    return (iRet == 0);
 }
 
