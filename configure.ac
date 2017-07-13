@@ -113,6 +113,27 @@ ARCH_UPPER=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQ
 LARCH_UPPER=`echo $LARCH | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
 ARCH_CPPFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
 
+AM_CONDITIONAL([MACOSX], [false])
+AS_IF([test "x$host_vendor" = "xapple"], [
+  AC_MSG_CHECKING([if building for macOS])
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#include <stdio.h>
+#include <TargetConditionals.h>
+    ]], [[
+#if TARGET_OS_IPHONE == 1
+#error Not macOS
+#endif
+return 0;
+    ]])
+  ],[
+    AC_MSG_RESULT([yes])
+    AM_CONDITIONAL([MACOSX], [true])
+  ],[
+    AC_MSG_RESULT([no])
+  ])
+])
+
 AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(RESIP_BIG_ENDIAN, , RESIP_BIG_ENDIAN)])
 
 CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS} ${TOOLCHAIN_CPPFLAGS}"
