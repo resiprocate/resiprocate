@@ -554,6 +554,21 @@ main(int argc, char* argv[])
        CritLog(<< "Received bad Dialogic fmtp line Ok");
     }
 
+   {
+      const char rawInput[] = "m= 1 \nc=IN  /9";
+      ParseBuffer input(rawInput, sizeof(rawInput));
+
+      try
+      {
+         SdpContents::Session::Medium medium;
+         medium.parse(input);
+      }
+      catch (ParseException& e)
+      {
+         // expected to fail, but don't do out-of-bounds access
+      }
+   }
+
    return 0;   
 }
 
