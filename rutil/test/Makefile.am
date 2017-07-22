@@ -82,6 +82,11 @@ testXMLCursor_SOURCES = testXMLCursor.cxx
 
 noinst_HEADERS = TestSubsystemLogLevel.hxx
 
+EXTRA_PROGRAMS = fuzzUtil
+
+fuzzUtil_SOURCES = fuzzUtil.cxx
+fuzzUtil_LDFLAGS = ${LIB_FUZZING_ENGINE}
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
