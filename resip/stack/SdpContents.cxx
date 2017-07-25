@@ -1347,6 +1347,10 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
 
          Connection& con = mConnections.back();
          const Data& addr = con.getAddress();
+         if (addr.empty())
+         {
+            pb.fail(__FILE__, __LINE__, "IP address expected");
+         }
          size_t i = addr.size() - 1;
          for (; i; i--)
          {
