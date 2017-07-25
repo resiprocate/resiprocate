@@ -1085,6 +1085,11 @@ Uri::parse(ParseBuffer& pb)
       pb.reset(start);
    }
 
+   if (pb.eof())
+   {
+      return;
+   }
+
    mHostCanonicalized=false;
    static std::bitset<256> hostDelimiter(Data::toBitset("\r\n\t :;?>"));
    if (*start == '[')
