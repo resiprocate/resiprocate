@@ -77,27 +77,15 @@
 int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
 		 int rd, unsigned char **buf, int *buflen)
 {
-  int len;
+  size_t len;
   unsigned char *q;
   const char *p;
 
-  /* Compute the length of the encoded name so we can check buflen.
-   * Start counting at 1 for the zero-length label at the end. */
-  len = 1;
-  for (p = name; *p; p++)
-    {
-      if (*p == '\\' && *(p + 1) != 0)
-	p++;
-      len++;
-    }
-  /* If there are n periods in the name, there are n + 1 labels, and
-   * thus n + 1 length fields, unless the name is empty or ends with a
-   * period.  So add 1 unless name is empty or ends with a period.
+  /* Allocate a memory area for the maximum size this packet might need. +2
+   * is for the length byte and zero termination if no dots or ecscaping is
+   * used.
    */
-  if (*name && *(p - 1) != '.')
-    len++;
-
-  *buflen = len + HFIXEDSZ + QFIXEDSZ;
+  *buflen = strlen(name) + 2 + HFIXEDSZ + QFIXEDSZ;
   *buf = malloc(*buflen);
   if (!*buf)
       return ARES_ENOMEM;
@@ -153,6 +141,21 @@ int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
   /* Finish off the question with the type and class. */
   DNS_QUESTION_SET_TYPE(q, type);
   DNS_QUESTION_SET_CLASS(q, dnsclass);
+
+  q += QFIXEDSZ;
+
+  len = (q - *buf);
+
+  /* Reject names that are longer than the maximum of 255 bytes that's
+   * specified in RFC 1035 ("To simplify implementations, the total length of
+   * a domain name (i.e., label octets and label length octets) is restricted
+   * to 255 octets or less."). */
+  if (len > (MAXCDNAME + HFIXEDSZ + QFIXEDSZ)) {
+    return ARES_EBADNAME;
+  }
+
+  /* we know this fits in an int at this point */
+  *buflen = (int)len;
 
   return ARES_SUCCESS;
 }
