@@ -1,5 +1,5 @@
 #if !defined(RESIP_DUMEXCEPTION_HXX)
-#define RESIP__DUMEXCEPTION_HXX
+#define RESIP_DUMEXCEPTION_HXX
 
 #include "rutil/BaseException.hxx"
 
