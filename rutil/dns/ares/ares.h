@@ -285,6 +285,10 @@ extern 	void ares_free_errmem(char *mem);
 #define MAXHOSTNAMELEN 256
 #endif
 
+#ifndef MAXCDNAME
+#define MAXCDNAME   255     /* maximum compressed domain name */
+#endif
+
 #define NS_DEFAULTPORT 53 
 #define NAMESERVER_PORT NS_DEFAULTPORT 
 
