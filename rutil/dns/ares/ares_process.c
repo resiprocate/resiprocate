@@ -357,7 +357,7 @@ static void read_udp_packets(ares_channel channel, int server_idx,
           continue;
       /* Make sure the server has a socket and is selected in read_fds. */
       server = &channel->servers[i];
-      if ( (server->udp_socket == -1) )
+      if ( server->udp_socket == -1 )
           continue;
       if ( read_fds && !FD_ISSET(server->udp_socket, read_fds) )
 	  continue;

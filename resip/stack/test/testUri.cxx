@@ -701,6 +701,18 @@ main(int argc, char* argv[])
    }
 
    {
+      const char rawInput[] = {':'};
+      const Data input(Data::Share, rawInput, sizeof(rawInput));
+      Uri uri = Uri(input);
+   }
+
+   {
+      const char rawInput[] = {':', '@'};
+      const Data input(Data::Share, rawInput, sizeof(rawInput));
+      Uri uri = Uri(input);
+   }
+
+   {
       Uri uri = Uri("/;p1=123;p2=456");
       assert(uri.path() == "/");
       assert(uri.param(UnknownParameterType("p1")) == Data("123"));

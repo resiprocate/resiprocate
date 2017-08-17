@@ -266,6 +266,12 @@ class TestData
             assert(input == "ABCD123ABCDa");
          }
          
+         {
+            // construct a Data object with binary zero in content
+            const char rawInput[] = {'I', 'P', '4', '\0'};
+            const Data input(rawInput, sizeof(rawInput));
+            assert(input != "IP4");
+         }
          
          {
             const char* s = "a";

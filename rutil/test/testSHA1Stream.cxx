@@ -20,7 +20,17 @@ main(void)
    {
       resip::SHA1 sha1test;
       sha1test.update("");
-      assert(sha1test.final() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");      
+      assert(sha1test.final() == "da39a3ee" "5e6b4b0d" "3255bfef" "95601890" "afd80709");
+   }
+   {
+      resip::SHA1 sha1test;
+      sha1test.update("abc");
+      assert(sha1test.final() == "a9993e36" "4706816a" "ba3e2571" "7850c26c" "9cd0d89d");
+   }
+   {
+      resip::SHA1 sha1test;
+      sha1test.update("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+      assert(sha1test.final() == "84983e44" "1c3bd26e" "baae4aa1" "f95129e5" "e54670f1");
    }
    {
       resip::SHA1 sha1test;
@@ -54,7 +64,17 @@ main(void)
    // Test Sha1Stream class that uses OpenSSL
    {
       SHA1Stream str;
-      assert(str.getHex() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+      assert(str.getHex() == "da39a3ee" "5e6b4b0d" "3255bfef" "95601890" "afd80709");
+   }
+   {
+      SHA1Stream str;
+      str << "abc";
+      assert(str.getHex() == "a9993e36" "4706816a" "ba3e2571" "7850c26c" "9cd0d89d");
+   }
+   {
+      SHA1Stream str;
+      str << "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      assert(str.getHex() == "84983e44" "1c3bd26e" "baae4aa1" "f95129e5" "e54670f1");
    }
 
    {
