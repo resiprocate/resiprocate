@@ -1816,15 +1816,16 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    EVP_PKEY* pKey = k->second;
    resip_assert( pKey );
 
-   if ( EVP_PKEY_id(pKey) !=  EVP_PKEY_RSA )
+   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+
+   if ( !rsa )
    {
       ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) <<"for "
               << signerDomain << " is not of type RSA" );
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
 
-   resip_assert( EVP_PKEY_id(pKey) ==  EVP_PKEY_RSA );
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+   resip_assert( rsa );
 
    unsigned char result[4096];
    int resultSize = sizeof(result);
@@ -1920,8 +1921,8 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    EVP_PKEY* pKey = X509_get_pubkey( cert );
    resip_assert( pKey );
 
-   resip_assert( EVP_PKEY_id(pKey) ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+   resip_assert( rsa );
 
 #if 1
    int ret = RSA_verify(NID_sha256, (unsigned char *)hashRes.data(),

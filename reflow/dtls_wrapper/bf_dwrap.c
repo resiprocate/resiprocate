@@ -21,20 +21,6 @@ static int dwrap_gets(BIO *b, char *buf, int size);
 static long dwrap_ctrl(BIO *b, int cmd, long num, void *ptr);
 static long dwrap_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp);
 
-static BIO_METHOD methods_dwrap=
-{
-   BIO_TYPE_DWRAP,
-      "dtls_wrapper",
-      dwrap_write,
-      dwrap_read,
-      dwrap_puts,
-      dwrap_gets,
-      dwrap_ctrl,
-      dwrap_new,
-      dwrap_free,
-      dwrap_callback_ctrl
-};
-
 typedef struct BIO_F_DWRAP_CTX_ 
 {
    int dgram_timer_exp;
@@ -43,19 +29,28 @@ typedef struct BIO_F_DWRAP_CTX_
 
 BIO_METHOD *BIO_f_dwrap(void) 
 {
-   return(&methods_dwrap);
+   BIO_METHOD *meth = BIO_meth_new(BIO_TYPE_DWRAP, "dtls_wrapper");
+   BIO_meth_set_write(meth, dwrap_write);
+   BIO_meth_set_read(meth, dwrap_read);
+   BIO_meth_set_puts(meth, dwrap_puts);
+   BIO_meth_set_gets(meth, dwrap_gets);
+   BIO_meth_set_ctrl(meth, dwrap_ctrl);
+   BIO_meth_set_create(meth, dwrap_new);
+   BIO_meth_set_destroy(meth, dwrap_free);
+   BIO_meth_set_callback_ctrl(meth, dwrap_callback_ctrl);
+   return meth;
 }
 
 static int dwrap_new(BIO *bi) 
 {
-   BIO_F_DWRAP_CTX *ctx=OPENSSL_malloc(sizeof(BIO_F_BUFFER_CTX));
+   BIO_F_DWRAP_CTX *ctx=OPENSSL_malloc(sizeof(BIO_F_DWRAP_CTX));
    if(!ctx) return(0);
 
-   memset(ctx,0,sizeof(BIO_F_BUFFER_CTX));
+   memset(ctx,0,sizeof(BIO_F_DWRAP_CTX));
 
-   bi->init=1;
-   bi->ptr=(char *)ctx;
-   bi->flags=0;
+   BIO_set_init(bi, 1);
+   BIO_set_data(bi, ctx);
+   // bi->flags=0;
 
    return 1;
 }
@@ -76,7 +71,7 @@ static int dwrap_read(BIO *b, char *out, int outl)
 
    BIO_clear_retry_flags(b);
 
-   ret=BIO_read(b->next_bio,out,outl);
+   ret=BIO_read(BIO_next(b),out,outl);
 
    if(ret<=0)
       BIO_copy_next_retry(b);
@@ -88,7 +83,7 @@ static int dwrap_write(BIO *b, const char *in, int inl)
 {
    if(!b || !in || (inl<=0)) return 0;
 
-   return BIO_write(b->next_bio,in,inl);
+   return BIO_write(BIO_next(b),in,inl);
 }
 
 static int dwrap_puts(BIO *b, const char *in)
@@ -110,7 +105,7 @@ static long dwrap_ctrl(BIO *b, int cmd, long num, void *ptr)
    long ret;
    BIO_F_DWRAP_CTX *ctx;
 
-   ctx=b->ptr;
+   ctx=BIO_get_data(b);
 
    switch(cmd){
     case BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP:
@@ -128,7 +123,7 @@ static long dwrap_ctrl(BIO *b, int cmd, long num, void *ptr)
        ret=1;
        break;
     default:
-       ret=BIO_ctrl(b->next_bio,cmd,num,ptr);
+       ret=BIO_ctrl(BIO_next(b),cmd,num,ptr);
        break;
    }
 
@@ -139,7 +134,7 @@ static long dwrap_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
    long ret;
 
-   ret=BIO_callback_ctrl(b->next_bio,cmd,fp);
+   ret=BIO_callback_ctrl(BIO_next(b),cmd,fp);
 
    return ret;
 }
