@@ -1,58 +1,22 @@
+#ifndef TESTPORTOFFSET_HXX
+#define TESTPORTOFFSET_HXX
 
-#if defined(HAVE_CONFIG_H)
-  #include "config.h"
+/* If the unit tests are run on a developer's machine, he or she may
+ * already be using port 5060 for another local process.
+ *
+ * The developer can override this offset with CPPFLAGS if necessary.
+ */
+#ifndef TEST_PORT_OFFSET
+#define TEST_PORT_OFFSET 20000
 #endif
 
-#include "rutil/Data.hxx"
+#define resipTestPort(p) (TEST_PORT_OFFSET + p)
 
-namespace resip
-{
-
-class ServerProcess
-{
-public:
-   ServerProcess();
-   virtual ~ServerProcess();
-
-   void mainLoop();
-   void onSignal(int signo);
-
-protected:
-   /* The main subclass can call installSignalHandler()
-      if it wants signals handled. */
-   void installSignalHandler();
-
-   /* The main subclass can call dropPrivileges()
-      if and when it wants to drop root privileges */
-   void dropPrivileges(const Data& runAsUser, const Data& runAsGroup);
-
-   /* If the PID file is specified, checks if we are already running
-      an instance of this binary */
-   bool isAlreadyRunning();
-
-   /* The main subclass can call daemonize() if and
-      when it wants to become a daemon */
-   void daemonize();
-
-   /* Filename of PID file, or empty string for no PID file */
-   void setPidFile(const Data& pidFile);
-
-   virtual void doWait();
-   virtual void onLoop();
-
-   virtual void onReload();
-
-private:
-   Data mPidFile;
-   bool mFinished;
-   bool mReceivedHUP;
-};
-
-}
+#endif
 
 /* ====================================================================
  *
- * Copyright (c) 2012 Daniel Pocock.  All rights reserved.
+ * Copyright 2017 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -84,7 +48,5 @@ private:
  *
  * ====================================================================
  *
- */
-/*
- * vi: set shiftwidth=3 expandtab:
+ *
  */

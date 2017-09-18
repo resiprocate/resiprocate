@@ -9,6 +9,8 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
+#include <proton/connection.hpp>
+#include <proton/function.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/sender.hpp>
 #include <proton/transport.hpp>
@@ -26,16 +28,40 @@ public:
    void on_sender_close(proton::sender &);
    void on_transport_error(proton::transport &t);
    void on_sendable(proton::sender &s);
+   void on_tracker_accept(proton::tracker &t);
 
    virtual void thread();
    virtual void shutdown();
 
    void sendMessage(const resip::Data& msg);
+   void doSend();
 
 private:
+   unsigned int mRetryDelay;
+   UInt64 mPending;
    std::string mUrl;
    proton::sender mSender;
    resip::TimeLimitFifo<resip::Data> mFifo;
+
+   class ready_to_send : public proton::void_function0
+   {
+   private:
+      QpidProtonThread& mThread;
+   public:
+      ready_to_send(QpidProtonThread& _thread) : mThread(_thread) {};
+      void operator()() { mThread.doSend(); };
+   };
+   ready_to_send mReadyToSend;
+
+   class ready_to_shutdown : public proton::void_function0
+   {
+   private:
+      QpidProtonThread& mThread;
+   public:
+      ready_to_shutdown(QpidProtonThread& _thread) : mThread(_thread) {};
+      void operator()();
+   };
+   ready_to_shutdown mReadyToShutdown;
 };
 
 } // namespace

@@ -1,0 +1,13 @@
+
+[Desktop Entry]
+Name=sipdialer
+GenericName=Click to dial
+Comment=Click to dial
+Type=Application
+NoDisplay=true
+TryExec=/usr/bin/sipdialer
+Exec=/usr/bin/sipdialer %u
+Terminal=false
+Categories=System
+Icon=/usr/share/icons/hicolor/48x48/apps/sipdialer.png
+MimeType=x-scheme-handler/sip;x-scheme-handler/tel;

@@ -410,7 +410,7 @@ static void init_by_defaults_apple_nameservers(ares_channel channel)
   channel->nservers = 0;
   // .amr. iPhone/iOS SDK's don't support SCDynamicStoreCreate so in that case fall back
   // to the nservers=0 case.
-#ifndef TARGET_OS_IPHONE
+#if !TARGET_OS_IPHONE
   store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_apple_nameservers"), NULL, &context);
 
   if (store)

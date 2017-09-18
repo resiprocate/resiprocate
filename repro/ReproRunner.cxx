@@ -272,6 +272,8 @@ ReproRunner::run(int argc, char** argv)
 {
    if(mRunning) return false;
 
+   installSignalHandler();
+
    if(!mRestarting)
    {
       // Store original arc and argv - so we can reuse them on restart request
@@ -520,7 +522,7 @@ ReproRunner::restart()
 }
 
 void
-ReproRunner::onHUP()
+ReproRunner::onReload()
 {
    // Let the plugins know
    std::vector<Plugin*>::iterator it;

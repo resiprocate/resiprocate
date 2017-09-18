@@ -1,5 +1,5 @@
 #ifndef UDP_RELAY_SERVER_HXX
-#define UDP_REALY_SERVER_HXX
+#define UDP_RELAY_SERVER_HXX
 
 #include <asio.hpp>
 #ifdef USE_SSL
