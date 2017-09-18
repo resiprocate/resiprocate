@@ -90,9 +90,6 @@ class FdPollGrp
       virtual void modPollItem(FdPollItemHandle handle, FdPollEventMask newMask) = 0;
       virtual void delPollItem(FdPollItemHandle handle) = 0;
 
-      virtual void registerFdSetIOObserver(FdSetIOObserver& observer) = 0;
-      virtual void unregisterFdSetIOObserver(FdSetIOObserver& observer) = 0;
-
       /// Wait at most {ms} milliseconds. If any file activity has
       /// already occurs or occurs before {ms} expires, then
       /// FdPollItem will be informed (via cb method) and this method will
