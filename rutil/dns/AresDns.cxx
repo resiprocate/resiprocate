@@ -653,7 +653,7 @@ void
 AresDns::processTimers()
 {
 #ifdef USE_CARES
-   return;
+   ares_process(mChannel, NULL, NULL);
 #else
    resip_assert( mPollGrp!=0 );
    time_t timeSecs;
