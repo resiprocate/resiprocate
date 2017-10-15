@@ -2,6 +2,7 @@
 #ifndef TestTimerContext_hxx
 #define TestTimerContext_hxx
 
+#include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
 
 namespace dtls {
@@ -12,7 +13,8 @@ class TestTimerContext: public DtlsTimerContext{
      void addTimer(DtlsTimer *timer, unsigned int seq);
      UInt64 getRemainingTime();
      void updateTimer();
-     
+     int select(resip::FdSet& fdSet);
+
      DtlsTimer *mTimer;
      UInt64 mExpiryTime;
 };

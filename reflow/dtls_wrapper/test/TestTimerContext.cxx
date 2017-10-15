@@ -60,6 +60,18 @@ TestTimerContext::updateTimer()
    }
 }
 
+int TestTimerContext::select(resip::FdSet& fdSet)
+{
+   if(mTimer)
+   {
+      return fdSet.selectMilliSeconds(getRemainingTime());
+   }
+   else
+   {
+      return fdSet.select();
+   }
+}
+
 
 /* ====================================================================
 
