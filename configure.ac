@@ -374,6 +374,7 @@ AC_OUTPUT(Makefile \
 	reTurn/client/Makefile \
 	reTurn/client/test/Makefile \
 	reflow/Makefile \
+  reflow/dtls_wrapper/test/Makefile \
 	resip/recon/Makefile \
 	resip/recon/MOHParkServer/Makefile \
 	resip/recon/test/Makefile \

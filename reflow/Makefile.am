@@ -4,7 +4,7 @@ EXTRA_DIST = ReadMe.txt
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 
 SUBDIRS = .
-#SUBDIRS += dtls_wrapper/test
+SUBDIRS += dtls_wrapper/test
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
