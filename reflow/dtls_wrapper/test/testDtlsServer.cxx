@@ -29,7 +29,7 @@ int main(int argc,char **argv)
    createCert(resip::Data("sip:server@example.com"),365,1024,serverCert,serverKey);
 
    TestTimerContext *ourTimer=new TestTimerContext();
-   DtlsFactory *serverFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),serverCert,serverKey);
+   std::auto_ptr<DtlsFactory> serverFactory(new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),serverCert,serverKey));
 
    cout << "Created the factory\n";
 
@@ -53,7 +53,7 @@ int main(int argc,char **argv)
 
    cout << "Entering wait loop\n";
    TestDtlsUdpSocketContext *sockContext=0;
-   DtlsSocket *dtlsSocket;
+   std::auto_ptr<DtlsSocket> dtlsSocket;
 
    while(1)
    {
@@ -83,7 +83,7 @@ int main(int argc,char **argv)
 
                cout << "Made the socket context\n";          
 
-               dtlsSocket=serverFactory->createServer(std::auto_ptr<DtlsSocketContext>(sockContext));
+               dtlsSocket.reset(serverFactory->createServer(std::auto_ptr<DtlsSocketContext>(sockContext)));
 
                cout << "Made the DTLS socket\n";
             }

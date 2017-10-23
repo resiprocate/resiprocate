@@ -79,19 +79,19 @@ int main(int argc,char **argv)
   createCert(resip::Data("sip:client@example.com"),365,1024,clientCert,clientKey);
   createCert(resip::Data("sip:server@example.com"),365,1024,serverCert,serverKey);
   
-  DtlsFactory *clientFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),clientCert,clientKey);
-  DtlsFactory *serverFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),serverCert,serverKey);
+  auto_ptr<DtlsFactory> clientFactory(new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),clientCert,clientKey));
+  auto_ptr<DtlsFactory> serverFactory(new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),serverCert,serverKey));
   
   cout << "Created the factories\n";
 
   TestDtlsSocketContext *clientContext=new TestDtlsSocketContext("Client");
   TestDtlsSocketContext *serverContext=new TestDtlsSocketContext("Server");
   
-  DtlsSocket *clientSocket=clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(clientContext));
-  DtlsSocket *serverSocket=serverFactory->createServer(std::auto_ptr<DtlsSocketContext>(serverContext));
+  auto_ptr<DtlsSocket> clientSocket(clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(clientContext)));
+  auto_ptr<DtlsSocket> serverSocket(serverFactory->createServer(std::auto_ptr<DtlsSocketContext>(serverContext)));
 
-  clientContext->mOtherSocket=serverSocket;
-  serverContext->mOtherSocket=clientSocket;  
+  clientContext->mOtherSocket=serverSocket.get();
+  serverContext->mOtherSocket=clientSocket.get();
   
   clientSocket->startClient();
 }

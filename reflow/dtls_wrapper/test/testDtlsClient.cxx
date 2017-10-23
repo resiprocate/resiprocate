@@ -31,7 +31,7 @@ int main(int argc,char **argv)
    createCert(resip::Data("sip:client@example.com"),365,1024,clientCert,clientKey);
 
    TestTimerContext *ourTimer=new TestTimerContext();
-   DtlsFactory *clientFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),clientCert,clientKey);
+   std::auto_ptr<DtlsFactory> clientFactory(new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),clientCert,clientKey));
 
    cout << "Created the factory\n";
 
@@ -59,7 +59,7 @@ int main(int argc,char **argv)
 
    cout << "Made the socket context\n";
 
-   DtlsSocket *dtlsSocket=clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(sockContext));
+   std::auto_ptr<DtlsSocket> dtlsSocket(clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(sockContext)));
 
    cout << "Made the DTLS socket\n";
 
