@@ -92,6 +92,9 @@ int main(int argc,char **argv)
             char inbuf[1024];
             cin.getline(inbuf, 1024);
             cout << "Read from stdin " << inbuf << endl;
+            if (strlen(inbuf) == 0) {
+               exit(0);
+            }
             sockContext->sendRtpData((const unsigned char *)inbuf,strlen(inbuf));
          }
          if (fdset.readyToRead(fd))
