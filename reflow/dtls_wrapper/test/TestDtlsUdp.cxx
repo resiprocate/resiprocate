@@ -173,13 +173,14 @@ void
 TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int len)
 {
    srtp_hdr_t *hdr;
-   unsigned char *ptr;
+   unsigned char *buffer, *ptr;
    int l=0;
 
    cerr << "Sending RTP packet of length " << len << endl;
 
-   ptr=(unsigned char *)malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
-   assert(ptr!=0);
+   buffer=(unsigned char *)malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
+   assert(buffer!=0);
+   ptr=buffer;
    hdr=(srtp_hdr_t *)ptr;
    ptr+=sizeof(srtp_hdr_t);
    l+=sizeof(srtp_hdr_t);
@@ -203,6 +204,8 @@ TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int le
       assert(r==0);
    }
    write((unsigned char *)hdr,l);
+
+   free(buffer);
 }
 
 void
