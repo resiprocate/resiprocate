@@ -98,6 +98,7 @@ int main(int argc,char **argv)
                unsigned int buf2l;
 
                sockContext->recvRtpData(buffer,r,buf2,&buf2l,sizeof(buf2));
+               buf2[buf2l] = 0;
 
                cout << "Read RTP data of length " << buf2l << endl;
                cout << buf2 << endl;
