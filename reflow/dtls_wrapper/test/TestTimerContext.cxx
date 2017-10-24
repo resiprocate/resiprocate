@@ -12,6 +12,11 @@ TestTimerContext::TestTimerContext()
    mTimer=0;
 }
 
+TestTimerContext::~TestTimerContext()
+{
+   delete mTimer;
+}
+
 void
 TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime)
 {
