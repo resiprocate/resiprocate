@@ -26,6 +26,12 @@ TfmDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    return Success;
 }
 
+int 
+TfmDns::init(int dnsTimeout, int dnsTries, unsigned int features)
+{
+    return Success;
+}
+
 TfmDns::TfmDns()
 {
    //setup();

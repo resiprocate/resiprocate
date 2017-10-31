@@ -377,9 +377,10 @@ TestRepro::addRoute(const resip::Data& matchingPattern,
 void 
 TestRepro::deleteRoute(const resip::Data& matchingPattern, 
                        const resip::Data& method, 
-                       const resip::Data& event)
+                       const resip::Data& event,
+                       int priority)
 {
-   mConfig.getDataStore()->mRouteStore.eraseRoute(method, event, matchingPattern);
+   mConfig.getDataStore()->mRouteStore.eraseRoute(method, event, matchingPattern, priority);
 }
 
 bool

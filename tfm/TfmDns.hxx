@@ -46,6 +46,7 @@ class TfmDns : public ExternalDns
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, int dnsTimeout = 0, int dnsTries = 0,
                        unsigned int features = 0);
+      virtual int init(int dnsTimeout = 0, int dnsTries = 0, unsigned int features = 0);
       virtual bool requiresProcess();
       virtual unsigned int getTimeTillNextProcessMS(void) { return 0; }
       // Synchronous, so no need to do anything.

@@ -20,7 +20,9 @@ RouteGuard::RouteGuard(TestProxy& proxy,
    : mProxy(proxy),
      mMatchingPattern(matchingPattern),
      mMethod(method),
-     mEvent(event)
+     mEvent(event),
+     mPriority(priority),
+     mWeight(weight)
 {
    cleanup();
    mProxy.addRoute(matchingPattern, rewriteExpression, method, event, priority, weight);
@@ -29,7 +31,7 @@ RouteGuard::RouteGuard(TestProxy& proxy,
 
 void RouteGuard::cleanup()
 {
-   mProxy.deleteRoute(mMatchingPattern, mMethod, mEvent);
+   mProxy.deleteRoute(mMatchingPattern, mMethod, mEvent, mPriority);
 }
 
 RouteGuard::~RouteGuard()

@@ -49,7 +49,8 @@ class TestRepro : public TestProxy
                             int weight);
       virtual void deleteRoute(const resip::Data& matchingPattern, 
                                const resip::Data& method, 
-                               const resip::Data& event);
+                               const resip::Data& event,
+                               int priority);
       virtual bool addTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0, short mask = 0, short family=resip::V4);
       virtual void deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0, short mask = 0, short family=resip::V4);
 

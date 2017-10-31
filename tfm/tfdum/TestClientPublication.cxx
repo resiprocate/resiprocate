@@ -32,14 +32,14 @@ CommonAction*
 TestClientPublication::refresh(unsigned int expiration)
 {
    return new CommonAction(mUa, "refresh", 
-                           boost::bind(&ClientPublication::refresh, boost::bind<ClientPublication*>(&ClientPublicationHandle::get, boost::ref(mHandle)), expiration));
+                           boost::bind(&ClientPublication::refresh, boost::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), boost::ref(mHandle)), expiration));
 }
 
 CommonAction*
 TestClientPublication::update(const resip::Contents* body)
 {
    return new CommonAction(mUa, "update", 
-                           boost::bind(&ClientPublication::update, boost::bind<ClientPublication*>(&ClientPublicationHandle::get, boost::ref(mHandle)), body));
+                           boost::bind(&ClientPublication::update, boost::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), boost::ref(mHandle)), body));
 
 }
 
@@ -47,7 +47,7 @@ TestClientPublication::update(const resip::Contents* body)
 CommonAction* 
 TestClientPublication::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ClientPublication::end, boost::bind<ClientPublication*>(&ClientPublicationHandle::get, boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", boost::bind(&ClientPublication::end, boost::bind<ClientPublication*>(static_cast<ClientPublication*(ClientPublicationHandle::*)()>(&ClientPublicationHandle::get), boost::ref(mHandle))));
 }
 
 bool 
