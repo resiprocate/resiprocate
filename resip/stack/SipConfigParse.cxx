@@ -1,6 +1,8 @@
 
 #include "resip/stack/NameAddr.hxx"
+#ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
+#endif
 #include "resip/stack/SipConfigParse.hxx"
 
 using namespace resip;
