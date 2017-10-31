@@ -31,7 +31,7 @@ int main(int argc,char **argv)
    createCert(resip::Data("sip:client@example.com"),365,1024,clientCert,clientKey);
 
    TestTimerContext *ourTimer=new TestTimerContext();
-   DtlsFactory *clientFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),clientCert,clientKey);
+   std::auto_ptr<DtlsFactory> clientFactory(new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),clientCert,clientKey));
 
    cout << "Created the factory\n";
 
@@ -59,7 +59,7 @@ int main(int argc,char **argv)
 
    cout << "Made the socket context\n";
 
-   DtlsSocket *dtlsSocket=clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(sockContext));
+   std::auto_ptr<DtlsSocket> dtlsSocket(clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(sockContext)));
 
    cout << "Made the DTLS socket\n";
 
@@ -81,11 +81,7 @@ int main(int argc,char **argv)
       fdset.setRead(0);
 #endif
 
-      UInt64 towait=ourTimer->getRemainingTime();
-
-      // cerr << "Invoking select for time " << towait << endl;
-
-      int toread=fdset.selectMilliSeconds(towait);
+      int toread=ourTimer->select(fdset);;
 
       ourTimer->updateTimer();
 
@@ -96,6 +92,9 @@ int main(int argc,char **argv)
             char inbuf[1024];
             cin.getline(inbuf, 1024);
             cout << "Read from stdin " << inbuf << endl;
+            if (strlen(inbuf) == 0) {
+               exit(0);
+            }
             sockContext->sendRtpData((const unsigned char *)inbuf,strlen(inbuf));
          }
          if (fdset.readyToRead(fd))
