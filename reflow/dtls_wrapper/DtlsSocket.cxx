@@ -10,7 +10,7 @@
 
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
-#include "bf_dwrap.h"
+#include "bf_dwrap.hxx"
 using namespace std;
 using namespace dtls;
 

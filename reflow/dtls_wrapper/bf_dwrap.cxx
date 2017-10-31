@@ -15,7 +15,7 @@
 
 static inline BIO_METHOD *BIO_meth_new(int type, const char *name)
 {
-  BIO_METHOD *biom = calloc(1, sizeof(BIO_METHOD));
+  BIO_METHOD *biom = (BIO_METHOD*)calloc(1, sizeof(BIO_METHOD));
 
   if (biom != NULL) {
     biom->type = type;
@@ -55,6 +55,8 @@ typedef struct BIO_F_DWRAP_CTX_
    int dgram_timer_exp;
 } BIO_F_DWRAP_CTX;
 
+namespace dtls
+{
 
 BIO_METHOD *BIO_f_dwrap(void) 
 {
@@ -70,9 +72,11 @@ BIO_METHOD *BIO_f_dwrap(void)
    return meth;
 }
 
+}
+
 static int dwrap_new(BIO *bi) 
 {
-   BIO_F_DWRAP_CTX *ctx=OPENSSL_malloc(sizeof(BIO_F_DWRAP_CTX));
+   BIO_F_DWRAP_CTX *ctx = (BIO_F_DWRAP_CTX*)OPENSSL_malloc(sizeof(BIO_F_DWRAP_CTX));
    if(!ctx) return(0);
 
    memset(ctx,0,sizeof(BIO_F_DWRAP_CTX));
@@ -137,7 +141,7 @@ static long dwrap_ctrl(BIO *b, int cmd, long num, void *ptr)
    long ret;
    BIO_F_DWRAP_CTX *ctx;
 
-   ctx=BIO_get_data(b);
+   ctx=(BIO_F_DWRAP_CTX*)BIO_get_data(b);
 
    switch(cmd){
     case BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP:
