@@ -1012,7 +1012,9 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    }
 }
 
-// Offer, Early, EarlyNoOffer, NoOffer
+// UAS_Offer, UAS_EarlyOffer, UAS_EarlyProvidedAnswer, UAS_NoOffer, UAS_ProvidedOffer,
+// UAS_ProvidedOfferReliable, UAS_EarlyNoOffer, UAS_EarlyProvidedOffer, UAS_OfferProvidedAnswer,
+// UAS_NoOfferReliable, UAS_OfferReliable, UAS_NoAnswerReliable
 void
 ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
 {
@@ -1025,6 +1027,15 @@ ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
       case OnBye:
          dispatchBye(msg);
          break;
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          SharedPtr<SipMessage> response(new SipMessage);
+          mDialog.makeResponse(*response, msg, 200);
+          send(response);
+          break;
+      }
       default:
          if(msg.isRequest())
          {
@@ -1318,6 +1329,16 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
           dispatchBye(msg);
           break;
 
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          SharedPtr<SipMessage> response(new SipMessage);
+          mDialog.makeResponse(*response, msg, 200);
+          send(response);
+          break;
+      }
+
       case OnPrack:
          if(handlePrack(msg))
          {
@@ -1447,6 +1468,16 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
          dispatchBye(msg);
          break;
 
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          SharedPtr<SipMessage> response(new SipMessage);
+          mDialog.makeResponse(*response, msg, 200);
+          send(response);
+          break;
+      }
+
       case OnPrack:
          if(handlePrack(msg))
          {
@@ -1515,6 +1546,16 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
       case OnBye:
          dispatchBye(msg);
          break;
+
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          SharedPtr<SipMessage> response(new SipMessage);
+          mDialog.makeResponse(*response, msg, 200);
+          send(response);
+          break;
+      }
 
       case OnPrack:
          if(handlePrack(msg))
@@ -1585,6 +1626,16 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
       case OnBye:
           dispatchBye(msg);
           break;
+
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          SharedPtr<SipMessage> response(new SipMessage);
+          mDialog.makeResponse(*response, msg, 200);
+          send(response);
+          break;
+      }
 
       case OnPrack:
          if(handlePrack(msg))
@@ -1740,6 +1791,16 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
       case OnBye:
           dispatchBye(msg);
           break;
+
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          SharedPtr<SipMessage> response(new SipMessage);
+          mDialog.makeResponse(*response, msg, 200);
+          send(response);
+          break;
+      }
 
       case On200Update:
          transition(UAS_Accepted);
@@ -1903,13 +1964,14 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
          break;
          
       case OnUpdate:
-         {
-            // UPDATE with no offer just respond with 200
-            SharedPtr<SipMessage> u200(new SipMessage);
-            mDialog.makeResponse(*u200, msg, 200);
-            send(u200);
-         }
-         break;
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          SharedPtr<SipMessage> response(new SipMessage);
+          mDialog.makeResponse(*response, msg, 200);
+          send(response);
+          break;
+      }
 
       default:
          if(msg.isRequest())

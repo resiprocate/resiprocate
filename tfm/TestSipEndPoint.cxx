@@ -989,7 +989,7 @@ TestSipEndPoint::update(const TestSipEndPoint& endPoint)
 }
 
 TestSipEndPoint::Update* 
-TestSipEndPoint::update(resip::Uri& url) 
+TestSipEndPoint::update(const resip::Uri& url) 
 {
    return new Update(this, url); 
 }

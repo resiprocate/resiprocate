@@ -908,7 +908,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       {
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          SharedPtr<SipMessage> response(new SipMessage);
-         *mLastRemoteSessionModification = msg;
          mDialog.makeResponse(*response, msg, 200);
          send(response);
          break;
@@ -1031,7 +1030,6 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       {
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          SharedPtr<SipMessage> response(new SipMessage);
-         *mLastRemoteSessionModification = msg;
          mDialog.makeResponse(*response, msg, 200);
          send(response);
          break;
@@ -1270,7 +1268,6 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       {
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          SharedPtr<SipMessage> response(new SipMessage);
-         *mLastRemoteSessionModification = msg;
          mDialog.makeResponse(*response, msg, 200);
          send(response);
          break;
@@ -1341,7 +1338,6 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
       {
          // ?slg? no offerAnswer in update - just respond immediately - do we need a callback?
          SharedPtr<SipMessage> response(new SipMessage);
-         *mLastRemoteSessionModification = msg;
          mDialog.makeResponse(*response, msg, 200);
          send(response);
          break;

@@ -1440,9 +1440,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       {
          // ?slg? no offerAnswer in update - just respond immediately (likely session timer) - do we need a callback?
          SharedPtr<SipMessage> response(new SipMessage);
-         *mLastRemoteSessionModification = msg;
-         mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
-         handleSessionTimerRequest(*response, *mLastRemoteSessionModification);
+         mDialog.makeResponse(*response, msg, 200);
+         handleSessionTimerRequest(*response, msg);
          send(response);
          break;
       }

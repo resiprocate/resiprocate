@@ -80,10 +80,13 @@ static NameAddr localhost;
 class DumTestCase : public DumFixture
 {
    CPPUNIT_TEST_SUITE( DumTestCase ); 
+
 #if 0
       // this test relies on a really long sleep, so don't run it unless you wanna wait:
       CPPUNIT_TEST(testSessionTimerUasRefresher);
 #else
+      CPPUNIT_TEST(testUASEarlyUpdateNoPrack);
+
       CPPUNIT_TEST(testDialogEventUacBasic);
       CPPUNIT_TEST(testDialogEventUasBasic);
       //CPPUNIT_TEST(testDialogEventUacTwoBranchesProvisional);  // test has commented out code and will cause onStaleCallTimeout to fire later in the middle of another test - commenting out until fixed
@@ -196,6 +199,7 @@ class DumTestCase : public DumFixture
       CPPUNIT_TEST(testByesCrossedOnTheWire);  
       CPPUNIT_TEST(testReinviteNo200);  // Requires record routing
 #endif
+
       CPPUNIT_TEST_SUITE_END(); 
 
    public:
@@ -5355,6 +5359,44 @@ class DumTestCase : public DumFixture
 
          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+      }
+
+      void testUASEarlyUpdateNoPrack()
+      {
+          InfoLog(<< "testUASEarlyUpdateNoPrack");
+
+          scott->getProfile()->setUacReliableProvisionalMode(MasterProfile::Never);
+          scott->getProfile()->setUasReliableProvisionalMode(MasterProfile::Never);
+
+          TestClientRegistration regScott(scott);
+
+          Seq(scott->registerUa(),
+              scott->expect(Register_Success, regScott, dumFrom(proxy), WaitForRegistration, scott->noAction()),
+              WaitForEndOfSeq);
+          ExecuteSequences();
+
+          TestSipEndPoint* sheila = sipEndPoint;
+          TestServerInviteSession uas(scott);
+          boost::shared_ptr<SdpContents> offer(static_cast<SdpContents*>(standardOffer->clone()));
+
+          Seq(david->invite(scott->getAor().uri(), offer, TestSipEndPoint::RelProvModeNone),
+              optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+              david->expect(INVITE / 407, from(proxy), WaitForResponse, chain(david->ack(), david->digestRespond())),
+              optional(david->expect(INVITE / 100, from(proxy), WaitFor100, david->noAction())),
+              scott->expect(Invite_NewServerSession, uas, dumFrom(proxy), WaitForCommand, uas.noAction()),
+              scott->expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, chain(uas.provideAnswer(*standardAnswer), uas.provisional(180, false))),  // provisional no answer
+              david->expect(INVITE / 180, from(scott->getInstanceId()), WaitForCommand, david->update(scott->getAor().uri().user())),
+              optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+              david->expect(UPDATE / 407, from(proxy), WaitForCommand, david->digestRespond()),
+              optional(david->expect(UPDATE / 100, from(proxy), WaitFor100, david->noAction())),
+              david->expect(UPDATE / 200, from(proxy), WaitForCommand, uas.accept()),
+              scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+              david->expect(INVITE / 200, from(proxy), WaitForResponse, chain(david->ack(), david->bye())),
+              scott->expect(Invite_Terminated, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
+              david->expect(BYE / 200, from(proxy), WaitForCommand, david->noAction()),
+              WaitForEndOfSeq);
+
+          ExecuteSequences();
       }
 };
 
