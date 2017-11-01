@@ -96,8 +96,7 @@ ClientPagerMessage::getHandle()
 ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet)
    : NonDialogUsage(dum, dialogSet),
      mRequest(dialogSet.getCreator()->getLastRequest()),
-     mEnded(false),
-     mLastQueuedPagedCSeq(0)
+     mEnded(false)
 {
 }
 
@@ -178,7 +177,7 @@ ClientPagerMessage::newTargetInfoSet()
 {
     if (mMsgQueue.empty() == false)
     {
-        // Note:  calling this will cause mLastQueuedPagedCSeq to get a new value
+        // Note:  calling this will cause mRequest->header(h_CSeq) to get a new value
         //        and the responses to the currently pending MESSAGE will be ignored
         pageFirstMsgQueued();
     }
@@ -205,7 +204,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
           // if cseq doesn't match last message paged then someone must have called newTargetInfoSet
           // we want to supress the onSuccess callback and logic, since we re-sent this first queued 
           // item to a new target
-          if (msg.header(h_CSeq).sequence() == mLastQueuedPagedCSeq)
+          if (msg.header(h_CSeq).sequence() == mRequest->header(h_CSeq).sequence())
           {
               if (mMsgQueue.empty() == false)
               {
@@ -224,7 +223,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
           // if cseq doesn't match last message paged then someone must have called newTargetInfoSet
           // we want to supress the onFailure callback and logic, since we re-sent this first queued 
           // item to a new target
-          if (msg.header(h_CSeq).sequence() == mLastQueuedPagedCSeq)
+          if (msg.header(h_CSeq).sequence() == mRequest->header(h_CSeq).sequence())
           {
               if (!mMsgQueue.empty())
               {
@@ -306,7 +305,6 @@ ClientPagerMessage::pageFirstMsgQueued()
    mRequest->header(h_CSeq).sequence()++;
    mRequest->setContents(mMsgQueue.front().contents);
    DumHelper::setOutgoingEncryptionLevel(*mRequest, mMsgQueue.front().encryptionLevel);
-   mLastQueuedPagedCSeq = mRequest->header(h_CSeq).sequence();
    DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << *mRequest);
    mDum.send(mRequest);
 }
