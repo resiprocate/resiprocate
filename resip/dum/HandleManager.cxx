@@ -100,8 +100,7 @@ HandleManager::dumpHandles() const
 bool
 HandleManager::isValidHandle(Handled::Id id) const
 {
-   //!dcm! -- fix; use find
-   return mHandleMap.count(id) != 0;
+   return mHandleMap.find(id) != mHandleMap.end();
 }
 
 Handled*
