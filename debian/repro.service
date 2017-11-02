@@ -1,0 +1,12 @@
+[Unit]
+Description=reSIProcate SIP stack - lightweight SIP proxy daemon
+After=local-fs.target network.target
+
+[Service]
+Type=simple
+PIDFile=/var/run/repro/repro.pid
+ExecStart=/usr/sbin/repro /etc/repro/repro.config --Daemonize=true --PidFile=/var/run/repro/repro.pid
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
