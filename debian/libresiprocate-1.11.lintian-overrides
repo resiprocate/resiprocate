@@ -1,11 +1,11 @@
 # library package contains multiple libs that are always used together
-librecon-1.10 binary: package-name-doesnt-match-sonames
+libresiprocate-1.11 binary: package-name-doesnt-match-sonames
 # code is Vovida (BSD-like) licensed, only packaging is GPL
-librecon-1.10 binary: possible-gpl-code-linked-with-openssl
+libresiprocate-1.11 binary: possible-gpl-code-linked-with-openssl
 # this is currently needed because the lintian check doesn't
 # seem to recognise libs created with libtool -release
 # (rather than the preferred libtool -version-info)
 # discussed on debian-mentors 2012-05-21
-librecon-1.10 binary: dev-pkg-without-shlib-symlink
+libresiprocate-1.11 binary: dev-pkg-without-shlib-symlink
 # this is needed because of bug #673112
-librecon-1.10 binary: hardening-no-fortify-functions
+libresiprocate-1.11 binary: hardening-no-fortify-functions
