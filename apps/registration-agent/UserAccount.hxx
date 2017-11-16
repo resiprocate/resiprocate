@@ -80,6 +80,7 @@ private:
    State mState;
 
    resip::SharedPtr<resip::UserProfile> mProfile;
+   std::vector<resip::Data> mRouteRaw;
    resip::NameAddrs mRoute;
 
    std::vector<resip::ClientRegistrationHandle> mHandles;

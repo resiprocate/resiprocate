@@ -122,11 +122,18 @@ UserAccount::deactivate()
 void
 UserAccount::setContact(const Data& newContact, const time_t expires, const std::vector<resip::Data>& route)
 {
+   if(mState == Active && newContact == mContact && route == mRouteRaw && expires > mExpires)
+   {
+      // only the expiry changes, so no need to de-register/re-register
+      mExpires = expires;
+      return;
+   }
    deactivate();
    mContactOverride = true;
    mContact = newContact;
    mContactUri = Uri(mContact);
    mExpires = expires;
+   mRouteRaw = route;
    mRoute.clear();
    for(std::vector<resip::Data>::const_iterator it = route.begin(); it != route.end(); it++)
    {
