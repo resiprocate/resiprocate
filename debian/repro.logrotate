@@ -4,6 +4,6 @@
 	compress
 	missingok
 	postrotate
-		start-stop-daemon -K -p /var/run/repro/repro.pid -s HUP -x /usr/sbin/repro -q
+		invoke-rc.d repro reload
 	endscript
 }

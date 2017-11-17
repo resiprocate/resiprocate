@@ -4,6 +4,6 @@
 	compress
 	missingok
 	postrotate
-		start-stop-daemon -K -p /var/run/reTurnServer/reTurnServer.pid -s HUP -x /usr/sbin/reTurnServer -q
+		invoke-rc.d resiprocate-turn-server reload
 	endscript
 }
