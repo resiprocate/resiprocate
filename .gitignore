@@ -1,0 +1,5 @@
+playback_prompt.h
+record_prompt.h
+build-aux/
+Makefile.in
+aclocal.m4
