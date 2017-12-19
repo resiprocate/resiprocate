@@ -1063,29 +1063,28 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          break;
 
       case On2xxOffer:
-         {
-             if (*offerAnswer == *mCurrentRemoteOfferAnswer)
-             {
-                 InfoLog (<< "Ignoring illegal offer identical with current remote offer/answer");
-                 transition(Connected);
-                 sendAck();
-                 handleFinalResponse(msg);
-                 onConnectedAspect(getHandle(), msg);
-                 break;
-             }
-         }
-         // fall through to next label
+          // RFC6337 section 3.1.2 recommends we ignore any illegal SDP here to be more interoperable
+          WarningLog(<< "Ignoring illegal SDP offer in 2xx: " << msg.brief());
+          transition(Connected);
+          sendAck();
+          handleFinalResponse(msg);
+          onConnectedAspect(getHandle(), msg);
+          break;
+
       case On2xxAnswer:
       case On1xxAnswer:
-      case On1xxOffer:
          sendAck();
          sendBye();
-         InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
+         WarningLog(<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
+      case On1xxOffer:
+         // RFC6337 section 3.1.2 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring illegal SDP offer in 1xx: " << msg.brief());
+         // No break is itentional
       case On1xx:
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
@@ -1151,29 +1150,28 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          break;
 
       case On2xxOffer:
-         {
-             if (*offerAnswer == *mCurrentRemoteOfferAnswer)
-             {
-                 InfoLog (<< "Ignoring illegal offer identical with current remote offer/answer");
-                 transition(Connected);
-                 sendAck();
-                 handleFinalResponse(msg);
-                 onConnectedAspect(getHandle(), msg);
-                 break;
-             }
-         }
-         // fall through to next label
+          // RFC6337 section 3.1.2 recommends we ignore any illegal SDP here to be more interoperable
+          WarningLog(<< "Ignoring illegal SDP offer in 2xx: " << msg.brief());
+          transition(Connected);
+          sendAck();
+          handleFinalResponse(msg);
+          onConnectedAspect(getHandle(), msg);
+          break;
+
       case On2xxAnswer:
       case On1xxAnswer:
-      case On1xxOffer:
          sendAck();
          sendBye();
-         InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
+         WarningLog(<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
+      case On1xxOffer:
+         // RFC6337 section 3.1.2 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring illegal SDP offer in 1xx: " << msg.brief());
+         // No break is itentional
       case On1xx:
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
@@ -1214,17 +1212,13 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
    switch (toEvent(msg, offerAnswer.get()))
    {
+      case On1xxOffer:
+         // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+         WarningLog(<< "Ignoring illegal SDP offer in 1xx: " << msg.brief());
+         // No break is itentional
       case On1xx:
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
-         break;
-
-      case On1xxOffer:
-         if(!isTerminated())  
-         {
-            transition(UAC_EarlyWithOffer);
-            handle1xxOffer(msg, *offerAnswer);
-         }
          break;
 
       case On2xx:
@@ -1235,22 +1229,18 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          break;
 
       case On2xxOffer:
-         {
-             if (*offerAnswer == *mCurrentRemoteOfferAnswer)
-             {
-                 InfoLog (<< "Ignoring illegal offer identical with current remote offer/answer");
-                 transition(Connected);
-                 sendAck();
-                 handleFinalResponse(msg);
-                 onConnectedAspect(getHandle(), msg);
-                 break;
-             }
-         }
-         // fall through to next label
+          // RFC6337 section 3.1.1 recommends we ignore any illegal SDP here to be more interoperable
+          WarningLog(<< "Ignoring illegal SDP offer in 2xx: " << msg.brief());
+          transition(Connected);
+          sendAck();
+          handleFinalResponse(msg);
+          onConnectedAspect(getHandle(), msg);
+          break;
+
       case On2xxAnswer:
          sendAck();
          sendBye();
-         InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
+         WarningLog(<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
          onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);

@@ -4146,6 +4146,8 @@ class DumTestCase : public DumFixture
          TestClientInviteSession uac(jason);
          boost::shared_ptr<SdpContents> answer(static_cast<SdpContents*>(standardAnswer->clone()));
          
+         // Note:  This test was modified on Dec 18, 2017 to take into account that it is not legal to send a 2nd offer in a
+         // subsequent 180rel.  DUM was modified to just ignore the SDP and not call onOffer.
          Seq(jason->invite(sheila->getContact(), standardOffer),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->reliableProvisional(answer, 1)),
              jason->expect(Invite_NewClientSession, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
@@ -4153,7 +4155,7 @@ class DumTestCase : public DumFixture
              uac.expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->reliableProvisional(answer, 2))),
              jason->expect(Invite_Provisional, uac, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
-             uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
+             //uac.expect(Invite_Offer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.provideAnswer(*standardAnswer)),
              sheila->expect(PRACK, from(jason->getInstanceId()), WaitForCommand, chain(sheila->ok(), sheila->answer())),
              And(Sub(uac.expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(sheila->expect(ACK, from(jason->getInstanceId()), WaitForResponse, sheila->noAction()))),
