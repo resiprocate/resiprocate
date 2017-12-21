@@ -686,10 +686,10 @@ ReproRunner::createSipStack()
    }
 
    // Set TCP Connect timeout 
-   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigInt("TCPConnectTimeout", 10000);  // Default to 10 seconds
+   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigUnsignedLong("TCPConnectTimeout", 10000);  // Default to 10 seconds
 
    // Set DNS Greylist Duration
-   resip::TransactionState::DnsGreylistDurationMs = mProxyConfig->getConfigInt("DNSGreylistDuration", 1800000);  // Default to 30mins
+   resip::TransactionState::DnsGreylistDurationMs = mProxyConfig->getConfigUnsignedLong("DNSGreylistDuration", 1800000);  // Default to 30mins
 
    unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("StreamMessageSizeLimit", 0);
    if(messageSizeLimit > 0)
