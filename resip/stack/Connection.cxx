@@ -513,7 +513,8 @@ Connection::isWritable()
     Virtual function of FdPollItemIf, called to process io events
 **/
 void
-Connection::processPollEvent(FdPollEventMask mask) {
+Connection::processPollEvent(FdPollEventMask mask) 
+{
    /* The original code in ConnectionManager.cxx didn't check
     * for error events unless no writable event. (e.g., writable
     * masked error. Why?)
@@ -539,6 +540,7 @@ Connection::processPollEvent(FdPollEventMask mask) {
    {
       performReads();
    }
+   mTransport->flushStateMacFifo();
 }
 
 bool 

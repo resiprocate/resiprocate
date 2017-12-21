@@ -361,6 +361,11 @@ class Transport : public FdSetIOObserver
          return CongestionManager::NORMAL;
       }
 
+      void flushStateMacFifo()
+      {
+          mStateMachineFifo.flush();
+      }
+
       UInt32 getExpectedWaitForIncoming() const
       {
          return (UInt32)mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;

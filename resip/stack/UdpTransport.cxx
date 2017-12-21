@@ -122,7 +122,6 @@ UdpTransport::setPollGrp(FdPollGrp *grp)
 void
 UdpTransport::process() 
 {
-   mStateMachineFifo.flush();
    if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_TXNOW)!= 0 )
    {
        processTxAll();
@@ -135,6 +134,8 @@ UdpTransport::process()
    {
        updateEvents();
    }
+
+   mStateMachineFifo.flush();
 }
 
 void
@@ -172,6 +173,7 @@ UdpTransport::processPollEvent(FdPollEventMask mask)
    {
       processRxAll();
    }
+   mStateMachineFifo.flush();
 }
 
 /**
@@ -202,7 +204,6 @@ UdpTransport::process(FdSet& fdset)
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo
-
    if (fdset.readyToWrite(mFd))
    {
       processTxAll();
