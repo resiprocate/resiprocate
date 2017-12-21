@@ -11,6 +11,11 @@ Makefile.in
 /autom4te.cache
 /build-aux
 /resiprocate.spec
+/resiprocate-[0-9]*.tar.gz
+/resiprocate-[0-9]*.zip
+/resiprocate-contrib-[0-9]*.tar.gz
+/resiprocate-contrib-[0-9]*.zip
+/repro_*.db
 
 /SVN-VERSION
 /.make_prefs
