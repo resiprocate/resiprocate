@@ -678,7 +678,7 @@ bool
 ReproRunner::createSipStack()
 {
    // Override T1 timer if configured to do so
-   unsigned long overrideT1 = mProxyConfig->getConfigInt("TimerT1", 0);
+   unsigned long overrideT1 = mProxyConfig->getConfigUnsignedLong("TimerT1", 0);
    if(overrideT1)
    {
       WarningLog(<< "Overriding T1! (new value is " << overrideT1 << ")");
