@@ -284,6 +284,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
       mProfile->clientOutboundEnabled() = true;
    }
 
+   resip::Timer::TcpConnectTimeout = 10000;
+
    // Install Managers
    mDum->setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
    mDum->setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));

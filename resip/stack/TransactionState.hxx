@@ -30,6 +30,9 @@ class TransactionState : public DnsHandler
 {
    public:
       RESIP_HeapCount(TransactionState);
+
+      static UInt64 DnsGreylistDurationMs;  // The amount of time to greylist a DNS entry for after receiving a transport error
+
       static void process(TransactionController& controller,
                            TransactionMessage* message); 
       static void processTimer(TransactionController& controller,

@@ -38,6 +38,7 @@
 #include "resip/stack/HEPSipMessageLoggingHandler.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/TransactionState.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
 
 #include "resip/dum/InMemorySyncRegDb.hxx"
@@ -685,7 +686,10 @@ ReproRunner::createSipStack()
    }
 
    // Set TCP Connect timeout 
-   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigInt("TCPConnectTimeout", 0);
+   resip::Timer::TcpConnectTimeout = mProxyConfig->getConfigInt("TCPConnectTimeout", 10000);  // Default to 10 seconds
+
+   // Set DNS Greylist Duration
+   resip::TransactionState::DnsGreylistDurationMs = mProxyConfig->getConfigInt("DNSGreylistDuration", 1800000);  // Default to 30mins
 
    unsigned long messageSizeLimit = mProxyConfig->getConfigUnsignedLong("StreamMessageSizeLimit", 0);
    if(messageSizeLimit > 0)
