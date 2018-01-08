@@ -50,6 +50,7 @@ TurnAsyncSocket::~TurnAsyncSocket()
 void
 TurnAsyncSocket::disableTurnAsyncHandler()
 {
+   Lock lock(mMutex);
    mTurnAsyncSocketHandler = 0;
 }
 
@@ -435,6 +436,7 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission, unsi
 void 
 TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
+   Lock lock(mMutex);
    if(data->size() > 4)
    {
       // Stun Message has first two bits as 00 

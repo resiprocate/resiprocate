@@ -140,6 +140,7 @@ protected:
 private:
    AsyncSocketBase& mAsyncSocketBase;
    bool mCloseAfterDestroyAllocationFinishes;
+   resip::Mutex mMutex;
 
    // Request map (for retransmissions)
    class RequestEntry : public boost::enable_shared_from_this<RequestEntry>
