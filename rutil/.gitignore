@@ -1,0 +1,15 @@
+
+/Makefile.in
+/Makefile
+/.deps
+/.libs
+
+/dns/.deps
+/dns/.dirstamp
+/hep/.deps
+/hep/.dirstamp
+/ssl/.deps
+/ssl/.dirstamp
+/stun/.deps
+/stun/.dirstamp
+
