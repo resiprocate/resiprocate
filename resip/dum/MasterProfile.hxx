@@ -28,6 +28,7 @@ class MasterProfile : public UserProfile
 
       /// Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
       virtual void addSupportedMethod(const MethodTypes& method);   
+      virtual void removeSupportedMethod(const MethodTypes& method);   
       virtual bool isMethodSupported(MethodTypes method) const;
       virtual Tokens getAllowedMethods() const;
       virtual Data getAllowedMethodsData() const;
