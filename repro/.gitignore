@@ -1,0 +1,14 @@
+
+/Makefile.in
+/Makefile
+/.deps
+/.libs
+
+/monkeys/.deps
+/monkeys/.dirstamp
+/stateAgents/.deps
+/stateAgents/.dirstamp
+
+/reproInfo.hxx
+
+/repro

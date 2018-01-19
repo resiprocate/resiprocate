@@ -1,0 +1,15 @@
+
+/Makefile.in
+/Makefile
+/.deps
+/.libs
+
+BasicCall
+basicClient
+basicMessage
+basicRegister
+limpc
+testSMIMEInvite
+testSMIMEMessage
+treg
+testRequestValidationHandler

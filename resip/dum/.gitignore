@@ -1,0 +1,9 @@
+
+/Makefile.in
+/Makefile
+/.deps
+/.libs
+
+/ssl/.deps
+/ssl/.dirstamp
+

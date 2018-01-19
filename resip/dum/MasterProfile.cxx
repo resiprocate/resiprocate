@@ -66,6 +66,24 @@ MasterProfile::addSupportedMethod(const MethodTypes& method)
    mSupportedMethods.push_back(Token(getMethodName(method)));
 }
 
+void 
+MasterProfile::removeSupportedMethod(const MethodTypes& method)
+{
+   mSupportedMethodTypes.erase(method);
+   for (Tokens::iterator i = mSupportedMethods.begin();
+            i != mSupportedMethods.end(); ++i)
+   {
+       if (getMethodType(i->value()) == method)
+       {
+           mSupportedMethods.erase(i);
+           break;
+       }
+   }
+
+   // Should we clear the mimetypes as well?
+   // clearSupportedMimeTypes(method);
+}
+
 bool 
 MasterProfile::isMethodSupported(MethodTypes method) const
 {
