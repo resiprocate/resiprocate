@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# this is a convenience script to help configure the linker to run
+# binaries linked against a local build of the reSIProcate source tree,
+# typically when using an unreleased version of the reSIProcate tree
+# from the repository
+
+if [ -z "$RESIP_SRC" ];
+then
+  echo "Please set RESIP_SRC"
+  exit 1
+fi
+
+export LD_LIBRARY_PATH="${RESIP_SRC}/rutil/.libs:${RESIP_SRC}/resip/stack/.libs:${RESIP_SRC}/resip/dum/.libs:${RESIP_SRC}/reTurn/client/.libs:${RESIP_SRC}/reflow/.libs:${RESIP_SRC}/resip/recon/.libs:${LD_LIBRARY_PATH}"
+

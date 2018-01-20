@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# this is a convenience script to help configure the tree for a build
+# against a reSIProcate source tree, typically when using an unreleased
+# version of the reSIProcate tree from the repository
+
+if [ -z "$RESIP_SRC" ];
+then
+  echo "Please set RESIP_SRC"
+  exit 1
+fi
+
+./configure \
+  CPPFLAGS="-I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DUSE_SSL -I${RESIP_SRC} -I${RESIP_SRC}/resip" \
+  CXXFLAGS="-fpermissive" \
+  LDFLAGS="-L${RESIP_SRC}/rutil/.libs -L${RESIP_SRC}/resip/stack/.libs -L${RESIP_SRC}/resip/dum/.libs -L${RESIP_SRC}/reTurn/client/.libs -L${RESIP_SRC}/reflow/.libs -L${RESIP_SRC}/resip/recon/.libs"
+
