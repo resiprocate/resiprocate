@@ -1052,6 +1052,9 @@ class SdpContents : public Contents
 
 static bool invokeSdpContentsInit = SdpContents::init();
 
+// Silence compiler warning for invokeSdpContentsInit defined, but not used
+static inline void foo(){if(0){(void) invokeSdpContentsInit;}};
+
 typedef SdpContents::Session::Codec Codec;
 
 bool operator==(const SdpContents::Session::Codec& lhs,
