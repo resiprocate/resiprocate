@@ -12,6 +12,9 @@
 
 namespace resip
 {
+
+class XMLCursor;
+
 static const UInt64 NeverExpire = 0xFFFFFFFFFFFFFFFFULL;
 
 /** A single contact record, bound to an Aor during registration.
@@ -20,10 +23,22 @@ class ContactInstanceRecord
 {
    public:
       ContactInstanceRecord();
+      ContactInstanceRecord(const ContactInstanceRecord& rhs);
+      ContactInstanceRecord& operator=(const ContactInstanceRecord& rhs);
+      virtual ~ContactInstanceRecord();
+
       static ContactInstanceRecord makeRemoveDelta(const NameAddr& contact);
       static ContactInstanceRecord makeUpdateDelta(const NameAddr& contact, 
                                                    UInt64 expires,  // absolute time in secs
                                                    const SipMessage& msg);
+
+      // Stream ContactInstanceRecord in XML format
+      void stream(std::stringstream& ss) const;
+
+      // Deserialize off xml tree
+      bool deserialize(resip::XMLCursor& xml, UInt64 now = 0);
+      /* @returns true if successfully deserialized
+       */
       
       NameAddr mContact;    // can contain callee caps and q-values
       UInt64 mRegExpires;   // in seconds
@@ -40,8 +55,10 @@ class ContactInstanceRecord
       // Data mServerSessionId;// if there is no SIP Path header, the connection/session identifier 
       // Uri gruu;  (GRUU is currently derived)
       void      *mUserInfo;       //!< can be used to map user record information (database record id for faster updates?)
+      Data* mUserData;      // Optional user/application specific string
       
       bool operator==(const ContactInstanceRecord& rhs) const;
+
 };
 
 typedef std::list<ContactInstanceRecord> ContactList;
