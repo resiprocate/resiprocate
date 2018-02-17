@@ -19,12 +19,14 @@ TESTS += basicMessage
 # so it is not run automatically
 #TESTS += basicClient
 TESTS += testRequestValidationHandler
+TESTS += testContactInstanceRecord
 
 check_PROGRAMS = \
 	basicRegister \
 	BasicCall \
 	basicMessage \
 	basicClient \
+        testContactInstanceRecord \
 	testRequestValidationHandler
 
 SHARED_SRCS = CommandLineParser.cxx UserAgent.cxx RegEventClient.cxx basicClientCall.cxx basicClientCmdLineParser.cxx basicClientUserAgent.cxx
@@ -33,6 +35,7 @@ basicRegister_SOURCES = basicRegister.cxx $(SHARED_SRCS)
 BasicCall_SOURCES = BasicCall.cxx $(SHARED_SRCS)
 basicMessage_SOURCES = basicMessage.cxx $(SHARED_SRCS)
 basicClient_SOURCES = basicClient.cxx $(SHARED_SRCS)
+testContactInstanceRecord_SOURCES = testContactInstanceRecord.cxx 
 testRequestValidationHandler_SOURCES = testRequestValidationHandler.cxx $(SHARED_SRCS)
 
 noinst_HEADERS = basicClientCall.hxx \
