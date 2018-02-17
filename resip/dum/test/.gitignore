@@ -12,4 +12,5 @@ limpc
 testSMIMEInvite
 testSMIMEMessage
 treg
+testContactInstanceRecord
 testRequestValidationHandler
