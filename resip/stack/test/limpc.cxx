@@ -819,7 +819,7 @@ myMain(int argc, char* argv[])
 
    SipStack sipStack( security );  
 #else
-   SipStack sipStack( false /*multihtread*/ );  
+   SipStack sipStack;
 #endif
 
    if ( key == Data("-") )
