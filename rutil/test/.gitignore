@@ -8,6 +8,8 @@
 /*.trs
 /testLogger*.txt
 /testCoders
+/testCompat
+/testConfigParse
 /testCountStream
 /testData
 /testDataPerformance
@@ -19,8 +21,10 @@
 /testIntrusiveList
 /testLogger
 /testMD5Stream
+/testNetNs
 /testParseBuffer
 /testRandomHex
 /testRandomThread
 /testSHA1Stream
 /testThreadIf
+/testXMLCursor
