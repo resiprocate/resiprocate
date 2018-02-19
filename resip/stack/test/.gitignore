@@ -17,13 +17,16 @@
 /testClient
 /testConnectionBase
 /testCorruption
+/testDialogInfoContents
 /testDigestAuthentication
 /testDns
 /testDtlsTransport
+/testDtmfPayload
 /testEmbedded
 /testEmptyHeader
 /testEmptyHfv
 /testExternalLogger
+/testGenericPidfContents
 /testIM
 /testIdentity
 /testLockStep
@@ -48,6 +51,8 @@
 /testSipMessageEncode
 /testSipMessageMemory
 /testSipStack1
+/testSipStackNetNs
+/testSocketFunc
 /testStack
 /testTcp
 /testTime
@@ -58,5 +63,6 @@
 /testTypedef
 /testUdp
 /testUri
+/testWsCookieContext
 /testXMLCursor
 
