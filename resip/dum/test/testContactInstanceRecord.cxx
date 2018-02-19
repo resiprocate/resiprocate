@@ -64,8 +64,13 @@ int main(int argc, const char* argv[])
     "      <contacturi>&lt;sip:foo@example.com:1234&gt;</contacturi>\r\n"
     "      <expires>3600</expires>\r\n"
     "      <lastupdate>1000</lastupdate>\r\n"
+#ifdef NETNS // Tuple serialization different when NETNS is enabled
     "      <receivedfrom>AAAAAAAAAAAAA1cEAAAAAAEBAQE=</receivedfrom>\r\n"
     "      <publicaddress>AAAAAAAAAAAAA64IAAAAAAICAgI=</publicaddress>\r\n"
+#else
+    "      <receivedfrom>AAAAAAAAAAAAA1cEAQEBAQ==</receivedfrom>\r\n"
+    "      <publicaddress>AAAAAAAAAAAAA64IAgICAg==</publicaddress>\r\n"
+#endif
     "      <sippath>sip:path1@3.3.3.1:3331</sippath>\r\n"
     "      <sippath>sip:path2@3.3.3.2:3332</sippath>\r\n"
     "      <instance>01:23:45:67:89:ab:cd:ef</instance>\r\n"
