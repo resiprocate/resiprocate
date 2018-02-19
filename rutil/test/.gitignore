@@ -5,6 +5,7 @@
 /.libs
 
 /*.log
+/*.trs
 /testLogger*.txt
 /testCoders
 /testCountStream
