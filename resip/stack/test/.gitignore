@@ -5,6 +5,7 @@
 /.libs
 
 /*.log
+/*.trs
 /RFC4475TortureTests
 /UAS
 /dumpTls
