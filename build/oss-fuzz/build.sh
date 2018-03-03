@@ -17,6 +17,14 @@
 
 autoreconf --install
 ./configure --disable-shared --enable-static
-make -j$(nproc) -C rutil/dns/ares aresfuzz aresfuzzname
 
+make -j$(nproc) -C rutil
+make -j$(nproc) -C rutil/test fuzzUtil
+cp rutil/test/fuzzUtil $OUT/
+
+make -j$(nproc) -C rutil/dns/ares aresfuzz aresfuzzname
 cp rutil/dns/ares/{aresfuzz,aresfuzzname} $OUT/
+
+make -j$(nproc) -C resip/stack
+make -j$(nproc) -C resip/stack/test fuzzStack
+cp resip/stack/test/fuzzStack $OUT/
