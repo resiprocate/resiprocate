@@ -138,7 +138,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	MD5Stream.hxx \
 	DnsUtil.hxx \
 	Timer.hxx \
-	DigestStream.hxx \
 	TransportType.hxx \
 	resipfaststreams.hxx \
 	Coders.hxx \
