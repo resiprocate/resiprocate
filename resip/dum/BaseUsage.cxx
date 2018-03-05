@@ -38,6 +38,11 @@ BaseUsage::getBaseHandle()
    return mHandle;
 }
 
+void BaseUsage::postDum(Message* messageForDum)
+{
+   mDum.post(messageForDum);
+}
+
 #if 0
 EncodeStream& 
 BaseUsage::dump(EncodeStream& strm) const
