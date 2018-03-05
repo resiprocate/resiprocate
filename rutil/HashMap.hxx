@@ -19,7 +19,7 @@
 //   https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
 #include <map> // force include of nonstandard <bits/c++config.h>
 
-#  if (defined(__cplusplus) && (__cplusplus >= 201103L)) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900))
+#  if (defined(__cplusplus) && (__cplusplus >= 201103L)) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)) || (defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION >= 1000))
 #    include <unordered_map>
 #    include <unordered_set>
 #    define HASH_MAP_NAMESPACE std
