@@ -19,7 +19,25 @@
 //   https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html
 #include <map> // force include of nonstandard <bits/c++config.h>
 
-#  if ( defined(__GLIBCXX__) && (__GLIBCXX__ >= 20080306) ) // >= 4.3.0
+#  if (defined(__cplusplus) && (__cplusplus >= 201103L)) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)) || (defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION >= 1000))
+#    include <unordered_map>
+#    include <unordered_set>
+#    define HASH_MAP_NAMESPACE std
+#    define HashMap std::unordered_map
+#    define HashSet std::unordered_set
+#    define HashMultiMap std::unordered_multimap
+
+#    define HashValue(type)                            \
+     namespace std                                     \
+     {                                                 \
+        template <>                                    \
+        struct hash<type>                              \
+        {                                              \
+           size_t operator()(const type& data) const;  \
+        };                                             \
+     }
+#    define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash<type>::operator()(const type& data) const { return ret; }
+#  elif ( defined(__GLIBCXX__) && (__GLIBCXX__ >= 20080306) ) // >= 4.3.0
 #    include <tr1/unordered_map>
 #    include <tr1/unordered_set>
 #    define HASH_MAP_NAMESPACE std::tr1
@@ -82,24 +100,6 @@
      size_t hash_value(const type& data);\
      }                                   
 #    define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash_value(const type& data) { return ret; }
-#  elif  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)  // hash_map in stdext namespace is deprecated for VS2015
-#    include <unordered_map>
-#    include <unordered_set>
-#    define HASH_MAP_NAMESPACE std
-#    define HashMap std::unordered_map
-#    define HashSet std::unordered_set
-#    define HashMultiMap std::unordered_multimap
-
-#    define HashValue(type)                            \
-     namespace std                                     \
-     {                                                 \
-        template <>                                    \
-        struct hash<type>                              \
-        {                                              \
-           size_t operator()(const type& data) const;  \
-        };                                             \
-     }
-#    define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash<type>::operator()(const type& data) const { return ret; }
 #  elif  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310)  // hash_map is in stdext namespace for VS.NET 2003
 #    include <hash_map>
 #    include <hash_set>
