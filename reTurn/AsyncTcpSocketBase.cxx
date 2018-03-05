@@ -182,7 +182,7 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       }
       else
       {
-         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection.");
+         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accommodate incoming framed data (" << dataLen+4 << ") closing connection.");
          close();
       }
    }

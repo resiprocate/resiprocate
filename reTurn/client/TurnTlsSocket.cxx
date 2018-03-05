@@ -176,9 +176,9 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
          ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
          resip_assert( s );
    
-         int t = M_ASN1_STRING_type(s);
-         int l = M_ASN1_STRING_length(s);
-         unsigned char* d = M_ASN1_STRING_data(s);
+         int t = ASN1_STRING_type(s);
+         int l = ASN1_STRING_length(s);
+         unsigned char* d = ASN1_STRING_data(s);
          resip::Data name(d,l);
          DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
          resip_assert( name.size() == (unsigned)l );

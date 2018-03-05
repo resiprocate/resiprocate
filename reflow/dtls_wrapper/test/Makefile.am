@@ -7,7 +7,7 @@ LDADD += -lsrtp
 noinst_LTLIBRARIES = libdtlswrappertest.la
 
 libdtlswrappertest_la_SOURCES = \
-	../bf_dwrap.c \
+	../bf_dwrap.cxx \
 	../DtlsFactory.cxx \
 	../DtlsSocket.cxx \
 	../DtlsTimer.cxx \

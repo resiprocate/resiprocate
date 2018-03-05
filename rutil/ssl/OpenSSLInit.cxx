@@ -18,6 +18,7 @@
 
 #define OPENSSL_THREAD_DEFINES
 #include <openssl/opensslconf.h>
+#include <openssl/opensslv.h>
 
 #if  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)
 // OpenSSL builds use an older version of visual studio that require the following definition
@@ -66,8 +67,13 @@ OpenSSLInit::OpenSSLInit()
 	CRYPTO_set_dynlock_lock_callback(::resip_OpenSSLInit_dynLockFunction);
 #endif
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
+#else
+	CRYPTO_set_mem_debug(1);
+#endif
+
 	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
 
 	SSL_library_init();

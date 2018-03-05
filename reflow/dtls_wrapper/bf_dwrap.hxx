@@ -4,9 +4,9 @@
 
 #ifdef USE_SSL 
 
-extern "C" 
+namespace dtls
 {
-     BIO_METHOD *BIO_f_dwrap(void);
+BIO_METHOD *BIO_f_dwrap(void);
 }
 
 #endif

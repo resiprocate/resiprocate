@@ -29,7 +29,7 @@ libreflow_la_SOURCES = FakeSelectSocketDescriptor.cxx \
         dtls_wrapper/DtlsTimer.cxx \
         dtls_wrapper/DtlsSocket.cxx \
         dtls_wrapper/DtlsFactory.cxx \
-        dtls_wrapper/bf_dwrap.c
+        dtls_wrapper/bf_dwrap.cxx
 
 reflowincludedir = $(includedir)/reflow
 nobase_reflowinclude_HEADERS = ErrorCode.hxx \
@@ -44,7 +44,7 @@ nobase_reflowinclude_HEADERS = ErrorCode.hxx \
 	HEPRTCPEventLoggingHandler.hxx \
 	MediaStream.hxx \
 	RTCPEventLoggingHandler.hxx \
-	dtls_wrapper/bf_dwrap.h \
+	dtls_wrapper/bf_dwrap.hxx \
 	dtls_wrapper/DtlsFactory.hxx \
 	dtls_wrapper/DtlsSocket.hxx \
 	dtls_wrapper/DtlsTimer.hxx \

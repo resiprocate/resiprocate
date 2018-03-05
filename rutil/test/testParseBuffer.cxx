@@ -1,6 +1,9 @@
 #include "rutil/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>
+#include <limits>
+#include <sstream>
+#include <vector>
 #include "rutil/Logger.hxx"
 
 using namespace resip;
@@ -388,6 +391,32 @@ main(int argc, char** argv)
    }
    
    {
+      char buf[] = "1.000";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.qVal() == 1000);
+   }
+
+   {
+      const char buf[] = {'1'};
+      const Data data(Data::Share, buf, sizeof(buf));
+      ParseBuffer pb(data);
+      assert(pb.qVal() == 1000);
+   }
+
+   {
+      const char buf[] = {'1', '.'};
+      const Data data(Data::Share, buf, sizeof(buf));
+      ParseBuffer pb(data);
+      assert(pb.qVal() == 1000);
+   }
+
+   {
+      char buf[] = "0.800";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.qVal() == 800);
+   }
+
+   {
       char buf[] = "17 ";
       ParseBuffer pb(buf, strlen(buf));   
       assert(pb.integer() == 17);
@@ -463,6 +492,55 @@ main(int argc, char** argv)
       Data t2;
       pb.data(t2, start);
       // should survive scope exit
+   }
+
+   // test integer() -- accept values near minimum / maximum
+   {
+      std::vector<int> testValues;
+      for (unsigned i = 0; i < 133; ++i)
+      {
+         testValues.push_back(std::numeric_limits<int>::max() - i);
+         testValues.push_back(std::numeric_limits<int>::min() + i);
+      }
+
+      for (unsigned i = 0; i < testValues.size(); ++i)
+      {
+         std::stringstream ss;
+         ss << testValues[i];
+         const Data stringValue(ss.str());
+         ParseBuffer test(stringValue);
+         const int parsed = test.integer();
+         assert(testValues[i] == parsed);
+      }
+   }
+
+   // test integer() -- reject values exceeding minimum / maximum
+   if (sizeof(Int64) > sizeof(int))
+   {
+      std::vector<Int64> testValues;
+      for (Int64 i = 1; i < 133; ++i)
+      {
+         testValues.push_back(std::numeric_limits<int>::max() + i);
+         testValues.push_back(std::numeric_limits<int>::min() - i);
+      }
+
+      for (unsigned i = 0; i < testValues.size(); ++i)
+      {
+         bool catchedException = false;
+         try
+         {
+            std::stringstream ss;
+            ss << testValues[i];
+            const Data stringValue(ss.str());
+            ParseBuffer test(stringValue);
+            test.integer();
+         }
+         catch (ParseException& e)
+         {
+            catchedException = true;
+         }
+         assert(catchedException);
+      }
    }
 
    std::cerr << "All OK" << std::endl;
