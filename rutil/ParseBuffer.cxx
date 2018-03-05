@@ -857,7 +857,7 @@ ParseBuffer::qVal()
          return 0;
       }
       
-      if (*mPosition == '.')
+      if (!eof() && *mPosition == '.')
       {
          skipChar();
          

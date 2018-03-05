@@ -388,6 +388,32 @@ main(int argc, char** argv)
    }
    
    {
+      char buf[] = "1.000";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.qVal() == 1000);
+   }
+
+   {
+      const char buf[] = {'1'};
+      const Data data(Data::Share, buf, sizeof(buf));
+      ParseBuffer pb(data);
+      assert(pb.qVal() == 1000);
+   }
+
+   {
+      const char buf[] = {'1', '.'};
+      const Data data(Data::Share, buf, sizeof(buf));
+      ParseBuffer pb(data);
+      assert(pb.qVal() == 1000);
+   }
+
+   {
+      char buf[] = "0.800";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.qVal() == 800);
+   }
+
+   {
       char buf[] = "17 ";
       ParseBuffer pb(buf, strlen(buf));   
       assert(pb.integer() == 17);
