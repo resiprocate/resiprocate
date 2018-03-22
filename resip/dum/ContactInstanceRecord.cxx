@@ -91,7 +91,7 @@ ContactInstanceRecord::operator==(const ContactInstanceRecord& rhs) const
    }
 }
 
-void ContactInstanceRecord::stream(std::stringstream& ss) const
+void ContactInstanceRecord::stream(std::iostream& ss) const
 {
     UInt64 now = Timer::getTimeSecs();
 

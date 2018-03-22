@@ -33,7 +33,7 @@ class ContactInstanceRecord
                                                    const SipMessage& msg);
 
       // Stream ContactInstanceRecord in XML format
-      void stream(std::stringstream& ss) const;
+      void stream(std::iostream& ss) const;
 
       // Deserialize off xml tree
       bool deserialize(resip::XMLCursor& xml, UInt64 now = 0);
