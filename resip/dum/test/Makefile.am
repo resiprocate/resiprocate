@@ -18,8 +18,9 @@ TESTS += basicMessage
 # The basicClient test case doesn't seem to run without user interaction,
 # so it is not run automatically
 #TESTS += basicClient
-TESTS += testRequestValidationHandler
 TESTS += testContactInstanceRecord
+TESTS += testPubDocument
+TESTS += testRequestValidationHandler
 
 check_PROGRAMS = \
 	basicRegister \
@@ -27,6 +28,7 @@ check_PROGRAMS = \
 	basicMessage \
 	basicClient \
         testContactInstanceRecord \
+        testPubDocument \
 	testRequestValidationHandler
 
 SHARED_SRCS = CommandLineParser.cxx UserAgent.cxx RegEventClient.cxx basicClientCall.cxx basicClientCmdLineParser.cxx basicClientUserAgent.cxx
@@ -36,6 +38,7 @@ BasicCall_SOURCES = BasicCall.cxx $(SHARED_SRCS)
 basicMessage_SOURCES = basicMessage.cxx $(SHARED_SRCS)
 basicClient_SOURCES = basicClient.cxx $(SHARED_SRCS)
 testContactInstanceRecord_SOURCES = testContactInstanceRecord.cxx 
+testPubDocument_SOURCES = testPubDocument.cxx 
 testRequestValidationHandler_SOURCES = testRequestValidationHandler.cxx $(SHARED_SRCS)
 
 noinst_HEADERS = basicClientCall.hxx \
