@@ -1,5 +1,6 @@
 *.log
 *.trs
+*.swp
 
 /Makefile.in
 /Makefile
@@ -11,8 +12,10 @@ basicClient
 basicMessage
 basicRegister
 limpc
+setldpath.sh
+testContactInstanceRecord
+testPubDocument
+testRequestValidationHandler
 testSMIMEInvite
 testSMIMEMessage
 treg
-testContactInstanceRecord
-testRequestValidationHandler
