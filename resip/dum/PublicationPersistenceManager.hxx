@@ -41,14 +41,16 @@ public:
       {
           UInt64 now = Timer::getTimeSecs();
 
-          s << "<pubdocument>" << Symbols::CRLF;
+          // Note: for compatibility with RegSyncServer/Client, using pubinfo for tag name instead of pubdocument
+          s << "<pubinfo>" << Symbols::CRLF;
           s << "  <eventtype>" << mEventType.xmlCharDataEncode() << "</eventtype>" << Symbols::CRLF;
           s << "  <documentkey>" << mDocumentKey.xmlCharDataEncode() << "</documentkey>" << Symbols::CRLF;
           s << "  <etag>" << mETag.xmlCharDataEncode() << "</etag>" << Symbols::CRLF;
           s << "  <expires>" << (((mExpirationTime == 0) || (mExpirationTime <= now)) ? 0 : (mExpirationTime - now)) << "</expires>" << Symbols::CRLF;
           s << "  <lastupdate>" << now - mLastUpdated << "</lastupdate>" << Symbols::CRLF;
-          if(mContents.get())
+          if (mExpirationTime != 0 && mContents.get())  // lingering records will have expirationTime as 0 - don't need to send contents - refreshes also have no body
           {
+
               Mime mimeType = mContents->getType();
 
               // There is an assumption that the contenttype and contentsubtype tags will always occur
@@ -56,8 +58,71 @@ public:
               s << "  <contentstype>" << mimeType.type().xmlCharDataEncode() << "</contentstype>" << Symbols::CRLF;
               s << "  <contentssubtype>" << mimeType.subType().xmlCharDataEncode() << "</contentssubtype>" << Symbols::CRLF;
               s << "  <contents>" << mContents->getBodyData().xmlCharDataEncode() << "</contents>" << Symbols::CRLF;
+
+              if(mSecurityAttributes.get())
+              {
+                  resip_assert(mSecurityAttributes);
+                  s << "   <isencrypted>" << (mSecurityAttributes->isEncrypted() ? "true" : "false") << "</isencrypted>" << Symbols::CRLF;
+                  if (mSecurityAttributes->isEncrypted())
+                  {
+                     s << "   <sigstatus>";
+                     switch (mSecurityAttributes->getSignatureStatus())
+                     {
+                     case SignatureNone:
+                        s << "none";
+                        break;
+                     case SignatureIsBad:
+                        s << "bad";
+                        break;
+                     case SignatureTrusted:
+                        s << "trusted";
+                        break;
+                     case SignatureCATrusted:
+                        s << "catrusted";
+                        break;
+                     case SignatureNotTrusted:
+                        s << "nottrusted";
+                        break;
+                     case SignatureSelfSigned:
+                        s << "selfsigned";
+                        break;
+                     default:
+                        resip_assert(false);
+                        s << "unknown";
+                        break;
+                     }
+                     s << "</sigstatus>" << Symbols::CRLF;
+                     if (!mSecurityAttributes->getSigner().empty())
+                     {
+                        s << "   <signer>" << mSecurityAttributes->getSigner().xmlCharDataEncode() << "</signer>" << Symbols::CRLF;
+                     }
+                     if (!mSecurityAttributes->getIdentity().empty())
+                     {
+                        s << "   <identity>" << mSecurityAttributes->getIdentity().xmlCharDataEncode() << "</identity>" << Symbols::CRLF;
+                        s << "   <identitystrength>";
+                        switch (mSecurityAttributes->getIdentityStrength())
+                        {
+                        case SecurityAttributes::From:
+                           s << "from";
+                           break;
+                        case SecurityAttributes::FailedIdentity:
+                           s << "failedidentity";
+                           break;
+                        case SecurityAttributes::Identity:
+                           s << "identity";
+                           break;
+                        default:
+                           resip_assert(false);
+                           s << "unknown";
+                           break;
+                        }
+                        s << "</identitystrength>" << Symbols::CRLF;
+                     }
+                     // Note:  intentionally not syncing mLevel and mEncryptionPerformed from SecurityAttributes since they are for outbound messages only
+                  }
+              }
           }
-          s << "</pubdocument>" << Symbols::CRLF;
+          s << "</pubinfo>" << Symbols::CRLF;
       }
       
       bool deserialize(resip::XMLCursor& xml, UInt64 now = 0)
@@ -71,7 +136,7 @@ public:
           Data mimeTypeString;
           Data mimeSubtypeString;
 
-          if(isEqualNoCase(xml.getTag(), "pubdocument"))
+          if(isEqualNoCase(xml.getTag(), "pubinfo"))
           {
              if(xml.firstChild())
              {
