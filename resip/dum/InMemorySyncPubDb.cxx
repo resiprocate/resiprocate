@@ -171,12 +171,6 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
    }
 }
 
-void 
-InMemorySyncPubDb::addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication)
-{
-   addUpdateDocument(PubDocument(eventType, documentKey, eTag, expirationTime, contents, securityAttributes, syncPublication));
-}
-
 bool 
 InMemorySyncPubDb::removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication)
 {

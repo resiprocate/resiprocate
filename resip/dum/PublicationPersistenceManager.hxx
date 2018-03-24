@@ -2,6 +2,8 @@
 #define RESIP_PUBLICATIONPERSISTENCEMANAGER_HXX
 
 #include <map>
+
+#include "rutil/XMLCursor.hxx"
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "rutil/Data.hxx"
@@ -35,6 +37,129 @@ public:
          }
       }
 
+      void stream(std::iostream& s) const
+      {
+          UInt64 now = Timer::getTimeSecs();
+
+          s << "<pubdocument>" << Symbols::CRLF;
+          s << "  <eventtype>" << mEventType.xmlCharDataEncode() << "</eventtype>" << Symbols::CRLF;
+          s << "  <documentkey>" << mDocumentKey.xmlCharDataEncode() << "</documentkey>" << Symbols::CRLF;
+          s << "  <etag>" << mETag.xmlCharDataEncode() << "</etag>" << Symbols::CRLF;
+          s << "  <expires>" << (((mExpirationTime == 0) || (mExpirationTime <= now)) ? 0 : (mExpirationTime - now)) << "</expires>" << Symbols::CRLF;
+          s << "  <lastupdate>" << now - mLastUpdated << "</lastupdate>" << Symbols::CRLF;
+          if(mContents.get())
+          {
+              Mime mimeType = mContents->getType();
+
+              // There is an assumption that the contenttype and contentsubtype tags will always occur
+              // before the content tag in the deserialization
+              s << "  <contentstype>" << mimeType.type().xmlCharDataEncode() << "</contentstype>" << Symbols::CRLF;
+              s << "  <contentssubtype>" << mimeType.subType().xmlCharDataEncode() << "</contentssubtype>" << Symbols::CRLF;
+              s << "  <contents>" << mContents->getBodyData().xmlCharDataEncode() << "</contents>" << Symbols::CRLF;
+          }
+          s << "</pubdocument>" << Symbols::CRLF;
+      }
+      
+      bool deserialize(resip::XMLCursor& xml, UInt64 now = 0)
+      {
+          bool success = false;
+          *this = PubDocument();
+          if(now <= 0)
+          {
+              now = Timer::getTimeSecs();
+          }
+          Data mimeTypeString;
+          Data mimeSubtypeString;
+
+          if(isEqualNoCase(xml.getTag(), "pubdocument"))
+          {
+             if(xml.firstChild())
+             {
+                do
+                {
+                    if(isEqualNoCase(xml.getTag(), "eventtype"))
+                    {
+                        if(xml.firstChild())
+                        {
+                            mEventType = xml.getValue().xmlCharDataDecode();
+                            xml.parent();
+                        }
+                    }
+                    else if(isEqualNoCase(xml.getTag(), "documentkey"))
+                    {
+                        if(xml.firstChild())
+                        {
+                            mDocumentKey = xml.getValue().xmlCharDataDecode();
+                            xml.parent();
+                        }
+                    }
+                    else if(isEqualNoCase(xml.getTag(), "etag"))
+                    {
+                        if(xml.firstChild())
+                        {
+                            mETag = xml.getValue().xmlCharDataDecode();
+                            xml.parent();
+                        }
+                    }
+                    else if(isEqualNoCase(xml.getTag(), "expires"))
+                    {
+                        if(xml.firstChild())
+                        {
+                           UInt64 expires = xml.getValue().convertUInt64();
+                           mExpirationTime = (expires == 0 ? 0 : now + expires);
+                           xml.parent();
+                        }
+                    }
+                    else if(isEqualNoCase(xml.getTag(), "lastupdated"))
+                    {
+                        if(xml.firstChild())
+                        {
+                           mLastUpdated = now - xml.getValue().convertUInt64();
+                           xml.parent();
+                        }
+                    }
+                    else if(isEqualNoCase(xml.getTag(), "contentstype"))
+                    {
+                        if(xml.firstChild())
+                        {
+                            mimeTypeString = xml.getValue().xmlCharDataDecode();
+                            xml.parent();
+                        }
+                    }
+                    else if(isEqualNoCase(xml.getTag(), "contentssubtype"))
+                    {
+                        if(xml.firstChild())
+                        {
+                            mimeSubtypeString = xml.getValue().xmlCharDataDecode();
+                            xml.parent();
+                        }
+                    }
+                    else if(isEqualNoCase(xml.getTag(), "contents"))
+                    {
+                        if(xml.firstChild())
+                        {
+                            // There is an assumption that the contenttype and contentsubtype tags will always occur
+                            // before the content tag
+                            Mime mimeType(mimeTypeString, mimeSubtypeString);
+                            // Need explilcit Data decodedBody as serializedContents refers to it in parser
+                            Data decodedBody(xml.getValue().xmlCharDataDecode());
+                            Contents* serializedContents = Contents::createContents(mimeType, decodedBody);
+                            // Need to clone, as serializedContents is still referring to decodedBody which will go out of scope.
+                            mContents.reset(serializedContents->clone());
+                            xml.parent();
+                            success = true;
+                        }
+                    }
+
+                } while(xml.nextSibling());
+                xml.parent();
+             }
+          }
+
+          return(success);
+      }
+
+
       Data mEventType;
       Data mDocumentKey;
       Data mETag;
@@ -60,7 +185,10 @@ public:
    virtual ~PublicationPersistenceManager() {}
 
    virtual void addUpdateDocument(const PubDocument& document) = 0;
-   virtual void addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false) = 0;
+   virtual void addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false)
+   {
+      addUpdateDocument(PubDocument(eventType, documentKey, eTag, expirationTime, contents, securityAttributes, syncPublication));
+   }
    virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication = false) = 0;
    virtual bool getMergedETags(const Data& eventType, const Data& documentKey, ETagMerger& merger, Contents* destination) = 0;
    virtual bool documentExists(const Data& eventType, const Data& documentKey, const Data& eTag) = 0;
