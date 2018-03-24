@@ -50,7 +50,7 @@ int main(int argc, const char* argv[])
     dStream.flush();
 
     Data expectedDoc =
-        "<pubdocument>\r\n"
+        "<pubinfo>\r\n"
         "  <eventtype>presence</eventtype>\r\n"
         "  <documentkey>pub@test.com</documentkey>\r\n"
         "  <etag>e64c1aa043680d6b</etag>\r\n"
@@ -66,7 +66,7 @@ int main(int argc, const char* argv[])
         "  &lt;/tuple&gt;\r\n"
         "&lt;/presence&gt;\r\n"
         "</contents>\r\n"
-        "</pubdocument>\r\n"
+        "</pubinfo>\r\n"
     ;
 
     if(docData != expectedDoc)
