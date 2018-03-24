@@ -172,6 +172,7 @@ public:
                         {
                            UInt64 expires = xml.getValue().convertUInt64();
                            mExpirationTime = (expires == 0 ? 0 : now + expires);
+                           mLingerTime = mExpirationTime;
                            xml.parent();
                         }
                     }
@@ -214,6 +215,103 @@ public:
                             xml.parent();
                             success = true;
                         }
+                    }
+                    else if (isEqualNoCase(xml.getTag(), "isencrypted"))
+                    {
+                       if (xml.firstChild())
+                       {
+                          if (mSecurityAttributes.get() == 0)
+                          {
+                             mSecurityAttributes.reset(new SecurityAttributes);
+                          }
+                          if (isEqualNoCase(xml.getValue(), "true"))
+                          {
+                             mSecurityAttributes->setEncrypted();
+                          }
+                          xml.parent();
+                       }
+                    }
+                    else if (isEqualNoCase(xml.getTag(), "sigstatus"))
+                    {
+                       if (xml.firstChild())
+                       {
+                          if (mSecurityAttributes.get() == 0)
+                          {
+                             mSecurityAttributes.reset(new SecurityAttributes);
+                          }
+                          if (isEqualNoCase(xml.getValue(), "none"))
+                          {
+                             mSecurityAttributes->setSignatureStatus(SignatureNone);
+                          }
+                          else if (isEqualNoCase(xml.getValue(), "bad"))
+                          {
+                             mSecurityAttributes->setSignatureStatus(SignatureIsBad);
+                          }
+                          else if (isEqualNoCase(xml.getValue(), "trusted"))
+                          {
+                             mSecurityAttributes->setSignatureStatus(SignatureTrusted);
+                          }
+                          else if (isEqualNoCase(xml.getValue(), "catrusted"))
+                          {
+                             mSecurityAttributes->setSignatureStatus(SignatureCATrusted);
+                          }
+                          else if (isEqualNoCase(xml.getValue(), "nottrusted"))
+                          {
+                             mSecurityAttributes->setSignatureStatus(SignatureNotTrusted);
+                          }
+                          else if (isEqualNoCase(xml.getValue(), "selfsigned"))
+                          {
+                             mSecurityAttributes->setSignatureStatus(SignatureSelfSigned);
+                          }
+                          xml.parent();
+                       }
+                    }
+                    else if (isEqualNoCase(xml.getTag(), "signer"))
+                    {
+                       if (xml.firstChild())
+                       {
+                          if (mSecurityAttributes.get() == 0)
+                          {
+                             mSecurityAttributes.reset(new SecurityAttributes);
+                          }
+                          mSecurityAttributes->setSigner(xml.getValue().xmlCharDataDecode());
+                          xml.parent();
+                       }
+                    }
+                    else if (isEqualNoCase(xml.getTag(), "identity"))
+                    {
+                       if (xml.firstChild())
+                       {
+                          if (mSecurityAttributes.get() == 0)
+                          {
+                             mSecurityAttributes.reset(new SecurityAttributes);
+                          }
+                          mSecurityAttributes->setIdentity(xml.getValue().xmlCharDataDecode());
+                          xml.parent();
+                       }
+                    }
+                    else if (isEqualNoCase(xml.getTag(), "identitystrength"))
+                    {
+                       if (xml.firstChild())
+                       {
+                          if (mSecurityAttributes.get() == 0)
+                          {
+                             mSecurityAttributes.reset(new SecurityAttributes);
+                          }
+                          if (isEqualNoCase(xml.getValue(), "from"))
+                          {
+                             mSecurityAttributes->setIdentityStrength(SecurityAttributes::From);
+                          }
+                          else if (isEqualNoCase(xml.getValue(), "failedidentity"))
+                          {
+                             mSecurityAttributes->setIdentityStrength(SecurityAttributes::FailedIdentity);
+                          }
+                          else if (isEqualNoCase(xml.getValue(), "identity"))
+                          {
+                             mSecurityAttributes->setIdentityStrength(SecurityAttributes::Identity);
+                          }
+                          xml.parent();
+                       }
                     }
 
                 } while(xml.nextSibling());
