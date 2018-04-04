@@ -83,7 +83,10 @@ class ConnectionBase
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
-      char* getWriteBufferForExtraBytes(int extraBytes);
+
+	  // Mike did this.... bug fix!
+      //char* getWriteBufferForExtraBytes(int extraBytes);
+      char* getWriteBufferForExtraBytes(int readBytes, int extraBytes);
       
       // for avoiding copies in external transports--not used in core resip
       void setBuffer(char* bytes, int count);
