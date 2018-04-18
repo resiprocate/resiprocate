@@ -194,11 +194,22 @@ Security::loadCADirectory(const Data& _dir)
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
    {
-      if(!it.is_directory())
+      try
       {
-         Data name = *it;
-         Data fileName = _dir + name;
-         loadCAFile(fileName);
+         if (!it.is_directory())  // This can throw!
+         {
+            Data name = *it;
+            Data fileName = _dir + name;
+            loadCAFile(fileName);
+         }
+      }
+      catch (Exception& e)
+      {
+         ErrLog(<< "loadCADirectory: Some problem reading " << *it << ": " << e);
+      }
+      catch (...)
+      {
+         ErrLog(<< "loadCADirectory: Some problem reading " << *it);
       }
    }
 }
@@ -213,11 +224,11 @@ Security::loadCAFile(const Data& _file)
    }
    catch (Exception& e)
    {
-      ErrLog(<< "Some problem reading " << _file << ": " << e);
+      ErrLog(<< "loadCAFile: Some problem reading " << _file << ": " << e);
    }
    catch (...)
    {
-      ErrLog(<< "Some problem reading " << _file);
+      ErrLog(<< "loadCAFile: Some problem reading " << _file);
    }
 }
 
@@ -344,7 +355,7 @@ int pem_passwd_cb(char *buf, int size, int rwflag, void *password)
    {
       strncpy(buf, (char *)(password), size);
       buf[size - 1] = '\0';
-      return(strlen(buf));
+      return (int)strlen(buf);
    }
    else
    {
@@ -604,7 +615,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
             throw Exception("BIO_get_mem_data failed: this cert will not be "
                               "added.", __FILE__,__LINE__);
          }
-         Data  buf(Data::Borrow, p, len);
+         Data buf(Data::Borrow, p, (Data::size_type)len);
          
          this->onWritePEM(key, type, buf);
       }
@@ -797,7 +808,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
             throw Exception("BIO_get_mem_data failed: cannot add"
                               " private key.", __FILE__, __LINE__);
          }
-         Data  pem(Data::Borrow, p, len);
+         Data pem(Data::Borrow, p, (Data::size_type)len);
          onWritePEM(name, type, pem );
       }
       catch(Exception& e)
@@ -2180,7 +2191,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    BUF_MEM* bufMem;
    BIO_get_mem_ptr(out, &bufMem);
 
-   int len = bufMem->length;
+   int len = (int)bufMem->length;
    char* buffer = new char[len];
    memcpy(buffer, bufMem->data, len);
 
