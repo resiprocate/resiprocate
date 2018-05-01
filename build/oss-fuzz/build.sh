@@ -23,7 +23,9 @@ make -j$(nproc) -C rutil/test fuzzUtil
 cp rutil/test/fuzzUtil $OUT/
 
 make -j$(nproc) -C rutil/dns/ares aresfuzz aresfuzzname
-cp rutil/dns/ares/{aresfuzz,aresfuzzname} $OUT/
+# those fuzz targets are too small
+#  See: https://github.com/google/oss-fuzz/issues/1331
+#cp rutil/dns/ares/{aresfuzz,aresfuzzname} $OUT/
 
 make -j$(nproc) -C resip/stack
 make -j$(nproc) -C resip/stack/test fuzzStack
