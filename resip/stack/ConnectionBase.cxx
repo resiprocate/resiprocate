@@ -1031,17 +1031,19 @@ ConnectionBase::getCurrentWriteBuffer()
 }
 
 char*
-ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
+ConnectionBase::getWriteBufferForExtraBytes(int currentPos, int extraBytes)
 {
-   if (extraBytes > 0)
+   if (currentPos > 0 && extraBytes > 0)
    {
-      char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize + extraBytes);
-      memcpy(buffer, mBuffer, mBufferSize);
-      delete [] mBuffer;
-      mBuffer = buffer;
-      buffer += mBufferSize;
-      mBufferSize += extraBytes;
-      return buffer;
+      if ((currentPos + extraBytes) > mBufferSize)
+      {
+         mBufferSize = currentPos + extraBytes;
+         char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize);
+         memcpy(buffer, mBuffer, currentPos);
+         delete[] mBuffer;
+         mBuffer = buffer;
+      }
+      return &mBuffer[currentPos];
    }
    else
    {
