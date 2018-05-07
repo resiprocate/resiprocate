@@ -412,7 +412,8 @@ TlsConnection::read(char* buf, int count )
       int bytesPending = SSL_pending(mSsl);
       if (bytesPending > 0)
       {
-         char* buffer = getWriteBufferForExtraBytes(bytesPending);
+         //char* buffer = getWriteBufferForExtraBytes(bytesPending);
+         char* buffer = getWriteBufferForExtraBytes(bytesRead, bytesPending);
          if (buffer)
          {
             //StackLog(<< "reading remaining buffered bytes");

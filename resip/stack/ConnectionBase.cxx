@@ -1030,6 +1030,16 @@ ConnectionBase::getCurrentWriteBuffer()
    return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
 }
 
+
+
+// mike did this 03/30/18 -- this is a bug fix to the stack
+// note that thuis function was returning as a pointer the size of the buffer, 
+// which is not nesesarily the position after where the buffer has been filled by the first SSL_read() in TlsConnection::read()
+// Hence, the buffer was being increased in length whenever this function was invoked (even when unnnecessary), and the 
+// "extraBytes" were being placed in the wrong place within the buffer.
+// My version (I think) corrects that -- see below.
+
+/*
 char*
 ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
 {
@@ -1049,6 +1059,33 @@ ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
       return mBuffer;
    }
 }
+*/
+
+
+
+char*
+ConnectionBase::getWriteBufferForExtraBytes(int readBytes, int extraBytes)
+{
+	if ((readBytes > 0) && (extraBytes > 0))
+	{
+		if ((readBytes + extraBytes) > mBufferSize) {
+			mBufferSize = readBytes + extraBytes;
+			char * buffer = MsgHeaderScanner::allocateBuffer(mBufferSize);
+			memcpy(buffer, mBuffer, readBytes);
+			delete[] mBuffer;
+			mBuffer = buffer;
+		}
+		return &mBuffer[readBytes];
+	}
+	else
+	{
+		resip_assert(0);
+		return mBuffer;
+	}
+}
+
+
+
             
 void 
 ConnectionBase::setBuffer(char* bytes, int count)
