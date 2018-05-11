@@ -1,12 +1,231 @@
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
 
-#include "resip/stack/ParserCategories.hxx"
+#include "resip/stack/Auth.hxx"
+#include "resip/stack/CSeqCategory.hxx"
+#include "resip/stack/CallId.hxx"
+#include "resip/stack/CpimContents.hxx"
+#include "resip/stack/DateCategory.hxx"
+#include "resip/stack/DialogInfoContents.hxx"
+#include "resip/stack/DtmfPayloadContents.hxx"
+#include "resip/stack/ExpiresCategory.hxx"
+#include "resip/stack/GenericPidfContents.hxx"
+#include "resip/stack/GenericUri.hxx"
+#include "resip/stack/IntegerCategory.hxx"
+#include "resip/stack/InvalidContents.hxx"
+#include "resip/stack/MessageWaitingContents.hxx"
+#include "resip/stack/Mime.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/OctetContents.hxx"
+#include "resip/stack/Pidf.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/Pkcs8Contents.hxx"
+#include "resip/stack/PlainContents.hxx"
+#include "resip/stack/PrivacyCategory.hxx"
+#include "resip/stack/RAckCategory.hxx"
+#include "resip/stack/RequestLine.hxx"
+#include "resip/stack/Rlmi.hxx"
 #include "resip/stack/SdpContents.hxx"
-#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/SipFrag.hxx"
+#include "resip/stack/StatusLine.hxx"
+#include "resip/stack/StringCategory.hxx"
+#include "resip/stack/Token.hxx"
+#include "resip/stack/TokenOrQuotedStringCategory.hxx"
+#include "resip/stack/UInt32Category.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/Via.hxx"
+#include "resip/stack/WarningCategory.hxx"
+#include "resip/stack/X509Contents.hxx"
 
 #include "TestSupport.hxx"
+
+static void fuzzAuth(const resip::HeaderFieldValue& hfv)
+{
+    resip::Auth payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzCSeqCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::CSeqCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzCpimContents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("message", "cpim");
+    resip::CpimContents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzCallId(const resip::HeaderFieldValue& hfv)
+{
+    resip::CallId payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzDtmfPayloadContents(const resip::HeaderFieldValue& hfv)
+{
+  static const resip::Mime type("application", "dtmf-relay");
+  resip::DtmfPayloadContents payload(hfv, type);
+  try
+  {
+    payload.checkParsed();
+  }
+  catch (resip::ParseException)
+  {
+  }
+}
+
+static void fuzzDateCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::DateCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzDialogInfoContents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "sdp");
+    resip::DialogInfoContents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzExpiresCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::ExpiresCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzGenericPidfContents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "pidf+xml");
+    resip::GenericPidfContents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzGenericUri(const resip::HeaderFieldValue& hfv)
+{
+    resip::GenericURI payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzIntegerCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::IntegerCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzInvalidContents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("Invalid", "Invalid");
+    resip::InvalidContents payload(hfv, type, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzMessageWaitingContents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "simple-message-summary");
+    resip::MessageWaitingContents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzMime(const resip::HeaderFieldValue& hfv)
+{
+    resip::Mime payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzMultipartMixedContents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("multipart", "mixed");
+    resip::MultipartMixedContents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
 
 static void fuzzNameAddr(const resip::Data& buffer)
 {
@@ -19,10 +238,123 @@ static void fuzzNameAddr(const resip::Data& buffer)
   }
 }
 
-static void fuzzSdp(const unsigned char *data, unsigned long size)
+static void fuzzOctetContents(const resip::HeaderFieldValue& hfv)
 {
-  resip::HeaderFieldValue hfv(reinterpret_cast<const char*>(data), size);
-  resip::Mime type("application", "sdp");
+    static const resip::Mime type("application", "octet-stream");
+    resip::OctetContents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzPidf(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "pidf+xml");
+    resip::Pidf payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzPkcs7Contents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "pkcs7-mime");
+    resip::Pkcs7Contents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzPkcs8Contents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "pkcs8");
+    resip::Pkcs8Contents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzPlainContents(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("text", "plain");
+    resip::PlainContents payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzPrivacyCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::PrivacyCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzRAckCategory(const resip::HeaderFieldValue& hfv)
+{
+    resip::RAckCategory payload(hfv, resip::Headers::UNKNOWN);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzRequestLine(const resip::HeaderFieldValue& hfv)
+{
+    resip::RequestLine payload(hfv);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzRlmi(const resip::HeaderFieldValue& hfv)
+{
+    static const resip::Mime type("application", "rlmi+xml");
+    resip::Rlmi payload(hfv, type);
+    try
+    {
+        payload.checkParsed();
+    }
+    catch (resip::ParseException)
+    {
+    }
+}
+
+static void fuzzSdp(const resip::HeaderFieldValue& hfv)
+{
+  static const resip::Mime type("application", "sdp");
   resip::SdpContents sdp(hfv, type);
   try
   {
@@ -44,11 +376,28 @@ static void fuzzSip(const resip::Data& buffer)
   }
 }
 
-static void fuzzUri(const resip::Data& buffer)
+/*
+
+TODO: add fuzzing for those classes
+
+resip/stack/SipFrag.cxx:SipFrag::parse(ParseBuffer& pb)
+resip/stack/StatusLine.cxx:StatusLine::parse(ParseBuffer& pb)
+resip/stack/StringCategory.cxx:StringCategory::parse(ParseBuffer& pb)
+resip/stack/Token.cxx:Token::parse(ParseBuffer& pb)
+resip/stack/TokenOrQuotedStringCategory.cxx:TokenOrQuotedStringCategory::parse(ParseBuffer& pb)
+resip/stack/UInt32Category.cxx:UInt32Category::parse(ParseBuffer& pb)
+resip/stack/Via.cxx:Via::parse(ParseBuffer& pb)
+resip/stack/WarningCategory.cxx:WarningCategory::parse(ParseBuffer& pb)
+resip/stack/X509Contents.cxx:X509Contents::parse(ParseBuffer& pb)
+
+*/
+
+static void fuzzUri(const resip::HeaderFieldValue& hfv)
 {
+  resip::Uri uri(hfv, resip::Headers::UNKNOWN);
   try
   {
-    resip::Uri uri(buffer);
+    uri.embedded();
   }
   catch (resip::ParseException)
   {
@@ -65,11 +414,38 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
                                       unsigned long size) {
 
   const resip::Data buffer(resip::Data::Share, reinterpret_cast<const char*>(data), size);
+  const resip::HeaderFieldValue hfv(reinterpret_cast<const char*>(data), size);
 
+  fuzzAuth(hfv);
+  fuzzCSeqCategory(hfv);
+  fuzzCallId(hfv);
+  fuzzCpimContents(hfv);
+  fuzzDtmfPayloadContents(hfv);
+  fuzzDateCategory(hfv);
+  fuzzExpiresCategory(hfv);
+  fuzzGenericPidfContents(hfv);
+  fuzzGenericUri(hfv);
+  fuzzIntegerCategory(hfv);
+  fuzzInvalidContents(hfv);
+  fuzzMessageWaitingContents(hfv);
+  fuzzMime(hfv);
+  fuzzMultipartMixedContents(hfv);
   fuzzNameAddr(buffer);
-  fuzzSdp(data, size);
+  fuzzOctetContents(hfv);
+  fuzzPidf(hfv);
+  fuzzPkcs7Contents(hfv);
+  fuzzPkcs8Contents(hfv);
+  fuzzPlainContents(hfv);
+  fuzzPrivacyCategory(hfv);
+  fuzzRAckCategory(hfv);
+  fuzzRequestLine(hfv);
+  fuzzRlmi(hfv);
+  fuzzSdp(hfv);
   fuzzSip(buffer);
-  fuzzUri(buffer);
+  fuzzUri(hfv);
+
+  // hogs memory
+  fuzzDialogInfoContents(hfv);
 
   return 0;
 }
