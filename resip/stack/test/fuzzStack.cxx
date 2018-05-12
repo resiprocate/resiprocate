@@ -423,7 +423,6 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
   fuzzDtmfPayloadContents(hfv);
   fuzzDateCategory(hfv);
   fuzzExpiresCategory(hfv);
-  fuzzGenericPidfContents(hfv);
   fuzzGenericUri(hfv);
   fuzzIntegerCategory(hfv);
   fuzzInvalidContents(hfv);
@@ -432,7 +431,7 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
   fuzzMultipartMixedContents(hfv);
   fuzzNameAddr(buffer);
   fuzzOctetContents(hfv);
-  fuzzPidf(hfv);
+
   fuzzPkcs7Contents(hfv);
   fuzzPkcs8Contents(hfv);
   fuzzPlainContents(hfv);
@@ -444,8 +443,10 @@ extern "C" int LLVMFuzzerTestOneInput(const unsigned char *data,
   fuzzSip(buffer);
   fuzzUri(hfv);
 
-  // hogs memory
-  fuzzDialogInfoContents(hfv);
+  // leaks or hogs memory
+  //fuzzDialogInfoContents(hfv);
+  //fuzzGenericPidfContents(hfv);
+  //fuzzPidf(hfv); return 0;
 
   return 0;
 }
