@@ -202,7 +202,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if(!iInCode)
    {
       memset(cBuf2, 0, sizeof(cBuf2) ); 
-      sprintf(cBuf2, "\n Error %s", X509_verify_cert_error_string(pInStore->error) );
+      sprintf(cBuf2, "\n Error %s", X509_verify_cert_error_string(X509_STORE_CTX_get_error(pInStore)) );
    }
  
    return iInCode;
