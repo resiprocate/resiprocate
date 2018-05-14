@@ -538,7 +538,11 @@ Connection::processPollEvent(FdPollEventMask mask)
    }
    if ( mask & FPEM_Read ) 
    {
-      performReads();
+       if (!performReads())
+       {
+           // Just deleted self
+           return;
+       }
    }
    mTransport->flushStateMacFifo();
 }
