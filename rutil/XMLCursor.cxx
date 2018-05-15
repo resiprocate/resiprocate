@@ -95,13 +95,13 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
             }
          }
       }
-      mRoot = new Node(ParseBuffer(mData.data(), mData.size()));
+      mRoot.reset(new Node(ParseBuffer(mData.data(), mData.size())));
    }
    else
    {
-      mRoot = new Node(ParseBuffer(start, pb.end() - start));
+      mRoot.reset(new Node(ParseBuffer(start, pb.end() - start)));
    }
-   mCursor = mRoot;
+   mCursor = mRoot.get();
 
    if (mRoot->extractTag())
    {
@@ -138,7 +138,6 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
 
 XMLCursor::~XMLCursor()
 {
-   delete mRoot;
 }
 
 void
@@ -258,7 +257,7 @@ XMLCursor::nextSibling()
    }
 
    StackLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
-   if (mCursor->mParent == mRoot)
+   if (mCursor->mParent == mRoot.get())
    {
       parseNextRootChild();
    }
@@ -315,14 +314,14 @@ XMLCursor::parent()
 void
 XMLCursor::reset()
 {
-   mCursor = mRoot;
+   mCursor = mRoot.get();
    mAttributesSet = false;
 }
 
 bool
 XMLCursor::atRoot() const
 {
-   return mCursor == mRoot;
+   return mCursor == mRoot.get();
 }
 
 bool
