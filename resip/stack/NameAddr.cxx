@@ -97,7 +97,9 @@ NameAddr::operator=(const NameAddr& rhs)
 bool 
 NameAddr::operator==(const NameAddr& other) const
 {
-    return uri() == other.uri() && displayName() == other.displayName();
+    return mAllContacts == other.mAllContacts &&
+           uri() == other.uri() &&
+           displayName() == other.displayName();
 }
 
 bool

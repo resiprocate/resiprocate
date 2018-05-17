@@ -719,6 +719,15 @@ main(int argc, char* argv[])
       assert(uri.param(UnknownParameterType("p2")) == Data("456"));
       assert(Data::from(uri) == "/;p1=123;p2=456");
    }
+
+   // Test NameAddr operator== with All Contacts NameAddr
+   {
+      NameAddr defaultNameAddr;
+      NameAddr allContactsNameAddr;
+      allContactsNameAddr.setAllContacts();
+      assert(!(defaultNameAddr == allContactsNameAddr));
+   }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }
