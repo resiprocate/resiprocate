@@ -833,6 +833,7 @@ ReproRunner::createSipStack()
    InteropHelper::setOutboundVersion(mProxyConfig->getConfigInt("OutboundVersion", 5626));
    InteropHelper::setOutboundSupported(mProxyConfig->getConfigBool("DisableOutbound", false) ? false : true);
    InteropHelper::setRRTokenHackEnabled(mProxyConfig->getConfigBool("EnableFlowTokens", false));
+   InteropHelper::setAllowInboundFlowTokensForNonDirectClients(mProxyConfig->getConfigBool("AllowInboundFlowTokensForNonDirectClients", false));
    InteropHelper::setAssumeFirstHopSupportsOutboundEnabled(mProxyConfig->getConfigBool("AssumeFirstHopSupportsOutbound", false));
    InteropHelper::setAssumeFirstHopSupportsFlowTokensEnabled(mProxyConfig->getConfigBool("AssumeFirstHopSupportsFlowTokens", false));
    Data clientNATDetectionMode = mProxyConfig->getConfigData("ClientNatDetectionMode", "DISABLED");
