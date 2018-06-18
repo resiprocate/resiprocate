@@ -11,7 +11,10 @@
 #include "resip/stack/Uri.hxx"
 #include "rutil/Socket.hxx"
 
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
