@@ -397,7 +397,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   mBufferSize = size;
                   
                   DebugLog (<< "Extra bytes after message: " << overHang);
-                  DebugLog (<< Data(mBuffer, overHang));
+                  //DebugLog (<< Data(mBuffer, overHang));
                   
                   bytesRead = overHang;
                }
@@ -471,11 +471,36 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          }
 
          mBufferPos += bytesRead;
-         if (mBufferPos == contentLength)
+         if (mBufferPos >= contentLength)
          {
+            int overHang = mBufferPos - (int)contentLength;
+            char *overHangStart = mBuffer + contentLength;
+
             mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, (UInt32)contentLength);
-            mBuffer=0;
+            mConnState = NewMessage;
+            mBuffer = 0;
+
+            if (overHang > 0)
+            {
+                // The next message has been partially read.
+                size_t size = overHang * 3 / 2;
+                if (size < ConnectionBase::ChunkSize)
+                {
+                    size = ConnectionBase::ChunkSize;
+                }
+                char* newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
+                memcpy(newBuffer, overHangStart, overHang);
+                mBuffer = newBuffer;
+                mBufferPos = 0;
+                mBufferSize = size;
+
+                DebugLog(<< "Extra bytes after message: " << overHang);
+                //DebugLog(<< Data(mBuffer, overHang));
+
+                bytesRead = overHang;
+            }
+
             // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
             // if we're overloaded.
             CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
@@ -515,11 +540,16 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                mTransport->pushRxMsgUp(mMessage);
                mMessage = 0;
             }
-            mConnState = NewMessage;
+            
+            if (overHang > 0) 
+            {
+               goto start;
+            }
          }
          else if (mBufferPos == mBufferSize)
          {
-            // .bwc. We've filled our buffer; go ahead and make more room.
+            // .bwc. We've filled our buffer and haven't read contentLength bytes yet; go ahead and make more room.
+            assert(contentLength >= mBufferSize);
             size_t newSize = resipMin(mBufferSize*3/2, contentLength);
             char* newBuffer = 0;
             try
