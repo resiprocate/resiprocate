@@ -1,0 +1,643 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
+    </Filter>
+    <Filter Include="ASIO Header Files">
+      <UniqueIdentifier>{5ff062c4-5808-4d60-9595-29397531617d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASIO Header Files\asio">
+      <UniqueIdentifier>{6ee0fae4-1460-4634-83fc-8734352d2fb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASIO Header Files\asio\detail">
+      <UniqueIdentifier>{6b9ce753-4d1f-402b-9724-17756f497e2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASIO Header Files\asio\ip">
+      <UniqueIdentifier>{284af25b-93a5-4a58-a0cc-1565b02d3249}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASIO Header Files\asio\ip\detail">
+      <UniqueIdentifier>{22434ead-0da5-4189-87ac-e13267ce7256}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASIO Header Files\asio\ssl">
+      <UniqueIdentifier>{8a9d23d0-63ce-4c7f-8789-74dd8f24f938}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ASIO Header Files\asio\ssl\detail">
+      <UniqueIdentifier>{690eb0b8-e049-48c3-a4fe-ba1f29741980}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AsyncSocketBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncTcpSocketBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncTlsSocketBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncUdpSocketBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ChannelManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectionManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DataBuffer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RemotePeer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RequestHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReTurnConfig.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="reTurnServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReTurnSubsystem.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StunAuth.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StunMessage.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StunTuple.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TlsConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TlsServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TurnAllocation.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TurnAllocationKey.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TurnManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TurnPermission.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UdpRelayServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UdpServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UserAuthData.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TurnAllocationManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AsyncSocketBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncSocketBaseHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncTcpSocketBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncTlsSocketBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncUdpSocketBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ChannelManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectionManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DataBuffer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RemotePeer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReTurnConfig.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReTurnSubsystem.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StunAuth.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StunMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StunTuple.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TlsConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TlsServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TurnAllocation.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TurnAllocationKey.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TurnManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TurnPermission.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UdpRelayServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UdpServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio.hpp">
+      <Filter>ASIO Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_datagram_socket.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_deadline_timer.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_io_object.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_socket.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_socket_acceptor.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_socket_iostream.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_socket_streambuf.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_stream_socket.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\basic_streambuf.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\buffer.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\buffered_read_stream.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\buffered_read_stream_fwd.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\buffered_stream.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\buffered_stream_fwd.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\buffered_write_stream.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\buffered_write_stream_fwd.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\completion_condition.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\datagram_socket_service.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\deadline_timer.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\deadline_timer_service.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\error.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\error_code.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\handler_alloc_hook.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\handler_invoke_hook.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\io_service.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\is_read_buffered.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\is_write_buffered.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\placeholders.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\read.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\read_until.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\socket_acceptor_service.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\socket_base.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\strand.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\stream_socket_service.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\streambuf.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\system_error.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\thread.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\time_traits.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\version.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\write.hpp">
+      <Filter>ASIO Header Files\asio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\bind_handler.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\buffer_resize_guard.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\buffered_stream_storage.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\call_stack.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\const_buffers_iterator.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\consuming_buffers.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\deadline_timer_service.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\epoll_reactor.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\epoll_reactor_fwd.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\event.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\fd_set_adapter.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\handler_alloc_helpers.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\handler_invoke_helpers.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\hash_map.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\io_control.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\kqueue_reactor.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\kqueue_reactor_fwd.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\local_free_on_block_exit.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\mutex.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\noncopyable.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\null_event.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\null_mutex.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\null_signal_blocker.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\null_thread.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\null_tss_ptr.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\old_win_sdk_compat.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\pipe_select_interrupter.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\pop_options.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\posix_event.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\posix_fd_set_adapter.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\posix_mutex.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\posix_signal_blocker.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\posix_thread.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\posix_tss_ptr.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\push_options.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\reactive_socket_service.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\reactor_op_queue.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\resolver_service.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\scoped_lock.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\select_interrupter.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\select_reactor.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\select_reactor_fwd.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\service_base.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\service_id.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\service_registry.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\service_registry_fwd.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\signal_blocker.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\signal_init.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\socket_holder.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\socket_ops.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\socket_option.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\socket_select_interrupter.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\socket_types.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\strand_service.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\task_io_service.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\task_io_service_fwd.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\thread.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\throw_error.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\timer_queue.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\timer_queue_base.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\tss_ptr.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_event.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_fd_set_adapter.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_io_service.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_io_service_fwd.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_operation.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_socket_service.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_mutex.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_signal_blocker.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_thread.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\win_tss_ptr.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\winsock_init.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\detail\wrapped_handler.hpp">
+      <Filter>ASIO Header Files\asio\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\address.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\address_v4.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\address_v6.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\basic_endpoint.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver_entry.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver_iterator.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver_query.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\host_name.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\multicast.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\resolver_query_base.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\resolver_service.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\tcp.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\udp.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\unicast.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\v6_only.hpp">
+      <Filter>ASIO Header Files\asio\ip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ip\detail\socket_option.hpp">
+      <Filter>ASIO Header Files\asio\ip\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\basic_context.hpp">
+      <Filter>ASIO Header Files\asio\ssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\context.hpp">
+      <Filter>ASIO Header Files\asio\ssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\context_base.hpp">
+      <Filter>ASIO Header Files\asio\ssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\context_service.hpp">
+      <Filter>ASIO Header Files\asio\ssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\stream.hpp">
+      <Filter>ASIO Header Files\asio\ssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\stream_base.hpp">
+      <Filter>ASIO Header Files\asio\ssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\stream_service.hpp">
+      <Filter>ASIO Header Files\asio\ssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_context_service.hpp">
+      <Filter>ASIO Header Files\asio\ssl\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_init.hpp">
+      <Filter>ASIO Header Files\asio\ssl\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_operation.hpp">
+      <Filter>ASIO Header Files\asio\ssl\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_stream_service.hpp">
+      <Filter>ASIO Header Files\asio\ssl\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_types.hpp">
+      <Filter>ASIO Header Files\asio\ssl\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="UserAuthData.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TurnAllocationManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="reTurnServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.txt" />
+    <None Include="reTurnServer.config" />
+  </ItemGroup>
+</Project>

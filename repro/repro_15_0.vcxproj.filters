@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="HttpTemplate">
+      <UniqueIdentifier>{688a9c29-e1a4-49b9-bdbf-2275c2dfacb6}</UniqueIdentifier>
+      <Extensions>ixx</Extensions>
+    </Filter>
+    <Filter Include="ConfigFile">
+      <UniqueIdentifier>{4ca4ec3e-27b7-4ffe-b707-03c8dec1bbe9}</UniqueIdentifier>
+      <Extensions>config</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BerkeleyDb.cxx" />
+    <ClCompile Include="HttpBase.cxx" />
+    <ClCompile Include="HttpConnection.cxx" />
+    <ClCompile Include="MySqlDb.cxx" />
+    <ClCompile Include="repro.cxx" />
+    <ClCompile Include="ReproRunner.cxx" />
+    <ClCompile Include="ReproVersion.cxx" />
+    <ClCompile Include="WebAdmin.cxx" />
+    <ClCompile Include="WebAdminThread.cxx" />
+    <ClCompile Include="SqlDb.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="WebAdminThread.hxx" />
+    <ClInclude Include="BerkeleyDb.hxx" />
+    <ClInclude Include="HttpBase.hxx" />
+    <ClInclude Include="HttpConnection.hxx" />
+    <ClInclude Include="MySqlDb.hxx" />
+    <ClInclude Include="ReproRunner.hxx" />
+    <ClInclude Include="ReproVersion.hxx" />
+    <ClInclude Include="WebAdmin.hxx" />
+    <ClInclude Include="SqlDb.hxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="webadmin\pageOutlinePost.ixx">
+      <Filter>HttpTemplate</Filter>
+    </None>
+    <None Include="webadmin\pageOutlinePre.ixx">
+      <Filter>HttpTemplate</Filter>
+    </None>
+    <None Include="repro.config">
+      <Filter>ConfigFile</Filter>
+    </None>
+  </ItemGroup>
+</Project>
