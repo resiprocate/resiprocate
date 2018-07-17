@@ -47,7 +47,9 @@ librepro_la_LIBADD = -ldb_cxx
 librepro_la_LIBADD += ../resip/dum/libdum.la
 librepro_la_LIBADD += ../resip/stack/libresip.la
 librepro_la_LIBADD += ../rutil/librutil.la
+if HAVE_LIBDL
 librepro_la_LIBADD += -ldl
+endif
 
 librepro_la_SOURCES = \
 	RouteStore.cxx \
