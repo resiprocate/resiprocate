@@ -8,10 +8,17 @@ struct headers { char *name; Headers::Type type; };
 
 class HeaderHash
 {
+#if  (GPERF_MAJOR_VER > 3 || (GPERF_MAJOR_VER == 3 && GPERF_MINOR_VER >= 1))
+private:
+  static inline unsigned int hash (const char *str, size_t len);
+public:
+  static const struct headers *in_word_set (const char *str, size_t len);
+#else
 private:
   static inline unsigned int hash (const char *str, unsigned int len);
 public:
   static const struct headers *in_word_set (const char *str, unsigned int len);
+#endif
 };
 // NOTE the cxx file for this class is AUTO GENERATED. DO NOT EDIT IT.
 // This file should match it. BUT THIS FILE IS MANUALLY GENERATED.

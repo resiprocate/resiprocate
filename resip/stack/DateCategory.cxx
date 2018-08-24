@@ -25,20 +25,34 @@ namespace resip
 struct days { const char *name; DayOfWeek type; };
 class DayOfWeekHash
 {
+#if  (GPERF_MAJOR_VER > 3 || (GPERF_MAJOR_VER == 3 && GPERF_MINOR_VER >= 1))
+private:
+  static inline unsigned int hash (const char *str, size_t len);
+public:
+  static const struct days *in_word_set (const char *str, size_t len);
+#else
 private:
   static inline unsigned int hash (const char *str, unsigned int len);
 public:
   static const struct days *in_word_set (const char *str, unsigned int len);
+#endif
 };
 
 // Implemented in gen/MonthHash.cxx
 struct months { const char *name; Month type; };
 class MonthHash
 {
+#if  (GPERF_MAJOR_VER > 3 || (GPERF_MAJOR_VER == 3 && GPERF_MINOR_VER >= 1))
+private:
+  static inline unsigned int hash (const char *str, size_t len);
+public:
+  static const struct months *in_word_set (const char *str, size_t len);
+#else
 private:
   static inline unsigned int hash (const char *str, unsigned int len);
 public:
   static const struct months *in_word_set (const char *str, unsigned int len);
+#endif
 };
 }
 
