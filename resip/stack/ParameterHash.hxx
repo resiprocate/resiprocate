@@ -1,5 +1,6 @@
 #if !defined(PARAMETERHASH_HXX)
 #define PARAMETERHASH_HXX
+#include "config.h"
 namespace resip 
 {
 struct params { char *name; ParameterTypes::Type type; };
@@ -7,17 +8,10 @@ struct params { char *name; ParameterTypes::Type type; };
 
 class ParameterHash
 {
-#if  (GPERF_MAJOR_VER > 3 || (GPERF_MAJOR_VER == 3 && GPERF_MINOR_VER >= 1))
 private:
-  static inline unsigned int hash (const char *str, size_t len);
+  static inline unsigned int hash (const char *str, GPERF_SIZE_TYPE len);
 public:
-  static const struct params *in_word_set (const char *str, size_t len);
-#else
-private:
-  static inline unsigned int hash (const char *str, unsigned int len);
-public:
-  static const struct params *in_word_set (const char *str, unsigned int len);
-#endif
+  static const struct params *in_word_set (const char *str, GPERF_SIZE_TYPE len);
 };
 // NOTE the cxx file for this class is AUTO GENERATED. DO NOT EDIT IT.
 // This file should match it. BUT THIS FILE IS MANUALLY GENERATED.
