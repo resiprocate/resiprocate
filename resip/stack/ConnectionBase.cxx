@@ -549,7 +549,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          else if (mBufferPos == mBufferSize)
          {
             // .bwc. We've filled our buffer and haven't read contentLength bytes yet; go ahead and make more room.
-            assert(contentLength >= mBufferSize);
+            resip_assert(contentLength >= mBufferSize);
             size_t newSize = resipMin(mBufferSize*3/2, contentLength);
             char* newBuffer = 0;
             try
