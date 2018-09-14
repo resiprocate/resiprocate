@@ -75,6 +75,11 @@ main(int argc, char** argv)
       dialog.remoteParticipant().setSessionDescription(Data::from(sdp), "application/sdp");
       dialog.remoteParticipant().setCSeq(10);
 
+      dialog.addDialogElement("Host", "UA1234");
+      dialog.addDialogElement("MultiElement", "0");
+      dialog.addDialogElement("MultiElement", "1");
+      dialog.addDialogElement("MultiElement", "2");
+
       di.addDialog(dialog);
 
       DialogInfoContents::Dialog mindialog;
@@ -90,6 +95,11 @@ main(int argc, char** argv)
       assert(di2.getVersion() == di.getVersion());
       assert(di2.getDialogInfoState() == di.getDialogInfoState());
       assert(di2.getEntity() == di.getEntity());
+      if(di2.getDialogs().size() != 2)
+      {
+         resipCout << "di2 size: " << di2.getDialogs().size() << endl << endl;
+         cout << di2 << endl;
+      }
       assert(di2.getDialogs().size() == 2);
 
       assert(di2.getDialogs().front().getId() == di.getDialogs().front().getId());
@@ -140,6 +150,45 @@ main(int argc, char** argv)
       assert(di2.getDialogs().front().remoteParticipant().getSessionDescriptionType() == di.getDialogs().front().remoteParticipant().getSessionDescriptionType());
       assert(di2.getDialogs().front().remoteParticipant().getCSeq() == di.getDialogs().front().remoteParticipant().getCSeq());
       assert(di2.getDialogs().front().remoteParticipant().hasCSeq() == di.getDialogs().front().remoteParticipant().hasCSeq());
+
+      Data hostValue;
+      assert(di2.getDialogs().front().getDialogElement("Host", hostValue) == true);
+      assert(hostValue == "UA1234");
+      assert(di2.getDialogs().front().getDialogElement("Host", hostValue, 0) == true);
+      assert(hostValue == "UA1234");
+      assert(di2.getDialogs().front().getDialogElement("Host", hostValue, 1) == false);
+      assert(hostValue.empty());
+      assert(di.getDialogs().front().getDialogElement("Host", hostValue) == true);
+      assert(hostValue == "UA1234");
+      assert(di.getDialogs().front().getDialogElement("Host", hostValue, 0) == true);
+      assert(hostValue == "UA1234");
+      assert(di.getDialogs().front().getDialogElement("Host", hostValue, 1) == false);
+      assert(hostValue.empty());
+
+      Data multiValue;
+      assert(di2.getDialogs().front().getDialogElement("MultiElement", multiValue, 0) == true);
+      cout << "multi[0]: " << multiValue << endl;
+      // Currently using multimap, not sure order can be assumed
+      assert(multiValue == "0" || multiValue == "1" || multiValue == "2");
+      assert(di2.getDialogs().front().getDialogElement("MultiElement", multiValue, 1) == true);
+      cout << "multi[0]: " << multiValue << endl;
+      assert(multiValue == "0" || multiValue == "1" || multiValue == "2");
+      assert(di2.getDialogs().front().getDialogElement("MultiElement", multiValue, 2) == true);
+      cout << "multi[0]: " << multiValue << endl;
+      assert(multiValue == "0" || multiValue == "1" || multiValue == "2");
+      assert(di2.getDialogs().front().getDialogElement("MultiElement", multiValue, 3) == false);
+      assert(multiValue.empty());
+      assert(di.getDialogs().front().getDialogElement("MultiElement", multiValue, 0) == true);
+      cout << "multi[0]: " << multiValue << endl;
+      assert(multiValue == "0" || multiValue == "1" || multiValue == "2");
+      assert(di.getDialogs().front().getDialogElement("MultiElement", multiValue, 1) == true);
+      cout << "multi[0]: " << multiValue << endl;
+      assert(multiValue == "0" || multiValue == "1" || multiValue == "2");
+      assert(di.getDialogs().front().getDialogElement("MultiElement", multiValue, 2) == true);
+      cout << "multi[0]: " << multiValue << endl;
+      assert(multiValue == "0" || multiValue == "1" || multiValue == "2");
+      assert(di.getDialogs().front().getDialogElement("MultiElement", multiValue, 3) == false);
+      assert(multiValue.empty());
 
       assert(di2.getDialogs().back().getId() == di.getDialogs().back().getId());
       assert(di2.getDialogs().back().getState() == di.getDialogs().back().getState());

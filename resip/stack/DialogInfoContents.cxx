@@ -190,6 +190,28 @@ DialogInfoContents::encodeParsed(EncodeStream& str) const
    return str;
 }
 
+bool 
+DialogInfoContents::Dialog::getDialogElement(const Data& childElementName, Data& elementValue, int instance) const
+{
+   bool found = false;
+   elementValue = "";
+   std::pair <std::multimap<Data, Data>::const_iterator, std::multimap<Data, Data>::const_iterator> filteredList;
+   filteredList = mExtraDialogElements.equal_range(childElementName);
+   int matchCount = 0;
+   for (std::multimap<Data, Data>::const_iterator matchListIterator = filteredList.first; matchListIterator != filteredList.second; ++matchListIterator)
+   {
+      if(instance == matchCount)
+      {
+         elementValue = matchListIterator->second;
+         found = true;
+         break;
+      }
+      matchCount++;
+   }
+
+   return(found);
+}
+
 EncodeStream& 
 DialogInfoContents::Dialog::encodeParsed(EncodeStream& str, const Data& indent) const
 {
@@ -262,6 +284,17 @@ DialogInfoContents::Dialog::encodeParsed(EncodeStream& str, const Data& indent) 
 
    // Encode remote participant (if set)
    mRemoteParticipant.encode(str, "remote", indent);
+
+   // User specific/non-standard Dialog elements
+   for(std::multimap<Data, Data>::const_iterator elementIterator = mExtraDialogElements.begin(); 
+       elementIterator != mExtraDialogElements.end(); 
+       elementIterator++)
+   {
+      DebugLog(<< "Dialog child element Name: \"" << elementIterator->first << "\" Value: \"" << elementIterator->second << "\"");
+      str << indent << indent << '<' << elementIterator->first << '>'
+          << elementIterator->second.xmlCharDataEncode()
+          << "</" << elementIterator->first << '>' << Symbols::CRLF;
+   }
 
    str << indent << "</dialog>" << Symbols::CRLF;
 
@@ -506,6 +539,9 @@ DialogInfoContents::parseDialog(XMLCursor& xml)
       // ?slg? - throw or be tolerant?
    }
 
+   // Clear out any remnent parsed dialog child elements
+   dialog.mExtraDialogElements.clear();
+
    if (xml.firstChild())
    {
       do
@@ -602,12 +638,23 @@ DialogInfoContents::parseDialog(XMLCursor& xml)
          }
          else
          {
-            DebugLog(<< "Unknown dialog element: " << xml.getTag());
+            Data elementName = xml.getTag();
+            if (xml.firstChild())
+            {
+               DebugLog(<< "Unknown dialog element: " << elementName << " value: " << xml.getValue().xmlCharDataDecode());
+               dialog.addDialogElement(elementName, xml.getValue().xmlCharDataDecode());
+               xml.parent();
+            }
+            else
+            {
+               DebugLog(<< "Unknown dialog element: " << elementName);
+            }
          }
       } while (xml.nextSibling());
       xml.parent();
    }
 
+   //DebugLog(<< "Pushing " << mDialogs.size() << "'th dialog " << dialog.mId << " parsed into DialogInfoCOntents::mDialogs");
    mDialogs.push_back(dialog);
 }
 
