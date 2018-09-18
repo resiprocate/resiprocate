@@ -20,7 +20,7 @@ public:
                                const asio::ip::address& address = UnspecifiedIpAddress, 
                                unsigned short port = 0);
 
-   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native_handle(); }
 
 protected:
 
@@ -42,6 +42,7 @@ private:
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

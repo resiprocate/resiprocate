@@ -1,18 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
-    </Filter>
     <Filter Include="ASIO Header Files">
       <UniqueIdentifier>{5ff062c4-5808-4d60-9595-29397531617d}</UniqueIdentifier>
     </Filter>
@@ -34,166 +22,40 @@
     <Filter Include="ASIO Header Files\asio\ssl\detail">
       <UniqueIdentifier>{690eb0b8-e049-48c3-a4fe-ba1f29741980}</UniqueIdentifier>
     </Filter>
+    <Filter Include="config">
+      <UniqueIdentifier>{1d3033b8-6d0a-46b1-a387-445b0461d379}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AsyncSocketBase.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AsyncTcpSocketBase.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AsyncTlsSocketBase.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AsyncUdpSocketBase.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ChannelManager.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ConnectionManager.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DataBuffer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RemotePeer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RequestHandler.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ReTurnConfig.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="reTurnServer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ReTurnSubsystem.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StunAuth.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StunMessage.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StunTuple.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TcpConnection.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TcpServer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TlsConnection.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TlsServer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TurnAllocation.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TurnAllocationKey.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TurnManager.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TurnPermission.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UdpRelayServer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UdpServer.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UserAuthData.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TurnAllocationManager.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="AsyncSocketBase.cxx" />
+    <ClCompile Include="AsyncTcpSocketBase.cxx" />
+    <ClCompile Include="AsyncTlsSocketBase.cxx" />
+    <ClCompile Include="AsyncUdpSocketBase.cxx" />
+    <ClCompile Include="ChannelManager.cxx" />
+    <ClCompile Include="ConnectionManager.cxx" />
+    <ClCompile Include="DataBuffer.cxx" />
+    <ClCompile Include="RemotePeer.cxx" />
+    <ClCompile Include="RequestHandler.cxx" />
+    <ClCompile Include="ReTurnConfig.cxx" />
+    <ClCompile Include="reTurnServer.cxx" />
+    <ClCompile Include="ReTurnSubsystem.cxx" />
+    <ClCompile Include="StunAuth.cxx" />
+    <ClCompile Include="StunMessage.cxx" />
+    <ClCompile Include="StunTuple.cxx" />
+    <ClCompile Include="TcpConnection.cxx" />
+    <ClCompile Include="TcpServer.cxx" />
+    <ClCompile Include="TlsConnection.cxx" />
+    <ClCompile Include="TlsServer.cxx" />
+    <ClCompile Include="TurnAllocation.cxx" />
+    <ClCompile Include="TurnAllocationKey.cxx" />
+    <ClCompile Include="TurnAllocationManager.cxx" />
+    <ClCompile Include="TurnManager.cxx" />
+    <ClCompile Include="TurnPermission.cxx" />
+    <ClCompile Include="UdpRelayServer.cxx" />
+    <ClCompile Include="UdpServer.cxx" />
+    <ClCompile Include="UserAuthData.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AsyncSocketBase.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AsyncSocketBaseHandler.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AsyncTcpSocketBase.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AsyncTlsSocketBase.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AsyncUdpSocketBase.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ChannelManager.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ConnectionManager.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DataBuffer.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RemotePeer.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RequestHandler.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ReTurnConfig.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ReTurnSubsystem.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="StunAuth.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="StunMessage.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="StunTuple.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TcpConnection.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TcpServer.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TlsConnection.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TlsServer.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TurnAllocation.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TurnAllocationKey.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TurnManager.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TurnPermission.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UdpRelayServer.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UdpServer.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\contrib\asio\asio.hpp">
       <Filter>ASIO Header Files</Filter>
     </ClInclude>
@@ -626,18 +488,39 @@
     <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_types.hpp">
       <Filter>ASIO Header Files\asio\ssl\detail</Filter>
     </ClInclude>
-    <ClInclude Include="UserAuthData.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TurnAllocationManager.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="reTurnServer.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="AsyncSocketBase.hxx" />
+    <ClInclude Include="AsyncSocketBaseHandler.hxx" />
+    <ClInclude Include="AsyncTcpSocketBase.hxx" />
+    <ClInclude Include="AsyncTlsSocketBase.hxx" />
+    <ClInclude Include="AsyncUdpSocketBase.hxx" />
+    <ClInclude Include="ChannelManager.hxx" />
+    <ClInclude Include="ConnectionManager.hxx" />
+    <ClInclude Include="DataBuffer.hxx" />
+    <ClInclude Include="RemotePeer.hxx" />
+    <ClInclude Include="RequestHandler.hxx" />
+    <ClInclude Include="ReTurnConfig.hxx" />
+    <ClInclude Include="reTurnServer.hxx" />
+    <ClInclude Include="ReTurnSubsystem.hxx" />
+    <ClInclude Include="StunAuth.hxx" />
+    <ClInclude Include="StunMessage.hxx" />
+    <ClInclude Include="StunTuple.hxx" />
+    <ClInclude Include="TcpConnection.hxx" />
+    <ClInclude Include="TcpServer.hxx" />
+    <ClInclude Include="TlsConnection.hxx" />
+    <ClInclude Include="TlsServer.hxx" />
+    <ClInclude Include="TurnAllocation.hxx" />
+    <ClInclude Include="TurnAllocationKey.hxx" />
+    <ClInclude Include="TurnAllocationManager.hxx" />
+    <ClInclude Include="TurnManager.hxx" />
+    <ClInclude Include="TurnPermission.hxx" />
+    <ClInclude Include="UdpRelayServer.hxx" />
+    <ClInclude Include="UdpServer.hxx" />
+    <ClInclude Include="UserAuthData.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.txt" />
-    <None Include="reTurnServer.config" />
+    <None Include="reTurnServer.config">
+      <Filter>config</Filter>
+    </None>
   </ItemGroup>
 </Project>
