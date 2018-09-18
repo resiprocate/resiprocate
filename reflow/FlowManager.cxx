@@ -2,6 +2,10 @@
 #include "config.h"
 #endif
 
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
+// a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
+#include <rutil/SharedPtr.hxx>
+
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
@@ -13,7 +17,6 @@
 #include <rutil/Logger.hxx>
 #include <rutil/ThreadIf.hxx>
 #include <rutil/Random.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Timer.hxx>
 
 #ifdef WIN32
