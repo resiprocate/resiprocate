@@ -384,7 +384,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -410,7 +410,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libeay32MTd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\ssleay32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MTd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -435,7 +435,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libeay32MDd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\ssleay32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -459,7 +459,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libeay32MTd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\ssleay32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto32MTd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -487,7 +487,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -518,7 +518,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libeay32MT.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\ssleay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MT.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -549,7 +549,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libeay32MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\ssleay32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -579,7 +579,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libeay32MT.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\ssleay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto32MT.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)reprocmd.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>

@@ -231,7 +231,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;crypt32.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libssl32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -255,7 +255,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\libeay32MDd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\ssleay32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\libssl32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)stunTestVectors.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)stunTestVectors.pdb</ProgramDatabaseFile>
@@ -322,7 +322,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;crypt32.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\VC\static\libssl32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -346,7 +346,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\libeay32MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\ssleay32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;$(SolutionDir)$(Platform)\$(Configuration)\rutil.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\VC\static\libssl32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)stunTestVectors.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
