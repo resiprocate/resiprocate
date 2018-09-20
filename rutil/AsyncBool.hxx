@@ -1,67 +1,23 @@
-#if !defined(REPRO_RADIUSSERVERAUTHMANAGER_HXX)
-#define REPRO_RADIUSSERVERAUTHMANAGER_HXX
-
-#include <map>
-
-#if defined(HAVE_CONFIG_H)
-  #include "config.h"
-#endif
-
-#include "rutil/AsyncBool.hxx"
-#include "resip/stack/Auth.hxx"
-#include "resip/stack/Message.hxx"
-#include "resip/dum/UserProfile.hxx"
-#include "resip/dum/RADIUSServerAuthManager.hxx"
-#include "repro/Dispatcher.hxx"
-
-#ifdef USE_RADIUS_CLIENT
+#if !defined(RESIP_ASYNCBOOL_HXX)
+#define RESIP_ASYNCBOOL_HXX
 
 namespace resip
 {
-class Profile;
-class DialogUsageManager;
-}
 
-namespace repro
+enum AsyncBool
 {
-class AclStore;
-
-class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
-{
-   public:
-      ReproRADIUSServerAuthManager(resip::DialogUsageManager& dum, 
-                             AclStore& aclDb,
-                             bool useAuthInt,
-                             bool rejectBadNonces,
-                             const resip::Data& configurationFile,
-                             bool challengeThirdParties,
-                             const resip::Data& staticRealm);
-      
-      ~ReproRADIUSServerAuthManager();
-      
-   protected:
-      virtual bool useAuthInt() const;
-      virtual bool rejectBadNonces() const;
-      virtual resip::AsyncBool requiresChallenge(const resip::SipMessage& msg);
-
-   private:
-      resip::DialogUsageManager& mDum;
-      AclStore&  mAclDb;
-      bool mUseAuthInt;
-      bool mRejectBadNonces;
+   True,  // response is true
+   False, // response is false
+   Async  // response will be sent asynchronously
 };
 
- 
 }
-
-#endif
 
 #endif
 
 /* ====================================================================
  *
- * Copyright 2013 Daniel Pocock http://danielpocock.com
- * All rights reserved.
+ * Copyright 2014 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -95,4 +51,5 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
  *
  *
  */
+
 

@@ -58,7 +58,7 @@ UserAgentServerAuthManager::authorizedForThisIdentity(const resip::Data &user,
    return true;  // We don't care who the request came from
 }
 
-ServerAuthManager::AsyncBool
+AsyncBool
 UserAgentServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());

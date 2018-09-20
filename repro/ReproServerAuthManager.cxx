@@ -1,5 +1,6 @@
 #include "rutil/ResipAssert.h"
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
@@ -45,7 +46,7 @@ ReproServerAuthManager::rejectBadNonces() const
    return mRejectBadNonces;
 }
 
-ServerAuthManager::AsyncBool
+AsyncBool
 ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());
