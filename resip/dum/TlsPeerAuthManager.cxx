@@ -103,6 +103,7 @@ TlsPeerAuthManager::authorizedForThisIdentity(
    }
 
    // catch-all: access denied
+   DebugLog(<< "message content didn't match any peer name");
    return false;
 }
 
@@ -138,6 +139,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
 
    if(isTrustedSource(*sipMessage))
    {
+      DebugLog(<<"from trusted node, skipping checks");
       return Authorized;
    }
 
@@ -146,17 +148,28 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    {
       // peerNames is empty if client certificate mode is `optional'
       // or if the message didn't come in on TLS transport
-      if (requiresAuthorization(*sipMessage) && !peerNames.empty())
+      if (!requiresAuthorization(*sipMessage))
       {
-         if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
-            return Authorized;
-         SharedPtr<SipMessage> response(new SipMessage);
-         Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
-         mDum.send(response);
-         return Rejected;
-      }
-      else
+         DebugLog(<<"authorization not required for this message");
          return Skipped;
+      }
+
+      if(peerNames.empty())
+      {
+         DebugLog(<<"peerNames is empty, allowing the message without further inspection");
+         return Skipped;
+      }
+
+      if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+      {
+         DebugLog(<<"authorized");
+         return Authorized;
+      }
+      DebugLog(<<"not authorized");
+      SharedPtr<SipMessage> response(new SipMessage);
+      Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
+      mDum.send(response);
+      return Rejected;
    }
    else
    {
@@ -166,16 +179,24 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
       {
          if(mThirdPartyRequiresCertificate)
          {
+            DebugLog(<<"third party requires certificate");
             SharedPtr<SipMessage> response(new SipMessage);
             Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
             mDum.send(response);
             return Rejected;
          }
          else
+         {
+            DebugLog(<<"third party does not require certificate, allowing the message without further inspection");
             return Skipped;
+         }
       }
       if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+      {
+         DebugLog(<<"authorized");
          return Authorized;
+      }
+      DebugLog(<<"not authorized");
       SharedPtr<SipMessage> response(new SipMessage);
       Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
       mDum.send(response);

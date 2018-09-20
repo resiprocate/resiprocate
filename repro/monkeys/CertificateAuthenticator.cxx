@@ -109,23 +109,28 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
 
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
+         if (rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
-            // peerNames is empty if client certificate mode is `optional'
-            // or if the message didn't come in on TLS transport
-            if(peerNames.empty())
-               return Continue;
-            if(authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri()))
-            {
-               rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
-               return Continue;
-            }
-            rc.sendResponse(*auto_ptr<SipMessage>
-                            (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
-            return SkipAllChains;
-         }
-         else
+            DebugLog(<<"from trusted node, skipping checks");
             return Continue;
+         }
+         // peerNames is empty if client certificate mode is `optional'
+         // or if the message didn't come in on TLS transport
+         if(peerNames.empty())
+         {
+            DebugLog(<<"peerNames is empty, allowing the message without further inspection");
+            return Continue;
+         }
+         if(authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri()))
+         {
+            rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+            DebugLog(<<"authorized");
+            return Continue;
+         }
+         DebugLog(<<"not authorized");
+         rc.sendResponse(*auto_ptr<SipMessage>
+                         (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
+         return SkipAllChains;
       }
       else
       {
@@ -135,24 +140,31 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          {
             if(mThirdPartyRequiresCertificate)
             {
+               DebugLog(<<"third party requires certificate");
                rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Mutual TLS required to handle that message")));
                return SkipAllChains;
             }
             else
+            {
+               DebugLog(<<"third party does not require certificate, allowing the message without further inspection");
                return Continue;
+            }
          }
          if(authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri()))
          {
             rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+            DebugLog(<<"authorized");
             return Continue;
          }
+         DebugLog(<<"not authorized");
          rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
       }
    }
 
+   DebugLog(<<"not a recognized message type");
    return Continue;
 }
 
@@ -204,6 +216,7 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
    }
 
    // catch-all: access denied
+   DebugLog(<< "message content didn't match any peer name");
    return false;
 }
 
