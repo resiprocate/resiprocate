@@ -26,6 +26,11 @@ ExtendedDomainMatcher::isMyDomain(const Data& domain) const
    Data _domain(domain);
    _domain.lowercase();
 
+   if(mDomainSuffixList.empty())
+   {
+      return false;
+   }
+
    static const Data dot(".");
    Data::size_type i = 0;
    for(i = _domain.find(dot, i); i < _domain.size() && i != Data::npos; i++)
