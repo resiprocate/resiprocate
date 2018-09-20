@@ -531,6 +531,7 @@
     <ClCompile Include="ExistsOrDataParameter.cxx" />
     <ClCompile Include="ExistsParameter.cxx" />
     <ClCompile Include="ExpiresCategory.cxx" />
+    <ClCompile Include="ExtendedDomainMatcher.cxx" />
     <ClCompile Include="ExtensionHeader.cxx" />
     <ClCompile Include="ExtensionParameter.cxx" />
     <ClCompile Include="ExternalBodyContents.cxx" />
@@ -725,6 +726,7 @@
     <ClInclude Include="ExistsOrDataParameter.hxx" />
     <ClInclude Include="ExistsParameter.hxx" />
     <ClInclude Include="ExpiresCategory.hxx" />
+    <ClInclude Include="ExtendedDomainMatcher.hxx" />
     <ClInclude Include="ExtensionHeader.hxx" />
     <ClInclude Include="ExtensionParameter.hxx" />
     <ClInclude Include="ExternalBodyContents.hxx" />

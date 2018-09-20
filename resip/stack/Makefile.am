@@ -86,6 +86,7 @@ libresip_la_SOURCES = \
 	DnsResult.cxx \
 	DtlsMessage.cxx \
 	Embedded.cxx \
+	ExtendedDomainMatcher.cxx \
 	ExtensionParameter.cxx \
 	ExtensionHeader.cxx \
 	ExistsOrDataParameter.cxx \
@@ -260,6 +261,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ExistsOrDataParameter.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
+	ExtendedDomainMatcher.hxx \
 	ExtensionHeader.hxx \
 	ExtensionParameter.hxx \
 	ExternalBodyContents.hxx \
