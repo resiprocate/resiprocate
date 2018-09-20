@@ -34,7 +34,6 @@ class SqlDb: public AbstractDb
       mutable resip::Mutex mMutex;
 
       const char* tableName( Table table ) const;
-      void getUserAndDomainFromKey(const AbstractDb::Key& key, resip::Data& user, resip::Data& domain) const;
 
    private:
       // Db manipulation routines

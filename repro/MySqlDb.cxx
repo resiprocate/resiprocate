@@ -20,6 +20,7 @@
 
 #include "repro/AbstractDb.hxx"
 #include "repro/MySqlDb.hxx"
+#include "repro/UserStore.hxx"
 
 
 using namespace resip;
@@ -375,7 +376,7 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       DataStream ds(command);
       Data user;
       Data domain;
-      getUserAndDomainFromKey(key, user, domain);
+      UserStore::getUserAndDomainFromKey(key, user, domain);
       ds << "SELECT passwordHash FROM users WHERE user = '" << user << "' AND domain = '" << domain << "' ";
    
       // Note: domain is empty when querying for HTTP admin user - for this special user, 
@@ -445,7 +446,7 @@ MySqlDb::nextUserKey()
    Data user(row[0]);
    Data domain(row[1]);
    
-   return user+"@"+domain;
+   return UserStore::buildKey(user, domain);
 }
 
 
@@ -652,7 +653,7 @@ MySqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
 {
    Data user;
    Data domain;
-   getUserAndDomainFromKey(key, user, domain);
+   UserStore::getUserAndDomainFromKey(key, user, domain);
    ds << " WHERE user='" << user
       << "' AND domain='" << domain
       << "'";      

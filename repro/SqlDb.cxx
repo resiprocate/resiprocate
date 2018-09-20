@@ -107,18 +107,6 @@ SqlDb::tableName(Table table) const
    return 0;
 }
 
-void
-SqlDb::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain) const
-{
-   ParseBuffer pb(key);
-   const char* start = pb.position();
-   pb.skipToOneOf("@");
-   pb.data(user, start);
-   const char* anchor = pb.skipChar();
-   pb.skipToEnd();
-   pb.data(domain, anchor);
-}
-
 /* ====================================================================
  * 
  * Copyright (c) 2015 Daniel Pocock.  All rights reserved.
