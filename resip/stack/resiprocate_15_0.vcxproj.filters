@@ -11,6 +11,7 @@
     <ClCompile Include="ApiCheck.cxx" />
     <ClCompile Include="ApplicationSip.cxx" />
     <ClCompile Include="Auth.cxx" />
+    <ClCompile Include="BasicDomainMatcher.cxx" />
     <ClCompile Include="BasicNonceHelper.cxx" />
     <ClCompile Include="BranchParameter.cxx" />
     <ClCompile Include="CallId.cxx" />
@@ -161,6 +162,7 @@
     <ClInclude Include="ApplicationMessage.hxx" />
     <ClInclude Include="ApplicationSip.hxx" />
     <ClInclude Include="Auth.hxx" />
+    <ClInclude Include="BasicDomainMatcher.hxx" />
     <ClInclude Include="BasicNonceHelper.hxx" />
     <ClInclude Include="BranchParameter.hxx" />
     <ClInclude Include="CallId.hxx" />
@@ -183,6 +185,7 @@
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
     <ClInclude Include="DnsResultMessage.hxx" />
+    <ClInclude Include="DomainMatcher.hxx" />
     <ClInclude Include="DtlsMessage.hxx" />
     <ClInclude Include="ssl\DtlsTransport.hxx" />
     <ClInclude Include="Embedded.hxx" />

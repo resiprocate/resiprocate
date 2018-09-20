@@ -70,6 +70,7 @@ libresip_la_SOURCES = \
 	Aor.cxx \
 	ApiCheck.cxx \
 	ApplicationSip.cxx \
+	BasicDomainMatcher.cxx \
 	BasicNonceHelper.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
@@ -226,6 +227,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ApplicationMessage.hxx \
 	ApplicationSip.hxx \
 	Auth.hxx \
+	BasicDomainMatcher.hxx \
 	BasicNonceHelper.hxx \
 	BranchParameter.hxx \
 	CallId.hxx \
@@ -246,6 +248,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	DateCategory.hxx \
 	DeprecatedDialog.hxx \
 	DialogInfoContents.hxx \
+	DomainMatcher.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsResultMessage.hxx \
