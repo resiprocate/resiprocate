@@ -20,6 +20,9 @@ class SqlDb: public AbstractDb
       virtual bool isSane() {return mConnected;}
 
       virtual void eraseUser( const Key& key );
+      virtual void eraseTlsPeerIdentity( const Key& key );
+
+      virtual bool isAuthorized(const resip::Data& peerName, const std::set<resip::Data>& identities) const;
 
       // Perform a query that expects a single result/row - returns all column/field data in a vector
       virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const = 0;
@@ -50,6 +53,7 @@ class SqlDb: public AbstractDb
       mutable volatile bool mConnected;
 
       virtual void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
+      virtual void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
 };
 
 }

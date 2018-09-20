@@ -17,6 +17,7 @@
 #include "repro/PostgreSqlDb.hxx"
 #include "repro/UserStore.hxx"
 
+#include "repro/TlsPeerIdentityStore.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -463,6 +464,118 @@ PostgreSqlDb::nextUserKey()
 
 
 bool 
+PostgreSqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::TlsPeerIdentityRecord& rec)
+{
+   Data command;
+   {
+      DataStream ds(command);
+      // Use two queries together to simulate UPSERT
+      // Real UPSERT is coming in PostgreSQL 9.5
+      ds /* << "UPDATE tlsPeerIdentity SET"
+         << "' foo='" << rec.foo
+         << "' WHERE peerName = '" << rec.peerName
+         << "' AND authorizedIdentity ='" << rec.authorizedIdentity
+         << "'; " */
+         << "INSERT INTO tlsPeerIdentity (peerName, authorizedIdentity)"
+         << " SELECT '"
+         << rec.peerName << "', '"
+         << rec.authorizedIdentity << "'"
+         << " WHERE NOT EXISTS (SELECT 1 FROM tlsPeerIdentity WHERE "
+         << "peerName = '" << rec.peerName << "' AND authorizedIdentity = '" << rec.authorizedIdentity << "')";
+   }
+   return query(command, 0) == 0;
+}
+
+
+AbstractDb::TlsPeerIdentityRecord
+PostgreSqlDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
+{
+   AbstractDb::TlsPeerIdentityRecord  ret;
+
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT peerName, authorizedIdentity FROM tlsPeerIdentity ";
+      tlsPeerIdentityWhereClauseToDataStream(key, ds);
+   }
+ 
+   PGresult* result=0;
+   if(query(command, &result) != 0)
+   {
+      return ret;
+   }
+ 
+   if (result==0)
+   {
+      ErrLog( << "PostgreSQL failed: " << PQerrorMessage(mConn));
+      return ret;
+   }
+
+   if (PQntuples(result) > 0)
+   {
+      int col = 0;
+      ret.peerName        = Data(PQgetvalue(result, 0, col++));
+      ret.authorizedIdentity = Data(PQgetvalue(result, 0, col++));
+   }
+
+   PQclear(result);
+
+   return ret;
+}
+
+
+AbstractDb::Key
+PostgreSqlDb::firstTlsPeerIdentityKey()
+{
+   // free memory from previous search 
+   if (mResult[TlsPeerIdentityTable])
+   {
+      PQclear(mResult[TlsPeerIdentityTable]);
+      mResult[TlsPeerIdentityTable] = 0;
+      mRow[TlsPeerIdentityTable] = 0;
+   }
+ 
+   Data command("SELECT peerName, authorizedIdentity FROM tlsPeerIdentity");
+
+   if(query(command, &mResult[TlsPeerIdentityTable]) != 0)
+   {
+      return Data::Empty;
+   }
+
+   if(mResult[TlsPeerIdentityTable] == 0)
+   {
+      ErrLog( << "PostgreSQL failed: " << PQerrorMessage(mConn));
+      return Data::Empty;
+   }
+
+   return nextTlsPeerIdentityKey();
+}
+
+
+AbstractDb::Key
+PostgreSqlDb::nextTlsPeerIdentityKey()
+{
+   if(mResult[TlsPeerIdentityTable] == 0)
+   {
+      return Data::Empty;
+   }
+
+   PGresult *result = mResult[TlsPeerIdentityTable];
+   if (mRow[TlsPeerIdentityTable] >= PQntuples(result))
+   {
+      PQclear(result);
+      mResult[TlsPeerIdentityTable] = 0;
+      mRow[TlsPeerIdentityTable] = 0;
+      return Data::Empty;
+   }
+   Data peerName(PQgetvalue(result, mRow[TlsPeerIdentityTable], 0));
+   Data authorizedIdentity(PQgetvalue(result, mRow[TlsPeerIdentityTable]++, 1));
+
+   return TlsPeerIdentityStore::buildKey(peerName, authorizedIdentity);
+}
+
+
+bool
 PostgreSqlDb::dbWriteRecord(const Table table, 
                        const resip::Data& pKey, 
                        const resip::Data& pData)
@@ -682,6 +795,17 @@ PostgreSqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
    ds << " WHERE username='" << user
       << "' AND domain='" << domain
       << "'";      
+}
+
+void
+PostgreSqlDb::tlsPeerIdentityWhereClauseToDataStream(const Key& key, DataStream& ds) const
+{
+   Data peerName;
+   Data authorizedIdentity;
+   TlsPeerIdentityStore::getTlsPeerIdentityFromKey(key, peerName, authorizedIdentity);
+   ds << " WHERE peerName='" << peerName
+      << "' AND authorizedIdentity='" << authorizedIdentity
+      << "'";
 }
    
 #endif // USE_POSTGRESQL

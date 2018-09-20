@@ -91,6 +91,7 @@ librepro_la_SOURCES = \
     ProcessorChain.cxx \
 	SqlDb.cxx \
 	Target.cxx \
+	TlsPeerIdentityStore.cxx \
     UserAuthGrabber.cxx \
 	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
@@ -200,6 +201,8 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Store.hxx \
 	Target.hxx \
 	TimerCMessage.hxx \
+	TlsPeerIdentityInfo.hxx \
+	TlsPeerIdentityStore.hxx \
 	UserAuthGrabber.hxx \
 	UserInfoMessage.hxx \
 	UserStore.hxx \

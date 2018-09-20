@@ -1,52 +1,56 @@
-#if !defined(RESIP_CERTIFICATE_AUTHENTICATOR_HXX)
-#define RESIP_CERTIFICATE_AUTHENTICATOR_HXX 
+#ifndef TLSPEERIDENTITYINFO_MESSAGE_HXX
+#define TLSPEERIDENTITYINFO_MESSAGE_HXX 1
 
-#include <set>
-
-#include "rutil/AsyncBool.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/KeyValueStore.hxx"
-#include "resip/dum/TlsPeerAuthManager.hxx"
-#include "repro/AclStore.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/ProxyConfig.hxx"
-
-namespace resip
-{
-   class SipStack;
-}
+#include "repro/ProcessorMessage.hxx"
+#include "repro/AbstractDb.hxx"
 
 namespace repro
 {
-  class CertificateAuthenticator : public Processor
-  {
-    public:
-      static resip::KeyValueStore::Key mCertificateVerifiedKey;
 
-      CertificateAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, resip::SipStack* stack, AclStore& aclStore, bool thirdPartyRequiresCertificate = true);
-      CertificateAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, resip::SipStack* stack, AclStore& aclStore, bool thirdPartyRequiresCertificate, resip::CommonNameMappings& commonNameMappings);
-      ~CertificateAuthenticator();
+class TlsPeerIdentityInfo : public ProcessorMessage
+{
+   public:
+      TlsPeerIdentityInfo(Processor& proc,
+                     const resip::Data& tid,
+                     resip::TransactionUser* passedtu):
+         ProcessorMessage(proc,tid,passedtu),
+         mAuthorized(false)
+      {
+      }
+      
+      TlsPeerIdentityInfo(const TlsPeerIdentityInfo& orig):
+         ProcessorMessage(orig)
+      {
+         mPeerName = orig.mPeerName;
+         mIdentities = orig.mIdentities;
+         mAuthorized = orig.mAuthorized;
+      }
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(EncodeStream &os) const;
+      const resip::Data& peerName() const{return mPeerName;}
+      resip::Data& peerName(){return mPeerName;}
+      
+      const std::set<resip::Data>& identities() const{return mIdentities;}
+      std::set<resip::Data>& identities(){return mIdentities;}
 
-    protected:
-      bool isTrustedSource(const std::list<resip::Data>& peerNames);
-      resip::AsyncBool authorizedForThisIdentity(RequestContext& context, const std::list<resip::Data>& peerNames, resip::Uri &fromUri);
+      const bool authorized() const{return mAuthorized;}
+      bool& authorized(){return mAuthorized;}
+      
+      virtual TlsPeerIdentityInfo* clone() const {return new TlsPeerIdentityInfo(*this);};
 
-      Dispatcher* mAuthRequestDispatcher;
-      AclStore& mAclStore;
-      bool mThirdPartyRequiresCertificate;
-      resip::CommonNameMappings mCommonNameMappings;
-  };
-  
+      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "TlsPeerIdentityInfo(tid="<<mTid<<")"; return ostr; };
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
+      
+      resip::Data mPeerName;
+      std::set<resip::Data> mIdentities;
+      bool mAuthorized;
+};
+
 }
 #endif
 
 /* ====================================================================
  *
- * Copyright (c) 2012 Daniel Pocock  All rights reserved.
+ * Copyright 2014 Daniel Pocock http://danielpocock.com  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -78,5 +82,5 @@ namespace repro
  *
  * ====================================================================
  *
+ *
  */
-

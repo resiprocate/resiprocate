@@ -4,8 +4,10 @@
 #include <map>
 #include <set>
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "DumFeature.hxx"
+#include "resip/dum/TlsPeerIdentityInfoMessage.hxx"
 
 namespace resip
 {
@@ -21,7 +23,8 @@ class TlsPeerAuthManager : public DumFeature
       {
          Authorized,
          Skipped,
-         Rejected
+         Rejected,
+         RequestedInfo
       };
 
       TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, const std::set<Data>& trustedPeers, bool thirdPartyRequiresCertificate = true);
@@ -34,9 +37,10 @@ class TlsPeerAuthManager : public DumFeature
 
       // can return Authorized, Rejected, Skipped
       virtual Result handle(SipMessage* sipMsg);
+      virtual SipMessage* handleTlsPeerIdentityInfo(TlsPeerIdentityInfoMessage *tpiInfo);
 
       /// should return true if the passed in user is authorized for the provided uri
-      virtual bool authorizedForThisIdentity(const std::list<resip::Data> &peerNames, 
+      virtual AsyncBool authorizedForThisIdentity(const std::list<resip::Data> &peerNames,
                                              resip::Uri &fromUri);
 
       /// should return true if the request must be challenged
@@ -48,6 +52,9 @@ class TlsPeerAuthManager : public DumFeature
       virtual bool isTrustedSource(const SipMessage& msg);
 
    private:
+      typedef std::map<Data, SipMessage*> MessageMap;
+      MessageMap mMessages;
+
       std::set<Data> mTrustedPeers;
       bool mThirdPartyRequiresCertificate;
       CommonNameMappings mCommonNameMappings;

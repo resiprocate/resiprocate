@@ -57,7 +57,7 @@ ReproAuthenticatorFactory::init()
       {
          numAuthGrabberWorkerThreads = 1; // must have at least one thread
       }
-      std::auto_ptr<Worker> grabber(new UserAuthGrabber(mProxyConfig.getDataStore()->mUserStore));
+      std::auto_ptr<Worker> grabber(new UserAuthGrabber(*mProxyConfig.getDataStore()));
       mAuthRequestDispatcher.reset(new Dispatcher(grabber, &mSipStack, numAuthGrabberWorkerThreads));
    }
 
@@ -152,7 +152,7 @@ ReproAuthenticatorFactory::getCertificateAuthenticator()
    Store *db = mProxyConfig.getDataStore();
    resip_assert(db);
    AclStore& aclStore = db->mAclStore;
-   return std::auto_ptr<Processor>(new CertificateAuthenticator(mProxyConfig, &mSipStack, aclStore, true, mCommonNameMappings));
+   return std::auto_ptr<Processor>(new CertificateAuthenticator(mProxyConfig, getDispatcher(), &mSipStack, aclStore, true, mCommonNameMappings));
 }
 
 SharedPtr<ServerAuthManager>
