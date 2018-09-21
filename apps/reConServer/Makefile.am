@@ -30,17 +30,17 @@ reConServer_SOURCES += SubscriptionForwarder.hxx
 reConServer_SOURCES += playback_prompt.h
 reConServer_SOURCES += record_prompt.h
 
-LDADD = -lrecon
-LDADD += -lreflow
-LDADD += -lsipXsdp
-LDADD += -lsipXmediaProcessing
-LDADD += -lsipXmedia
-LDADD += -lsipXport
-LDADD += -lsipXtack
-LDADD += -ldum
-LDADD += -lresip
-LDADD += -lrutil
-LDADD += -lssl -lcrypto -lpthread
+reConServer_LDADD = ../../resip/recon/librecon.la
+reConServer_LDADD += ../../reflow/libreflow.la
+reConServer_LDADD += -lsipXsdp
+reConServer_LDADD += -lsipXmediaProcessing
+reConServer_LDADD += -lsipXmedia
+reConServer_LDADD += -lsipXport
+reConServer_LDADD += -lsipXtack
+reConServer_LDADD += ../../resip/dum/libdum.la
+reConServer_LDADD += ../../resip/stack/libresip.la
+reConServer_LDADD += ../../rutil/librutil.la
+reConServer_LDADD += -lssl -lcrypto -lpthread
 
 BUILT_SOURCES = playback_prompt.h record_prompt.h
 

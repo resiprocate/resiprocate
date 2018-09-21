@@ -10,7 +10,7 @@
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/SharedPtr.hxx>
-#include <recon/UserAgent.hxx>
+#include <resip/recon/UserAgent.hxx>
 
 #include "B2BCallManager.hxx"
 #include "RegistrationForwarder.hxx"

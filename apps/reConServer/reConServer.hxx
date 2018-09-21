@@ -6,7 +6,7 @@
 #endif
 
 #include "rutil/Data.hxx"
-#include "recon/UserAgent.hxx"
+#include "resip/recon/UserAgent.hxx"
 #include "rutil/ServerProcess.hxx"
 
 #include "MyConversationManager.hxx"

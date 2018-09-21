@@ -11,7 +11,7 @@
 #include <rutil/Log.hxx>
 #include <rutil/BaseException.hxx>
 #include <resip/stack/SipConfigParse.hxx>
-#include <recon/UserAgent.hxx>
+#include <resip/recon/UserAgent.hxx>
 
 namespace reconserver {
 

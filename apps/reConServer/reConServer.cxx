@@ -39,9 +39,9 @@ int _kbhit() {
 #endif
 
 #include "resip/stack/InteropHelper.hxx"
-#include "recon/UserAgent.hxx"
+#include "resip/recon/UserAgent.hxx"
 #include "AppSubsystem.hxx"
-#include <recon/SipXHelper.hxx>
+#include <resip/recon/SipXHelper.hxx>
 
 #include <os/OsSysLog.h>
 

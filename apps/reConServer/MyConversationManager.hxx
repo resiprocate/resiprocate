@@ -8,7 +8,7 @@
 #endif
 
 #include <rutil/Data.hxx>
-#include <recon/ConversationManager.hxx>
+#include <resip/recon/ConversationManager.hxx>
 
 namespace reconserver
 {

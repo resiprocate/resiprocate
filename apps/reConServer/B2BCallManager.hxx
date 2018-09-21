@@ -12,7 +12,7 @@
 #include <resip/stack/ExtensionHeader.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Time.hxx>
-#include <recon/ConversationManager.hxx>
+#include <resip/recon/ConversationManager.hxx>
 
 #include "reConServerConfig.hxx"
 #include "MyConversationManager.hxx"

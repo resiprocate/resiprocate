@@ -392,6 +392,7 @@ AC_OUTPUT(Makefile \
 	apps/sipdial/Makefile \
 	apps/telepathy/Makefile \
 	apps/telepathy/data/Makefile \
+	apps/reConServer/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
