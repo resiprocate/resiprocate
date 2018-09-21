@@ -21,7 +21,7 @@ SubscriptionForwarder::SubscriptionForwarder(ConfigParse& configParse, SipStack&
    mStack(stack),
    mShutdownState(Running)
 {
-   mStack.registerTransactionUser(*this);
+   mStack.registerTransactionUser(*this, true);
 
    MessageFilterRuleList ruleList;
 

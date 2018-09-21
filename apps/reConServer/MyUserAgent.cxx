@@ -27,32 +27,6 @@ MyUserAgent::MyUserAgent(ConfigParse& configParse, ConversationManager* conversa
 {
    mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
    mSubscriptionForwarder.reset(new SubscriptionForwarder(configParse, getSipStack()));
-   MessageFilterRuleList ruleList;
-   MessageFilterRule::MethodList methodList;
-   methodList.push_back(resip::INVITE);
-   methodList.push_back(resip::CANCEL);
-   methodList.push_back(resip::BYE);
-   methodList.push_back(resip::ACK);
-   methodList.push_back(resip::REFER);
-   methodList.push_back(resip::PUBLISH);
-   methodList.push_back(resip::OPTIONS);
-   methodList.push_back(resip::PRACK);
-   ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                        resip::MessageFilterRule::Any,
-                                        methodList) );
-
-   // We have to be more selective about NOTIFY because some of the
-   // Event types must fall through to the SubscriptionForwarder
-   MessageFilterRule::MethodList methodList2;
-   methodList2.push_back(resip::NOTIFY);
-   MessageFilterRule::EventList eventList;
-   eventList.push_back("refer"); // FIXME
-   ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                        resip::MessageFilterRule::Any,
-                                        methodList2,
-                                        eventList) );
-
-   getDialogUsageManager().setMessageFilterRuleList(ruleList);
 }
 
 void
