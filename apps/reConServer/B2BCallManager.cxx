@@ -13,6 +13,9 @@
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
+#include "mysql/soci-mysql.h"
+#include "postgresql/soci-postgresql.h"
+
 #include "MyUserAgent.hxx"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
@@ -81,6 +84,35 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
    if(!usersFilename.empty())
    {
       loadUserCredentials(usersFilename);
+   }
+   else
+   {
+      Data dbType = config.getConfigData("DatabaseType", "PostgreSQL").lowercase();
+      Data dbHost = config.getConfigData("DatabaseHost", "localhost");
+      Data dbName = config.getConfigData("DatabaseName", "reg");
+      Data dbUser = config.getConfigData("DatabaseUser", "reg");
+      Data dbPassword = config.getConfigData("DatabasePassword", "");
+      int dbPort = config.getConfigInt("DatabasePort", 3306);
+      mDatabaseCredentialsHashed = config.getConfigBool("DatabaseCredentialsHashed", true);
+      mDatabaseQueryUserCredential = config.getConfigData("DatabaseQueryUserCredential",
+         "SELECT passwordHash FROM `users` WHERE user = :user AND domain = :domain");
+
+      std::stringstream s;
+      s << "host=" << dbHost << " port=" << dbPort << " db=" << dbName
+         << " user=" << dbUser << " password='" << dbPassword << "'";
+      if(dbType == "postgresql")
+      {
+         mDb.reset(new soci::session(soci::postgresql, s.str()));
+      }
+      else if(dbType == "mysql")
+      {
+         mDb.reset(new soci::session(soci::mysql, s.str()));
+      }
+      else
+      {
+         CritLog(<<"unrecognized DatabaseType: " << dbType.c_str());
+         resip_assert("unrecognized DatabaseType");
+      }
    }
 }
 
@@ -167,17 +199,69 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
       const Data& callerUsername = callerUri.user();
       const Data& callerDomain = callerUri.host();
       // If found in mUsers, put the credentials into the profile
-      std::map<resip::Data,UserCredentials>::const_iterator it = mUsers.find(callerAor);
-      if(it != mUsers.end())
+      if(mDb.get() == 0)
       {
-         const Data& callerRealm = callerDomain;
-         DebugLog(<<"found credential for authenticating " << callerAor << " in realm " << callerRealm << " and added it to user profile");
-         profile->clearDigestCredentials();
-         profile->setDigestCredential(callerRealm, callerUsername, it->second.mPassword);
+         std::map<resip::Data,UserCredentials>::const_iterator it = mUsers.find(callerAor);
+         if(it != mUsers.end())
+         {
+            const Data& callerRealm = callerDomain;
+            DebugLog(<<"found credential for authenticating " << callerAor << " in realm " << callerRealm << " and added it to user profile");
+            profile->clearDigestCredentials();
+            profile->setDigestCredential(callerRealm, callerUsername, it->second.mPassword);
+         }
+         else
+         {
+            DebugLog(<<"didn't find individual credential for authenticating " << callerAor);
+         }
       }
       else
       {
-         DebugLog(<<"didn't find individual credential for authenticating " << callerAor);
+         std::string secret;
+         soci::indicator ind;
+         int retries = 2;
+         while(retries-- > 0)
+         {
+            try
+            {
+               std::string user(callerUsername.c_str());
+               std::string domain(callerDomain.c_str());
+               *mDb << mDatabaseQueryUserCredential, soci::into(secret, ind), soci::use(user), soci::use(domain);
+               retries = 0;
+            }
+            catch (soci::soci_error const & e)
+            {
+               ErrLog(<<"SOCI error: " << e.what());
+               if(retries > 0)
+               {
+                  mDb->reconnect();
+               }
+               else
+               {
+                  return;
+               }
+            }
+         }
+
+         if(!mDb->got_data())
+         {
+            WarningLog(<<"no credential found for " << callerAor);
+         }
+         if(ind != soci::i_ok)
+         {
+            WarningLog(<<"credential is NULL or something else is wrong (ind != soci::i_ok)");
+         }
+
+         if(!secret.empty())
+         {
+            const Data& callerRealm = callerDomain;
+            DebugLog(<<"found credential for authenticating " << callerAor << " in realm " << callerRealm << " and added it to user profile");
+            profile->clearDigestCredentials();
+            profile->setDigestCredential(callerRealm, callerUsername, Data(secret), mDatabaseCredentialsHashed);
+         }
+         else
+         {
+            DebugLog(<<"didn't find individual credential for authenticating " << callerAor);
+         }
       }
    }
    static ExtensionHeader h_X_CID("X-CID");

@@ -17,6 +17,8 @@
 #include "reConServerConfig.hxx"
 #include "MyConversationManager.hxx"
 
+#include "soci.h"
+
 namespace reconserver
 {
 
@@ -108,6 +110,10 @@ protected:
 
    std::map<recon::ConversationHandle,resip::SharedPtr<B2BCall> > mCallsByConversation;
    std::map<recon::ParticipantHandle,resip::SharedPtr<B2BCall> > mCallsByParticipant;
+
+   resip::SharedPtr<soci::session> mDb;
+   bool mDatabaseCredentialsHashed;
+   resip::Data mDatabaseQueryUserCredential;
 };
 
 }
