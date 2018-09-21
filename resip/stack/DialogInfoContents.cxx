@@ -193,8 +193,6 @@ DialogInfoContents::encodeParsed(EncodeStream& str) const
 bool 
 DialogInfoContents::Dialog::getDialogElement(const Data& childElementName, Data& elementValue, int instance) const
 {
-   checkParsed();
-
    bool found = false;
    elementValue = "";
    std::pair <std::multimap<Data, Data>::const_iterator, std::multimap<Data, Data>::const_iterator> filteredList;
