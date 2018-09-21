@@ -162,19 +162,22 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
       SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
       profile.reset(new ConversationProfile(*internalProfile.get()));
       // Look up the user in mUsers
-      const Data& callerUri = msg.header(h_From).uri().getAor();
+      const Uri& callerUri = msg.header(h_From).uri();
+      const Data& callerAor = callerUri.getAor();
+      const Data& callerUsername = callerUri.user();
+      const Data& callerDomain = callerUri.host();
       // If found in mUsers, put the credentials into the profile
-      if(mUsers.find(callerUri) != mUsers.end())
+      std::map<resip::Data,UserCredentials>::const_iterator it = mUsers.find(callerAor);
+      if(it != mUsers.end())
       {
-         const Data& callerUsername = msg.header(h_From).uri().user();
-         const Data& callerRealm = msg.header(h_From).uri().host();
-         DebugLog(<<"found credential for authenticating " << callerUri << " in realm " << callerRealm << " and added it to user profile");
+         const Data& callerRealm = callerDomain;
+         DebugLog(<<"found credential for authenticating " << callerAor << " in realm " << callerRealm << " and added it to user profile");
          profile->clearDigestCredentials();
-         profile->setDigestCredential(callerRealm, callerUsername, mUsers.find(callerUri)->second.mPassword);
+         profile->setDigestCredential(callerRealm, callerUsername, it->second.mPassword);
       }
       else
       {
-         DebugLog(<<"didn't find individual credential for authenticating " << callerUri);
+         DebugLog(<<"didn't find individual credential for authenticating " << callerAor);
       }
    }
    static ExtensionHeader h_X_CID("X-CID");
