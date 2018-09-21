@@ -4,11 +4,14 @@
 
 #include <proton/default_container.hpp>
 #include <proton/delivery.hpp>
+#include <proton/message.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/connection.hpp>
-#include <proton/thread_safe.hpp>
+#include <proton/connection_options.hpp>
+#include <proton/container.hpp>
 #include <proton/tracker.hpp>
 #include <proton/source_options.hpp>
+#include <proton/work_queue.hpp>
 
 using proton::sender_options;
 using proton::source_options;
@@ -23,9 +26,7 @@ QpidProtonThread::QpidProtonThread(const std::string &u)
    : mRetryDelay(2000),
      mPending(0),
      mUrl(u),
-     mFifo(0, 0),
-     mReadyToSend(*this),
-     mReadyToShutdown(*this)
+     mFifo(0, 0)
 {
 }
 
@@ -37,14 +38,20 @@ void
 QpidProtonThread::on_container_start(proton::container &c)
 {
    InfoLog(<<"QpidProtonThread::on_container_start invoked");
-   proton::connection_options co;
-   mSender = c.open_sender(mUrl, co);
+   mSender = c.open_sender(mUrl);
 }
 
 void
-QpidProtonThread::on_sender_open(proton::sender &)
+QpidProtonThread::on_connection_open(proton::connection& conn)
+{
+}
+
+void
+QpidProtonThread::on_sender_open(proton::sender &s)
 {
    InfoLog(<<"sender ready for queue " << mUrl);
+   mSender = s;
+   mWorkQueue = &s.work_queue();
 }
 
 void
@@ -66,7 +73,7 @@ void
 QpidProtonThread::on_sendable(proton::sender& s)
 {
    StackLog(<<"on_sendable invoked");
-   //doSend();   // FIXME - thread safety issue discovered 2017-06-27
+   doSend();
 }
 
 void
@@ -107,22 +114,16 @@ void
 QpidProtonThread::sendMessage(const resip::Data& msg)
 {
    mFifo.add(new Data(msg), TimeLimitFifo<Data>::InternalElement);
-   proton::returned<proton::connection> ts_c = proton::make_thread_safe(mSender.connection());
-   ts_c.get()->event_loop()->inject(mReadyToSend);
+   mWorkQueue->add(make_work(&QpidProtonThread::doSend, this));
    StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
 }
 
 void
 QpidProtonThread::doSend()
 {
-   if(!mSender.active())
-   {
-      StackLog(<<"doSend: mSender.active() == false, not trying to send");
-      return;
-   }
-   while(mSender.credit() && mFifo.messageAvailable())
-   {
-      try
+   try {
+      StackLog(<<"checking for a message");
+      while(mFifo.messageAvailable() && mSender.credit() > 0)
       {
          StackLog(<<"doSend trying to send a message");
          SharedPtr<Data> body(mFifo.getNext());
@@ -131,15 +132,15 @@ QpidProtonThread::doSend()
          mSender.send(msg);
          StackLog(<<"doSend: mPending = " << ++mPending);
       }
-      catch(const std::exception& e)
+      if(mFifo.messageAvailable())
       {
-         ErrLog(<<"failed to send a message: " << e.what());
-         return;
+         StackLog(<<"tick still has messages to send, but no credit remaining");
       }
    }
-   if(mFifo.messageAvailable())
+   catch(const std::exception& e)
    {
-      StackLog(<<"doSend still has messages to send, but no credit remaining");
+      ErrLog(<<"failed to send a message: " << e.what());
+      return;
    }
 }
 
@@ -156,8 +157,7 @@ QpidProtonThread::shutdown()
    if(!mFifo.messageAvailable() && mPending == 0)
    {
       StackLog(<<"no messages outstanding, shutting down immediately");
-      proton::returned<proton::connection> ts_c = proton::make_thread_safe(mSender.connection());
-      ts_c.get()->event_loop()->inject(mReadyToShutdown);
+      mWorkQueue->add(make_work(&QpidProtonThread::doShutdown, this));
    }
    else
    {
@@ -167,10 +167,10 @@ QpidProtonThread::shutdown()
 }
 
 void
-QpidProtonThread::ready_to_shutdown::operator()()
+QpidProtonThread::doShutdown()
 {
-   StackLog(<<"ready_to_shutdown::operator(): closing sender");
-   mThread.mSender.container().stop();
+   StackLog(<<"closing sender");
+   mSender.container().stop();
 }
 
 
