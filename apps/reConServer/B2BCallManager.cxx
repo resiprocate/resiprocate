@@ -78,7 +78,7 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
 
    Data usersFilename;
    config.getConfigValue("B2BUAUsersFilename", usersFilename);
-   if(!usersFilename.empty());
+   if(!usersFilename.empty())
    {
       loadUserCredentials(usersFilename);
    }
