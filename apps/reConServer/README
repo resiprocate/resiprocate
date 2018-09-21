@@ -1,0 +1,34 @@
+
+To prepare your machine for building the project, you need to install
+the build dependencies.  On a Debian or Ubuntu system, you may use a
+command like this:
+
+$ sudo apt-get install \
+     libresiprocate-dev librecon-dev libsipxtapi-dev \
+     libresiprocate-turn-client-dev
+
+
+NOTE: You must have at least reSIProcate v1.8.10
+
+To build this project, note that CPPFLAGS are necessary:
+
+$ git clone $REPOSITORY
+$ cd reConServer
+$ autoreconf --install
+$ ./configure CPPFLAGS="-I/usr/include/sipxtapi -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=10 -D__pingtel_on_posix__ -D_linux -D_REENTRANT -D_FILE_OFFSET_BITS=64 -DRESIP_TOOLCHAIN_GNU -DRESIP_OSTYPE_LINUX -DRESIP_ARCH_X86_64 -DHAVE_sockaddr_in_len -DUSE_CARES -DUSE_SSL -DUSE_IPV6 -DHAVE_EPOLL"
+$ autoreconf --install
+$ make
+
+
+To run the project, see the original testua_readme.txt
+
+
+G.722 notes
+-----------
+
+Earlier versions of the sipXtapi code (and packages) don't fully support
+G.722 sample rate specification in the SDP.  This is a special case explained
+in RFC 3551.
+
+Use sipXtapi package version 3.3.0~test14 or later to have this work correctly.
+
