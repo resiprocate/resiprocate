@@ -2,6 +2,10 @@
 #include "config.h"
 #endif
 
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
+// a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
+#include <rutil/SharedPtr.hxx>  
+
 #ifdef USE_SSL
 #include <asio.hpp>
 #include <asio/ssl.hpp>
@@ -154,6 +158,7 @@ FlowDtlsSocketContext::srtpUnprotect(void* data, int* size, bool rtcp)
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

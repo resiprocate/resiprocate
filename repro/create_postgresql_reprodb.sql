@@ -10,6 +10,7 @@
 
 -- Uncomment the following to have all tables re-created
 -- DROP TABLE IF EXISTS users;
+-- DROP TABLE IF EXISTS tlsPeerAuthorization;
 -- DROP TABLE IF EXISTS routesavp;
 -- DROP TABLE IF EXISTS aclsavp;
 -- DROP TABLE IF EXISTS configsavp;
@@ -34,6 +35,15 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE UNIQUE INDEX idx_user_domain ON users (username, domain);
+
+--
+-- Table structure for table tlsPeerAuthorization
+--
+CREATE TABLE IF NOT EXISTS tlsPeerAuthorization (
+  id SERIAL PRIMARY KEY,
+  peerName VARCHAR(253) NOT NULL,
+  authorizedIdentity VARCHAR(253) NOT NULL
+);
 
 --
 -- Table structure for table routesavp

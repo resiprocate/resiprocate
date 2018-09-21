@@ -17,7 +17,7 @@ public:
    explicit TurnTcpSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
                           unsigned short port = 0);
 
-   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native_handle(); }
 
    // To use this socket without a Turn Relay, use this connect call to connect directly
    // to endpoint
@@ -48,6 +48,7 @@ private:
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

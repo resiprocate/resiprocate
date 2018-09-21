@@ -1,8 +1,8 @@
 #ifndef USER_AUTH_GRABBER
 #define USER_AUTH_GRABBER 1
 
+#include "repro/Store.hxx"
 #include "repro/Worker.hxx"
-#include "repro/UserStore.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 
 namespace repro
@@ -11,14 +11,14 @@ namespace repro
 class UserAuthGrabber : public Worker
 {
    public:
-      UserAuthGrabber(repro::UserStore& userStore);
+      UserAuthGrabber(repro::Store& dataStore);
       virtual ~UserAuthGrabber();
       
       virtual bool process(resip::ApplicationMessage* msg);
       virtual UserAuthGrabber* clone() const;
       
    protected:
-      UserStore& mUserStore;
+      Store& mDataStore;
 };
 
 }

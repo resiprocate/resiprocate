@@ -47,7 +47,9 @@ librepro_la_LIBADD = -ldb_cxx
 librepro_la_LIBADD += ../resip/dum/libdum.la
 librepro_la_LIBADD += ../resip/stack/libresip.la
 librepro_la_LIBADD += ../rutil/librutil.la
+if HAVE_LIBDL
 librepro_la_LIBADD += -ldl
+endif
 
 librepro_la_SOURCES = \
 	RouteStore.cxx \
@@ -89,6 +91,7 @@ librepro_la_SOURCES = \
     ProcessorChain.cxx \
 	SqlDb.cxx \
 	Target.cxx \
+	TlsPeerIdentityStore.cxx \
     UserAuthGrabber.cxx \
 	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
@@ -198,6 +201,8 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Store.hxx \
 	Target.hxx \
 	TimerCMessage.hxx \
+	TlsPeerIdentityInfo.hxx \
+	TlsPeerIdentityStore.hxx \
 	UserAuthGrabber.hxx \
 	UserInfoMessage.hxx \
 	UserStore.hxx \

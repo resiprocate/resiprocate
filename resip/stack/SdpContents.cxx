@@ -1345,8 +1345,17 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
          pb.skipChar();
          int num = pb.integer();
 
+         if (num > 255)
+         {
+            pb.fail(__FILE__, __LINE__, "Too many connection addresses");
+         }
+
          Connection& con = mConnections.back();
          const Data& addr = con.getAddress();
+         if (addr.empty())
+         {
+            pb.fail(__FILE__, __LINE__, "IP address expected");
+         }
          size_t i = addr.size() - 1;
          for (; i; i--)
          {

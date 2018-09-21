@@ -47,6 +47,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
+UInt64 TransactionState::DnsGreylistDurationMs = 32000;  // default to 32 seconds, application can override
 UInt32 TransactionState::StatelessIdCounter = 0;
 
 TransactionState::TransactionState(TransactionController& controller, Machine m, 
@@ -2319,8 +2320,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
    else if(mDnsResult)
    {
       // .bwc. Greylist for 32s
-      // !bwc! TODO make this duration configurable.
-      mDnsResult->greylistLast(Timer::getTimeMs()+32000);
+      mDnsResult->greylistLast(Timer::getTimeMs() + DnsGreylistDurationMs);
 
       // .bwc. We should only try multiple dns results if we are originating a
       // request. Additionally, there are (potential) cases where it would not
@@ -2765,9 +2765,7 @@ TransactionState::sendToTU(TransactionMessage* msg)
             if(!sipMsg->isFromWire() && (mState == Trying || mState==Calling))  // only greylist if internally generated and we haven't received any responses yet
             {
                // greylist last target.
-               // ?bwc? How long do we greylist this for? Probably should make
-               // this configurable. TODO
-               mDnsResult->greylistLast(resip::Timer::getTimeMs() + 32000);
+               mDnsResult->greylistLast(resip::Timer::getTimeMs() + DnsGreylistDurationMs);
             }
 
             break;

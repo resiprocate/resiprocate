@@ -187,14 +187,24 @@ template<typename _Tp>
 inline const _Tp&
 resipMin(const _Tp& __a, const _Tp& __b)
 {
-   if (__b < __a) return __b; return __a;
+   if (__b < __a)
+   {
+      return __b;
+   }
+
+   return __a;
 }
 
 template<typename _Tp>
 inline const _Tp&
 resipMax(const _Tp& __a, const _Tp& __b) 
 {
-   if (__a < __b) return __b; return __a;
+   if (__a < __b)
+   {
+      return __b;
+   }
+
+   return __a;
 }
 
 template<typename _Tp1, typename _Tp2>

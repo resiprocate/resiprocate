@@ -37,6 +37,51 @@ SqlDb::eraseUser(const AbstractDb::Key& key )
    query(command);
 }
 
+void
+SqlDb::eraseTlsPeerIdentity(const AbstractDb::Key& key )
+{
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "DELETE FROM tlsPeerIdentity ";
+      tlsPeerIdentityWhereClauseToDataStream(key, ds);
+   }
+   query(command);
+}
+
+bool
+SqlDb::isAuthorized(const resip::Data& peerName, const std::set<resip::Data>& identities) const
+{
+   std::vector<Data> ret;
+
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT count(1) FROM tlsPeerIdentities WHERE peerName = '" << peerName << "' AND authorizedIdentity IN (";
+      std::set<resip::Data>::iterator it = identities.begin();
+      while(it != identities.end())
+      {
+         if(it != identities.begin())
+         {
+            ds << ", ";
+         }
+         ds << "'" << *it << "'";
+         it++;
+      }
+      ds << ");";
+   }
+
+   if(singleResultQuery(command, ret) != 0 || ret.size() == 0)
+   {
+      return false;
+   }
+   int count = ret.front().convertInt();
+
+   DebugLog( << "Count is " << count);
+
+   return count > 0;
+}
+
 void 
 SqlDb::dbEraseRecord(const Table table, 
                        const resip::Data& pKey,
@@ -74,6 +119,7 @@ SqlDb::dbRollbackTransaction(const Table table)
 }
 
 static const char usersavp[] = "usersavp";
+static const char tlsPeerIdentitysavp[] = "tlsPeerIdentitysavp";
 static const char routesavp[] = "routesavp";
 static const char aclsavp[] = "aclsavp";
 static const char configsavp[] = "configsavp";
@@ -89,6 +135,9 @@ SqlDb::tableName(Table table) const
       case UserTable:
          resip_assert(false);  // usersavp is not used!
          return usersavp;
+      case TlsPeerIdentityTable:
+         resip_assert(false);  // tlsPeerIdentitysavp is not used!
+         return tlsPeerIdentitysavp;
       case RouteTable:
          return routesavp;
       case AclTable:
@@ -105,18 +154,6 @@ SqlDb::tableName(Table table) const
          resip_assert(0);
    }
    return 0;
-}
-
-void
-SqlDb::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain) const
-{
-   ParseBuffer pb(key);
-   const char* start = pb.position();
-   pb.skipToOneOf("@");
-   pb.data(user, start);
-   const char* anchor = pb.skipChar();
-   pb.skipToEnd();
-   pb.data(domain, anchor);
 }
 
 /* ====================================================================

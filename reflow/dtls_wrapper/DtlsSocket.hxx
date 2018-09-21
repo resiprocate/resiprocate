@@ -8,6 +8,7 @@
 #define DtlsSocket_hxx
 
 #include <memory>
+#include <vector>
 extern "C" 
 {
 #ifdef WIN32
@@ -51,14 +52,10 @@ class DtlsSocketContext
 class SrtpSessionKeys
 {
    public:
-      unsigned char *clientMasterKey;
-      int clientMasterKeyLen;
-      unsigned char *serverMasterKey;
-      int serverMasterKeyLen;
-      unsigned char *clientMasterSalt;
-      int clientMasterSaltLen;
-      unsigned char *serverMasterSalt;
-      int serverMasterSaltLen;
+      std::vector<unsigned char> clientMasterKey;
+      std::vector<unsigned char> serverMasterKey;
+      std::vector<unsigned char> clientMasterSalt;
+      std::vector<unsigned char> serverMasterSalt;
 };
 
 class DtlsSocketTimer;

@@ -2500,9 +2500,13 @@ DialogUsageManager::unRegisterForConnectionTermination(Postable* listener)
 void
 DialogUsageManager::requestMergedRequestRemoval(const MergedRequestKey& key)
 {
-   DebugLog(<< "Got merged request removal request");
-   MergedRequestRemovalCommand command(*this, key);
-   mStack.postMS(command, Timer::TF, this);
+   // Only post delayed merge request removal if running, if we are shutting down, then there is no need
+   if (mShutdownState == Running)
+   {
+       DebugLog(<< "Got merged request removal request");
+       MergedRequestRemovalCommand command(*this, key);
+       mStack.postMS(command, Timer::TF, this);
+   }
 }
 
 void

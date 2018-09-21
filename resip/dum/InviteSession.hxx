@@ -70,6 +70,7 @@ class InviteSession : public DialogUsage
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
       /** will send a reINVITE (current offerAnswer) or UPDATE with new Contact header */
+      /** currently only supported when in the Connected state, UAC_Early states are allowed by RFC but not yet supported */
       virtual void targetRefresh(const NameAddr& localUri);
 
       // Following methods are for sending requests within a dialog

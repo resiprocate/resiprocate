@@ -129,6 +129,11 @@ public:
       FD_ZERO(&except);
    }
 
+   int select()
+   {
+      return numReady = ::select(size, &read, &write, &except, NULL);
+   }
+
    int select(struct timeval& tv)
    {
       return numReady = ::select(size, &read, &write, &except, &tv);

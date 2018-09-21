@@ -128,7 +128,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       friend class Update;
       Update* update(const TestSipEndPoint& endPoint);
-      Update* update(resip::Uri& url);
+      Update* update(const resip::Uri& url);
       Update* update(const resip::Data& user);
       Update* update(const resip::Data& user, const boost::shared_ptr<resip::SdpContents>& sdp);
 

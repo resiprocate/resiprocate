@@ -22,7 +22,7 @@ TurnTlsSocket::TurnTlsSocket(bool validateServerCertificateHostname,
                              const asio::ip::address& address, 
                              unsigned short port) : 
    TurnTcpSocket(address,port),
-   mSslContext(mIOService, asio::ssl::context::sslv23),  // SSLv23 (actually chooses TLS version dynamically)
+   mSslContext(asio::ssl::context::sslv23),  // SSLv23 (actually chooses TLS version dynamically)
    mSocket(mIOService, mSslContext),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
 {
@@ -106,14 +106,14 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
 
    // print session info
    const SSL_CIPHER *ciph;
-   ciph=SSL_get_current_cipher(mSocket.impl()->ssl);
+   ciph=SSL_get_current_cipher(mSocket.native_handle());
    InfoLog( << "TLS session set up with " 
-      <<  SSL_get_version(mSocket.impl()->ssl) << " "
+      <<  SSL_get_version(mSocket.native_handle()) << " "
       <<  SSL_CIPHER_get_version(ciph) << " "
       <<  SSL_CIPHER_get_name(ciph) << " " );
 
    // get the certificate - should always exist since mode is set for SSL to verify the cert first
-   X509* cert = SSL_get_peer_certificate(mSocket.impl()->ssl);
+   X509* cert = SSL_get_peer_certificate(mSocket.native_handle());
    resip_assert(cert);
 
    // Look at the SubjectAltName, and if found, set as peerName
@@ -176,9 +176,9 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
          ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
          resip_assert( s );
    
-         int t = M_ASN1_STRING_type(s);
-         int l = M_ASN1_STRING_length(s);
-         unsigned char* d = M_ASN1_STRING_data(s);
+         int t = ASN1_STRING_type(s);
+         int l = ASN1_STRING_length(s);
+         unsigned char* d = ASN1_STRING_data(s);
          resip::Data name(d,l);
          DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
          resip_assert( name.size() == (unsigned)l );
@@ -238,6 +238,7 @@ TurnTlsSocket::cancelSocket()
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

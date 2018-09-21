@@ -37,7 +37,10 @@
 #endif
 
 #if ( USE_OPENSSL == 1 )
+#  include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #  include <openssl/e_os2.h>
+#endif
 #  include <openssl/rand.h>
 #  include <openssl/err.h>
 #endif

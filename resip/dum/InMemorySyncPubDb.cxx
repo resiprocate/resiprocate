@@ -136,7 +136,7 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
                // This can happen if someone deletes a publication on the web page, then it is refreshed.  The delete causes a 
                // notify of closed state, the refresh should bring the state back.
                if (eTagIt->second.mExpirationTime == 0 ||
-                   eTagIt->second.mExpirationTime > now)
+                   eTagIt->second.mExpirationTime < now)
                {
                    contentsForOnDocumentModified = eTagIt->second.mContents; 
                    securityAttributesForOnDocumentModified = eTagIt->second.mSecurityAttributes;
@@ -169,12 +169,6 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
       // Only pass sync as true if this update just came from an inbound sync operation
       invokeOnDocumentModified(document.mSyncPublication /* sync publication? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, document.mContents.get(), document.mSecurityAttributes.get());
    }
-}
-
-void 
-InMemorySyncPubDb::addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication)
-{
-   addUpdateDocument(PubDocument(eventType, documentKey, eTag, expirationTime, contents, securityAttributes, syncPublication));
 }
 
 bool 

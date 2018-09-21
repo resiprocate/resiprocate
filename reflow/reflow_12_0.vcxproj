@@ -160,7 +160,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="dtls_wrapper\bf_dwrap.c" />
+    <ClCompile Include="dtls_wrapper\bf_dwrap.cxx" />
     <ClCompile Include="dtls_wrapper\DtlsFactory.cxx" />
     <ClCompile Include="dtls_wrapper\DtlsSocket.cxx" />
     <ClCompile Include="dtls_wrapper\DtlsTimer.cxx" />
@@ -173,7 +173,7 @@
     <ClCompile Include="MediaStream.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dtls_wrapper\bf_dwrap.h" />
+    <ClInclude Include="dtls_wrapper\bf_dwrap.hxx" />
     <ClInclude Include="dtls_wrapper\DtlsFactory.hxx" />
     <ClInclude Include="dtls_wrapper\DtlsSocket.hxx" />
     <ClInclude Include="dtls_wrapper\DtlsTimer.hxx" />

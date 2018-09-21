@@ -1,0 +1,13 @@
+
+*.swp
+
+/Makefile.in
+/Makefile
+/.deps
+/.libs
+
+/gen/.deps
+/gen/.dirstamp
+/ssl/.deps
+/ssl/.dirstamp
+

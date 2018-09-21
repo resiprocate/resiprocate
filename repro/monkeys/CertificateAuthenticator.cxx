@@ -18,6 +18,7 @@
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/Dispatcher.hxx"
+#include "repro/TlsPeerIdentityInfo.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -31,21 +32,25 @@ using namespace std;
 KeyValueStore::Key CertificateAuthenticator::mCertificateVerifiedKey = Proxy::allocateRequestKeyValueStoreKey();
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
+                                                   Dispatcher* authRequestDispatcher,
                                                    resip::SipStack* stack,
                                                    AclStore& aclStore,
                                                    bool thirdPartyRequiresCertificate) :
    Processor("CertificateAuthenticator"),
+   mAuthRequestDispatcher(authRequestDispatcher),
    mAclStore(aclStore),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate)
 {
 }
 
 CertificateAuthenticator::CertificateAuthenticator(ProxyConfig& config,
+                                                   Dispatcher* authRequestDispatcher,
                                                    resip::SipStack* stack,
                                                    AclStore& aclStore,
                                                    bool thirdPartyRequiresCertificate,
                                                    CommonNameMappings& commonNameMappings) :
    Processor("CertificateAuthenticator"),
+   mAuthRequestDispatcher(authRequestDispatcher),
    mAclStore(aclStore),
    mThirdPartyRequiresCertificate(thirdPartyRequiresCertificate),
    mCommonNameMappings(commonNameMappings)
@@ -64,6 +69,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
    Message *message = rc.getCurrentEvent();
    
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
+   TlsPeerIdentityInfo *tpaInfo = dynamic_cast<TlsPeerIdentityInfo*>(message);
    Proxy &proxy = rc.getProxy();
    
    if (sipMessage)
@@ -109,23 +115,34 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
 
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         if (!rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
+         if (rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
-            // peerNames is empty if client certificate mode is `optional'
-            // or if the message didn't come in on TLS transport
-            if(peerNames.empty())
-               return Continue;
-            if(authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri()))
-            {
-               rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
-               return Continue;
-            }
-            rc.sendResponse(*auto_ptr<SipMessage>
-                            (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
-            return SkipAllChains;
-         }
-         else
+            DebugLog(<<"from trusted node, skipping checks");
             return Continue;
+         }
+         // peerNames is empty if client certificate mode is `optional'
+         // or if the message didn't come in on TLS transport
+         if(peerNames.empty())
+         {
+            DebugLog(<<"peerNames is empty, allowing the message without further inspection");
+            return Continue;
+         }
+         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri());
+         if(_auth == True)
+         {
+            rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+            DebugLog(<<"authorized");
+            return Continue;
+         }
+         else if(_auth == Async)
+         {
+            DebugLog(<<"waiting for async authorization");
+            return WaitingForEvent;
+         }
+         DebugLog(<<"not authorized");
+         rc.sendResponse(*auto_ptr<SipMessage>
+                         (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
+         return SkipAllChains;
       }
       else
       {
@@ -135,24 +152,54 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          {
             if(mThirdPartyRequiresCertificate)
             {
+               DebugLog(<<"third party requires certificate");
                rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Mutual TLS required to handle that message")));
                return SkipAllChains;
             }
             else
+            {
+               DebugLog(<<"third party does not require certificate, allowing the message without further inspection");
                return Continue;
+            }
          }
-         if(authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri()))
+         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri());
+         if(_auth == True)
          {
             rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
+            DebugLog(<<"authorized");
             return Continue;
          }
+         else if(_auth == Async)
+         {
+            DebugLog(<<"waiting for async authorization");
+            return WaitingForEvent;
+         }
+         DebugLog(<<"not authorized");
          rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
       }
    }
+   else if (tpaInfo)
+   {
+      DebugLog(<<"handling TlsPeerIdentityInfo");
+      sipMessage = &rc.getOriginalRequest();
+      if(tpaInfo->authorized())
+      {
+         DebugLog(<<"authorized");
+         return Continue;
+      }
+      else
+      {
+         DebugLog(<<"not authorized");
+         rc.sendResponse(*auto_ptr<SipMessage>
+                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
+         return SkipAllChains;
+      }
+   }
 
+   DebugLog(<<"not a recognized message type");
    return Continue;
 }
 
@@ -162,7 +209,7 @@ CertificateAuthenticator::isTrustedSource(const std::list<Data>& peerNames)
    return mAclStore.isTlsPeerNameTrusted(peerNames);
 }
 
-bool
+AsyncBool
 CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, const std::list<Data>& peerNames,
                                                 resip::Uri &fromUri)
 {
@@ -176,12 +223,23 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
       if(i == aor)
       {
          DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor);
-         return true;
+         return True;
       }
       if(i == domain)
       {
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
-         return true;
+         return True;
+      }
+      if(mCommonNameMappings.size() == 0)
+      {
+         DebugLog(<<"mCommonNameMappings is empty, trying database");
+         TlsPeerIdentityInfo* tpaInfo = new TlsPeerIdentityInfo(*this, context.getTransactionId(), &(context.getProxy()));
+         tpaInfo->peerName() = i;
+         tpaInfo->identities().insert(aor);
+         tpaInfo->identities().insert(domain);
+         std::auto_ptr<ApplicationMessage> app(tpaInfo);
+         mAuthRequestDispatcher->post(app);
+         return Async;
       }
       CommonNameMappings::iterator _mapping =
          mCommonNameMappings.find(i);
@@ -192,19 +250,20 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
          if(permitted.find(aor) != permitted.end())
          {
             DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor << " by common name mappings");
-            return true;
+            return True;
          }
          if(permitted.find(domain) != permitted.end())
          {
             DebugLog(<< "Matched certificate name " << i << " against domain " << domain << " by common name mappings");
-            return true;
+            return True;
          }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }
 
    // catch-all: access denied
-   return false;
+   DebugLog(<< "message content didn't match any peer name");
+   return False;
 }
 
 void

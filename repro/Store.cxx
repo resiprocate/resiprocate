@@ -15,6 +15,7 @@ using namespace std;
 
 Store::Store(AbstractDb& db, AbstractDb* runtimedb):
    mUserStore(runtimedb ? *runtimedb : db),
+   mTlsPeerIdentityStore(db),
    mRouteStore(db),
    mAclStore(db),
    mConfigStore(db),

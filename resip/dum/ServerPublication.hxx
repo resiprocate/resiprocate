@@ -17,6 +17,7 @@ class ServerPublication : public BaseUsage
 
       const Data& getEtag() const;
       const Data& getDocumentKey() const;
+      const Data& getEventType() const {return(mEventType);}
       
       SharedPtr<SipMessage> accept(int statusCode = 200);
       SharedPtr<SipMessage> reject(int responseCode);

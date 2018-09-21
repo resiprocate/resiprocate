@@ -460,6 +460,7 @@ DnsResult::lookupInternal(const Uri& uri)
             }
             else
             {
+               bool udpSupported = false;;
                if(mark!=TupleMarkManager::OK && (mInterface.isSupported(UDP, V4) ||
                                     mInterface.isSupported(UDP, V6)))
                {
@@ -467,10 +468,13 @@ DnsResult::lookupInternal(const Uri& uri)
                   mPort = getDefaultPort(mTransport,uri.port());
                   tuple=Tuple(mTarget,mPort,mTransport,mTarget);
                   mark=mInterface.getMarkManager().getMarkType(tuple);
+                  udpSupported = true;
                }
                
                if (!mInterface.getUdpOnlyOnNumeric())
                {
+                  bool allMarksNotOK = mark != TupleMarkManager::OK;
+                  bool tcpSupported = false;
                   if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TCP, V4) ||
                            mInterface.isSupported(TCP, V6)))
                   {
@@ -483,6 +487,8 @@ DnsResult::lookupInternal(const Uri& uri)
                      DebugLog(<< "DnsResult netns: " << uri.netNs());
 #endif
                      mark=mInterface.getMarkManager().getMarkType(tuple);
+                     allMarksNotOK = mark != TupleMarkManager::OK;
+                     tcpSupported = true;
                   }
 
                   if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TLS, V4) ||
@@ -492,6 +498,28 @@ DnsResult::lookupInternal(const Uri& uri)
                      mPort = getDefaultPort(mTransport,uri.port());
                      tuple=Tuple(mTarget,mPort,mTransport,mTarget);
                      mark=mInterface.getMarkManager().getMarkType(tuple);
+                     allMarksNotOK = mark != TupleMarkManager::OK;
+                  }
+
+                  // If all transports are grey or blacklisted, then just fallback to UDP, assuming it is available
+                  // or TCP if it is available.  We don't want to end up continually trying TCP or TLS because all
+                  // transports for this IP Address are greylisted.
+                  if (allMarksNotOK)
+                  {
+                     if (udpSupported && mTransport != UDP)
+                     {
+                        mTransport = UDP;
+                        mPort = getDefaultPort(mTransport, uri.port());
+                        tuple = Tuple(mTarget, mPort, mTransport, mTarget);
+                        mark = mInterface.getMarkManager().getMarkType(tuple);
+                     }
+                     else if (tcpSupported && mTransport != TCP)
+                     {
+                        mTransport = TCP;
+                        mPort = getDefaultPort(mTransport, uri.port());
+                        tuple = Tuple(mTarget, mPort, mTransport, mTarget, uri.netNs());
+                        mark = mInterface.getMarkManager().getMarkType(tuple);
+                     }
                   }
                }
             }

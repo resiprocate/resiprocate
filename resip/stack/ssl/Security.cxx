@@ -43,7 +43,10 @@
 #endif
 
 #include <sys/types.h>
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
@@ -115,7 +118,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
    {
-      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
+      ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(X509_STORE_CTX_get_error(pInStore)) << cBuf2 );
       DebugLog(<<"additional validation checks may have failed but only one is ever logged - please check peer certificate carefully");
    }
  
@@ -194,11 +197,22 @@ Security::loadCADirectory(const Data& _dir)
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
    {
-      if(!it.is_directory())
+      try
       {
-         Data name = *it;
-         Data fileName = _dir + name;
-         loadCAFile(fileName);
+         if (!it.is_directory())  // This can throw!
+         {
+            Data name = *it;
+            Data fileName = _dir + name;
+            loadCAFile(fileName);
+         }
+      }
+      catch (Exception& e)
+      {
+         ErrLog(<< "loadCADirectory: Some problem reading " << *it << ": " << e);
+      }
+      catch (...)
+      {
+         ErrLog(<< "loadCADirectory: Some problem reading " << *it);
       }
    }
 }
@@ -213,11 +227,11 @@ Security::loadCAFile(const Data& _file)
    }
    catch (Exception& e)
    {
-      ErrLog(<< "Some problem reading " << _file << ": " << e);
+      ErrLog(<< "loadCAFile: Some problem reading " << _file << ": " << e);
    }
    catch (...)
    {
-      ErrLog(<< "Some problem reading " << _file);
+      ErrLog(<< "loadCAFile: Some problem reading " << _file);
    }
 }
 
@@ -344,7 +358,7 @@ int pem_passwd_cb(char *buf, int size, int rwflag, void *password)
    {
       strncpy(buf, (char *)(password), size);
       buf[size - 1] = '\0';
-      return(strlen(buf));
+      return (int)strlen(buf);
    }
    else
    {
@@ -604,7 +618,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
             throw Exception("BIO_get_mem_data failed: this cert will not be "
                               "added.", __FILE__,__LINE__);
          }
-         Data  buf(Data::Borrow, p, len);
+         Data buf(Data::Borrow, p, (Data::size_type)len);
          
          this->onWritePEM(key, type, buf);
       }
@@ -797,7 +811,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
             throw Exception("BIO_get_mem_data failed: cannot add"
                               " private key.", __FILE__, __LINE__);
          }
-         Data  pem(Data::Borrow, p, len);
+         Data pem(Data::Borrow, p, (Data::size_type)len);
          onWritePEM(name, type, pem );
       }
       catch(Exception& e)
@@ -1815,16 +1829,17 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    EVP_PKEY* pKey = k->second;
    resip_assert( pKey );
- 
-   if ( pKey->type !=  EVP_PKEY_RSA )
+
+   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+
+   if ( !rsa )
    {
-      ErrLog( << "Private key (type=" << pKey->type <<"for " 
+      ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) <<"for "
               << signerDomain << " is not of type RSA" );
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
 
-   resip_assert( pKey->type ==  EVP_PKEY_RSA );
-   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+   resip_assert( rsa );
 
    unsigned char result[4096];
    int resultSize = sizeof(result);
@@ -1920,8 +1935,8 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    EVP_PKEY* pKey = X509_get_pubkey( cert );
    resip_assert( pKey );
 
-   resip_assert( pKey->type ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+   resip_assert( rsa );
 
 #if 1
    int ret = RSA_verify(NID_sha256, (unsigned char *)hashRes.data(),
@@ -2179,7 +2194,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    BUF_MEM* bufMem;
    BIO_get_mem_ptr(out, &bufMem);
 
-   int len = bufMem->length;
+   int len = (int)bufMem->length;
    char* buffer = new char[len];
    memcpy(buffer, bufMem->data, len);
 
@@ -2620,9 +2635,9 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
       resip_assert( s );
       
-      int t = M_ASN1_STRING_type(s);
-      int l = M_ASN1_STRING_length(s);
-      unsigned char* d = M_ASN1_STRING_data(s);
+      int t = ASN1_STRING_type(s);
+      int l = ASN1_STRING_length(s);
+      unsigned char* d = ASN1_STRING_data(s);
       Data name(d,l);
       DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
       resip_assert( name.size() == (unsigned)l );
@@ -2684,6 +2699,66 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
             DebugLog(<< "subjectAltName of cert has EMAIL type" );
       }
           
+      if (gen->type == GEN_IPADD)
+      {
+         // RFC 3280 "For IP Version 4, as specified in RFC 791, the octet string
+         // MUST contain exactly four octets.  For IP Version 6, as specified in
+         // RFC 1883, the octet string MUST contain exactly sixteen octets."
+         ASN1_OCTET_STRING* asn = gen->d.iPAddress;
+         if (asn->length == 4)
+         {
+            uint32_t ip = (asn->data[0] << 24) |
+                (asn->data[1] << 16) |
+                (asn->data[2] << 8) |
+                (asn->data[3]);
+
+            sockaddr_in sa;
+            sa.sin_family = AF_INET;
+            sa.sin_addr.s_addr = htonl(ip);
+
+            char addrStr[INET_ADDRSTRLEN];
+            if (inet_ntop(sa.sin_family, &(sa.sin_addr), addrStr, INET_ADDRSTRLEN) != NULL)
+            {
+                Data ipv4(addrStr);
+                PeerName peerName(SubjectAltName, ipv4);
+                peerNames.push_back(peerName);
+                InfoLog(<< "subjectAltName of TLS session cert contains IP ADDRESS <" << ipv4 << ">" );
+            }
+         }
+         else if (asn->length == 16)
+         {
+            sockaddr_in6 sa;
+            sa.sin6_family = AF_INET6;
+            sa.sin6_addr.s6_addr[0] = asn->data[0];
+            sa.sin6_addr.s6_addr[1] = asn->data[1];
+            sa.sin6_addr.s6_addr[2] = asn->data[2];
+            sa.sin6_addr.s6_addr[3] = asn->data[3];
+            sa.sin6_addr.s6_addr[4] = asn->data[4];
+            sa.sin6_addr.s6_addr[5] = asn->data[5];
+            sa.sin6_addr.s6_addr[6] = asn->data[6];
+            sa.sin6_addr.s6_addr[7] = asn->data[7];
+            sa.sin6_addr.s6_addr[8] = asn->data[8];
+            sa.sin6_addr.s6_addr[9] = asn->data[9];
+            sa.sin6_addr.s6_addr[10] = asn->data[10];
+            sa.sin6_addr.s6_addr[11] = asn->data[11];
+            sa.sin6_addr.s6_addr[12] = asn->data[12];
+            sa.sin6_addr.s6_addr[13] = asn->data[13];
+            sa.sin6_addr.s6_addr[14] = asn->data[14];
+            sa.sin6_addr.s6_addr[15] = asn->data[15];
+
+            char addrStr[INET6_ADDRSTRLEN];
+            if (inet_ntop(sa.sin6_family, &(sa.sin6_addr), addrStr, INET6_ADDRSTRLEN) != NULL)
+            {
+                Data ipv6(addrStr);
+                PeerName peerName(SubjectAltName, ipv6);
+                peerNames.push_back(peerName);
+                InfoLog(<< "subjectAltName of TLS session cert contains IP ADDRESS <" << ipv6 << ">" );
+            }
+         }
+         else
+            DebugLog(<< "subjectAltName of cert contains invalid IP ADDRESS" );
+      }
+
       if(gen->type == GEN_URI) 
       {
          ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
@@ -2786,18 +2861,22 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    {
       return SSL_OP_CIPHER_SERVER_PREFERENCE;
    }
+#if defined SSL_OP_CISCO_ANYCONNECT
    if(optionName == "SSL_OP_CISCO_ANYCONNECT")
    {
       return SSL_OP_CISCO_ANYCONNECT;
    }
+#endif
    if(optionName == "SSL_OP_COOKIE_EXCHANGE")
    {
       return SSL_OP_COOKIE_EXCHANGE;
    }
+#if defined SSL_OP_CRYPTOPRO_TLSEXT_BUG
    if(optionName == "SSL_OP_CRYPTOPRO_TLSEXT_BUG")
    {
       return SSL_OP_CRYPTOPRO_TLSEXT_BUG;
    }
+#endif
    if(optionName == "SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS")
    {
       return SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
@@ -2838,10 +2917,12 @@ BaseSecurity::parseOpenSSLCTXOption(const Data& optionName)
    {
       return SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG;
    }
+#if defined SSL_OP_NO_COMPRESSION
    if(optionName == "SSL_OP_NO_COMPRESSION")
    {
       return SSL_OP_NO_COMPRESSION;
    }
+#endif
    if(optionName == "SSL_OP_NO_QUERY_MTU")
    {
       return SSL_OP_NO_QUERY_MTU;
@@ -2964,7 +3045,8 @@ BaseSecurity::matchHostNameWithWildcards(const Data& certificateName, const Data
 bool
 BaseSecurity::isSelfSigned(const X509 *cert)
 {
-   int iRet = X509_NAME_cmp(cert->cert_info->issuer, cert->cert_info->subject);
+   X509 *mutableCert = const_cast<X509*>(cert);
+   int iRet = X509_NAME_cmp(X509_get_issuer_name(mutableCert), X509_get_subject_name(mutableCert));
    return (iRet == 0);
 }
 

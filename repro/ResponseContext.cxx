@@ -744,7 +744,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
       }
    }
 
-   if(flowToken.empty() && orig.header(h_Vias).size()==1)
+   if(flowToken.empty() && orig.header(h_Vias).size() == 1)
    {
       if(resip::InteropHelper::getRRTokenHackEnabled() ||
          mIsClientBehindNAT ||
@@ -759,6 +759,15 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
          Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
          flowToken = binaryFlowToken.base64encode();
       }
+   }
+
+   if (flowToken.empty() &&
+       resip::InteropHelper::getRRTokenHackEnabled() &&
+       InteropHelper::getAllowInboundFlowTokensForNonDirectClients())
+   {
+       resip::Data binaryFlowToken;
+       Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
+       flowToken = binaryFlowToken.base64encode();
    }
 
    return flowToken;

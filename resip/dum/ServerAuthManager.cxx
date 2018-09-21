@@ -270,7 +270,7 @@ ServerAuthManager::rejectBadNonces() const
 }
 
 
-ServerAuthManager::AsyncBool
+AsyncBool
 ServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    if(!mChallengeThirdParties)

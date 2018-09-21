@@ -32,6 +32,15 @@ class ClientPagerMessage : public NonDialogUsage
       virtual void page(std::auto_ptr<Contents> contents, DialogUsageManager::EncryptionLevel level=DialogUsageManager::None);
       virtual void end();
 
+      // Use this API if the application has ongoing pending messages and it is using
+      // getMessageRequest to modify the target routing information for messages (ie:
+      // requestUri or Route headers).  This will cause the current pending message to
+      // be re-sent immediately using the new information that the application just set.
+      // Any onSuccess or onFailure callbacks that might result from the active pending
+      // message at the time this is called will be suppressed.  Any messages queued 
+      // behind that message will be dispatched sequentially to the new target.
+      void newTargetInfoSet();
+
       /**
        * Provide asynchronous method access by using command
        */
@@ -41,7 +50,7 @@ class ClientPagerMessage : public NonDialogUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      size_t       msgQueued () const;
+      size_t       msgQueued() const;
 
       virtual EncodeStream& dump(EncodeStream& strm) const;
 
@@ -69,8 +78,8 @@ class ClientPagerMessage : public NonDialogUsage
       ClientPagerMessage(const ClientPagerMessage&);
       ClientPagerMessage& operator=(const ClientPagerMessage&);
 
-      void pageFirstMsgQueued ();
-      void clearMsgQueued ();
+      void pageFirstMsgQueued();
+      void clearMsgQueued();
 };
 
 }

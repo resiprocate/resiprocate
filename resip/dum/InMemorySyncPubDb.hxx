@@ -52,7 +52,6 @@ public:
 
    // PublicationPersistenceManager Methods
    virtual void addUpdateDocument(const PubDocument& document);
-   virtual void addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false);
    virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication = false);
    virtual bool getMergedETags(const Data& eventType, const Data& documentKey, ETagMerger& merger, Contents* destination);
    virtual bool documentExists(const Data& eventType, const Data& documentKey, const Data& eTag);

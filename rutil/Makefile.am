@@ -114,6 +114,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	wince/WceCompat.hxx \
 	SysLogStream.hxx \
 	AsyncID.hxx \
+	AsyncBool.hxx \
 	ConfigParse.hxx \
 	CongestionManager.hxx \
 	GeneralCongestionManager.hxx \

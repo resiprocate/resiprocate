@@ -5,6 +5,7 @@
 #include "rutil/ServerProcess.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include "resip/stack/StatisticsHandler.hxx"
+#include "resip/stack/DomainMatcher.hxx"
 #include <memory>
 
 #include "repro/AuthenticatorFactory.hxx"
@@ -77,7 +78,8 @@ protected:
    virtual void createRegSync();
    virtual void createCommandServer();
 
-   virtual resip::Data addDomains(resip::TransactionUser& tu, bool log);
+   virtual void initDomainMatcher();
+   virtual void addDomains(resip::TransactionUser& tu);
    virtual bool addTransports(bool& allTransportsSpecifyRecordRoute);
    // Override this and examine the processor name to selectively add custom processors before or after the standard ones
    virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor);
@@ -127,6 +129,8 @@ protected:
    std::vector<Plugin*> mPlugins;
    typedef std::map<unsigned int, resip::NameAddr> TransportRecordRouteMap;
    TransportRecordRouteMap mStartupTransportRecordRoutes;
+   resip::SharedPtr<resip::DomainMatcher> mDomainMatcher;
+   resip::Data mDefaultRealm;
 };
 
 }

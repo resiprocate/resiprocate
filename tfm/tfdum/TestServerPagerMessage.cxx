@@ -27,7 +27,7 @@ TestServerPagerMessage::accept(int statusCode)
 {
    return new SendingAction<ServerPagerMessageHandle>(mUa, mHandle, "accept", 
                                                       boost::bind(&ServerPagerMessage::accept, 
-                                                                  boost::bind<ServerPagerMessage*>(&ServerPagerMessageHandle::get, boost::ref(mHandle)), statusCode), 
+                                                                  boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle)), statusCode), 
                                                       NoAdornment::instance());
 }
 
@@ -36,7 +36,7 @@ TestServerPagerMessage::reject(int responseCode)
 {
    return new SendingAction<ServerPagerMessageHandle>(mUa, mHandle, "reject",
                                                       boost::bind(&ServerPagerMessage::reject, 
-                                                                  boost::bind<ServerPagerMessage*>(&ServerPagerMessageHandle::get, boost::ref(mHandle)), 
+                                                                  boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle)), 
                                                                   responseCode),
                                                       NoAdornment::instance());
 }
@@ -44,14 +44,14 @@ TestServerPagerMessage::reject(int responseCode)
 CommonAction* 
 TestServerPagerMessage::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ServerPagerMessage::endCommand, boost::bind<ServerPagerMessage*>(&ServerPagerMessageHandle::get, boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", boost::bind(&ServerPagerMessage::endCommand, boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle))));
 }
  
 CommonAction* 
 TestServerPagerMessage::send(resip::SharedPtr<SipMessage> msg)
 {
    return new CommonAction(mUa, "send", 
-                           boost::bind(&ServerPagerMessage::sendCommand, boost::bind<ServerPagerMessage*>(&ServerPagerMessageHandle::get, boost::ref(mHandle)), 
+                           boost::bind(&ServerPagerMessage::sendCommand, boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle)), 
                                        msg));
 }
 

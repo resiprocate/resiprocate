@@ -30,7 +30,7 @@ TestInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUs
 {
    void (InviteSession::*fpProvideOffer) (const resip::Contents&, resip::DialogUsageManager::EncryptionLevel, const resip::Contents*) = &InviteSession::provideOffer;
    return new CommonAction(mUa, "InviteSession::provideOffer",
-                           boost::bind(fpProvideOffer, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)),
+                           boost::bind(fpProvideOffer, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)),
                                        offer, level, alternative));
 }
 
@@ -38,7 +38,7 @@ CommonAction*
 TestInviteSession::provideAnswer(const resip::SdpContents& answer)
 {
    return new CommonAction(mUa, "InviteSession::provideAnswer",
-                           boost::bind(&InviteSession::provideAnswer, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)),
+                           boost::bind(&InviteSession::provideAnswer, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)),
                                        answer));
 }
 
@@ -47,14 +47,14 @@ TestInviteSession::end(resip::InviteSession::EndReason reason)
 {
    void (resip::InviteSession::*fn)(resip::InviteSession::EndReason) = &InviteSession::end;
    return new CommonAction(mUa, "InviteSession::end",
-                           boost::bind(fn, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), reason));
+                           boost::bind(fn, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), reason));
 }
  
 CommonAction* 
 TestInviteSession::reject(int statusCode, resip::WarningCategory* warning)
 {
    return new CommonAction(mUa, "InviteSession::reject",
-                           boost::bind(&InviteSession::reject, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)),
+                           boost::bind(&InviteSession::reject, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)),
                                        statusCode, warning));
 }
  
@@ -62,28 +62,28 @@ CommonAction*
 TestInviteSession::requestOffer()
 {
    return new CommonAction(mUa, "requestOffer",
-                           boost::bind(&InviteSession::requestOffer, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle))));
+                           boost::bind(&InviteSession::requestOffer, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle))));
 }
   
 CommonAction* 
 TestInviteSession::targetRefresh(const resip::NameAddr& localUri)
 {
    return new CommonAction(mUa, "targetRefresh",
-                           boost::bind(&InviteSession::targetRefresh, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), localUri));
+                           boost::bind(&InviteSession::targetRefresh, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), localUri));
 }
  
 CommonAction* 
 TestInviteSession::refer(const resip::NameAddr& referTo, bool referSub)
 {
    return new CommonAction(mUa, "refer",
-                           boost::bind(&InviteSession::refer, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), referTo, referSub));
+                           boost::bind(&InviteSession::refer, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), referTo, referSub));
 }
 
 CommonAction*
 TestInviteSession::refer(const resip::NameAddr& referTo, resip::InviteSessionHandle sessionToReplace, bool referSub)
 {
    void (InviteSession::*refer)(const resip::NameAddr&, resip::InviteSessionHandle, bool) = &InviteSession::refer;
-   return new CommonAction(mUa, "refer", boost::bind(refer, boost::bind<InviteSession*>(&InviteSessionHandle::get, 
+   return new CommonAction(mUa, "refer", boost::bind(refer, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), 
                                                                                                         boost::ref(mSessionHandle)),
                                                      referTo, sessionToReplace, referSub));
 }
@@ -92,21 +92,21 @@ CommonAction*
 TestInviteSession::info(const resip::Contents& contents)
 {
    return new CommonAction(mUa, "info",
-                           boost::bind(&InviteSession::info, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), boost::ref(contents)));
+                           boost::bind(&InviteSession::info, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), boost::ref(contents)));
 }
  
 CommonAction*
 TestInviteSession:: message(const resip::Contents& contents)
 {
    return new CommonAction(mUa, "message",
-                           boost::bind(&InviteSession::message, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), boost::ref(contents)));
+                           boost::bind(&InviteSession::message, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), boost::ref(contents)));
 }
 
 CommonAction* 
 TestInviteSession::acceptNIT(int statusCode, const resip::Contents* contents)
 {
    return new CommonAction(mUa, "acceptNIT",
-                           boost::bind(&InviteSession::acceptNIT, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), 
+                           boost::bind(&InviteSession::acceptNIT, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), 
                                        statusCode, contents));
 }
  
@@ -114,21 +114,21 @@ CommonAction*
 TestInviteSession::rejectNIT(int statusCode)
 {
    return new CommonAction(mUa, "rejectNIT",
-                           boost::bind(&InviteSession::rejectNIT, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), statusCode));
+                           boost::bind(&InviteSession::rejectNIT, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), statusCode));
 }
 
 CommonAction*
 TestInviteSession::acceptReferNoSub(int code)
 {
    return new CommonAction(mUa, "acceptReferNoSub",
-                           boost::bind(&InviteSession::acceptReferNoSub, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), code));
+                           boost::bind(&InviteSession::acceptReferNoSub, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), code));
 }
 
 CommonAction*
 TestInviteSession::rejectReferNoSub(int code)
 {
    return new CommonAction(mUa, "rejectReferNoSub",
-                           boost::bind(&InviteSession::rejectReferNoSub, boost::bind<InviteSession*>(&InviteSessionHandle::get, boost::ref(mSessionHandle)), code));
+                           boost::bind(&InviteSession::rejectReferNoSub, boost::bind<InviteSession*>(static_cast<InviteSession*(InviteSessionHandle::*)()>(&InviteSessionHandle::get), boost::ref(mSessionHandle)), code));
 }
 
 SendingAction<resip::ServerSubscriptionHandle>* 
@@ -137,7 +137,7 @@ TestInviteSession::acceptRefer(int statusCode)
    InfoLog(<< "acceptRefer");
    return new SendingAction<ServerSubscriptionHandle>(mUa, mServerSubscription, "acceptRefer", 
                                                       boost::bind(&ServerSubscription::accept, 
-                                                                  boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mServerSubscription)), statusCode), 
+                                                                  boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mServerSubscription)), statusCode), 
                                                       NoAdornment::instance());
 }
  
@@ -147,7 +147,7 @@ TestInviteSession::rejectRefer(int responseCode)
    InfoLog(<< "rejectRefer");
    return new SendingAction<ServerSubscriptionHandle>(mUa, mServerSubscription, "rejectRefer",
                                                       boost::bind(&ServerSubscription::reject, 
-                                                                  boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mServerSubscription)), responseCode),
+                                                                  boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mServerSubscription)), responseCode),
                                                       NoAdornment::instance());
 }
 
@@ -278,7 +278,7 @@ CommonAction*
 TestClientInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative)
 {
    return new CommonAction(mUa, "ClientInviteSession::provideOffer",
-                           boost::bind(&ClientInviteSession::provideOffer, boost::bind<ClientInviteSession*>(&ClientInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ClientInviteSession::provideOffer, boost::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), boost::ref(mHandle)),
                                        offer, level, alternative));
 }
 
@@ -286,7 +286,7 @@ CommonAction*
 TestClientInviteSession::provideAnswer(const resip::SdpContents& answer)
 {
    return new CommonAction(mUa, "ClientInviteSession::provideAnswer",
-                           boost::bind(&ClientInviteSession::provideAnswer, boost::bind<ClientInviteSession*>(&ClientInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ClientInviteSession::provideAnswer, boost::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), boost::ref(mHandle)),
                                        answer));
 }
 
@@ -295,7 +295,7 @@ TestClientInviteSession::end(resip::InviteSession::EndReason reason)
 {
    void (resip::ClientInviteSession::*fn)(resip::InviteSession::EndReason) = &ClientInviteSession::end;
    return new CommonAction(mUa, "ClientInviteSession::end",
-                           boost::bind(fn, boost::bind<ClientInviteSession*>(&ClientInviteSessionHandle::get, boost::ref(mHandle)), 
+                           boost::bind(fn, boost::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), boost::ref(mHandle)), 
                                        reason));
 }
  
@@ -303,7 +303,7 @@ CommonAction*
 TestClientInviteSession::reject(int statusCode, resip::WarningCategory* warning)
 {
    return new CommonAction(mUa, "ClientInviteSession::reject",
-                           boost::bind(&ClientInviteSession::reject, boost::bind<ClientInviteSession*>(&ClientInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ClientInviteSession::reject, boost::bind<ClientInviteSession*>(static_cast<ClientInviteSession*(ClientInviteSessionHandle::*)()>(&ClientInviteSessionHandle::get), boost::ref(mHandle)),
                                        statusCode, warning));
 }
 
@@ -360,7 +360,7 @@ CommonAction*
 TestServerInviteSession::provideOffer(const resip::SdpContents& offer, resip::DialogUsageManager::EncryptionLevel level, resip::SdpContents* alternative, bool sendOfferAtAccept)
 {
    return new CommonAction(mUa, "ServerInviteSession::provideOffer",
-                           boost::bind(&ServerInviteSession::provideOffer, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ServerInviteSession::provideOffer, boost::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), boost::ref(mHandle)),
                                        offer, level, alternative, sendOfferAtAccept));
 }
 
@@ -368,7 +368,7 @@ CommonAction*
 TestServerInviteSession::provideAnswer(const resip::SdpContents& answer)
 {
    return new CommonAction(mUa, "ServerInviteSession::provideAnswer",
-                           boost::bind(&ServerInviteSession::provideAnswer, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ServerInviteSession::provideAnswer, boost::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), boost::ref(mHandle)),
                                        answer));
 }
  
@@ -377,7 +377,7 @@ TestServerInviteSession::end(resip::InviteSession::EndReason reason)
 {
    void (resip::ServerInviteSession::*fn)(resip::InviteSession::EndReason) = &ServerInviteSession::end;
    return new CommonAction(mUa, "ServerInviteSession::end",
-                           boost::bind(fn, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(fn, boost::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), boost::ref(mHandle)),
                               reason));
 }
 
@@ -385,7 +385,7 @@ CommonAction*
 TestServerInviteSession::reject(int statusCode, resip::WarningCategory* warning)
 {
    return new CommonAction(mUa, "ServerInviteSession::reject",
-                           boost::bind(&ServerInviteSession::reject, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ServerInviteSession::reject, boost::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), boost::ref(mHandle)),
                                        statusCode, warning));
 }
  
@@ -393,7 +393,7 @@ CommonAction*
 TestServerInviteSession::accept(int statusCode)
 {
    return new CommonAction(mUa, "ServerInviteSession::accept",
-                           boost::bind(&ServerInviteSession::accept, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ServerInviteSession::accept, boost::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), boost::ref(mHandle)),
                                        statusCode));
 }
  
@@ -401,7 +401,7 @@ CommonAction*
 TestServerInviteSession::redirect(const resip::NameAddrs& contacts, int code)
 {
    return new CommonAction(mUa, "ServerInviteSession::redirect",
-                           boost::bind(&ServerInviteSession::redirect, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, boost::ref(mHandle)),
+                           boost::bind(&ServerInviteSession::redirect, boost::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), boost::ref(mHandle)),
                                        contacts, code));
 }
 
@@ -409,6 +409,6 @@ CommonAction*
 TestServerInviteSession::provisional(int code, bool earlyFlag)
 {
    return new CommonAction(mUa, "ServerInviteSession::provisional",
-                           boost::bind(&ServerInviteSession::provisional, boost::bind<ServerInviteSession*>(&ServerInviteSessionHandle::get, 
+                           boost::bind(&ServerInviteSession::provisional, boost::bind<ServerInviteSession*>(static_cast<ServerInviteSession*(ServerInviteSessionHandle::*)()>(&ServerInviteSessionHandle::get), 
                                                                                                             boost::ref(mHandle)), code, earlyFlag));
 }

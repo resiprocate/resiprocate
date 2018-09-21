@@ -10,7 +10,10 @@
 
 #include "rutil/ssl/OpenSSLInit.hxx"
 
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
@@ -66,8 +69,13 @@ OpenSSLInit::OpenSSLInit()
 	CRYPTO_set_dynlock_lock_callback(::resip_OpenSSLInit_dynLockFunction);
 #endif
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
+#else
+	CRYPTO_set_mem_debug(1);
+#endif
+
 	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
 
 	SSL_library_init();

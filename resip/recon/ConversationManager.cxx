@@ -498,7 +498,7 @@ ConversationManager::enableNoiseReduction(bool enable)
    OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioNoiseReductionMode(enable ? MEDIA_NOISE_REDUCTION_MEDIUM /* arbitrary */ : MEDIA_NOISE_REDUCTION_DISABLED);
    if(status != OS_SUCCESS)
    {
-      WarningLog(<< "enableAutoGainControl failed: status=" << status);
+      WarningLog(<< "enableNoiseReduction failed: status=" << status);
    }
    if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
    {

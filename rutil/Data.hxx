@@ -1014,6 +1014,9 @@ static bool invokeDataInit = Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>(0))
 
 inline bool Data::isHex(unsigned char c)
 {
+   // Shut up the warning about invokeDataInit defined, but not used
+   if(0){(void) invokeDataInit;}
+
    return DataHelper::isCharHex[c];
 }
 

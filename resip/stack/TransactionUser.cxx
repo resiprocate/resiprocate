@@ -1,3 +1,4 @@
+#include "resip/stack/BasicDomainMatcher.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/MessageFilterRule.hxx"
 #include "rutil/Logger.hxx"
@@ -13,7 +14,7 @@ TransactionUser::TransactionUser(TransactionTermination t,
    mFifo(0, 0),
    mCongestionManager(0),
    mRuleList(),
-   mDomainList(),
+   mDomainMatcher(new BasicDomainMatcher()),
    mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
    mRegisteredForConnectionTermination(c == RegisterForConnectionTermination),
    mRegisteredForKeepAlivePongs(k == RegisterForKeepAlivePongs)
@@ -34,7 +35,7 @@ TransactionUser::TransactionUser(MessageFilterRuleList &mfrl,
    mFifo(0, 0), 
    mCongestionManager(0),
    mRuleList(mfrl),
-   mDomainList(),
+   mDomainMatcher(new BasicDomainMatcher()),
    mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
    mRegisteredForConnectionTermination(c == RegisterForConnectionTermination),
    mRegisteredForKeepAlivePongs(k == RegisterForKeepAlivePongs)
@@ -94,25 +95,25 @@ TransactionUser::isForMe(const SipMessage& msg) const
 bool 
 TransactionUser::isMyDomain(const Data& domain) const
 {
-   // Domain search should be case insensitive - search in lowercase only
-   return mDomainList.count(Data(domain).lowercase()) > 0;
+   return mDomainMatcher->isMyDomain(domain);
 }
 
 void 
 TransactionUser::addDomain(const Data& domain)
 {
-   // Domain search should be case insensitive - store in lowercase only
-   mDomainList.insert(Data(domain).lowercase());  
+   mDomainMatcher->addDomain(domain);
 }
 
 void 
 TransactionUser::removeDomain(const Data& domain)
 {
-   DomainList::iterator it = mDomainList.find(Data(domain).lowercase());
-   if (it != mDomainList.end())
-   {
-      mDomainList.erase(it);
-   }
+   mDomainMatcher->removeDomain(domain);
+}
+
+void
+TransactionUser::setDomainMatcher(SharedPtr<DomainMatcher> domainMatcher)
+{
+   mDomainMatcher = domainMatcher;
 }
 
 EncodeStream& 
