@@ -1,0 +1,2 @@
+apps/reConServer/reConServer.config etc/reConServer
+apps/reConServer/reconserver.service lib/systemd/system

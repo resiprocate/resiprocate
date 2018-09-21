@@ -1,0 +1,9 @@
+/var/log/reConServer/reConServer.log {
+	rotate 14
+	daily
+	compress
+	missingok
+	postrotate
+		invoke-rc.d reconserver reload
+	endscript
+}
