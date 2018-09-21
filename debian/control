@@ -9,7 +9,7 @@ Standards-Version: 3.9.8
 Vcs-Git: git://anonscm.debian.org/pkg-voip/resiprocate.git
 Vcs-Browser: https://anonscm.debian.org/cgit/pkg-voip/resiprocate.git
 
-Package: libresiprocate-1.11
+Package: libresiprocate-1.12
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -22,10 +22,10 @@ Description: reSIProcate SIP stack - shared libraries
  libresip (SIP stack/RFC compliant message parsing) and
  libdum (SIP Dialog Usage Manager, a state machine for SIP dialogs).
 
-Package: libresiprocate-1.11-dev
+Package: libresiprocate-1.12-dev
 Section: libdevel
 Architecture: any
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libc-ares-dev, libssl1.0-dev | libssl-dev (<< 1.1), libradcli-dev
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libc-ares-dev, libssl1.0-dev | libssl-dev (<< 1.1), libradcli-dev
 Provides: libresiprocate-dev
 Conflicts: libresiprocate-dev, libresiprocate-1.8-dev
 Replaces: libresiprocate-dev, libresiprocate-1.8-dev, repro (<< 1:1.11.0~beta1-2)
@@ -38,10 +38,10 @@ Description: reSIProcate SIP stack - development files
  This package provides header files needed for developing applications
  based on the core reSIProcate libraries.
 
-Package: librecon-1.11
+Package: librecon-1.12
 Architecture: linux-any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libsipxtapi (>= 3.3.0~test15)
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libsipxtapi (>= 3.3.0~test15)
 Description: reSIProcate conversation manager - shared libraries
  reSIProcate is a framework that aims to fully implement the SIP protocol
  in first class C++.  It is intended for use in other applications,
@@ -56,9 +56,9 @@ Description: reSIProcate conversation manager - shared libraries
  any other features of sipXtapi for the session control.  Future versions of
  recon aim to support multiple media frameworks using an abstraction layer.
  
-Package: librecon-1.11-dev
+Package: librecon-1.12-dev
 Section: libdevel
-Depends: librecon-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.11-dev (= ${binary:Version}), libresiprocate-turn-client-1.11-dev (= ${binary:Version}), libsipxtapi-dev, libsrtp-dev
+Depends: librecon-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.12-dev (= ${binary:Version}), libresiprocate-turn-client-1.12-dev (= ${binary:Version}), libsipxtapi-dev, libsrtp-dev
 Architecture: linux-any
 Provides: librecon-dev
 Conflicts: librecon-dev, librecon-1.8-dev
@@ -71,10 +71,10 @@ Description: reSIProcate conversation manager - development files
  This package provides header files needed for developing applications
  based on librecon.
 
-Package: libresiprocate-turn-client-1.11
+Package: libresiprocate-turn-client-1.12
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: reSIProcate TURN client (reTurn) - shared libraries
  reTurn is the TURN component of the reSIProcate project.
  This package provides a shared library implementing the TURN
@@ -87,10 +87,10 @@ Description: reSIProcate TURN client (reTurn) - shared libraries
  in first class C++.  It is intended for use in other applications,
  such as the repro SIP proxy.
 
-Package: libresiprocate-turn-client-1.11-dev
+Package: libresiprocate-turn-client-1.12-dev
 Section: libdevel
 Architecture: any
-Depends: libresiprocate-turn-client-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.11-dev (= ${binary:Version}), libasio-dev (>= 1.2.0), libboost-dev
+Depends: libresiprocate-turn-client-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.12-dev (= ${binary:Version}), libasio-dev (>= 1.2.0), libboost-dev
 Provides: libresiprocate-turn-client-dev
 Conflicts: libresiprocate-turn-client-dev, libresiprocate-turn-client-1.8-dev
 Replaces: libresiprocate-turn-client-dev, libresiprocate-turn-client-1.8-dev
@@ -106,7 +106,7 @@ Package: repro
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl, lsb-base
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl, lsb-base
 Recommends: apache2-utils, turn-server | stun-server
 Suggests: jscommunicator-web-phone
 Provides: sip-router
@@ -123,7 +123,7 @@ Package: resiprocate-turn-server
 Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl, lsb-base
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser, openssl, lsb-base
 Suggests: sip-router, xmpp-server, jscommunicator-web-phone
 Provides: stun-server, turn-server
 Description: reSIProcate SIP stack - ICE/TURN server
@@ -167,7 +167,7 @@ Description: reSIProcate SIP stack - ICE/TURN server
 Package: sipdialer
 Section: net
 Architecture: any
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: reSIProcate SIP stack - click-to-call utility
  sipdialer is a click-to-call application that uses the SIP REFER
  method to force a SIP phone (for example, the phone on your desk)
@@ -182,7 +182,7 @@ Description: reSIProcate SIP stack - click-to-call utility
 Package: telepathy-resiprocate
 Section: net
 Architecture: any
-Depends: libresiprocate-1.11 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: SIP Connection Manager for Telepathy Framework
  Connection Manager providing support for SIP using all the features
  supported by the reSIProcate stack, including TLS, IPv6 and TURN for
