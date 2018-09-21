@@ -3,6 +3,7 @@
 
 #include <map>
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "DumFeature.hxx"
@@ -42,13 +43,6 @@ class ServerAuthManager : public DumFeature
       virtual Result handle(SipMessage* sipMsg);
       
    protected:
-
-      enum AsyncBool
-      {
-           True,  // response is true
-           False, // response is false
-           Async  // response will be sent asynchronously
-      };
 
       enum AuthFailureReason
       {

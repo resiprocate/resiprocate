@@ -138,6 +138,18 @@ UserStore::buildKey( const resip::Data& user, const resip::Data& realm)
    return ret;
 }
 
+void
+UserStore::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain)
+{
+   ParseBuffer pb(key);
+   const char* start = pb.position();
+   pb.skipToOneOf("@");
+   pb.data(user, start);
+   const char* anchor = pb.skipChar();
+   pb.skipToEnd();
+   pb.data(domain, anchor);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

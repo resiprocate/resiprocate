@@ -36,6 +36,11 @@ class MySqlDb: public SqlDb
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
 
+      virtual bool addTlsPeerIdentity( const Key& key, const TlsPeerIdentityRecord& rec );
+      virtual TlsPeerIdentityRecord getTlsPeerIdentity( const Key& key ) const;
+      virtual Key firstTlsPeerIdentityKey();// return empty if no more
+      virtual Key nextTlsPeerIdentityKey(); // return empty if no more
+
       // Perform a query that expects a single result/row - returns all column/field data in a vector
       virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const;
 
@@ -74,6 +79,7 @@ class MySqlDb: public SqlDb
       mutable MYSQL_RES* mResult[MaxTable];
 
       void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
+      void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const;
 };
 
 }

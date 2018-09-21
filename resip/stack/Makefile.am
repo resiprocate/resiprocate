@@ -70,6 +70,7 @@ libresip_la_SOURCES = \
 	Aor.cxx \
 	ApiCheck.cxx \
 	ApplicationSip.cxx \
+	BasicDomainMatcher.cxx \
 	BasicNonceHelper.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
@@ -85,6 +86,7 @@ libresip_la_SOURCES = \
 	DnsResult.cxx \
 	DtlsMessage.cxx \
 	Embedded.cxx \
+	ExtendedDomainMatcher.cxx \
 	ExtensionParameter.cxx \
 	ExtensionHeader.cxx \
 	ExistsOrDataParameter.cxx \
@@ -226,6 +228,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ApplicationMessage.hxx \
 	ApplicationSip.hxx \
 	Auth.hxx \
+	BasicDomainMatcher.hxx \
 	BasicNonceHelper.hxx \
 	BranchParameter.hxx \
 	CallId.hxx \
@@ -246,6 +249,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	DateCategory.hxx \
 	DeprecatedDialog.hxx \
 	DialogInfoContents.hxx \
+	DomainMatcher.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsResultMessage.hxx \
@@ -257,6 +261,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ExistsOrDataParameter.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
+	ExtendedDomainMatcher.hxx \
 	ExtensionHeader.hxx \
 	ExtensionParameter.hxx \
 	ExternalBodyContents.hxx \

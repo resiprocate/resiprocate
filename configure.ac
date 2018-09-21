@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.11.0~beta5)
+AC_INIT(resiprocate,1.12.0~alpha1)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -358,6 +358,9 @@ CURL_CHECK_LIBS_CLOCK_GETTIME_MONOTONIC
 AX_HAVE_EPOLL(
   [AC_DEFINE_UNQUOTED(HAVE_EPOLL, ,HAVE_EPOLL)],  )
 
+AC_CHECK_LIB(dl, dlopen)
+AM_CONDITIONAL(HAVE_LIBDL, [test x"$ac_cv_lib_dl_dlopen" = xyes])
+
 AM_MAINTAINER_MODE
 
 AC_OUTPUT(Makefile \
@@ -389,6 +392,7 @@ AC_OUTPUT(Makefile \
 	apps/sipdial/Makefile \
 	apps/telepathy/Makefile \
 	apps/telepathy/data/Makefile \
+	apps/reConServer/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \

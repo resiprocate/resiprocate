@@ -4,6 +4,7 @@
   #include "config.h"
 #endif
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/ReproRADIUSServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
@@ -50,7 +51,7 @@ ReproRADIUSServerAuthManager::rejectBadNonces() const
    return mRejectBadNonces;
 }
 
-ServerAuthManager::AsyncBool
+AsyncBool
 ReproRADIUSServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());

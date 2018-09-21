@@ -43,6 +43,17 @@ class InteropHelper
       static bool getRRTokenHackEnabled(){return useRRTokenHack;}
       static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
+      // If EnableFlowTokens is enabled, then by default flow tokens are only used for inbound
+      // Record-Routes if the client is directly connected(ie: has only a single Via header).If you
+      // enable this setting then inbound flow tokens will be used for non-directly connected clients
+      // as well(ie: any number of Via headers).
+      // This is particularly useful for TLS based connections between two SIP proxies, to help ensure
+      // a single TLS connection per dialog.Avoiding an issue where a UAC request may be using an IP
+      // addresses in it's TLS based Record-Route but is presenting a certificate that does not contain
+      // the IP address.
+      static bool getAllowInboundFlowTokensForNonDirectClients() { return allowInboundFlowTokensForNonDirectClients; }
+      static void setAllowInboundFlowTokensForNonDirectClients(bool enabled) { allowInboundFlowTokensForNonDirectClients = enabled; }
+
       enum ClientNATDetectionMode
       {
          ClientNATDetectionDisabled,
@@ -82,6 +93,7 @@ class InteropHelper
       // and will not reject registrations with the 439 error.
       static bool getAssumeFirstHopSupportsFlowTokensEnabled(){return assumeFirstHopSupportsFlowTokens;}
       static void setAssumeFirstHopSupportsFlowTokensEnabled(bool enabled) {assumeFirstHopSupportsFlowTokens=enabled;}
+
    private:
       InteropHelper();
       ~InteropHelper();
@@ -92,6 +104,7 @@ class InteropHelper
       static unsigned int flowTimerSeconds;
       static unsigned int flowTimerGracePeriodSeconds;
       static bool useRRTokenHack;
+      static bool allowInboundFlowTokensForNonDirectClients;
       static ClientNATDetectionMode clientNATDetection;
       static bool assumeFirstHopSupportsOutbound;
       static bool assumeFirstHopSupportsFlowTokens;

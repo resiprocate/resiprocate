@@ -35,6 +35,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/EventStackThread.hxx"
+#include "resip/stack/ExtendedDomainMatcher.hxx"
 #include "resip/stack/HEPSipMessageLoggingHandler.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/ConnectionManager.hxx"
@@ -833,6 +834,7 @@ ReproRunner::createSipStack()
    InteropHelper::setOutboundVersion(mProxyConfig->getConfigInt("OutboundVersion", 5626));
    InteropHelper::setOutboundSupported(mProxyConfig->getConfigBool("DisableOutbound", false) ? false : true);
    InteropHelper::setRRTokenHackEnabled(mProxyConfig->getConfigBool("EnableFlowTokens", false));
+   InteropHelper::setAllowInboundFlowTokensForNonDirectClients(mProxyConfig->getConfigBool("AllowInboundFlowTokensForNonDirectClients", false));
    InteropHelper::setAssumeFirstHopSupportsOutboundEnabled(mProxyConfig->getConfigBool("AssumeFirstHopSupportsOutbound", false));
    InteropHelper::setAssumeFirstHopSupportsFlowTokensEnabled(mProxyConfig->getConfigBool("AssumeFirstHopSupportsFlowTokens", false));
    Data clientNATDetectionMode = mProxyConfig->getConfigData("ClientNatDetectionMode", "DISABLED");
@@ -1088,7 +1090,7 @@ ReproRunner::createDialogUsageManager()
    {
       mDum = new DialogUsageManager(*mSipStack);
       mDum->setMasterProfile(profile);
-      addDomains(*mDum, false /* log? already logged when adding to Proxy - no need to log again*/);
+      addDomains(*mDum);
    }
 
    // If registrar is enabled, configure DUM to handle REGISTER requests
@@ -1244,8 +1246,8 @@ ReproRunner::createProxy()
                       *mMonkeys, 
                       *mLemurs, 
                       *mBaboons);
-   Data defaultRealm = addDomains(*mProxy, true);
-   mHttpRealm = mProxyConfig->getConfigData("HttpAdminRealm", defaultRealm);
+   addDomains(*mProxy);
+   mHttpRealm = mProxyConfig->getConfigData("HttpAdminRealm", mDefaultRealm);
 
    // Set Server Text
 #ifdef PACKAGE_VERSION
@@ -1529,23 +1531,40 @@ ReproRunner::createCommandServer()
    }
 }
 
-Data
-ReproRunner::addDomains(TransactionUser& tu, bool log)
+void
+ReproRunner::initDomainMatcher()
 {
    resip_assert(mProxyConfig);
-   Data realm;
    
+   SharedPtr<ExtendedDomainMatcher> matcher(new ExtendedDomainMatcher());
+   mDomainMatcher = matcher;
+
    std::vector<Data> configDomains;
    if(mProxyConfig->getConfigValue("Domains", configDomains))
    {
       for (std::vector<Data>::const_iterator i=configDomains.begin(); 
          i != configDomains.end(); ++i)
       {
-         if(log) InfoLog (<< "Adding domain " << *i << " from command line");
-         tu.addDomain(*i);
-         if ( realm.empty() )
+         InfoLog (<< "Adding domain " << *i << " from command line");
+         matcher->addDomain(*i);
+         if ( mDefaultRealm.empty() )
          {
-            realm = *i;
+            mDefaultRealm = *i;
+         }
+      }
+   }
+
+   std::vector<Data> configDomainSuffixes;
+   if(mProxyConfig->getConfigValue("DomainSuffixes", configDomainSuffixes))
+   {
+      for (std::vector<Data>::const_iterator i=configDomainSuffixes.begin();
+         i != configDomainSuffixes.end(); ++i)
+      {
+         InfoLog (<< "Adding domain suffix " << *i << " from command line");
+         matcher->addDomainSuffix(*i);
+         if ( mDefaultRealm.empty() )
+         {
+            mDefaultRealm = *i;
          }
       }
    }
@@ -1554,11 +1573,11 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
    for (ConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
-      if(log) InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
-      tu.addDomain( i->second.mDomain );
-      if ( realm.empty() )
+      InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
+      matcher->addDomain( i->second.mDomain );
+      if ( mDefaultRealm.empty() )
       {
-         realm = i->second.mDomain;
+         mDefaultRealm = i->second.mDomain;
       }
    }
 
@@ -1566,36 +1585,44 @@ ReproRunner::addDomains(TransactionUser& tu, bool log)
       add any of the items below to the Domains config option in repro.config
 
    Data localhostname(DnsUtil::getLocalHostName());
-   if(log) InfoLog (<< "Adding local hostname domain " << localhostname );
-   tu.addDomain(localhostname);
-   if ( realm.empty() )
+   InfoLog (<< "Adding local hostname domain " << localhostname );
+   matcher->addDomain(localhostname);
+   if ( mDefaultRealm.empty() )
    {
-      realm = localhostname;
+      mDefaultRealm = localhostname;
    }
 
-   if(log) InfoLog (<< "Adding localhost domain.");
-   tu.addDomain("localhost");
-   if ( realm.empty() )
+   InfoLog (<< "Adding localhost domain.");
+   matcher->addDomain("localhost");
+   if ( mDefaultRealm.empty() )
    {
-      realm = "localhost";
+      mDefaultRealm = "localhost";
    }
    
    list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
-      if(log) InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
-      tu.addDomain(i->second);
+      InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
+      matcher->addDomain(i->second);
    }
 
-   if(log) InfoLog (<< "Adding 127.0.0.1 domain.");
-   tu.addDomain("127.0.0.1"); */
+   InfoLog (<< "Adding 127.0.0.1 domain.");
+   matcher->addDomain("127.0.0.1"); */
 
-   if( realm.empty() )
+   if( mDefaultRealm.empty() )
    {
-      realm = "Unconfigured";
+      mDefaultRealm = "Unconfigured";
    }
+}
 
-   return realm;
+void
+ReproRunner::addDomains(TransactionUser& tu)
+{
+   if(mDomainMatcher.get() == 0)
+   {
+      initDomainMatcher();
+   }
+   tu.setDomainMatcher(mDomainMatcher);
 }
 
 bool

@@ -31,7 +31,7 @@ TlsPeerAuthManager::TlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::T
 
 TlsPeerAuthManager::~TlsPeerAuthManager()
 {
-   InfoLog(<< "~TlsPeerAuthManager");
+   InfoLog(<< "~TlsPeerAuthManager:  " << mMessages.size() << " messages in memory when destroying.");
 }
 
 // !bwc! We absolutely, positively, MUST NOT throw here. This is because in
@@ -42,6 +42,7 @@ DumFeature::ProcessingResult
 TlsPeerAuthManager::process(Message* msg)
 {
    SipMessage* sipMessage = dynamic_cast<SipMessage*>(msg);
+   TlsPeerIdentityInfoMessage* tpiMessage = dynamic_cast<TlsPeerIdentityInfoMessage*>(msg);
 
    if (sipMessage)
    {
@@ -51,8 +52,25 @@ TlsPeerAuthManager::process(Message* msg)
          case TlsPeerAuthManager::Rejected:
             InfoLog(<< "TlsPeerAuth rejected request " << sipMessage->brief());
             return DumFeature::ChainDoneAndEventDone;            
+         case TlsPeerAuthManager::RequestedInfo:
+            return DumFeature::EventTaken;
          default:   // includes Authorized, Skipped
             return DumFeature::FeatureDone;            
+      }
+   }
+
+   if (tpiMessage)
+   {
+      Message* result = handleTlsPeerIdentityInfo(tpiMessage);
+      if (result)
+      {
+         postCommand(auto_ptr<Message>(result));
+         return FeatureDoneAndEventDone;
+      }
+      else
+      {
+         InfoLog(<< "TlsPeerAuth rejected request " << *tpiMessage);
+         return ChainDoneAndEventDone;
       }
    }
 
@@ -60,7 +78,7 @@ TlsPeerAuthManager::process(Message* msg)
    return FeatureDone;   
 }
 
-bool
+AsyncBool
 TlsPeerAuthManager::authorizedForThisIdentity(
    const std::list<resip::Data> &peerNames,
    resip::Uri &fromUri)
@@ -75,12 +93,12 @@ TlsPeerAuthManager::authorizedForThisIdentity(
       if(i == aor)
       {
          DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor);
-         return true;
+         return True;
       }
       if(i == domain)
       {
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
-         return true;
+         return True;
       }
       CommonNameMappings::iterator _mapping =
          mCommonNameMappings.find(i);
@@ -91,19 +109,20 @@ TlsPeerAuthManager::authorizedForThisIdentity(
          if(permitted.find(aor) != permitted.end())
          {
             DebugLog(<< "Matched certificate name " << i << " against full AoR " << aor << " by common name mappings");
-            return true;
+            return True;
          }
          if(permitted.find(domain) != permitted.end())
          {
             DebugLog(<< "Matched certificate name " << i << " against domain " << domain << " by common name mappings");
-            return true;
+            return True;
          }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }
 
    // catch-all: access denied
-   return false;
+   DebugLog(<< "message content didn't match any peer name");
+   return False;
 }
 
 // return true if request has been consumed 
@@ -138,6 +157,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
 
    if(isTrustedSource(*sipMessage))
    {
+      DebugLog(<<"from trusted node, skipping checks");
       return Authorized;
    }
 
@@ -146,17 +166,35 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    {
       // peerNames is empty if client certificate mode is `optional'
       // or if the message didn't come in on TLS transport
-      if (requiresAuthorization(*sipMessage) && !peerNames.empty())
+      if (!requiresAuthorization(*sipMessage))
       {
-         if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
-            return Authorized;
-         SharedPtr<SipMessage> response(new SipMessage);
-         Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
-         mDum.send(response);
-         return Rejected;
-      }
-      else
+         DebugLog(<<"authorization not required for this message");
          return Skipped;
+      }
+
+      if(peerNames.empty())
+      {
+         DebugLog(<<"peerNames is empty, allowing the message without further inspection");
+         return Skipped;
+      }
+
+      AsyncBool _auth = authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri());
+      if(_auth == True)
+      {
+         DebugLog(<<"authorized");
+         return Authorized;
+      }
+      else if(_auth == Async)
+      {
+         mMessages[sipMessage->getTransactionId()] = sipMessage;
+         DebugLog(<<"waiting for async authorization");
+         return RequestedInfo;
+      }
+      DebugLog(<<"not authorized");
+      SharedPtr<SipMessage> response(new SipMessage);
+      Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
+      mDum.send(response);
+      return Rejected;
    }
    else
    {
@@ -166,16 +204,31 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
       {
          if(mThirdPartyRequiresCertificate)
          {
+            DebugLog(<<"third party requires certificate");
             SharedPtr<SipMessage> response(new SipMessage);
             Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
             mDum.send(response);
             return Rejected;
          }
          else
+         {
+            DebugLog(<<"third party does not require certificate, allowing the message without further inspection");
             return Skipped;
+         }
       }
-      if(authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri()))
+      AsyncBool _auth = authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri());
+      if(_auth == True)
+      {
+         DebugLog(<<"authorized");
          return Authorized;
+      }
+      else if(_auth == Async)
+      {
+         mMessages[sipMessage->getTransactionId()] = sipMessage;
+         DebugLog(<<"waiting for async authorization");
+         return RequestedInfo;
+      }
+      DebugLog(<<"not authorized");
       SharedPtr<SipMessage> response(new SipMessage);
       Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
       mDum.send(response);
@@ -184,6 +237,30 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
 
    InfoLog(<< "Skipping some message that we didn't explicitly handle");
    return Skipped;
+}
+
+SipMessage*
+TlsPeerAuthManager::handleTlsPeerIdentityInfo(TlsPeerIdentityInfoMessage *tpiInfo)
+{
+   resip_assert(tpiInfo);
+
+   MessageMap::iterator it = mMessages.find(tpiInfo->getTransactionId());
+   resip_assert(it != mMessages.end());
+   SipMessage* request = it->second;
+   mMessages.erase(it);
+
+   if(tpiInfo->authorized())
+   {
+      DebugLog(<<"authorized");
+      return request;
+   }
+
+   DebugLog(<<"not authorized");
+   SharedPtr<SipMessage> response(new SipMessage);
+   Helper::makeResponse(*response, *request, 403, "Authentication Failed for peer cert.");
+   mDum.send(response);
+   delete request;
+   return 0;
 }
 
 bool

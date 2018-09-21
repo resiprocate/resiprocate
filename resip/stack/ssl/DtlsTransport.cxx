@@ -50,7 +50,10 @@
 
 #include "rutil/WinLeakCheck.hxx"
 
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
@@ -58,7 +61,6 @@
 #include <openssl/pkcs7.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
-#include <openssl/opensslv.h>
 
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>

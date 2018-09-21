@@ -828,7 +828,7 @@ class SipStack : public FdSetIOObserver
           receiveAny, the SipStack will call postToTu on the appropriate
           Tu. Messages not associated with a registered TU go into SipStack::mTuFifo.
       */
-      void registerTransactionUser(TransactionUser&);
+      void registerTransactionUser(TransactionUser&, const bool front = false);
 
       /** @brief Queue a shutdown request to the specified TU **/
       void requestTransactionUserShutdown(TransactionUser&);

@@ -363,7 +363,7 @@ int main(int argc, char* argv[])
     MyTurnAsyncSocketHandler handler(ioService);
 
 #ifdef USE_SSL
-    asio::ssl::context sslContext(ioService, asio::ssl::context::tlsv1);
+    asio::ssl::context sslContext(asio::ssl::context::tlsv1);
     // Setup SSL context
     sslContext.set_verify_mode(asio::ssl::context::verify_peer);
     sslContext.load_verify_file("ca.pem");
@@ -405,6 +405,7 @@ int main(int argc, char* argv[])
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

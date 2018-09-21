@@ -355,6 +355,7 @@ public:
    virtual bool removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication = false) = 0;
    virtual bool getMergedETags(const Data& eventType, const Data& documentKey, ETagMerger& merger, Contents* destination) = 0;
    virtual bool documentExists(const Data& eventType, const Data& documentKey, const Data& eTag) = 0;
+   virtual bool getDocument(const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, PubDocument& document) { return false; }
    virtual bool checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated) = 0;
    virtual void lockDocuments() = 0;
    virtual KeyToETagMap& getDocuments() = 0;  // Ensure you lock before calling this and unlock when done

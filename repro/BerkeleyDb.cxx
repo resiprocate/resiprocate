@@ -102,6 +102,8 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
       {
          case UserTable:
             fileName += "_user"; break;
+         case TlsPeerIdentityTable:
+            fileName += "_tlspeeridentity"; break;
          case RouteTable:
             fileName += "_route"; break;
          case AclTable:

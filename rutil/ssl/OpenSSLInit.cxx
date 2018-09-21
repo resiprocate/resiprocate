@@ -10,7 +10,10 @@
 
 #include "rutil/ssl/OpenSSLInit.hxx"
 
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
@@ -18,7 +21,6 @@
 
 #define OPENSSL_THREAD_DEFINES
 #include <openssl/opensslconf.h>
-#include <openssl/opensslv.h>
 
 #if  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)
 // OpenSSL builds use an older version of visual studio that require the following definition
