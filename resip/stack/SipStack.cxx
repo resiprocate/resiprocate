@@ -1147,9 +1147,9 @@ SipStack::pollStatistics()
 }
 
 void
-SipStack::registerTransactionUser(TransactionUser& tu)
+SipStack::registerTransactionUser(TransactionUser& tu, const bool front)
 {
-   mTuSelector.registerTransactionUser(tu);
+   mTuSelector.registerTransactionUser(tu, front);
 }
 
 void
