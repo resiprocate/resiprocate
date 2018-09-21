@@ -196,8 +196,8 @@ public:
       // These are local/non-standard child elements to the Dialog element
       void addDialogElement(const Data& childElementName, const Data& elementValue) { mExtraDialogElements.insert( std::pair<Data,Data>(childElementName, elementValue));}
 
-      // get the instance'th occurance of the named Dialog child element
-      // Assumes parsed.
+      // get the instance'th occurance of the named Dialog child element.
+      // The first instance is index 0.
       bool getDialogElement(const Data& childElementName, Data& elementValue, int instance=0) const;
 
    private:
