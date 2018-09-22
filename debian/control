@@ -25,7 +25,7 @@ Description: reSIProcate SIP stack - shared libraries
 Package: libresiprocate-1.12-dev
 Section: libdevel
 Architecture: any
-Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libc-ares-dev, libssl1.0-dev | libssl-dev (<< 1.1), libradcli-dev
+Depends: libresiprocate-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libc-ares-dev, libssl-dev, libradcli-dev
 Provides: libresiprocate-dev
 Conflicts: libresiprocate-dev, libresiprocate-1.8-dev
 Replaces: libresiprocate-dev, libresiprocate-1.8-dev, repro (<< 1:1.11.0~beta1-2)
