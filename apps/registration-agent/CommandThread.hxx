@@ -13,6 +13,7 @@
 #include <proton/messaging_handler.hpp>
 #include <proton/receiver.hpp>
 #include <proton/transport.hpp>
+#include <proton/work_queue.hpp>
 
 #include "cajun/json/elements.h"
 
@@ -27,6 +28,7 @@ public:
    ~CommandThread();
 
    void on_container_start(proton::container &c);
+   void on_connection_open(proton::connection &conn);
    void on_receiver_open(proton::receiver &);
    void on_receiver_close(proton::receiver &);
    void on_transport_error(proton::transport &t);
@@ -42,17 +44,10 @@ private:
    unsigned int mRetryDelay;
    std::string mUrl;
    proton::receiver mReceiver;
+   proton::work_queue* mWorkQueue;
    resip::TimeLimitFifo<json::Object> mFifo;
 
-   class ready_to_shutdown : public proton::void_function0
-   {
-   private:
-      CommandThread& mThread;
-   public:
-      ready_to_shutdown(CommandThread& _thread) : mThread(_thread) {};
-      void operator()();
-   };
-   ready_to_shutdown mReadyToShutdown;
+   void doShutdown();
 };
 
 } // namespace

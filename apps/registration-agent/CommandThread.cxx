@@ -5,10 +5,14 @@
 
 #include <proton/default_container.hpp>
 #include <proton/delivery.hpp>
+#include <proton/message.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/connection.hpp>
+#include <proton/connection_options.hpp>
+#include <proton/container.hpp>
 #include <proton/tracker.hpp>
 #include <proton/source_options.hpp>
+#include <proton/work_queue.hpp>
 
 // Cajun JSON
 #include "cajun/json/reader.h"
@@ -28,8 +32,7 @@ CommandThread::CommandThread(const std::string &u)
    : mMaximumAge(60000),
      mRetryDelay(2000),
      mUrl(u),
-     mFifo(0, 0),
-     mReadyToShutdown(*this)
+     mFifo(0, 0)
 {
 }
 
@@ -44,9 +47,15 @@ CommandThread::on_container_start(proton::container &c)
 }
 
 void
+CommandThread::on_connection_open(proton::connection& conn)
+{
+}
+
+void
 CommandThread::on_receiver_open(proton::receiver &)
 {
    InfoLog(<<"receiver ready for queue " << mUrl);
+   mWorkQueue = &mReceiver.work_queue();
 }
 
 void
@@ -189,15 +198,14 @@ CommandThread::shutdown()
    }
    DebugLog(<<"trying to shutdown the Qpid Proton container");
    ThreadIf::shutdown();
-   proton::returned<proton::connection> ts_c = proton::make_thread_safe(mReceiver.connection());
-   ts_c.get()->event_loop()->inject(mReadyToShutdown);
+   mWorkQueue->add(make_work(&CommandThread::doShutdown, this));
 }
 
 void
-CommandThread::ready_to_shutdown::operator()()
+CommandThread::doShutdown()
 {
-   StackLog(<<"ready_to_shutdown::operator(): closing sender");
-   mThread.mReceiver.container().stop();
+   StackLog(<<"closing sender");
+   mReceiver.container().stop();
 }
 
 /* ====================================================================
