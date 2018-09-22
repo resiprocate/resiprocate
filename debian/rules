@@ -31,6 +31,8 @@ CPPFLAGS += -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20
 CPPFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS
 CPPFLAGS += ${QT_LIBS}
 CPPFLAGS += -I/usr/include/telepathy-qt${QT_SELECT}
+CPPFLAGS += -I/usr/include/soci
+CPPFLAGS += -I/usr/include/mysql
 CXXFLAGS += -fpermissive
 CXXFLAGS += -I/usr/include/postgresql
 LDFLAGS += -lcares
