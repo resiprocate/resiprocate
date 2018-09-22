@@ -20,7 +20,7 @@ RegistrationForwarder::RegistrationForwarder(ConfigParse& configParse, SipStack&
    mStack(stack),
    mShutdownState(Running)
 {
-   mStack.registerTransactionUser(*this);
+   mStack.registerTransactionUser(*this, true);
    MessageFilterRuleList ruleList;
    MessageFilterRule::MethodList methodList;
    methodList.push_back(resip::REGISTER);

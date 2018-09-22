@@ -14,6 +14,7 @@
 #include <proton/messaging_handler.hpp>
 #include <proton/sender.hpp>
 #include <proton/transport.hpp>
+#include <proton/work_queue.hpp>
 
 namespace repro {
 
@@ -24,6 +25,7 @@ public:
    ~QpidProtonThread();
 
    void on_container_start(proton::container &c);
+   void on_connection_open(proton::connection &conn);
    void on_sender_open(proton::sender &);
    void on_sender_close(proton::sender &);
    void on_transport_error(proton::transport &t);
@@ -34,34 +36,17 @@ public:
    virtual void shutdown();
 
    void sendMessage(const resip::Data& msg);
-   void doSend();
 
 private:
    unsigned int mRetryDelay;
    UInt64 mPending;
    std::string mUrl;
    proton::sender mSender;
+   proton::work_queue* mWorkQueue;
    resip::TimeLimitFifo<resip::Data> mFifo;
 
-   class ready_to_send : public proton::void_function0
-   {
-   private:
-      QpidProtonThread& mThread;
-   public:
-      ready_to_send(QpidProtonThread& _thread) : mThread(_thread) {};
-      void operator()() { mThread.doSend(); };
-   };
-   ready_to_send mReadyToSend;
-
-   class ready_to_shutdown : public proton::void_function0
-   {
-   private:
-      QpidProtonThread& mThread;
-   public:
-      ready_to_shutdown(QpidProtonThread& _thread) : mThread(_thread) {};
-      void operator()();
-   };
-   ready_to_shutdown mReadyToShutdown;
+   void doSend();
+   void doShutdown();
 };
 
 } // namespace
