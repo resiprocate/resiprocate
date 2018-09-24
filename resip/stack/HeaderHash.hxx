@@ -1,10 +1,8 @@
 #if !defined(RESIP_HEADERHASH_HXX)
 #define RESIP_HEADERHASH_HXX
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#else
-#define GPERF_SIZE_TYPE unsigned int
-#endif
+
+#include "rutil/compat.hxx"
+
 namespace resip 
 {
 

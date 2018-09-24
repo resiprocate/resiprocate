@@ -3,6 +3,8 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+#define GPERF_SIZE_TYPE unsigned int
 #endif
 
 
