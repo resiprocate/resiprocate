@@ -501,6 +501,7 @@
     <ClCompile Include="SubscriptionState.cxx" />
     <ClCompile Include="TargetCommand.cxx" />
     <ClCompile Include="TlsPeerAuthManager.cxx" />
+    <ClCompile Include="TlsPeerIdentityInfoMessage.cxx" />
     <ClCompile Include="UserAuthInfo.cxx" />
     <ClCompile Include="UserProfile.cxx" />
     <ClCompile Include="WsCookieAuthManager.cxx" />
@@ -602,6 +603,7 @@
     <ClInclude Include="SubscriptionState.hxx" />
     <ClInclude Include="TargetCommand.hxx" />
     <ClInclude Include="TlsPeerAuthManager.hxx" />
+    <ClInclude Include="TlsPeerIdentityInfoMessage.hxx" />
     <ClInclude Include="UsageUseException.hxx" />
     <ClInclude Include="UserAuthInfo.hxx" />
     <ClInclude Include="UserProfile.hxx" />
