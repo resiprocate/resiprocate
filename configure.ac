@@ -34,21 +34,7 @@ AC_PROG_RANLIB
 
 AM_MISSING_PROG([GPERF], [gperf])
 
-GPERFVER=`gperf -v|head -1 |cut -d " " -f3`
-if test "$GPERFVER"x != x; then
-  GPERF_MAJOR_VER=`echo $GPERFVER | cut -f1 -d.`
-  GPERF_MINOR_VER=`echo $GPERFVER | cut -f2 -d.`
-  if test  $GPERF_MAJOR_VER -gt 3 -o $GPERF_MAJOR_VER -eq 3 -a $GPERF_MINOR_VER -ge 1 ; then
-    GPERF_SIZE_TYPE="size_t"
-  else
-    GPERF_SIZE_TYPE="unsigned int"
-  fi
-else
-  GPERF_SIZE_TYPE="unsigned int"
-fi
-
-AC_DEFINE_UNQUOTED(GPERF_SIZE_TYPE, $GPERF_SIZE_TYPE)
-AH_TEMPLATE([GPERF_SIZE_TYPE], [GPERF size type])
+AC_GPERFVER
 
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
