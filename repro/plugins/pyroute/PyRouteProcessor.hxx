@@ -8,7 +8,7 @@
 #include <Python.h>
 #include <CXX/Objects.hxx>
 
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "repro/Processor.hxx"
 #include "repro/Proxy.hxx"
 
@@ -18,7 +18,7 @@ namespace repro
 class PyRouteProcessor : public Processor
 {
    public:
-      PyRouteProcessor(Dispatcher& dispatcher);
+      PyRouteProcessor(resip::Dispatcher& dispatcher);
       virtual ~PyRouteProcessor();
 
       /*
@@ -27,7 +27,7 @@ class PyRouteProcessor : public Processor
       virtual processor_action_t process(RequestContext &context);
 
    private:
-      Dispatcher& mDispatcher;
+      resip::Dispatcher& mDispatcher;
 };
 
 };

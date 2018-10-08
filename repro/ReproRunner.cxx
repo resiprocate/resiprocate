@@ -55,7 +55,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/ProxyConfig.hxx"
 #include "repro/BerkeleyDb.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "repro/UserAuthGrabber.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/ReproVersion.hxx"

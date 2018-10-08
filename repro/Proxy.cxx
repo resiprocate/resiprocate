@@ -6,7 +6,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/Ack200DoneMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/ApplicationMessage.hxx"

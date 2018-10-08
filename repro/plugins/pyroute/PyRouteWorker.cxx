@@ -20,7 +20,7 @@
 #include "repro/Processor.hxx"
 #include "repro/ProcessorMessage.hxx"
 #include "repro/RequestContext.hxx"
-#include "repro/Worker.hxx"
+#include "resip/stack/Worker.hxx"
 
 #include "PyRouteWorker.hxx"
 #include "PyThreadSupport.hxx"

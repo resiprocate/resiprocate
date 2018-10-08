@@ -9,16 +9,16 @@
 namespace resip
 {
 class DialogUsageManager;
+class Dispatcher;
 }
 
 namespace repro
 {
-class Dispatcher;
 
 class PresenceServer
 {
    public:
-      PresenceServer(resip::DialogUsageManager& dum, repro::Dispatcher* userDispatcher, bool presenceUsesRegistrationState, bool presenceNotifyClosedStateForNonPublishedUsers);
+      PresenceServer(resip::DialogUsageManager& dum, resip::Dispatcher* userDispatcher, bool presenceUsesRegistrationState, bool presenceNotifyClosedStateForNonPublishedUsers);
       ~PresenceServer();
 
    private:

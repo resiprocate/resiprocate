@@ -16,6 +16,7 @@ namespace resip
 {
    class TransactionUser;
    class SipStack;
+   class Dispatcher;
    class RegistrationPersistenceManager;
    class PublicationPersistenceManager;
    class FdPollGrp;
@@ -29,7 +30,6 @@ namespace repro
 {
 class ProxyConfig;
 class ProcessorChain;
-class Dispatcher;
 class AbstractDb;
 class ProcessorChain;
 class Proxy;
@@ -106,7 +106,7 @@ protected:
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
    resip::PublicationPersistenceManager* mPublicationPersistenceManager;
    AuthenticatorFactory* mAuthFactory;
-   Dispatcher* mAsyncProcessorDispatcher;
+   resip::Dispatcher* mAsyncProcessorDispatcher;
    ProcessorChain* mMonkeys;
    ProcessorChain* mLemurs;
    ProcessorChain* mBaboons;

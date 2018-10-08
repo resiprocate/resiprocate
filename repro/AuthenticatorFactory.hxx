@@ -4,9 +4,9 @@
 #include <memory>
 
 #include "rutil/SharedPtr.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
-#include "repro/Dispatcher.hxx"
 #include "repro/Processor.hxx"
 
 namespace repro
@@ -29,7 +29,7 @@ public:
 
    virtual resip::SharedPtr<resip::ServerAuthManager> getServerAuthManager() = 0;
    virtual std::auto_ptr<Processor> getDigestAuthenticator() = 0;
-   virtual Dispatcher* getDispatcher() = 0;
+   virtual resip::Dispatcher* getDispatcher() = 0;
 };
 
 }

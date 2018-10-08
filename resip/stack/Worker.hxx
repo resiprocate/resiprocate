@@ -1,35 +1,26 @@
-#ifndef WORKER_THREAD_HXX
-#define WORKER_THREAD_HXX 1
+#ifndef WORKER_HXX
+#define WORKER_HXX 1
 
-#include "rutil/ThreadIf.hxx"
-#include "repro/Worker.hxx"
-#include "rutil/TimeLimitFifo.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
+#include "rutil/ResipAssert.h"
 
 namespace resip
 {
-class SipStack;
-}
 
-namespace repro
+class Worker
 {
-
-class WorkerThread : public resip::ThreadIf
-{
-
    public:
-      WorkerThread(Worker* impl,resip::TimeLimitFifo<resip::ApplicationMessage>& fifo,resip::SipStack* stack);
-      virtual ~WorkerThread();
-      void thread();
-      
-   protected:
-      Worker* mWorker;
-      resip::TimeLimitFifo<resip::ApplicationMessage>& mFifo;
-      resip::SipStack* mStack;
+      Worker(){};
+      virtual ~Worker(){};
 
+      // called once when the thread is started
+      virtual void onStart() {};
+      
+      // return true to queue to stack when complete, false when no response is required
+      virtual bool process(resip::ApplicationMessage* msg)=0;
+      virtual Worker* clone() const=0;
 };
 }
-
 #endif
 
 /* ====================================================================

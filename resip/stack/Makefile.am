@@ -82,6 +82,7 @@ libresip_la_SOURCES = \
 	DataParameter.cxx \
 	DeprecatedDialog.cxx \
 	DialogInfoContents.cxx \
+	Dispatcher.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	DtlsMessage.cxx \
@@ -176,6 +177,7 @@ libresip_la_SOURCES = \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
 	InvalidContents.cxx \
+	WorkerThread.cxx \
 	WsBaseTransport.cxx \
 	WsFrameExtractor.cxx \
 	WsTransport.cxx \
@@ -249,6 +251,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	DateCategory.hxx \
 	DeprecatedDialog.hxx \
 	DialogInfoContents.hxx \
+	Dispatcher.hxx \
 	DomainMatcher.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
@@ -389,6 +392,8 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ValueFifo.hxx \
 	Via.hxx \
 	WarningCategory.hxx \
+	Worker.hxx \
+	WorkerThread.hxx \
 	WsBaseTransport.hxx \
 	WsDecorator.hxx \
 	WsFrameExtractor.hxx \

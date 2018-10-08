@@ -2,13 +2,13 @@
 #define USER_AUTH_GRABBER 1
 
 #include "repro/Store.hxx"
-#include "repro/Worker.hxx"
+#include "resip/stack/Worker.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 
 namespace repro
 {
 
-class UserAuthGrabber : public Worker
+class UserAuthGrabber : public resip::Worker
 {
    public:
       UserAuthGrabber(repro::Store& dataStore);
