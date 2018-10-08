@@ -10,4 +10,7 @@ endif
 if BUILD_RECON
 SUBDIRS += reConServer
 endif
+if BUILD_QPID_PROTON
+SUBDIRS += registration-agent
+endif
 
