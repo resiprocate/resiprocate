@@ -1,0 +1,36 @@
+#
+# /etc/registrationClient/users.txt sample
+#
+# Text file (Tab separated values) containing accounts to be registered
+#
+# Lines starting with '#' are ignored
+#
+# File format is:
+#
+#   AoR<tab>Contact<tab>Secret<tab>Auth-User<tab>Expiry<tab>Outbound-Proxy<tab>Reg-ID<tab>instance-ID
+#
+# where:
+#
+#   AoR            is the SIP URI to register, with prefix
+#
+#   Contact        is the full Contact header URI.  If using outbound,
+#                  the transport specified here should probably match
+#                  the type of transport that the proxy is using
+#                  to contact the external site.
+#
+#   Secret         is the plaintext secret for DIGEST authentication
+#
+#   Auth-User      (optional) is the username for authentication, if blank,
+#                  it is extracted from the AoR
+#
+#   Expiry         (optional) expiry timeout (seconds), default is 3600
+#
+#   Outbound-Proxy (optional) send requests through a proxy
+#
+#   Reg-ID         (optional) the Reg-ID value for SIP OUTBOUND
+#
+#   Instance-ID    (optional) the instance-ID value for SIP OUTBOUND
+#
+#   Example:
+#
+#sip:foo@sip.example.org	sip:foo@198.51.100.2:5061;transport=TLS;ob	secret	foo	60	sip:sip-proxy.example.net	1	<urn:uuid:2ee5fbe1-a356-45c4-828a-e38c7068d3cf>
