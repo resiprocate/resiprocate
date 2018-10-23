@@ -70,7 +70,7 @@
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 
 static void SSL_set0_rbio(SSL *s, BIO *rbio)
 {
@@ -78,10 +78,12 @@ static void SSL_set0_rbio(SSL *s, BIO *rbio)
     s->rbio = rbio;
 }
 
+#if !defined(LIBRESSL_VERSION_NUMBER)
 static void BIO_up_ref(BIO *a)
 {
     CRYPTO_add(&a->references, 1, CRYPTO_LOCK_BIO);
 }
+#endif
 
 #endif
 
