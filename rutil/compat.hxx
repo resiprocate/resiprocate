@@ -298,6 +298,10 @@ hton64(const UInt64 input)
 #endif
 #endif
 
+#ifndef IPPROTO_SCTP
+#define IPPROTO_SCTP 132
+#endif
+
 // !bwc! Some poking around seems to indicate that icc supports gcc's function 
 // attributes, at least as far back as version 8. I have no idea what support is 
 // like prior to that. As for SUNPRO, it uses gcc's frontend, so I would expect 
