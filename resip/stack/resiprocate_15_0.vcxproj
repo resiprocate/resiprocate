@@ -513,6 +513,7 @@
     <ClCompile Include="DataParameter.cxx" />
     <ClCompile Include="DateCategory.cxx" />
     <ClCompile Include="DialogInfoContents.cxx" />
+    <ClCompile Include="Dispatcher.cxx" />
     <ClCompile Include="GenericPidfContents.cxx" />
     <ClCompile Include="gen\DayOfWeekHash.cxx" />
     <ClCompile Include="DeprecatedDialog.cxx" />
@@ -671,6 +672,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="WorkerThread.cxx" />
     <ClCompile Include="WsBaseTransport.cxx" />
     <ClCompile Include="WsConnection.cxx" />
     <ClCompile Include="WsConnectionBase.cxx" />
@@ -709,6 +711,7 @@
     <ClInclude Include="DateCategory.hxx" />
     <ClInclude Include="DeprecatedDialog.hxx" />
     <ClInclude Include="DialogInfoContents.hxx" />
+    <ClInclude Include="Dispatcher.hxx" />
     <ClInclude Include="DnsInterface.hxx" />
     <ClInclude Include="DnsResult.hxx" />
     <ClInclude Include="DnsResultMessage.hxx" />
@@ -846,6 +849,8 @@
     <ClInclude Include="Via.hxx" />
     <ClInclude Include="WarningCategory.hxx" />
     <ClInclude Include="ssl\WinSecurity.hxx" />
+    <ClInclude Include="Worker.hxx" />
+    <ClInclude Include="WorkerThread.hxx" />
     <ClInclude Include="WsBaseTransport.hxx" />
     <ClInclude Include="WsConnection.hxx" />
     <ClInclude Include="WsConnectionBase.hxx" />

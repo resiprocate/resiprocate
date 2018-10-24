@@ -798,25 +798,25 @@ endlocal
     <None Include="webadmin\pageOutlinePre.ixx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\contrib\db\build_windows\db_static_14_0.vcxproj">
+    <ProjectReference Include="..\contrib\db\build_windows\db_static_15_0.vcxproj">
       <Project>{9e5a7645-1502-4467-91f8-bcf2eb06ef72}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\contrib\GeoIP\GeoIP_14_0.vcxproj">
+    <ProjectReference Include="..\contrib\GeoIP\GeoIP_15_0.vcxproj">
       <Project>{6527d843-ee53-4f1e-b0a9-12abba8e75cc}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\contrib\pcre\pcre_14_0.vcxproj">
+    <ProjectReference Include="..\contrib\pcre\pcre_15_0.vcxproj">
       <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\resip\dum\dum_14_0.vcxproj">
+    <ProjectReference Include="..\resip\dum\dum_15_0.vcxproj">
       <Project>{31b0654f-e08e-405f-909f-80f86cb14b9d}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\resip\stack\resiprocate_14_0.vcxproj">
+    <ProjectReference Include="..\resip\stack\resiprocate_15_0.vcxproj">
       <Project>{2a8be839-6466-4001-b224-8f1c3168d04a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\rutil\rutil_14_0.vcxproj">
+    <ProjectReference Include="..\rutil\rutil_15_0.vcxproj">
       <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
     </ProjectReference>
-    <ProjectReference Include="reprolib_14_0.vcxproj">
+    <ProjectReference Include="reprolib_15_0.vcxproj">
       <Project>{31b0654f-e08e-405f-909f-80f86cb14b9e}</Project>
     </ProjectReference>
   </ItemGroup>

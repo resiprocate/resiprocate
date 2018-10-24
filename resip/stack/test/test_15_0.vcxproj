@@ -612,13 +612,13 @@
     <ClCompile Include="testStack.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\contrib\popt\popt_14_0.vcxproj">
+    <ProjectReference Include="..\..\..\contrib\popt\popt_15_0.vcxproj">
       <Project>{25d97d59-9407-af5e-355d-b60a17ae3567}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\rutil\rutil_14_0.vcxproj">
+    <ProjectReference Include="..\..\..\rutil\rutil_15_0.vcxproj">
       <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\resiprocate_14_0.vcxproj">
+    <ProjectReference Include="..\resiprocate_15_0.vcxproj">
       <Project>{2a8be839-6466-4001-b224-8f1c3168d04a}</Project>
     </ProjectReference>
   </ItemGroup>
