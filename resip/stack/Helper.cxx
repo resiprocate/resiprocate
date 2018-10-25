@@ -128,7 +128,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_Contacts).push_back(contact);
-   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_CallId).value() = Helper::computeCallId(from.uri().host().data());
    //request->header(h_ContentLength).value() = 0;
    
    Via via;
@@ -172,7 +172,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& c
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_CallId).value() = Helper::computeCallId(from.uri().host().data());
    resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    
@@ -211,7 +211,7 @@ Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& 
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = to;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_CallId).value() = Helper::computeCallId(contact.uri().host().data());
    resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    
@@ -243,7 +243,7 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_CallId).value() = Helper::computeCallId(from.uri().host().data());
    resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    Via via;
@@ -273,7 +273,7 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_CallId).value() = Helper::computeCallId(from.uri().host().data());
    resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_back( contact );
    Via via;
@@ -304,7 +304,7 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_CallId).value() = Helper::computeCallId(from.uri().host().data());
    resip_assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_front( contact );
    Via via;
@@ -648,7 +648,7 @@ Helper::computeUniqueBranch()
 }
 
 Data
-Helper::computeCallId()
+Helper::computeCallId(const Data &host)
 {
    Data hostAndSalt(DnsUtil::getLocalHostName() + Random::getRandomHex(16));
 #ifndef USE_SSL // .bwc. None of this is neccessary if we're using openssl
@@ -667,7 +667,7 @@ Helper::computeCallId()
    hostAndSalt.append((char*)&threadId,sizeof(threadId));
 #endif
 #endif // of USE_SSL
-   return hostAndSalt.md5(Data::BASE64);
+   return hostAndSalt.md5(Data::BASE64) + Data("@") + host;
 }
 
 Data

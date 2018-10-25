@@ -61,7 +61,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest->header(h_CSeq).sequence() = 1;
    mLastRequest->header(h_From) = from;
    mLastRequest->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   mLastRequest->header(h_CallId).value() = Helper::computeCallId();
+   mLastRequest->header(h_CallId).value() = Helper::computeCallId(from.uri().host().data());
 
    resip_assert(mUserProfile.get());
    if (!mUserProfile->getImsAuthUserName().empty())

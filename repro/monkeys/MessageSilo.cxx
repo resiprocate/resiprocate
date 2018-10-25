@@ -269,7 +269,7 @@ MessageSilo::asyncProcess(AsyncProcessorMessage* msg)
                      msg->header(h_CSeq).sequence() = 1;
                      msg->header(h_From) = NameAddr(siloIt->mSourceUri);
                      msg->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-                     msg->header(h_CallId).value() = Helper::computeCallId();   
+                     msg->header(h_CallId).value() = Helper::computeCallId((NameAddr(siloIt->mSourceUri)).uri().host().data());
                      Via via;
                      msg->header(h_Vias).push_back(via);
 
