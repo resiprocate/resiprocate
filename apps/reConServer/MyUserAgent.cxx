@@ -59,6 +59,22 @@ MyUserAgent::getIncomingConversationProfile(const resip::SipMessage& msg)
    return defaultProfile;
 }
 
+resip::SharedPtr<ConversationProfile>
+MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
+{
+   // For the moment,
+   // - we only handle a REFER from the external zone
+   // - we assume the INVITE goes to the internal zone
+   B2BCallManager *b2bcm = getB2BCallManager();
+   if(b2bcm)
+   {
+      return b2bcm->getInternalConversationProfile();
+   }
+
+   // fall through to superclass if not handled by B2BUA
+   return UserAgent::getConversationProfileForRefer(msg);
+}
+
 void
 MyUserAgent::process(int timeoutMs)
 {
