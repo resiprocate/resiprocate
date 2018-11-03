@@ -134,6 +134,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<Use
    SharedPtr<UserProfile> profile = callingProfile;
    if(!profile)
    {
+      DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling getDefaultOutgoingConversationProfile");
       profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
    }
    buildSdpOffer(mLocalHold, offer);
@@ -861,6 +862,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
    std::auto_ptr<SdpContents> _sessionCaps;
    if(!profile) // This can happen for UAC calls
    {
+      DebugLog(<<"buildSdpOffer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
       profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
       // if using the default profile, we need a copy of the session caps that we can modify
       _sessionCaps.reset(new SdpContents(profile->sessionCaps()));
@@ -1295,6 +1297,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
       if(!profile)
       {
+         DebugLog(<<"initiateRemoteCall: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
          profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
       }
       answer = profile->sessionCaps();
