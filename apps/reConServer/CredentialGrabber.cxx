@@ -77,6 +77,7 @@ CredentialGrabber::process(resip::ApplicationMessage* msg)
       {
          DebugLog(<<"found credential for authenticating " << user << " in realm " << realm);
          ci->secret() = Data(secret.c_str());
+         ci->mode() = CredentialInfo::RetrievedCredential;
       }
       else
       {
