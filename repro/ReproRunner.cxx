@@ -187,7 +187,7 @@ public:
             Data mySQLServer = dbConfig.getConfigData("Host", Data::Empty);
             if (!mySQLServer.empty())
             {
-                return new MySqlDb(mySQLServer,
+                return new MySqlDb(dbConfig, mySQLServer,
                     dbConfig.getConfigData("User", Data::Empty),
                     dbConfig.getConfigData("Password", Data::Empty),
                     dbConfig.getConfigData("DatabaseName", Data::Empty),
@@ -206,7 +206,7 @@ public:
             Data postgreSQLServer = dbConfig.getConfigData("Host", Data::Empty);
             if (!postgreSQLConnInfo.empty() || !postgreSQLServer.empty())
             {
-                return new PostgreSqlDb(postgreSQLConnInfo, postgreSQLServer,
+                return new PostgreSqlDb(dbConfig, postgreSQLConnInfo, postgreSQLServer,
                     dbConfig.getConfigData("User", Data::Empty),
                     dbConfig.getConfigData("Password", Data::Empty),
                     dbConfig.getConfigData("DatabaseName", Data::Empty),
@@ -963,7 +963,7 @@ ReproRunner::createDatastore()
       if(!mySQLServer.empty())
       {
          WarningLog(<<"Using deprecated parameter MySQLServer, please update to indexed Database definitions.");
-         mAbstractDb = new MySqlDb(mySQLServer,
+         mAbstractDb = new MySqlDb(*mProxyConfig, mySQLServer,
                           mProxyConfig->getConfigData("MySQLUser", Data::Empty),
                           mProxyConfig->getConfigData("MySQLPassword", Data::Empty),
                           mProxyConfig->getConfigData("MySQLDatabaseName", Data::Empty),
@@ -995,7 +995,7 @@ ReproRunner::createDatastore()
       if(!runtimeMySQLServer.empty())
       {
          WarningLog(<<"Using deprecated parameter RuntimeMySQLServer, please update to indexed Database definitions.");
-         mRuntimeAbstractDb = new MySqlDb(runtimeMySQLServer,
+         mRuntimeAbstractDb = new MySqlDb(*mProxyConfig, runtimeMySQLServer,
                           mProxyConfig->getConfigData("RuntimeMySQLUser", Data::Empty), 
                           mProxyConfig->getConfigData("RuntimeMySQLPassword", Data::Empty),
                           mProxyConfig->getConfigData("RuntimeMySQLDatabaseName", Data::Empty),

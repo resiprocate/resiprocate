@@ -67,12 +67,14 @@ class MySQLInitializer
 };
 static MySQLInitializer g_MySQLInitializer;
 
-MySqlDb::MySqlDb(const Data& server, 
+MySqlDb::MySqlDb(const resip::ConfigParse& config,
+                 const Data& server,
                  const Data& user, 
                  const Data& password, 
                  const Data& databaseName, 
                  unsigned int port, 
                  const Data& customUserAuthQuery) :
+   SqlDb(config),
    mDBServer(server),
    mDBUser(user),
    mDBPassword(password),

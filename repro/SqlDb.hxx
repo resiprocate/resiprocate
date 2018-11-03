@@ -1,6 +1,7 @@
 #if !defined(RESIP_SQLDB_HXX)
 #define RESIP_SQLDB_HXX 
 
+#include "rutil/ConfigParse.hxx"
 #include "rutil/Data.hxx"
 #include "repro/AbstractDb.hxx"
 
@@ -15,7 +16,7 @@ namespace repro
 class SqlDb: public AbstractDb
 {
    public:
-      SqlDb();
+      SqlDb(const resip::ConfigParse& config);
       
       virtual bool isSane() {return mConnected;}
 

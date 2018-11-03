@@ -21,7 +21,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-SqlDb::SqlDb() : mConnected(false)
+SqlDb::SqlDb(const resip::ConfigParse& config) : mConnected(false)
 {
 }
 
