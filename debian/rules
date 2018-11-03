@@ -9,9 +9,6 @@ include /usr/share/dpkg/buildflags.mk
 #CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS)
 #LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
 
-#include /usr/share/cdbs/1/rules/debhelper.mk
-#include /usr/share/cdbs/1/class/autotools.mk
-
 DEB_DH_INSTALL_ARGS := --sourcedir=debian/tmp
 
 export QT_SELECT = 5
@@ -82,13 +79,10 @@ override_dh_auto_build:
 %:
 	dh $@ --with autoreconf --builddirectory=.
 
-#install/repro::
-#	cp debian/repro.config-sample debian/repro/etc/repro/repro.config
-
-#install/resiprocate-turn-server::
-#	cp debian/reTurnServer.config-sample debian/resiprocate-turn-server/etc/reTurnServer.config
-
-install/registration-agent:
+override_dh_auto_install:
+	dh_auto_install
+	#	cp debian/repro.config-sample debian/repro/etc/repro/repro.config
+	#	cp debian/reTurnServer.config-sample debian/resiprocate-turn-server/etc/reTurnServer.config
 	sed -i \
 		-e 's!UserAccountFile = users.txt!UserAccountFile = /etc/registrationAgent/users.txt!' \
 		debian/registration-agent/etc/registrationAgent/registrationAgent.config
