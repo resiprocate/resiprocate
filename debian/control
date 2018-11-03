@@ -202,3 +202,15 @@ Description: lightweight SIP conferencing service
  reSIProcate community.  It provides a lightweight, easy to configure
  way to run multi-user SIP conferences.  It supports audio but not video
  or text.
+
+Package: registration-agent
+Section: net
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Suggests: python-qpid-proton
+Description: SIP registration agent
+ registration-agent is a daemon that can maintain one or more SIP registrations,
+ typically sending a Contact header to the registrar telling it to send incoming
+ calls to a local SIP proxy or other gateway device that is unable to send
+ a registration request itself.

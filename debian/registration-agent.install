@@ -1,0 +1,4 @@
+usr/sbin/registrationAgent
+apps/registration-agent/registrationAgent.config etc/registrationAgent
+apps/registration-agent/users.txt etc/registrationAgent
+apps/registration-agent/registration-agent.service lib/systemd/system

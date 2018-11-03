@@ -1,0 +1,9 @@
+/var/log/registrationAgent/registrationAgent.log {
+	rotate 14
+	daily
+	compress
+	missingok
+	postrotate
+		invoke-rc.d registration-agent reload
+	endscript
+}

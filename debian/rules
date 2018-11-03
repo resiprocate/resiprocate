@@ -88,3 +88,9 @@ override_dh_auto_build:
 #install/resiprocate-turn-server::
 #	cp debian/reTurnServer.config-sample debian/resiprocate-turn-server/etc/reTurnServer.config
 
+install/registration-agent:
+	sed -i \
+		-e 's!UserAccountFile = users.txt!UserAccountFile = /etc/registrationAgent/users.txt!' \
+		debian/registration-agent/etc/registrationAgent/registrationAgent.config
+	install -D apps/registration-agent/registration-agent.init debian/registration-agent/etc/init.d/registration-agent
+
