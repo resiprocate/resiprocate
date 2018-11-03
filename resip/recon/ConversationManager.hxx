@@ -346,6 +346,8 @@ public:
    */
    virtual void redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle);
 
+   virtual void holdParticipant(ParticipantHandle partHandle, bool hold);
+
    /**
      This function is used to add a chunk of memory to a media/prompt cache.
      Cached prompts can later be played back via createMediaParticipant.
@@ -634,6 +636,7 @@ private:
    friend class RejectParticipantCmd;
    friend class RedirectParticipantCmd;
    friend class RedirectToParticipantCmd;
+   friend class HoldParticipantCmd;
 
 private:  
    UserAgent* mUserAgent;
