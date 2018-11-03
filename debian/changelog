@@ -1,3 +1,9 @@
+resiprocate (1:1.12.0~beta3-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 03 Nov 2018 23:57:21 +0100
+
 resiprocate (1:1.12.0~beta2-1) unstable; urgency=medium
 
   * New upstream release.
