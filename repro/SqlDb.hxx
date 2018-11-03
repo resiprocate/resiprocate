@@ -1,6 +1,7 @@
 #if !defined(RESIP_SQLDB_HXX)
 #define RESIP_SQLDB_HXX 
 
+#include "rutil/ConfigParse.hxx"
 #include "rutil/Data.hxx"
 #include "repro/AbstractDb.hxx"
 
@@ -15,7 +16,7 @@ namespace repro
 class SqlDb: public AbstractDb
 {
    public:
-      SqlDb();
+      SqlDb(const resip::ConfigParse& config);
       
       virtual bool isSane() {return mConnected;}
 
@@ -51,6 +52,7 @@ class SqlDb: public AbstractDb
       virtual resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const = 0;
 
       mutable volatile bool mConnected;
+      resip::Data mTlsPeerAuthorizationQuery;
 
       virtual void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
       virtual void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;

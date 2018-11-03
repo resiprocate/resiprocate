@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.12.0~beta1)
+AC_INIT(resiprocate,1.12.0~beta2)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -33,6 +33,8 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 AM_MISSING_PROG([GPERF], [gperf])
+
+AC_GPERFVER
 
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
@@ -392,6 +394,7 @@ AC_OUTPUT(Makefile \
 	apps/sipdial/Makefile \
 	apps/telepathy/Makefile \
 	apps/telepathy/data/Makefile \
+	apps/registration-agent/Makefile \
 	apps/reConServer/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \

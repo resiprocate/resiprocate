@@ -7,7 +7,7 @@
 
 -- Uncomment the following to have all tables re-created
 -- DROP TABLE IF EXISTS `users`;
--- DROP TABLE IF EXISTS `tlsPeerAuthorization`;
+-- DROP TABLE IF EXISTS `tlsPeerIdentity`;
 -- DROP TABLE IF EXISTS `routesavp`;
 -- DROP TABLE IF EXISTS `aclsavp`;
 -- DROP TABLE IF EXISTS `configsavp`;
@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Table structure for table `tlsPeerAuthorization`
+-- Table structure for table `tlsPeerIdentity`
 --
-CREATE TABLE IF NOT EXISTS `tlsPeerAuthorization` (
+CREATE TABLE IF NOT EXISTS `tlsPeerIdentity` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `peerName` VARCHAR(253) NOT NULL,
   `authorizedIdentity` VARCHAR(253) NOT NULL

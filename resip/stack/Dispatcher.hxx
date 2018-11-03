@@ -1,8 +1,8 @@
 #ifndef DISPATCHER_HXX
 #define DISPATCHER_HXX 1
 
-#include "repro/WorkerThread.hxx"
-#include "repro/Worker.hxx"
+#include "resip/stack/WorkerThread.hxx"
+#include "resip/stack/Worker.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/RWMutex.hxx"
@@ -13,10 +13,6 @@ namespace resip
 { 
    class SipStack; 
    class ApplicationMessage; 
-};
-
-namespace repro
-{
 
 /**
    @class Dispatcher

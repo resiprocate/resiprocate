@@ -14,7 +14,7 @@
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/Helper.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "repro/Plugin.hxx"
 #include "repro/Processor.hxx"
 #include "repro/Proxy.hxx"

@@ -3,6 +3,8 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+#define GPERF_SIZE_TYPE unsigned int
 #endif
 
 
@@ -296,6 +298,10 @@ hton64(const UInt64 input)
 // #undef USE_IPV6
 #endif
 #endif
+#endif
+
+#ifndef IPPROTO_SCTP
+#define IPPROTO_SCTP 132
 #endif
 
 // !bwc! Some poking around seems to indicate that icc supports gcc's function 

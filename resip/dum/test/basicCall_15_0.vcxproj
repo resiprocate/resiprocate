@@ -612,13 +612,13 @@
     <ClCompile Include="BasicCall.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\rutil\rutil_14_0.vcxproj">
+    <ProjectReference Include="..\..\..\rutil\rutil_15_0.vcxproj">
       <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\stack\resiprocate_14_0.vcxproj">
+    <ProjectReference Include="..\..\stack\resiprocate_15_0.vcxproj">
       <Project>{2a8be839-6466-4001-b224-8f1c3168d04a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\dum_14_0.vcxproj">
+    <ProjectReference Include="..\dum_15_0.vcxproj">
       <Project>{31b0654f-e08e-405f-909f-80f86cb14b9d}</Project>
     </ProjectReference>
   </ItemGroup>

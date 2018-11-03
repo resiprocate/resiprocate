@@ -514,6 +514,7 @@
     <ClCompile Include="Store.cxx" />
     <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
     <ClCompile Include="Target.cxx" />
+    <ClCompile Include="TlsPeerIdentityStore.cxx" />
     <ClCompile Include="UserAuthGrabber.cxx" />
     <ClCompile Include="UserStore.cxx" />
     <ClCompile Include="WorkerThread.cxx" />
@@ -584,6 +585,8 @@
     <ClInclude Include="monkeys\StrictRouteFixup.hxx" />
     <ClInclude Include="Target.hxx" />
     <ClInclude Include="TimerCMessage.hxx" />
+    <ClInclude Include="TlsPeerIdentityInfo.hxx" />
+    <ClInclude Include="TlsPeerIdentityStore.hxx" />
     <ClInclude Include="UserAuthGrabber.hxx" />
     <ClInclude Include="UserInfoMessage.hxx" />
     <ClInclude Include="UserStore.hxx" />

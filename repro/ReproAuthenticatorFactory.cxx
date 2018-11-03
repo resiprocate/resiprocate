@@ -16,7 +16,7 @@
 #include "ReproServerAuthManager.hxx"
 #include "ReproTlsPeerAuthManager.hxx"
 #include "UserAuthGrabber.hxx"
-#include "Worker.hxx"
+#include "resip/stack/Worker.hxx"
 #include "monkeys/CertificateAuthenticator.hxx"
 #include "monkeys/DigestAuthenticator.hxx"
 #include "monkeys/RADIUSAuthenticator.hxx"

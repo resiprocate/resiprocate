@@ -1,65 +1,32 @@
-#include "repro/WorkerThread.hxx"
+#ifndef WORKER_THREAD_HXX
+#define WORKER_THREAD_HXX 1
 
-#include "resip/stack/SipStack.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "resip/stack/Worker.hxx"
+#include "rutil/TimeLimitFifo.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
-#include "rutil/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+namespace resip
+{
+class SipStack;
 
-namespace repro
+class WorkerThread : public resip::ThreadIf
 {
 
-WorkerThread::WorkerThread(Worker* worker,
-                        resip::TimeLimitFifo<resip::ApplicationMessage>& fifo,
-                        resip::SipStack* stack):
-   mWorker(worker),
-   mFifo(fifo),
-   mStack(stack)
-{}
+   public:
+      WorkerThread(Worker* impl,resip::TimeLimitFifo<resip::ApplicationMessage>& fifo,resip::SipStack* stack);
+      virtual ~WorkerThread();
+      void thread();
+      
+   protected:
+      Worker* mWorker;
+      resip::TimeLimitFifo<resip::ApplicationMessage>& mFifo;
+      resip::SipStack* mStack;
 
-WorkerThread::~WorkerThread()
-{
-   shutdown();
-   join();
-   delete mWorker;
+};
 }
 
-void
-WorkerThread::thread()
-{
-   resip::ApplicationMessage* msg;
-   bool queueToStack;
-   if(mWorker && !isShutdown())
-   {
-      mWorker->onStart();
-      while(mWorker && !isShutdown())
-      {
-         if( (msg=mFifo.getNext(100)) != 0 )
-         {
-            queueToStack = mWorker->process(msg);
-
-            if(queueToStack && mStack)
-            {
-               StackLog(<<"async work done, posting to stack");
-               // Post to stack instead of directly to TU, since stack does
-               // some safety checks to ensure the TU still exists before posting
-               mStack->post(std::auto_ptr<resip::ApplicationMessage>(msg));
-            }
-            else
-            {
-               StackLog(<<"discarding a message");
-               if(!mStack)
-               {
-                  WarningLog(<<"mStack == 0");
-               }
-               delete msg;
-            }
-         }
-      }
-   }
-}
-
-}//namespace repro
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

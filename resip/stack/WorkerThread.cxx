@@ -1,27 +1,65 @@
-#ifndef WORKER_HXX
-#define WORKER_HXX 1
+#include "resip/stack/WorkerThread.hxx"
 
+#include "resip/stack/SipStack.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
-#include "rutil/ResipAssert.h"
+#include "rutil/Logger.hxx"
 
-namespace repro
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
+
+namespace resip
 {
 
-class Worker
-{
-   public:
-      Worker(){};
-      virtual ~Worker(){};
+WorkerThread::WorkerThread(Worker* worker,
+                        resip::TimeLimitFifo<resip::ApplicationMessage>& fifo,
+                        resip::SipStack* stack):
+   mWorker(worker),
+   mFifo(fifo),
+   mStack(stack)
+{}
 
-      // called once when the thread is started
-      virtual void onStart() {};
-      
-      // return true to queue to stack when complete, false when no response is required
-      virtual bool process(resip::ApplicationMessage* msg)=0;
-      virtual Worker* clone() const=0;
-};
+WorkerThread::~WorkerThread()
+{
+   shutdown();
+   join();
+   delete mWorker;
 }
-#endif
+
+void
+WorkerThread::thread()
+{
+   resip::ApplicationMessage* msg;
+   bool queueToStack;
+   if(mWorker && !isShutdown())
+   {
+      mWorker->onStart();
+      while(mWorker && !isShutdown())
+      {
+         if( (msg=mFifo.getNext(100)) != 0 )
+         {
+            queueToStack = mWorker->process(msg);
+
+            if(queueToStack && mStack)
+            {
+               StackLog(<<"async work done, posting to stack");
+               // Post to stack instead of directly to TU, since stack does
+               // some safety checks to ensure the TU still exists before posting
+               mStack->post(std::auto_ptr<resip::ApplicationMessage>(msg));
+            }
+            else
+            {
+               StackLog(<<"discarding a message");
+               if(!mStack)
+               {
+                  WarningLog(<<"mStack == 0");
+               }
+               delete msg;
+            }
+         }
+      }
+   }
+}
+
+}//namespace resip
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

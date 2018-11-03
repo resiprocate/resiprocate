@@ -594,7 +594,7 @@
     <ClCompile Include="reprocmd.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\rutil\rutil_14_0.vcxproj">
+    <ProjectReference Include="..\..\rutil\rutil_15_0.vcxproj">
       <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
     </ProjectReference>
   </ItemGroup>

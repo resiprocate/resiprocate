@@ -346,6 +346,8 @@ public:
    */
    virtual void redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle);
 
+   virtual void holdParticipant(ParticipantHandle partHandle, bool hold);
+
    /**
      This function is used to add a chunk of memory to a media/prompt cache.
      Cached prompts can later be played back via createMediaParticipant.
@@ -481,6 +483,8 @@ public:
      @param up Set to true if the DTMF key is up (otherwise down)
    */
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) = 0;
+
+   virtual void onParticipantRequestedHold(ParticipantHandle partHandle, bool held) = 0;
 
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
@@ -632,6 +636,7 @@ private:
    friend class RejectParticipantCmd;
    friend class RedirectParticipantCmd;
    friend class RedirectToParticipantCmd;
+   friend class HoldParticipantCmd;
 
 private:  
    UserAgent* mUserAgent;

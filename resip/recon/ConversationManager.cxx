@@ -334,6 +334,13 @@ ConversationManager::redirectToParticipant(ParticipantHandle partHandle, Partici
    post(cmd);
 }
 
+void
+ConversationManager::holdParticipant(ParticipantHandle partHandle, bool hold)
+{
+   HoldParticipantCmd* cmd = new HoldParticipantCmd(this, partHandle, hold);
+   post(cmd);
+}
+
 ConversationHandle 
 ConversationManager::getNewConversationHandle()
 {

@@ -6,6 +6,7 @@
 
 #include "rutil/Data.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include "AuthenticatorFactory.hxx"
@@ -32,7 +33,7 @@ public:
    virtual resip::SharedPtr<resip::ServerAuthManager> getServerAuthManager();
    virtual std::auto_ptr<Processor> getDigestAuthenticator();
 
-   virtual Dispatcher* getDispatcher();
+   virtual resip::Dispatcher* getDispatcher();
 
 private:
    void init();
@@ -55,7 +56,7 @@ private:
 
    resip::CommonNameMappings mCommonNameMappings;
 
-   std::auto_ptr<Dispatcher> mAuthRequestDispatcher;
+   std::auto_ptr<resip::Dispatcher> mAuthRequestDispatcher;
 
    resip::SharedPtr<resip::DumFeature> mCertificateAuthManager;
    resip::SharedPtr<resip::ServerAuthManager> mServerAuthManager;

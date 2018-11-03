@@ -1,7 +1,7 @@
 #include "repro/stateAgents/PresenceSubscriptionHandler.hxx"
 #include "repro/stateAgents/PresenceServer.hxx"
 #include "repro/AbstractDb.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/PublicationPersistenceManager.hxx>
@@ -17,7 +17,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 PresenceSubscriptionHandler::PresenceSubscriptionHandler(resip::DialogUsageManager& dum,
-                                                         repro::Dispatcher* userDispatcher,
+                                                         resip::Dispatcher* userDispatcher,
                                                          bool presenceUsesRegistrationState,
                                                          bool presenceNotifyClosedStateForNonPublishedUsers)
   : InMemorySyncRegDbHandler(InMemorySyncRegDbHandler::AllChanges),

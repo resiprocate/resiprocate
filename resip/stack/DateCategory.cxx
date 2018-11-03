@@ -1,6 +1,4 @@
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
+#include "rutil/compat.hxx"
 
 #include <string.h>
 #include <ctype.h>
@@ -26,9 +24,9 @@ struct days { const char *name; DayOfWeek type; };
 class DayOfWeekHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, GPERF_SIZE_TYPE len);
 public:
-  static const struct days *in_word_set (const char *str, unsigned int len);
+  static const struct days *in_word_set (const char *str, GPERF_SIZE_TYPE len);
 };
 
 // Implemented in gen/MonthHash.cxx
@@ -36,9 +34,9 @@ struct months { const char *name; Month type; };
 class MonthHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, GPERF_SIZE_TYPE len);
 public:
-  static const struct months *in_word_set (const char *str, unsigned int len);
+  static const struct months *in_word_set (const char *str, GPERF_SIZE_TYPE len);
 };
 }
 

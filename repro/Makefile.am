@@ -93,10 +93,8 @@ librepro_la_SOURCES = \
 	Target.cxx \
 	TlsPeerIdentityStore.cxx \
     UserAuthGrabber.cxx \
-	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
 	XmlRpcServerBase.cxx \
-	Dispatcher.cxx \
 	OutboundTarget.cxx \
 	PersistentMessageQueue.cxx \
 	QValueTarget.cxx \
@@ -137,7 +135,6 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	CommandServer.hxx \
 	CommandServerThread.hxx \
 	ConfigStore.hxx \
-	Dispatcher.hxx \
 	FilterStore.hxx \
 	ForkControlMessage.hxx \
 	HttpBase.hxx \
@@ -208,8 +205,6 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	UserStore.hxx \
 	WebAdmin.hxx \
 	WebAdminThread.hxx \
-	Worker.hxx \
-	WorkerThread.hxx \
 	XmlRpcConnection.hxx \
 	XmlRpcServerBase.hxx
 

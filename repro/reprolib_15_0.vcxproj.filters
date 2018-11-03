@@ -16,7 +16,6 @@
     <ClCompile Include="monkeys\ConstantLocationMonkey.cxx" />
     <ClCompile Include="monkeys\CookieAuthenticator.cxx" />
     <ClCompile Include="monkeys\DigestAuthenticator.cxx" />
-    <ClCompile Include="Dispatcher.cxx" />
     <ClCompile Include="FilterStore.cxx" />
     <ClCompile Include="monkeys\GeoProximityTargetSorter.cxx" />
     <ClCompile Include="monkeys\IsTrustedNode.cxx" />
@@ -55,13 +54,13 @@
     <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
     <ClCompile Include="Target.cxx" />
     <ClCompile Include="UserStore.cxx" />
-    <ClCompile Include="WorkerThread.cxx" />
     <ClCompile Include="XmlRpcConnection.cxx" />
     <ClCompile Include="XmlRpcServerBase.cxx" />
     <ClCompile Include="UserAuthGrabber.cxx" />
     <ClCompile Include="stateAgents\PresencePublicationHandler.cxx" />
     <ClCompile Include="stateAgents\PresenceServer.cxx" />
     <ClCompile Include="stateAgents\PresenceSubscriptionHandler.cxx" />
+    <ClCompile Include="TlsPeerIdentityStore.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="XmlRpcServerBase.hxx" />
@@ -85,7 +84,6 @@
     <ClInclude Include="monkeys\ConstantLocationMonkey.hxx" />
     <ClInclude Include="monkeys\CookieAuthenticator.hxx" />
     <ClInclude Include="monkeys\DigestAuthenticator.hxx" />
-    <ClInclude Include="Dispatcher.hxx" />
     <ClInclude Include="FilterStore.hxx" />
     <ClInclude Include="ForkControlMessage.hxx" />
     <ClInclude Include="monkeys\GeoProximityTargetSorter.hxx" />
@@ -128,11 +126,11 @@
     <ClInclude Include="UserAuthGrabber.hxx" />
     <ClInclude Include="UserInfoMessage.hxx" />
     <ClInclude Include="UserStore.hxx" />
-    <ClInclude Include="Worker.hxx" />
-    <ClInclude Include="WorkerThread.hxx" />
     <ClInclude Include="XmlRpcConnection.hxx" />
     <ClInclude Include="stateAgents\PresencePublicationHandler.hxx" />
     <ClInclude Include="stateAgents\PresenceServer.hxx" />
     <ClInclude Include="stateAgents\PresenceSubscriptionHandler.hxx" />
+    <ClInclude Include="TlsPeerIdentityInfo.hxx" />
+    <ClInclude Include="TlsPeerIdentityStore.hxx" />
   </ItemGroup>
 </Project>

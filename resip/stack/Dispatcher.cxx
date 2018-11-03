@@ -1,10 +1,10 @@
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 
-namespace repro
+namespace resip
 {
 
 Dispatcher::Dispatcher(std::auto_ptr<Worker> prototype,
@@ -134,7 +134,7 @@ Dispatcher::startAll()
    }
 }
 
-} //namespace repro
+} //namespace resip
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
