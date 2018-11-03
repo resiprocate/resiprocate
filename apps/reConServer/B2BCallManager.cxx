@@ -371,11 +371,11 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
       SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
-      rejectParticipant(call->peer(partHandle), statusCode);
       destroyConversation(call->conversation());
       mCallsByParticipant.erase(call->participantA());
       if(call->participantA() != call->participantB())
       {
+         rejectParticipant(call->peer(partHandle), statusCode);
          mCallsByParticipant.erase(call->participantB());
       }
       mCallsByConversation.erase(call->conversation());
