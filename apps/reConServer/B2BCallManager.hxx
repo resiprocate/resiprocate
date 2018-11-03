@@ -100,7 +100,8 @@ public:
    virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
 
-   resip::SharedPtr<ConversationProfile> getInternalConversationProfile();
+   resip::SharedPtr<recon::ConversationProfile> getInternalConversationProfile();
+   resip::SharedPtr<recon::ConversationProfile> getExternalConversationProfile();
    resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<recon::ConversationProfile> defaultProfile);
 
    void loadUserCredentials(resip::Data filename);

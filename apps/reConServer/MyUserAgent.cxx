@@ -68,7 +68,20 @@ MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
    B2BCallManager *b2bcm = getB2BCallManager();
    if(b2bcm)
    {
-      return b2bcm->getInternalConversationProfile();
+      resip::SharedPtr<ConversationProfile> p(b2bcm->getExternalConversationProfile());
+      // The re-INVITE needs to have a Route header to ensure it
+      // is sent back to reConServer over the same interface where
+      // the REFER was received.
+      // This hack takes the REFER's request URI, strips the user part and
+      // adds the lr parameter to create a suitable Route header.
+      NameAddr loop(msg.header(h_RequestLine).uri());
+      loop.uri().user() = "";
+      loop.uri().param(p_lr);
+      DebugLog(<<"using Route " << loop.uri() << " for re-INVITE, REFER was received on " << msg.getReceivedTransportTuple());
+      NameAddrs route;
+      route.push_back(loop);
+      p->setServiceRoute(route);
+      return p;
    }
 
    // fall through to superclass if not handled by B2BUA

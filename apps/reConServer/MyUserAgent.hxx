@@ -28,7 +28,7 @@ public:
    virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
    virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
    virtual resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
-   virtual resip::SharedPtr<ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
+   virtual resip::SharedPtr<recon::ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
    virtual void process(int timeoutMs);
 
    virtual void addIncomingFeature(resip::SharedPtr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(f); };

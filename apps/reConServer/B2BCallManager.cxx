@@ -237,6 +237,11 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
    if(needCredential)
    {
       const Uri& callerUri = msg.header(h_From).uri();
+      if(msg.exists(h_ReferredBy))
+      {
+         callerUri = msg.header(h_ReferredBy).uri();
+      }
+      DebugLog(<<"need credential for AoR " << callerUri);
       const Data& callerAor = callerUri.getAor();
       const Data& callerUsername = callerUri.user();
       const Data& callerDomain = callerUri.host();
@@ -454,6 +459,16 @@ B2BCallManager::getInternalConversationProfile()
       }
    }
    return ua->getDefaultOutgoingConversationProfile();
+}
+
+resip::SharedPtr<ConversationProfile>
+B2BCallManager::getExternalConversationProfile()
+{
+   MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
+   resip_assert(ua);
+   SharedPtr<ConversationProfile> externalProfile = ua->getDefaultOutgoingConversationProfile();
+   SharedPtr<ConversationProfile> p(new ConversationProfile(*externalProfile.get()));
+   return p;
 }
 
 bool
