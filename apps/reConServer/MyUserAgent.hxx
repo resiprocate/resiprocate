@@ -10,6 +10,7 @@
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/SharedPtr.hxx>
+#include <resip/stack/Dispatcher.hxx>
 #include <resip/recon/UserAgent.hxx>
 
 #include "B2BCallManager.hxx"
@@ -28,6 +29,12 @@ public:
    virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
    virtual resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);
    virtual void process(int timeoutMs);
+
+   virtual void addIncomingFeature(resip::SharedPtr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(f); };
+
+   virtual resip::SharedPtr<resip::Dispatcher> initDispatcher(std::auto_ptr<resip::Worker> prototype,
+                  int workers=2,
+                  bool startImmediately=true);
 
 private:
    friend class B2BCallManager;

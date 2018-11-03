@@ -70,6 +70,21 @@ MyUserAgent::process(int timeoutMs)
    UserAgent::process(timeoutMs);
 }
 
+SharedPtr<Dispatcher>
+MyUserAgent::initDispatcher(std::auto_ptr<Worker> prototype,
+                  int workers,
+                  bool startImmediately)
+{
+   DialogUsageManager& dum = getDialogUsageManager();
+   SharedPtr<DumFeature> df(new CredentialProcessor(dum, dum.dumIncomingTarget(), getB2BCallManager()));
+   dum.addIncomingFeature(df);
+
+   DebugLog(<< "initializing Dispatcher for " << workers << " worker(s)");
+   SharedPtr<Dispatcher> d(new Dispatcher(prototype, &getSipStack(), workers, startImmediately));
+
+   return d;
+}
+
 B2BCallManager*
 MyUserAgent::getB2BCallManager()
 {

@@ -1295,6 +1295,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
+      B2BCallManager *b2BCallManager = 0;
       switch(application)
       {
          case ReConServerConfig::None:
@@ -1307,7 +1308,8 @@ ReConServerProcess::main (int argc, char** argv)
                {
                   b2bCallLogger.reset(new CDRFile(cdrLogFilename));
                }
-               mConversationManager.reset(new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger));
+               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger);
+               mConversationManager.reset(b2BCallManager);
             }
             break;
          default:
@@ -1319,6 +1321,8 @@ ReConServerProcess::main (int argc, char** argv)
 
       if(application == ReConServerConfig::B2BUA)
       {
+         b2BCallManager->init(*mUserAgent.get());
+
          Data internalMediaAddress;
          reConServerConfig.getConfigValue("B2BUAInternalMediaAddress", internalMediaAddress);
          if(!internalMediaAddress.empty())

@@ -17,6 +17,7 @@
 #include "postgresql/soci-postgresql.h"
 
 #include "MyUserAgent.hxx"
+#include "CredentialGrabber.hxx"
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
@@ -24,10 +25,13 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-B2BCall::B2BCall(const recon::ConversationHandle& conv, const recon::ParticipantHandle& a, const recon::ParticipantHandle b, const resip::SipMessage& msg, const resip::Data& originZone, const resip::Data& destinationZone, const resip::Data& b2bCallID)
+ExtensionHeader B2BCallManager::h_X_CID("X-CID");
+
+B2BCall::B2BCall(const recon::ConversationHandle& conv, const recon::ParticipantHandle& a, const resip::SipMessage& msg, const resip::Data& originZone, const resip::Data& destinationZone, const resip::Data& b2bCallID)
     : mConversation(conv),
       mPartA(a),
-      mPartB(b),
+      mPartB(a), // FIXME - is there a better value to use here until the B-leg is created?
+      mInviteMessage((SipMessage*)msg.clone()),
       mOriginZone(originZone),
       mDestinationZone(destinationZone),
       mB2BCallID(b2bCallID),
@@ -87,6 +91,7 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
    }
    else
    {
+      mDbPoolSize = config.getConfigInt("DatabaseConnectionPoolSize", 4);
       Data dbType = config.getConfigData("DatabaseType", "PostgreSQL").lowercase();
       Data dbHost = config.getConfigData("DatabaseHost", "localhost");
       Data dbName = config.getConfigData("DatabaseName", "reg");
@@ -98,22 +103,46 @@ B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaul
          "SELECT passwordHash FROM `users` WHERE user = :user AND domain = :domain");
 
       std::stringstream s;
-      s << "host=" << dbHost << " port=" << dbPort << " db=" << dbName
+      // parameters for PostgreSQL:
+      //   https://www.postgresql.org/docs/9.6/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS
+      // and other databases (see Portability note):
+      //   http://soci.sourceforge.net/doc/3.2/connections.html
+      s << "host=" << dbHost << " port=" << dbPort << " dbname=" << dbName
          << " user=" << dbUser << " password='" << dbPassword << "'";
+
+      const soci::backend_factory *_dbType = 0;
       if(dbType == "postgresql")
       {
-         mDb.reset(new soci::session(soci::postgresql, s.str()));
+         _dbType = &soci::postgresql;
       }
       else if(dbType == "mysql")
       {
-         mDb.reset(new soci::session(soci::mysql, s.str()));
+         _dbType = &soci::mysql;
       }
       else
       {
          CritLog(<<"unrecognized DatabaseType: " << dbType.c_str());
          resip_assert("unrecognized DatabaseType");
       }
+
+      mPool.reset(new soci::connection_pool(mDbPoolSize));
+      for(size_t i = 0; i < mDbPoolSize; i++)
+      {
+         soci::session& db = mPool->at(i);
+         db.open(*_dbType, s.str());
+      }
    }
+}
+
+B2BCallManager::~B2BCallManager()
+{
+}
+
+void
+B2BCallManager::init(MyUserAgent& ua)
+{
+   std::auto_ptr<Worker> grabber(new CredentialGrabber(mPool, mDatabaseQueryUserCredential));
+   mDispatcher = ua.initDispatcher(grabber, mDbPoolSize);
 }
 
 void
@@ -165,107 +194,25 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
    // Create a new conversation for each new participant
    ConversationHandle conv = createConversation();
    addParticipant(conv, partHandleA);
-   const Uri& reqUri = msg.header(h_RequestLine).uri();
-   SharedPtr<ConversationProfile> profile;
+
    bool internalSource = isSourceInternal(msg);
    Data originZoneName;
    Data destinationZoneName;
+   bool needCredential = false;
    if(internalSource)
    {
       originZoneName = "internal";
       destinationZoneName = "external";
       DebugLog(<<"INVITE request from zone: internal");
-      Uri uri(msg.header(h_RequestLine).uri());
-      uri.param(p_lr);
-      NameAddrs route;
-      route = msg.header(h_Routes);
-      route.pop_front();  // remove ourselves
-      MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
-      resip_assert(ua);
-      SharedPtr<ConversationProfile> externalProfile = ua->getDefaultOutgoingConversationProfile();
-      profile.reset(new ConversationProfile(*externalProfile.get()));
-      profile->setServiceRoute(route);
    }
    else
    {
       DebugLog(<<"INVITE request from zone: external");
       originZoneName = "external";
       destinationZoneName = "internal";
-      SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
-      profile.reset(new ConversationProfile(*internalProfile.get()));
-      // Look up the user in mUsers
-      const Uri& callerUri = msg.header(h_From).uri();
-      const Data& callerAor = callerUri.getAor();
-      const Data& callerUsername = callerUri.user();
-      const Data& callerDomain = callerUri.host();
-      // If found in mUsers, put the credentials into the profile
-      if(mDb.get() == 0)
-      {
-         std::map<resip::Data,UserCredentials>::const_iterator it = mUsers.find(callerAor);
-         if(it != mUsers.end())
-         {
-            const Data& callerRealm = callerDomain;
-            DebugLog(<<"found credential for authenticating " << callerAor << " in realm " << callerRealm << " and added it to user profile");
-            profile->clearDigestCredentials();
-            profile->setDigestCredential(callerRealm, callerUsername, it->second.mPassword);
-         }
-         else
-         {
-            DebugLog(<<"didn't find individual credential for authenticating " << callerAor);
-         }
-      }
-      else
-      {
-         std::string secret;
-         soci::indicator ind;
-         int retries = 2;
-         while(retries-- > 0)
-         {
-            try
-            {
-               std::string user(callerUsername.c_str());
-               std::string domain(callerDomain.c_str());
-               *mDb << mDatabaseQueryUserCredential, soci::into(secret, ind), soci::use(user), soci::use(domain);
-               retries = 0;
-            }
-            catch (soci::soci_error const & e)
-            {
-               ErrLog(<<"SOCI error: " << e.what());
-               if(retries > 0)
-               {
-                  mDb->reconnect();
-               }
-               else
-               {
-                  return;
-               }
-            }
-         }
-
-         if(!mDb->got_data())
-         {
-            WarningLog(<<"no credential found for " << callerAor);
-         }
-         if(ind != soci::i_ok)
-         {
-            WarningLog(<<"credential is NULL or something else is wrong (ind != soci::i_ok)");
-         }
-
-         if(!secret.empty())
-         {
-            const Data& callerRealm = callerDomain;
-            DebugLog(<<"found credential for authenticating " << callerAor << " in realm " << callerRealm << " and added it to user profile");
-            profile->clearDigestCredentials();
-            profile->setDigestCredential(callerRealm, callerUsername, Data(secret), mDatabaseCredentialsHashed);
-         }
-         else
-         {
-            DebugLog(<<"didn't find individual credential for authenticating " << callerAor);
-         }
-      }
+      needCredential = true;
    }
-   static ExtensionHeader h_X_CID("X-CID");
-   std::multimap<Data,Data> extraHeaders;
+
    Data b2bCallID;
    if(msg.exists(h_X_CID) && internalSource)
    {
@@ -274,23 +221,106 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
       for( ; v != pc.end(); v++)
       {
          b2bCallID = v->value();
-         extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), b2bCallID));
       }
    }
    else
    {
       // no correlation header exists in incoming message, copy A-leg Call-ID header to B-leg h_X_CID
       b2bCallID = msg.header(h_CallId).value();
-      extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), b2bCallID));
    }
+
+   SharedPtr<B2BCall> call(new B2BCall(conv, partHandleA, msg, originZoneName, destinationZoneName, b2bCallID));
+   mCallsByConversation[call->conversation()] = call;
+   mCallsByParticipant[call->participantA()] = call;
+
+   CredentialInfo *ci = 0;
+   if(needCredential)
+   {
+      const Uri& callerUri = msg.header(h_From).uri();
+      const Data& callerAor = callerUri.getAor();
+      const Data& callerUsername = callerUri.user();
+      const Data& callerDomain = callerUri.host();
+      const Data& callerRealm = callerDomain;
+      MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
+      resip_assert(ua);
+      ci = new CredentialInfo(call, callerUsername, callerRealm, msg.getTransactionId(), &(ua->getDialogUsageManager()), this);
+      // If found in mUsers, put the credentials into the profile
+      if(mDispatcher.get() == 0)
+      {
+         std::map<resip::Data,UserCredentials>::const_iterator it = mUsers.find(callerAor);
+         if(it != mUsers.end())
+         {
+            DebugLog(<<"found credential for authenticating " << callerAor << " in realm " << callerRealm << " and added it to user profile");
+            ci->secret() = it->second.mPassword;
+            ci->mode() = CredentialInfo::RetrievedCredential;
+         }
+         else
+         {
+            DebugLog(<<"didn't find individual credential for authenticating " << callerAor);
+            rejectCall(call);
+            return;
+         }
+      }
+      else
+      {
+         DebugLog(<<"requesting async credential lookup for " << callerAor);
+         std::auto_ptr<ApplicationMessage> app(ci);
+         mDispatcher->post(app);
+         return;
+      }
+   }
+
+   makeBLeg(call, ci);
+   delete ci;
+}
+
+void
+B2BCallManager::makeBLeg(SharedPtr<B2BCall> call, CredentialInfo* ci)
+{
+   DebugLog(<<"creating B leg for " << call.get());
+   SharedPtr<SipMessage> inv = call->getInviteMessage();
+   const Uri& reqUri = inv->header(h_RequestLine).uri();
+   SharedPtr<ConversationProfile> profile;
+   if(call->getOriginZone() == "internal")
+   {
+      Uri uri(inv->header(h_RequestLine).uri());
+      uri.param(p_lr);
+      NameAddrs route;
+      route = inv->header(h_Routes);
+      if(route.begin() != route.end())
+      {
+         // FIXME: check that the first route entry really is us
+         route.pop_front();  // remove ourselves
+      }
+      MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
+      resip_assert(ua);
+      SharedPtr<ConversationProfile> externalProfile = ua->getDefaultOutgoingConversationProfile();
+      profile.reset(new ConversationProfile(*externalProfile.get()));
+      profile->setServiceRoute(route);
+   }
+   else
+   {
+      SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
+      profile.reset(new ConversationProfile(*internalProfile.get()));
+
+      if(ci != 0)
+      {
+         resip_assert(ci->mode() == CredentialInfo::RetrievedCredential);
+         profile->clearDigestCredentials();
+         profile->setDigestCredential(ci->realm(), ci->user(), ci->secret(), mDatabaseCredentialsHashed);
+      }
+   }
+
+   std::multimap<Data,Data> extraHeaders;
+   extraHeaders.insert(std::pair<Data,Data>(h_X_CID.getName(), call->getB2BCallID()));
    std::vector<resip::Data>::const_iterator it = mReplicatedHeaders.begin();
    for( ; it != mReplicatedHeaders.end(); it++)
    {
       const ExtensionHeader h(*it);
-      if(msg.exists(h))
+      if(inv->exists(h))
       {
          // Replicate the header and value into the outgoing INVITE
-         const ParserContainer<StringCategory>& pc = msg.header(h);
+         const ParserContainer<StringCategory>& pc = inv->header(h);
          ParserContainer<StringCategory>::const_iterator v = pc.begin();
          for( ; v != pc.end(); v++)
          {
@@ -298,14 +328,19 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
          }
       }
    }
-   NameAddr outgoingCaller = msg.header(h_From);
+   NameAddr outgoingCaller = inv->header(h_From);
    profile->setDefaultFrom(outgoingCaller);
    SharedPtr<UserProfile> _profile(profile);
-   ParticipantHandle partHandleB = ConversationManager::createRemoteParticipant(conv, NameAddr(reqUri), ForkSelectAutomatic, _profile, extraHeaders);
-   SharedPtr<B2BCall> call(new B2BCall(conv, partHandleA, partHandleB, msg, originZoneName, destinationZoneName, b2bCallID));
-   mCallsByConversation[call->conversation()] = call;
-   mCallsByParticipant[call->participantA()] = call;
+   ParticipantHandle partHandleB = ConversationManager::createRemoteParticipant(call->conversation(), NameAddr(reqUri), ForkSelectAutomatic, _profile, extraHeaders);
+
+   call->setParticipantB(partHandleB);
    mCallsByParticipant[call->participantB()] = call;
+}
+
+void
+B2BCallManager::rejectCall(SharedPtr<B2BCall> call)
+{
+   onParticipantTerminated(call->participantA(), 500);
 }
 
 void
@@ -325,7 +360,10 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
       }
       destroyConversation(call->conversation());
       mCallsByParticipant.erase(call->participantA());
-      mCallsByParticipant.erase(call->participantB());
+      if(call->participantA() != call->participantB())
+      {
+         mCallsByParticipant.erase(call->participantB());
+      }
       mCallsByConversation.erase(call->conversation());
       call->onFinish(statusCode);
       if(mB2BCallLogger.get())
@@ -511,6 +549,54 @@ B2BCallManager::loadUserCredentials(Data filename)
       }
    }
    InfoLog(<<"Loaded " << mUsers.size() << " users");
+}
+
+CredentialProcessor::CredentialProcessor(resip::DialogUsageManager& dum, resip::TargetCommand::Target& target, B2BCallManager *b2BCallManager) :
+   DumFeature(dum, target),
+   mB2BCallManager(b2BCallManager)
+{
+   DebugLog(<<"instantiated");
+}
+
+CredentialProcessor::~CredentialProcessor()
+{
+   DebugLog(<<"destroyed");
+}
+
+DumFeature::ProcessingResult
+CredentialProcessor::process(resip::Message* msg)
+{
+   DebugLog(<<"handling a message");
+   CredentialInfo* ci = dynamic_cast<CredentialInfo*>(msg);
+   if(ci)
+   {
+      DebugLog(<< "handling: " << *ci);
+      SharedPtr<B2BCall> call = ci->call();
+      /*  FIXME - check that participant is still active
+      if(mCallsByParticipant.find(call->participantA()) == mCallsByParticipant.end())
+      {
+         DebugLog(<< "call has already been terminated");
+         return ChainDoneAndEventDone;
+      }
+      SharedPtr<B2BCall> _call = mCallsByParticipant[call->participantA()];
+      if(call != _call)
+      {
+         DebugLog(<< "call has already been terminated and handle reused");
+         return ChainDoneAndEventDone;
+      } */
+
+      switch(ci->mode())
+      {
+         case CredentialInfo::RetrievedCredential:
+            mB2BCallManager->makeBLeg(call, ci);
+            return FeatureDoneAndEventDone;
+         case CredentialInfo::UserUnknown:
+         case CredentialInfo::Error:
+            mB2BCallManager->rejectCall(call);
+            return ChainDoneAndEventDone;
+      }
+   }
+   return DumFeature::FeatureDone;
 }
 
 /* ====================================================================
