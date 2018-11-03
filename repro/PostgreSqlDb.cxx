@@ -260,6 +260,7 @@ PostgreSqlDb::query(const Data& queryCommand) const
 int
 PostgreSqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
+   StackLog(<<"executing query: " << queryCommand);
    PGresult* result=0;
    int rc = query(queryCommand, &result);
       

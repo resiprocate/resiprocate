@@ -253,6 +253,7 @@ MySqlDb::query(const Data& queryCommand) const
 int
 MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
+   StackLog(<<"executing query: " << queryCommand);
    MYSQL_RES* result=0;
    int rc = query(queryCommand, &result);
       
