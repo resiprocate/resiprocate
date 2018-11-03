@@ -260,9 +260,15 @@ RemoteParticipant::checkHoldCondition()
          break;
       }
    }
-   if(mLocalHold != shouldHold)
+   setLocalHold(shouldHold);
+}
+
+void
+RemoteParticipant::setLocalHold(bool _hold)
+{
+   if(mLocalHold != _hold)
    {
-      if(shouldHold)
+      if(_hold)
       {
          hold();
       }
