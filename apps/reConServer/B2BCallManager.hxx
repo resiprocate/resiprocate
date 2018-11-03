@@ -100,6 +100,7 @@ public:
    virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held);
 
    resip::SharedPtr<recon::ConversationProfile> getInternalConversationProfile();
    resip::SharedPtr<recon::ConversationProfile> getExternalConversationProfile();

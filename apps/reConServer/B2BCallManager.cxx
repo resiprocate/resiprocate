@@ -432,6 +432,21 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
    }
 }
 
+void
+B2BCallManager::onParticipantRequestedHold(ParticipantHandle partHandle, bool held)
+{
+   InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
+   {
+      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
+      holdParticipant(call->peer(partHandle), held);
+   }
+   else
+   {
+      WarningLog(<< "Participant " << partHandle << " held, not known in any existing call");
+   }
+}
+
 resip::SharedPtr<ConversationProfile>
 B2BCallManager::getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<ConversationProfile> defaultProfile)
 {
