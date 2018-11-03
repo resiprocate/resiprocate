@@ -44,6 +44,12 @@ B2BCall::B2BCall(const recon::ConversationHandle& conv, const recon::Participant
 {
 }
 
+const recon::ParticipantHandle&
+B2BCall::peer(const recon::ParticipantHandle& partHandle)
+{
+   return (partHandle == mPartA) ? mPartB : mPartA;
+}
+
 B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, resip::SharedPtr<B2BCallLogger> b2bCallLogger)
    : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
      mB2BCallLogger(b2bCallLogger)
@@ -355,14 +361,7 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
       SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
-      if(partHandle == call->participantB())
-      {
-         rejectParticipant(call->participantA(), statusCode);
-      }
-      else
-      {
-         rejectParticipant(call->participantB(), statusCode);
-      }
+      rejectParticipant(call->peer(partHandle), statusCode);
       destroyConversation(call->conversation());
       mCallsByParticipant.erase(call->participantA());
       if(call->participantA() != call->participantB())

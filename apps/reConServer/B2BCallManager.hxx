@@ -39,6 +39,7 @@ public:
    const recon::ParticipantHandle& participantA() { return mPartA; };
    void setParticipantB(const recon::ParticipantHandle b) { mPartB = b; };
    const recon::ParticipantHandle& participantB() { return mPartB; };
+   const recon::ParticipantHandle& peer(const recon::ParticipantHandle& partHandle);
 
    const resip::SharedPtr<resip::SipMessage> getInviteMessage() const { return mInviteMessage; };
 
