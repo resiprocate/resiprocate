@@ -34,6 +34,8 @@ AC_PROG_RANLIB
 
 AM_MISSING_PROG([GPERF], [gperf])
 
+AC_GPERFVER
+
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
   CXXFLAGS="${CXXFLAGS} -Wall -Wno-deprecated"
