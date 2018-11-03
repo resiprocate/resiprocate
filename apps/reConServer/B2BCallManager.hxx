@@ -12,7 +12,6 @@
 #include "apps/reConServer/CredentialInfo.hxx"
 #include <resip/stack/Dispatcher.hxx>
 #include <resip/stack/ExtensionHeader.hxx>
-#include <resip/dum/DumFeature.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Time.hxx>
 #include <resip/recon/ConversationManager.hxx>
@@ -137,20 +136,6 @@ protected:
    resip::SharedPtr<resip::Dispatcher> mDispatcher;
 
    static resip::ExtensionHeader h_X_CID;
-
-};
-
-class CredentialProcessor : public resip::DumFeature
-{
-   public:
-      CredentialProcessor(resip::DialogUsageManager& dum, resip::TargetCommand::Target& target, B2BCallManager *b2BCallManager);
-
-      virtual ~CredentialProcessor();
-
-      virtual resip::DumFeature::ProcessingResult process(resip::Message* msg);
-
-   private:
-      B2BCallManager *mB2BCallManager;
 
 };
 

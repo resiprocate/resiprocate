@@ -316,7 +316,17 @@ B2BCallManager::makeBLeg(SharedPtr<B2BCall> call, CredentialInfo* ci)
 
       if(ci != 0)
       {
-         resip_assert(ci->mode() == CredentialInfo::RetrievedCredential);
+         switch(ci->mode())
+         {
+            case CredentialInfo::RetrievedCredential:
+               break;
+            case CredentialInfo::UserUnknown:
+            case CredentialInfo::Error:
+            default:
+               WarningLog(<<"ci->mode() == " << ci->mode() << ", unable to proceed");
+               rejectCall(call);
+               return;
+         }
          profile->clearDigestCredentials();
          profile->setDigestCredential(ci->realm(), ci->user(), ci->secret(), mDatabaseCredentialsHashed);
       }
@@ -578,54 +588,6 @@ B2BCallManager::loadUserCredentials(Data filename)
       }
    }
    InfoLog(<<"Loaded " << mUsers.size() << " users");
-}
-
-CredentialProcessor::CredentialProcessor(resip::DialogUsageManager& dum, resip::TargetCommand::Target& target, B2BCallManager *b2BCallManager) :
-   DumFeature(dum, target),
-   mB2BCallManager(b2BCallManager)
-{
-   DebugLog(<<"instantiated");
-}
-
-CredentialProcessor::~CredentialProcessor()
-{
-   DebugLog(<<"destroyed");
-}
-
-DumFeature::ProcessingResult
-CredentialProcessor::process(resip::Message* msg)
-{
-   DebugLog(<<"handling a message");
-   CredentialInfo* ci = dynamic_cast<CredentialInfo*>(msg);
-   if(ci)
-   {
-      DebugLog(<< "handling: " << *ci);
-      SharedPtr<B2BCall> call = ci->call();
-      /*  FIXME - check that participant is still active
-      if(mCallsByParticipant.find(call->participantA()) == mCallsByParticipant.end())
-      {
-         DebugLog(<< "call has already been terminated");
-         return ChainDoneAndEventDone;
-      }
-      SharedPtr<B2BCall> _call = mCallsByParticipant[call->participantA()];
-      if(call != _call)
-      {
-         DebugLog(<< "call has already been terminated and handle reused");
-         return ChainDoneAndEventDone;
-      } */
-
-      switch(ci->mode())
-      {
-         case CredentialInfo::RetrievedCredential:
-            mB2BCallManager->makeBLeg(call, ci);
-            return FeatureDoneAndEventDone;
-         case CredentialInfo::UserUnknown:
-         case CredentialInfo::Error:
-            mB2BCallManager->rejectCall(call);
-            return ChainDoneAndEventDone;
-      }
-   }
-   return DumFeature::FeatureDone;
 }
 
 /* ====================================================================
