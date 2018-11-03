@@ -52,6 +52,7 @@ class SqlDb: public AbstractDb
       virtual resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const = 0;
 
       mutable volatile bool mConnected;
+      resip::Data mTlsPeerAuthorizationQuery;
 
       virtual void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
       virtual void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
