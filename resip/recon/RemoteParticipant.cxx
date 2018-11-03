@@ -677,6 +677,17 @@ RemoteParticipant::unhold()
    }
 }
 
+void
+RemoteParticipant::setRemoteHold(bool remoteHold)
+{
+   bool stateChanged = (remoteHold != mRemoteHold);
+   mRemoteHold = remoteHold;
+   if(stateChanged)
+   {
+      mConversationManager.onParticipantRequestedHold(mHandle, mRemoteHold);
+   }
+}
+
 void 
 RemoteParticipant::setPendingOODReferInfo(ServerOutOfDialogReqHandle ood, const SipMessage& referMsg)
 {
@@ -1757,11 +1768,11 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 	  if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
 	     remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
 	  {
-		  mRemoteHold = true;
+             setRemoteHold(true);
 	  }
 	  else
 	  {
-		  mRemoteHold = false;
+             setRemoteHold(false);
 	  }
 
       // Check if any conversations are broadcast only - if so, then we need to send media to parties on hold
@@ -2256,7 +2267,7 @@ RemoteParticipant::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
    InfoLog(<< "onOfferRequired: handle=" << mHandle << ", " << msg.brief());
    // We are being asked to provide SDP to the remote end - we should no longer be considering that
    // remote end wants us to be on hold
-   mRemoteHold = false;
+   setRemoteHold(false);
 
    if(mState == Connecting && !h->isAccepted())  
    {

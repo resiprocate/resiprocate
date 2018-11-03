@@ -128,6 +128,7 @@ public:
 private:       
    void hold();
    void unhold();
+   void setRemoteHold(bool remoteHold);
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);

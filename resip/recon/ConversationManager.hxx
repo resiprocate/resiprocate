@@ -482,6 +482,8 @@ public:
    */
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) = 0;
 
+   virtual void onParticipantRequestedHold(ParticipantHandle partHandle, bool held) = 0;
+
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
    ///////////////////////////////////////////////////////////////////////

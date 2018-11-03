@@ -84,6 +84,7 @@ protected:
    virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle);
    virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held);
 
 private:
    friend class MOHManager;
