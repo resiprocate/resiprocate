@@ -61,13 +61,15 @@ class PostgreSQLInitializer
 };
 static PostgreSQLInitializer g_PostgreSQLInitializer;
 
-PostgreSqlDb::PostgreSqlDb(const Data& connInfo,
+PostgreSqlDb::PostgreSqlDb(const resip::ConfigParse& config,
+                 const Data& connInfo,
                  const Data& server,
                  const Data& user, 
                  const Data& password, 
                  const Data& databaseName, 
                  unsigned int port, 
                  const Data& customUserAuthQuery) :
+   SqlDb(config),
    mDBConnInfo(connInfo),
    mDBServer(server),
    mDBUser(user),
@@ -258,6 +260,7 @@ PostgreSqlDb::query(const Data& queryCommand) const
 int
 PostgreSqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
+   StackLog(<<"executing query: " << queryCommand);
    PGresult* result=0;
    int rc = query(queryCommand, &result);
       

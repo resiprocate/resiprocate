@@ -194,6 +194,12 @@ MyConversationManager::onParticipantRedirectFailure(ParticipantHandle partHandle
 }
 
 void
+MyConversationManager::onParticipantRequestedHold(ParticipantHandle partHandle, bool held)
+{
+   InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+}
+
+void
 MyConversationManager::displayInfo()
 {
    Data output;

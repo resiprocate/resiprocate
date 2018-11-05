@@ -70,6 +70,7 @@ public:
    virtual void redirect(resip::NameAddr& destination);
    virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle);
    virtual void checkHoldCondition();
+   virtual void setLocalHold(bool hold);
 
    virtual void setPendingOODReferInfo(resip::ServerOutOfDialogReqHandle ood, const resip::SipMessage& referMsg); // OOD-Refer (no Sub)
    virtual void setPendingOODReferInfo(resip::ServerSubscriptionHandle ss, const resip::SipMessage& referMsg); // OOD-Refer (with Sub)
@@ -127,6 +128,7 @@ public:
 private:       
    void hold();
    void unhold();
+   void setRemoteHold(bool remoteHold);
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);

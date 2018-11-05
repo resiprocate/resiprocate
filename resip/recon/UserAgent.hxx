@@ -311,6 +311,8 @@ protected:
    // Returns the ConversationProfile for a specific media address
    resip::SharedPtr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
    virtual resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
+   // Return the ConversationProfile suitable for creating an INVITE from a REFER
+   virtual resip::SharedPtr<ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
    resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
 
 private:

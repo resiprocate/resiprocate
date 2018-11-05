@@ -21,8 +21,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-SqlDb::SqlDb() : mConnected(false)
+SqlDb::SqlDb(const resip::ConfigParse& config) : mConnected(false)
 {
+   mTlsPeerAuthorizationQuery = config.getConfigData("CustomTlsAuthQuery", "");
 }
 
 void 
@@ -54,21 +55,34 @@ SqlDb::isAuthorized(const resip::Data& peerName, const std::set<resip::Data>& id
 {
    std::vector<Data> ret;
 
-   Data command;
+   Data identitySet;
    {
-      DataStream ds(command);
-      ds << "SELECT count(1) FROM tlsPeerIdentities WHERE peerName = '" << peerName << "' AND authorizedIdentity IN (";
-      std::set<resip::Data>::iterator it = identities.begin();
+      DataStream dsIdentity(identitySet);
+      std::set<resip::Data>::const_iterator it = identities.begin();
       while(it != identities.end())
       {
          if(it != identities.begin())
          {
-            ds << ", ";
+            dsIdentity << ", ";
          }
-         ds << "'" << *it << "'";
+         dsIdentity << "'" << *it << "'";
          it++;
       }
+   }
+   Data command;
+   if(mTlsPeerAuthorizationQuery.empty())
+   {
+      DataStream ds(command);
+      ds << "SELECT count(1) FROM tlsPeerIdentities WHERE peerName = '" << peerName << "' AND authorizedIdentity IN (";
+      ds << identitySet;
       ds << ");";
+   }
+   else
+   {
+      command = mTlsPeerAuthorizationQuery;
+      command.replace("$peerName", peerName);
+      command.replace("$identities", identitySet);
+      StackLog(<<"identitySet = " << identitySet);
    }
 
    if(singleResultQuery(command, ret) != 0 || ret.size() == 0)

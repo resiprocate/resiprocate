@@ -631,6 +631,12 @@ Server::onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int 
    InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
 }
 
+void
+Server::onParticipantRequestedHold(ParticipantHandle partHandle, bool held)
+{
+   InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+}
+
 void 
 Server::onMaxParkTimeout(recon::ParticipantHandle participantHandle)
 {

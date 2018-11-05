@@ -67,12 +67,14 @@ class MySQLInitializer
 };
 static MySQLInitializer g_MySQLInitializer;
 
-MySqlDb::MySqlDb(const Data& server, 
+MySqlDb::MySqlDb(const resip::ConfigParse& config,
+                 const Data& server,
                  const Data& user, 
                  const Data& password, 
                  const Data& databaseName, 
                  unsigned int port, 
                  const Data& customUserAuthQuery) :
+   SqlDb(config),
    mDBServer(server),
    mDBUser(user),
    mDBPassword(password),
@@ -251,6 +253,7 @@ MySqlDb::query(const Data& queryCommand) const
 int
 MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
+   StackLog(<<"executing query: " << queryCommand);
    MYSQL_RES* result=0;
    int rc = query(queryCommand, &result);
       

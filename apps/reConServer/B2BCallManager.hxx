@@ -9,6 +9,8 @@
 
 #include <memory>
 
+#include "apps/reConServer/CredentialInfo.hxx"
+#include <resip/stack/Dispatcher.hxx>
 #include <resip/stack/ExtensionHeader.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Time.hxx>
@@ -22,17 +24,23 @@
 namespace reconserver
 {
 
+class MyUserAgent;
+
 class B2BCall
 {
 public:
-   B2BCall(const recon::ConversationHandle& conv, const recon::ParticipantHandle& a, const recon::ParticipantHandle b, const resip::SipMessage& msg, const resip::Data& originZone, const resip::Data& destinationZone, const resip::Data& b2bCallID);
+   B2BCall(const recon::ConversationHandle& conv, const recon::ParticipantHandle& a, const resip::SipMessage& msg, const resip::Data& originZone, const resip::Data& destinationZone, const resip::Data& b2bCallID);
 
    void onConnect() { mConnect = resip::ResipClock::getTimeMs(); };
    void onFinish(const int responseCode = 200) { mFinish = resip::ResipClock::getTimeMs(); mResponseCode = responseCode; };
 
    const recon::ConversationHandle& conversation() { return mConversation; };
    const recon::ParticipantHandle& participantA() { return mPartA; };
+   void setParticipantB(const recon::ParticipantHandle b) { mPartB = b; };
    const recon::ParticipantHandle& participantB() { return mPartB; };
+   const recon::ParticipantHandle& peer(const recon::ParticipantHandle& partHandle);
+
+   const resip::SharedPtr<resip::SipMessage> getInviteMessage() const { return mInviteMessage; };
 
    const resip::Data& getOriginZone() const { return mOriginZone; };
    const resip::Data& getDestinationZone() const { return mDestinationZone; };
@@ -48,7 +56,9 @@ public:
 private:
    const recon::ConversationHandle mConversation;
    const recon::ParticipantHandle mPartA;
-   const recon::ParticipantHandle mPartB;
+   recon::ParticipantHandle mPartB;
+
+   resip::SharedPtr<resip::SipMessage> mInviteMessage;
 
    const resip::Data mOriginZone;
    const resip::Data mDestinationZone;
@@ -77,20 +87,27 @@ class B2BCallManager : public MyConversationManager
 public:
 
    B2BCallManager(recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, resip::SharedPtr<B2BCallLogger> b2bCallLogger = resip::SharedPtr<B2BCallLogger>());
+   ~B2BCallManager();
+
+   virtual void init(MyUserAgent& ua);
 
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
    virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
+   virtual void makeBLeg(resip::SharedPtr<B2BCall> call, CredentialInfo* ci);
+   virtual void rejectCall(resip::SharedPtr<B2BCall> call);
    virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
    virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held);
 
+   resip::SharedPtr<recon::ConversationProfile> getInternalConversationProfile();
+   resip::SharedPtr<recon::ConversationProfile> getExternalConversationProfile();
    resip::SharedPtr<recon::ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<recon::ConversationProfile> defaultProfile);
 
    void loadUserCredentials(resip::Data filename);
 
 protected:
-   resip::SharedPtr<recon::ConversationProfile> getInternalConversationProfile();
    virtual bool isSourceInternal(const resip::SipMessage& msg);
 
    struct UserCredentials
@@ -111,9 +128,15 @@ protected:
    std::map<recon::ConversationHandle,resip::SharedPtr<B2BCall> > mCallsByConversation;
    std::map<recon::ParticipantHandle,resip::SharedPtr<B2BCall> > mCallsByParticipant;
 
-   resip::SharedPtr<soci::session> mDb;
+   int mDbPoolSize;
    bool mDatabaseCredentialsHashed;
    resip::Data mDatabaseQueryUserCredential;
+   resip::SharedPtr<soci::connection_pool> mPool;
+
+   resip::SharedPtr<resip::Dispatcher> mDispatcher;
+
+   static resip::ExtensionHeader h_X_CID;
+
 };
 
 }

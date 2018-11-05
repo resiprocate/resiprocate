@@ -253,6 +253,11 @@ public:
       InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
+   {
+      InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   }
+
    void displayInfo()
    {
       Data output;

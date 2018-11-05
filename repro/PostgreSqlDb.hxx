@@ -17,7 +17,8 @@ namespace repro
 class PostgreSqlDb: public SqlDb
 {
    public:
-      PostgreSqlDb(const resip::Data& dbConnInfo,
+      PostgreSqlDb(const resip::ConfigParse& config,
+              const resip::Data& dbConnInfo,
               const resip::Data& dbServer,
               const resip::Data& user, 
               const resip::Data& password, 
