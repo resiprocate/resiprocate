@@ -80,8 +80,8 @@ override_dh_auto_build:
 %:
 	dh $@ --with autoreconf --builddirectory=.
 
-override_dh_auto_install:
-	dh_auto_install
+override_dh_install:
+	dh_install
 	#	cp debian/repro.config-sample debian/repro/etc/repro/repro.config
 	#	cp debian/reTurnServer.config-sample debian/resiprocate-turn-server/etc/reTurnServer.config
 	sed -i \
