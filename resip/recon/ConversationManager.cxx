@@ -609,7 +609,20 @@ ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsi
                capabilityRate = 8000;
             }
 
-            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getCodecPayloadFormat(), capabilityRate);
+            Data codecName(mimeSubType.data());
+#ifdef RECON_SDP_ENCODING_NAMES_CASE_HACK
+            // The encoding names are not supposed to be case sensitive.
+            // However, some phones, including Polycom, don't recognize
+            // telephone-event if it is not lowercase.
+            // sipXtapi is writing all codec names in uppercase.
+            // (see sipXtapi macro SDP_MIME_SUBTYPE_TO_CASE) and this
+            // hack works around that.
+            if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
+            {
+               codecName = "telephone-event";
+            }
+#endif
+            SdpContents::Session::Codec codec(codecName, sdpcodec->getCodecPayloadFormat(), capabilityRate);
             if(sdpcodec->getNumChannels() > 1)
             {
                codec.encodingParameters() = Data(sdpcodec->getNumChannels());
