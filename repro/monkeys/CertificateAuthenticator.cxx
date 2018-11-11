@@ -94,6 +94,21 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
                          (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
          return SkipAllChains;         
       }
+      Uri claimedUri = sipMessage->header(h_From).uri();
+      if(sipMessage->method() == REFER && sipMessage->exists(h_ReferredBy))
+      {
+         if(!sipMessage->header(h_ReferredBy).isWellFormed() ||
+            sipMessage->header(h_ReferredBy).isAllContacts() )
+         {
+            InfoLog(<<"Malformed Referred-By header: cannot verify against any certificate. Rejecting.");
+            rc.sendResponse(*auto_ptr<SipMessage>
+                            (Helper::makeResponse(*sipMessage, 400, "Malformed Referred-By header")));
+            return SkipAllChains;
+         }
+         // For REFER requests, we authenticate the Referred-By header
+         // instead of the From header
+         claimedUri = sipMessage->header(h_ReferredBy).uri();
+      }
 
       // Get the certificate from the peer
       if(sipMessage->isExternal() && !isSecure(sipMessage->getSource().getType()))
@@ -113,7 +128,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          return Continue;
       }
 
-      if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
+      if (proxy.isMyDomain(claimedUri.host()))
       {
          if (rc.getKeyValueStore().getBoolValue(IsTrustedNode::mFromTrustedNodeKey))
          {
@@ -127,7 +142,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
             DebugLog(<<"peerNames is empty, allowing the message without further inspection");
             return Continue;
          }
-         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri());
+         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, claimedUri);
          if(_auth == True)
          {
             rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
@@ -163,7 +178,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
                return Continue;
             }
          }
-         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, sipMessage->header(h_From).uri());
+         AsyncBool _auth = authorizedForThisIdentity(rc, peerNames, claimedUri);
          if(_auth == True)
          {
             rc.getKeyValueStore().setBoolValue(CertificateAuthenticator::mCertificateVerifiedKey, true);
