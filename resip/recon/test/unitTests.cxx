@@ -337,6 +337,11 @@ public:
       InfoLog(<< mLogPrefix << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
+   {
+      InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   }
+
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}
 
 private:
@@ -575,6 +580,11 @@ public:
          assert(false);
          break;
       }
+   }
+
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
+   {
+      InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}

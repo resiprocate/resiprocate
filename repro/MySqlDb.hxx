@@ -21,7 +21,8 @@ namespace repro
 class MySqlDb: public SqlDb
 {
    public:
-      MySqlDb(const resip::Data& dbServer, 
+      MySqlDb(const resip::ConfigParse& config,
+              const resip::Data& dbServer,
               const resip::Data& user, 
               const resip::Data& password, 
               const resip::Data& databaseName, 

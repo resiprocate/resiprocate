@@ -134,6 +134,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<Use
    SharedPtr<UserProfile> profile = callingProfile;
    if(!profile)
    {
+      DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling getDefaultOutgoingConversationProfile");
       profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
    }
    buildSdpOffer(mLocalHold, offer);
@@ -259,9 +260,15 @@ RemoteParticipant::checkHoldCondition()
          break;
       }
    }
-   if(mLocalHold != shouldHold)
+   setLocalHold(shouldHold);
+}
+
+void
+RemoteParticipant::setLocalHold(bool _hold)
+{
+   if(mLocalHold != _hold)
    {
-      if(shouldHold)
+      if(_hold)
       {
          hold();
       }
@@ -670,6 +677,17 @@ RemoteParticipant::unhold()
    }
 }
 
+void
+RemoteParticipant::setRemoteHold(bool remoteHold)
+{
+   bool stateChanged = (remoteHold != mRemoteHold);
+   mRemoteHold = remoteHold;
+   if(stateChanged)
+   {
+      mConversationManager.onParticipantRequestedHold(mHandle, mRemoteHold);
+   }
+}
+
 void 
 RemoteParticipant::setPendingOODReferInfo(ServerOutOfDialogReqHandle ood, const SipMessage& referMsg)
 {
@@ -861,6 +879,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
    std::auto_ptr<SdpContents> _sessionCaps;
    if(!profile) // This can happen for UAC calls
    {
+      DebugLog(<<"buildSdpOffer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
       profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
       // if using the default profile, we need a copy of the session caps that we can modify
       _sessionCaps.reset(new SdpContents(profile->sessionCaps()));
@@ -1295,6 +1314,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
       if(!profile)
       {
+         DebugLog(<<"initiateRemoteCall: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
          profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
       }
       answer = profile->sessionCaps();
@@ -1748,11 +1768,11 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 	  if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
 	     remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
 	  {
-		  mRemoteHold = true;
+             setRemoteHold(true);
 	  }
 	  else
 	  {
-		  mRemoteHold = false;
+             setRemoteHold(false);
 	  }
 
       // Check if any conversations are broadcast only - if so, then we need to send media to parties on hold
@@ -2247,7 +2267,7 @@ RemoteParticipant::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
    InfoLog(<< "onOfferRequired: handle=" << mHandle << ", " << msg.brief());
    // We are being asked to provide SDP to the remote end - we should no longer be considering that
    // remote end wants us to be on hold
-   mRemoteHold = false;
+   setRemoteHold(false);
 
    if(mState == Connecting && !h->isAccepted())  
    {
@@ -2354,8 +2374,11 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       // Figure out hold SDP before removing ourselves from the conversation
       bool holdSdp = mLocalHold;  
 
+      // Choose the appropriate ConversationProfile
+      SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+
       // Create new Participant - but use same participant handle
-      RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
+      RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
 
@@ -2366,7 +2389,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       participant->buildSdpOffer(holdSdp, offer);  
 
       // Build the Invite
-      SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), &offer, participantDialogSet);
+      SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, SharedPtr<UserProfile>(profile, resip::dynamic_cast_tag()), ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
       participantDialogSet->sendInvite(NewInviteMsg); 
 
       // Set RTP stack to listen
@@ -2388,8 +2411,11 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    // Figure out hold SDP before removing ourselves from the conversation
    bool holdSdp = mLocalHold;  
 
+   // Choose the appropriate ConversationProfile
+   SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+
    // Create new Participant - but use same participant handle
-   RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
+   RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
 
@@ -2400,7 +2426,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    participant->buildSdpOffer(holdSdp, offer);
 
    // Build the Invite
-   SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, mDialogSet.getUserProfile(), &offer, participantDialogSet);
+   SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, SharedPtr<UserProfile>(profile, resip::dynamic_cast_tag()), &offer, participantDialogSet);
    participantDialogSet->sendInvite(NewInviteMsg); 
 
    // Set RTP stack to listen

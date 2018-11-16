@@ -661,6 +661,46 @@ class RedirectToParticipantCmd  : public resip::DumCommand
       ParticipantHandle mDestPartHandle;
 };
 
+class HoldParticipantCmd  : public resip::DumCommand
+{
+   public:
+      HoldParticipantCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle,
+                          bool hold)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle),
+           mHold(hold) {}
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mHold)
+            {
+               // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
+               // media (ie. hold set to true).
+               if(remoteParticipant->getConversations().size() == 0)
+               {
+                  WarningLog(<< "HoldParticipantCmd: remote participants must to added to a conversation before hold can be used when in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
+            remoteParticipant->setLocalHold(mHold);
+         }
+         else
+         {
+            WarningLog(<< "HoldParticipantCmd: invalid remote participant handle.");
+         }
+      }
+      resip::Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+      bool mHold;
+};
+
 }
 
 #endif

@@ -147,6 +147,22 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
       mDum.send(response);
       return Rejected;
    }
+   Uri claimedUri = sipMessage->header(h_From).uri();
+   if(sipMessage->method() == REFER && sipMessage->exists(h_ReferredBy))
+   {
+      if(!sipMessage->header(h_ReferredBy).isWellFormed() ||
+         sipMessage->header(h_ReferredBy).isAllContacts() )
+      {
+         InfoLog(<<"Malformed Referred-By header: cannot verify against any certificate. Rejecting.");
+         SharedPtr<SipMessage> response(new SipMessage);
+         Helper::makeResponse(*response, *sipMessage, 400, "Malformed Referred-By header");
+         mDum.send(response);
+         return Rejected;
+      }
+      // For REFER requests, we authenticate the Referred-By header
+      // instead of the From header
+      claimedUri = sipMessage->header(h_ReferredBy).uri();
+   }
 
    // We are only concerned with connections over TLS
    if(!sipMessage->isExternal() || !isSecure(sipMessage->getSource().getType()))
@@ -162,7 +178,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
    }
 
    const std::list<resip::Data> &peerNames = sipMessage->getTlsPeerNames();
-   if (mDum.isMyDomain(sipMessage->header(h_From).uri().host()))
+   if (mDum.isMyDomain(claimedUri.host()))
    {
       // peerNames is empty if client certificate mode is `optional'
       // or if the message didn't come in on TLS transport
@@ -178,7 +194,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
          return Skipped;
       }
 
-      AsyncBool _auth = authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri());
+      AsyncBool _auth = authorizedForThisIdentity(peerNames, claimedUri);
       if(_auth == True)
       {
          DebugLog(<<"authorized");
@@ -216,7 +232,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
             return Skipped;
          }
       }
-      AsyncBool _auth = authorizedForThisIdentity(peerNames, sipMessage->header(h_From).uri());
+      AsyncBool _auth = authorizedForThisIdentity(peerNames, claimedUri);
       if(_auth == True)
       {
          DebugLog(<<"authorized");
