@@ -19,22 +19,26 @@ SUBDIRS += test
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
 
+lib_LTLIBRARIES = libreTurnCommon.la
+
+libreTurnCommon_la_SOURCES = \
+	AsyncSocketBase.cxx \
+	AsyncTcpSocketBase.cxx \
+	AsyncTlsSocketBase.cxx \
+	AsyncUdpSocketBase.cxx \
+	ChannelManager.cxx \
+	DataBuffer.cxx \
+	RemotePeer.cxx \
+	ReTurnSubsystem.cxx \
+	StunMessage.cxx \
+	StunTuple.cxx
+
 sbin_PROGRAMS = reTurnServer
 reTurnServer_SOURCES = reTurnServer.cxx \
-	AsyncSocketBase.cxx \
-        AsyncUdpSocketBase.cxx \
-        AsyncTcpSocketBase.cxx \
-        AsyncTlsSocketBase.cxx \
-        ChannelManager.cxx \
         ConnectionManager.cxx \
-        DataBuffer.cxx \
-        RemotePeer.cxx \
         RequestHandler.cxx \
         ReTurnConfig.cxx \
-        ReTurnSubsystem.cxx \
         StunAuth.cxx \
-        StunMessage.cxx \
-        StunTuple.cxx \
         TcpConnection.cxx \
         TcpServer.cxx \
         TlsConnection.cxx \
@@ -79,7 +83,8 @@ nobase_reTurninclude_HEADERS = AsyncSocketBaseHandler.hxx \
 	reTurnServer.hxx
 
 #reTurnServer_LDADD = librepro.la
-reTurnServer_LDADD = ../rutil/librutil.la
+reTurnServer_LDADD = libreTurnCommon.la
+reTurnServer_LDADD += ../rutil/librutil.la
 #reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
 reTurnServer_LDADD += @LIBSTL_LIBADD@
