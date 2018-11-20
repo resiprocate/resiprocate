@@ -28,7 +28,7 @@ class TlsPeerIdentityStore
       
       AbstractDb::TlsPeerIdentityRecord getTlsPeerIdentityInfo( const Key& key ) const;
 
-      bool isAuthorized( const resip::Data& peerNames,
+      bool isAuthorized( const std::set<resip::Data>& peerNames,
                                    const std::set<resip::Data>& identities ) const;
       
       bool addTlsPeerIdentity( const resip::Data& peerName, 

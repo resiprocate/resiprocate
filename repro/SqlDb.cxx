@@ -50,39 +50,54 @@ SqlDb::eraseTlsPeerIdentity(const AbstractDb::Key& key )
    query(command);
 }
 
+void
+SqlDb::setToData(const std::set<resip::Data>& items, resip::Data& result, const resip::Data& sep, const char quote) const
+{
+   DataStream ds(result);
+   std::set<resip::Data>::const_iterator it = items.begin();
+   while(it != items.end())
+   {
+      if(it != items.begin())
+      {
+         ds << sep;
+      }
+      if(quote != 0)
+      {
+         ds << quote << *it << quote;
+      }
+      else
+      {
+         ds << *it;
+      }
+      it++;
+   }
+}
+
 bool
-SqlDb::isAuthorized(const resip::Data& peerName, const std::set<resip::Data>& identities) const
+SqlDb::isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const
 {
    std::vector<Data> ret;
 
+   Data peerNameSet;
+   setToData(peerNames, peerNameSet);
+   StackLog(<<"peerNameSet = " << peerNameSet);
+
    Data identitySet;
-   {
-      DataStream dsIdentity(identitySet);
-      std::set<resip::Data>::const_iterator it = identities.begin();
-      while(it != identities.end())
-      {
-         if(it != identities.begin())
-         {
-            dsIdentity << ", ";
-         }
-         dsIdentity << "'" << *it << "'";
-         it++;
-      }
-   }
+   setToData(identities, identitySet);
+   StackLog(<<"identitySet = " << identitySet);
+
    Data command;
    if(mTlsPeerAuthorizationQuery.empty())
    {
       DataStream ds(command);
-      ds << "SELECT count(1) FROM tlsPeerIdentities WHERE peerName = '" << peerName << "' AND authorizedIdentity IN (";
-      ds << identitySet;
-      ds << ");";
+      ds << "SELECT count(1) FROM tlsPeerIdentities WHERE peerName IN (" << peerNameSet << ") AND ";
+      ds << "authorizedIdentity IN (" << identitySet << ");";
    }
    else
    {
       command = mTlsPeerAuthorizationQuery;
-      command.replace("$peerName", peerName);
+      command.replace("$peerNames", peerNameSet);
       command.replace("$identities", identitySet);
-      StackLog(<<"identitySet = " << identitySet);
    }
 
    if(singleResultQuery(command, ret) != 0 || ret.size() == 0)

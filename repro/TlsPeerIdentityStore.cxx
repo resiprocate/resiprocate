@@ -36,10 +36,10 @@ TlsPeerIdentityStore::getTlsPeerIdentityInfo( const Key& key ) const
 }
 
 bool
-TlsPeerIdentityStore::isAuthorized(  const resip::Data& peerName, 
+TlsPeerIdentityStore::isAuthorized(  const std::set<resip::Data>& peerNames,
                              const std::set<resip::Data>& identities ) const
 {
-   return mDb.isAuthorized( peerName, identities );
+   return mDb.isAuthorized( peerNames, identities );
 }
 
 bool 

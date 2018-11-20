@@ -48,8 +48,8 @@ UserAuthGrabber::process(resip::ApplicationMessage* msg)
    repro::TlsPeerIdentityInfo* tpaInfo = dynamic_cast<repro::TlsPeerIdentityInfo*>(msg);
    if (tpaInfo)
    {
-      tpaInfo->authorized() = mDataStore.mTlsPeerIdentityStore.isAuthorized(tpaInfo->peerName(), tpaInfo->identities());
-      DebugLog(<< "Looked up authorization for " << tpaInfo->peerName() << " result = " << tpaInfo->authorized());
+      tpaInfo->authorized() = mDataStore.mTlsPeerIdentityStore.isAuthorized(tpaInfo->peerNames(), tpaInfo->identities());
+      DebugLog(<< "Looked up authorization for " << tpaInfo << " result = " << tpaInfo->authorized());
       return true;
    }
 
