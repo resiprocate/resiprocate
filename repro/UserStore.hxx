@@ -61,6 +61,7 @@ class UserStore
    private:
 
       AbstractDb& mDb;
+      static const resip::Data SEPARATOR;
 };
 
  }

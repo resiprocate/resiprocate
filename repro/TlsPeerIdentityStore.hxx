@@ -49,6 +49,7 @@ class TlsPeerIdentityStore
    private:
 
       AbstractDb& mDb;
+      static const resip::Data SEPARATOR;
 };
 
 }
