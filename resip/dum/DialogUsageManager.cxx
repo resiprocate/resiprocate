@@ -2294,16 +2294,19 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
 
    if (it == mDialogSetMap.end())
    {
+      StackLog ( << "Not found" );
       return 0;
    }
    else
    {
       if(it->second->isDestroying())
       {
+         StackLog ( << "isDestroying() == true" );
          return 0;
       }
       else
       {
+         StackLog ( << "found" );
          return it->second;
       }
    }
