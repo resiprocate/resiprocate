@@ -426,14 +426,14 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
       SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
-      if(call->participantB() == partHandle)
+      if(!call->answered() && call->participantB() == partHandle)
       {
          answerParticipant(call->participantA());
          call->onConnect();
       }
       else
       {
-         WarningLog(<<"Unexpected connected signal from A-leg of call, partHandle = " << partHandle);
+         WarningLog(<<"Unexpected connected signal from call, partHandle = " << partHandle);
          // FIXME: should only do this if it was REFER / INVITE / Replaces
          SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
          holdParticipant(call->peer(partHandle), false);
