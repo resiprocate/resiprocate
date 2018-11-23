@@ -80,6 +80,14 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          return Continue;
       }
 
+      if (sipMessage->header(h_To).exists(p_tag))
+      {
+         // If a tag is present, the UAS will validate the
+         // tag or reject the request
+         DebugLog(<<"To-tag detected, allowing a request that claims to belong to an existing dialog");
+         return Continue;
+      }
+
       // if there was no Proxy-Auth header already, and the request is purportedly From
       // one of our domains, send a challenge, unless this is from a trusted node in one
       // of "our" domains (ex: from a gateway).
