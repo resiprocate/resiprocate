@@ -58,7 +58,7 @@ case "$1" in
 	;;
   stop)
 	log_daemon_msg "Stopping $DESC ($NAME)" $BIN
-	if start-stop-daemon --stop --quiet --oknodo --user $USER --pidfile $PIDFILE --exec $DAEMON ;
+	if start-stop-daemon --stop --quiet --oknodo --user $USER --pidfile $PIDFILE --exec $DAEMON --retry 10 ;
 	then
 	    log_end_msg 0
 	else
