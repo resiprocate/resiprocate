@@ -23,7 +23,7 @@ class SqlDb: public AbstractDb
       virtual void eraseUser( const Key& key );
       virtual void eraseTlsPeerIdentity( const Key& key );
 
-      virtual bool isAuthorized(const resip::Data& peerName, const std::set<resip::Data>& identities) const;
+      virtual bool isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const;
 
       // Perform a query that expects a single result/row - returns all column/field data in a vector
       virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const = 0;
@@ -31,6 +31,8 @@ class SqlDb: public AbstractDb
    protected:
       virtual void setConnected(bool connected) const { mConnected = connected; }
       virtual bool isConnected() const { return mConnected; }
+
+      void setToData(const std::set<resip::Data>& items, resip::Data& result, const resip::Data& sep = ",", const char quote = '\'') const;
 
       // when multiple threads are in use with the same connection, you need to
       // mutex calls to mysql_query and mysql_store_result:

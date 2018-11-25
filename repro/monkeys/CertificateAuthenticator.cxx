@@ -80,6 +80,14 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          return Continue;
       }
 
+      if (sipMessage->header(h_To).exists(p_tag))
+      {
+         // If a tag is present, the UAS will validate the
+         // tag or reject the request
+         DebugLog(<<"To-tag detected, allowing a request that claims to belong to an existing dialog");
+         return Continue;
+      }
+
       // if there was no Proxy-Auth header already, and the request is purportedly From
       // one of our domains, send a challenge, unless this is from a trusted node in one
       // of "our" domains (ex: from a gateway).
@@ -245,17 +253,6 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
          DebugLog(<< "Matched certificate name " << i << " against domain " << domain);
          return True;
       }
-      if(mCommonNameMappings.size() == 0)
-      {
-         DebugLog(<<"mCommonNameMappings is empty, trying database");
-         TlsPeerIdentityInfo* tpaInfo = new TlsPeerIdentityInfo(*this, context.getTransactionId(), &(context.getProxy()));
-         tpaInfo->peerName() = i;
-         tpaInfo->identities().insert(aor);
-         tpaInfo->identities().insert(domain);
-         std::auto_ptr<ApplicationMessage> app(tpaInfo);
-         mAuthRequestDispatcher->post(app);
-         return Async;
-      }
       CommonNameMappings::iterator _mapping =
          mCommonNameMappings.find(i);
       if(_mapping != mCommonNameMappings.end())
@@ -274,6 +271,21 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
          }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
+   }
+
+   if(mCommonNameMappings.size() == 0)
+   {
+      DebugLog(<<"mCommonNameMappings is empty, trying database");
+      TlsPeerIdentityInfo* tpaInfo = new TlsPeerIdentityInfo(*this, context.getTransactionId(), &(context.getProxy()));
+      for(it = peerNames.begin(); it != peerNames.end(); ++it)
+      {
+         tpaInfo->peerNames().insert(*it);
+      }
+      tpaInfo->identities().insert(aor);
+      tpaInfo->identities().insert(domain);
+      std::auto_ptr<ApplicationMessage> app(tpaInfo);
+      mAuthRequestDispatcher->post(app);
+      return Async;
    }
 
    // catch-all: access denied

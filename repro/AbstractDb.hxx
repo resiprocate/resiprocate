@@ -125,7 +125,7 @@ class AbstractDb
       virtual bool addTlsPeerIdentity(const Key& key, const TlsPeerIdentityRecord& rec);
       virtual void eraseTlsPeerIdentity(const Key& key);
       virtual TlsPeerIdentityRecord getTlsPeerIdentity(const Key& key) const;
-      virtual bool isAuthorized(const resip::Data& peerName, const std::set<resip::Data>& identities) const;
+      virtual bool isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const;
       virtual Key firstTlsPeerIdentityKey();// return empty if no more
       virtual Key nextTlsPeerIdentityKey(); // return empty if no more
          

@@ -298,7 +298,7 @@ AbstractDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
 
 
 bool
-AbstractDb::isAuthorized(const resip::Data& peerName, const std::set<resip::Data>& identities) const
+AbstractDb::isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const
 {
    // FIXME
    resip_assert("TlsPeerIdentity not implemented for this database backend");

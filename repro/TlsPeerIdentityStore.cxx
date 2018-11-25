@@ -21,6 +21,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+const resip::Data TlsPeerIdentityStore::SEPARATOR(",");
+
 TlsPeerIdentityStore::TlsPeerIdentityStore(AbstractDb& db ) : mDb(db)
 { 
 }
@@ -36,10 +38,10 @@ TlsPeerIdentityStore::getTlsPeerIdentityInfo( const Key& key ) const
 }
 
 bool
-TlsPeerIdentityStore::isAuthorized(  const resip::Data& peerName, 
+TlsPeerIdentityStore::isAuthorized(  const std::set<resip::Data>& peerNames,
                              const std::set<resip::Data>& identities ) const
 {
-   return mDb.isAuthorized( peerName, identities );
+   return mDb.isAuthorized( peerNames, identities );
 }
 
 bool 
@@ -89,7 +91,7 @@ TlsPeerIdentityStore::getNextKey()
 TlsPeerIdentityStore::Key
 TlsPeerIdentityStore::buildKey( const resip::Data& peerName, const resip::Data& authorizedIdentity)
 {
-   Data ret = peerName + Data(",") + authorizedIdentity;
+   Data ret = peerName + Data(SEPARATOR) + authorizedIdentity;
    return ret;
 }
 
@@ -98,7 +100,7 @@ TlsPeerIdentityStore::getTlsPeerIdentityFromKey(const Key& key, Data& peerName, 
 {
    ParseBuffer pb(key);
    const char* start = pb.position();
-   pb.skipToOneOf(",");  // FIXME
+   pb.skipToOneOf(SEPARATOR);
    pb.data(peerName, start);
    const char* anchor = pb.skipChar();
    pb.skipToEnd();

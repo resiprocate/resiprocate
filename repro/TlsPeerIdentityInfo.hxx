@@ -21,13 +21,13 @@ class TlsPeerIdentityInfo : public ProcessorMessage
       TlsPeerIdentityInfo(const TlsPeerIdentityInfo& orig):
          ProcessorMessage(orig)
       {
-         mPeerName = orig.mPeerName;
+         mPeerNames = orig.mPeerNames;
          mIdentities = orig.mIdentities;
          mAuthorized = orig.mAuthorized;
       }
 
-      const resip::Data& peerName() const{return mPeerName;}
-      resip::Data& peerName(){return mPeerName;}
+      const std::set<resip::Data>& peerNames() const{return mPeerNames;}
+      std::set<resip::Data>& peerNames(){return mPeerNames;}
       
       const std::set<resip::Data>& identities() const{return mIdentities;}
       std::set<resip::Data>& identities(){return mIdentities;}
@@ -40,7 +40,7 @@ class TlsPeerIdentityInfo : public ProcessorMessage
       virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "TlsPeerIdentityInfo(tid="<<mTid<<")"; return ostr; };
       virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
       
-      resip::Data mPeerName;
+      std::set<resip::Data> mPeerNames;
       std::set<resip::Data> mIdentities;
       bool mAuthorized;
 };
