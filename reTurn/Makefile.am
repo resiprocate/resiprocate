@@ -21,6 +21,13 @@ AM_CXXFLAGS = -I $(top_srcdir)
 
 lib_LTLIBRARIES = libreTurnCommon.la
 
+libreTurnCommon_la_LIBADD = $(LIBSSL_LIBADD)
+libreTurnCommon_la_LIBADD += @LIBSTL_LIBADD@
+libreTurnCommon_la_LIBADD += @LIBLOG_LIBADD@
+libreTurnCommon_la_LIBADD += @LIBPTHREAD_LIBADD@
+libreTurnCommon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
+
+
 libreTurnCommon_la_SOURCES = \
 	AsyncSocketBase.cxx \
 	AsyncTcpSocketBase.cxx \
