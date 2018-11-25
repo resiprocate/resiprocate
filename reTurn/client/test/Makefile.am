@@ -3,6 +3,7 @@ EXTRA_DIST = ca.pem
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 
 LDADD = ../libreTurnClient.la
+LDADD += ../../libreTurnCommon.la
 LDADD += ../../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
