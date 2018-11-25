@@ -4,6 +4,7 @@ resiprocate (1:1.12.0~beta6-1) unstable; urgency=medium
   * Using OpenSSL 1.1 (Closes: #859715)
   * Fixed CVE-2018-12584 upstream. (Closes: #905495)
   * Fixed CVE-2017-11521 upstream. (Closes: #869404)
+  * reTurnServer init: add retry parameter. (Closes: #889996)
 
  -- Daniel Pocock <daniel@pocock.pro>  Sun, 25 Nov 2018 23:24:48 +0100
 
