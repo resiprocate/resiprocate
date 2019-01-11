@@ -1,7 +1,6 @@
 [Unit]
 Description=reSIProcate reTurn ICE/STUN/TURN server daemon
 After=network-online.target
-After=syslog.target
 Wants=network-online.target
 
 [Service]
