@@ -18,6 +18,7 @@ QT_LIBS += -I${QT_LIB_PREFIX}/QtCore
 QT_LIBS += -I${QT_LIB_PREFIX}/QtNetwork
 QT_LIBS += -I${QT_LIB_PREFIX}/QtDBus
 
+CPPFLAGS += -DRESIP_DIGEST_LOGGING
 #CPPFLAGS += -DRESIP_FIXED_POINT
 # this is just temporary, reSIProcate 1.9.x should not need this:
 CPPFLAGS += -I/usr/include/sipxtapi
