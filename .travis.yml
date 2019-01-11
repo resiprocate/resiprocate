@@ -15,7 +15,7 @@ before_install:
  - curl -O http://apt.debify.org/pool/main/d/debify-archive-keyring/debify-archive-keyring_2019.01_all.deb
  - sudo dpkg -i debify-archive-keyring_2019.01_all.deb
  - sudo apt-get update -qq
- - sudo apt-get install -qq --force-yes -t stretch libradcli-dev libsipxtapi-dev libsoci-dev libqpid-proton-cpp-dev
+ - sudo apt-get install -qq --force-yes -t stretch libradcli-dev libsipxtapi-dev libsoci-dev libqpid-proton-cpp12-dev
 compiler:
   - gcc
   - clang
