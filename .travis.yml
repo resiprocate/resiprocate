@@ -12,7 +12,7 @@ before_install:
  - sudo add-apt-repository -y "deb http://http.us.debian.org/debian/ stretch main"
  - sudo add-apt-repository -y "deb http://http.us.debian.org/debian/ stretch-backports main"
  - sudo add-apt-repository -y "deb http://apt.debify.org/ stretch main"
- - curl http://apt.debify.org/pool/main/d/debify-archive-keyring/debify-archive-keyring_2019.01_all.deb
+ - curl -O http://apt.debify.org/pool/main/d/debify-archive-keyring/debify-archive-keyring_2019.01_all.deb
  - sudo dpkg -i debify-archive-keyring_2019.01_all.deb
  - sudo apt-get update -qq
  - sudo apt-get install -qq --force-yes -t stretch libradcli-dev libsipxtapi-dev libsoci-dev libqpid-proton-cpp-dev
