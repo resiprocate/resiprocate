@@ -870,14 +870,12 @@ ReproRunner::createSipStack()
 
    // Check Path and RecordRoute settings, print warning if features are enabled that
    // require record-routing and record-route uri(s) is not configured
-   bool assumePath = mProxyConfig->getConfigBool("AssumePath", false);
    bool forceRecordRoute = mProxyConfig->getConfigBool("ForceRecordRouting", false);
    Uri recordRouteUri;
    mProxyConfig->getConfigValue("RecordRouteUri", recordRouteUri);
    if((InteropHelper::getOutboundSupported() 
          || InteropHelper::getRRTokenHackEnabled()
          || InteropHelper::getClientNATDetectionMode() != InteropHelper::ClientNATDetectionDisabled
-         || assumePath
          || forceRecordRoute
       )
       && !(allTransportsSpecifyRecordRoute || !recordRouteUri.host().empty()))
@@ -888,7 +886,6 @@ ReproRunner::createSipStack()
       InteropHelper::setOutboundSupported(false);
       InteropHelper::setRRTokenHackEnabled(false);
       InteropHelper::setClientNATDetectionMode(InteropHelper::ClientNATDetectionDisabled);
-      assumePath = false;
       forceRecordRoute=false;
    }
 

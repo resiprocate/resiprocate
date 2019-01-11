@@ -20,12 +20,14 @@ class MD5Buffer : public std::streambuf
        */
       Data getHex();
       Data getBin();
+      size_t bytesTaken();
    protected:
       virtual int sync();
       virtual int overflow(int c = -1);
    private:
       char mBuf[64];
       MD5Context mContext;
+      size_t mLen;
 };
 
 /** 
@@ -43,6 +45,7 @@ class MD5Stream : private MD5Buffer, public std::ostream
        */
       Data getHex();
       Data getBin();
+      size_t bytesTaken();
    private:
       //MD5Buffer mStreambuf;
 };

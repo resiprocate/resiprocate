@@ -80,9 +80,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool getRecordRouteForced() const { return mRecordRouteForced; }
       void setRecordRouteForced(bool forced) { mRecordRouteForced = forced; }
 
-      void setAssumePath(bool f) { mAssumePath = f; }
-      bool getAssumePath() const { return mAssumePath; }
-
       bool isPAssertedIdentityProcessingEnabled() { return mPAssertedIdentityProcessing; }
       bool isNeverStripProxyAuthorizationHeadersEnabled() { return mNeverStripProxyAuthorizationHeaders; }
       
@@ -123,7 +120,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       mutable resip::Mutex mTransportRecordRouteMutex;
 
       bool mRecordRouteForced;
-      bool mAssumePath;
       bool mPAssertedIdentityProcessing;
       bool mNeverStripProxyAuthorizationHeaders;
       resip::Data mServerText;
