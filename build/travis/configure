@@ -12,6 +12,7 @@ set -e
   --enable-dtls \
   --enable-ipv6 \
   --with-radcli \
+  --with-qpid-proton \
   --with-repro \
   --enable-repro-plugins \
   DEPS_PYTHON_CFLAGS="`/usr/bin/python2.7-config --cflags`" \
@@ -20,7 +21,7 @@ set -e
   --with-python \
   --with-rend \
   --with-recon \
-  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
+  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
   --with-c-ares
 
