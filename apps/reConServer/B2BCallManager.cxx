@@ -242,7 +242,7 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
    CredentialInfo *ci = 0;
    if(needCredential)
    {
-      const Uri& callerUri = msg.header(h_From).uri();
+      Uri callerUri = msg.header(h_From).uri();
       if(msg.exists(h_ReferredBy))
       {
          callerUri = msg.header(h_ReferredBy).uri();
