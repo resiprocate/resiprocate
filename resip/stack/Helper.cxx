@@ -706,7 +706,12 @@ Helper::makeResponseMD5WithA1(const Data& a1,
                               const Data& qop, const Data& cnonce, const Data& cnonceCount,
                               const Contents* entityBody)
 {
+#ifdef RESIP_DIGEST_LOGGING
+   Data _a2;
+   DataStream a2(_a2);
+#else
    MD5Stream a2;
+#endif
    a2 << method
       << Symbols::COLON
       << digestUri;
@@ -718,14 +723,25 @@ Helper::makeResponseMD5WithA1(const Data& a1,
          MD5Stream eStream;
          eStream << *entityBody;
          a2 << Symbols::COLON << eStream.getHex();
+#ifdef RESIP_DIGEST_LOGGING
+         StackLog(<<"auth-int, body length = " << eStream.bytesTaken());
+#endif
       }
       else
       {
          a2 << Symbols::COLON << noBody;
+#ifdef RESIP_DIGEST_LOGGING
+         StackLog(<<"auth-int, no body");
+#endif
       }
    }
    
+#ifdef RESIP_DIGEST_LOGGING
+   Data _r;
+   DataStream r(_r);
+#else
    MD5Stream r;
+#endif
    r << a1
      << Symbols::COLON
      << nonce
@@ -740,9 +756,22 @@ Helper::makeResponseMD5WithA1(const Data& a1,
         << qop
         << Symbols::COLON;
    }
+#ifdef RESIP_DIGEST_LOGGING
+   a2.flush();
+   StackLog(<<"A2 = " << _a2);
+   MD5Stream a2md5;
+   a2md5 << _a2;
+   r << a2md5.getHex();
+   r.flush();
+   StackLog(<<"response to be hashed (HA1:nonce:HA2) = " << _r);
+   MD5Stream rmd5;
+   rmd5 << _r;
+   return rmd5.getHex();
+#else
    r << a2.getHex();
 
    return r.getHex();
+#endif
 }
 
 //RFC 2617 3.2.2.1
