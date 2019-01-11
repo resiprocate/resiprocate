@@ -56,6 +56,8 @@ SubscriptionForwarder::SubscriptionForwarder(ConfigParse& configParse, SipStack&
    mSubscriptionRoute = NameAddr(subscriptionRoute);
    mMissingEventHack = configParse.getConfigBool("B2BUASubscriptionMissingEventHack", false);
    mOverrideContactWithAor = configParse.getConfigBool("B2BUASubscriptionOverrideContactWithAor", false);
+   mMaxExpiry = configParse.getConfigInt("B2BUASubscriptionForwardMaxExpiry", 300);
+
 }
 
 SubscriptionForwarder::~SubscriptionForwarder()
@@ -179,6 +181,10 @@ SubscriptionForwarder::internalProcess(std::auto_ptr<Message> msg)
             if(mOverrideContactWithAor)
             {
                uri = sipMsg->header(h_From).uri();
+            }
+            if(sipMsg->exists(h_Expires) && sipMsg->header(h_Expires).value() > mMaxExpiry)
+            {
+               sipMsg->header(h_Expires).value() = mMaxExpiry;
             }
             mStack.send(*sipMsg, this);
          }
