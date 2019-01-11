@@ -21,6 +21,7 @@
 #include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"
 #include "digcalc.hxx"
 
@@ -30,6 +31,7 @@ using namespace resip;
 int
 main(int arc, char** argv)
 {
+   Log::initialize(Log::Cout, Log::Stack, argv[0]);
    {
       Auth auth;
       auth.scheme() = "Digest";
