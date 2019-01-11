@@ -90,3 +90,7 @@ override_dh_install:
 		debian/registration-agent/etc/registrationAgent/registrationAgent.config
 	install -D apps/registration-agent/registration-agent.init debian/registration-agent/etc/init.d/registration-agent
 
+# workaround for lintian script-in-etc-init.d-not-registered-via-update-rc.d registration-agent
+override_dh_installinit:
+	dh_installinit -pregistration-agent --only-scripts
+	dh_installinit --remaining
