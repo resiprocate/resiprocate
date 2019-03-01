@@ -48,6 +48,7 @@ class ContactInstanceRecord
       NameAddrs mSipPath;   // Value of SIP Path header from the request
       Data mInstance;       // From the instance parameter; usually a UUID URI
       UInt32 mRegId;        // From regid parameter of Contact header
+      Data mUserAgent;      // From User-Agent header
       bool mSyncContact;    // This contact came from registration sync process, instead of direct SIP registration
       bool mUseFlowRouting; // Set to true when routing to this contact should use flow routing 
                             // Note:  There is no need to regsync this field, since such records will also have 

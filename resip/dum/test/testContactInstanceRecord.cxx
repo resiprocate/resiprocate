@@ -15,6 +15,7 @@
     assert(CIR.mSipPath.front() == NameAddr("sip:path1@3.3.3.1:3331"));\
     assert(CIR.mSipPath.back() == NameAddr("sip:path2@3.3.3.2:3332"));\
     assert(CIR.mInstance == "01:23:45:67:89:ab:cd:ef");\
+    assert(CIR.mUserAgent == "TestUA");\
     assert(CIR.mRegId == 5555);\
     assert(CIR.mSyncContact == false);\
     assert(CIR.mUserInfo == (void*) 0x1);\
@@ -39,6 +40,7 @@ int main(int argc, const char* argv[])
     rec.mSipPath.push_back(NameAddr("sip:path1@3.3.3.1:3331"));
     rec.mSipPath.push_back(NameAddr("sip:path2@3.3.3.2:3332"));
     rec.mInstance = "01:23:45:67:89:ab:cd:ef";
+    rec.mUserAgent = "TestUA";
     rec.mRegId = 5555;
     rec.mSyncContact = false;
     rec.mUserInfo = (void*)0x1;
@@ -75,6 +77,7 @@ int main(int argc, const char* argv[])
     "      <sippath>sip:path2@3.3.3.2:3332</sippath>\r\n"
     "      <instance>01:23:45:67:89:ab:cd:ef</instance>\r\n"
     "      <regid>5555</regid>\r\n"
+    "      <useragent>TestUA</useragent>\r\n"
     "      <userdata>sip:proxy1.com:6666</userdata>\r\n"
     "   </contactinfo>\r\n"
     ;
