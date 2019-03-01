@@ -869,7 +869,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int numCodecIds = _codecIds.size();
 
    Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str());
-   GenericLogImpl::MaxLineCount = loggingFileMaxLineCount;
+   Log::setMaxLineCount(loggingFileMaxLineCount);
 
    // Setup logging for the sipX media stack
    // It is bridged to the reSIProcate logger
