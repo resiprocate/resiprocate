@@ -321,7 +321,8 @@ ReproRunner::run(int argc, char** argv)
    }
 
    // Initialize resip logger
-   GenericLogImpl::MaxByteCount = mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */);
+   Log::setMaxByteCount(mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */));
+   Log::setKeepAllLogFiles(mProxyConfig->getConfigBool("KeepAllLogFiles", false));
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
    Data syslogFacilityName = mProxyConfig->getConfigData("SyslogFacility", "LOG_DAEMON", true);
    Log::initialize(loggingType, 

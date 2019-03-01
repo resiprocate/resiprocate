@@ -35,6 +35,7 @@ int Log::mSyslogFacility = -1;
 #endif
 unsigned int Log::MaxLineCount = 0; // no limit by default
 unsigned int Log::MaxByteCount = 0; // no limit by default
+bool Log::KeepAllLogFiles = false;  // do not keep all log files by default
 
 #ifdef WIN32
 int Log::mPid=0;
@@ -408,6 +409,36 @@ Log::setMaxByteCount(unsigned int maxByteCount, Log::LocalLoggerId loggerId)
       Lock lock(_mutex);
       mDefaultLoggerData.mMaxByteCount = maxByteCount;
    }
+}
+
+void
+Log::setKeepAllLogFiles(bool keepAllLogFiles)
+{
+    Lock lock(_mutex);
+    getLoggerData().setKeepAllLogFiles(keepAllLogFiles);
+}
+
+void
+Log::setKeepAllLogFiles(bool keepAllLogFiles, Log::LocalLoggerId loggerId)
+{
+    if (loggerId)
+    {
+        ThreadData *pData = mLocalLoggerMap.getData(loggerId);
+        if (pData)
+        {
+            // Local logger found. Set logging level.
+            pData->setKeepAllLogFiles(keepAllLogFiles);
+
+            // We don't need local logger instance anymore.
+            mLocalLoggerMap.decreaseUseCount(loggerId);
+            pData = NULL;
+        }
+    }
+    else
+    {
+        Lock lock(_mutex);
+        mDefaultLoggerData.setKeepAllLogFiles(keepAllLogFiles);
+    }
 }
 
 const static Data log_("LOG_");
@@ -953,18 +984,32 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
 
       case Log::File:
          if (mLogger == 0 ||
-             (maxLineCount() && mLineCount >= maxLineCount()) ||
-             (maxByteCount() && ((unsigned int)mLogger->tellp()+bytesToWrite) >= maxByteCount()))
+            (maxLineCount() && mLineCount >= maxLineCount()) ||
+            (maxByteCount() && ((unsigned int)mLogger->tellp() + bytesToWrite) >= maxByteCount()))
          {
             Data logFileName(mLogFileName != "" ? mLogFileName : "resiprocate.log");
             if (mLogger)
             {
-               Data oldLogFileName(logFileName + ".old");
-               delete mLogger;
-               // Keep one backup file: Delete .old file, Rename log file to .old
-               // Could be expanded in the future to keep X backup log files
-               remove(oldLogFileName.c_str());
-               rename(logFileName.c_str(), oldLogFileName.c_str());
+               if (keepAllLogFiles())
+               {
+                  char buffer[256];
+                  Data ts(Data::Borrow, buffer, sizeof(buffer));
+                  Data oldLogFileName(logFileName + "_" + timestamp(ts));
+
+                  delete mLogger;
+
+                  // Keep all log files, rename the log file with timestamp
+                  rename(logFileName.c_str(), oldLogFileName.c_str());
+               }
+               else
+               {
+                  Data oldLogFileName(logFileName + ".old");
+                  delete mLogger;
+                  // Keep one backup file: Delete .old file, Rename log file to .old
+                  // Could be expanded in the future to keep X backup log files
+                  remove(oldLogFileName.c_str());
+                  rename(logFileName.c_str(), oldLogFileName.c_str());
+               }
             }
             mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | std::ios_base::app);
             mLineCount = 0;

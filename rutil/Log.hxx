@@ -208,6 +208,8 @@ class Log
       static void setMaxLineCount(unsigned int maxLineCount, LocalLoggerId loggerId);
       static void setMaxByteCount(unsigned int maxByteCount);
       static void setMaxByteCount(unsigned int maxByteCount, LocalLoggerId loggerId);
+      static void setKeepAllLogFiles(bool keepAllLogFiles);
+      static void setKeepAllLogFiles(bool keepAllLogFiles, LocalLoggerId loggerId);
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -236,7 +238,7 @@ class Log
                                          Type type,
                                          Level level,
                                          const char * logFileName = NULL,
-                                         ExternalLogger* externalLogger = NULL);						
+                                         ExternalLogger* externalLogger = NULL);
 
       /** Destroy existing logger instance.
       * @retval 0 on success
@@ -263,14 +265,14 @@ class Log
       static void droppingPrivileges(uid_t uid, pid_t pid);
 #endif
 
-   public:
-      static unsigned int MaxLineCount; 
-      static unsigned int MaxByteCount; 
-
    protected:
       static Mutex _mutex;
       static volatile short touchCount;
       static const Data delim;
+
+      static unsigned int MaxLineCount;
+      static unsigned int MaxByteCount;
+      static bool KeepAllLogFiles;
 
       class ThreadData
       {
@@ -281,6 +283,8 @@ class Log
                : mLevel(level),
                  mMaxLineCount(0),
                  mMaxByteCount(0),
+                 mKeepAllLogFiles(false),
+                 mKeepAllLogFilesSet(false),
                  mExternalLogger(pExternalLogger),
                  mId(id),
                  mType(type),
@@ -311,20 +315,25 @@ class Log
             LocalLoggerId id() const {return mId;}
             unsigned int maxLineCount() { return mMaxLineCount ? mMaxLineCount : MaxLineCount; }  // return local max, if not set use global max
             unsigned int maxByteCount() { return mMaxByteCount ? mMaxByteCount : MaxByteCount; }  // return local max, if not set use global max
+            bool keepAllLogFiles() { return mKeepAllLogFilesSet ? mKeepAllLogFiles : KeepAllLogFiles; } // return local if set, if not use global setting
             Type type() const {return mType;}
+
+            void setKeepAllLogFiles(bool keepAllLogFiles) { mKeepAllLogFiles = keepAllLogFiles; mKeepAllLogFilesSet = true; }
 
             std::ostream& Instance(unsigned int bytesToWrite); ///< Return logger stream instance, creating it if needed.
             void reset(); ///< Frees logger stream
 #ifndef WIN32
             void droppingPrivileges(uid_t uid, pid_t pid);
 #endif
-
             volatile Level mLevel;
             volatile unsigned int mMaxLineCount;
             volatile unsigned int mMaxByteCount;
             ExternalLogger* mExternalLogger;
 
          protected:
+            volatile bool mKeepAllLogFiles;
+            volatile bool mKeepAllLogFilesSet;
+
             friend class Guard;
             const LocalLoggerId mId;
             Type mType;
@@ -371,7 +380,7 @@ class Log
                           Type type,
                           Level level,
                           const char * logFileName = NULL,
-                          ExternalLogger* externalLogger = NULL);						
+                          ExternalLogger* externalLogger = NULL);
 
          /** Remove existing logger instance from map and destroy.
          * @retval 0 on success
