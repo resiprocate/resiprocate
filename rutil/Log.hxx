@@ -170,24 +170,28 @@ class Log
                              const Data& appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
-                             const Data& syslogFacility = "LOG_DAEMON");
+                             const Data& syslogFacility = "LOG_DAEMON",
+                             bool removeOldFiles = true);
       static void initialize(const Data& type,
                              const Data& level,
                              const Data& appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
-                             const Data& syslogFacility = "LOG_DAEMON");
+                             const Data& syslogFacility = "LOG_DAEMON",
+                             bool removeOldFiles = true);
       static void initialize(const char* type,
                              const char* level,
                              const char* appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
-                             const char* syslogFacility = "LOG_DAEMON");
+                             const char* syslogFacility = "LOG_DAEMON",
+                             bool removeOldFiles = true);
       static void initialize(Type type,
                              Level level,
                              const Data& appName,
                              ExternalLogger& logger,
-                             const Data& syslogFacility = "LOG_DAEMON");
+                             const Data& syslogFacility = "LOG_DAEMON",
+                             bool removeOldFiles = true);
 
       /** @brief Set logging level for current thread.
       * If thread has no local logger attached, then set global logging level.
@@ -226,7 +230,8 @@ class Log
       static LocalLoggerId localLoggerCreate(Type type,
                                              Level level,
                                              const char * logFileName = NULL,
-                                             ExternalLogger* externalLogger = NULL);
+                                             ExternalLogger* externalLogger = NULL,
+                                             bool removeOldFiles = true);
 
       /** Reinitialize all new setting for a local logger instance
       * @retval 0 on success
@@ -236,7 +241,8 @@ class Log
                                          Type type,
                                          Level level,
                                          const char * logFileName = NULL,
-                                         ExternalLogger* externalLogger = NULL);						
+                                         ExternalLogger* externalLogger = NULL,
+                                         bool removeOldFiles = true);
 
       /** Destroy existing logger instance.
       * @retval 0 on success
@@ -275,9 +281,12 @@ class Log
       class ThreadData
       {
          public:
-            ThreadData(LocalLoggerId id, Type type=Cout, Level level=Info,
-                       const char *logFileName=NULL,
-                       ExternalLogger *pExternalLogger=NULL)
+            ThreadData(LocalLoggerId id, 
+                       Type type=Cout, 
+				           Level level=Info,
+                       const char *logFileName = NULL,
+                       ExternalLogger *pExternalLogger = NULL,
+                       bool removeOldFiles = true)
                : mLevel(level),
                  mMaxLineCount(0),
                  mMaxByteCount(0),
@@ -285,7 +294,8 @@ class Log
                  mId(id),
                  mType(type),
                  mLogger(NULL),
-                 mLineCount(0)
+                 mLineCount(0),
+                 mRemoveOldFiles(removeOldFiles)
             {
                if (logFileName)
                {
@@ -294,9 +304,11 @@ class Log
             }
             ~ThreadData() { reset(); }
 
-            void set(Type type=Cout, Level level=Info,
+            void set(Type type=Cout, 
+                     Level level=Info,
                      const char *logFileName=NULL,
-                     ExternalLogger *pExternalLogger=NULL)
+                     ExternalLogger *pExternalLogger=NULL,
+                     bool removeOldFiles = true)
             {
                mType = type;
                mLevel = level;
@@ -306,6 +318,7 @@ class Log
                   mLogFileName = logFileName;
                }
                mExternalLogger = pExternalLogger;
+               mRemoveOldFiles = removeOldFiles;
             }
 
             LocalLoggerId id() const {return mId;}
@@ -331,6 +344,7 @@ class Log
             Data mLogFileName;
             std::ostream* mLogger;
             unsigned int mLineCount;
+			bool mRemoveOldFiles;
       };
 
       static ThreadData mDefaultLoggerData; ///< Default logger settings.
@@ -361,7 +375,8 @@ class Log
          LocalLoggerId create(Type type,
                               Level level,
                               const char * logFileName = NULL,
-                              ExternalLogger* externalLogger = NULL);
+                              ExternalLogger* externalLogger = NULL,
+                              bool removeOldFiles = true);
 
          /** Reinitialize all new setting for a local logger instance
           * @retval 0 on success
@@ -371,7 +386,8 @@ class Log
                           Type type,
                           Level level,
                           const char * logFileName = NULL,
-                          ExternalLogger* externalLogger = NULL);						
+                          ExternalLogger* externalLogger = NULL,
+                          bool removeOldFiles = true);
 
          /** Remove existing logger instance from map and destroy.
          * @retval 0 on success

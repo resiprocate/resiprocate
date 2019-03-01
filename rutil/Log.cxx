@@ -25,7 +25,7 @@ using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
-Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
+Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL, true);
 Data Log::mAppName;
 Data Log::mHostname;
 #ifndef WIN32
@@ -111,15 +111,25 @@ LogStaticInitializer::~LogStaticInitializer()
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName)
+Log::initialize(const char* typed, 
+                const char* leveld, 
+                const char* appName, 
+                const char *logFileName, 
+                ExternalLogger* externalLogger, 
+                const char* syslogFacilityName,
+                bool removeOldFiles)
 {
-   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName);
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName, removeOldFiles);
 }
 
 void
-Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
-                const char *logFileName, ExternalLogger* externalLogger,
-                const Data& syslogFacilityName)
+Log::initialize(const Data& typed, 
+                const Data& leveld, 
+                const Data& appName, 
+                const char *logFileName, 
+                ExternalLogger* externalLogger,
+                const Data& syslogFacilityName,
+                bool removeOldFiles)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -132,7 +142,7 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
    Level level = Log::Info;
    level = toLevel(leveld);
 
-   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName);
+   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName, removeOldFiles);
 }
 
 int
@@ -234,12 +244,13 @@ void
 Log::initialize(Type type, Level level, const Data& appName, 
                 const char * logFileName,
                 ExternalLogger* externalLogger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                bool removeOldFiles)
 {
    Lock lock(_mutex);
    mDefaultLoggerData.reset();   
    
-   mDefaultLoggerData.set(type, level, logFileName, externalLogger);
+   mDefaultLoggerData.set(type, level, logFileName, externalLogger, removeOldFiles);
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
@@ -286,9 +297,10 @@ Log::initialize(Type type,
                 Level level,
                 const Data& appName,
                 ExternalLogger& logger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                bool removeOldFiles)
 {
-   initialize(type, level, appName, 0, &logger, syslogFacilityName);
+   initialize(type, level, appName, 0, &logger, syslogFacilityName, removeOldFiles);
 }
 
 void
@@ -694,18 +706,20 @@ Log::setServiceLevel(int service, Level l)
 Log::LocalLoggerId Log::localLoggerCreate(Log::Type type,
                                           Log::Level level,
                                           const char * logFileName,
-                                          ExternalLogger* externalLogger)
+                                          ExternalLogger* externalLogger,
+                                          bool removeOldFiles)
 {
-   return mLocalLoggerMap.create(type, level, logFileName, externalLogger);
+   return mLocalLoggerMap.create(type, level, logFileName, externalLogger, removeOldFiles);
 }
 
 int Log::localLoggerReinitialize(Log::LocalLoggerId loggerId,
                                  Log::Type type,
                                  Log::Level level,
                                  const char * logFileName,
-                                 ExternalLogger* externalLogger)
+                                 ExternalLogger* externalLogger,
+                                 bool removeOldFiles)
 {
-   return mLocalLoggerMap.reinitialize(loggerId, type, level, logFileName, externalLogger);
+   return mLocalLoggerMap.reinitialize(loggerId, type, level, logFileName, externalLogger, removeOldFiles);
 }
 
 int Log::localLoggerRemove(Log::LocalLoggerId loggerId)
@@ -780,14 +794,14 @@ Log::OutputToWin32DebugWindow(const Data& result)
 }
 
 Log::LocalLoggerId Log::LocalLoggerMap::create(Log::Type type,
-                                                    Log::Level level,
-                                                    const char * logFileName,
-                                                    ExternalLogger* externalLogger)
+                                               Log::Level level,
+                                               const char * logFileName,
+                                               ExternalLogger* externalLogger,
+                                               bool removeOldFiles)
 {
    Lock lock(mLoggerInstancesMapMutex);
    Log::LocalLoggerId id = ++mLastLocalLoggerId;
-   Log::ThreadData *pNewData = new Log::ThreadData(id, type, level, logFileName,
-                                                   externalLogger);
+   Log::ThreadData *pNewData = new Log::ThreadData(id, type, level, logFileName, externalLogger, removeOldFiles);
    mLoggerInstancesMap[id].first = pNewData;
    mLoggerInstancesMap[id].second = 0;
    return id;
@@ -797,7 +811,8 @@ int Log::LocalLoggerMap::reinitialize(Log::LocalLoggerId loggerId,
                                       Log::Type type,
                                       Log::Level level,
                                       const char * logFileName,
-                                      ExternalLogger* externalLogger)
+                                      ExternalLogger* externalLogger, 
+                                      bool removeOldFiles)
 {
    Lock lock(mLoggerInstancesMapMutex);
    LoggerInstanceMap::iterator it = mLoggerInstancesMap.find(loggerId);
@@ -808,7 +823,7 @@ int Log::LocalLoggerMap::reinitialize(Log::LocalLoggerId loggerId,
       return 1;
    }
    it->second.first->reset();
-   it->second.first->set(type, level, logFileName, externalLogger);
+   it->second.first->set(type, level, logFileName, externalLogger, removeOldFiles);
    return 0;
 }
 
@@ -953,18 +968,32 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
 
       case Log::File:
          if (mLogger == 0 ||
-             (maxLineCount() && mLineCount >= maxLineCount()) ||
-             (maxByteCount() && ((unsigned int)mLogger->tellp()+bytesToWrite) >= maxByteCount()))
+            (maxLineCount() && mLineCount >= maxLineCount()) ||
+            (maxByteCount() && ((unsigned int)mLogger->tellp() + bytesToWrite) >= maxByteCount()))
          {
             Data logFileName(mLogFileName != "" ? mLogFileName : "resiprocate.log");
             if (mLogger)
             {
-               Data oldLogFileName(logFileName + ".old");
-               delete mLogger;
-               // Keep one backup file: Delete .old file, Rename log file to .old
-               // Could be expanded in the future to keep X backup log files
-               remove(oldLogFileName.c_str());
-               rename(logFileName.c_str(), oldLogFileName.c_str());
+               if (mRemoveOldFiles)
+               {
+                  Data oldLogFileName(logFileName + ".old");
+                  delete mLogger;
+                  // Keep one backup file: Delete .old file, Rename log file to .old
+                  // Could be expanded in the future to keep X backup log files
+                  remove(oldLogFileName.c_str());
+                  rename(logFileName.c_str(), oldLogFileName.c_str());
+               }
+               else
+               {
+                  char buffer[256];
+                  Data ts(Data::Borrow, buffer, sizeof(buffer));
+                  Data oldLogFileName(logFileName + "_" + timestamp(ts));
+
+                  delete mLogger;
+
+                  // Keep all log files, rename the log file with timestamp
+                  rename(logFileName.c_str(), oldLogFileName.c_str());
+               }
             }
             mLogger = new std::ofstream(logFileName.c_str(), std::ios_base::out | std::ios_base::app);
             mLineCount = 0;
