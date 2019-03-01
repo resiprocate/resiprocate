@@ -390,6 +390,15 @@ RegSyncClient::handleRegInfoEvent(resip::XMLCursor& xml)
                            xml.parent();
                         }
                      }
+                     else if (isEqualNoCase(xml.getTag(), "useragent"))
+                     {
+                        if (xml.firstChild())
+                        {
+                           //InfoLog(<< "RegSyncClient::handleRegInfoEvent: useragent=" << xml.getValue());
+                           rec.mUserAgent = xml.getValue().xmlCharDataDecode();
+                           xml.parent();
+                        }
+                     }
                      else if(isEqualNoCase(xml.getTag(), "regid"))
                      {
                         if(xml.firstChild())

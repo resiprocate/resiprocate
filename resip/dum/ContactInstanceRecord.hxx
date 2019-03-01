@@ -47,6 +47,7 @@ class ContactInstanceRecord
       Tuple mPublicAddress; // Public IP address closest to the client (from Via headers): note: Tuple::getType == UNKNOWN_TRANPORT if no public address was found
       NameAddrs mSipPath;   // Value of SIP Path header from the request
       Data mInstance;       // From the instance parameter; usually a UUID URI
+      Data mUserAgent;		// From User-Agent header
       UInt32 mRegId;        // From regid parameter of Contact header
       bool mSyncContact;    // This contact came from registration sync process, instead of direct SIP registration
       bool mUseFlowRouting; // Set to true when routing to this contact should use flow routing 
