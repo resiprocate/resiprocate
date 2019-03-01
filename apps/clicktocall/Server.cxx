@@ -150,7 +150,7 @@ Server::Server(int argc, char** argv) :
    mXmlRpcServerV6(0),
    mXmlRpcServerThread(0)
 {
-   GenericLogImpl::MaxLineCount = mLogFileMaxLines; 
+   Log::setMaxLineCount(mLogFileMaxLines); 
    Log::initialize("file", mLogLevel, "", mLogFilename.c_str(), (ExternalLogger*)&g_ClickToCallLogger);
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemGateway);
@@ -937,11 +937,6 @@ void
 Server::onTerminated(ServerSubscriptionHandle)
 {
    InfoLog(<< "onTerminated(ServerSubscriptionHandle)");
-}
-
-void 
-Server::onReadyToSend(ServerSubscriptionHandle, SipMessage&)
-{
 }
 
 void 
