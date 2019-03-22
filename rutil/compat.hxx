@@ -54,7 +54,7 @@
 #include "wince/WceCompat.hxx"
 #endif // UNDER_CE
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #include <stdio.h>
 #ifndef snprintf
 #define snprintf c99_snprintf
