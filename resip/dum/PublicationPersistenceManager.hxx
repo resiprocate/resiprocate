@@ -210,8 +210,11 @@ public:
                             // Need explilcit Data decodedBody as serializedContents refers to it in parser
                             Data decodedBody(xml.getValue().xmlCharDataDecode());
                             Contents* serializedContents = Contents::createContents(mimeType, decodedBody);
-                            // Need to clone, as serializedContents is still referring to decodedBody which will go out of scope.
+                            // Need to clone, as serializedContents is still referring to decodedBody, via the LazyParser,
+                            // which will go out of scope.
                             mContents.reset(serializedContents->clone());
+                            delete serializedContents;
+                            serializedContents = 0;
                             xml.parent();
                             success = true;
                         }
