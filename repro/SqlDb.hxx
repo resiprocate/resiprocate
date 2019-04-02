@@ -39,7 +39,7 @@ class SqlDb: public AbstractDb
       // http://dev.mysql.com/doc/refman/5.1/en/threaded-clients.html
       mutable resip::Mutex mMutex;
 
-      const char* tableName( Table table ) const;
+      resip::Data tableName( Table table ) const;
 
    private:
       // Db manipulation routines
@@ -55,6 +55,7 @@ class SqlDb: public AbstractDb
 
       mutable volatile bool mConnected;
       resip::Data mTlsPeerAuthorizationQuery;
+      resip::Data mTableNamePrefix;
 
       virtual void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
       virtual void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;

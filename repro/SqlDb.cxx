@@ -24,6 +24,7 @@ using namespace std;
 SqlDb::SqlDb(const resip::ConfigParse& config) : mConnected(false)
 {
    mTlsPeerAuthorizationQuery = config.getConfigData("CustomTlsAuthQuery", "");
+   mTableNamePrefix = config.getConfigData("TableNamePrefix", "");
 }
 
 void 
@@ -156,27 +157,27 @@ static const char staticregsavp[] = "staticregsavp";
 static const char filtersavp[] = "filtersavp";
 static const char siloavp[] = "siloavp";
 
-const char*
+Data
 SqlDb::tableName(Table table) const
 {
    switch (table)
    {
       case UserTable:
-         return userTable;
+         return mTableNamePrefix + userTable;
       case TlsPeerIdentityTable:
-         return tlsPeerIdentityTable;
+         return mTableNamePrefix + tlsPeerIdentityTable;
       case RouteTable:
-         return routesavp;
+         return mTableNamePrefix + routesavp;
       case AclTable:
-         return aclsavp; 
+         return mTableNamePrefix + aclsavp;
       case ConfigTable:
-         return configsavp;
+         return mTableNamePrefix + configsavp;
       case StaticRegTable:
-         return staticregsavp;
+         return mTableNamePrefix + staticregsavp;
       case FilterTable:
-         return filtersavp;
+         return mTableNamePrefix + filtersavp;
       case SiloTable:
-         return siloavp;
+         return mTableNamePrefix + siloavp;
       default:
          resip_assert(0);
    }
