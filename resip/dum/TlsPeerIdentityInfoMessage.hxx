@@ -16,8 +16,8 @@ class TlsPeerIdentityInfoMessage : public resip::DumFeatureMessage
                      resip::TransactionUser* transactionUser);
       ~TlsPeerIdentityInfoMessage();
 
-      const resip::Data& peerName() const{return mPeerName;}
-      resip::Data& peerName(){return mPeerName;}
+      const std::set<resip::Data>& peerNames() const{return mPeerNames;}
+      std::set<resip::Data>& peerNames(){return mPeerNames;}
 
       const std::set<resip::Data>& identities() const{return mIdentities;}
       std::set<resip::Data>& identities(){return mIdentities;}
@@ -32,8 +32,7 @@ class TlsPeerIdentityInfoMessage : public resip::DumFeatureMessage
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
 
    private:
-      resip::TransactionUser* mTu;
-      resip::Data mPeerName;
+      std::set<resip::Data> mPeerNames;
       std::set<resip::Data> mIdentities;
       bool mAuthorized;
 };
