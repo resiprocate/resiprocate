@@ -140,7 +140,7 @@ ReproAuthenticatorFactory::getCertificateAuthManager()
       Store *db = mProxyConfig.getDataStore();
       resip_assert(db);
       AclStore& aclStore = db->mAclStore;
-      mCertificateAuthManager.reset(new ReproTlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), aclStore, true, mCommonNameMappings));
+      mCertificateAuthManager.reset(new ReproTlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), getDispatcher(), aclStore, true, mCommonNameMappings));
    }
    return mCertificateAuthManager;
 }

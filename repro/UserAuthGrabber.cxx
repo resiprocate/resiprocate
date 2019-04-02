@@ -2,6 +2,7 @@
 #include "repro/AbstractDb.hxx"
 #include "repro/UserInfoMessage.hxx"
 #include "repro/TlsPeerIdentityInfo.hxx"
+#include "resip/dum/TlsPeerIdentityInfoMessage.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
 #include "repro/stateAgents/PresenceSubscriptionHandler.hxx"
 #include "rutil/Logger.hxx"
@@ -50,6 +51,14 @@ UserAuthGrabber::process(resip::ApplicationMessage* msg)
    {
       tpaInfo->authorized() = mDataStore.mTlsPeerIdentityStore.isAuthorized(tpaInfo->peerNames(), tpaInfo->identities());
       DebugLog(<< "Looked up authorization for " << tpaInfo << " result = " << tpaInfo->authorized());
+      return true;
+   }
+
+   resip::TlsPeerIdentityInfoMessage* tpaInfoMessage = dynamic_cast<resip::TlsPeerIdentityInfoMessage*>(msg);
+   if (tpaInfoMessage)
+   {
+      tpaInfoMessage->authorized() = mDataStore.mTlsPeerIdentityStore.isAuthorized(tpaInfoMessage->peerNames(), tpaInfoMessage->identities());
+      DebugLog(<< "Looked up authorization for " << tpaInfoMessage << " result = " << tpaInfoMessage->authorized());
       return true;
    }
 
