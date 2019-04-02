@@ -310,7 +310,7 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
       DataStream ds(command);
       // Use two queries together to simulate UPSERT
       // Real UPSERT is coming in PostgreSQL 9.5
-      ds << "UPDATE users SET"
+      ds << "UPDATE " << tableName(UserTable) << " SET"
          << " realm='" << rec.realm
          << "', passwordHash='" << rec.passwordHash
          << "', passwordHashAlt='" << rec.passwordHashAlt
@@ -320,7 +320,7 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
          << "' WHERE username = '" << rec.user
          << "' AND domain='" << rec.domain
          << "'; "
-         << "INSERT INTO users (username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
+         << "INSERT INTO " << tableName(UserTable) << " (username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
          << " SELECT '" 
          << rec.user << "', '"
          << rec.domain << "', '"
@@ -330,7 +330,7 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
          << rec.name << "', '"
          << rec.email << "', '"
          << rec.forwardAddress << "'"
-         << " WHERE NOT EXISTS (SELECT 1 FROM users WHERE "
+         << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(UserTable) << " WHERE "
          << "username = '" << rec.user << "' AND domain = '" << rec.domain << "')";
    }
    return query(command, 0) == 0;
@@ -345,7 +345,7 @@ PostgreSqlDb::getUser( const AbstractDb::Key& key ) const
    Data command;
    {
       DataStream ds(command);
-      ds << "SELECT username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM users ";
+      ds << "SELECT username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM " << tableName(UserTable) << " ";
       userWhereClauseToDataStream(key, ds);
    }
    
@@ -391,7 +391,7 @@ PostgreSqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       Data user;
       Data domain;
       UserStore::getUserAndDomainFromKey(key, user, domain);
-      ds << "SELECT passwordHash FROM users WHERE username = '" << user << "' AND domain = '" << domain << "' ";
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE username = '" << user << "' AND domain = '" << domain << "' ";
    
       // Note: domain is empty when querying for HTTP admin user - for this special user, 
       // we will only check the repro db, by not adding the UNION statement below
@@ -426,7 +426,11 @@ PostgreSqlDb::firstUserKey()
       mRow[UserTable] = 0;
    }
    
-   Data command("SELECT username, domain FROM users");
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT username, domain FROM " << tableName(UserTable);
+   }
 
    if(query(command, &mResult[UserTable]) != 0)
    {
@@ -474,16 +478,16 @@ PostgreSqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::T
       DataStream ds(command);
       // Use two queries together to simulate UPSERT
       // Real UPSERT is coming in PostgreSQL 9.5
-      ds /* << "UPDATE tlsPeerIdentity SET"
+      ds /* << "UPDATE " << tableName(TlsPeerIdentityTable) << " SET"
          << "' foo='" << rec.foo
          << "' WHERE peerName = '" << rec.peerName
          << "' AND authorizedIdentity ='" << rec.authorizedIdentity
          << "'; " */
-         << "INSERT INTO tlsPeerIdentity (peerName, authorizedIdentity)"
+         << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, authorizedIdentity)"
          << " SELECT '"
          << rec.peerName << "', '"
          << rec.authorizedIdentity << "'"
-         << " WHERE NOT EXISTS (SELECT 1 FROM tlsPeerIdentity WHERE "
+         << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(TlsPeerIdentityTable) << " WHERE "
          << "peerName = '" << rec.peerName << "' AND authorizedIdentity = '" << rec.authorizedIdentity << "')";
    }
    return query(command, 0) == 0;
@@ -498,7 +502,7 @@ PostgreSqlDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
    Data command;
    {
       DataStream ds(command);
-      ds << "SELECT peerName, authorizedIdentity FROM tlsPeerIdentity ";
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable);
       tlsPeerIdentityWhereClauseToDataStream(key, ds);
    }
  
@@ -538,7 +542,11 @@ PostgreSqlDb::firstTlsPeerIdentityKey()
       mRow[TlsPeerIdentityTable] = 0;
    }
  
-   Data command("SELECT peerName, authorizedIdentity FROM tlsPeerIdentity");
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable);
+   }
 
    if(query(command, &mResult[TlsPeerIdentityTable]) != 0)
    {

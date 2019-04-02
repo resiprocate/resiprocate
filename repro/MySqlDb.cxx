@@ -302,7 +302,7 @@ MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
    Data command;
    {
       DataStream ds(command);
-      ds << "INSERT INTO users (user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
+      ds << "INSERT INTO " << tableName(UserTable) << " (user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
          << " VALUES('" 
          << rec.user << "', '"
          << rec.domain << "', '"
@@ -335,7 +335,7 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
    Data command;
    {
       DataStream ds(command);
-      ds << "SELECT user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM users ";
+      ds << "SELECT user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM " << tableName(UserTable) << " ";
       userWhereClauseToDataStream(key, ds);
    }
    
@@ -382,7 +382,7 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       Data user;
       Data domain;
       UserStore::getUserAndDomainFromKey(key, user, domain);
-      ds << "SELECT passwordHash FROM users WHERE user = '" << user << "' AND domain = '" << domain << "' ";
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE user = '" << user << "' AND domain = '" << domain << "' ";
    
       // Note: domain is empty when querying for HTTP admin user - for this special user, 
       // we will only check the repro db, by not adding the UNION statement below
@@ -416,7 +416,11 @@ MySqlDb::firstUserKey()
       mResult[UserTable] = 0;
    }
    
-   Data command("SELECT user, domain FROM users");
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT user, domain FROM " << tableName(UserTable);
+   }
 
    if(query(command, &mResult[UserTable]) != 0)
    {
@@ -461,7 +465,7 @@ MySqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::TlsPee
    Data command;
    {
       DataStream ds(command);
-      ds << "INSERT INTO tlsPeerIdentity (peerName, tlsPeerIdentity)"
+      ds << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, tlsPeerIdentity)"
          << " VALUES('"
          << rec.peerName << "', '"
          << rec.authorizedIdentity << "')"
@@ -482,7 +486,7 @@ MySqlDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
    Data command;
    {
       DataStream ds(command);
-      ds << "SELECT peerName, authorizedIdentity FROM tlsPeerIdentity ";
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable) << " ";
       tlsPeerIdentityWhereClauseToDataStream(key, ds);
    }
 
@@ -522,7 +526,11 @@ MySqlDb::firstTlsPeerIdentityKey()
       mResult[TlsPeerIdentityTable] = 0;
    }
  
-   Data command("SELECT peerName, authorizedIdentity FROM tlsPeerIdentity");
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable);
+   }
 
    if(query(command, &mResult[TlsPeerIdentityTable]) != 0)
    {
