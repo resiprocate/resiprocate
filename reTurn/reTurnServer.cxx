@@ -100,7 +100,7 @@ reTurn::ReTurnServerProcess::main(int argc, char* argv[])
    {
       // Initialize Logging
       resip::Log::initialize(reTurnConfig.mLoggingType, reTurnConfig.mLoggingLevel, "reTurnServer", reTurnConfig.mLoggingFilename.c_str(), 0, reTurnConfig.mSyslogFacility);
-      resip::GenericLogImpl::MaxLineCount = reTurnConfig.mLoggingFileMaxLineCount;
+      resip::Log::setMaxLineCount(reTurnConfig.mLoggingFileMaxLineCount);
 
       // Initialize server.
       asio::io_service ioService;                                // The one and only ioService for the stunServer

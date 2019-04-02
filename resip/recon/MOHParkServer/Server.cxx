@@ -385,7 +385,7 @@ void
 Server::initializeResipLogging(unsigned int maxByteCount, const Data& level, const Data& resipFilename)
 {
    // Initialize loggers
-   GenericLogImpl::MaxByteCount = maxByteCount; 
+   Log::setMaxByteCount(maxByteCount); 
    Log::initialize("file", level.c_str(), "", resipFilename.c_str(), &g_MOHParkServerLogger);
 }
 

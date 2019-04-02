@@ -1,20 +1,21 @@
-To create the repro MySQL database tables, run the create_mysql_reprodb.sql script 
-against your MySQL server instance, by using one of the following two commands:
 
-Option 1
-========
-mysql -u root -p < create_mysql_reprodb.sql
+In the examples below, the superuser (with permission to create
+databases and users) is the username root and the database name
+is repro.
 
-It will prompt for root password, alternatively you can use a different user if has "create" privileges.
+1. create a database:
 
+mysqladmin -u root -p create repro
 
-Option 2
-========
-Login to mysql using root or a user which has 'create' privileges, then at mysql prompt run:
+2. create a user and flush privileges:
 
-mysql>source create_mysql_reprodb.sql
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON *.* TO root@localhost WITH GRANT OPTION"
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON repro.* TO repro@localhost"
+mysql -u root -p -e "FLUSH PRIVILEGES"
 
+3. load the schema:
 
+mysql -u root -p repro < create_mysql_reprodb.sql
 
 Other Potentially Useful Commands
 =================================
@@ -25,13 +26,8 @@ sudo /sw/bin/mysqld_safe &
 Remove REPRO DB with
 mysqladmin -u root -p DROP repro 
 
-Create a user called repro that can use the DB
-mysql -u root -p -e "GRANT ALL PRIVILEGES ON *.* TO root@localhost WITH GRANT OPTION"
-mysql -u root -p -e "GRANT ALL PRIVILEGES ON repro.* TO repro@localhost"
-mysql -u root -p -e "FLUSH PRIVILEGES"
-
 you can view permissions with 
-mysqlaccess -U root -P <pwd> \* \* repro --brief
+mysqlaccess -U root -p \* \* repro --brief
 
 Can make sure all is flushed with 
 mysqladmin -u root -p refresh

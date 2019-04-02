@@ -80,6 +80,7 @@ TlsPeerAuthManager::process(Message* msg)
 
 AsyncBool
 TlsPeerAuthManager::authorizedForThisIdentity(
+   const Data& transactionId,
    const std::list<resip::Data> &peerNames,
    resip::Uri &fromUri)
 {
@@ -118,6 +119,19 @@ TlsPeerAuthManager::authorizedForThisIdentity(
          }
       }
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
+   }
+
+   if(mCommonNameMappings.size() == 0)
+   {
+      DebugLog(<<"mCommonNameMappings is empty, trying async");
+      TlsPeerIdentityInfoMessage* tpaInfo = new TlsPeerIdentityInfoMessage(transactionId, &mDum);
+      for(it = peerNames.begin(); it != peerNames.end(); ++it)
+      {
+         tpaInfo->peerNames().insert(*it);
+      }
+      tpaInfo->identities().insert(aor);
+      tpaInfo->identities().insert(domain);
+      return asyncLookup(tpaInfo);
    }
 
    // catch-all: access denied
@@ -194,7 +208,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
          return Skipped;
       }
 
-      AsyncBool _auth = authorizedForThisIdentity(peerNames, claimedUri);
+      AsyncBool _auth = authorizedForThisIdentity(sipMessage->getTransactionId(), peerNames, claimedUri);
       if(_auth == True)
       {
          DebugLog(<<"authorized");
@@ -232,7 +246,7 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
             return Skipped;
          }
       }
-      AsyncBool _auth = authorizedForThisIdentity(peerNames, claimedUri);
+      AsyncBool _auth = authorizedForThisIdentity(sipMessage->getTransactionId(), peerNames, claimedUri);
       if(_auth == True)
       {
          DebugLog(<<"authorized");
@@ -277,6 +291,13 @@ TlsPeerAuthManager::handleTlsPeerIdentityInfo(TlsPeerIdentityInfoMessage *tpiInf
    mDum.send(response);
    delete request;
    return 0;
+}
+
+AsyncBool
+TlsPeerAuthManager::asyncLookup(TlsPeerIdentityInfoMessage *info)
+{
+   delete info;
+   return False;
 }
 
 bool

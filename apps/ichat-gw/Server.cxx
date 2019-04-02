@@ -171,7 +171,7 @@ Server::Server(int argc, char** argv) :
    mMediaRelay(0),
    mIPCThread(0)
 {
-   GenericLogImpl::MaxLineCount = mLogFileMaxLines; 
+   Log::setMaxLineCount(mLogFileMaxLines); 
    Log::initialize("file", mLogLevel, "", mLogFilename.c_str(), (ExternalLogger*)&g_GatewayLogger);
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemGateway);

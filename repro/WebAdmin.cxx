@@ -1754,6 +1754,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "<tr>" << endl << 
       "  <td>AOR</td>" << endl << 
       "  <td>Contact</td>" << endl << 
+      "  <td>User Agent</td>" << endl <<
       "  <td>Instance ID</td>" << endl <<
       "  <td>Reg ID</td>" << endl <<
       "  <td>QValue</td>" << endl <<
@@ -1767,11 +1768,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
    RegistrationPersistenceManager::UriList aors;
    mRegDb.getAors(aors);
    for ( RegistrationPersistenceManager::UriList::const_iterator 
-            aor = aors.begin(); aor != aors.end(); ++aor )
+            aorIt = aors.begin(); aorIt != aors.end(); ++aorIt )
    {
-      Uri uri = *aor;
+      Uri aor = *aorIt;
       ContactList contacts;
-      mRegDb.getContacts(uri, contacts);
+      mRegDb.getContacts(aor, contacts);
          
       bool first = true;
       for (ContactList::iterator i = contacts.begin();
@@ -1782,14 +1783,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             UInt64 secondsRemaining = i->mRegExpires - now;
 
             s << "<tr>" << endl
-               << "  <td>" ;
+              << "  <td>" ;
             if (first) 
             { 
-               s << uri;
+               s << aor;
                first = false;
             }
             s << "</td>" << endl
-               << "  <td>";
+              << "  <td>";
             
             const ContactInstanceRecord& r = *i;
             const NameAddr& contact = r.mContact;
@@ -1797,6 +1798,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             int regId = r.mRegId;
 
             s << contact.uri();
+            s << "</td>" << endl
+                << "  <td>";
+
+            s << r.mUserAgent;
+
             s <<"</td>" << endl 
                << "<td>" << instanceId.xmlCharDataEncode() 
                << "</td><td>" << regId 
@@ -1825,7 +1831,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s << "</td><td>Never</td>" << endl;
             }
             s << "  <td>"
-               << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
+               << "<input type=\"checkbox\" name=\"remove." << aor << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
                                                             << "|" << instanceId.urlEncoded() 
                                                             << "|" << regId
                                                             << "|" << (staticRegContact ? "1" : "0")
@@ -1835,7 +1841,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          else
          {
             // remove expired contact 
-            mRegDb.removeContact(uri, *i);
+            mRegDb.removeContact(aor, *i);
          }
       }
    }

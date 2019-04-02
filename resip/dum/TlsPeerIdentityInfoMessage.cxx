@@ -14,9 +14,9 @@ using namespace std;
 TlsPeerIdentityInfoMessage::TlsPeerIdentityInfoMessage(const Data& transactionId,
                               resip::TransactionUser* transactionUser) :
    DumFeatureMessage(transactionId),
-   mTu(transactionUser),
    mAuthorized(false)
 {
+   mTu = transactionUser;
 }
 
 TlsPeerIdentityInfoMessage::~TlsPeerIdentityInfoMessage()

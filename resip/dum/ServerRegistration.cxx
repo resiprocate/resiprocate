@@ -331,7 +331,10 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       {
          rec.mInstance=i->param(p_Instance);
       }
-
+      if (msg.exists(h_UserAgent))
+      {
+         rec.mUserAgent = msg.header(h_UserAgent).value();
+      }
       if(!msg.empty(h_Paths))
       {
          rec.mSipPath=msg.header(h_Paths);

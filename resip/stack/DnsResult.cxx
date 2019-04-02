@@ -268,6 +268,11 @@ DnsResult::lookup(const Uri& uri)
 void
 DnsResult::lookupInternalWithEnum(const Uri& uri)
 {
+   if ( mType == Destroyed )
+   {
+      destroy();
+      return;
+   }
    if (!mDnsStub.getEnumSuffixes().empty() && 
        uri.isEnumSearchable() &&
        mDnsStub.getEnumDomains().find(uri.host()) != mDnsStub.getEnumDomains().end())

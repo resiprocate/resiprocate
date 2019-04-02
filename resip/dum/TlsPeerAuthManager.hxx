@@ -40,12 +40,13 @@ class TlsPeerAuthManager : public DumFeature
       virtual SipMessage* handleTlsPeerIdentityInfo(TlsPeerIdentityInfoMessage *tpiInfo);
 
       /// should return true if the passed in user is authorized for the provided uri
-      virtual AsyncBool authorizedForThisIdentity(const std::list<resip::Data> &peerNames,
+      virtual AsyncBool authorizedForThisIdentity(const resip::Data& transactionId, const std::list<resip::Data> &peerNames,
                                              resip::Uri &fromUri);
 
       /// should return true if the request must be challenged
       /// The default is to challenge all requests - override this class to change this beviour
       virtual bool requiresAuthorization(const SipMessage& msg);
+      virtual AsyncBool asyncLookup(TlsPeerIdentityInfoMessage *info);
       /// should return true if the request should be trusted based on
       /// the source/transport
       /// default implementation uses mTrustedPeers

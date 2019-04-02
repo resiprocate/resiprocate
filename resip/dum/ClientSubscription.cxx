@@ -179,9 +179,10 @@ ClientSubscription::processResponse(const SipMessage& msg)
    }
    else if (!mEnded &&
             statusCode == 481 &&
+            msg.header(h_To).exists(p_tag) &&  // Only do this if we were re-subscribing
             msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
    {
-      InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
+      InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (subscription server probably restarted) "
                << mLastRequest->header(h_To));
 
       reSubscribe();  // will delete "this"

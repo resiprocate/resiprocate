@@ -34,6 +34,7 @@ ContactInstanceRecord& ContactInstanceRecord::operator=(const ContactInstanceRec
    mPublicAddress = rhs.mPublicAddress;
    mSipPath = rhs.mSipPath;
    mInstance = rhs.mInstance;
+   mUserAgent = rhs.mUserAgent;
    mRegId = rhs.mRegId;
    mSyncContact = rhs.mSyncContact;
    mUseFlowRouting = rhs.mUseFlowRouting;
@@ -124,6 +125,10 @@ void ContactInstanceRecord::stream(std::iostream& ss) const
     if(mRegId != 0)
     {
         ss << "      <regid>" << mRegId << "</regid>" << Symbols::CRLF;
+    }
+    if (!mUserAgent.empty())
+    {
+       ss << "      <useragent>" << mUserAgent.xmlCharDataEncode() << "</useragent>" << Symbols::CRLF;
     }
 
     if(mUserData != 0 && mUserData->size())
@@ -220,6 +225,15 @@ bool ContactInstanceRecord::deserialize(resip::XMLCursor& xml, UInt64 now)
                {
                   //InfoLog(<< "RegSyncClient::handleRegInfoEvent: regid=" << xml.getValue());
                   mRegId = xml.getValue().convertUnsignedLong();
+                  xml.parent();
+               }
+            }
+            else if (isEqualNoCase(xml.getTag(), "useragent"))
+            {
+               if (xml.firstChild())
+               {
+                  //InfoLog(<< "RegSyncClient::handleRegInfoEvent: useragent=" << xml.getValue());
+                  mUserAgent = xml.getValue().xmlCharDataDecode();
                   xml.parent();
                }
             }

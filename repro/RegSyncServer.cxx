@@ -326,6 +326,10 @@ RegSyncServer::streamContactInstanceRecord(std::stringstream& ss, const ContactI
     {
         ss << "      <regid>" << rec.mRegId << "</regid>" << Symbols::CRLF;
     }
+    if (!rec.mUserAgent.empty())
+    {
+       ss << "      <useragent>" << rec.mUserAgent.xmlCharDataEncode() << "</useragent>" << Symbols::CRLF;
+    }
     ss << "   </contactinfo>" << Symbols::CRLF;
 }
 

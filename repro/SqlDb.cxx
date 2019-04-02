@@ -24,6 +24,7 @@ using namespace std;
 SqlDb::SqlDb(const resip::ConfigParse& config) : mConnected(false)
 {
    mTlsPeerAuthorizationQuery = config.getConfigData("CustomTlsAuthQuery", "");
+   mTableNamePrefix = config.getConfigData("TableNamePrefix", "");
 }
 
 void 
@@ -32,7 +33,7 @@ SqlDb::eraseUser(const AbstractDb::Key& key )
    Data command;
    {
       DataStream ds(command);
-      ds << "DELETE FROM users ";
+      ds << "DELETE FROM " << tableName(UserTable) << " ";
       userWhereClauseToDataStream(key, ds);
    }
    query(command);
@@ -44,7 +45,7 @@ SqlDb::eraseTlsPeerIdentity(const AbstractDb::Key& key )
    Data command;
    {
       DataStream ds(command);
-      ds << "DELETE FROM tlsPeerIdentity ";
+      ds << "DELETE FROM " << tableName(TlsPeerIdentityTable) << " ";
       tlsPeerIdentityWhereClauseToDataStream(key, ds);
    }
    query(command);
@@ -90,7 +91,7 @@ SqlDb::isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip
    if(mTlsPeerAuthorizationQuery.empty())
    {
       DataStream ds(command);
-      ds << "SELECT count(1) FROM tlsPeerIdentities WHERE peerName IN (" << peerNameSet << ") AND ";
+      ds << "SELECT count(1) FROM " << tableName(TlsPeerIdentityTable) << " WHERE peerName IN (" << peerNameSet << ") AND ";
       ds << "authorizedIdentity IN (" << identitySet << ");";
    }
    else
@@ -147,8 +148,8 @@ SqlDb::dbRollbackTransaction(const Table table)
    return query(command) == 0;
 }
 
-static const char usersavp[] = "usersavp";
-static const char tlsPeerIdentitysavp[] = "tlsPeerIdentitysavp";
+static const char userTable[] = "users";
+static const char tlsPeerIdentityTable[] = "tlsPeerIdentity";
 static const char routesavp[] = "routesavp";
 static const char aclsavp[] = "aclsavp";
 static const char configsavp[] = "configsavp";
@@ -156,29 +157,27 @@ static const char staticregsavp[] = "staticregsavp";
 static const char filtersavp[] = "filtersavp";
 static const char siloavp[] = "siloavp";
 
-const char*
+Data
 SqlDb::tableName(Table table) const
 {
    switch (table)
    {
       case UserTable:
-         resip_assert(false);  // usersavp is not used!
-         return usersavp;
+         return mTableNamePrefix + userTable;
       case TlsPeerIdentityTable:
-         resip_assert(false);  // tlsPeerIdentitysavp is not used!
-         return tlsPeerIdentitysavp;
+         return mTableNamePrefix + tlsPeerIdentityTable;
       case RouteTable:
-         return routesavp;
+         return mTableNamePrefix + routesavp;
       case AclTable:
-         return aclsavp; 
+         return mTableNamePrefix + aclsavp;
       case ConfigTable:
-         return configsavp;
+         return mTableNamePrefix + configsavp;
       case StaticRegTable:
-         return staticregsavp;
+         return mTableNamePrefix + staticregsavp;
       case FilterTable:
-         return filtersavp;
+         return mTableNamePrefix + filtersavp;
       case SiloTable:
-         return siloavp;
+         return mTableNamePrefix + siloavp;
       default:
          resip_assert(0);
    }

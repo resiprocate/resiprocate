@@ -173,7 +173,6 @@ protected:
    virtual void onNewSubscriptionFromRefer(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
    virtual void onRefresh(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
    virtual void onTerminated(resip::ServerSubscriptionHandle);
-   virtual void onReadyToSend(resip::ServerSubscriptionHandle, resip::SipMessage&);
    virtual void onNotifyRejected(resip::ServerSubscriptionHandle, const resip::SipMessage& msg);      
    virtual void onError(resip::ServerSubscriptionHandle, const resip::SipMessage& msg);      
    virtual void onExpiredByClient(resip::ServerSubscriptionHandle, const resip::SipMessage& sub, resip::SipMessage& notify);

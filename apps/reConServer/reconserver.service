@@ -2,7 +2,6 @@
 [Unit]
 Description=reConServer
 After=network-online.target
-After=syslog.target
 Wants=network-online.target
 
 [Service]
