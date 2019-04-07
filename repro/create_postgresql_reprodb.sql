@@ -406,3 +406,5 @@ LANGUAGE 'plpgsql';
 CREATE OR REPLACE VIEW silo AS
   SELECT NULL::INT AS id, * FROM get_silo_table();
 
+GRANT SELECT ON route, acl, domain, staticreg, filter, silo TO repro;
+
