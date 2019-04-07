@@ -248,7 +248,7 @@ CREATE OR REPLACE VIEW acl AS
 -- new table/view: domain
 --
 CREATE OR REPLACE FUNCTION config_record(value VARCHAR,
-    OUT domain VARCHAR) AS $$
+    OUT domain VARCHAR, OUT tlsPort INT) AS $$
 DECLARE
   pos INTEGER;
   buf BYTEA;
@@ -258,14 +258,16 @@ BEGIN
   buf := DECODE(value, 'base64');
   SELECT * FROM BYTEA2INT(buf, pos) INTO pos, version;
   SELECT * FROM BYTEA2STRING(buf, pos) INTO pos, domain;
+  SELECT * FROM BYTEA2INT(buf, pos) INTO pos, tlsPort;
 END; $$
 LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION get_config_table() RETURNS TABLE (
-  domain VARCHAR(256))
+  domain VARCHAR(256),
+  tlsPort INT)
 AS $$
 BEGIN
-  RETURN QUERY SELECT (config_record(value)) FROM configsavp;
+  RETURN QUERY SELECT (config_record(value)).* FROM configsavp;
 END; $$
 LANGUAGE 'plpgsql';
 
