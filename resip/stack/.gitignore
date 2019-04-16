@@ -6,8 +6,7 @@
 /.deps
 /.libs
 
-/gen/.deps
-/gen/.dirstamp
+gen
 /ssl/.deps
 /ssl/.dirstamp
 
