@@ -7,12 +7,22 @@
 #include <boost/bind.hpp>
 
 #include "TurnTlsSocket.hxx"
+#include <openssl/opensslv.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x)
+{
+    return ASN1_STRING_data(const_cast< ASN1_STRING* >(x));
+}
+
+#endif // OPENSSL_VERSION_NUMBER < 0x10100000L
 
 using namespace std;
 
@@ -178,7 +188,7 @@ TurnTlsSocket::validateServerCertificateHostname(const std::string& hostname)
    
          int t = ASN1_STRING_type(s);
          int l = ASN1_STRING_length(s);
-         unsigned char* d = ASN1_STRING_data(s);
+         const unsigned char* d = ASN1_STRING_get0_data(s);
          resip::Data name(d,l);
          DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
          resip_assert( name.size() == (unsigned)l );

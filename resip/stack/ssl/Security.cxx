@@ -57,6 +57,15 @@
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x)
+{
+    return ASN1_STRING_data(const_cast< ASN1_STRING* >(x));
+}
+
+#endif // OPENSSL_VERSION_NUMBER < 0x10100000L
+
 using namespace resip;
 using namespace std;
 
@@ -2637,7 +2646,7 @@ BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames,
       
       int t = ASN1_STRING_type(s);
       int l = ASN1_STRING_length(s);
-      unsigned char* d = ASN1_STRING_data(s);
+      const unsigned char* d = ASN1_STRING_get0_data(s);
       Data name(d,l);
       DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
       resip_assert( name.size() == (unsigned)l );
