@@ -88,15 +88,22 @@ OpenSSLInit::OpenSSLInit()
 OpenSSLInit::~OpenSSLInit()
 {
    mInitialized = false;
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
    ERR_remove_state(0);// free thread error queue
+#elif OPENSSL_VERSION_NUMBER < 0x10100000L
+   ERR_remove_thread_state(NULL);// free thread error queue
+#endif
    EVP_cleanup();// Clean up data allocated during OpenSSL_add_all_algorithms
    CRYPTO_cleanup_all_ex_data();
    ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
 
    // Warning: Unable to free compression methods on OpenSSL < 1.0.2
-   // For now we don't even try to free, see discussion in Debian bug #848652
+   // For now we don't even try to free for older versions, see discussion in Debian bug #848652
    // https://bugs.debian.org/848652
-   //SSL_COMP_free_compression_methods();
+   // No need to free for OpenSSL 1.1.0 and later, the library manages the memory by itself.
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L && OPENSSL_VERSION_NUMBER < 0x10100000L
+   SSL_COMP_free_compression_methods();
+#endif
 
 //	CRYPTO_mem_leaks_fp(stderr);
 
