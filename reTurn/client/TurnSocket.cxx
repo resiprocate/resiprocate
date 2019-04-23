@@ -635,6 +635,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
             {
                size = tempsize;
             }
+            delete stunMsg;
          }
          else // Channel Data Message
          {
