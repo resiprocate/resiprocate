@@ -288,8 +288,7 @@ ClientAuthManager::AuthState::addAuthentication(SipMessage& request)
 ClientAuthManager::RealmState::RealmState() :
    mIsProxyCredential(false),
    mState(Invalid),
-   mNonceCount(0),
-   mAuthPtr(NULL)
+   mNonceCount(0)
 {
 }
 
