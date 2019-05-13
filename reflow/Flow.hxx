@@ -48,6 +48,9 @@ class Flow : public TurnAsyncSocketHandler
 {
 public:
 
+   static int maxReceiveFifoDuration;
+   static int maxReceiveFifoSize;
+
    enum FlowState
    {
       Unconnected,

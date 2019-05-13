@@ -28,8 +28,8 @@ using namespace dtls;
 
 using namespace std;
 
-#define MAX_RECEIVE_FIFO_DURATION 10 // seconds
-#define MAX_RECEIVE_FIFO_SIZE (100 * MAX_RECEIVE_FIFO_DURATION)  // 1000 = 1 message every 10 ms for 10 seconds - appropriate for RTP
+int Flow::maxReceiveFifoDuration = 10; // seconds
+int Flow::maxReceiveFifoSize = 100 * maxReceiveFifoDuration; // 1000 = 1 message every 10 ms for 10 seconds - appropriate for RTP
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
@@ -141,7 +141,7 @@ Flow::Flow(asio::io_service& ioService,
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
     mFlowState(Unconnected),
-    mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE)
+    mReceivedDataFifo(maxReceiveFifoDuration, maxReceiveFifoSize)
 {
    InfoLog(<< "Flow: flow created for " << mLocalBinding << "  ComponentId=" << mComponentId);
 
