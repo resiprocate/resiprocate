@@ -809,6 +809,7 @@ ReConServerProcess::main (int argc, char** argv)
    Data stunUsername = reConServerConfig.getConfigData("StunUsername", "", true);
    Data stunPassword = reConServerConfig.getConfigData("StunPassword", "", true);
    bool addViaRport = reConServerConfig.getConfigBool("AddViaRport", true);
+   unsigned int maxReceiveFifoSize = reConServerConfig.getConfigInt("MaxReceiveFifoSize", 1000);
    unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPort", 5062);
    unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
@@ -890,6 +891,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Secure Media Mode = " << secureMediaMode);
    InfoLog( << "  NAT Traversal Mode = " << natTraversalMode);
    InfoLog( << "  NAT Server = " << natTraversalServerHostname << ":" << natTraversalServerPort);
+   InfoLog( << "  Max RTP receive FIFO size = " << maxReceiveFifoSize);
    InfoLog( << "  STUN/TURN user = " << stunUsername);
    InfoLog( << "  STUN/TURN password = " << stunPassword);
    InfoLog( << "  TCP Port = " << tcpPort);
@@ -1290,6 +1292,8 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->secureMediaMode() = secureMediaMode;
    conversationProfile->secureMediaRequired() = secureMediaRequired;
    conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
+
+   Flow::maxReceiveFifoSize = maxReceiveFifoSize;
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
