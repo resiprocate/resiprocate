@@ -240,7 +240,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                         InfoLog(<< response);
                         throw Exception("lastRequest does not contain a valid contact.", __FILE__, __LINE__);
                      }
-                     mLocalContact = creator->getLastRequest()->header(h_Contacts).front();
+                     mLocalContact = lastRequest->header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
                   else
@@ -678,8 +678,21 @@ Dialog::dispatch(const SipMessage& msg)
          }
          else
          {
-            // Ensure that if the route-set in the 200 is empty, then we overwrite any existing route-sets
-            mRouteSet.clear();
+            // Note:  This is code to facilitate Dialog recovery, and works in conjunction with the 
+            //        makeInviteSession API that takes a DialogSetId parameter.
+            // If our original outbound request contained a to tag, then we are attempting to restore a previously
+            // existing (outside this process) dialog.  Some clients will send the routeset to use as Record-Routes 
+            // in the response, in which case the code above will store them.  However clients are not mandated to 
+            // do so, so if our outbound INVITE had routes on it, then store these as the routeset for the dialog.
+            if (creator->getLastRequest()->header(h_To).exists(p_tag) && creator->getLastRequest()->exists(h_Routes))
+            {
+                mRouteSet = creator->getLastRequest()->header(h_Routes);
+            }
+            else
+            {
+               // Ensure that if the route-set in the 200 is empty, then we overwrite any existing route-sets
+               mRouteSet.clear();
+            }
          }
       }
 
