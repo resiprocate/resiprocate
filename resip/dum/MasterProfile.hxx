@@ -188,7 +188,7 @@ class MasterProfile : public UserProfile
       virtual void clearAdditionalTransactionTerminatingResponses(void);
       
       virtual unsigned long getClientSubscriptionWaitForNotify() const;
-      virtual void setClientSubscriptionWaitFornotify(unsigned long expireMs);
+      virtual void setClientSubscriptionWaitForNotify(unsigned long expireMs);
 
    private:
       virtual UserProfile* clone() const;

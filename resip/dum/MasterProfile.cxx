@@ -492,7 +492,7 @@ unsigned long MasterProfile::getClientSubscriptionWaitForNotify() const
 {
   return mWaitForNotifyExpires;
 }
-void MasterProfile::setClientSubscriptionWaitFornotify(unsigned long expireMs)
+void MasterProfile::setClientSubscriptionWaitForNotify(unsigned long expireMs)
 {
   mWaitForNotifyExpires = expireMs;
 }
