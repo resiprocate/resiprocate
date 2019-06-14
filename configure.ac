@@ -38,7 +38,7 @@ AC_GPERFVER
 
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
-  CXXFLAGS="${CXXFLAGS} -Wall -Wno-deprecated"
+  CXXFLAGS="${CXXFLAGS} -Wall -Wno-deprecated -fPIC"
   CFLAGS="${CFLAGS} -Wall -Wno-deprecated"
   AC_MSG_RESULT([yes])
 else
@@ -138,7 +138,7 @@ return 0;
 
 AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(RESIP_BIG_ENDIAN, , RESIP_BIG_ENDIAN)])
 
-CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS} ${TOOLCHAIN_CPPFLAGS}"
+CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS} ${TOOLCHAIN_CPPFLAGS} -fPIC"
 
 AH_TEMPLATE([HAVE_sockaddr_in_len], [Define if sockaddr_in.sin_len exists])
 AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,

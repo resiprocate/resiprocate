@@ -186,6 +186,9 @@ class MasterProfile : public UserProfile
 
       virtual const std::set<int>& getAdditionalTransactionTerminatingResponses() const;
       virtual void clearAdditionalTransactionTerminatingResponses(void);
+      
+      virtual unsigned long getClientSubscriptionWaitForNotify() const;
+      virtual void setClientSubscriptionWaitFornotify(unsigned long expireMs);
 
    private:
       virtual UserProfile* clone() const;
@@ -209,6 +212,8 @@ class MasterProfile : public UserProfile
       UInt32 mServerRegistrationMinExpires;
       UInt32 mServerRegistrationMaxExpires;
       UInt32 mServerRegistrationDefaultExpires;
+      
+      unsigned long mWaitForNotifyExpires;
 
       bool mAdditionalTransactionTerminatingResponsesEnabled;
       std::set<int> mAdditionalTransactionTerminatingResponsess;

@@ -2,6 +2,7 @@
 #include "resip/dum/Profile.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/stack/HeaderTypes.hxx"
+#include "rutil/Timer.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;
@@ -24,7 +25,8 @@ MasterProfile::MasterProfile() :
    mServerRegistrationMinExpires(0),
    mServerRegistrationMaxExpires(UINT_MAX),
    mServerRegistrationDefaultExpires(3600),
-   mAdditionalTransactionTerminatingResponsesEnabled(false)
+   mAdditionalTransactionTerminatingResponsesEnabled(false),
+   mWaitForNotifyExpires(64 * Timer::T1)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -484,6 +486,15 @@ const std::set<int>& MasterProfile::getAdditionalTransactionTerminatingResponses
 void MasterProfile::clearAdditionalTransactionTerminatingResponses(void)
 {
   mAdditionalTransactionTerminatingResponsess.clear();
+}
+
+unsigned long MasterProfile::getClientSubscriptionWaitForNotify() const
+{
+  return mWaitForNotifyExpires;
+}
+void MasterProfile::setClientSubscriptionWaitFornotify(unsigned long expireMs)
+{
+  mWaitForNotifyExpires = expireMs;
 }
 
 /* ====================================================================

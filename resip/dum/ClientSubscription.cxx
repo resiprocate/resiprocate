@@ -10,6 +10,7 @@
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/SubscriptionCreator.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "resip/dum/MasterProfile.hxx"
 
 #include "resip/dum/AppDialogSet.hxx"
 
@@ -167,7 +168,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
             // SUBSCRIBE is sent, we have to set the timer when the 200 comes in, if
             // it beats the NOTIFY.
             mDum.addTimerMs(DumTimeout::WaitForNotify,
-                64 * Timer::T1,
+                mDum.getMasterProfile()->getClientSubscriptionWaitForNotify(), //64 * Timer::T1,
                 getBaseHandle(),
                 ++mTimerSeq);
          }
@@ -533,7 +534,7 @@ ClientSubscription::requestRefresh(UInt32 expires)
       send(mLastRequest);
       // Timer for reSUB NOTIFY.
       mDum.addTimerMs(DumTimeout::WaitForNotify, 
-              64*Timer::T1, 
+              mDum.getMasterProfile()->getClientSubscriptionWaitForNotify(), //64 * Timer::T1,
               getBaseHandle(),
               ++mTimerSeq);
    }
@@ -590,8 +591,8 @@ ClientSubscription::end(bool immediate)
          mEnded = true;
          send(mLastRequest);
          // Timer for NOTIFY terminated
-         mDum.addTimerMs(DumTimeout::WaitForNotify, 
-                 64*Timer::T1, 
+          mDum.addTimerMs(DumTimeout::WaitForNotify, 
+                 mDum.getMasterProfile()->getClientSubscriptionWaitForNotify(), //64 * Timer::T1,
                  getBaseHandle(),
                  ++mTimerSeq);
       }
