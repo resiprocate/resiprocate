@@ -956,6 +956,17 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    resip_assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   
+   if (!handler)
+   {
+       DebugLog( << "No handler - sending 405" );
+       SharedPtr<SipMessage> failure(new SipMessage);
+       mDum.makeResponse(*failure, msg, 405);
+       mDum.send(failure);
+       delete(this);
+       return;
+   }
+   
    std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    storePeerCapabilities(msg);
 
