@@ -81,7 +81,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mEndReason(NotSpecified)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);
-   resip_assert(mDum.mInviteSessionHandler);
+   //resip_assert(mDum.mInviteSessionHandler);
 }
 
 InviteSession::~InviteSession()
