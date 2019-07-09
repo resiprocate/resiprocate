@@ -267,7 +267,7 @@ ServerProcess::daemonize()
       // parent process done
       exit(0);
    }
-   if(chdir("/") < 0)
+   if(chdir("./") < 0)
    {
       ErrLog(<<"chdir() failed: "<<strerror(errno));
       throw std::runtime_error(strerror(errno));
