@@ -9,6 +9,8 @@ set -e
   --with-mysql \
   --with-postgresql \
   --with-apps \
+  --with-telepathy \
+  --with-ichat-gw \
   --enable-dtls \
   --enable-ipv6 \
   --with-radcli \
