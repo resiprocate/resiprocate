@@ -14,9 +14,9 @@ before_install:
  - wget -q -O - https://ftp-master.debian.org/keys/archive-key-10.asc | sudo apt-key add -
  - sudo add-apt-repository -y "deb http://http.us.debian.org/debian/ buster main"
  - sudo add-apt-repository -y "deb http://http.us.debian.org/debian/ buster-backports main"
- - sudo add-apt-repository -y "deb http://apt.debify.org/debify debify-buster-backports main"
  - curl -O http://apt.debify.org/debify/pool/main/d/debify-archive-keyring/debify-archive-keyring_2019.01_all.deb
  - sudo dpkg -i debify-archive-keyring_2019.01_all.deb
+ - sudo add-apt-repository -y "deb http://apt.debify.org/debify debify-buster-backports main"
  - sudo apt-get update -qq
  - sudo apt-get install -qq --force-yes -t buster libradcli-dev libsoci-dev libqpid-proton-cpp12-dev
  - sudo apt-get install -qq --force-yes -t debify-buster-backports libsipxtapi-dev
