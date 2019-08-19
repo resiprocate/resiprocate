@@ -261,6 +261,14 @@ AC_ARG_WITH(radcli,
  AC_SUBST(LIBRADIUS_LIBADD, "-lradcli")
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)])
 
+AM_CONDITIONAL(USE_NETSNMP, false)
+AC_ARG_WITH(netsnmp,
+[  --with-netsnmp         Link against NetSNMP client libraries],
+ [AC_DEFINE_UNQUOTED(USE_NETSNMP, , USE_NETSNMP)
+ AC_SUBST(LIBNETSNMP_LDADD, [`net-snmp-config --agent-libs`])
+ AM_CONDITIONAL(USE_NETSNMP, true)],
+ [ AC_SUBST(LIBNETSNMP_LDADD, "")])
+
 AM_CONDITIONAL(BUILD_REPRO, false)
 AC_ARG_WITH(repro,
 [  --with-repro            Build repro, requires CAJUN and bdb],

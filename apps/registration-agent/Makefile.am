@@ -18,6 +18,10 @@ registrationAgent_SOURCES += KeyedFile.hxx
 registrationAgent_SOURCES += RegConfig.cxx
 registrationAgent_SOURCES += RegConfig.hxx
 registrationAgent_SOURCES += registrationAgent.cxx
+registrationAgent_SOURCES += SNMP_reSIProcate.cxx
+registrationAgent_SOURCES += SNMP_reSIProcate.hxx
+registrationAgent_SOURCES += SNMPThread.cxx
+registrationAgent_SOURCES += SNMPThread.hxx
 registrationAgent_SOURCES += UserAccount.cxx
 registrationAgent_SOURCES += UserAccount.hxx
 registrationAgent_SOURCES += UserRegistrationClient.cxx
@@ -29,6 +33,7 @@ registrationAgent_LDADD += ../../rutil/librutil.la
 registrationAgent_LDADD += -lssl -lcrypto -lpthread
 registrationAgent_LDADD += -lqpid-proton-cpp
 registrationAgent_LDADD += -ldl
+registrationAgent_LDADD += @LIBNETSNMP_LDADD@
 
 
 
