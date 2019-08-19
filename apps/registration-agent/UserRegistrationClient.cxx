@@ -58,6 +58,7 @@ UserRegistrationClient::onSuccess(ClientRegistrationHandle h, const SipMessage& 
    SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
    if(userAccount.get())
    {
+      mFailedAccounts.erase(userAccount);
       userAccount->onSuccess(h, response);
    }
 }
@@ -69,6 +70,7 @@ UserRegistrationClient::onRemoved(ClientRegistrationHandle h, const SipMessage& 
    SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
    if(userAccount.get())
    {
+      mFailedAccounts.erase(userAccount);
       userAccount->onRemoved(h, response);
    }
 }
@@ -80,6 +82,7 @@ UserRegistrationClient::onFailure(ClientRegistrationHandle h, const SipMessage& 
    SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
    if(userAccount.get())
    {
+      mFailedAccounts.insert(userAccount);
       userAccount->onFailure(h, response);
    }
 }
@@ -93,6 +96,7 @@ UserRegistrationClient::onRequestRetry(ClientRegistrationHandle h, int retrySeco
    SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
    if(userAccount.get())
    {
+      mFailedAccounts.insert(userAccount);
       return userAccount->onRequestRetry(h, retrySeconds, response);
    }
    return 30;

@@ -31,6 +31,9 @@ public:
    virtual int onRequestRetry(resip::ClientRegistrationHandle, int retrySeconds, const resip::SipMessage& response);
    virtual bool onRefreshRequired(resip::ClientRegistrationHandle, const resip::SipMessage& lastRequest);
 
+   virtual std::size_t getAccountsTotal() const { return mKeyedFile->getLineCount(); };
+   virtual std::size_t getAccountsFailed() const { return mFailedAccounts.size(); };
+
 protected:
    resip::SharedPtr<UserAccount> userAccountForMessage(const resip::SipMessage& m);
    resip::SharedPtr<UserAccount> userAccountForAoR(const resip::Uri& aor);
@@ -38,6 +41,7 @@ protected:
 private:
    resip::SharedPtr<KeyedFile> mKeyedFile;
    std::map<resip::Uri, resip::SharedPtr<UserAccount> > mAccounts;
+   std::set<resip::SharedPtr<UserAccount> > mFailedAccounts;
 };
 
 } // namespace
