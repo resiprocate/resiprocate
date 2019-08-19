@@ -13,7 +13,6 @@ set -e
   --with-postgresql \
   --with-apps \
   --with-telepathy \
-  --without-ichat-gw \
   --enable-dtls \
   --enable-ipv6 \
   --with-radcli \
