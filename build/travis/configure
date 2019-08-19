@@ -2,6 +2,9 @@
 
 set -e
 
+# Notes:
+#   we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
+#     (compile fails on clang)
 ./configure \
   --enable-assert-syslog \
   --with-popt \
@@ -10,7 +13,7 @@ set -e
   --with-postgresql \
   --with-apps \
   --with-telepathy \
-  --with-ichat-gw \
+  --without-ichat-gw \
   --enable-dtls \
   --enable-ipv6 \
   --with-radcli \
