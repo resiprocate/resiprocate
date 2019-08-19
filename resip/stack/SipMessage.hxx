@@ -536,7 +536,7 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
+      UInt64 getCreatedTimeMicroSec() const {return mCreatedTime;}
 
       /// deal with a notion of an "out-of-band" forced target for SIP routing
       void setForceTarget(const Uri& uri);
