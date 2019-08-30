@@ -42,7 +42,10 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    mSslType(sslType),
    mDomainCtx(0),
    mClientVerificationMode(cvm),
-   mUseEmailAsSIP(useEmailAsSIP)
+   mUseEmailAsSIP(useEmailAsSIP),
+   mCertificateFilename(certificateFilename),
+   mPrivateKeyFilename(privateKeyFilename),
+   mPrivateKeyPassPhrase(privateKeyPassPhrase)
 {
    setTlsDomain(sipDomain);   
    mTuple.setType(transportType);
@@ -76,6 +79,13 @@ TlsBaseTransport::~TlsBaseTransport()
    {
       SSL_CTX_free(mDomainCtx);mDomainCtx=0;
    }
+}
+
+void
+TlsBaseTransport::onReload()
+{
+   DebugLog(<<"TlsBaseTransport::onReload, re-reading certificate and private key for domain " << tlsDomain());
+   mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
 }
 
 SSL_CTX* 

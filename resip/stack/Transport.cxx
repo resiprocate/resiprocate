@@ -79,6 +79,11 @@ Transport::~Transport()
 }
 
 void
+Transport::onReload()
+{
+}
+
+void
 Transport::error(int e)
 {
    switch (e)

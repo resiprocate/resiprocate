@@ -311,6 +311,21 @@ SipStack::shutdownAndJoinThreads()
    mInternalThreadsRunning=false;
 }
 
+void
+SipStack::onReload()
+{
+   reloadCertificates();
+}
+
+void
+SipStack::reloadCertificates()
+{
+   for(SecureTransportMap::iterator itS = mSecureTransports.begin(); itS != mSecureTransports.end(); itS++)
+   {
+      itS->second->onReload();
+   }
+}
+
 Transport*
 SipStack::addTransport( TransportType protocol,
                         int port,

@@ -252,6 +252,22 @@ class SipStack : public FdSetIOObserver
       void shutdownAndJoinThreads();
 
       /**
+         @brief reload configuration
+         @details Perform actions typically associated with the HUP signal,
+             for example, reloading certificate files from disk.
+         @note If an application never calls this method, for example,
+             because it is on a platform without signal support, the
+             SipStack still works anyway.
+      */
+      void onReload();
+
+      /**
+         @brief reload the TLS X.509 certificates
+         @details reloads the X.509 certificate for each transport.
+      */
+      void reloadCertificates();
+
+      /**
         @brief thrown when the stack is unable to function.
         @details For instance, the stack cannot process messages because
         there are no transports associated with the stack.
