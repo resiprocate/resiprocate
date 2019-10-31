@@ -95,7 +95,7 @@ InviteClient::go()
       }
    }
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << mNumInvites << " peformed in " << elapsed << " ms, a rate of " 
+   cout << mNumInvites << " performed in " << elapsed << " ms, a rate of "
         << mNumInvites / ((float) elapsed / 1000.0) << " calls per second." << endl;
 }
 

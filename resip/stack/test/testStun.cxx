@@ -128,12 +128,12 @@ main(int argc, char* argv[])
    UInt64 elapsed = Timer::getTimeMs() - startTime;
    if (!invite)
    {
-      cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " registrations performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
    }
    else
    {
-      cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
    }
    cout << "Note: this test runs both sides (client and server)" << endl;
