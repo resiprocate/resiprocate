@@ -258,6 +258,13 @@ main(int argc, char** argv)
    }
 
    {
+      char buf[] = {'a', 'x', 'y'};      // Intentionally not NUL terminated.
+      ParseBuffer pb(buf, sizeof(buf));  // Note: sizeof instead of strlen.
+
+      pb.skipToChars("xyzabc123");
+   }
+
+   {
       char buf[] = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
 
