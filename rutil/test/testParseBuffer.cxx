@@ -244,6 +244,15 @@ main(int argc, char** argv)
    }
 
    {
+      char buf[] = "abcdef";
+      ParseBuffer pb(buf, strlen(buf));
+
+      pb.skipToChars("def");
+      pb.skipChars("def");
+      pb.assertEof();
+   }
+
+   {
       char buf[] = "Here is asom \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
