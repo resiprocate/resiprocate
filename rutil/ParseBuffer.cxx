@@ -247,9 +247,9 @@ ParseBuffer::skipToChars(const char* cs)
 
    const char* rpos;
    const char* cpos;
-   // Checking mPosition >= mEnd - l is unnecessary because there won't be
+   // Checking mPosition >= mEnd - l +1 is unnecessary because there won't be
    // enough bytes left to find [cs].
-   while (mPosition < mEnd - l)
+   while (mPosition < mEnd - l + 1)
    {
       rpos = mPosition;
       cpos = cs;
