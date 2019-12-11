@@ -244,6 +244,15 @@ main(int argc, char** argv)
    }
 
    {
+      char buf[] = "abcdef";
+      ParseBuffer pb(buf, strlen(buf));
+
+      pb.skipToChars("def");
+      pb.skipChars("def");
+      pb.assertEof();
+   }
+
+   {
       char buf[] = "Here is asom \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
@@ -255,6 +264,13 @@ main(int argc, char** argv)
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
       pb.assertEof();
+   }
+
+   {
+      char buf[] = {'a', 'x', 'y'};      // Intentionally not NUL terminated.
+      ParseBuffer pb(buf, sizeof(buf));  // Note: sizeof instead of strlen.
+
+      pb.skipToChars("xyzabc123");
    }
 
    {

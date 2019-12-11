@@ -186,7 +186,7 @@ main(int argc, char* argv[])
    InfoLog (<< "Finished " << count << " runs");
    
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+   cout << runs << " registrations performed in " << elapsed << " ms, a rate of "
         << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);

@@ -72,7 +72,7 @@ Register::go()
       }
    }
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << mNumRegistrations << " peformed in " << elapsed << " ms, a rate of " 
+   cout << mNumRegistrations << " performed in " << elapsed << " ms, a rate of "
         << mNumRegistrations / ((float) elapsed / 1000.0) << " registrations per second." << endl;
 }
 /* ====================================================================

@@ -247,7 +247,9 @@ ParseBuffer::skipToChars(const char* cs)
 
    const char* rpos;
    const char* cpos;
-   while (mPosition < mEnd)
+   // Checking mPosition >= mEnd - l +1 is unnecessary because there won't be
+   // enough bytes left to find [cs].
+   while (mPosition < mEnd - l + 1)
    {
       rpos = mPosition;
       cpos = cs;
@@ -262,6 +264,8 @@ ParseBuffer::skipToChars(const char* cs)
       return CurrentPosition(*this);
      skip: ;
    }
+   // Advance to the end since we didn't find a match.
+   mPosition = mEnd;
    return CurrentPosition(*this);
 }
 
