@@ -1,4 +1,4 @@
-/* C++ code produced by gperf version 3.0.3 */
+/* C++ code produced by gperf version 3.1 */
 /* Command-line: gperf -C -D -E -L C++ -t --key-positions='*' --compare-strncmp --ignore-case -Z ParameterHash ParameterHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -25,7 +25,7 @@
       && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
       && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
-#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
+#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
 #line 1 "ParameterHash.gperf"
@@ -67,7 +67,7 @@ static unsigned char gperf_downcase[256] =
 #ifndef GPERF_CASE_STRNCMP
 #define GPERF_CASE_STRNCMP 1
 static int
-gperf_case_strncmp (register const char *s1, register const char *s2, register unsigned int n)
+gperf_case_strncmp (const char *s1, const char *s2, size_t n)
 {
   for (; n > 0;)
     {
@@ -87,13 +87,13 @@ gperf_case_strncmp (register const char *s1, register const char *s2, register u
 class ParameterHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, size_t len);
 public:
-  static const struct params *in_word_set (const char *str, unsigned int len);
+  static const struct params *in_word_set (const char *str, size_t len);
 };
 
 inline unsigned int
-ParameterHash::hash (register const char *str, register unsigned int len)
+ParameterHash::hash (const char *str, size_t len)
 {
   static const unsigned short asso_values[] =
     {
@@ -124,70 +124,70 @@ ParameterHash::hash (register const char *str, register unsigned int len)
       513, 513, 513, 513, 513, 513, 513, 513, 513, 513,
       513, 513, 513, 513, 513, 513
     };
-  register int hval = len;
+  unsigned int hval = len;
 
   switch (hval)
     {
       default:
-        hval += asso_values[(unsigned char)str[17]];
+        hval += asso_values[static_cast<unsigned char>(str[17])];
       /*FALLTHROUGH*/
       case 17:
-        hval += asso_values[(unsigned char)str[16]];
+        hval += asso_values[static_cast<unsigned char>(str[16])];
       /*FALLTHROUGH*/
       case 16:
-        hval += asso_values[(unsigned char)str[15]];
+        hval += asso_values[static_cast<unsigned char>(str[15])];
       /*FALLTHROUGH*/
       case 15:
-        hval += asso_values[(unsigned char)str[14]];
+        hval += asso_values[static_cast<unsigned char>(str[14])];
       /*FALLTHROUGH*/
       case 14:
-        hval += asso_values[(unsigned char)str[13]];
+        hval += asso_values[static_cast<unsigned char>(str[13])];
       /*FALLTHROUGH*/
       case 13:
-        hval += asso_values[(unsigned char)str[12]];
+        hval += asso_values[static_cast<unsigned char>(str[12])];
       /*FALLTHROUGH*/
       case 12:
-        hval += asso_values[(unsigned char)str[11]];
+        hval += asso_values[static_cast<unsigned char>(str[11])];
       /*FALLTHROUGH*/
       case 11:
-        hval += asso_values[(unsigned char)str[10]];
+        hval += asso_values[static_cast<unsigned char>(str[10])];
       /*FALLTHROUGH*/
       case 10:
-        hval += asso_values[(unsigned char)str[9]];
+        hval += asso_values[static_cast<unsigned char>(str[9])];
       /*FALLTHROUGH*/
       case 9:
-        hval += asso_values[(unsigned char)str[8]];
+        hval += asso_values[static_cast<unsigned char>(str[8])];
       /*FALLTHROUGH*/
       case 8:
-        hval += asso_values[(unsigned char)str[7]];
+        hval += asso_values[static_cast<unsigned char>(str[7])];
       /*FALLTHROUGH*/
       case 7:
-        hval += asso_values[(unsigned char)str[6]];
+        hval += asso_values[static_cast<unsigned char>(str[6])];
       /*FALLTHROUGH*/
       case 6:
-        hval += asso_values[(unsigned char)str[5]];
+        hval += asso_values[static_cast<unsigned char>(str[5])];
       /*FALLTHROUGH*/
       case 5:
-        hval += asso_values[(unsigned char)str[4]];
+        hval += asso_values[static_cast<unsigned char>(str[4])];
       /*FALLTHROUGH*/
       case 4:
-        hval += asso_values[(unsigned char)str[3]];
+        hval += asso_values[static_cast<unsigned char>(str[3])];
       /*FALLTHROUGH*/
       case 3:
-        hval += asso_values[(unsigned char)str[2]];
+        hval += asso_values[static_cast<unsigned char>(str[2])];
       /*FALLTHROUGH*/
       case 2:
-        hval += asso_values[(unsigned char)str[1]];
+        hval += asso_values[static_cast<unsigned char>(str[1])];
       /*FALLTHROUGH*/
       case 1:
-        hval += asso_values[(unsigned char)str[0]];
+        hval += asso_values[static_cast<unsigned char>(str[0])];
         break;
     }
   return hval;
 }
 
 const struct params *
-ParameterHash::in_word_set (register const char *str, register unsigned int len)
+ParameterHash::in_word_set (const char *str, size_t len)
 {
   enum
     {
@@ -472,15 +472,15 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = hash (str, len);
+      unsigned int key = hash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
+      if (key <= MAX_HASH_VALUE)
         {
-          register int index = lookup[key];
+          int index = lookup[key];
 
           if (index >= 0)
             {
-              register const char *s = wordlist[index].name;
+              const char *s = wordlist[index].name;
 
               if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_strncmp (str, s, len) && s[len] == '\0')
                 return &wordlist[index];
