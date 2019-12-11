@@ -44,6 +44,7 @@ RequestContext::RequestContext(Proxy& proxy,
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
+   mTopRouteFlowTupleSet(false),
    mResponseContext(*this),
    mTCSerial(0),
    mSessionCreatedEventSent(false),
@@ -378,8 +379,9 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
    try
    {
       // .slg. look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
-      if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
-          getProxy().isMyUri(msg->header(h_RequestLine).uri()))
+      if(!mTopRouteFlowTupleSet &&  // If we have a flow token in top route, then we don't need to route with RequestUri (so don't consider self aimed)
+         (!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
+         getProxy().isMyUri(msg->header(h_RequestLine).uri()))
       {
          // .bwc. Someone sent an ACK with us in the Request-Uri, and no
          // Route headers (after we have removed ourself). We will never perform 
@@ -388,7 +390,7 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
          handleSelfAimedStrayAck(msg);
       }
       // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
-      else if(msg->hasForceTarget() || !mTopRoute.uri().host().empty() || getProxy().isMyUri(msg->header(h_From).uri()))
+      else if(msg->hasForceTarget() || mTopRouteFlowTupleSet || getProxy().isMyUri(msg->header(h_From).uri()))
       {
          // Top most route is us, or From header uri is ours.  Note:  The From check is 
          // required to interoperate with endpoints that configure outbound proxy 
@@ -826,15 +828,10 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
       
       mAck200ToRetransmit->header(h_Vias).push_front(Via());
 
-      // .bwc. Check for flow-token
-      if(!mTopRoute.uri().user().empty())
+      // .bwc. Check for flow-token use
+      if(mTopRouteFlowTupleSet)
       {
-         resip::Tuple dest(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
-         if(!(dest==resip::Tuple()))
-         {
-            // valid flow token
-            mAck200ToRetransmit->setDestination(dest);
-         }
+         mAck200ToRetransmit->setDestination(mTopRouteFlowTuple);
       }
    }
 
@@ -1052,6 +1049,17 @@ RequestContext::removeTopRouteIfSelf()
             // should we reject?
          }
       }
+
+      // Extract Flow Token from mTopRoute - if present
+      if (!mTopRoute.uri().user().empty())
+      {
+          resip::Tuple flowTuple(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
+          if (!(flowTuple == Tuple()))
+          {
+             mTopRouteFlowTuple = flowTuple;
+             mTopRouteFlowTupleSet = true;
+          }
+      }
    }
 }
 
@@ -1071,6 +1079,18 @@ NameAddr&
 RequestContext::getTopRoute()
 {
    return mTopRoute;
+}
+
+bool
+RequestContext::isTopRouteFlowTupleSet()
+{
+    return mTopRouteFlowTupleSet;
+}
+
+Tuple&
+RequestContext::getTopRouteFlowTuple()
+{
+   return mTopRouteFlowTuple;
 }
 
 const resip::Data&

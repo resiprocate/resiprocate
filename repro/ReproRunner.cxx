@@ -527,6 +527,7 @@ ReproRunner::restart()
 void
 ReproRunner::onReload()
 {
+   mSipStack->onReload();
    // Let the plugins know
    std::vector<Plugin*>::iterator it;
    for(it = mPlugins.begin(); it != mPlugins.end(); it++)

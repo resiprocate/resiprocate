@@ -5,7 +5,7 @@
 
 namespace resip 
 {
-struct params { char *name; ParameterTypes::Type type; };
+struct params { const char *name; ParameterTypes::Type type; };
 /* maximum key range = 494, duplicates = 0 */
 
 class ParameterHash
