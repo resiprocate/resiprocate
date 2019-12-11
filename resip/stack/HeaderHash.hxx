@@ -6,7 +6,7 @@
 namespace resip 
 {
 
-struct headers { char *name; Headers::Type type; };
+struct headers { const char *name; Headers::Type type; };
 /* maximum key range = 494, duplicates = 0 */
 
 class HeaderHash
