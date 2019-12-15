@@ -193,8 +193,8 @@ DateCategory::setDatetime(time_t datetime)
 DayOfWeek
 DateCategory::DayOfWeekFromData(const Data& dow)
 {
-   register const char *str = dow.data();
-   register Data::size_type len = dow.size();
+   const char *str = dow.data();
+   Data::size_type len = dow.size();
 
    const struct days* _day = DayOfWeekHash::in_word_set(str, len);
    if(_day != 0)
@@ -210,8 +210,8 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 Month
 DateCategory::MonthFromData(const Data& mon)
 {
-   register const char *str = mon.data();
-   register Data::size_type len = mon.size();
+   const char *str = mon.data();
+   Data::size_type len = mon.size();
 
    const struct months* _month = MonthHash::in_word_set(str, len);
    if(_month != 0)
