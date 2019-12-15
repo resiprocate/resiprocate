@@ -1793,7 +1793,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
    }
 }
 
-#if defined(USE_SSL)
+#if defined(USE_SSL) && !defined(OPENSSL_NO_BF)
 #include <openssl/blowfish.h>
 
 static const Data sep("[]");
