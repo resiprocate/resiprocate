@@ -77,7 +77,9 @@ class InviteSession : public DialogUsage
 
       /** sends a refer request */
       virtual void refer(const NameAddr& referTo, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const NameAddr& referredBy, bool referSub = true);
       virtual void refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const NameAddr& referredBy, std::auto_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends a refer request with a replaces header */
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
