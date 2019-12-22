@@ -4,6 +4,7 @@
 */
 
 #cmakedefine DB_HEADER "@DB_HEADER@"
+#cmakedefine GPERF_SIZE_TYPE @GPERF_SIZE_TYPE@
 #cmakedefine HAVE_EPOLL 1
 #cmakedefine HAVE_POPT_H 1
 #cmakedefine USE_SSL 1

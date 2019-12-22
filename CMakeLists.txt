@@ -5,7 +5,7 @@ if(POLICY CMP0042)
   CMAKE_POLICY(SET CMP0042 NEW)
 endif(POLICY CMP0042)
 
-project(reSIProcate VERSION 1.11.0)
+project(reSIProcate VERSION 1.12.0)
 
 include(GNUInstallDirs)
 include(Utilities)
@@ -46,13 +46,13 @@ endif()
 # ares
 if(WITH_C_ARES)
    # Don't use built-in ares
-   find_package(cares REQUIRED)
+   find_package(c-ares REQUIRED)
 
    set(USE_CARES true)
    add_definitions(-DUSE_CARES)
 
-   set(ARES_LIBRARIES ${CARES_LIBRARIES})
-   include_directories(${CARES_INCLUDE_DIRS})
+   set(ARES_LIBRARIES c-ares::cares)
+   include_directories(${c-ares_INCLUDE_DIR})
 else()
    # Use built-in ares
    set(USE_ARES true)
@@ -74,35 +74,40 @@ if(POPT_FOUND)
 endif()
 
 # ASIO
+# modern ASIO requires C++11
+set(ASIO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/asio")
 find_package(ASIO)
 if(ASIO_FOUND)
-   include_directories(${ASIO_INCLUDE_DIRS})
+   include_directories(SYSTEM ${ASIO_INCLUDE_DIRS})
 endif()
 
 # Boost
 find_package(Boost)
 if(Boost_FOUND)
-   include_directories(${Boost_INCLUDE_DIRS})
+   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 endif()
 
 # SRTP
 find_package(srtp)
 if(SRTP_FOUND)
-   include_directories(${SRTP_INCLUDE_DIRS})
+   include_directories(SYSTEM ${SRTP_INCLUDE_DIRS})
 endif()
 
 # Cajun
 find_package(cajun)
 if(CAJUN_FOUND)
-   include_directories(${CAJUN_INCLUDE_DIRS})
+   include_directories(SYSTEM ${CAJUN_INCLUDE_DIRS})
 endif()
 
 # BerkeleyDb
 find_package(BerkeleyDb)
 if(BERKELEYDB_FOUND)
-   include_directories(${BERKELEYDB_INCLUDE_DIRS})
+   include_directories(SYSTEM ${BERKELEYDB_INCLUDE_DIRS})
    set(DB_HEADER "db_cxx.h")
 endif()
+
+# gperf
+set(GPERF_SIZE_TYPE "size_t")
 
 # epoll
 include(CheckIncludeFiles)

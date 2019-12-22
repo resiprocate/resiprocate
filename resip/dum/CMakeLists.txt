@@ -101,6 +101,7 @@ set(INCLUDES
    SubscriptionState.hxx
    TargetCommand.hxx
    TlsPeerAuthManager.hxx
+   TlsPeerIdentityInfoMessage.hxx
    WsCookieAuthManager.hxx
    UsageUseException.hxx
    UserAuthInfo.hxx
@@ -185,6 +186,7 @@ add_library(dum
    SubscriptionState.cxx
    TargetCommand.cxx
    TlsPeerAuthManager.cxx
+   TlsPeerIdentityInfoMessage.cxx
    UserAuthInfo.cxx
    UserProfile.cxx
    WsCookieAuthManager.cxx

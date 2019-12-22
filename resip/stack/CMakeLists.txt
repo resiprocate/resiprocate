@@ -7,6 +7,7 @@ set(INCLUDES
    ApplicationMessage.hxx
    ApplicationSip.hxx
    Auth.hxx
+   BasicDomainMatcher.hxx
    BasicNonceHelper.hxx
    BranchParameter.hxx
    CallId.hxx
@@ -205,6 +206,7 @@ add_library(resip
    Aor.cxx
    ApiCheck.cxx
    ApplicationSip.cxx
+   BasicDomainMatcher.cxx
    BasicNonceHelper.cxx
    BranchParameter.cxx
    Connection.cxx
