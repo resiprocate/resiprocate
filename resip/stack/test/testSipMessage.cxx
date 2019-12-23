@@ -2296,6 +2296,28 @@ main(int argc, char** argv)
       assert( msg->header(h_ContentLength).value() == 0 );
    }
 
+   {
+		   Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+		   "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+		   "To: Bob <sip:bob@biloxi.com>\r\n"
+		   "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+		   "Call-ID: a84b4c76e66710\r\n"
+		   "CSeq: 314159 INVITE\r\n"
+		   "Max-Forwards: 70\r\n"
+		   "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+		   "P-Access-Network-Info: 3GPP-GERAN;cgi-3gpp=24008;network-provided;x-roaming-status=home, 3GPP-E-UTRAN-FDD;local-time-zone=\"2019-12-11T14:34:36+01:00\";utran-cell-id-3gpp=2400827261b04603\r\n"
+		   "Contact: <sip:192.168.2.15:5100>\r\n"
+		   "Content-Length: 0\r\n"
+		   "\r\n");
+
+       auto_ptr<SipMessage> msg (TestSupport::makeMessage (txt));
+       assert( msg->header(resip::h_PAccessNetworkInfos).size() == 2);
+       msg->header (resip::h_PAccessNetworkInfos).pop_back ();
+       assert( msg->header(resip::h_PAccessNetworkInfos).size() == 1);
+       msg->header (resip::h_PAccessNetworkInfos).push_back (resip::Token("3GPP-E-UTRAN-FDD;local-time-zone=\"2019-12-11T14:34:36+01:00\";utran-cell-id-3gpp=2400827261b04603"));
+       assert( msg->header(resip::h_PAccessNetworkInfos).size() == 2);
+   }
+
    resipCerr << "\nTEST OK" << endl;
    return 0;
 }
