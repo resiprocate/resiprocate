@@ -94,6 +94,7 @@ if(SRTP2_FOUND)
 endif()
 
 # Cajun
+set(CAJUN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun")
 find_package(cajun)
 if(CAJUN_FOUND)
    include_directories(SYSTEM ${CAJUN_INCLUDE_DIRS})
