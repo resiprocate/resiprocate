@@ -240,50 +240,26 @@ target_include_directories(librepro PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(librepro PRIVATE ${CAJUN_INCLUDE_DIRS})
 target_include_directories(librepro PRIVATE ${BERKELEYDB_INCLUDE_DIRS})
 target_link_libraries(librepro PRIVATE ${BERKELEYDB_LIBRARIES})
+target_link_libraries(librepro PRIVATE ${GEOIP_LIBRARIES})
+
+target_add_conditional_sources(librepro MySQL_FOUND
+        MySqlDb.cxx
+        )
+target_link_libraries(librepro PRIVATE ${MySQL_LIBRARIES})
+target_include_directories(librepro PRIVATE ${MySQL_INCLUDE_DIRS})
+
+target_add_conditional_sources(librepro PostgreSQL_FOUND
+        PostgreSqlDb.cxx
+        )
+target_link_libraries(librepro PRIVATE ${PostgreSQL_LIBRARIES})
+target_include_directories(librepro PRIVATE ${PostgreSQL_INCLUDE_DIRS})
 
 #[[
-reproincludedir = $(includedir)/repro
-nobase_reproinclude_HEADERS =
-
-
-if USE_SSL
-librepro_la_SOURCES +=
-stateAgents/CertServer.cxx
-stateAgents/CertPublicationHandler.cxx
-stateAgents/CertSubscriptionHandler.cxx
-stateAgents/PrivateKeyPublicationHandler.cxx
-stateAgents/PrivateKeySubscriptionHandler.cxx
-endif
-
-if USE_MYSQL
-librepro_la_SOURCES += MySqlDb.cxx
-librepro_la_LIBADD += @LIBMYSQL_LIBADD@
-endif
-
-if USE_POSTGRESQL
-librepro_la_SOURCES += PostgreSqlDb.cxx
-librepro_la_LIBADD += @LIBPOSTGRESQL_LIBADD@
-endif
-
-if USE_MAXMIND_GEOIP
-librepro_la_LIBADD += @LIBGEOIP_LIBADD@
-endif
 
 if BUILD_QPID_PROTON
 librepro_la_SOURCES += QpidProtonThread.cxx
 nobase_reproinclude_HEADERS += QpidProtonThread.hxx
 librepro_la_LIBADD += -lqpid-proton-cpp
 endif
-
-# reproInfo.hxx is created manually be other build systems
-# but here we just delegate to the autoconf generated config.h
-reproInfo.hxx:
-@echo "#include"config.h\"" >  reproInfo.hxx
-cat reproInfo.hxx
-
-ReproVersion.cxx: reproInfo.hxx
-
-dist_man_MANS = doc/repro.8
-dist_man_MANS += doc/reprocmd.8
 
 ]]

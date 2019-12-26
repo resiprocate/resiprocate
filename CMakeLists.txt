@@ -109,6 +109,24 @@ if(BERKELEYDB_FOUND)
    set(DB_HEADER "db_cxx.h")
 endif()
 
+# GeoIP
+find_package(GeoIP)
+if(GeoIP_FOUND)
+   set(USE_MAXMIND_GEOIP true)
+endif()
+
+# MySQL
+find_package(MySQL)
+if(MySQL_FOUND)
+   set(USE_MYSQL true)
+endif()
+
+# PostgreSQL
+find_package(PostgreSQL)
+if(PostgreSQL_FOUND)
+   set(USE_POSTGRESQL true)
+endif()
+
 # gperf
 set(GPERF_SIZE_TYPE "size_t")
 
