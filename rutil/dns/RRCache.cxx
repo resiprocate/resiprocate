@@ -153,7 +153,7 @@ RRCache::lookup(const Data& target,
                 Result& records, 
                 int& status)
 {
-   records.empty();
+   records.clear();
    status = 0;
    RRList* key = new RRList(target, type);
    RRSet::iterator it = mRRSet.find(key);
