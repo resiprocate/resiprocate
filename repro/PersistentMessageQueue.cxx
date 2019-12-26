@@ -108,7 +108,7 @@ struct Cursor
 
 PersistentMessageQueue::PersistentMessageQueue(const Data& baseDir) : 
 #ifndef DISABLE_BERKELEYDB_USE
-   DbEnv(0), 
+   DbEnv(0u),
    mDb(0), 
 #endif
    mBaseDir(baseDir),

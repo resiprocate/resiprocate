@@ -19,6 +19,8 @@ option(WITH_SSL "Link against SSL libraries" TRUE)
 option(WITH_C_ARES "Link against libc-ares (rather than rutil/dns/ares)" FALSE)
 option(BUILD_SHARED_LIBS "Build libraries as shared" TRUE)
 
+#set(CMAKE_CXX_STANDARD 98)
+
 ####################
 ### Dependencies ###
 ####################
@@ -94,7 +96,7 @@ if(SRTP2_FOUND)
 endif()
 
 # Cajun
-set(CAJUN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun")
+set(CAJUN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
 find_package(cajun)
 if(CAJUN_FOUND)
    include_directories(SYSTEM ${CAJUN_INCLUDE_DIRS})
@@ -157,6 +159,12 @@ if(OPENSSL_FOUND AND ASIO_FOUND AND Boost_FOUND AND SRTP2_FOUND)
    add_subdirectory(reflow)
 else()
    message(STATUS "Missing libraries, will not build reFlow")
+endif()
+
+if(BERKELEYDB_FOUND AND CAJUN_FOUND)
+   add_subdirectory(repro)
+else()
+   message(STATUS "Missing libraries, will not build repro")
 endif()
 
 ###############
