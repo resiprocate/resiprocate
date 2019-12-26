@@ -28,6 +28,7 @@ set(INCLUDES
    DateCategory.hxx
    DeprecatedDialog.hxx
    DialogInfoContents.hxx
+   Dispatcher.hxx
    DnsInterface.hxx
    DnsResult.hxx
    DnsResultMessage.hxx
@@ -39,6 +40,7 @@ set(INCLUDES
    ExistsOrDataParameter.hxx
    ExistsParameter.hxx
    ExpiresCategory.hxx
+   ExtendedDomainMatcher.hxx
    ExtensionHeader.hxx
    ExtensionParameter.hxx
    ExternalBodyContents.hxx
@@ -166,6 +168,8 @@ set(INCLUDES
    ValueFifo.hxx
    Via.hxx
    WarningCategory.hxx
+   Worker.hxx
+   WorkerThread.hxx
    WsBaseTransport.hxx
    WsDecorator.hxx
    WsFrameExtractor.hxx
@@ -218,6 +222,7 @@ add_library(resip
    DataParameter.cxx
    DeprecatedDialog.cxx
    DialogInfoContents.cxx
+   Dispatcher.cxx
    DnsInterface.cxx
    DnsResult.cxx
    DtlsMessage.cxx
@@ -227,6 +232,7 @@ add_library(resip
    ExistsOrDataParameter.cxx
    ExistsParameter.cxx
    ExternalBodyContents.cxx
+   ExtendedDomainMatcher.cxx
    QValue.cxx
    QValueParameter.cxx
    GenericContents.cxx
@@ -311,6 +317,7 @@ add_library(resip
    KeepAliveMessage.cxx
    StatelessHandler.cxx
    InvalidContents.cxx
+   WorkerThread.cxx
    WsBaseTransport.cxx
    WsFrameExtractor.cxx
    WsTransport.cxx

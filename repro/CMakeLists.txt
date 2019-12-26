@@ -223,11 +223,23 @@ ${INCLUDES}
 
         )
 
+target_add_conditional_sources(librepro OPENSSL_FOUND
+stateAgents/CertServer.cxx
+stateAgents/CertPublicationHandler.cxx
+stateAgents/CertSubscriptionHandler.cxx
+stateAgents/PrivateKeyPublicationHandler.cxx
+stateAgents/PrivateKeySubscriptionHandler.cxx
+        )
+
+target_link_libraries(librepro PUBLIC rutil resip dum)
+
 target_include_directories(librepro PUBLIC ${PROJECT_SOURCE_DIR})
 target_include_directories(librepro PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(librepro PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(librepro PRIVATE ${CAJUN_INCLUDE_DIRS})
+target_include_directories(librepro PRIVATE ${BERKELEYDB_INCLUDE_DIRS})
+target_link_libraries(librepro PRIVATE ${BERKELEYDB_LIBRARIES})
 
 #[[
 reproincludedir = $(includedir)/repro
