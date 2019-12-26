@@ -343,10 +343,10 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    //   octet_string_hex_string(client_master_key_and_salt, key_len + salt_len) << endl;
 
    /* initialize client SRTP policy from profile  */
-   err_status_t err = crypto_policy_set_from_profile_for_rtp(&client_policy.rtp, profile);   
+   srtp_err_status_t err = srtp_crypto_policy_set_from_profile_for_rtp(&client_policy.rtp, profile);
    if (err) resip_assert(0);
 
-   err = crypto_policy_set_from_profile_for_rtcp(&client_policy.rtcp, profile);
+   err = srtp_crypto_policy_set_from_profile_for_rtcp(&client_policy.rtcp, profile);
    if (err) resip_assert(0);
    client_policy.next = NULL;
 
@@ -370,10 +370,10 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    //   octet_string_hex_string(server_master_key_and_salt, key_len + salt_len) << endl;
 
    /* initialize server SRTP policy from profile  */
-   err = crypto_policy_set_from_profile_for_rtp(&server_policy.rtp, profile);
+   err = srtp_crypto_policy_set_from_profile_for_rtp(&server_policy.rtp, profile);
    if (err) resip_assert(0);
 
-   err = crypto_policy_set_from_profile_for_rtcp(&server_policy.rtcp, profile);
+   err = srtp_crypto_policy_set_from_profile_for_rtcp(&server_policy.rtcp, profile);
    if (err) resip_assert(0);
    server_policy.next = NULL;
 

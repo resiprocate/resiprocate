@@ -13,7 +13,7 @@
 #ifdef WIN32
 #include <srtp.h>
 #else
-#include <srtp/srtp.h>
+#include <srtp2/srtp.h>
 #endif
 #include <boost/shared_ptr.hpp>
 

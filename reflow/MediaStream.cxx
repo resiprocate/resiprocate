@@ -137,7 +137,7 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
       return false;
    }
 
-   err_status_t status;
+   srtp_err_status_t status;
    Lock lock(mMutex);
    if(mSRTPSessionOutCreated)
    {
@@ -164,12 +164,12 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
    switch(cryptoSuite)
    {
    case SRTP_AES_CM_128_HMAC_SHA1_80:
-      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtp);
-      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtcp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtcp);
       break;
    case SRTP_AES_CM_128_HMAC_SHA1_32:
-      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtp);
-      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtcp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtcp);
       break;
    default:
       ErrLog(<< "Unable to create outbound SRTP session, invalid crypto suite=" << cryptoSuite);
@@ -202,7 +202,7 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
       return false;
    }
 
-   err_status_t status;
+   srtp_err_status_t status;
    Lock lock(mMutex);
    if(mSRTPSessionInCreated)
    {
@@ -229,12 +229,12 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    switch(cryptoSuite)
    {
    case SRTP_AES_CM_128_HMAC_SHA1_80:
-      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtp);
-      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtcp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtcp);
       break;
    case SRTP_AES_CM_128_HMAC_SHA1_32:
-      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtp);
-      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtcp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtp);
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtcp);
       break;
    default:
       ErrLog(<< "Unable to create inbound SRTP session, invalid crypto suite=" << cryptoSuite);
@@ -258,11 +258,11 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    return true;
 }
 
-err_status_t 
+srtp_err_status_t
 MediaStream::srtpProtect(void* data, int* size, bool rtcp)
 {
    Lock lock(mMutex);
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSRTPSessionOutCreated)
    {
       if(rtcp)
@@ -277,11 +277,11 @@ MediaStream::srtpProtect(void* data, int* size, bool rtcp)
    return status;
 }
 
-err_status_t 
+srtp_err_status_t
 MediaStream::srtpUnprotect(void* data, int* size, bool rtcp)
 {
    Lock lock(mMutex);
-   err_status_t status = err_status_no_ctx;
+   srtp_err_status_t status = srtp_err_status_no_ctx;
    if(mSRTPSessionInCreated)
    {
       if(rtcp)

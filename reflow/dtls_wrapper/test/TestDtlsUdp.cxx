@@ -12,6 +12,8 @@
 
 #include <memory.h>
 
+#include <boost/predef/other/endian.h>
+
 #include <openssl/ssl.h>
 #include <openssl/srtp.h>
 
@@ -25,8 +27,52 @@
 
 extern "C" 
 {
-#include <srtp/srtp.h>
-#include <srtp/srtp_priv.h>
+#include <srtp2/srtp.h>
+}
+
+namespace {
+
+#ifndef BOOST_ENDIAN_LITTLE_BYTE
+#error Endianess detection is broken
+#endif
+
+#if BOOST_ENDIAN_LITTLE_BYTE
+
+/*
+ * srtp_hdr_t represents an RTP or SRTP header.  The bit-fields in
+ * this structure should be declared "unsigned int" instead of
+ * "unsigned char", but doing so causes the MS compiler to not
+ * fully pack the bit fields.
+ */
+
+typedef struct {
+    unsigned char cc:4;	/* CSRC count             */
+    unsigned char x:1;	/* header extension flag  */
+    unsigned char p:1;	/* padding flag           */
+    unsigned char version:2; /* protocol version    */
+    unsigned char pt:7;	/* payload type           */
+    unsigned char m:1;	/* marker bit             */
+    uint16_t seq;		/* sequence number        */
+    uint32_t ts;		/* timestamp              */
+    uint32_t ssrc;	/* synchronization source */
+} srtp_hdr_t;
+
+#else /*  BIG_ENDIAN */
+
+typedef struct {
+    unsigned char version:2; /* protocol version    */
+    unsigned char p:1;	/* padding flag           */
+    unsigned char x:1;	/* header extension flag  */
+    unsigned char cc:4;	/* CSRC count             */
+    unsigned char m:1;	/* marker bit             */
+    unsigned pt:7;	/* payload type           */
+    uint16_t seq;		/* sequence number        */
+    uint32_t ts;		/* timestamp              */
+    uint32_t ssrc;	/* synchronization source */
+} srtp_hdr_t;
+
+#endif
+
 }
 
 void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::string &rOutDump)
@@ -200,8 +246,8 @@ TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int le
 
    if(useSrtp)
    {
-      int r=srtp_protect(srtpOut,(unsigned char *)hdr,&l);
-      assert(r==0);
+      srtp_err_status_t r=srtp_protect(srtpOut,(unsigned char *)hdr,&l);
+      assert(r==srtp_err_status_ok);
    }
    write((unsigned char *)hdr,l);
 
@@ -217,8 +263,8 @@ TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, uns
 
    if(useSrtp)
    {
-      int r=srtp_unprotect(srtpIn,hdr,&len_int);
-      assert(r==0);
+      srtp_err_status_t r=srtp_unprotect(srtpIn,hdr,&len_int);
+      assert(r==srtp_err_status_ok);
       inlen=(unsigned int)len_int;
    }
 
