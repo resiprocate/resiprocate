@@ -1,4 +1,4 @@
-#if !defined(RESIP_LOCATIONSSERVER_REQUEST_PROCESSOR_HXX)
+#if !defined(RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX)
 #define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
 #include "repro/ProxyConfig.hxx"
