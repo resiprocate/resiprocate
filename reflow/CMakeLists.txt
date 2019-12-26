@@ -36,8 +36,8 @@ add_library(reflow
 )
 
 target_include_directories(reflow PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/reflow/dtls_wrapper>)
-target_include_directories(reflow PUBLIC ${SRTP_INCLUDE_DIRS})
-target_link_libraries(reflow rutil reTurnClient ${SRTP_LIBRARIES})
+target_include_directories(reflow PUBLIC ${SRTP2_INCLUDE_DIRS})
+target_link_libraries(reflow rutil reTurnClient ${SRTP2_LIBRARIES})
 set_target_properties(reflow PROPERTIES FOLDER reflow)
 set_target_properties(reflow PROPERTIES VERSION ${SO_RELEASE})
 

@@ -87,10 +87,10 @@ if(Boost_FOUND)
    include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 endif()
 
-# SRTP
-find_package(srtp)
-if(SRTP_FOUND)
-   include_directories(SYSTEM ${SRTP_INCLUDE_DIRS})
+# SRTP2
+find_package(srtp2)
+if(SRTP2_FOUND)
+   include_directories(SYSTEM ${SRTP2_INCLUDE_DIRS})
 endif()
 
 # Cajun
@@ -152,7 +152,7 @@ else()
    message(STATUS "Missing libraries, will not build reTurn")
 endif()
 
-if(OPENSSL_FOUND AND ASIO_FOUND AND Boost_FOUND AND SRTP_FOUND)
+if(OPENSSL_FOUND AND ASIO_FOUND AND Boost_FOUND AND SRTP2_FOUND)
    add_subdirectory(reflow)
 else()
    message(STATUS "Missing libraries, will not build reFlow")
