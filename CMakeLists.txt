@@ -17,7 +17,12 @@ enable_testing()
 # specified on the command line, using cmake-gui or ccmake.
 option(WITH_SSL "Link against SSL libraries" TRUE)
 option(WITH_C_ARES "Link against libc-ares (rather than rutil/dns/ares)" FALSE)
-option(BUILD_SHARED_LIBS "Build libraries as shared" TRUE)
+if(WIN32)
+   set(BUILD_SHARED_LIBS_DEFAULT OFF)
+else()
+   set(BUILD_SHARED_LIBS_DEFAULT ON)
+endif()
+option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
 
 #set(CMAKE_CXX_STANDARD 98)
 
