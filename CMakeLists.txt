@@ -149,6 +149,11 @@ if(HAVE_CLOCK_GETTIME_MONOTONIC)
    add_definitions(-DHAVE_CLOCK_GETTIME_MONOTONIC)
 endif()
 
+if(WIN32)
+   add_definitions(-DNOMINMAX)
+   add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
+
 # shared library versioning
 
 set(SO_RELEASE "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
