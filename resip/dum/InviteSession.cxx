@@ -778,6 +778,7 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
+         mProposedRemoteOfferAnswer.reset();  // Clear out any potential ProposedRemoteOfferAnswer since we are rejecting
          transition(Connected);
 
          SharedPtr<SipMessage> response(new SipMessage);
