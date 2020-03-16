@@ -155,6 +155,7 @@ class InviteSession : public DialogUsage
       const SdpContents& getProposedRemoteSdp() const;
 
       bool isConnected() const;
+      bool isUpdating() const;
       bool isTerminated() const;
       bool isEarly() const;     // UAC Early states
       bool isAccepted() const;  // UAS States after accept is called

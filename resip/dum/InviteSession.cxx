@@ -299,6 +299,29 @@ InviteSession::isConnected() const
 }
 
 bool
+InviteSession::isUpdating() const
+{
+  switch (mState)
+  {
+    case SentUpdate:
+    case SentUpdateGlare:
+    case SentReinvite:
+    case SentReinviteGlare:
+    case SentReinviteNoOffer:
+    case SentReinviteAnswered:
+    case SentReinviteNoOfferGlare:
+    case ReceivedUpdate:
+    case ReceivedReinvite:
+    case ReceivedReinviteNoOffer:
+    case ReceivedReinviteSentOffer:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
+bool
 InviteSession::isEarly() const
 {
    switch (mState)

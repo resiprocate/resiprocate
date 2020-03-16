@@ -425,7 +425,17 @@ Dialog::dispatch(const SipMessage& msg)
          mNetworkAssociation.update(msg, keepAliveTime, false /* targetSupportsOutbound */); // target supports outbound is detected in registration responses only
       }
    }
-   
+
+   if(msg.isRequest() &&
+       (INVITE == msg.header(h_CSeq).method() || UPDATE == msg.header(h_CSeq).method()) &&
+       mInviteSession != 0 && mInviteSession->isUpdating())
+   {
+     SipMessage failure;
+     makeResponse(failure, msg, 491);
+     mDum.sendResponse(failure);
+     return;
+   }
+
    handleTargetRefresh(msg);
    if (msg.isRequest())
    {
