@@ -304,12 +304,9 @@ InviteSession::isUpdating() const
   switch (mState)
   {
     case SentUpdate:
-    case SentUpdateGlare:
     case SentReinvite:
-    case SentReinviteGlare:
     case SentReinviteNoOffer:
     case SentReinviteAnswered:
-    case SentReinviteNoOfferGlare:
     case ReceivedUpdate:
     case ReceivedReinvite:
     case ReceivedReinviteNoOffer:
