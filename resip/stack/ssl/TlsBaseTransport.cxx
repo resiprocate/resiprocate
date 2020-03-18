@@ -45,7 +45,8 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    mUseEmailAsSIP(useEmailAsSIP),
    mCertificateFilename(certificateFilename),
    mPrivateKeyFilename(privateKeyFilename),
-   mPrivateKeyPassPhrase(privateKeyPassPhrase)
+   mPrivateKeyPassPhrase(privateKeyPassPhrase),
+   mReloadCertificate(false)
 {
    setTlsDomain(sipDomain);   
    mTuple.setType(transportType);
@@ -84,8 +85,8 @@ TlsBaseTransport::~TlsBaseTransport()
 void
 TlsBaseTransport::onReload()
 {
-   DebugLog(<<"TlsBaseTransport::onReload, re-reading certificate and private key for domain " << tlsDomain());
-   mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+   DebugLog(<<"TlsBaseTransport::onReload, setting mReloadCertificate for domain " << tlsDomain());
+   mReloadCertificate = true;
 }
 
 SSL_CTX* 
@@ -128,6 +129,18 @@ Connection*
 TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    resip_assert(this);
+   // FIXME: would be better to do this in a method called asynchronously after onReload
+   // as doing it here may slow down the connection.
+   // HUP is only likely to happen once per day for log reloads so the impact of doing it
+   // here is negligible
+   if(mReloadCertificate)
+   {
+      DebugLog(<<"TlsBaseTransport::createConnection, re-reading certificate and private key for domain " << tlsDomain());
+      mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+      // an extra log entry so we can see how long it took
+      StackLog(<<"TlsBaseTransport::createConnection, updated certificate and private key for domain " << tlsDomain());
+      mReloadCertificate = false;
+   }
    Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
    return conn;

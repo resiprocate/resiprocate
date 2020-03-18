@@ -90,6 +90,7 @@ class TlsBaseTransport : public TcpBaseTransport
       const Data mCertificateFilename;
       const Data mPrivateKeyFilename;
       const Data mPrivateKeyPassPhrase;
+      volatile bool mReloadCertificate;
 };
 
 }
