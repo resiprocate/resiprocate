@@ -3,6 +3,7 @@
 
 #include <map>
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
@@ -82,7 +83,7 @@ private:
 
    TurnManager& mTurnManager;
    TurnAllocationManager& mTurnAllocationManager;
-   asio::deadline_timer mAllocationTimer;
+   asio::steady_timer mAllocationTimer;
 
    AsyncSocketBase* mLocalTurnSocket;
    boost::shared_ptr<UdpRelayServer> mUdpRelayServer;

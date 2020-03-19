@@ -19,6 +19,12 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+using namespace boost::chrono;
+#endif
+
 FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_service& ioService) :
   mIOService(ioService) 
 {
@@ -27,8 +33,8 @@ FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_service& ioService) :
 void 
 FlowDtlsTimerContext::addTimer(dtls::DtlsTimer *timer, unsigned int durationMs) 
 {
-   resip::SharedPtr<asio::deadline_timer> deadlineTimer(new asio::deadline_timer(mIOService));
-   deadlineTimer->expires_from_now(boost::posix_time::milliseconds(durationMs));
+   resip::SharedPtr<asio::steady_timer> deadlineTimer(new asio::steady_timer(mIOService));
+   deadlineTimer->expires_from_now(milliseconds(durationMs));
    deadlineTimer->async_wait(boost::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, asio::placeholders::error));
    mDeadlineTimers[timer] = deadlineTimer;
    //InfoLog(<< "FlowDtlsTimerContext: starting timer for " << durationMs << "ms.");

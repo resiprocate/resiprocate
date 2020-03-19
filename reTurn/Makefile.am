@@ -18,12 +18,15 @@ SUBDIRS += test
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
+AM_CXXFLAGS += -DASIO_HAS_BOOST_BIND
+AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
 
 lib_LTLIBRARIES = libreTurnCommon.la
 
 libreTurnCommon_la_LIBADD = $(LIBSSL_LIBADD)
 libreTurnCommon_la_LIBADD += @LIBSTL_LIBADD@
 libreTurnCommon_la_LIBADD += @LIBLOG_LIBADD@
+libreTurnCommon_la_LIBADD += -lboost_system
 libreTurnCommon_la_LIBADD += @LIBPTHREAD_LIBADD@
 libreTurnCommon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
@@ -92,6 +95,7 @@ nobase_reTurninclude_HEADERS = AsyncSocketBaseHandler.hxx \
 #reTurnServer_LDADD = librepro.la
 reTurnServer_LDADD = libreTurnCommon.la
 reTurnServer_LDADD += ../rutil/librutil.la
+reTurnServer_LDADD += -lboost_system
 #reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
 reTurnServer_LDADD += @LIBSTL_LIBADD@

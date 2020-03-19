@@ -117,7 +117,7 @@ protected:
    asio::io_service mIOService;
 
    // handlers and timers required to do a timed out read
-   asio::deadline_timer mReadTimer;
+   asio::steady_timer mReadTimer;
    size_t mBytesRead;
    asio::error_code mReadErrorCode;
    void startReadTimer(unsigned int timeout);

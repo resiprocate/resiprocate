@@ -10,6 +10,12 @@
 using namespace std;
 using namespace resip;
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+using namespace boost::chrono;
+#endif
+
 namespace reTurn {
 
 UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
@@ -209,7 +215,7 @@ UdpServer::ResponseEntry::ResponseEntry(UdpServer* requestUdpServer, UdpServer* 
    mCleanupTimer(requestUdpServer->mIOService)
 {
    // start timer
-   mCleanupTimer.expires_from_now(boost::posix_time::seconds(10));  // Transaction Responses are cached for 10 seconds
+   mCleanupTimer.expires_from_now(seconds(10));  // Transaction Responses are cached for 10 seconds
    mCleanupTimer.async_wait(boost::bind(&UdpServer::cleanupResponseMap, requestUdpServer, asio::placeholders::error, responseMessage->mHeader.magicCookieAndTid));
 }
 

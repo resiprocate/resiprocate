@@ -2,6 +2,7 @@
 #define TURNASYNCSOCKETHANDLER_HXX
 
 #include <rutil/compat.hxx>
+#include <boost/shared_ptr.hpp>
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>

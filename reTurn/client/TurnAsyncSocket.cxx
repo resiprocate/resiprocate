@@ -14,6 +14,12 @@ using namespace resip;
 #define TURN_CHANNEL_BINDING_REFRESH_SECONDS 240   // 4 minuntes - this is one minute before the permission will expire, Note:  ChannelBinding refreshes also refresh permissions
 #define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-12   "  // Note padding size to a multiple of 4, to help compatibility with older clients
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+using namespace boost::chrono;
+#endif
+
 namespace reTurn {
 
 // Initialize static members
@@ -1192,7 +1198,7 @@ TurnAsyncSocket::RequestEntry::startTimer()
 {
    //std::cout << "RequestEntry::startTimer() " << mTimeout << " " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
    // start the request timer
-   mRequestTimer.expires_from_now(boost::posix_time::milliseconds(mTimeout));  
+   mRequestTimer.expires_from_now(milliseconds(mTimeout));  
    mRequestTimer.async_wait(weak_bind<RequestEntry, void(const asio::error_code&)>(shared_from_this(), boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, asio::placeholders::error)));
 }
 
@@ -1302,7 +1308,7 @@ TurnAsyncSocket::clearActiveRequestMap()
 void
 TurnAsyncSocket::startAllocationTimer()
 {
-   mAllocationTimer.expires_from_now(boost::posix_time::seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
+   mAllocationTimer.expires_from_now(seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
    mAllocationTimer.async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::allocationTimerExpired, this, asio::placeholders::error)));
 }
 
@@ -1326,11 +1332,11 @@ TurnAsyncSocket::startChannelBindingTimer(unsigned short channel)
    if(it==mChannelBindingTimers.end())
    {
       std::pair<ChannelBindingTimerMap::iterator,bool> ret = 
-         mChannelBindingTimers.insert(std::pair<unsigned short, asio::deadline_timer*>(channel, new asio::deadline_timer(mIOService)));
+         mChannelBindingTimers.insert(std::pair<unsigned short, asio::steady_timer*>(channel, new asio::steady_timer(mIOService)));
       resip_assert(ret.second);
       it = ret.first;
    }
-   it->second->expires_from_now(boost::posix_time::seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
+   it->second->expires_from_now(seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
    it->second->async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, asio::placeholders::error, channel)));
 }
 

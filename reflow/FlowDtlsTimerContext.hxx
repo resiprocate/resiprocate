@@ -30,7 +30,7 @@ class FlowDtlsTimerContext: public dtls::DtlsTimerContext
 
    private:
      asio::io_service& mIOService;
-     std::map<dtls::DtlsTimer*, resip::SharedPtr<asio::deadline_timer> > mDeadlineTimers;  
+     std::map<dtls::DtlsTimer*, resip::SharedPtr<asio::steady_timer> > mDeadlineTimers;  
 };
 
 }
