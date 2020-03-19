@@ -25,8 +25,8 @@ public:
    void setAccountsFailed(const std::size_t& accountsFailed);
 
 private:
-   volatile std::size_t mAccountsTotal;
-   volatile std::size_t mAccountsFailed;
+   std::size_t mAccountsTotal;
+   std::size_t mAccountsFailed;
    resip::Data mSocket;
 };
 
