@@ -1,76 +1,90 @@
 = Release Notes v 1.10 =
+
 ==1.10.2 Changes==
-changes to support Windows 10 IOT ARM (RaspPi2)
-VS2015 build support
-cleanup some warnings
-rutil: fix ARM / GCC 6 build issue with signed char[]
-resip/stack: fix issue with ACK/non-200 transport selection for client transactions over WSS transports
-repro: SQL backends: singleResultQuery: distinguish error from empty result set
-repro: fix for OutboundTargets added by LocationServer - first parameter should be an AOR and not an instance Id
+*changes to support Windows 10 IOT ARM (RaspPi2)
+*VS2015 build support
+*cleanup some warnings
+*rutil: fix ARM / GCC 6 build issue with signed char[]
+*resip/stack: fix issue with ACK/non-200 transport selection for client transactions over WSS transports
+*repro: SQL backends: singleResultQuery: distinguish error from empty result set
+*repro: fix for OutboundTargets added by LocationServer - first parameter should be an AOR and not an instance Id
+*resip/dum: added convenience API's to DialogUsageManager for ending all ServerSubsciptions and ServerPublications to aid in graceful DUM shutdown
+*repro: fix for OutboundTargets added by LocationServer - first parameter should be an AOR and not an instance Id
+*resip/dum: fixed issue with DUM ServerInviteSession not automatically re-issuing an INVITE after received a 491. Also added tfdum test.
+*resip/stack: fix InternalTransport::bind to work when binding to port 0 when using an IPv6 interface
+*repro: update drop of GeoIP library to latest 1.6.9 version
+*return/recon: update ASIO drop from 1.10.1 to 1.10.6
+*resip/dum: ServerSubscription: fix reason text in responses
+
 ==1.10.1 Changes==
-resip/stack: TLS: make the path argument of the Security class constructor more versatile
-rutil, dum: RADIUS: support for radcli instead of freeradius-client
-build: add more Visual Studio artifacts
+*resip/stack: TLS: make the path argument of the Security class constructor more versatile
+*rutil, dum: RADIUS: support for radcli instead of freeradius-client
+*build: add more Visual Studio artifacts
+
 ==1.10.0 Changes==
-repro: added a full presence server
-resip/stack: WebSocket authentication may now use URL parameters instead of cookies
-repro: added support for PostgreSQL and indexed database definitions
-repro: can include multiple files into repro.config using Include
-resip/stack: TLS: perfect forward secrecy (PFS) support using DH or ECDH
-resip/stack: TLS compatibility and cipher strength improvements
-resip/stack: TLS: support for passphrases used to encrypt private key files for domain certificates
-rutil: better Syslog support (now sets severity correctly)
-rutil: allow customization of assert() behavior using resip_assert(), improves diagnosis of crashes
-resip/stack: added Poll(WSAPoll) implementation for event loop - allows Windows to support thousands of TCP connections instead of only ~60 (FD_SETSIZE)
-resip/stack: added ability to remove transports at runtime
-resip/stack: added netns (linux network namespace) support to stack
+*repro: added a full presence server
+*resip/stack: WebSocket authentication may now use URL parameters instead of cookies
+*repro: added support for PostgreSQL and indexed database definitions
+*repro: can include multiple files into repro.config using Include
+*resip/stack: TLS: perfect forward secrecy (PFS) support using DH or ECDH
+*resip/stack: TLS compatibility and cipher strength improvements
+*resip/stack: TLS: support for passphrases used to encrypt private key files for domain certificates
+*rutil: better Syslog support (now sets severity correctly)
+*rutil: allow customization of assert() behavior using resip_assert(), improves diagnosis of crashes
+*resip/stack: added Poll(WSAPoll) implementation for event loop - allows Windows to support thousands of TCP connections instead of only ~60 (FD_SETSIZE)
+*resip/stack: added ability to remove transports at runtime
+*resip/stack: added netns (linux network namespace) support to stack
+
 ==1.9.11 Changes==
-resip/stack: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
-repro: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
-repro: CommonNameMappings: detect repeated common names in config file
-resip/stack: fix buffer management bug in WebSocket transport
-rutil: XMLCursor: support whitespace before first XML element
-resip/stack: Helper: fix for an auth validation issue
-reTurn: add psql-user-extract script
-resip/dum: DialogUsage: added logic to avoid trapping if mAppDialogSet is 0
-resip/dum: DialogSet: Added handling for non-invite dialogs
-resip/stack: ConnectionBase: increase max headers from 256 to 1024
-rutil/dns/ares: fix for uninitialized pointer
-rutil/dns/ares: remove cache-sensitive logic from caching algorithm
-rutil/stun: Qualify bind to prevent clang from using std::bind
-resip/stack/SdpContents: add some static codec definitions and new methods
+*resip/stack: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
+*repro: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
+*repro: CommonNameMappings: detect repeated common names in config file
+*resip/stack: fix buffer management bug in WebSocket transport
+*rutil: XMLCursor: support whitespace before first XML element
+*resip/stack: Helper: fix for an auth validation issue
+*reTurn: add psql-user-extract script
+*resip/dum: DialogUsage: added logic to avoid trapping if mAppDialogSet is 0
+*resip/dum: DialogSet: Added handling for non-invite dialogs
+*resip/stack: ConnectionBase: increase max headers from 256 to 1024
+*rutil/dns/ares: fix for uninitialized pointer
+*rutil/dns/ares: remove cache-sensitive logic from caching algorithm
+*rutil/stun: Qualify bind to prevent clang from using std::bind
+*resip/stack/SdpContents: add some static codec definitions and new methods
+
 ==1.9.10 Changes==
-resip/stack: support for OpenSSL versions that don't have all option names
-resip/stack: lower severity of some log messages when TLS connections close
-resip/stack: make ensureWriteable more tolerant during TLS handshakes, resolves crashes
-resip/stack: add support for CA root cert bundle files
-resip/stack: use StrongestSuite as default cipher list
-resip/dum: challenge with correct realm when from and req URI domains don't match
-rpm: update Wants and After details in unit files
+*resip/stack: support for OpenSSL versions that don't have all option names
+*resip/stack: lower severity of some log messages when TLS connections close
+*resip/stack: make ensureWriteable more tolerant during TLS handshakes, resolves crashes
+*resip/stack: add support for CA root cert bundle files
+*resip/stack: use StrongestSuite as default cipher list
+*resip/dum: challenge with correct realm when from and req URI domains don't match
+*rpm: update Wants and After details in unit files
+
 ==1.9.9 Changes==
-resip/stack: only support SSL_OP_SAFARI_ECDHE_ECDSA_BUG as configuration string with compatible OpenSSL versions
+*resip/stack: only support SSL_OP_SAFARI_ECDHE_ECDSA_BUG as configuration string with compatible OpenSSL versions
+
 ==1.9.8 Changes==
-resip/stack: add static fields on BaseSecurity for setting OpenSSL CTX options
-resip/stack: explicitly disable SSLv2 and SSLv3 by default when using SSLv23
-resip/stack: allow application to provide OpenSSL certificate verification callback
-repro: change default OpenSSL method from TLSv1_method to SSLv23_method (enables TLS v1.1 and v1.2)
-repro: add configuration options OpenSSLCTXSetOptions and OpenSSLCTXClearOptions to control OpenSSL CTX options
-repro: add configuration OpenSSLCipherList to manually configure the OpenSSL cipher list
+*resip/stack: add static fields on BaseSecurity for setting OpenSSL CTX options
+*resip/stack: explicitly disable SSLv2 and SSLv3 by default when using SSLv23
+*resip/stack: allow application to provide OpenSSL certificate verification callback
+*repro: change default OpenSSL method from TLSv1_method to SSLv23_method (enables TLS v1.1 and v1.2)
+*repro: add configuration options OpenSSLCTXSetOptions and OpenSSLCTXClearOptions to control OpenSSL CTX options
+*repro: add configuration OpenSSLCipherList to manually configure the OpenSSL cipher list
 ==1.9.7 Changes==
-rpm: Indicate that b2bua package is obsolete
-resip/stack: TlsConnection: correctly handle OpenSSL error queue after SSL_read
-resip/stack: fix for forced target routing in TransactionState - thanks to John Gregg for this
-rutil: enhance command line parsing exceptions with additional details - thanks to John Gregg for initial contribution
-rutil: if a v6 address is passed to the GenericIPAddress sockaddr constructor, ensure the entire v6 address is copied over properly.  Note:  sockaddr is smaller than sockaddr_in6 - Thanks to Bjorn A for this fix
-rutil: accept case insensitive log level strings
-resip/dum: fix obscure bug in basicClient where if we don't use a threaded stack processing does not function correctly - required PollGrp to be passed to SipStack constructor
-resip/stack: fix for a use-after-free bug when adding multi-headers to a list that has been copied, and then one of the headers is accessed (but not necessarily parsed) - thanks to Byron Campen for this fix!
-resip/stack: Added accessor for TransactionUser FIFO so to obtain stats
-resip/stack: additional OpenSSL cleanup fn - reordered functions to match order used in this post: http://openssl.6102.n7.nabble.com/Cleanup-procedure-missing-some-calls-td37441.html
-reTurn: modified asio and boost include file ordering to avoid multiply defined symbol errors on linking
-resip/recon: remove extra sleep definitions
-resip/stack: fix a bug with Keepalive processing that causes transaction state leakage and potential traps
-rutil: syslog: use LOG_PID, avoid sending redundant data in log string.
+*rpm: Indicate that b2bua package is obsolete
+*resip/stack: TlsConnection: correctly handle OpenSSL error queue after SSL_read
+*resip/stack: fix for forced target routing in TransactionState - thanks to John Gregg for this
+*rutil: enhance command line parsing exceptions with additional details - thanks to John Gregg for initial contribution
+*rutil: if a v6 address is passed to the GenericIPAddress sockaddr constructor, ensure the entire v6 address is copied over properly.  Note:  sockaddr is smaller than sockaddr_in6 - Thanks to Bjorn A for this fix
+*rutil: accept case insensitive log level strings
+*resip/dum: fix obscure bug in basicClient where if we don't use a threaded stack processing does not function correctly - required PollGrp to be passed to SipStack constructor
+*resip/stack: fix for a use-after-free bug when adding multi-headers to a list that has been copied, and then one of the headers is accessed (but not necessarily parsed) - thanks to Byron Campen for this fix!
+*resip/stack: Added accessor for TransactionUser FIFO so to obtain stats
+*resip/stack: additional OpenSSL cleanup fn - reordered functions to match order used in this post: http://openssl.6102.n7.nabble.com/Cleanup-procedure-missing-some-calls-td37441.html
+*reTurn: modified asio and boost include file ordering to avoid multiply defined symbol errors on linking
+*resip/recon: remove extra sleep definitions
+*resip/stack: fix a bug with Keepalive processing that causes transaction state leakage and potential traps
+*rutil: syslog: use LOG_PID, avoid sending redundant data in log string.
 
 ==1.9.6 Changes==
 *resip/recon: fixes a bug that makes it impossible to use codecs with RTP clock rates other than 8000, makes Opus support possible
