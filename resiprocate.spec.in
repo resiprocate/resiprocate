@@ -21,7 +21,12 @@ BuildRequires: systemd
 %endif
 BuildRequires: db4-devel
 BuildRequires: openssl-devel >= 0.9.8
+%define use_mariadb 0%{?fedora} == 0 || 0%{?fedora} >= 30 || 0%{?rhel} >= 8
+%if use_mariadb
+BuildRequires: mariadb-connector-c-devel
+%else
 BuildRequires: mysql-devel
+%endif
 BuildRequires: pcre-devel
 BuildRequires: perl
 BuildRequires: popt-devel
