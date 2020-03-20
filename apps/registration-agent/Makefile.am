@@ -5,6 +5,9 @@ EXTRA_DIST += registration-agent.service
 EXTRA_DIST += send-cmd.py
 EXTRA_DIST += users.txt
 
+mibdir = $(datarootdir)/snmp/mibs
+mib_DATA = REG-AGENT-MIB.txt
+
 sbin_PROGRAMS = registrationAgent
 
 dist_man_MANS = registrationAgent.8
