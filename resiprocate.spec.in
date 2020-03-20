@@ -26,8 +26,8 @@ BuildRequires: pcre-devel
 BuildRequires: perl
 BuildRequires: popt-devel
 BuildRequires: postgresql-devel
-BuildRequires: python-devel
-BuildRequires: python-pycxx-devel
+BuildRequires: python3-devel
+BuildRequires: python3-pycxx-devel
 %define use_freeradius_client 0%{?fedora} == 0 || 0%{?fedora} >= 21 || 0%{?rhel} >= 7
 %if %use_freeradius_client
 BuildRequires: freeradius-client-devel
@@ -101,7 +101,7 @@ such as the repro SIP proxy.
 
 %package turn-server-psql
 Summary: ICE/STUN/TURN server PostgreSQL users script
-Requires: python-psycopg2
+Requires: python3-psycopg2
 
 %description turn-server-psql
 reTurn is the TURN server developed as part of the reSIProcate project.
@@ -134,8 +134,8 @@ such as the repro SIP proxy.
 %setup -q
 
 %build
-PYCONFIG=/usr/bin/python2.7-config
-[ -x $PYCONFIG ] || PYCONFIG=/usr/bin/python2.6-config
+PYCONFIG=/usr/bin/python3.7-config
+[ -x $PYCONFIG ] || PYCONFIG=/usr/bin/python3.6-config
 if [ ! -x $PYCONFIG ] ; then echo "python*-config not found" ; exit 1 ; fi
 %if %use_freeradius_client
 RADIUS_CFG=--with-freeradius
@@ -143,7 +143,7 @@ RADIUS_CFG=--with-freeradius
 RADIUS_CFG=--with-radius
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python2 --enable-assert-syslog
+CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{?_smp_mflags}
