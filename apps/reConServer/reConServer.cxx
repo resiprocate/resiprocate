@@ -776,7 +776,7 @@ ReConServerProcess::main (int argc, char** argv)
    catch(std::exception& e)
    {
       ErrLog(<< "Exception parsing configuration: " << e.what());
-      exit(-1);
+      return -1;
    }
 
    Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
@@ -1379,6 +1379,8 @@ ReConServerProcess::main (int argc, char** argv)
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
 } // end FML scope
 #endif
+
+   return 0;
 }
 
 void
