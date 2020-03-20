@@ -145,7 +145,7 @@ such as the repro SIP proxy.
 %package registration-agent
 Summary: SIP registration agent process
 
-%description
+%description registration-agent
 An agent process to submit REGISTER requests with a synthetic Contact
 header for routing calls back to a SIP proxy or some other endpoint that
 can't submit a REGISTER request itself
