@@ -1,4 +1,62 @@
-= Release Notes v 1.10 =
+= Release Notes v 1.11 =
+
+==1.11 (Beta) Changes==
+*resip/stack: implement  http://tools.ietf.org/html/rfc3261#section-18.1.1, paragraph 8 (Server error conditions)
+*resip/stack: added TransactionUser::removeDomain API
+*rutil: fixed issue with DNS logic if we switch from DNS over UDP to DNS over TCP, which can occur when the DNS result is greater than 512 bytes
+*resip/stack: fixed up RFC4373 requires parameter - it is an exists parameter and not a Data parameter
+*resip/stack: added the ability to retrieve a list of simple presence info from a GenericPidfContents
+*rutil: improve the log output of DNS records
+*resip/recon: make sure we look at rinstance header, if it is present, when looking up the incoming conversation profile
+*resip/recon: added logic to detect if a TCP connection is terminated.  This makes TCP registration errors detected much faster.
+*recon/MOHServer: multi-tenancy support.  Allow registering more than one MOH AOR with it's own music file
+*recon/MOHServer: added certificate path setting
+*repro: added route order to key, so that you can have multiple routes with the same matching pattern and different destinations, as long as they use a different order value
+*resip/stack: added a reloadDnsServers API to SipStack
+*repro: added a Reload DNS Servers button to repro settings GUI
+*resip/stack: added ECONNABORTED to Windows TCP connection timeout processing for WSAPoll implementation
+*repro: changes to allow repro to run with outbound support behind a NAT device.  Use configured transport specific record-routes in all cases
+*resip/stack: update TlsConnection.cxx to add TLS SNI extension in Client Hello
+*resip/dum: added new method to ClientRegistration class so that applications can check if a registration operation is currently in progress or not
+*resip/recon: send presence mechanism through PUBLISH message
+*resip/recon: send/receive text message with MESSAGE request
+*return/resip/repro: Use SSLv23 instead of TLSv1 when using OpenSSL for better TLS version capability 
+*resip/dum: added ability for DialogUsage's (ie: InviteSessionHandle) to query the route set from the stored Dialog Info
+*resip/dum: added missing UAC_SentUpdateEarlyGlare state to the InviteSession::isEarly implementation
+*repro: added support for HOMER / HEP
+*resip/stack: added the ability to update QOS to a new value on existing stack managed sockets, without needing to restart the SipStack.  Note:  DNS sockets are not currently supported
+*resip/stack: fixed bug with SipStack::removeTransport method - transport selector maps could get out of sync and cause existing transports to not get used correctly after a runtime removal
+*resip/stack: added DialogInfoContents for handling of dialog-info+xml bodies
+*resip/dum: fixes to DUM's DialogEventStateManager implementation
+**fixed a bug in DialogEventStateManager that could tag as call as replaced in a dialog info event, even though it will get denied because it is in the incorrect state
+**fixed up DialogEventStateManager so that the onConfirmed callback will occur for any mid-dialog SDP changes
+**added accessor to DialogEventStateManager to be able return the DialogStateInfos for a particular Uri, instead of returning all DialogInfo's in memory
+**added missing DialogEventStateManager onTerminated callback for when we reject a UAS call
+*reflow resip/recon: add ForceCOMedia for NAT users / comedia behavior
+*repro: only bind HTTP and command ports to localhost by default
+*resip/recon: ensure G.722 sample rate is advertised as 8000 in local capabilities
+*resip/recon: warn about peers offering G.722 with sample rate other than 8000
+*resip repro: add AssumeFirstHopSupportsFlowTokens option
+*resip/stack resip/dum: InteropHelper: add option to enable/disable adding rport to Via
+*repro: add config option AddViaRport
+*resip/stack: fix for TCP timeout handling, ensure TransportFailure code is used so that the next DNS entry will be tried
+*resip/stack: removed use of USE_DNS_VIP preprocessor define and use a runtime setting instead. Runtime setting is a new parameter passed into one of the two SipStack constructors.
+*resip/recon: UserAgent: add method getConversationProfileByMediaAddress
+*rutil: GenericIPAddress: implement stream operator
+*reTurn: StunTuple: add method getSockaddr
+*reflow: add RTCPEventLoggingHandler API
+*rutil: OpenSSLInit: fix code to free compression methods
+*resip/dum: UserProfile: log a warning when no digest credentials available
+*ensure 503 and 408 blacklist and greylist logic is working correctly for Client Invite transactions on unreliable transports
+*repro: RegSyncServer: send reg sync XML messages to AMQP topic with Qpid Proton
+*resip/stack: DnsResult: add some debug messages when transport not supported
+*repro: make sure we create a DiaglogUsageManager if PresenseServer is enabled, could crash on startup otherwise
+*repro: RFC3326 (The Reason Header Field) Support in repro
+**When a forked call is answered by one leg the other legs are canceled.  These cancel messages will now go out with a Reason header on them:  Reason: SIP;cause=200;text=Call completed elsewhere
+**Repro will copy reason headers from Cancel message it receives from the caller to the Cancel messages that are sent to each leg.
+**If one of the call legs returns a 6xx global response code, then the other call legs are canceled.  This CANCEL message will contain a reason header with the 6xx cause code and reason text in the reason header.
+**resip/dum: fix to ensure Privacy headers don't grow with each mid-dialog re-invite (if present)
+*repro / reTurn: Use systemd to restart if process stops unexpectedly
 
 ==1.10.2 Changes==
 *changes to support Windows 10 IOT ARM (RaspPi2)
