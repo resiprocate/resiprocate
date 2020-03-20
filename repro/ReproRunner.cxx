@@ -726,17 +726,19 @@ ReproRunner::createSipStack()
    {
       security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
-   Data caDir;
-   mProxyConfig->getConfigValue("CADirectory", caDir);
-   if(!caDir.empty())
+   std::vector<Data> caDirNames;
+   mProxyConfig->getConfigValue("CADirectory", caDirNames);
+   for(std::vector<Data>::const_iterator caDir = caDirNames.cbegin();
+      caDir != caDirNames.cend(); caDir++)
    {
-      security->addCADirectory(caDir);
+      security->addCADirectory(*caDir);
    }
-   Data caFile;
-   mProxyConfig->getConfigValue("CAFile", caFile);
-   if(!caFile.empty())
+   std::vector<Data> caFileNames;
+   mProxyConfig->getConfigValue("CAFile", caFileNames);
+   for(std::vector<Data>::const_iterator caFile = caFileNames.cbegin();
+      caFile != caFileNames.cend(); caFile++)
    {
-      security->addCAFile(caFile);
+      security->addCAFile(*caFile);
    }
 #endif
 
