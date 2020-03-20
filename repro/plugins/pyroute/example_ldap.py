@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # This could be made more efficient for high workloads in various ways,
 # for example, creating the LDAP connections in a pool and using
@@ -63,7 +63,8 @@ def provide_route(method, request_uri, headers, transport_type, body, cookies, n
                     phone = entry[1]['telephoneNumber'][0]
                     routes.append('sip:' + phone + '@' + phone_domain)
 
-    except ldap.LDAPError, error_message:
+    except ldap.LDAPError as e:
+        errno, error_message = e.args
         resip.log_err("Couldn't Connect. %s " % error_message)
         return (500)
 
@@ -71,7 +72,7 @@ def provide_route(method, request_uri, headers, transport_type, body, cookies, n
 
 # for testing from the command line:
 if __name__ == '__main__':
-    print provide_route('sip:bob@example.org')
+    print(provide_route('sip:bob@example.org'))
 
 
 #  ====================================================================
