@@ -728,15 +728,15 @@ ReproRunner::createSipStack()
    }
    std::vector<Data> caDirNames;
    mProxyConfig->getConfigValue("CADirectory", caDirNames);
-   for(std::vector<Data>::const_iterator caDir = caDirNames.cbegin();
-      caDir != caDirNames.cend(); caDir++)
+   for(std::vector<Data>::const_iterator caDir = caDirNames.begin();
+      caDir != caDirNames.end(); caDir++)
    {
       security->addCADirectory(*caDir);
    }
    std::vector<Data> caFileNames;
    mProxyConfig->getConfigValue("CAFile", caFileNames);
-   for(std::vector<Data>::const_iterator caFile = caFileNames.cbegin();
-      caFile != caFileNames.cend(); caFile++)
+   for(std::vector<Data>::const_iterator caFile = caFileNames.begin();
+      caFile != caFileNames.end(); caFile++)
    {
       security->addCAFile(*caFile);
    }
