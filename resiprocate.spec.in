@@ -33,11 +33,16 @@ BuildRequires: popt-devel
 BuildRequires: postgresql-devel
 BuildRequires: python3-devel
 BuildRequires: python3-pycxx-devel
-%define use_freeradius_client 0%{?fedora} == 0 || 0%{?fedora} >= 21 || 0%{?rhel} >= 7
+%define use_radcli 0%{?fedora} == 0 || 0%{?fedora} >= 30 || 0%{?rhel} >= 7
+%if %use_radcli
+BuildRequires: radcli-devel
+%else
+%define use_freeradius_client 0%{?fedora} >= 21
 %if %use_freeradius_client
 BuildRequires: freeradius-client-devel
 %else
 BuildRequires: radiusclient-ng-devel
+%endif
 %endif
 BuildRequires: xerces-c-devel
 BuildRequires: net-snmp-devel
@@ -155,10 +160,14 @@ such as the repro SIP proxy.
 PYCONFIG=/usr/bin/python3.7-config
 [ -x $PYCONFIG ] || PYCONFIG=/usr/bin/python3.6-config
 if [ ! -x $PYCONFIG ] ; then echo "python*-config not found" ; exit 1 ; fi
+%if %use_radcli
+RADIUS_CFG=--with-radcli
+%else
 %if %use_freeradius_client
 RADIUS_CFG=--with-freeradius
 %else
 RADIUS_CFG=--with-radius
+%endif
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
 CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp
