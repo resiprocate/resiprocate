@@ -2,7 +2,6 @@
 #include "config.h"
 #endif
 
-#include <signal.h>
 #ifdef WIN32
 #include <conio.h>
 #else
@@ -83,13 +82,6 @@ static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then reConServer will automatically answer incoming calls by adding to lowest numbered conversation
 SharedPtr<ConversationProfile> conversationProfile;
-
-static void
-signalHandler(int signo)
-{
-   std::cerr << "Shutting down" << endl;
-   finished = true;
-}
 
 int main(int argc, char** argv)
 {
