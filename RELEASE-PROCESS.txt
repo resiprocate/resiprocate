@@ -25,9 +25,11 @@ Workspace
 
 Obtain a release branch from the Git repository.
 
-  git clone https://github.com/resiprocate/resiprocate resip-1.8
+  git clone -b release/1.8 https://github.com/resiprocate/resiprocate resip-1.8
   cd resip-1.8
-  git checkout resiprocate-1.8
+
+If this is the beginning of a release branch, manually copy the ChangeLog
+file from the previous release branch and then add the new entries.
 
 Version/tag
 -----------
@@ -42,14 +44,14 @@ Update version information and tag it:
   git commit -m 'release: Update for 1.8.5'
   git tag -s -m 'release: Tag 1.8.5'
 
-  git push                (send changes back to SVN)
+  git push                (send changes back to Git)
 
 Bootstrap
 ---------
 
 The bootstrap must always be done on the same version of autotools
 for consistency.  The currently endorsed version is the autotools
-distributed in Debian 8.0 (jessie).  If another version is to be used,
+distributed in Debian 10.0 (buster).  If another version is to be used,
 it should be discussed on the mailing list and noted in this document.
 
   autoreconf --install
