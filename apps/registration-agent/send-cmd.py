@@ -8,7 +8,7 @@
 
 # To install the dependencies:
 #
-#   apt-get install -t jessie-backports python-qpid-proton
+#   apt-get install -t jessie-backports python3-qpid-proton
 #
 
 from __future__ import print_function, unicode_literals

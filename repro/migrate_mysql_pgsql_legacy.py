@@ -5,7 +5,7 @@
 #
 # Dependencies:
 #
-#    apt install python-mysqldb python-psycopg2
+#    apt install python3-mysqldb python3-psycopg2
 #
 # To use the script:
 #

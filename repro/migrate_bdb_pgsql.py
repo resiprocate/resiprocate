@@ -8,7 +8,7 @@
 #
 # Dependencies:
 #
-#    apt install python-psycopg2
+#    apt install python3-psycopg2 python3-bsddb3
 #
 # To use the script:
 #

@@ -56,11 +56,11 @@
 #
 # Debian/Ubuntu requirements:
 #
-#     apt-get install python-psycopg2
+#     apt-get install python3-psycopg2
 #
 # RPM requirements:
 #
-#     yum install python-psycopg2
+#     yum install python3-psycopg2
 #
 
 import hashlib
