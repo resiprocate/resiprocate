@@ -1307,12 +1307,11 @@ ReConServerProcess::main (int argc, char** argv)
             break;
          case ReConServerConfig::B2BUA:
             {
-               SharedPtr<B2BCallLogger> b2bCallLogger;
                if(!cdrLogFilename.empty())
                {
-                  b2bCallLogger.reset(new CDRFile(cdrLogFilename));
+                  mCDRFile.reset(new CDRFile(cdrLogFilename));
                }
-               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger);
+               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
             break;
@@ -1413,6 +1412,11 @@ void
 ReConServerProcess::onReload()
 {
    StackLog(<<"ReConServerProcess::onReload invoked");
+   if(mCDRFile)
+   {
+      StackLog(<<"ReConServerProcess::onReload: request CDR rotation");
+      mCDRFile->rotateLog();
+   }
 }
 
 
