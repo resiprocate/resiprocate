@@ -17,10 +17,19 @@ fi
 
 autoreconf --install
 
-CFLAGS='-g -O0 -fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security' \
-CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
-CXXFLAGS='-g -O0 -fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive' \
-LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
+# Qt libraries are required for the Telepathy Connection Manager
+QT_VERSION=qt4
+QT_LIB_PREFIX="/usr/include/${QT_VERSION}"
+QT_LIBS="-I${QT_LIB_PREFIX}"
+for lib in QtCore QtNetwork QtDBus ;
+do
+  QT_LIBS="${QT_LIBS} -I${QT_LIB_PREFIX}/${lib}"
+done
+
+CFLAGS='-g -O0 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security' \
+CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/telepathy-qt4 ${QT_LIBS} -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" \
+CXXFLAGS='-g -O0 -fPIE -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -fpermissive' \
+LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
   ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls $RADIUS_LIB --with-ssl \
               --enable-assert-syslog \
               --with-c-ares \
@@ -35,8 +44,6 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-apps \
               --with-telepathy \
               --with-ichat-gw \
-              --with-recon \
-              --with-qpid-proton \
-              --with-netsnmp
+              --with-recon
 
 
