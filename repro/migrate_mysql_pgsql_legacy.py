@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: latin-1 -*-
 #
 # migrates data from MySQL (legacy schema) to PostgreSQL (legacy schema)

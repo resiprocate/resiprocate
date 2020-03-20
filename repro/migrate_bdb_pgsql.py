@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: latin-1 -*-
 #
 # migrates data from BerkeleyDB (legacy *.db files) to
@@ -52,7 +52,7 @@
 
 import array
 import base64
-import bsddb
+import bsddb3
 import getpass
 import psycopg2
 import sys
