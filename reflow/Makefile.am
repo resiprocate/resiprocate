@@ -1,7 +1,7 @@
 # $Id$
 
 EXTRA_DIST = ReadMe.txt
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 
 SUBDIRS = .
 SUBDIRS += dtls_wrapper/test

@@ -1,5 +1,5 @@
 
-EXTRA_DIST = *.vcxproj *.vcxproj.filters
+EXTRA_DIST = *.vcxproj
 
 TESTS = sanityTests
 
