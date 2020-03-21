@@ -5,6 +5,8 @@
 #ifndef SNMP_RESIPROCATE_H
 #define SNMP_RESIPROCATE_H
 
+#include <cstddef>
+
 /* function declarations */
 void init_reSIProcate(const std::size_t *registrationsConfigured, const std::size_t *registrationsFailed);
 Netsnmp_Node_Handler handle_registrationsConfigured;
