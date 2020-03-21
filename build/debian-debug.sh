@@ -36,6 +36,7 @@ LDFLAGS='-fPIE -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-mysql \
               --with-postgresql \
               --with-repro \
+              --with-return \
               --enable-repro-plugins \
               --with-python \
                 DEPS_PYTHON_CFLAGS="`/usr/bin/python3.7-config --cflags`" \
