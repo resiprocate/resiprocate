@@ -287,6 +287,12 @@ reproplugindir='${pkglibdir}/repro/plugins'
 AC_SUBST([returnpkglibdir])
 returnpkglibdir='${pkglibdir}/reTurnServer'
 
+AM_CONDITIONAL(BUILD_RETURN, false)
+AC_ARG_WITH(return,
+[  --with-return           Build reTurn client and server],
+ [AC_DEFINE_UNQUOTED(BUILD_RETURN, , BUILD_RETURN)
+ AM_CONDITIONAL(BUILD_RETURN, true)], )
+
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
 [  --with-rend             Build rend],
