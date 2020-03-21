@@ -28,6 +28,7 @@ autoreconf --install && \
               --with-postgresql \
               --with-freeradius \
               --with-repro \
+              --with-return \
               --enable-repro-plugins \
               --with-python \
                 DEPS_PYTHON_CFLAGS="`/usr/bin/python3.7-config --cflags`" \
