@@ -208,6 +208,7 @@ Section: net
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, lsb-base
+Recommends: snmpd, snmp, snmp-mibs-downloader, libsnmp-perl
 Suggests: python3-qpid-proton
 Description: SIP registration agent
  registration-agent is a daemon that can maintain one or more SIP registrations,
