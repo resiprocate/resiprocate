@@ -44,7 +44,7 @@ class TlsBaseTransport : public TcpBaseTransport
 
       void onReload();
 
-      SSL_CTX* getCtx() const;
+      SSL_CTX* getCtx();
 
       SecurityTypes::TlsClientVerificationMode getClientVerificationMode() 
          { return mClientVerificationMode; };
