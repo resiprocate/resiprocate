@@ -50,6 +50,7 @@ CFG_ARGS := --with-ssl \
 		--with-python \
 		--with-c-ares \
 		--with-qpid-proton \
+	        --with-netsnmp \
 		--enable-assert-syslog
 
 # on kfreebsd, sipxtapi is not available and recon can't be built
