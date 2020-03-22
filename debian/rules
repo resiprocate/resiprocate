@@ -71,6 +71,7 @@ ifeq ($(DEB_HOST_ARCH_OS),kfreebsd)
 endif
 
 override_dh_auto_build:
+	rm resip/stack/gen/*.cxx
 	dh_auto_build --parallel
 
 # let the test cases run
