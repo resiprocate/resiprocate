@@ -60,10 +60,10 @@ CFG_ARGS += --with-recon
 CFG_ARGS += --with-telepathy
 endif
 
-PYVERSION=2.7
+PYVERSION=3.7
 
 override_dh_auto_configure:
-	dh_auto_configure -- $(CFG_ARGS) DEPS_PYTHON_CFLAGS="`/usr/bin/python$(PYVERSION)-config --cflags`" DEPS_PYTHON_LIBS="`/usr/bin/python$(PYVERSION)-config --ldflags`" PYCXX_SRCDIR=/usr/share/python$(PYVERSION)/CXX/Python2
+	dh_auto_configure -- $(CFG_ARGS) DEPS_PYTHON_CFLAGS="`/usr/bin/python$(PYVERSION)-config --cflags`" DEPS_PYTHON_LIBS="`/usr/bin/python$(PYVERSION)-config --ldflags`" PYCXX_SRCDIR=/usr/share/python$(PYVERSION)/CXX/Python3
 ifeq ($(DEB_HOST_ARCH_OS),kfreebsd)
 # this is due to a problem with the test case rather than the stack itself
 # upstream is investigating
