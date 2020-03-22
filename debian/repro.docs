@@ -5,4 +5,7 @@ repro/create_postgresql_reprodb.sql
 repro/create_postgresql_reprodb_v2.sql
 repro/database-migration.dia
 repro/database-migration.pdf
+repro/migrate_bdb_pgsql.py
+repro/migrate_mysql_pgsql_legacy.py
 repro/migrate_sql_v2.py
+repro/upgrade_mysql_reprodb.sql
