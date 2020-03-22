@@ -90,20 +90,37 @@ TlsBaseTransport::onReload()
 }
 
 SSL_CTX* 
-TlsBaseTransport::getCtx() const 
+TlsBaseTransport::getCtx()
 { 
+   SSL_CTX *ctx = NULL;
    if(mDomainCtx)
    {
       DebugLog(<<"Using TlsDomain-transport SSL_CTX");
-      return mDomainCtx;
+      ctx = mDomainCtx;
    }
    else if(mSslType == SecurityTypes::SSLv23)
    {
       DebugLog(<<"Using SSLv23_method");
-      return mSecurity->getSslCtx();
+      ctx = mSecurity->getSslCtx();
    }
-   DebugLog(<<"Using TLSv1_method");
-   return mSecurity->getTlsCtx();
+   else
+   {
+      DebugLog(<<"Using TLSv1_method");
+      ctx = mSecurity->getTlsCtx();
+   }
+   // FIXME: would be better to do this in a method called asynchronously after onReload
+   // as doing it here may slow down the connection.
+   // HUP is only likely to happen once per day for log reloads so the impact of doing it
+   // here is negligible
+   if(mReloadCertificate)
+   {
+      DebugLog(<<"TlsBaseTransport::createConnection, re-reading certificate and private key for domain " << tlsDomain());
+      mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+      // an extra log entry so we can see how long it took
+      StackLog(<<"TlsBaseTransport::createConnection, updated certificate and private key for domain " << tlsDomain());
+      mReloadCertificate = false;
+   }
+   return ctx;
 }
 
 bool
@@ -129,18 +146,6 @@ Connection*
 TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
    resip_assert(this);
-   // FIXME: would be better to do this in a method called asynchronously after onReload
-   // as doing it here may slow down the connection.
-   // HUP is only likely to happen once per day for log reloads so the impact of doing it
-   // here is negligible
-   if(mReloadCertificate)
-   {
-      DebugLog(<<"TlsBaseTransport::createConnection, re-reading certificate and private key for domain " << tlsDomain());
-      mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
-      // an extra log entry so we can see how long it took
-      StackLog(<<"TlsBaseTransport::createConnection, updated certificate and private key for domain " << tlsDomain());
-      mReloadCertificate = false;
-   }
    Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
    return conn;

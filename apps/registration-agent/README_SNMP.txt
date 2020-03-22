@@ -11,7 +11,7 @@ Dependencies
 
 On a Debian system, ensure that the required packages are installed.
 
-  sudo apt install snmp snmp-mibs-downloader libsnmp-dev libsnmp-perl
+  sudo apt install snmpd snmp snmp-mibs-downloader libsnmp-dev libsnmp-perl
 
 snmpd daemon (master agent) configuration
 -----------------------------------------
@@ -42,6 +42,16 @@ If you will test the process by running it in your own user account, you can
 do that with the command:
 
   sudo addgroup $USER Debian-snmp
+
+or if you run the service using the unit file from the package:
+
+  sudo addgroup registration-agent Debian-snmp
+
+Edit registrationAgent.config.  Uncomment SNMPMasterSocket.
+Make sure the value of SNMPMasterSocket matches the agentxsocket
+value in /etc/snmp/snmpd.conf, for example:
+
+  SNMPMasterSocket = /var/run/snmp-agentx-master
 
 When you start the registrationAgent now, it should successfully connect
 to the master agent.
