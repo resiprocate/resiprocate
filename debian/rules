@@ -45,6 +45,7 @@ CFG_ARGS := --with-ssl \
 		--enable-dtls \
 		--with-radcli \
 		--with-repro \
+	        --with-return \
 		--enable-repro-plugins \
 		--with-python \
 		--with-c-ares \
