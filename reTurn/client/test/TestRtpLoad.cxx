@@ -27,6 +27,12 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+using namespace boost::chrono;
+#endif
+
 using namespace reTurn;
 using namespace std;
 
@@ -152,7 +158,7 @@ public:
    {
       if(++mNumSends <= NUM_RTP_PACKETS_TO_SIMULATE)
       {
-         mTimer.expires_from_now(boost::posix_time::milliseconds(PACKET_TIME_TO_SIMULATE));   
+         mTimer.expires_from_now(milliseconds(PACKET_TIME_TO_SIMULATE));
          mTimer.async_wait(boost::bind(&MyTurnAsyncSocketHandler::sendRtpSimPacket, this));
          //InfoLog(<< "Sending packet " << mNumReceives << "...");
          mTurnAsyncSocket->send(rtpPayload.data(), rtpPayload.size());  
@@ -305,7 +311,7 @@ public:
 
 private:
    asio::io_service& mIOService;
-   asio::deadline_timer mTimer;
+   asio::steady_timer mTimer;
    TurnAsyncSocket* mTurnAsyncSocket;
    unsigned int mNumReceives;
    unsigned int mNumSends;
