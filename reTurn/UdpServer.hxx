@@ -67,7 +67,7 @@ private:
 
       UdpServer* mResponseUdpServer;
       StunMessage* mResponseMessage;
-      asio::deadline_timer mCleanupTimer;
+      asio::steady_timer mCleanupTimer;
    };
    typedef std::map<UInt128, ResponseEntry*> ResponseMap;
    ResponseMap mResponseMap;

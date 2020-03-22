@@ -1,0 +1,67 @@
+REG-AGENT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    NOTIFICATION-GROUP, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    DisplayString
+        FROM SNMPv2-TC
+    OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    netSnmpExperimental
+        FROM NET-SNMP-MIB
+;
+
+--
+-- top level structure
+--
+reSIProcate MODULE-IDENTITY
+    LAST-UPDATED "201908190000Z"
+    ORGANIZATION "reSIProcate project"
+    CONTACT-INFO
+         "Daniel Pocock
+	  resiprocate-devel@resiprocate.org"
+    DESCRIPTION
+         "Monitoring the SIP registration agent
+          Experimental implementation"
+    REVISION     "201908190000Z"
+    DESCRIPTION  "Outgoing registrations from the User Agent"
+    ::= { netSnmpExperimental 1 }
+
+registrationAgent              OBJECT IDENTIFIER ::= { reSIProcate 1 }
+reConformanceGroups            OBJECT IDENTIFIER ::= { reSIProcate 99 }
+
+---
+--- Some Scalars
+---
+registrationsConfigured OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "registrations that are defined in the configuration"
+    ::= { registrationAgent 1 }
+
+registrationsFailed OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "registrations that are in the failed state"
+    ::= { registrationAgent 2 }
+
+---
+--- Conformance related definitions
+---
+
+raGroup OBJECT-GROUP
+    OBJECTS { registrationsConfigured, registrationsFailed }
+    STATUS      current
+    DESCRIPTION
+        "Group of stats that we are implementing."
+    ::= { reConformanceGroups 1 }
+
+
+
+---
+--- vim modeline to tell it how to colorize
+--- vim: syntax=mib
+---
+END

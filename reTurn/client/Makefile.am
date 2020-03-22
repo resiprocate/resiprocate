@@ -1,11 +1,13 @@
 # $Id$
 
-EXTRA_DIST = *.vcxproj *.vcxproj.filters
+EXTRA_DIST = *.vcxproj
 
 SUBDIRS = . 
 SUBDIRS += test
 
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
+AM_CXXFLAGS = -DASIO_HAS_BOOST_BIND
+AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
 
 lib_LTLIBRARIES = libreTurnClient.la
 

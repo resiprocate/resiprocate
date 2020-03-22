@@ -1,21 +1,27 @@
 # $Id$
 
 EXTRA_DIST = *.html
+EXTRA_DIST += database-migration.dia
+EXTRA_DIST += database-migration.pdf
 EXTRA_DIST += doc
 EXTRA_DIST += pkg
 EXTRA_DIST += Doxyfile
+EXTRA_DIST += migrate_bdb_pgsql.py
+EXTRA_DIST += migrate_mysql_pgsql_legacy.py
+EXTRA_DIST += migrate_sql_v2.py
 EXTRA_DIST += php
 EXTRA_DIST += README_MySQL.txt
 EXTRA_DIST += README_PostgreSQL.txt
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 #EXTRA_DIST += *.db
 EXTRA_DIST += VERSION
 EXTRA_DIST += webadmin
-EXTRA_DIST += WinSetup WinSetupx64
 EXTRA_DIST += repro.config
 EXTRA_DIST += create_mysql_reprodb.sql
 EXTRA_DIST += create_postgresql_reprodb.sql
+EXTRA_DIST += create_postgresql_reprodb_v2.sql
 EXTRA_DIST += genUsers.cxx
+EXTRA_DIST += upgrade_mysql_reprodb.sql
 EXTRA_DIST += users.txt
 
 SUBDIRS = . test reprocmd accountingconsumers

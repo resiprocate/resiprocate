@@ -22,6 +22,12 @@ using namespace resip;
 
 #define SOFTWARE_STRING "reTURN Sync Client 0.3 - RFC5389/turn-12"
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+using namespace boost::chrono;
+#endif
+
 namespace reTurn {
 
 // Initialize static members
@@ -852,7 +858,7 @@ TurnSocket::startReadTimer(unsigned int timeout)
 {
    if(timeout != 0)
    {
-      mReadTimer.expires_from_now(boost::posix_time::milliseconds(timeout));
+      mReadTimer.expires_from_now(milliseconds(timeout));
       mReadTimer.async_wait(boost::bind(&TurnSocket::handleRawReadTimeout, this, asio::placeholders::error));
    }
 }

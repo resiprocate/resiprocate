@@ -58,6 +58,8 @@ class RequestContext
       ResponseContext& getResponseContext();
       
       resip::NameAddr& getTopRoute();
+      bool isTopRouteFlowTupleSet();
+      resip::Tuple& getTopRouteFlowTuple();
       const resip::Data& getDigestRealm();
             
       virtual void send(resip::SipMessage& msg);
@@ -99,6 +101,8 @@ class RequestContext
       int mTransactionCount;
       Proxy& mProxy;
       resip::NameAddr mTopRoute;
+      bool mTopRouteFlowTupleSet;       // Provided so caller can avoid needing to compare mTopRouteFlowTuple to and empty Tuple() to check if set or not
+      resip::Tuple mTopRouteFlowTuple;  // extracted from mTopRoute if valid Flow-Token is present
       ResponseContext mResponseContext;
       int mTCSerial;
       bool mSessionCreatedEventSent;

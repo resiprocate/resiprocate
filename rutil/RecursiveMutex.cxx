@@ -69,7 +69,7 @@ RecursiveMutex::RecursiveMutex()
 {
 #ifndef WIN32
    int rc = pthread_mutexattr_init(&mMutexAttr);
- #if defined(__linux__)
+ #if defined(__linux__) && defined(PTHREAD_MUTEX_RECURSIVE_NP)
    pthread_mutexattr_settype(&mMutexAttr, PTHREAD_MUTEX_RECURSIVE_NP);
  #else
    pthread_mutexattr_settype(&mMutexAttr, PTHREAD_MUTEX_RECURSIVE);

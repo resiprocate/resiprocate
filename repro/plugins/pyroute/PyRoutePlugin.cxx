@@ -136,7 +136,7 @@ class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
          initialize("reSIProcate SIP stack API callbacks");
 
          PyObject *sys_path = PySys_GetObject("path");
-         PyObject *addpath = PyString_FromString(pyPath.c_str());
+         PyObject *addpath = PyUnicode_FromString(pyPath.c_str());
          PyList_Append(sys_path, addpath);
          mThreadState = PyGILState_GetThisThreadState();
 

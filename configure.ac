@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.12.0~beta9)
+AC_INIT(resiprocate,1.12.0~beta10)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -261,6 +261,14 @@ AC_ARG_WITH(radcli,
  AC_SUBST(LIBRADIUS_LIBADD, "-lradcli")
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)])
 
+AM_CONDITIONAL(USE_NETSNMP, false)
+AC_ARG_WITH(netsnmp,
+[  --with-netsnmp         Link against NetSNMP client libraries],
+ [AC_DEFINE_UNQUOTED(USE_NETSNMP, , USE_NETSNMP)
+ AC_SUBST(LIBNETSNMP_LDADD, [`net-snmp-config --agent-libs`])
+ AM_CONDITIONAL(USE_NETSNMP, true)],
+ [ AC_SUBST(LIBNETSNMP_LDADD, "")])
+
 AM_CONDITIONAL(BUILD_REPRO, false)
 AC_ARG_WITH(repro,
 [  --with-repro            Build repro, requires CAJUN and bdb],
@@ -278,6 +286,12 @@ reproplugindir='${pkglibdir}/repro/plugins'
 
 AC_SUBST([returnpkglibdir])
 returnpkglibdir='${pkglibdir}/reTurnServer'
+
+AM_CONDITIONAL(BUILD_RETURN, false)
+AC_ARG_WITH(return,
+[  --with-return           Build reTurn client and server],
+ [AC_DEFINE_UNQUOTED(BUILD_RETURN, , BUILD_RETURN)
+ AM_CONDITIONAL(BUILD_RETURN, true)], )
 
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
@@ -328,7 +342,7 @@ AC_ARG_WITH(python,
 [  --with-python           Build components requiring Python],
  [AC_DEFINE_UNQUOTED(BUILD_PYTHON, , BUILD_PYTHON)
  AM_CONDITIONAL(BUILD_PYTHON, true)
- PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 2.7])
+ PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 3.6])
  AC_SUBST(PYCXX_SRCDIR)
  if [ ! test -e "${PYCXX_SRCDIR}/cxx_extensions.cxx" ];
  then

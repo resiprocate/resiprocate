@@ -199,6 +199,14 @@ KeyedFile::readFile()
    InfoLog(<<"Processed " << lineNo << " lines");
 }
 
+std::size_t
+KeyedFile::getLineCount()
+{
+   Lock readLock(mLinesMutex);
+
+   return mLines.size();
+}
+
 /* ====================================================================
  *
  * Copyright 2012 Daniel Pocock http://danielpocock.com  All rights reserved.

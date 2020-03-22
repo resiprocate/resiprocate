@@ -90,7 +90,7 @@ main(int argc, char* argv[])
       }
 
       UInt64 elapsed = Timer::getTimeMs() - startTime;
-      cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
       
       InfoLog (<< "Messages created");
@@ -156,7 +156,7 @@ main(int argc, char* argv[])
    }
 
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+   cout << runs << " calls performed in " << elapsed << " ms, a rate of "
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 
    return 0;

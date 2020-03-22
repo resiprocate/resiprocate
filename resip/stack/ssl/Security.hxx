@@ -277,6 +277,7 @@ class Security : public BaseSecurity
       virtual void preload();
       virtual SSL_CTX* createDomainCtx(const SSL_METHOD* method, const Data& domain, const Data& certificateFilename, 
                                        const Data& privateKeyFilename, const Data& privateKeyPassPhrase);
+      virtual void updateDomainCtx(SSL_CTX* ctx, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase);
 
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;

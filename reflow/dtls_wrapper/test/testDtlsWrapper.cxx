@@ -15,11 +15,11 @@ class TestDtlsSocketContext : public DtlsSocketContext
 {
    public:
      DtlsSocket *mOtherSocket;
-     char *mName;
+     const char *mName;
      
      //memory is only valid for duration of callback; must be copied if queueing
      //is required
-     TestDtlsSocketContext(char *name):
+     TestDtlsSocketContext(const char *name):
           mName(name){}
            
       virtual ~TestDtlsSocketContext(){}

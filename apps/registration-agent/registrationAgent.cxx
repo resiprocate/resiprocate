@@ -33,6 +33,7 @@
 #include "AppSubsystem.hxx"
 #include "CommandThread.hxx"
 #include "RegConfig.hxx"
+#include "SNMPThread.hxx"
 #include "UserRegistrationClient.hxx"
 #include "KeyedFile.hxx"
 
@@ -180,12 +181,26 @@ class MyClientRegistrationAgent : public ServerProcess
             mCmd->run();
          }
 
+         // FIXME - conditional start
+         Data snmpSocket(cfg.getConfigData("SNMPMasterSocket", "", true));
+         if(!snmpSocket.empty())
+         {
+            mSnmp.reset(new SnmpThread(snmpSocket));
+            mSnmp->run();
+         }
+
          mainLoop();
 
          if(mCmd.get())
          {
             mCmd->shutdown();
             mCmd->join();
+         }
+
+         if(mSnmp.get())
+         {
+            mSnmp->shutdown();
+            mSnmp->join();
          }
       }
 
@@ -201,6 +216,11 @@ class MyClientRegistrationAgent : public ServerProcess
          {
             mCmd->processQueue(*mClientHandler);
          }
+         if(mSnmp.get())
+         {
+            mSnmp->setAccountsTotal(mClientHandler->getAccountsTotal());
+            mSnmp->setAccountsFailed(mClientHandler->getAccountsFailed());
+         }
       }
 
       void onReload()
@@ -214,6 +234,7 @@ class MyClientRegistrationAgent : public ServerProcess
       SharedPtr<KeyedFile> mKeyedFile;
       SharedPtr<UserRegistrationClient> mClientHandler;
       SharedPtr<CommandThread> mCmd;
+      SharedPtr<SnmpThread> mSnmp;
 
 };
 

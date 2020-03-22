@@ -57,15 +57,10 @@ StrictRouteFixup::process(RequestContext& context)
       // and terminate any pending transactions.
       context.getResponseContext().cancelAllClientTransactions();
       std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
-      if(!context.getTopRoute().uri().user().empty())
+      if (context.isTopRouteFlowTupleSet())
       {
-         resip::Tuple source(Tuple::makeTupleFromBinaryToken(context.getTopRoute().uri().user().base64decode(), Proxy::FlowTokenSalt));
-         if(!(source == resip::Tuple()))
-         {
-            // valid flow token
-            target->rec().mReceivedFrom = source;
-            target->rec().mUseFlowRouting = true;
-         }
+         target->rec().mReceivedFrom = context.getTopRouteFlowTuple();
+         target->rec().mUseFlowRouting = true;
       }
       context.getResponseContext().addTarget(target);
       return Processor::SkipThisChain;

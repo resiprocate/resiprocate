@@ -156,7 +156,7 @@ private:
       asio::io_service& mIOService;
       TurnAsyncSocket* mTurnAsyncSocket;
       StunMessage* mRequestMessage;
-      asio::deadline_timer mRequestTimer;
+      asio::steady_timer mRequestTimer;
       unsigned int mRequestsSent;
       unsigned int mTimeout;
       const StunTuple* mDest;
@@ -205,12 +205,12 @@ private:
       boost::function< F > mFunction;
    };
 
-   asio::deadline_timer mAllocationTimer;
+   asio::steady_timer mAllocationTimer;
    void startAllocationTimer();
    void cancelAllocationTimer();
    void allocationTimerExpired(const asio::error_code& e);
 
-   typedef std::map<unsigned short, asio::deadline_timer*> ChannelBindingTimerMap;
+   typedef std::map<unsigned short, asio::steady_timer*> ChannelBindingTimerMap;
    ChannelBindingTimerMap mChannelBindingTimers;
    void startChannelBindingTimer(unsigned short channel);
    void cancelChannelBindingTimers();

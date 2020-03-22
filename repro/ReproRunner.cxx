@@ -527,6 +527,7 @@ ReproRunner::restart()
 void
 ReproRunner::onReload()
 {
+   mSipStack->onReload();
    // Let the plugins know
    std::vector<Plugin*>::iterator it;
    for(it = mPlugins.begin(); it != mPlugins.end(); it++)
@@ -725,17 +726,19 @@ ReproRunner::createSipStack()
    {
       security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
-   Data caDir;
-   mProxyConfig->getConfigValue("CADirectory", caDir);
-   if(!caDir.empty())
+   std::vector<Data> caDirNames;
+   mProxyConfig->getConfigValue("CADirectory", caDirNames);
+   for(std::vector<Data>::const_iterator caDir = caDirNames.begin();
+      caDir != caDirNames.end(); caDir++)
    {
-      security->addCADirectory(caDir);
+      security->addCADirectory(*caDir);
    }
-   Data caFile;
-   mProxyConfig->getConfigValue("CAFile", caFile);
-   if(!caFile.empty())
+   std::vector<Data> caFileNames;
+   mProxyConfig->getConfigValue("CAFile", caFileNames);
+   for(std::vector<Data>::const_iterator caFile = caFileNames.begin();
+      caFile != caFileNames.end(); caFile++)
    {
-      security->addCAFile(caFile);
+      security->addCAFile(*caFile);
    }
 #endif
 

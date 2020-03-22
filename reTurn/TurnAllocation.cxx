@@ -19,6 +19,12 @@ using namespace resip;
 #define TURN_PERMISSION_LIFETIME_SECONDS 300   // 5 minuntes
 //#define TURN_PERMISSION_LIFETIME_SECONDS 30   // TESTING only
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+using namespace boost::chrono;
+#endif
+
 namespace reTurn {
 
 TurnAllocation::TurnAllocation(TurnManager& turnManager,
@@ -116,7 +122,7 @@ TurnAllocation::refresh(unsigned int lifetime)  // update expiration time
    mExpires = time(0) + lifetime;
 
    // start timer
-   mAllocationTimer.expires_from_now(boost::posix_time::seconds(lifetime));
+   mAllocationTimer.expires_from_now(seconds(lifetime));
    mAllocationTimer.async_wait(boost::bind(&TurnAllocationManager::allocationExpired, &mTurnAllocationManager, asio::placeholders::error, mKey));
 }
 

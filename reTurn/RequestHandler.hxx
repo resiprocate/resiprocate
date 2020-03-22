@@ -3,6 +3,7 @@
 
 #include <string>
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "DataBuffer.hxx"
 #include "StunMessage.hxx"

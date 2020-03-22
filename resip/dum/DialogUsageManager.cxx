@@ -592,6 +592,24 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, level, alternative, appDs);
 }
 
+SharedPtr<SipMessage>
+DialogUsageManager::makeInviteSession(const NameAddr& target,
+    const DialogSetId& dialogSetId,
+    const SharedPtr<UserProfile>& userProfile,
+    const Contents* initialOffer,
+    EncryptionLevel level,
+    const Contents* alternative,
+    AppDialogSet* appDs)
+{
+    assert(mDialogSetMap.find(dialogSetId) == mDialogSetMap.end());
+    BaseCreator* baseCreator(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative));
+    baseCreator->getLastRequest()->header(h_CallID).value() = dialogSetId.getCallId();
+    baseCreator->getLastRequest()->header(h_From).param(p_tag) = dialogSetId.getLocalTag();
+    SharedPtr<SipMessage> inv = makeNewSession(baseCreator, appDs);
+    DumHelper::setOutgoingEncryptionLevel(*inv, level);
+    return inv;
+}
+
 SharedPtr<SipMessage> 
 DialogUsageManager::makeInviteSession(const NameAddr& target, 
                                       InviteSessionHandle sessionToReplace, 
@@ -2157,7 +2175,7 @@ DialogUsageManager::processResponse(const SipMessage& response)
          DebugLog ( << "DialogUsageManager::processResponse: " << std::endl << std::endl << response.brief());
          ds->dispatch(response);
       }
-       else
+      else
       {
           InfoLog (<< "Throwing away stray response: " << std::endl << std::endl << response.brief());
       }

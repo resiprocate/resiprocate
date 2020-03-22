@@ -113,7 +113,7 @@ class ReTurnUserFileScanner
       static bool mHup;
       int mLoopInterval;
       time_t mNextFileCheck;
-      asio::deadline_timer mTimer;
+      asio::steady_timer mTimer;
 
       bool hasUserFileChanged();
       void timeout(const asio::error_code& e);

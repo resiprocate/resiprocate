@@ -2,6 +2,8 @@
 EXTRA_DIST = reConServer_readme.txt
 EXTRA_DIST += reConServer.config
 EXTRA_DIST += *.wav
+EXTRA_DIST += reconserver.init
+EXTRA_DIST += reconserver.service
 
 sbin_PROGRAMS = reConServer
 

@@ -21,7 +21,7 @@ if test "$GPERFVER"x != x; then
     GPERF_SIZE_TYPE="unsigned int"
   fi
 else
-  GPERF_SIZE_TYPE="unsigned int"
+  GPERF_SIZE_TYPE="size_t"
 fi
 
 AC_DEFINE_UNQUOTED(GPERF_SIZE_TYPE, $GPERF_SIZE_TYPE)

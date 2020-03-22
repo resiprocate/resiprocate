@@ -9,6 +9,7 @@
 #include "resip/recon/UserAgent.hxx"
 #include "rutil/ServerProcess.hxx"
 
+#include "CDRFile.hxx"
 #include "MyConversationManager.hxx"
 #include "MyUserAgent.hxx"
 
@@ -31,6 +32,7 @@ protected:
    virtual void onReload();
 
 private:
+   resip::SharedPtr<CDRFile> mCDRFile;
    bool mKeyboardInput;
    resip::SharedPtr<MyUserAgent> mUserAgent;
    std::auto_ptr<MyConversationManager> mConversationManager;

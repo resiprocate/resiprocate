@@ -2,7 +2,6 @@
 #include "config.h"
 #endif
 
-#include <signal.h>
 #ifdef WIN32
 #include <conio.h>
 #else
@@ -83,13 +82,6 @@ static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then reConServer will automatically answer incoming calls by adding to lowest numbered conversation
 SharedPtr<ConversationProfile> conversationProfile;
-
-static void
-signalHandler(int signo)
-{
-   std::cerr << "Shutting down" << endl;
-   finished = true;
-}
 
 int main(int argc, char** argv)
 {
@@ -776,7 +768,7 @@ ReConServerProcess::main (int argc, char** argv)
    catch(std::exception& e)
    {
       ErrLog(<< "Exception parsing configuration: " << e.what());
-      exit(-1);
+      return -1;
    }
 
    Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
@@ -1307,12 +1299,11 @@ ReConServerProcess::main (int argc, char** argv)
             break;
          case ReConServerConfig::B2BUA:
             {
-               SharedPtr<B2BCallLogger> b2bCallLogger;
                if(!cdrLogFilename.empty())
                {
-                  b2bCallLogger.reset(new CDRFile(cdrLogFilename));
+                  mCDRFile.reset(new CDRFile(cdrLogFilename));
                }
-               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger);
+               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
             break;
@@ -1380,6 +1371,8 @@ ReConServerProcess::main (int argc, char** argv)
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
 } // end FML scope
 #endif
+
+   return 0;
 }
 
 void
@@ -1413,6 +1406,11 @@ void
 ReConServerProcess::onReload()
 {
    StackLog(<<"ReConServerProcess::onReload invoked");
+   if(mCDRFile)
+   {
+      StackLog(<<"ReConServerProcess::onReload: request CDR rotation");
+      mCDRFile->rotateLog();
+   }
 }
 
 

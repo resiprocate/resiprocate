@@ -152,6 +152,8 @@ class Transport : public FdSetIOObserver
 
       virtual ~Transport();
 
+      virtual void onReload();
+
       /**
          @note Subclasses override this method by checking whether
          there are unprocessed messages on the TransactionMessage

@@ -60,6 +60,8 @@ public:
 
    resip::SharedPtr<KeyedFileLine> getByKey(const resip::Data& key);
 
+   std::size_t getLineCount();
+
 private:
    void readFile();
 

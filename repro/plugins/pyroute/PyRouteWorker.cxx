@@ -201,7 +201,7 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    // will be selected by the stack
    if(response.isNumeric())
    {
-      Py::Int responseCode(response);
+      Py::Long responseCode(response);
       work->mResponseCode = responseCode;
       work->mResponseMessage = "";
       return true;
@@ -232,7 +232,7 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
          work->mResponseCode = 500;
          return true;
       }
-      Py::Int responseCode(err[0]);
+      Py::Long responseCode(err[0]);
       Py::String responseMessage;
       if(err.size() > 1)
       {

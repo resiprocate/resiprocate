@@ -151,12 +151,12 @@ TestDtlsUdpSocketContext::handshakeCompleted()
    cout << "Made SRTP policies\n";
    if(mSocket->getSocketType()==DtlsSocket::Client) 
    {
-      char *testData="test data";
+      const char *testData="test data";
       sendRtpData((const unsigned char *)testData,strlen(testData)+1);
 
 
 #if defined(WIN32)
-      char *testData2="test bobo";
+      const char *testData2="test bobo";
       sendRtpData((const unsigned char *)testData2,strlen(testData)+1);
 #endif
    }

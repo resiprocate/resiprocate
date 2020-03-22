@@ -449,7 +449,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(Via, "Via", Via, "RFC 3261");
       defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
-      defineHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 3455");
+      defineMultiHeader(PAccessNetworkInfo, "P-Access-Network-Info", Token, "RFC 7315"); // section 5.4.
       defineHeader(PChargingVector, "P-Charging-Vector", Token, "RFC 3455");
       defineHeader(PChargingFunctionAddresses, "P-Charging-Function-Addresses", Token, "RFC 3455");
       defineMultiHeader(PVisitedNetworkID, "P-Visited-Network-ID", TokenOrQuotedStringCategory, "RFC 3455");
@@ -536,7 +536,7 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
+      UInt64 getCreatedTimeMicroSec() const {return mCreatedTime;}
 
       /// deal with a notion of an "out-of-band" forced target for SIP routing
       void setForceTarget(const Uri& uri);

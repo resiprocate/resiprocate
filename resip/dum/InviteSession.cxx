@@ -778,6 +778,7 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
+         mProposedRemoteOfferAnswer.reset();  // Clear out any potential ProposedRemoteOfferAnswer since we are rejecting
          transition(Connected);
 
          SharedPtr<SipMessage> response(new SipMessage);
@@ -858,17 +859,27 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 void
 InviteSession::refer(const NameAddr& referTo, bool referSub)
 {
-   refer(referTo,std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo,myAddr(),std::auto_ptr<resip::Contents>(0),referSub);
+}
+void
+InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, bool referSub)
+{
+   refer(referTo,referredBy,std::auto_ptr<resip::Contents>(0),referSub);
 }
 void
 InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents,bool referSub)
+{
+   refer(referTo,myAddr(),contents,referSub);
+}
+void
+InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, std::auto_ptr<resip::Contents> contents, bool referSub)
 {
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = myAddr(); 
+      refer->header(h_ReferredBy) = referredBy;
       refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
       refer->setContents(contents);
       if (!referSub)

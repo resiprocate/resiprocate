@@ -6,7 +6,7 @@
 namespace resip 
 {
 
-struct methods { char *name; MethodTypes type; };
+struct methods { const char *name; MethodTypes type; };
 /* maximum key range = 494, duplicates = 0 */
 
 class MethodHash

@@ -1,4 +1,8 @@
 
+NOTE: PostgreSQL support is currently more advanced than MySQL
+support.  For new installations, we recommend you consider using
+PostgreSQL and see README_PostgreSQL.txt for instructions.
+
 In the examples below, the superuser (with permission to create
 databases and users) is the username root and the database name
 is repro.

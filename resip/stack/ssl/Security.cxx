@@ -396,6 +396,20 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
    }
    SSL_CTX_set_cert_store(ctx, x509Store);
 
+   updateDomainCtx(ctx, domain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+
+   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
+   SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
+   setDHParams(ctx);
+   SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
+   SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
+
+   return ctx;
+}
+
+void
+Security::updateDomainCtx(SSL_CTX* ctx, const Data& domain, const Data& certificateFilename, const Data& privateKeyFilename, const Data& privateKeyPassPhrase)
+{
    // Load domain cert chain and private key
    if(!domain.empty())
    {
@@ -418,11 +432,11 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
       {
          // Add to storage
          addCertPEM( DomainCert, domain, Data::fromFile(certFilename), false);
-         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain cert and added to Security storage, domain=" << domain << ", filename=" <<  certFilename);
+         InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain cert and added to Security storage, domain=" << domain << ", filename=" <<  certFilename);
       }
       else
       {
-         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain cert, domain=" << domain << ", filename=" <<  certFilename);
+         InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain cert, domain=" << domain << ", filename=" <<  certFilename);
       }
 
       Data keyFilename(privateKeyFilename.empty() ? mPath + pemTypePrefixes(DomainPrivateKey) + domain + PEM : privateKeyFilename);
@@ -444,21 +458,13 @@ Security::createDomainCtx(const SSL_METHOD* method, const Data& domain, const Da
       {
          // Add to storage
          addPrivateKeyPEM( DomainPrivateKey, domain, Data::fromFile(keyFilename), false, privateKeyPassPhrase);
-         InfoLog(<< "Security::createDomainCtx: Successfully loaded domain private key and added to Security storage, domain=" << domain << ", filename=" <<  keyFilename);
+         InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain private key and added to Security storage, domain=" << domain << ", filename=" <<  keyFilename);
       }
       else
       {
-          InfoLog(<< "Security::createDomainCtx: Successfully loaded domain private key, domain=" << domain << ", filename=" <<  keyFilename);
+          InfoLog(<< "Security::updateDomainCtx: Successfully loaded domain private key, domain=" << domain << ", filename=" <<  keyFilename);
       }
    }
-
-   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
-   SSL_CTX_set_cipher_list(ctx, mCipherList.cipherList().c_str());
-   setDHParams(ctx);
-   SSL_CTX_set_options(ctx, BaseSecurity::OpenSSLCTXSetOptions);
-   SSL_CTX_clear_options(ctx, BaseSecurity::OpenSSLCTXClearOptions);
-
-   return ctx;
 }
 
 void
