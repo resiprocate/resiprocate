@@ -114,8 +114,15 @@ TlsBaseTransport::getCtx()
    // here is negligible
    if(mReloadCertificate)
    {
-      DebugLog(<<"TlsBaseTransport::createConnection, re-reading certificate and private key for domain " << tlsDomain());
-      mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+      DebugLog(<<"TlsBaseTransport::getCtx, re-reading certificate and private key for domain " << tlsDomain());
+      try
+      {
+         mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+      }
+      catch (...)
+      {
+         ErrLog(<<"failed to read the certificate/private key files");
+      }
       // an extra log entry so we can see how long it took
       StackLog(<<"TlsBaseTransport::createConnection, updated certificate and private key for domain " << tlsDomain());
       mReloadCertificate = false;

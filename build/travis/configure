@@ -18,6 +18,7 @@ set -e
   --with-radcli \
   --with-qpid-proton \
   --with-repro \
+  --with-return \
   --enable-repro-plugins \
   DEPS_PYTHON_CFLAGS="`/usr/bin/python3.7-config --cflags`" \
   DEPS_PYTHON_LIBS="`/usr/bin/python3.7-config --ldflags`" \

@@ -390,7 +390,8 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
          handleSelfAimedStrayAck(msg);
       }
       // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
-      else if(msg->hasForceTarget() || mTopRouteFlowTupleSet || getProxy().isMyUri(msg->header(h_From).uri()))
+      else if(msg->hasForceTarget() || mTopRouteFlowTupleSet || getProxy().isMyUri(msg->header(h_From).uri()) ||
+         getProxy().getConfig().getDataStore()->mAclStore.isRequestTrusted(*msg))
       {
          // Top most route is us, or From header uri is ours.  Note:  The From check is 
          // required to interoperate with endpoints that configure outbound proxy 
