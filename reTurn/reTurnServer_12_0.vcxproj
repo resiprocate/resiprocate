@@ -171,8 +171,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -201,8 +201,8 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -225,8 +225,8 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -255,8 +255,8 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSLx64/include;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSLx64/include;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -278,8 +278,8 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -307,8 +307,8 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -330,8 +330,8 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -359,8 +359,8 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../contrib/asio;../contrib/boost;../contrib/OpenSSLx64/include;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../contrib/asio/include;../contrib/boost;../contrib/OpenSSLx64/include;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -437,150 +437,6 @@ copy $(ProjectDir)\*.pem $(TargetDir)</Command>
     <ClInclude Include="TurnPermission.hxx" />
     <ClInclude Include="UdpRelayServer.hxx" />
     <ClInclude Include="UdpServer.hxx" />
-    <ClInclude Include="..\contrib\asio\asio.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_datagram_socket.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_deadline_timer.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_io_object.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_socket.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_socket_acceptor.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_socket_iostream.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_socket_streambuf.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_stream_socket.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\basic_streambuf.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\buffer.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\buffered_read_stream.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\buffered_read_stream_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\buffered_stream.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\buffered_stream_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\buffered_write_stream.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\buffered_write_stream_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\completion_condition.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\datagram_socket_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\deadline_timer.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\deadline_timer_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\error.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\error_code.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\handler_alloc_hook.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\handler_invoke_hook.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\io_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\is_read_buffered.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\is_write_buffered.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\placeholders.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\read.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\read_until.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\socket_acceptor_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\socket_base.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\strand.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\stream_socket_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\streambuf.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\system_error.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\thread.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\time_traits.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\version.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\write.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\bind_handler.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\buffer_resize_guard.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\buffered_stream_storage.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\call_stack.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\const_buffers_iterator.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\consuming_buffers.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\deadline_timer_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\epoll_reactor.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\epoll_reactor_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\event.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\fd_set_adapter.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\handler_alloc_helpers.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\handler_invoke_helpers.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\hash_map.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\io_control.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\kqueue_reactor.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\kqueue_reactor_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\local_free_on_block_exit.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\mutex.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\noncopyable.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\null_event.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\null_mutex.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\null_signal_blocker.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\null_thread.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\null_tss_ptr.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\old_win_sdk_compat.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\pipe_select_interrupter.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\pop_options.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\posix_event.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\posix_fd_set_adapter.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\posix_mutex.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\posix_signal_blocker.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\posix_thread.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\posix_tss_ptr.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\push_options.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\reactive_socket_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\reactor_op_queue.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\resolver_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\scoped_lock.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\select_interrupter.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\select_reactor.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\select_reactor_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\service_base.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\service_id.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\service_registry.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\service_registry_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\signal_blocker.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\signal_init.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\socket_holder.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\socket_ops.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\socket_option.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\socket_select_interrupter.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\socket_types.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\strand_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\task_io_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\task_io_service_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\thread.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\throw_error.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\timer_queue.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\timer_queue_base.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\tss_ptr.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_event.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_fd_set_adapter.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_io_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_io_service_fwd.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_operation.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_iocp_socket_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_mutex.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_signal_blocker.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_thread.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\win_tss_ptr.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\winsock_init.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\detail\wrapped_handler.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\address.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\address_v4.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\address_v6.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\basic_endpoint.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver_entry.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver_iterator.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\basic_resolver_query.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\host_name.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\multicast.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\resolver_query_base.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\resolver_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\tcp.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\udp.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\unicast.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\v6_only.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ip\detail\socket_option.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\basic_context.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\context.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\context_base.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\context_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\stream.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\stream_base.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\stream_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_context_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_init.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_operation.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_stream_service.hpp" />
-    <ClInclude Include="..\contrib\asio\asio\ssl\detail\openssl_types.hpp" />
     <ClInclude Include="UserAuthData.hxx" />
   </ItemGroup>
   <ItemGroup>

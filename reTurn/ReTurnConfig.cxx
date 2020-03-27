@@ -11,8 +11,6 @@
 
 #include <asio/placeholders.hpp>
 #include <boost/bind.hpp>
-#include <boost/chrono.hpp>
-
 #include "ReTurnConfig.hxx"
 
 #include "ReTurnSubsystem.hxx"
@@ -33,6 +31,7 @@ using namespace resip;
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
+#include <boost/chrono.hpp>
 using namespace boost::chrono;
 #endif
 
