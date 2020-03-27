@@ -11,6 +11,7 @@
 #include <asio/ssl.hpp>
 #endif
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 #include <map>
 
 #include <rutil/Log.hxx>

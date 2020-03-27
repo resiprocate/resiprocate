@@ -2,6 +2,7 @@
 #define ConversationManager_hxx
 
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "BridgeMixer.hxx"
 
