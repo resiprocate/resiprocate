@@ -59,7 +59,7 @@ Requires(postun): systemd
 Requires: chkconfig
 Requires(preun): initscripts
 %endif
-Obsoletes: resiprocate-b2bua
+Obsoletes: resiprocate-b2bua < 1.9.0
 
 %description
 The reSIProcate components, particularly the SIP stack, are in use in both
