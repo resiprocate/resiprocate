@@ -92,8 +92,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio/include;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -111,8 +111,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio/include;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BufferSecurityCheck>true</BufferSecurityCheck>
@@ -128,8 +128,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio/include;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -145,8 +145,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)/..;$(ProjectDir)/../reTurn;$(ProjectDir)/../contrib/asio/include;$(ProjectDir)/../contrib/boost;$(ProjectDir)/../contrib/openssl/include;$(ProjectDir)/../contrib/srtp/include;$(ProjectDir)/../contrib/srtp/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>

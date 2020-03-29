@@ -30,6 +30,7 @@
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
+#include <boost/chrono.hpp>
 using namespace boost::chrono;
 #endif
 

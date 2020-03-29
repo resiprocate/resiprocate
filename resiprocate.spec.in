@@ -8,7 +8,7 @@ Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%versio
 BuildRequires: libtool automake autoconf
 %define build_return 0%{?fedora} >= 30 || 0%{?rhel} >= 8
 %if %build_return
-BuildRequires: asio-devel
+BuildRequires: asio-devel >= 1.12.0
 %endif
 BuildRequires: boost-devel
 BuildRequires: cajun-jsonapi-devel
@@ -59,7 +59,7 @@ Requires(postun): systemd
 Requires: chkconfig
 Requires(preun): initscripts
 %endif
-Obsoletes: resiprocate-b2bua
+Obsoletes: resiprocate-b2bua < 1.9.0
 
 %description
 The reSIProcate components, particularly the SIP stack, are in use in both
@@ -355,6 +355,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libresip-*.so
 %if %build_return
 %{_libdir}/libreTurnClient-*.so
+%{_libdir}/libreTurnCommon-*.so
 %endif
 %{_libdir}/librutil-*.so
 %{_libdir}/libsipdial-*.so
@@ -399,6 +400,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libresip.so
 %if %build_return
 %{_libdir}/libreTurnClient.so
+%{_libdir}/libreTurnCommon.so
 %endif
 %{_libdir}/librutil.so
 %{_libdir}/libsipdial.so

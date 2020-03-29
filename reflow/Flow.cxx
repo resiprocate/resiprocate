@@ -7,6 +7,7 @@
 #include <asio/ssl.hpp>
 #endif
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>

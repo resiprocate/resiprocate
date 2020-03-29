@@ -2,6 +2,7 @@
 #define UserAgent_hxx
 
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "InstantMessage.hxx"
 #include "ConversationManager.hxx"
