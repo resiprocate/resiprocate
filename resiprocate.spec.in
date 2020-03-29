@@ -355,6 +355,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libresip-*.so
 %if %build_return
 %{_libdir}/libreTurnClient-*.so
+%{_libdir}/libreTurnCommon-*.so
 %endif
 %{_libdir}/librutil-*.so
 %{_libdir}/libsipdial-*.so
@@ -399,6 +400,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libresip.so
 %if %build_return
 %{_libdir}/libreTurnClient.so
+%{_libdir}/libreTurnCommon.so
 %endif
 %{_libdir}/librutil.so
 %{_libdir}/libsipdial.so
