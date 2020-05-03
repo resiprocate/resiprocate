@@ -623,7 +623,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
    if(sessionToReplace.isValid())
    {
       CallId replaces;
-      DialogId id = sessionToReplace->getDialogId();
+      const DialogId& id = sessionToReplace->getDialogId();
       replaces.value() = id.getCallId();
       replaces.param(p_toTag) = id.getRemoteTag();
       replaces.param(p_fromTag) = id.getLocalTag();
@@ -647,7 +647,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
    if(sessionToReplace.isValid())
    {
       CallId replaces;
-      DialogId id = sessionToReplace->getDialogId();
+      const DialogId& id = sessionToReplace->getDialogId();
       replaces.value() = id.getCallId();
       replaces.param(p_toTag) = id.getRemoteTag();
       replaces.param(p_fromTag) = id.getLocalTag();
@@ -670,7 +670,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
    if(sessionToReplace.isValid())
    {
       CallId replaces;
-      DialogId id = sessionToReplace->getDialogId();
+      const DialogId& id = sessionToReplace->getDialogId();
       replaces.value() = id.getCallId();
       replaces.param(p_toTag) = id.getRemoteTag();
       replaces.param(p_fromTag) = id.getLocalTag();
