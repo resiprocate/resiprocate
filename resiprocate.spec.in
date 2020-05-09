@@ -164,8 +164,7 @@ such as the repro SIP proxy.
 %setup -q
 
 %build
-PYCONFIG=/usr/bin/python3.7-config
-[ -x $PYCONFIG ] || PYCONFIG=/usr/bin/python3.6-config
+PYCONFIG=/usr/bin/python3-config
 if [ ! -x $PYCONFIG ] ; then echo "python*-config not found" ; exit 1 ; fi
 %if %use_radcli
 RADIUS_CFG=--with-radcli
