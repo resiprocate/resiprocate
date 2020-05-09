@@ -215,3 +215,13 @@ Description: SIP registration agent
  typically sending a Contact header to the registrar telling it to send incoming
  calls to a local SIP proxy or other gateway device that is unable to send
  a registration request itself.
+
+Package: libresiprocate-mibs
+Section: net
+Architecture: all
+Pre-Depends: ${misc:Pre-Depends}
+Suggests: snmp, snmp-mibs-downloader
+Description: reSIProcate SIP stack - MIBs for SNMP users
+ MIB files describing the properties exposed by the SNMP agents
+ in reSIProcate-based processes.  The MIBs are typically installed on the
+ monitoring host that polls the reSIProcate services.
