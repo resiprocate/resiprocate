@@ -1,4 +1,44 @@
-= Release Notes v 1.11 =
+= Release Notes v 1.12 =
+
+==1.12 Changes==
+*added Visual Studio 2017 Solutions and Project files
+*added OpenSSL 1.1.1 Support
+*added LibreSSL Support
+*added new reConServer application - B2BUA using recon 
+*rutil: fix bug in SHA1 implementation
+*resip/stack: Uri: Fix potential out of bounds read
+*resip/stack: SdpContents: Reject malformed IP Address
+*rutil: ares: Fix heap overflow in ares_mkquery like c-ares does
+*resip/stack: Fix: Adding too many media connections may lead to memory exhaustion.
+*rutil: DnsUtil: Fix potential out of bounds access
+*rutil: cares use only: Missing handling of timers can cause 100% load in dns-thread if no answer is received from server
+*resip/dum: added support for reception of UPDATE (no SDP / target refresh) requests in early UAS dialog states
+*resip/dum: be tolerant of illegal subsequent SDP's in UAC PRACK flows as recommended by RFC6337 Section 3.1.1 and 3.1.2
+*resip/stack: ensure the buffered producer state machine fifo in the transports is flushed when operations are completed, so that getNextProcessTime API's will behave correctly
+*resip/stack: make DNS greylist duration configurable
+*repro: expose a new config setting in repro for DNS greylist duration 
+*resip/dum: MasterProfile: added a removeSupportedMethod to remove a specific SIP method from thos available to profile.
+*resip/stack: fix: if IP Address routing fails over UDP and also fails over TCP, such that both UDP and TCP tuples are greylisted, then revert to using UDP (instead of TCP) until the greylisted entries expire
+*resip/dum: Added BaseUsage::postDum convenience method
+*resip/dum: modified DialogUsageManager::requestMergedRequestRemoval to not bother queuing a delayed merge request removal if the stack is shutting down.  Helps to be less sensitive the order of object deletion at app exit time
+*rutil: ParseBuffer: Do not read past the buffer.
+*resip/stack: Security.cxx: Add support for ip address in subjectAltName
+*resip/dum: fix crash in ServerSubscription::shouldDestroyAfterSendingFailure
+*repro/resip/stack: fix an uncaught exception when loading certificates that can cause repro no to start is_directory can throw.  This can happen when interrogating a broken link in linux.
+*repro: fix presence server so that NOTIFY messages are not sent out for publication refreshes that don't update the presence document
+*resip/stack: fix for WSS transports when reading large messages
+*resip/stack: fix for potential crash if Connection::processReads deletes the connection
+*resip/stack: fix NameAddr operator== so that an AllContact NameAddr is NOT equal to an empty NameAddr
+*rutil: Fix XMLCursor memory leak when ctor throws
+*repro: add new repro setting (AllowInboundFlowTokensForNonDirectClients) that works in-conjunction with RRTokenHack / EnableFlowTokens setting that allows inbound flow tokens to be used for connections that come from non-directly connected clients
+*resip/stack: fixed an issue where the stack could crash if a TCP based sender sends a Content-Length that is less that the actual SIP body transmitted 
+*return: update ASIO drop from version 1.10.6 to 1.12.1
+*resip/dum/TlsPeerAuthManager and repro/monkeys/CertificateAuthenticator: add more debug logging
+*resip/dum repro: certificate authentication: async DB lookups 
+*resip/stack/repro: More flexible domain matching is now supported 
+*resip/stack: TuSelector: allow TUs to be inserted at front of list
+*resip/stack: Added ability to add non standard child elements to the Dialog package document Dialog element.
+*repro: update for qpid-prton 0.22.0
 
 ==1.11 (Beta) Changes==
 *resip/stack: implement  http://tools.ietf.org/html/rfc3261#section-18.1.1, paragraph 8 (Server error conditions)
