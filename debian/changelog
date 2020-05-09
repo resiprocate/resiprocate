@@ -1,3 +1,9 @@
+resiprocate (1:1.12.0-1~bpo10+1) buster-backports; urgency=medium
+ 
+  * Build for buster-backports.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 09 May 2020 23:27:16 +0200
+
 resiprocate (1:1.12.0-1) unstable; urgency=medium
 
   * New upstream release.
