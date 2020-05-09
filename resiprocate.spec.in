@@ -160,6 +160,14 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
+%package mibs
+Summary: MIBs for SNMP users
+
+%description mibs
+MIB files describing the properties exposed by the SNMP agents
+in reSIProcate-based processes.  These are typically installed on the
+monitoring host that polls the reSIProcate services.
+
 %prep
 %setup -q
 
@@ -452,6 +460,8 @@ rm -rf $RPM_BUILD_ROOT
 %files registration-agent
 %{_sbindir}/registrationAgent
 %{_mandir}/man8/registrationAgent.8*
+
+%files mibs
 %{_datadir}/snmp/mibs/REG-AGENT-MIB.txt
 
 %changelog
