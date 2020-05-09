@@ -2149,7 +2149,7 @@ WebAdmin::buildLogLevelSubPage(resip::DataStream& s)
 void
 WebAdmin::buildReloadCertsSubPage(resip::DataStream& s)
 {
-    mProxy.getStack().onReload();
+    mProxy.getStack().reloadCertificates();
     s << "Reloaded certificates." << endl;
 }
 

@@ -1,76 +1,188 @@
-= Release Notes v 1.10 =
+= Release Notes v 1.12 =
+
+==1.12 Changes==
+*added Visual Studio 2017 Solutions and Project files
+*added OpenSSL 1.1.1 Support
+*added LibreSSL Support
+*added new reConServer application - B2BUA using recon 
+*rutil: fix bug in SHA1 implementation
+*resip/stack: Uri: Fix potential out of bounds read
+*resip/stack: SdpContents: Reject malformed IP Address
+*rutil: ares: Fix heap overflow in ares_mkquery like c-ares does
+*resip/stack: Fix: Adding too many media connections may lead to memory exhaustion.
+*rutil: DnsUtil: Fix potential out of bounds access
+*rutil: cares use only: Missing handling of timers can cause 100% load in dns-thread if no answer is received from server
+*resip/dum: added support for reception of UPDATE (no SDP / target refresh) requests in early UAS dialog states
+*resip/dum: be tolerant of illegal subsequent SDP's in UAC PRACK flows as recommended by RFC6337 Section 3.1.1 and 3.1.2
+*resip/stack: ensure the buffered producer state machine fifo in the transports is flushed when operations are completed, so that getNextProcessTime API's will behave correctly
+*resip/stack: make DNS greylist duration configurable
+*repro: expose a new config setting in repro for DNS greylist duration 
+*resip/dum: MasterProfile: added a removeSupportedMethod to remove a specific SIP method from thos available to profile.
+*resip/stack: fix: if IP Address routing fails over UDP and also fails over TCP, such that both UDP and TCP tuples are greylisted, then revert to using UDP (instead of TCP) until the greylisted entries expire
+*resip/dum: Added BaseUsage::postDum convenience method
+*resip/dum: modified DialogUsageManager::requestMergedRequestRemoval to not bother queuing a delayed merge request removal if the stack is shutting down.  Helps to be less sensitive the order of object deletion at app exit time
+*rutil: ParseBuffer: Do not read past the buffer.
+*resip/stack: Security.cxx: Add support for ip address in subjectAltName
+*resip/dum: fix crash in ServerSubscription::shouldDestroyAfterSendingFailure
+*repro/resip/stack: fix an uncaught exception when loading certificates that can cause repro no to start is_directory can throw.  This can happen when interrogating a broken link in linux.
+*repro: fix presence server so that NOTIFY messages are not sent out for publication refreshes that don't update the presence document
+*resip/stack: fix for WSS transports when reading large messages
+*resip/stack: fix for potential crash if Connection::processReads deletes the connection
+*resip/stack: fix NameAddr operator== so that an AllContact NameAddr is NOT equal to an empty NameAddr
+*rutil: Fix XMLCursor memory leak when ctor throws
+*repro: add new repro setting (AllowInboundFlowTokensForNonDirectClients) that works in-conjunction with RRTokenHack / EnableFlowTokens setting that allows inbound flow tokens to be used for connections that come from non-directly connected clients
+*resip/stack: fixed an issue where the stack could crash if a TCP based sender sends a Content-Length that is less that the actual SIP body transmitted 
+*return: update ASIO drop from version 1.10.6 to 1.12.1
+*resip/dum/TlsPeerAuthManager and repro/monkeys/CertificateAuthenticator: add more debug logging
+*resip/dum repro: certificate authentication: async DB lookups 
+*resip/stack/repro: More flexible domain matching is now supported 
+*resip/stack: TuSelector: allow TUs to be inserted at front of list
+*resip/stack: Added ability to add non standard child elements to the Dialog package document Dialog element.
+*repro: update for qpid-prton 0.22.0
+
+==1.11 (Beta) Changes==
+*resip/stack: implement  http://tools.ietf.org/html/rfc3261#section-18.1.1, paragraph 8 (Server error conditions)
+*resip/stack: added TransactionUser::removeDomain API
+*rutil: fixed issue with DNS logic if we switch from DNS over UDP to DNS over TCP, which can occur when the DNS result is greater than 512 bytes
+*resip/stack: fixed up RFC4373 requires parameter - it is an exists parameter and not a Data parameter
+*resip/stack: added the ability to retrieve a list of simple presence info from a GenericPidfContents
+*rutil: improve the log output of DNS records
+*resip/recon: make sure we look at rinstance header, if it is present, when looking up the incoming conversation profile
+*resip/recon: added logic to detect if a TCP connection is terminated.  This makes TCP registration errors detected much faster.
+*recon/MOHServer: multi-tenancy support.  Allow registering more than one MOH AOR with it's own music file
+*recon/MOHServer: added certificate path setting
+*repro: added route order to key, so that you can have multiple routes with the same matching pattern and different destinations, as long as they use a different order value
+*resip/stack: added a reloadDnsServers API to SipStack
+*repro: added a Reload DNS Servers button to repro settings GUI
+*resip/stack: added ECONNABORTED to Windows TCP connection timeout processing for WSAPoll implementation
+*repro: changes to allow repro to run with outbound support behind a NAT device.  Use configured transport specific record-routes in all cases
+*resip/stack: update TlsConnection.cxx to add TLS SNI extension in Client Hello
+*resip/dum: added new method to ClientRegistration class so that applications can check if a registration operation is currently in progress or not
+*resip/recon: send presence mechanism through PUBLISH message
+*resip/recon: send/receive text message with MESSAGE request
+*return/resip/repro: Use SSLv23 instead of TLSv1 when using OpenSSL for better TLS version capability 
+*resip/dum: added ability for DialogUsage's (ie: InviteSessionHandle) to query the route set from the stored Dialog Info
+*resip/dum: added missing UAC_SentUpdateEarlyGlare state to the InviteSession::isEarly implementation
+*repro: added support for HOMER / HEP
+*resip/stack: added the ability to update QOS to a new value on existing stack managed sockets, without needing to restart the SipStack.  Note:  DNS sockets are not currently supported
+*resip/stack: fixed bug with SipStack::removeTransport method - transport selector maps could get out of sync and cause existing transports to not get used correctly after a runtime removal
+*resip/stack: added DialogInfoContents for handling of dialog-info+xml bodies
+*resip/dum: fixes to DUM's DialogEventStateManager implementation
+**fixed a bug in DialogEventStateManager that could tag as call as replaced in a dialog info event, even though it will get denied because it is in the incorrect state
+**fixed up DialogEventStateManager so that the onConfirmed callback will occur for any mid-dialog SDP changes
+**added accessor to DialogEventStateManager to be able return the DialogStateInfos for a particular Uri, instead of returning all DialogInfo's in memory
+**added missing DialogEventStateManager onTerminated callback for when we reject a UAS call
+*reflow resip/recon: add ForceCOMedia for NAT users / comedia behavior
+*repro: only bind HTTP and command ports to localhost by default
+*resip/recon: ensure G.722 sample rate is advertised as 8000 in local capabilities
+*resip/recon: warn about peers offering G.722 with sample rate other than 8000
+*resip repro: add AssumeFirstHopSupportsFlowTokens option
+*resip/stack resip/dum: InteropHelper: add option to enable/disable adding rport to Via
+*repro: add config option AddViaRport
+*resip/stack: fix for TCP timeout handling, ensure TransportFailure code is used so that the next DNS entry will be tried
+*resip/stack: removed use of USE_DNS_VIP preprocessor define and use a runtime setting instead. Runtime setting is a new parameter passed into one of the two SipStack constructors.
+*resip/recon: UserAgent: add method getConversationProfileByMediaAddress
+*rutil: GenericIPAddress: implement stream operator
+*reTurn: StunTuple: add method getSockaddr
+*reflow: add RTCPEventLoggingHandler API
+*rutil: OpenSSLInit: fix code to free compression methods
+*resip/dum: UserProfile: log a warning when no digest credentials available
+*ensure 503 and 408 blacklist and greylist logic is working correctly for Client Invite transactions on unreliable transports
+*repro: RegSyncServer: send reg sync XML messages to AMQP topic with Qpid Proton
+*resip/stack: DnsResult: add some debug messages when transport not supported
+*repro: make sure we create a DiaglogUsageManager if PresenseServer is enabled, could crash on startup otherwise
+*repro: RFC3326 (The Reason Header Field) Support in repro
+**When a forked call is answered by one leg the other legs are canceled.  These cancel messages will now go out with a Reason header on them:  Reason: SIP;cause=200;text=Call completed elsewhere
+**Repro will copy reason headers from Cancel message it receives from the caller to the Cancel messages that are sent to each leg.
+**If one of the call legs returns a 6xx global response code, then the other call legs are canceled.  This CANCEL message will contain a reason header with the 6xx cause code and reason text in the reason header.
+**resip/dum: fix to ensure Privacy headers don't grow with each mid-dialog re-invite (if present)
+*repro / reTurn: Use systemd to restart if process stops unexpectedly
+
 ==1.10.2 Changes==
-changes to support Windows 10 IOT ARM (RaspPi2)
-VS2015 build support
-cleanup some warnings
-rutil: fix ARM / GCC 6 build issue with signed char[]
-resip/stack: fix issue with ACK/non-200 transport selection for client transactions over WSS transports
-repro: SQL backends: singleResultQuery: distinguish error from empty result set
-repro: fix for OutboundTargets added by LocationServer - first parameter should be an AOR and not an instance Id
+*changes to support Windows 10 IOT ARM (RaspPi2)
+*VS2015 build support
+*cleanup some warnings
+*rutil: fix ARM / GCC 6 build issue with signed char[]
+*resip/stack: fix issue with ACK/non-200 transport selection for client transactions over WSS transports
+*repro: SQL backends: singleResultQuery: distinguish error from empty result set
+*repro: fix for OutboundTargets added by LocationServer - first parameter should be an AOR and not an instance Id
+*resip/dum: added convenience API's to DialogUsageManager for ending all ServerSubsciptions and ServerPublications to aid in graceful DUM shutdown
+*repro: fix for OutboundTargets added by LocationServer - first parameter should be an AOR and not an instance Id
+*resip/dum: fixed issue with DUM ServerInviteSession not automatically re-issuing an INVITE after received a 491. Also added tfdum test.
+*resip/stack: fix InternalTransport::bind to work when binding to port 0 when using an IPv6 interface
+*repro: update drop of GeoIP library to latest 1.6.9 version
+*return/recon: update ASIO drop from 1.10.1 to 1.10.6
+*resip/dum: ServerSubscription: fix reason text in responses
+
 ==1.10.1 Changes==
-resip/stack: TLS: make the path argument of the Security class constructor more versatile
-rutil, dum: RADIUS: support for radcli instead of freeradius-client
-build: add more Visual Studio artifacts
+*resip/stack: TLS: make the path argument of the Security class constructor more versatile
+*rutil, dum: RADIUS: support for radcli instead of freeradius-client
+*build: add more Visual Studio artifacts
+
 ==1.10.0 Changes==
-repro: added a full presence server
-resip/stack: WebSocket authentication may now use URL parameters instead of cookies
-repro: added support for PostgreSQL and indexed database definitions
-repro: can include multiple files into repro.config using Include
-resip/stack: TLS: perfect forward secrecy (PFS) support using DH or ECDH
-resip/stack: TLS compatibility and cipher strength improvements
-resip/stack: TLS: support for passphrases used to encrypt private key files for domain certificates
-rutil: better Syslog support (now sets severity correctly)
-rutil: allow customization of assert() behavior using resip_assert(), improves diagnosis of crashes
-resip/stack: added Poll(WSAPoll) implementation for event loop - allows Windows to support thousands of TCP connections instead of only ~60 (FD_SETSIZE)
-resip/stack: added ability to remove transports at runtime
-resip/stack: added netns (linux network namespace) support to stack
+*repro: added a full presence server
+*resip/stack: WebSocket authentication may now use URL parameters instead of cookies
+*repro: added support for PostgreSQL and indexed database definitions
+*repro: can include multiple files into repro.config using Include
+*resip/stack: TLS: perfect forward secrecy (PFS) support using DH or ECDH
+*resip/stack: TLS compatibility and cipher strength improvements
+*resip/stack: TLS: support for passphrases used to encrypt private key files for domain certificates
+*rutil: better Syslog support (now sets severity correctly)
+*rutil: allow customization of assert() behavior using resip_assert(), improves diagnosis of crashes
+*resip/stack: added Poll(WSAPoll) implementation for event loop - allows Windows to support thousands of TCP connections instead of only ~60 (FD_SETSIZE)
+*resip/stack: added ability to remove transports at runtime
+*resip/stack: added netns (linux network namespace) support to stack
+
 ==1.9.11 Changes==
-resip/stack: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
-repro: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
-repro: CommonNameMappings: detect repeated common names in config file
-resip/stack: fix buffer management bug in WebSocket transport
-rutil: XMLCursor: support whitespace before first XML element
-resip/stack: Helper: fix for an auth validation issue
-reTurn: add psql-user-extract script
-resip/dum: DialogUsage: added logic to avoid trapping if mAppDialogSet is 0
-resip/dum: DialogSet: Added handling for non-invite dialogs
-resip/stack: ConnectionBase: increase max headers from 256 to 1024
-rutil/dns/ares: fix for uninitialized pointer
-rutil/dns/ares: remove cache-sensitive logic from caching algorithm
-rutil/stun: Qualify bind to prevent clang from using std::bind
-resip/stack/SdpContents: add some static codec definitions and new methods
+*resip/stack: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
+*repro: change TLS cipher suites to use -COMPLEMENTOFDEFAULT
+*repro: CommonNameMappings: detect repeated common names in config file
+*resip/stack: fix buffer management bug in WebSocket transport
+*rutil: XMLCursor: support whitespace before first XML element
+*resip/stack: Helper: fix for an auth validation issue
+*reTurn: add psql-user-extract script
+*resip/dum: DialogUsage: added logic to avoid trapping if mAppDialogSet is 0
+*resip/dum: DialogSet: Added handling for non-invite dialogs
+*resip/stack: ConnectionBase: increase max headers from 256 to 1024
+*rutil/dns/ares: fix for uninitialized pointer
+*rutil/dns/ares: remove cache-sensitive logic from caching algorithm
+*rutil/stun: Qualify bind to prevent clang from using std::bind
+*resip/stack/SdpContents: add some static codec definitions and new methods
+
 ==1.9.10 Changes==
-resip/stack: support for OpenSSL versions that don't have all option names
-resip/stack: lower severity of some log messages when TLS connections close
-resip/stack: make ensureWriteable more tolerant during TLS handshakes, resolves crashes
-resip/stack: add support for CA root cert bundle files
-resip/stack: use StrongestSuite as default cipher list
-resip/dum: challenge with correct realm when from and req URI domains don't match
-rpm: update Wants and After details in unit files
+*resip/stack: support for OpenSSL versions that don't have all option names
+*resip/stack: lower severity of some log messages when TLS connections close
+*resip/stack: make ensureWriteable more tolerant during TLS handshakes, resolves crashes
+*resip/stack: add support for CA root cert bundle files
+*resip/stack: use StrongestSuite as default cipher list
+*resip/dum: challenge with correct realm when from and req URI domains don't match
+*rpm: update Wants and After details in unit files
+
 ==1.9.9 Changes==
-resip/stack: only support SSL_OP_SAFARI_ECDHE_ECDSA_BUG as configuration string with compatible OpenSSL versions
+*resip/stack: only support SSL_OP_SAFARI_ECDHE_ECDSA_BUG as configuration string with compatible OpenSSL versions
+
 ==1.9.8 Changes==
-resip/stack: add static fields on BaseSecurity for setting OpenSSL CTX options
-resip/stack: explicitly disable SSLv2 and SSLv3 by default when using SSLv23
-resip/stack: allow application to provide OpenSSL certificate verification callback
-repro: change default OpenSSL method from TLSv1_method to SSLv23_method (enables TLS v1.1 and v1.2)
-repro: add configuration options OpenSSLCTXSetOptions and OpenSSLCTXClearOptions to control OpenSSL CTX options
-repro: add configuration OpenSSLCipherList to manually configure the OpenSSL cipher list
+*resip/stack: add static fields on BaseSecurity for setting OpenSSL CTX options
+*resip/stack: explicitly disable SSLv2 and SSLv3 by default when using SSLv23
+*resip/stack: allow application to provide OpenSSL certificate verification callback
+*repro: change default OpenSSL method from TLSv1_method to SSLv23_method (enables TLS v1.1 and v1.2)
+*repro: add configuration options OpenSSLCTXSetOptions and OpenSSLCTXClearOptions to control OpenSSL CTX options
+*repro: add configuration OpenSSLCipherList to manually configure the OpenSSL cipher list
 ==1.9.7 Changes==
-rpm: Indicate that b2bua package is obsolete
-resip/stack: TlsConnection: correctly handle OpenSSL error queue after SSL_read
-resip/stack: fix for forced target routing in TransactionState - thanks to John Gregg for this
-rutil: enhance command line parsing exceptions with additional details - thanks to John Gregg for initial contribution
-rutil: if a v6 address is passed to the GenericIPAddress sockaddr constructor, ensure the entire v6 address is copied over properly.  Note:  sockaddr is smaller than sockaddr_in6 - Thanks to Bjorn A for this fix
-rutil: accept case insensitive log level strings
-resip/dum: fix obscure bug in basicClient where if we don't use a threaded stack processing does not function correctly - required PollGrp to be passed to SipStack constructor
-resip/stack: fix for a use-after-free bug when adding multi-headers to a list that has been copied, and then one of the headers is accessed (but not necessarily parsed) - thanks to Byron Campen for this fix!
-resip/stack: Added accessor for TransactionUser FIFO so to obtain stats
-resip/stack: additional OpenSSL cleanup fn - reordered functions to match order used in this post: http://openssl.6102.n7.nabble.com/Cleanup-procedure-missing-some-calls-td37441.html
-reTurn: modified asio and boost include file ordering to avoid multiply defined symbol errors on linking
-resip/recon: remove extra sleep definitions
-resip/stack: fix a bug with Keepalive processing that causes transaction state leakage and potential traps
-rutil: syslog: use LOG_PID, avoid sending redundant data in log string.
+*rpm: Indicate that b2bua package is obsolete
+*resip/stack: TlsConnection: correctly handle OpenSSL error queue after SSL_read
+*resip/stack: fix for forced target routing in TransactionState - thanks to John Gregg for this
+*rutil: enhance command line parsing exceptions with additional details - thanks to John Gregg for initial contribution
+*rutil: if a v6 address is passed to the GenericIPAddress sockaddr constructor, ensure the entire v6 address is copied over properly.  Note:  sockaddr is smaller than sockaddr_in6 - Thanks to Bjorn A for this fix
+*rutil: accept case insensitive log level strings
+*resip/dum: fix obscure bug in basicClient where if we don't use a threaded stack processing does not function correctly - required PollGrp to be passed to SipStack constructor
+*resip/stack: fix for a use-after-free bug when adding multi-headers to a list that has been copied, and then one of the headers is accessed (but not necessarily parsed) - thanks to Byron Campen for this fix!
+*resip/stack: Added accessor for TransactionUser FIFO so to obtain stats
+*resip/stack: additional OpenSSL cleanup fn - reordered functions to match order used in this post: http://openssl.6102.n7.nabble.com/Cleanup-procedure-missing-some-calls-td37441.html
+*reTurn: modified asio and boost include file ordering to avoid multiply defined symbol errors on linking
+*resip/recon: remove extra sleep definitions
+*resip/stack: fix a bug with Keepalive processing that causes transaction state leakage and potential traps
+*rutil: syslog: use LOG_PID, avoid sending redundant data in log string.
 
 ==1.9.6 Changes==
 *resip/recon: fixes a bug that makes it impossible to use codecs with RTP clock rates other than 8000, makes Opus support possible
