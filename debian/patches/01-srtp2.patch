@@ -1,0 +1,183 @@
+diff --git a/reflow/Flow.hxx b/reflow/Flow.hxx
+index 0e2dfe9d7..fb3dcf020 100644
+--- a/reflow/Flow.hxx
++++ b/reflow/Flow.hxx
+@@ -13,7 +13,8 @@
+ #ifdef WIN32
+ #include <srtp.h>
+ #else
+-#include <srtp/srtp.h>
++#include <srtp2/srtp.h>
++#include "Srtp2Helper.hxx"
+ #endif
+ #include <boost/shared_ptr.hpp>
+ 
+diff --git a/reflow/FlowDtlsSocketContext.hxx b/reflow/FlowDtlsSocketContext.hxx
+index 2c4fde51c..66d802251 100644
+--- a/reflow/FlowDtlsSocketContext.hxx
++++ b/reflow/FlowDtlsSocketContext.hxx
+@@ -12,7 +12,8 @@
+ #ifdef WIN32
+ #include <srtp.h>
+ #else
+-#include <srtp/srtp.h>
++#include <srtp2/srtp.h>
++#include "Srtp2Helper.hxx"
+ #endif
+ 
+ #include "dtls_wrapper/DtlsSocket.hxx"
+diff --git a/reflow/FlowManager.cxx b/reflow/FlowManager.cxx
+index 59f3cd138..cfa2c9b00 100644
+--- a/reflow/FlowManager.cxx
++++ b/reflow/FlowManager.cxx
+@@ -23,7 +23,8 @@
+ #ifdef WIN32
+ #include <srtp.h>
+ #else
+-#include <srtp/srtp.h>
++#include <srtp2/srtp.h>
++#include "Srtp2Helper.hxx"
+ #endif
+ 
+ #ifdef USE_SSL  
+diff --git a/reflow/MediaStream.hxx b/reflow/MediaStream.hxx
+index b680356e2..8d65887ba 100644
+--- a/reflow/MediaStream.hxx
++++ b/reflow/MediaStream.hxx
+@@ -16,7 +16,8 @@
+ #ifdef WIN32
+ #include <srtp.h>
+ #else
+-#include <srtp/srtp.h>
++#include <srtp2/srtp.h>
++#include "Srtp2Helper.hxx"
+ #endif
+ 
+ #include "dtls_wrapper/DtlsFactory.hxx"
+diff --git a/reflow/Srtp2Helper.hxx b/reflow/Srtp2Helper.hxx
+new file mode 100644
+index 000000000..05f0de6ef
+--- /dev/null
++++ b/reflow/Srtp2Helper.hxx
+@@ -0,0 +1,43 @@
++#if !defined(Srtp2Helper_hxx)
++#define Srtp2Helper_hxx
++
++// grep 'not declared' /tmp/errs.log | cut -f5- -d: | sort -u | sed -e 's/ was not declared in this scope; did you mean//' | tr -d "'?" | while read ; do echo "#define$REPLY" ; done
++
++#define err_status_t srtp_err_status_t
++#define err_status_ok srtp_err_status_ok
++#define crypto_policy_t srtp_crypto_policy_t
++#define crypto_policy_set_aes_cm_256_hmac_sha1_80 srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80
++#define crypto_policy_set_aes_cm_128_hmac_sha1_32 srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32
++#define crypto_policy_set_aes_cm_128_null_auth srtp_crypto_policy_set_aes_cm_128_null_auth
++#define crypto_policy_set_null_cipher_hmac_sha1_80 srtp_crypto_policy_set_null_cipher_hmac_sha1_80
++#define crypto_policy_set_aes_cm_128_hmac_sha1_80 srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80
++#define crypto_policy_set_aes_cm_256_hmac_sha1_32 srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32
++#define crypto_policy_set_from_profile_for_rtp srtp_crypto_policy_set_from_profile_for_rtp
++#define crypto_policy_set_from_profile_for_rtcp srtp_crypto_policy_set_from_profile_for_rtcp
++#define ssrc_t srtp_ssrc_t
++#define err_status_algo_fail srtp_err_status_algo_fail
++#define err_status_alloc_fail srtp_err_status_alloc_fail
++#define err_status_auth_fail srtp_err_status_auth_fail
++#define err_status_bad_param srtp_err_status_bad_param
++#define err_status_cant_check srtp_err_status_cant_check
++#define err_status_cipher_fail srtp_err_status_cipher_fail
++#define err_status_dealloc_fail srtp_err_status_dealloc_fail
++#define err_status_encode_err srtp_err_status_encode_err
++#define err_status_fail srtp_err_status_fail
++#define err_status_init_fail srtp_err_status_init_fail
++#define err_status_key_expired srtp_err_status_key_expired
++#define err_status_no_ctx srtp_err_status_no_ctx
++#define err_status_nonce_bad srtp_err_status_nonce_bad
++#define err_status_no_such_op srtp_err_status_no_such_op
++#define err_status_parse_err srtp_err_status_parse_err
++#define err_status_pfkey_err srtp_err_status_pfkey_err
++#define err_status_read_fail srtp_err_status_read_fail
++#define err_status_replay_fail srtp_err_status_replay_fail
++#define err_status_replay_old srtp_err_status_replay_old
++#define err_status_semaphore_err srtp_err_status_semaphore_err
++#define err_status_signal_err srtp_err_status_signal_err
++#define err_status_socket_err srtp_err_status_socket_err
++#define err_status_terminus srtp_err_status_terminus
++#define err_status_write_fail srtp_err_status_write_fail
++
++#endif
+diff --git a/reflow/dtls_wrapper/DtlsSocket.hxx b/reflow/dtls_wrapper/DtlsSocket.hxx
+index 67c642f41..905270d8f 100644
+--- a/reflow/dtls_wrapper/DtlsSocket.hxx
++++ b/reflow/dtls_wrapper/DtlsSocket.hxx
+@@ -14,7 +14,8 @@ extern "C"
+ #ifdef WIN32
+ #include <srtp.h>
+ #else
+-#include <srtp/srtp.h>
++#include <srtp2/srtp.h>
++#include "../Srtp2Helper.hxx"
+ #endif
+ }
+ 
+diff --git a/reflow/dtls_wrapper/test/TestDtlsUdp.cxx b/reflow/dtls_wrapper/test/TestDtlsUdp.cxx
+index de1154645..3592d36e2 100644
+--- a/reflow/dtls_wrapper/test/TestDtlsUdp.cxx
++++ b/reflow/dtls_wrapper/test/TestDtlsUdp.cxx
+@@ -25,8 +25,9 @@
+ 
+ extern "C" 
+ {
+-#include <srtp/srtp.h>
+-#include <srtp/srtp_priv.h>
++#include <srtp2/srtp.h>
++#include "../../Srtp2Helper.hxx"
++//#include <srtp/srtp_priv.h>
+ }
+ 
+ void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::string &rOutDump)
+diff --git a/reflow/Makefile.am b/reflow/Makefile.am
+index 5a184f33f..f8e26f180 100644
+--- a/reflow/Makefile.am
++++ b/reflow/Makefile.am
+@@ -4,7 +4,7 @@ EXTRA_DIST = ReadMe.txt
+ EXTRA_DIST += *.vcxproj
+ 
+ SUBDIRS = .
+-SUBDIRS += dtls_wrapper/test
++#SUBDIRS += dtls_wrapper/test
+ 
+ #AM_CXXFLAGS = -DUSE_ARES
+ AM_CXXFLAGS = -I $(top_srcdir)
+@@ -15,7 +15,7 @@ lib_LTLIBRARIES = libreflow.la
+ libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la
+ libreflow_la_LIBADD += ../rutil/librutil.la
+ libreflow_la_LIBADD += -lsipXmediaProcessing
+-libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
++libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp2
+ libreflow_la_LIBADD += @LIBSTL_LIBADD@
+ libreflow_la_LIBADD += @LIBPTHREAD_LIBADD@
+ libreflow_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
+diff --git a/reflow/dtls_wrapper/test/Makefile.am b/reflow/dtls_wrapper/test/Makefile.am
+index e88b9059b..3c331096f 100644
+--- a/reflow/dtls_wrapper/test/Makefile.am
++++ b/reflow/dtls_wrapper/test/Makefile.am
+@@ -2,7 +2,7 @@ AM_CXXFLAGS = -I..
+ 
+ LDADD = ../../../rutil/librutil.la
+ LDADD += $(LIBSSL_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
+-LDADD += -lsrtp
++LDADD += -lsrtp2
+ 
+ noinst_LTLIBRARIES = libdtlswrappertest.la
+ 
+diff --git a/resip/recon/Makefile.am b/resip/recon/Makefile.am
+index 1ad9b6d17..a7e64f797 100644
+--- a/resip/recon/Makefile.am
++++ b/resip/recon/Makefile.am
+@@ -21,7 +21,7 @@ librecon_la_LIBADD += -lsipXmediaProcessing
+ librecon_la_LIBADD += -lsipXmedia
+ librecon_la_LIBADD += -lsipXsdp
+ librecon_la_LIBADD += -lsipXport
+-librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
++librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp2
+ librecon_la_LIBADD += @LIBPTHREAD_LIBADD@
+ librecon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
+ 
