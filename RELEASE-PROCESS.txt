@@ -42,7 +42,7 @@ Update version information and tag it:
 
   git add configure.ac
   git commit -m 'release: Update for 1.8.5'
-  git tag -s -m 'release: Tag 1.8.5'
+  git tag -s -m 'release: Tag 1.8.5' resiprocate-1.8.5
 
   git push                (send changes back to Git)
 
