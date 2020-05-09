@@ -3,7 +3,7 @@ Section: libs
 Priority: extra
 Maintainer: Debian VoIP Team <pkg-voip-maintainers@lists.alioth.debian.org>
 Uploaders: Daniel Pocock <daniel@pocock.pro>
-Build-Depends: debhelper (>= 9.0.0), gperf, libasio-dev, libboost-dev, libc-ares-dev (>= 1.6.0), libdb++-dev, libpopt-dev, libssl-dev, perl, default-libmysqlclient-dev, libpq-dev, libradcli-dev, libcppunit-dev, autotools-dev, libpcre3-dev, dpkg-dev (>= 1.16.1~), libsipxtapi-dev (>= 3.3.0~test15) [linux-any], libsrtp-dev [linux-any], libcajun-dev, python3-cxx-dev, dh-autoreconf, pkg-config, libtelepathy-qt5-dev (>= 0.9.6.1), libgloox-dev (>= 1.0.17), vim-common, libqpid-proton-cpp-dev, libsoci-dev, libsnmp-dev
+Build-Depends: debhelper (>= 9.0.0), gperf, libasio-dev, libboost-dev, libc-ares-dev (>= 1.6.0), libdb++-dev, libpopt-dev, libssl-dev, perl, default-libmysqlclient-dev, libpq-dev, libradcli-dev, libcppunit-dev, autotools-dev, libpcre3-dev, dpkg-dev (>= 1.16.1~), libsipxtapi-dev (>= 3.3.0~test15) [linux-any], libsrtp2-dev [linux-any], libcajun-dev, python3-cxx-dev, dh-autoreconf, pkg-config, libtelepathy-qt5-dev (>= 0.9.6.1), libgloox-dev (>= 1.0.17), vim-common, libqpid-proton-cpp-dev, libsoci-dev, libsnmp-dev
 Homepage: http://www.resiprocate.org/
 Standards-Version: 4.2.1
 Vcs-Git: https://github.com/resiprocate/resiprocate.git
@@ -58,7 +58,7 @@ Description: reSIProcate conversation manager - shared libraries
  
 Package: librecon-1.12-dev
 Section: libdevel
-Depends: librecon-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.12-dev (= ${binary:Version}), libresiprocate-turn-client-1.12-dev (= ${binary:Version}), libsipxtapi-dev, libsrtp-dev
+Depends: librecon-1.12 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, libresiprocate-1.12-dev (= ${binary:Version}), libresiprocate-turn-client-1.12-dev (= ${binary:Version}), libsipxtapi-dev, libsrtp2-dev
 Architecture: linux-any
 Provides: librecon-dev
 Conflicts: librecon-dev, librecon-1.8-dev
