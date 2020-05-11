@@ -280,15 +280,17 @@ Dialog::~Dialog()
 
    mDestroying = true;
 
-   while (!mClientSubscriptions.empty())
+   for (std::list<ClientSubscription*>::iterator it = mClientSubscriptions.begin(); it != mClientSubscriptions.end(); ++it)
    {
-      delete *mClientSubscriptions.begin();
+       delete *it;
    }
+   mClientSubscriptions.clear();
 
-   while (!mServerSubscriptions.empty())
+   for (std::list<ServerSubscription*>::iterator it = mServerSubscriptions.begin(); it != mServerSubscriptions.end(); ++it)
    {
-      delete *mServerSubscriptions.begin();
+       delete *it;
    }
+   mServerSubscriptions.clear();
 
    delete mInviteSession;
    mDialogSet.mDialogs.erase(this->getId());
