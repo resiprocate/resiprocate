@@ -42,7 +42,7 @@ Update version information and tag it:
 
   git add configure.ac
   git commit -m 'release: Update for 1.8.5'
-  git tag -s -m 'release: Tag 1.8.5'
+  git tag -s -m 'release: Tag 1.8.5' resiprocate-1.8.5
 
   git push                (send changes back to Git)
 
@@ -87,10 +87,13 @@ Distribute the tarball
 
   Upload the tarball to the pre-release section of the web site
 
+  cadaver https://www.resiprocate.org/files/pub/reSIProcate/releases/
+  mput resiprocate-1.8.5.tar.gz resiprocate-1.8.5.zip resiprocate-contrib-1.8.5.tar.gz resiprocate-contrib-1.8.5.zip
+
   Send a PGP signed email to the developers list announcing that
   a release candidate has been built.  Other developers may test the tarball.
 
-  Include the SHA-256 checksum in the PGP signed email.
+  Include the SHA-256 checksum of each file in the PGP signed email.
 
 Confirm the release
 -------------------
