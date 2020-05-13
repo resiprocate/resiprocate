@@ -34,6 +34,8 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #if defined(USE_SSL)
 
 using namespace resip;
@@ -285,11 +287,11 @@ bool EncryptionManager::decrypt(SipMessage* msg)
 
    if (ret)
    {
-      if (csa.mContents.get())
+      if (csa.mContents)
       {
-         msg->setContents(csa.mContents);
+         msg->setContents(std::move(csa.mContents));
          
-         if (csa.mAttributes.get()) 
+         if (csa.mAttributes) 
          {
             // Security Attributes might already exist on the message if the Identity Handler is enabled
             // if so, ensure we maintain the Identity Strength
@@ -298,7 +300,7 @@ bool EncryptionManager::decrypt(SipMessage* msg)
             {
                 csa.mAttributes->setIdentityStrength(origSecurityAttributes->getIdentityStrength());
             }
-            msg->setSecurityAttributes(csa.mAttributes);
+            msg->setSecurityAttributes(std::move(csa.mAttributes));
          }
       }
       else
@@ -852,14 +854,14 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
                         (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
 
 
-      if (csa.mContents.get())
+      if (csa.mContents)
       {
          csa.mContents->checkParsed();
-         mMsgToDecrypt->setContents(csa.mContents);
+         mMsgToDecrypt->setContents(std::move(csa.mContents));
          
-         if (csa.mAttributes.get()) 
+         if (csa.mAttributes) 
          {
-            mMsgToDecrypt->setSecurityAttributes(csa.mAttributes);
+            mMsgToDecrypt->setSecurityAttributes(std::move(csa.mAttributes));
          }         
       }
       else
