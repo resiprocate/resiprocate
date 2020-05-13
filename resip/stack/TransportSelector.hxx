@@ -97,7 +97,7 @@ class TransportSelector
       void poke();
 
       /// Add/Remove a transport
-      void addTransport(std::auto_ptr<Transport> transport, bool isStackRunning);
+      void addTransport(std::unique_ptr<Transport> transport, bool isStackRunning);
       void removeTransport(unsigned int transportKey);
 
       /// DNS Resolution
@@ -254,7 +254,7 @@ class TransportSelector
 
       int mAvgBufferSize;
       Fifo<Transport> mTransportsToAddRemove;
-      std::auto_ptr<SelectInterruptor> mSelectInterruptor;
+      std::unique_ptr<SelectInterruptor> mSelectInterruptor;
       FdPollItemHandle mInterruptorHandle;
 
       friend class TestTransportSelector;

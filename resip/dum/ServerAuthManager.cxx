@@ -11,6 +11,8 @@
 #include "resip/stack/Helper.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -66,7 +68,7 @@ ServerAuthManager::process(Message* msg)
       InfoLog(<< "ServerAuth got ChallengeInfo " << challengeInfo->brief());
       MessageMap::iterator it = mMessages.find(challengeInfo->getTransactionId());
       resip_assert(it != mMessages.end());
-      std::auto_ptr<SipMessage> sipMsg(it->second);
+      std::unique_ptr<SipMessage> sipMsg(it->second);
       mMessages.erase(it);
 
       if(challengeInfo->isFailed()) 
@@ -89,7 +91,7 @@ ServerAuthManager::process(Message* msg)
       else 
       {
         // challenge is not required, re-instate original message
-        postCommand(auto_ptr<Message>(sipMsg));
+        postCommand(std::move(sipMsg));
         return FeatureDoneAndEventDone;
       }
    }
@@ -104,7 +106,7 @@ ServerAuthManager::process(Message* msg)
          Message* result = handleUserAuthInfo(userAuth);
          if (result)
          {
-            postCommand(auto_ptr<Message>(result));
+            postCommand(unique_ptr<Message>(result));
             return FeatureDoneAndEventDone;
          }
          else
@@ -360,7 +362,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
             // someone has cancelled a non-INVITE transaction or we have a tid collision.
             if(it->second->isRequest() && it->second->method() == INVITE)
             {
-               std::auto_ptr<SipMessage> inviteMsg(it->second);
+               std::unique_ptr<SipMessage> inviteMsg(it->second);
                mMessages.erase(it);  // Remove the INVITE from the message map and respond to it
 
                InfoLog (<< "Received a CANCEL for an INVITE request that we are still waiting on auth "

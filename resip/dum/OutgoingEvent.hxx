@@ -12,7 +12,7 @@ namespace resip
 class OutgoingEvent : public Message
 {
    public:
-      //OutgoingEvent(std::auto_ptr<SipMessage> msg);
+      //OutgoingEvent(std::unique_ptr<SipMessage> msg);
       OutgoingEvent(SharedPtr<SipMessage> msg);
       OutgoingEvent(const OutgoingEvent&);
       ~OutgoingEvent();
@@ -27,7 +27,7 @@ class OutgoingEvent : public Message
       virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
       
    private:
-      //mutable std::auto_ptr<SipMessage> mMessage;
+      //mutable std::unique_ptr<SipMessage> mMessage;
       SharedPtr<SipMessage> mMessage;
 };
 

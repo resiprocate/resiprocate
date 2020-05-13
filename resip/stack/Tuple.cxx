@@ -28,7 +28,6 @@
 #   include "rutil/NetNs.hxx"
 #endif
 
-using std::auto_ptr;
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DNS

@@ -45,7 +45,7 @@ class ClientAuthExtension
       
       virtual bool algorithmAndQopSupported(const Auth& challenge);
 
-      static void setInstance(std::auto_ptr<ClientAuthExtension> ext);
+      static void setInstance(std::unique_ptr<ClientAuthExtension> ext);
       static ClientAuthExtension& instance() 
       {
          return *mInstance;
@@ -54,7 +54,7 @@ class ClientAuthExtension
       ClientAuthExtension() {}
 
       
-      static std::auto_ptr<ClientAuthExtension> mInstance;
+      static std::unique_ptr<ClientAuthExtension> mInstance;
       
 };
 

@@ -35,7 +35,7 @@ class EncryptionManager : public DumFeature
 
       EncryptionManager(DialogUsageManager& dum, TargetCommand::Target& target);
       virtual ~EncryptionManager();
-      void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
+      void setRemoteCertStore(std::unique_ptr<RemoteCertStore> store);
       virtual DumFeature::ProcessingResult process(Message* msg);
 
    private:
@@ -143,7 +143,7 @@ class EncryptionManager : public DumFeature
             bool mMessageTaken;
  };
 
-      std::auto_ptr<RemoteCertStore> mRemoteCertStore;
+      std::unique_ptr<RemoteCertStore> mRemoteCertStore;
 
       typedef std::list<Request*> RequestList;
       RequestList mRequests;

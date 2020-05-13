@@ -9,7 +9,7 @@
    Boost.org
 */
 
-#include <memory>           // std::auto_ptr, std::allocator
+#include <memory>           // std::unique_ptr, std::allocator
 #include <functional>       // std::less
 #include <exception>        // std::exception
 #include <new>              // std::bad_alloc
@@ -239,9 +239,9 @@ public:
       }
    }
 
-   // auto_ptr<Y> is special cased to provide the strong guarantee
+   // unique_ptr<Y> is special cased to provide the strong guarantee
    template<class Y>
-   explicit shared_count(std::auto_ptr<Y> & r): pi_(new sp_counted_base_impl< Y *, checked_deleter<Y> >(r.get(), checked_deleter<Y>()))
+   explicit shared_count(std::unique_ptr<Y> & r): pi_(new sp_counted_base_impl< Y *, checked_deleter<Y> >(r.get(), checked_deleter<Y>()))
    {
       r.release();
    }

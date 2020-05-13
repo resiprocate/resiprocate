@@ -69,7 +69,7 @@ ReproServerAuthManager::requestCredential(const Data& user,
 {
    // Build a UserAuthInfo object and pass to UserAuthGrabber to have a1 password filled in
    UserAuthInfo* async = new UserAuthInfo(user,realm,transactionId,&mDum);
-   std::auto_ptr<ApplicationMessage> app(async);
+   std::unique_ptr<ApplicationMessage> app(async);
    mAuthRequestDispatcher->post(app);
 }
  

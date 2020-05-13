@@ -23,6 +23,8 @@
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
@@ -498,9 +500,9 @@ public:
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<const Contents> mOffer;
+   std::unique_ptr<const Contents> mOffer;
    DialogUsageManager::EncryptionLevel mLevel;
-   std::auto_ptr<const Contents> mAlternative;
+   std::unique_ptr<const Contents> mAlternative;
 };
 
 void
@@ -538,7 +540,7 @@ public:
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<const Contents> mOffer;
+   std::unique_ptr<const Contents> mOffer;
 };
 
 void
@@ -558,7 +560,7 @@ InviteSession::provideAnswer(const Contents& answer)
          handleSessionTimerRequest(*mInvite200, *mLastRemoteSessionModification);
          InviteSession::setOfferAnswer(*mInvite200, answer, 0);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          InfoLog (<< "Sending " << mInvite200->brief());
          DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
@@ -579,7 +581,7 @@ InviteSession::provideAnswer(const Contents& answer)
          handleSessionTimerRequest(*response, *mLastRemoteSessionModification);
          InviteSession::setOfferAnswer(*response, answer, 0);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          InfoLog (<< "Sending " << response->brief());
          DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
          send(response);
@@ -595,7 +597,7 @@ InviteSession::provideAnswer(const Contents& answer)
          transition(Connected);
          sendAck(&answer);
 
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          if (mDum.mDialogEventStateManager)
          {
@@ -633,7 +635,7 @@ public:
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<const Contents> mAnswer;
+   std::unique_ptr<const Contents> mAnswer;
 };
 
 void
@@ -832,7 +834,7 @@ public:
 private:
    InviteSessionHandle mInviteSessionHandle;
    int mCode;
-   std::auto_ptr<WarningCategory> mWarning;
+   std::unique_ptr<WarningCategory> mWarning;
 };
 
 void
@@ -859,20 +861,20 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 void
 InviteSession::refer(const NameAddr& referTo, bool referSub)
 {
-   refer(referTo,myAddr(),std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, myAddr(), nullptr, referSub);
 }
 void
 InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, bool referSub)
 {
-   refer(referTo,referredBy,std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, referredBy, nullptr, referSub);
 }
 void
-InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents,bool referSub)
+InviteSession::refer(const NameAddr& referTo, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
-   refer(referTo,myAddr(),contents,referSub);
+   refer(referTo, myAddr(), std::move(contents), referSub);
 }
 void
-InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, std::auto_ptr<resip::Contents> contents, bool referSub)
+InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
@@ -881,7 +883,7 @@ InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, std::a
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = referredBy;
       refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
-      refer->setContents(contents);
+      refer->setContents(std::move(contents));
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
@@ -970,11 +972,11 @@ InviteSession::referCommand(const NameAddr& referTo, bool referSub)
 void
 InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
-   refer(referTo,sessionToReplace,std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, sessionToReplace, nullptr, referSub);
 }
 
 void
-InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::auto_ptr<resip::Contents> contents, bool referSub)
+InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
    if (!sessionToReplace.isValid())
    {
@@ -987,23 +989,23 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
    replaces.param(p_toTag) = id.getRemoteTag();
    replaces.param(p_fromTag) = id.getLocalTag();
 
-   refer(referTo, replaces, contents, referSub);
+   refer(referTo, replaces, std::move(contents), referSub);
 }
 
 void 
 InviteSession::refer(const NameAddr& referTo, const CallId& replaces, bool referSub)
 {
-   refer(referTo,replaces,std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, replaces, nullptr, referSub);
 }
 
 void 
-InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::auto_ptr<resip::Contents> contents, bool referSub)
+InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
    if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
-      refer->setContents(contents);
+      refer->setContents(std::move(contents));
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr();
       refer->header(h_ReferredBy).remove(p_tag);
@@ -1116,7 +1118,7 @@ public:
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<Contents> mContents;
+   std::unique_ptr<Contents> mContents;
 };
 
 void
@@ -1169,7 +1171,7 @@ public:
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<Contents> mContents;
+   std::unique_ptr<Contents> mContents;
 };
 
 
@@ -1406,7 +1408,7 @@ void
 InviteSession::dispatchConnected(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1422,7 +1424,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          *mLastRemoteSessionModification = msg;
          transition(ReceivedReinvite);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteOfferAnswer = offerAnswer; 
+         mProposedRemoteOfferAnswer = std::move(offerAnswer); 
 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
          break;
@@ -1443,7 +1445,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  See rfc3311 5.2, 4th paragraph.
          *mLastRemoteSessionModification = msg;
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteOfferAnswer = offerAnswer; 
+         mProposedRemoteOfferAnswer = std::move(offerAnswer); 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
          break;
 
@@ -1479,7 +1481,7 @@ void
 InviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1505,7 +1507,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalOfferAnswer(msg);
 
-            mCurrentRemoteOfferAnswer = offerAnswer; 
+            mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
             if (mDum.mDialogEventStateManager)
             {
                 // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -1567,7 +1569,7 @@ void
 InviteSession::dispatchSentReinvite(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1607,7 +1609,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          
             if (*mCurrentRemoteOfferAnswer != *offerAnswer)
             {
-               mCurrentRemoteOfferAnswer = offerAnswer; 
+               mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
                if (mDum.mDialogEventStateManager)
                {
                    // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -1618,7 +1620,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          }
          else
          {
-            mCurrentRemoteOfferAnswer = offerAnswer; 
+            mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
             if (mDum.mDialogEventStateManager)
             {
                 // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -1692,7 +1694,7 @@ void
 InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1721,7 +1723,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          transition(SentReinviteAnswered);
          handleSessionTimerResponse(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteOfferAnswer = offerAnswer; 
+         mProposedRemoteOfferAnswer = std::move(offerAnswer); 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
          break;
       }
@@ -1786,7 +1788,7 @@ void
 InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1805,7 +1807,7 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       case OnAckAnswer:
          transition(Connected);
          setCurrentLocalOfferAnswer(msg);
-         mCurrentRemoteOfferAnswer = offerAnswer; 
+         mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
@@ -1891,7 +1893,7 @@ void
 InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
 {
    // InviteSessionHandler* handler = mDum.mInviteSessionHandler; // unused
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -2018,7 +2020,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
 void
 InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -2295,7 +2297,7 @@ public:
 private:
    InviteSessionHandle mInviteSessionHandle;
    int mStatusCode;
-   std::auto_ptr<Contents> mContents;
+   std::unique_ptr<Contents> mContents;
 };
 
 void
@@ -2816,34 +2818,30 @@ InviteSession::isReliable(const SipMessage& msg) const
    }
 }
 
-//static std::auto_ptr<SdpContents> emptySdp;
-std::auto_ptr<Contents>
+//static std::unique_ptr<SdpContents> emptySdp;
+std::unique_ptr<Contents>
 InviteSession::getOfferAnswer(const SipMessage& msg)
 {
 	if(mDum.mInviteSessionHandler->isGenericOfferAnswer())   
    {
       if(msg.getContents())
       {
-         return std::auto_ptr<Contents>(msg.getContents()->clone());
+         return std::unique_ptr<Contents>(msg.getContents()->clone());
       }
-      else
-      {
-         return std::auto_ptr<Contents>();
-      }
+
+      return nullptr;
    }
-   else
-   {
-      return std::auto_ptr<Contents>(Helper::getSdp(msg.getContents()));
-   }
+
+   return std::unique_ptr<Contents>(Helper::getSdp(msg.getContents()));
 }
 
-std::auto_ptr<Contents>
+std::unique_ptr<Contents>
 InviteSession::makeOfferAnswer(const Contents& offerAnswer)
 {
-   return std::auto_ptr<Contents>(static_cast<Contents*>(offerAnswer.clone()));
+   return std::unique_ptr<Contents>(static_cast<Contents*>(offerAnswer.clone()));
 }
 
-auto_ptr<Contents>
+unique_ptr<Contents>
 InviteSession::makeOfferAnswer(const Contents& offerAnswer,
                                const Contents* alternative)
 {
@@ -2852,11 +2850,11 @@ InviteSession::makeOfferAnswer(const Contents& offerAnswer,
       MultipartAlternativeContents* mac = new MultipartAlternativeContents;
       mac->parts().push_back(alternative->clone());
       mac->parts().push_back(offerAnswer.clone());
-      return auto_ptr<Contents>(mac);
+      return unique_ptr<Contents>(mac);
    }
    else
    {
-      return auto_ptr<Contents>(offerAnswer.clone());
+      return unique_ptr<Contents>(offerAnswer.clone());
    }
 }
 
@@ -2872,7 +2870,7 @@ InviteSession::setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, cons
       MultipartAlternativeContents* mac = new MultipartAlternativeContents;
       mac->parts().push_back(alternative->clone());
       mac->parts().push_back(offerAnswer.clone());
-      msg.setContents(auto_ptr<Contents>(mac));
+      msg.setContents(unique_ptr<Contents>(mac));
    }
    else
    {
@@ -3187,16 +3185,16 @@ InviteSession::setCurrentLocalOfferAnswer(const SipMessage& msg)
    {
       if (DialogUsageManager::Encrypt == getEncryptionLevel(msg) || DialogUsageManager::SignAndEncrypt == getEncryptionLevel(msg))
       {
-         mCurrentLocalOfferAnswer = auto_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().back()->clone()));
+         mCurrentLocalOfferAnswer = unique_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().back()->clone()));
       }
       else
       {
-         mCurrentLocalOfferAnswer = auto_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().front()->clone()));
+         mCurrentLocalOfferAnswer = unique_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().front()->clone()));
       }
    }
    else
    {
-      mCurrentLocalOfferAnswer = auto_ptr<Contents>(static_cast<Contents*>(mProposedLocalOfferAnswer.get()->clone()));
+      mCurrentLocalOfferAnswer = unique_ptr<Contents>(static_cast<Contents*>(mProposedLocalOfferAnswer->clone()));
    }
    mProposedLocalOfferAnswer.reset();   
 }

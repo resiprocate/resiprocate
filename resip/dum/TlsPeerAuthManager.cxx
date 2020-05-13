@@ -64,7 +64,7 @@ TlsPeerAuthManager::process(Message* msg)
       Message* result = handleTlsPeerIdentityInfo(tpiMessage);
       if (result)
       {
-         postCommand(auto_ptr<Message>(result));
+         postCommand(unique_ptr<Message>(result));
          return FeatureDoneAndEventDone;
       }
       else

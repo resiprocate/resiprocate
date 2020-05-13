@@ -341,7 +341,7 @@ class ClientPublicationUpdateCommand : public DumCommandAdapter
 public:
    ClientPublicationUpdateCommand(const ClientPublicationHandle& clientPublicationHandle, const Contents* body)
       : mClientPublicationHandle(clientPublicationHandle),
-      mBody(body?body->clone():0)
+      mBody(body ? body->clone() : nullptr)
    {
    }
 
@@ -360,7 +360,7 @@ public:
 
 private:
    ClientPublicationHandle mClientPublicationHandle;
-   std::auto_ptr<Contents> mBody;
+   std::unique_ptr<Contents> mBody;
 };
 
 void

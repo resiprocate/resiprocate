@@ -78,14 +78,14 @@ class InviteSession : public DialogUsage
       /** sends a refer request */
       virtual void refer(const NameAddr& referTo, bool referSub = true);
       virtual void refer(const NameAddr& referTo, const NameAddr& referredBy, bool referSub = true);
-      virtual void refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents, bool referSub = true);
-      virtual void refer(const NameAddr& referTo, const NameAddr& referredBy, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, std::unique_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const NameAddr& referredBy, std::unique_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends a refer request with a replaces header */
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
-      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::unique_ptr<resip::Contents> contents, bool referSub = true);
       virtual void refer(const NameAddr& referTo, const CallId& replaces, bool referSub = true);
-      virtual void refer(const NameAddr& referTo, const CallId& replaces, std::auto_ptr<resip::Contents> contents, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, const CallId& replaces, std::unique_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends an info request */
       virtual void info(const Contents& contents);
@@ -326,10 +326,10 @@ class InviteSession : public DialogUsage
       static Data toData(State state);
       void transition(State target);
 
-      std::auto_ptr<Contents> getOfferAnswer(const SipMessage& msg);
+      std::unique_ptr<Contents> getOfferAnswer(const SipMessage& msg);
       bool isReliable(const SipMessage& msg) const;
-      static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
-      static std::auto_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
+      static std::unique_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer);
+      static std::unique_ptr<Contents> makeOfferAnswer(const Contents& offerAnswer, const Contents* alternative);
       static void setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, const Contents* alternative = 0);
       static void setOfferAnswer(SipMessage& msg, const Contents* offerAnswer);
       void provideProposedOffer();
@@ -361,11 +361,11 @@ class InviteSession : public DialogUsage
       NitState mNitState;
       NitState mServerNitState;
 
-      std::auto_ptr<Contents> mCurrentLocalOfferAnswer;    // This gets set with mProposedLocalOfferAnswer after we receive an SDP answer from the remote end or when we send and SDP answer to the remote end
-      std::auto_ptr<Contents> mProposedLocalOfferAnswer;   // This get set when we send an offer to the remote end
+      std::unique_ptr<Contents> mCurrentLocalOfferAnswer;    // This gets set with mProposedLocalOfferAnswer after we receive an SDP answer from the remote end or when we send and SDP answer to the remote end
+      std::unique_ptr<Contents> mProposedLocalOfferAnswer;   // This get set when we send an offer to the remote end
 
-      std::auto_ptr<Contents> mCurrentRemoteOfferAnswer;   // This gets set with mProposedRemoteOfferAnswer after we send an SDP answer, or when we receive an SDP answer from the remote end
-      std::auto_ptr<Contents> mProposedRemoteOfferAnswer;  // This gets set when we receive an offer from the remote end
+      std::unique_ptr<Contents> mCurrentRemoteOfferAnswer;   // This gets set with mProposedRemoteOfferAnswer after we send an SDP answer, or when we receive an SDP answer from the remote end
+      std::unique_ptr<Contents> mProposedRemoteOfferAnswer;  // This gets set when we receive an offer from the remote end
 
       SharedPtr<SipMessage> mLastLocalSessionModification;  // last UPDATE or reINVITE sent
       SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received

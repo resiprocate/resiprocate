@@ -34,6 +34,8 @@
 #include "basicClientUserAgent.hxx"
 #include "basicClientCall.hxx"
 
+#include <utility>
+
 using namespace resip;
 using namespace std;
 
@@ -287,8 +289,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    resip::Timer::TcpConnectTimeout = 10000;
 
    // Install Managers
-   mDum->setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum->setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   mDum->setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum->setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
    mProfile->setKeepAliveTimeForDatagram(30);
    mProfile->setKeepAliveTimeForStream(120);
 
@@ -303,8 +305,8 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mDum->addServerSubscriptionHandler("basicClientTest", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new ClientAppDialogSetFactory(*this));
-   mDum->setAppDialogSetFactory(dsf);
+   unique_ptr<AppDialogSetFactory> dsf(new ClientAppDialogSetFactory(*this));
+   mDum->setAppDialogSetFactory(std::move(dsf));
 
    mDum->setMasterProfile(mProfile);
 
@@ -466,8 +468,8 @@ BasicClientUserAgent::sendNotify()
       mServerSubscriptionHandle->send(mServerSubscriptionHandle->update(&plain));
 
       // start timer for next one
-      auto_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
-      mStack->post(timer, NotifySendTime, mDum);
+      unique_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
+      mStack->post(std::move(timer), NotifySendTime, mDum);
    }
 }
 

@@ -19,6 +19,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 //#include "rutil/WinLeakCheck.hxx"  // not compatible with placement new used below
+#include <utility>
 
 using namespace resip;
 using namespace std;
@@ -991,7 +992,7 @@ SipMessage::setRawBody(const HeaderFieldValue& body)
 
 
 void
-SipMessage::setContents(auto_ptr<Contents> contents)
+SipMessage::setContents(unique_ptr<Contents> contents)
 {
    Contents* contentsP = contents.release();
 
@@ -1041,11 +1042,11 @@ SipMessage::setContents(const Contents* contents)
 { 
    if (contents)
    {
-      setContents(auto_ptr<Contents>(contents->clone()));
+      setContents(unique_ptr<Contents>(contents->clone()));
    }
    else
    {
-      setContents(auto_ptr<Contents>(0));
+      setContents(unique_ptr<Contents>());
    }
 }
 
@@ -1103,17 +1104,17 @@ SipMessage::getContents() const
    return mContents;
 }
 
-auto_ptr<Contents>
+unique_ptr<Contents>
 SipMessage::releaseContents()
 {
    Contents* c=getContents();
-   // .bwc. auto_ptr owns the Contents. No other references allowed!
-   auto_ptr<Contents> ret(c ? c->clone() : 0);
-   setContents(std::auto_ptr<Contents>(0));
+   // .bwc. unique_ptr owns the Contents. No other references allowed!
+   unique_ptr<Contents> ret(c ? c->clone() : nullptr);
+   setContents(nullptr);
 
-   if (ret.get() != 0 && !ret->isWellFormed())
+   if (ret != nullptr && !ret->isWellFormed())
    {
-      ret.reset(0);
+      ret.reset();
    }
 
    return ret;
@@ -1728,9 +1729,9 @@ SipMessage::mergeUri(const Uri& source)
 }
 
 void 
-SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec)
+SipMessage::setSecurityAttributes(unique_ptr<SecurityAttributes> sec)
 {
-   mSecurityAttributes = sec;
+   mSecurityAttributes = std::move(sec);
 }
 
 void
@@ -1782,7 +1783,7 @@ SipMessage::copyOutboundDecoratorsToStackCancel(SipMessage& cancel)
   {
      if((*i)->copyToStackCancels())
      {
-        cancel.addOutboundDecorator(std::auto_ptr<MessageDecorator>((*i)->clone()));
+        cancel.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
 }
@@ -1796,7 +1797,7 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
   {
      if((*i)->copyToStackFailureAcks())
      {
-        ack.addOutboundDecorator(std::auto_ptr<MessageDecorator>((*i)->clone()));
+        ack.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
 }

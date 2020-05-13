@@ -24,6 +24,7 @@
 
 #include <sstream>
 #include <time.h>
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 /* #define NO_REGISTRATION 1 -- This is now run-time option */
@@ -602,17 +603,17 @@ main (int argc, char** argv)
    stackUac.addTransport(TCP, 12005);
 
    SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
-   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
    dumUac->setMasterProfile(uacMasterProfile);
-   dumUac->setClientAuthManager(uacAuth);
+   dumUac->setClientAuthManager(std::move(uacAuth));
 
    TestUac uac;
    dumUac->setInviteSessionHandler(&uac);
    dumUac->setClientRegistrationHandler(&uac);
    dumUac->addOutOfDialogHandler(OPTIONS, &uac);
 
-   auto_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
-   dumUac->setAppDialogSetFactory(uac_dsf);
+   unique_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
+   dumUac->setAppDialogSetFactory(std::move(uac_dsf));
 
    if ( doReg ) 
    {
@@ -638,9 +639,9 @@ main (int argc, char** argv)
    stackUas.addTransport(TCP, 12010);
    
    SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
-   std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
+   std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
    dumUas->setMasterProfile(uasMasterProfile);
-   dumUas->setClientAuthManager(uasAuth);
+   dumUas->setClientAuthManager(std::move(uasAuth));
 
    if(doReg) 
    {
@@ -665,8 +666,8 @@ main (int argc, char** argv)
    dumUas->setInviteSessionHandler(&uas);
    dumUas->addOutOfDialogHandler(OPTIONS, &uas);
 
-   auto_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
-   dumUas->setAppDialogSetFactory(uas_dsf);
+   unique_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
+   dumUas->setAppDialogSetFactory(std::move(uas_dsf));
 
    if (doReg) 
    {

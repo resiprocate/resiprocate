@@ -4,6 +4,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <utility>
 
 #include "resip/stack/Headers.hxx"
 #include "resip/dum/EventDispatcher.hxx"
@@ -130,7 +131,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       Data getHostAddress();
 
-      void setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory>);
+      void setAppDialogSetFactory(std::unique_ptr<AppDialogSetFactory>);
 
       void setMasterProfile(const SharedPtr<MasterProfile>& masterProfile);
       SharedPtr<MasterProfile>& getMasterProfile();
@@ -139,18 +140,18 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //optional handler to track the progress of DialogSets
       void setDialogSetHandler(DialogSetHandler* handler);
 
-      void setKeepAliveManager(std::auto_ptr<KeepAliveManager> keepAlive);
+      void setKeepAliveManager(std::unique_ptr<KeepAliveManager> keepAlive);
 
       //There is a default RedirectManager.  Setting one may cause the old one
       //to be deleted. 
-      void setRedirectManager(std::auto_ptr<RedirectManager> redirect);
+      void setRedirectManager(std::unique_ptr<RedirectManager> redirect);
       //informational, so a RedirectHandler is not required
       void setRedirectHandler(RedirectHandler* handler);      
       RedirectHandler* getRedirectHandler();      
 
       /// If there is no ClientAuthManager, when the client receives a 401/407,
       /// pass it up through the normal BaseUsageHandler
-      void setClientAuthManager(std::auto_ptr<ClientAuthManager> client);
+      void setClientAuthManager(std::unique_ptr<ClientAuthManager> client);
 
       /// If there is no ServerAuthManager, the server does not authenticate requests
       void setServerAuthManager(resip::SharedPtr<ServerAuthManager> server);
@@ -342,7 +343,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       //exposed so DumThread variants can be written
       Message* getNext(int ms) { return mFifo.getNext(ms); }
-      void internalProcess(std::auto_ptr<Message> msg);
+      void internalProcess(std::unique_ptr<Message> msg);
       bool messageAvailable(void) { return mFifo.messageAvailable(); }
 
       void applyToAllClientSubscriptions(ClientSubscriptionFunctor*);
@@ -409,9 +410,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             {
             }
 
-            virtual void post(std::auto_ptr<Message> msg)
+            virtual void post(std::unique_ptr<Message> msg)
             {
-               mDum.incomingProcess(msg);
+               mDum.incomingProcess(std::move(msg));
             }
       };
       
@@ -422,9 +423,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             {
             }
 
-            virtual void post(std::auto_ptr<Message> msg)
+            virtual void post(std::unique_ptr<Message> msg)
             {
-               mDum.outgoingProcess(msg);
+               mDum.outgoingProcess(std::move(msg));
             }
       };
 
@@ -439,7 +440,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // May call a callback to let the app adorn
       void sendResponse(const SipMessage& response);
 
-      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, std::auto_ptr<SipMessage> msg);
+      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, std::unique_ptr<SipMessage> msg);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
@@ -481,8 +482,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       bool queueForIdentityCheck(SipMessage* msg);
       void processIdentityCheckResponse(const HttpGetMessage& msg);
 
-      void incomingProcess(std::auto_ptr<Message> msg);
-      void outgoingProcess(std::auto_ptr<Message> msg);
+      void incomingProcess(std::unique_ptr<Message> msg);
+      void outgoingProcess(std::unique_ptr<Message> msg);
       void processExternalMessage(ExternalMessageBase* externalMessage);
 
       // For delayed delete of a Usage
@@ -504,9 +505,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       SharedPtr<MasterProfile> mMasterProfile;
       SharedPtr<UserProfile> mMasterUserProfile;
-      std::auto_ptr<RedirectManager>   mRedirectManager;
-      std::auto_ptr<ClientAuthManager> mClientAuthManager;
-      //std::auto_ptr<ServerAuthManager> mServerAuthManager;  
+      std::unique_ptr<RedirectManager>   mRedirectManager;
+      std::unique_ptr<ClientAuthManager> mClientAuthManager;
+      //std::unique_ptr<ServerAuthManager> mServerAuthManager;  
     
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
@@ -525,7 +526,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       std::map<Data, ClientPublicationHandler*> mClientPublicationHandlers;
       std::map<Data, ServerPublicationHandler*> mServerPublicationHandlers;
       std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandlers;
-      std::auto_ptr<KeepAliveManager> mKeepAliveManager;
+      std::unique_ptr<KeepAliveManager> mKeepAliveManager;
       bool mIsDefaultServerReferHandler;
 
       ClientPagerMessageHandler* mClientPagerMessageHandler;
@@ -536,7 +537,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // server subscription handler for the 'dialog' event...
       DialogEventStateManager* mDialogEventStateManager;
 
-      std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
+      std::unique_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 
       SipStack& mStack;
       DumShutdownHandler* mDumShutdownHandler;

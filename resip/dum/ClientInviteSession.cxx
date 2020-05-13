@@ -38,7 +38,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    resip_assert(request->isRequest());
    if(initialOffer)  
    {
-      mProposedLocalOfferAnswer = auto_ptr<Contents>(initialOffer->clone());
+      mProposedLocalOfferAnswer = unique_ptr<Contents>(initialOffer->clone());
       mProposedEncryptionLevel = level;
    }
    *mLastLocalSessionModification = *request;  // Copy message, so that modifications to mLastLocalSessionModification don't effect creator->getLastRequest
@@ -137,7 +137,7 @@ ClientInviteSession::provideAnswer (const Contents& answer)
          transition(UAC_SentAnswer);
 
          //  Remember proposed local offerAnswer.
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
 
          //  Creates a PRACK request with application supplied answer
@@ -150,7 +150,7 @@ ClientInviteSession::provideAnswer (const Contents& answer)
          transition(Connected);
          sendAck(&answer);
 
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
       }
@@ -166,7 +166,7 @@ ClientInviteSession::provideAnswer (const Contents& answer)
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
          InviteSession::setOfferAnswer(*response, answer, 0);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          InfoLog (<< "Sending " << response->brief());
          DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
          send(response);
@@ -670,7 +670,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    resip_assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    InviteSession::Event event = toEvent(msg, offerAnswer.get());
 
@@ -799,7 +799,7 @@ void
 ClientInviteSession::dispatchEarly (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -928,7 +928,7 @@ void
 ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 {
    //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -980,7 +980,7 @@ void
 ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1047,7 +1047,7 @@ void
 ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1119,7 +1119,7 @@ void
 ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1208,7 +1208,7 @@ void
 ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1304,7 +1304,7 @@ void
 ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1370,7 +1370,7 @@ void
 ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1410,7 +1410,7 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 void
 ClientInviteSession::dispatchReceivedUpdateEarly(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1437,7 +1437,7 @@ void
 ClientInviteSession::dispatchCancelled (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {

@@ -1858,7 +1858,7 @@ Codec::CodecMap& Codec::getStaticCodecs()
       //
       // Build map of static codecs as defined in RFC 3551
       //
-      sStaticCodecs = std::auto_ptr<CodecMap>(new CodecMap);
+      sStaticCodecs = std::unique_ptr<CodecMap>(new CodecMap);
 
       // Audio codecs
       sStaticCodecs->insert(make_pair(0,Codec("PCMU",0,8000)));
@@ -1936,7 +1936,7 @@ const Codec Codec::TelephoneEvent("telephone-event", 101, 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event",102, 8000);
 
 bool Codec::sStaticCodecsCreated = false;
-std::auto_ptr<Codec::CodecMap> Codec::sStaticCodecs;
+std::unique_ptr<Codec::CodecMap> Codec::sStaticCodecs;
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

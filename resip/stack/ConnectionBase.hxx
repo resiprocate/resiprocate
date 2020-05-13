@@ -100,7 +100,7 @@ class ConnectionBase
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
       bool scanMsgHeader(int bytesRead);
-      std::auto_ptr<Data> makeWsHandshakeResponse();
+      std::unique_ptr<Data> makeWsHandshakeResponse();
       bool isUsingSecWebSocketKey();
       bool isUsingDeprecatedSecWebSocketKeys();
    protected:

@@ -56,7 +56,7 @@ class SHA1Buffer : public std::streambuf
       // this adds overhead, two additional new/delete.
       // could get rid of the overhead if, sizeof(SHA_CTX) and SHA_DIGEST_LENGTH are known and FIXED.
       // could use pimpl to get rid of one new/delete pair.
-      std::auto_ptr<SHA_CTX> mContext;
+      std::unique_ptr<SHA_CTX> mContext;
       std::vector<char> mBuf;
       bool mBlown;
 };

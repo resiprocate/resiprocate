@@ -86,12 +86,12 @@ ServerRegistration::accept(SipMessage& ok)
          }
          else
          {
-            std::auto_ptr<ContactRecordTransactionLog> log;
-            std::auto_ptr<ContactPtrList> contacts;
+            std::unique_ptr<ContactRecordTransactionLog> log;
+            std::unique_ptr<ContactPtrList> contacts;
 
             mAsyncLocalStore->releaseLog(log,contacts);
 
-            if (contacts.get())
+            if (contacts)
             {
                asyncProcessFinalOkMsg(ok,*contacts);
             }
@@ -112,13 +112,13 @@ ServerRegistration::accept(SipMessage& ok)
          //receive a final contact list before sending the 200.
          mAsyncState = asyncStateAcceptedWaitingForFinalContactList;
 
-         std::auto_ptr<ContactRecordTransactionLog> log;
-         std::auto_ptr<ContactPtrList> modifiedContacts;
+         std::unique_ptr<ContactRecordTransactionLog> log;
+         std::unique_ptr<ContactPtrList> modifiedContacts;
 
          mAsyncLocalStore->releaseLog(log,modifiedContacts);
 
          mAsyncOkMsg = SharedPtr<SipMessage>(static_cast<SipMessage*>(ok.clone()));
-         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(),mAor,modifiedContacts,log);
+         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(), mAor, std::move(modifiedContacts), std::move(log));
          //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
          return;
       }
@@ -626,7 +626,7 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
       ContactPtrList::iterator it(contacts.begin());
       ContactPtrList::iterator itEnd(contacts.end());
 
-      std::auto_ptr<ContactPtrList> expired;
+      std::unique_ptr<ContactPtrList> expired;
 
       UInt64 now=Timer::getTimeSecs();
 
@@ -644,7 +644,7 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
          {
             if (!expired.get())
             {
-               expired = std::auto_ptr<ContactPtrList>(new ContactPtrList());
+               expired = std::unique_ptr<ContactPtrList>(new ContactPtrList());
             }
             expired->push_back(rec);
             continue;
@@ -656,7 +656,7 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
 
       if (expired.get() && expired->size() > 0)
       {
-         mDum.mServerRegistrationHandler->asyncRemoveExpired(getHandle(),mAor,expired);
+         mDum.mServerRegistrationHandler->asyncRemoveExpired(getHandle(), mAor, std::move(expired));
          //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
          return;
       }
@@ -691,14 +691,14 @@ ServerRegistration::processFinalOkMsg(SipMessage &msg, ContactList &contacts)
 }
 
 bool
-ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> contacts)
+ServerRegistration::asyncProvideContacts(std::unique_ptr<resip::ContactPtrList> contacts)
 {
    switch (mAsyncState)
    {
       case asyncStateWaitingForInitialContactList:
       {
          resip_assert(mAsyncLocalStore.get() == 0);
-         mAsyncLocalStore = resip::SharedPtr<AsyncLocalStore>(new AsyncLocalStore(contacts));
+         mAsyncLocalStore = resip::SharedPtr<AsyncLocalStore>(new AsyncLocalStore(std::move(contacts)));
          mAsyncState = asyncStateProcessingRegistration;
          processRegistration(mRequest);
          break;
@@ -711,7 +711,7 @@ ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> co
       case asyncStateAcceptedWaitingForFinalContactList:
       {
          mAsyncState = asyncStateProvidedFinalContacts;
-         asyncProcessFinalContacts(contacts);
+         asyncProcessFinalContacts(std::move(contacts));
          break;
       }
       default:
@@ -725,9 +725,9 @@ ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> co
 }
 
 void
-ServerRegistration::asyncProcessFinalContacts(std::auto_ptr<resip::ContactPtrList> contacts)
+ServerRegistration::asyncProcessFinalContacts(std::unique_ptr<resip::ContactPtrList> contacts)
 {
-   if (contacts.get())
+   if (contacts)
    {
       if (!mAsyncOkMsg.get())
       {
@@ -746,10 +746,10 @@ ServerRegistration::asyncProcessFinalContacts(std::auto_ptr<resip::ContactPtrLis
 }
 
 void
-ServerRegistration::AsyncLocalStore::create(std::auto_ptr<ContactPtrList> originalContacts)
+ServerRegistration::AsyncLocalStore::create(std::unique_ptr<ContactPtrList> originalContacts)
 {
-   mModifiedContacts = originalContacts;
-   mLog = std::auto_ptr<ContactRecordTransactionLog>(new ContactRecordTransactionLog());
+   mModifiedContacts = std::move(originalContacts);
+   mLog = std::unique_ptr<ContactRecordTransactionLog>(new ContactRecordTransactionLog());
 }
 
 void
@@ -762,7 +762,7 @@ ServerRegistration::AsyncLocalStore::destroy(void)
 RegistrationPersistenceManager::update_status_t
 ServerRegistration::AsyncLocalStore::updateContact(const ContactInstanceRecord &rec)
 {
-   if (!mModifiedContacts.get() || !mLog.get())
+   if (!mModifiedContacts || !mLog)
    {
       resip_assert(0);
       return RegistrationPersistenceManager::CONTACT_UPDATED;
@@ -801,7 +801,7 @@ ServerRegistration::AsyncLocalStore::updateContact(const ContactInstanceRecord &
 void
 ServerRegistration::AsyncLocalStore::removeContact(const ContactInstanceRecord &rec)
 {
-   if (!mModifiedContacts.get() || !mLog.get())
+   if (!mModifiedContacts || !mLog)
    {
       resip_assert(0);
       return;
@@ -830,7 +830,7 @@ ServerRegistration::AsyncLocalStore::removeContact(const ContactInstanceRecord &
 void
 ServerRegistration::AsyncLocalStore::removeAllContacts(void)
 {
-   if (!mModifiedContacts.get() || !mLog.get())
+   if (!mModifiedContacts || !mLog)
    {
       return;
    }

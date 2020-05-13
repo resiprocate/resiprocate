@@ -22,6 +22,8 @@
 #endif
 #endif
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 using namespace resip;
@@ -91,7 +93,7 @@ main (int argc, char** argv)
 
    DialogUsageManager clientDum(stack);
    SharedPtr<MasterProfile> profile(new MasterProfile);
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);   
+   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
    ClientHandler clientHandler;
 
    stack.addTransport(UDP, 0, V4);
@@ -104,12 +106,12 @@ main (int argc, char** argv)
 #endif
    clientDum.setMasterProfile(profile);
    clientDum.setClientRegistrationHandler(&clientHandler);
-   clientDum.setClientAuthManager(clientAuth);
+   clientDum.setClientAuthManager(std::move(clientAuth));
    clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
 
    // keep alive test.
-   auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
-   clientDum.setKeepAliveManager(keepAlive);
+   unique_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
+   clientDum.setKeepAliveManager(std::move(keepAlive));
 
    clientDum.getMasterProfile()->setDefaultFrom(userAor);
    profile->setDigestCredential(userAor.uri().host(),

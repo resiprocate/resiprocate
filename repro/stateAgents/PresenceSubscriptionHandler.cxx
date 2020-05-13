@@ -181,7 +181,7 @@ PresenceSubscriptionHandler::notifyPresenceNoPublication(resip::ServerSubscripti
          
       // Do async lookup of user from User tables
       PresenceUserExists* async = new PresenceUserExists(mDum, this, h, sendAcceptReject, aor);
-      std::auto_ptr<ApplicationMessage> app(async);
+      std::unique_ptr<ApplicationMessage> app(async);
       mUserDispatcher->post(app);
    }
 }
@@ -536,7 +536,7 @@ PresenceSubscriptionHandler::onDocumentModified(bool sync, const Data& eventType
          if (expiresSeconds > 0)
          {
             //DebugLog(<< "PresenceSubscriptionHandler::onDocumentModified: starting check expired timer for sync'd publication, docKey=" << documentKey << ", tag=" << eTag << ", lastUpdated=" << lastUpdated << ", timerExpirey=" << expiresSeconds);
-            mDum.getSipStack().post(std::auto_ptr<resip::ApplicationMessage>(new PresenceServerCheckDocExpiredCommand(*this, documentKey, eTag, lastUpdated)), (unsigned int)expiresSeconds, &mDum);
+            mDum.getSipStack().post(std::unique_ptr<resip::ApplicationMessage>(new PresenceServerCheckDocExpiredCommand(*this, documentKey, eTag, lastUpdated)), (unsigned int)expiresSeconds, &mDum);
          }
       }
    }

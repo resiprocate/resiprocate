@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 #ifndef WIN32
 #include <syslog.h>
 #endif
@@ -1198,7 +1199,7 @@ ReproRunner::createProxy()
    if(numAsyncProcessorWorkerThreads > 0)
    {
       resip_assert(!mAsyncProcessorDispatcher);
-      mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<Worker>(new AsyncProcessorWorker), 
+      mAsyncProcessorDispatcher = new Dispatcher(std::unique_ptr<Worker>(new AsyncProcessorWorker),
                                                  mSipStack, 
                                                  numAsyncProcessorWorkerThreads);
    }
@@ -1906,9 +1907,9 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 }
 
 void 
-ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor> processor)
+ReproRunner::addProcessor(repro::ProcessorChain& chain, std::unique_ptr<Processor> processor)
 {
-   chain.addProcessor(processor);
+   chain.addProcessor(std::move(processor));
 }
 
 void  // Monkeys
@@ -1918,10 +1919,10 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    resip_assert(mRegistrationPersistenceManager);
 
    // Add strict route fixup monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new StrictRouteFixup));
+   addProcessor(chain, std::unique_ptr<Processor>(new StrictRouteFixup));
 
    // Add is trusted node monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
+   addProcessor(chain, std::unique_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
    resip_assert(mAuthFactory);
@@ -1939,7 +1940,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    Data wsCookieExtraHeaderName = mProxyConfig->getConfigData("WSCookieExtraHeaderName", "X-WS-Session-Extra");
    if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
    {
-      addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, wsCookieExtraHeaderName, mSipStack)));
+      addProcessor(chain, std::unique_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, wsCookieExtraHeaderName, mSipStack)));
    }
 
    // Add digest authenticator monkey - if required
@@ -1949,14 +1950,14 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    // Add am I responsible monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
+   addProcessor(chain, std::unique_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
 
    // Add RequestFilter monkey
    if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))
    {
       if(mAsyncProcessorDispatcher)
       {
-         addProcessor(chain, std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
+         addProcessor(chain, std::unique_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
       }
       else
       {
@@ -1974,16 +1975,16 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    if (routeSet.empty())
    {
       // add static route monkey
-      addProcessor(chain, std::auto_ptr<Processor>(new StaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new StaticRoute(*mProxyConfig)));
    }
    else
    {
       // add simple static route monkey
-      addProcessor(chain, std::auto_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig)));
    }
 
    // Add location server monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthFactory->getDispatcher())));
+   addProcessor(chain, std::unique_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthFactory->getDispatcher())));
 
    // Add message silo monkey
    if(mProxyConfig->getConfigBool("MessageSiloEnabled", false))
@@ -1992,7 +1993,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       {
          MessageSilo* silo = new MessageSilo(*mProxyConfig, mAsyncProcessorDispatcher);
          mRegistrar->addRegistrarHandler(silo);
-         addProcessor(chain, std::auto_ptr<Processor>(silo));
+         addProcessor(chain, std::unique_ptr<Processor>(silo));
       }
       else
       {
@@ -2008,12 +2009,12 @@ ReproRunner::makeResponseProcessorChain(ProcessorChain& chain)
    resip_assert(mRegistrationPersistenceManager);
 
    // Add outbound target handler lemur
-   addProcessor(chain, std::auto_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager))); 
+   addProcessor(chain, std::unique_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager)));
 
    if (mProxyConfig->getConfigBool("RecursiveRedirect", false))
    {
       // Add recursive redirect lemur
-      addProcessor(chain, std::auto_ptr<Processor>(new RecursiveRedirect)); 
+      addProcessor(chain, std::unique_ptr<Processor>(new RecursiveRedirect));
    }
 }
 
@@ -2025,18 +2026,18 @@ ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
 #ifndef RESIP_FIXED_POINT
    if(mProxyConfig->getConfigBool("GeoProximityTargetSorting", false))
    {
-      addProcessor(chain, std::auto_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
+      addProcessor(chain, std::unique_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
    }
 #endif
 
    if(mProxyConfig->getConfigBool("QValue", true))
    {
       // Add q value target handler baboon
-      addProcessor(chain, std::auto_ptr<Processor>(new QValueTargetHandler(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new QValueTargetHandler(*mProxyConfig)));
    }
    
    // Add simple target handler baboon
-   addProcessor(chain, std::auto_ptr<Processor>(new SimpleTargetHandler)); 
+   addProcessor(chain, std::unique_ptr<Processor>(new SimpleTargetHandler));
 }
 
 bool 

@@ -85,7 +85,7 @@ class ClientInviteSession : public InviteSession
       void onProvisionalAspect(ClientInviteSessionHandle c, const SipMessage& msg);
       void onFailureAspect(ClientInviteSessionHandle c, const SipMessage& msg);
 
-      std::auto_ptr<Contents> mEarlyMedia;
+      std::unique_ptr<Contents> mEarlyMedia;
 
       RAckCategory mRelRespInfo;
       unsigned int mStaleCallTimerSeq;

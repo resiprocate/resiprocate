@@ -495,14 +495,14 @@ class SipMessage : public TransactionMessage
         **/
       Contents* getContents() const;
       /// Removes the contents from the message
-      std::auto_ptr<Contents> releaseContents();
+      std::unique_ptr<Contents> releaseContents();
 
       /// @brief Set the contents of the message
       /// @param contents to store in the message
       void setContents(const Contents* contents);
       /// @brief Set the contents of the message
       /// @param contents to store in the message
-      void setContents(std::auto_ptr<Contents> contents);
+      void setContents(std::unique_ptr<Contents> contents);
 
       /// @internal transport interface
       void setStartLine(const char* start, int len); 
@@ -560,12 +560,12 @@ class SipMessage : public TransactionMessage
       
       SipMessage& mergeUri(const Uri& source);      
 
-      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>);
+      void setSecurityAttributes(std::unique_ptr<SecurityAttributes>);
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
       /// @brief Call a MessageDecorator to process the message before it is
       /// sent to the transport
-      void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
+      void addOutboundDecorator(std::unique_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
       void clearOutboundDecorators();
       void callOutboundDecorators(const Tuple &src, 
                                     const Tuple &dest,
@@ -734,7 +734,7 @@ class SipMessage : public TransactionMessage
       // parsed cookie authentication elements associated with this message from the WebSocket Upgrade request
       SharedPtr<WsCookieContext> mWsCookieContext;
 
-      std::auto_ptr<SecurityAttributes> mSecurityAttributes;
+      std::unique_ptr<SecurityAttributes> mSecurityAttributes;
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 

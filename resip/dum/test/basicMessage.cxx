@@ -24,6 +24,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 using namespace resip;
@@ -70,7 +71,7 @@ public:
 	    InfoLog(<<"ClientMessageHandler::onSuccess\n");
 	    _ended = true;
     }
-	virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<Contents> contents)
+	virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::unique_ptr<Contents> contents)
     {
     	InfoLog(<<"ClientMessageHandler::onFailure\n");
 	    _ended = true;
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]) {
 	// sip logic
 	RegListener client;
 	SharedPtr<MasterProfile> profile(new MasterProfile);   
-	auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
+	unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
 
     SipStack clientStack;
 	DialogUsageManager clientDum(clientStack);
@@ -140,7 +141,7 @@ int main(int argc, char *argv[]) {
 	clientDum.setMasterProfile(profile);
 
 	clientDum.setClientRegistrationHandler(&client);
-	clientDum.setClientAuthManager(clientAuth);
+	clientDum.setClientAuthManager(std::move(clientAuth));
 	clientDum.getMasterProfile()->setDefaultRegistrationTime(70);		
 	clientDum.getMasterProfile()->addSupportedMethod(MESSAGE);
 	clientDum.getMasterProfile()->addSupportedMimeType(MESSAGE, Mime("text", "plain"));
@@ -173,8 +174,8 @@ int main(int argc, char *argv[]) {
 			NameAddr naTo(to.c_str());
 			ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(naTo);
 			
-			auto_ptr<Contents> content(new PlainContents(Data("my first message!")));
-			cpmh.get()->page(content); 
+			unique_ptr<Contents> content(new PlainContents(Data("my first message!")));
+			cpmh.get()->page(std::move(content)); 
 		}
 	}   
 

@@ -6,6 +6,8 @@
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/DumHelper.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
@@ -37,7 +39,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
       }
    }
 
-   std::auto_ptr<Contents> initialOffer;
+   std::unique_ptr<Contents> initialOffer;
    if (initial)
    {
       if (alternative)
@@ -51,7 +53,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
       {
          initialOffer.reset(initial->clone());
       }
-      getLastRequest()->setContents(initialOffer);
+      getLastRequest()->setContents(std::move(initialOffer));
    }
    //100rel 
    switch(mDum.getMasterProfile()->getUacReliableProvisionalMode())

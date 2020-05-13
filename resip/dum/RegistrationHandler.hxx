@@ -107,8 +107,8 @@ class ServerRegistrationHandler
        */
       virtual void asyncUpdateContacts(ServerRegistrationHandle,
                                        const Uri& aor,
-                                       std::auto_ptr<ContactPtrList> modifiedContactList, 
-                                       std::auto_ptr<ContactRecordTransactionLog> transactionLog)
+                                       std::unique_ptr<ContactPtrList> modifiedContactList,
+                                       std::unique_ptr<ContactRecordTransactionLog> transactionLog)
       {
       }
 
@@ -117,7 +117,7 @@ class ServerRegistrationHandler
       */
       virtual void asyncRemoveExpired(ServerRegistrationHandle, 
                                       const resip::Uri& aor,
-                                      std::auto_ptr<resip::ContactPtrList> contacts)
+                                      std::unique_ptr<resip::ContactPtrList> contacts)
       {
       }
 };

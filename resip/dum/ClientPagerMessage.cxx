@@ -20,6 +20,8 @@
 #include "resip/stack/ssl/Security.hxx"
 #endif
 
+#include <utility>
+
 using namespace resip;
 
 #if(0)
@@ -113,9 +115,9 @@ ClientPagerMessage::getMessageRequest()
 }
 
 void
-ClientPagerMessage::page(std::auto_ptr<Contents> contents, DialogUsageManager::EncryptionLevel level)
+ClientPagerMessage::page(std::unique_ptr<Contents> contents, DialogUsageManager::EncryptionLevel level)
 {
-    resip_assert(contents.get() != 0);
+    resip_assert(contents != nullptr);
     bool do_page = mMsgQueue.empty();
     Item item;
     item.contents = contents.release();
@@ -131,10 +133,10 @@ class ClientPagerMessagePageCommand : public DumCommandAdapter
 {
 public:
    ClientPagerMessagePageCommand(const ClientPagerMessageHandle& clientPagerMessageHandle, 
-      std::auto_ptr<Contents> contents,
+      std::unique_ptr<Contents> contents,
       DialogUsageManager::EncryptionLevel level)
       : mClientPagerMessageHandle(clientPagerMessageHandle),
-        mContents(contents),
+        mContents(std::move(contents)),
         mLevel(level) 
    { 
    }
@@ -143,7 +145,7 @@ public:
    {
       if(mClientPagerMessageHandle.isValid())
       {
-         mClientPagerMessageHandle->page(mContents, mLevel);
+         mClientPagerMessageHandle->page(std::move(mContents), mLevel);
       }
    }
 
@@ -154,15 +156,15 @@ public:
 
 private:
    ClientPagerMessageHandle mClientPagerMessageHandle;
-   std::auto_ptr<Contents> mContents;
+   std::unique_ptr<Contents> mContents;
    DialogUsageManager::EncryptionLevel mLevel;
 };
 
 void
-ClientPagerMessage::pageCommand(std::auto_ptr<Contents> contents,
+ClientPagerMessage::pageCommand(std::unique_ptr<Contents> contents,
                                 DialogUsageManager::EncryptionLevel level)
 {
-   mDum.post(new ClientPagerMessagePageCommand(getHandle(), contents, level));
+   mDum.post(new ClientPagerMessagePageCommand(getHandle(), std::move(contents), level));
 }
 
 // Use this API if the application has ongoing pending messages and it is using
@@ -236,14 +238,14 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
                       Contents* p = contents->contents;
                       WarningLog(<< "Paging failed " << *p);
                       Helper::makeResponse(errResponse, *mRequest, code);
-                      handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
+                      handler->onFailure(getHandle(), errResponse, std::unique_ptr<Contents>(p));
                       contents->contents = 0;
                   }
                   mMsgQueue.clear();
               }
               else
               {
-                  handler->onFailure(getHandle(), msg, std::auto_ptr<Contents>(mRequest->releaseContents()));
+                  handler->onFailure(getHandle(), msg, mRequest->releaseContents());
               }
           }
       }

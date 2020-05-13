@@ -244,7 +244,7 @@ public:
    RendDlgSharedPtr lookupDlg(RendLocalKey localKey);
    RendDlgSharedPtr lookupDlg(const resip::Data& localTag, const char **badDetail);
 
-   void sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg = NULL);
+   void sendMsg(std::unique_ptr<resip::SipMessage> msg, RendDlg *dlg = NULL);
 
    int processRequest(RendTimeUs now, const resip::SipMessage *rsp);
    int processResponse(RendTimeUs now, const resip::SipMessage *rsp);

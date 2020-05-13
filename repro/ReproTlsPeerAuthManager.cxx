@@ -24,7 +24,7 @@ ReproTlsPeerAuthManager::~ReproTlsPeerAuthManager()
 AsyncBool
 ReproTlsPeerAuthManager::asyncLookup(TlsPeerIdentityInfoMessage *info)
 {
-   std::auto_ptr<ApplicationMessage> app(info);
+   std::unique_ptr<ApplicationMessage> app(info);
    mAuthRequestDispatcher->post(app);
    return Async;
 }

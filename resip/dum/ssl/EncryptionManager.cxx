@@ -66,7 +66,7 @@ EncryptionManager::~EncryptionManager()
    mRequests.clear();
 }
 
-void EncryptionManager::setRemoteCertStore(std::auto_ptr<RemoteCertStore> store)
+void EncryptionManager::setRemoteCertStore(std::unique_ptr<RemoteCertStore> store)
 {
    ErrLog(<< "Async currently is not supported");
    resip_assert(0);
@@ -149,7 +149,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       {
          if (setContents)
          {
-            event->message()->setContents(auto_ptr<Contents>(contents));
+            event->message()->setContents(unique_ptr<Contents>(contents));
             DumHelper::setEncryptionPerformed(*event->message());
          }
          return DumFeature::FeatureDone;
@@ -438,11 +438,11 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
       {
          InfoLog(<< "Signing message" << endl);
          MultipartSignedContents* msc = mDum.getSecurity()->sign(aor, mMsgToEncrypt->getContents());
-         mMsgToEncrypt->setContents(auto_ptr<Contents>(msc));
+         mMsgToEncrypt->setContents(unique_ptr<Contents>(msc));
          DumHelper::setEncryptionPerformed(*mMsgToEncrypt);
          OutgoingEvent* event = new OutgoingEvent(mMsgToEncrypt);
          //mTaken = false;
-         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
+         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), unique_ptr<Message>(event)));
          result = Complete;
       }
    }
@@ -533,11 +533,11 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
       --mPendingRequests;
       InfoLog(<< "Encrypting message" << endl);
       Pkcs7Contents* encrypted = mDum.getSecurity()->encrypt(mMsgToEncrypt->getContents(), aor);
-      mMsgToEncrypt->setContents(auto_ptr<Contents>(encrypted));
+      mMsgToEncrypt->setContents(unique_ptr<Contents>(encrypted));
       DumHelper::setEncryptionPerformed(*mMsgToEncrypt);
       OutgoingEvent* event = new OutgoingEvent(mMsgToEncrypt);
       //mTaken = false;
-      mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));      
+      mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), unique_ptr<Message>(event)));
    }
    else
    {
@@ -641,11 +641,11 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
       {
          InfoLog(<< "Encrypting and signing message" << endl);
          Contents* contents = doWork();
-         mMsgToEncrypt->setContents(auto_ptr<Contents>(contents));
+         mMsgToEncrypt->setContents(unique_ptr<Contents>(contents));
          DumHelper::setEncryptionPerformed(*mMsgToEncrypt);
          OutgoingEvent* event = new OutgoingEvent(mMsgToEncrypt);
          //mTaken = false;
-         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
+         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), unique_ptr<Message>(event)));
          result = Complete;
       }
    }
@@ -925,7 +925,7 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
 
          if (*contents == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(mps)));
+            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(mps)));
          }
          else
          {
@@ -950,7 +950,7 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
          ErrLog(<< e.name() << endl << e.getMessage());
          if (*contents == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(alt)));
+            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(alt)));
          }
          else
          {
@@ -1022,7 +1022,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
                {
                   if (*contents == mMsgToDecrypt->getContents())
                   {
-                     mMsgToDecrypt->setContents(auto_ptr<Contents>(decrypted));
+                     mMsgToDecrypt->setContents(unique_ptr<Contents>(decrypted));
                      *contents = mMsgToDecrypt->getContents();
                   }
                   else
@@ -1040,7 +1040,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
 
             if (*contents == mMsgToDecrypt->getContents())
             {
-               mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(decrypted)));
+               mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(decrypted)));
             }
             else
             {
@@ -1076,7 +1076,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
 
          if (*contents == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(alt)));
+            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(alt)));
          }
          else
          {
@@ -1127,9 +1127,9 @@ Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(SipMessage* mes
       }
    }
 
-   std::auto_ptr<Contents> c(contents);
-   std::auto_ptr<SecurityAttributes> a(attr);
-   return Helper::ContentsSecAttrs(c, a);
+   std::unique_ptr<Contents> c(contents);
+   std::unique_ptr<SecurityAttributes> a(attr);
+   return Helper::ContentsSecAttrs(std::move(c), std::move(a));
 }
 
 Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
@@ -1167,7 +1167,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
             {
                if (*tree == mMsgToDecrypt->getContents())
                {
-                  mMsgToDecrypt->setContents(auto_ptr<Contents>(contents));
+                  mMsgToDecrypt->setContents(unique_ptr<Contents>(contents));
                   *tree = mMsgToDecrypt->getContents();
                }
                else
@@ -1189,7 +1189,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
 
             if (*tree == mMsgToDecrypt->getContents())
             {
-               mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(contents)));
+               mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(contents)));
             }
             else
             {
@@ -1233,7 +1233,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
 
          if (*tree == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(alt)));
+            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(alt)));
          }
          else
          {
@@ -1272,7 +1272,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
 
          if (*tree == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(mult)));
+            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(mult)));
          }
          else
          {
@@ -1300,7 +1300,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
 
       if (*tree == mMsgToDecrypt->getContents())
       {
-         mMsgToDecrypt->setContents(auto_ptr<Contents>(createInvalidContents(*tree)));
+         mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(*tree)));
       }
       else
       {
@@ -1341,7 +1341,7 @@ EncryptionManager::Decrypt::handleInvalidContents()
       {
          DebugLog(<< "No valid contents in the request" << endl);
          InvalidContents* invalid = new InvalidContents(mOriginalMsgContents, mOriginalMsgContentsType);
-         mMsgToDecrypt->setContents(auto_ptr<Contents>(invalid));
+         mMsgToDecrypt->setContents(unique_ptr<Contents>(invalid));
       }
       else
       {
@@ -1355,7 +1355,7 @@ EncryptionManager::Decrypt::handleInvalidContents()
    {
       DebugLog(<< "No valid contents in the response" << endl);
       InvalidContents* invalid = new InvalidContents(mOriginalMsgContents, mOriginalMsgContentsType);
-      mMsgToDecrypt->setContents(auto_ptr<Contents>(invalid));
+      mMsgToDecrypt->setContents(unique_ptr<Contents>(invalid));
    }
 }
 

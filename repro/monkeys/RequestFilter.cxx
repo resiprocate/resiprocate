@@ -187,7 +187,7 @@ RequestFilter::process(RequestContext &rc)
             if(mSqlDb)
             {
                // Dispatch async
-               std::auto_ptr<ApplicationMessage> async(new RequestFilterAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy(), actionData));
+               std::unique_ptr<ApplicationMessage> async(new RequestFilterAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy(), actionData));
                mAsyncDispatcher->post(async);
                return WaitingForEvent;
             }

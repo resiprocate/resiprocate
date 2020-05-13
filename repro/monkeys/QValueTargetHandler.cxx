@@ -231,7 +231,7 @@ QValueTargetHandler::process(RequestContext &rc)
          resip::ApplicationMessage* app=
                            dynamic_cast<resip::ApplicationMessage*>(fork);
                            
-         proxy->postMS(std::auto_ptr<resip::ApplicationMessage>(app),
+         proxy->postMS(std::unique_ptr<resip::ApplicationMessage>(app),
                               mDelayBetweenForkGroups);
       }
       else // Issue two seperate ForkControlMessages
@@ -244,7 +244,7 @@ QValueTargetHandler::process(RequestContext &rc)
             resip::ApplicationMessage* app=
                               dynamic_cast<resip::ApplicationMessage*>(cancel);
 
-            rc.getProxy().postMS(std::auto_ptr<resip::ApplicationMessage>(app),
+            rc.getProxy().postMS(std::unique_ptr<resip::ApplicationMessage>(app),
                                  mCancellationDelay);
          }
          if(!nextBeginTids.empty())
@@ -255,7 +255,7 @@ QValueTargetHandler::process(RequestContext &rc)
             resip::ApplicationMessage* app
                               =dynamic_cast<resip::ApplicationMessage*>(begin);
 
-            proxy->postMS(std::auto_ptr<resip::ApplicationMessage>(app),
+            proxy->postMS(std::unique_ptr<resip::ApplicationMessage>(app),
                                  mDelayBetweenForkGroups);
          }
       }

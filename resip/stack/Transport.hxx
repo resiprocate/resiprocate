@@ -161,7 +161,7 @@ class Transport : public FdSetIOObserver
       */
       virtual bool isFinished() const=0;
       
-      std::auto_ptr<SendData> makeSendData( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
+      std::unique_ptr<SendData> makeSendData( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
       
       /**
          @todo !bwc! What we do with a SendData is flexible. It might make a
@@ -171,7 +171,7 @@ class Transport : public FdSetIOObserver
          @todo !bch! Should this be protected and not public?
                !bwc! TransportSelector uses this directly for retransmissions.
       */
-      virtual void send(std::auto_ptr<SendData> data)=0;
+      virtual void send(std::unique_ptr<SendData> data)=0;
 
       /**
          Called when a writer is done adding messages to the TxFifo; this is
@@ -288,10 +288,10 @@ class Transport : public FdSetIOObserver
       void makeFailedResponse(const SipMessage& msg,
                               int responseCode = 400,
                               const char * warning = 0);
-      std::auto_ptr<SendData> make503(SipMessage& msg,
+      std::unique_ptr<SendData> make503(SipMessage& msg,
                                       UInt16 retryAfter);
 
-      std::auto_ptr<SendData> make100(SipMessage& msg);
+      std::unique_ptr<SendData> make100(SipMessage& msg);
       void setRemoteSigcompId(SipMessage&msg, Data& id);
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);

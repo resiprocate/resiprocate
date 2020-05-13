@@ -1991,7 +1991,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 void
 BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
 {
-   auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
+   unique_ptr<SecurityAttributes> sec(new SecurityAttributes);
    X509* cert=NULL;
    
    try
@@ -2037,7 +2037,7 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
       sec->setIdentity(msg.const_header(h_From).uri().getAor());
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
-   msg.setSecurityAttributes(sec);
+   msg.setSecurityAttributes(std::move(sec));
 }
 
 

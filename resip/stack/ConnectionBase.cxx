@@ -419,10 +419,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   
                   // .bwc. This handles all appropriate checking for whether
                   // this is a response or an ACK.
-                  std::auto_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
+                  std::unique_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
                   if(tryLater.get())
                   {
-                     transport()->send(tryLater);
+                     transport()->send(std::move(tryLater));
                   }
                   delete mMessage; // dropping message due to congestion
                   mMessage = 0;
@@ -518,10 +518,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                
                // .bwc. This handles all appropriate checking for whether
                // this is a response or an ACK.
-               std::auto_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
+               std::unique_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
                if(tryLater.get())
                {
-                  transport()->send(tryLater);
+                  transport()->send(std::move(tryLater));
                }
                delete mMessage; // dropping message due to congestion
                mMessage = 0;
@@ -693,7 +693,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
          }
       }
 
-      std::auto_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
+      std::unique_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
 
       if (wsResponsePtr.get())
       {
@@ -754,10 +754,10 @@ ConnectionBase::scanMsgHeader(int bytesRead)
    return true;
 }
 
-std::auto_ptr<Data>
+std::unique_ptr<Data>
 ConnectionBase::makeWsHandshakeResponse()
 {
-   std::auto_ptr<Data> responsePtr(0);
+   std::unique_ptr<Data> responsePtr;
    if(isUsingSecWebSocketKey())
    {
       responsePtr.reset(new Data("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
@@ -807,7 +807,7 @@ ConnectionBase::wsProcessData(int bytesRead)
 {
    bool dropConnection = false;
    // Always consumes the whole buffer:
-   std::auto_ptr<Data> msg = mWsFrameExtractor.processBytes((UInt8*)mBuffer, bytesRead, dropConnection);
+   std::unique_ptr<Data> msg = mWsFrameExtractor.processBytes((UInt8*)mBuffer, bytesRead, dropConnection);
 
    while(msg.get())
    {

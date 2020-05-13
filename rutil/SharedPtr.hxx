@@ -11,7 +11,7 @@
 */
 
 #include "rutil/SharedCount.hxx"
-#include <memory>               // for std::auto_ptr
+#include <memory>               // for std::unique_ptr
 #include <algorithm>            // for std::swap
 #include <functional>           // for std::less
 #include <typeinfo>             // for std::bad_cast
@@ -151,7 +151,7 @@ public:
    }
 
    template<class Y>
-   explicit SharedPtr(std::auto_ptr<Y> & r): px(r.get()), pn()
+   explicit SharedPtr(std::unique_ptr<Y> & r): px(r.get()), pn()
    {
       Y * tmp = r.get();
       pn = shared_count(r);
@@ -167,7 +167,7 @@ public:
    }
 
    template<class Y>
-   SharedPtr & operator=(std::auto_ptr<Y> & r)
+   SharedPtr & operator=(std::unique_ptr<Y> & r)
    {
       this_type(r).swap(*this);
       return *this;

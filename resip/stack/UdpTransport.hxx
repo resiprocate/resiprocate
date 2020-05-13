@@ -25,7 +25,7 @@ public:
     * @param transport contains a pointer to the specific UdpTransport object that
     *                  received the unknown packet.
     * @param unknownDatagram contains the actual contents of unknown data received. */
-   virtual void operator()(UdpTransport* transport, const Tuple& source, std::auto_ptr<Data> unknownDatagram) = 0;
+   virtual void operator()(UdpTransport* transport, const Tuple& source, std::unique_ptr<Data> unknownDatagram) = 0;
 };
 
 /**

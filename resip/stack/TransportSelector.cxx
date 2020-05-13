@@ -60,6 +60,7 @@
 #define gai_strerror strerror
 #endif
 
+#include <utility>
 #include <sys/types.h>
 
 using namespace resip;
@@ -164,7 +165,7 @@ TransportSelector::isFinished() const
 }
 
 void
-TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isStackRunning)
+TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool isStackRunning)
 {
    Transport* transport = autoTransport.release();
 
@@ -1311,7 +1312,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             handler->outboundMessage(source, target, *msg);
          }
 
-         std::auto_ptr<SendData> send(new SendData(target,
+         std::unique_ptr<SendData> send(new SendData(target,
                                                    resip::Data::Empty,
                                                    msg->getTransactionId(),
                                                    remoteSigcompId));
@@ -1339,7 +1340,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             *sendData = *send;
          }
 
-         transport->send(send);
+         transport->send(std::move(send));
          return Sent;
       }
       else
@@ -1395,7 +1396,7 @@ TransportSelector::retransmit(const SendData& data)
          handler->outboundRetransmit(transport->getTuple(), data.destination, data);
       }
        
-      transport->send(std::auto_ptr<SendData>(data.clone()));
+      transport->send(std::unique_ptr<SendData>(data.clone()));
    }
 }
 
@@ -1410,7 +1411,7 @@ TransportSelector::closeConnection(const Tuple& peer)
                                    resip::Data::Empty,
                                    resip::Data::Empty);
       close->command = SendData::CloseConnection;
-      t->send(std::auto_ptr<SendData>(close));
+      t->send(std::unique_ptr<SendData>(close));
    }
 }
 
@@ -1442,7 +1443,7 @@ TransportSelector::enableFlowTimer(const resip::Tuple& flow)
                                     resip::Data::Empty,
                                     resip::Data::Empty);
       enableFlowTimer->command = SendData::EnableFlowTimer;
-      t->send(std::auto_ptr<SendData>(enableFlowTimer));
+      t->send(std::unique_ptr<SendData>(enableFlowTimer));
    }
 }
 

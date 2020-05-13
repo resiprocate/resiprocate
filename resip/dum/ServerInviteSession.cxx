@@ -399,25 +399,25 @@ ServerInviteSession::provideAnswer(const Contents& answer)
    {
       case UAS_Offer:
          transition(UAS_OfferProvidedAnswer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
       case UAS_EarlyOffer:
          transition(UAS_EarlyProvidedAnswer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
          
       case UAS_OfferReliable: 
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          transition(UAS_OfferReliableProvidedAnswer);
          break;
 
       case UAS_NoAnswerReliableWaitingPrack: 
          // Store answer and wait for PRACK
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
@@ -430,7 +430,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
             InviteSession::setOfferAnswer(*response, answer, 0);
             mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+            mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
             send(response);
@@ -443,7 +443,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
             InviteSession::setOfferAnswer(*response, answer, 0);
             mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+            mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
             send(response);
@@ -454,7 +454,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
          break;
 
       case UAS_NoAnswerReliable:
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          transition(UAS_OfferReliableProvidedAnswer);
          break;
@@ -464,7 +464,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
       case UAS_NegotiatedReliable:
          if(mPrackWithOffer.get())
          {
-            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+            mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
             SharedPtr<SipMessage> p200(new SipMessage);
             mDialog.makeResponse(*p200, *mPrackWithOffer, 200);
@@ -956,7 +956,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    resip_assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    storePeerCapabilities(msg);
 
    if (mDum.mDialogEventStateManager)
@@ -1018,7 +1018,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
 void
 ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    switch (toEvent(msg, offerAnswer.get()))
    {
       case OnCancel:
@@ -1049,7 +1049,7 @@ void
 ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchAccepted: " << msg.brief());
    
    switch (toEvent(msg, offerAnswer.get()))
@@ -1118,7 +1118,7 @@ void
 ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchWaitingToOffer: " << msg.brief());
    
    switch (toEvent(msg, offerAnswer.get()))
@@ -1183,7 +1183,7 @@ void
 ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchWaitingToRequestOffer: " << msg.brief());
    
    switch (toEvent(msg, offerAnswer.get()))
@@ -1247,7 +1247,7 @@ void
 ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1317,7 +1317,7 @@ void
 ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1456,7 +1456,7 @@ void
 ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1535,7 +1535,7 @@ void
 ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1615,7 +1615,7 @@ void
 ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1688,7 +1688,7 @@ void
 ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1748,7 +1748,7 @@ void
 ServerInviteSession::dispatchSentUpdateGlare(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1780,7 +1780,7 @@ void
 ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1842,7 +1842,7 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 void
 ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1878,7 +1878,7 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
 void
 ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1914,7 +1914,7 @@ void
 ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1985,7 +1985,7 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
 void
 ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {

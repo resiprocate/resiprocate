@@ -266,9 +266,9 @@ TransactionController::cancelClientInviteTransaction(const Data& tid, const resi
 }
 
 void 
-TransactionController::addTransport(std::auto_ptr<Transport> transport)
+TransactionController::addTransport(std::unique_ptr<Transport> transport)
 {
-   mStateMacFifo.add(new AddTransport(transport));
+   mStateMacFifo.add(new AddTransport(std::move(transport)));
 }
 
 void 
