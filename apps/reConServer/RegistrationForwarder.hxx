@@ -25,7 +25,7 @@ class RegistrationForwarder : public resip::TransactionUser
       virtual const resip::Data& name() const;
 
    private:
-      void internalProcess(std::auto_ptr<resip::Message>);
+      void internalProcess(std::unique_ptr<resip::Message>);
 
       resip::SipStack& mStack;
 

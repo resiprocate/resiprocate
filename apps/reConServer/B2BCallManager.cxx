@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <utility>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -147,8 +148,8 @@ B2BCallManager::~B2BCallManager()
 void
 B2BCallManager::init(MyUserAgent& ua)
 {
-   std::auto_ptr<Worker> grabber(new CredentialGrabber(mPool, mDatabaseQueryUserCredential));
-   mDispatcher = ua.initDispatcher(grabber, mDbPoolSize);
+   std::unique_ptr<Worker> grabber(new CredentialGrabber(mPool, mDatabaseQueryUserCredential));
+   mDispatcher = ua.initDispatcher(std::move(grabber), mDbPoolSize);
 }
 
 void
@@ -275,7 +276,7 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
       else
       {
          DebugLog(<<"requesting async credential lookup for " << callerAor);
-         std::auto_ptr<ApplicationMessage> app(ci);
+         std::unique_ptr<ApplicationMessage> app(ci);
          mDispatcher->post(app);
          return;
       }

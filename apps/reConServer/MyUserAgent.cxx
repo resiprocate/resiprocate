@@ -3,6 +3,7 @@
 #endif
 
 #include <cstdio>
+#include <utility>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -100,12 +101,12 @@ MyUserAgent::process(int timeoutMs)
 }
 
 SharedPtr<Dispatcher>
-MyUserAgent::initDispatcher(std::auto_ptr<Worker> prototype,
+MyUserAgent::initDispatcher(std::unique_ptr<Worker> prototype,
                   int workers,
                   bool startImmediately)
 {
    DebugLog(<< "initializing Dispatcher for " << workers << " worker(s)");
-   SharedPtr<Dispatcher> d(new Dispatcher(prototype, &getSipStack(), workers, startImmediately));
+   SharedPtr<Dispatcher> d(new Dispatcher(std::move(prototype), &getSipStack(), workers, startImmediately));
 
    return d;
 }

@@ -33,7 +33,7 @@ public:
 
    virtual void addIncomingFeature(resip::SharedPtr<resip::DumFeature> f) { getDialogUsageManager().addIncomingFeature(f); };
 
-   virtual resip::SharedPtr<resip::Dispatcher> initDispatcher(std::auto_ptr<resip::Worker> prototype,
+   virtual resip::SharedPtr<resip::Dispatcher> initDispatcher(std::unique_ptr<resip::Worker> prototype,
                   int workers=2,
                   bool startImmediately=true);
 

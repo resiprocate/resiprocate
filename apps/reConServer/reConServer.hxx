@@ -35,7 +35,7 @@ private:
    resip::SharedPtr<CDRFile> mCDRFile;
    bool mKeyboardInput;
    resip::SharedPtr<MyUserAgent> mUserAgent;
-   std::auto_ptr<MyConversationManager> mConversationManager;
+   std::unique_ptr<MyConversationManager> mConversationManager;
 };
 
 }
