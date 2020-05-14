@@ -369,7 +369,7 @@ static void fuzzSip(const resip::Data& buffer)
 {
   try
   {
-    std::auto_ptr<resip::SipMessage> msg(resip::TestSupport::makeMessage(buffer));
+    std::unique_ptr<resip::SipMessage> msg(resip::TestSupport::makeMessage(buffer));
   }
   catch (resip::ParseException)
   {

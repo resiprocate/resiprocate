@@ -21,6 +21,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DataStream.hxx"
 
+#include <utility>
+
 using namespace resip;
 using namespace std;
 
@@ -121,8 +123,8 @@ main(int argc, char* argv[])
             next->encode(strm);
             outstanding++;
          }
-         std::auto_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
-         sender->send(toSend);
+         std::unique_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
+         sender->send(std::move(toSend));
       }
 
       FdSet fdset; 

@@ -76,7 +76,7 @@ main(int argc, char* argv[])
         "m=audio 49172 RTP/AVP 0\r\n"
         "a=rtpmap:0 PCMU/8000\r\n";
      
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt1));
 
       try
       {
@@ -109,7 +109,7 @@ main(int argc, char* argv[])
          "\r\n"
          ;
       
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
       
       try
       {
@@ -162,7 +162,7 @@ main(int argc, char* argv[])
          ;
       
      
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt1));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt1));
 
       try
       {
@@ -203,7 +203,7 @@ main(int argc, char* argv[])
          ;
       
             
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
       
       try
       {
@@ -243,7 +243,7 @@ main(int argc, char* argv[])
 "Content-Length: 0\r\n"
          "\r\n";
       
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
       
       try
       {

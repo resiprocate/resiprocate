@@ -58,15 +58,15 @@ InviteClient::go()
          from.uri().user() = Data(i);
          to.uri().user() = Data(i+1);
          
-         auto_ptr<SipMessage> invite(Helper::makeInvite(to, from, contact));
+         unique_ptr<SipMessage> invite(Helper::makeInvite(to, from, contact));
          
          mTransceiver.send(target, *invite);
          
          try
          {
-            auto_ptr<SipMessage> i_100(waitForResponse(100, 1000));
-            auto_ptr<SipMessage> i_180(waitForResponse(180, 1000));
-            auto_ptr<SipMessage> i_200(waitForResponse(200, 1000));
+            unique_ptr<SipMessage> i_100(waitForResponse(100, 1000));
+            unique_ptr<SipMessage> i_180(waitForResponse(180, 1000));
+            unique_ptr<SipMessage> i_200(waitForResponse(200, 1000));
 
             DebugLog(<< "Creating dialog.");
             
@@ -76,15 +76,15 @@ InviteClient::go()
             dlog.createDialogAsUAC(*i_200);
             
             DebugLog(<< "making ack.");
-            auto_ptr<SipMessage> ack(dlog.makeAck(*invite));
+            unique_ptr<SipMessage> ack(dlog.makeAck(*invite));
             DebugLog(<< "making bye.");
-            auto_ptr<SipMessage> bye(dlog.makeBye());
+            unique_ptr<SipMessage> bye(dlog.makeBye());
 
             DebugLog(<< "Sending ack: << *ack");
             
             mTransceiver.send(*ack);
             mTransceiver.send(*bye);
-            auto_ptr<SipMessage> b_200(waitForResponse(200, 1000));
+            unique_ptr<SipMessage> b_200(waitForResponse(200, 1000));
             numInvited++;
          }
          catch(Exception e)

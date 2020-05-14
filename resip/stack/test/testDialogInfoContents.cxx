@@ -233,7 +233,7 @@ main(int argc, char** argv)
          );
       try
       {
-         auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+         unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
          Contents* body = msg->getContents();
 
          assert(body != 0);

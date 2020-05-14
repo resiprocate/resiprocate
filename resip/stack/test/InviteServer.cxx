@@ -28,27 +28,27 @@ InviteServer::go()
    {
       try
       {
-         auto_ptr<SipMessage> invite(waitForRequest(INVITE, 100000));
+         unique_ptr<SipMessage> invite(waitForRequest(INVITE, 100000));
          contact.uri().user() = invite->header(h_RequestLine).uri().user();
          
-         auto_ptr<SipMessage> i_100(Helper::makeResponse(*invite, 100, "Trying"));
+         unique_ptr<SipMessage> i_100(Helper::makeResponse(*invite, 100, "Trying"));
          mTransceiver.send(*i_100);
 
          Data localTag = Helper::computeTag(4);
 
-         auto_ptr<SipMessage> i_180(Helper::makeResponse(*invite, 180, contact, "Ringing"));
+         unique_ptr<SipMessage> i_180(Helper::makeResponse(*invite, 180, contact, "Ringing"));
          i_180->header(h_To).uri().param(p_tag) = localTag;
          DebugLog(<< "constructed 180: " << *i_180);
          mTransceiver.send(*i_180);
 
-         auto_ptr<SipMessage> i_200(Helper::makeResponse(*invite, 200, contact, "OK"));
+         unique_ptr<SipMessage> i_200(Helper::makeResponse(*invite, 200, contact, "OK"));
          i_200->header(h_To).uri().param(p_tag) = localTag;
          mTransceiver.send(*i_200);
          
-         auto_ptr<SipMessage> ack(waitForRequest(ACK, 1000));
-         auto_ptr<SipMessage> bye(waitForRequest(BYE, 1000));
+         unique_ptr<SipMessage> ack(waitForRequest(ACK, 1000));
+         unique_ptr<SipMessage> bye(waitForRequest(BYE, 1000));
 
-         auto_ptr<SipMessage> b_200(Helper::makeResponse(*bye, 200, contact, "OK"));
+         unique_ptr<SipMessage> b_200(Helper::makeResponse(*bye, 200, contact, "OK"));
          mTransceiver.send(*b_200);
       }
       catch(Exception e)

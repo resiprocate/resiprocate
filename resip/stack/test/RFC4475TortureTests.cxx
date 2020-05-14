@@ -122,7 +122,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -421,7 +421,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -667,7 +667,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -878,7 +878,7 @@ L:0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -1088,7 +1088,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -1286,7 +1286,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -1493,7 +1493,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -1793,7 +1793,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -1975,7 +1975,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -2185,7 +2185,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -2450,7 +2450,7 @@ hÎÿ®<½+ÿuÝÕdŽY=ÖG(òb ÷éAtž3
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -2711,7 +2711,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -2946,7 +2946,7 @@ Contact: <sip:user@host105.example.com>
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3123,7 +3123,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3205,7 +3205,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3294,7 +3294,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3381,7 +3381,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3455,7 +3455,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3536,7 +3536,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3616,7 +3616,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3694,7 +3694,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3774,7 +3774,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3845,7 +3845,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -3926,7 +3926,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4012,7 +4012,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4083,7 +4083,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4150,7 +4150,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4225,7 +4225,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4292,7 +4292,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4357,7 +4357,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4434,7 +4434,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4498,7 +4498,7 @@ Contact: <sip:user@host105.example.com>
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4571,7 +4571,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4747,7 +4747,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4812,7 +4812,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4876,7 +4876,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -4940,7 +4940,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5008,7 +5008,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5077,7 +5077,7 @@ m=audio 49217 RTP/AVP 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5145,7 +5145,7 @@ Content-Length: 40
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5212,7 +5212,7 @@ There's no way to know how many octets are supposed to be here.
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5292,7 +5292,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5355,7 +5355,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5419,7 +5419,7 @@ Content-Length:0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5483,7 +5483,7 @@ L:0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5557,7 +5557,7 @@ a=rtpmap:31 LPC
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5620,7 +5620,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5684,7 +5684,7 @@ l: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);
@@ -5747,7 +5747,7 @@ Content-Length: 0
       return;
    }
 
-   std::auto_ptr<resip::SipMessage> message(msg);
+   std::unique_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
    resip::SipMessage copy(*msg);

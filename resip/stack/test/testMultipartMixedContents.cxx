@@ -101,7 +101,7 @@ main()
                      "\r\n"
                      "--example-1--");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       MultipartRelatedContents* mpc = dynamic_cast<MultipartRelatedContents*>(msg->getContents());
       assert(mpc);
@@ -121,7 +121,7 @@ main()
       }
 
       {      
-         auto_ptr<SipMessage> msg1(TestSupport::makeMessage(buff.c_str()));
+         unique_ptr<SipMessage> msg1(TestSupport::makeMessage(buff.c_str()));
          MultipartRelatedContents* mpc = dynamic_cast<MultipartRelatedContents*>(msg->getContents());
          assert(mpc);
          assert(mpc->parts().size() == 2);

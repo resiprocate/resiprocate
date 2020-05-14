@@ -259,7 +259,7 @@ bool testSendReceiveOnAllInterfaces()
             target.uri().netNs() = publicNetNs[netNsIndex];
             MethodTypes method = OPTIONS;
             cout << "From: " << from << " To: " << target << endl;
-            auto_ptr<SipMessage> sipRequest = auto_ptr<SipMessage>(Helper::makeRequest(target, from, method));
+            unique_ptr<SipMessage> sipRequest(Helper::makeRequest(target, from, method));
             assert(sipRequest->header(h_RequestLine).uri().netNs() == publicNetNs[netNsIndex]);
 
             // Send a message
@@ -275,7 +275,7 @@ bool testSendReceiveOnAllInterfaces()
 
                // Send back a response to stop resends
                // TODO
-               auto_ptr<SipMessage> sipResponse(Helper::makeResponse(*receivedRequest, 200, "Got it"));
+               unique_ptr<SipMessage> sipResponse(Helper::makeResponse(*receivedRequest, 200, "Got it"));
                receiveSipStack->send(sipResponse, receiveSipTransactionConsumer);
                
                // Assert we received it on the right interface
