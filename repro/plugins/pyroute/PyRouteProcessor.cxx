@@ -2,6 +2,8 @@
 #include "PyRouteProcessor.hxx"
 #include "PyRouteWorker.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
@@ -61,8 +63,8 @@ PyRouteProcessor::process(RequestContext &context)
       return Processor::Continue;
    }
    work = new PyRouteWork(*this, context.getTransactionId(), &(context.getProxy()), msg);
-   std::auto_ptr<ApplicationMessage> app(work);
-   mDispatcher.post(app);
+   std::unique_ptr<ApplicationMessage> app(work);
+   mDispatcher.post(std::move(app));
 
    return Processor::WaitingForEvent;
 }

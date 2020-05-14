@@ -11,6 +11,7 @@
 #include <CXX/Extensions.hxx>
 
 #include <memory>
+#include <utility>
 
 #include "rutil/Logger.hxx"
 #include "resip/stack/Helper.hxx"
@@ -174,8 +175,8 @@ class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
          PyEval_ReleaseThread(mThreadState);
 
          int numPyRouteWorkerThreads = proxyConfig->getConfigInt("PyRouteNumWorkerThreads", 2);
-         std::auto_ptr<Worker> worker(new PyRouteWorker(interpreterState, mAction));
-         mDispatcher = new Dispatcher(worker, &sipStack, numPyRouteWorkerThreads);
+         std::unique_ptr<Worker> worker(new PyRouteWorker(interpreterState, mAction));
+         mDispatcher = new Dispatcher(std::move(worker), &sipStack, numPyRouteWorkerThreads);
 
          return true;
       }
@@ -188,8 +189,8 @@ class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
          // any monkey instance here
 
          // Add the pyroute monkey to the chain ahead of LocationServer
-         std::auto_ptr<Processor> proc(new PyRouteProcessor(*mDispatcher));
-         chain.insertProcessor<LocationServer>(proc);
+         std::unique_ptr<Processor> proc(new PyRouteProcessor(*mDispatcher));
+         chain.insertProcessor<LocationServer>(std::move(proc));
       }
 
       virtual void onResponseProcessorChainPopulated(ProcessorChain& chain)
@@ -210,7 +211,7 @@ class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
    private:
       PyThreadState* mThreadState;
       Data mRouteScript;
-      std::auto_ptr<Py::Module> mPyModule;
+      std::unique_ptr<Py::Module> mPyModule;
       Py::Callable mAction;
       Dispatcher* mDispatcher;
 };
