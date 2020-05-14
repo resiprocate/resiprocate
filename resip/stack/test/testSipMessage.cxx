@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <utility>
 
 #include "rutil/DataStream.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -1306,7 +1307,7 @@ main(int argc, char** argv)
       inv.header(h_CSeq).method() = INVITE;
 
       unique_ptr<Contents> pc(new PlainContents("here is some plain ol' contents"));
-      inv.setContents(pc);
+      inv.setContents(std::move(pc));
 
       resipCerr << inv.header(h_ContentType).type() << endl;
       assert(inv.header(h_ContentType).type() == "text");
