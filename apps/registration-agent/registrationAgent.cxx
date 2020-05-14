@@ -37,6 +37,8 @@
 #include "UserRegistrationClient.hxx"
 #include "KeyedFile.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
 #define DEFAULT_CONFIG_FILE "registrationAgent.config"
@@ -123,7 +125,7 @@ class MyClientRegistrationAgent : public ServerProcess
 
          mClientDum.reset(new DialogUsageManager(*mStack));
          SharedPtr<MasterProfile> profile(new MasterProfile);
-         auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
+         unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
 
          mStack->addTransport(UDP, 0, V4);
          // mStack->addTransport(UDP, 0, V6);
@@ -144,15 +146,15 @@ class MyClientRegistrationAgent : public ServerProcess
          }
 
          mClientDum->setMasterProfile(profile);
-         mClientDum->setClientAuthManager(clientAuth);
+         mClientDum->setClientAuthManager(std::move(clientAuth));
          mClientDum->getMasterProfile()->setDefaultRegistrationTime(cfg.getConfigInt("RegistrationExpiry", 3600));
          // Retry every 60 seconds after a hard failure:
          mClientDum->getMasterProfile()->setDefaultRegistrationRetryTime(60);
          mClientDum->getMasterProfile()->setUserAgent("reSIProcate registrationAgent");
 
          // keep alive test.
-         auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
-         mClientDum->setKeepAliveManager(keepAlive);
+         unique_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
+         mClientDum->setKeepAliveManager(std::move(keepAlive));
 
          profile->setRportEnabled(rport);
 
