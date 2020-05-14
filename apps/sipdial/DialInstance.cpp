@@ -54,8 +54,8 @@ DialInstance::DialResult DialInstance::execute()
    mDum->addTransport(TLS, 5067, V4);
    SharedPtr<MasterProfile> masterProfile = SharedPtr<MasterProfile>(new MasterProfile);
    mDum->setMasterProfile(masterProfile);
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
-   mDum->setClientAuthManager(clientAuth);
+   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
+   mDum->setClientAuthManager(std::move(clientAuth));
    MyInviteSessionHandler *ish = new MyInviteSessionHandler(*this);
    mDum->setInviteSessionHandler(ish);
 
