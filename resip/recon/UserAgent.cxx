@@ -92,8 +92,8 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
    mDum.registerForConnectionTermination(this);
-   mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
    mDum.setRedirectHandler(mConversationManager);
    mDum.setInviteSessionHandler(mConversationManager); 
    mDum.setDialogSetHandler(mConversationManager);
@@ -116,8 +116,8 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    //mDum.addServerSubscriptionHandler("message-summary", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
-	mDum.setAppDialogSetFactory(dsf);
+   unique_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
+	mDum.setAppDialogSetFactory(std::move(dsf));
 
    // Set UserAgentServerAuthManager
    SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
@@ -571,8 +571,8 @@ UserAgent::sendMessage(const NameAddr& destination, const Data& msg, const Mime&
    }
    
    ClientPagerMessageHandle cpmh = mDum.makePagerMessage(destination);
-   auto_ptr<Contents> msgContent(new PlainContents(msg, mimeType));
-   cpmh.get()->page(msgContent);
+   unique_ptr<Contents> msgContent(new PlainContents(msg, mimeType));
+   cpmh.get()->page(std::move(msgContent));
    SharedPtr<SipMessage> sipMessage = cpmh.get()->getMessageRequestSharedPtr();
    mDum.send(sipMessage);
 

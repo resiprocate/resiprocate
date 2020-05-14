@@ -31,6 +31,8 @@
 
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
+
 using namespace recon;
 using namespace sdpcontainer;
 using namespace resip;
@@ -361,9 +363,9 @@ RemoteParticipant::accept()
             {
                provideOffer(true /* postOfferAccept */);
             }
-            else if(mPendingOffer.get() != 0)
+            else if(mPendingOffer)
             {
-               provideAnswer(*mPendingOffer.get(), true /* postAnswerAccept */, false /* postAnswerAlert */);
+               provideAnswer(*mPendingOffer, true /* postAnswerAccept */, false /* postAnswerAlert */);
             }
             else  
             {
@@ -406,7 +408,7 @@ RemoteParticipant::alert(bool earlyFlag)
          ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
          if(sis && !sis->isAccepted())
          {
-            if(earlyFlag && mPendingOffer.get() != 0)
+            if(earlyFlag && mPendingOffer)
             {
                if(getLocalRTPPort() == 0)
                {
@@ -415,7 +417,7 @@ RemoteParticipant::alert(bool earlyFlag)
                   return;
                }
 
-               provideAnswer(*mPendingOffer.get(), false /* postAnswerAccept */, true /* postAnswerAlert */);
+               provideAnswer(*mPendingOffer, false /* postAnswerAccept */, true /* postAnswerAlert */);
                mPendingOffer.release();               
             }
             else
@@ -843,25 +845,25 @@ RemoteParticipant::processReferNotify(const SipMessage& notify)
 void 
 RemoteParticipant::provideOffer(bool postOfferAccept)
 {
-   std::auto_ptr<SdpContents> offer(new SdpContents);
+   std::unique_ptr<SdpContents> offer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
    
    buildSdpOffer(mLocalHold, *offer);
 
-   mDialogSet.provideOffer(offer, mInviteSessionHandle, postOfferAccept);
+   mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
    mOfferRequired = false;
 }
 
 bool 
 RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert)
 {
-   auto_ptr<SdpContents> answer(new SdpContents);
+   unique_ptr<SdpContents> answer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
    bool answerOk = buildSdpAnswer(offer, *answer);
 
    if(answerOk)
    {
-      mDialogSet.provideAnswer(answer, mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
+      mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
    }
    else
    {
@@ -876,7 +878,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 {
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
-   std::auto_ptr<SdpContents> _sessionCaps;
+   std::unique_ptr<SdpContents> _sessionCaps;
    if(!profile) // This can happen for UAC calls
    {
       DebugLog(<<"buildSdpOffer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
@@ -2239,7 +2241,7 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
       {
          // Don't set answer now - store offer and set when needed - so that sendHoldSdp() can be calculated at the right instant
          // we need to allow time for app to add to a conversation before alerting(with early flag) or answering
-         mPendingOffer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(offer.clone()));
+         mPendingOffer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(offer.clone()));
          return;
       }
    }

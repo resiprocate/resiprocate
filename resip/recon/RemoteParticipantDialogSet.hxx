@@ -88,8 +88,8 @@ public:
    void processMediaStreamErrorEvent(unsigned int errorCode);
 
    void sendInvite(resip::SharedPtr<resip::SipMessage> invite);
-   void provideOffer(std::auto_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept);
-   void provideAnswer(std::auto_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert);
+   void provideOffer(std::unique_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept);
+   void provideAnswer(std::unique_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert);
    void accept(resip::InviteSessionHandle& inviteSessionHandle);
    ConversationProfile::SecureMediaMode getSecureMediaMode() { return mSecureMediaMode; }
    flowmanager::MediaStream::SrtpCryptoSuite getSrtpCryptoSuite() { return mSrtpCryptoSuite; }
@@ -131,13 +131,13 @@ private:
    public:
       PendingOfferAnswer() {}
       bool mOffer;
-      std::auto_ptr<resip::SdpContents> mSdp;
+      std::unique_ptr<resip::SdpContents> mSdp;
       resip::InviteSessionHandle mInviteSessionHandle;
       bool mPostOfferAnswerAccept;
       bool mPostAnswerAlert;
    };
    PendingOfferAnswer mPendingOfferAnswer;
-   void doProvideOfferAnswer(bool offer, std::auto_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert);
+   void doProvideOfferAnswer(bool offer, std::unique_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert);
    sdpcontainer::Sdp* mProposedSdp;  // stored here vs RemoteParticipant, since each forked leg needs access to the original offer
 
    // Secure Media 

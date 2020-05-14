@@ -186,7 +186,7 @@ private:
       resip::InviteSessionHandle mDestInviteSessionHandle;
    };
    PendingRequest mPendingRequest;
-   std::auto_ptr<resip::SdpContents> mPendingOffer;
+   std::unique_ptr<resip::SdpContents> mPendingOffer;
 
    sdpcontainer::Sdp* mLocalSdp;
    sdpcontainer::Sdp* mRemoteSdp;
