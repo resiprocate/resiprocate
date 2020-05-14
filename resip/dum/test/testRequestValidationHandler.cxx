@@ -24,6 +24,7 @@
 
 #include <sstream>
 #include <time.h>
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -268,9 +269,9 @@ main (int argc, char** argv)
    dumUac->addTransport(TCP, 17298);
 
    SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
-   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
    dumUac->setMasterProfile(uacMasterProfile);
-   dumUac->setClientAuthManager(uacAuth);
+   dumUac->setClientAuthManager(std::move(uacAuth));
 
    TestInviteSessionHandler uac("UAC");
    dumUac->setInviteSessionHandler(&uac);
@@ -285,9 +286,9 @@ main (int argc, char** argv)
    dumUas->addTransport(TCP, 17299);
    
    SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
-   std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
+   std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
    dumUas->setMasterProfile(uasMasterProfile);
-   dumUas->setClientAuthManager(uasAuth);
+   dumUas->setClientAuthManager(std::move(uasAuth));
 
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
 

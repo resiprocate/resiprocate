@@ -85,7 +85,7 @@ UserAgent::UserAgent(int argc, char** argv) :
    mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    mDum.addClientPublicationHandler(Symbols::Presence, this);
    mDum.addOutOfDialogHandler(OPTIONS, this);
-   mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
    mDum.setInviteSessionHandler(this);
    
    mStackThread.run(); 
@@ -113,7 +113,7 @@ UserAgent::startup()
 #if 0
    mDum.send(mDum.makePublish);
 
-   auto_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
+   unique_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
    Pidf* pidf = new Pidf( *mPidf );
    msg->header(h_Event).value() = "presence";
    msg->setContents( pidf );
@@ -172,7 +172,7 @@ UserAgent::onNewSession(ClientInviteSessionHandle h, InviteSession::OfferAnswerT
 
    // Schedule an end() call; checks handle validity, and whether the Session
    // is already tearing down (isTerminated() check)
-   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
+   mStack.post(std::unique_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 }
 
 void
@@ -189,7 +189,7 @@ UserAgent::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerT
 
    // Schedule an end() call; checks handle validity, and whether the Session
    // is already tearing down (isTerminated() check)
-   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
+   mStack.post(std::unique_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 
    // might update presence here
 }

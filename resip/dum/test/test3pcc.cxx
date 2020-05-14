@@ -22,6 +22,7 @@
 
 #include <sstream>
 #include <time.h>
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -135,9 +136,9 @@ main (int argc, char** argv)
    controller.addTransport(UDP, 12005);
 
    SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);      
-   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
    controller.setMasterProfile(uacMasterProfile);
-   controller.setClientAuthManager(uacAuth);
+   controller.setClientAuthManager(std::move(uacAuth));
 
    Controller invSessionHandler;
    controller.setInviteSessionHandler(&invSessionHandler);

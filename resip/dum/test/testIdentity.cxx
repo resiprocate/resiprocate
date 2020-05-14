@@ -29,6 +29,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 using namespace resip;
@@ -85,7 +86,7 @@ class TestIdentityHandler : public ClientPagerMessageHandler,
 
       virtual void onFailure(ClientPagerMessageHandle,
                              const SipMessage& status,
-                             std::auto_ptr<Contents> contents)
+                             std::unique_ptr<Contents> contents)
       {
          InfoLog( << "ClientMessageHandler::onFailure\n" );
          _ended = true;
@@ -139,7 +140,7 @@ int main(int argc, char *argv[])
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    HttpProvider::setFactory(
-      std::auto_ptr<HttpProviderFactory>(new CurlHttpProviderFactory()));
+      std::unique_ptr<HttpProviderFactory>(new CurlHttpProviderFactory()));
 
    bool first = true;
    NameAddr userAor(argv[1]);
@@ -165,11 +166,11 @@ int main(int argc, char *argv[])
    // clientDum.addTransport(TLS, 0, V6);
 
    SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
+   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
    TestIdentityHandler clientHandler;
 
    clientDum.setMasterProfile(clientProfile);
-   clientDum.setClientAuthManager(clientAuth);
+   clientDum.setClientAuthManager(std::move(clientAuth));
    clientDum.setClientRegistrationHandler(&clientHandler);
    clientDum.setClientPagerMessageHandler(&clientHandler);
    clientDum.setServerPagerMessageHandler(&clientHandler);
@@ -209,8 +210,8 @@ int main(int argc, char *argv[])
          InfoLog( << "client registered!!\n" );
          InfoLog( << "Sending MESSAGE\n" );
          ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(userAor);			
-         auto_ptr<Contents> content(new PlainContents(Data("message")));
-         cpmh.get()->page(content); 
+         unique_ptr<Contents> content(new PlainContents(Data("message")));
+         cpmh.get()->page(std::move(content)); 
       }
    } 
 

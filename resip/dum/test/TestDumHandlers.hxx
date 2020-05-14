@@ -253,7 +253,7 @@ class TestClientPagerMessageHandler : public ClientPagerMessageHandler
 
       virtual void onFailure(ClientPagerMessageHandle,
                              const SipMessage& status,
-                             std::auto_ptr<Contents> contents)
+                             std::unique_ptr<Contents> contents)
       {
          InfoLog( << "TestClientMessageHandler::onFailure" );
       }

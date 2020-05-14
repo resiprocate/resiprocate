@@ -38,6 +38,7 @@
 
 #include <time.h>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 using namespace resip;
@@ -252,7 +253,7 @@ main (int argc, char** argv)
    TestSMIMEInviteHandler handler(security);
 
    // Shared FdPollGrp
-   std::auto_ptr<FdPollGrp> pollGrp(FdPollGrp::create());
+   std::unique_ptr<FdPollGrp> pollGrp(FdPollGrp::create());
 
    // set up UAC
    SipStack clientStack(security,
@@ -274,9 +275,9 @@ main (int argc, char** argv)
 #endif
 
    SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
+   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
 
-   clientDum.setClientAuthManager(clientAuth);
+   clientDum.setClientAuthManager(std::move(clientAuth));
    clientDum.setClientRegistrationHandler(&handler);
    clientDum.setInviteSessionHandler(&handler);
 
@@ -303,9 +304,9 @@ main (int argc, char** argv)
    //serverDum.addTransport(TLS, 0, V4);
 
    SharedPtr<MasterProfile> serverProfile(new MasterProfile);
-   std::auto_ptr<ClientAuthManager> serverAuth(new ClientAuthManager);
+   std::unique_ptr<ClientAuthManager> serverAuth(new ClientAuthManager);
 
-   serverDum.setClientAuthManager(serverAuth);
+   serverDum.setClientAuthManager(std::move(serverAuth));
    serverDum.setClientRegistrationHandler(&handler);
    serverDum.setInviteSessionHandler(&handler);
 

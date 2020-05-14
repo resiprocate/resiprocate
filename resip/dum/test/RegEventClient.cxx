@@ -15,6 +15,8 @@
 
 #include "RegEventClient.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
@@ -83,8 +85,8 @@ RegEventClient::RegEventClient(SharedPtr<MasterProfile> profile) :
    mProfile->setUserAgent("RFC3680-testUA");
    mDum.setMasterProfile(mProfile);
    
-   std::auto_ptr<resip::ClientAuthManager> clam(new resip::ClientAuthManager());
-   mDum.setClientAuthManager(clam);
+   std::unique_ptr<resip::ClientAuthManager> clam(new resip::ClientAuthManager());
+   mDum.setClientAuthManager(std::move(clam));
    mDum.setClientRegistrationHandler(this);
    
    mDum.addClientSubscriptionHandler(regEvent.value(), this);

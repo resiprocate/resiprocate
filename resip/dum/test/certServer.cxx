@@ -307,7 +307,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
          addServerPublicationHandler(Symbols::Certificate, &mCertUpdater);
          addOutOfDialogHandler(OPTIONS, this);
          
-         //setServerAuthManager(std::auto_ptr<ServerAuthManager>(new ServerAuthManager(mProfile)));
+         //setServerAuthManager(std::unique_ptr<ServerAuthManager>(new ServerAuthManager(mProfile)));
 
          DialogUsageManager::run();
       }

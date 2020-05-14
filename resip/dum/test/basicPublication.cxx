@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 using namespace resip;
@@ -95,14 +96,14 @@ int main(int argc, char *argv[])
    
    // sip logic
    SharedPtr<MasterProfile> profile(new MasterProfile);   
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
+   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
 
    SipStack clientStack;
    DialogUsageManager clientDum(clientStack);
    clientDum.addTransport(UDP, port);
    clientDum.setMasterProfile(profile);
 
-   clientDum.setClientAuthManager(clientAuth);
+   clientDum.setClientAuthManager(std::move(clientAuth));
    clientDum.getMasterProfile()->addSupportedMethod(PUBLISH);
    clientDum.getMasterProfile()->addSupportedMimeType(PUBLISH,Pidf::getStaticType());
 
