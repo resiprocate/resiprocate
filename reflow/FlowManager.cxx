@@ -126,7 +126,7 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    if(createCert(aor, 365 /* expireDays */, 1024 /* keyLen */, mClientCert, mClientKey))
    {
       FlowDtlsTimerContext* timerContext = new FlowDtlsTimerContext(mIOService);
-      mDtlsFactory = new DtlsFactory(std::auto_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
+      mDtlsFactory = new DtlsFactory(std::unique_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
       resip_assert(mDtlsFactory);
    }
    else

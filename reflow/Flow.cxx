@@ -20,6 +20,8 @@
 #include "MediaStream.hxx"
 #include "FlowDtlsSocketContext.hxx"
 
+#include <utility>
+
 using namespace flowmanager;
 using namespace resip;
 
@@ -927,8 +929,8 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
       InfoLog(<< "Creating DTLS Client socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createClient(socketContext);
+      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+      dtlsSocket = mMediaStream.mDtlsFactory->createClient(std::move(socketContext));
       dtlsSocket->startClient();
       mDtlsSockets[endpoint] = dtlsSocket;
    }
@@ -943,8 +945,8 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
       InfoLog(<< "Creating DTLS Server socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createServer(socketContext);
+      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+      dtlsSocket = mMediaStream.mDtlsFactory->createServer(std::move(socketContext));
       mDtlsSockets[endpoint] = dtlsSocket;
    }
 

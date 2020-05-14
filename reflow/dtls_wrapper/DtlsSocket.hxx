@@ -113,7 +113,7 @@ class DtlsSocket
       void forceRetransmit();     
 
       // Creates an SSL socket, and if client sets state to connect_state and if server sets state to accept_state.  Sets SSL BIO's.
-      DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType);
+      DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType);
 
       // Give CPU cyces to the handshake process - checks current state and acts appropraitely
       void doHandshakeIteration();
@@ -122,7 +122,7 @@ class DtlsSocket
       int getReadTimeout();
       
       // Internals
-      std::auto_ptr<DtlsSocketContext> mSocketContext;
+      std::unique_ptr<DtlsSocketContext> mSocketContext;
       DtlsFactory* mFactory;
       DtlsTimer *mReadTimer;  // Timer used during handshake process
       

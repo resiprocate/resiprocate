@@ -17,11 +17,13 @@
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 
+#include <utility>
+
 using namespace dtls;
 const char* DtlsFactory::DefaultSrtpProfile = "SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32";
 
-DtlsFactory::DtlsFactory(std::auto_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PKEY *privkey):
-   mTimerContext(tc),
+DtlsFactory::DtlsFactory(std::unique_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PKEY *privkey):
+   mTimerContext(std::move(tc)),
    mCert(cert)
 {
    int r;
@@ -47,15 +49,15 @@ DtlsFactory::~DtlsFactory()
 
 
 DtlsSocket*
-DtlsFactory::createClient(std::auto_ptr<DtlsSocketContext> context)
+DtlsFactory::createClient(std::unique_ptr<DtlsSocketContext> context)
 {
-   return new DtlsSocket(context,this,DtlsSocket::Client);
+   return new DtlsSocket(std::move(context), this, DtlsSocket::Client);
 }
 
 DtlsSocket*
-DtlsFactory::createServer(std::auto_ptr<DtlsSocketContext> context)
+DtlsFactory::createServer(std::unique_ptr<DtlsSocketContext> context)
 {
-   return new DtlsSocket(context,this,DtlsSocket::Server);  
+   return new DtlsSocket(std::move(context), this, DtlsSocket::Server);  
 }
 
 void

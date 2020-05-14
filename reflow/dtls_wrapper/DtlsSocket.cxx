@@ -11,6 +11,9 @@
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 #include "bf_dwrap.hxx"
+
+#include <utility>
+
 using namespace std;
 using namespace dtls;
 
@@ -40,8 +43,8 @@ int dummy_cb(int d, X509_STORE_CTX *x)
    return 1;
 }
 
-DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
-   mSocketContext(socketContext),
+DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
+   mSocketContext(std::move(socketContext)),
    mFactory(factory),
    mReadTimer(0),
    mSocketType(type), 
