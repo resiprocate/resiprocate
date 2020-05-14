@@ -288,15 +288,15 @@ RemoteParticipantDialogSet::processMediaStreamReadyEvent(const StunTuple& rtpTup
       mPendingInvite.reset();
    }
 
-   if(mPendingOfferAnswer.mSdp.get() != 0)
+   if(mPendingOfferAnswer.mSdp != nullptr)
    {
       // Pending Offer or Answer
       doProvideOfferAnswer(mPendingOfferAnswer.mOffer, 
-                           mPendingOfferAnswer.mSdp, 
+                           std::move(mPendingOfferAnswer.mSdp), 
                            mPendingOfferAnswer.mInviteSessionHandle, 
                            mPendingOfferAnswer.mPostOfferAnswerAccept, 
                            mPendingOfferAnswer.mPostAnswerAlert);
-      resip_assert(mPendingOfferAnswer.mSdp.get() == 0);
+      resip_assert(mPendingOfferAnswer.mSdp == nullptr);
    }
 }
 
@@ -388,7 +388,7 @@ RemoteParticipantDialogSet::provideOffer(std::unique_ptr<resip::SdpContents> off
    }
    else
    {
-      resip_assert(mPendingOfferAnswer.mSdp.get() == 0);
+      resip_assert(mPendingOfferAnswer.mSdp == nullptr);
       mPendingOfferAnswer.mOffer = true;
       mPendingOfferAnswer.mSdp = std::move(offer);
       mPendingOfferAnswer.mInviteSessionHandle = inviteSessionHandle;
@@ -406,7 +406,7 @@ RemoteParticipantDialogSet::provideAnswer(std::unique_ptr<resip::SdpContents> an
    }
    else
    {
-      resip_assert(mPendingOfferAnswer.mSdp.get() == 0);
+      resip_assert(mPendingOfferAnswer.mSdp == nullptr);
       mPendingOfferAnswer.mOffer = false;
       mPendingOfferAnswer.mSdp = std::move(answer);
       mPendingOfferAnswer.mInviteSessionHandle = inviteSessionHandle;
@@ -460,7 +460,7 @@ void
 RemoteParticipantDialogSet::accept(resip::InviteSessionHandle& inviteSessionHandle)
 {
    // If we have a pending answer, then just flag to accept when complete
-   if(mPendingOfferAnswer.mSdp.get() != 0 &&
+   if(mPendingOfferAnswer.mSdp != nullptr &&
       !mPendingOfferAnswer.mOffer)
    {
       mPendingOfferAnswer.mPostOfferAnswerAccept = true;
