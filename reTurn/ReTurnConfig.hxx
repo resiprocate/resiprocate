@@ -90,7 +90,7 @@ public:
 
    bool isUserNameValid(const resip::Data& username,  const resip::Data& realm) const;
    resip::Data getHa1ForUsername(const resip::Data& username, const resip::Data& realm) const;
-   std::auto_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
+   std::unique_ptr<UserAuthData> getUser(const resip::Data& userName, const resip::Data& realm) const;
    void addUser(const resip::Data& username, const resip::Data& password, const resip::Data& realm);
    void authParse(const resip::Data& accountDatabaseFilename);
 

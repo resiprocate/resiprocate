@@ -337,11 +337,11 @@ ReTurnConfig::getHa1ForUsername(const Data& username, const resip::Data& realm) 
    }
 }
 
-std::auto_ptr<UserAuthData>
+std::unique_ptr<UserAuthData>
 ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) const
 {
    ReadLock lock(mUserDataMutex);
-   std::auto_ptr<UserAuthData> ret(0);
+   std::unique_ptr<UserAuthData> ret;
    std::map<resip::Data,RealmUsers>::const_iterator it = mUsers.find(realm);
    if(it == mUsers.end())
       return ret;
@@ -351,7 +351,7 @@ ReTurnConfig::getUser(const resip::Data& userName, const resip::Data& realm) con
    if(it2 == realmUsers.end())
       return ret;
 
-   return std::auto_ptr<UserAuthData>(new UserAuthData(it2->second));
+   return std::unique_ptr<UserAuthData>(new UserAuthData(it2->second));
 }
 
 bool ReTurnUserFileScanner::mHup = false;
