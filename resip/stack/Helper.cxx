@@ -2187,7 +2187,7 @@ unique_ptr<SdpContents> Helper::getSdp(Contents* tree)
    }
 
    //DebugLog(<< "No sdp" << endl);
-   return unique_ptr<SdpContents>();
+   return nullptr;
 }
 
 bool 

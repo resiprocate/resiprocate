@@ -332,7 +332,7 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
       //}
 
       // Add message to buffer
-      std::unique_ptr<char> buffer(new char[sizeof(RtpHeader)]);
+      std::unique_ptr<char[]> buffer(new char[sizeof(RtpHeader)]);
       memcpy(buffer.get(), &keepalive, sizeof(RtpHeader));
       
       relayPort->mFirstEndpoint.mRelayDatagram = std::move(buffer);
@@ -362,7 +362,7 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
       //}
 
       // Add message to buffer
-      std::unique_ptr<char> buffer(new char[sizeof(RtpHeader)]);
+      std::unique_ptr<char[]> buffer(new char[sizeof(RtpHeader)]);
       memcpy(buffer.get(), &keepalive, sizeof(RtpHeader));
       
       relayPort->mSecondEndpoint.mRelayDatagram = std::move(buffer);
@@ -391,7 +391,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
 {
    resip::Socket fd = INVALID_SOCKET;
    Tuple tuple;
-   std::unique_ptr<char> buffer;
+   std::unique_ptr<char[]> buffer;
    int len;
 
    // If we have data to write to first sender then check if readyToWrite
@@ -506,7 +506,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
    }
    if (fd != INVALID_SOCKET)
    {
-      std::unique_ptr<char> buffer(new char[UDP_BUFFER_SIZE+1]);
+      std::unique_ptr<char[]> buffer(new char[UDP_BUFFER_SIZE+1]);
 
       socklen_t slen = tuple.length();
       int len = recvfrom( fd,

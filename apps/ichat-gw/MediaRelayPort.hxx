@@ -19,7 +19,7 @@ public:
 
    resip::Tuple mTuple;
    unsigned int mSsrc;
-   std::unique_ptr<char> mRelayDatagram;
+   std::unique_ptr<char[]> mRelayDatagram;
    int mRelayDatagramLen;
    UInt64 mSendTimeMs;
    UInt64 mRecvTimeMs;
