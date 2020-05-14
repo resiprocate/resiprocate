@@ -318,8 +318,8 @@ Server::Server(int argc, char** argv) :
 
    // Install Handlers
    mDum.setMasterProfile(mProfile);
-   //mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   //mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
 
    // Install Sdp Message Decorator
    SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
@@ -335,8 +335,8 @@ Server::Server(int argc, char** argv) :
    mDum.addServerSubscriptionHandler("refer", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new ClickToCallDialogSetFactory(*this));
-	mDum.setAppDialogSetFactory(dsf);
+   unique_ptr<AppDialogSetFactory> dsf(new ClickToCallDialogSetFactory(*this));
+	mDum.setAppDialogSetFactory(std::move(dsf));
 
 #if 0
    // Set UserAgentServerAuthManager
