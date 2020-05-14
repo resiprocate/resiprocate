@@ -190,7 +190,7 @@ protected:
    virtual void onNewIPCMsg(const IPCMsg& msg);
 
    // External Unknown Packet Handler//////////////////////////////////////////////
-   virtual void operator()(resip::UdpTransport* transport, const resip::Tuple& source, std::auto_ptr<resip::Data> unknownPacket);
+   virtual void operator()(resip::UdpTransport* transport, const resip::Tuple& source, std::unique_ptr<resip::Data> unknownPacket);
 
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();

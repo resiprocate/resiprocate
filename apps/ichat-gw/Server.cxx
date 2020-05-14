@@ -30,6 +30,8 @@
 #include <resip/dum/AppDialogSetFactory.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
+
 using namespace gateway;
 using namespace resip;
 using namespace std;
@@ -458,8 +460,8 @@ Server::Server(int argc, char** argv) :
    // Install Handlers
    mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
-   //mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   //mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
 
    // Install Sdp Message Decorator
    SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
@@ -475,8 +477,8 @@ Server::Server(int argc, char** argv) :
    mDum.addServerSubscriptionHandler("refer", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new GatewayDialogSetFactory(*this));
-   mDum.setAppDialogSetFactory(dsf);
+   unique_ptr<AppDialogSetFactory> dsf(new GatewayDialogSetFactory(*this));
+   mDum.setAppDialogSetFactory(std::move(dsf));
 
 #if 0
    // Set UserAgentServerAuthManager
@@ -939,7 +941,7 @@ Server::onNewIPCMsg(const IPCMsg& msg)
 }
 
 void 
-Server::operator()(UdpTransport* transport, const Tuple& source, std::auto_ptr<resip::Data> unknownPacket)
+Server::operator()(UdpTransport* transport, const Tuple& source, std::unique_ptr<resip::Data> unknownPacket)
 {
    InfoLog(<< "Received an unknown packet of size=" << unknownPacket->size() << ", from " << source);
 }

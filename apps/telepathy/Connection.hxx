@@ -92,7 +92,7 @@ private:
    resip::SharedPtr<TelepathyMasterProfile> mUAProfile;
    resip::SharedPtr<TelepathyConversationProfile> mConversationProfile;
    resip::SharedPtr<MyInstantMessage> mInstantMessage;
-   std::auto_ptr<MyConversationManager> myConversationManager;
+   std::unique_ptr<MyConversationManager> myConversationManager;
 
    Tp::BaseConnectionContactsInterfacePtr mContactsInterface;
    Tp::BaseConnectionAliasingInterfacePtr mAliasingInterface;
