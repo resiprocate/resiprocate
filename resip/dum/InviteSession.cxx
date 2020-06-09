@@ -2075,6 +2075,15 @@ InviteSession::dispatchOthers(const SipMessage& msg)
 
    switch (msg.header(h_CSeq).method())
    {
+      case INVITE:
+      case UPDATE:
+         if (msg.isRequest())
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDialog.makeResponse(*response, msg, 491);
+            send(response);
+         }
+         break;
       case PRACK:
          dispatchPrack(msg);
          break;
