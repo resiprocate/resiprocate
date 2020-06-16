@@ -35,6 +35,7 @@ class DialogUsage : public BaseUsage
       const NameAddr& myAddr() const;
       const NameAddr& peerAddr() const;
       const NameAddr& remoteTarget() const;
+      const NameAddr& pendingRemoteTarget() const;
       const NameAddrs& getRouteSet() const;
       const DialogId& getDialogId() const;
       const Data& getCallId() const;
