@@ -16,7 +16,12 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    mTimerSeq(0),
    mSubscriptionState(Invalid)
 {
-   if (request.exists(h_Event))
+   if (request.header(h_RequestLine).method() == REFER)
+   {
+      mEventType = "refer";
+      mLastRequest->header(h_Event).value() = mEventType;
+   }
+   else if (request.exists(h_Event))
    {
       mEventType = request.header(h_Event).value();
       if (request.header(h_Event).exists(p_id))
@@ -24,12 +29,6 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
          mSubscriptionId = request.header(h_Event).param(p_id);
       }
       mLastRequest->header(h_Event) = request.header(h_Event);      
-   }
-   else if (request.header(h_RequestLine).method() == REFER
-            || request.header(h_RequestLine).method() == NOTIFY) 
-   {
-      mEventType = "refer";
-      mLastRequest->header(h_Event).value() = mEventType;      
    }
 }
 
