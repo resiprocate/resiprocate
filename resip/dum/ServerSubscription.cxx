@@ -218,10 +218,9 @@ ServerSubscription::dispatch(const SipMessage& msg)
    DebugLog( << "ServerSubscription::dispatch: " << msg.brief());
 
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   resip_assert(handler);
 
    if (msg.isRequest())
-   {      
+   {
       //!dcm! -- need to have a mechanism to retrieve default & acceptable
       //expiration times for an event package--part of handler API?
       //added to handler for now.
@@ -230,6 +229,14 @@ ServerSubscription::dispatch(const SipMessage& msg)
           mLastResponse.reset(new SipMessage);
       }
       mDialog.makeResponse(*mLastResponse, msg, 200);  // Generate response now and wait for user to accept or reject, then adjust status code
+      if(!handler)
+      {
+        InfoLog (<< "Can't find handler for Event: " << msg.header(h_Event).value());
+        SharedPtr<SipMessage> response = reject(489);
+        DialogUsage::send(response);
+        delete this;
+        return;
+      }
    
       int errorResponseCode = 0;
       handler->getExpires(msg,mExpires,errorResponseCode);
@@ -312,7 +319,8 @@ ServerSubscription::dispatch(const SipMessage& msg)
       }
    }
    else
-   {     
+   {
+      resip_assert(handler);
       //.dcm. - will need to change if retry-afters are reaching here
       //mLastRequest->releaseContents();
       mLastRequest.reset();   // Release ref count on memory - so message goes away when send is done
@@ -451,8 +459,10 @@ void
 ServerSubscription::onReadyToSend(SipMessage& msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   resip_assert(handler);
-   handler->onReadyToSend(getHandle(), msg);
+   if (handler)
+   {
+     handler->onReadyToSend(getHandle(), msg);
+   }
 }
 
 void
