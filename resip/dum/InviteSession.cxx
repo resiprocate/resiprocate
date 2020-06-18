@@ -772,13 +772,13 @@ InviteSession::endCommand(EndReason reason)
 void
 InviteSession::reject(int statusCode, WarningCategory *warning)
 {
+   mProposedRemoteOfferAnswer.reset();  // Clear out any potential ProposedRemoteOfferAnswer since we are rejecting
    switch (mState)
    {
       case ReceivedUpdate:
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
-         mProposedRemoteOfferAnswer.reset();  // Clear out any potential ProposedRemoteOfferAnswer since we are rejecting
          transition(Connected);
 
          SharedPtr<SipMessage> response(new SipMessage);
