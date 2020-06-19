@@ -3019,7 +3019,8 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    {
       return On487Invite;
    }
-   else if (method == INVITE && code == 491)
+   else if (method == INVITE && code == 491 &&
+            !mDialog.mDialogSet.getUserProfile()->getHandling491AsGeneralFailure())
    {
       return On491Invite;
    }
@@ -3085,7 +3086,8 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    {
       return On422Update;
    }
-   else if (method == UPDATE && code == 491)
+   else if (method == UPDATE && code == 491 &&
+            !mDialog.mDialogSet.getUserProfile()->getHandling491AsGeneralFailure())
    {
       return On491Update;
    }

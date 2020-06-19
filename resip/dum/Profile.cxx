@@ -56,6 +56,7 @@ Profile::reset()
    unsetMethodsParamEnabled();
    unsetUserAgentCapabilities();
    unsetExtraHeadersInReferNotifySipFragEnabled();
+   unsetHandling491AsGeneralFailure();
 }
 
 void
@@ -992,6 +993,37 @@ Profile::unsetExtraHeadersInReferNotifySipFragEnabled()
    }
 }
 
+void
+Profile::setHandling491AsGeneralFailure(bool enabled)
+{
+   mHandling491AsGeneralFailure = enabled;
+   mHasHandling491AsGeneralFailure = true;
+}
+
+bool
+Profile::getHandling491AsGeneralFailure() const
+{
+   // Fall through seting (if required)
+   if(!mHasHandling491AsGeneralFailure && mBaseProfile.get())
+   {
+       return mBaseProfile->getHandling491AsGeneralFailure();
+   }
+   return mHandling491AsGeneralFailure;
+}
+
+void
+Profile::unsetHandling491AsGeneralFailure()
+{
+   if(mBaseProfile.get())
+   {
+      mHasHandling491AsGeneralFailure = false;
+   }
+   else
+   {
+      mHasHandling491AsGeneralFailure = true;
+      mHandling491AsGeneralFailure = false;
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
