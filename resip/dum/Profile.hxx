@@ -236,9 +236,9 @@ class Profile
       virtual bool getExtraHeadersInReferNotifySipFragEnabled() const;
       virtual void unsetExtraHeadersInReferNotifySipFragEnabled();
 
-      virtual void setHandling491AsGeneralFailure(bool enabled);
-      virtual bool getHandling491AsGeneralFailure() const;
-      virtual void unsetHandling491AsGeneralFailure();
+      virtual void setHandleInviteSession491AsGeneralFailureEnabled(bool enabled);
+      virtual bool getHandleInviteSession491AsGeneralFailureEnabled() const;
+      virtual void unsetHandleInviteSession491AsGeneralFailureEnabled();
 
    private:
       bool mHasDefaultRegistrationExpires;
@@ -325,8 +325,8 @@ class Profile
       bool mHasExtraHeadersInReferNotifySipFragEnabled;
       bool mExtraHeadersInReferNotifySipFragEnabled;
 
-      bool mHasHandling491AsGeneralFailure;
-      bool mHandling491AsGeneralFailure;
+      bool mHasHandleInviteSession491AsGeneralFailureEnabled;
+      bool mHandleInviteSession491AsGeneralFailureEnabled;
 
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };

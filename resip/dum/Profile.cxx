@@ -56,7 +56,7 @@ Profile::reset()
    unsetMethodsParamEnabled();
    unsetUserAgentCapabilities();
    unsetExtraHeadersInReferNotifySipFragEnabled();
-   unsetHandling491AsGeneralFailure();
+   unsetHandleInviteSession491AsGeneralFailureEnabled();
 }
 
 void
@@ -994,34 +994,34 @@ Profile::unsetExtraHeadersInReferNotifySipFragEnabled()
 }
 
 void
-Profile::setHandling491AsGeneralFailure(bool enabled)
+Profile::setHandleInviteSession491AsGeneralFailureEnabled(bool enabled)
 {
-   mHandling491AsGeneralFailure = enabled;
-   mHasHandling491AsGeneralFailure = true;
+   mHandleInviteSession491AsGeneralFailureEnabled = enabled;
+   mHasHandleInviteSession491AsGeneralFailureEnabled = true;
 }
 
 bool
-Profile::getHandling491AsGeneralFailure() const
+Profile::getHandleInviteSession491AsGeneralFailureEnabled() const
 {
    // Fall through seting (if required)
-   if(!mHasHandling491AsGeneralFailure && mBaseProfile.get())
+   if(!mHasHandleInviteSession491AsGeneralFailureEnabled && mBaseProfile.get())
    {
-       return mBaseProfile->getHandling491AsGeneralFailure();
+       return mBaseProfile->getHandleInviteSession491AsGeneralFailureEnabled();
    }
-   return mHandling491AsGeneralFailure;
+   return mHandleInviteSession491AsGeneralFailureEnabled;
 }
 
 void
-Profile::unsetHandling491AsGeneralFailure()
+Profile::unsetHandleInviteSession491AsGeneralFailureEnabled()
 {
    if(mBaseProfile.get())
    {
-      mHasHandling491AsGeneralFailure = false;
+      mHasHandleInviteSession491AsGeneralFailureEnabled = false;
    }
    else
    {
-      mHasHandling491AsGeneralFailure = true;
-      mHandling491AsGeneralFailure = false;
+      mHasHandleInviteSession491AsGeneralFailureEnabled = true;
+      mHandleInviteSession491AsGeneralFailureEnabled = false;
    }
 }
 
