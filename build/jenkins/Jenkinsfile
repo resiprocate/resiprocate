@@ -1,0 +1,57 @@
+
+pipeline {
+    agent none
+    options {
+        timestamps()
+    }
+    stages {
+        stage('Build'){
+            matrix {
+                axes {
+                    axis {
+                        name 'DISTRO'
+                        values 'alpine', 'ubuntu'
+                    }
+                }
+                agent {
+                    dockerfile {
+                        dir "build/jenkins/${DISTRO}"
+                    }
+                }
+                stages {
+                    stage('Configure'){
+                        steps {
+                            sh 'autoreconf --install'
+                            sh './configure --enable-dtls --enable-ipv6 --with-ssl'
+                        }
+                    }
+                    stage('Build'){
+                        steps {
+                            sh 'make'
+                        }
+                    }
+                    stage('Test'){
+                        steps {
+                            sh 'make check'
+                        }
+                    }
+                }
+                post {
+                    always {
+                        recordIssues (
+                            tools: [
+                                gcc(
+                                    id: "${DISTRO}-gcc",
+                                    name: "${DISTRO} - GNU C Compiler (gcc)"
+                                )
+                            ]
+                        )
+                    }
+                    cleanup {
+                        cleanWs()
+                    }
+                }
+            }
+        }
+    }
+}
