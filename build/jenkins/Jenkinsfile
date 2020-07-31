@@ -19,10 +19,15 @@ pipeline {
                     }
                 }
                 stages {
-                    stage('Configure'){
+                    stage('Bootstrap'){
                         steps {
                             sh 'autoreconf --install'
-                            sh './configure --enable-dtls --enable-ipv6 --with-ssl'
+                            sh 'rm resip/stack/gen/*'
+                        }
+                    }
+                    stage('Configure'){
+                        steps {
+                            sh './configure --enable-dtls --enable-ipv6 --with-popt --with-ssl'
                         }
                     }
                     stage('Build'){
