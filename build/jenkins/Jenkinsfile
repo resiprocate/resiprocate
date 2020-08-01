@@ -27,7 +27,7 @@ pipeline {
                     }
                     stage('Configure'){
                         steps {
-                            sh './configure --enable-dtls --enable-ipv6 --with-apps --with-c-ares --with-netsnmp --with-popt --with-repro --with-return --with-ssl CXXFLAGS=\"-Icontrib/cajun/include\"'
+                            sh "./configure --enable-dtls --enable-ipv6 --with-apps --with-c-ares --with-netsnmp --with-popt --with-repro --with-return --with-ssl CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include\""
                         }
                     }
                     stage('Build'){
