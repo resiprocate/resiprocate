@@ -23,4 +23,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        pkg-config && \
     adduser --system --uid 1000 jenkins
 
+ENV CPATH="/usr/include/postgresql:${CPATH}"
+
 USER jenkins

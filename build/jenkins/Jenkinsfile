@@ -27,7 +27,19 @@ pipeline {
                     }
                     stage('Configure'){
                         steps {
-                            sh "./configure --enable-dtls --enable-ipv6 --with-apps --with-c-ares --with-mysql --with-netsnmp --with-popt --with-postgresql --with-repro --with-return --with-ssl CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql\""
+                            sh """./configure --enable-dtls
+                                              --enable-ipv6
+                                              --with-apps
+                                              --with-c-ares
+                                              --with-mysql
+                                              --with-netsnmp
+                                              --with-popt
+                                              --with-postgresql
+                                              --with-repro
+                                              --with-return
+                                              --with-ssl
+                                              CXXFLAGS="-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql"
+                               """
                         }
                     }
                     stage('Build'){
