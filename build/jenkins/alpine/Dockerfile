@@ -18,7 +18,8 @@ RUN apk add --no-cache asio-dev \
                        pcre-dev \
                        pkgconfig \
                        popt-dev \
-                       postgresql-dev && \
+                       postgresql-dev \
+                       telepathy-qt-dev && \
     adduser --system --uid 1000 jenkins
 
 USER jenkins

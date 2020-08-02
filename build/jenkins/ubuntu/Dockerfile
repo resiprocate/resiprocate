@@ -18,6 +18,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        libpq-dev \
                        libsnmp-dev \
                        libssl-dev \
+                       libtelepathy-qt5-dev \
                        libtool \
                        make \
                        pkg-config && \

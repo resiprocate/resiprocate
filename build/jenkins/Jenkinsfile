@@ -27,8 +27,10 @@ pipeline {
                     }
                     stage('Configure'){
                         steps {
-                            sh "./configure --enable-dtls \
+                            sh "./configure --enable-assert-syslog \
+                                            --enable-dtls \
                                             --enable-ipv6 \
+                                            --enable-repro-plugins \
                                             --with-apps \
                                             --with-c-ares \
                                             --with-mysql \
@@ -38,6 +40,7 @@ pipeline {
                                             --with-repro \
                                             --with-return \
                                             --with-ssl \
+                                            --with-telepathy \
                                             CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql\""
                         }
                     }
