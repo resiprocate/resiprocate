@@ -21,7 +21,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        libtelepathy-qt5-dev \
                        libtool \
                        make \
-                       pkg-config && \
+                       pkg-config \
+                       xxd && \
     adduser --system --uid 1000 jenkins
 
 ENV CPATH="/usr/include/postgresql:${CPATH}"
