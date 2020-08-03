@@ -1,20 +1,25 @@
 FROM alpine:3.12
 
-RUN apk add --no-cache asio-dev \
+RUN apk add --no-cache abi-compliance-checker \
+                       asio-dev \
                        autoconf-archive \
                        automake \
                        boost-dev \
                        c-ares-dev \
+                       cmake \
                        cppunit-dev \
                        db-dev \
                        g++ \
                        gcc \
+                       git \
+                       gnutls-dev \
                        gperf \
                        linux-headers \
                        libtool \
                        make \
                        mariadb-connector-c-dev \
                        net-snmp-dev \
+                       nettle-dev \
                        openssl-dev \
                        pcre-dev \
                        pkgconfig \
@@ -26,11 +31,33 @@ RUN apk add --no-cache asio-dev \
                        xxd && \
     adduser --system --uid 1000 jenkins
 
-RUN cd /root && \
-    svn checkout https://svn.code.sf.net/p/cxx/code/tags/7.1.4 pycxx && \
+WORKDIR /root
+
+RUN svn checkout https://svn.code.sf.net/p/cxx/code/tags/7.1.4 pycxx && \
     cd pycxx && \
     python3 setup.py install && \
     cd .. && \
     rm -fr pycxx
 
+RUN git clone https://github.com/radcli/radcli.git && \
+    cd radcli && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr && \
+    make && \
+    make check && \
+    make install && \
+    cd .. && \
+    rm -fr radcli
+
+RUN git clone https://github.com/SOCI/soci.git && \
+    cd soci && \
+    mkdir build && \
+    cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .. && \
+    cmake --build . && \
+    cmake --install . && \
+    cd ../.. && \
+    rm -fr soci
+
 USER jenkins
+WORKDIR /home/jenkins

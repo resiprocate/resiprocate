@@ -17,8 +17,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        libpcre3-dev \
                        libpopt-dev \
                        libpq-dev \
+                       libradcli-dev \
                        libsipxtapi-dev \
                        libsnmp-dev \
+                       libsoci-dev \
                        libssl-dev \
                        libtelepathy-qt5-dev \
                        libtool \

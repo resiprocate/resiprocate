@@ -38,10 +38,13 @@ pipeline {
                                             --with-popt \
                                             --with-postgresql \
                                             --with-python \
+                                            --with-radcli \
+                                            --with-recon \
+                                            --with-rend \
                                             --with-repro \
                                             --with-return \
                                             --with-ssl \
-                                            CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql\" \
+                                            CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql -I/usr/include/soci\" \
                                             DEPS_PYTHON_CFLAGS=\"`/usr/bin/python3.8-config --cflags`\" \
                                             DEPS_PYTHON_LIBS=\"`/usr/bin/python3.8-config --ldflags`\" \
                                             PYCXX_SRCDIR=/usr/share/python3.8/CXX/Python3"
