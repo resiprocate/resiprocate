@@ -5,6 +5,7 @@ RUN apk add --no-cache asio-dev \
                        automake \
                        boost-dev \
                        c-ares-dev \
+                       cppunit-dev \
                        db-dev \
                        g++ \
                        gcc \

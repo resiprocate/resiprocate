@@ -40,7 +40,6 @@ pipeline {
                                             --with-repro \
                                             --with-return \
                                             --with-ssl \
-                                            --with-telepathy \
                                             CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql\""
                         }
                     }
