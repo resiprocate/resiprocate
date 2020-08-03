@@ -34,6 +34,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        xxd && \
     adduser --system --uid 1000 jenkins
 
+WORKDIR /root
+
 RUN git clone https://github.com/cisco/libsrtp.git && \
     cd libsrtp && \
     git checkout tags/v1.6.0 && \
@@ -46,3 +48,4 @@ RUN git clone https://github.com/cisco/libsrtp.git && \
 ENV CPATH="/usr/include/postgresql:/usr/include/sipxtapi:${CPATH}"
 
 USER jenkins
+WORKDIR /home/jenkins

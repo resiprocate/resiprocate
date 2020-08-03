@@ -80,16 +80,14 @@ RUN git clone https://github.com/cisco/libsrtp.git && \
 #    cd ../.. && \
 #    rm -fr qpid-proton
 
-#ADD https://camaya.net/download/gloox-1.0.24.tar.bz2 /root/
-#RUN tar -xzf gloox-1.0.24.tar.bz2 && \
-#    rm gloox-1.0.24.tar.bz2 && \
-#    cd gloox-1.0.24 && \
-#    ./autogen.sh && \
-#    ./configure --prefix=/usr && \
-#    make && \
-#    make install && \
-#    cd .. && \
-#    rm -fr gloox-1.0.24
+RUN svn checkout svn://svn.camaya.net/gloox/branches/1.0 gloox && \
+    cd gloox && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -fr gloox
 
 USER jenkins
 WORKDIR /home/jenkins
