@@ -7,16 +7,19 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        automake \
                        g++ \
                        gcc \
+                       git \
                        gperf \
                        libasio-dev \
                        libboost-all-dev \
                        libc-ares-dev \
                        libcppunit-dev \
                        libdb++-dev \
+                       libgloox-dev \
                        libmysqlclient-dev \
                        libpcre3-dev \
                        libpopt-dev \
                        libpq-dev \
+                       libqpid-proton-cpp12-dev \
                        libradcli-dev \
                        libsipxtapi-dev \
                        libsnmp-dev \
@@ -24,11 +27,21 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        libssl-dev \
                        libtelepathy-qt5-dev \
                        libtool \
+                       libxerces-c-dev \
                        make \
                        pkg-config \
                        python3-cxx-dev \
                        xxd && \
     adduser --system --uid 1000 jenkins
+
+RUN git clone https://github.com/cisco/libsrtp.git && \
+    cd libsrtp && \
+    git checkout tags/v1.6.0 && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -fr libsrtp
 
 ENV CPATH="/usr/include/postgresql:/usr/include/sipxtapi:${CPATH}"
 

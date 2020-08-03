@@ -28,6 +28,7 @@ RUN apk add --no-cache abi-compliance-checker \
                        python3-dev \
                        subversion \
                        telepathy-qt-dev \
+                       xerces-c-dev \
                        xxd && \
     adduser --system --uid 1000 jenkins
 
@@ -58,6 +59,37 @@ RUN git clone https://github.com/SOCI/soci.git && \
     cmake --install . && \
     cd ../.. && \
     rm -fr soci
+
+RUN git clone https://github.com/cisco/libsrtp.git && \
+    cd libsrtp && \
+    git checkout tags/v1.6.0 && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -fr libsrtp
+
+#RUN apk add --no-cache util-linux-dev && \
+#    git clone https://github.com/apache/qpid-proton.git && \
+#    cd qpid-proton && \
+#    mkdir build && \
+#    cd build && \
+#    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .. && \
+#    cmake --build . && \
+#    cmake --install . && \
+#    cd ../.. && \
+#    rm -fr qpid-proton
+
+#ADD https://camaya.net/download/gloox-1.0.24.tar.bz2 /root/
+#RUN tar -xzf gloox-1.0.24.tar.bz2 && \
+#    rm gloox-1.0.24.tar.bz2 && \
+#    cd gloox-1.0.24 && \
+#    ./autogen.sh && \
+#    ./configure --prefix=/usr && \
+#    make && \
+#    make install && \
+#    cd .. && \
+#    rm -fr gloox-1.0.24
 
 USER jenkins
 WORKDIR /home/jenkins
