@@ -20,6 +20,7 @@ RUN apk add --no-cache asio-dev \
                        pkgconfig \
                        popt-dev \
                        postgresql-dev \
+                       python3-dev \
                        telepathy-qt-dev \
                        xxd && \
     adduser --system --uid 1000 jenkins

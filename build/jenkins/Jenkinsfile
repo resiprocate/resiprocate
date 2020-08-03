@@ -37,10 +37,13 @@ pipeline {
                                             --with-netsnmp \
                                             --with-popt \
                                             --with-postgresql \
+                                            --with-python \
                                             --with-repro \
                                             --with-return \
                                             --with-ssl \
-                                            CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql\""
+                                            CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql\" \
+                                            DEPS_PYTHON_CFLAGS=\"`/usr/bin/python3.8-config --cflags`\" \
+                                            DEPS_PYTHON_LIBS=\"`/usr/bin/python3.8-config --ldflags`\""
                         }
                     }
                     stage('Build'){
