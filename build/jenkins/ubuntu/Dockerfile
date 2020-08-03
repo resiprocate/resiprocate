@@ -24,7 +24,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        libtool \
                        make \
                        pkg-config \
-                       python3-dev \
+                       python3-cxx-dev \
                        xxd && \
     adduser --system --uid 1000 jenkins
 

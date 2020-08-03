@@ -43,7 +43,8 @@ pipeline {
                                             --with-ssl \
                                             CXXFLAGS=\"-I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql\" \
                                             DEPS_PYTHON_CFLAGS=\"`/usr/bin/python3.8-config --cflags`\" \
-                                            DEPS_PYTHON_LIBS=\"`/usr/bin/python3.8-config --ldflags`\""
+                                            DEPS_PYTHON_LIBS=\"`/usr/bin/python3.8-config --ldflags`\" \
+                                            PYCXX_SRCDIR=/usr/share/python3.8/CXX/Python3"
                         }
                     }
                     stage('Build'){
