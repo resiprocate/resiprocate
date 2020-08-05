@@ -6,21 +6,19 @@
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
 using namespace reconserver;
 using namespace resip;
 using namespace soci;
 
-CredentialGrabber::CredentialGrabber(SharedPtr<soci::connection_pool> pool, const resip::Data& databaseQueryUserCredential) :
-   mPool(pool),
+CredentialGrabber::CredentialGrabber(std::shared_ptr<soci::connection_pool> pool, const resip::Data& databaseQueryUserCredential) :
+   mPool(std::move(pool)),
    mDatabaseQueryUserCredential(databaseQueryUserCredential)
 {
    DebugLog(<<"instantiated");
-}
-
-CredentialGrabber::~CredentialGrabber()
-{
 }
 
 bool

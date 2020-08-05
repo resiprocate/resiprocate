@@ -198,8 +198,8 @@ bool testSendReceiveOnAllInterfaces()
                                                Data::Empty, // private key filename
                                                SecurityTypes::None,
                                                false, // use email as SIP
-                                               SharedPtr<resip::WsConnectionValidator>(),
-                                               SharedPtr<resip::WsCookieContextFactory>(),
+                                               nullptr,
+                                               nullptr,
                                                publicNetNs[netNsIndex]);
                 assert(transport);
                 sendPort = transport->getTuple().getPort();
@@ -230,8 +230,8 @@ bool testSendReceiveOnAllInterfaces()
                                                Data::Empty, // private key filename
                                                SecurityTypes::None,
                                                false, // use email as SIP
-                                               SharedPtr<resip::WsConnectionValidator>(),
-                                               SharedPtr<resip::WsCookieContextFactory>(),
+                                               nullptr,
+                                               nullptr,
                                                publicNetNs[netNsIndex]);
                 assert(transport);
                 receivePort = transport->getTuple().getPort();

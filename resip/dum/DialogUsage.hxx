@@ -2,11 +2,13 @@
 #define RESIP_DIALOGUSAGE_HXX
 
 #include "rutil/BaseException.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/DumCommand.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/dum/Handles.hxx"
+
+#include <memory>
+#include <utility>
 
 namespace resip
 {
@@ -28,17 +30,17 @@ class DialogUsage : public BaseUsage
             virtual const char* name() const;
       };
 
-      AppDialogSetHandle getAppDialogSet();
-      AppDialogHandle getAppDialog();     
+      AppDialogSetHandle getAppDialogSet() const;
+      AppDialogHandle getAppDialog() const;     
 
       // Convenience methods for accessing attributes of a dialog. 
-      const NameAddr& myAddr() const;
-      const NameAddr& peerAddr() const;
-      const NameAddr& remoteTarget() const;
-      const NameAddrs& getRouteSet() const;
+      const NameAddr& myAddr() const noexcept;
+      const NameAddr& peerAddr() const noexcept;
+      const NameAddr& remoteTarget() const noexcept;
+      const NameAddrs& getRouteSet() const noexcept;
       const DialogId& getDialogId() const;
       const Data& getCallId() const;
-      SharedPtr<UserProfile> getUserProfile();
+      std::shared_ptr<UserProfile> getUserProfile() const;
       
    protected:
       friend class DialogSet;
@@ -48,30 +50,30 @@ class DialogUsage : public BaseUsage
       class DialogUsageSendCommand : public DumCommandAdapter
       {
       public:
-         DialogUsageSendCommand(DialogUsage& usage, SharedPtr<SipMessage> msg)
+         DialogUsageSendCommand(DialogUsage& usage, std::shared_ptr<SipMessage> msg)
             : mDialogUsage(usage),
-              mMessage(msg)
+              mMessage(std::move(msg))
          {
          }
-      
-         virtual void executeCommand()
+
+         void executeCommand() override
          {
             mDialogUsage.send(mMessage);
          }
-      
-         virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+
+         EncodeStream& encodeBrief(EncodeStream& strm) const override
          {
             return strm << "DialogUsageSendCommand";
          }
       private:
          DialogUsage& mDialogUsage;
-         SharedPtr<SipMessage> mMessage;
+         std::shared_ptr<SipMessage> mMessage;
       };
       
 
       //virtual void send(SipMessage& msg);
-      virtual void send(SharedPtr<SipMessage> msg);      
-      virtual void sendCommand(SharedPtr<SipMessage> msg);
+      virtual void send(std::shared_ptr<SipMessage> msg);
+      virtual void sendCommand(std::shared_ptr<SipMessage> msg);
 
       // any usage that wants to give app a chance to adorn the message
       // should override this method.

@@ -92,8 +92,8 @@ main (int argc, char** argv)
 #endif
 
    DialogUsageManager clientDum(stack);
-   SharedPtr<MasterProfile> profile(new MasterProfile);
-   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
+   auto profile = std::make_shared<MasterProfile>();
+   std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
    ClientHandler clientHandler;
 
    stack.addTransport(UDP, 0, V4);
@@ -118,10 +118,10 @@ main (int argc, char** argv)
                                      userAor.uri().user(),
                                      passwd);
 
-   SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(userAor);
+   auto regMessage = clientDum.makeRegistration(userAor);
    NameAddr contact;
 
-   clientDum.send( regMessage );
+   clientDum.send(std::move(regMessage));
 
    int n = 0;
    while ( !clientHandler.done )

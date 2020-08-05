@@ -8,11 +8,12 @@
 
 #include <map>
 
-#include "rutil/SharedPtr.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TransactionUser.hxx"
 
 #include "RendAcct.hxx"
+
+#include <memory>
 
 struct RendReqCxt 
 {
@@ -91,7 +92,7 @@ public:
 
 
 class RendDlg;
-typedef resip::SharedPtr<RendDlg> RendDlgSharedPtr;
+typedef std::shared_ptr<RendDlg> RendDlgSharedPtr;
 
 class RendDlg 
 {
@@ -207,7 +208,7 @@ public:
 };
 
 
-typedef resip::SharedPtr<RendDlg> RendDlgSharedPtr;
+typedef std::shared_ptr<RendDlg> RendDlgSharedPtr;
 typedef std::map<RendLocalKey, RendDlgSharedPtr> RendDialogMap;
 typedef std::deque<resip::Transport*> RendTransportList;
 

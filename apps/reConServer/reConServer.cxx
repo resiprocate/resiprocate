@@ -81,7 +81,7 @@ void sleepSeconds(unsigned int seconds)
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then reConServer will automatically answer incoming calls by adding to lowest numbered conversation
-SharedPtr<ConversationProfile> conversationProfile;
+std::shared_ptr<ConversationProfile> conversationProfile;
 
 int main(int argc, char** argv)
 {
@@ -915,7 +915,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   const auto profile = std::make_shared<UserAgentMasterProfile>();
 
    Data certPath;
    reConServerConfig.getConfigValue("CertificatePath", certPath);
@@ -938,9 +938,9 @@ ReConServerProcess::main (int argc, char** argv)
 
    if(!captureHost.empty())
    {
-      SharedPtr<HepAgent> agent(new HepAgent(captureHost, capturePort, captureAgentID));
-      profile->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(agent)));
-      profile->setRTCPEventLoggingHandler(SharedPtr<HEPRTCPEventLoggingHandler>(new HEPRTCPEventLoggingHandler(agent)));
+      const auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
+      profile->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
+      profile->setRTCPEventLoggingHandler(std::make_shared<HEPRTCPEventLoggingHandler>(agent));
    }
 
    // Add transports
@@ -1193,15 +1193,14 @@ ReConServerProcess::main (int argc, char** argv)
    {
       StackLog(<<"NAT traversal features not enabled, "
          "adding message decorator for SDP connection address");
-      SharedPtr<MessageDecorator> md(new MyMessageDecorator());
-      profile->setOutboundDecorator(md);
+      profile->setOutboundDecorator(std::make_shared<MyMessageDecorator>());
    }
 
    //////////////////////////////////////////////////////////////////////////////
    // Setup ConversationProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   conversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(profile));
+   conversationProfile = std::make_shared<ConversationProfile>(profile);
    if(uri.uri().user() != "noreg" && !registrationDisabled)
    {
       conversationProfile->setDefaultRegistrationTime(3600);
@@ -1295,13 +1294,13 @@ ReConServerProcess::main (int argc, char** argv)
       switch(application)
       {
          case ReConServerConfig::None:
-            mConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+            mConversationManager = std::make_shared<MyConversationManager>(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled);
             break;
          case ReConServerConfig::B2BUA:
             {
                if(!cdrLogFilename.empty())
                {
-                  mCDRFile.reset(new CDRFile(cdrLogFilename));
+                  mCDRFile = std::make_shared<CDRFile>(cdrLogFilename);
                }
                b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
                mConversationManager.reset(b2BCallManager);
@@ -1310,19 +1309,19 @@ ReConServerProcess::main (int argc, char** argv)
          default:
             assert(0);
       }
-      mUserAgent.reset(new MyUserAgent(reConServerConfig, mConversationManager.get(), profile));
+      mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
       mConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
       {
-         b2BCallManager->init(*mUserAgent.get());
+         b2BCallManager->init(*mUserAgent);
 
          Data internalMediaAddress;
          reConServerConfig.getConfigValue("B2BUAInternalMediaAddress", internalMediaAddress);
          if(!internalMediaAddress.empty())
          {
-            SharedPtr<ConversationProfile> internalProfile(new ConversationProfile(conversationProfile));
+            auto internalProfile = std::make_shared<ConversationProfile>(conversationProfile);
             Data b2BUANextHop = reConServerConfig.getConfigData("B2BUANextHop", "", true);
             if(b2BUANextHop.empty())
             {

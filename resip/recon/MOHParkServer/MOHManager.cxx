@@ -64,7 +64,7 @@ MOHManager::initializeConversationProfile(const NameAddr& uri, const Data& passw
    }
 
    // Setup ConversationProfile
-   SharedPtr<ConversationProfile> mohConversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(mServer.mUserAgentMasterProfile));
+   auto mohConversationProfile = std::make_shared<ConversationProfile>(mServer.mUserAgentMasterProfile);
    mohConversationProfile->setDefaultRegistrationTime(registrationTime);  
    mohConversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
    mohConversationProfile->setDefaultFrom(uri);
@@ -83,7 +83,7 @@ MOHManager::initializeConversationProfile(const NameAddr& uri, const Data& passw
    mohConversationProfile->natTraversalMode() = ConversationProfile::NoNatTraversal;
    mohConversationProfile->secureMediaMode() = ConversationProfile::NoSecureMedia;
    mServer.buildSessionCapabilities(mohConversationProfile->sessionCaps());
-   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(mohConversationProfile);
+   mConversationProfileHandle = mServer.mMyUserAgent->addConversationProfile(std::move(mohConversationProfile));
    mMOHUri = uri;
 }
 

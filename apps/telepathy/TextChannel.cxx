@@ -22,6 +22,8 @@
 #include "TextChannel.hxx"
 #include "Connection.hxx"
 
+#include <utility>
+
 using namespace std;
 using namespace resip;
 
@@ -29,14 +31,14 @@ using namespace resip;
 
 typedef Tp::SharedPtr<tr::TextChannel> TextChannelPtr;
 
-tr::TextChannel::TextChannel(tr::MyUserAgent* userAgent, SharedPtr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID)
+tr::TextChannel::TextChannel(tr::MyUserAgent* userAgent, std::shared_ptr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID)
    : Tp::BaseChannelTextType(baseChannel),
      mTargetHandle(baseChannel->targetHandle()),
      mTargetID(baseChannel->targetID()),
      mSelfHandle(selfHandle),
      mSelfID(selfID),
      ua(userAgent),
-     mInstantMessage(instantMessage)
+     mInstantMessage(std::move(instantMessage))
 {
    QStringList supportedContentTypes = QStringList() << QLatin1String("text/plain");
    Tp::UIntList messageTypes = Tp::UIntList() << Tp::ChannelTextMessageTypeNormal
@@ -62,9 +64,9 @@ tr::TextChannel::TextChannel(tr::MyUserAgent* userAgent, SharedPtr<MyInstantMess
 }
 
 TextChannelPtr
-tr::TextChannel::create(tr::MyUserAgent* userAgent, SharedPtr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID)
+tr::TextChannel::create(tr::MyUserAgent* userAgent, std::shared_ptr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID)
 {
-   return tr::TextChannelPtr(new tr::TextChannel(userAgent, instantMessage, baseChannel, selfHandle, selfID));
+   return tr::TextChannelPtr(new tr::TextChannel(userAgent, std::move(instantMessage), baseChannel, selfHandle, selfID));
 }
 
 QString

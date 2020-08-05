@@ -16,21 +16,27 @@ class ClientPagerMessage : public NonDialogUsage
 {
   public:
       ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);
+      ClientPagerMessage(const ClientPagerMessage&) = delete;
+      ClientPagerMessage(ClientPagerMessage&&) = delete;
+
+      ClientPagerMessage& operator=(const ClientPagerMessage&) = delete;
+      ClientPagerMessage& operator=(ClientPagerMessage&&) = delete;
+
       ClientPagerMessageHandle getHandle();
 
       //allow the user to adorn the MESSAGE message if desired
       //!kh!
       //I don't know how this would interact with the queuing mechanism.
       //Will come back to re-visit this in the future.
-      SipMessage& getMessageRequest();
-      SharedPtr<SipMessage> getMessageRequestSharedPtr() { return mRequest; }
+      SipMessage& getMessageRequest() noexcept;
+      std::shared_ptr<SipMessage> getMessageRequestSharedPtr() const noexcept { return mRequest; }
 
       //!kh!
       //queues the message if there is one sent but not yet received a response
       //for it.
       //asserts if contents->get() is NULL.
       virtual void page(std::unique_ptr<Contents> contents, DialogUsageManager::EncryptionLevel level=DialogUsageManager::None);
-      virtual void end();
+      void end() override;
 
       // Use this API if the application has ongoing pending messages and it is using
       // getMessageRequest to modify the target routing information for messages (ie:
@@ -47,12 +53,12 @@ class ClientPagerMessage : public NonDialogUsage
       virtual void endCommand();
       virtual void pageCommand(std::unique_ptr<Contents> contents, DialogUsageManager::EncryptionLevel level=DialogUsageManager::None);
 
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
-      size_t       msgQueued() const;
+      size_t msgQueued() const;
 
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
 
    protected:
       virtual ~ClientPagerMessage();
@@ -62,7 +68,7 @@ class ClientPagerMessage : public NonDialogUsage
 
       //uses memory from creator
       //SipMessage& mRequest;
-      SharedPtr<SipMessage> mRequest;
+      std::shared_ptr<SipMessage> mRequest;
 
       typedef struct
       {
@@ -73,10 +79,6 @@ class ClientPagerMessage : public NonDialogUsage
       typedef std::deque<Item> MsgQueue;
       MsgQueue mMsgQueue;
       bool mEnded;
-
-      // disabled
-      ClientPagerMessage(const ClientPagerMessage&);
-      ClientPagerMessage& operator=(const ClientPagerMessage&);
 
       void pageFirstMsgQueued();
       void clearMsgQueued();

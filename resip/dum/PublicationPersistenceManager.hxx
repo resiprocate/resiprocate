@@ -8,7 +8,8 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -207,7 +208,7 @@ public:
                             // There is an assumption that the contenttype and contentsubtype tags will always occur
                             // before the content tag
                             Mime mimeType(mimeTypeString, mimeSubtypeString);
-                            // Need explilcit Data decodedBody as serializedContents refers to it in parser
+                            // Need explicit Data decodedBody as serializedContents refers to it in parser
                             Data decodedBody(xml.getValue().xmlCharDataDecode());
                             Contents* serializedContents = Contents::createContents(mimeType, decodedBody);
                             // Need to clone, as serializedContents is still referring to decodedBody, via the LazyParser,
@@ -332,8 +333,8 @@ public:
       UInt64 mExpirationTime;
       UInt64 mLastUpdated;
       UInt64 mLingerTime;      // No need to sync this - this is essentially the latest expiration time we have seen for this ETag
-      SharedPtr<Contents> mContents;
-      SharedPtr<SecurityAttributes> mSecurityAttributes;
+      std::shared_ptr<Contents> mContents;
+      std::shared_ptr<SecurityAttributes> mSecurityAttributes;
       bool mSyncPublication;   // No need to sync this
    };
 
@@ -343,12 +344,12 @@ public:
    class ETagMerger
    {
    public:
-       virtual ~ETagMerger() {}
+       virtual ~ETagMerger() = default;
        virtual bool mergeETag(Contents* eTagDest, Contents* eTagSrc, bool isFirst) = 0;
    };
 
-   PublicationPersistenceManager() {}
-   virtual ~PublicationPersistenceManager() {}
+   PublicationPersistenceManager() = default;
+   virtual ~PublicationPersistenceManager() = default;
 
    virtual void addUpdateDocument(const PubDocument& document) = 0;
    virtual void addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication = false)

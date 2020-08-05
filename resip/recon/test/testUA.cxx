@@ -63,7 +63,7 @@ using namespace std;
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then testUA will automatically answer incoming calls by adding to lowest numbered conversation
-SharedPtr<ConversationProfile> conversationProfile;
+std::shared_ptr<ConversationProfile> conversationProfile;
 
 static void
 signalHandler(int signo)
@@ -75,8 +75,8 @@ signalHandler(int signo)
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
+      UserAgent(conversationManager, std::move(profile)) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -1281,7 +1281,7 @@ main (int argc, char** argv)
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Add transports
    profile->addTransport(UDP, sipPort, V4, StunDisabled, address);
@@ -1420,7 +1420,7 @@ main (int argc, char** argv)
    // Setup ConversationProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   conversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(profile));
+   conversationProfile = std::make_shared<ConversationProfile>(profile);
    if(uri.uri().user() != "noreg" && !registrationDisabled)
    {
       conversationProfile->setDefaultRegistrationTime(3600);

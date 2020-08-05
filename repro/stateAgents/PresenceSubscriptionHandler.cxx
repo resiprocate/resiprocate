@@ -67,12 +67,12 @@ void PresenceSubscriptionHandler::onRefresh(ServerSubscriptionHandle h, const Si
       InfoLog(<< "PresenceSubscriptionHandler::onRefresh: aor=" << aor << ", registered=" << isRegistered << ", maxRegExpires=" << maxExpires);
       if (!checkRegistrationStateChanged(aor, isRegistered, maxExpires))
       {
-         SharedPtr<SipMessage> notify = h->neutralNotify();
+         auto notify = h->neutralNotify();
          if (maxExpires && isRegistered)
          {
             adjustNotifyExpiresTime(*notify.get(), maxExpires);
          }
-         h->send(notify);
+         h->send(std::move(notify));
       }
    }
    else
@@ -177,7 +177,7 @@ PresenceSubscriptionHandler::notifyPresenceNoPublication(resip::ServerSubscripti
    }
    else
    {
-      mOnlineAors.erase(aor);  // remove now, since we might have an immediate unregister coming in before this aysnc finishes and we want to avoid sending 2 closed states
+      mOnlineAors.erase(aor);  // remove now, since we might have an immediate unregister coming in before this async finishes and we want to avoid sending 2 closed states
          
       // Do async lookup of user from User tables
       PresenceUserExists* async = new PresenceUserExists(mDum, this, h, sendAcceptReject, aor);
@@ -305,12 +305,12 @@ PresenceSubscriptionHandler::fabricateSimplePresence(ServerSubscriptionHandle h,
       h->setSubscriptionState(Active);
       h->send(h->accept(200));
    }
-   resip::SharedPtr<SipMessage> notify = h->update(&pidf);
+   auto notify = h->update(&pidf);
    if (regMaxExpires && online)
    {
       adjustNotifyExpiresTime(*notify.get(), regMaxExpires);
    }
-   h->send(notify);
+   h->send(std::move(notify));
 }
 
 bool 

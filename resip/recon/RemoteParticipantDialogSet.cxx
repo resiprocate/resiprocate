@@ -47,7 +47,7 @@ using namespace std;
 
 RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conversationManager,        
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode,
-                                                       SharedPtr<ConversationProfile> conversationProfile) :
+                                                       std::shared_ptr<ConversationProfile> conversationProfile) :
    AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
    mConversationManager(conversationManager),
    mUACOriginalRemoteParticipant(0),
@@ -56,7 +56,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mLocalRTPPort(0),
    mAllocateLocalRTPPortFailed(false),
    mForkSelectMode(forkSelectMode),
-   mConversationProfile(conversationProfile),
+   mConversationProfile(std::move(conversationProfile)),
    mFlowContext(new FlowContext()),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
    mActiveRemoteParticipantHandle(0),
@@ -91,7 +91,7 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
    InfoLog(<< "RemoteParticipantDialogSet destroyed.  mActiveRemoteParticipantHandle=" << mActiveRemoteParticipantHandle);
 }
 
-SharedPtr<UserProfile> 
+std::shared_ptr<UserProfile> 
 RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
 {
    return mConversationManager.getUserAgent()->getIncomingConversationProfile(msg);
@@ -347,21 +347,21 @@ RemoteParticipantDialogSet::onMediaStreamError(unsigned int errorCode)
 }
 
 void 
-RemoteParticipantDialogSet::sendInvite(SharedPtr<SipMessage> invite)
+RemoteParticipantDialogSet::sendInvite(std::shared_ptr<SipMessage> invite)
 {
    if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
    {
-      doSendInvite(invite);
+      doSendInvite(std::move(invite));
    }
    else
    {
       // Wait until media stream is ready
-      mPendingInvite = invite;
+      mPendingInvite = std::move(invite);
    }
 }
 
 void 
-RemoteParticipantDialogSet::doSendInvite(SharedPtr<SipMessage> invite)
+RemoteParticipantDialogSet::doSendInvite(std::shared_ptr<SipMessage> invite)
 {
    // Fix up address and port in SDP if we have remote info
    // Note:  the only time we don't is if there was an error preparing the media stream
@@ -376,7 +376,7 @@ RemoteParticipantDialogSet::doSendInvite(SharedPtr<SipMessage> invite)
    }
 
    // Send the invite
-   mDum.send(invite);
+   mDum.send(std::move(invite));
 }
 
 void 
@@ -475,7 +475,7 @@ RemoteParticipantDialogSet::accept(resip::InviteSessionHandle& inviteSessionHand
    }
 }
 
-SharedPtr<MediaInterface>
+std::shared_ptr<MediaInterface>
 RemoteParticipantDialogSet::getMediaInterface()
 {
    if(!mMediaInterface)

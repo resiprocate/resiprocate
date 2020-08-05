@@ -33,8 +33,8 @@ void
 AddAor::executeCommand()
 {
    //InfoLog (<< "Execute: " << *this);
-   SharedPtr<SipMessage> sub = mClient.mDum.makeSubscription(resip::NameAddr(mAor), regEvent.value());
-   mClient.mDum.send(sub);
+   auto sub = mClient.mDum.makeSubscription(resip::NameAddr(mAor), regEvent.value());
+   mClient.mDum.send(std::move(sub));
 }
 
 resip::Message* 
@@ -67,13 +67,13 @@ AddAor::encodeBrief(resip::ResipFastOStream& strm) const
 }
 
 
-RegEventClient::RegEventClient(SharedPtr<MasterProfile> profile) :
+RegEventClient::RegEventClient(std::shared_ptr<MasterProfile> profile) :
    mSecurity(0),
    mStack(mSecurity),
    mStackThread(mStack),
    mDum(mStack),
    mDumThread(mDum),
-   mProfile(profile)
+   mProfile(std::move(profile))
 {
    mDum.addTransport(UDP, 5060);
    mDum.addTransport(TCP, 5060);

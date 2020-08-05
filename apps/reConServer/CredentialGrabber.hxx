@@ -1,11 +1,12 @@
 #ifndef CREDENTIAL_GRABBER
 #define CREDENTIAL_GRABBER
 
-#include "rutil/SharedPtr.hxx"
 #include "resip/stack/Worker.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 
 #include "soci.h"
+
+#include <memory>
 
 namespace reconserver
 {
@@ -13,14 +14,13 @@ namespace reconserver
 class CredentialGrabber : public resip::Worker
 {
    public:
-      CredentialGrabber(resip::SharedPtr<soci::connection_pool> pool, const resip::Data& databaseQueryUserCredential);
-      virtual ~CredentialGrabber();
+      CredentialGrabber(std::shared_ptrs<soci::connection_pool> pool, const resip::Data& databaseQueryUserCredential);
 
       virtual bool process(resip::ApplicationMessage* msg);
       virtual CredentialGrabber* clone() const;
 
    private:
-      resip::SharedPtr<soci::connection_pool> mPool;
+      std::shared_ptr<soci::connection_pool> mPool;
       resip::Data mDatabaseQueryUserCredential;
 };
 

@@ -15,31 +15,36 @@ class ClientSubscription: public BaseSubscription
 {
    public:      
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
+      ClientSubscription(const ClientSubscription&) = delete;
+      ClientSubscription(ClientSubscription&&) = delete;
+
+      ClientSubscription& operator=(const ClientSubscription&) = delete;
+      ClientSubscription& operator=(ClientSubscription&&) = delete;
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
       
       //.dcm. no adornment for ease of use, can add if there is a use case
-      void acceptUpdate(int statusCode = 200, const char* reason=0);
+      void acceptUpdate(int statusCode = 200, const char* reason = nullptr);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
-      virtual void end();
+      void end() override;
       void end(bool immediate); // If immediate is true then usage is destroyed with no further messaging
       virtual void reSubscribe();  // forms a new Subscription dialog - reusing the same target and AppDialogSet      
       /**
        * Provide asynchronous method access by using command
        */
-      void acceptUpdateCommand(int statusCode = 200, const char* reason=0);
+      void acceptUpdateCommand(int statusCode = 200, const char* reason = nullptr);
       void rejectUpdateCommand(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       void requestRefreshCommand(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
       virtual void endCommand(bool immediate=false); // If immediate is true then usage is destroyed with no further messaging
 
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
 
    protected:
       virtual ~ClientSubscription();
       virtual void onReadyToSend(SipMessage& msg);
-      virtual void send(SharedPtr<SipMessage> msg);
+      virtual void send(std::shared_ptr<SipMessage> msg);
       virtual void flowTerminated();
 
    private:
@@ -52,8 +57,8 @@ class ClientSubscription: public BaseSubscription
             QueuedNotify(const SipMessage& notify, bool outOfOrder)
                : mNotify(notify), mOutOfOrder(outOfOrder) {}
 
-            SipMessage& notify() { return mNotify; }
-            bool outOfOrder() { return mOutOfOrder; }
+            SipMessage& notify() noexcept { return mNotify; }
+            bool outOfOrder() const noexcept { return mOutOfOrder; }
 
          private:
             SipMessage mNotify;
@@ -79,18 +84,14 @@ class ClientSubscription: public BaseSubscription
 
       unsigned int mLargestNotifyCSeq;
 
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
       void sendQueuedRefreshRequest();
       void processNextNotify();
       void processResponse(const SipMessage& response);
       void clearDustbin();
       void scheduleRefresh(unsigned long refreshInterval);
-      
-      // disabled
-      ClientSubscription(const ClientSubscription&);
-      ClientSubscription& operator=(const ClientSubscription&);
 };
  
 }

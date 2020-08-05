@@ -42,9 +42,9 @@ static const QString c_fileWithContacts = QLatin1String("data.txt");
 
 tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString &cmName, const QString &protocolName, const QVariantMap &parameters)
    : Tp::BaseConnection(dbusConnection, cmName, protocolName, parameters),
-     mUAProfile(new TelepathyMasterProfile(parameters)),
-     mConversationProfile(new TelepathyConversationProfile(mUAProfile, parameters)),
-     mInstantMessage(SharedPtr<MyInstantMessage>(new MyInstantMessage())),
+     mUAProfile(std::make_shared<TelepathyMasterProfile>(parameters)),
+     mConversationProfile(std::make_shared<TelepathyConversationProfile>(mUAProfile, parameters)),
+     mInstantMessage(std::make_shared<MyInstantMessage>()),
      ua(0),
      nextHandleId(1)
 {
@@ -73,7 +73,7 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    unsigned int defaultSampleRate = 16000;
    unsigned int maximumSampleRate = 16000;
    bool autoAnswerEnabled = false;
-   myConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this));
+   myConversationManager = std::make_shared<MyConversationManager>(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this);
    ua = new MyUserAgent(myConversationManager.get(), mUAProfile, *this, mInstantMessage);
    myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), numCodecIds, codecIds, mConversationProfile->sessionCaps());
    ua->addConversationProfile(mConversationProfile);

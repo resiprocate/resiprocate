@@ -8,11 +8,9 @@
 using namespace resip;
 
 void
-DumUaAction::operator()(boost::shared_ptr<Event> event)
+DumUaAction::operator()(std::shared_ptr<Event> event)
 {
-   //!dcm! having resip::SharedPtr is annoying now..two dynamic_pointer_cast templates
-   boost::shared_ptr<DumEvent> dumEvent 
-      = boost::dynamic_pointer_cast<DumEvent, Event>(event);        
+   auto dumEvent = std::dynamic_pointer_cast<DumEvent>(event);        
    return (*this)(*mUa, dumEvent);
 }
 
@@ -23,7 +21,7 @@ DumUaAction::operator()()
 }
 
 void 
-DumUaAction::operator()(DumUserAgent& tua, boost::shared_ptr<DumEvent> event)
+DumUaAction::operator()(DumUserAgent& tua, std::shared_ptr<DumEvent> event)
 {
    return (*this)(*mUa);
 }
@@ -109,7 +107,7 @@ void
 DumUaSendingCommandCommand::executeCommand()
 {
    StackLog(<< "DumUaSendingCommand::operator(): Executing deferred call: ");
-   SharedPtr<SipMessage> msg = mFunctor();
+   auto msg = mFunctor();
    if (mMessageAdorner)
    {
       mDum.send((*mMessageAdorner)(msg));

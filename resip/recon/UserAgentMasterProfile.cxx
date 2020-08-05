@@ -3,6 +3,8 @@
 #include "ReconSubsystem.hxx"
 #include "UserAgentMasterProfile.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -28,25 +30,25 @@ UserAgentMasterProfile::UserAgentMasterProfile()
 }
 
 void
-UserAgentMasterProfile::setTransportSipMessageLoggingHandler(SharedPtr<Transport::SipMessageLoggingHandler> handler)
+UserAgentMasterProfile::setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept
 {
-   mTransportSipMessageLoggingHandler = handler;
+   mTransportSipMessageLoggingHandler = std::move(handler);
 }
 
-const SharedPtr<Transport::SipMessageLoggingHandler>
-UserAgentMasterProfile::getTransportSipMessageLoggingHandler() const
+std::shared_ptr<Transport::SipMessageLoggingHandler>
+UserAgentMasterProfile::getTransportSipMessageLoggingHandler() const noexcept
 {
    return mTransportSipMessageLoggingHandler;
 }
 
 void
-UserAgentMasterProfile::setRTCPEventLoggingHandler(SharedPtr<flowmanager::RTCPEventLoggingHandler> handler)
+UserAgentMasterProfile::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> handler) noexcept
 {
-   mRTCPEventLoggingHandler = handler;
+   mRTCPEventLoggingHandler = std::move(handler);
 }
 
-const SharedPtr<flowmanager::RTCPEventLoggingHandler>
-UserAgentMasterProfile::getRTCPEventLoggingHandler() const
+std::shared_ptr<flowmanager::RTCPEventLoggingHandler>
+UserAgentMasterProfile::getRTCPEventLoggingHandler() const noexcept
 {
    return mRTCPEventLoggingHandler;
 }

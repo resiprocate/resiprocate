@@ -599,8 +599,8 @@ private:
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
+      UserAgent(conversationManager, std::move(profile)) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -632,9 +632,9 @@ public:
 };
 
 
-SharedPtr<UserAgentMasterProfile> createUserAgentMasterProfile()
+std::shared_ptr<UserAgentMasterProfile> createUserAgentMasterProfile()
 {
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Settings
    profile->statisticsManagerEnabled() = false;
@@ -682,9 +682,9 @@ SharedPtr<UserAgentMasterProfile> createUserAgentMasterProfile()
    return profile;
 }
 
-SharedPtr<ConversationProfile> createConversationProfile(SharedPtr<UserAgentMasterProfile> profile, int port)
+std::shared_ptr<ConversationProfile> createConversationProfile(std::shared_ptr<UserAgentMasterProfile> profile, int port)
 {
-   SharedPtr<ConversationProfile> conversationProfile(new ConversationProfile(profile));
+   auto conversationProfile = std::make_shared<ConversationProfile>(std::move(profile));
    conversationProfile->setDefaultRegistrationTime(0);
 
    // Create Session Capabilities and assign to coversation Profile
@@ -715,15 +715,15 @@ void executeConversationTest(ConversationManager::MediaInterfaceMode mode)
    //////////////////////////////////////////////////////////////////////////////
    // Setup UserAgentMasterProfiles
    //////////////////////////////////////////////////////////////////////////////
-   SharedPtr<UserAgentMasterProfile> profileAlice = createUserAgentMasterProfile();
+   auto profileAlice = createUserAgentMasterProfile();
    profileAlice->addTransport(UDP, aliceUri.uri().port(), V4);
-   SharedPtr<ConversationProfile> conversationProfileAlice = createConversationProfile(profileAlice, 16384);
+   auto conversationProfileAlice = createConversationProfile(profileAlice, 16384);
    conversationProfileAlice->setDefaultFrom(aliceUri);
    conversationProfileAlice->setUserAgent("Test-Alice");
 
-   SharedPtr<UserAgentMasterProfile> profileBob = createUserAgentMasterProfile();
+   auto profileBob = createUserAgentMasterProfile();
    profileBob->addTransport(UDP, bobUri.uri().port(), V4);
-   SharedPtr<ConversationProfile> conversationProfileBob = createConversationProfile(profileBob, 16385);
+   auto conversationProfileBob = createConversationProfile(profileBob, 16385);
    conversationProfileBob->setDefaultFrom(bobUri);
    conversationProfileBob->setUserAgent("Test-Bob");
 

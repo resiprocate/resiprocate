@@ -98,7 +98,7 @@ void ContactInstanceRecord::stream(std::iostream& ss) const
 
     ss << "   <contactinfo>" << Symbols::CRLF;
     ss << "      <contacturi>" << Data::from(mContact).xmlCharDataEncode() << "</contacturi>" << Symbols::CRLF;
-    // If contact is expired or removed, then pass expires time as 0, otherwise send number of seconds until expirey
+    // If contact is expired or removed, then pass expires time as 0, otherwise send number of seconds until expiry
     ss << "      <expires>" << (((mRegExpires == 0) || (mRegExpires <= now)) ? 0 : (mRegExpires-now)) << "</expires>" << Symbols::CRLF;
     ss << "      <lastupdate>" << now-mLastUpdated << "</lastupdate>" << Symbols::CRLF;
     if(mReceivedFrom.getPort() != 0)

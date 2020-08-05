@@ -71,7 +71,7 @@ private:
    BasicClientUserAgent& mUserAgent;
 };
 
-// Used to set the IP Address in outbound SDP to match the IP address choosen by the stack to send the message on
+// Used to set the IP Address in outbound SDP to match the IP address chosen by the stack to send the message on
 class SdpMessageDecorator : public MessageDecorator
 {
 public:
@@ -228,8 +228,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->setMethodsParamEnabled(true);
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   mProfile->setOutboundDecorator(outboundDecorator);
+   mProfile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    // Other Profile Settings
    mProfile->setUserAgent("basicClient/1.0");
@@ -260,7 +259,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);   
 #endif
    // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
-   // across machine re-starts and is unique to this applicaiton instance.  The one used 
+   // across machine re-starts and is unique to this application instance.  The one used 
    // here is only as unique as the hostname of this machine.  If someone runs two 
    // instances of this application on the same host for the same Aor, then things will 
    // break.  See RFC5626 section 4.1
@@ -346,8 +345,8 @@ BasicClientUserAgent::startup()
       // Check if we should try to form a test subscription
       if(!mSubscribeTarget.host().empty())
       {
-         SharedPtr<SipMessage> sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
-         mDum->send(sub);
+         auto sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
+         mDum->send(std::move(sub));
       }
 
       // Check if we should try to form a test call
@@ -542,8 +541,8 @@ BasicClientUserAgent::onSuccess(ClientRegistrationHandle h, const SipMessage& ms
       // Check if we should try to form a test subscription
       if(!mSubscribeTarget.host().empty())
       {
-         SharedPtr<SipMessage> sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
-         mDum->send(sub);
+         auto sub = mDum->makeSubscription(NameAddr(mSubscribeTarget), mProfile, "basicClientTest");
+         mDum->send(std::move(sub));
       }
 
       // Check if we should try to form a test call
@@ -1042,8 +1041,8 @@ BasicClientUserAgent::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Si
    {
    case OPTIONS:
       {
-         SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
-         ood->send(optionsAnswer);
+         auto optionsAnswer = ood->answerOptions();
+         ood->send(std::move(optionsAnswer));
          break;
       }
    default:

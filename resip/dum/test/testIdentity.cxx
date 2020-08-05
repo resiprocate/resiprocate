@@ -165,8 +165,8 @@ int main(int argc, char *argv[])
    // clientDum.addTransport(TCP, 0, V6);
    // clientDum.addTransport(TLS, 0, V6);
 
-   SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
-   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
+   auto clientProfile = std::make_shared<MasterProfile>();   
+   std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
    TestIdentityHandler clientHandler;
 
    clientDum.setMasterProfile(clientProfile);
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
          InfoLog( << "client registered!!\n" );
          InfoLog( << "Sending MESSAGE\n" );
          ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(userAor);			
-         unique_ptr<Contents> content(new PlainContents(Data("message")));
+         std::unique_ptr<Contents> content(new PlainContents(Data("message")));
          cpmh.get()->page(std::move(content)); 
       }
    } 

@@ -37,21 +37,23 @@
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Random.hxx>
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc, SharedPtr<InstantMessage> instantMessage) : 
+UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc, std::shared_ptr<InstantMessage> instantMessage) : 
    mCurrentSubscriptionHandle(1),
    mCurrentConversationProfileHandle(1),
    mDefaultOutgoingConversationProfileHandle(0),
    mConversationManager(conversationManager),
-   mProfile(profile),
-   mInstantMessage(instantMessage),
+   mProfile(std::move(profile)),
+   mInstantMessage(std::move(instantMessage)),
 #if defined(USE_SSL)
-   mSecurity(new Security(profile->certPath())),
+   mSecurity(new Security(mProfile->certPath())),
 #else
    mSecurity(0),
 #endif
@@ -105,7 +107,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    // If application didn't create an IM object, we use a default one
    if(!mInstantMessage)
    {
-      mInstantMessage = SharedPtr<InstantMessage>(new InstantMessage());
+      mInstantMessage = std::make_shared<InstantMessage>();
    }
    mDum.setServerPagerMessageHandler(mInstantMessage.get());
    mDum.setClientPagerMessageHandler(mInstantMessage.get());
@@ -116,12 +118,11 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    //mDum.addServerSubscriptionHandler("message-summary", this);
 
    // Set AppDialogSetFactory
-   unique_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
-	mDum.setAppDialogSetFactory(std::move(dsf));
+   std::unique_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
+   mDum.setAppDialogSetFactory(std::move(dsf));
 
    // Set UserAgentServerAuthManager
-   SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
-   mDum.setServerAuthManager(uasAuth);
+   mDum.setServerAuthManager(std::make_shared<UserAgentServerAuthManager>(*this));
 }
 
 UserAgent::~UserAgent()
@@ -284,10 +285,10 @@ UserAgent::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
 }
 
 ConversationProfileHandle 
-UserAgent::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+UserAgent::addConversationProfile(std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    ConversationProfileHandle handle = getNewConversationProfileHandle();
-   AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, conversationProfile, defaultOutgoing);
+   AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, std::move(conversationProfile), defaultOutgoing);
    mDum.post(cmd);
    return handle;
 }
@@ -339,7 +340,7 @@ UserAgent::destroyPublication(PublicationHandle handle)
    mDum.post(cmd);
 }
 
-SharedPtr<ConversationProfile> 
+std::shared_ptr<ConversationProfile> 
 UserAgent::getDefaultOutgoingConversationProfile()
 {
    if(mDefaultOutgoingConversationProfileHandle != 0)
@@ -350,11 +351,11 @@ UserAgent::getDefaultOutgoingConversationProfile()
    {
       resip_assert(false);
       ErrLog( << "getDefaultOutgoingConversationProfile: something is wrong - no profiles to return");
-      return SharedPtr<ConversationProfile>((ConversationProfile*)0);
+      return nullptr;
    }
 }
 
-SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 UserAgent::getConversationProfileByMediaAddress(const resip::Data& mediaAddress)
 {
    resip_assert(!mediaAddress.empty());
@@ -362,16 +363,16 @@ UserAgent::getConversationProfileByMediaAddress(const resip::Data& mediaAddress)
    ConversationProfileMap::iterator conIt;
    for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
    {
-      SharedPtr<ConversationProfile> cp = conIt->second;
+      auto cp = conIt->second;
       if(cp->sessionCaps().session().origin().getAddress() == mediaAddress)
       {
          return cp;
       }
    }
-   return SharedPtr<ConversationProfile>();
+   return nullptr;
 }
 
-SharedPtr<ConversationProfile> 
+std::shared_ptr<ConversationProfile> 
 UserAgent::getIncomingConversationProfile(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());
@@ -418,7 +419,7 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
    return getDefaultOutgoingConversationProfile();
 }
 
-SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 UserAgent::getConversationProfileForRefer(const SipMessage& msg)
 {
    // default behaviour (before this API method was added) was to simply
@@ -428,8 +429,8 @@ UserAgent::getConversationProfileForRefer(const SipMessage& msg)
    return getDefaultOutgoingConversationProfile();
 }
 
-SharedPtr<UserAgentMasterProfile> 
-UserAgent::getUserAgentMasterProfile()
+std::shared_ptr<UserAgentMasterProfile> 
+UserAgent::getUserAgentMasterProfile() const noexcept
 {
    return mProfile;
 }
@@ -571,9 +572,9 @@ UserAgent::sendMessage(const NameAddr& destination, const Data& msg, const Mime&
    }
    
    ClientPagerMessageHandle cpmh = mDum.makePagerMessage(destination);
-   unique_ptr<Contents> msgContent(new PlainContents(msg, mimeType));
+   std::unique_ptr<Contents> msgContent(new PlainContents(msg, mimeType));
    cpmh.get()->page(std::move(msgContent));
-   SharedPtr<SipMessage> sipMessage = cpmh.get()->getMessageRequestSharedPtr();
+   const auto sipMessage = cpmh.get()->getMessageRequestSharedPtr();
    mDum.send(sipMessage);
 
    return sipMessage->header(h_CallId).value().c_str();
@@ -604,7 +605,7 @@ UserAgent::shutdownImpl()
 }
 
 void 
-UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    // Store new profile
    mConversationProfiles[handle] = conversationProfile;

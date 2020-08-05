@@ -10,6 +10,7 @@
 #include "resip/stack/Message.hxx"
 #include "resip/stack/MessageFilterRule.hxx"
 
+#include <memory>
 
 namespace resip
 {
@@ -101,7 +102,7 @@ class TransactionUser
       /**
          @brief Replaces the default DomainMatcher
       */
-      void setDomainMatcher(SharedPtr<DomainMatcher> domainMatcher);
+      void setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher);
 
       /**
          @brief Return the name of this TransactionUser. Used in encode().
@@ -259,7 +260,7 @@ class TransactionUser
 
    private:
       MessageFilterRuleList mRuleList;
-      SharedPtr<DomainMatcher> mDomainMatcher;
+      std::shared_ptr<DomainMatcher> mDomainMatcher;
       bool mRegisteredForTransactionTermination;
       bool mRegisteredForConnectionTermination;
       bool mRegisteredForKeepAlivePongs;

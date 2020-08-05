@@ -819,12 +819,12 @@ ReproRunner::createSipStack()
    {
       int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
       int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
-      SharedPtr<HepAgent> agent(new HepAgent(captureHost, capturePort, captureAgentID));
-      mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(agent)));
+      auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
+      mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
    }
    else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
-       mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<ReproSipMessageLoggingHandler>(new ReproSipMessageLoggingHandler));
+       mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<ReproSipMessageLoggingHandler>());
    }
 
    // Add stack transports
@@ -1053,7 +1053,7 @@ ReproRunner::createDialogUsageManager()
 {
    // Create Profile settings for DUM Instance that handles ServerRegistration,
    // and potentially certificate subscription server
-   SharedPtr<MasterProfile> profile(new MasterProfile);
+   auto profile = std::make_shared<MasterProfile>();
    profile->setRportEnabled(InteropHelper::getRportEnabled());
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
@@ -1174,8 +1174,8 @@ ReproRunner::createDialogUsageManager()
       Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
       if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
       {
-         SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
-         mDum->addIncomingFeature(cookieAuth);
+         auto cookieAuth = std::make_shared<WsCookieAuthManager>(*mDum, mDum->dumIncomingTarget());
+         mDum->addIncomingFeature(std::move(cookieAuth));
       }
 
       // If Authentication is enabled, then configure DUM to authenticate requests
@@ -1194,7 +1194,7 @@ bool
 ReproRunner::createProxy()
 {
    // Create AsyncProcessorDispatcher thread pool that is shared by the processsors for
-   // any asyncronous tasks (ie: RequestFilter and MessageSilo processors)
+   // any asynchronous tasks (ie: RequestFilter and MessageSilo processors)
    int numAsyncProcessorWorkerThreads = mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2);
    if(numAsyncProcessorWorkerThreads > 0)
    {
@@ -1538,7 +1538,7 @@ ReproRunner::initDomainMatcher()
 {
    resip_assert(mProxyConfig);
    
-   SharedPtr<ExtendedDomainMatcher> matcher(new ExtendedDomainMatcher());
+   auto matcher = std::make_shared<ExtendedDomainMatcher>();
    mDomainMatcher = matcher;
 
    std::vector<Data> configDomains;
@@ -1620,7 +1620,7 @@ ReproRunner::initDomainMatcher()
 void
 ReproRunner::addDomains(TransactionUser& tu)
 {
-   if(mDomainMatcher.get() == 0)
+   if (!mDomainMatcher)
    {
       initDomainMatcher();
    }
@@ -1638,16 +1638,16 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
-   SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
-   SharedPtr<WsCookieContextFactory> wsCookieContextFactory;
+   std::shared_ptr<BasicWsConnectionValidator> basicWsConnectionValidator;
+   std::shared_ptr<WsCookieContextFactory> wsCookieContextFactory;
    if(!wsCookieAuthSharedSecret.empty())
    {
-      basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
+      basicWsConnectionValidator = std::make_shared<BasicWsConnectionValidator>(wsCookieAuthSharedSecret);
       Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", Data::Empty);
       Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", Data::Empty);
       Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", Data::Empty);
 
-      wsCookieContextFactory.reset(new BasicWsCookieContextFactory(infoCookieName, extraCookieName, macCookieName));
+      wsCookieContextFactory = std::make_shared<BasicWsCookieContextFactory>(infoCookieName, extraCookieName, macCookieName);
    }
 
    try

@@ -230,9 +230,9 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                         throw Exception("BaseCreator is null for DialogSet", __FILE__, __LINE__);
                      }
 
-                     SharedPtr<SipMessage> lastRequest(creator->getLastRequest());
+                     auto lastRequest = creator->getLastRequest();
 
-                     if( 0 == lastRequest.get() ||
+                     if (!lastRequest ||
                         !lastRequest->exists(h_Contacts) ||
                         lastRequest->header(h_Contacts).empty())
                      {
@@ -300,37 +300,37 @@ Dialog::~Dialog()
 }
 
 const DialogId&
-Dialog::getId() const
+Dialog::getId() const noexcept
 {
    return mId;
 }
 
 const NameAddr&
-Dialog::getLocalNameAddr() const
+Dialog::getLocalNameAddr() const noexcept
 {
    return mLocalNameAddr;
 }
 
 const NameAddr&
-Dialog::getLocalContact() const
+Dialog::getLocalContact() const noexcept
 {
    return mLocalContact;
 }
 
 const NameAddr&
-Dialog::getRemoteNameAddr() const
+Dialog::getRemoteNameAddr() const noexcept
 {
    return mRemoteNameAddr;
 }
 
 const NameAddr&
-Dialog::getRemoteTarget() const
+Dialog::getRemoteTarget() const noexcept
 {
    return mRemoteTarget;
 }
 
 const NameAddrs&
-Dialog::getRouteSet() const
+Dialog::getRouteSet() const noexcept
 {
    return mRouteSet;
 }
@@ -626,9 +626,9 @@ Dialog::dispatch(const SipMessage& msg)
                      }
                      else
                      {
-                        SharedPtr<SipMessage> response(new SipMessage);
+                        auto response = std::make_shared<SipMessage>();
                         makeResponse(*response, msg, 406);
-                        send(response);
+                        send(std::move(response));
                      }
                   }
                }
@@ -1112,7 +1112,7 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
 
 
 void
-Dialog::send(SharedPtr<SipMessage> msg)
+Dialog::send(std::shared_ptr<SipMessage> msg)
 {
    if (msg->isRequest() && msg->header(h_CSeq).method() != ACK)
    {

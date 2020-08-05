@@ -74,8 +74,8 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
          
          InfoLog( << "ServerPagerMessageHandler::onMessageArrived: " );
 
-         SharedPtr<SipMessage> ok = handle->accept();
-         handle->send(ok);
+         auto ok = handle->accept();
+         handle->send(std::move(ok));
 
          _rcvd = true;
 
@@ -177,8 +177,8 @@ int main(int argc, char *argv[])
    // clientDum.addTransport(TCP, 0, V6);
    // clientDum.addTransport(TLS, 0, V6);
 
-   SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
-   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
+   auto clientProfile = std::make_shared<MasterProfile>();   
+   std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
    TestSMIMEMessageHandler clientHandler(security);
 
    clientDum.setClientAuthManager(std::move(clientAuth));
@@ -195,10 +195,10 @@ int main(int argc, char *argv[])
    clientProfile->addSupportedMimeType(MESSAGE, Mime("multipart", "signed"));
    clientDum.setMasterProfile(clientProfile);
 
-   SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(userAor);
+   auto regMessage = clientDum.makeRegistration(userAor);
 	
    InfoLog( << *regMessage << "Generated register: " << endl << *regMessage );
-   clientDum.send(regMessage);
+   clientDum.send(std::move(regMessage));
 
    int iteration = 0;
    bool finished = false;
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
             {
                ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(userAor);			
                Contents* mcontent = new PlainContents(Data("message"));
-               unique_ptr<Contents> content;
+               std::unique_ptr<Contents> content;
 
                switch (iteration) 
                {
@@ -227,14 +227,14 @@ int main(int argc, char *argv[])
                   {
                      InfoLog( << "Sending PKCS7 encrypted data" );
                      Pkcs7Contents* pkcs7 = security->encrypt(mcontent, userAor.uri().getAor());
-                     content = unique_ptr<Contents>(static_cast<Contents *>(pkcs7));
+                     content = std::unique_ptr<Contents>(static_cast<Contents *>(pkcs7));
                      break;
                   }
                   case 1:
                   {
                      InfoLog( << "Sending PKCS7 signed data" );
                      MultipartSignedContents* mpc = security->sign(userAor.uri().getAor(), mcontent);
-                     content = unique_ptr<Contents>(static_cast<Contents *>(mpc));
+                     content = std::unique_ptr<Contents>(static_cast<Contents *>(mpc));
                      break;
                   }
                   default:

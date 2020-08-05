@@ -205,12 +205,11 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
 ParticipantHandle 
 ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
-   SharedPtr<UserProfile> profile;
-   return createRemoteParticipant(convHandle, destination, forkSelectMode, profile, std::multimap<resip::Data,resip::Data>());
+   return createRemoteParticipant(convHandle, destination, forkSelectMode, nullptr, std::multimap<resip::Data,resip::Data>());
 }
 
 ParticipantHandle
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, SharedPtr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, std::shared_ptr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
 
@@ -737,13 +736,13 @@ ConversationManager::notifyDtmfEvent(ConversationHandle conversationHandle, int 
 void 
 ConversationManager::createMediaInterfaceAndMixer(bool giveFocus, 
                                                   ConversationHandle ownerConversationHandle,
-                                                  SharedPtr<MediaInterface>& mediaInterface, 
+                                                  std::shared_ptr<MediaInterface>& mediaInterface, 
                                                   BridgeMixer** bridgeMixer)
 {
    UtlString localRtpInterfaceAddress("127.0.0.1");  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
 
    // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
-   mediaInterface = SharedPtr<MediaInterface>(new MediaInterface(*this, ownerConversationHandle, mMediaFactory->createMediaInterface(NULL, 
+   mediaInterface = std::make_shared<MediaInterface>(*this, ownerConversationHandle, mMediaFactory->createMediaInterface(NULL, 
             localRtpInterfaceAddress, 
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 
@@ -757,7 +756,7 @@ ConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
             NULL,  /* TURN User */
             NULL,  /* TURN Password */
             25,    /* TURN Keepalive period (seconds) */
-            false))); /* enable ICE? */
+            false)); /* enable ICE? */
 
    // Register the NotificationDispatcher class (derived from OsMsgDispatcher)
    // as the sipX notification dispatcher
@@ -1157,13 +1156,13 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
    {
    case OPTIONS:
    {
-      SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
+      auto optionsAnswer = ood->answerOptions();
 
       // Attach an offer to the options request
       SdpContents sdp;
       buildSdpOffer(mUserAgent->getIncomingConversationProfile(msg).get(), sdp);
       optionsAnswer->setContents(&sdp);
-      ood->send(optionsAnswer);
+      ood->send(std::move(optionsAnswer));
       break;
    }
    case REFER:

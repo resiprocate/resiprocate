@@ -70,10 +70,10 @@ dispatchEventHelper(E* event, C& container)
    throw TestEndPoint::GlobalFailure("No matching endpoint for the event", __FILE__, __LINE__);
 }
 
-resip::SharedPtr<resip::MasterProfile>
+std::shared_ptr<resip::MasterProfile>
 DumUserAgent::makeProfile(const resip::Uri& aor, const Data& password)
 {
-   resip::SharedPtr<resip::MasterProfile> profile(new MasterProfile);
+   auto profile = std::make_shared<MasterProfile>();
 
    //profile->addAllowedEvent(resip::Token("conference"));
    profile->validateAcceptEnabled() = false;
@@ -93,9 +93,9 @@ DumUserAgent::getAor() const
    return getProfile()->getDefaultFrom();
 }
 
-ExpectAction* DumUserAgent::setOfferToProvideInNextOnAnswerCallback(boost::shared_ptr<resip::SdpContents> offer) 
+ExpectAction* DumUserAgent::setOfferToProvideInNextOnAnswerCallback(std::shared_ptr<resip::SdpContents> offer) 
 { 
-   mOfferToProvideInNextOnAnswerCallback = offer; 
+   mOfferToProvideInNextOnAnswerCallback = std::move(offer); 
    return new NoAction();
 }
 
@@ -120,8 +120,8 @@ DumUserAgent::clean()
 }
 
 
-DumUserAgent::DumUserAgent(resip::SharedPtr<resip::MasterProfile> profile) :
-   mProfile(profile),
+DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile) :
+   mProfile(std::move(profile)),
    mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
    mInterruptor(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
@@ -142,9 +142,9 @@ DumUserAgent::DumUserAgent(resip::SharedPtr<resip::MasterProfile> profile) :
    registerWithTransportDriver();
 }
 
-DumUserAgent::DumUserAgent(resip::SharedPtr<resip::MasterProfile> profile,
+DumUserAgent::DumUserAgent(std::shared_ptr<resip::MasterProfile> profile,
                            TestProxy* proxy) : 
-   mProfile(profile),
+   mProfile(std::move(profile)),
    mPollGrp(FdPollGrp::create()),  // Will create EPoll implementation if available, otherwise FdPoll
    mInterruptor(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
@@ -221,8 +221,8 @@ DumUserAgent::init()
    //mDum->addServerSubscriptionHandler("message-summary", this);
    mDum->setInviteSessionHandler(this);
 
-   std::auto_ptr<resip::ClientAuthManager> clam(new resip::ClientAuthManager());
-   mDum->setClientAuthManager(clam);
+   std::unique_ptr<resip::ClientAuthManager> clam(new resip::ClientAuthManager());
+   mDum->setClientAuthManager(std::move(clam));
    
    //!dcm! -- use TestAP/dumv2 pattern
 //   mDum->addOutOfDialogHandler(REFER, this);
@@ -357,7 +357,7 @@ DumUserAgent::getName() const
 void
 DumUserAgent::handleEvent(Event* eventRaw)
 {
-   boost::shared_ptr<Event> event(eventRaw);
+   std::shared_ptr<Event> event(eventRaw);
    DebugLog(<< "DumUserAgent::handeEvent: " << *eventRaw);    
    if (getSequenceSet())
    {
@@ -376,7 +376,7 @@ DumUserAgent::invite(const NameAddr& target,
                      const SdpContents* alternative,
                      DialogUsageManager::EncryptionLevel level)
 {
-  resip::SharedPtr<resip::SipMessage> (resip::DialogUsageManager::*fn)(const NameAddr&, const Contents*, DialogUsageManager::EncryptionLevel, const Contents*, AppDialogSet*) = &resip::DialogUsageManager::makeInviteSession;
+  std::shared_ptr<resip::SipMessage> (resip::DialogUsageManager::*fn)(const NameAddr&, const Contents*, DialogUsageManager::EncryptionLevel, const Contents*, AppDialogSet*) = &resip::DialogUsageManager::makeInviteSession;
   return new DumUaSendingCommand(this, boost::bind(fn, mDum,
                                                    target, initialOffer, level, alternative, (AppDialogSet*)0));
 }
@@ -421,7 +421,7 @@ DumUserAgent::registerUa(bool tcp)
 }
 
 DumUaAction*
-DumUserAgent::send(resip::SharedPtr<resip::SipMessage> msg)
+DumUserAgent::send(std::shared_ptr<resip::SipMessage> msg)
 {
    return new DumUaCommand(this, boost::bind(&resip::DialogUsageManager::send, mDum, msg));
 }
@@ -913,7 +913,7 @@ DumUserAgent::getMessageRequest()
 }
  
 DumUaAction* 
-DumUserAgent::page(std::auto_ptr<resip::Contents> contents, resip::DialogUsageManager::EncryptionLevel level)
+DumUserAgent::page(std::unique_ptr<resip::Contents> contents, resip::DialogUsageManager::EncryptionLevel level)
 {
    // contents needs to outlive the boost::bind(...) to assure this to work.
    return new ClientPagerMessageAction(this, boost::bind(&resip::ClientPagerMessage::page, _1, boost::ref(contents), level));
@@ -947,7 +947,7 @@ DumUserAgent::endServerPagerMsg()
 }
  
 DumUaAction* 
-DumUserAgent::sendServerPagerMsg(resip::SharedPtr<resip::SipMessage> msg)
+DumUserAgent::sendServerPagerMsg(std::shared_ptr<resip::SipMessage> msg)
 {
    return new ServerPagerMessageAction(this, boost::bind(&resip::ServerPagerMessage::send, _1, msg));
 }
@@ -1430,7 +1430,7 @@ DumUserAgent::answerOptions()
 }
 
 DumUaAction*
-DumUserAgent::sendServerOutOfDialogReq(SharedPtr<resip::SipMessage> msg)
+DumUserAgent::sendServerOutOfDialogReq(std::shared_ptr<resip::SipMessage> msg)
 {
    return new ServerOutOfDialogReqAction(this, boost::bind(&resip::ServerOutOfDialogReq::send, _1, msg));
 }

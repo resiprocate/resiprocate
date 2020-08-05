@@ -4,6 +4,8 @@
 #include "resip/stack/ssl/WssConnection.hxx"
 #include "resip/stack/Tuple.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -11,9 +13,9 @@ using namespace resip;
 WssConnection::WssConnection(Transport* transport, const Tuple& who, Socket fd,
                               Security* security, bool server, Data domain,
                               SecurityTypes::SSLType sslType , Compression &compression,
-                              SharedPtr<WsConnectionValidator> wsConnectionValidator)
+                              std::shared_ptr<WsConnectionValidator> wsConnectionValidator)
   : TlsConnection(transport, who, fd, security, server, domain, sslType, compression),
-    WsConnectionBase(wsConnectionValidator)
+    WsConnectionBase(std::move(wsConnectionValidator))
 {
    DebugLog (<< "Creating WSS connection " << who << " on " << fd);
 }

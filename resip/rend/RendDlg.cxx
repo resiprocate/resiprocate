@@ -18,7 +18,6 @@
 #include <utility>
 
 #include "rutil/Logger.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "rutil/DnsUtil.hxx"
 
 #include "resip/stack/Message.hxx"

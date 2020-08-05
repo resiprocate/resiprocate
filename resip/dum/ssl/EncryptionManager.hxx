@@ -7,7 +7,6 @@
   #include "config.h"
 #endif
 
-#include "rutil/SharedPtr.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -47,15 +46,15 @@ class EncryptionManager : public DumFeature
       } Result;
 
       EncryptionManager::Result processCertMessage(CertMessage* cert);
-      Contents* sign(SharedPtr<SipMessage> msg, const Data& senderAor, bool* noCerts);
-      Contents* encrypt(SharedPtr<SipMessage> msg, const Data& recipientAor, bool* noCerts);
-      Contents* signAndEncrypt(SharedPtr<SipMessage> msg, const Data& senderAor, const Data& recipientAor, bool* noCerts);
+      Contents* sign(std::shared_ptr<SipMessage> msg, const Data& senderAor, bool* noCerts);
+      Contents* encrypt(std::shared_ptr<SipMessage> msg, const Data& recipientAor, bool* noCerts);
+      Contents* signAndEncrypt(std::shared_ptr<SipMessage> msg, const Data& senderAor, const Data& recipientAor, bool* noCerts);
       bool decrypt(SipMessage* msg);
 
       class Request
       {
          public:
-            Request(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg, DumFeature& feature);
+            Request(DialogUsageManager& dum, RemoteCertStore* store, std::shared_ptr<SipMessage> msg, DumFeature& feature);
             virtual ~Request();
             virtual Result received(bool success, MessageId::Type type, const Data& aor, const Data& data) = 0;
             Data getId() const { return mMsgToEncrypt->getTransactionId(); }            
@@ -65,7 +64,7 @@ class EncryptionManager : public DumFeature
          protected:
             DialogUsageManager& mDum;
             RemoteCertStore* mStore;
-            SharedPtr<SipMessage> mMsgToEncrypt; // initial message.
+            std::shared_ptr<SipMessage> mMsgToEncrypt; // initial message.
             int mPendingRequests;
             DumFeature& mFeature;
             //bool mTaken;
@@ -76,8 +75,7 @@ class EncryptionManager : public DumFeature
       class Sign : public Request
       {
          public:
-            Sign(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg, const Data& senderAor, DumFeature& feature);
-            virtual ~Sign();
+            Sign(DialogUsageManager& dum, RemoteCertStore* store, std::shared_ptr<SipMessage> msg, const Data& senderAor, DumFeature& feature);
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool sign(Contents**, bool* noCerts);
 
@@ -88,8 +86,7 @@ class EncryptionManager : public DumFeature
       class Encrypt : public Request
       {
          public:
-            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg, const Data& recipientAor, DumFeature& feature);
-            virtual ~Encrypt();
+            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, std::shared_ptr<SipMessage> msg, const Data& recipientAor, DumFeature& feature);
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool encrypt(Contents**, bool* noCerts);
 
@@ -100,8 +97,7 @@ class EncryptionManager : public DumFeature
       class SignAndEncrypt : public Request
       {
          public:
-            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg,  const Data& senderAor, const Data& recipientAor, DumFeature& feature);
-            ~SignAndEncrypt();
+            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, std::shared_ptr<SipMessage> msg,  const Data& senderAor, const Data& recipientAor, DumFeature& feature);
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool signAndEncrypt(Contents**, bool* noCerts);
 

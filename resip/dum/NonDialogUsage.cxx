@@ -5,6 +5,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -32,24 +34,24 @@ NonDialogUsage::~NonDialogUsage()
 }
 
 AppDialogSetHandle 
-NonDialogUsage::getAppDialogSet()
+NonDialogUsage::getAppDialogSet() const
 {
    return mDialogSet.mAppDialogSet->getHandle();
 }
 
-SharedPtr<UserProfile> 
-NonDialogUsage::getUserProfile() 
+std::shared_ptr<UserProfile> 
+NonDialogUsage::getUserProfile() const noexcept
 {
    return mDialogSet.mUserProfile;
 }
 
 void 
-NonDialogUsage::send(SharedPtr<SipMessage> msg)
+NonDialogUsage::send(std::shared_ptr<SipMessage> msg)
 {
    const NameAddrs& sRoute = getUserProfile()->getServiceRoute();
 
    // Clear the routes if there was previously a service_route. Otherwise
-   // keep the route incase there exists custom routes
+   // keep the route in case there exists custom routes
 
    if (!sRoute.empty())
    {
@@ -66,36 +68,36 @@ NonDialogUsage::send(SharedPtr<SipMessage> msg)
       }
    }
    
-   mDum.send(msg);
+   mDum.send(std::move(msg));
 }
 
 class NonDialogUsageSendCommand : public DumCommandAdapter
 {
 public:
-   NonDialogUsageSendCommand(NonDialogUsage& usage, SharedPtr<SipMessage> msg)
+   NonDialogUsageSendCommand(NonDialogUsage& usage, std::shared_ptr<SipMessage> msg)
       : mNonDialogUsage(usage),
-        mMessage(msg)
+        mMessage(std::move(msg))
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       mNonDialogUsage.send(mMessage);
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "NonDialogUsageSendCommand";
    }
 private:
    NonDialogUsage& mNonDialogUsage;
-   SharedPtr<SipMessage> mMessage;
+   std::shared_ptr<SipMessage> mMessage;
 };
 
 void
-NonDialogUsage::sendCommand(SharedPtr<SipMessage> message)
+NonDialogUsage::sendCommand(std::shared_ptr<SipMessage> message)
 {   
-   mDum.post(new NonDialogUsageSendCommand(*this, message));
+   mDum.post(new NonDialogUsageSendCommand(*this, std::move(message)));
 }
 
 /* ====================================================================

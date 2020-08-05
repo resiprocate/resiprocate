@@ -154,7 +154,6 @@ TelepathyMasterProfile::TelepathyMasterProfile(const QVariantMap &parameters)
    rtpPortRangeMax() = mediaPortStart + 101; // Allows 100 media streams
 
    // This should only be used when there is no NAT traversal mode
-   SharedPtr<MessageDecorator> md(new MyMessageDecorator());
-   setOutboundDecorator(md);
+   setOutboundDecorator(std::make_shared<MyMessageDecorator>());
 }
 

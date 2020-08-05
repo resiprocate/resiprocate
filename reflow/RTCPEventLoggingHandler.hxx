@@ -6,10 +6,11 @@
 #endif
 
 #include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <reTurn/StunTuple.hxx>
 
 #include "reflow/FlowContext.hxx"
+
+#include <memory>
 
 namespace flowmanager
 {
@@ -17,10 +18,10 @@ namespace flowmanager
 class RTCPEventLoggingHandler
 {
    public:
-      virtual ~RTCPEventLoggingHandler() {};
+      virtual ~RTCPEventLoggingHandler() = default;
 
-      virtual void outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event) = 0;
-      virtual void inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event) = 0;
+      virtual void outboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event) = 0;
+      virtual void inboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event) = 0;
 };
 
 }

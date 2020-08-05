@@ -5,6 +5,8 @@
 #include "resip/dum/SubscriptionState.hxx"
 #include "resip/stack/SipMessage.hxx"
 
+#include <memory>
+
 namespace resip
 {
 
@@ -14,11 +16,17 @@ class DialogUsageManager;
 
 class BaseSubscription: public DialogUsage
 {
-   public:      
+   public:
+      BaseSubscription(const BaseSubscription&) = delete;
+      BaseSubscription(BaseSubscription&&) = delete;
+
+      BaseSubscription& operator=(const BaseSubscription&) = delete;
+      BaseSubscription& operator=(BaseSubscription&&) = delete;
+
       bool matches(const SipMessage& subOrNotify);
-      const Data& getDocumentKey() const { return mDocumentKey; }
-      const Data& getEventType() const { return mEventType; }
-      const Data& getId() const { return mSubscriptionId; }
+      const Data& getDocumentKey() const noexcept { return mDocumentKey; }
+      const Data& getEventType() const noexcept { return mEventType; }
+      const Data& getId() const noexcept { return mSubscriptionId; }
 
    protected:
       friend class Dialog;
@@ -37,22 +45,18 @@ class BaseSubscription: public DialogUsage
 
       BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
-      SubscriptionState getSubscriptionState();      
+      SubscriptionState getSubscriptionState() const noexcept;      
 
-      virtual ~BaseSubscription();
+      virtual ~BaseSubscription() = default;
 
-      SharedPtr<SipMessage> mLastRequest;
-      SharedPtr<SipMessage> mLastResponse;
+      std::shared_ptr<SipMessage> mLastRequest;
+      std::shared_ptr<SipMessage> mLastResponse;
       
       Data mDocumentKey;
       Data mEventType;
       Data mSubscriptionId;
       unsigned int mTimerSeq;      
       SubscriptionState mSubscriptionState;
-
-      // disabled
-      BaseSubscription(const BaseSubscription&);
-      BaseSubscription& operator=(const BaseSubscription&);
 };
  
 }

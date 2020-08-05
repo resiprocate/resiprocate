@@ -21,6 +21,7 @@
 #include <rutil/ThreadIf.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
 // sipX includes
 #include <os/OsSysLog.h>
 
@@ -58,8 +59,8 @@ public:
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(Server& server, SharedPtr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
-      UserAgent(&server, profile, socketFunc),
+   MyUserAgent(Server& server, std::shared_ptr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
+      UserAgent(&server, std::move(profile), socketFunc),
       mServer(server) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
@@ -192,7 +193,7 @@ Server::Server(ConfigParser& config) :
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Add transports
    try
@@ -331,8 +332,7 @@ Server::Server(ConfigParser& config) :
    profile->rtpPortRangeMax() = mConfig.mMediaPortRangeStart + mConfig.mMediaPortRangeSize-1; 
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   profile->setOutboundDecorator(outboundDecorator);
+   profile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    mUserAgentMasterProfile = profile;
 

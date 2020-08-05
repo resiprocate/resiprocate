@@ -29,7 +29,7 @@ class DefaultDialogSet : public resip::AppDialogSet
       DefaultDialogSet(ConversationManager& conversationManager);  
 
    protected:
-      resip::SharedPtr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&); 
+      std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&); 
 
    private:       
       ConversationManager &mConversationManager;

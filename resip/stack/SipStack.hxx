@@ -22,7 +22,9 @@
 #include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
 #include "rutil/dns/DnsStub.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
+#include <utility>
 
 /**
     Let external applications know that this version of the stack
@@ -301,11 +303,11 @@ class SipStack : public FdSetIOObserver
                                       you can call setSipMessageLoggingHandler on the
                                       Transport pointer returned from addTransport
 
-         @param handler               SharedPtr to a handler to call for inbound and
+         @param handler               std::shared_ptr to a handler to call for inbound and
                                       outbound SIP messages for all transports added
                                       after calling this.
       */
-      void setTransportSipMessageLoggingHandler(SharedPtr<Transport::SipMessageLoggingHandler> handler) { mTransportSipMessageLoggingHandler = handler; }
+      void setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) { mTransportSipMessageLoggingHandler = std::move(handler); }
 
       /**
          Used by the application to add in a new built-in transport.  The transport is
@@ -364,9 +366,9 @@ class SipStack : public FdSetIOObserver
                               const Data& certificateFilename = "", const Data& privateKeyFilename = "",
                               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                               bool useEmailAsSIP = false,
-                              SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
-                              SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(),
-                              const Data& netns = Data::Empty
+                              std::shared_ptr<WsConnectionValidator> = nullptr,
+                              std::shared_ptr<WsCookieContextFactory> = nullptr,
+                              const Data& netNs = Data::Empty
                              );
 
       /**
@@ -1190,7 +1192,7 @@ class SipStack : public FdSetIOObserver
 
       unsigned int mNextTransportKey;
 
-      SharedPtr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+      std::shared_ptr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
 
       friend class Executive;
       friend class StatelessHandler;

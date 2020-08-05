@@ -548,7 +548,8 @@ public:
    {
 
    }
-   virtual void executeCommand()
+
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -556,7 +557,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionRefreshCommand";
    }
@@ -617,7 +618,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -625,7 +626,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionEndCommand";
    }
@@ -672,7 +673,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -680,7 +681,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionAcceptUpdateCommand";
    }
@@ -701,14 +702,14 @@ ClientSubscription::reSubscribe()
 {
    NameAddr target(mLastRequest->header(h_To));
    target.remove(p_tag);  // ensure To tag is removed
-   SharedPtr<SipMessage> sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
-   mDum.send(sub);
+   auto sub = mDum.makeSubscription(target, getUserProfile(), getEventType(), getAppDialogSet()->reuse());
+   mDum.send(std::move(sub));
 
    delete this;
 }
 
 void 
-ClientSubscription::send(SharedPtr<SipMessage> msg)
+ClientSubscription::send(std::shared_ptr<SipMessage> msg)
 {
    DialogUsage::send(msg);
 
@@ -783,7 +784,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientSubscriptionHandle.isValid())
       {
@@ -791,7 +792,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientSubscriptionRejectUpdateCommand";
    }

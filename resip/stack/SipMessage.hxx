@@ -25,7 +25,6 @@
 #include "rutil/StlPoolAllocator.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
-#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -553,8 +552,8 @@ class SipMessage : public TransactionMessage
       const CookieList& getWsCookies() const { return mWsCookies; }
       void setWsCookies(const CookieList& wsCookies) { mWsCookies = wsCookies; }
 
-      SharedPtr<WsCookieContext> getWsCookieContext() const { return mWsCookieContext; }
-      void setWsCookieContext(SharedPtr<WsCookieContext> wsCookieContext) { mWsCookieContext = wsCookieContext; }
+      std::shared_ptr<WsCookieContext> getWsCookieContext() const noexcept { return mWsCookieContext; }
+      void setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept { mWsCookieContext = std::move(wsCookieContext); }
 
       Data getCanonicalIdentityString() const;
       
@@ -732,7 +731,7 @@ class SipMessage : public TransactionMessage
       CookieList mWsCookies;
 
       // parsed cookie authentication elements associated with this message from the WebSocket Upgrade request
-      SharedPtr<WsCookieContext> mWsCookieContext;
+      std::shared_ptr<WsCookieContext> mWsCookieContext;
 
       std::unique_ptr<SecurityAttributes> mSecurityAttributes;
 

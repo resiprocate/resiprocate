@@ -45,7 +45,7 @@ using namespace std;
 
 static bool isAckOrCancelOrBye(const SipMessage& msg)
 {
-   MethodTypes method = msg.header(h_RequestLine).getMethod();
+   const MethodTypes method = msg.header(h_RequestLine).getMethod();
    return (method == ACK || method == CANCEL || method == BYE);
 }
 
@@ -99,7 +99,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       }
    }
 
-   OutgoingEvent* event = dynamic_cast<OutgoingEvent*>(msg);
+   OutgoingEvent* const event = dynamic_cast<OutgoingEvent*>(msg);
    if (event)
    {
       if (!event->message()->getContents())
@@ -174,7 +174,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
    CertMessage* certMsg = dynamic_cast<CertMessage*>(msg);
    if (certMsg)
    {
-      EncryptionManager::Result result = processCertMessage(certMsg);
+      const EncryptionManager::Result result = processCertMessage(certMsg);
       if (result == Complete)
       {
          return DumFeature::FeatureDone;
@@ -213,11 +213,11 @@ EncryptionManager::Result EncryptionManager::processCertMessage(CertMessage* mes
    return ret;
 }
 
-Contents* EncryptionManager::sign(SharedPtr<SipMessage> msg, 
+Contents* EncryptionManager::sign(std::shared_ptr<SipMessage> msg,
                                   const Data& senderAor,
                                   bool* noCerts)
 {
-   Sign* request = new Sign(mDum, mRemoteCertStore.get(), msg, senderAor, *this);
+   Sign* request = new Sign(mDum, mRemoteCertStore.get(), std::move(msg), senderAor, *this);
    Contents* contents;
    *noCerts = false;
    bool async = request->sign(&contents, noCerts);
@@ -234,11 +234,11 @@ Contents* EncryptionManager::sign(SharedPtr<SipMessage> msg,
    return contents;
 }
 
-Contents* EncryptionManager::encrypt(SharedPtr<SipMessage> msg,
+Contents* EncryptionManager::encrypt(std::shared_ptr<SipMessage> msg,
                                      const Data& recipientAor,
                                      bool* noCerts)
 {
-   Encrypt* request = new Encrypt(mDum, mRemoteCertStore.get(), msg, recipientAor, *this);
+   Encrypt* request = new Encrypt(mDum, mRemoteCertStore.get(), std::move(msg), recipientAor, *this);
    Contents* contents;
    *noCerts = false;
    bool async = request->encrypt(&contents, noCerts);
@@ -255,12 +255,12 @@ Contents* EncryptionManager::encrypt(SharedPtr<SipMessage> msg,
    return contents;
 }
 
-Contents* EncryptionManager::signAndEncrypt(SharedPtr<SipMessage> msg,
+Contents* EncryptionManager::signAndEncrypt(std::shared_ptr<SipMessage> msg,
                                             const Data& senderAor,
                                             const Data& recipAor,
                                             bool* noCerts)
 {
-   SignAndEncrypt* request = new SignAndEncrypt(mDum, mRemoteCertStore.get(), msg, senderAor, recipAor, *this);
+   SignAndEncrypt* request = new SignAndEncrypt(mDum, mRemoteCertStore.get(), std::move(msg), senderAor, recipAor, *this);
    Contents* contents;
    *noCerts = false;
    bool async = request->signAndEncrypt(&contents, noCerts);
@@ -280,10 +280,9 @@ Contents* EncryptionManager::signAndEncrypt(SharedPtr<SipMessage> msg,
 bool EncryptionManager::decrypt(SipMessage* msg)
 {
    Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), msg, *this);
-   bool ret = true;
-   
+
    Helper::ContentsSecAttrs csa;
-   ret = request->decrypt(csa);
+   bool ret = request->decrypt(csa);
 
    if (ret)
    {
@@ -326,11 +325,11 @@ bool EncryptionManager::decrypt(SipMessage* msg)
 
 EncryptionManager::Request::Request(DialogUsageManager& dum,
                                     RemoteCertStore* store,
-                                    SharedPtr<SipMessage> msg,
+                                    std::shared_ptr<SipMessage> msg,
                                     DumFeature& feature)
     : mDum(dum),
      mStore(store),
-     mMsgToEncrypt(msg),
+     mMsgToEncrypt(std::move(msg)),
      mPendingRequests(0),
      mFeature(feature)
      //mTaken(false)
@@ -356,15 +355,11 @@ void EncryptionManager::Request::response415()
 
 EncryptionManager::Sign::Sign(DialogUsageManager& dum,
                               RemoteCertStore* store,
-                              SharedPtr<SipMessage> msg, 
+                              std::shared_ptr<SipMessage> msg, 
                               const Data& senderAor,
                               DumFeature& feature)
-   : Request(dum, store, msg, feature),
+   : Request(dum, store, std::move(msg), feature),
      mSenderAor(senderAor)
-{
-}
-
-EncryptionManager::Sign::~Sign()
 {
 }
 
@@ -459,15 +454,11 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
 
 EncryptionManager::Encrypt::Encrypt(DialogUsageManager& dum, 
                                     RemoteCertStore* store, 
-                                    SharedPtr<SipMessage> msg, 
+                                    std::shared_ptr<SipMessage> msg, 
                                     const Data& recipientAor,
                                     DumFeature& feature)
-   : Request(dum, store, msg, feature),
+   : Request(dum, store, std::move(msg), feature),
      mRecipientAor(recipientAor)
-{
-}
-
-EncryptionManager::Encrypt::~Encrypt()
 {
 }
 
@@ -551,17 +542,13 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
 
 EncryptionManager::SignAndEncrypt::SignAndEncrypt(DialogUsageManager& dum, 
                                                   RemoteCertStore* store, 
-                                                  SharedPtr<SipMessage> msg, 
+                                                  std::shared_ptr<SipMessage> msg, 
                                                   const Data& senderAor, 
                                                   const Data& recipientAor,
                                                   DumFeature& feature)
-   : Request(dum, store, msg, feature),
+   : Request(dum, store, std::move(msg), feature),
      mSenderAor(senderAor),
      mRecipientAor(recipientAor)
-{
-}
-
-EncryptionManager::SignAndEncrypt::~SignAndEncrypt()
 {
 }
 
@@ -694,7 +681,7 @@ EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
                                     RemoteCertStore* store, 
                                     SipMessage* msg,
                                     DumFeature& feature)
-   : Request(dum, store, SharedPtr<SipMessage>(), feature),
+   : Request(dum, store, nullptr, feature),
      mIsEncrypted(false),
      mMsgToDecrypt(msg),
      mMessageTaken(false)
@@ -919,7 +906,7 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
       {
          mps->parts();
       }
-      catch (BaseException& e)
+      catch (const BaseException& e)
       {
          // structure of multipart is bad. this is unrecoverable error,
          // replace the whole multipart contents with an InvalidContents.
@@ -927,7 +914,7 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
 
          if (*contents == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(mps)));
+            mMsgToDecrypt->setContents(std::unique_ptr<Contents>(createInvalidContents(mps)));
          }
          else
          {
@@ -947,12 +934,12 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
       {
          alt->parts();
       }
-      catch (BaseException& e)
+      catch (const BaseException& e)
       {
          ErrLog(<< e.name() << endl << e.getMessage());
          if (*contents == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(alt)));
+            mMsgToDecrypt->setContents(std::unique_ptr<Contents>(createInvalidContents(alt)));
          }
          else
          {
@@ -1036,13 +1023,13 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
                }
             }
          }
-         catch (BaseException& e)
+         catch (const BaseException& e)
          {
             ErrLog(<< e.name() << endl << e.getMessage());
 
             if (*contents == mMsgToDecrypt->getContents())
             {
-               mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(decrypted)));
+               mMsgToDecrypt->setContents(std::unique_ptr<Contents>(createInvalidContents(decrypted)));
             }
             else
             {
@@ -1070,7 +1057,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
       {
          alt->parts();
       }
-      catch (BaseException& e)
+      catch (const BaseException& e)
       {
          // structure of multipart is bad. this is unrecoverable error,
          // replace the whole multipart contents with an InvalidContents.
@@ -1169,7 +1156,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
             {
                if (*tree == mMsgToDecrypt->getContents())
                {
-                  mMsgToDecrypt->setContents(unique_ptr<Contents>(contents));
+                  mMsgToDecrypt->setContents(std::unique_ptr<Contents>(contents));
                   *tree = mMsgToDecrypt->getContents();
                }
                else
@@ -1185,13 +1172,13 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
                attributes->setEncrypted();
             }
          }
-         catch (BaseException& e)
+         catch (const BaseException& e)
          {
             ErrLog(<< e.name() << endl << e.getMessage());
 
             if (*tree == mMsgToDecrypt->getContents())
             {
-               mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(contents)));
+               mMsgToDecrypt->setContents(std::unique_ptr<Contents>(createInvalidContents(contents)));
             }
             else
             {
@@ -1227,7 +1214,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
       {
          alt->parts();
       }
-      catch (BaseException& e)
+      catch (const BaseException& e)
       {
          // structure of multipart is bad. this is an unrecoverable error,
          // replace the whole multipart contents with an InvalidContents.
@@ -1235,7 +1222,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
 
          if (*tree == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(alt)));
+            mMsgToDecrypt->setContents(std::unique_ptr<Contents>(createInvalidContents(alt)));
          }
          else
          {
@@ -1266,7 +1253,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
       {
          mult->parts();
       }
-      catch (BaseException& e)
+      catch (const BaseException& e)
       {
          // structure of multipart is bad. this is unrecoverable error,
          // replace the whole multipart contents with an InvalidContents.
@@ -1274,7 +1261,7 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
 
          if (*tree == mMsgToDecrypt->getContents())
          {
-            mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(mult)));
+            mMsgToDecrypt->setContents(std::unique_ptr<Contents>(createInvalidContents(mult)));
          }
          else
          {
@@ -1296,13 +1283,13 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
       (*tree)->checkParsed();
       ret = (*tree)->clone();
    }
-   catch (BaseException& e)
+   catch (const BaseException& e)
    {
       ErrLog(<< e.name() << endl << e.getMessage());
 
       if (*tree == mMsgToDecrypt->getContents())
       {
-         mMsgToDecrypt->setContents(unique_ptr<Contents>(createInvalidContents(*tree)));
+         mMsgToDecrypt->setContents(std::unique_ptr<Contents>(createInvalidContents(*tree)));
       }
       else
       {

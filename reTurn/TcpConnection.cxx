@@ -1,7 +1,6 @@
 #include "TcpConnection.hxx"
 #include <vector>
 #include <boost/bind.hpp>
-#include <rutil/SharedPtr.hxx>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
 #include <rutil/Logger.hxx>

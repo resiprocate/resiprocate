@@ -42,8 +42,8 @@ MyInstantMessage::MyInstantMessage()
 void
 MyInstantMessage::onMessageArrived(ServerPagerMessageHandle handle, const SipMessage& message)
 {
-   SharedPtr<SipMessage> ok = handle->accept();
-   handle->send(ok);
+   auto ok = handle->accept();
+   handle->send(std::move(ok));
    InfoLog(<<"MyInstantMessage::onMessageArrived " << message.brief());
    emit onMessageReceived(message);
 }
