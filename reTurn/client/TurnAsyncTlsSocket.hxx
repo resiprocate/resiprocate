@@ -9,7 +9,6 @@
 
 #include <asio.hpp>
 #include <asio/ssl.hpp>
-#include <boost/bind.hpp>
 
 #include "TurnAsyncTcpSocket.hxx"
 #include "reTurn/AsyncTlsSocketBase.hxx"
@@ -34,7 +33,7 @@ private:
    // AsyncTcpSocketBase callbacks
    virtual void onConnectSuccess();
    virtual void onConnectFailure(const asio::error_code& e);
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(const asio::error_code& e);
    virtual void onSendSuccess();
    virtual void onSendFailure(const asio::error_code& e);

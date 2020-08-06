@@ -2,8 +2,6 @@
 #define REQUEST_HANDLER_HXX
 
 #include <string>
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "DataBuffer.hxx"
 #include "StunMessage.hxx"
@@ -15,13 +13,18 @@ namespace reTurn {
 class AsyncSocketBase;
 
 /// The common handler for all incoming requests.
-class RequestHandler
-  : private boost::noncopyable
+class RequestHandle
 {
 public:
    explicit RequestHandler(TurnManager& turnManager, 
                            const asio::ip::address* prim3489Address = 0, unsigned short* prim3489Port = 0,
                            const asio::ip::address* alt3489Address = 0, unsigned short* alt3489Port = 0);
+
+   RequestHandler(const RequestHandler&) = delete;
+   RequestHandler(RequestHandler&&) = delete;
+
+   RequestHandler& operator=(const RequestHandler&) = delete;
+   RequestHandler& operator=(RequestHandler&&) = delete;
 
    typedef enum
    {
@@ -35,7 +38,7 @@ public:
    /// Process a received StunMessage, and produce a reply
    /// Returns true if the response message is to be sent
    ProcessResult processStunMessage(AsyncSocketBase* turnSocket, TurnAllocationManager& turnAllocationManager, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
-   void processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data);
+   void processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const std::shared_ptr<DataBuffer>& data);
 
    const ReTurnConfig& getConfig() { return mTurnManager.getConfig(); }
 

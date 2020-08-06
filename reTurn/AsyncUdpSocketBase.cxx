@@ -18,10 +18,6 @@ AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService)
 {
 }
 
-AsyncUdpSocketBase::~AsyncUdpSocketBase() 
-{
-}
-
 unsigned int 
 AsyncUdpSocketBase::getSocketDescriptor() 
 { 

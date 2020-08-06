@@ -10,26 +10,26 @@ class DataBuffer
 public:
    typedef void(*deallocator)(char*);
 
-   DataBuffer(const char* data, unsigned int size, deallocator dealloc=ArrayDeallocator);  
-   DataBuffer(unsigned int size, deallocator dealloc=ArrayDeallocator);  
+   DataBuffer(const char* data, size_t size, deallocator dealloc = ArrayDeallocator);
+   DataBuffer(size_t size, deallocator dealloc = ArrayDeallocator);
    ~DataBuffer();
 
-   static DataBuffer* own(char* data, unsigned int size, deallocator dealloc=ArrayDeallocator);
+   static DataBuffer* own(char* data, size_t size, deallocator dealloc = ArrayDeallocator);
 
-   const char* data();
-   unsigned int size();
-   char& operator[](unsigned int p);
-   char operator[](unsigned int p) const;
+   const char* data() const noexcept;
+   size_t size() const noexcept;
+   char& operator[](size_t p);
+   char operator[](size_t p) const;
 
-   unsigned int truncate(unsigned int newSize);
-   unsigned int offset(unsigned int bytes);
+   size_t truncate(size_t newSize);
+   size_t offset(size_t bytes);
 
-   char* mutableData();
-   unsigned int& mutableSize();
+   char* mutableData() noexcept;
+   size_t& mutableSize() noexcept;
 
 private:
    char* mBuffer;
-   unsigned int mSize;
+   size_t mSize;
    char* mStart;
    deallocator mDealloc;
 };

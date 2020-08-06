@@ -6,7 +6,6 @@
 #include <asio/ssl.hpp>
 #endif
 #include <string>
-#include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
 #include "AsyncUdpSocketBase.hxx"
 
@@ -15,17 +14,21 @@ namespace reTurn {
 class StunMessage;
 
 class UdpServer
-  : public AsyncUdpSocketBase,
-    private boost::noncopyable
+  : public AsyncUdpSocketBase
 {
 public:
    /// Create the server to listen on the specified UDP address and port
    explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
+   UdpServer(const UdpServer&) = delete;
+   UdpServer(UdpServer&&) = delete;
    ~UdpServer();
+
+   UdpServer& operator=(const UdpServer&) = delete;
+   UdpServer& operator=(UdpServer&&) = delete;
 
    void start();
 
-   /// This method is used if this UdpServer supports RFC3489 operation - note turnFraming in contructor must be false
+   /// This method is used if this UdpServer supports RFC3489 operation - note turnFraming in constructor must be false
    void setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort);
    bool isRFC3489BackwardsCompatServer();
 
@@ -36,12 +39,12 @@ public:
 
 private:
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void onReceiveFailure(const asio::error_code& e);
+   void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data) override;
+   void onReceiveFailure(const asio::error_code& e) override;
 
    /// Handle completion of a send operation
-   virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   void onSendSuccess() override;
+   void onSendFailure(const asio::error_code& e) override;
 
    /// Manages turn allocations
    TurnAllocationManager mTurnAllocationManager;

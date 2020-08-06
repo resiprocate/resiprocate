@@ -289,7 +289,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSendFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
    {
       //InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data()); 
       if(++mNumReceives == NUM_RTP_PACKETS_TO_SIMULATE)
@@ -376,10 +376,10 @@ int main(int argc, char* argv[])
     sslContext.load_verify_file("ca.pem");
 #endif
 
-    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    const auto turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    //const auto turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
 #ifdef USE_SSL
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0)); port++;
+    //const auto turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0); port++;
 #endif
 
     handler.setTurnAsyncSocket(turnSocket.get());
@@ -400,7 +400,7 @@ int main(int argc, char* argv[])
     turnPeer.join();
 #endif
   }
-  catch (std::exception& e)
+  catch (const std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << "\n";
   }
