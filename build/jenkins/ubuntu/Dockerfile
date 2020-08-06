@@ -45,7 +45,7 @@ RUN git clone https://github.com/cisco/libsrtp.git && \
     cd .. && \
     rm -fr libsrtp
 
-ENV CPATH="/usr/include/postgresql:/usr/include/sipxtapi:${CPATH}"
+ENV CPATH="/usr/include/postgresql:${CPATH}"
 
 USER jenkins
 WORKDIR /home/jenkins

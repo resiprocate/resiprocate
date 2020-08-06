@@ -89,5 +89,19 @@ RUN svn checkout svn://svn.camaya.net/gloox/branches/1.0 gloox && \
     cd .. && \
     rm -fr gloox
 
+COPY sipXtapi-code-fixes.patch /root/
+RUN apk add --no-cache coreutils net-tools opus-dev && \
+    git clone https://github.com/sipXtapi/sipXtapi.git && \
+    cd sipXtapi && \
+    git checkout tags/3.3.0_test18 && \
+    patch -p0 < ../sipXtapi-code-fixes.patch && \
+    autoreconf --install && \
+    ./configure --prefix=/usr --disable-codec-ilbc && \
+    make CPPFLAGS='-DINCLUDE_SIPX_RESPARSE -DDEFAULT_CODECS_PATH=\"/usr/lib\"' && \
+    make install && \
+    cd .. && \
+    rm -fr sipXtapi && \
+    rm sipXtapi-code-fixes.patch
+
 USER jenkins
 WORKDIR /home/jenkins
