@@ -211,7 +211,7 @@ private:
    virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e);
 
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, std::shared_ptr<DataBuffer> data);
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onSendSuccess(unsigned int socketDesc);

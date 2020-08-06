@@ -167,7 +167,7 @@ Flow::Flow(asio::io_service& ioService,
                                                false, // validateServerCertificateHostname - TODO - make this configurable
                                                this, 
                                                mLocalBinding.getAddress(), 
-                                               mLocalBinding.getPort()));
+                                               mLocalBinding.getPort());
 #endif
       break;
    default:
@@ -801,7 +801,7 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
 }
 
 void 
-Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, std::shared_ptr<reTurn::DataBuffer>& data)
+Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<reTurn::DataBuffer>& data)
 {
    DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
 
