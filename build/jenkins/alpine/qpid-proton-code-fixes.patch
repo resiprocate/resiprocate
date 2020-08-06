@@ -1,0 +1,11 @@
+--- c/src/proactor/epoll.c.bak
++++ c/src/proactor/epoll.c
+@@ -133,7 +133,7 @@
+   pthread_mutexattr_t attr;
+ 
+   pthread_mutexattr_init(&attr);
+-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ADAPTIVE_NP);
++  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+   if (pthread_mutex_init(pm, &attr)) {
+     perror("pthread failure");
+     abort();

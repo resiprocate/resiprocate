@@ -69,17 +69,6 @@ RUN git clone https://github.com/cisco/libsrtp.git && \
     cd .. && \
     rm -fr libsrtp
 
-#RUN apk add --no-cache util-linux-dev && \
-#    git clone https://github.com/apache/qpid-proton.git && \
-#    cd qpid-proton && \
-#    mkdir build && \
-#    cd build && \
-#    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .. && \
-#    cmake --build . && \
-#    cmake --install . && \
-#    cd ../.. && \
-#    rm -fr qpid-proton
-
 RUN svn checkout svn://svn.camaya.net/gloox/branches/1.0 gloox && \
     cd gloox && \
     ./autogen.sh && \
@@ -102,6 +91,21 @@ RUN apk add --no-cache coreutils net-tools opus-dev && \
     cd .. && \
     rm -fr sipXtapi && \
     rm sipXtapi-code-fixes.patch
+
+COPY qpid-proton-code-fixes.patch /root/
+RUN apk add --no-cache util-linux-dev && \
+    git clone https://github.com/apache/qpid-proton.git && \
+    cd qpid-proton && \
+    git checkout tags/0.31.0 && \
+    patch -p0 < ../qpid-proton-code-fixes.patch && \
+    mkdir build && \
+    cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .. && \
+    cmake --build . && \
+    ctest . && \
+    cmake --install . && \
+    cd ../.. && \
+    rm -fr qpid-proton
 
 USER jenkins
 WORKDIR /home/jenkins
