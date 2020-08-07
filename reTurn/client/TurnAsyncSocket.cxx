@@ -5,6 +5,8 @@
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
+#include <boost/bind.hpp>
+
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
@@ -90,7 +92,7 @@ TurnAsyncSocket::doRequestSharedSecret()
 void
 TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetUsernameAndPassword(new Data(username), new Data(password), shortTermAuth); });
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetUsernameAndPassword(new Data(username), new Data(password), shortTermAuth); }));
 }
 
 void 
@@ -110,7 +112,7 @@ TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool s
 void 
 TurnAsyncSocket::setLocalPassword(const char* password)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetLocalPassword(new Data(password)); });
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetLocalPassword(new Data(password)); }));
 }
 
 void 
@@ -123,7 +125,7 @@ TurnAsyncSocket::doSetLocalPassword(Data* password)
 void 
 TurnAsyncSocket::bindRequest()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doBindRequest(); });
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doBindRequest(); }));
 }
 
 void 
@@ -146,7 +148,7 @@ void
 TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    resip_assert(setIceControlling || setIceControlled);
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); });
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
 }
 
 void
@@ -177,7 +179,7 @@ TurnAsyncSocket::createAllocation(unsigned int lifetime,
                                   UInt64 reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
-    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType); });
+    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
 }
 
 void
@@ -1366,9 +1368,9 @@ TurnAsyncSocket::channelBindingTimerExpired(const asio::error_code& e, unsigned 
 }
 
 void 
-TurnAsyncSocket::setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp)
+TurnAsyncSocket::setOnBeforeSocketClosedFp(AsyncSocketBase::BeforeClosedHandler fp)
 {
-   mAsyncSocketBase.setOnBeforeSocketClosedFp(fp);
+   mAsyncSocketBase.setOnBeforeSocketClosedFp(std::move(fp));
 }
 
 } // namespace

@@ -144,7 +144,7 @@ private:
    resip::Mutex mMutex;
 
    // Request map (for retransmissions)
-   class RequestEntry : public boost::enable_shared_from_this<RequestEntry>
+   class RequestEntry : public std::enable_shared_from_this<RequestEntry>
    {
    public:
       RequestEntry(asio::io_service& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage, unsigned int rc, unsigned int retrans_iterval_ms, const StunTuple* dest=NULL);

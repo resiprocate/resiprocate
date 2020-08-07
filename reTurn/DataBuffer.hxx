@@ -1,6 +1,8 @@
 #ifndef DATA_BUFFER_HXX
 #define DATA_BUFFER_HXX
 
+#include <cstddef>
+
 namespace reTurn {
 
 void ArrayDeallocator(char* data);
