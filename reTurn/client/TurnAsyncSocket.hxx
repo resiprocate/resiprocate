@@ -26,6 +26,7 @@
 
 #include <functional>
 #include <memory>
+#include <utility>
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
                      // Should also be calculation this on the fly
@@ -180,30 +181,32 @@ private:
       // argument for this constructor BE CAREFUL that you are passing 'this' and
       // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
       // purpose of this class holding a weak_ptr
-      weak_bind<P,F>( std::weak_ptr<P> parent, std::function<F> func )
-         : mParent( parent ), mFunction( func ) {}
+      weak_bind<P,F>(std::weak_ptr<P> parent, std::function<F> func)
+         : mParent(std::move(parent)), mFunction(std::move(func))
+      {
+      }
 
       void operator()()
       {
-         if ( std::shared_ptr< P > ptr = mParent.lock() )
+         if (std::shared_ptr<P> ptr = mParent.lock())
          {
-            if ( !mFunction.empty() )
+            if (mFunction)
                mFunction();
          }
       }
 
       void operator()(const asio::error_code& e)
       {
-         if ( std::shared_ptr< P > ptr = mParent.lock() )
+         if (std::shared_ptr<P> ptr = mParent.lock())
          {
-            if ( !mFunction.empty() )
+            if (mFunction)
                mFunction(e);
          }
       }
 
    private:
-      std::weak_ptr< P > mParent;
-      std::function< F > mFunction;
+      std::weak_ptr<P> mParent;
+      std::function<F> mFunction;
    };
 
    asio::steady_timer mAllocationTimer;
