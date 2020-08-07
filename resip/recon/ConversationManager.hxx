@@ -1,8 +1,6 @@
 #if !defined(ConversationManager_hxx)
 #define ConversationManager_hxx
 
-#include <boost/function.hpp>
-
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>
@@ -174,7 +172,7 @@ public:
    */   
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, std::shared_ptr<resip::UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<resip::UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
 
    /**
      Creates a new media resource participant in the specified conversation.  
@@ -287,7 +285,7 @@ public:
      Modifies how the participant contributes to the particular conversation.  
      The send and receive gain can be set to a number between 0 and 100.
 
-     @param convHandle Handle of the conversation to apply modication to
+     @param convHandle Handle of the conversation to apply modification to
      @param partHandle Handle of the participant to modify
    */
    virtual void modifyParticipantContribution(ConversationHandle convHandle, ParticipantHandle partHandle, unsigned int inputGain, unsigned int outputGain);

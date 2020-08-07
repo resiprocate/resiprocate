@@ -141,7 +141,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            std::shared_ptr<ConversationProfile> _callerProfile(mCallerProfile, resip::dynamic_cast_tag());
+            const auto _callerProfile = std::dynamic_pointer_cast<ConversationProfile>(mCallerProfile);
             RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode, _callerProfile);
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
             if(participant)
