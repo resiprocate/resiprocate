@@ -73,7 +73,7 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    unsigned int defaultSampleRate = 16000;
    unsigned int maximumSampleRate = 16000;
    bool autoAnswerEnabled = false;
-   myConversationManager = std::make_shared<MyConversationManager>(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this);
+   myConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this));
    ua = new MyUserAgent(myConversationManager.get(), mUAProfile, *this, mInstantMessage);
    myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), numCodecIds, codecIds, mConversationProfile->sessionCaps());
    ua->addConversationProfile(mConversationProfile);
