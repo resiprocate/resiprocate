@@ -5,16 +5,18 @@
 
 #include "RendAcct.hxx"
 
+#include <stdexcept>
+
 namespace resip
 {
    class SipStack;
 }
 
-class RendWaveAbortException final : public std::exception 
+class RendWaveAbortException final : public std::runtime_error 
 {
 public:
    explicit RendWaveAbortException(const std::string& msg)
-      : std::exception(msg.c_str())
+      : std::runtime_error(msg)
    {
    }
 };
