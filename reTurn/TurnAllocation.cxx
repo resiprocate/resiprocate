@@ -9,6 +9,8 @@
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
+#include <boost/bind.hpp>
+
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
@@ -122,7 +124,7 @@ TurnAllocation::refresh(unsigned int lifetime)  // update expiration time
 
    // start timer
    mAllocationTimer.expires_from_now(seconds(lifetime));
-   mAllocationTimer.async_wait(std::bind(&TurnAllocationManager::allocationExpired, &mTurnAllocationManager, asio::placeholders::error, mKey));
+   mAllocationTimer.async_wait(boost::bind(&TurnAllocationManager::allocationExpired, &mTurnAllocationManager, asio::placeholders::error, mKey));
 }
 
 bool 
