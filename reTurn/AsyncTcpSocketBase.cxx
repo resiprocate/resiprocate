@@ -22,10 +22,6 @@ AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_service& ioService)
 {
 }
 
-AsyncTcpSocketBase::~AsyncTcpSocketBase() 
-{
-}
-
 unsigned int 
 AsyncTcpSocketBase::getSocketDescriptor() 
 { 
@@ -118,7 +114,7 @@ AsyncTcpSocketBase::setConnectedAddressAndPort()
    mConnectedPort = mSocket.remote_endpoint(ec).port();
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncTcpSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 

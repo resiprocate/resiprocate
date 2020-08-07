@@ -4,7 +4,6 @@
 #endif
 
 #ifdef USE_SSL
-#include <boost/function.hpp>
 #include <boost/bind.hpp>
 
 #include <openssl/opensslv.h>
@@ -36,10 +35,6 @@ AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::c
    mSocket(ioService, context),
    mResolver(ioService),
    mValidateServerCertificateHostname(validateServerCertificateHostname)
-{
-}
-
-AsyncTlsSocketBase::~AsyncTlsSocketBase() 
 {
 }
 

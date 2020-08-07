@@ -13,7 +13,7 @@ namespace reTurn {
 class AsyncSocketBase;
 
 /// The common handler for all incoming requests.
-class RequestHandle
+class RequestHandler
 {
 public:
    explicit RequestHandler(TurnManager& turnManager, 
