@@ -39,7 +39,7 @@ protected:
    void handleServerHandshake(const asio::error_code& e) override;
    void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
    void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
-   void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator); override
+   void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) override;
    virtual bool validateServerCertificateHostname();
 
    virtual void onServerHandshakeSuccess() { resip_assert(false); }
