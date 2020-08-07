@@ -4,6 +4,8 @@
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
+#include <boost/bind.hpp>
+
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
@@ -28,13 +30,13 @@ AsyncSocketBase::~AsyncSocketBase()
 void 
 AsyncSocketBase::send(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.dispatch(std::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
+   mIOService.dispatch(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
 }
 
 void 
 AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.post(std::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
+   mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
 }
 
 void

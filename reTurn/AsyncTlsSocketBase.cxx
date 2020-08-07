@@ -279,7 +279,7 @@ AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
    }
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncTlsSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 
@@ -351,7 +351,7 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
 
-      if(dataLen+4 < RECEIVE_BUFFER_SIZE)
+      if (dataLen + 4U < RECEIVE_BUFFER_SIZE)
       {
          asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
                           boost::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));
