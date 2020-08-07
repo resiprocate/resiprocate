@@ -202,7 +202,7 @@ DumExpect::Exception::getName() const
 }
 
 const char* 
-DumExpect::Exception::name() const 
+DumExpect::Exception::name() const noexcept
 {
    return "DumExpect::Exception";
 }

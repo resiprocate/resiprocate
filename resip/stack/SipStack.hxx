@@ -274,7 +274,7 @@ class SipStack : public FdSetIOObserver
         @details For instance, the stack cannot process messages because
         there are no transports associated with the stack.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             /**
@@ -292,7 +292,7 @@ class SipStack : public FdSetIOObserver
             /**
               @brief what gets called instead of the pure virtual in the base
               */
-            const char* name() const { return "SipStack::Exception"; }
+            const char* name() const noexcept override { return "SipStack::Exception"; }
       };
 
       /**

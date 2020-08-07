@@ -17,7 +17,7 @@ class BaseException;
 class DnsNaptrRecord : public DnsResourceRecord
 {
    public:
-      class NaptrException : public BaseException
+      class NaptrException final : public BaseException
       {
          public:
             NaptrException(const Data& msg, const Data& file, const int line)
@@ -25,7 +25,7 @@ class DnsNaptrRecord : public DnsResourceRecord
             {
             }
             
-            const char* name() const { return "NaptrException"; }
+            const char* name() const noexcept override { return "NaptrException"; }
       };
 
       class RegExp

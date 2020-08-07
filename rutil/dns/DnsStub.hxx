@@ -130,7 +130,7 @@ class DnsStub : public ExternalDnsHandler
             virtual void transform(const Data& target, int rrType, DnsResourceRecordsByPtr& src) = 0;
       };
 
-      class DnsStubException : public BaseException
+      class DnsStubException final : public BaseException
       {
          public:
             DnsStubException(const Data& msg, const Data& file, const int line)
@@ -138,7 +138,7 @@ class DnsStub : public ExternalDnsHandler
             {
             }
             
-            const char* name() const { return "DnsStubException"; }
+            const char* name() const noexcept override { return "DnsStubException"; }
       };
 
       DnsStub(const NameserverList& additional = EmptyNameserverList,

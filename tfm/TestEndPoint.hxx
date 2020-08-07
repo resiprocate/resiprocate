@@ -28,7 +28,7 @@ class TestEndPoint
 {
    public:
 
-      class GlobalFailure : public TestException
+      class GlobalFailure final : public TestException
       {
          public:
             GlobalFailure(const resip::Data& msg, const resip::Data& file, int line);
@@ -139,13 +139,13 @@ class TestEndPoint
       class ExpectBase : public AsciiGraphic
       {
          public:
-            class Exception : public TestException
+            class Exception final : public TestException
             {
                public:
                   Exception(const resip::Data& msg,
                             const resip::Data& file,
-                            const int line);
-                  virtual resip::Data getName() const ;
+                            int line);
+                  virtual resip::Data getName() const;
             };
 
          public:

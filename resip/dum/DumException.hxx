@@ -6,12 +6,12 @@
 namespace resip
 {
 
-class DumException : public BaseException
+class DumException final : public BaseException
 {
    public:
       DumException(const Data& msg, const Data& file, const int line)
          : BaseException(msg, file, line) {}
-      const char* name() const { return "DumException"; }
+      const char* name() const noexcept override { return "DumException"; }
 };
  
 }

@@ -18,7 +18,7 @@ class InviteClient
                    int numInvites = 0);
       void go();
 
-      class Exception : public resip::BaseException
+      class Exception final : public resip::BaseException
       {
          public:
             Exception(const resip::Data& msg,
@@ -26,10 +26,8 @@ class InviteClient
                       const int line) 
                : resip::BaseException(msg, file, line) 
             {}
-
-            ~Exception() throw() {}
             
-            virtual const char* name() const 
+            const char* name() const noexcept override
             { 
                return "InviteClient::BaseException";
             }

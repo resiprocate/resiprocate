@@ -198,7 +198,7 @@ class SipMessage : public TransactionMessage
       /**
       @brief Base exception for SipMessage related exceptions
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             /**
@@ -211,7 +211,7 @@ class SipMessage : public TransactionMessage
             @brief returns the class name of the exception instance
             @return the class name of the instance
             */
-            const char* name() const { return "SipMessage::Exception"; }
+            const char* name() const noexcept override { return "SipMessage::Exception"; }
       };
 
       /// Mark message as internally generated

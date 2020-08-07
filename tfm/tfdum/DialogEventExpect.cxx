@@ -176,7 +176,7 @@ DialogEventExpect::Exception::getName() const
 }
 
 const char* 
-DialogEventExpect::Exception::name() const 
+DialogEventExpect::Exception::name() const noexcept
 {
    return "DialogEventExpect::Exception";
 }

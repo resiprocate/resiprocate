@@ -28,11 +28,11 @@ class AppDialog;
 class Dialog 
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, int line);
-            virtual const char* name() const {return "Dialog::Exception";}
+            const char* name() const noexcept override { return "Dialog::Exception"; }
       };
          
       // different behavior from request vs. response

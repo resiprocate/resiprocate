@@ -11,17 +11,14 @@ ParseException::ParseException(const Data& msg,
    mContext(context)
 {}
 
-ParseException::~ParseException() throw() 
-{}
-
 const char* 
-ParseException::name() const 
+ParseException::name() const noexcept
 { 
    return "ParseException"; 
 }
 
 const Data& 
-ParseException::getContext() const
+ParseException::getContext() const noexcept
 {
    return mContext;
 }

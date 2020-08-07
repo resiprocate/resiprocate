@@ -80,16 +80,16 @@ class DialogEventHandler;
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg,
                       const Data& file,
-                      int line)
+                      const int line)
                : BaseException(msg, file, line)
             {}
             
-            virtual const char* name() const {return "DialogUsageManager::Exception";}
+            const char* name() const noexcept override { return "DialogUsageManager::Exception"; }
       };
 
       typedef enum

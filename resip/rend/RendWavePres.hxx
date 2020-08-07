@@ -10,18 +10,13 @@ namespace resip
    class SipStack;
 }
 
-class RendWaveAbortException : public std::exception 
+class RendWaveAbortException final : public std::exception 
 {
 public:
-   RendWaveAbortException(const std::string what) throw() 
+   explicit RendWaveAbortException(const std::string& msg)
+      : std::exception(msg.c_str())
    {
-      mWhat = what;
    }
-   virtual ~RendWaveAbortException() throw();
-   // const char *name() const { return "RendWaveAbortException"; }
-   virtual const char *what() const throw() { return mWhat.c_str(); }
-
-   std::string mWhat;
 };
 
 class RendWavePresIf 
