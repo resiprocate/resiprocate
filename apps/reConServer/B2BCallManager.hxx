@@ -93,8 +93,8 @@ public:
 
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
    virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
-   virtual void makeBLeg(std::shared_ptr call, CredentialInfo* ci);
-   virtual void rejectCall(std::shared_ptr call);
+   virtual void makeBLeg(std::shared_ptr<B2BCall> call, CredentialInfo* ci);
+   virtual void rejectCall(std::shared_ptr<B2BCall> call);
    virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
    virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
