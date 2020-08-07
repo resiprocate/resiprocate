@@ -31,7 +31,7 @@ ConversationProfile::ConversationProfile() :
 {
 }
 
-ConversationProfile::ConversationProfile(std::shared_ptr baseProfile) :
+ConversationProfile::ConversationProfile(std::shared_ptr<Profile> baseProfile) :
    UserProfile(std::move(baseProfile)),
    mHandle(0),
    mAllowAutoAnswer(false),
