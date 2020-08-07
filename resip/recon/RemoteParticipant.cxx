@@ -129,7 +129,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 }
 
 void
-RemoteParticipant::initiateRemoteCall(const NameAddr& destination, std::shared_ptr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    SdpContents offer;
    auto profile = callingProfile;
