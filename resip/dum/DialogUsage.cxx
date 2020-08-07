@@ -11,13 +11,13 @@
 
 using namespace resip;
 
-DialogUsage::Exception::Exception(const Data& msg,const Data& file,int line)
+DialogUsage::Exception::Exception(const Data& msg, const Data& file, const int line)
    : BaseException(msg, file, line)
 {
 }
 
 const char*
-DialogUsage::Exception::name() const
+DialogUsage::Exception::name() const noexcept
 {
    return "DialogUsage::Exception";
 }
