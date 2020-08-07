@@ -183,7 +183,7 @@ main(int argc, char* argv[])
        {
           sdp.checkParsed();
        }
-       catch (resip::ParseException)
+       catch (const resip::ParseException&)
        {
        }
     }

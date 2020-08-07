@@ -51,7 +51,7 @@ InviteServer::go()
          unique_ptr<SipMessage> b_200(Helper::makeResponse(*bye, 200, contact, "OK"));
          mTransceiver.send(*b_200);
       }
-      catch(Exception e)
+      catch (const Exception&)
       {
          ErrLog(<< "Proxy not responding.");
          exit(-1);
