@@ -1294,7 +1294,7 @@ ReConServerProcess::main (int argc, char** argv)
       switch(application)
       {
          case ReConServerConfig::None:
-            mConversationManager = std::make_shared<MyConversationManager>(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled);
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
             {
