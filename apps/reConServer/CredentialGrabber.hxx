@@ -14,7 +14,7 @@ namespace reconserver
 class CredentialGrabber : public resip::Worker
 {
    public:
-      CredentialGrabber(std::shared_ptrs<soci::connection_pool> pool, const resip::Data& databaseQueryUserCredential);
+      CredentialGrabber(std::shared_ptr<soci::connection_pool> pool, const resip::Data& databaseQueryUserCredential);
 
       virtual bool process(resip::ApplicationMessage* msg);
       virtual CredentialGrabber* clone() const;
