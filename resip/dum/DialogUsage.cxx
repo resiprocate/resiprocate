@@ -68,6 +68,12 @@ DialogUsage::remoteTarget() const noexcept
    return mDialog.mRemoteTarget;
 }
 
+const NameAddr&
+DialogUsage::pendingRemoteTarget() const
+{
+    return mDialog.mPendingRemoteTarget;
+}
+
 const NameAddrs&
 DialogUsage::getRouteSet() const noexcept
 {

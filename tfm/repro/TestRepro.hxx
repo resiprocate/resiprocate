@@ -7,7 +7,7 @@
 #include "repro/Registrar.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
@@ -63,7 +63,7 @@ class TestRepro : public TestProxy
       std::shared_ptr<resip::MasterProfile> mProfile;
       repro::AbstractDb* mDb;
       TfmProxyConfig mConfig;
-      repro::Dispatcher* mAuthRequestDispatcher;
+      resip::Dispatcher* mAuthRequestDispatcher;
       repro::ProcessorChain mRequestProcessors;
       repro::ProcessorChain mResponseProcessors;
       repro::ProcessorChain mTargetProcessors;

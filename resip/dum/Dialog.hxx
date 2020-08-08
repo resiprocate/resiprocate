@@ -44,8 +44,9 @@ class Dialog
       const NameAddr& getLocalContact() const noexcept;
       const NameAddr& getRemoteNameAddr() const noexcept;
       const NameAddr& getRemoteTarget() const noexcept;
+      const NameAddr& getPendingRemoteTarget() const;
       const NameAddrs& getRouteSet() const noexcept;
-      
+
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests
       void send(std::shared_ptr<SipMessage> msg);
@@ -72,9 +73,9 @@ class Dialog
       void processNotify(const SipMessage& notify);
       
       //will end this dialog(if it makes sense)
-      void redirected(const SipMessage& msg);      
+      void redirected(const SipMessage& msg);
 
-      void onForkAccepted();      
+      void onForkAccepted();
       void cancel();
 
       bool isDestroying() const noexcept { return mDestroying; };
@@ -88,8 +89,8 @@ class Dialog
       
       friend class ClientSubscription;
       friend class InviteSession;
-      friend class ClientInviteSession;      
-      friend class ServerInviteSession;      
+      friend class ClientInviteSession;
+      friend class ServerInviteSession;
       friend class ServerSubscription;
       friend class ClientRegistration;
       friend class ServerRegistration;
@@ -106,14 +107,15 @@ class Dialog
 
       void addUsage(BaseUsage* usage);
       ClientInviteSession* makeClientInviteSession(const SipMessage& msg);
-      ClientSubscription* makeClientSubscription(const SipMessage& msg);
+      ClientSubscription*  makeClientSubscription(const SipMessage& msg);
       
-      ServerInviteSession*  makeServerInviteSession(const SipMessage& msg);
-      ServerSubscription* makeServerSubscription(const SipMessage& msg);
+      ServerInviteSession* makeServerInviteSession(const SipMessage& msg);
+      ServerSubscription*  makeServerSubscription(const SipMessage& msg);
 
       //matches using tid of response
       bool matches(const SipMessage& msg);      
       void handleTargetRefresh(const SipMessage& msg);
+      void handlePendingTargetRefresh(const SipMessage& msg);
 
       void flowTerminated();
 
@@ -142,6 +144,8 @@ class Dialog
       NameAddr mLocalContact;
       unsigned int mLocalCSeq;
       unsigned int mRemoteCSeq;
+      NameAddr mPendingRemoteTarget;
+      unsigned int mPendingRemoteTargetCSeq;
       NameAddr mRemoteTarget;
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;

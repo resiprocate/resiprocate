@@ -774,13 +774,13 @@ InviteSession::endCommand(EndReason reason)
 void
 InviteSession::reject(int statusCode, WarningCategory *warning)
 {
+   mProposedRemoteOfferAnswer.reset();  // Clear out any potential ProposedRemoteOfferAnswer since we are rejecting
    switch (mState)
    {
       case ReceivedUpdate:
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
-         mProposedRemoteOfferAnswer.reset();  // Clear out any potential ProposedRemoteOfferAnswer since we are rejecting
          transition(Connected);
 
          auto response = std::make_shared<SipMessage>();
@@ -2077,6 +2077,15 @@ InviteSession::dispatchOthers(const SipMessage& msg)
 
    switch (msg.header(h_CSeq).method())
    {
+      case INVITE:
+      case UPDATE:
+         if (msg.isRequest())
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDialog.makeResponse(*response, msg, 491);
+            send(response);
+         }
+         break;
       case PRACK:
          dispatchPrack(msg);
          break;
@@ -3008,7 +3017,8 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    {
       return On487Invite;
    }
-   else if (method == INVITE && code == 491)
+   else if (method == INVITE && code == 491 &&
+            !mDialog.mDialogSet.getUserProfile()->getHandleInviteSession491AsGeneralFailureEnabled())
    {
       return On491Invite;
    }
@@ -3074,7 +3084,8 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    {
       return On422Update;
    }
-   else if (method == UPDATE && code == 491)
+   else if (method == UPDATE && code == 491 &&
+            !mDialog.mDialogSet.getUserProfile()->getHandleInviteSession491AsGeneralFailureEnabled())
    {
       return On491Update;
    }

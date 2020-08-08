@@ -34,9 +34,11 @@ class DialogUsage : public BaseUsage
       AppDialogHandle getAppDialog() const;     
 
       // Convenience methods for accessing attributes of a dialog. 
+
       const NameAddr& myAddr() const noexcept;
       const NameAddr& peerAddr() const noexcept;
       const NameAddr& remoteTarget() const noexcept;
+      const NameAddr& pendingRemoteTarget() const;
       const NameAddrs& getRouteSet() const noexcept;
       const DialogId& getDialogId() const;
       const Data& getCallId() const;
