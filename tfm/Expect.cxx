@@ -146,7 +146,7 @@ Expect::Exception::getName() const
 }
 
 const char* 
-Expect::Exception::name() const
+Expect::Exception::name() const noexcept
 {  
    return "Expect::Exception";
 }

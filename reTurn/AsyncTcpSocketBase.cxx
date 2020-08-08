@@ -22,10 +22,6 @@ AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_service& ioService)
 {
 }
 
-AsyncTcpSocketBase::~AsyncTcpSocketBase() 
-{
-}
-
 unsigned int 
 AsyncTcpSocketBase::getSocketDescriptor() 
 { 
@@ -118,7 +114,7 @@ AsyncTcpSocketBase::setConnectedAddressAndPort()
    mConnectedPort = mSocket.remote_endpoint(ec).port();
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncTcpSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 
@@ -175,7 +171,7 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       {
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
-      if(dataLen+4 < RECEIVE_BUFFER_SIZE)
+      if (dataLen + 4U < RECEIVE_BUFFER_SIZE)
       {
          asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
                           boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));

@@ -48,7 +48,7 @@ TestServerPagerMessage::end()
 }
  
 CommonAction* 
-TestServerPagerMessage::send(resip::SharedPtr<SipMessage> msg)
+TestServerPagerMessage::send(std::shared_ptr<SipMessage> msg)
 {
    return new CommonAction(mUa, "send", 
                            boost::bind(&ServerPagerMessage::sendCommand, boost::bind<ServerPagerMessage*>(static_cast<ServerPagerMessage*(ServerPagerMessageHandle::*)()>(&ServerPagerMessageHandle::get), boost::ref(mHandle)), 

@@ -274,8 +274,8 @@ main (int argc, char** argv)
    clientDum.addTransport(TLS, 0, V6);
 #endif
 
-   SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
-   unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
+   auto clientProfile = std::make_shared<MasterProfile>();   
+   std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
 
    clientDum.setClientAuthManager(std::move(clientAuth));
    clientDum.setClientRegistrationHandler(&handler);
@@ -303,7 +303,7 @@ main (int argc, char** argv)
    serverDum.addTransport(TCP, 0, V4);
    //serverDum.addTransport(TLS, 0, V4);
 
-   SharedPtr<MasterProfile> serverProfile(new MasterProfile);
+   auto serverProfile = std::make_shared<MasterProfile>();
    std::unique_ptr<ClientAuthManager> serverAuth(new ClientAuthManager);
 
    serverDum.setClientAuthManager(std::move(serverAuth));
@@ -332,10 +332,10 @@ main (int argc, char** argv)
    time_t endTime=0;
 
    // register client and server
-   SharedPtr<SipMessage> clientRegMessage = clientDum.makeRegistration(clientAor);
-   clientDum.send(clientRegMessage);
-   SharedPtr<SipMessage> serverRegMessage = serverDum.makeRegistration(serverAor);
-   serverDum.send(serverRegMessage);
+   auto clientRegMessage = clientDum.makeRegistration(clientAor);
+   clientDum.send(std::move(clientRegMessage));
+   auto serverRegMessage = serverDum.makeRegistration(serverAor);
+   serverDum.send(std::move(serverRegMessage));
    state = Registering;
 
    while (state != Finished)

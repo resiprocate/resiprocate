@@ -105,7 +105,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
       return;
    }
    
-   // do the listen, seting the maximum queue size for compeletly established
+   // do the listen, seting the maximum queue size for completely established
    // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
    // queue size(see man listen)
    int e = listen(mFd,5);
@@ -306,10 +306,10 @@ XmlRpcServerBase::sendEvent(unsigned int connectionId,
    mSelectInterruptor.interrupt();
 }
 
-SharedPtr<ThreadIf>
+std::shared_ptr<ThreadIf>
 XmlRpcServerBase::getThread()
 {
-   return SharedPtr<ThreadIf>(mQpidProtonThread, dynamic_cast_tag());
+   return mQpidProtonThread;
 }
 
 bool 

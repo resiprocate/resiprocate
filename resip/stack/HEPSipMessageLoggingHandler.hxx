@@ -8,21 +8,22 @@
 #include "rutil/Socket.hxx"
 #include "rutil/hep/HepAgent.hxx"
 
+#include <memory>
+
 namespace resip
 {
 
 class HEPSipMessageLoggingHandler : public Transport::SipMessageLoggingHandler
 {
    public:
-      HEPSipMessageLoggingHandler(SharedPtr<HepAgent> agent);
-      virtual ~HEPSipMessageLoggingHandler();
+      explicit HEPSipMessageLoggingHandler(std::shared_ptr<HepAgent> agent);
       virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg);
       virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data);
       virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg);
    protected:
       virtual void sendToHOMER(const Tuple& source, const Tuple& destination, const SipMessage &msg);
    private:
-      SharedPtr<HepAgent> mHepAgent;
+      std::shared_ptr<HepAgent> mHepAgent;
 };
 
 

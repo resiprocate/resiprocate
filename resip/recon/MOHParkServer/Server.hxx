@@ -93,7 +93,7 @@ private:
 
    bool mIsV6Avail;
    recon::UserAgent* mMyUserAgent;
-   resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
+   std::shared_ptr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
 
    typedef std::map<unsigned long, MOHManager*> MOHManagerMap;
    MOHManagerMap mMOHManagerMap;

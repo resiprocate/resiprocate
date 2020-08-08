@@ -135,8 +135,8 @@ main (int argc, char** argv)
    DialogUsageManager controller;
    controller.addTransport(UDP, 12005);
 
-   SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);      
-   unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   auto uacMasterProfile = std::make_shared<MasterProfile>();      
+   std::unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
    controller.setMasterProfile(uacMasterProfile);
    controller.setClientAuthManager(std::move(uacAuth));
 

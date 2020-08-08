@@ -23,7 +23,7 @@ typedef std::pair<resip::Data, resip::Data> RealmUserPair;
 class ReTurnConfig : public resip::ConfigParse
 {
 public:
-   class Exception : public resip::BaseException
+   class Exception final : public resip::BaseException
    {
       public:
          Exception(const resip::Data& msg,
@@ -31,7 +31,7 @@ public:
                    const int line)
             : resip::BaseException(msg, file, line) {}            
       protected:
-         virtual const char* name() const { return "ReTurnConfig::Exception"; }
+         const char* name() const noexcept override { return "ReTurnConfig::Exception"; }
    };
    
    ReTurnConfig();

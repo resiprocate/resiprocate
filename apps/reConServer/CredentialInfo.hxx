@@ -4,10 +4,11 @@
 #include <iostream>
 #include "apps/reConServer/AppSubsystem.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/dum/DumCommand.hxx"
 #include "resip/dum/DumFeatureMessage.hxx"
+
+#include <memory>
 
 namespace reconserver
 {
@@ -25,21 +26,21 @@ class CredentialInfo : public resip::DumCommand
         Error              // some error occurred
       };
 
-      CredentialInfo(resip::SharedPtr<B2BCall> call, const resip::Data& user, const resip::Data& realm, const resip::Data& transactionId, resip::TransactionUser* transactionUser, B2BCallManager* b);
+      CredentialInfo(std::shared_ptr<B2BCall> call, const resip::Data& user, const resip::Data& realm, const resip::Data& transactionId, resip::TransactionUser* transactionUser, B2BCallManager* b);
 
-      resip::SharedPtr<B2BCall> call() { return mCall; };
+      std::shared_ptr<B2BCall> call() const noexcept { return mCall; }
 
-      const resip::Data& user() const { return mUser; };
-      resip::Data& user() { return mUser; };
+      const resip::Data& user() const noexcept { return mUser; }
+      resip::Data& user() noexcept { return mUser; }
 
-      const resip::Data& realm() const { return mRealm; };
-      resip::Data& realm() { return mRealm; };
+      const resip::Data& realm() const noexcept { return mRealm; }
+      resip::Data& realm() noexcept { return mRealm; }
 
-      const resip::Data& secret() const { return mSecret; };
-      resip::Data& secret() { return mSecret; };
+      const resip::Data& secret() const noexcept { return mSecret; }
+      resip::Data& secret() noexcept { return mSecret; }
 
-      const InfoMode mode() const { return mMode; };
-      InfoMode& mode() { return mMode; };
+      const InfoMode mode() const noexcept { return mMode; }
+      InfoMode& mode() noexcept { return mMode; }
 
       virtual void executeCommand();
 
@@ -50,7 +51,7 @@ class CredentialInfo : public resip::DumCommand
       virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
-      resip::SharedPtr<B2BCall> mCall;
+      std::shared_ptr<B2BCall> mCall;
       resip::Data mUser;
       resip::Data mRealm;
       resip::Data mSecret;

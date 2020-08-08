@@ -20,9 +20,9 @@ public:
       SyncServer,
       AllChanges
    } HandlerMode;
-   InMemorySyncPubDbHandler(HandlerMode mode = SyncServer) : mMode(mode) {}
-   virtual ~InMemorySyncPubDbHandler(){}
-   HandlerMode getMode() { return mMode; }
+   explicit InMemorySyncPubDbHandler(HandlerMode mode = SyncServer) : mMode(mode) {}
+   virtual ~InMemorySyncPubDbHandler() = default;
+   HandlerMode getMode() const noexcept { return mMode; }
    virtual void onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) = 0;
    virtual void onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated) = 0;
    virtual void onInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes) {}
@@ -43,8 +43,8 @@ class InMemorySyncPubDb : public PublicationPersistenceManager
 {
 public:
 
-   InMemorySyncPubDb(bool syncEnabled = false);
-   virtual ~InMemorySyncPubDb();
+   explicit InMemorySyncPubDb(bool syncEnabled = false);
+   virtual ~InMemorySyncPubDb() = default;
 
    virtual void addHandler(InMemorySyncPubDbHandler* handler);
    virtual void removeHandler(InMemorySyncPubDbHandler* handler);

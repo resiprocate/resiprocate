@@ -11,7 +11,10 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/SendData.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
+#include <utility>
+
 namespace resip
 {
 
@@ -74,20 +77,27 @@ class Transport : public FdSetIOObserver
 {
    public:
 
-    class SipMessageLoggingHandler
+      class SipMessageLoggingHandler
       {
       public:
-          virtual ~SipMessageLoggingHandler(){}
+          SipMessageLoggingHandler() = default;
+          SipMessageLoggingHandler(const SipMessageLoggingHandler&) = delete;
+          SipMessageLoggingHandler(SipMessageLoggingHandler&&) = delete;
+          virtual ~SipMessageLoggingHandler() = default;
+
+          SipMessageLoggingHandler& operator=(const SipMessageLoggingHandler&) = delete;
+          SipMessageLoggingHandler& operator=(SipMessageLoggingHandler&&) = delete;
+
           virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg) = 0;
-          // Note:  retranmissions store already encoded messages, so callback doesn't send SipMessage it sends
+          // Note:  retransmissions store already encoded messages, so callback doesn't send SipMessage it sends
           //        the encoded version of the SipMessage instead.  If you need a SipMessage you will need to
           //        re-parse back into a SipMessage in the callback handler.
           virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data) {}
           virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg) = 0;
       };
 
-      void setSipMessageLoggingHandler(SharedPtr<SipMessageLoggingHandler> handler) { mSipMessageLoggingHandler = handler; }
-      SipMessageLoggingHandler* getSipMessageLoggingHandler() { return 0 != mSipMessageLoggingHandler.get() ? mSipMessageLoggingHandler.get() : 0; }
+      void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandler = std::move(handler); }
+      SipMessageLoggingHandler* getSipMessageLoggingHandler() const noexcept { return mSipMessageLoggingHandler.get(); }
 
       /**
          @brief General exception class for Transport.
@@ -95,11 +105,11 @@ class Transport : public FdSetIOObserver
          This would be thrown if there was an attempt to bind to a port
          that is already in use.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line);
-            const char* name() const { return "TransportException"; }
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override { return "TransportException"; }
       };
       
       /**
@@ -397,7 +407,7 @@ class Transport : public FdSetIOObserver
       friend EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
 
       Data mTlsDomain;
-      SharedPtr<SipMessageLoggingHandler> mSipMessageLoggingHandler;
+      std::shared_ptr<SipMessageLoggingHandler> mSipMessageLoggingHandler;
 
    protected:
       AfterSocketCreationFuncPtr mSocketFunc;

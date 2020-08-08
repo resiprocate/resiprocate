@@ -131,7 +131,7 @@ ReproAuthenticatorFactory::loadCommonNameMappings()
    }
 }
 
-SharedPtr<DumFeature>
+std::shared_ptr<DumFeature>
 ReproAuthenticatorFactory::getCertificateAuthManager()
 {
    init();
@@ -155,7 +155,7 @@ ReproAuthenticatorFactory::getCertificateAuthenticator()
    return std::unique_ptr<Processor>(new CertificateAuthenticator(mProxyConfig, getDispatcher(), &mSipStack, aclStore, true, mCommonNameMappings));
 }
 
-SharedPtr<ServerAuthManager>
+std::shared_ptr<ServerAuthManager>
 ReproAuthenticatorFactory::getServerAuthManager()
 {
    init();

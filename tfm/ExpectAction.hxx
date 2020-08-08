@@ -14,11 +14,10 @@ class ExpectAction : public ActionBase
       virtual void operator()(boost::shared_ptr<Event> event) = 0;
       virtual void operator()();
 
-      class Exception : public TestException
+      class Exception final : public TestException
       {
          public:
-            Exception(const resip::Data& msg) throw();
-            virtual ~Exception() throw();
+            explicit Exception(const resip::Data& msg);
             virtual resip::Data getName() const;
       };
 };

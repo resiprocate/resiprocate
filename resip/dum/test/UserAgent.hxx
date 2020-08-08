@@ -134,7 +134,7 @@ class UserAgent : public CommandLineParser,
    protected:
       void addTransport(TransportType type, int port);
 
-      SharedPtr<MasterProfile> mProfile;
+      std::shared_ptr<MasterProfile> mProfile;
       Security* mSecurity;
       SipStack mStack;
       DialogUsageManager mDum;

@@ -15,28 +15,36 @@ class ServerSubscription : public BaseSubscription
 {
    public:
       typedef Handle<ServerSubscription> ServerSubscriptionHandle;
+
+      ServerSubscription(const ServerSubscription&) = delete;
+      ServerSubscription(ServerSubscription&&) = delete;
+
+      ServerSubscription& operator=(const ServerSubscription&) = delete;
+      ServerSubscription& operator=(ServerSubscription&&) = delete;
+
       ServerSubscriptionHandle getHandle();
 
-      const Data& getSubscriber() const { return mSubscriber; }
+      const Data& getSubscriber() const noexcept { return mSubscriber; }
       UInt32 getTimeLeft();
      
-      //only 200 and 202 are permissable.  SubscriptionState is not affected.
+      //only 200 and 202 are permissible.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
-      SharedPtr<SipMessage> accept(int statusCode = 202);
-      SharedPtr<SipMessage> reject(int responseCode);
+      std::shared_ptr<SipMessage> accept(int statusCode = 202);
+      std::shared_ptr<SipMessage> reject(int responseCode);
 
-      //used to accept a reresh when there is no useful state to convey to the
+      //used to accept a refresh when there is no useful state to convey to the
       //client     
-      SharedPtr<SipMessage> neutralNotify();
+      std::shared_ptr<SipMessage> neutralNotify();
       
       void setSubscriptionState(SubscriptionState state);
 
-      SharedPtr<SipMessage> update(const Contents* document);
+      std::shared_ptr<SipMessage> update(const Contents* document);
       void end(TerminateReason reason, const Contents* document = 0, int retryAfter = 0);
 
-      virtual void end();
-      virtual void send(SharedPtr<SipMessage> msg);
-      virtual void sendCommand(SharedPtr<SipMessage> msg)
+      void end() override;
+      void send(std::shared_ptr<SipMessage> msg) override;
+
+      void sendCommand(std::shared_ptr<SipMessage> msg) override
       {
          BaseSubscription::sendCommand(msg);
       }
@@ -44,10 +52,10 @@ class ServerSubscription : public BaseSubscription
 //      void setTerminationState(TerminateReason reason);
 //      void setCurrentEventDocument(const Contents* document);
 
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
 
    protected:
       virtual ~ServerSubscription();
@@ -69,9 +77,6 @@ class ServerSubscription : public BaseSubscription
       Data mSubscriber;
       UInt32 mExpires;
 
-      // disabled
-      ServerSubscription(const ServerSubscription&);
-      ServerSubscription& operator=(const ServerSubscription&);
       UInt64 mAbsoluteExpiry;      
 };
  

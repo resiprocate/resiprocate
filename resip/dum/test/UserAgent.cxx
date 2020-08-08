@@ -33,7 +33,7 @@ using namespace std;
 
 UserAgent::UserAgent(int argc, char** argv) : 
    CommandLineParser(argc, argv),
-   mProfile(new MasterProfile),
+   mProfile(std::make_shared<MasterProfile>()),
 #if defined(USE_SSL)
    mSecurity(new Security(mCertPath)),
    mStack(mSecurity),

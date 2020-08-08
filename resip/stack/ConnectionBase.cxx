@@ -15,7 +15,6 @@
 #include "resip/stack/WsCookieContextFactory.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "rutil/Sha1.hxx"
 
 #ifdef USE_SSL
@@ -653,7 +652,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       CookieList cookieList;
       if(wsConnectionBase)
       {
-         SharedPtr<WsCookieContext> wsCookieContext((WsCookieContext*)0);
+         std::shared_ptr<WsCookieContext> wsCookieContext;
          if (mMessage->exists(h_Cookies))
          {
             WsBaseTransport* wst = dynamic_cast<WsBaseTransport*>(mTransport);
@@ -676,9 +675,9 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
                WarningLog(<<"Failed to parse cookies into WsCookieContext: " << ex);
             }
          }
-         SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
+         std::shared_ptr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
          if(wsConnectionValidator &&
-            (!wsCookieContext.get() || !wsConnectionValidator->validateConnection(*wsCookieContext)))
+            (!wsCookieContext || !wsConnectionValidator->validateConnection(*wsCookieContext)))
          {
             ErrLog(<<"WebSocket cookie validation failed, dropping connection");
             // FIXME: should send back a HTTP error code:

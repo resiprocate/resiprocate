@@ -389,7 +389,7 @@ Tuple::makeTupleFromBinaryToken(const resip::Data& binaryFlowToken, const Data& 
    {
       netNs = NetNs::getNetNsName(netNsId);
    }
-   catch(NetNs::Exception e)
+   catch (const NetNs::Exception& e)
    {
        ErrLog(<< "Tuple binary token contained netns id: " << netNsId << "which does not exist." 
                << e);

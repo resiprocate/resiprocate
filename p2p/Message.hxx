@@ -121,7 +121,7 @@ class Message : public Signable
       DestinationId nextDestination() const;
       void popNextDestinationId(); 
       
-      virtual std::auto_ptr<Event> event() = 0;
+      virtual std::unique_ptr<Event> event() = 0;
       
       virtual resip::Data brief() const =0;
       

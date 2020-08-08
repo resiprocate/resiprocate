@@ -3,25 +3,23 @@
 #include "AppSubsystem.hxx"
 #include "UserRegistrationClient.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
 using namespace registrationagent;
 using namespace resip;
 using namespace std;
 
-UserRegistrationClient::UserRegistrationClient(resip::SharedPtr<KeyedFile> keyedFile) :
-   mKeyedFile(keyedFile)
-{
-}
-
-UserRegistrationClient::~UserRegistrationClient()
+UserRegistrationClient::UserRegistrationClient(std::shared_ptr<KeyedFile> keyedFile) :
+   mKeyedFile(std::move(keyedFile))
 {
 }
 
 void
-UserRegistrationClient::addUserAccount(const Uri& aor, SharedPtr<UserAccount> userAccount)
+UserRegistrationClient::addUserAccount(const Uri& aor, std::shared_ptr<UserAccount> userAccount)
 {
-   mAccounts[aor] = userAccount;
+   mAccounts[aor] = std::move(userAccount);
 }
 
 void
@@ -34,8 +32,8 @@ UserRegistrationClient::removeUserAccount(const Uri& aor)
 void
 UserRegistrationClient::setContact(const Uri& aor, const Data& newContact, const time_t expires, const vector<Data>& route)
 {
-   SharedPtr<UserAccount> userAccount = userAccountForAoR(aor);
-   if(userAccount.get())
+   const auto userAccount = userAccountForAoR(aor);
+   if (userAccount)
    {
       userAccount->setContact(newContact, expires, route);
    }
@@ -44,8 +42,8 @@ UserRegistrationClient::setContact(const Uri& aor, const Data& newContact, const
 void
 UserRegistrationClient::unSetContact(const Uri& aor)
 {
-   SharedPtr<UserAccount> userAccount = userAccountForAoR(aor);
-   if(userAccount.get())
+   const auto userAccount = userAccountForAoR(aor);
+   if (userAccount)
    {
       userAccount->unSetContact();
    }
@@ -55,8 +53,8 @@ void
 UserRegistrationClient::onSuccess(ClientRegistrationHandle h, const SipMessage& response)
 {
    InfoLog( << "ClientHandler::onSuccess: " << endl );
-   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
-   if(userAccount.get())
+   const auto userAccount = userAccountForMessage(response);
+   if (userAccount)
    {
       mFailedAccounts.erase(userAccount);
       userAccount->onSuccess(h, response);
@@ -67,8 +65,8 @@ void
 UserRegistrationClient::onRemoved(ClientRegistrationHandle h, const SipMessage& response)
 {
    InfoLog ( << "ClientHandler::onRemoved ");
-   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
-   if(userAccount.get())
+   const auto userAccount = userAccountForMessage(response);
+   if (userAccount)
    {
       mFailedAccounts.erase(userAccount);
       userAccount->onRemoved(h, response);
@@ -79,8 +77,8 @@ void
 UserRegistrationClient::onFailure(ClientRegistrationHandle h, const SipMessage& response)
 {
    InfoLog ( << "ClientHandler::onFailure - check the configuration.  Peer response: " << response );
-   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
-   if(userAccount.get())
+   const auto userAccount = userAccountForMessage(response);
+   if (userAccount)
    {
       mFailedAccounts.insert(userAccount);
       userAccount->onFailure(h, response);
@@ -93,8 +91,8 @@ UserRegistrationClient::onFailure(ClientRegistrationHandle h, const SipMessage& 
 int
 UserRegistrationClient::onRequestRetry(ClientRegistrationHandle h, int retrySeconds, const SipMessage& response)
 {
-   SharedPtr<UserAccount> userAccount = userAccountForMessage(response);
-   if(userAccount.get())
+   const auto userAccount = userAccountForMessage(response);
+   if (userAccount)
    {
       mFailedAccounts.insert(userAccount);
       return userAccount->onRequestRetry(h, retrySeconds, response);
@@ -105,33 +103,33 @@ UserRegistrationClient::onRequestRetry(ClientRegistrationHandle h, int retrySeco
 bool
 UserRegistrationClient::onRefreshRequired(ClientRegistrationHandle h, const resip::SipMessage& lastRequest)
 {
-   SharedPtr<UserAccount> userAccount = userAccountForMessage(lastRequest);
-   if(userAccount.get())
+   const auto userAccount = userAccountForMessage(lastRequest);
+   if (userAccount)
    {
       return userAccount->onRefreshRequired(h, lastRequest);
    }
    return true;
 }
 
-SharedPtr<UserAccount>
+std::shared_ptr<UserAccount>
 UserRegistrationClient::userAccountForMessage(const resip::SipMessage& m)
 {
    Uri aor = m.header(h_To).uri();
    return userAccountForAoR(aor);
 }
 
-SharedPtr<UserAccount>
+std::shared_ptr<UserAccount>
 UserRegistrationClient::userAccountForAoR(const Uri& aor)
 {
-   map<Uri, SharedPtr<UserAccount> >::iterator it = mAccounts.find(aor);
-   if(it != mAccounts.end())
+   const auto it = mAccounts.find(aor);
+   if (it != std::end(mAccounts))
    {
       return it->second;
    }
    else
    {
       WarningLog(<<"couldn't find UserAccount for " << aor);
-      return SharedPtr<UserAccount>();
+      return nullptr;
    }
 }
 

@@ -24,7 +24,7 @@ class MasterProfile : public UserProfile
       /// Default is "sip"
       virtual void addSupportedScheme(const Data& scheme);          
       virtual bool isSchemeSupported(const Data& scheme) const;
-      virtual void clearSupportedSchemes(void);
+      virtual void clearSupportedSchemes() noexcept;
 
       /// Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
       virtual void addSupportedMethod(const MethodTypes& method);   
@@ -33,13 +33,13 @@ class MasterProfile : public UserProfile
       virtual Tokens getAllowedMethods() const;
       virtual Data getAllowedMethodsData() const;
 
-      virtual void clearSupportedMethods(void);
+      virtual void clearSupportedMethods() noexcept;
 
       /// Default is none. Do not use to enable PRACK(100rel) support. 
       virtual void addSupportedOptionTag(const Token& tag);        
       virtual Tokens getUnsupportedOptionsTags(const Tokens& requires); // Returns list of unsupported option tags
       virtual Tokens getSupportedOptionTags() const;
-      virtual void clearSupportedOptionTags(void);
+      virtual void clearSupportedOptionTags() noexcept;
 
       typedef enum
       {
@@ -63,7 +63,7 @@ class MasterProfile : public UserProfile
       // 
       // Invite/18x(offer)/PRACK(ans) also works
       // 
-      // Invite(offer)/18x(ans)/PRACK(offer)/200P(ans) issupported, but not recommended.  
+      // Invite(offer)/18x(ans)/PRACK(offer)/200P(ans) is supported, but not recommended.  
       // The UAC MUST call provideOffer from the onAnswer callback in order to generate 
       // the offer in the PRACK.
       //
@@ -73,8 +73,8 @@ class MasterProfile : public UserProfile
       //
       // Note:  Using SupportedEssential is exactly the same as using Supported, 
       //        SupportedEssential only effects UAS Prack implementation
-      virtual void setUacReliableProvisionalMode(ReliableProvisionalMode mode);
-      virtual ReliableProvisionalMode getUacReliableProvisionalMode() const;
+      virtual void setUacReliableProvisionalMode(ReliableProvisionalMode mode) noexcept;
+      virtual ReliableProvisionalMode getUacReliableProvisionalMode() const noexcept;
 
       // UAS PRACK support.  UPDATE must be enabled(currently defaults to on, do
       // not disable w/out disabling UAS PRACK support).
@@ -85,8 +85,8 @@ class MasterProfile : public UserProfile
       // SupportedEssential - Only send reliable provisionals if sending a body and far end supports
       // Supported - Always send reliable provisionals if far end supports
       // Required - Always send reliable provisionals
-      virtual void setUasReliableProvisionalMode(ReliableProvisionalMode mode);
-      virtual ReliableProvisionalMode getUasReliableProvisionalMode() const;
+      virtual void setUasReliableProvisionalMode(ReliableProvisionalMode mode) noexcept;
+      virtual ReliableProvisionalMode getUasReliableProvisionalMode() const noexcept;
 
       /// Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
       virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);      
@@ -94,61 +94,61 @@ class MasterProfile : public UserProfile
       virtual bool isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType);
       virtual Mimes getSupportedMimeTypes(const MethodTypes& method);
       virtual void clearSupportedMimeTypes(const MethodTypes& method);
-      virtual void clearSupportedMimeTypes(void);  // Clear for all Methods
+      virtual void clearSupportedMimeTypes() noexcept;  // Clear for all Methods
 
       /// Default is no encoding
       virtual void addSupportedEncoding(const Token& encoding);     
       virtual bool isContentEncodingSupported(const Token& contentEncoding) const;
       virtual Tokens getSupportedEncodings() const;
-      virtual void clearSupportedEncodings(void);
+      virtual void clearSupportedEncodings() noexcept;
 
       /// Default is all - if nothing is set, then all are allowed
       virtual void addSupportedLanguage(const Token& lang);         
       virtual bool isLanguageSupported(const Tokens& lang) const;
       virtual Tokens getSupportedLanguages() const;
-      virtual void clearSupportedLanguages(void);
+      virtual void clearSupportedLanguages() noexcept;
       
       /// Default is to not send an Allow-Events header.
       virtual void addAllowedEvent(const Token& event);         
       virtual bool isEventAllowed(const Tokens& event) const;
       virtual Tokens getAllowedEvents() const;
-      virtual void clearAllowedEvents(void);
+      virtual void clearAllowedEvents() noexcept;
       
       ///enable/disable content validation
-      virtual bool& validateContentEnabled();
-      virtual bool validateContentEnabled() const;
+      virtual bool& validateContentEnabled() noexcept;
+      virtual bool validateContentEnabled() const noexcept;
 
       ///enable/disable content language validation
-      virtual bool& validateContentLanguageEnabled();
-      virtual bool validateContentLanguageEnabled() const;
+      virtual bool& validateContentLanguageEnabled() noexcept;
+      virtual bool validateContentLanguageEnabled() const noexcept;
 
       ///enable/disable Accept header validation
-      virtual bool& validateAcceptEnabled();
-      virtual bool validateAcceptEnabled() const;
+      virtual bool& validateAcceptEnabled() noexcept;
+      virtual bool validateAcceptEnabled() const noexcept;
 
       ///Set this to allow the Registration Server to accept registration requests that contain 
       ///a To Tag.
-      virtual bool& allowBadRegistrationEnabled();
-      virtual bool allowBadRegistrationEnabled() const;  
+      virtual bool& allowBadRegistrationEnabled() noexcept;
+      virtual bool allowBadRegistrationEnabled() const noexcept;
 
            
       ///
-      /// Used when receiveing a REGISTER request, if the expires value in the request
+      /// Used when receiving a REGISTER request, if the expires value in the request
       /// is less than this time, then dum will reject the message with a 423 and set the
       /// min-expires header to the value specified here.
       ///
-      virtual UInt32& serverRegistrationMinExpiresTime(void);
-      virtual const UInt32 serverRegistrationMinExpiresTime(void) const;
+      virtual UInt32& serverRegistrationMinExpiresTime() noexcept;
+      virtual UInt32 serverRegistrationMinExpiresTime() const noexcept;
 
       ///
       /// If an inbound REGISTER has an Expires header or any individual contact bindings with expires greater
       /// than this value, use this Max expires instead of the one given by the client.
-      virtual UInt32& serverRegistrationMaxExpiresTime(void);
-      virtual const UInt32 serverRegistrationMaxExpiresTime(void) const;
+      virtual UInt32& serverRegistrationMaxExpiresTime() noexcept;
+      virtual UInt32 serverRegistrationMaxExpiresTime() const noexcept;
 
       /// If no Expires header or individual contact bindings specify an expiration value, use this value.
-      virtual UInt32& serverRegistrationDefaultExpiresTime(void);
-      virtual const UInt32 serverRegistrationDefaultExpiresTime(void) const;
+      virtual UInt32& serverRegistrationDefaultExpiresTime() noexcept;
+      virtual UInt32 serverRegistrationDefaultExpiresTime() const noexcept;
 
       ///Set this to include the RequestURI in merge request detection.
       ///*!*!*!*!*!*! RED FLASHING LIGHT *!*!*!*!*!*! 
@@ -161,8 +161,8 @@ class MasterProfile : public UserProfile
       ///to more than one line - if you want only one line to ring, leave this false.
       ///If you want them all to ring, set it to true.
       
-      virtual bool& checkReqUriInMergeDetectionEnabled();
-      virtual bool checkReqUriInMergeDetectionEnabled() const;
+      virtual bool& checkReqUriInMergeDetectionEnabled() noexcept;
+      virtual bool checkReqUriInMergeDetectionEnabled() const noexcept;
 
       /// Enabling this setting will allow the application layer to provide additional SIP responses, from class 4xx, 5xx, 6xx, 
       /// that will lead to transaction termination instead of other failure effects like dialog termination, as defined by
@@ -178,14 +178,14 @@ class MasterProfile : public UserProfile
       /// 1. Set additionalTransactionTerminatingResponsesEnabled() = true on master profile
       /// 2. Call method addAdditionalTransactionTerminatingResponses(code) to provide SIP responses for which the application
       /// need the transaction to be terminated
-      virtual bool& additionalTransactionTerminatingResponsesEnabled();
-      virtual bool additionalTransactionTerminatingResponsesEnabled() const;
+      virtual bool& additionalTransactionTerminatingResponsesEnabled() noexcept;
+      virtual bool additionalTransactionTerminatingResponsesEnabled() const noexcept;
 
       virtual void addAdditionalTransactionTerminatingResponses(int code);
       virtual bool isAdditionalTransactionTerminatingResponse(int code) const;
 
       virtual const std::set<int>& getAdditionalTransactionTerminatingResponses() const;
-      virtual void clearAdditionalTransactionTerminatingResponses(void);
+      virtual void clearAdditionalTransactionTerminatingResponses() noexcept;
 
    private:
       virtual UserProfile* clone() const;

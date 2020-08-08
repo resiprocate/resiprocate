@@ -1,5 +1,3 @@
-#include <boost/bind.hpp>
-
 #include "TurnAllocation.hxx"
 #include "TurnAllocationManager.hxx"
 #include "TurnManager.hxx"
@@ -10,6 +8,8 @@
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
+
+#include <boost/bind.hpp>
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -85,7 +85,7 @@ TurnAllocation::startRelay()
 {
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
-      mUdpRelayServer.reset(new UdpRelayServer(mTurnManager.getIOService(), *this));
+      mUdpRelayServer = std::make_shared<UdpRelayServer>(mTurnManager.getIOService(), *this);
       if(!mUdpRelayServer->startReceiving())
       {
          stopRelay();  // Ensure allocation timer is stopped
@@ -106,10 +106,10 @@ void
 TurnAllocation::stopRelay()
 {
    // Stop and detach Relay Server
-   if(mUdpRelayServer.get())
+   if (mUdpRelayServer)
    {
       mUdpRelayServer->stop();
-      mUdpRelayServer.reset();
+      mUdpRelayServer = nullptr;
    }
    mAllocationTimer.cancel();
 }
@@ -176,7 +176,7 @@ TurnAllocation::onSocketDestroyed()
 }
 
 void 
-TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool isFramed)
+TurnAllocation::sendDataToPeer(unsigned short channelNumber, const std::shared_ptr<DataBuffer>& data, bool isFramed)
 {
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
    if(remotePeer)
@@ -202,7 +202,7 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<D
 }
 
 void 
-TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool isFramed)
+TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const std::shared_ptr<DataBuffer>& data, bool isFramed)
 {
    DebugLog(<< "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
            mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " peerAddress=" << peerAddress);
@@ -240,7 +240,7 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
 }
 
 void 
-TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data)
+TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const std::shared_ptr<DataBuffer>& data)
 {
    // See if a permission exists
    if(!existsPermission(peerAddress.getAddress()))
@@ -279,7 +279,7 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr
 
       // send DataInd to local client
       unsigned int bufferSize = (unsigned int)data->size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnData Header + potential pad */;
-      boost::shared_ptr<DataBuffer> buffer = AsyncSocketBase::allocateBuffer(bufferSize);
+      const auto buffer = AsyncSocketBase::allocateBuffer(bufferSize);
       unsigned int size = dataInd.stunEncodeMessage((char*)buffer->data(), bufferSize);
       buffer->truncate(size);  // Set size to proper size
       mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), buffer);

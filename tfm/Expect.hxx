@@ -121,14 +121,14 @@ class Expect : public TestEndPoint::ExpectBase
 
       virtual std::ostream& output(std::ostream& s) const;
 
-      class Exception : public resip::BaseException
+      class Exception final : public resip::BaseException
       {
          public:
             Exception(const resip::Data& msg,
                       const resip::Data& file,
-                      const int line);
-            virtual resip::Data getName() const ;
-            virtual const char* name() const ;
+                      int line);
+            virtual resip::Data getName() const;
+            const char* name() const noexcept override;
       };
 
       virtual Box layout() const;

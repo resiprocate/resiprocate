@@ -1,10 +1,11 @@
 #if !defined(RESIP_SERVERPUBLICATION_HXX)
 #define RESIP_SERVERPUBLICATION_HXX
 
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -19,15 +20,15 @@ class ServerPublication : public BaseUsage
       const Data& getDocumentKey() const;
       const Data& getEventType() const {return(mEventType);}
       
-      SharedPtr<SipMessage> accept(int statusCode = 200);
-      SharedPtr<SipMessage> reject(int responseCode);
+      std::shared_ptr<SipMessage> accept(int statusCode = 200);
+      std::shared_ptr<SipMessage> reject(int responseCode);
 
       virtual void end();
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      void send(SharedPtr<SipMessage> response);      
+      void send(std::shared_ptr<SipMessage> response);
 
       Data getPublisher() const; // aor of From
       virtual EncodeStream& dump(EncodeStream& strm) const;
@@ -40,7 +41,7 @@ class ServerPublication : public BaseUsage
       friend class DialogUsageManager;
       ServerPublication(DialogUsageManager& dum, const Data& etag, const SipMessage& request);
       SipMessage mLastRequest;
-      SharedPtr<SipMessage> mLastResponse;
+      std::shared_ptr<SipMessage> mLastResponse;
       const Data mEtag;
       const Data mEventType;
       const Data mDocumentKey;

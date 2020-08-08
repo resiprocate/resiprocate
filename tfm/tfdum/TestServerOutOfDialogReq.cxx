@@ -58,7 +58,7 @@ TestServerOutOfDialogReq::end()
 }
  
 CommonAction* 
-TestServerOutOfDialogReq::send(resip::SharedPtr<SipMessage> msg)
+TestServerOutOfDialogReq::send(std::shared_ptr<SipMessage> msg)
 {
    return new CommonAction(mUa, "send", 
                            boost::bind(&ServerOutOfDialogReq::send, boost::bind<ServerOutOfDialogReq*>(static_cast<ServerOutOfDialogReq*(ServerOutOfDialogReqHandle::*)()>(&ServerOutOfDialogReqHandle::get), boost::ref(mHandle)), 

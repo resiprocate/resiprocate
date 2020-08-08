@@ -341,8 +341,8 @@ SipStack::addTransport( TransportType protocol,
                         const Data& certificateFilename, const Data& privateKeyFilename,
                         SecurityTypes::TlsClientVerificationMode cvm,
                         bool useEmailAsSIP,
-                        SharedPtr<WsConnectionValidator> wsConnectionValidator,
-                        SharedPtr<WsCookieContextFactory> wsCookieContextFactory,
+                        std::shared_ptr<WsConnectionValidator> wsConnectionValidator,
+                        std::shared_ptr<WsCookieContextFactory> wsCookieContextFactory,
                         const Data& netNs)
 {
    resip_assert(!mShuttingDown);
@@ -569,7 +569,7 @@ SipStack::addTransport(std::unique_ptr<Transport> transport)
    }
 
    // Set Sip Message Logging Handler if one was provided
-   if(mTransportSipMessageLoggingHandler.get())
+   if (mTransportSipMessageLoggingHandler)
    {
        transport->setSipMessageLoggingHandler(mTransportSipMessageLoggingHandler);
    }

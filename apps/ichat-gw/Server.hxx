@@ -17,7 +17,6 @@
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <resip/dum/RegistrationHandler.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
 
 #include "ConfigParser.hxx"
@@ -27,6 +26,8 @@
 #include "MediaRelay.hxx"
 #include "IChatIPPortData.hxx"
 #include "IPCThread.hxx"
+
+#include <memory>
 
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
@@ -183,7 +184,7 @@ public:
    B2BSession* findMatchingIChatB2BSession(const resip::SipMessage& msg);
 
 protected:
-   resip::SharedPtr<resip::MasterProfile>& getMasterProfile() { return mProfile; }
+   std::shared_ptr<resip::MasterProfile>& getMasterProfile() noexcept { return mProfile; }
    bool translateAddress(const resip::Data& address, resip::Data& translation, bool failIfNoRule=false);
 
    // IPC Handler
@@ -289,7 +290,7 @@ private:
    friend class SipUnregisterJabberUserCmd;
    void sipUnregisterJabberUserImpl(const std::string& jidToUnregister);
 
-   resip::SharedPtr<resip::MasterProfile> mProfile;
+   std::shared_ptr<resip::MasterProfile> mProfile;
    resip::Security* mSecurity;
    resip::SelectInterruptor mSelectInterruptor;
    resip::SipStack mStack;

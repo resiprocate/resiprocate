@@ -129,7 +129,7 @@ protected:
    std::vector<Plugin*> mPlugins;
    typedef std::map<unsigned int, resip::NameAddr> TransportRecordRouteMap;
    TransportRecordRouteMap mStartupTransportRecordRoutes;
-   resip::SharedPtr<resip::DomainMatcher> mDomainMatcher;
+   std::shared_ptr<resip::DomainMatcher> mDomainMatcher;
    resip::Data mDefaultRealm;
 };
 

@@ -3,7 +3,6 @@
 #endif
 
 #include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -39,8 +38,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                          const char* stunUsername,
                          const char* stunPassword,
                          bool forceCOMedia,
-                         SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
-                         SharedPtr<FlowContext> context) :
+                         std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
+                         std::shared_ptr<FlowContext> context) :
 #ifdef USE_SSL
    mDtlsFactory(dtlsFactory),
 #endif  
@@ -67,8 +66,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                           localRtpBinding, 
                           *this,
                           mForceCOMedia,
-                          SharedPtr<RTCPEventLoggingHandler>(),
-                          context);
+                          nullptr,
+                          std::move(context));
 
       mRtcpFlow = new Flow(ioService, 
 #ifdef USE_SSL
@@ -78,8 +77,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                            localRtcpBinding, 
                            *this,
                            mForceCOMedia,
-                           rtcpEventLoggingHandler,
-                           context);
+                           std::move(rtcpEventLoggingHandler),
+                           std::move(context));
 
       mRtpFlow->activateFlow(StunMessage::PropsPortPair);
 
@@ -99,8 +98,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                           localRtpBinding, 
                           *this,
                           mForceCOMedia,
-                          SharedPtr<RTCPEventLoggingHandler>(),
-                          context);
+                          nullptr,
+                          std::move(context));
       mRtpFlow->activateFlow(StunMessage::PropsPortEven);
       mRtcpFlow = 0;
    }

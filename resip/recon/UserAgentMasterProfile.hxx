@@ -1,13 +1,14 @@
 #if !defined(UserAgentMasterProfile_hxx)
 #define UserAgentMasterProfile_hxx
 
-#include <rutil/SharedPtr.hxx>
 #include <rutil/TransportType.hxx>
 #include <rutil/dns/DnsStub.hxx>
 #include <resip/stack/SecurityTypes.hxx> 
 #include <resip/stack/Transport.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <reflow/RTCPEventLoggingHandler.hxx>
+
+#include <memory>
 #include <vector>
 
 namespace recon
@@ -44,13 +45,13 @@ public:
       unsigned int mRcvBufLen;
    };
 
-   void setTransportSipMessageLoggingHandler(resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> handler);
+   void setTransportSipMessageLoggingHandler(std::shared_ptr<resip::Transport::SipMessageLoggingHandler> handler) noexcept;
 
-   const resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> getTransportSipMessageLoggingHandler() const;
+   std::shared_ptr<resip::Transport::SipMessageLoggingHandler> getTransportSipMessageLoggingHandler() const noexcept;
 
-   void setRTCPEventLoggingHandler(resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> handler);
+   void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> handler) noexcept;
 
-   const resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const;
+   std::shared_ptr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const noexcept;
 
    /**
      Adds a network transport to use for send/receiving SIP messages.
@@ -203,8 +204,8 @@ private:
    std::vector<resip::Data> mRootCertDirectories;
    std::vector<resip::Data> mRootCertBundles;
    bool mStatisticsManagerEnabled;
-   resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
-   resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
+   std::shared_ptr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+   std::shared_ptr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
    std::vector<TransportInfo> mTransports;
    std::vector<resip::Data> mEnumSuffixes;
    resip::DnsStub::NameserverList mAdditionalDnsServers;

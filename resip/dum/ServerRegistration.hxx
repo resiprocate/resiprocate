@@ -5,6 +5,7 @@
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "resip/stack/SipMessage.hxx"
 
+#include <memory>
 #include <utility>
 
 namespace resip
@@ -36,11 +37,11 @@ class ServerRegistration: public NonDialogUsage
       */
       void reject(int statusCode);
 
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      void end() override;
+      void dispatch(const SipMessage& msg) override;
+      void dispatch(const DumTimeout& timer) override;
 
-      virtual EncodeStream& dump(EncodeStream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const override;
 
       /** Used when useAsyncProcessing() is true.  Provide the current set of contacts for this registration for
         * processing.  This is required during initial registration processing to provide a local copy of the registered contacts, which
@@ -51,8 +52,8 @@ class ServerRegistration: public NonDialogUsage
         */
       bool asyncProvideContacts(std::unique_ptr<resip::ContactPtrList> contacts);
 
-      resip::SharedPtr<ContactList> getOriginalContacts() { return mOriginalContacts; }  // WARNING - use this only if async mode is not used
-      const ContactList& getRequestContacts() { return mRequestContacts; }
+      std::shared_ptr<ContactList> getOriginalContacts() const noexcept { return mOriginalContacts; }  // WARNING - use this only if async mode is not used
+      const ContactList& getRequestContacts() const noexcept { return mRequestContacts; }
 
    protected:
       virtual ~ServerRegistration();
@@ -70,13 +71,9 @@ class ServerRegistration: public NonDialogUsage
 
       SipMessage mRequest;
       Uri mAor;
-      resip::SharedPtr<ContactList> mOriginalContacts;  // Used only for non-async processing
+      std::shared_ptr<ContactList> mOriginalContacts;  // Used only for non-async processing
       ContactList mRequestContacts;  // Contains the Contacts from the REGISTER request
       bool mDidOutbound;
-
-      // disabled
-      ServerRegistration(const ServerRegistration&);
-      ServerRegistration& operator=(const ServerRegistration&);
 
       /** States are used to keep track of asynchronous requests made to the database.
          Typical activity & state progression for a successful registration (onQuery & reject() are slightly different):
@@ -169,7 +166,7 @@ class ServerRegistration: public NonDialogUsage
             RegistrationPersistenceManager::update_status_t
             updateContact(const ContactInstanceRecord &rec);
 
-            /** Remove the transacation log and updated contact list.  This object should be considered destroyed and
+            /** Remove the transaction log and updated contact list.  This object should be considered destroyed and
                 not used after releasing.
                */
             void releaseLog(std::unique_ptr<ContactRecordTransactionLog> &log, std::unique_ptr<ContactPtrList> &modifiedContacts)
@@ -184,12 +181,12 @@ class ServerRegistration: public NonDialogUsage
             std::unique_ptr<ContactPtrList> mModifiedContacts;
       };
 
-      resip::SharedPtr<AsyncLocalStore> mAsyncLocalStore;
+      std::shared_ptr<AsyncLocalStore> mAsyncLocalStore;
 
       /** Message stored during accept() call when waiting for final contact list from database.
         * Is eventually used as the 200Ok sent back to DUM when all is finished.
         */
-      resip::SharedPtr<SipMessage> mAsyncOkMsg;
+      std::shared_ptr<SipMessage> mAsyncOkMsg;
 };
 
 }

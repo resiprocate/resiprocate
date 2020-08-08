@@ -9,6 +9,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/dum/PublicationHandler.hxx"
 
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -22,13 +23,13 @@ ClientPublication::getHandle()
 
 ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      DialogSet& dialogSet,
-                                     SharedPtr<SipMessage> req)
+                                     std::shared_ptr<SipMessage> req)
    : NonDialogUsage(dum, dialogSet),
      mPublished(false),
      mWaitingForResponse(false),
      mPendingPublish(false),
      mPendingEnd(false),
-     mPublish(req),
+     mPublish(std::move(req)),
      mEventType(req->header(h_Event).value()),
      mTimerSeq(0),
      mDocument(mPublish->releaseContents().release())
@@ -86,7 +87,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientPublicationHandle.isValid())
       {
@@ -94,7 +95,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientPublicationEndCommand";
    }
@@ -290,7 +291,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientPublicationHandle.isValid())
       {
@@ -298,7 +299,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientPublicationRefreshCommand";
    }
@@ -345,7 +346,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientPublicationHandle.isValid())
       {
@@ -353,7 +354,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientPublicationUpdateCommand";
    }
@@ -370,7 +371,7 @@ ClientPublication::updateCommand(const Contents* body)
 }
 
 void 
-ClientPublication::send(SharedPtr<SipMessage> request)
+ClientPublication::send(std::shared_ptr<SipMessage> request)
 {
    if (mWaitingForResponse)
    {
@@ -379,7 +380,7 @@ ClientPublication::send(SharedPtr<SipMessage> request)
    else
    {
       request->header(h_CSeq).sequence()++;
-      mDum.send(request);
+      mDum.send(std::move(request));
       mWaitingForResponse = true;
       mPendingPublish = false;
    }

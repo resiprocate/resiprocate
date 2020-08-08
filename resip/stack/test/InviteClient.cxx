@@ -87,7 +87,7 @@ InviteClient::go()
             unique_ptr<SipMessage> b_200(waitForResponse(200, 1000));
             numInvited++;
          }
-         catch(Exception e)
+         catch (const Exception&)
          {
             ErrLog(<< "Proxy not responding.");
             exit(-1);

@@ -90,8 +90,8 @@ public:
     {
     	//cout << "Message rcv: "  << message << "\n";
 	
-	    SharedPtr<SipMessage> ok = handle->accept();
-	    handle->send(ok);
+	    auto ok = handle->accept();
+	    handle->send(std::move(ok));
 
 	    Contents *body = message.getContents();
 	    cout << "Message rcv: "  << *body << "\n";
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 	
 	// sip logic
 	RegListener client;
-	SharedPtr<MasterProfile> profile(new MasterProfile);   
+	auto profile = std::make_shared<MasterProfile>();   
 	unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
 
     SipStack clientStack;
@@ -155,10 +155,10 @@ int main(int argc, char *argv[]) {
 	profile->setDefaultFrom(naFrom);
 	profile->setDigestCredential(realm.c_str(), user.c_str(), passwd.c_str());
 	
-	SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(naFrom);
+	auto regMessage = clientDum.makeRegistration(naFrom);
 	
 	InfoLog( << *regMessage << "Generated register: " << endl << *regMessage );
-	clientDum.send( regMessage );
+	clientDum.send(std::move(regMessage));
 
 	while(true) // (!cmh->isEnded() || !smh->isRcvd() )
 

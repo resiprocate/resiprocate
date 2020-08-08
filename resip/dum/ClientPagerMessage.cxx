@@ -25,7 +25,7 @@
 using namespace resip;
 
 #if(0)
-//  for appcliation behaves like ICQ
+//  for application behaves like ICQ
 app::onSendButtonClicked(im)
 {
     disableSendButton();
@@ -109,7 +109,7 @@ ClientPagerMessage::~ClientPagerMessage()
 }
 
 SipMessage&
-ClientPagerMessage::getMessageRequest()
+ClientPagerMessage::getMessageRequest() noexcept
 {
    return *mRequest;
 }
@@ -141,7 +141,7 @@ public:
    { 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mClientPagerMessageHandle.isValid())
       {
@@ -149,7 +149,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientPagerMessagePageCommand";
    }
@@ -168,11 +168,11 @@ ClientPagerMessage::pageCommand(std::unique_ptr<Contents> contents,
 }
 
 // Use this API if the application has ongoing pending messages and it is using
-// getMessageRequest to modify the target routing information for messsages (ie:
+// getMessageRequest to modify the target routing information for messages (ie:
 // requestUri or Route headers).  This will cause the current pending message to
 // be re-sent immediately using the new information that the application just set.
 // Any onSuccess or onFailure callbacks that might result from the active pending
-// message at the time this is called will be supressed.  Any messages queued 
+// message at the time this is called will be suppressed.  Any messages queued 
 // behind that message will be dispatched sequentially to the new target.
 void 
 ClientPagerMessage::newTargetInfoSet()
@@ -193,7 +193,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
    ClientPagerMessageHandler* handler = mDum.mClientPagerMessageHandler;
    resip_assert(handler);
 
-   int code = msg.header(h_StatusLine).statusCode();
+   const int code = msg.header(h_StatusLine).statusCode();
 
    DebugLog ( << "ClientPagerMessageReq::dispatch(msg)" << msg.brief());
    {
@@ -204,7 +204,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
       else if (code < 300)
       {
           // if cseq doesn't match last message paged then someone must have called newTargetInfoSet
-          // we want to supress the onSuccess callback and logic, since we re-sent this first queued 
+          // we want to suppress the onSuccess callback and logic, since we re-sent this first queued 
           // item to a new target
           if (msg.header(h_CSeq).sequence() == mRequest->header(h_CSeq).sequence())
           {
@@ -223,14 +223,14 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
       else
       {
           // if cseq doesn't match last message paged then someone must have called newTargetInfoSet
-          // we want to supress the onFailure callback and logic, since we re-sent this first queued 
+          // we want to suppress the onFailure callback and logic, since we re-sent this first queued 
           // item to a new target
           if (msg.header(h_CSeq).sequence() == mRequest->header(h_CSeq).sequence())
           {
               if (!mMsgQueue.empty())
               {
                   // if cseq doesn't match first queued element - someone must have called newTargetInfoSet
-                  // we want to supress the onFailure callback and logic, since we re-sent this first queued item to a new target
+                  // we want to suppress the onFailure callback and logic, since we re-sent this first queued item to a new target
                   SipMessage errResponse;
                   MsgQueue::iterator contents;
                   for (contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
@@ -275,12 +275,12 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       mClientPagerMessage.end();
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ClientPagerMessageEndCommand";
    }

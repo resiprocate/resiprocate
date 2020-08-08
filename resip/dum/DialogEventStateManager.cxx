@@ -8,11 +8,7 @@ namespace resip
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 DialogEventStateManager::DialogEventStateManager()
-   : mDialogEventHandler(0)
-{
-}
-
-DialogEventStateManager::~DialogEventStateManager()
+   : mDialogEventHandler(nullptr)
 {
 }
 
@@ -195,7 +191,7 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
       eventInfo->mRemoteOfferAnswer = (is->hasRemoteOfferAnswer() ? std::unique_ptr<Contents>(is->getRemoteOfferAnswer().clone()) : nullptr);
 
       // for the dialog that got the 200 OK
-      SharedPtr<ConfirmedDialogEvent> confirmedEvt(new ConfirmedDialogEvent(*eventInfo));
+      std::shared_ptr<ConfirmedDialogEvent> confirmedEvt(new ConfirmedDialogEvent(*eventInfo));
       
       //mDialogEventHandler->onConfirmed(confirmedEvt);
       MultipleEventDialogEvent::EventVector events;
@@ -212,9 +208,8 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
          if (dialogState == DialogEventInfo::Proceeding || dialogState == DialogEventInfo::Early)
          {
             // .jjg. we're killing a *specific* dialog *after* the successful completion of the initial INVITE transaction;
-            // so just elminate this dialog, not the entire dialogset
-            SharedPtr<TerminatedDialogEvent> evt(onDialogTerminatedImpl(it->second, InviteSessionHandler::RemoteCancel));
-            events.push_back(evt);
+            // so just eliminate this dialog, not the entire dialogset
+            events.emplace_back(std::shared_ptr<TerminatedDialogEvent>(onDialogTerminatedImpl(it->second, InviteSessionHandler::RemoteCancel)));
             delete it->second;
             mDialogIdToEventInfo.erase(it++);
          }
@@ -224,7 +219,7 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
          }
       }
 
-      if (events.size() > 0)
+      if (!events.empty())
       {
          events.push_back(confirmedEvt);
          MultipleEventDialogEvent multipleEvt(events);

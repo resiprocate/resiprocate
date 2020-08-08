@@ -1,9 +1,6 @@
 #if !defined(ConversationManager_hxx)
 #define ConversationManager_hxx
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>
@@ -13,7 +10,6 @@
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
-#include <rutil/SharedPtr.hxx>
 
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
@@ -21,6 +17,8 @@
 #include "MediaInterface.hxx"
 
 #include "reflow/FlowManager.hxx"
+
+#include <memory>
 
 class CpMediaInterfaceFactory;
 
@@ -174,7 +172,7 @@ public:
    */   
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, resip::SharedPtr<resip::UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<resip::UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
 
    /**
      Creates a new media resource participant in the specified conversation.  
@@ -287,7 +285,7 @@ public:
      Modifies how the participant contributes to the particular conversation.  
      The send and receive gain can be set to a number between 0 and 100.
 
-     @param convHandle Handle of the conversation to apply modication to
+     @param convHandle Handle of the conversation to apply modification to
      @param partHandle Handle of the participant to modify
    */
    virtual void modifyParticipantContribution(ConversationHandle convHandle, ParticipantHandle partHandle, unsigned int inputGain, unsigned int outputGain);
@@ -673,12 +671,12 @@ private:
 
    // sipX Media related members
    void createMediaInterfaceAndMixer(bool giveFocus, ConversationHandle ownerConversationHandle, 
-                                     resip::SharedPtr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
-   resip::SharedPtr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
+                                     std::shared_ptr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
+   std::shared_ptr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
    CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
    BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
    CpMediaInterfaceFactory* mMediaFactory;
-   resip::SharedPtr<MediaInterface> mMediaInterface;  
+   std::shared_ptr<MediaInterface> mMediaInterface;  
    BridgeMixer* mBridgeMixer;
    int mSipXTOSValue;
 };

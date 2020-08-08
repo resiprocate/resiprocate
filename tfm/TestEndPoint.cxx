@@ -20,7 +20,7 @@ TestEndPoint::AlwaysTrue* TestEndPoint::AlwaysTruePred = new TestEndPoint::Alway
 
 TestEndPoint::GlobalFailure::GlobalFailure(const resip::Data& msg,
                                            const resip::Data& file, 
-                                           int line)
+                                           const int line)
    : TestException(msg, file, line)
 {
 }

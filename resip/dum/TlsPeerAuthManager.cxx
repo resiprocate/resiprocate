@@ -46,7 +46,7 @@ TlsPeerAuthManager::process(Message* msg)
 
    if (sipMessage)
    {
-      //!dcm! -- unecessary happens in handle
+      //!dcm! -- unnecessary happens in handle
       switch ( handle(sipMessage) )
       {
          case TlsPeerAuthManager::Rejected:
@@ -121,7 +121,7 @@ TlsPeerAuthManager::authorizedForThisIdentity(
       DebugLog(<< "Certificate name " << i << " doesn't match AoR " << aor << " or domain " << domain);
    }
 
-   if(mCommonNameMappings.size() == 0)
+   if (mCommonNameMappings.empty())
    {
       DebugLog(<<"mCommonNameMappings is empty, trying async");
       TlsPeerIdentityInfoMessage* tpaInfo = new TlsPeerIdentityInfoMessage(transactionId, &mDum);
@@ -156,9 +156,9 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
       sipMessage->header(h_From).isAllContacts() )
    {
       InfoLog(<<"Malformed From header: cannot verify against any certificate. Rejecting.");
-      SharedPtr<SipMessage> response(new SipMessage);
+      auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *sipMessage, 400, "Malformed From header");
-      mDum.send(response);
+      mDum.send(std::move(response));
       return Rejected;
    }
    Uri claimedUri = sipMessage->header(h_From).uri();
@@ -168,9 +168,9 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
          sipMessage->header(h_ReferredBy).isAllContacts() )
       {
          InfoLog(<<"Malformed Referred-By header: cannot verify against any certificate. Rejecting.");
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          Helper::makeResponse(*response, *sipMessage, 400, "Malformed Referred-By header");
-         mDum.send(response);
+         mDum.send(std::move(response));
          return Rejected;
       }
       // For REFER requests, we authenticate the Referred-By header
@@ -221,9 +221,9 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
          return RequestedInfo;
       }
       DebugLog(<<"not authorized");
-      SharedPtr<SipMessage> response(new SipMessage);
+      auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
-      mDum.send(response);
+      mDum.send(std::move(response));
       return Rejected;
    }
    else
@@ -235,9 +235,9 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
          if(mThirdPartyRequiresCertificate)
          {
             DebugLog(<<"third party requires certificate");
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             Helper::makeResponse(*response, *sipMessage, 403, "Mutual TLS required to handle that message");
-            mDum.send(response);
+            mDum.send(std::move(response));
             return Rejected;
          }
          else
@@ -259,9 +259,9 @@ TlsPeerAuthManager::handle(SipMessage* sipMessage)
          return RequestedInfo;
       }
       DebugLog(<<"not authorized");
-      SharedPtr<SipMessage> response(new SipMessage);
+      auto response = std::make_shared<SipMessage>();
       Helper::makeResponse(*response, *sipMessage, 403, "Authorization Failed for peer cert");
-      mDum.send(response);
+      mDum.send(std::move(response));
       return Rejected;
    }
 
@@ -286,9 +286,9 @@ TlsPeerAuthManager::handleTlsPeerIdentityInfo(TlsPeerIdentityInfoMessage *tpiInf
    }
 
    DebugLog(<<"not authorized");
-   SharedPtr<SipMessage> response(new SipMessage);
+   auto response = std::make_shared<SipMessage>();
    Helper::makeResponse(*response, *request, 403, "Authentication Failed for peer cert.");
-   mDum.send(response);
+   mDum.send(std::move(response));
    delete request;
    return 0;
 }

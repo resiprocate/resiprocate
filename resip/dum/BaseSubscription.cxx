@@ -56,12 +56,8 @@ BaseSubscription::matches(const SipMessage& msg)
    }
 }
 
-BaseSubscription::~BaseSubscription()
-{
-}
-
 SubscriptionState 
-BaseSubscription::getSubscriptionState()
+BaseSubscription::getSubscriptionState() const noexcept
 {
    return mSubscriptionState;
 }

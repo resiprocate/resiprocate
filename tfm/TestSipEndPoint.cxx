@@ -3980,7 +3980,7 @@ TestSipEndPoint::SipExpect::Exception::getName() const
 }
 
 const char* 
-TestSipEndPoint::SipExpect::Exception::name() const 
+TestSipEndPoint::SipExpect::Exception::name() const noexcept
 {
    return "TestEndPoint::Expect::Exception";
 }

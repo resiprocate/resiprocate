@@ -3,7 +3,6 @@
 #endif
 
 #include <cstdio>
-#include <utility>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -22,8 +21,8 @@ using namespace reconserver;
 using namespace std;
 
 
-MyUserAgent::MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-   UserAgent(conversationManager, profile),
+MyUserAgent::MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
+   UserAgent(conversationManager, std::move(profile)),
    mMaxRegLoops(1000)
 {
    mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
@@ -48,19 +47,19 @@ MyUserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyD
    InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
 }
 
-resip::SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 MyUserAgent::getIncomingConversationProfile(const resip::SipMessage& msg)
 {
    B2BCallManager *b2bcm = getB2BCallManager();
-   SharedPtr<ConversationProfile> defaultProfile = UserAgent::getIncomingConversationProfile(msg);
+   auto defaultProfile = UserAgent::getIncomingConversationProfile(msg);
    if(b2bcm)
    {
-      return b2bcm->getIncomingConversationProfile(msg, defaultProfile);
+      return b2bcm->getIncomingConversationProfile(msg, std::move(defaultProfile));
    }
    return defaultProfile;
 }
 
-resip::SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
 {
    // For the moment,
@@ -69,7 +68,7 @@ MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
    B2BCallManager *b2bcm = getB2BCallManager();
    if(b2bcm)
    {
-      resip::SharedPtr<ConversationProfile> p(b2bcm->getExternalConversationProfile());
+      auto p = b2bcm->getExternalConversationProfile();
       // The re-INVITE needs to have a Route header to ensure it
       // is sent back to reConServer over the same interface where
       // the REFER was received.
@@ -100,15 +99,13 @@ MyUserAgent::process(int timeoutMs)
    UserAgent::process(timeoutMs);
 }
 
-SharedPtr<Dispatcher>
+std::shared_ptr<Dispatcher>
 MyUserAgent::initDispatcher(std::unique_ptr<Worker> prototype,
                   int workers,
                   bool startImmediately)
 {
    DebugLog(<< "initializing Dispatcher for " << workers << " worker(s)");
-   SharedPtr<Dispatcher> d(new Dispatcher(std::move(prototype), &getSipStack(), workers, startImmediately));
-
-   return d;
+   return std::make_shared<Dispatcher>(std::move(prototype), &getSipStack(), workers, startImmediately);
 }
 
 B2BCallManager*

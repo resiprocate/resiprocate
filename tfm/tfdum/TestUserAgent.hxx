@@ -37,11 +37,11 @@ class TestUserAgent : public TestEndPoint, public ThreadableUserAgent
 
 
 //--
-      class ExpectException : public resip::BaseException
+      class ExpectException final : public resip::BaseException
       {
          public:
-            ExpectException(const Data& msg, const Data& file, const int line);
-            virtual const char* name() const;
+            ExpectException(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override;
       };
 
       class Expect : public TestEndPoint::ExpectBase

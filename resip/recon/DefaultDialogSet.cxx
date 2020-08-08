@@ -22,7 +22,7 @@ DefaultDialogSet::DefaultDialogSet(ConversationManager& conversationManager)
 {
 }
 
-SharedPtr<UserProfile> 
+std::shared_ptr<UserProfile> 
 DefaultDialogSet::selectUASUserProfile(const SipMessage& msg)
 {
    return mConversationManager.getUserAgent()->getIncomingConversationProfile(msg);

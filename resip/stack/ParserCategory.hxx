@@ -202,13 +202,13 @@ class ParserCategory : public LazyParser
       /**
          @brief Exception class used by ParserCategory.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line)
                : BaseException(msg, file, line) {}
 
-            const char* name() const { return "ParserCategory::Exception"; }
+            const char* name() const noexcept override { return "ParserCategory::Exception"; }
       };
 
       /**

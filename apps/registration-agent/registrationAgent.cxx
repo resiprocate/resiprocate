@@ -50,8 +50,8 @@ using namespace std;
 class MyClientRegistrationAgent : public ServerProcess
 {
    public:
-      MyClientRegistrationAgent() {};
-      ~MyClientRegistrationAgent() {};
+      MyClientRegistrationAgent() = default;
+      ~MyClientRegistrationAgent() = default;
 
       void run(int argc, char **argv)
       {
@@ -118,14 +118,14 @@ class MyClientRegistrationAgent : public ServerProcess
          {
             security->addCAFile(caFile);
          }
-         mStack.reset(new SipStack(security));
+         mStack = std::make_shared<SipStack>(security);
 #else
-         mStack.reset(new SipStack());
+         mStack = std::make_shared<SipStack>();
 #endif
 
-         mClientDum.reset(new DialogUsageManager(*mStack));
-         SharedPtr<MasterProfile> profile(new MasterProfile);
-         unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
+         mClientDum = std::make_shared<DialogUsageManager>(*mStack);
+         const auto profile = std::make_shared<MasterProfile>();
+         std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);
 
          mStack->addTransport(UDP, 0, V4);
          // mStack->addTransport(UDP, 0, V6);
@@ -153,7 +153,7 @@ class MyClientRegistrationAgent : public ServerProcess
          mClientDum->getMasterProfile()->setUserAgent("reSIProcate registrationAgent");
 
          // keep alive test.
-         unique_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
+         std::unique_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
          mClientDum->setKeepAliveManager(std::move(keepAlive));
 
          profile->setRportEnabled(rport);
@@ -168,10 +168,10 @@ class MyClientRegistrationAgent : public ServerProcess
             profile->setOutboundProxy(_outboundProxy);
          }
 
-         SharedPtr<UserAccountFileRowHandler> rowHandler(new UserAccountFileRowHandler(*mClientDum));
-         mKeyedFile.reset(new KeyedFile(cfg.getConfigData("UserAccountFile", "users.txt", false), SharedPtr<KeyedFileRowHandler>(rowHandler, dynamic_cast_tag())));
+         const auto rowHandler = std::make_shared<UserAccountFileRowHandler>(*mClientDum);
+         mKeyedFile = std::make_shared<KeyedFile>(cfg.getConfigData("UserAccountFile", "users.txt", false), rowHandler);
          mKeyedFile->setSharedPtr(mKeyedFile);
-         mClientHandler.reset(new UserRegistrationClient(mKeyedFile));
+         mClientHandler = std::make_shared<UserRegistrationClient>(mKeyedFile);
          mClientDum->setClientRegistrationHandler(mClientHandler.get());
          rowHandler->setUserRegistrationClient(mClientHandler);
          mKeyedFile->doReload();
@@ -231,12 +231,12 @@ class MyClientRegistrationAgent : public ServerProcess
       }
 
    private:
-      SharedPtr<SipStack> mStack;
-      SharedPtr<DialogUsageManager> mClientDum;
-      SharedPtr<KeyedFile> mKeyedFile;
-      SharedPtr<UserRegistrationClient> mClientHandler;
-      SharedPtr<CommandThread> mCmd;
-      SharedPtr<SnmpThread> mSnmp;
+      std::shared_ptr<SipStack> mStack;
+      std::shared_ptr<DialogUsageManager> mClientDum;
+      std::shared_ptr<KeyedFile> mKeyedFile;
+      std::shared_ptr<UserRegistrationClient> mClientHandler;
+      std::shared_ptr<CommandThread> mCmd;
+      std::shared_ptr<SnmpThread> mSnmp;
 
 };
 
