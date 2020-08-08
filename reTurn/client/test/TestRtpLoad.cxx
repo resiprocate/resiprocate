@@ -376,10 +376,10 @@ int main(int argc, char* argv[])
     sslContext.load_verify_file("ca.pem");
 #endif
 
-    const auto turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
-    //const auto turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
 #ifdef USE_SSL
-    //const auto turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0); port++;
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0); port++;
 #endif
 
     handler.setTurnAsyncSocket(turnSocket.get());
