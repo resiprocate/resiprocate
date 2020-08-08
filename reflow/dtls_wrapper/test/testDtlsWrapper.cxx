@@ -76,8 +76,8 @@ int main(int argc,char **argv)
   X509 *clientCert,*serverCert;
   EVP_PKEY *clientKey,*serverKey;
 
-  createCert(resip::Data("sip:client@example.com"),365,1024,clientCert,clientKey);
-  createCert(resip::Data("sip:server@example.com"),365,1024,serverCert,serverKey);
+  createCert(resip::Data("sip:client@example.com"),365,2048,clientCert,clientKey);
+  createCert(resip::Data("sip:server@example.com"),365,2048,serverCert,serverKey);
   
   unique_ptr<DtlsFactory> clientFactory(new DtlsFactory(std::unique_ptr<DtlsTimerContext>(new TestTimerContext()),clientCert,clientKey));
   unique_ptr<DtlsFactory> serverFactory(new DtlsFactory(std::unique_ptr<DtlsTimerContext>(new TestTimerContext()),serverCert,serverKey));
