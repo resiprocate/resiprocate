@@ -2081,9 +2081,9 @@ InviteSession::dispatchOthers(const SipMessage& msg)
       case UPDATE:
          if (msg.isRequest())
          {
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             mDialog.makeResponse(*response, msg, 491);
-            send(response);
+            send(std::move(response));
          }
          break;
       case PRACK:
