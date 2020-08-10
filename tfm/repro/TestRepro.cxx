@@ -147,7 +147,7 @@ TestRepro::TestRepro(const resip::Data& name,
 #endif
    mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mRegistrar(),
-   mProfile(std::make_shared<MasterProfile>(),
+   mProfile(std::make_shared<MasterProfile>()),
    mDb(new BerkeleyDb),
    mConfig(mDb, args),
    mAuthRequestDispatcher(new Dispatcher(std::unique_ptr<Worker>(new UserAuthGrabber(*mConfig.getDataStore())), 
