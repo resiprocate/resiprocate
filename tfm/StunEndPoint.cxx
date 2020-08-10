@@ -137,7 +137,7 @@ StunEndPoint::generateBindingResponse()
 {
    return new CommonAction(this, 
                            "Generate Binding Response",
-                           std::bind(&StunEndPoint::generateBindingResponseDelegate, this));
+                           [this] { generateBindingResponseDelegate(); });
 }
 
 ActionBase*
@@ -145,7 +145,7 @@ StunEndPoint::generateBindingResponse(const Uri& mappedAddress)
 {
    return new CommonAction(this, 
                            "Generate Binding Response",
-                           std::bind(&StunEndPoint::generateBindingResponseDelegate, this, mappedAddress));
+                           [&] { generateBindingResponseDelegate(mappedAddress); });
 }
 
 ActionBase*

@@ -177,14 +177,14 @@ class TestEndPoint
             bool mIsOptional;
       };
 
-      class AssertException : public resip::BaseException
+      class AssertException final : public resip::BaseException
       {
          public:
             AssertException(const resip::Data& msg,
                             const resip::Data& file,
                             const int line);
-            virtual resip::Data getName() const ;
-            virtual const char* name() const ;
+            virtual resip::Data getName() const;
+            virtual const char* name() const noexcept;
       };
 
       typedef std::function<bool(std::shared_ptr<Event>)> PredicateFn;
