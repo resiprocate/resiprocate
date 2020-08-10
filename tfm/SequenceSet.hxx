@@ -30,7 +30,7 @@ class SequenceSet
       void enqueue(std::shared_ptr<Event> event);
       long enqueue(std::shared_ptr<Event> event, int delay);
       void globalFailure(const resip::Data& message);
-      void globalFailure(resip::BaseException& e);
+      void globalFailure(const resip::BaseException& e);
       bool executionFailed() const;
 
       bool exec();

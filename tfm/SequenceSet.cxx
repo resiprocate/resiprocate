@@ -107,7 +107,7 @@ SequenceSet::globalFailure(const resip::Data& message)
 }
 
 void
-SequenceSet::globalFailure(resip::BaseException& e)
+SequenceSet::globalFailure(const resip::BaseException& e)
 {
    // keep first fail info
    if (this && !mFailed) 
