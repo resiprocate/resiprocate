@@ -119,5 +119,18 @@ RUN tar -xf 0.31.0.tar.gz && \
     rm -fr qpid-proton-0.31.0 && \
     rm qpid-proton-code-fixes.patch
 
+ADD http://ftp.debian.org/debian/pool/main/n/netxx/netxx_0.3.2.orig.tar.gz /root/
+COPY netxx-code-fixes.patch /root/
+RUN tar -xf netxx_0.3.2.orig.tar.gz && \
+    rm netxx_0.3.2.orig.tar.gz && \
+    cd Netxx-0.3.2 && \
+    patch -p0 < ../netxx-code-fixes.patch && \
+    ./configure.pl --prefix=/usr --disable-examples && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -fr Netxx-0.3.2 && \
+    rm netxx-code-fixes.patch
+
 USER jenkins
 WORKDIR /home/jenkins

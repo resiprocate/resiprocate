@@ -16,6 +16,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        libdb++-dev \
                        libgloox-dev \
                        libmysqlclient-dev \
+                       libnetxx-dev \
                        libpcre3-dev \
                        libpopt-dev \
                        libpq-dev \

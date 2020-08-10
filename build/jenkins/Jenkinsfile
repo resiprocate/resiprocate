@@ -46,6 +46,7 @@ pipeline {
                                             --with-return \
                                             --with-ssl \
                                             --with-telepathy \
+                                            --with-tfm \
                                             CPPFLAGS=\"-D__pingtel_on_posix__ -D_FILE_OFFS -D_REENTRANT -D_linux_ -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I${WORKSPACE}/contrib/cajun/include -I/usr/include/mysql -I/usr/include/sipxtapi -I/usr/include/soci `net-snmp-config --base-cflags`\" \
                                             CXXFLAGS=\"-Wformat -Werror=format-security -fpermissive\" \
                                             DEPS_PYTHON_CFLAGS=\"`/usr/bin/python3.8-config --cflags`\" \
