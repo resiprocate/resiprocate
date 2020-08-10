@@ -373,7 +373,7 @@ TestEndPoint::AssertException::getName() const
 }
 
 const char* 
-TestEndPoint::AssertException::name() const 
+TestEndPoint::AssertException::name() const noexcept
 {
    return "TestEndPoint::AssertException";
 }

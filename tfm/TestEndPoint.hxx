@@ -182,7 +182,7 @@ class TestEndPoint
          public:
             AssertException(const resip::Data& msg,
                             const resip::Data& file,
-                            const int line);
+                            int line);
             virtual resip::Data getName() const;
             virtual const char* name() const noexcept;
       };
