@@ -297,16 +297,16 @@ TestRepro::TestRepro(const resip::Data& name,
                                                            mConfig.getDataStore()->mAclStore,
                                                            true,
                                                            false,
-                                                           true));
+                                                           true);
    mDum->setServerAuthManager(std::move(authMgr));
 
    mStack->registerTransactionUser(mProxy);
 
    if(args.mUseCongestionManager)
    {
-      mCongestionManager = std::make_shared<GeneralCongestionManager>(
+      mCongestionManager = std::unique_ptr<GeneralCongestionManager>(new GeneralCongestionManager(
                                           GeneralCongestionManager::WAIT_TIME, 
-                                          200);
+                                          200));
       mStack->setCongestionManager(mCongestionManager.get());
    }
 
