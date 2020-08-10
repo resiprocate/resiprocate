@@ -226,7 +226,7 @@ TestSipEndPoint::setTransport(Transport* transport)
 }
 
 void 
-TestSipEndPoint::send(std::shared_ptr<SipMessage>& msg, RawConditionerFn func)
+TestSipEndPoint::send(const std::shared_ptr<SipMessage>& msg, RawConditionerFn func)
 {
    const Tuple* useTuple = 0;
 
@@ -794,12 +794,12 @@ TestSipEndPoint::Refer::operator()(TestSipEndPoint& endPoint)
 {  
    DeprecatedDialog* dialog = endPoint.getDialog(mWho.user());
    resip_assert(dialog);
-   std::shared_ptr<SipMessage> refer(dialog->makeRefer(NameAddr(mTo)));
+   const std::shared_ptr<SipMessage> refer(dialog->makeRefer(NameAddr(mTo)));
    if (mReplaces)
    {
       refer->header(h_Replaces) = dialog->makeReplaces();
    }
-   endPoint.send(std::move(refer));
+   endPoint.send(refer);
 }
 
 resip::Data
@@ -867,7 +867,7 @@ TestSipEndPoint::ReInvite::go()
    }
       
    const std::shared_ptr<SipMessage> invite(dialog->makeInvite());
-   if (mSdp.get())
+   if (mSdp)
    {
       invite->setContents(mSdp.get());
    }
@@ -1142,9 +1142,9 @@ TestSipEndPoint::Invite::Invite(TestSipEndPoint* from,
                                 EndpointReliableProvisionalMode mode,
                                 std::shared_ptr<resip::SdpContents> sdp)
    : MessageAction(*from, to),
+     mSdp(std::move(sdp)),
      mUseOutbound(useOutbound),
-     mRelProvMode(mode),
-     mSdp(std::move(sdp))
+     mRelProvMode(mode)
 {}
 
 std::shared_ptr<SipMessage>
@@ -1682,7 +1682,7 @@ TestSipEndPoint::message(const TestUser& endPoint, const Data& text)
 {
    auto plain = std::make_shared<PlainContents>();
    plain->text() = text; 
-   return new Request(this, endPoint.getAddressOfRecord(), resip::MESSAGE, std::move(plain)));
+   return new Request(this, endPoint.getAddressOfRecord(), resip::MESSAGE, std::move(plain));
 }
 
 // vk
@@ -1791,7 +1791,7 @@ TestSipEndPoint::publish(const resip::NameAddr& target, const resip::Data& text)
    Mime type("application", "pidf+xml");
    auto pc = std::make_shared<Pidf>(hfv, type);
 
-   return new Publish(this, target.uri(), resip::PUBLISH, std::move(pc)));
+   return new Publish(this, target.uri(), resip::PUBLISH, std::move(pc));
 }
 
 resip::Data
@@ -2266,8 +2266,7 @@ TestSipEndPoint::send503WithRetryAfter(int retryAfter)
 
 TestSipEndPoint::Send302::Send302(TestSipEndPoint & endPoint)
    : MessageExpectAction(endPoint),
-     mEndPoint(endPoint),
-     mRedirectTo(0)
+     mEndPoint(endPoint)
 {
 }
 
@@ -2283,7 +2282,7 @@ TestSipEndPoint::Send302::go(std::shared_ptr<resip::SipMessage> msg)
 {
    resip_assert (msg->isRequest());
    std::shared_ptr<resip::SipMessage> resp = mEndPoint.makeResponse(*msg, 302);
-   if (mRedirectTo.get())
+   if (mRedirectTo)
    {
       resp->header(h_Contacts).clear();
       resp->header(h_Contacts).push_back(NameAddr(*mRedirectTo));

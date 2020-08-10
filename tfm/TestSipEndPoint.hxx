@@ -1163,7 +1163,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       
       // .bwc. If rawData is specified, do all target resolution steps
       // based on sipMessage, but put the bits in rawData on the wire.
-      virtual void send(std::shared_ptr<resip::SipMessage>& sipMessage,
+      virtual void send(const std::shared_ptr<resip::SipMessage>& sipMessage,
                         RawConditionerFn rawCondition=raw_identity);
       
       // !dlb! need to shove the interface through MessageAction
