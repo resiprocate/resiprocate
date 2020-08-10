@@ -7,13 +7,13 @@
 #include "resip/dum/Handles.hxx"
 #include "resip/stack/SipMessage.hxx"
 
-#include <boost/shared_ptr.hpp>
-
 #include "rutil/Logger.hxx"
 
 #include "DumExpect.hxx"
 
 #include "TestDialogEvent.hxx"
+
+#include <memory>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -24,7 +24,7 @@ class DialogEventMatcher
       {
       }
 
-      virtual bool operator()(boost::shared_ptr<Event> event)
+      virtual bool operator()(std::shared_ptr<Event> event)
       {
          DialogEventHandlerEvent* specificEvent = dynamic_cast<DialogEventHandlerEvent*>(event.get());
          if (specificEvent)
@@ -89,10 +89,10 @@ class DialogEventExpect : public TestEndPoint::ExpectBase
 
       virtual unsigned int getTimeout() const;
       
-      virtual bool isMatch(boost::shared_ptr<Event> event) const;
-      virtual resip::Data explainMismatch(boost::shared_ptr<Event> event) const;
+      virtual bool isMatch(std::shared_ptr<Event> event) const;
+      virtual resip::Data explainMismatch(std::shared_ptr<Event> event) const;
       
-      virtual void onEvent(TestEndPoint&, boost::shared_ptr<Event> event);
+      virtual void onEvent(TestEndPoint&, std::shared_ptr<Event> event);
 
       virtual resip::Data getMsgTypeString() const;      
       virtual std::ostream& output(std::ostream& s) const;
@@ -110,7 +110,7 @@ class DialogEventExpect : public TestEndPoint::ExpectBase
       virtual Box layout() const;
       virtual void render(AsciiGraphic::CharRaster &out) const;
    private:
-      bool match(boost::shared_ptr<Event> event) const;
+      bool match(std::shared_ptr<Event> event) const;
       DialogEventMatcher* mDialogEventMatcher;
       DialogEventPred& mPredicate;
       MessageMatcher* mMatcher;

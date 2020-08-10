@@ -7,9 +7,9 @@
 #include "resip/dum/Handles.hxx"
 #include "resip/stack/SipMessage.hxx"
 
-#include <boost/shared_ptr.hpp>
-
 #include "rutil/Logger.hxx"
+
+#include <memory>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -21,14 +21,14 @@ class MessageMatcher
 {
    public:
       virtual ~MessageMatcher() {}
-      virtual bool isMatch(const boost::shared_ptr<resip::SipMessage>& message) const = 0;
+      virtual bool isMatch(const std::shared_ptr<resip::SipMessage>& message) const = 0;
       virtual resip::Data toString() const = 0;
 };
 
 class DumEventMatcher
 {
    public:
-      virtual bool operator()(boost::shared_ptr<Event> event)
+      virtual bool operator()(std::shared_ptr<Event> event)
       {
          resip_assert(0);
          return false;
@@ -52,7 +52,7 @@ class DumEventMatcherSpecific : public DumEventMatcher
       {
       }
 
-      virtual bool operator()(boost::shared_ptr<Event> event)
+      virtual bool operator()(std::shared_ptr<Event> event)
       {
          T* specificEvent = dynamic_cast<T*>(event.get());
          if (specificEvent)
@@ -107,10 +107,10 @@ class DumExpect : public TestEndPoint::ExpectBase
 
       virtual unsigned int getTimeout() const;
       
-      virtual bool isMatch(boost::shared_ptr<Event> event) const;
-      virtual resip::Data explainMismatch(boost::shared_ptr<Event> event) const;
+      virtual bool isMatch(std::shared_ptr<Event> event) const;
+      virtual resip::Data explainMismatch(std::shared_ptr<Event> event) const;
       
-      virtual void onEvent(TestEndPoint&, boost::shared_ptr<Event> event);
+      virtual void onEvent(TestEndPoint&, std::shared_ptr<Event> event);
 
       virtual resip::Data getMsgTypeString() const;      
       virtual std::ostream& output(std::ostream& s) const;
@@ -129,7 +129,7 @@ class DumExpect : public TestEndPoint::ExpectBase
       virtual void render(AsciiGraphic::CharRaster &out) const;
    private:
 
-      bool match(boost::shared_ptr<Event> event) const;
+      bool match(std::shared_ptr<Event> event) const;
 
       //DumUserAgent& mUserAgent;
       TestEndPoint& mUserAgent;

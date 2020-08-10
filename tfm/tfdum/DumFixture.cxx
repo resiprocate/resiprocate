@@ -111,7 +111,7 @@ DumFixture::~DumFixture()
 void
 DumFixture::initialize(int argc, char** argv)
 {
-   //ExternalDnsFactory::set(auto_ptr<ExternalDns>(createExternalDns()));
+   //ExternalDnsFactory::set(std::unique_ptr<ExternalDns>(createExternalDns()));
 
    InfoLog(<< "Setting up proxy");
 #ifdef USE_SSL

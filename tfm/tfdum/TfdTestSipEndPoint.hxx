@@ -31,7 +31,7 @@ class TfdTestSipEndPoint : public TestSipEndPoint
          public:
             TerminateConnection(TfdTestSipEndPoint* from);
             virtual void operator()();
-            virtual void operator()(boost::shared_ptr<Event> event);
+            virtual void operator()(std::shared_ptr<Event> event);
             virtual resip::Data toString() const;
             virtual void go();
 

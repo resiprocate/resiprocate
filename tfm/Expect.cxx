@@ -56,7 +56,7 @@ Expect::getTimeout() const
 }
 
 bool
-Expect::isMatch(boost::shared_ptr<Event> event) const
+Expect::isMatch(std::shared_ptr<Event> event) const
 {
    bool bMatch = mEventMatcher->isMatch(event);
 
@@ -81,14 +81,14 @@ Expect::isMatch(boost::shared_ptr<Event> event) const
 }
 
 Data
-Expect::explainMismatch(boost::shared_ptr<Event> event) const
+Expect::explainMismatch(std::shared_ptr<Event> event) const
 {
    // .jv. maybe print out event
    return mMessage;
 }
 
 void
-Expect::onEvent(TestEndPoint& endPoint, boost::shared_ptr<Event> event)
+Expect::onEvent(TestEndPoint& endPoint, std::shared_ptr<Event> event)
 {
    mExpectAction->exec(event);
 }

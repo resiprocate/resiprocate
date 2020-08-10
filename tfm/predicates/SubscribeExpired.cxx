@@ -10,17 +10,17 @@ SubscribeExpired::SubscribeExpired()
 {}
 
 bool 
-SubscribeExpired::operator()(boost::shared_ptr<Event> event)
+SubscribeExpired::operator()(std::shared_ptr<Event> event)
 {
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
    resip_assert(sipEvent);
-   boost::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
+   std::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
    
    return (*this)(msg);
 }
 
 bool
-SubscribeExpired::operator()(boost::shared_ptr<resip::SipMessage> msg)
+SubscribeExpired::operator()(std::shared_ptr<resip::SipMessage> msg)
 {
    if (!msg->exists(h_SubscriptionState))
    {

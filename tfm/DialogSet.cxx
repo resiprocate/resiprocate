@@ -4,21 +4,22 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 using namespace std;
 using namespace resip;
 
-DialogSet::DialogSet(boost::shared_ptr<SipMessage> msg,
+DialogSet::DialogSet(std::shared_ptr<SipMessage> msg,
                      const TestSipEndPoint& testSipEndPoint)
-   : mMsg(msg),
+   : mMsg(std::move(msg)),
      mDialogs(),
      mTestSipEndPoint(&testSipEndPoint)
 {}
 
-boost::shared_ptr<resip::SipMessage> 
-DialogSet::getMessage() const
+std::shared_ptr<resip::SipMessage>
+DialogSet::getMessage() const noexcept
 {
    return mMsg;
 }
@@ -30,7 +31,7 @@ DialogSet::getDialogs()
 }
 
 bool
-DialogSet::isMatch(boost::shared_ptr<SipMessage> msg) const
+DialogSet::isMatch(std::shared_ptr<SipMessage> msg) const
 {
    if (msg->isRequest() &&
        msg->header(h_CSeq).method() == NOTIFY)
@@ -64,7 +65,7 @@ DialogSet::isMatch(boost::shared_ptr<SipMessage> msg) const
 }
 
 void
-DialogSet::dispatch(boost::shared_ptr<SipMessage> msg)
+DialogSet::dispatch(std::shared_ptr<SipMessage> msg)
 {
    for (vector<DeprecatedDialog>::iterator i = mDialogs.begin();
         i != mDialogs.end(); ++i)

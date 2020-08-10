@@ -3,8 +3,9 @@
 
 #include "resip/dum/Handles.hxx"
 #include "rutil/Data.hxx"
-#include <boost/function.hpp>
 #include "tfm/ActionBase.hxx"
+
+#include <memory>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -21,9 +22,9 @@ class BindHandle : public ActionBase
          {}
       virtual ~BindHandle() {}
 
-      virtual void operator()(boost::shared_ptr<Event> event) 
+      virtual void operator()(std::shared_ptr<Event> event) 
       {
-         boost::shared_ptr<T> k = boost::dynamic_pointer_cast<T, Event>(event);
+         const auto k = std::dynamic_pointer_cast<T>(event);
          StackLog(<< "Binding handle... handle Id is " << k->getHandle().getId());
          mHandle = k->getHandle();
       }
@@ -33,7 +34,7 @@ class BindHandle : public ActionBase
       virtual resip::Data toString() const { return mActionName; }
 
    protected:
-      bool match(boost::shared_ptr<Event> event) const;
+      bool match(std::shared_ptr<Event> event) const;
 
       TestEndPoint* mTestEndPoint;
       resip:: Data mActionName;
@@ -54,9 +55,9 @@ class BindHandleInvite : public ActionBase
 
       virtual ~BindHandleInvite() {}
 
-      virtual void operator()(boost::shared_ptr<Event> event) 
+      virtual void operator()(std::shared_ptr<Event> event)
       {
-         boost::shared_ptr<T1> k = boost::dynamic_pointer_cast<T1, Event>(event);
+         constr auto k = std::dynamic_pointer_cast<T1>(event);
          StackLog(<< "Binding invite session  handle... handle Id is " << k->getHandle().getId());
          mHandle = k->getHandle();
          resip_assert(mHandle.isValid());
@@ -69,7 +70,7 @@ class BindHandleInvite : public ActionBase
       virtual resip::Data toString() const { return mActionName; }
 
    protected:
-      bool match(boost::shared_ptr<Event> event) const;
+      bool match(std::shared_ptr<Event> event) const;
 
       TestEndPoint* mTestEndPoint;
       resip:: Data mActionName;

@@ -3,8 +3,6 @@
 
 #include <signal.h>
 
-#include <boost/bind.hpp>
-
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TextOutputter.h>
@@ -49,6 +47,8 @@
 
 #include "tfm/TfmHelper.hxx"
 #include "tfm/CheckPrivacy.hxx"
+
+#include <functional>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -393,7 +393,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
@@ -455,7 +455,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, chain(sheila->send100(),sheila->send500())),
              And(Sub(uac.expect(DialogEvent_Terminated, *pDi2, InviteSessionHandler::Error, WaitForCommand, uac.noAction()),
@@ -515,7 +515,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(sheila->send100(),
@@ -612,7 +612,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
@@ -702,7 +702,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              uac.expect(DialogEvent_Trying, *pDi1, WaitForCommand, uac.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, sheila->send302(derek->getAor().uri())),
              And(Sub(uac.expect(DialogEvent_Terminated, *pDi3, InviteSessionHandler::Rejected, WaitForCommand, uac.noAction()),
@@ -793,7 +793,7 @@ class DumTestCase : public DumFixture
 
          InviteHelper ih1(inviteMsg);
 
-         Seq(new DumUaSendingCommand(jason, boost::bind(&InviteHelper::getInvite, ih1)),
+         Seq(new DumUaSendingCommand(jason, std::bind(&InviteHelper::getInvite, ih1)),
              testDialogEvt.expect(DialogEvent_Trying, *pDi1, WaitForCommand, testDialogEvt.noAction()),
              sheila->expect(INVITE, from(jason->getInstanceId()), WaitForCommand, 
                             chain(save(sheilasRing, sheila->ring()), 
@@ -3228,7 +3228,7 @@ class DumTestCase : public DumFixture
             {
             }
                
-            boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg)
+            std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
             {
                msg->header(h_CallId).value() = mCallId;
                msg->header(h_From).param(p_tag) = mTag;

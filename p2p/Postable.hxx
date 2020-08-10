@@ -10,8 +10,8 @@ template<class T>
 class Postable
 {
    public:
-      virtual ~Postable(){}
-      virtual void post(std::auto_ptr<T> posted)=0;
+      virtual ~Postable() = default;
+      virtual void post(std::unique_ptr<T> posted) = 0;
 };
 
 }

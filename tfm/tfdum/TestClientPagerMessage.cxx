@@ -25,7 +25,7 @@ TestClientPagerMessage::TestClientPagerMessage(DumUserAgent* ua, ClientPagerMess
 }
 
 CommonAction* 
-TestClientPagerMessage::page(std::auto_ptr<resip::Contents>& contents, resip::DialogUsageManager::EncryptionLevel level)
+TestClientPagerMessage::page(std::unique_ptr<resip::Contents>& contents, resip::DialogUsageManager::EncryptionLevel level)
 {
    return new CommonAction(mUa, "page", boost::bind(&ClientPagerMessage::page, boost::bind<ClientPagerMessage*>(static_cast<ClientPagerMessage*(ClientPagerMessageHandle::*)()>(&ClientPagerMessageHandle::get), boost::ref(mHandle)),
                                                     boost::ref(contents), level));

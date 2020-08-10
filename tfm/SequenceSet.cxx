@@ -65,14 +65,14 @@ SequenceSet::clear()
 }
      
 void
-SequenceSet::enqueue(boost::shared_ptr<Event> event)
+SequenceSet::enqueue(std::shared_ptr<Event> event)
 {
    DebugLog(<< "SequenceSet::enqueue(" << &*event << ") " << event->briefString());
    mEventFifo.add(event);
 }
 
 SequenceSet::EventFifo::TimerId
-SequenceSet::enqueue(boost::shared_ptr<Event> event, int delay)
+SequenceSet::enqueue(std::shared_ptr<Event> event, int delay)
 {
    InfoLog(<< "SequenceClass::enqueue " << event->briefString() << " with delay " << delay);
    return mEventFifo.addDelayMs(event, delay);
@@ -202,7 +202,7 @@ SequenceSet::postLoop()
 }
 
 void
-SequenceSet::handle(boost::shared_ptr<Event> event)
+SequenceSet::handle(std::shared_ptr<Event> event)
 {
    //CerrLog( << "Current ActiveSet");
    for (set<SequenceClass*>::const_iterator i = mActiveSet.begin();
@@ -231,11 +231,7 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
    DebugLog(<< "handle_event::dequeue(" << event << ") " << event->briefString());
    //CerrLog(<< "Dequeued: " << event->briefString());
          
-#if BOOST_VERSION >= 103500
-   boost::shared_ptr<ExpectActionEvent> action = dynamic_pointer_cast<ExpectActionEvent>(event);
-#else
-   boost::shared_ptr<ExpectActionEvent> action = shared_dynamic_cast<ExpectActionEvent>(event);
-#endif   
+   const auto action = std::dynamic_pointer_cast<ExpectActionEvent>(event);
    if (action)
    {
       try
@@ -243,18 +239,14 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
          DebugLog(<<"Executing stored action.");
          action->doIt();
       }
-      catch (ExpectAction::Exception& e)
+      catch (const ExpectAction::Exception& e)
       {
          globalFailure(e);
       }
       return;
    }
-         
-#if BOOST_VERSION >= 103500
-   boost::shared_ptr<TimeoutEvent> timeout = dynamic_pointer_cast<TimeoutEvent>(event);
-#else
-   boost::shared_ptr<TimeoutEvent> timeout = shared_dynamic_cast<TimeoutEvent>(event);
-#endif   
+
+   const auto timeout = std::dynamic_pointer_cast<TimeoutEvent>(event);
    if (timeout)
    {
       Data errorMessage;
@@ -282,12 +274,8 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
 //      throw TestEndPoint::AssertException(errorMessage, __FILE__, __LINE__);
       return;
    }
-         
-#if BOOST_VERSION >= 103500
-   boost::shared_ptr<SequenceDoneEvent> seqDone = dynamic_pointer_cast<SequenceDoneEvent>(event);
-#else
-   boost::shared_ptr<SequenceDoneEvent> seqDone = shared_dynamic_cast<SequenceDoneEvent>(event);
-#endif   
+
+   const auto seqDone = std::dynamic_pointer_cast<SequenceDoneEvent>(event);
    if (seqDone)
    {
       // remove sequences that have completed
@@ -316,7 +304,7 @@ SequenceSet::handle(boost::shared_ptr<Event> event)
 }
 
 void
-SequenceSet::handleEvent(boost::shared_ptr<Event> event)
+SequenceSet::handleEvent(std::shared_ptr<Event> event)
 {
    // prevent debug output on cascading message mismatches
    if (mFailed)
@@ -342,11 +330,7 @@ SequenceSet::handleEvent(boost::shared_ptr<Event> event)
       }
    }
 
-#if BOOST_VERSION >= 103500
-   if (!handled && !dynamic_pointer_cast<OptionalTimeoutEvent>(event))
-#else
-   if (!handled && !shared_dynamic_cast<OptionalTimeoutEvent>(event))
-#endif   
+   if (!handled && !std::dynamic_pointer_cast<OptionalTimeoutEvent>(event))
    {
       if (!mFailed)
       {

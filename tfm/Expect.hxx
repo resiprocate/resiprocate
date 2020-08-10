@@ -4,12 +4,12 @@
 #include "tfm/Event.hxx"
 #include "tfm/TestEndPoint.hxx"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 class EventMatcher
 {
    public:
-      virtual bool isMatch(boost::shared_ptr<Event> event)
+      virtual bool isMatch(std::shared_ptr<Event> event)
       {
          resip_assert(0);
          return false;
@@ -23,7 +23,7 @@ class EventMatcher
 
       virtual const resip::Data& explainMismatch() const = 0;
 
-      virtual ~EventMatcher() {}
+      virtual ~EventMatcher() = default;
 };
 
 template<class T>
@@ -35,7 +35,7 @@ class EventMatcherSpecific : public EventMatcher
       {
       }
 
-      virtual bool isMatch(boost::shared_ptr<Event> event)
+      virtual bool isMatch(std::shared_ptr<Event> event)
       {
          T* specificEvent = dynamic_cast<T*>(event.get());
          if (specificEvent)
@@ -84,11 +84,9 @@ class EventMatcherSpecific : public EventMatcher
 class ExpectPredicate
 {
    public:
-      virtual ~ExpectPredicate() 
-      {
-      }
+      virtual ~ExpectPredicate() = default;
       
-      virtual bool passes(boost::shared_ptr<Event>) = 0;
+      virtual bool passes(std::shared_ptr<Event>) = 0;
       virtual const resip::Data& explainMismatch() const = 0;
 };
 
@@ -111,11 +109,11 @@ class Expect : public TestEndPoint::ExpectBase
 
       virtual unsigned int getTimeout() const;
 
-      virtual bool isMatch(boost::shared_ptr<Event> event) const;
+      virtual bool isMatch(std::shared_ptr<Event> event) const;
 
-      virtual resip::Data explainMismatch(boost::shared_ptr<Event> event) const;
+      virtual resip::Data explainMismatch(std::shared_ptr<Event> event) const;
 
-      virtual void onEvent(TestEndPoint&, boost::shared_ptr<Event> event);
+      virtual void onEvent(TestEndPoint&, std::shared_ptr<Event> event);
 
       virtual resip::Data getMsgTypeString() const;
 

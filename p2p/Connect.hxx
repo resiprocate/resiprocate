@@ -4,6 +4,7 @@
 #include "p2p/Message.hxx"
 #include "p2p/ConnectBase.hxx"
 #include "p2p/EventWrapper.hxx"
+
 namespace p2p
 {
 
@@ -14,7 +15,7 @@ public:
 	virtual MessageType getType() const { return ConnectReqType; }
 	virtual resip::Data brief() const { return "ConnectReq Message"; }
 
-  std::auto_ptr<Event> event()
+    std::unique_ptr<Event> event()
     {
       return wrap(this);
     }
@@ -32,7 +33,7 @@ public:
 	virtual MessageType getType() const { return ConnectAnsType; }
 	virtual resip::Data brief() const { return "ConnectAns Message"; }
 
-  std::auto_ptr<Event> event()
+    std::unique_ptr<Event> event()
     {
       return wrap(this);
     }

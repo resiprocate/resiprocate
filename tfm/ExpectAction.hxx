@@ -1,17 +1,18 @@
 #if !defined(TFM_ExpectAction_hxx)
 #define TFM_ExpectAction_hxx
 
-#include <boost/shared_ptr.hpp>
 #include "rutil/Data.hxx"
 #include "tfm/ActionBase.hxx"
 #include "tfm/TestException.hxx"
+
+#include <memory>
 
 class Event;
 
 class ExpectAction : public ActionBase
 {
    public:
-      virtual void operator()(boost::shared_ptr<Event> event) = 0;
+      virtual void operator()(std::shared_ptr<Event> event) = 0;
       virtual void operator()();
 
       class Exception final : public TestException

@@ -1,11 +1,13 @@
 #include "tfm/ActionBase.hxx"
 #include "tfm/ExpectActionEvent.hxx"
 
+#include <utility>
+
 ExpectActionEvent::ExpectActionEvent(ActionBase* action,
-                                     boost::shared_ptr<Event> event)
+                                     std::shared_ptr<Event> event)
    : Event(event->getEndPoint()),
      mAction(action),
-     mEvent(event),
+     mEvent(std::move(event)),
      mHasEvent(true)
 {
 }

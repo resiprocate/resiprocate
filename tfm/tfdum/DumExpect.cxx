@@ -54,7 +54,7 @@ DumExpect::getTimeout() const
 }
 
 void
-DumExpect::onEvent(TestEndPoint& endPoint, boost::shared_ptr<Event> event)
+DumExpect::onEvent(TestEndPoint& endPoint, std::shared_ptr<Event> event)
 {
    mExpectAction->exec(event);
 }
@@ -90,7 +90,7 @@ DumExpect::output(ostream& s) const
 
 
 bool
-DumExpect::isMatch(boost::shared_ptr<Event> event) const
+DumExpect::isMatch(std::shared_ptr<Event> event) const
 {
    
    bool matches = match(event);
@@ -108,7 +108,7 @@ DumExpect::isMatch(boost::shared_ptr<Event> event) const
 //!dcm! TODO quiter, but information is lost; save what is now StackLog and use
 //!in explainMismatch
 bool
-DumExpect::match(boost::shared_ptr<Event> event) const
+DumExpect::match(std::shared_ptr<Event> event) const
 {
    StackLog (<< "matching: " << *event);
    DumEvent* dumEvent = dynamic_cast<DumEvent*>(event.get());
@@ -170,11 +170,11 @@ DumExpect::match(boost::shared_ptr<Event> event) const
 }
 
 resip::Data
-DumExpect::explainMismatch(boost::shared_ptr<Event> event) const
+DumExpect::explainMismatch(std::shared_ptr<Event> event) const
 {
    DumEvent* dumEvent = dynamic_cast<DumEvent*>(event.get());
    resip_assert(dumEvent);
-   boost::shared_ptr<SipMessage> msg = dumEvent->getMessage();
+   std::shared_ptr<SipMessage> msg = dumEvent->getMessage();
 
    Data s;
    {
