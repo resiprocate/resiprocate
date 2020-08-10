@@ -9,7 +9,6 @@
 
 using namespace resip;
 using namespace std;
-using namespace boost;
 
 #define TURN_MAGIC_COOKIE      0x72c64bc6
 #define TURN_MAX_BANDWIDTH     1000
