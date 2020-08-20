@@ -9558,7 +9558,7 @@ class TestHolder : public ReproFixture
          int mRport;
    };
 
-   static std::shared_ptr<SipMessage>& addRport(std::shared_ptr<SipMessage>& msg)
+   static std::shared_ptr<SipMessage> addRport(std::shared_ptr<SipMessage> msg)
    { 
       resip_assert(!msg->header(h_Vias).empty());
       // mentioning it makes it so
@@ -10246,7 +10246,7 @@ class TestHolder : public ReproFixture
             mCallId(callId)
          {}
 
-         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "SetCallId=" << mCallId << endl << *msg);
 
@@ -10267,7 +10267,7 @@ class TestHolder : public ReproFixture
             mSeq(seq)
          {}
 
-         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "SetCSeqSequence=" << mSeq << endl << *msg);
 
@@ -10287,7 +10287,7 @@ class TestHolder : public ReproFixture
          StripAuth()
          {}
 
-         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "StripAuth" << endl << *msg);
 
