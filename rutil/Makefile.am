@@ -120,7 +120,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	GeneralCongestionManager.hxx \
 	HeapInstanceCounter.hxx \
 	KeyValueStore.hxx \
-	SharedCount.hxx \
 	FdSetIOObserver.hxx \
 	Fifo.hxx \
 	CircularBuffer.hxx \
