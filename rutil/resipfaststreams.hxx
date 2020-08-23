@@ -385,6 +385,13 @@ inline resip::ResipFastOStream & operator<<(resip::ResipFastOStream &ostr, const
    return ostr;
 }
 
+template <typename T>
+ResipFastOStream& operator<<(ResipFastOStream& os, const std::shared_ptr<T>& ptr)
+{
+   os << ptr.get();
+   return os;
+}
+
 /** std::istream replacement
 */
 class ResipFastIStream : public ResipBasicIOStream
