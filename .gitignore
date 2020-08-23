@@ -9,7 +9,7 @@
 /Makefile.in
 /.deps
 /.libs
-/.vs
+**/.vs
 /aclocal.m4
 /config.h
 /config.h.in
