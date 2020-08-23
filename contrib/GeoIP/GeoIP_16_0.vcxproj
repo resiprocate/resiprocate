@@ -241,63 +241,63 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">
     <VcpkgConfiguration>Release</VcpkgConfiguration>
-    <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
