@@ -19,7 +19,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
 }
 
@@ -44,7 +44,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
 }
@@ -71,7 +71,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -100,7 +100,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -131,7 +131,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -164,7 +164,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -199,7 +199,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -236,7 +236,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -275,7 +275,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -316,7 +316,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -359,7 +359,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -404,7 +404,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -451,7 +451,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -500,7 +500,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -551,7 +551,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -604,7 +604,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -659,7 +659,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -716,7 +716,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -775,7 +775,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -836,7 +836,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -899,7 +899,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -964,7 +964,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1031,7 +1031,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1100,7 +1100,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1171,7 +1171,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1244,7 +1244,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1319,7 +1319,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1396,7 +1396,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1475,7 +1475,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1556,7 +1556,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1639,7 +1639,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1724,7 +1724,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1811,7 +1811,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1900,7 +1900,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -1991,7 +1991,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2084,7 +2084,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2179,7 +2179,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2276,7 +2276,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2375,7 +2375,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2476,7 +2476,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2579,7 +2579,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2684,7 +2684,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2791,7 +2791,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -2900,7 +2900,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3011,7 +3011,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3124,7 +3124,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3239,7 +3239,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3356,7 +3356,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3475,7 +3475,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3596,7 +3596,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3719,7 +3719,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3844,7 +3844,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -3971,7 +3971,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -4100,7 +4100,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -4231,7 +4231,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -4364,7 +4364,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -4499,7 +4499,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -4636,7 +4636,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -4775,7 +4775,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -4916,7 +4916,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -5059,7 +5059,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -5204,7 +5204,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -5351,7 +5351,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -5500,7 +5500,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -5651,7 +5651,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -5804,7 +5804,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -5959,7 +5959,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -6116,7 +6116,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -6275,7 +6275,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -6436,7 +6436,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -6599,7 +6599,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -6764,7 +6764,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -6931,7 +6931,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -7100,7 +7100,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -7271,7 +7271,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -7444,7 +7444,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -7619,7 +7619,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -7796,7 +7796,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -7975,7 +7975,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -8156,7 +8156,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -8339,7 +8339,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -8524,7 +8524,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -8711,7 +8711,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -8900,7 +8900,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -9091,7 +9091,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -9284,7 +9284,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -9479,7 +9479,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -9676,7 +9676,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -9875,7 +9875,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -10076,7 +10076,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -10279,7 +10279,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -10484,7 +10484,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -10691,7 +10691,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -10900,7 +10900,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -11111,7 +11111,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -11324,7 +11324,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -11539,7 +11539,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -11756,7 +11756,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -11975,7 +11975,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -12196,7 +12196,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
@@ -12419,7 +12419,7 @@ SequenceClass::SequenceClass(int lineNumber,
 {
    if (execute)
    {
-      set->mSequences.push_back(this);
+      mSet->mSequences.push_back(this);
    }
    addExpect(e1);
    addExpect(e2);
