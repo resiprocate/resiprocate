@@ -31,7 +31,7 @@ main(int argc, char** argv)
 
    FakeUsageFunction d;
 //      std::function<void, FakeUsage> d;
-   d = bind(&FakeUsage::doSomething, _1, 7, "bob");
+   d = std::bind(&FakeUsage::doSomething, std::placeholders::_1, 7, "bob");
    InfoLog(<< "Call deferred");
    
    FakeUsage f;
