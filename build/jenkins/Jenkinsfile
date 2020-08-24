@@ -61,7 +61,8 @@ pipeline {
                     }
                     stage('Test'){
                         steps {
-                            sh 'make -j check'
+                            sh 'make -j check TESTS='
+                            sh 'make check'
                         }
                     }
                 }
