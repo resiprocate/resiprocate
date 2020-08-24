@@ -56,12 +56,12 @@ pipeline {
                     }
                     stage('Build'){
                         steps {
-                            sh 'make'
+                            sh 'make -j'
                         }
                     }
                     stage('Test'){
                         steps {
-                            sh 'make check'
+                            sh 'make -j check'
                         }
                     }
                 }
