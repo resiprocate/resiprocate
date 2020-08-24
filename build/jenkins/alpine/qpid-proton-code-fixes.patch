@@ -9,3 +9,14 @@
    if (pthread_mutex_init(pm, &attr)) {
      perror("pthread failure");
      abort();
+--- CMakeLists.txt.bak
++++ CMakeLists.txt
+@@ -230,7 +230,7 @@
+ 
+ # Start of variables used during install
+ set (INCLUDE_INSTALL_DIR include CACHE PATH "Include file directory")
+-set (LIB_INSTALL_DIR "lib${LIB_SUFFIX}" CACHE PATH "Library object file directory")
++set (LIB_INSTALL_DIR lib CACHE PATH "Library object file directory")
+ set (SYSCONF_INSTALL_DIR etc CACHE PATH "System read only configuration directory")
+ set (SHARE_INSTALL_DIR share CACHE PATH "Shared read only data directory")
+ set (MAN_INSTALL_DIR share/man CACHE PATH "Manpage directory")

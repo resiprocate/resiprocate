@@ -59,16 +59,19 @@ RUN tar -xf 1.2.11.tar.gz && \
     rm -fr radcli-1.2.11
 
 ADD https://github.com/SOCI/soci/archive/4.0.0.tar.gz /root/
+COPY soci-code-fixes.patch /root/
 RUN tar -xf 4.0.0.tar.gz && \
     rm 4.0.0.tar.gz && \
     cd soci-4.0.0 && \
+    patch -p0 < ../soci-code-fixes.patch && \
     mkdir build && \
     cd build && \
     cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .. && \
     cmake --build . && \
     cmake --install . && \
     cd ../.. && \
-    rm -fr soci-4.0.0
+    rm -fr soci-4.0.0 && \
+    rm soci-code-fixes.patch
 
 ADD https://github.com/cisco/libsrtp/archive/v1.6.0.tar.gz /root/
 RUN tar -xf v1.6.0.tar.gz && \
