@@ -28,6 +28,8 @@
 
 #include "DumFixture.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 using namespace CppUnit;
@@ -93,8 +95,8 @@ static DumUserAgent* createAnonDumUserAgent(const Data& user, const Data& host =
    auto prof = DumUserAgent::makeProfile(aor, user);
    //!dcm! -- truly terrible hack. Should be banned by the geneva convention,
    //clean up post-haste.
-   auto anonProf = DumUserAgent::makeProfile(aor, user)->getAnonymousUserProfile();
-   DumUserAgent* ua = new DumUserAgent(anonProf, DumFixture::proxy);
+   auto anonProf = std::dynamic_pointer_cast<MasterProfile>(DumUserAgent::makeProfile(aor, user)->getAnonymousUserProfile());
+   DumUserAgent* ua = new DumUserAgent(std::move(anonProf), DumFixture::proxy);
    ua->init();
    return ua;
 }

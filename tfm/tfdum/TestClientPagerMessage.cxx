@@ -8,9 +8,6 @@
 
 #include "resip/dum/Handles.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
@@ -27,14 +24,13 @@ TestClientPagerMessage::TestClientPagerMessage(DumUserAgent* ua, ClientPagerMess
 CommonAction* 
 TestClientPagerMessage::page(std::unique_ptr<resip::Contents>& contents, resip::DialogUsageManager::EncryptionLevel level)
 {
-   return new CommonAction(mUa, "page", boost::bind(&ClientPagerMessage::page, boost::bind<ClientPagerMessage*>(static_cast<ClientPagerMessage*(ClientPagerMessageHandle::*)()>(&ClientPagerMessageHandle::get), boost::ref(mHandle)),
-                                                    boost::ref(contents), level));
+   return new CommonAction(mUa, "page", [&] { mHandle->page(std::move(contents), level); });
 }
 
 CommonAction* 
 TestClientPagerMessage::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ClientPagerMessage::end, boost::bind<ClientPagerMessage*>(static_cast<ClientPagerMessage*(ClientPagerMessageHandle::*)()>(&ClientPagerMessageHandle::get), boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", [this] { mHandle->end(); });
 }
 
 bool 

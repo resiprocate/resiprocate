@@ -111,7 +111,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;winmm.lib;pcre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;winmm.lib;pcred.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -137,7 +137,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;winmm.lib;pcre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;iphlpapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;winmm.lib;pcred.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>

@@ -57,7 +57,7 @@ class BindHandleInvite : public ActionBase
 
       virtual void operator()(std::shared_ptr<Event> event)
       {
-         constr auto k = std::dynamic_pointer_cast<T1>(event);
+         const auto k = std::dynamic_pointer_cast<T1>(event);
          StackLog(<< "Binding invite session  handle... handle Id is " << k->getHandle().getId());
          mHandle = k->getHandle();
          resip_assert(mHandle.isValid());

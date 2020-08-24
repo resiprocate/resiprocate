@@ -387,23 +387,20 @@ DumUserAgent::inviteFromRefer(const resip::SipMessage& refer,
                               resip::DialogUsageManager::EncryptionLevel level,
                               const resip::SdpContents* alternative)
 {
-  return new DumUaSendingCommand(this, std::bind(&resip::DialogUsageManager::makeInviteSessionFromRefer, mDum,
-                                                 std::ref(refer), std::ref(h), initialOffer, level, alternative, nullptr));
+   return new DumUaSendingCommand(this, [&] { return mDum->makeInviteSessionFromRefer(refer, h, initialOffer, level, alternative, nullptr); });
 }
 
 DumUaAction*
 DumUserAgent::subscribe(const NameAddr& target, const Data& eventType)
 {
-   return new DumUaSendingCommand(this, std::bind(&resip::DialogUsageManager::makeSubscription, mDum,
-                                                  target, eventType, nullptr));
+   return new DumUaSendingCommand(this, [=] { return mDum->makeSubscription(target, eventType, nullptr); });
 }
 
 DumUaAction*
 DumUserAgent::publish(const resip::NameAddr& target, const resip::Contents& body, 
                       const resip::Data& eventType, unsigned expiresSeconds)
 {
-   return new DumUaSendingCommand(this, std::bind(&resip::DialogUsageManager::makePublication, mDum,
-                                                  target, std::ref(body), eventType, expiresSeconds, nullptr));
+   return new DumUaSendingCommand(this, [&] { return mDum->makePublication(target, body, eventType, expiresSeconds, nullptr); });
 }
 
 DumUaAction*
@@ -414,42 +411,41 @@ DumUserAgent::registerUa(bool tcp)
    {
       target.uri().param(resip::p_transport) = "tcp";
    }
-   
-   return new DumUaSendingCommand(this, std::bind(&resip::DialogUsageManager::makeRegistration, mDum,
-                                                  target, nullptr));   
+
+   return new DumUaSendingCommand(this, [=] { return mDum->makeRegistration(target, nullptr); });
 }
 
 DumUaAction*
 DumUserAgent::send(std::shared_ptr<resip::SipMessage> msg)
 {
-   return new DumUaCommand(this, std::bind(&resip::DialogUsageManager::send, mDum, msg));
+   return new DumUaCommand(this, [=] { mDum->send(msg); });
 }
 
 DumUaAction*
 DumUserAgent::cancelInvite()
 {
    resip_assert(mAppDialogSet);
-   return new DumUaCommand(this, std::bind(&resip::AppDialogSet::end, mAppDialogSet));
+   return new DumUaCommand(this, [this] { mAppDialogSet->end(); });
 }
 
 DumUaAction*
 DumUserAgent::refer(const resip::NameAddr& target, const resip::NameAddr& referTo)
 {
-   return new DumUaSendingCommand(this, std::bind(&resip::DialogUsageManager::makeRefer, mDum, target, referTo, nullptr));
+   return new DumUaSendingCommand(this, [=] { return mDum->makeRefer(target, referTo, nullptr); });
 }
 
 DumUaAction*
 DumUserAgent::referNoReferSub(const resip::NameAddr& target, const resip::NameAddr& referTo)
 {
-   ReferAdornment* adorner = new ReferAdornment(referTo);
-   return new DumUaSendingCommand(this, std::bind(&resip::DialogUsageManager::makeOutOfDialogRequest, mDum, target, REFER, nullptr), adorner);
+    ReferAdornment* adorner = new ReferAdornment(referTo);
+    return new DumUaSendingCommand(this, [=] { return mDum->makeOutOfDialogRequest(target, REFER, nullptr); }, adorner);
 }
 
 DumUaAction*
 DumUserAgent::referNoReferSubWithoutReferSubHeader(const resip::NameAddr& target, const resip::NameAddr& referTo)
 {
    ReferAdornmentRemoveReferSubHeader* adorner = new ReferAdornmentRemoveReferSubHeader(referTo);
-   return new DumUaSendingCommand(this, std::bind(&resip::DialogUsageManager::makeOutOfDialogRequest, mDum, target, REFER, nullptr), adorner);
+   return new DumUaSendingCommand(this, [=] { return mDum->makeOutOfDialogRequest(target, REFER, nullptr); }, adorner);
 }
 
 // ClientRegistrationHandler
