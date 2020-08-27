@@ -3154,6 +3154,8 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       BIO_free(bio);
    }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
 #ifndef SSL_CTRL_SET_ECDH_AUTO
 #define SSL_CTRL_SET_ECDH_AUTO 94
 #endif
@@ -3189,6 +3191,10 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       WarningLog(<<"unable to initialize ECDH: SSL_CTX_ctrl failed, OPENSSL_NO_ECDH defined or repro was compiled with an old OpenSSL version");
 #endif
    }
+
+#endif
+
+
 }
 
 #endif
