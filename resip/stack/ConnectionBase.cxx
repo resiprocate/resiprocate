@@ -1064,7 +1064,7 @@ ConnectionBase::getWriteBufferForExtraBytes(int currentPos, int extraBytes)
 {
    if (currentPos > 0 && extraBytes > 0)
    {
-      if ((currentPos + extraBytes) > mBufferSize)
+      if (((size_t)currentPos + (size_t)extraBytes) > mBufferSize)
       {
          mBufferSize = currentPos + extraBytes;
          char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize);

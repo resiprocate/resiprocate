@@ -1207,7 +1207,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       HeaderFieldValueList* hfvl=0;
       if (mHeaderIndices[header] == 0)
       {
-         mHeaderIndices[header] = mHeaders.size();
+         mHeaderIndices[header] = (short)mHeaders.size();
          mHeaders.push_back(getEmptyHfvl());
          hfvl=mHeaders.back();
       }
@@ -1349,7 +1349,7 @@ SipMessage::ensureHeaders(Headers::Type type)
       // create the list with a new component
       mHeaders.push_back(getEmptyHfvl());
       hfvl=mHeaders.back();
-      mHeaderIndices[type]=mHeaders.size()-1;
+      mHeaderIndices[type]= (short)mHeaders.size()-1;
    }
 
    return hfvl;
@@ -1377,7 +1377,7 @@ SipMessage::ensureHeader(Headers::Type type)
       // create the list with a new component
       mHeaders.push_back(getEmptyHfvl());
       hfvl=mHeaders.back();
-      mHeaderIndices[type]=mHeaders.size()-1;
+      mHeaderIndices[type]=(short)mHeaders.size()-1;
       mHeaders.back()->push_back(0,0,false);
    }
 
@@ -1600,7 +1600,7 @@ SipMessage::setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerT
    HeaderFieldValueList* copy=0;
    if (mHeaderIndices[headerType] == 0)
    {
-      mHeaderIndices[headerType]=mHeaders.size();
+      mHeaderIndices[headerType]=(short)mHeaders.size();
       copy=getCopyHfvl(*hfvs);
       mHeaders.push_back(copy);
    }
