@@ -3,6 +3,8 @@
 //#include "tfm/tfdum/DumEvent.hxx"
 //#include "rutil/Logger.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 using namespace resip;
@@ -62,14 +64,14 @@ Shutdown::operator()(DumUserAgent& dua)
 
 DumUaSendingCommand::DumUaSendingCommand(DumUserAgent* dua, Functor func) :
    DumUaAction(dua),
-   mFunctor(func),
-   mMessageAdorner(0)
+   mFunctor(std::move(func)),
+   mMessageAdorner(nullptr)
 {
 }
 
 DumUaSendingCommand::DumUaSendingCommand(DumUserAgent* dua, Functor func, MessageAdorner* adorner) :
    DumUaAction(dua),
-   mFunctor(func),
+   mFunctor(std::move(func)),
    mMessageAdorner(adorner)
 {
 }
@@ -83,11 +85,11 @@ void
 DumUaSendingCommand::operator()(DumUserAgent& dua)
 {
    dua.getDum().post(new DumUaSendingCommandCommand(dua.getDum(), mFunctor, mMessageAdorner));
-   mMessageAdorner=0;
+   mMessageAdorner = nullptr;
 }
 
 DumUaSendingCommandCommand::DumUaSendingCommandCommand(resip::DialogUsageManager& dum, Functor func, MessageAdorner* adorn) :
-   mFunctor(func),
+   mFunctor(std::move(func)),
    mMessageAdorner(adorn),
    mDum(dum)
 {}
@@ -120,7 +122,7 @@ DumUaSendingCommandCommand::executeCommand()
 
 DumUaCommand::DumUaCommand(DumUserAgent* dua, Functor func) :
    DumUaAction(dua),
-   mFunctor(func)
+   mFunctor(std::move(func))
 {
 }
 

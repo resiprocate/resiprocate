@@ -24,7 +24,7 @@ TestClientPagerMessage::TestClientPagerMessage(DumUserAgent* ua, ClientPagerMess
 CommonAction* 
 TestClientPagerMessage::page(std::unique_ptr<resip::Contents>& contents, resip::DialogUsageManager::EncryptionLevel level)
 {
-   return new CommonAction(mUa, "page", [&] { mHandle->page(std::move(contents), level); });
+   return new CommonAction(mUa, "page", [=, &contents] { mHandle->page(std::move(contents), level); });
 }
 
 CommonAction* 

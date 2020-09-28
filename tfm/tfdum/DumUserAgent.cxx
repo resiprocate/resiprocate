@@ -387,7 +387,7 @@ DumUserAgent::inviteFromRefer(const resip::SipMessage& refer,
                               resip::DialogUsageManager::EncryptionLevel level,
                               const resip::SdpContents* alternative)
 {
-   return new DumUaSendingCommand(this, [&] { return mDum->makeInviteSessionFromRefer(refer, h, initialOffer, level, alternative, nullptr); });
+   return new DumUaSendingCommand(this, [=, &refer, &h] { return mDum->makeInviteSessionFromRefer(refer, h, initialOffer, level, alternative, nullptr); });
 }
 
 DumUaAction*
@@ -400,7 +400,7 @@ DumUaAction*
 DumUserAgent::publish(const resip::NameAddr& target, const resip::Contents& body, 
                       const resip::Data& eventType, unsigned expiresSeconds)
 {
-   return new DumUaSendingCommand(this, [&] { return mDum->makePublication(target, body, eventType, expiresSeconds, nullptr); });
+   return new DumUaSendingCommand(this, [=, &body] { return mDum->makePublication(target, body, eventType, expiresSeconds, nullptr); });
 }
 
 DumUaAction*
