@@ -29,7 +29,7 @@ class RequestContext;
 class ResponseContext
 {
    public:
-      class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
+      class CompareStatus
       {
          public:
             bool operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const;
