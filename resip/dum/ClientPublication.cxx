@@ -30,7 +30,7 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
      mPendingPublish(false),
      mPendingEnd(false),
      mPublish(std::move(req)),
-     mEventType(req->header(h_Event).value()),
+     mEventType(mPublish->header(h_Event).value()),
      mTimerSeq(0),
      mDocument(mPublish->releaseContents().release())
 {
