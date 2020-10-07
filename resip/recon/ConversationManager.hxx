@@ -1,6 +1,8 @@
 #if !defined(ConversationManager_hxx)
 #define ConversationManager_hxx
 
+#include <boost/function.hpp>
+
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>
