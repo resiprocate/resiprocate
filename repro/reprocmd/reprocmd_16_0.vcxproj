@@ -409,7 +409,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -431,7 +431,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MTd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -453,7 +453,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MDd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MDd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -475,7 +475,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MTd.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -502,7 +502,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -531,7 +531,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MT.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -560,7 +560,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -589,7 +589,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;winmm.lib;Dnsapi.lib;crypt32.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MT.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>

@@ -158,7 +158,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -183,7 +183,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_ARES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -209,7 +209,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -220,7 +220,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;libcrypto.lib;libssl.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MDd.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -231,7 +231,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_ARES;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -242,7 +242,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;libcrypto.lib;libssl.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MDd.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MDd.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -256,7 +256,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_ARES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -269,7 +269,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;libcrypto.lib;libssl.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -285,7 +285,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/popt/win32/include;$(ProjectDir)../../contrib/boost;$(ProjectDir)../../contrib/openssl/inc32;$(ProjectDir)../../contrib/openssl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_ARES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -298,7 +298,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/FIXED:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;libcrypto.lib;libssl.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Dnsapi.lib;Iphlpapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;$(ProjectDir)..\..\contrib\popt\win32\lib\libpopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -334,11 +334,11 @@
     <ClInclude Include="RendWavePres.hxx" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\rutil\dns\ares\ares_16_0.vcxproj">
+      <Project>{ce7cf5e0-cad1-49d6-95d1-143ded7b226e}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\rutil\rutil_16_0.vcxproj">
       <Project>{3d0e5ceb-93dc-4fdb-918b-d08fa369e106}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\dum\dum_16_0.vcxproj">
-      <Project>{31b0654f-e08e-405f-909f-80f86cb14b9d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\stack\resiprocate_16_0.vcxproj">
       <Project>{2a8be839-6466-4001-b224-8f1c3168d04a}</Project>

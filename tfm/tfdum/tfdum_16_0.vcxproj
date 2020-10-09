@@ -188,7 +188,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -199,7 +199,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -209,7 +210,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -220,7 +221,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\contrib\popt\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -229,7 +231,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -239,7 +241,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -247,7 +250,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -257,7 +260,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\sdk\contrib\sipfoundry\Projects\resiprocate\Win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\ares\Win32\Release;..\..\..\sdk\external\OpenSSL\openssl-0.9.7g\libs;..\..\..\sdk\contrib\sipfoundry\Projects\tfm\win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\repro\Win32\Release;.\Release;..\..\..\sdk\contrib\sipfoundry\Projects\dum\Win32\Release;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32\lib;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32;..\..\..\sdk\contrib\sipfoundry\main\contrib\db\build_win32\Release_static;..\..\natnav\Release;..\tfmprojects\tfdum\Release;..\tfcommon\Release;..\..\..\sdk\contrib\sipfoundry\Projects\pcre\Win32\Release;..\..\..\sdk\cpsi\lib\release;..\..\..\sdk\source\ccm\natnav\release;..\..\..\sdk\contrib\sipfoundry\Projects\cppunit\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -266,7 +270,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;..\..\contrib\OpenSSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -277,7 +281,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -290,7 +295,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;..\..\contrib\OpenSSLx64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -301,7 +306,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\contrib\popt\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -313,7 +319,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;..\..\contrib\OpenSSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -323,7 +329,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -331,7 +338,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\;..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\cppunit\include;..\;..\..;..\..\contrib\boost;..\..\contrib\pcre;..\..\contrib\OpenSSLx64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -341,18 +348,28 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\sdk\contrib\sipfoundry\Projects\resiprocate\Win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\ares\Win32\Release;..\..\..\sdk\external\OpenSSL\openssl-0.9.7g\libs;..\..\..\sdk\contrib\sipfoundry\Projects\tfm\win32\Release;..\..\..\sdk\contrib\sipfoundry\Projects\repro\Win32\Release;.\Release;..\..\..\sdk\contrib\sipfoundry\Projects\dum\Win32\Release;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32\lib;..\..\..\sdk\contrib\sipfoundry\main\contrib\popt\win32;..\..\..\sdk\contrib\sipfoundry\main\contrib\db\build_win32\Release_static;..\..\natnav\Release;..\tfmprojects\tfdum\Release;..\tfcommon\Release;..\..\..\sdk\contrib\sipfoundry\Projects\pcre\Win32\Release;..\..\..\sdk\cpsi\lib\release;..\..\..\sdk\source\ccm\natnav\release;..\..\..\sdk\contrib\sipfoundry\Projects\cppunit\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\contrib\cppunit\src\cppunit\cppunit_16_0.vcxproj">
+      <Project>{d23d6465-7ea9-45fd-9784-54dbf8a1a5ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\contrib\db\build_windows\db_static_16_0.vcxproj">
+      <Project>{9e5a7645-1502-4467-91f8-bcf2eb06ef72}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\contrib\GeoIP\GeoIP_16_0.vcxproj">
       <Project>{6527d843-ee53-4f1e-b0a9-12abba8e75cc}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\contrib\Netxx-0.3.2\netxx_16_0.vcxproj">
       <Project>{9f26ed15-437c-4a8a-9062-75bf0e5a0f39}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\contrib\pcre\pcre_16_0.vcxproj">
+      <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\contrib\popt\popt_16_0.vcxproj">
       <Project>{25d97d59-9407-af5e-355d-b60a17ae3567}</Project>

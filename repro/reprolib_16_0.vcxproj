@@ -284,7 +284,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;$(ProjectDir)../contrib/MySQLConnectorC/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/MySQLConnectorC/include;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories);$(ProjectDir)../contrib/cajun/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_ARES;USE_IPV6;USE_MYSQL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
@@ -298,7 +298,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_ARES;USE_IPV6;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
@@ -311,7 +311,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;$(ProjectDir)../contrib/MySQLConnectorC/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/MySQLConnectorC/include;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories);$(ProjectDir)../contrib/cajun/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_MYSQL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -322,7 +322,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -334,7 +334,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;$(ProjectDir)../contrib/MySQLConnectorC/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/MySQLConnectorC/include;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories);$(ProjectDir)../contrib/cajun/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_MYSQL;USE_SSL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
@@ -348,7 +348,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;$(ProjectDir)../contrib/MySQLConnectorC/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/MySQLConnectorC/include;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories);$(ProjectDir)../contrib/cajun/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_MYSQL;USE_SSL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
@@ -362,7 +362,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/opensslx64/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_SSL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
@@ -376,7 +376,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug-MT|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/opensslx64/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6;USE_SSL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
@@ -389,7 +389,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;$(ProjectDir)../contrib/MySQLConnectorC/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/MySQLConnectorC/include;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories);$(ProjectDir)../contrib/cajun/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_SSL;USE_MYSQL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -400,7 +400,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;$(ProjectDir)../contrib/MySQLConnectorC/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/MySQLConnectorC/include;$(ProjectDir)../contrib/db/build_windows;%(AdditionalIncludeDirectories);$(ProjectDir)../contrib/cajun/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_SSL;USE_MYSQL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -411,7 +411,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/opensslx64/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_SSL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -422,7 +422,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../;$(ProjectDir)../resip/stack;$(ProjectDir)../contrib/pcre;$(ProjectDir)../contrib/opensslx64/include;$(ProjectDir)../contrib/openssl/inc32;$(ProjectDir)../contrib/GeoIP/libGeoIP;$(ProjectDir)../contrib/db/build_windows;$(ProjectDir)../contrib/cajun/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;USE_ARES;USE_IPV6;USE_SSL;USE_MAXMIND_GEOIP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>

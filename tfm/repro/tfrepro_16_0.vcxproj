@@ -196,7 +196,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -206,7 +206,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -217,7 +218,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -227,7 +228,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -237,7 +239,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -246,7 +248,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -258,7 +261,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -267,7 +270,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -280,7 +284,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;..\..\contrib\OpenSSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -290,7 +294,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -304,7 +309,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;..\..\contrib\OpenSSLx64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -314,7 +319,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcred.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -327,7 +333,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;..\..\contrib\OpenSSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -336,7 +342,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;winmm.lib;crypt32.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libcrypto32MD.lib;$(ProjectDir)..\..\contrib\openssl\lib\vc\static\libssl32MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -348,7 +355,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\contrib\popt\win32\include;..\..\contrib\Netxx-0.3.2\include\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\contrib\pcre;..\..\contrib\popt\win32\include;..\..\contrib\cppunit\include;..\..\contrib\Netxx-0.3.2\include\;..\..\contrib\boost;..\..\;..\..\contrib\db\build_windows;..\..\contrib\OpenSSLx64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_IPV6;USE_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -357,7 +364,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;libdb48.lib;pcre.lib;legacy_stdio_definitions.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;Ws2_32.lib;Iphlpapi.lib;Dnsapi.lib;crypt32.lib;winmm.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libcrypto64MD.lib;$(ProjectDir)..\..\contrib\opensslx64\lib\vc\static\libssl64MD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)tfrepro.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -368,11 +376,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\contrib\cppunit\src\cppunit\cppunit_16_0.vcxproj">
+      <Project>{d23d6465-7ea9-45fd-9784-54dbf8a1a5ce}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\contrib\db\build_windows\db_static_16_0.vcxproj">
+      <Project>{9e5a7645-1502-4467-91f8-bcf2eb06ef72}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\contrib\GeoIP\GeoIP_16_0.vcxproj">
       <Project>{6527d843-ee53-4f1e-b0a9-12abba8e75cc}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\contrib\Netxx-0.3.2\netxx_16_0.vcxproj">
       <Project>{9f26ed15-437c-4a8a-9062-75bf0e5a0f39}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\contrib\pcre\pcre_16_0.vcxproj">
+      <Project>{b933f895-8efb-4fdd-a46d-09b8c00d1d26}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\contrib\popt\popt_16_0.vcxproj">

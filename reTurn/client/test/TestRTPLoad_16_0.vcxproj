@@ -199,7 +199,7 @@
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -222,7 +222,7 @@
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -245,7 +245,7 @@
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;../../../contrib/OpenSSL/include;../../../contrib/OpenSSL/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -254,7 +254,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;iphlpapi.lib;legacy_stdio_definitions.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;crypt32.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libcrypto32MDd.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libssl32MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -268,7 +268,7 @@
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;../../../contrib/OpenSSLx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;LEAK_CHECK;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -277,7 +277,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;iphlpapi.lib;legacy_stdio_definitions.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;crypt32.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\libcrypto64MDd.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\libssl64MDd.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -290,7 +290,7 @@
       <Path>$(IntDir)\$(MSBuildProjectName).log</Path>
     </BuildLog>
     <ClCompile>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -313,7 +313,7 @@
       <Path>$(IntDir)BuildLog-TestAsyncClient.htm</Path>
     </BuildLog>
     <ClCompile>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -336,7 +336,7 @@
       <Path>$(IntDir)\$(MSBuildProjectName).log</Path>
     </BuildLog>
     <ClCompile>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;../../../contrib/OpenSSL/include;../../../contrib/OpenSSL/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -344,7 +344,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;iphlpapi.lib;legacy_stdio_definitions.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;crypt32.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libcrypto32MD.lib;$(ProjectDir)..\..\..\contrib\openssl\lib\VC\static\libssl32MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -359,7 +359,7 @@
       <Path>$(IntDir)BuildLog-TestAsyncClient.htm</Path>
     </BuildLog>
     <ClCompile>
-      <AdditionalIncludeDirectories>../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../contrib/asio;../../../contrib/boost;../../../;../../../contrib/OpenSSLx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ASIO_HAS_BOOST_BIND;BOOST_ASIO_HAS_STD_CHRONO;WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0501;USE_SSL;ASIO_ENABLE_CANCELIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -367,7 +367,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;iphlpapi.lib;legacy_stdio_definitions.lib;crypt32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;crypt32.lib;legacy_stdio_definitions.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\libcrypto64MD.lib;$(ProjectDir)..\..\..\contrib\opensslx64\lib\VC\static\libssl64MD.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>

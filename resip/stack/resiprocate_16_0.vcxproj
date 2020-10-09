@@ -357,7 +357,7 @@
     <ClCompile>
       <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -372,7 +372,7 @@
     <ClCompile>
       <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -387,7 +387,7 @@
     <ClCompile>
       <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -402,7 +402,7 @@
     <ClCompile>
       <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LEAK_CHECK;USE_SSL;USE_ARES;USE_IPV6;USE_DTLS;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -419,7 +419,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -438,7 +438,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/openssl/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -457,7 +457,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -475,7 +475,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../contrib/ares;$(ProjectDir)../;$(ProjectDir)../../;$(ProjectDir)../../contrib/opensslx64/include;$(ProjectDir)../../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES;USE_IPV6;NO_IPHLPAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
