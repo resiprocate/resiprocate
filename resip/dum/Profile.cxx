@@ -18,7 +18,7 @@ Profile::Profile(std::shared_ptr<Profile> baseProfile) :
    mHasOutboundDecorator(false),
    mBaseProfile(std::move(baseProfile))
 {
-   resip_assert(baseProfile.get());
+   resip_assert(mBaseProfile.get());
 
    Profile::reset();  // default all settings to fallthrough to mBaseProfile
 }
