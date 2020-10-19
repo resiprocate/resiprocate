@@ -374,7 +374,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   
                   auto bye = std::make_shared<SipMessage>();
                   dialog.makeRequest(*bye, BYE);
-                  dialog.send(std::move(bye));
+                  dialog.send(bye);
                   
                   if (mDum.mDialogEventStateManager)
                   {
