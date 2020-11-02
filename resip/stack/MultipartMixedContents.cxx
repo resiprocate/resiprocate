@@ -103,8 +103,8 @@ MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
       Contents::operator=(rhs);
       clear();
       
-      for (vector<Contents*>::iterator i = mContents.begin(); 
-           i != mContents.end(); ++i)
+      for (vector<Contents*>::const_iterator i = rhs.mContents.begin(); 
+           i != rhs.mContents.end(); ++i)
       {
          mContents.push_back( (*i)->clone() );
       }

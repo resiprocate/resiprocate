@@ -62,6 +62,11 @@ main()
       f->getBodyData();
 
       mpc.encode(resipCerr);
+
+      // Test operator=
+      MultipartRelatedContents dest;
+      dest = mpc;
+      assert(dest == mpc);
    }
 
    {
