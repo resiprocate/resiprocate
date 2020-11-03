@@ -41,3 +41,5 @@ obj.gopt.*
 obj.prof.*
 bin.prof.*
 
+/.idea
+/cmake-build-*
