@@ -1061,8 +1061,9 @@ ConnectionBase::getCurrentWriteBuffer()
 }
 
 char*
-ConnectionBase::getWriteBufferForExtraBytes(int currentPos, int extraBytes)
+ConnectionBase::getWriteBufferForExtraBytes(int bytesRead, int extraBytes)
 {
+   int currentPos = mBufferPos + bytesRead;
    if (currentPos > 0 && extraBytes > 0)
    {
       if ((currentPos + extraBytes) > mBufferSize)
