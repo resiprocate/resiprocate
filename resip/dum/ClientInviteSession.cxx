@@ -1471,7 +1471,14 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
          break;
 
       default:
-         break;
+        if(msg.isRequest())
+        {
+           // We have canceled - reject any new requests
+           SharedPtr<SipMessage> rsp(new SipMessage);
+           mDialog.makeResponse(*rsp, msg, 481);
+           send(rsp);
+        }
+        break;
    }
 }
 
