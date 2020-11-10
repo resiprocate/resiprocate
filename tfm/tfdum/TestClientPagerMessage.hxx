@@ -19,7 +19,7 @@ class TestClientPagerMessage : public TestUsage
 
       resip::Data getName() const { return "TestClientPagerMessage"; }
 
-      CommonAction* page(std::auto_ptr<resip::Contents>& contents, resip::DialogUsageManager::EncryptionLevel level=resip::DialogUsageManager::None);
+      CommonAction* page(std::unique_ptr<resip::Contents>& contents, resip::DialogUsageManager::EncryptionLevel level=resip::DialogUsageManager::None);
       CommonAction* end();
 
       bool isMyEvent(Event*);

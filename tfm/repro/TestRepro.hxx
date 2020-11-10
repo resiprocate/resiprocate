@@ -16,7 +16,6 @@
 #include "resip/stack/EventStackThread.hxx"
 #include "rutil/FdPoll.hxx"
 #include "rutil/CongestionManager.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
 
@@ -61,7 +60,7 @@ class TestRepro : public TestProxy
       resip::EventStackThread* mStackThread;
       
       repro::Registrar mRegistrar;
-      resip::SharedPtr<resip::MasterProfile> mProfile;
+      std::shared_ptr<resip::MasterProfile> mProfile;
       repro::AbstractDb* mDb;
       TfmProxyConfig mConfig;
       resip::Dispatcher* mAuthRequestDispatcher;
@@ -72,7 +71,7 @@ class TestRepro : public TestProxy
       repro::Proxy mProxy;
       resip::DialogUsageManager* mDum;
       resip::DumThread* mDumThread;
-      std::auto_ptr<resip::CongestionManager> mCongestionManager;
+      std::unique_ptr<resip::CongestionManager> mCongestionManager;
 };
 
 #endif

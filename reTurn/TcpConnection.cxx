@@ -1,7 +1,5 @@
 #include "TcpConnection.hxx"
 #include <vector>
-#include <boost/bind.hpp>
-#include <rutil/SharedPtr.hxx>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
 #include <rutil/Logger.hxx>
@@ -58,7 +56,7 @@ TcpConnection::close()
 }
 
 void 
-TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    if (data->size() > 4)
    {
@@ -99,8 +97,8 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
             default:
                break;
             }
-#define RESPONSE_BUFFER_SIZE 1024
-            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            constexpr size_t RESPONSE_BUFFER_SIZE = 1024;
+            const auto buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
             unsigned int responseSize;
             responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
             buffer->truncate(responseSize);  // set size to real size

@@ -5,6 +5,8 @@
 #include "ReconSubsystem.hxx"
 #include "ConversationProfile.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -29,8 +31,8 @@ ConversationProfile::ConversationProfile() :
 {
 }
 
-ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
-   UserProfile(baseProfile),
+ConversationProfile::ConversationProfile(std::shared_ptr<Profile> baseProfile) :
+   UserProfile(std::move(baseProfile)),
    mHandle(0),
    mAllowAutoAnswer(false),
    mAllowPriorityAutoAnswer(false),

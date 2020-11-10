@@ -175,9 +175,9 @@ class TransactionState : public DnsHandler
       Tuple mResponseTarget; // used to reply to requests
 
       // used when the DnsResult moves to another transport on failure. Only
-      // used for outgoing stateful, so auto_ptr for space efficiency.
-      std::auto_ptr<NameAddr> mOriginalContact;
-      std::auto_ptr<Via> mOriginalVia;
+      // used for outgoing stateful, so unique_ptr for space efficiency.
+      std::unique_ptr<NameAddr> mOriginalContact;
+      std::unique_ptr<Via> mOriginalVia;
 
       const Data mId;
       const MethodTypes mMethod;

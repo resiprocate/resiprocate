@@ -105,7 +105,7 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
    applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge port matrix
 }
 
-SharedPtr<MediaInterface> 
+std::shared_ptr<MediaInterface> 
 Participant::getMediaInterface()
 {
    switch(mConversationManager.getMediaInterfaceMode())
@@ -119,7 +119,7 @@ Participant::getMediaInterface()
       return mConversations.begin()->second->getMediaInterface();
    default:
       resip_assert(false);
-      return SharedPtr<MediaInterface>((MediaInterface*)0);
+      return nullptr;
    }
 }
 

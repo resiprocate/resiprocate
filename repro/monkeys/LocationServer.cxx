@@ -138,7 +138,7 @@ LocationServer::process(RequestContext& context)
          async->user() = inputUri.user();
          async->realm() = inputUri.host();
          async->domain() = inputUri.host();
-         std::auto_ptr<ApplicationMessage> app(async);
+         std::unique_ptr<ApplicationMessage> app(async);
          mUserInfoDispatcher->post(app);
          return WaitingForEvent;
       }

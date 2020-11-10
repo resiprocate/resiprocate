@@ -311,7 +311,7 @@ SipImpApp::imInit()
 			resip_assert( 0 );
 		}
 	}
-	catch ( resip::Security::Exception e )
+	catch (const resip::Security::Exception& e)
 	{
 		Data error = Data::from( e );
 		const char* problem = error.c_str();

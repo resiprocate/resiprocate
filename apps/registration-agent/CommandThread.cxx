@@ -126,8 +126,8 @@ CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
 {
    while(mFifo.messageAvailable())
    {
-      SharedPtr<json::Object> _jObj(mFifo.getNext());
-      json::Object& jObj = *_jObj.get();
+      std::unique_ptr<json::Object> _jObj(mFifo.getNext());
+      json::Object& jObj = *_jObj;
       std::string command = json::String(jObj["command"]).Value();
       json::Object args = jObj["arguments"];
       StackLog(<<"received command " << command);

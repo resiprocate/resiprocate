@@ -7,7 +7,7 @@
 
 // !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
-#include <rutil/SharedPtr.hxx>
+#include <memory>
 
 #include <asio.hpp>
 #ifdef USE_SSL
@@ -77,8 +77,8 @@ public:
                const char* stunUsername = 0,
                const char* stunPassword = 0,
                bool forceCOMedia = false,
-               resip::SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = resip::SharedPtr<RTCPEventLoggingHandler>(),
-               resip::SharedPtr<FlowContext> context = resip::SharedPtr<FlowContext>());
+               std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = nullptr,
+               std::shared_ptr<FlowContext> context = nullptr);
    virtual ~MediaStream();
 
    Flow* getRtpFlow() { return mRtpFlow; }

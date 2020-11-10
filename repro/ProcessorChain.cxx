@@ -54,7 +54,7 @@ repro::ProcessorChain::~ProcessorChain()
 }
 
 void
-repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
+repro::ProcessorChain::addProcessor(unique_ptr<Processor> rp)
 {
    DebugLog(<< "Adding new " << mName << " to chain: " << *(rp.get()));
    resip_assert(!mChainReady);

@@ -43,7 +43,7 @@ class InstantMessage : public resip::ServerPagerMessageHandler,
 	Callback used when a MESSAGE has been failed to send
 	@note An application should override this method. Application could re-page the failed contents or just ingore it.
      */
-      virtual void onFailure(resip::ClientPagerMessageHandle handle, const resip::SipMessage& status, std::auto_ptr<resip::Contents> contents);
+      virtual void onFailure(resip::ClientPagerMessageHandle handle, const resip::SipMessage& status, std::unique_ptr<resip::Contents> contents);
 
 };
 

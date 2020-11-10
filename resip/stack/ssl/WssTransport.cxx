@@ -4,8 +4,6 @@
 
 #ifdef USE_SSL
 
-#include <memory>
-
 #include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
@@ -14,6 +12,8 @@
 #include "resip/stack/ssl/WssConnection.hxx"
 #include "resip/stack/ssl/Security.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
@@ -32,26 +32,21 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
                            unsigned transportFlags,
                            SecurityTypes::TlsClientVerificationMode cvm,
                            bool useEmailAsSIP,
-                           SharedPtr<WsConnectionValidator> connectionValidator,
-                           SharedPtr<WsCookieContextFactory> cookieContextFactory,
+                           std::shared_ptr<WsConnectionValidator> connectionValidator,
+                           std::shared_ptr<WsCookieContextFactory> cookieContextFactory,
                            const Data& certificateFilename, 
                            const Data& privateKeyFilename,
                            const Data& privateKeyPassPhrase):
    TlsBaseTransport(fifo, portNum, version, interfaceObj, security, sipDomain, sslType, WSS, socketFunc, 
                     compression, transportFlags, cvm, useEmailAsSIP, certificateFilename, privateKeyFilename,
                     privateKeyPassPhrase),
-   WsBaseTransport(connectionValidator, cookieContextFactory)
+   WsBaseTransport(std::move(connectionValidator), std::move(cookieContextFactory))
 {
    InfoLog (<< "Creating WSS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
             << " port=" << mTuple.getPort());
 
    mTxFifo.setDescription("WssTransport::mTxFifo");
-}
-
-
-WssTransport::~WssTransport()
-{
 }
 
 Connection*

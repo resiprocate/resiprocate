@@ -4,6 +4,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
 
 using namespace resip;
@@ -111,9 +113,9 @@ TransactionUser::removeDomain(const Data& domain)
 }
 
 void
-TransactionUser::setDomainMatcher(SharedPtr<DomainMatcher> domainMatcher)
+TransactionUser::setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher)
 {
-   mDomainMatcher = domainMatcher;
+   mDomainMatcher = std::move(domainMatcher);
 }
 
 EncodeStream& 

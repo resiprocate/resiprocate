@@ -16,6 +16,8 @@
 #include "MediaRelay.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
+
 using namespace gateway;
 using namespace resip;
 using namespace std;
@@ -330,10 +332,10 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
       //}
 
       // Add message to buffer
-      std::auto_ptr<char> buffer(new char[sizeof(RtpHeader)]); 
+      std::unique_ptr<char[]> buffer(new char[sizeof(RtpHeader)]);
       memcpy(buffer.get(), &keepalive, sizeof(RtpHeader));
       
-      relayPort->mFirstEndpoint.mRelayDatagram = buffer;
+      relayPort->mFirstEndpoint.mRelayDatagram = std::move(buffer);
       relayPort->mFirstEndpoint.mRelayDatagramLen = sizeof(RtpHeader);
    }
 
@@ -360,10 +362,10 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
       //}
 
       // Add message to buffer
-      std::auto_ptr<char> buffer(new char[sizeof(RtpHeader)]); 
+      std::unique_ptr<char[]> buffer(new char[sizeof(RtpHeader)]);
       memcpy(buffer.get(), &keepalive, sizeof(RtpHeader));
       
-      relayPort->mSecondEndpoint.mRelayDatagram = buffer;
+      relayPort->mSecondEndpoint.mRelayDatagram = std::move(buffer);
       relayPort->mSecondEndpoint.mRelayDatagramLen = sizeof(RtpHeader);
    }
 }
@@ -389,7 +391,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
 {
    resip::Socket fd = INVALID_SOCKET;
    Tuple tuple;
-   std::auto_ptr<char> buffer;
+   std::unique_ptr<char[]> buffer;
    int len;
 
    // If we have data to write to first sender then check if readyToWrite
@@ -400,7 +402,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       {
          fd = relayPort->mV4Fd;
          tuple = relayPort->mFirstEndpoint.mTuple;
-         buffer = relayPort->mFirstEndpoint.mRelayDatagram;
+         buffer = std::move(relayPort->mFirstEndpoint.mRelayDatagram);
          len = relayPort->mFirstEndpoint.mRelayDatagramLen;               
       }
       else if(mIsV6Avail &&
@@ -409,7 +411,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       {
          fd = relayPort->mV6Fd;
          tuple = relayPort->mFirstEndpoint.mTuple;
-         buffer = relayPort->mFirstEndpoint.mRelayDatagram;
+         buffer = std::move(relayPort->mFirstEndpoint.mRelayDatagram);
          len = relayPort->mFirstEndpoint.mRelayDatagramLen;               
       }
    }
@@ -444,7 +446,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       {
          fd = relayPort->mV4Fd;
          tuple = relayPort->mSecondEndpoint.mTuple;
-         buffer = relayPort->mSecondEndpoint.mRelayDatagram;
+         buffer = std::move(relayPort->mSecondEndpoint.mRelayDatagram);
          len = relayPort->mSecondEndpoint.mRelayDatagramLen;               
       }
       else if(mIsV6Avail && 
@@ -453,7 +455,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       {
          fd = relayPort->mV6Fd;
          tuple = relayPort->mSecondEndpoint.mTuple;
-         buffer = relayPort->mSecondEndpoint.mRelayDatagram;
+         buffer = std::move(relayPort->mSecondEndpoint.mRelayDatagram);
          len = relayPort->mSecondEndpoint.mRelayDatagramLen;               
       }
    }
@@ -504,7 +506,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
    }
    if (fd != INVALID_SOCKET)
    {
-      std::auto_ptr<char> buffer(new char[UDP_BUFFER_SIZE+1]); 
+      std::unique_ptr<char[]> buffer(new char[UDP_BUFFER_SIZE+1]);
 
       socklen_t slen = tuple.length();
       int len = recvfrom( fd,
@@ -595,7 +597,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
 
                   // relay packet to second sender
                   resip_assert(pSendingEndpoint->mRelayDatagram.get() == 0);
-                  pSendingEndpoint->mRelayDatagram = buffer;
+                  pSendingEndpoint->mRelayDatagram = std::move(buffer);
                   pSendingEndpoint->mRelayDatagramLen = len;
                   if(pSendingEndpoint->mKeepaliveMode)
                   {

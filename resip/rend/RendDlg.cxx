@@ -15,9 +15,9 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <utility>
 
 #include "rutil/Logger.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "rutil/DnsUtil.hxx"
 
 #include "resip/stack/Message.hxx"
@@ -426,12 +426,12 @@ RendDlg::sendNextCmd(int expireSecs, int maxRetryReqCnt)
    }
 
    setExpireSecs(expireSecs);
-   std::auto_ptr<resip::SipMessage> msg(makeNextReq());
+   std::unique_ptr<resip::SipMessage> msg(makeNextReq());
    // XXX: do something with maxRetryReqCnt
    mCmdRetryCnt = 0;
    addAuthFromCache(msg.get());
    mReqSendTime = RendGetTimeUsRel();
-   getTu().sendMsg(msg, this);
+   getTu().sendMsg(std::move(msg), this);
    return 1;
 }
 
@@ -565,7 +565,7 @@ RendDlg::processResponse( RendTimeUs now, const resip::SipMessage *rsp)
          return -2;
       }
 
-      std::auto_ptr<resip::SipMessage> nextReq(makeNextReq());
+      std::unique_ptr<resip::SipMessage> nextReq(makeNextReq());
       if ( addAuthFromRsp(nextReq.get(), *rsp) < 0 ) 
       {
          WarningLog(<< "Auth failed (unable to respond):" 
@@ -574,7 +574,7 @@ RendDlg::processResponse( RendTimeUs now, const resip::SipMessage *rsp)
          return -2;
       }
       mReqSendTime = RendGetTimeUsRel();	// not sure about this
-      mTu.sendMsg(nextReq, this);
+      mTu.sendMsg(std::move(nextReq), this);
    } 
    else if(rspCode>=100 && rspCode < 199) 
    {
@@ -863,7 +863,7 @@ RendTu::lookupDlg(const resip::Data& localTag, const char **badDetail)
 // extern resip::Transport *RendTransports[];
 
 void
-RendTu::sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg)
+RendTu::sendMsg(std::unique_ptr<resip::SipMessage> msg, RendDlg *dlg)
 {
    if ( msg->isRequest() ) 
    {
@@ -926,7 +926,7 @@ RendTu::sendMsg(std::auto_ptr<resip::SipMessage> msg, RendDlg *dlg)
    }
 #endif
 
-   mStack.send(msg, this);
+   mStack.send(std::move(msg), this);
 }
 
 int /*REND_PRA_... */
@@ -940,9 +940,9 @@ RendTu::badRequest( const resip::SipMessage *req, int rspCode,
       <<", why="<<detailWhy
       <<", why2="<<(why2?why2:"na"));
 
-   std::auto_ptr<resip::SipMessage> rsp(new resip::SipMessage);
+   std::unique_ptr<resip::SipMessage> rsp(new resip::SipMessage);
    resip::Helper::makeResponse(*rsp, *req, rspCode, resip::Data(reason));
-   sendMsg(rsp);
+   sendMsg(std::move(rsp));
    return REND_PRA_RspSent;
 }
 
@@ -1001,9 +1001,9 @@ RendTu::processRequest( RendTimeUs now, const resip::SipMessage *req)
    if (act!=REND_PRA_RspSent)
    {
       resip_assert ( act >= 100 && act <= 999 );
-      std::auto_ptr<resip::SipMessage> rsp(new resip::SipMessage);
+      std::unique_ptr<resip::SipMessage> rsp(new resip::SipMessage);
       resip::Helper::makeResponse(*rsp, *req, act);
-      sendMsg(rsp);
+      sendMsg(std::move(rsp));
       return REND_PRA_RspSent;
    }
    return act;

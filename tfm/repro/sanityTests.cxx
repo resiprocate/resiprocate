@@ -83,8 +83,8 @@ class DisableDigestAuthGuard
 class TestHolder : public ReproFixture
 {
    public:
-      static boost::shared_ptr<SipMessage>
-      bogusAuth(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      bogusAuth(std::shared_ptr<SipMessage> msg)
       {
          if(msg->exists(h_ProxyAuthorizations))
          {
@@ -108,8 +108,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      badNonce(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      badNonce(std::shared_ptr<SipMessage> msg)
       {
          if(msg->exists(h_ProxyAuthorizations))
          {
@@ -123,52 +123,52 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      noUserInTo(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      noUserInTo(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_To).uri().user()="";
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      userInReqUri(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      userInReqUri(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_RequestLine).uri().user()="boom";
          return msg;
       }
 
-   static boost::shared_ptr<SipMessage>
-   unknownHostInTo(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownHostInTo(std::shared_ptr<SipMessage> msg)
    {
       
       msg->header(h_To).uri().host()="po9eiwi7hpfnqvn89hpbcn";
       return msg;
    }
    
-   static boost::shared_ptr<SipMessage>
-   unknownHostInFrom(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownHostInFrom(std::shared_ptr<SipMessage> msg)
    {
       
       msg->header(h_From).uri().host()="po9eiwi7hpfnqvn89hpbcn";
       return msg;
    }
    
-   static boost::shared_ptr<SipMessage>
-   unknownUserInTo(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownUserInTo(std::shared_ptr<SipMessage> msg)
    {
       msg->header(h_To).uri().user()="n97n3qwbefcpp";
       return msg;
    }
 
-   static boost::shared_ptr<SipMessage>
-   unknownUserInFrom(boost::shared_ptr<SipMessage> msg)
+   static std::shared_ptr<SipMessage>
+   unknownUserInFrom(std::shared_ptr<SipMessage> msg)
    {
       msg->header(h_From).uri().user()="n97n3qwbefcpp";
       return msg;
    }
 
-      static boost::shared_ptr<SipMessage>
-      largeCallId(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      largeCallId(std::shared_ptr<SipMessage> msg)
       {
          const int oversize = 4096;
          Data callId(oversize, Data::Preallocate);
@@ -182,8 +182,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      largeContact(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      largeContact(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->exists(h_Contacts) &&
                 !msg->header(h_Contacts).empty());
@@ -200,54 +200,54 @@ class TestHolder : public ReproFixture
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      inviteCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      inviteCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::INVITE;
          msg->header(resip::h_CSeq).unknownMethodName()="INVITE";         
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      cancelCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      cancelCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::CANCEL;
          msg->header(resip::h_CSeq).unknownMethodName()="CANCEL";         
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      ackCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      ackCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::ACK;
          msg->header(resip::h_CSeq).unknownMethodName()="ACK";         
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      unknownCSeq(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      unknownCSeq(std::shared_ptr<SipMessage> msg)
       {
          msg->header(resip::h_CSeq).method()=resip::UNKNOWN;
          msg->header(resip::h_CSeq).unknownMethodName()="blargagsaqq";         
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      missingTid(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      missingTid(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_Vias).front().remove(p_branch);
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      unknownProxyRequire(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      unknownProxyRequire(std::shared_ptr<SipMessage> msg)
       {
          msg->header(h_ProxyRequires).push_back(Token("foobajooba"));
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      supportedProxyRequire(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      supportedProxyRequire(std::shared_ptr<SipMessage> msg)
       {
          // !bwc! TODO Once we have something we _do_ support, put that here.
          msg->header(h_ProxyRequires).push_back(Token("p-fakeoption"));
@@ -272,8 +272,8 @@ class TestHolder : public ReproFixture
          return result;
       }
 
-      static boost::shared_ptr<SipMessage>
-      addRecordRoute(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      addRecordRoute(std::shared_ptr<SipMessage> msg)
       {
          resip::NameAddr rr("bogus@blahblahblah");
          msg->header(h_RecordRoutes).push_front(rr);
@@ -284,17 +284,17 @@ class TestHolder : public ReproFixture
       {
          public:
             AssertNoRecordRoutes();
-            virtual void operator()(boost::shared_ptr<Event> event)
+            virtual void operator()(std::shared_ptr<Event> event)
             {
                SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
                resip_assert(sipEvent);
-               boost::shared_ptr<SipMessage> msg = sipEvent->getMessage();
+               std::shared_ptr<SipMessage> msg = sipEvent->getMessage();
                resip_assert(!msg->exists(h_RecordRoutes));
             }
       };
 
-      static boost::shared_ptr<SipMessage>
-      makeMessage(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeMessage(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -304,8 +304,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      makeInfo(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeInfo(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -315,8 +315,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      makeInvite(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeInvite(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -326,8 +326,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
       
-      static boost::shared_ptr<SipMessage>
-      makeAck(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      makeAck(std::shared_ptr<SipMessage> msg)
       {
          if(msg->isRequest())
          {
@@ -337,8 +337,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      fiddleBranchCase(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      fiddleBranchCase(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->isResponse());
          // Yes, this is evil. However, BranchParameter does not expose any API
@@ -358,8 +358,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      upperBranchCase(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      upperBranchCase(std::shared_ptr<SipMessage> msg)
       {
          // Yes, this is evil. However, BranchParameter does not expose any API
          // for doing this evil, evil thing.
@@ -371,8 +371,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      removeProxyVias(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      removeProxyVias(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->header(h_Vias).size()>1);
          resip_assert(msg->isResponse());
@@ -382,8 +382,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      addProxyVia(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      addProxyVia(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->header(h_Vias).size()>1);
          resip_assert(msg->isResponse());
@@ -394,8 +394,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      corruptProxyBranch(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      corruptProxyBranch(std::shared_ptr<SipMessage> msg)
       {
          resip_assert(msg->header(h_Vias).size()>1);
          resip_assert(msg->isResponse());
@@ -410,8 +410,8 @@ class TestHolder : public ReproFixture
          return msg;
       }
 
-      static boost::shared_ptr<SipMessage>
-      removeTo(boost::shared_ptr<SipMessage> msg)
+      static std::shared_ptr<SipMessage>
+      removeTo(std::shared_ptr<SipMessage> msg)
       {
          msg->remove(h_To);
          return msg;
@@ -580,7 +580,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegister407Dropped!*");
 
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq(save(reg,jason->registerUser(60,jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->retransmit(reg)),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
@@ -633,7 +633,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegisterClientRetransmits!*");
 
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq(save(reg, jason->registerUser(60, jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->retransmit(reg)),
@@ -1218,7 +1218,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegister407DroppedWithOutbound!*");
       
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq
       (
          save(reg,jason->registerUserWithOutbound(60,jason->getDefaultContacts())),
@@ -1288,7 +1288,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testRegisterClientRetransmitsWithOutbound!*");
 
-      boost::shared_ptr<SipMessage> reg;
+      std::shared_ptr<SipMessage> reg;
       Seq(save(reg, jason->registerUserWithOutbound(60, jason->getDefaultContacts())),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
           jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->retransmit(reg)),
@@ -3266,7 +3266,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testInvite407Dropped!*");
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
 
       Seq(derek->registerUser(60, derek->getDefaultContacts()),
           derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
@@ -3362,7 +3362,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -3389,7 +3389,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
 
       Seq
       (
@@ -3427,8 +3427,8 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
       
-      boost::shared_ptr<SipMessage> inv;
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> ok;
       Seq(save(inv, derek->invite(*jason)),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -3452,7 +3452,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -3513,7 +3513,7 @@ class TestHolder : public ReproFixture
    {
       WarningLog(<<"*!testInviteServerSpams200!*");
       
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
 
       Seq(jason->registerUser(600, jason->getDefaultContacts()),
           jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
@@ -3611,7 +3611,7 @@ class TestHolder : public ReproFixture
       
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       
       Seq
       (
@@ -3664,7 +3664,7 @@ class TestHolder : public ReproFixture
       
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       
       Seq
       (
@@ -3702,7 +3702,7 @@ class TestHolder : public ReproFixture
       
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       
       Seq
       (
@@ -3770,7 +3770,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> busy;
+      std::shared_ptr<SipMessage> busy;
 
       Seq
       (
@@ -3808,7 +3808,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> error;
+      std::shared_ptr<SipMessage> error;
 
       Seq
       (
@@ -3846,7 +3846,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> error;
+      std::shared_ptr<SipMessage> error;
 
       Seq
       (
@@ -3978,7 +3978,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
       
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       
       Seq
       (
@@ -7255,7 +7255,7 @@ class TestHolder : public ReproFixture
           derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
           WaitForEndOfSeq);
       ExecuteSequences();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          save(msg, jason->message(*derek,"Ping")),
@@ -7406,7 +7406,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7429,7 +7429,7 @@ class TestHolder : public ReproFixture
           derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
           WaitForEndOfSeq);
       ExecuteSequences();
-      boost::shared_ptr<SipMessage> resp;
+      std::shared_ptr<SipMessage> resp;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7474,7 +7474,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7498,7 +7498,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7524,7 +7524,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -7547,7 +7547,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          jason->message(*derek,"Ping"),
@@ -8768,7 +8768,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),condition(makeMessage,derek->sendSip(inv,*jason))),
@@ -8798,7 +8798,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),condition(makeAck,derek->sendSip(inv,*jason))),
@@ -8828,7 +8828,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),rawcondition(make200Response,derek->sendSip(inv,*jason))),
@@ -8858,7 +8858,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),rawcondition(make200Response,condition(makeInfo,derek->sendSip(inv,*jason)))),
@@ -8888,7 +8888,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> inv;
+      std::shared_ptr<SipMessage> inv;
       Seq
       (
          chain(inv<=derek->invite(*jason),rawcondition(make200Response,condition(makeAck,derek->sendSip(inv,*jason)))),
@@ -8921,7 +8921,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),condition(makeInvite,derek->sendSip(msg,*jason))),
@@ -8940,7 +8940,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),condition(makeInfo,derek->sendSip(msg,*jason))),
@@ -8959,7 +8959,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),condition(makeAck,derek->sendSip(msg,*jason))),
@@ -8978,7 +8978,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,condition(makeInvite,derek->sendSip(msg,*jason)))),
@@ -8997,7 +8997,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,derek->sendSip(msg,*jason))),
@@ -9016,7 +9016,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,condition(makeInfo,derek->sendSip(msg,*jason)))),
@@ -9035,7 +9035,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> msg;
+      std::shared_ptr<SipMessage> msg;
       Seq
       (
          chain(msg<=derek->message(*jason,"ping"),rawcondition(make200Response,condition(makeAck,derek->sendSip(msg,*jason)))),
@@ -9057,7 +9057,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9089,7 +9089,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9120,7 +9120,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9141,7 +9141,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9162,7 +9162,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9183,7 +9183,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9213,7 +9213,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9243,7 +9243,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9273,7 +9273,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9303,7 +9303,7 @@ class TestHolder : public ReproFixture
       DisableDigestAuthGuard daGuard(*proxy);
 
       refreshRegistration();
-      boost::shared_ptr<SipMessage> ack;
+      std::shared_ptr<SipMessage> ack;
       Seq
       (
          derek->invite(*jason),
@@ -9395,7 +9395,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> infoMsg;
+      std::shared_ptr<SipMessage> infoMsg;
       Seq(save(infoMsg, derek->info(david)),
           derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
           david->expect(INFO, from(derek), 1000, david->noAction()),
@@ -9509,7 +9509,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfSeq);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -9532,11 +9532,11 @@ class TestHolder : public ReproFixture
          CheckRport(int rport) : mRport(rport)
          {
          }
-         bool operator()(boost::shared_ptr<Event> event) const
+         bool operator()(std::shared_ptr<Event> event) const
          {
             SipEvent* msgEvent = dynamic_cast<SipEvent*>(event.get());
             resip_assert(msgEvent);
-            boost::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
+            std::shared_ptr<resip::SipMessage> msg = msgEvent->getMessage();
             resip_assert(msg.get());
 
             DebugLog (<< "Looking for rport=" << mRport << endl << *msg);
@@ -9558,7 +9558,7 @@ class TestHolder : public ReproFixture
          int mRport;
    };
 
-   static boost::shared_ptr<SipMessage>& addRport(boost::shared_ptr<SipMessage>& msg)
+   static std::shared_ptr<SipMessage> addRport(std::shared_ptr<SipMessage> msg)
    { 
       resip_assert(!msg->header(h_Vias).empty());
       // mentioning it makes it so
@@ -9865,7 +9865,7 @@ class TestHolder : public ReproFixture
           WaitForEndOfTest);
       ExecuteSequences();
 
-      boost::shared_ptr<SipMessage> ok;
+      std::shared_ptr<SipMessage> ok;
       Seq(derek->invite(*jason),
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
@@ -10246,7 +10246,7 @@ class TestHolder : public ReproFixture
             mCallId(callId)
          {}
 
-         boost::shared_ptr<SipMessage> operator()(boost::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "SetCallId=" << mCallId << endl << *msg);
 
@@ -10267,7 +10267,7 @@ class TestHolder : public ReproFixture
             mSeq(seq)
          {}
 
-         boost::shared_ptr<SipMessage> operator()(boost::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "SetCSeqSequence=" << mSeq << endl << *msg);
 
@@ -10287,7 +10287,7 @@ class TestHolder : public ReproFixture
          StripAuth()
          {}
 
-         boost::shared_ptr<SipMessage> operator()(boost::shared_ptr<resip::SipMessage>& msg) const
+         std::shared_ptr<SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg) const
          {
             DebugLog (<< "StripAuth" << endl << *msg);
 
@@ -10560,7 +10560,7 @@ class TestHolder : public ReproFixture
    
       ExecuteSequences();
       
-      boost::shared_ptr<SipMessage> ring;
+      std::shared_ptr<SipMessage> ring;
       
       Seq
       (

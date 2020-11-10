@@ -3,7 +3,6 @@
 
 #include "resip/dum/DialogSetId.hxx"
 #include "resip/dum/UserProfile.hxx"
-#include "rutil/SharedPtr.hxx"
 
 #include <map>
 #include <functional>

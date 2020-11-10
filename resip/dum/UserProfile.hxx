@@ -17,22 +17,22 @@ class UserProfile : public Profile
 {
    public:  
       UserProfile();
-      UserProfile(SharedPtr<Profile> baseProfile);
+      explicit UserProfile(std::shared_ptr<Profile> baseProfile);
       virtual ~UserProfile();
       
       virtual void setDefaultFrom(const NameAddr& from);
-      virtual NameAddr& getDefaultFrom();
+      virtual NameAddr& getDefaultFrom() noexcept;
 
       virtual void setServiceRoute(const NameAddrs& sRoute);
-      virtual NameAddrs& getServiceRoute();
+      virtual NameAddrs& getServiceRoute() noexcept;
       
       virtual void setImsAuthUser(const Data& userName, const Data& host) { mImsAuthUserName = userName; mImsAuthHost = host; }      
-      virtual Data& getImsAuthUserName() { return mImsAuthUserName; }      
-      virtual Data& getImsAuthHost() { return mImsAuthHost; }
+      virtual Data& getImsAuthUserName() noexcept { return mImsAuthUserName; }      
+      virtual Data& getImsAuthHost() noexcept { return mImsAuthHost; }
 
       // Returns a UserProfile that will return a UserProfile that can be used
       // to send requests according to RFC 3323 and RFC 3325
-      virtual SharedPtr<UserProfile> getAnonymousUserProfile() const;      
+      virtual std::shared_ptr<UserProfile> getAnonymousUserProfile() const;
       bool isAnonymous() const;
       
       // !cj! - this GRUU stuff looks very suspect
@@ -48,15 +48,15 @@ class UserProfile : public Profile
       virtual NameAddr& getGruu(const Data& aor, const NameAddr& contact);
 
       //should do Supported wrangling--but what if required is desired? Same as 100rel?
-      virtual bool& gruuEnabled() { return mGruuEnabled; }
-      virtual bool gruuEnabled() const { return mGruuEnabled; }
+      virtual bool& gruuEnabled() noexcept { return mGruuEnabled; }
+      virtual bool gruuEnabled() const noexcept { return mGruuEnabled; }
 
       virtual bool hasPublicGruu() const { return !mPubGruu.host().empty(); }
-      virtual const Uri& getPublicGruu() { return mPubGruu; }
+      virtual const Uri& getPublicGruu() const noexcept { return mPubGruu; }
       virtual void setPublicGruu(const Uri& gruu) { mPubGruu = gruu; }
 
       virtual bool hasTempGruu() const { return !mTempGruu.host().empty(); }
-      virtual const Uri& getTempGruu() { return mTempGruu; }
+      virtual const Uri& getTempGruu() const noexcept { return mTempGruu; }
       virtual void setTempGruu(const Uri& gruu) { mTempGruu = gruu; }
       
       struct DigestCredential
@@ -77,7 +77,7 @@ class UserProfile : public Profile
       };
       
       /// The following functions deal with clearing, setting and getting of digest credentals 
-      virtual void clearDigestCredentials();
+      virtual void clearDigestCredentials() noexcept;
       /// For the password you may either provide the plain text password (isPasswordA1Hash = false)
       /// or the Digest A1 MD5 Hash (isPasswordA1Hash = true).  Note:  If the A1 hash is provided
       /// then the realm MUST match the realm in the challenge or authentication will fail.  If the
@@ -96,8 +96,8 @@ class UserProfile : public Profile
       // have the same cached Authorization header on them, until they are re-challenged by the far end.  A setting of 
       // 1 disables caching entirely and future requests within the dialog set will go out without any authorization 
       // headers.
-      virtual void setDigestCacheUseLimit(unsigned long digestCacheUseLimit) { mDigestCacheUseLimit = digestCacheUseLimit; }
-      virtual unsigned long getDigestCacheUseLimit() { return mDigestCacheUseLimit; }
+      virtual void setDigestCacheUseLimit(unsigned long digestCacheUseLimit) noexcept { mDigestCacheUseLimit = digestCacheUseLimit; }
+      virtual unsigned long getDigestCacheUseLimit() const noexcept { return mDigestCacheUseLimit; }
 
       // Enable this to enable RFC5626 support in DUM - adds regId to registrations, and 
       // ;ob parameter to Path, Route, and Contact headers
@@ -106,21 +106,21 @@ class UserProfile : public Profile
       // options:
       // profile->addSupportedOptionTag(Token(Symbols::Outbound));  // RFC 5626 - outbound
       // profile->addSupportedOptionTag(Token(Symbols::Path));      // RFC 3327 - path
-      virtual bool& clientOutboundEnabled() { return mClientOutboundEnabled; }
-      virtual bool clientOutboundEnabled() const { return mClientOutboundEnabled; }
+      virtual bool& clientOutboundEnabled() noexcept { return mClientOutboundEnabled; }
+      virtual bool clientOutboundEnabled() const noexcept { return mClientOutboundEnabled; }
 
       // Outbound (RFC5626) instanceId used in contact headers
       virtual bool hasInstanceId();
       virtual void setInstanceId(const Data& id);
-      virtual const Data& getInstanceId() const;
+      virtual const Data& getInstanceId() const noexcept;
 
       // Outbound (RFC5626) regId used in registrations
-      virtual void setRegId(int regId) { mRegId = regId; }
-      virtual int getRegId() { return mRegId; }
+      virtual void setRegId(int regId) noexcept { mRegId = regId; }
+      virtual int getRegId() noexcept { return mRegId; }
 
       // Returns the current Flow Tuple that is being used for communication on usages
       // that use this profile
-      const Tuple& getClientOutboundFlowTuple() const { return mClientOutboundFlowTuple; }
+      const Tuple& getClientOutboundFlowTuple() const noexcept { return mClientOutboundFlowTuple; }
       void clearClientOutboundFlowTuple() { mClientOutboundFlowTuple = Tuple(); }
       void setClientOutboundFlowTuple(const Tuple& outboundFlowTuple) { mClientOutboundFlowTuple = outboundFlowTuple; }  // Only for advanced users
 

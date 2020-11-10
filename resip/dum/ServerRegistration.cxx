@@ -33,7 +33,7 @@ ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dial
 
 ServerRegistration::~ServerRegistration()
 {
-   mDialogSet.mServerRegistration = 0;
+   mDialogSet.mServerRegistration = nullptr;
 }
 
 void 
@@ -72,8 +72,8 @@ ServerRegistration::accept(SipMessage& ok)
 
       database->unlockRecord(mAor);
 
-      SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
-      mDum.send(msg);
+      std::shared_ptr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
+      mDum.send(std::move(msg));
       delete(this);
    }
    else
@@ -86,24 +86,24 @@ ServerRegistration::accept(SipMessage& ok)
          }
          else
          {
-            std::auto_ptr<ContactRecordTransactionLog> log;
-            std::auto_ptr<ContactPtrList> contacts;
+            std::unique_ptr<ContactRecordTransactionLog> log;
+            std::unique_ptr<ContactPtrList> contacts;
 
             mAsyncLocalStore->releaseLog(log,contacts);
 
-            if (contacts.get())
+            if (contacts)
             {
                asyncProcessFinalOkMsg(ok,*contacts);
             }
          }
 
-         SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
-         mDum.send(msg);
+         std::shared_ptr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
+         mDum.send(std::move(msg));
          delete(this);        
       }
       else
       {
-         if (!mAsyncLocalStore.get())
+         if (!mAsyncLocalStore)
          {
             resip_assert(0);
             return;
@@ -112,13 +112,13 @@ ServerRegistration::accept(SipMessage& ok)
          //receive a final contact list before sending the 200.
          mAsyncState = asyncStateAcceptedWaitingForFinalContactList;
 
-         std::auto_ptr<ContactRecordTransactionLog> log;
-         std::auto_ptr<ContactPtrList> modifiedContacts;
+         std::unique_ptr<ContactRecordTransactionLog> log;
+         std::unique_ptr<ContactPtrList> modifiedContacts;
 
          mAsyncLocalStore->releaseLog(log,modifiedContacts);
 
-         mAsyncOkMsg = SharedPtr<SipMessage>(static_cast<SipMessage*>(ok.clone()));
-         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(),mAor,modifiedContacts,log);
+         mAsyncOkMsg = std::shared_ptr<SipMessage>(static_cast<SipMessage*>(ok.clone()));
+         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(), mAor, std::move(modifiedContacts), std::move(log));
          //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
          return;
       }
@@ -164,10 +164,10 @@ ServerRegistration::reject(int statusCode)
       database->unlockRecord(mAor);
    }
 
-   SharedPtr<SipMessage> failure(new SipMessage);
+   auto failure = std::make_shared<SipMessage>();
    mDum.makeResponse(*failure, mRequest, statusCode);
    failure->remove(h_Contacts);
-   mDum.send(failure);
+   mDum.send(std::move(failure));
    delete(this);
 }
 
@@ -186,9 +186,9 @@ ServerRegistration::dispatch(const SipMessage& msg)
       // ?jmatthewsr? Possibly because of the note in section 21.5.2 about recognizing the method, but not supporting it?
        DebugLog( << "No handler or DB - sending 405" );
        
-       SharedPtr<SipMessage> failure(new SipMessage);
+       auto failure = std::make_shared<SipMessage>();
        mDum.makeResponse(*failure, msg, 405);
-       mDum.send(failure);
+       mDum.send(std::move(failure));
        delete(this);
        return;
     }
@@ -201,10 +201,10 @@ ServerRegistration::dispatch(const SipMessage& msg)
    {
        DebugLog( << "Bad scheme in Aor" );
        
-       SharedPtr<SipMessage> failure(new SipMessage);
+       auto failure = std::make_shared<SipMessage>();
        mDum.makeResponse(*failure, msg, 400);
        failure->header(h_StatusLine).reason() = "Bad/unsupported scheme in To: " + mAor.scheme();
-       mDum.send(failure);
+       mDum.send(std::move(failure));
        delete(this);
        return;
    }
@@ -236,14 +236,14 @@ ServerRegistration::processRegistration(const SipMessage& msg)
 
    if (returnCode >= 400)
    {
-      SharedPtr<SipMessage> failure(new SipMessage);
+      auto failure = std::make_shared<SipMessage>();
       mDum.makeResponse(*failure, msg, returnCode);
       if (423 == returnCode)
       {
          failure->header(h_StatusLine).reason() = "Interval Too Brief";
          failure->header(h_MinExpires).value() = globalExpires;
       }
-      mDum.send(failure);
+      mDum.send(std::move(failure));
       delete(this);
       return;
    }
@@ -252,7 +252,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    {
       database->lockRecord(mAor);
 
-      mOriginalContacts = resip::SharedPtr<ContactList>(new ContactList);
+      mOriginalContacts = std::make_shared<ContactList>();
       database->getContacts(mAor, *mOriginalContacts);
    }
 
@@ -278,9 +278,9 @@ ServerRegistration::processRegistration(const SipMessage& msg)
    {
       if (!i->isWellFormed())
       {
-         SharedPtr<SipMessage> failure(new SipMessage);
+         auto failure = std::make_shared<SipMessage>();
          mDum.makeResponse(*failure, msg, 400, "Malformed Contact");
-         mDum.send(failure);
+         mDum.send(std::move(failure));
          if (!async)
          {
             database->unlockRecord(mAor);
@@ -297,9 +297,9 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       {
          if (contactList.size() > 1 || expires != 0)
          {
-            SharedPtr<SipMessage> failure(new SipMessage);
+            auto failure = std::make_shared<SipMessage>();
             mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
-            mDum.send(failure);
+            mDum.send(std::move(failure));
             if (!async)
             {
                database->unlockRecord(mAor);
@@ -532,26 +532,26 @@ ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
       // to have a flow.
       if(!hasFlow)
       {
-         SharedPtr<SipMessage> failure(new SipMessage);
+         auto failure = std::make_shared<SipMessage>();
          mDum.makeResponse(*failure, msg, 439);
-         mDum.send(failure);
+         mDum.send(std::move(failure));
          return false;
       }
    }
 
    if(!hasFlow && flowTokenNeededForTls(rec))
    {
-      SharedPtr<SipMessage> failure(new SipMessage);
+      auto failure = std::make_shared<SipMessage>();
       mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
-      mDum.send(failure);
+      mDum.send(std::move(failure));
       return false;
    }
 
    if(!hasFlow && flowTokenNeededForSigcomp(rec))
    {
-      SharedPtr<SipMessage> failure(new SipMessage);
+      auto failure = std::make_shared<SipMessage>();
       mDum.makeResponse(*failure, msg, 400, "Trying to use sigcomp on a connection-oriented protocol won't work if you don't have a flow. Consider implementing outbound, or using UDP/DTLS for this case.");
-      mDum.send(failure);
+      mDum.send(std::move(failure));
       return false;
    }
 
@@ -621,19 +621,14 @@ ServerRegistration::flowTokenNeededForSigcomp(const ContactInstanceRecord &rec) 
 void
 ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &contacts)
 {
-   if (contacts.size() > 0)
+   if (!contacts.empty())
    {
-      ContactPtrList::iterator it(contacts.begin());
-      ContactPtrList::iterator itEnd(contacts.end());
-
-      std::auto_ptr<ContactPtrList> expired;
+      std::unique_ptr<ContactPtrList> expired;
 
       UInt64 now=Timer::getTimeSecs();
 
-      for (;it != itEnd;++it)
+      for (const auto& rec : contacts)
       {
-         resip::SharedPtr<ContactInstanceRecord> rec(*it);
-
          if (!rec)
          {
             resip_assert(0);
@@ -642,9 +637,9 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
 
          if (rec->mRegExpires <= now)
          {
-            if (!expired.get())
+            if (!expired)
             {
-               expired = std::auto_ptr<ContactPtrList>(new ContactPtrList());
+               expired = std::unique_ptr<ContactPtrList>(new ContactPtrList());
             }
             expired->push_back(rec);
             continue;
@@ -654,9 +649,9 @@ ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &cont
          msg.header(h_Contacts).push_back(rec->mContact);
       }
 
-      if (expired.get() && expired->size() > 0)
+      if (expired.get() && !expired->empty())
       {
-         mDum.mServerRegistrationHandler->asyncRemoveExpired(getHandle(),mAor,expired);
+         mDum.mServerRegistrationHandler->asyncRemoveExpired(getHandle(), mAor, std::move(expired));
          //!WARN! Must not access this object beyond this point. The client my call reject() or accept(), deleting this object.  Also, watch out for local objects that are still in scope and access this object on destruction.
          return;
       }
@@ -669,36 +664,33 @@ ServerRegistration::processFinalOkMsg(SipMessage &msg, ContactList &contacts)
    //build the 200Ok and remove any expired entries.
    //the non-asynchronous behavior is to call the database directly, the async behavior is to build a
    //list of all expired entries and send it to the handler.
-   if (contacts.size() > 0)
+   if (!contacts.empty())
    {
-      ContactList::iterator it(contacts.begin());
-      ContactList::iterator itEnd(contacts.end());
-
       RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
       UInt64 now=Timer::getTimeSecs();
 
-      for (;it != itEnd;++it)
+      for (auto& rec : contacts)
       {
-         if (it->mRegExpires <= now)
+         if (rec.mRegExpires <= now)
          {
-            database->removeContact(mAor,*it);
+            database->removeContact(mAor, rec);
             continue;
          }
-         it->mContact.param(p_expires) = UInt32(it->mRegExpires - now);
-         msg.header(h_Contacts).push_back(it->mContact);
+         rec.mContact.param(p_expires) = UInt32(rec.mRegExpires - now);
+         msg.header(h_Contacts).push_back(rec.mContact);
       }
    }
 }
 
 bool
-ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> contacts)
+ServerRegistration::asyncProvideContacts(std::unique_ptr<resip::ContactPtrList> contacts)
 {
    switch (mAsyncState)
    {
       case asyncStateWaitingForInitialContactList:
       {
          resip_assert(mAsyncLocalStore.get() == 0);
-         mAsyncLocalStore = resip::SharedPtr<AsyncLocalStore>(new AsyncLocalStore(contacts));
+         mAsyncLocalStore = std::make_shared<AsyncLocalStore>(std::move(contacts));
          mAsyncState = asyncStateProcessingRegistration;
          processRegistration(mRequest);
          break;
@@ -711,7 +703,7 @@ ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> co
       case asyncStateAcceptedWaitingForFinalContactList:
       {
          mAsyncState = asyncStateProvidedFinalContacts;
-         asyncProcessFinalContacts(contacts);
+         asyncProcessFinalContacts(std::move(contacts));
          break;
       }
       default:
@@ -725,11 +717,11 @@ ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> co
 }
 
 void
-ServerRegistration::asyncProcessFinalContacts(std::auto_ptr<resip::ContactPtrList> contacts)
+ServerRegistration::asyncProcessFinalContacts(std::unique_ptr<resip::ContactPtrList> contacts)
 {
-   if (contacts.get())
+   if (contacts)
    {
-      if (!mAsyncOkMsg.get())
+      if (!mAsyncOkMsg)
       {
          resip_assert(0);
       }
@@ -746,10 +738,10 @@ ServerRegistration::asyncProcessFinalContacts(std::auto_ptr<resip::ContactPtrLis
 }
 
 void
-ServerRegistration::AsyncLocalStore::create(std::auto_ptr<ContactPtrList> originalContacts)
+ServerRegistration::AsyncLocalStore::create(std::unique_ptr<ContactPtrList> originalContacts)
 {
-   mModifiedContacts = originalContacts;
-   mLog = std::auto_ptr<ContactRecordTransactionLog>(new ContactRecordTransactionLog());
+   mModifiedContacts = std::move(originalContacts);
+   mLog = std::unique_ptr<ContactRecordTransactionLog>(new ContactRecordTransactionLog());
 }
 
 void
@@ -762,36 +754,29 @@ ServerRegistration::AsyncLocalStore::destroy(void)
 RegistrationPersistenceManager::update_status_t
 ServerRegistration::AsyncLocalStore::updateContact(const ContactInstanceRecord &rec)
 {
-   if (!mModifiedContacts.get() || !mLog.get())
+   if (!mModifiedContacts || !mLog)
    {
       resip_assert(0);
       return RegistrationPersistenceManager::CONTACT_UPDATED;
    }
 
-   ContactPtrList::iterator it(mModifiedContacts->begin());
-   ContactPtrList::iterator itEnd(mModifiedContacts->end());
-
-   resip::SharedPtr<ContactRecordTransaction> logEntry;
-
    // See if the contact is already present. We use URI matching rules here.
-   for (; it != itEnd; ++it)
+   for (auto& modifiedContact : *mModifiedContacts)
    {
-      if ((*it) && **it == rec)
+      if (modifiedContact && *modifiedContact == rec)
       {
-         **it = rec;
+         *modifiedContact = rec;
 
-         logEntry = resip::SharedPtr<ContactRecordTransaction>(new ContactRecordTransaction(ContactRecordTransaction::update,*it));
-         mLog->push_back(logEntry);
+         mLog->emplace_back(std::make_shared<ContactRecordTransaction>(ContactRecordTransaction::update, modifiedContact));
 
          return RegistrationPersistenceManager::CONTACT_UPDATED;
       }
    }
 
    // This is a new contact, so we add it to the list.
-   resip::SharedPtr<ContactInstanceRecord> newRec(new ContactInstanceRecord(rec));
+   auto newRec = std::make_shared<ContactInstanceRecord>(rec);
 
-   logEntry = resip::SharedPtr<ContactRecordTransaction>(new ContactRecordTransaction(ContactRecordTransaction::create,newRec));
-   mLog->push_back(logEntry);
+   mLog->emplace_back(std::make_shared<ContactRecordTransaction>(ContactRecordTransaction::create, newRec));
 
    mModifiedContacts->push_back(newRec);
 
@@ -801,25 +786,18 @@ ServerRegistration::AsyncLocalStore::updateContact(const ContactInstanceRecord &
 void
 ServerRegistration::AsyncLocalStore::removeContact(const ContactInstanceRecord &rec)
 {
-   if (!mModifiedContacts.get() || !mLog.get())
+   if (!mModifiedContacts || !mLog)
    {
       resip_assert(0);
       return;
    }
 
-   ContactPtrList::iterator it(mModifiedContacts->begin());
-   ContactPtrList::iterator itEnd(mModifiedContacts->end());
-
    // See if the contact is present. We use URI matching rules here.
-   for (; it != itEnd; ++it)
+   for (auto it = std::begin(*mModifiedContacts); it != std::end(*mModifiedContacts); ++it)
    {
       if ((*it) && **it == rec)
       {
-         resip::SharedPtr<ContactRecordTransaction>
-         logEntry(resip::SharedPtr<ContactRecordTransaction>
-                  (new ContactRecordTransaction(ContactRecordTransaction::remove,*it)));
-
-         mLog->push_back(logEntry);
+         mLog->emplace_back(std::make_shared<ContactRecordTransaction>(ContactRecordTransaction::remove, *it));
 
          mModifiedContacts->erase(it);
          return;
@@ -828,19 +806,14 @@ ServerRegistration::AsyncLocalStore::removeContact(const ContactInstanceRecord &
 }
 
 void
-ServerRegistration::AsyncLocalStore::removeAllContacts(void)
+ServerRegistration::AsyncLocalStore::removeAllContacts()
 {
-   if (!mModifiedContacts.get() || !mLog.get())
+   if (!mModifiedContacts || !mLog)
    {
       return;
    }
 
-   resip::SharedPtr<ContactInstanceRecord> recNull;
-
-   resip::SharedPtr<ContactRecordTransaction>
-   logEntry(resip::SharedPtr<ContactRecordTransaction>(new ContactRecordTransaction(ContactRecordTransaction::removeAll,recNull)));
-
-   mLog->push_back(logEntry);
+   mLog->emplace_back(std::make_shared<ContactRecordTransaction>(ContactRecordTransaction::removeAll, nullptr));
 
    mModifiedContacts->clear();
 }

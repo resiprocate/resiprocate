@@ -12,7 +12,8 @@
 #include "resip/dum/DumThread.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -26,7 +27,7 @@ class RegEventClient  : public resip::ClientSubscriptionHandler,
                         public resip::ClientRegistrationHandler
 {
    public:
-      RegEventClient(resip::SharedPtr<resip::MasterProfile> profile);
+      explicit RegEventClient(std::shared_ptr<resip::MasterProfile> profile);
       virtual ~RegEventClient();
       
       void run();
@@ -86,7 +87,7 @@ class RegEventClient  : public resip::ClientSubscriptionHandler,
       resip::DialogUsageManager mDum;
       resip::DumThread mDumThread;
       
-      resip::SharedPtr<resip::MasterProfile> mProfile;
+      std::shared_ptr<resip::MasterProfile> mProfile;
       friend class AddAor;
 };
 

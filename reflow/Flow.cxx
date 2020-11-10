@@ -6,8 +6,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -19,6 +17,8 @@
 #include "Flow.hxx"
 #include "MediaStream.hxx"
 #include "FlowDtlsSocketContext.hxx"
+
+#include <memory>
 
 using namespace flowmanager;
 using namespace resip;
@@ -126,8 +126,8 @@ Flow::Flow(asio::io_service& ioService,
            const StunTuple& localBinding, 
            MediaStream& mediaStream,
            bool forceCOMedia,
-           SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
-           resip::SharedPtr<FlowContext> context)
+           std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
+           std::shared_ptr<FlowContext> context)
   : mIOService(ioService),
 #ifdef USE_SSL
     mSslContext(sslContext),
@@ -136,8 +136,8 @@ Flow::Flow(asio::io_service& ioService,
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
     mForceCOMedia(forceCOMedia),
-    mRtcpEventLoggingHandler(rtcpEventLoggingHandler),
-    mFlowContext(context),
+    mRtcpEventLoggingHandler(std::move(rtcpEventLoggingHandler)),
+    mFlowContext(std::move(context)),
     mPrivatePeer(false),
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
@@ -155,19 +155,19 @@ Flow::Flow(asio::io_service& ioService,
    switch(mLocalBinding.getTransportType())
    {
    case StunTuple::UDP:
-      mTurnSocket.reset(new TurnAsyncUdpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
+      mTurnSocket = std::make_shared<TurnAsyncUdpSocket>(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort());
       break;
    case StunTuple::TCP:
-      mTurnSocket.reset(new TurnAsyncTcpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
+      mTurnSocket = std::make_shared<TurnAsyncTcpSocket>(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort());
       break;
 #ifdef USE_SSL
    case StunTuple::TLS:
-      mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, 
+      mTurnSocket = std::make_shared<TurnAsyncTlsSocket>(mIOService, 
                                                mSslContext, 
                                                false, // validateServerCertificateHostname - TODO - make this configurable
                                                this, 
                                                mLocalBinding.getAddress(), 
-                                               mLocalBinding.getPort()));
+                                               mLocalBinding.getPort());
 #endif
       break;
    default:
@@ -175,7 +175,7 @@ Flow::Flow(asio::io_service& ioService,
       resip_assert(false);
    }
 
-   if(mTurnSocket.get() && 
+   if (mTurnSocket && 
       mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal && 
       !mMediaStream.mStunUsername.empty() && 
       !mMediaStream.mStunPassword.empty())
@@ -202,7 +202,7 @@ Flow::~Flow()
  #endif //USE_SSL
 
    // Cleanup TurnSocket
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
       mTurnSocket->disableTurnAsyncHandler();
       mTurnSocket->close();  
@@ -221,7 +221,7 @@ Flow::activateFlow(UInt8 allocationProps)
 {
    mAllocationProps = allocationProps;
 
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
       if(mMediaStream.mNatTraversalMode != MediaStream::NoNatTraversal &&
          !mMediaStream.mNatTraversalServerHostname.empty())
@@ -247,14 +247,7 @@ Flow::getSelectSocketDescriptor()
 unsigned int 
 Flow::getSocketDescriptor()
 {
-   if(mTurnSocket.get() != 0)
-   {
-      return mTurnSocket->getSocketDescriptor();
-   }
-   else
-   {
-      return 0;
-   }
+   return mTurnSocket ? mTurnSocket->getSocketDescriptor() : 0;
 }
 
 // Turn Send Methods
@@ -509,7 +502,7 @@ Flow::processReceivedData(char* buffer, unsigned int& size, ReceivedData* receiv
 void 
 Flow::setActiveDestination(const char* address, unsigned short port)
 {
-   if(mTurnSocket.get())
+   if (mTurnSocket)
    {
       asio::ip::address peerAddress = asio::ip::address::from_string(address);
 
@@ -808,7 +801,7 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
 }
 
 void 
-Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
+Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<reTurn::DataBuffer>& data)
 {
    DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
 
@@ -927,8 +920,8 @@ Flow::createDtlsSocketClient(const StunTuple& endpoint)
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
       InfoLog(<< "Creating DTLS Client socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createClient(socketContext);
+      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+      dtlsSocket = mMediaStream.mDtlsFactory->createClient(std::move(socketContext));
       dtlsSocket->startClient();
       mDtlsSockets[endpoint] = dtlsSocket;
    }
@@ -943,8 +936,8 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
    if(!dtlsSocket && mMediaStream.mDtlsFactory)
    {
       InfoLog(<< "Creating DTLS Server socket, componentId=" << mComponentId);
-      std::auto_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
-      dtlsSocket = mMediaStream.mDtlsFactory->createServer(socketContext);
+      std::unique_ptr<DtlsSocketContext> socketContext(new FlowDtlsSocketContext(*this, endpoint.getAddress(), endpoint.getPort()));
+      dtlsSocket = mMediaStream.mDtlsFactory->createServer(std::move(socketContext));
       mDtlsSockets[endpoint] = dtlsSocket;
    }
 

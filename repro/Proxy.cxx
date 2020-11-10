@@ -19,6 +19,8 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
@@ -132,9 +134,9 @@ Proxy::setOptionsHandler(OptionsHandler* handler)
 }
  
 void 
-Proxy::setRequestContextFactory(std::auto_ptr<RequestContextFactory> requestContextFactory)
+Proxy::setRequestContextFactory(std::unique_ptr<RequestContextFactory> requestContextFactory)
 {
-   mRequestContextFactory = requestContextFactory;
+   mRequestContextFactory = std::move(requestContextFactory);
 }
 
 bool
@@ -194,7 +196,7 @@ Proxy::thread()
                   {
                      if(mOptionsHandler)
                      {
-                        std::auto_ptr<SipMessage> resp(new SipMessage);
+                        std::unique_ptr<SipMessage> resp(new SipMessage);
                         Helper::makeResponse(*resp,*sip,200);
                         if(mOptionsHandler->onOptionsRequest(*sip, *resp))
                         {
@@ -205,7 +207,7 @@ Proxy::thread()
                      }
                      else if(sip->header(h_RequestLine).uri().user().empty())
                      {
-                        std::auto_ptr<SipMessage> resp(new SipMessage);
+                        std::unique_ptr<SipMessage> resp(new SipMessage);
                         Helper::makeResponse(*resp,*sip,200);
 
                         if(resip::InteropHelper::getOutboundSupported())
@@ -229,7 +231,7 @@ Proxy::thread()
                   {
                      //Malformed Max-Forwards! (Maybe we can be lenient and set
                      // it to 70...)
-                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip,400));
+                     std::unique_ptr<SipMessage> response(Helper::makeResponse(*sip,400));
                      response->header(h_StatusLine).reason()="Malformed Max-Forwards";
                      mStack.send(*response,this);
                      delete sip;
@@ -246,12 +248,12 @@ Proxy::thread()
                   {
                      if (sip->header(h_RequestLine).method() != OPTIONS)
                      {
-                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                     std::unique_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
                      mStack.send(*response, this);
                      }
                      else  // If the request is an OPTIONS, send an appropriate response
                      {
-                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 200));
+                        std::unique_ptr<SipMessage> response(Helper::makeResponse(*sip, 200));
                         mStack.send(*response, this);                        
                      }
                      // in either case get rid of the request and process the next one
@@ -261,7 +263,7 @@ Proxy::thread()
 
                   if(!sip->empty(h_ProxyRequires))
                   {
-                     std::auto_ptr<SipMessage> response(0);
+                     std::unique_ptr<SipMessage> response;
 
                      for(Tokens::iterator i=sip->header(h_ProxyRequires).begin();
                            i!=sip->header(h_ProxyRequires).end();
@@ -270,7 +272,7 @@ Proxy::thread()
                         if(!i->isWellFormed() || 
                            !mSupportedOptions.count(i->value()) )
                         {
-                           if(!response.get())
+                           if(!response)
                            {
                               response.reset(Helper::makeResponse(*sip, 420, "Bad extension"));
                            }
@@ -278,7 +280,7 @@ Proxy::thread()
                         }
                      }
 
-                     if(response.get())
+                     if(response)
                      {
                         mStack.send(*response, this);
                         delete sip;
@@ -302,7 +304,7 @@ Proxy::thread()
                      {
                         try
                         {
-                           i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                           i->second->process(std::unique_ptr<resip::SipMessage>(sip));
                         }
                         catch(resip::BaseException& e)
                         {
@@ -349,7 +351,7 @@ Proxy::thread()
                      // RequestContext 
                      try
                      {
-                        context->process(std::auto_ptr<resip::SipMessage>(sip));
+                        context->process(std::unique_ptr<resip::SipMessage>(sip));
                      }
                      catch(resip::BaseException& e)
                      {
@@ -376,7 +378,7 @@ Proxy::thread()
                         //DebugLog (<< "RequestContexts: " << InserterP(mServerRequestContexts));  For a busy proxy - this generates a HUGE log statement!
                         try
                         {
-                           context->process(std::auto_ptr<resip::SipMessage>(sip));
+                           context->process(std::unique_ptr<resip::SipMessage>(sip));
                         }
                         catch(resip::BaseException& e)
                         {
@@ -413,7 +415,7 @@ Proxy::thread()
                   {
                      try
                      {
-                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                        i->second->process(std::unique_ptr<resip::SipMessage>(sip));
                      }
                      catch(resip::BaseException& e)
                      {
@@ -446,7 +448,7 @@ Proxy::thread()
                   bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app)!=0);
                   try
                   {
-                     i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
+                     i->second->process(std::unique_ptr<resip::ApplicationMessage>(app));
                   }
                   catch(resip::BaseException& e)
                   {
@@ -556,7 +558,7 @@ Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 }
 
 void
-Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
+Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc)
 {
    if(mTimerC > 0)
    {
@@ -566,7 +568,7 @@ Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
 }
 
 void
-Proxy::postMS(std::auto_ptr<resip::ApplicationMessage> msg, int msec)
+Proxy::postMS(std::unique_ptr<resip::ApplicationMessage> msg, int msec)
 {
    mStack.postMS(*msg,msec,this);
 }

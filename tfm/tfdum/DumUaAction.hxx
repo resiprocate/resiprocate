@@ -14,11 +14,12 @@
 #include "rutil/Logger.hxx"
 #include "tfm/ActionBase.hxx"
 #include "tfm/TestEndPoint.hxx"
-#include <boost/function.hpp>
-#include "rutil/SharedPtr.hxx"
 
 #include "DumEvent.hxx"
 #include "tfm/CommonAction.hxx"
+
+#include <functional>
+#include <memory>
 
 class DumUserAgent;
 
@@ -29,10 +30,10 @@ class DumUaAction : public ActionBase
    public:
       explicit DumUaAction(DumUserAgent* tua) : mUa(tua) {}           
       virtual ~DumUaAction() {}
-      virtual void operator()(boost::shared_ptr<Event> event);
+      virtual void operator()(std::shared_ptr<Event> event);
       virtual void operator()();
       virtual void operator()(DumUserAgent& tua) = 0;
-      virtual void operator()(DumUserAgent& tua,boost::shared_ptr<DumEvent> event);
+      virtual void operator()(DumUserAgent& tua, std::shared_ptr<DumEvent> event);
       
    protected:
       DumUserAgent* mUa;
@@ -61,7 +62,7 @@ template<class T, class E, class H>
 class UsageAction : public DumUaAction
 {
    public:
-      typedef boost::function<void (T& c) > Functor;
+      typedef std::function<void(T& c)> Functor;
       typedef H UsageHandleType;      
       
       UsageAction(DumUserAgent* dua, Functor func) :
@@ -69,7 +70,7 @@ class UsageAction : public DumUaAction
          mFunctor(func)
       {}      
 
-      virtual void operator()(DumUserAgent& dua, boost::shared_ptr<Event> event)
+      virtual void operator()(DumUserAgent& dua, std::shared_ptr<Event> event)
       {
          E* specificEvent = dynamic_cast<E*>(event.get());
          
@@ -123,13 +124,13 @@ class MessageAdorner
    public:
       virtual ~MessageAdorner() {}
       //virtual resip::SipMessage& operator()(resip::SipMessage&)=0;
-      virtual resip::SharedPtr<resip::SipMessage> operator()(resip::SharedPtr<resip::SipMessage>)=0;
+      virtual std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage>) = 0;
 };
 
 class NoAdornment : public MessageAdorner
 {
    public:
-      virtual resip::SharedPtr<resip::SipMessage> operator()(resip::SharedPtr<resip::SipMessage> msg)
+      virtual std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
       {
          return msg;
       }
@@ -144,7 +145,7 @@ class ReferAdornment : public MessageAdorner
 {
    public:
       ReferAdornment(const resip::NameAddr& referTo) : mReferTo(referTo) {}
-      virtual resip::SharedPtr<resip::SipMessage> operator()(resip::SharedPtr<resip::SipMessage> msg)
+      virtual std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
       {
          msg->header(resip::h_ReferTo) = mReferTo;
          msg->header(resip::h_ReferSub).value() = "false";
@@ -158,7 +159,7 @@ class ReferAdornmentRemoveReferSubHeader : public MessageAdorner
 {
    public:
       ReferAdornmentRemoveReferSubHeader(const resip::NameAddr& referTo) : mReferTo(referTo) {}
-      virtual resip::SharedPtr<resip::SipMessage> operator()(resip::SharedPtr<resip::SipMessage> msg)
+      virtual std::shared_ptr<resip::SipMessage> operator()(std::shared_ptr<resip::SipMessage> msg)
       {
          msg->header(resip::h_ReferTo) = mReferTo;
          msg->remove(resip::h_ReferSub);
@@ -173,7 +174,7 @@ template<class H>
 class SendingAction : public ActionBase
 {
    public:
-      typedef boost::function<resip::SharedPtr<resip::SipMessage> () > Functor;
+      typedef std::function<std::shared_ptr<resip::SipMessage>()> Functor;
       
       SendingAction(TestEndPoint* tua, H& handle, resip::Data action, Functor f, MessageAdorner& adorner)
          : mTestEndPoint(tua), 
@@ -184,7 +185,7 @@ class SendingAction : public ActionBase
       {
       }
 
-      virtual void operator()(boost::shared_ptr<Event> event)
+      virtual void operator()(std::shared_ptr<Event> event)
       {
          (*this)();
       }
@@ -210,7 +211,7 @@ class SendingAction : public ActionBase
    private:
       TestEndPoint* mTestEndPoint;
       H& mHandle;
-      resip:: Data mActionName;
+      resip::Data mActionName;
       Functor mFunctor;
       MessageAdorner* mMessageAdorner;
 };
@@ -219,9 +220,9 @@ template<class T, class E, class H>
 class SendingUsageAction : public DumUaAction
 {
    public:
-      typedef boost::function<void (T& c) > Functor;
-      //typedef boost::function<resip::SipMessage& (T& c) > MessageFunctor;
-      typedef boost::function<resip::SharedPtr<resip::SipMessage> (T& c) > MessageFunctor;
+      typedef std::function<void (T& c) > Functor;
+      //typedef std::function<resip::SipMessage& (T& c) > MessageFunctor;
+      typedef std::function<std::shared_ptr<resip::SipMessage>(T& c)> MessageFunctor;
       typedef H UsageHandleType;      
       
       SendingUsageAction(DumUserAgent* dua, Functor func) :
@@ -238,7 +239,7 @@ class SendingUsageAction : public DumUaAction
       {
       }      
 
-      virtual void operator()(DumUserAgent& dua, boost::shared_ptr<Event> event)
+      virtual void operator()(DumUserAgent& dua, std::shared_ptr<Event> event)
       {
          E* specificEvent = dynamic_cast<E*>(event.get());
          
@@ -302,7 +303,7 @@ class SendingUsageAction : public DumUaAction
 
 class DumUaSendingCommand : public DumUaAction{
    public:      
-      typedef boost::function<resip::SharedPtr<resip::SipMessage> (void) > Functor;
+      typedef std::function<std::shared_ptr<resip::SipMessage>()> Functor;
       //TODO adornment functor support
 
       DumUaSendingCommand(DumUserAgent* dua, Functor func);
@@ -317,7 +318,7 @@ class DumUaSendingCommand : public DumUaAction{
 class DumUaSendingCommandCommand : public resip::DumCommandAdapter
 {
    public:
-      typedef boost::function<resip::SharedPtr<resip::SipMessage> (void) > Functor;
+      typedef std::function<std::shared_ptr<resip::SipMessage>()> Functor;
       //TODO adornment functor support
 
       DumUaSendingCommandCommand(resip::DialogUsageManager& dum, Functor func, MessageAdorner* adorn);
@@ -333,7 +334,7 @@ class DumUaSendingCommandCommand : public resip::DumCommandAdapter
 class DumUaCommand : public DumUaAction
 {
    public:
-      typedef boost::function<void (void) > Functor;
+      typedef std::function<void()> Functor;
 
       DumUaCommand(DumUserAgent* dua, Functor func);
       virtual void operator()(DumUserAgent& dua);

@@ -2,8 +2,9 @@
 #define TFM_NotifyContents_hxx
 
 #include <vector>
-#include <boost/shared_ptr.hpp>
 #include "resip/stack/Pidf.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -18,8 +19,8 @@ class NotifyContents
       explicit NotifyContents(int count);
       explicit NotifyContents(const std::vector<resip::Pidf::Tuple>& tuples);
       explicit NotifyContents(resip::Pidf::Tuple tuples[]);
-      bool operator()(boost::shared_ptr<Event> event);
-      bool operator()(boost::shared_ptr<resip::SipMessage> msg);
+      bool operator()(std::shared_ptr<Event> event);
+      bool operator()(std::shared_ptr<resip::SipMessage> msg);
 
    private:
       std::vector<resip::Pidf::Tuple> mTuples;
@@ -27,7 +28,7 @@ class NotifyContents
 };
 
 // conditions
-boost::shared_ptr<resip::SipMessage>& simulateRefresh(boost::shared_ptr<resip::SipMessage>& msg);
+std::shared_ptr<resip::SipMessage>& simulateRefresh(std::shared_ptr<resip::SipMessage>& msg);
 
 #endif
 

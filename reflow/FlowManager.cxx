@@ -4,14 +4,13 @@
 
 // !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
-#include <rutil/SharedPtr.hxx>
+#include <memory>
 
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
 #include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <map>
 
 #include <rutil/Log.hxx>
@@ -126,7 +125,7 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    if(createCert(aor, 365 /* expireDays */, 1024 /* keyLen */, mClientCert, mClientKey))
    {
       FlowDtlsTimerContext* timerContext = new FlowDtlsTimerContext(mIOService);
-      mDtlsFactory = new DtlsFactory(std::auto_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
+      mDtlsFactory = new DtlsFactory(std::unique_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
       resip_assert(mDtlsFactory);
    }
    else
@@ -167,7 +166,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const char* stunUsername,
                                const char* stunPassword,
                                bool forceCOMedia,
-                               SharedPtr<FlowContext> context)
+                               std::shared_ptr<FlowContext> context)
 {
    MediaStream* newMediaStream = 0;
    if(rtcpEnabled)
@@ -190,7 +189,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        mRtcpEventLoggingHandler,
-                                       context);
+                                       std::move(context));
    }
    else
    {
@@ -211,8 +210,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunUsername, 
                                        stunPassword,
                                        forceCOMedia,
-                                       SharedPtr<RTCPEventLoggingHandler>(),
-                                       context);
+                                       nullptr,
+                                       std::move(context));
    }
    return newMediaStream;
 }

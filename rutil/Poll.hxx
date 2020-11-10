@@ -110,7 +110,7 @@ class Poll {
       friend class Poll::FDEntry;
 
    private:
-      std::auto_ptr<PollImpl> mImpl;
+      std::unique_ptr<PollImpl> mImpl;
    public:
 
       /*

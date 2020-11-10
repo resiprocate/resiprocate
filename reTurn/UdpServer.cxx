@@ -81,7 +81,7 @@ UdpServer::getSocket()
 }
 
 void 
-UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    if (data->size() > 4)
    {
@@ -143,8 +143,8 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
                responseUdpServer = it->second->mResponseUdpServer;
             }
 
-#define RESPONSE_BUFFER_SIZE 1024
-            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            constexpr size_t RESPONSE_BUFFER_SIZE = 1024;
+            const auto buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
             unsigned int responseSize;
             responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
             buffer->truncate(responseSize);  // set size to real size

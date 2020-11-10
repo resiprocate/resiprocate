@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <utility>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -50,9 +51,9 @@ B2BCall::peer(const recon::ParticipantHandle& partHandle)
    return (partHandle == mPartA) ? mPartB : mPartA;
 }
 
-B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, resip::SharedPtr<B2BCallLogger> b2bCallLogger)
+B2BCallManager::B2BCallManager(MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
    : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
-     mB2BCallLogger(b2bCallLogger)
+     mB2BCallLogger(std::move(b2bCallLogger))
 { 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
    config.getConfigValue("B2BUAInternalTLSNames", mInternalTLSNames);
@@ -147,8 +148,8 @@ B2BCallManager::~B2BCallManager()
 void
 B2BCallManager::init(MyUserAgent& ua)
 {
-   std::auto_ptr<Worker> grabber(new CredentialGrabber(mPool, mDatabaseQueryUserCredential));
-   mDispatcher = ua.initDispatcher(grabber, mDbPoolSize);
+   std::unique_ptr<Worker> grabber(new CredentialGrabber(mPool, mDatabaseQueryUserCredential));
+   mDispatcher = ua.initDispatcher(std::move(grabber), mDbPoolSize);
 }
 
 void
@@ -166,7 +167,7 @@ B2BCallManager::onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration
 
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
+      const auto call = mCallsByParticipant[partHandle];
       if(dtmf > 15)
       {
          WarningLog(<< "Unhandled DTMF code: " << dtmf);
@@ -235,7 +236,7 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
       b2bCallID = msg.header(h_CallId).value();
    }
 
-   SharedPtr<B2BCall> call(new B2BCall(conv, partHandleA, msg, originZoneName, destinationZoneName, b2bCallID));
+   const auto call = std::make_shared<B2BCall>(conv, partHandleA, msg, originZoneName, destinationZoneName, b2bCallID);
    mCallsByConversation[call->conversation()] = call;
    mCallsByParticipant[call->participantA()] = call;
 
@@ -275,7 +276,7 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
       else
       {
          DebugLog(<<"requesting async credential lookup for " << callerAor);
-         std::auto_ptr<ApplicationMessage> app(ci);
+         std::unique_ptr<ApplicationMessage> app(ci);
          mDispatcher->post(app);
          return;
       }
@@ -286,12 +287,12 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
 }
 
 void
-B2BCallManager::makeBLeg(SharedPtr<B2BCall> call, CredentialInfo* ci)
+B2BCallManager::makeBLeg(std::shared_ptr<B2BCall> call, CredentialInfo* ci)
 {
    DebugLog(<<"creating B leg for " << call.get());
-   SharedPtr<SipMessage> inv = call->getInviteMessage();
+   const auto inv = call->getInviteMessage();
    const Uri& reqUri = inv->header(h_RequestLine).uri();
-   SharedPtr<ConversationProfile> profile;
+   std::shared_ptr<ConversationProfile> profile;
    if(call->getOriginZone() == "internal")
    {
       Uri uri(inv->header(h_RequestLine).uri());
@@ -305,14 +306,14 @@ B2BCallManager::makeBLeg(SharedPtr<B2BCall> call, CredentialInfo* ci)
       }
       MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
       resip_assert(ua);
-      SharedPtr<ConversationProfile> externalProfile = ua->getDefaultOutgoingConversationProfile();
-      profile.reset(new ConversationProfile(*externalProfile.get()));
+      const auto externalProfile = ua->getDefaultOutgoingConversationProfile();
+      profile = std::make_shared<ConversationProfile>(*externalProfile);
       profile->setServiceRoute(route);
    }
    else
    {
-      SharedPtr<ConversationProfile> internalProfile = getInternalConversationProfile();
-      profile.reset(new ConversationProfile(*internalProfile.get()));
+      const auto internalProfile = getInternalConversationProfile();
+      profile = std::make_shared<ConversationProfile>(*internalProfile);
 
       if(ci != 0)
       {
@@ -351,15 +352,14 @@ B2BCallManager::makeBLeg(SharedPtr<B2BCall> call, CredentialInfo* ci)
    }
    NameAddr outgoingCaller = inv->header(h_From);
    profile->setDefaultFrom(outgoingCaller);
-   SharedPtr<UserProfile> _profile(profile);
-   ParticipantHandle partHandleB = ConversationManager::createRemoteParticipant(call->conversation(), NameAddr(reqUri), ForkSelectAutomatic, _profile, extraHeaders);
+   ParticipantHandle partHandleB = ConversationManager::createRemoteParticipant(call->conversation(), NameAddr(reqUri), ForkSelectAutomatic, profile, extraHeaders);
 
    call->setParticipantB(partHandleB);
    mCallsByParticipant[call->participantB()] = call;
 }
 
 void
-B2BCallManager::rejectCall(SharedPtr<B2BCall> call)
+B2BCallManager::rejectCall(std::shared_ptr<B2BCall> call)
 {
    onParticipantTerminated(call->participantA(), 500);
 }
@@ -370,7 +370,7 @@ B2BCallManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned i
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
+      const auto call = mCallsByParticipant[partHandle];
       destroyConversation(call->conversation());
       mCallsByParticipant.erase(call->participantA());
       if(call->participantA() != call->participantB())
@@ -403,7 +403,7 @@ B2BCallManager::onParticipantAlerting(ParticipantHandle partHandle, const SipMes
    InfoLog(<< "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
+      const auto call = mCallsByParticipant[partHandle];
       if(call->participantB() == partHandle)
       {
          alertParticipant(call->participantA(), false);
@@ -425,7 +425,7 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
    InfoLog(<< "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
+      const auto call = mCallsByParticipant[partHandle];
       if(!call->answered() && call->participantB() == partHandle)
       {
          answerParticipant(call->participantA());
@@ -435,7 +435,7 @@ B2BCallManager::onParticipantConnected(ParticipantHandle partHandle, const SipMe
       {
          WarningLog(<<"Unexpected connected signal from call, partHandle = " << partHandle);
          // FIXME: should only do this if it was REFER / INVITE / Replaces
-         SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
+         const auto call = mCallsByParticipant[partHandle];
          holdParticipant(call->peer(partHandle), false);
       }
    }
@@ -451,7 +451,7 @@ B2BCallManager::onParticipantRequestedHold(ParticipantHandle partHandle, bool he
    InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    if(mCallsByParticipant.find(partHandle) != mCallsByParticipant.end())
    {
-      SharedPtr<B2BCall> call = mCallsByParticipant[partHandle];
+      const auto call = mCallsByParticipant[partHandle];
       holdParticipant(call->peer(partHandle), held);
    }
    else
@@ -460,8 +460,8 @@ B2BCallManager::onParticipantRequestedHold(ParticipantHandle partHandle, bool he
    }
 }
 
-resip::SharedPtr<ConversationProfile>
-B2BCallManager::getIncomingConversationProfile(const resip::SipMessage& msg, resip::SharedPtr<ConversationProfile> defaultProfile)
+std::shared_ptr<ConversationProfile>
+B2BCallManager::getIncomingConversationProfile(const resip::SipMessage& msg, std::shared_ptr<ConversationProfile> defaultProfile)
 {
    DebugLog(<<"getIncomingConversationProfile: defaultProfile.get() == " << defaultProfile.get());
    if(isSourceInternal(msg))
@@ -472,15 +472,15 @@ B2BCallManager::getIncomingConversationProfile(const resip::SipMessage& msg, res
    return defaultProfile;
 }
 
-resip::SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 B2BCallManager::getInternalConversationProfile()
 {
    MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
    resip_assert(ua);
    if(!mInternalMediaAddress.empty())
    {
-      SharedPtr<ConversationProfile> p = ua->getConversationProfileByMediaAddress(mInternalMediaAddress);
-      if(p.get())
+      auto p = ua->getConversationProfileByMediaAddress(mInternalMediaAddress);
+      if (p)
       {
          return p;
       }
@@ -488,14 +488,13 @@ B2BCallManager::getInternalConversationProfile()
    return ua->getDefaultOutgoingConversationProfile();
 }
 
-resip::SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 B2BCallManager::getExternalConversationProfile()
 {
    MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
    resip_assert(ua);
-   SharedPtr<ConversationProfile> externalProfile = ua->getDefaultOutgoingConversationProfile();
-   SharedPtr<ConversationProfile> p(new ConversationProfile(*externalProfile.get()));
-   return p;
+   const auto externalProfile = ua->getDefaultOutgoingConversationProfile();
+   return std::make_shared<ConversationProfile>(*externalProfile);
 }
 
 bool

@@ -16,7 +16,6 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
 
 #include "ConfigParser.hxx"
@@ -26,6 +25,8 @@
 #include "WebAdminThread.hxx"
 #include "XmlRpcServer.hxx"
 #include "XmlRpcServerThread.hxx"
+
+#include <memory>
 
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
@@ -121,7 +122,7 @@ public:
    bool translateAddress(const resip::Data& address, resip::Data& translation, bool failIfNoRule=false);
 
 protected:
-   resip::SharedPtr<resip::MasterProfile>& getMasterProfile() { return mProfile; }
+   std::shared_ptr<resip::MasterProfile>& getMasterProfile() noexcept { return mProfile; }
 
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
@@ -201,7 +202,7 @@ private:
    friend class ClickToCallCmd;
    void clickToCallImpl(const resip::Uri& initiator, const resip::Uri& destination, bool anchorCall, const XmlRpcInfo& xmlRpcInfo);
 
-   resip::SharedPtr<resip::MasterProfile> mProfile;
+   std::shared_ptr<resip::MasterProfile> mProfile;
    resip::Security* mSecurity;
    resip::SelectInterruptor mSelectInterruptor;
    resip::SipStack mStack;

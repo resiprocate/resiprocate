@@ -4,6 +4,8 @@
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
+#include <boost/bind.hpp>
+
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
@@ -16,7 +18,7 @@ AsyncSocketBase::AsyncSocketBase(asio::io_service& ioService) :
   mIOService(ioService),
   mReceiving(false),
   mConnected(false),
-  mAsyncSocketBaseHandler(0)
+  mAsyncSocketBaseHandler(nullptr)
 {
 }
 
@@ -26,36 +28,35 @@ AsyncSocketBase::~AsyncSocketBase()
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data)
+AsyncSocketBase::send(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data)
 {
    mIOService.dispatch(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data)
+AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data)
 {
    mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data, const size_t bufferStartPos)
 {
    doSend(destination, NO_CHANNEL, data, bufferStartPos);
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data, const size_t bufferStartPos)
 {
    bool writeInProgress = !mSendDataQueue.empty();
-   if(channel == NO_CHANNEL)
+   if (channel == NO_CHANNEL)
    {
-      boost::shared_ptr<DataBuffer> empty;
-      mSendDataQueue.push_back(SendData(destination, empty, data, bufferStartPos));
+      mSendDataQueue.push_back(SendData(destination, nullptr, data, bufferStartPos));
    }
    else
    {
       // Add Turn Framing
-      boost::shared_ptr<DataBuffer> frame = allocateBuffer(4);
+      const auto frame = allocateBuffer(4);
       channel = htons(channel);
       memcpy(&(*frame)[0], &channel, 2);
       unsigned short msgsize = htons((unsigned short)data->size());
@@ -95,7 +96,7 @@ void
 AsyncSocketBase::sendFirstQueuedData()
 {
    std::vector<asio::const_buffer> bufs;
-   if(mSendDataQueue.front().mFrameData.get() != 0) // If we have frame data
+   if (mSendDataQueue.front().mFrameData) // If we have frame data
    {
       bufs.push_back(asio::buffer(mSendDataQueue.front().mFrameData->data(), mSendDataQueue.front().mFrameData->size()));
    }
@@ -106,7 +107,7 @@ AsyncSocketBase::sendFirstQueuedData()
 void 
 AsyncSocketBase::receive()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doReceive, shared_from_this()));
+   mIOService.post(std::bind(&AsyncSocketBase::doReceive, shared_from_this()));
 }
 
 void
@@ -123,7 +124,7 @@ AsyncSocketBase::doReceive()
 void 
 AsyncSocketBase::framedReceive()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doFramedReceive, shared_from_this()));
+   mIOService.post(std::bind(&AsyncSocketBase::doFramedReceive, shared_from_this()));
 }
 
 void
@@ -138,7 +139,7 @@ AsyncSocketBase::doFramedReceive()
 }
 
 void 
-AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTransferred)
+AsyncSocketBase::handleReceive(const asio::error_code& e, const size_t bytesTransferred)
 {
    mReceiving = false;
 
@@ -158,13 +159,13 @@ AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTrans
 void 
 AsyncSocketBase::close()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::transportClose, shared_from_this()));
+   mIOService.post(std::bind(&AsyncSocketBase::transportClose, shared_from_this()));
 }
 
-boost::shared_ptr<DataBuffer>  
-AsyncSocketBase::allocateBuffer(unsigned int size)
+std::shared_ptr<DataBuffer>  
+AsyncSocketBase::allocateBuffer(const size_t size)
 {
-   return boost::shared_ptr<DataBuffer>(new DataBuffer(size));
+   return std::make_shared<DataBuffer>(size);
 }
 
 } // namespace

@@ -18,7 +18,7 @@ class ClientPublicationHandler
    public:
       virtual ~ClientPublicationHandler() {}
 
-      /// Called when the publication succeeds or each time it is sucessfully
+      /// Called when the publication succeeds or each time it is successfully
       /// refreshed.
       virtual void onSuccess(ClientPublicationHandle, const SipMessage& status)=0;
 

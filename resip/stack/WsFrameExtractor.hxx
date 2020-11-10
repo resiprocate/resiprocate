@@ -16,7 +16,7 @@ class WsFrameExtractor
 
       WsFrameExtractor(Data::size_type maxMessage);
       ~WsFrameExtractor();
-      std::auto_ptr<Data> processBytes(UInt8 *input, Data::size_type len, bool& dropConnection);
+      std::unique_ptr<Data> processBytes(UInt8 *input, Data::size_type len, bool& dropConnection);
 
    private:
 

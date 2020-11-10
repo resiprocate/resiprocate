@@ -28,7 +28,7 @@ class Tuple;
 class DnsUtil
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg,
@@ -36,7 +36,7 @@ class DnsUtil
                       const int line)
                : BaseException(msg, file, line) {}            
          protected:
-            virtual const char* name() const { return "DnsUtil::Exception"; }
+            const char* name() const noexcept override { return "DnsUtil::Exception"; }
       };
 
       /** @returns the fully qualified local host name as the host

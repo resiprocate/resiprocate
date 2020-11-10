@@ -7,7 +7,7 @@
 namespace resip
 {
 
-Dispatcher::Dispatcher(std::auto_ptr<Worker> prototype,
+Dispatcher::Dispatcher(std::unique_ptr<Worker> prototype,
                         resip::SipStack* stack,
                         int workers, 
                         bool startImmediately):
@@ -51,7 +51,7 @@ Dispatcher::~Dispatcher()
 }
 
 bool
-Dispatcher::post(std::auto_ptr<resip::ApplicationMessage>& work)
+Dispatcher::post(std::unique_ptr<resip::ApplicationMessage>& work)
 {
    resip::ReadLock r(mMutex);
    if(mAcceptingWork)
@@ -65,7 +65,7 @@ Dispatcher::post(std::auto_ptr<resip::ApplicationMessage>& work)
    
    //If we aren't accepting work, the auto ptr is not released. (We don't
    // take ownership, and the caller gets to handle the contents of the 
-   // auto_ptr)
+   // unique_ptr)
 }
 
 size_t

@@ -63,7 +63,7 @@ class InternalTransport : public Transport
 
       // used for statistics
       virtual unsigned int getFifoSize() const;
-      virtual void send(std::auto_ptr<SendData> data);
+      virtual void send(std::unique_ptr<SendData> data);
       virtual void poke();
       
       // .bwc. This needs to be overridden if this transport runs in its own

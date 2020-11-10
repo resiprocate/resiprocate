@@ -24,6 +24,7 @@
 
 #include <sstream>
 #include <time.h>
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 /* #define NO_REGISTRATION 1 -- This is now run-time option */
@@ -69,7 +70,7 @@ public:
    {  
       return new testAppDialog(mDum, mSampleAppData);  
    }
-   virtual SharedPtr<UserProfile> selectUASUserProfile(const SipMessage& msg) 
+   virtual std::shared_ptr<UserProfile> selectUASUserProfile(const SipMessage& msg)
    { 
       cout << mSampleAppData << ": testAppDialogSet: UAS UserProfile requested for msg: " << msg.brief() << endl;  
       return mDum.getMasterUserProfile(); 
@@ -173,7 +174,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
          cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
-         assert(0); // This is overrideen in UAS and UAC specific handlers
+         assert(0); // This is overriden in UAS and UAC specific handlers
       }
 
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents& sdp)
@@ -601,18 +602,18 @@ main (int argc, char** argv)
    stackUac.addTransport(UDP, 12005);
    stackUac.addTransport(TCP, 12005);
 
-   SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
-   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   auto uacMasterProfile = std::make_shared<MasterProfile>();
+   std::unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
    dumUac->setMasterProfile(uacMasterProfile);
-   dumUac->setClientAuthManager(uacAuth);
+   dumUac->setClientAuthManager(std::move(uacAuth));
 
    TestUac uac;
    dumUac->setInviteSessionHandler(&uac);
    dumUac->setClientRegistrationHandler(&uac);
    dumUac->addOutOfDialogHandler(OPTIONS, &uac);
 
-   auto_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
-   dumUac->setAppDialogSetFactory(uac_dsf);
+   unique_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
+   dumUac->setAppDialogSetFactory(std::move(uac_dsf));
 
    if ( doReg ) 
    {
@@ -637,10 +638,10 @@ main (int argc, char** argv)
    stackUas.addTransport(UDP, 12010);
    stackUas.addTransport(TCP, 12010);
    
-   SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
-   std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
+   auto uasMasterProfile = std::make_shared<MasterProfile>();
+   std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
    dumUas->setMasterProfile(uasMasterProfile);
-   dumUas->setClientAuthManager(uasAuth);
+   dumUas->setClientAuthManager(std::move(uasAuth));
 
    if(doReg) 
    {
@@ -665,14 +666,14 @@ main (int argc, char** argv)
    dumUas->setInviteSessionHandler(&uas);
    dumUas->addOutOfDialogHandler(OPTIONS, &uas);
 
-   auto_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
-   dumUas->setAppDialogSetFactory(uas_dsf);
+   std::unique_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
+   dumUas->setAppDialogSetFactory(std::move(uas_dsf));
 
    if (doReg) 
    {
-      SharedPtr<SipMessage> regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      auto regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
       cout << "Sending register for Uas: " << endl << regMessage << endl;
-      dumUas->send(regMessage);
+      dumUas->send(std::move(regMessage));
    } 
    else 
    {
@@ -680,9 +681,9 @@ main (int argc, char** argv)
    }
    if (doReg) 
    {
-      SharedPtr<SipMessage> regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAC(Registration)"));
+      auto regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAC(Registration)"));
       cout << "Sending register for Uac: " << endl << regMessage << endl;
-      dumUac->send(regMessage);
+      dumUac->send(std::move(regMessage));
    } 
    else 
    {

@@ -37,6 +37,8 @@
 //#define DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -45,7 +47,7 @@ using namespace std;
 
 RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conversationManager,        
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode,
-                                                       SharedPtr<ConversationProfile> conversationProfile) :
+                                                       std::shared_ptr<ConversationProfile> conversationProfile) :
    AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
    mConversationManager(conversationManager),
    mUACOriginalRemoteParticipant(0),
@@ -54,7 +56,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mLocalRTPPort(0),
    mAllocateLocalRTPPortFailed(false),
    mForkSelectMode(forkSelectMode),
-   mConversationProfile(conversationProfile),
+   mConversationProfile(std::move(conversationProfile)),
    mFlowContext(new FlowContext()),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
    mActiveRemoteParticipantHandle(0),
@@ -89,7 +91,7 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
    InfoLog(<< "RemoteParticipantDialogSet destroyed.  mActiveRemoteParticipantHandle=" << mActiveRemoteParticipantHandle);
 }
 
-SharedPtr<UserProfile> 
+std::shared_ptr<UserProfile> 
 RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
 {
    return mConversationManager.getUserAgent()->getIncomingConversationProfile(msg);
@@ -286,15 +288,15 @@ RemoteParticipantDialogSet::processMediaStreamReadyEvent(const StunTuple& rtpTup
       mPendingInvite.reset();
    }
 
-   if(mPendingOfferAnswer.mSdp.get() != 0)
+   if(mPendingOfferAnswer.mSdp != nullptr)
    {
       // Pending Offer or Answer
       doProvideOfferAnswer(mPendingOfferAnswer.mOffer, 
-                           mPendingOfferAnswer.mSdp, 
+                           std::move(mPendingOfferAnswer.mSdp), 
                            mPendingOfferAnswer.mInviteSessionHandle, 
                            mPendingOfferAnswer.mPostOfferAnswerAccept, 
                            mPendingOfferAnswer.mPostAnswerAlert);
-      resip_assert(mPendingOfferAnswer.mSdp.get() == 0);
+      resip_assert(mPendingOfferAnswer.mSdp == nullptr);
    }
 }
 
@@ -345,21 +347,21 @@ RemoteParticipantDialogSet::onMediaStreamError(unsigned int errorCode)
 }
 
 void 
-RemoteParticipantDialogSet::sendInvite(SharedPtr<SipMessage> invite)
+RemoteParticipantDialogSet::sendInvite(std::shared_ptr<SipMessage> invite)
 {
    if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
    {
-      doSendInvite(invite);
+      doSendInvite(std::move(invite));
    }
    else
    {
       // Wait until media stream is ready
-      mPendingInvite = invite;
+      mPendingInvite = std::move(invite);
    }
 }
 
 void 
-RemoteParticipantDialogSet::doSendInvite(SharedPtr<SipMessage> invite)
+RemoteParticipantDialogSet::doSendInvite(std::shared_ptr<SipMessage> invite)
 {
    // Fix up address and port in SDP if we have remote info
    // Note:  the only time we don't is if there was an error preparing the media stream
@@ -374,21 +376,21 @@ RemoteParticipantDialogSet::doSendInvite(SharedPtr<SipMessage> invite)
    }
 
    // Send the invite
-   mDum.send(invite);
+   mDum.send(std::move(invite));
 }
 
 void 
-RemoteParticipantDialogSet::provideOffer(std::auto_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept)
+RemoteParticipantDialogSet::provideOffer(std::unique_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept)
 {
    if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
    {
-      doProvideOfferAnswer(true /* offer */, offer, inviteSessionHandle, postOfferAccept, false);
+      doProvideOfferAnswer(true /* offer */, std::move(offer), inviteSessionHandle, postOfferAccept, false);
    }
    else
    {
-      resip_assert(mPendingOfferAnswer.mSdp.get() == 0);
+      resip_assert(mPendingOfferAnswer.mSdp == nullptr);
       mPendingOfferAnswer.mOffer = true;
-      mPendingOfferAnswer.mSdp = offer;
+      mPendingOfferAnswer.mSdp = std::move(offer);
       mPendingOfferAnswer.mInviteSessionHandle = inviteSessionHandle;
       mPendingOfferAnswer.mPostOfferAnswerAccept = postOfferAccept;
       mPendingOfferAnswer.mPostAnswerAlert = false;
@@ -396,17 +398,17 @@ RemoteParticipantDialogSet::provideOffer(std::auto_ptr<resip::SdpContents> offer
 }
 
 void 
-RemoteParticipantDialogSet::provideAnswer(std::auto_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert)
+RemoteParticipantDialogSet::provideAnswer(std::unique_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert)
 {
    if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
    {
-      doProvideOfferAnswer(false /* offer */, answer, inviteSessionHandle, postAnswerAccept, postAnswerAlert);
+      doProvideOfferAnswer(false /* offer */, std::move(answer), inviteSessionHandle, postAnswerAccept, postAnswerAlert);
    }
    else
    {
-      resip_assert(mPendingOfferAnswer.mSdp.get() == 0);
+      resip_assert(mPendingOfferAnswer.mSdp == nullptr);
       mPendingOfferAnswer.mOffer = false;
-      mPendingOfferAnswer.mSdp = answer;
+      mPendingOfferAnswer.mSdp = std::move(answer);
       mPendingOfferAnswer.mInviteSessionHandle = inviteSessionHandle;
       mPendingOfferAnswer.mPostOfferAnswerAccept = postAnswerAccept;
       mPendingOfferAnswer.mPostAnswerAlert = postAnswerAlert;
@@ -414,7 +416,7 @@ RemoteParticipantDialogSet::provideAnswer(std::auto_ptr<resip::SdpContents> answ
 }
 
 void 
-RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::auto_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert)
+RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::unique_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert)
 {
    if(inviteSessionHandle.isValid() && !inviteSessionHandle->isTerminated())
    {
@@ -458,7 +460,7 @@ void
 RemoteParticipantDialogSet::accept(resip::InviteSessionHandle& inviteSessionHandle)
 {
    // If we have a pending answer, then just flag to accept when complete
-   if(mPendingOfferAnswer.mSdp.get() != 0 &&
+   if(mPendingOfferAnswer.mSdp != nullptr &&
       !mPendingOfferAnswer.mOffer)
    {
       mPendingOfferAnswer.mPostOfferAnswerAccept = true;
@@ -473,7 +475,7 @@ RemoteParticipantDialogSet::accept(resip::InviteSessionHandle& inviteSessionHand
    }
 }
 
-SharedPtr<MediaInterface>
+std::shared_ptr<MediaInterface>
 RemoteParticipantDialogSet::getMediaInterface()
 {
    if(!mMediaInterface)

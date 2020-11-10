@@ -25,7 +25,7 @@ main(int argc, char* argv[])
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
    
-   HttpProvider::setFactory(std::auto_ptr<HttpProviderFactory>(new CurlHttpProviderFactory()));
+   HttpProvider::setFactory(std::unique_ptr<HttpProviderFactory>(new CurlHttpProviderFactory()));
    
    GenericUri target;
    if (argc == 2)

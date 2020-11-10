@@ -18,10 +18,6 @@ AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService)
 {
 }
 
-AsyncUdpSocketBase::~AsyncUdpSocketBase() 
-{
-}
-
 unsigned int 
 AsyncUdpSocketBase::getSocketDescriptor() 
 { 
@@ -89,7 +85,7 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
    }
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncUdpSocketBase::getSenderEndpointAddress() 
 { 
    return mSenderEndpoint.address(); 

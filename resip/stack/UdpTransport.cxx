@@ -3,6 +3,7 @@
 #endif
 
 #include <memory>
+#include <utility>
 
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SendData.hxx"
@@ -247,7 +248,7 @@ UdpTransport::processTxOne(SendData *data)
       return;
    }
    ++mTxMsgCnt;
-   std::auto_ptr<SendData> sendData(data);
+   std::unique_ptr<SendData> sendData(data);
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
    resip_assert( sendData->destination.getPort() != 0 );
@@ -597,8 +598,8 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
       StackLog(<< Data(Data::Borrow, buffer, len));
       if(mExternalUnknownDatagramHandler)
       {
-         auto_ptr<Data> datagram(new Data(buffer,len));
-         (*mExternalUnknownDatagramHandler)(this,sender,datagram);
+         unique_ptr<Data> datagram(new Data(buffer, len));
+         (*mExternalUnknownDatagramHandler)(this, sender, std::move(datagram));
       }
 
       // Idea: consider backing buffer out of message and letting caller reuse it
@@ -639,10 +640,10 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
       // .bwc. This handles all appropriate checking for whether
       // this is a response or an ACK.
-      std::auto_ptr<SendData> tryLater(make503(*message, getExpectedWaitForIncoming()/1000));
+      std::unique_ptr<SendData> tryLater(make503(*message, getExpectedWaitForIncoming()/1000));
       if(tryLater.get())
       {
-         send(tryLater);
+         send(std::move(tryLater));
       }
       delete message; // dropping message due to congestion
       message = 0;

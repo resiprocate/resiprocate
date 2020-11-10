@@ -40,7 +40,7 @@ InstantMessage::onSuccess(resip::ClientPagerMessageHandle handle, const resip::S
 }
 
 void
-InstantMessage::onFailure(resip::ClientPagerMessageHandle handle, const resip::SipMessage& status, std::auto_ptr<resip::Contents> contents)
+InstantMessage::onFailure(resip::ClientPagerMessageHandle handle, const resip::SipMessage& status, std::unique_ptr<resip::Contents> contents)
 {
    // Default implementation is to do nothing - application should override this
 }

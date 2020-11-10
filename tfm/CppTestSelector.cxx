@@ -254,7 +254,7 @@ void CppTestSelector::GetTestCases(CppUnit::Test *test, std::vector<std::string>
 // may throw memory exception 
 int CppTestSelector::SelectTests(CppUnit::Test *suite, CppUnit::TestRunner &testRunner, UISelector &uiSelector, int &numTimes)
 {
-	CppUnitVector<std::string>    testNames ;
+	std::vector<std::string> testNames;
 	std::vector<int>   selectedTests;
 	size_t i = 0;
 	numTimes = 1;

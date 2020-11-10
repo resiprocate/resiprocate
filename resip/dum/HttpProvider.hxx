@@ -21,7 +21,7 @@ class HttpProvider
 {
    public:
       //HttpProvider assumes memory
-      static void setFactory(std::auto_ptr<HttpProviderFactory> fact);
+      static void setFactory(std::unique_ptr<HttpProviderFactory> fact);
       //ptr so users can check for existence
       static HttpProvider* instance();
       
@@ -30,7 +30,7 @@ class HttpProvider
       virtual ~HttpProvider(){} //impl. singleton destructor pattern later
    private:
       static HttpProvider* mInstance;
-      static std::auto_ptr<HttpProviderFactory> mFactory;
+      static std::unique_ptr<HttpProviderFactory> mFactory;
       static Mutex mMutex;      
 };
 

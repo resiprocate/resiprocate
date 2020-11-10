@@ -30,6 +30,8 @@
 #include <resip/dum/AppDialogSetFactory.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
+
 using namespace gateway;
 using namespace resip;
 using namespace std;
@@ -458,12 +460,11 @@ Server::Server(int argc, char** argv) :
    // Install Handlers
    mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
-   //mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   //mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   mProfile->setOutboundDecorator(outboundDecorator);
+   mProfile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    // Install this Server as handler
    mDum.setInviteSessionHandler(this); 
@@ -475,13 +476,11 @@ Server::Server(int argc, char** argv) :
    mDum.addServerSubscriptionHandler("refer", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new GatewayDialogSetFactory(*this));
-   mDum.setAppDialogSetFactory(dsf);
+   mDum.setAppDialogSetFactory(std::unique_ptr<AppDialogSetFactory>(new GatewayDialogSetFactory(*this)));
 
 #if 0
    // Set UserAgentServerAuthManager
-   SharedPtr<ServerAuthManager> uasAuth( new AppServerAuthManager(*this));
-   mDum.setServerAuthManager(uasAuth);
+   mDum.setServerAuthManager(std::make_shared<AppServerAuthManager>(*this));
 #endif
 }
 
@@ -697,7 +696,7 @@ Server::sipRegisterJabberUserImpl(const std::string& jidToRegister)
             SipRegistration *registration = new SipRegistration(*this, mDum, sipNameAddr.uri());
 
             // Create new UserProfile
-            SharedPtr<UserProfile> userProfile(new UserProfile(mProfile));
+            auto userProfile = std::make_shared<UserProfile>(mProfile);
             userProfile->setDefaultFrom(sipNameAddr);
 
             mDum.send(mDum.makeRegistration(sipNameAddr, userProfile, registration));
@@ -939,7 +938,7 @@ Server::onNewIPCMsg(const IPCMsg& msg)
 }
 
 void 
-Server::operator()(UdpTransport* transport, const Tuple& source, std::auto_ptr<resip::Data> unknownPacket)
+Server::operator()(UdpTransport* transport, const Tuple& source, std::unique_ptr<resip::Data> unknownPacket)
 {
    InfoLog(<< "Received an unknown packet of size=" << unknownPacket->size() << ", from " << source);
 }
@@ -1368,8 +1367,7 @@ Server::onReceivedRequest(ServerOutOfDialogReqHandle ood, const SipMessage& msg)
    {
    case OPTIONS:
    {
-      SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
-      ood->send(optionsAnswer);
+      ood->send(ood->answerOptions());
       break;
    }
    case REFER:

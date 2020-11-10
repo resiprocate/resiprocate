@@ -15,14 +15,14 @@ class CountDown : public TestEndPoint::ExpectPreCon
             CountDownDec(CountDown* countdown);
             virtual ~CountDownDec();
             using ExpectAction::operator();
-            virtual void operator()(boost::shared_ptr<Event> event);
+            virtual void operator()(std::shared_ptr<Event> event);
          private:
             CountDown* _countdown;
       };
       friend class CountDownDec;
       CountDownDec* dec();
       virtual resip::Data toString() const;
-      virtual bool passes(boost::shared_ptr<Event>);
+      virtual bool passes(std::shared_ptr<Event>);
    private:
       resip::Data _description;
       UInt32 _count;

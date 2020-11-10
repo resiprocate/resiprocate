@@ -28,28 +28,28 @@ class AppDialog;
 class Dialog 
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, int line);
-            virtual const char* name() const {return "Dialog::Exception";}
+            const char* name() const noexcept override { return "Dialog::Exception"; }
       };
          
       // different behavior from request vs. response
       // (request creates to tag)
       Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
 
-      const DialogId& getId() const;
-      const NameAddr& getLocalNameAddr() const;
-      const NameAddr& getLocalContact() const;
-      const NameAddr& getRemoteNameAddr() const;
-      const NameAddr& getRemoteTarget() const;
+      const DialogId& getId() const noexcept;
+      const NameAddr& getLocalNameAddr() const noexcept;
+      const NameAddr& getLocalContact() const noexcept;
+      const NameAddr& getRemoteNameAddr() const noexcept;
+      const NameAddr& getRemoteTarget() const noexcept;
       const NameAddr& getPendingRemoteTarget() const;
-      const NameAddrs& getRouteSet() const;
-      
+      const NameAddrs& getRouteSet() const noexcept;
+
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests
-      void send(SharedPtr<SipMessage> msg);
+      void send(std::shared_ptr<SipMessage> msg);
       //void send(SipMessage& msg);
       
       void makeRequest(SipMessage& request, MethodTypes method, bool incrementCSeq = true);
@@ -78,7 +78,7 @@ class Dialog
       void onForkAccepted();
       void cancel();
 
-      bool isDestroying() { return mDestroying; };
+      bool isDestroying() const noexcept { return mDestroying; };
 
    private:
       virtual ~Dialog();
@@ -154,7 +154,7 @@ class Dialog
       // store until we get a response (non-401/407)
       // !jf! this shouldn't be necessary
       // !dcm! -- no longer used for subscriptions, INVITE will take more thought/work
-      typedef std::map<int, SharedPtr<SipMessage> > RequestMap;
+      typedef std::map<int, std::shared_ptr<SipMessage>> RequestMap;
       RequestMap mRequests;
 
       AppDialog* mAppDialog;

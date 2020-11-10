@@ -32,10 +32,10 @@ protected:
    virtual void onReload();
 
 private:
-   resip::SharedPtr<CDRFile> mCDRFile;
+   std::shared_ptr<CDRFile> mCDRFile;
    bool mKeyboardInput;
-   resip::SharedPtr<MyUserAgent> mUserAgent;
-   std::auto_ptr<MyConversationManager> mConversationManager;
+   std::shared_ptr<MyUserAgent> mUserAgent;
+   std::unique_ptr<MyConversationManager> mConversationManager;
 };
 
 }

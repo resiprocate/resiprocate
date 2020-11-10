@@ -11,16 +11,16 @@ class SubscriptionCreator : public BaseCreator
    public:
    
       //probably want to have things like the Accept list here too
-      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile> userProfile, const Data& event, 
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, std::shared_ptr<UserProfile> userProfile, const Data& event,
                           UInt32 subscriptionTime);
-      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile> userProfile, const Data& event, 
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, std::shared_ptr<UserProfile> userProfile, const Data& event,
                           UInt32 subscriptionTime, int refreshInterval);
       
       // for out of dialog refer
-      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile> userProfile, const H_ReferTo::Type& referTo);
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, std::shared_ptr<UserProfile> userProfile, const H_ReferTo::Type& referTo);
 
-      bool hasRefreshInterval() const;      
-      int getRefreshInterval() const;
+      bool hasRefreshInterval() const noexcept;      
+      int getRefreshInterval() const noexcept;
    private:
       int mRefreshInterval;      
       Data mEvent; 

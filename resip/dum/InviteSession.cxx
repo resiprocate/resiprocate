@@ -23,6 +23,8 @@
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
@@ -484,7 +486,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -492,15 +494,15 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionProvideOfferExCommand";
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<const Contents> mOffer;
+   std::unique_ptr<const Contents> mOffer;
    DialogUsageManager::EncryptionLevel mLevel;
-   std::auto_ptr<const Contents> mAlternative;
+   std::unique_ptr<const Contents> mAlternative;
 };
 
 void
@@ -524,7 +526,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -532,13 +534,13 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionProvideOfferCommand";
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<const Contents> mOffer;
+   std::unique_ptr<const Contents> mOffer;
 };
 
 void
@@ -558,7 +560,7 @@ InviteSession::provideAnswer(const Contents& answer)
          handleSessionTimerRequest(*mInvite200, *mLastRemoteSessionModification);
          InviteSession::setOfferAnswer(*mInvite200, answer, 0);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          InfoLog (<< "Sending " << mInvite200->brief());
          DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
@@ -574,15 +576,15 @@ InviteSession::provideAnswer(const Contents& answer)
       {
          transition(Connected);
 
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
          handleSessionTimerRequest(*response, *mLastRemoteSessionModification);
          InviteSession::setOfferAnswer(*response, answer, 0);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          InfoLog (<< "Sending " << response->brief());
          DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-         send(response);
+         send(std::move(response));
          if (mDum.mDialogEventStateManager)
          {
              // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -595,7 +597,7 @@ InviteSession::provideAnswer(const Contents& answer)
          transition(Connected);
          sendAck(&answer);
 
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          if (mDum.mDialogEventStateManager)
          {
@@ -619,7 +621,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -627,13 +629,13 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionProvideAnswerCommand";
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<const Contents> mAnswer;
+   std::unique_ptr<const Contents> mAnswer;
 };
 
 void
@@ -676,7 +678,7 @@ InviteSession::end(EndReason reason)
       {
          // !jf! do we need to store the BYE somewhere?
          // .dw. BYE message handled
-         SharedPtr<SipMessage> msg = sendBye();
+         const auto msg = sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
@@ -698,7 +700,7 @@ InviteSession::end(EndReason reason)
          else
          {
              // ACK has likely timedout - hangup immediately
-             SharedPtr<SipMessage> msg = sendBye();
+             const auto msg = sendBye();
              transition(Terminated);
              mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          }
@@ -708,12 +710,12 @@ InviteSession::end(EndReason reason)
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 488);
          InfoLog (<< "Sending " << response->brief());
-         send(response);
+         send(std::move(response));
 
-         SharedPtr<SipMessage> msg = sendBye();
+         const auto msg = sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
@@ -721,7 +723,7 @@ InviteSession::end(EndReason reason)
 
       case WaitingToTerminate:  // ?slg?  Why is this here?
       {
-         SharedPtr<SipMessage> msg = sendBye();
+         const auto msg = sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          break;
@@ -746,7 +748,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -754,7 +756,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionEndCommand";
    }
@@ -781,14 +783,14 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
       {
          transition(Connected);
 
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, statusCode);
          if(warning)
          {
             response->header(h_Warnings).push_back(*warning);
          }
          InfoLog (<< "Sending " << response->brief());
-         send(response);
+         send(std::move(response));
          break;
       }
       // Sent a reINVITE no offer and received a 200-offer.
@@ -817,7 +819,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -825,14 +827,14 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionRejectCommand";
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
    int mCode;
-   std::auto_ptr<WarningCategory> mWarning;
+   std::unique_ptr<WarningCategory> mWarning;
 };
 
 void
@@ -859,29 +861,29 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 void
 InviteSession::refer(const NameAddr& referTo, bool referSub)
 {
-   refer(referTo,myAddr(),std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, myAddr(), nullptr, referSub);
 }
 void
 InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, bool referSub)
 {
-   refer(referTo,referredBy,std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, referredBy, nullptr, referSub);
 }
 void
-InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents,bool referSub)
+InviteSession::refer(const NameAddr& referTo, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
-   refer(referTo,myAddr(),contents,referSub);
+   refer(referTo, myAddr(), std::move(contents), referSub);
 }
 void
-InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, std::auto_ptr<resip::Contents> contents, bool referSub)
+InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      SharedPtr<SipMessage> refer(new SipMessage());
+      auto refer = std::make_shared<SipMessage>();
       mDialog.makeRequest(*refer, REFER, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = referredBy;
       refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
-      refer->setContents(contents);
+      refer->setContents(std::move(contents));
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
@@ -907,7 +909,7 @@ InviteSession::refer(const NameAddr& referTo, const NameAddr& referredBy, std::a
    }
 }
 
-const SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 InviteSession::getLastSentNITRequest() const
 {
    return mLastSentNITRequest;
@@ -924,7 +926,7 @@ InviteSession::nitComplete()
       mNitState = NitProceeding;
       mReferSub = qn->referSubscription();
       mLastSentNITRequest = qn->getNIT();
-      mDialog.setRequestNextCSeq(*mLastSentNITRequest.get());
+      mDialog.setRequestNextCSeq(*mLastSentNITRequest);
       InfoLog(<< "checkNITQueue - sending queued NIT:" << mLastSentNITRequest->brief());
       send(mLastSentNITRequest);
       delete qn;
@@ -942,7 +944,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -950,7 +952,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionReferCommand";
    }
@@ -970,11 +972,11 @@ InviteSession::referCommand(const NameAddr& referTo, bool referSub)
 void
 InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
-   refer(referTo,sessionToReplace,std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, sessionToReplace, nullptr, referSub);
 }
 
 void
-InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::auto_ptr<resip::Contents> contents, bool referSub)
+InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
    if (!sessionToReplace.isValid())
    {
@@ -987,23 +989,23 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
    replaces.param(p_toTag) = id.getRemoteTag();
    replaces.param(p_fromTag) = id.getLocalTag();
 
-   refer(referTo, replaces, contents, referSub);
+   refer(referTo, replaces, std::move(contents), referSub);
 }
 
 void 
 InviteSession::refer(const NameAddr& referTo, const CallId& replaces, bool referSub)
 {
-   refer(referTo,replaces,std::auto_ptr<resip::Contents>(0),referSub);
+   refer(referTo, replaces, nullptr, referSub);
 }
 
 void 
-InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::auto_ptr<resip::Contents> contents, bool referSub)
+InviteSession::refer(const NameAddr& referTo, const CallId& replaces, std::unique_ptr<resip::Contents> contents, bool referSub)
 {
    if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      SharedPtr<SipMessage> refer(new SipMessage());
+      auto refer = std::make_shared<SipMessage>();
       mDialog.makeRequest(*refer, REFER, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
-      refer->setContents(contents);
+      refer->setContents(std::move(contents));
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr();
       refer->header(h_ReferredBy).remove(p_tag);
@@ -1047,7 +1049,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -1055,7 +1057,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionReferExCommand";
    }
@@ -1076,7 +1078,7 @@ InviteSession::referCommand(const NameAddr& referTo, InviteSessionHandle session
 void
 InviteSession::info(const Contents& contents)
 {
-   SharedPtr<SipMessage> info(new SipMessage());
+   auto info = std::make_shared<SipMessage>();
    mDialog.makeRequest(*info, INFO, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
    // !jf! handle multipart here
    info->setContents(&contents);
@@ -1102,7 +1104,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -1110,13 +1112,13 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionInfoCommand";
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<Contents> mContents;
+   std::unique_ptr<Contents> mContents;
 };
 
 void
@@ -1128,7 +1130,7 @@ InviteSession::infoCommand(const Contents& contents)
 void
 InviteSession::message(const Contents& contents)
 {
-   SharedPtr<SipMessage> message(new SipMessage());
+   auto message = std::make_shared<SipMessage>();
    mDialog.makeRequest(*message, MESSAGE, mNitState == NitComplete);  // only increment CSeq if not going to queue NIT
    // !jf! handle multipart here
    message->setContents(&contents);
@@ -1155,7 +1157,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -1163,13 +1165,13 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionMessageCommand";
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
-   std::auto_ptr<Contents> mContents;
+   std::unique_ptr<Contents> mContents;
 };
 
 
@@ -1278,7 +1280,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
             if(mState == UAS_WaitingToHangup || 
                mState == WaitingToHangup)
             {
-               SharedPtr<SipMessage> msg = sendBye();
+               const auto msg = sendBye();
                transition(Terminated);
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
             }
@@ -1361,7 +1363,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          if(mState == WaitingToTerminate)
          {
-            SharedPtr<SipMessage> msg = sendBye();
+            const auto msg = sendBye();
             transition(Terminated);
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
          }
@@ -1406,7 +1408,7 @@ void
 InviteSession::dispatchConnected(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1422,7 +1424,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          *mLastRemoteSessionModification = msg;
          transition(ReceivedReinvite);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteOfferAnswer = offerAnswer; 
+         mProposedRemoteOfferAnswer = std::move(offerAnswer); 
 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
          break;
@@ -1443,17 +1445,17 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  See rfc3311 5.2, 4th paragraph.
          *mLastRemoteSessionModification = msg;
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteOfferAnswer = offerAnswer; 
+         mProposedRemoteOfferAnswer = std::move(offerAnswer); 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
          break;
 
       case OnUpdate:
       {
          // ?slg? no offerAnswer in update - just respond immediately (likely session timer) - do we need a callback?
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
          handleSessionTimerRequest(*response, msg);
-         send(response);
+         send(std::move(response));
          break;
       }
 
@@ -1479,7 +1481,7 @@ void
 InviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1491,21 +1493,21 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
       case OnUpdateOffer:
       {
          // glare
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
       case On200Update:
          transition(Connected);
          handleSessionTimerResponse(msg);
-         if (offerAnswer.get() && mProposedLocalOfferAnswer.get())
+         if (offerAnswer && mProposedLocalOfferAnswer)
          {
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalOfferAnswer(msg);
 
-            mCurrentRemoteOfferAnswer = offerAnswer; 
+            mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
             if (mDum.mDialogEventStateManager)
             {
                 // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -1513,7 +1515,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             }
             handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteOfferAnswer);
          }
-         else if(mProposedLocalOfferAnswer.get()) 
+         else if(mProposedLocalOfferAnswer) 
          {
             // If we sent an offer in the Update Request and no answer is received
             handler->onIllegalNegotiation(getSessionHandle(), msg);
@@ -1567,7 +1569,7 @@ void
 InviteSession::dispatchSentReinvite(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1578,9 +1580,9 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
@@ -1607,7 +1609,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          
             if (*mCurrentRemoteOfferAnswer != *offerAnswer)
             {
-               mCurrentRemoteOfferAnswer = offerAnswer; 
+               mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
                if (mDum.mDialogEventStateManager)
                {
                    // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -1618,7 +1620,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          }
          else
          {
-            mCurrentRemoteOfferAnswer = offerAnswer; 
+            mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
             if (mDum.mDialogEventStateManager)
             {
                 // New Offer/Answer - generate a new confirmed callback with updated SDP
@@ -1692,7 +1694,7 @@ void
 InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1703,9 +1705,9 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
@@ -1721,7 +1723,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          transition(SentReinviteAnswered);
          handleSessionTimerResponse(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteOfferAnswer = offerAnswer; 
+         mProposedRemoteOfferAnswer = std::move(offerAnswer); 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteOfferAnswer);
          break;
       }
@@ -1786,7 +1788,7 @@ void
 InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1797,15 +1799,15 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
       case OnAckAnswer:
          transition(Connected);
          setCurrentLocalOfferAnswer(msg);
-         mCurrentRemoteOfferAnswer = offerAnswer; 
+         mCurrentRemoteOfferAnswer = std::move(offerAnswer); 
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
@@ -1891,7 +1893,7 @@ void
 InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
 {
    // InviteSessionHandler* handler = mDum.mInviteSessionHandler; // unused
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1904,19 +1906,19 @@ InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
       {
          // Means that the UAC has sent us a second reINVITE or UPDATE before we
          // responded to the first one. Bastard!
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
          response->header(h_RetryAfter).value() = Random::getRandom() % 10;
-         send(response);
+         send(std::move(response));
          break;
       }
       case OnBye:
       {
          // BYE received after a reINVITE, terminate the reINVITE transaction.
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 487); // Request Terminated
          handleSessionTimerRequest(*response, *mLastRemoteSessionModification);
-         send(response);
+         send(std::move(response));
 
          dispatchBye(msg);
          break;
@@ -1949,7 +1951,7 @@ InviteSession::dispatchSentReinviteAnswered(const SipMessage& msg)
        msg.header(h_CSeq).method() == INVITE &&
        msg.header(h_StatusLine).statusCode() / 200 == 1)
    {
-      // Receving a 200 retransmission is possible - but we don't have an ACK response yet - we are still waiting for provideAnswer to be
+      // Receiving a 200 retransmission is possible - but we don't have an ACK response yet - we are still waiting for provideAnswer to be
       // called by the app - so just drop the retransmission
       return;
    }
@@ -1996,9 +1998,9 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
          // !jf! Need to include the answer here.
          sendAck();
       }
-      SharedPtr<SipMessage> msg = sendBye();
+      const auto bye = sendBye();
       transition(Terminated);
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get()); 
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, bye.get()); 
    }
    else if(msg.isRequest())
    {
@@ -2008,9 +2010,9 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       }
       else
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 400 /* Bad Request */);
-         send(response);
+         send(std::move(response));
       }
    }
 }
@@ -2018,7 +2020,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
 void
 InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+	const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -2027,9 +2029,9 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         SharedPtr<SipMessage> msg = sendBye();
+         const auto bye = sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, bye.get());
          break;
       }
       
@@ -2047,15 +2049,15 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
    {
       if (BYE == msg.header(h_CSeq).method())
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 200);
-         send(response);
+         send(std::move(response));
       }
       else
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 481);
-         send(response);
+         send(std::move(response));
       }
 
       // !jf! means the peer sent BYE while we are waiting for response to BYE
@@ -2079,9 +2081,9 @@ InviteSession::dispatchOthers(const SipMessage& msg)
       case UPDATE:
          if (msg.isRequest())
          {
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             mDialog.makeResponse(*response, msg, 491);
-            send(response);
+            send(std::move(response));
          }
          break;
       case PRACK:
@@ -2122,10 +2124,10 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
 
    // If we get an INVITE request from the wire and we are not in
    // Connected state, reject the request and send a BYE
-   SharedPtr<SipMessage> response(new SipMessage);
+   auto response = std::make_shared<SipMessage>();
    mDialog.makeResponse(*response, msg, 400); // !jf! what code to use?
    InfoLog (<< "Sending " << response->brief());
-   send(response);
+   send(std::move(response));
 
    sendBye();
    transition(Terminated);
@@ -2138,9 +2140,9 @@ InviteSession::dispatchPrack(const SipMessage& msg)
    resip_assert(msg.header(h_CSeq).method() == PRACK);
    if(msg.isRequest())
    {
-      SharedPtr<SipMessage> rsp(new SipMessage);
+      auto rsp = std::make_shared<SipMessage>();
       mDialog.makeResponse(*rsp, msg, 481);
-      send(rsp);
+      send(std::move(rsp));
 
       sendBye();
       // !jf! should we make some other callback here
@@ -2160,9 +2162,9 @@ InviteSession::dispatchCancel(const SipMessage& msg)
    resip_assert(msg.header(h_CSeq).method() == CANCEL);
    if(msg.isRequest())
    {
-      SharedPtr<SipMessage> rsp(new SipMessage);
+      auto rsp = std::make_shared<SipMessage>();
       mDialog.makeResponse(*rsp, msg, 200);
-      send(rsp);
+      send(std::move(rsp));
 
       sendBye();
       // !jf! should we make some other callback here
@@ -2195,10 +2197,10 @@ InviteSession::dispatchBye(const SipMessage& msg)
          mServerNitState = NitComplete;
       }
 
-      SharedPtr<SipMessage> rsp(new SipMessage);
+      auto rsp = std::make_shared<SipMessage>();
       InfoLog (<< "Received " << msg.brief());
       mDialog.makeResponse(*rsp, msg, 200);
-      send(rsp);
+      send(std::move(rsp));
 
       // !jf! should we make some other callback here
       transition(Terminated);
@@ -2228,10 +2230,10 @@ InviteSession::dispatchInfo(const SipMessage& msg)
       {
          // Means that the UAC has sent us a second INFO before we
          // responded to the first one.
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
          response->header(h_RetryAfter).value() = Random::getRandom() % 10;
-         send(response);
+         send(std::move(response));
          WarningLog(<<"an INFO message was received before the application called acceptNIT() for the previous INFO message");
       }
       else
@@ -2289,7 +2291,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -2297,14 +2299,14 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionAcceptNITCommand";
    }
 private:
    InviteSessionHandle mInviteSessionHandle;
    int mStatusCode;
-   std::auto_ptr<Contents> mContents;
+   std::unique_ptr<Contents> mContents;
 };
 
 void
@@ -2342,7 +2344,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mInviteSessionHandle.isValid())
       {
@@ -2350,7 +2352,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "InviteSessionRejectNITCommand";
    }
@@ -2375,10 +2377,10 @@ InviteSession::dispatchMessage(const SipMessage& msg)
       {
          // Means that the UAC has sent us a second NIT message before we
          // responded to the first one.
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 500);
          response->header(h_RetryAfter).value() = Random::getRandom() % 10;
-         send(response);
+         send(std::move(response));
       }
       else
       {
@@ -2498,7 +2500,7 @@ InviteSession::sessionRefresh()
       mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
       startStaleReInviteTimer();
       InviteSession::setOfferAnswer(*mLastLocalSessionModification, mCurrentLocalOfferAnswer.get());
-      mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(*mCurrentLocalOfferAnswer.get(), 0);
+      mProposedLocalOfferAnswer = InviteSession::makeOfferAnswer(*mCurrentLocalOfferAnswer, 0);
       mSessionRefreshReInvite = true;      
    }
    setSessionTimerHeaders(*mLastLocalSessionModification);
@@ -2825,34 +2827,30 @@ InviteSession::isReliable(const SipMessage& msg) const
    }
 }
 
-//static std::auto_ptr<SdpContents> emptySdp;
-std::auto_ptr<Contents>
+//static std::unique_ptr<SdpContents> emptySdp;
+std::unique_ptr<Contents>
 InviteSession::getOfferAnswer(const SipMessage& msg)
 {
 	if(mDum.mInviteSessionHandler->isGenericOfferAnswer())   
    {
       if(msg.getContents())
       {
-         return std::auto_ptr<Contents>(msg.getContents()->clone());
+         return std::unique_ptr<Contents>(msg.getContents()->clone());
       }
-      else
-      {
-         return std::auto_ptr<Contents>();
-      }
+
+      return nullptr;
    }
-   else
-   {
-      return std::auto_ptr<Contents>(Helper::getSdp(msg.getContents()));
-   }
+
+   return std::unique_ptr<Contents>(Helper::getSdp(msg.getContents()));
 }
 
-std::auto_ptr<Contents>
+std::unique_ptr<Contents>
 InviteSession::makeOfferAnswer(const Contents& offerAnswer)
 {
-   return std::auto_ptr<Contents>(static_cast<Contents*>(offerAnswer.clone()));
+   return std::unique_ptr<Contents>(static_cast<Contents*>(offerAnswer.clone()));
 }
 
-auto_ptr<Contents>
+std::unique_ptr<Contents>
 InviteSession::makeOfferAnswer(const Contents& offerAnswer,
                                const Contents* alternative)
 {
@@ -2861,11 +2859,11 @@ InviteSession::makeOfferAnswer(const Contents& offerAnswer,
       MultipartAlternativeContents* mac = new MultipartAlternativeContents;
       mac->parts().push_back(alternative->clone());
       mac->parts().push_back(offerAnswer.clone());
-      return auto_ptr<Contents>(mac);
+      return std::unique_ptr<Contents>(mac);
    }
    else
    {
-      return auto_ptr<Contents>(offerAnswer.clone());
+      return std::unique_ptr<Contents>(offerAnswer.clone());
    }
 }
 
@@ -2881,7 +2879,7 @@ InviteSession::setOfferAnswer(SipMessage& msg, const Contents& offerAnswer, cons
       MultipartAlternativeContents* mac = new MultipartAlternativeContents;
       mac->parts().push_back(alternative->clone());
       mac->parts().push_back(offerAnswer.clone());
-      msg.setContents(auto_ptr<Contents>(mac));
+      msg.setContents(unique_ptr<Contents>(mac));
    }
    else
    {
@@ -3105,9 +3103,9 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
 void 
 InviteSession::sendAck(const Contents *answer)
 {
-   SharedPtr<SipMessage> ack(new SipMessage);
+   auto ack = std::make_shared<SipMessage>();
 
-   SharedPtr<SipMessage> source;
+   std::shared_ptr<SipMessage> source;
    
    if (mLastLocalSessionModification->method() == UPDATE)
    {
@@ -3149,10 +3147,10 @@ InviteSession::sendAck(const Contents *answer)
    send(ack);
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 InviteSession::sendBye()
 {
-   SharedPtr<SipMessage> bye(new SipMessage());
+   auto bye = std::make_shared<SipMessage>();
    mDialog.makeRequest(*bye, BYE);
    Data txt;
    if (mEndReason != NotSpecified)
@@ -3198,16 +3196,16 @@ InviteSession::setCurrentLocalOfferAnswer(const SipMessage& msg)
    {
       if (DialogUsageManager::Encrypt == getEncryptionLevel(msg) || DialogUsageManager::SignAndEncrypt == getEncryptionLevel(msg))
       {
-         mCurrentLocalOfferAnswer = auto_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().back()->clone()));
+         mCurrentLocalOfferAnswer = unique_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().back()->clone()));
       }
       else
       {
-         mCurrentLocalOfferAnswer = auto_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().front()->clone()));
+         mCurrentLocalOfferAnswer = unique_ptr<Contents>(static_cast<Contents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalOfferAnswer.get()))->parts().front()->clone()));
       }
    }
    else
    {
-      mCurrentLocalOfferAnswer = auto_ptr<Contents>(static_cast<Contents*>(mProposedLocalOfferAnswer.get()->clone()));
+      mCurrentLocalOfferAnswer = unique_ptr<Contents>(static_cast<Contents*>(mProposedLocalOfferAnswer->clone()));
    }
    mProposedLocalOfferAnswer.reset();   
 }
@@ -3241,12 +3239,12 @@ InviteSession::acceptReferNoSub(int statusCode)
       throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
    }
 
-   SharedPtr<SipMessage> response(new SipMessage);
+   auto response = std::make_shared<SipMessage>();
    mDialog.makeResponse(*response, mLastReferNoSubRequest, statusCode);
    response->header(h_ReferSub).value() = "false";
    //response->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
    
-   send(response);
+   send(std::move(response));
 } 
 
 void
@@ -3257,9 +3255,9 @@ InviteSession::rejectReferNoSub(int responseCode)
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
 
-   SharedPtr<SipMessage> response(new SipMessage);
+   auto response = std::make_shared<SipMessage>();
    mDialog.makeResponse(*response, mLastReferNoSubRequest, responseCode);
-   send(response);
+   send(std::move(response));
 }
 
 /* ====================================================================

@@ -120,7 +120,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	GeneralCongestionManager.hxx \
 	HeapInstanceCounter.hxx \
 	KeyValueStore.hxx \
-	SharedCount.hxx \
 	FdSetIOObserver.hxx \
 	Fifo.hxx \
 	CircularBuffer.hxx \
@@ -144,7 +143,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	resipfaststreams.hxx \
 	Coders.hxx \
 	Sha1.hxx \
-	SharedPtr.hxx \
 	SelectInterruptor.hxx \
 	Socket.hxx \
 	dns/ExternalDnsFactory.hxx \

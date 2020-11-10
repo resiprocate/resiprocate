@@ -29,7 +29,7 @@ class RequestContext;
 class ResponseContext
 {
    public:
-      class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
+      class CompareStatus
       {
          public:
             bool operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const;
@@ -70,7 +70,7 @@ class ResponseContext
          @note Targets are not checked for duplicate uris until an attempt 
             is made to start them.
       */
-      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately = false, bool checkDuplicates = true);
+      bool addTarget(std::unique_ptr<repro::Target> target, bool beginImmediately = false, bool checkDuplicates = true);
 
       /**
          Adds a batch of Targets. 

@@ -1001,9 +1001,9 @@ TransactionState::saveOriginalContactAndVia(const SipMessage& sip)
    if(sip.exists(h_Contacts) && sip.const_header(h_Contacts).size() == 1 &&
       sip.const_header(h_Contacts).front().isWellFormed())
    {
-      mOriginalContact = std::auto_ptr<NameAddr>(new NameAddr(sip.header(h_Contacts).front()));
+      mOriginalContact = std::unique_ptr<NameAddr>(new NameAddr(sip.header(h_Contacts).front()));
    }
-   mOriginalVia = std::auto_ptr<Via>(new Via(sip.header(h_Vias).front()));
+   mOriginalVia = std::unique_ptr<Via>(new Via(sip.header(h_Vias).front()));
 }
 
 void TransactionState::restoreOriginalContactAndVia()

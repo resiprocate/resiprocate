@@ -2,7 +2,6 @@
 #include "config.h"
 #endif
 
-#include <memory>
 #include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
@@ -10,6 +9,8 @@
 #include "resip/stack/WsTransport.hxx"
 #include "resip/stack/WsConnection.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#include <utility>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
@@ -21,24 +22,20 @@ WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
       AfterSocketCreationFuncPtr socketFunc,
       Compression &compression,
       unsigned transportFlags,
-      SharedPtr<WsConnectionValidator> connectionValidator,
-      SharedPtr<WsCookieContextFactory> cookieContextFactory)
+      std::shared_ptr<WsConnectionValidator> connectionValidator,
+      std::shared_ptr<WsCookieContextFactory> cookieContextFactory)
 : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
-  WsBaseTransport(connectionValidator, cookieContextFactory)
+  WsBaseTransport(std::move(connectionValidator), std::move(cookieContextFactory))
 {
    mTuple.setType(WS);
 
-   init();
+   TcpBaseTransport::init();
 
    InfoLog (<< "Creating WS transport host=" << pinterface
          << " port=" << mTuple.getPort()
-         << " ipv4=" << bool(version==V4) );
+         << " ipv4=" << (version == V4) );
 
    mTxFifo.setDescription("WsTransport::mTxFifo");
-}
-
-WsTransport::~WsTransport()
-{
 }
 
 Connection*

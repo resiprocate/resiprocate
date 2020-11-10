@@ -143,7 +143,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 
    DeprecatedDialog* dialog = new DeprecatedDialog( NameAddr(mContact) );
  
-   auto_ptr<SipMessage> msg( dialog->makeInitialMessage(NameAddr(target),NameAddr(from)) );
+   unique_ptr<SipMessage> msg( dialog->makeInitialMessage(NameAddr(target),NameAddr(from)) );
  
    Page page;
    page.text = text;
@@ -411,7 +411,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    resip_assert( dialog );
    dialog->setExpirySeconds( expires );
    
-   auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
+   unique_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
  
    response->header(h_Expires).value() = expires;
    response->header(h_Event).value() = Data("presence");
@@ -504,7 +504,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
 
    processSipFrag( msg );
 
-   auto_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
+   unique_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
    mStack->send( *response );
 
    Uri from = msg->header(h_From).uri();
@@ -1110,7 +1110,7 @@ TuIM::process()
    {
       if ( mRegistrationDialog.isCreated() )
       {
-         auto_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
+         unique_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
          msg->header(h_Expires).value() = mRegistrationTimeSeconds;
          setOutbound( *msg );
          mStack->send( *msg );
@@ -1131,7 +1131,7 @@ TuIM::process()
          resip_assert(  buddy.presDialog );
          if ( buddy.presDialog->isCreated() )
          {
-            auto_ptr<SipMessage> msg( buddy.presDialog->makeSubscribe() );
+            unique_ptr<SipMessage> msg( buddy.presDialog->makeSubscribe() );
                         
             msg->header(h_Event).value() = Data("presence");;
             msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
@@ -1183,7 +1183,7 @@ TuIM::registerAor( const Uri& uri, const Data& password  )
    //contactName.uri() = mContact;
    //SipMessage* msg = Helper::makeRegister(aorName,aorName,contactName);
 
-   auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(uri),NameAddr(uri)) );
+   unique_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(uri),NameAddr(uri)) );
 
    msg->header(h_Expires).value() = mRegistrationTimeSeconds;
    msg->header(h_Contacts).front().param(p_expires) = mRegistrationTimeSeconds;
@@ -1248,7 +1248,7 @@ void
 TuIM::subscribeBuddy( Buddy& buddy )
 {
    // subscribe to this budy 
-   auto_ptr<SipMessage> msg( buddy.presDialog->makeInitialSubscribe(NameAddr(buddy.uri),NameAddr(mAor)) );
+   unique_ptr<SipMessage> msg( buddy.presDialog->makeInitialSubscribe(NameAddr(buddy.uri),NameAddr(mAor)) );
 
    msg->header(h_Event).value() = Data("presence");;
    msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
@@ -1308,7 +1308,7 @@ TuIM::sendNotify(DeprecatedDialog* dialog)
 { 
    resip_assert( dialog );
    
-   auto_ptr<SipMessage> msg( dialog->makeNotify() );
+   unique_ptr<SipMessage> msg( dialog->makeNotify() );
 
    Pidf* pidf = new Pidf( *mPidf );
 
@@ -1332,7 +1332,7 @@ TuIM::sendPublish(StateAgent& sa)
 { 
    resip_assert( sa.dialog );
    
-   auto_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
+   unique_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
 
    Pidf* pidf = new Pidf( *mPidf );
 

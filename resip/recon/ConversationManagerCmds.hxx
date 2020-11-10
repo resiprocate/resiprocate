@@ -127,21 +127,21 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
                                  ConversationHandle convHandle,
                                  const resip::NameAddr& destination,
                                  ConversationManager::ParticipantForkSelectMode forkSelectMode,
-                                 resip::SharedPtr<resip::UserProfile> callerProfile = resip::SharedPtr<resip::UserProfile>(),
+                                 std::shared_ptr<resip::UserProfile> callerProfile = nullptr,
                                  const std::multimap<resip::Data,resip::Data>& extraHeaders = (std::multimap<resip::Data,resip::Data>()))
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
            mDestination(destination),
            mForkSelectMode(forkSelectMode),
-           mCallerProfile(callerProfile),
+           mCallerProfile(std::move(callerProfile)),
            mExtraHeaders(extraHeaders) {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            resip::SharedPtr<ConversationProfile> _callerProfile(mCallerProfile, resip::dynamic_cast_tag());
+            const auto _callerProfile = std::dynamic_pointer_cast<ConversationProfile>(mCallerProfile);
             RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode, _callerProfile);
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
             if(participant)
@@ -170,7 +170,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
       ConversationHandle mConvHandle;
       resip::NameAddr mDestination;
       ConversationManager::ParticipantForkSelectMode mForkSelectMode;
-      resip::SharedPtr<resip::UserProfile> mCallerProfile;
+      std::shared_ptr<resip::UserProfile> mCallerProfile;
       std::multimap<resip::Data,resip::Data> mExtraHeaders;
 };
 

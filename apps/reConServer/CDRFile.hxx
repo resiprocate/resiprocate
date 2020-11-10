@@ -20,7 +20,7 @@ class CDRFile : public B2BCallLogger
 public:
    CDRFile(const resip::Data& filename);
    virtual ~CDRFile();
-   virtual void log(resip::SharedPtr<B2BCall> call);
+   virtual void log(std::shared_ptr<B2BCall> call);
    virtual void rotateLog();
 
 private:

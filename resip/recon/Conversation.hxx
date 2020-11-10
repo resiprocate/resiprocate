@@ -78,7 +78,7 @@ protected:
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
-   resip::SharedPtr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
+   std::shared_ptr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
 
 private: 
    ConversationHandle mHandle;
@@ -95,7 +95,7 @@ private:
 
    // sipX Media related members
    BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
-   resip::SharedPtr<MediaInterface> mMediaInterface;  
+   std::shared_ptr<MediaInterface> mMediaInterface;
    BridgeMixer* mBridgeMixer;
 };
 

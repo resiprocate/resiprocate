@@ -1,43 +1,45 @@
 #ifndef RESIP_WsCookieContextFactory_hxx
 #define RESIP_WsCookieContextFactory_hxx
 
-#include "rutil/SharedPtr.hxx"
-
 #include "Cookie.hxx"
 #include "rutil/Data.hxx"
 #include "Uri.hxx"
 #include "WsCookieContext.hxx"
+
+#include <memory>
 
 namespace resip
 {
 
 class WsCookieContextFactory
 {
-   protected:
-      WsCookieContextFactory() {};
-      virtual ~WsCookieContextFactory() {};
-
    public:
-      virtual SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList, const Uri& requestUri) = 0;
+      WsCookieContextFactory() = default;
+      WsCookieContextFactory(const WsCookieContextFactory&) = delete;
+      WsCookieContextFactory(WsCookieContextFactory&&) = delete;
+      virtual ~WsCookieContextFactory() = default;
+
+      WsCookieContextFactory& operator=(const WsCookieContextFactory&) = delete;
+      WsCookieContextFactory& operator=(WsCookieContextFactory&&) = delete;
+
+      virtual std::shared_ptr<WsCookieContext> makeCookieContext(const CookieList& cookieList, const Uri& requestUri) = 0;
 };
 
-class BasicWsCookieContextFactory : public WsCookieContextFactory
+class BasicWsCookieContextFactory final
+   : public WsCookieContextFactory
 {
    public:
-      BasicWsCookieContextFactory(const Data& infoCookieName = "", const Data& extraCookieName = "", const Data& macCookieName = "")
+      explicit BasicWsCookieContextFactory(const Data& infoCookieName = "", const Data& extraCookieName = "", const Data& macCookieName = "")
        : mInfoCookieName(infoCookieName.empty() ? "WSSessionInfo" : infoCookieName),
          mExtraCookieName(extraCookieName.empty() ? "WSSessionExtra": extraCookieName),
          macCookieName(macCookieName.empty() ? "WSSessionMAC" : macCookieName)
       {
-      };
+      }
 
-      virtual ~BasicWsCookieContextFactory() {};
-
-      SharedPtr<WsCookieContext> makeCookieContext(const CookieList& cookieList, const Uri& requestUri)
+      std::shared_ptr<WsCookieContext> makeCookieContext(const CookieList& cookieList, const Uri& requestUri) override
       {
-         SharedPtr<WsCookieContext> ctx(new WsCookieContext(cookieList, mInfoCookieName, mExtraCookieName, macCookieName, requestUri));
-         return ctx;
-      };
+         return std::make_shared<WsCookieContext>(cookieList, mInfoCookieName, mExtraCookieName, macCookieName, requestUri);
+      }
 
    private:
       Data mInfoCookieName;

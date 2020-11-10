@@ -36,7 +36,7 @@ CDRFile::~CDRFile()
 }
 
 void
-CDRFile::log(SharedPtr <B2BCall> call)
+CDRFile::log(std::shared_ptr<B2BCall> call)
 {
    if(mRotate)
    {

@@ -68,7 +68,7 @@ main(int argc, char* argv[])
 
 
    
-   auto_ptr<SipStack> stack(new SipStack());
+   unique_ptr<SipStack> stack(new SipStack());
    if (optBindAddr)
    {
      const char *addr = optBindUdpAddr?optBindUdpAddr:optBindAddr;

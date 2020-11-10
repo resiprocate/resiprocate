@@ -34,10 +34,10 @@ FlowDtlsTimerContext::FlowDtlsTimerContext(asio::io_service& ioService) :
 void 
 FlowDtlsTimerContext::addTimer(dtls::DtlsTimer *timer, unsigned int durationMs) 
 {
-   resip::SharedPtr<asio::steady_timer> deadlineTimer(new asio::steady_timer(mIOService));
+   auto deadlineTimer = std::make_shared<asio::steady_timer>(mIOService);
    deadlineTimer->expires_from_now(milliseconds(durationMs));
    deadlineTimer->async_wait(boost::bind(&FlowDtlsTimerContext::handleTimeout, this, timer, asio::placeholders::error));
-   mDeadlineTimers[timer] = deadlineTimer;
+   mDeadlineTimers[timer] = std::move(deadlineTimer);
    //InfoLog(<< "FlowDtlsTimerContext: starting timer for " << durationMs << "ms.");
 }    
 

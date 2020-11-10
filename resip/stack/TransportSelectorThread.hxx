@@ -46,7 +46,7 @@ class TransportSelectorThread : public ThreadIf
 
    protected:
       TransportSelector& mSelector;
-      std::auto_ptr<FdPollGrp> mPollGrp;
+      std::unique_ptr<FdPollGrp> mPollGrp;
 
 }; // class TransportSelectorThread
 

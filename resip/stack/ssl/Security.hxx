@@ -44,11 +44,11 @@ class SipMessage;
 class BaseSecurity
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line);
-            const char* name() const { return "SecurityException"; }
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override { return "SecurityException"; }
       };
 
       class CipherList

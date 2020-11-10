@@ -7,22 +7,24 @@
 #include "AppSubsystem.hxx"
 #include "KeyedFile.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
 using namespace registrationagent;
 using namespace resip;
 using namespace std;
 
-KeyedFileLine::KeyedFileLine(SharedPtr<KeyedFile> keyedFile, const Data& key)
-   : mKeyedFile(keyedFile),
+KeyedFileLine::KeyedFileLine(std::shared_ptr<KeyedFile> keyedFile, const Data& key)
+   : mKeyedFile(std::move(keyedFile)),
      mKey(key)
 {
 }
 
 void
-KeyedFileLine::onLineRemoved(SharedPtr<KeyedFileLine> sp)
+KeyedFileLine::onLineRemoved(std::shared_ptr<KeyedFileLine> sp)
 {
-   mSharedPtr = sp;
+   mSharedPtr = std::move(sp);
 }
 
 const Data&
@@ -31,8 +33,8 @@ KeyedFileLine::getKey()
    return mKey;
 }
 
-BasicKeyedFileLine::BasicKeyedFileLine(SharedPtr<KeyedFile> keyedFile, const Data& key, const vector<Data>& columns)
-   : KeyedFileLine(keyedFile, key),
+BasicKeyedFileLine::BasicKeyedFileLine(std::shared_ptr<KeyedFile> keyedFile, const Data& key, const vector<Data>& columns)
+   : KeyedFileLine(std::move(keyedFile), key),
      mColumns(columns)
 {
 }
@@ -70,9 +72,9 @@ BasicKeyedFileLine::onFileReload(const std::vector<Data>& columns)
    }
 }
 
-KeyedFile::KeyedFile(const Data& filename, SharedPtr<KeyedFileRowHandler> rowHandler, const int minimumColumns, const int maximumColumns)
+KeyedFile::KeyedFile(const Data& filename, std::shared_ptr<KeyedFileRowHandler> rowHandler, const int minimumColumns, const int maximumColumns)
     : mFilename(filename),
-      mRowHandler(rowHandler),
+      mRowHandler(std::move(rowHandler)),
       mMinimumColumns(minimumColumns),
       mMaximumColumns(maximumColumns)
 {
@@ -88,15 +90,15 @@ KeyedFile::doReload()
    readFile();
 }
 
-SharedPtr<KeyedFileLine>
+std::shared_ptr<KeyedFileLine>
 KeyedFile::getByKey(const Data& key)
 {
-   map<Data, SharedPtr<KeyedFileLine> >::iterator it = mLines.find(key);
+   const auto it = mLines.find(key);
    if(it != mLines.end())
    {
       return it->second;
    }
-   return SharedPtr<KeyedFileLine>();
+   return nullptr;
 }
 
 void
@@ -179,21 +181,18 @@ KeyedFile::readFile()
    }
 
    // Process removed lines
-   set<Data> removedKeys;
-   for(map<Data, SharedPtr<KeyedFileLine> >::iterator it = mLines.begin();
-      it != mLines.end(); it++)
+   for (auto it = std::begin(mLines); it != std::end(mLines);)
    {
-      if(keys.find(it->first) == keys.end())
+      if (keys.find(it->first) == std::end(keys))
       {
          StackLog(<< mFilename << " removing key '" << it->first << "'");
-         removedKeys.insert(it->first);
          it->second->onLineRemoved(it->second);
+         it = mLines.erase(it);
       }
-   }
-   for(set<Data>::iterator it = removedKeys.begin();
-      it != removedKeys.end(); it++)
-   {
-      mLines.erase(*it);
+      else
+      {
+         ++it;
+      }
    }
 
    InfoLog(<<"Processed " << lineNo << " lines");

@@ -8,6 +8,8 @@
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/DumCommand.hxx"
 
+#include <memory>
+
 namespace resip
 {
 
@@ -27,7 +29,7 @@ class AppDialogSet : public Handled
       // Asynchronously calls end() through a DUM command
       virtual void endCommand();
       
-      virtual SharedPtr<UserProfile> getUserProfile();
+      virtual std::shared_ptr<UserProfile> getUserProfile();
 
       virtual AppDialog* createAppDialog(const SipMessage&);
 
@@ -71,7 +73,7 @@ class AppDialogSet : public Handled
       // This is called by the DialogUsageManager to select an userProfile to assign to a UAS DialogSet.
       // The application should not call this directly, but should override it, in order to assign 
       // an userProfile other than the MasterProfile
-      virtual SharedPtr<UserProfile> selectUASUserProfile(const SipMessage&); 
+      virtual std::shared_ptr<UserProfile> selectUASUserProfile(const SipMessage&); 
 
    private:
       /// Prepare for association with a different dialog set id.  Need this

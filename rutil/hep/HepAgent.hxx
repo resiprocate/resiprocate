@@ -162,7 +162,7 @@ class HepAgent
          hg->time_sec.chunk.vendor_id = htons(0x0000);
          hg->time_sec.chunk.type_id   = htons(0x0009);
          hg->time_sec.chunk.length = htons(sizeof(hg->time_sec));
-         hg->time_sec.data = htonl(now / 1000000LL);
+         hg->time_sec.data = htonl((u_long)(now / 1000000LL));
 
          /* TIMESTAMP USEC */
          hg->time_usec.chunk.vendor_id = htons(0x0000);

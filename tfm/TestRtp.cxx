@@ -10,10 +10,8 @@
 #include "Expect.hxx"
 #include "CommonAction.hxx"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-
-#include <time.h>
+#include <ctime>
+#include <functional>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -137,15 +135,11 @@ TestRtp::TestRtp() :
    clean();
 }
 
-TestRtp::~TestRtp()
-{
-}
-
 // ----------------------------------------------------------------------------
 void
 TestRtp::clean()
 {
-   mLocalSdp = boost::shared_ptr<SdpContents>(new SdpContents());
+   mLocalSdp = std::make_shared<SdpContents>();
    mLocalSdp->session().name() = SDP_SESSION_NAME;
    mLocalSdp->session().version() = 0;
    mLocalSdp->session().origin()
@@ -505,21 +499,21 @@ TestRtp::sendPacket(resip::Socket fd, Tuple& dest, const Data& data)
 }
 
 // ----------------------------------------------------------------------------
-boost::shared_ptr<SdpContents>
+std::shared_ptr<SdpContents>
 TestRtp::getLocalSdp() const
 {
    return getLocalSdp(MEDIA_ACTIVE, MEDIA_ACTIVE);
 }
 
 // ----------------------------------------------------------------------------
-boost::shared_ptr<SdpContents>
+std::shared_ptr<SdpContents>
 TestRtp::getLocalSdp(unsigned long audioAttr, unsigned long videoAttr) const
 {
    SdpContents * contents = dynamic_cast<SdpContents*>(mLocalSdp->clone());
    mLocalSdp->session().origin().getVersion() += 1;
    if (! mSessionName.empty())
       mLocalSdp->session().name() = mSessionName;
-   boost::shared_ptr<SdpContents> sdp = boost::shared_ptr<SdpContents>(contents);
+   std::shared_ptr<SdpContents> sdp(contents);
 
    SdpContents::AddrType addrType = mLocalAddrRtp.ipVersion() == V4 ? SdpContents::IP4 :  SdpContents::IP6;
    Data addr = Tuple::inet_ntop(mLocalAddrRtp);
@@ -621,7 +615,7 @@ TestRtp::addCodec(
       return;
 
    if (! mLocalSdp)
-      mLocalSdp = boost::shared_ptr<SdpContents>(new SdpContents());
+      mLocalSdp = std::make_shared<SdpContents>();
 
    Medium * medium = 0;
    // find the m-line based on media-type: 'audio'/'video', etc. in the REVERSE direction.
@@ -735,7 +729,7 @@ SdpHelper::getMediaDirectionFromString(const char * szMediaName)
 }
 
 SdpHelper::MediaDirection
-SdpHelper::getMediaDirection(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
+SdpHelper::getMediaDirection(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if (!sdp || !szMediaName)
@@ -755,7 +749,7 @@ SdpHelper::getMediaDirection(boost::shared_ptr<resip::SipMessage> msg, const cha
 
 
 bool
-SdpHelper::hasIce(boost::shared_ptr<SipMessage> msg)
+SdpHelper::hasIce(std::shared_ptr<SipMessage> msg)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if( NULL == sdp )
@@ -777,7 +771,7 @@ SdpHelper::hasIce(boost::shared_ptr<SipMessage> msg)
 }
 
 Data 
-SdpHelper::getConnectionAddr(boost::shared_ptr<resip::SipMessage> msg)
+SdpHelper::getConnectionAddr(std::shared_ptr<resip::SipMessage> msg)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if( NULL == sdp )
@@ -789,7 +783,7 @@ SdpHelper::getConnectionAddr(boost::shared_ptr<resip::SipMessage> msg)
 }
 
 int
-SdpHelper::getPort(boost::shared_ptr<resip::SipMessage> msg, unsigned int index)
+SdpHelper::getPort(std::shared_ptr<resip::SipMessage> msg, unsigned int index)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if( NULL == sdp )
@@ -808,7 +802,7 @@ SdpHelper::getPort(boost::shared_ptr<resip::SipMessage> msg, unsigned int index)
 }
 
 int
-SdpHelper::getPort(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
+SdpHelper::getPort(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if (!sdp || !szMediaName)
@@ -822,7 +816,7 @@ SdpHelper::getPort(boost::shared_ptr<resip::SipMessage> msg, const char * szMedi
 }
 
 void
-SdpHelper::setPort(boost::shared_ptr<resip::SdpContents> sdp, const char * szMediaName, unsigned long port)
+SdpHelper::setPort(std::shared_ptr<resip::SdpContents> sdp, const char * szMediaName, unsigned long port)
 {
    if (!sdp || !szMediaName)
       return;
@@ -837,7 +831,7 @@ SdpHelper::setPort(boost::shared_ptr<resip::SdpContents> sdp, const char * szMed
 }
 
 void SdpHelper::addAttr(
-   boost::shared_ptr<resip::SdpContents> sdp,
+   std::shared_ptr<resip::SdpContents> sdp,
    const char * szMediaName,
    const char* szAttrField,
    const char* szAttrValue)
@@ -855,7 +849,7 @@ void SdpHelper::addAttr(
 }
 
 bool
-SdpHelper::isMediaInactive(boost::shared_ptr<SipMessage> msg)
+SdpHelper::isMediaInactive(std::shared_ptr<SipMessage> msg)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if( NULL == sdp )
@@ -874,7 +868,7 @@ SdpHelper::isMediaInactive(boost::shared_ptr<SipMessage> msg)
 }
 
 bool
-SdpHelper::isMediaSendOnly(boost::shared_ptr<SipMessage> msg)
+SdpHelper::isMediaSendOnly(std::shared_ptr<SipMessage> msg)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if( NULL == sdp )
@@ -893,7 +887,7 @@ SdpHelper::isMediaSendOnly(boost::shared_ptr<SipMessage> msg)
 }
 
 bool
-SdpHelper::isMediaRecvOnly(boost::shared_ptr<SipMessage> msg)
+SdpHelper::isMediaRecvOnly(std::shared_ptr<SipMessage> msg)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if( NULL == sdp )
@@ -912,7 +906,7 @@ SdpHelper::isMediaRecvOnly(boost::shared_ptr<SipMessage> msg)
 }
 
 unsigned int
-SdpHelper::getMediaCount(boost::shared_ptr<resip::SipMessage> msg)
+SdpHelper::getMediaCount(std::shared_ptr<resip::SipMessage> msg)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if (! sdp)
@@ -922,7 +916,7 @@ SdpHelper::getMediaCount(boost::shared_ptr<resip::SipMessage> msg)
 
 // m-line
 unsigned int
-SdpHelper::getMLineCount(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
+SdpHelper::getMLineCount(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
 {
    unsigned int ret = 0;
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
@@ -937,7 +931,7 @@ SdpHelper::getMLineCount(boost::shared_ptr<resip::SipMessage> msg, const char * 
 }
 
 unsigned int
-SdpHelper::getCodecsCount(boost::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
+SdpHelper::getCodecsCount(std::shared_ptr<resip::SipMessage> msg, const char * szMediaName)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if (! sdp)
@@ -951,7 +945,7 @@ SdpHelper::getCodecsCount(boost::shared_ptr<resip::SipMessage> msg, const char *
 }
 
 bool
-SdpHelper::hasPayloadNumber(boost::shared_ptr<resip::SipMessage> msg, int payloadNumber)
+SdpHelper::hasPayloadNumber(std::shared_ptr<resip::SipMessage> msg, int payloadNumber)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if (! sdp)
@@ -968,7 +962,7 @@ SdpHelper::hasPayloadNumber(boost::shared_ptr<resip::SipMessage> msg, int payloa
 }
 
 bool
-SdpHelper::isHold2543(boost::shared_ptr<SipMessage> msg)
+SdpHelper::isHold2543(std::shared_ptr<SipMessage> msg)
 {
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
    if( NULL == sdp )
@@ -1142,5 +1136,5 @@ TestRtp::enableSending(bool enable)
    DebugLog(<< "TestRtp::enableSending()");
    return new CommonAction(this,
       "Enable sending",
-       boost::bind(&TestRtp::enableSendingDelegate, this, enable));
+       std::bind(&TestRtp::enableSendingDelegate, this, enable));
 }

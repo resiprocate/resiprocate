@@ -21,6 +21,8 @@
 #include "tfm/TestSipEndPoint.hxx"
 #include "tfm/tfdum/TfdTestSipEndPoint.hxx"
 
+#include <memory>
+
 class DumFixture : public CppUnit::TestFixture
 {
    public:
@@ -35,7 +37,7 @@ class DumFixture : public CppUnit::TestFixture
 
       static DumUserAgent* createUserAgentForFailoverTest(const resip::Data& user, const resip::Data&);
       
-      static std::auto_ptr<resip::Pidf> makePidf(const DumUserAgent* dua);
+      static std::unique_ptr<resip::Pidf> makePidf(const DumUserAgent* dua);
 
       static resip::ExternalDns* createExternalDns();
 

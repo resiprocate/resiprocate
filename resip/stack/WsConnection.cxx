@@ -11,9 +11,10 @@ using namespace resip;
 WsConnection::WsConnection(Transport* transport,
                            const Tuple& who, Socket fd,
                            Compression &compression,
-                           SharedPtr<WsConnectionValidator> wsConnectionValidator,
+                           std::shared_ptr<WsConnectionValidator> wsConnectionValidator,
                            bool isServer)
-  : TcpConnection(transport,who, fd, compression, isServer), WsConnectionBase(wsConnectionValidator)
+   : TcpConnection(transport,who, fd, compression, isServer)
+   , WsConnectionBase(std::move(wsConnectionValidator))
 {
    DebugLog (<< "Creating WS connection " << who << " on " << fd);
 }

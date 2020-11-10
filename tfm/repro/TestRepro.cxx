@@ -64,25 +64,25 @@ makeRequestProcessorChain(ProcessorChain& chain,
    ProcessorChain* authenticators = new ProcessorChain(Processor::REQUEST_CHAIN);
    
    IsTrustedNode* isTrusted = new IsTrustedNode(config);
-   authenticators->addProcessor(std::auto_ptr<Processor>(isTrusted));
+   authenticators->addProcessor(std::unique_ptr<Processor>(isTrusted));
 
    DigestAuthenticator* da = new DigestAuthenticator(config, authRequestDispatcher);
-   authenticators->addProcessor(std::auto_ptr<Processor>(da)); 
+   authenticators->addProcessor(std::unique_ptr<Processor>(da)); 
 
    StrictRouteFixup* srf = new StrictRouteFixup;
-   locators->addProcessor(std::auto_ptr<Processor>(srf));
+   locators->addProcessor(std::unique_ptr<Processor>(srf));
 
    AmIResponsible* isme = new AmIResponsible;
-   locators->addProcessor(std::auto_ptr<Processor>(isme));
+   locators->addProcessor(std::unique_ptr<Processor>(isme));
       
    StaticRoute* sr = new StaticRoute(config);
-   locators->addProcessor(std::auto_ptr<Processor>(sr));
+   locators->addProcessor(std::unique_ptr<Processor>(sr));
  
    LocationServer* ls = new LocationServer(config, regData, authRequestDispatcher);
-   locators->addProcessor(std::auto_ptr<Processor>(ls));
+   locators->addProcessor(std::unique_ptr<Processor>(ls));
  
-   chain.addProcessor(std::auto_ptr<Processor>(authenticators));
-   chain.addProcessor(std::auto_ptr<Processor>(locators));
+   chain.addProcessor(std::unique_ptr<Processor>(authenticators));
+   chain.addProcessor(std::unique_ptr<Processor>(locators));
    return chain;
 }
 
@@ -93,9 +93,9 @@ makeResponseProcessorChain(ProcessorChain& chain,
    ProcessorChain* lemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
 
    OutboundTargetHandler* ob = new OutboundTargetHandler(regData);
-   lemurs->addProcessor(std::auto_ptr<Processor>(ob));
+   lemurs->addProcessor(std::unique_ptr<Processor>(ob));
 
-   chain.addProcessor(std::auto_ptr<Processor>(lemurs));
+   chain.addProcessor(std::unique_ptr<Processor>(lemurs));
    return chain;
 }
 
@@ -105,12 +105,12 @@ makeTargetProcessorChain(ProcessorChain& chain, ProxyConfig& config)
    ProcessorChain* baboons = new ProcessorChain(Processor::TARGET_CHAIN);
 
    QValueTargetHandler* qval =  new QValueTargetHandler(config);
-   baboons->addProcessor(std::auto_ptr<Processor>(qval));
+   baboons->addProcessor(std::unique_ptr<Processor>(qval));
    
    SimpleTargetHandler* smpl = new SimpleTargetHandler;
-   baboons->addProcessor(std::auto_ptr<Processor>(smpl));
+   baboons->addProcessor(std::unique_ptr<Processor>(smpl));
    
-   chain.addProcessor(std::auto_ptr<Processor>(baboons));
+   chain.addProcessor(std::unique_ptr<Processor>(baboons));
    return chain;
 }
 
@@ -147,10 +147,10 @@ TestRepro::TestRepro(const resip::Data& name,
 #endif
    mStackThread(new EventStackThread(*mStack, *mInterruptor, *mPollGrp)),
    mRegistrar(),
-   mProfile(new MasterProfile),
+   mProfile(std::make_shared<MasterProfile>()),
    mDb(new BerkeleyDb),
    mConfig(mDb, args),
-   mAuthRequestDispatcher(new Dispatcher(std::auto_ptr<Worker>(new UserAuthGrabber(*mConfig.getDataStore())), 
+   mAuthRequestDispatcher(new Dispatcher(std::unique_ptr<Worker>(new UserAuthGrabber(*mConfig.getDataStore())), 
                                          mStack, 2)),
    mRequestProcessors(Processor::REQUEST_CHAIN),
    mResponseProcessors(Processor::RESPONSE_CHAIN),
@@ -292,19 +292,19 @@ TestRepro::TestRepro(const resip::Data& name,
                                         methodList) );
    mDum->setMessageFilterRuleList(ruleList);
     
-   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(*mDum, 
-                                                                   mAuthRequestDispatcher,
-                                                                   mConfig.getDataStore()->mAclStore, 
-                                                                   true, 
-                                                                   false,
-                                                                   true));
-   mDum->setServerAuthManager(authMgr);    
+   auto authMgr = std::make_shared<ReproServerAuthManager>(*mDum,
+                                                           mAuthRequestDispatcher,
+                                                           mConfig.getDataStore()->mAclStore,
+                                                           true,
+                                                           false,
+                                                           true);
+   mDum->setServerAuthManager(std::move(authMgr));
 
    mStack->registerTransactionUser(mProxy);
 
    if(args.mUseCongestionManager)
    {
-      mCongestionManager.reset(new GeneralCongestionManager(
+      mCongestionManager = std::unique_ptr<GeneralCongestionManager>(new GeneralCongestionManager(
                                           GeneralCongestionManager::WAIT_TIME, 
                                           200));
       mStack->setCongestionManager(mCongestionManager.get());

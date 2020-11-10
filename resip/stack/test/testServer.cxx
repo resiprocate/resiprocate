@@ -58,25 +58,25 @@ class Server : public ThreadIf
             SipMessage* received = mStack.receive();
             if (received)
             {
-               auto_ptr<SipMessage> forDel(received);
+               unique_ptr<SipMessage> forDel(received);
                MethodTypes meth = received->header(h_RequestLine).getMethod();
                ErrLog ( << "Server received: " << getMethodName(meth));
                if ( meth == INVITE )
                {
                   Data localTag = Helper::computeTag(4);
-                  auto_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, contact));
+                  unique_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, contact));
                   msg180->header(h_To).param(p_tag) = localTag;
                   ErrLog( << "Sent 180");
                   mStack.send( *msg180);
 
-                  auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
+                  unique_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
                   msg200->header(h_To).param(p_tag) = localTag;
                   ErrLog( << "Sent 200");
                   mStack.send(*msg200);
                }
                if ( meth == BYE)
                {
-                  auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
+                  unique_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
                   calls--;
                   ErrLog( << "Sent 200 to BYE");
                   mStack.send(*msg200);
