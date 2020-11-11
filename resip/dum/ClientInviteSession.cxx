@@ -1476,7 +1476,7 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
         if(msg.isRequest())
         {
            // We have canceled - reject any new requests
-           SharedPtr<SipMessage> rsp(new SipMessage);
+           std::shared_ptr<SipMessage> rsp(new SipMessage);
            mDialog.makeResponse(*rsp, msg, 481);
            send(rsp);
         }
