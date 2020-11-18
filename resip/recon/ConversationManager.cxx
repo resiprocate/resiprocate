@@ -205,12 +205,11 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
 ParticipantHandle 
 ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
-   SharedPtr<UserProfile> profile;
-   return createRemoteParticipant(convHandle, destination, forkSelectMode, profile, std::multimap<resip::Data,resip::Data>());
+   return createRemoteParticipant(convHandle, destination, forkSelectMode, nullptr, std::multimap<resip::Data,resip::Data>());
 }
 
 ParticipantHandle
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, SharedPtr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
 
@@ -331,6 +330,13 @@ void
 ConversationManager::redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle)
 {
    RedirectToParticipantCmd* cmd = new RedirectToParticipantCmd(this, partHandle, destPartHandle);
+   post(cmd);
+}
+
+void
+ConversationManager::holdParticipant(ParticipantHandle partHandle, bool hold)
+{
+   HoldParticipantCmd* cmd = new HoldParticipantCmd(this, partHandle, hold);
    post(cmd);
 }
 
@@ -498,7 +504,7 @@ ConversationManager::enableNoiseReduction(bool enable)
    OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioNoiseReductionMode(enable ? MEDIA_NOISE_REDUCTION_MEDIUM /* arbitrary */ : MEDIA_NOISE_REDUCTION_DISABLED);
    if(status != OS_SUCCESS)
    {
-      WarningLog(<< "enableAutoGainControl failed: status=" << status);
+      WarningLog(<< "enableNoiseReduction failed: status=" << status);
    }
    if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)  // Note for sipXConversationMediaInterfaceMode - setting will apply on next conversation given focus
    {
@@ -596,7 +602,26 @@ ConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsi
             sdpcodec->getEncodingName(mimeSubType);
             //mimeSubType.toUpper();
             
-            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getCodecPayloadFormat(), sdpcodec->getSampleRate());
+            int capabilityRate = sdpcodec->getSampleRate();
+            if(mimeSubType == "G722")
+            {
+               capabilityRate = 8000;
+            }
+
+            Data codecName(mimeSubType.data());
+#ifdef RECON_SDP_ENCODING_NAMES_CASE_HACK
+            // The encoding names are not supposed to be case sensitive.
+            // However, some phones, including Polycom, don't recognize
+            // telephone-event if it is not lowercase.
+            // sipXtapi is writing all codec names in uppercase.
+            // (see sipXtapi macro SDP_MIME_SUBTYPE_TO_CASE) and this
+            // hack works around that.
+            if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
+            {
+               codecName = "telephone-event";
+            }
+#endif
+            SdpContents::Session::Codec codec(codecName, sdpcodec->getCodecPayloadFormat(), capabilityRate);
             if(sdpcodec->getNumChannels() > 1)
             {
                codec.encodingParameters() = Data(sdpcodec->getNumChannels());
@@ -711,13 +736,13 @@ ConversationManager::notifyDtmfEvent(ConversationHandle conversationHandle, int 
 void 
 ConversationManager::createMediaInterfaceAndMixer(bool giveFocus, 
                                                   ConversationHandle ownerConversationHandle,
-                                                  SharedPtr<MediaInterface>& mediaInterface, 
+                                                  std::shared_ptr<MediaInterface>& mediaInterface, 
                                                   BridgeMixer** bridgeMixer)
 {
    UtlString localRtpInterfaceAddress("127.0.0.1");  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
 
    // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
-   mediaInterface = SharedPtr<MediaInterface>(new MediaInterface(*this, ownerConversationHandle, mMediaFactory->createMediaInterface(NULL, 
+   mediaInterface = std::make_shared<MediaInterface>(*this, ownerConversationHandle, mMediaFactory->createMediaInterface(NULL, 
             localRtpInterfaceAddress, 
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 
@@ -731,7 +756,7 @@ ConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
             NULL,  /* TURN User */
             NULL,  /* TURN Password */
             25,    /* TURN Keepalive period (seconds) */
-            false))); /* enable ICE? */
+            false)); /* enable ICE? */
 
    // Register the NotificationDispatcher class (derived from OsMsgDispatcher)
    // as the sipX notification dispatcher
@@ -1131,13 +1156,13 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
    {
    case OPTIONS:
    {
-      SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
+      auto optionsAnswer = ood->answerOptions();
 
       // Attach an offer to the options request
       SdpContents sdp;
       buildSdpOffer(mUserAgent->getIncomingConversationProfile(msg).get(), sdp);
       optionsAnswer->setContents(&sdp);
-      ood->send(optionsAnswer);
+      ood->send(std::move(optionsAnswer));
       break;
    }
    case REFER:

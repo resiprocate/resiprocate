@@ -8,6 +8,13 @@
 #include <rutil/Fifo.hxx>
 #include <resip/stack/Tuple.hxx>
 #include <rutil/SelectInterruptor.hxx>
+#include <rutil/ThreadIf.hxx>
+
+#ifdef BUILD_QPID_PROTON
+#include "repro/QpidProtonThread.hxx"
+#endif
+
+#include <memory>
 
 /// This Class is used to implement a primitive form of RPC using loose XML formatting.
 /// The XML formatting used is specific to this implementation and is NOT currently intended to 
@@ -29,12 +36,10 @@ public:
       mResponseData(responseData),
       mIsFinal(isFinal) {}
 
-   ~ResponseInfo() {}
-
-   unsigned int getConnectionId() const { return mConnectionId; }
-   unsigned int getRequestId() const { return mRequestId; }
-   const resip::Data& getResponseData() const { return mResponseData; }
-   bool getIsFinal() const { return mIsFinal; }
+   unsigned int getConnectionId() const noexcept { return mConnectionId; }
+   unsigned int getRequestId() const noexcept { return mRequestId; }
+   const resip::Data& getResponseData() const noexcept { return mResponseData; }
+   bool getIsFinal() const noexcept { return mIsFinal; }
 
 private:
    unsigned int mConnectionId;
@@ -49,6 +54,7 @@ class XmlRpcServerBase
       
 public:
    XmlRpcServerBase(int port, resip::IpVersion version, resip::Data ipAddr = resip::Data::Empty);
+   XmlRpcServerBase(const resip::Data& brokerUrl);
    virtual ~XmlRpcServerBase();
       
    void buildFdSet(resip::FdSet& fdset);
@@ -67,6 +73,8 @@ public:
    void sendEvent(unsigned int connectionId,
                   const resip::Data& eventData);
 
+   std::shared_ptr<resip::ThreadIf> getThread();
+
 protected:
    virtual void handleRequest(unsigned int connectionId, 
                               unsigned int requestId, 
@@ -78,6 +86,12 @@ private:
    resip::Socket mFd;
    resip::Tuple mTuple;
    bool mSane;
+
+#ifdef BUILD_QPID_PROTON
+   std::shared_ptr<QpidProtonThread> mQpidProtonThread;
+#else
+   std::shared_ptr<resip::ThreadIf> mQpidProtonThread;
+#endif
 
    typedef std::map<unsigned int, XmlRpcConnection*> ConnectionMap;
    ConnectionMap mConnections;

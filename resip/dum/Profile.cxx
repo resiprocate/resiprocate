@@ -3,26 +3,24 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/HeaderTypes.hxx"
 
+#include <utility>
+
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 Profile::Profile() :
    mHasOutboundDecorator(false)
 {
-   reset();  // set defaults
+	Profile::reset();  // set defaults
 }
 
-Profile::Profile(SharedPtr<Profile> baseProfile) : 
+Profile::Profile(std::shared_ptr<Profile> baseProfile) :
    mHasOutboundDecorator(false),
-   mBaseProfile(baseProfile)
+   mBaseProfile(std::move(baseProfile))
 {
-   resip_assert(baseProfile.get());
+   resip_assert(mBaseProfile.get());
 
-   reset();  // default all settings to fallthrough to mBaseProfile
-}
-
-Profile::~Profile()
-{
+   Profile::reset();  // default all settings to fallthrough to mBaseProfile
 }
 
 void
@@ -56,20 +54,21 @@ Profile::reset()
    unsetMethodsParamEnabled();
    unsetUserAgentCapabilities();
    unsetExtraHeadersInReferNotifySipFragEnabled();
+   unsetHandleInviteSession491AsGeneralFailureEnabled();
 }
 
 void
-Profile::setDefaultRegistrationTime(UInt32 secs)
+Profile::setDefaultRegistrationTime(UInt32 secs) noexcept
 {
    mDefaultRegistrationExpires = secs;
    mHasDefaultRegistrationExpires = true;
 }
 
 UInt32 
-Profile::getDefaultRegistrationTime() const
+Profile::getDefaultRegistrationTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultRegistrationExpires && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultRegistrationExpires && mBaseProfile)
    {
        return mBaseProfile->getDefaultRegistrationTime();
    }
@@ -77,9 +76,9 @@ Profile::getDefaultRegistrationTime() const
 }
 
 void
-Profile::unsetDefaultRegistrationTime()
+Profile::unsetDefaultRegistrationTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultRegistrationExpires = false;
    }
@@ -91,17 +90,17 @@ Profile::unsetDefaultRegistrationTime()
 }
 
 void
-Profile::setDefaultMaxRegistrationTime(UInt32 secs)
+Profile::setDefaultMaxRegistrationTime(UInt32 secs) noexcept
 {
    mDefaultMaxRegistrationExpires = secs;
    mHasDefaultMaxRegistrationExpires = true;
 }
 
 UInt32 
-Profile::getDefaultMaxRegistrationTime() const
+Profile::getDefaultMaxRegistrationTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultMaxRegistrationExpires && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultMaxRegistrationExpires && mBaseProfile)
    {
        return mBaseProfile->getDefaultMaxRegistrationTime();
    }
@@ -109,9 +108,9 @@ Profile::getDefaultMaxRegistrationTime() const
 }
 
 void
-Profile::unsetDefaultMaxRegistrationTime()
+Profile::unsetDefaultMaxRegistrationTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultMaxRegistrationExpires = false;
    }
@@ -123,17 +122,17 @@ Profile::unsetDefaultMaxRegistrationTime()
 }
 
 void
-Profile::setDefaultRegistrationRetryTime(int secs)
+Profile::setDefaultRegistrationRetryTime(int secs) noexcept
 {
    mDefaultRegistrationRetryInterval = secs;
    mHasDefaultRegistrationRetryInterval = true;
 }
 
 int 
-Profile::getDefaultRegistrationRetryTime() const
+Profile::getDefaultRegistrationRetryTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultRegistrationRetryInterval && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultRegistrationRetryInterval && mBaseProfile)
    {
        return mBaseProfile->getDefaultRegistrationRetryTime();
    }
@@ -141,9 +140,9 @@ Profile::getDefaultRegistrationRetryTime() const
 }
 
 void
-Profile::unsetDefaultRegistrationRetryTime()
+Profile::unsetDefaultRegistrationRetryTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultRegistrationRetryInterval = false;
    }
@@ -155,17 +154,17 @@ Profile::unsetDefaultRegistrationRetryTime()
 }
 
 void
-Profile::setDefaultSubscriptionTime(UInt32 secs)
+Profile::setDefaultSubscriptionTime(UInt32 secs) noexcept
 {
    mDefaultSubscriptionExpires = secs;
    mHasDefaultSubscriptionExpires = true;
 }
 
 UInt32 
-Profile::getDefaultSubscriptionTime() const
+Profile::getDefaultSubscriptionTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultSubscriptionExpires && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultSubscriptionExpires && mBaseProfile)
    {
        return mBaseProfile->getDefaultSubscriptionTime();
    }
@@ -173,9 +172,9 @@ Profile::getDefaultSubscriptionTime() const
 }
 
 void
-Profile::unsetDefaultSubscriptionTime()
+Profile::unsetDefaultSubscriptionTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultSubscriptionExpires = false;
    }
@@ -187,17 +186,17 @@ Profile::unsetDefaultSubscriptionTime()
 }
 
 void
-Profile::setDefaultPublicationTime(UInt32 secs)
+Profile::setDefaultPublicationTime(UInt32 secs) noexcept
 {
    mDefaultPublicationExpires = secs;
    mHasDefaultPublicationExpires = true;
 }
 
 UInt32 
-Profile::getDefaultPublicationTime() const
+Profile::getDefaultPublicationTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultPublicationExpires && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultPublicationExpires && mBaseProfile)
    {
        return mBaseProfile->getDefaultPublicationTime();
    }
@@ -205,9 +204,9 @@ Profile::getDefaultPublicationTime() const
 }
 
 void
-Profile::unsetDefaultPublicationTime()
+Profile::unsetDefaultPublicationTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultPublicationExpires = false;
    }
@@ -219,17 +218,17 @@ Profile::unsetDefaultPublicationTime()
 }
 
 void
-Profile::setDefaultStaleCallTime(int secs)
+Profile::setDefaultStaleCallTime(int secs) noexcept
 {
    mDefaultStaleCallTime = secs;
    mHasDefaultStaleCallTime = true;
 }
 
 int 
-Profile::getDefaultStaleCallTime() const
+Profile::getDefaultStaleCallTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultStaleCallTime && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultStaleCallTime && mBaseProfile)
    {
        return mBaseProfile->getDefaultStaleCallTime();
    }
@@ -237,9 +236,9 @@ Profile::getDefaultStaleCallTime() const
 }
 
 void
-Profile::unsetDefaultStaleCallTime()
+Profile::unsetDefaultStaleCallTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultStaleCallTime = false;
    }
@@ -251,17 +250,17 @@ Profile::unsetDefaultStaleCallTime()
 }
 
 void
-Profile::setDefaultStaleReInviteTime(int secs)
+Profile::setDefaultStaleReInviteTime(int secs) noexcept
 {
    mDefaultStaleReInviteTime = secs;
    mHasDefaultStaleReInviteTime = true;
 }
 
 int 
-Profile::getDefaultStaleReInviteTime() const
+Profile::getDefaultStaleReInviteTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultStaleReInviteTime && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultStaleReInviteTime && mBaseProfile)
    {
        return mBaseProfile->getDefaultStaleReInviteTime();
    }
@@ -269,9 +268,9 @@ Profile::getDefaultStaleReInviteTime() const
 }
 
 void
-Profile::unsetDefaultStaleReInviteTime()
+Profile::unsetDefaultStaleReInviteTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultStaleReInviteTime = false;
    }
@@ -283,17 +282,17 @@ Profile::unsetDefaultStaleReInviteTime()
 }
 
 void
-Profile::setDefaultSessionTime(UInt32 secs)
+Profile::setDefaultSessionTime(UInt32 secs) noexcept
 {
    mDefaultSessionExpires = secs;
    mHasDefaultSessionExpires = true;
 }
 
 UInt32 
-Profile::getDefaultSessionTime() const
+Profile::getDefaultSessionTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultSessionExpires && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultSessionExpires && mBaseProfile)
    {
        return mBaseProfile->getDefaultSessionTime();
    }
@@ -301,9 +300,9 @@ Profile::getDefaultSessionTime() const
 }
 
 void
-Profile::unsetDefaultSessionTime()
+Profile::unsetDefaultSessionTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultSessionExpires = false;
    }
@@ -315,17 +314,17 @@ Profile::unsetDefaultSessionTime()
 }
 
 void
-Profile::setDefaultSessionTimerMode(Profile::SessionTimerMode mode)
+Profile::setDefaultSessionTimerMode(Profile::SessionTimerMode mode) noexcept
 {
    mDefaultSessionTimerMode = mode;
    mHasDefaultSessionTimerMode = true;
 }
 
 Profile::SessionTimerMode 
-Profile::getDefaultSessionTimerMode() const
+Profile::getDefaultSessionTimerMode() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasDefaultSessionTimerMode && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasDefaultSessionTimerMode && mBaseProfile)
    {
        return mBaseProfile->getDefaultSessionTimerMode();
    }
@@ -333,9 +332,9 @@ Profile::getDefaultSessionTimerMode() const
 }
 
 void
-Profile::unsetDefaultSessionTimerMode()
+Profile::unsetDefaultSessionTimerMode() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasDefaultSessionTimerMode = false;
    }
@@ -347,17 +346,17 @@ Profile::unsetDefaultSessionTimerMode()
 }
 
 void
-Profile::set1xxRetransmissionTime(int secs)
+Profile::set1xxRetransmissionTime(int secs) noexcept
 {
    m1xxRetransmissionTime = secs;
    mHas1xxRetransmissionTime = true;
 }
 
 int 
-Profile::get1xxRetransmissionTime() const
+Profile::get1xxRetransmissionTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHas1xxRetransmissionTime && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHas1xxRetransmissionTime && mBaseProfile)
    {
        return mBaseProfile->get1xxRetransmissionTime();
    }
@@ -365,9 +364,9 @@ Profile::get1xxRetransmissionTime() const
 }
 
 void
-Profile::unset1xxRetransmissionTime()
+Profile::unset1xxRetransmissionTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHas1xxRetransmissionTime = false;
    }
@@ -379,17 +378,17 @@ Profile::unset1xxRetransmissionTime()
 }
 
 void
-Profile::set1xxRelResubmitTime(int secs)
+Profile::set1xxRelResubmitTime(int secs) noexcept
 {
    m1xxRelResubmitTime = secs;
    mHas1xxRelResubmitTime = true;
 }
 
 int 
-Profile::get1xxRelResubmitTime() const
+Profile::get1xxRelResubmitTime() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHas1xxRelResubmitTime && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHas1xxRelResubmitTime && mBaseProfile)
    {
        return mBaseProfile->get1xxRelResubmitTime();
    }
@@ -397,9 +396,9 @@ Profile::get1xxRelResubmitTime() const
 }
 
 void
-Profile::unset1xxRelResubmitTime()
+Profile::unset1xxRelResubmitTime() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHas1xxRelResubmitTime = false;
    }
@@ -418,10 +417,10 @@ Profile::setOverrideHostAndPort(const Uri& hostPort)
 }
 
 bool 
-Profile::hasOverrideHostAndPort() const
+Profile::hasOverrideHostAndPort() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasOverrideHostPort && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasOverrideHostPort && mBaseProfile)
    {
        return mBaseProfile->hasOverrideHostAndPort();
    }
@@ -431,8 +430,8 @@ Profile::hasOverrideHostAndPort() const
 const Uri& 
 Profile::getOverrideHostAndPort() const
 {
-   // Fall through seting (if required)
-   if(!mHasOverrideHostPort && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasOverrideHostPort && mBaseProfile)
    {
        return mBaseProfile->getOverrideHostAndPort();
    }
@@ -440,7 +439,7 @@ Profile::getOverrideHostAndPort() const
 }
 
 void
-Profile::unsetOverrideHostAndPort()
+Profile::unsetOverrideHostAndPort() noexcept
 {
    mHasOverrideHostPort = false;
 }
@@ -461,8 +460,8 @@ Profile::addAdvertisedCapability(const Headers::Type header)
 bool 
 Profile::isAdvertisedCapability(const Headers::Type header) const
 {
-   // Fall through seting (if required)
-   if(!mHasAdvertisedCapabilities && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasAdvertisedCapabilities && mBaseProfile)
    {
        return mBaseProfile->isAdvertisedCapability(header);
    }
@@ -470,7 +469,7 @@ Profile::isAdvertisedCapability(const Headers::Type header) const
 }
 
 void 
-Profile::clearAdvertisedCapabilities(void)
+Profile::clearAdvertisedCapabilities() noexcept
 {
    mHasAdvertisedCapabilities = true;
    return mAdvertisedCapabilities.clear();
@@ -479,7 +478,7 @@ Profile::clearAdvertisedCapabilities(void)
 void
 Profile::unsetAdvertisedCapabilities()
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasAdvertisedCapabilities = false;
    }
@@ -503,8 +502,8 @@ Profile::setOutboundProxy( const Uri& uri )
 const NameAddr&
 Profile::getOutboundProxy() const
 {
-   // Fall through seting (if required)
-   if(!mHasOutboundProxy && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasOutboundProxy && mBaseProfile)
    {
        return mBaseProfile->getOutboundProxy();
    }
@@ -513,10 +512,10 @@ Profile::getOutboundProxy() const
 }
 
 bool
-Profile::hasOutboundProxy() const
+Profile::hasOutboundProxy() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasOutboundProxy && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasOutboundProxy && mBaseProfile)
    {
        return mBaseProfile->hasOutboundProxy();
    }
@@ -524,23 +523,23 @@ Profile::hasOutboundProxy() const
 }
 
 void
-Profile::unsetOutboundProxy()
+Profile::unsetOutboundProxy() noexcept
 {
    mHasOutboundProxy = false;
 }
 
 void 
-Profile::setForceOutboundProxyOnAllRequestsEnabled(bool enabled)
+Profile::setForceOutboundProxyOnAllRequestsEnabled(bool enabled) noexcept
 {
    mForceOutboundProxyOnAllRequestsEnabled = enabled;
    mHasForceOutboundProxyOnAllRequestsEnabled = true;
 }
 
 bool 
-Profile::getForceOutboundProxyOnAllRequestsEnabled() const
+Profile::getForceOutboundProxyOnAllRequestsEnabled() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasForceOutboundProxyOnAllRequestsEnabled && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasForceOutboundProxyOnAllRequestsEnabled && mBaseProfile)
    {
        return mBaseProfile->getForceOutboundProxyOnAllRequestsEnabled();
    }
@@ -548,9 +547,9 @@ Profile::getForceOutboundProxyOnAllRequestsEnabled() const
 }
 
 void
-Profile::unsetForceOutboundProxyOnAllRequestsEnabled()
+Profile::unsetForceOutboundProxyOnAllRequestsEnabled() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasForceOutboundProxyOnAllRequestsEnabled = false;
    }
@@ -562,17 +561,17 @@ Profile::unsetForceOutboundProxyOnAllRequestsEnabled()
 }
 
 void 
-Profile::setExpressOutboundAsRouteSetEnabled(bool enabled)
+Profile::setExpressOutboundAsRouteSetEnabled(bool enabled) noexcept
 {
    mExpressOutboundAsRouteSetEnabled = enabled;
    mHasExpressOutboundAsRouteSetEnabled = true;
 }
 
 bool 
-Profile::getExpressOutboundAsRouteSetEnabled() const
+Profile::getExpressOutboundAsRouteSetEnabled() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasExpressOutboundAsRouteSetEnabled && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasExpressOutboundAsRouteSetEnabled && mBaseProfile)
    {
        return mBaseProfile->getExpressOutboundAsRouteSetEnabled();
    }
@@ -580,9 +579,9 @@ Profile::getExpressOutboundAsRouteSetEnabled() const
 }
 
 void
-Profile::unsetExpressOutboundAsRouteSetEnabled()
+Profile::unsetExpressOutboundAsRouteSetEnabled() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasExpressOutboundAsRouteSetEnabled = false;
    }
@@ -594,17 +593,17 @@ Profile::unsetExpressOutboundAsRouteSetEnabled()
 }
 
 void 
-Profile::setRportEnabled(bool enabled)
+Profile::setRportEnabled(bool enabled) noexcept
 {
    mRportEnabled = enabled;
    mHasRportEnabled = true;
 }
 
 bool 
-Profile::getRportEnabled() const
+Profile::getRportEnabled() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasRportEnabled && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasRportEnabled && mBaseProfile)
    {
        return mBaseProfile->getRportEnabled();
    }
@@ -612,9 +611,9 @@ Profile::getRportEnabled() const
 }
 
 void
-Profile::unsetRportEnabled()
+Profile::unsetRportEnabled() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasRportEnabled = false;
    }
@@ -635,8 +634,8 @@ Profile::setUserAgent( const Data& userAgent )
 const Data& 
 Profile::getUserAgent() const
 {
-   // Fall through seting (if required)
-   if(!mHasUserAgent && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasUserAgent && mBaseProfile)
    {
        return mBaseProfile->getUserAgent();
    }
@@ -645,10 +644,10 @@ Profile::getUserAgent() const
 }
  
 bool 
-Profile::hasUserAgent() const
+Profile::hasUserAgent() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasUserAgent && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasUserAgent && mBaseProfile)
    {
        return mBaseProfile->hasUserAgent();
    }
@@ -656,7 +655,7 @@ Profile::hasUserAgent() const
 }
 
 void
-Profile::unsetUserAgent()
+Profile::unsetUserAgent() noexcept
 {
    mHasUserAgent = false;
 }
@@ -671,8 +670,8 @@ Profile::setProxyRequires( const Tokens& proxyRequires )
 const Tokens& 
 Profile::getProxyRequires() const
 {
-   // Fall through seting (if required)
-   if(!mHasProxyRequires && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasProxyRequires && mBaseProfile)
    {
        return mBaseProfile->getProxyRequires();
    }
@@ -681,10 +680,10 @@ Profile::getProxyRequires() const
 }
  
 bool 
-Profile::hasProxyRequires() const
+Profile::hasProxyRequires() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasProxyRequires && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasProxyRequires && mBaseProfile)
    {
        return mBaseProfile->hasProxyRequires();
    }
@@ -692,23 +691,23 @@ Profile::hasProxyRequires() const
 }
 
 void
-Profile::unsetProxyRequires()
+Profile::unsetProxyRequires() noexcept
 {
    mHasProxyRequires = false;
 }
 
 void 
-Profile::setKeepAliveTimeForDatagram(int keepAliveTime)
+Profile::setKeepAliveTimeForDatagram(int keepAliveTime) noexcept
 {
    mKeepAliveTimeForDatagram = keepAliveTime;
    mHasKeepAliveTimeForDatagram = true;
 }
 
 int 
-Profile::getKeepAliveTimeForDatagram() const
+Profile::getKeepAliveTimeForDatagram() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasKeepAliveTimeForDatagram && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasKeepAliveTimeForDatagram && mBaseProfile)
    {
        return mBaseProfile->getKeepAliveTimeForDatagram();
    }
@@ -716,9 +715,9 @@ Profile::getKeepAliveTimeForDatagram() const
 }
 
 void
-Profile::unsetKeepAliveTimeForDatagram()
+Profile::unsetKeepAliveTimeForDatagram() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasKeepAliveTimeForDatagram = false;
    }
@@ -730,17 +729,17 @@ Profile::unsetKeepAliveTimeForDatagram()
 }
 
 void 
-Profile::setKeepAliveTimeForStream(int keepAliveTime)
+Profile::setKeepAliveTimeForStream(int keepAliveTime) noexcept
 {
    mKeepAliveTimeForStream = keepAliveTime;
    mHasKeepAliveTimeForStream = true;
 }
 
 int 
-Profile::getKeepAliveTimeForStream() const
+Profile::getKeepAliveTimeForStream() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasKeepAliveTimeForStream && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasKeepAliveTimeForStream && mBaseProfile)
    {
        return mBaseProfile->getKeepAliveTimeForStream();
    }
@@ -748,9 +747,9 @@ Profile::getKeepAliveTimeForStream() const
 }
 
 void
-Profile::unsetKeepAliveTimeForStream()
+Profile::unsetKeepAliveTimeForStream() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasKeepAliveTimeForStream = false;
    }
@@ -762,17 +761,17 @@ Profile::unsetKeepAliveTimeForStream()
 }
 
 void 
-Profile::setFixedTransportPort(int fixedTransportPort)
+Profile::setFixedTransportPort(int fixedTransportPort) noexcept
 {
    mFixedTransportPort = fixedTransportPort;
    mHasFixedTransportPort = true;
 }
 
 int 
-Profile::getFixedTransportPort() const
+Profile::getFixedTransportPort() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasFixedTransportPort && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasFixedTransportPort && mBaseProfile)
    {
        return mBaseProfile->getFixedTransportPort();
    }
@@ -780,9 +779,9 @@ Profile::getFixedTransportPort() const
 }
 
 void
-Profile::unsetFixedTransportPort()
+Profile::unsetFixedTransportPort() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasFixedTransportPort = false;
    }
@@ -803,8 +802,8 @@ Profile::setFixedTransportInterface(const Data& fixedTransportInterface)
 const Data&
 Profile::getFixedTransportInterface() const
 {
-   // Fall through seting (if required)
-   if(!mHasFixedTransportInterface && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasFixedTransportInterface && mBaseProfile)
    {
        return mBaseProfile->getFixedTransportInterface();
    }
@@ -814,7 +813,7 @@ Profile::getFixedTransportInterface() const
 void
 Profile::unsetFixedTransportInterface()
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasFixedTransportInterface = false;
    }
@@ -827,17 +826,17 @@ Profile::unsetFixedTransportInterface()
 
 
 void 
-Profile::setRinstanceEnabled(bool enabled)
+Profile::setRinstanceEnabled(bool enabled) noexcept
 {
    mRinstanceEnabled = enabled;
    mHasRinstanceEnabled = true;
 }
 
 bool 
-Profile::getRinstanceEnabled() const
+Profile::getRinstanceEnabled() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasRinstanceEnabled && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasRinstanceEnabled && mBaseProfile)
    {
        return mBaseProfile->getRinstanceEnabled();
    }
@@ -845,9 +844,9 @@ Profile::getRinstanceEnabled() const
 }
 
 void
-Profile::unsetRinstanceEnabled()
+Profile::unsetRinstanceEnabled() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasRinstanceEnabled = false;
    }
@@ -859,22 +858,22 @@ Profile::unsetRinstanceEnabled()
 }
 
 	  ////If set then dum will add this MessageDecorator to all outbound messages
-	  //virtual void setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator);
-	  //virtual SharedPtr<MessageDecorator> getOutboundDecorator();
+	  //virtual void setOutboundDecorator(std::shared_ptr<MessageDecorator> outboundDecorator);
+	  //virtual std::shared_ptr<MessageDecorator> getOutboundDecorator();
 	  //virtual void unsetOutboundDecorator();
 
 void 
-Profile::setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator)
+Profile::setOutboundDecorator(std::shared_ptr<MessageDecorator> outboundDecorator) noexcept
 {
-   mOutboundDecorator = outboundDecorator;
+   mOutboundDecorator = std::move(outboundDecorator);
    mHasOutboundDecorator = true;
 }
 
-SharedPtr<MessageDecorator> 
-Profile::getOutboundDecorator()
+std::shared_ptr<MessageDecorator>
+Profile::getOutboundDecorator() noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasOutboundDecorator && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasOutboundDecorator && mBaseProfile)
    {
        return mBaseProfile->getOutboundDecorator();
    }
@@ -882,7 +881,7 @@ Profile::getOutboundDecorator()
 }
 
 void
-Profile::unsetOutboundDecorator()
+Profile::unsetOutboundDecorator() noexcept
 {
    if (mHasOutboundDecorator)
    {
@@ -893,17 +892,17 @@ Profile::unsetOutboundDecorator()
 }
 
 void 
-Profile::setMethodsParamEnabled(bool enabled)
+Profile::setMethodsParamEnabled(bool enabled) noexcept
 {
    mMethodsParamEnabled = enabled;
    mHasMethodsParamEnabled = true;
 }
 
 bool 
-Profile::getMethodsParamEnabled() const
+Profile::getMethodsParamEnabled() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasMethodsParamEnabled && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasMethodsParamEnabled && mBaseProfile)
    {
        return mBaseProfile->getMethodsParamEnabled();
    }
@@ -911,9 +910,9 @@ Profile::getMethodsParamEnabled() const
 }
 
 void
-Profile::unsetMethodsParamEnabled()
+Profile::unsetMethodsParamEnabled() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasMethodsParamEnabled = false;
    }
@@ -934,8 +933,8 @@ Profile::setUserAgentCapabilities(const NameAddr& capabilities)
 const NameAddr&
 Profile::getUserAgentCapabilities() const
 {
-   // Fall through seting (if required)
-   if(!mHasUserAgentCapabilities && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasUserAgentCapabilities && mBaseProfile)
    {
        return mBaseProfile->getUserAgentCapabilities();
    }
@@ -944,10 +943,10 @@ Profile::getUserAgentCapabilities() const
 }
 
 bool
-Profile::hasUserAgentCapabilities() const
+Profile::hasUserAgentCapabilities() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasUserAgentCapabilities && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasUserAgentCapabilities && mBaseProfile)
    {
        return mBaseProfile->hasUserAgentCapabilities();
    }
@@ -955,23 +954,23 @@ Profile::hasUserAgentCapabilities() const
 }
 
 void
-Profile::unsetUserAgentCapabilities()
+Profile::unsetUserAgentCapabilities() noexcept
 {
    mHasUserAgentCapabilities = false;
 }
 
 void 
-Profile::setExtraHeadersInReferNotifySipFragEnabled(bool enabled)
+Profile::setExtraHeadersInReferNotifySipFragEnabled(bool enabled) noexcept
 {
    mExtraHeadersInReferNotifySipFragEnabled = enabled;
    mHasExtraHeadersInReferNotifySipFragEnabled = true;
 }
 
 bool 
-Profile::getExtraHeadersInReferNotifySipFragEnabled() const
+Profile::getExtraHeadersInReferNotifySipFragEnabled() const noexcept
 {
-   // Fall through seting (if required)
-   if(!mHasExtraHeadersInReferNotifySipFragEnabled && mBaseProfile.get())
+   // Fall through setting (if required)
+   if (!mHasExtraHeadersInReferNotifySipFragEnabled && mBaseProfile)
    {
        return mBaseProfile->getExtraHeadersInReferNotifySipFragEnabled();
    }
@@ -979,9 +978,9 @@ Profile::getExtraHeadersInReferNotifySipFragEnabled() const
 }
 
 void
-Profile::unsetExtraHeadersInReferNotifySipFragEnabled()
+Profile::unsetExtraHeadersInReferNotifySipFragEnabled() noexcept
 {
-   if(mBaseProfile.get()) 
+   if (mBaseProfile) 
    {
       mHasExtraHeadersInReferNotifySipFragEnabled = false;
    }
@@ -992,6 +991,37 @@ Profile::unsetExtraHeadersInReferNotifySipFragEnabled()
    }
 }
 
+void
+Profile::setHandleInviteSession491AsGeneralFailureEnabled(bool enabled)
+{
+   mHandleInviteSession491AsGeneralFailureEnabled = enabled;
+   mHasHandleInviteSession491AsGeneralFailureEnabled = true;
+}
+
+bool
+Profile::getHandleInviteSession491AsGeneralFailureEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasHandleInviteSession491AsGeneralFailureEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getHandleInviteSession491AsGeneralFailureEnabled();
+   }
+   return mHandleInviteSession491AsGeneralFailureEnabled;
+}
+
+void
+Profile::unsetHandleInviteSession491AsGeneralFailureEnabled()
+{
+   if(mBaseProfile.get())
+   {
+      mHasHandleInviteSession491AsGeneralFailureEnabled = false;
+   }
+   else
+   {
+      mHasHandleInviteSession491AsGeneralFailureEnabled = true;
+      mHandleInviteSession491AsGeneralFailureEnabled = false;
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

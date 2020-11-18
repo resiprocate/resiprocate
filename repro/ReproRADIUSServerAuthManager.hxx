@@ -7,11 +7,12 @@
   #include "config.h"
 #endif
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/RADIUSServerAuthManager.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 #ifdef USE_RADIUS_CLIENT
 
@@ -41,7 +42,7 @@ class ReproRADIUSServerAuthManager: public resip::RADIUSServerAuthManager
    protected:
       virtual bool useAuthInt() const;
       virtual bool rejectBadNonces() const;
-      virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
+      virtual resip::AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
       resip::DialogUsageManager& mDum;

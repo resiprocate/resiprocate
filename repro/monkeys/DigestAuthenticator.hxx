@@ -4,7 +4,7 @@
 #include "rutil/Data.hxx"
 #include "resip/stack/Auth.hxx"
 #include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "repro/ProxyConfig.hxx"
 #include "repro/UserInfoMessage.hxx"
 
@@ -18,7 +18,7 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator(ProxyConfig& config, Dispatcher* authRequestDispatcher, const resip::Data& staticRealm = resip::Data::Empty);
+      DigestAuthenticator(ProxyConfig& config, resip::Dispatcher* authRequestDispatcher, const resip::Data& staticRealm = resip::Data::Empty);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -32,8 +32,8 @@ namespace repro
       virtual resip::Data getRealm(RequestContext &);
       virtual bool isMyRealm(RequestContext &, const resip::Data& realm);
       
-    private:
-      Dispatcher* mAuthRequestDispatcher;
+    protected:
+      resip::Dispatcher* mAuthRequestDispatcher;
       resip::Data mStaticRealm;
       bool mNoIdentityHeaders;
       resip::Data mHttpHostname;  // Used in identity headers

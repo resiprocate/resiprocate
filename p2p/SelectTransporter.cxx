@@ -12,6 +12,8 @@
 #include "p2p/p2p.hxx"
 #include "p2p/P2PSubsystem.hxx"
 
+#include <memory>
+
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 namespace p2p
@@ -83,7 +85,7 @@ SelectTransporter::addListenerImpl(resip::TransportType transport,
 }
 
 void
-SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
+SelectTransporter::sendImpl(NodeId nodeId, std::unique_ptr<p2p::Message> msg)
 {
    DebugLog( << "sending " << msg->brief() << " to " << nodeId);
    if (msg->getTTL() <= 1)
@@ -126,7 +128,7 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 }
 
 void
-SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
+SelectTransporter::sendImpl(FlowId flowId, std::unique_ptr<resip::Data> data)
 {
    DebugLog( << "sending raw data to: " << flowId);
 
@@ -580,10 +582,10 @@ SelectTransporter::process(int ms)
                }
 
                resip::Data data(resip::Data::Take, buffer, length);
-               std::auto_ptr<p2p::Message> msg(Message::parse(data));
+               std::unique_ptr<p2p::Message> msg(Message::parse(data));
                msg->pushVia(i->first);
 
-               MessageArrived *ma = new MessageArrived(flowId.getNodeId(), msg);
+               MessageArrived *ma = new MessageArrived(flowId.getNodeId(), std::move(msg));
 
                mRxFifo->add(ma);
             }

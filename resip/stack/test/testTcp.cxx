@@ -25,6 +25,8 @@
 #include "rutil/Random.hxx"
 #include "rutil/DataStream.hxx"
 
+#include <utility>
+
 using namespace resip;
 using namespace std;
 
@@ -125,8 +127,8 @@ main(int argc, char* argv[])
          m->header(h_Vias).front().sentPort() = sender->port();
          int contentLength=resip::Random::getRandom()%65535;
          std::string body(contentLength,'0');
-         std::auto_ptr<Contents> contents(new PlainContents(Data(body.data(), body.size())));
-         m->setContents(contents);
+         std::unique_ptr<Contents> contents(new PlainContents(Data(body.data(), body.size())));
+         m->setContents(std::move(contents));
          int headerLength=resip::Random::getRandom()%1024;
          std::string bigHeader(headerLength,'h');
          m->header(h_Subject).value()=Data(bigHeader.data(), bigHeader.size());
@@ -167,8 +169,8 @@ main(int argc, char* argv[])
             outstanding++;
             delete next;
          }
-         std::auto_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
-         sender->send(toSend);
+         std::unique_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
+         sender->send(std::move(toSend));
       }
 
       FdSet fdset; 
@@ -233,7 +235,7 @@ main(int argc, char* argv[])
    }
 
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+   cout << runs << " calls performed in " << elapsed << " ms, a rate of "
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 
    SipMessage::checkContentLength=false;
@@ -267,7 +269,7 @@ main(int argc, char* argv[])
       // We need a well formed message to test that any traffic has
       // gotten through at all.
       Data wellFormed;
-      std::auto_ptr<SipMessage> next(messages.front());
+      std::unique_ptr<SipMessage> next(messages.front());
       messages.pop_front();
             
       {
@@ -310,14 +312,14 @@ main(int argc, char* argv[])
 
       ++type;
       // Send a garbage request, followed by a good request
-      std::auto_ptr<SendData> garbageSend(sender->makeSendData(dest, garbage, Data(tid++), Data::Empty));
-      sender->send(garbageSend);
+      std::unique_ptr<SendData> garbageSend(sender->makeSendData(dest, garbage, Data(tid++), Data::Empty));
+      sender->send(std::move(garbageSend));
 
      
       for(int p=0; p < 10; ++p)
       {
          process(sender, receiver);
-         std::auto_ptr<Message> msg(rxFifo.getNext(1));
+         std::unique_ptr<Message> msg(rxFifo.getNext(1));
          SipMessage* received = dynamic_cast<SipMessage*>(msg.get());
          // .bwc. These are all unrecoverable garbage, we should not get
          // any sip traffic on this fifo.
@@ -330,21 +332,21 @@ main(int argc, char* argv[])
 
       // Send a stun ping to make sure the sender has noticed the connection
       // is closed.
-      std::auto_ptr<SendData> ping(sender->makeSendData(dest, "\r\n\r\n", Data(tid++), Data::Empty));
-      sender->send(ping);
+      std::unique_ptr<SendData> ping(sender->makeSendData(dest, "\r\n\r\n", Data(tid++), Data::Empty));
+      sender->send(std::move(ping));
 
       // Throw in a process call to ensure that both sides have
       // torn down the connection.
       process(sender, receiver);
 
       // Verify that good traffic can come through
-      std::auto_ptr<SendData> goodSend(sender->makeSendData(dest, wellFormed, Data(tid++), Data::Empty));
-      sender->send(goodSend);
+      std::unique_ptr<SendData> goodSend(sender->makeSendData(dest, wellFormed, Data(tid++), Data::Empty));
+      sender->send(std::move(goodSend));
       bool failedToReceiveGoodMessage = true;
       for(int p=0; p < 10; ++p)
       {
          process(sender, receiver);
-         std::auto_ptr<Message> msg(rxFifo.getNext(10));
+         std::unique_ptr<Message> msg(rxFifo.getNext(10));
          SipMessage* received = dynamic_cast<SipMessage*>(msg.get());
          if(received)
          {

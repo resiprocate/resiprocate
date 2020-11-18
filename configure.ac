@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.10.0)
+AC_INIT(resiprocate,1.13.0~alpha1)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -14,7 +14,7 @@ AC_SUBST(LIBTOOL_VERSION_RELEASE)
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([foreign subdir-objects])
+AM_INIT_AUTOMAKE([foreign subdir-objects tar-pax])
 m4_pattern_forbid([^PKG_])
 
 AC_CANONICAL_HOST
@@ -33,6 +33,10 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 AM_MISSING_PROG([GPERF], [gperf])
+
+AC_GPERFVER
+
+AX_CXX_COMPILE_STDCXX(11)
 
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
@@ -112,6 +116,27 @@ OSTYPE_UPPER=`echo $OSTYPE | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQ
 ARCH_UPPER=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
 LARCH_UPPER=`echo $LARCH | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
 ARCH_CPPFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
+
+AM_CONDITIONAL([MACOSX], [false])
+AS_IF([test "x$host_vendor" = "xapple"], [
+  AC_MSG_CHECKING([if building for macOS])
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#include <stdio.h>
+#include <TargetConditionals.h>
+    ]], [[
+#if TARGET_OS_IPHONE == 1
+#error Not macOS
+#endif
+return 0;
+    ]])
+  ],[
+    AC_MSG_RESULT([yes])
+    AM_CONDITIONAL([MACOSX], [true])
+  ],[
+    AC_MSG_RESULT([no])
+  ])
+])
 
 AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(RESIP_BIG_ENDIAN, , RESIP_BIG_ENDIAN)])
 
@@ -198,7 +223,7 @@ AM_CONDITIONAL(USE_MYSQL, false)
 AC_ARG_WITH(mysql,
 [  --with-mysql            Link against MySQL client libraries],
  [AC_DEFINE_UNQUOTED(USE_MYSQL, , USE_MYSQL)
- AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient_r")
+ AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
@@ -238,6 +263,14 @@ AC_ARG_WITH(radcli,
  AC_SUBST(LIBRADIUS_LIBADD, "-lradcli")
  AM_CONDITIONAL(USE_RADIUS_CLIENT, true)])
 
+AM_CONDITIONAL(USE_NETSNMP, false)
+AC_ARG_WITH(netsnmp,
+[  --with-netsnmp         Link against NetSNMP client libraries],
+ [AC_DEFINE_UNQUOTED(USE_NETSNMP, , USE_NETSNMP)
+ AC_SUBST(LIBNETSNMP_LDADD, [`net-snmp-config --agent-libs`])
+ AM_CONDITIONAL(USE_NETSNMP, true)],
+ [ AC_SUBST(LIBNETSNMP_LDADD, "")])
+
 AM_CONDITIONAL(BUILD_REPRO, false)
 AC_ARG_WITH(repro,
 [  --with-repro            Build repro, requires CAJUN and bdb],
@@ -255,6 +288,12 @@ reproplugindir='${pkglibdir}/repro/plugins'
 
 AC_SUBST([returnpkglibdir])
 returnpkglibdir='${pkglibdir}/reTurnServer'
+
+AM_CONDITIONAL(BUILD_RETURN, false)
+AC_ARG_WITH(return,
+[  --with-return           Build reTurn client and server],
+ [AC_DEFINE_UNQUOTED(BUILD_RETURN, , BUILD_RETURN)
+ AM_CONDITIONAL(BUILD_RETURN, true)], )
 
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
@@ -284,7 +323,9 @@ AM_CONDITIONAL(BUILD_TELEPATHY_CM, false)
 AC_ARG_WITH(telepathy,
 [  --with-telepathy        Build the Telepathy Connection Manager],
  [AC_DEFINE_UNQUOTED(BUILD_TELEPATHY_CM, , BUILD_TELEPATHY_CM)
- AM_CONDITIONAL(BUILD_TELEPATHY_CM, true)], )
+ AM_CONDITIONAL(BUILD_TELEPATHY_CM, true)
+ PKG_CHECK_MODULES([QT5], [Qt5Core, Qt5DBus Qt5Network])
+ PKG_CHECK_MODULES([TP_QT5], [TelepathyQt5, TelepathyQt5Service])])
 
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
@@ -303,7 +344,7 @@ AC_ARG_WITH(python,
 [  --with-python           Build components requiring Python],
  [AC_DEFINE_UNQUOTED(BUILD_PYTHON, , BUILD_PYTHON)
  AM_CONDITIONAL(BUILD_PYTHON, true)
- PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 2.7])
+ PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 3.6])
  AC_SUBST(PYCXX_SRCDIR)
  if [ ! test -e "${PYCXX_SRCDIR}/cxx_extensions.cxx" ];
  then
@@ -312,6 +353,12 @@ AC_ARG_WITH(python,
   exit 1
  fi
 ], )
+
+AM_CONDITIONAL(BUILD_QPID_PROTON, false)
+AC_ARG_WITH(qpid-proton,
+[  --with-qpid-proton      Build components requiring qpid-proton (AMQP)],
+ [AC_DEFINE_UNQUOTED(BUILD_QPID_PROTON, , BUILD_QPID_PROTON)
+ AM_CONDITIONAL(BUILD_QPID_PROTON, true)], )
 
 AM_CONDITIONAL(RESIP_ASSERT_SYSLOG, false)
 AC_ARG_ENABLE(assert-syslog,
@@ -328,6 +375,9 @@ CURL_CHECK_LIBS_CLOCK_GETTIME_MONOTONIC
 
 AX_HAVE_EPOLL(
   [AC_DEFINE_UNQUOTED(HAVE_EPOLL, ,HAVE_EPOLL)],  )
+
+AC_CHECK_LIB(dl, dlopen)
+AM_CONDITIONAL(HAVE_LIBDL, [test x"$ac_cv_lib_dl_dlopen" = xyes])
 
 AM_MAINTAINER_MODE
 
@@ -359,12 +409,16 @@ AC_OUTPUT(Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
 	apps/telepathy/Makefile \
+	apps/telepathy/data/Makefile \
+	apps/registration-agent/Makefile \
+	apps/reConServer/Makefile \
 	resiprocate.spec \
 	reTurn/Makefile \
 	reTurn/test/Makefile \
 	reTurn/client/Makefile \
 	reTurn/client/test/Makefile \
 	reflow/Makefile \
+  reflow/dtls_wrapper/test/Makefile \
 	resip/recon/Makefile \
 	resip/recon/MOHParkServer/Makefile \
 	resip/recon/test/Makefile \

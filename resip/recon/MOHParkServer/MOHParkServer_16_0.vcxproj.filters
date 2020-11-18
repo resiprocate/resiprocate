@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Config Files">
+      <UniqueIdentifier>{666b25fa-d0f2-4c38-a47c-6d438268281d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AppSubsystem.cxx" />
+    <ClCompile Include="WebAdminThread.cxx" />
+    <ClCompile Include="ConfigParser.cxx" />
+    <ClCompile Include="HttpBase.cxx" />
+    <ClCompile Include="HttpConnection.cxx" />
+    <ClCompile Include="MOHManager.cxx" />
+    <ClCompile Include="MOHParkServer.cxx" />
+    <ClCompile Include="ParkManager.cxx" />
+    <ClCompile Include="ParkOrbit.cxx" />
+    <ClCompile Include="Server.cxx" />
+    <ClCompile Include="WebAdmin.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ActiveCallInfo.hxx" />
+    <ClInclude Include="WebAdminThread.hxx" />
+    <ClInclude Include="AppSubsystem.hxx" />
+    <ClInclude Include="ConfigParser.hxx" />
+    <ClInclude Include="HttpBase.hxx" />
+    <ClInclude Include="HttpConnection.hxx" />
+    <ClInclude Include="MOHManager.hxx" />
+    <ClInclude Include="ParkManager.hxx" />
+    <ClInclude Include="ParkOrbit.hxx" />
+    <ClInclude Include="Server.hxx" />
+    <ClInclude Include="WebAdmin.hxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MOHParkServer.config">
+      <Filter>Config Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

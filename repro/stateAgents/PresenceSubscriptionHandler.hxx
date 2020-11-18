@@ -9,13 +9,9 @@
 #include <resip/dum/InMemorySyncRegDb.hxx>
 #include <resip/dum/InMemorySyncPubDb.hxx>
 
-namespace repro
-{
-class Dispatcher;
-}
-
 namespace resip
 {
+class Dispatcher;
 class SipMessage;
 class SecurityAttributes;
 class Data;
@@ -71,7 +67,7 @@ class PresenceSubscriptionHandler : public resip::ServerSubscriptionHandler,
 {
 public:
     PresenceSubscriptionHandler(resip::DialogUsageManager& dum,
-                               repro::Dispatcher* userDispatcher,
+                               resip::Dispatcher* userDispatcher,
                                bool presenceUsesRegistrationState,
                                bool PresenceNotifyClosedStateForNonPublishedUsers);
     virtual ~PresenceSubscriptionHandler();
@@ -118,7 +114,7 @@ protected:
 
     bool mPresenceUsesRegistrationState;
     bool mPresenceNotifyClosedStateForNonPublishedUsers;
-    Dispatcher* mUserDispatcher;
+    resip::Dispatcher* mUserDispatcher;
     std::set<resip::Uri> mOnlineAors;
 };
  

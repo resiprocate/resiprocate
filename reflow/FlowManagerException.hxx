@@ -9,13 +9,13 @@
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class FlowManagerException : public resip::BaseException
+class FlowManagerException final : public resip::BaseException
 {
 public:
    FlowManagerException(const resip::Data& msg, const resip::Data& file, const int line)
       : resip::BaseException(msg, file, line) {}
 
-   const char* name() const { return "FlowManagerException"; }
+   const char* name() const noexcept override { return "FlowManagerException"; }
 };
 
 

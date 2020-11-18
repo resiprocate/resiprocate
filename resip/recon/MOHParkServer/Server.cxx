@@ -21,6 +21,7 @@
 #include <rutil/ThreadIf.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
 // sipX includes
 #include <os/OsSysLog.h>
 
@@ -58,8 +59,8 @@ public:
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(Server& server, SharedPtr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
-      UserAgent(&server, profile, socketFunc),
+   MyUserAgent(Server& server, std::shared_ptr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
+      UserAgent(&server, std::move(profile), socketFunc),
       mServer(server) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
@@ -192,7 +193,7 @@ Server::Server(ConfigParser& config) :
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Add transports
    try
@@ -208,27 +209,27 @@ Server::Server(ConfigParser& config) :
       }
       if(mConfig.mUdpPort != (unsigned short)-1)
       {
-         profile->addTransport(UDP, mConfig.mUdpPort, V4, mConfig.mAddress);
+         profile->addTransport(UDP, mConfig.mUdpPort, V4, StunDisabled, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(UDP, mConfig.mUdpPort, V6, mConfig.mAddress);
+            profile->addTransport(UDP, mConfig.mUdpPort, V6, StunDisabled, mConfig.mAddress);
          }
       }
       if(mConfig.mTcpPort != (unsigned short)-1)
       {
-         profile->addTransport(TCP, mConfig.mTcpPort, V4, mConfig.mAddress);
+         profile->addTransport(TCP, mConfig.mTcpPort, V4, StunDisabled, mConfig.mAddress);
          if(mIsV6Avail)
          {
-            profile->addTransport(TCP, mConfig.mTcpPort, V6, mConfig.mAddress);
+            profile->addTransport(TCP, mConfig.mTcpPort, V6, StunDisabled, mConfig.mAddress);
          }
       }
 #ifdef USE_SSL
       if(mConfig.mTlsPort != (unsigned short)-1)
       {
-         profile->addTransport(TLS, mConfig.mTlsPort, V4, mConfig.mAddress, mConfig.mTlsDomain);
+         profile->addTransport(TLS, mConfig.mTlsPort, V4, StunDisabled, mConfig.mAddress, mConfig.mTlsDomain);
          if(mIsV6Avail)
          {
-            profile->addTransport(TLS, mConfig.mTlsPort, V6, mConfig.mAddress, mConfig.mTlsDomain);
+            profile->addTransport(TLS, mConfig.mTlsPort, V6, StunDisabled, mConfig.mAddress, mConfig.mTlsDomain);
          }
       }
 #endif
@@ -331,8 +332,7 @@ Server::Server(ConfigParser& config) :
    profile->rtpPortRangeMax() = mConfig.mMediaPortRangeStart + mConfig.mMediaPortRangeSize-1; 
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   profile->setOutboundDecorator(outboundDecorator);
+   profile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    mUserAgentMasterProfile = profile;
 
@@ -385,7 +385,7 @@ void
 Server::initializeResipLogging(unsigned int maxByteCount, const Data& level, const Data& resipFilename)
 {
    // Initialize loggers
-   GenericLogImpl::MaxByteCount = maxByteCount; 
+   Log::setMaxByteCount(maxByteCount); 
    Log::initialize("file", level.c_str(), "", resipFilename.c_str(), &g_MOHParkServerLogger);
 }
 
@@ -629,6 +629,12 @@ void
 Server::onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
+}
+
+void
+Server::onParticipantRequestedHold(ParticipantHandle partHandle, bool held)
+{
+   InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
 }
 
 void 

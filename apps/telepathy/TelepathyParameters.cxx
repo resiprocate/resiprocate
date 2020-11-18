@@ -56,7 +56,8 @@ TelepathyParameters::TelepathyParameters(const QVariantMap &parameters)
 
    mRealm = mContact.uri().host();
    // FIXME: support username only too
-   mAuthUser = mContact.uri().getAorNoPort();
+   mAuthUser = mContact.uri().user(); //this is for using test.sip5060.net server
+   // mAuthUser = mContact.uri().getAorNoPort();
    mPassword = getString("password");
 }
 

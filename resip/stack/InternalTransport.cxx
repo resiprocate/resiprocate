@@ -190,7 +190,7 @@ InternalTransport::hasDataToSend() const
 }
 
 void
-InternalTransport::send(std::auto_ptr<SendData> data)
+InternalTransport::send(std::unique_ptr<SendData> data)
 {
    mTxFifo.add(data.release());
 }
@@ -235,6 +235,15 @@ InternalTransport::poke()
       // this new outgoing message.
       mSelectInterruptor.handleProcessNotification();
    }
+}
+
+void 
+InternalTransport::invokeAfterSocketCreationFunc() const
+{
+    if (mSocketFunc)
+    {
+        mSocketFunc(mFd, transport(), __FILE__, __LINE__);
+    }
 }
 
 

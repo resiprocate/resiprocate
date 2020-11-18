@@ -1,14 +1,15 @@
 # $Id$
 
 EXTRA_DIST = ReadMe.txt
-EXTRA_DIST += *.vcproj
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 
 SUBDIRS = .
-#SUBDIRS += dtls_wrapper/test
+SUBDIRS += dtls_wrapper/test
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
+AM_CXXFLAGS += -DASIO_HAS_BOOST_BIND
+AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
 
 lib_LTLIBRARIES = libreflow.la
 libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la
@@ -25,11 +26,12 @@ libreflow_la_SOURCES = FakeSelectSocketDescriptor.cxx \
         FlowDtlsTimerContext.cxx \
         FlowManager.cxx \
         FlowManagerSubsystem.cxx \
+	HEPRTCPEventLoggingHandler.cxx \
         MediaStream.cxx \
         dtls_wrapper/DtlsTimer.cxx \
         dtls_wrapper/DtlsSocket.cxx \
         dtls_wrapper/DtlsFactory.cxx \
-        dtls_wrapper/bf_dwrap.c
+        dtls_wrapper/bf_dwrap.cxx
 
 reflowincludedir = $(includedir)/reflow
 nobase_reflowinclude_HEADERS = ErrorCode.hxx \
@@ -37,14 +39,18 @@ nobase_reflowinclude_HEADERS = ErrorCode.hxx \
 	FlowDtlsSocketContext.hxx \
 	FlowDtlsTimerContext.hxx \
 	Flow.hxx \
+	FlowContext.hxx \
 	FlowManagerException.hxx \
 	FlowManager.hxx \
 	FlowManagerSubsystem.hxx \
+	HEPRTCPEventLoggingHandler.hxx \
 	MediaStream.hxx \
-	dtls_wrapper/bf_dwrap.h \
+	RTCPEventLoggingHandler.hxx \
+	dtls_wrapper/bf_dwrap.hxx \
 	dtls_wrapper/DtlsFactory.hxx \
 	dtls_wrapper/DtlsSocket.hxx \
-	dtls_wrapper/DtlsTimer.hxx
+	dtls_wrapper/DtlsTimer.hxx \
+	rtcp/re_rtp.h
 
 ##############################################################################
 # 

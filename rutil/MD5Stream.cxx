@@ -11,6 +11,7 @@ MD5Buffer::MD5Buffer()
 {
    MD5Init(&mContext);
    setp(mBuf, mBuf + sizeof(mBuf));
+   mLen = 0;
 }
 
 MD5Buffer::~MD5Buffer()
@@ -26,6 +27,7 @@ MD5Buffer::sync()
       MD5Update(&mContext, reinterpret_cast <unsigned const char*>(pbase()), (unsigned int)len);
       // reset the put buffer
       setp(mBuf, mBuf + sizeof(mBuf));
+      mLen += len;
    }
    return 0;
 }
@@ -61,6 +63,12 @@ MD5Buffer::getBin()
    return digest;
 }
 
+size_t
+MD5Buffer::bytesTaken()
+{
+   return mLen;
+}
+
 MD5Stream::MD5Stream()
    : std::ostream(this)
 {
@@ -82,6 +90,12 @@ MD5Stream::getBin()
 {
    flush();
    return MD5Buffer::getBin();
+}
+
+size_t
+MD5Stream::bytesTaken()
+{
+   return MD5Buffer::bytesTaken();
 }
 
 /* ====================================================================

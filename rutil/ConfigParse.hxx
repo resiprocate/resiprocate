@@ -15,7 +15,7 @@ class ConfigParse
 private:
    class NestedConfigParse;
 public:
-   class Exception : public BaseException
+   class Exception final : public BaseException
    {
       public:
          Exception(const Data& msg,
@@ -23,7 +23,7 @@ public:
                    const int line)
             : BaseException(msg, file, line) {}            
       protected:
-         virtual const char* name() const { return "ConfigParse::Exception"; }
+         const char* name() const noexcept override { return "ConfigParse::Exception"; }
    };
 
    ConfigParse();
@@ -40,8 +40,8 @@ public:
 
    void getConfigIndexKeys(const resip::Data& indexName, std::set<resip::Data>& keys);
 
-   bool getConfigValue(const resip::Data& name, resip::Data &value);
-   resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false);
+   bool getConfigValue(const resip::Data& name, resip::Data &value) const;
+   resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false) const;
 
    bool getConfigValue(const resip::Data& name, bool &value);
    bool getConfigBool(const resip::Data& name, bool defaultValue);

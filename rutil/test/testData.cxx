@@ -266,6 +266,12 @@ class TestData
             assert(input == "ABCD123ABCDa");
          }
          
+         {
+            // construct a Data object with binary zero in content
+            const char rawInput[] = {'I', 'P', '4', '\0'};
+            const Data input(rawInput, sizeof(rawInput));
+            assert(input != "IP4");
+         }
          
          {
             const char* s = "a";
@@ -1334,6 +1340,35 @@ class TestData
             assert(  Data("1234567" ).base64encode() == d7 );
          }
          
+         {
+            // RFC 4648 Base64 test vectors
+            const unsigned char rawInput1[] = { 0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e };
+            const unsigned char rawInput2[] = { 0x14, 0xfb, 0x9c, 0x03, 0xd9 };
+            const unsigned char rawInput3[] = { 0x14, 0xfb, 0x9c, 0x03 };
+
+            struct TestVector {
+               Data plaintext;
+               Data encoded;
+            } testVectors[] = {
+               {Data(rawInput1, sizeof(rawInput1)), "FPucA9l+"},
+               {Data(rawInput2, sizeof(rawInput2)), "FPucA9k="},
+               {Data(rawInput3, sizeof(rawInput3)), "FPucAw=="},
+               {"", ""},
+               {"f", "Zg=="},
+               {"fo", "Zm8="},
+               {"foo", "Zm9v"},
+               {"foob", "Zm9vYg=="},
+               {"fooba", "Zm9vYmE="},
+               {"foobar", "Zm9vYmFy"},
+            };
+
+            for (unsigned i = 0, n = sizeof(testVectors) / sizeof(testVectors[0]); i < n; ++i) {
+               const TestVector& entry = testVectors[i];
+               assert( entry.encoded.base64decode() == entry.plaintext );
+               assert( entry.plaintext.base64encode() == entry.encoded );
+            }
+         }
+
          for(int i=0; i<4; ++i)
          {
             const char* buf1="5d7a9b7c02034b5b";

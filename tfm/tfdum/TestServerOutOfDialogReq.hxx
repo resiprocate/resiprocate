@@ -23,7 +23,7 @@ class TestServerOutOfDialogReq : public TestUsage
       SendingAction<resip::ServerOutOfDialogReqHandle>* reject(int statusCode);
       SendingAction<resip::ServerOutOfDialogReqHandle>* answerOptions();
 
-      CommonAction* send(resip::SharedPtr<resip::SipMessage> msg);
+      CommonAction* send(std::shared_ptr<resip::SipMessage> msg);
       CommonAction* end();
 
       bool isMyEvent(Event*);

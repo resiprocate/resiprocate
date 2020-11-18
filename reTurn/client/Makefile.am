@@ -1,32 +1,24 @@
 # $Id$
 
-EXTRA_DIST = *.vcproj
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST = *.vcxproj
 
 SUBDIRS = . 
 SUBDIRS += test
 
 #AM_CXXFLAGS = -I../../contrib/ares -DUSE_ARES
+AM_CXXFLAGS = -DASIO_HAS_BOOST_BIND
+AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
 
 lib_LTLIBRARIES = libreTurnClient.la
 
-libreTurnClient_la_LIBADD = ../../rutil/librutil.la
+libreTurnClient_la_LIBADD = ../libreTurnCommon.la
+libreTurnClient_la_LIBADD += ../../rutil/librutil.la
 libreTurnClient_la_LIBADD += @LIBSTL_LIBADD@
 libreTurnClient_la_LIBADD += @LIBSSL_LIBADD@
 libreTurnClient_la_LIBADD += @LIBPTHREAD_LIBADD@
 libreTurnClient_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 libreTurnClient_la_SOURCES = \
-        ../AsyncSocketBase.cxx \
-        ../AsyncTcpSocketBase.cxx \
-        ../AsyncTlsSocketBase.cxx \
-        ../AsyncUdpSocketBase.cxx \
-        ../ChannelManager.cxx \
-        ../DataBuffer.cxx \
-        ../RemotePeer.cxx \
-        ../ReTurnSubsystem.cxx \
-        ../StunMessage.cxx \
-        ../StunTuple.cxx \
         TurnAsyncSocket.cxx \
         TurnAsyncSocketHandler.cxx \
         TurnAsyncTcpSocket.cxx \

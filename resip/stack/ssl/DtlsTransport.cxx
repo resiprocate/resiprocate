@@ -51,7 +51,10 @@
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Errdes.hxx"
 
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
@@ -67,6 +70,23 @@
 #endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+
+static void SSL_set0_rbio(SSL *s, BIO *rbio)
+{
+    BIO_free_all(s->rbio);
+    s->rbio = rbio;
+}
+
+#if !defined(LIBRESSL_VERSION_NUMBER)
+static void BIO_up_ref(BIO *a)
+{
+    CRYPTO_add(&a->references, 1, CRYPTO_LOCK_BIO);
+}
+#endif
+
+#endif
 
 using namespace std;
 using namespace resip;
@@ -230,14 +250,13 @@ DtlsTransport::_read( FdSet& fdset )
    rbio = BIO_new_mem_buf( buffer, len ) ;
    BIO_set_mem_eof_return( rbio, -1 ) ;
 
-   ssl->rbio = rbio ;
+   SSL_set0_rbio( ssl, rbio );
 
    len = SSL_read( ssl, pt, UdpTransport::MaxBufferSize ) ;
    int err = SSL_get_error( ssl, len ) ;
 
    /* done with the rbio */
-   BIO_free( ssl->rbio ) ;
-   ssl->rbio = mDummyBio ;
+   SSL_set0_rbio( ssl, mDummyBio );
    delete [] buffer ;
    buffer = 0 ;
 
@@ -709,7 +728,7 @@ DtlsTransport::_cleanupConnectionState( SSL *ssl, struct sockaddr_in peer )
     * SSL_free decrements the ref-count for mDummyBio by 1, so
     * add 1 to the ref-count to make sure it does not get free'd
     */
-   CRYPTO_add(&mDummyBio->references, 1, CRYPTO_LOCK_BIO);
+   BIO_up_ref(mDummyBio);
    SSL_shutdown(ssl);
    SSL_free(ssl) ;
    mDtlsConnections.erase(peer) ;

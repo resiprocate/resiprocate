@@ -3,10 +3,9 @@
 
 #include <memory>
 
-#include "rutil/SharedPtr.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
-#include "repro/Dispatcher.hxx"
 #include "repro/Processor.hxx"
 
 namespace repro
@@ -15,21 +14,21 @@ namespace repro
 class AuthenticatorFactory
 {
 public:
-   AuthenticatorFactory() {};
-   virtual ~AuthenticatorFactory() {};
+	AuthenticatorFactory() = default;
+   virtual ~AuthenticatorFactory() = default;
 
    virtual void setDum(resip::DialogUsageManager* dum) = 0;
 
    virtual bool certificateAuthEnabled() = 0;
 
-   virtual resip::SharedPtr<resip::DumFeature> getCertificateAuthManager() = 0;
-   virtual std::auto_ptr<Processor> getCertificateAuthenticator() = 0;
+   virtual std::shared_ptr<resip::DumFeature> getCertificateAuthManager() = 0;
+   virtual std::unique_ptr<Processor> getCertificateAuthenticator() = 0;
 
    virtual bool digestAuthEnabled() = 0;
 
-   virtual resip::SharedPtr<resip::ServerAuthManager> getServerAuthManager() = 0;
-   virtual std::auto_ptr<Processor> getDigestAuthenticator() = 0;
-   virtual Dispatcher* getDispatcher() = 0;
+   virtual std::shared_ptr<resip::ServerAuthManager> getServerAuthManager() = 0;
+   virtual std::unique_ptr<Processor> getDigestAuthenticator() = 0;
+   virtual resip::Dispatcher* getDispatcher() = 0;
 };
 
 }

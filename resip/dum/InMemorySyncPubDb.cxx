@@ -12,10 +12,6 @@ InMemorySyncPubDb::InMemorySyncPubDb(bool syncEnabled) : mSyncEnabled(syncEnable
 {
 }
 
-InMemorySyncPubDb::~InMemorySyncPubDb()
-{
-}
-
 void 
 InMemorySyncPubDb::addHandler(InMemorySyncPubDbHandler* handler)
 { 
@@ -94,7 +90,7 @@ InMemorySyncPubDb::initialSync(unsigned int connectionId)
       }
 
       // If there are no more eTags then remove entity
-      if (keyIt->second.size() == 0)
+      if (keyIt->second.empty())
       {
          mPublicationDb.erase(keyIt++);
       }
@@ -124,8 +120,8 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
          if (!document.mSyncPublication || (document.mLastUpdated > eTagIt->second.mLastUpdated))
          {
             UInt64 now = Timer::getTimeSecs();
-            SharedPtr<Contents> contentsForOnDocumentModified = document.mContents;
-            SharedPtr<SecurityAttributes> securityAttributesForOnDocumentModified = document.mSecurityAttributes;
+            auto contentsForOnDocumentModified = document.mContents;
+            auto securityAttributesForOnDocumentModified = document.mSecurityAttributes;
             // We should only need to linger a document past the latest expiration time we have ever seen, since both sides will
             // treat the publication as gone after this time anyway.  However this is timing sensitive with the sync process.  
             // So we will linger a document for twice this duration.
@@ -136,13 +132,13 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
                // This can happen if someone deletes a publication on the web page, then it is refreshed.  The delete causes a 
                // notify of closed state, the refresh should bring the state back.
                if (eTagIt->second.mExpirationTime == 0 ||
-                   eTagIt->second.mExpirationTime > now)
+                   eTagIt->second.mExpirationTime < now)
                {
                    contentsForOnDocumentModified = eTagIt->second.mContents; 
                    securityAttributesForOnDocumentModified = eTagIt->second.mSecurityAttributes;
                }
-               SharedPtr<Contents> contents = eTagIt->second.mContents;
-               SharedPtr<SecurityAttributes> securityAttributes = eTagIt->second.mSecurityAttributes;
+               const auto contents = eTagIt->second.mContents;
+               const auto securityAttributes = eTagIt->second.mSecurityAttributes;
                eTagIt->second = document;
                eTagIt->second.mContents = contents;
                eTagIt->second.mSecurityAttributes = securityAttributes;
@@ -162,19 +158,13 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
    // Note: Pub refreshes don't contain a contents - so we happen to receive a refresh as our
    //       first message for an etag we don't want to add it to the store - until we have 
    //       at least a doc body.
-   if (!found && document.mContents.get() != 0)
+   if (!found && document.mContents)
    {
       // Add new
       mPublicationDb[mapKey][document.mETag] = document;
       // Only pass sync as true if this update just came from an inbound sync operation
       invokeOnDocumentModified(document.mSyncPublication /* sync publication? */, document.mEventType, document.mDocumentKey, document.mETag, document.mExpirationTime, document.mLastUpdated, document.mContents.get(), document.mSecurityAttributes.get());
    }
-}
-
-void 
-InMemorySyncPubDb::addUpdateDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, const Contents* contents, const SecurityAttributes* securityAttributes, bool syncPublication)
-{
-   addUpdateDocument(PubDocument(eventType, documentKey, eTag, expirationTime, contents, securityAttributes, syncPublication));
 }
 
 bool 
@@ -212,7 +202,7 @@ InMemorySyncPubDb::removeDocument(const Data& eventType, const Data& documentKey
          }
       }
       // If there are no more eTags then remove entity
-      if (keyIt->second.size() == 0)
+      if (keyIt->second.empty())
       {
          mPublicationDb.erase(keyIt);
       }
@@ -239,7 +229,7 @@ InMemorySyncPubDb::getMergedETags(const Data& eventType, const Data& documentKey
          if (!shouldEraseDocument(eTagIt->second, now))
          {
             // Just because we don't need to erase it doesn't mean it didn't expire - check for expiration
-            if (eTagIt->second.mExpirationTime > now && eTagIt->second.mContents.get() != 0)
+            if (eTagIt->second.mExpirationTime > now && eTagIt->second.mContents)
             {
                merger.mergeETag(destination, eTagIt->second.mContents.get(), isFirst);
                isFirst = false;
@@ -251,7 +241,7 @@ InMemorySyncPubDb::getMergedETags(const Data& eventType, const Data& documentKey
             // ETag has expired - remove it
             keyIt->second.erase(eTagIt++);
             // If no more Etags for key, then remove key entry and bail out
-            if (keyIt->second.size() == 0)
+            if (keyIt->second.empty())
             {
                mPublicationDb.erase(keyIt);
                break;
@@ -294,7 +284,7 @@ InMemorySyncPubDb::documentExists(const Data& eventType, const Data& documentKey
 }
 
 // If lastUpdated != 0 then we make sure that passed in lastUpdated matches the document before returning true
-// This method is used in timer expirey and the lastUpdated checks helps us to make sure the timer that just
+// This method is used in timer expiry and the lastUpdated checks helps us to make sure the timer that just
 // expired hasn't been made obsolete due to a new update.
 bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
 {
@@ -326,7 +316,7 @@ bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& document
                // ETag was found - remove it
                keyIt->second.erase(eTagIt);
                // If no more Etags for key, then remove key entry
-               if (keyIt->second.size() == 0)
+               if (keyIt->second.empty())
                {
                   mPublicationDb.erase(keyIt);
                }

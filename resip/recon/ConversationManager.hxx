@@ -12,7 +12,6 @@
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
-#include <rutil/SharedPtr.hxx>
 
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
@@ -20,6 +19,8 @@
 #include "MediaInterface.hxx"
 
 #include "reflow/FlowManager.hxx"
+
+#include <memory>
 
 class CpMediaInterfaceFactory;
 
@@ -173,7 +174,7 @@ public:
    */   
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, resip::SharedPtr<resip::UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<resip::UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
 
    /**
      Creates a new media resource participant in the specified conversation.  
@@ -286,7 +287,7 @@ public:
      Modifies how the participant contributes to the particular conversation.  
      The send and receive gain can be set to a number between 0 and 100.
 
-     @param convHandle Handle of the conversation to apply modication to
+     @param convHandle Handle of the conversation to apply modification to
      @param partHandle Handle of the participant to modify
    */
    virtual void modifyParticipantContribution(ConversationHandle convHandle, ParticipantHandle partHandle, unsigned int inputGain, unsigned int outputGain);
@@ -345,6 +346,8 @@ public:
      @param destPartHandle Handle ot the participant to redirect to
    */
    virtual void redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle);
+
+   virtual void holdParticipant(ParticipantHandle partHandle, bool hold);
 
    /**
      This function is used to add a chunk of memory to a media/prompt cache.
@@ -481,6 +484,8 @@ public:
      @param up Set to true if the DTMF key is up (otherwise down)
    */
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) = 0;
+
+   virtual void onParticipantRequestedHold(ParticipantHandle partHandle, bool held) = 0;
 
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
@@ -632,6 +637,7 @@ private:
    friend class RejectParticipantCmd;
    friend class RedirectParticipantCmd;
    friend class RedirectToParticipantCmd;
+   friend class HoldParticipantCmd;
 
 private:  
    UserAgent* mUserAgent;
@@ -667,12 +673,12 @@ private:
 
    // sipX Media related members
    void createMediaInterfaceAndMixer(bool giveFocus, ConversationHandle ownerConversationHandle, 
-                                     resip::SharedPtr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
-   resip::SharedPtr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
+                                     std::shared_ptr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
+   std::shared_ptr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
    CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
    BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
    CpMediaInterfaceFactory* mMediaFactory;
-   resip::SharedPtr<MediaInterface> mMediaInterface;  
+   std::shared_ptr<MediaInterface> mMediaInterface;  
    BridgeMixer* mBridgeMixer;
    int mSipXTOSValue;
 };

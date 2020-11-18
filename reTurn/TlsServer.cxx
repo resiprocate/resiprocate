@@ -18,7 +18,7 @@ namespace reTurn {
 TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
-  mContext(ioService, asio::ssl::context::tlsv1),  // TLSv1.0
+  mContext(asio::ssl::context::sslv23),  // SSLv23 (actually chooses TLS version dynamically)
   mConnectionManager(),
   mRequestHandler(requestHandler)
 {
@@ -121,6 +121,7 @@ TlsServer::handleAccept(const asio::error_code& e)
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

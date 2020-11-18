@@ -472,7 +472,6 @@
     <ClCompile Include="ConfigStore.cxx" />
     <ClCompile Include="monkeys\ConstantLocationMonkey.cxx" />
     <ClCompile Include="monkeys\DigestAuthenticator.cxx" />
-    <ClCompile Include="Dispatcher.cxx" />
     <ClCompile Include="monkeys\IsTrustedNode.cxx" />
     <ClCompile Include="monkeys\LocationServer.cxx" />
     <ClCompile Include="OutboundTarget.cxx" />
@@ -514,9 +513,9 @@
     <ClCompile Include="Store.cxx" />
     <ClCompile Include="monkeys\StrictRouteFixup.cxx" />
     <ClCompile Include="Target.cxx" />
+    <ClCompile Include="TlsPeerIdentityStore.cxx" />
     <ClCompile Include="UserAuthGrabber.cxx" />
     <ClCompile Include="UserStore.cxx" />
-    <ClCompile Include="WorkerThread.cxx" />
     <ClCompile Include="XmlRpcConnection.cxx" />
     <ClCompile Include="XmlRpcServerBase.cxx" />
   </ItemGroup>
@@ -551,7 +550,6 @@
     <ClInclude Include="ConfigStore.hxx" />
     <ClInclude Include="monkeys\ConstantLocationMonkey.hxx" />
     <ClInclude Include="monkeys\DigestAuthenticator.hxx" />
-    <ClInclude Include="Dispatcher.hxx" />
     <ClInclude Include="monkeys\IsTrustedNode.hxx" />
     <ClInclude Include="monkeys\LocationServer.hxx" />
     <ClInclude Include="OutboundTarget.hxx" />
@@ -584,11 +582,11 @@
     <ClInclude Include="monkeys\StrictRouteFixup.hxx" />
     <ClInclude Include="Target.hxx" />
     <ClInclude Include="TimerCMessage.hxx" />
+    <ClInclude Include="TlsPeerIdentityInfo.hxx" />
+    <ClInclude Include="TlsPeerIdentityStore.hxx" />
     <ClInclude Include="UserAuthGrabber.hxx" />
     <ClInclude Include="UserInfoMessage.hxx" />
     <ClInclude Include="UserStore.hxx" />
-    <ClInclude Include="Worker.hxx" />
-    <ClInclude Include="WorkerThread.hxx" />
     <ClInclude Include="XmlRpcConnection.hxx" />
     <ClInclude Include="XmlRpcServerBase.hxx" />
   </ItemGroup>

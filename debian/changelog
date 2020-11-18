@@ -1,3 +1,169 @@
+resiprocate (1:1.11.0~beta5-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 29 Jun 2017 10:43:00 +0200
+
+resiprocate (1:1.11.0~beta4-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 28 Jun 2017 17:00:32 +0200
+
+resiprocate (1:1.11.0~beta1-3) unstable; urgency=high
+
+  * control file: add breaks/replaces for librepro.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 16 Apr 2017 10:15:56 +0200
+
+resiprocate (1:1.11.0~beta1-2) unstable; urgency=high
+
+  * Move librepro from repro.deb to libresiprocate.deb. (Closes: #856874)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 15 Apr 2017 11:06:10 +0200
+
+resiprocate (1:1.11.0~beta1-1) unstable; urgency=high
+
+  * New upstream release.
+  * Fix extraction of RTCP values for HEP.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 15 Jan 2017 21:19:41 +0100
+
+resiprocate (1:1.11.0~alpha11-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Fri, 30 Dec 2016 15:52:39 +0100
+
+resiprocate (1:1.11.0~alpha10-1) unstable; urgency=medium
+
+  * New upstream release.
+  * OpenSSLInit: fix code to free compression methods (Closes: #848652)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Tue, 20 Dec 2016 20:03:48 +0100
+
+resiprocate (1:1.11.0~alpha9-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Mon, 19 Dec 2016 08:36:12 +0100
+
+resiprocate (1:1.11.0~alpha8-3) unstable; urgency=medium
+
+  * postinst: Set RANDFILE when calling openssl
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 18 Dec 2016 08:18:36 +0100
+
+resiprocate (1:1.11.0~alpha8-2) unstable; urgency=medium
+
+  * Put libssl1.0-dev ahead of libssl-dev
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sat, 17 Dec 2016 14:00:50 +0100
+
+resiprocate (1:1.11.0~alpha8-1) unstable; urgency=medium
+
+  * Resolve some more lintian issues.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 15 Dec 2016 21:52:51 +0100
+
+resiprocate (1:1.11.0~alpha7-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Resolve some lintian errors.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 15 Dec 2016 20:35:47 +0100
+
+resiprocate (1:1.11.0~alpha6-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Sun, 11 Dec 2016 17:56:40 +0100
+
+resiprocate (1:1.11.0~alpha5-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 08 Dec 2016 10:52:41 +0100
+
+resiprocate (1:1.11.0~alpha4-2) unstable; urgency=medium
+
+  * Add missing build-dep vim-common for xxd binary.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 07 Dec 2016 17:46:42 +0100
+
+resiprocate (1:1.11.0~alpha4-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 07 Dec 2016 10:58:52 +0100
+
+resiprocate (1:1.11.0~alpha3-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Tue, 06 Dec 2016 21:49:04 +0100
+
+resiprocate (1:1.11.0~alpha2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Build against libssl1.0-dev (Closes: #828532)
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 23 Nov 2016 20:58:46 +0100
+
+resiprocate (1:1.11.0~alpha1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Fri, 18 Nov 2016 22:05:55 +0100
+
+resiprocate (1:1.10.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Mon, 16 May 2016 21:58:04 +0200
+
+resiprocate (1:1.10.1-2) unstable; urgency=high
+
+  * init scripts: Change default umask from 002 to 022
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 29 Oct 2015 20:34:59 +0100
+
+resiprocate (1:1.10.1-1) unstable; urgency=high
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Wed, 28 Oct 2015 20:36:34 +0100
+
+resiprocate (1:1.10.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Fri, 02 Oct 2015 11:23:29 +0200
+
+resiprocate (1:1.10.0~beta2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Fri, 18 Sep 2015 12:20:45 +0200
+
+resiprocate (1:1.10.0~beta1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Fri, 18 Sep 2015 09:14:23 +0200
+
+resiprocate (1:1.10.0~alpha4-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 17 Sep 2015 22:41:47 +0200
+
+resiprocate (1:1.10.0~alpha3-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Pocock <daniel@pocock.pro>  Thu, 17 Sep 2015 21:38:15 +0200
+
 resiprocate (1:1.10.0~alpha2-1) unstable; urgency=medium
 
   * New upstream release.

@@ -5,7 +5,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/bind.hpp>
 
 #include "TurnAsyncSocket.hxx"
 #include "reTurn/AsyncUdpSocketBase.hxx"
@@ -20,7 +19,7 @@ public:
                                const asio::ip::address& address, 
                                unsigned short port); 
 
-   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native(); }
+   virtual unsigned int getSocketDescriptor() { return (unsigned int)mSocket.native_handle(); }
 
 protected:
 
@@ -28,7 +27,7 @@ private:
    // AsyncUdpSocketBase callbacks
    virtual void onConnectSuccess();
    virtual void onConnectFailure(const asio::error_code& e);
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(const asio::error_code& e);
    virtual void onSendSuccess();
    virtual void onSendFailure(const asio::error_code& e);
@@ -42,6 +41,7 @@ private:
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

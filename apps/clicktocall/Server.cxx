@@ -110,7 +110,7 @@ class ClickToCallLogger : public ExternalLogger
 {
 public:
    virtual ~ClickToCallLogger() {}
-   /** return true to also do default logging, false to supress default logging. */
+   /** return true to also do default logging, false to suppress default logging. */
    virtual bool operator()(Log::Level level,
                            const Subsystem& subsystem, 
                            const Data& appName,
@@ -150,7 +150,7 @@ Server::Server(int argc, char** argv) :
    mXmlRpcServerV6(0),
    mXmlRpcServerThread(0)
 {
-   GenericLogImpl::MaxLineCount = mLogFileMaxLines; 
+   Log::setMaxLineCount(mLogFileMaxLines); 
    Log::initialize("file", mLogLevel, "", mLogFilename.c_str(), (ExternalLogger*)&g_ClickToCallLogger);
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemGateway);
@@ -318,12 +318,11 @@ Server::Server(int argc, char** argv) :
 
    // Install Handlers
    mDum.setMasterProfile(mProfile);
-   //mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   //mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   mProfile->setOutboundDecorator(outboundDecorator);
+   mProfile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    // Install this Server as handler
    mDum.setInviteSessionHandler(this); 
@@ -335,13 +334,11 @@ Server::Server(int argc, char** argv) :
    mDum.addServerSubscriptionHandler("refer", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new ClickToCallDialogSetFactory(*this));
-	mDum.setAppDialogSetFactory(dsf);
+	mDum.setAppDialogSetFactory(std::unique_ptr<AppDialogSetFactory>(new ClickToCallDialogSetFactory(*this)));
 
 #if 0
    // Set UserAgentServerAuthManager
-   SharedPtr<ServerAuthManager> uasAuth( new AppServerAuthManager(*this));
-   mDum.setServerAuthManager(uasAuth);
+   mDum.setServerAuthManager(std::make_shared<AppServerAuthManager>(*this));
 #endif
 
    // Create Http Server
@@ -940,11 +937,6 @@ Server::onTerminated(ServerSubscriptionHandle)
 }
 
 void 
-Server::onReadyToSend(ServerSubscriptionHandle, SipMessage&)
-{
-}
-
-void 
 Server::onNotifyRejected(ServerSubscriptionHandle, const SipMessage& msg)
 {
    WarningLog(<< "onNotifyRejected(ServerSubscriptionHandle): " << msg.brief());
@@ -1004,8 +996,7 @@ Server::onReceivedRequest(ServerOutOfDialogReqHandle ood, const SipMessage& msg)
    {
    case OPTIONS:
    {
-      SharedPtr<SipMessage> optionsAnswer = ood->answerOptions();
-      ood->send(optionsAnswer);
+      ood->send(ood->answerOptions());
       break;
    }
    case REFER:

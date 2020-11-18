@@ -50,7 +50,7 @@ main(int argc, char* argv[])
 
 
        
-       auto_ptr<SipMessage> msg(Helper::makeRegister(alice,alice,aliceContact));
+       unique_ptr<SipMessage> msg(Helper::makeRegister(alice,alice,aliceContact));
 
        cout << *msg << endl;
 
@@ -701,12 +701,33 @@ main(int argc, char* argv[])
    }
 
    {
+      const char rawInput[] = {':'};
+      const Data input(Data::Share, rawInput, sizeof(rawInput));
+      Uri uri = Uri(input);
+   }
+
+   {
+      const char rawInput[] = {':', '@'};
+      const Data input(Data::Share, rawInput, sizeof(rawInput));
+      Uri uri = Uri(input);
+   }
+
+   {
       Uri uri = Uri("/;p1=123;p2=456");
       assert(uri.path() == "/");
       assert(uri.param(UnknownParameterType("p1")) == Data("123"));
       assert(uri.param(UnknownParameterType("p2")) == Data("456"));
       assert(Data::from(uri) == "/;p1=123;p2=456");
    }
+
+   // Test NameAddr operator== with All Contacts NameAddr
+   {
+      NameAddr defaultNameAddr;
+      NameAddr allContactsNameAddr;
+      allContactsNameAddr.setAllContacts();
+      assert(!(defaultNameAddr == allContactsNameAddr));
+   }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }

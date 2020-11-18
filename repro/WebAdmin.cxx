@@ -237,6 +237,7 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("settings.html")) &&
       ( pageName != Data("restart.html") ) &&  
       ( pageName != Data("logLevel.html") ) &&
+      ( pageName != Data("reloadcerts.html") ) &&
       ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
@@ -426,6 +427,7 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
       if ( pageName == Data("restart.html"))     buildRestartSubPage(s);
       if ( pageName == Data("logLevel.html"))    buildLogLevelSubPage(s);
+      if ( pageName == Data("reloadcerts.html")) buildReloadCertsSubPage(s);
       
       s << mPageOutlinePost;
       s.flush();
@@ -1754,6 +1756,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "<tr>" << endl << 
       "  <td>AOR</td>" << endl << 
       "  <td>Contact</td>" << endl << 
+      "  <td>User Agent</td>" << endl <<
       "  <td>Instance ID</td>" << endl <<
       "  <td>Reg ID</td>" << endl <<
       "  <td>QValue</td>" << endl <<
@@ -1767,11 +1770,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
    RegistrationPersistenceManager::UriList aors;
    mRegDb.getAors(aors);
    for ( RegistrationPersistenceManager::UriList::const_iterator 
-            aor = aors.begin(); aor != aors.end(); ++aor )
+            aorIt = aors.begin(); aorIt != aors.end(); ++aorIt )
    {
-      Uri uri = *aor;
+      Uri aor = *aorIt;
       ContactList contacts;
-      mRegDb.getContacts(uri, contacts);
+      mRegDb.getContacts(aor, contacts);
          
       bool first = true;
       for (ContactList::iterator i = contacts.begin();
@@ -1782,14 +1785,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             UInt64 secondsRemaining = i->mRegExpires - now;
 
             s << "<tr>" << endl
-               << "  <td>" ;
+              << "  <td>" ;
             if (first) 
             { 
-               s << uri;
+               s << aor;
                first = false;
             }
             s << "</td>" << endl
-               << "  <td>";
+              << "  <td>";
             
             const ContactInstanceRecord& r = *i;
             const NameAddr& contact = r.mContact;
@@ -1797,6 +1800,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             int regId = r.mRegId;
 
             s << contact.uri();
+            s << "</td>" << endl
+                << "  <td>";
+
+            s << r.mUserAgent;
+
             s <<"</td>" << endl 
                << "<td>" << instanceId.xmlCharDataEncode() 
                << "</td><td>" << regId 
@@ -1825,7 +1833,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s << "</td><td>Never</td>" << endl;
             }
             s << "  <td>"
-               << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
+               << "<input type=\"checkbox\" name=\"remove." << aor << "\" value=\"" << Data::from(contact.uri()).urlEncoded() 
                                                             << "|" << instanceId.urlEncoded() 
                                                             << "|" << regId
                                                             << "|" << (staticRegContact ? "1" : "0")
@@ -1835,7 +1843,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          else
          {
             // remove expired contact 
-            mRegDb.removeContact(uri, *i);
+            mRegDb.removeContact(aor, *i);
          }
       }
    }
@@ -2032,6 +2040,12 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
            << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
            << "</form>" << endl;
    }
+
+#ifdef USE_SSL
+   s << "<form id=\"reloadCerts\" method=\"get\" action=\"reloadcerts.html\" name=\"reloadcerts\">" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Reload Certificates\"/>" << endl
+       << "</form>" << endl;
+#endif
 }
 
 void 
@@ -2130,6 +2144,13 @@ WebAdmin::buildLogLevelSubPage(resip::DataStream& s)
       WarningLog(<<"no log level specified");
       s << "ERROR: No level specified." << endl;
    }
+}
+
+void
+WebAdmin::buildReloadCertsSubPage(resip::DataStream& s)
+{
+    mProxy.getStack().reloadCertificates();
+    s << "Reloaded certificates." << endl;
 }
 
 Data 

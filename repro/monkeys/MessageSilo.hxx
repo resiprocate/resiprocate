@@ -18,7 +18,7 @@ class MessageSilo: public AsyncProcessor,
                    public RegistrarHandler
 {
 public:
-   MessageSilo(ProxyConfig& config, Dispatcher* asyncDispatcher);
+   MessageSilo(ProxyConfig& config, resip::Dispatcher* asyncDispatcher);
    virtual ~MessageSilo();
 
    virtual processor_action_t process(RequestContext &);

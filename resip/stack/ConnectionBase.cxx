@@ -15,7 +15,6 @@
 #include "resip/stack/WsCookieContextFactory.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "rutil/Sha1.hxx"
 
 #ifdef USE_SSL
@@ -397,7 +396,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   mBufferSize = size;
                   
                   DebugLog (<< "Extra bytes after message: " << overHang);
-                  DebugLog (<< Data(mBuffer, overHang));
+                  //DebugLog (<< Data(mBuffer, overHang));
                   
                   bytesRead = overHang;
                }
@@ -419,10 +418,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   
                   // .bwc. This handles all appropriate checking for whether
                   // this is a response or an ACK.
-                  std::auto_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
+                  std::unique_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
                   if(tryLater.get())
                   {
-                     transport()->send(tryLater);
+                     transport()->send(std::move(tryLater));
                   }
                   delete mMessage; // dropping message due to congestion
                   mMessage = 0;
@@ -471,11 +470,36 @@ ConnectionBase::preparseNewBytes(int bytesRead)
          }
 
          mBufferPos += bytesRead;
-         if (mBufferPos == contentLength)
+         if (mBufferPos >= contentLength)
          {
+            int overHang = mBufferPos - (int)contentLength;
+            char *overHangStart = mBuffer + contentLength;
+
             mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, (UInt32)contentLength);
-            mBuffer=0;
+            mConnState = NewMessage;
+            mBuffer = 0;
+
+            if (overHang > 0)
+            {
+                // The next message has been partially read.
+                size_t size = overHang * 3 / 2;
+                if (size < ConnectionBase::ChunkSize)
+                {
+                    size = ConnectionBase::ChunkSize;
+                }
+                char* newBuffer = MsgHeaderScanner::allocateBuffer((int)size);
+                memcpy(newBuffer, overHangStart, overHang);
+                mBuffer = newBuffer;
+                mBufferPos = 0;
+                mBufferSize = size;
+
+                DebugLog(<< "Extra bytes after message: " << overHang);
+                //DebugLog(<< Data(mBuffer, overHang));
+
+                bytesRead = overHang;
+            }
+
             // .bwc. basicCheck takes up substantial CPU. Don't bother doing it
             // if we're overloaded.
             CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
@@ -493,10 +517,10 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                
                // .bwc. This handles all appropriate checking for whether
                // this is a response or an ACK.
-               std::auto_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
+               std::unique_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
                if(tryLater.get())
                {
-                  transport()->send(tryLater);
+                  transport()->send(std::move(tryLater));
                }
                delete mMessage; // dropping message due to congestion
                mMessage = 0;
@@ -515,11 +539,16 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                mTransport->pushRxMsgUp(mMessage);
                mMessage = 0;
             }
-            mConnState = NewMessage;
+            
+            if (overHang > 0) 
+            {
+               goto start;
+            }
          }
          else if (mBufferPos == mBufferSize)
          {
-            // .bwc. We've filled our buffer; go ahead and make more room.
+            // .bwc. We've filled our buffer and haven't read contentLength bytes yet; go ahead and make more room.
+            resip_assert(contentLength >= mBufferSize);
             size_t newSize = resipMin(mBufferSize*3/2, contentLength);
             char* newBuffer = 0;
             try
@@ -623,7 +652,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
       CookieList cookieList;
       if(wsConnectionBase)
       {
-         SharedPtr<WsCookieContext> wsCookieContext((WsCookieContext*)0);
+         std::shared_ptr<WsCookieContext> wsCookieContext;
          if (mMessage->exists(h_Cookies))
          {
             WsBaseTransport* wst = dynamic_cast<WsBaseTransport*>(mTransport);
@@ -646,9 +675,9 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
                WarningLog(<<"Failed to parse cookies into WsCookieContext: " << ex);
             }
          }
-         SharedPtr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
+         std::shared_ptr<WsConnectionValidator> wsConnectionValidator = wsConnectionBase->connectionValidator();
          if(wsConnectionValidator &&
-            (!wsCookieContext.get() || !wsConnectionValidator->validateConnection(*wsCookieContext)))
+            (!wsCookieContext || !wsConnectionValidator->validateConnection(*wsCookieContext)))
          {
             ErrLog(<<"WebSocket cookie validation failed, dropping connection");
             // FIXME: should send back a HTTP error code:
@@ -663,7 +692,7 @@ ConnectionBase::wsProcessHandshake(int bytesRead, bool &dropConnection)
          }
       }
 
-      std::auto_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
+      std::unique_ptr<Data> wsResponsePtr = makeWsHandshakeResponse();
 
       if (wsResponsePtr.get())
       {
@@ -724,10 +753,10 @@ ConnectionBase::scanMsgHeader(int bytesRead)
    return true;
 }
 
-std::auto_ptr<Data>
+std::unique_ptr<Data>
 ConnectionBase::makeWsHandshakeResponse()
 {
-   std::auto_ptr<Data> responsePtr(0);
+   std::unique_ptr<Data> responsePtr;
    if(isUsingSecWebSocketKey())
    {
       responsePtr.reset(new Data("HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
@@ -777,7 +806,7 @@ ConnectionBase::wsProcessData(int bytesRead)
 {
    bool dropConnection = false;
    // Always consumes the whole buffer:
-   std::auto_ptr<Data> msg = mWsFrameExtractor.processBytes((UInt8*)mBuffer, bytesRead, dropConnection);
+   std::unique_ptr<Data> msg = mWsFrameExtractor.processBytes((UInt8*)mBuffer, bytesRead, dropConnection);
 
    while(msg.get())
    {
@@ -1031,17 +1060,20 @@ ConnectionBase::getCurrentWriteBuffer()
 }
 
 char*
-ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
+ConnectionBase::getWriteBufferForExtraBytes(int bytesRead, int extraBytes)
 {
-   if (extraBytes > 0)
+   int currentPos = mBufferPos + bytesRead;
+   if (currentPos > 0 && extraBytes > 0)
    {
-      char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize + extraBytes);
-      memcpy(buffer, mBuffer, mBufferSize);
-      delete [] mBuffer;
-      mBuffer = buffer;
-      buffer += mBufferSize;
-      mBufferSize += extraBytes;
-      return buffer;
+      if (((size_t)currentPos + (size_t)extraBytes) > mBufferSize)
+      {
+         mBufferSize = currentPos + extraBytes;
+         char* buffer = MsgHeaderScanner::allocateBuffer((int)mBufferSize);
+         memcpy(buffer, mBuffer, currentPos);
+         delete[] mBuffer;
+         mBuffer = buffer;
+      }
+      return &mBuffer[currentPos];
    }
    else
    {

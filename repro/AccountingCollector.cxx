@@ -650,7 +650,7 @@ AccountingCollector::pushEventObjectToQueue(Object& eventObject, AccountingColle
 }
 
 void 
-AccountingCollector::internalProcess(std::auto_ptr<FifoEvent> eventData)
+AccountingCollector::internalProcess(std::unique_ptr<FifoEvent> eventData)
 {
    InfoLog(<< "AccountingCollector::internalProcess: JSON=" << endl << eventData->mData);
 
@@ -694,10 +694,10 @@ AccountingCollector::thread()
    {
       try
       {
-         std::auto_ptr<FifoEvent> eventData(mFifo.getNext(1000));  // Only need to wake up to see if we are shutdown
-         if (eventData.get())
+         std::unique_ptr<FifoEvent> eventData(mFifo.getNext(1000));  // Only need to wake up to see if we are shutdown
+         if (eventData)
          {
-            internalProcess(eventData);
+            internalProcess(std::move(eventData));
          }
       }
       catch (BaseException& e)

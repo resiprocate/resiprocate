@@ -41,7 +41,7 @@ class Participant
       virtual void replaceWithParticipant(Participant* replacingParticipant);
 
       virtual int getConnectionPortOnBridge() = 0;
-      virtual resip::SharedPtr<MediaInterface> getMediaInterface();
+      virtual std::shared_ptr<MediaInterface> getMediaInterface();
       virtual void applyBridgeMixWeights();
       virtual void applyBridgeMixWeights(Conversation* removedConversation);  
 

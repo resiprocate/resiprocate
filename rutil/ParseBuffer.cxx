@@ -247,7 +247,9 @@ ParseBuffer::skipToChars(const char* cs)
 
    const char* rpos;
    const char* cpos;
-   while (mPosition < mEnd)
+   // Checking mPosition >= mEnd - l +1 is unnecessary because there won't be
+   // enough bytes left to find [cs].
+   while (mPosition < mEnd - l + 1)
    {
       rpos = mPosition;
       cpos = cs;
@@ -262,6 +264,8 @@ ParseBuffer::skipToChars(const char* cs)
       return CurrentPosition(*this);
      skip: ;
    }
+   // Advance to the end since we didn't find a match.
+   mPosition = mEnd;
    return CurrentPosition(*this);
 }
 
@@ -656,10 +660,10 @@ ParseBuffer::integer()
       fail(__FILE__, __LINE__,"Expected a digit, got eof ");
    }
 
-   int signum = 1;
+   bool negative = false;
    if (*mPosition == '-')
    {
-      signum = -1;
+      negative = true;
       ++mPosition;
       assertNotEof();
    }
@@ -671,25 +675,33 @@ ParseBuffer::integer()
 
    if (!isdigit(*mPosition))
    {
-       Data msg("Expected a digit, got: ");
-       msg += Data(mPosition, (mEnd - mPosition));
+      Data msg("Expected a digit, got: ");
+      msg += Data(mPosition, (mEnd - mPosition));
       fail(__FILE__, __LINE__,msg);
    }
-   
-   int num = 0;
-   int last=0;
+
+   // The absolute value limit depending on the detected sign
+   const unsigned int absoluteLimit = negative ? -(unsigned int)INT_MIN : INT_MAX;
+   // maximum value for full number except last digit
+   const unsigned int border = absoluteLimit / 10;
+   // value the last digit must not exceed
+   const unsigned int digitLimit = absoluteLimit % 10;
+
+   unsigned int num = 0;
    while (!eof() && isdigit(*mPosition))
    {
-      last=num;
-      num = num*10 + (*mPosition-'0');
-      if(last > num)
-      {
+      const unsigned int c = *mPosition++ - '0';
+      if (num > border || (num == border && c > digitLimit)) {
          fail(__FILE__, __LINE__,"Overflow detected.");
       }
-      ++mPosition;
-   }
-   
-   return signum*num;
+      num *= 10;
+      num += c;
+    }
+    if (negative)
+    {
+        num = -num;
+    }
+    return num;
 }
 
 UInt8
@@ -857,7 +869,7 @@ ParseBuffer::qVal()
          return 0;
       }
       
-      if (*mPosition == '.')
+      if (!eof() && *mPosition == '.')
       {
          skipChar();
          

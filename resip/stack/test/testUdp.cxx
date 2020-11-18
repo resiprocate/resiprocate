@@ -21,6 +21,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DataStream.hxx"
 
+#include <utility>
+
 using namespace resip;
 using namespace std;
 
@@ -90,7 +92,7 @@ main(int argc, char* argv[])
       }
 
       UInt64 elapsed = Timer::getTimeMs() - startTime;
-      cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of "
            << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
       
       InfoLog (<< "Messages created");
@@ -121,8 +123,8 @@ main(int argc, char* argv[])
             next->encode(strm);
             outstanding++;
          }
-         std::auto_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
-         sender->send(toSend);
+         std::unique_ptr<SendData> toSend(sender->makeSendData(dest, encoded, Data(tid++), Data::Empty));
+         sender->send(std::move(toSend));
       }
 
       FdSet fdset; 
@@ -156,7 +158,7 @@ main(int argc, char* argv[])
    }
 
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+   cout << runs << " calls performed in " << elapsed << " ms, a rate of "
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 
    return 0;

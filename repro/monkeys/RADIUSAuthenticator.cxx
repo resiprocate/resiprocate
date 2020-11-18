@@ -15,7 +15,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -94,7 +94,7 @@ RADIUSAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, U
       if(result < 0)
       {
          ErrLog(<<"RADIUSServerAuthManager::requestCredential, uri = " << reqUri <<" failed to start thread, error = " << result);
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 500, "Auth failed")));
          return SkipAllChains;
       }
@@ -103,7 +103,7 @@ RADIUSAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, U
    {
       WarningLog(<<"RADIUSServerAuthManager::requestCredential, unexpected exception thrown");
       delete radiusListener;
-      rc.sendResponse(*auto_ptr<SipMessage>
+      rc.sendResponse(*unique_ptr<SipMessage>
                       (Helper::makeResponse(*sipMessage, 500, "Auth failed")));
       return SkipAllChains;
    }

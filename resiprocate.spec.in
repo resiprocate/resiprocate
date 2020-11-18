@@ -6,7 +6,10 @@ License: VSL
 Url: http://www.resiprocate.org
 Source: https://www.resiprocate.org/files/pub/reSIProcate/releases/%name-%version.tar.gz
 BuildRequires: libtool automake autoconf
-BuildRequires: asio-devel
+%define build_return 0%{?fedora} >= 30 || 0%{?rhel} >= 8
+%if %build_return
+BuildRequires: asio-devel >= 1.12.0
+%endif
 BuildRequires: boost-devel
 BuildRequires: cajun-jsonapi-devel
 BuildRequires: c-ares-devel
@@ -20,22 +23,34 @@ BuildRequires: db4-cxx-devel
 BuildRequires: systemd
 %endif
 BuildRequires: db4-devel
-BuildRequires: openssl-devel >= 0.9.8
+BuildRequires: openssl-devel >= 1.1.0
+%define use_mariadb 0%{?fedora} >= 30 || 0%{?rhel} >= 8
+%if %use_mariadb
+BuildRequires: mariadb-connector-c-devel
+%else
 BuildRequires: mysql-devel
+%endif
 BuildRequires: pcre-devel
 BuildRequires: perl
 BuildRequires: popt-devel
 BuildRequires: postgresql-devel
-BuildRequires: python-devel
-BuildRequires: python-pycxx-devel
-%define use_freeradius_client 0%{?fedora} == 0 || 0%{?fedora} >= 21 || 0%{?rhel} >= 7
+BuildRequires: python3-devel
+BuildRequires: python3-pycxx-devel
+%define use_radcli 0%{?fedora} >= 30 || 0%{?rhel} >= 7
+%if %use_radcli
+BuildRequires: radcli-devel
+%else
+%define use_freeradius_client 0%{?fedora} >= 21
 %if %use_freeradius_client
 BuildRequires: freeradius-client-devel
 %else
 BuildRequires: radiusclient-ng-devel
 %endif
+%endif
 BuildRequires: xerces-c-devel
-Requires: openssl >= 0.9.8
+BuildRequires: net-snmp-devel
+BuildRequires: qpid-proton-cpp-devel
+Requires: openssl >= 1.1.0
 %if %use_systemd
 Requires(post): systemd
 Requires(preun): systemd
@@ -44,7 +59,7 @@ Requires(postun): systemd
 Requires: chkconfig
 Requires(preun): initscripts
 %endif
-Obsoletes: resiprocate-b2bua
+Obsoletes: resiprocate-b2bua < 1.9.0
 
 %description
 The reSIProcate components, particularly the SIP stack, are in use in both
@@ -82,6 +97,7 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
+%if %build_return
 %package turn-server
 Summary: ICE/STUN/TURN server
 Requires(pre): shadow-utils
@@ -98,15 +114,18 @@ Jitsi, Empathy and Psi.
 reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
+%endif
 
+%if %build_return
 %package turn-server-psql
 Summary: ICE/STUN/TURN server PostgreSQL users script
-Requires: python-psycopg2
+Requires: python3-psycopg2
 
 %description turn-server-psql
 reTurn is the TURN server developed as part of the reSIProcate project.
 This packages provides a Python script to synchronize the reTurn
 users.txt file from a PostgreSQL table.
+%endif
 
 %package sipdialer
 Summary: Click-to-call utility
@@ -130,32 +149,62 @@ reSIProcate is a framework that aims to fully implement the SIP protocol
 in first class C++.  It is intended for use in other applications,
 such as the repro SIP proxy.
 
+%package registration-agent
+Summary: SIP registration agent process
+
+%description registration-agent
+An agent process to submit REGISTER requests with a synthetic Contact
+header for routing calls back to a SIP proxy or some other endpoint that
+can't submit a REGISTER request itself
+reSIProcate is a framework that aims to fully implement the SIP protocol
+in first class C++.  It is intended for use in other applications,
+such as the repro SIP proxy.
+
+%package mibs
+Summary: MIBs for SNMP users
+
+%description mibs
+MIB files describing the properties exposed by the SNMP agents
+in reSIProcate-based processes.  These are typically installed on the
+monitoring host that polls the reSIProcate services.
+
 %prep
 %setup -q
 
 %build
-PYCONFIG=/usr/bin/python2.7-config
-[ -x $PYCONFIG ] || PYCONFIG=/usr/bin/python2.6-config
+PYCONFIG=/usr/bin/python3-config
 if [ ! -x $PYCONFIG ] ; then echo "python*-config not found" ; exit 1 ; fi
+%if %use_radcli
+RADIUS_CFG=--with-radcli
+%else
 %if %use_freeradius_client
 RADIUS_CFG=--with-freeradius
 %else
 RADIUS_CFG=--with-radius
 %endif
+%endif
+%if %build_return
+RETURN_CFG=--with-return
+%endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python2 --enable-assert-syslog
+CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} ${RETURN_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp --with-qpid-proton
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+rm -rf resip/stack/gen/*.cxx
 make %{?_smp_mflags}
 
 %install
 make DESTDIR=%{buildroot} install
 %if %use_systemd
 install -p -D -m644 repro/pkg/common/repro.service %{buildroot}%{_unitdir}/repro.service
+%if %build_return
 install -p -D -m644 reTurn/pkg/common/resiprocate-turn-server.service %{buildroot}%{_unitdir}/resiprocate-turn-server.service
+%endif
 %else
 install -p -D -m755 repro/pkg/fedora/repro.init %{buildroot}%{_initddir}/repro
+%if %build_return
 install -p -D -m755 reTurn/pkg/fedora/resiprocate-turn-server.init %{buildroot}%{_initddir}/resiprocate-turn-server
+%endif
 %endif
 install -m 0755 -d %{buildroot}%{_sysconfdir}/repro
 install -p -D -m640 repro/repro.config %{buildroot}%{_sysconfdir}/repro/repro.config
@@ -175,6 +224,7 @@ sed -i \
  -e 's!^Database1Path = ./$!Database1Path = %{_sharedstatedir}/repro!' \
  -e 's!^ChallengeThirdPartiesCallingLocalDomains = true$!ChallengeThirdPartiesCallingLocalDomains = false!' \
             %{buildroot}%{_sysconfdir}/repro/repro.config
+%if %build_return
 install -p -D -m640 reTurn/reTurnServer.config %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
 install -p -D -m640 reTurn/users.txt %{buildroot}%{_sysconfdir}/reTurn/users.txt
 sed -i -e 's/1234/6078a36f89704d83763c9e174b3e87a4/' %{buildroot}%{_sysconfdir}/reTurn/users.txt
@@ -190,6 +240,7 @@ sed -i \
  -e 's!^UserDatabaseHashedPasswords = false!UserDatabaseHashedPasswords = true!' \
  -e 's!^TlsTempDhFilename = dh2048.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh2048.pem!' \
             %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
+%endif
 install -m 0755 -d %{buildroot}%{_sharedstatedir}/repro
 rm -f %{buildroot}%{_libdir}/lib*.a
 rm -f %{buildroot}%{_libdir}/lib*.la
@@ -205,11 +256,13 @@ getent passwd repro >/dev/null || \
     useradd -r -g repro -d %{_sharedstatedir}/repro -s /sbin/nologin \
     -c "repro SIP proxy" repro
 
+%if %build_return
 %pre turn-server
 getent group return >/dev/null || groupadd -r return
 getent passwd return >/dev/null || \
     useradd -r -g return -d / -s /sbin/nologin \
     -c "reTurn TURN server" return
+%endif
 
 %post libs -p /sbin/ldconfig
 
@@ -230,6 +283,7 @@ then
   chmod 0640 %{_sysconfdir}/repro/dh2048.pem
 fi
 
+%if %build_return
 %post turn-server
 %if %use_systemd
 %systemd_post resiprocate-turn-server.service
@@ -245,6 +299,7 @@ then
   chown root:return %{_sysconfdir}/reTurn/dh2048.pem
   chmod 0640 %{_sysconfdir}/reTurn/dh2048.pem
 fi
+%endif
 
 %preun repro
 %if %use_systemd
@@ -258,6 +313,7 @@ then
 fi
 %endif
 
+%if %build_return
 %preun turn-server
 %if %use_systemd
 %systemd_preun resiprocate-turn-server.service
@@ -268,6 +324,7 @@ then
    /sbin/service resiprocate-turn-server stop
    /sbin/chkconfig --del resiprocate-turn-server
 fi
+%endif
 %endif
 
 %postun libs -p /sbin/ldconfig
@@ -283,6 +340,7 @@ if [ $1 -ge 1 ] ; then
 fi
 %endif
 
+%if %build_return
 %postun turn-server
 %if %use_systemd
 %systemd_postun_with_restart resiprocate-turn-server.service
@@ -291,6 +349,7 @@ if [ $1 -ge 1 ] ; then
     # Package upgrade, not uninstall
     /sbin/service resiprocate-turn-server try-restart
 fi
+%endif
 %endif
 
 %clean
@@ -301,14 +360,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libdum-*.so
 %{_libdir}/librepro-*.so
 %{_libdir}/libresip-*.so
+%if %build_return
 %{_libdir}/libreTurnClient-*.so
+%{_libdir}/libreTurnCommon-*.so
+%endif
 %{_libdir}/librutil-*.so
 %{_libdir}/libsipdial-*.so
 
 %files devel
 %dir %{_includedir}/clicktocall/
+%if %build_return
 %dir %{_includedir}/reTurn/
 %dir %{_includedir}/reTurn/client/
+%endif
 %dir %{_includedir}/repro/
 %dir %{_includedir}/repro/monkeys/
 %dir %{_includedir}/repro/stateAgents/
@@ -324,8 +388,10 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/rutil/wince/
 %dir %{_includedir}/sipdial/
 %{_includedir}/clicktocall/*.hxx
+%if %build_return
 %{_includedir}/reTurn/*.hxx
 %{_includedir}/reTurn/client/*.hxx
+%endif
 %{_includedir}/repro/*.hxx
 %{_includedir}/repro/*/*.hxx
 %{_includedir}/resip/dum/*.hxx
@@ -339,7 +405,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libdum.so
 %{_libdir}/librepro.so
 %{_libdir}/libresip.so
+%if %build_return
 %{_libdir}/libreTurnClient.so
+%{_libdir}/libreTurnCommon.so
+%endif
 %{_libdir}/librutil.so
 %{_libdir}/libsipdial.so
 
@@ -361,6 +430,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/@PACKAGE@/repro/plugins/*.so
 %{_docdir}/repro
 
+%if %build_return
 %files turn-server
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/reTurnServer.config
 %attr(0640,root,return) %config(noreplace) %{_sysconfdir}/reTurn/users.txt
@@ -373,9 +443,12 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 %{_sbindir}/reTurnServer
 %{_mandir}/man8/reTurnServer.8*
+%endif
 
+%if %build_return
 %files turn-server-psql
 %{_libdir}/@PACKAGE@/reTurnServer/psql-user-extract
+%endif
 
 %files sipdialer
 %{_bindir}/sipdialer
@@ -383,6 +456,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %files clicktocall
 %{_sbindir}/clicktocall
+
+%files registration-agent
+%{_sbindir}/registrationAgent
+%{_mandir}/man8/registrationAgent.8*
+
+%files mibs
+%{_datadir}/snmp/mibs/REG-AGENT-MIB.txt
 
 %changelog
 * Sat Nov 24 2012 Daniel Pocock <daniel@pocock.pro> - @VERSION@-1

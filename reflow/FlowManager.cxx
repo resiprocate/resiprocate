@@ -2,6 +2,10 @@
 #include "config.h"
 #endif
 
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
+// a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
+#include <memory>
+
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
@@ -13,7 +17,6 @@
 #include <rutil/Logger.hxx>
 #include <rutil/ThreadIf.hxx>
 #include <rutil/Random.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Timer.hxx>
 
 #ifdef WIN32
@@ -61,7 +64,7 @@ private:
 FlowManager::FlowManager()
 #ifdef USE_SSL
    : 
-   mSslContext(mIOService, asio::ssl::context::tlsv1),
+   mSslContext(asio::ssl::context::sslv23),
    mClientCert(0),
    mClientKey(0),
    mDtlsFactory(0)
@@ -122,7 +125,7 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    if(createCert(aor, 365 /* expireDays */, 1024 /* keyLen */, mClientCert, mClientKey))
    {
       FlowDtlsTimerContext* timerContext = new FlowDtlsTimerContext(mIOService);
-      mDtlsFactory = new DtlsFactory(std::auto_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
+      mDtlsFactory = new DtlsFactory(std::unique_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
       resip_assert(mDtlsFactory);
    }
    else
@@ -161,7 +164,9 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const char* natTraversalServerHostname, 
                                unsigned short natTraversalServerPort, 
                                const char* stunUsername,
-                               const char* stunPassword)
+                               const char* stunPassword,
+                               bool forceCOMedia,
+                               std::shared_ptr<FlowContext> context)
 {
    MediaStream* newMediaStream = 0;
    if(rtcpEnabled)
@@ -181,7 +186,10 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
                                        stunUsername, 
-                                       stunPassword);
+                                       stunPassword,
+                                       forceCOMedia,
+                                       mRtcpEventLoggingHandler,
+                                       std::move(context));
    }
    else
    {
@@ -200,7 +208,10 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        natTraversalServerHostname, 
                                        natTraversalServerPort, 
                                        stunUsername, 
-                                       stunPassword);
+                                       stunPassword,
+                                       forceCOMedia,
+                                       nullptr,
+                                       std::move(context));
    }
    return newMediaStream;
 }
@@ -286,6 +297,7 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

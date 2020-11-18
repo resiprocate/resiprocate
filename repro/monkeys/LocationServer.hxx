@@ -1,8 +1,8 @@
-#if !defined(RESIP_LOCATIONSSERVER_REQUEST_PROCESSOR_HXX)
+#if !defined(RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX)
 #define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
 #include "repro/ProxyConfig.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
@@ -13,7 +13,7 @@ namespace repro
     public:
       LocationServer(ProxyConfig& config, 
                      resip::RegistrationPersistenceManager& store,
-                     Dispatcher* userInfoDispatcher) : 
+                     resip::Dispatcher* userInfoDispatcher) : 
          Processor("LocationServer"), 
          mStore(store),
          mUserInfoDispatcher(userInfoDispatcher)
@@ -23,9 +23,9 @@ namespace repro
 
       virtual processor_action_t process(RequestContext &);
 
-    private:
+    protected:
       resip::RegistrationPersistenceManager& mStore;
-      Dispatcher* mUserInfoDispatcher;
+      resip::Dispatcher* mUserInfoDispatcher;
   };
 }
 #endif

@@ -2,6 +2,8 @@
 #include "p2p/Dispatcher.hxx"
 #include "p2p/P2PSubsystem.hxx"
 
+#include <utility>
+
 namespace p2p
 {
 
@@ -21,7 +23,7 @@ ForwardingLayer::process(int ms)
 
 
 void 
-ForwardingLayer::forward( std::auto_ptr<Message> m )
+ForwardingLayer::forward(std::unique_ptr<Message> m)
 {
    // get the destination node from m 
    DebugLog(<< "ForwardingLayer: message arrived");
@@ -50,7 +52,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
          else
          { 
             DebugLog(<< "ForwardingLayer: no more entries on destination list. Posting.");
-            mDispatcher.post(m);
+            mDispatcher.post(std::move(m));
          }
       }
       else // not me
@@ -61,7 +63,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
          { 
             DebugLog(<< "ForwardingLayer: forwarding to directly connected node");
             
-            mTransporter.send(did.asNodeId(), m); 
+            mTransporter.send(did.asNodeId(), std::move(m)); 
          }
          else if(mTopology.isResponsible(did.asNodeId()))
          {
@@ -74,7 +76,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
             // We're not responsible, try to route to someone who is
             DebugLog(<< "ForwardingLayer: routing to next hop");
             
-            mTransporter.send(mTopology.findNextHop(did), m);
+            mTransporter.send(mTopology.findNextHop(did), std::move(m));
          }
       }
    }
@@ -91,7 +93,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
          {
             DebugLog(<< "ForwardingLayer: delivering");
             
-            mDispatcher.post(m);            
+            mDispatcher.post(std::move(m));            
          }
          else
          {
@@ -105,7 +107,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
          // Not responsible so try to route 
          DebugLog(<< "ForwardingLayer: routing to next hop");
          
-         mTransporter.send(mTopology.findNextHop(did.asResourceId()), m);
+         mTransporter.send(mTopology.findNextHop(did.asResourceId()), std::move(m));
       }
    }
 }
@@ -171,7 +173,7 @@ ForwardingLayer::consume(LocalCandidatesCollected& m)
 }
 
 void 
-ForwardingLayer::post(std::auto_ptr<Event> event)
+ForwardingLayer::post(std::unique_ptr<Event> event)
 {
    event->dispatch(*this);
 }

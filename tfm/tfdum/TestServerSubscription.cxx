@@ -27,7 +27,7 @@ TestServerSubscription::accept(int statusCode)
 {
    return new SendingAction<ServerSubscriptionHandle>(mUa, mHandle, "accept", 
                                                       boost::bind(&ServerSubscription::accept, 
-                                                                  boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mHandle)), statusCode), 
+                                                                  boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle)), statusCode), 
                                                       NoAdornment::instance());
 }
 
@@ -36,7 +36,7 @@ TestServerSubscription::reject(int responseCode)
 {
    return new SendingAction<ServerSubscriptionHandle>(mUa, mHandle, "reject",
                                                       boost::bind(&ServerSubscription::reject, 
-                                                                  boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mHandle)), 
+                                                                  boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle)), 
                                                                   responseCode),
                                                       NoAdornment::instance());
 }
@@ -46,7 +46,7 @@ TestServerSubscription::neutralNotify()
 {
    return new SendingAction<ServerSubscriptionHandle>(mUa, mHandle, "neutralNotify",
                                                       boost::bind(&ServerSubscription::neutralNotify, 
-                                                                  boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mHandle))), 
+                                                                  boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle))), 
                                                       NoAdornment::instance());
 }
                                                                                     
@@ -55,7 +55,7 @@ TestServerSubscription::update(const resip::Contents* document)
 {
    return new SendingAction<ServerSubscriptionHandle>(mUa, mHandle, "update",
                                                       boost::bind(&ServerSubscription::update, 
-                                                                  boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mHandle)), document), 
+                                                                  boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle)), document), 
                                                       NoAdornment::instance());
 }
 
@@ -64,21 +64,21 @@ TestServerSubscription::setSubscriptionState(resip::SubscriptionState state)
 {
    return new CommonAction(mUa, "setSubscriptionState", 
                            boost::bind(&ServerSubscription::setSubscriptionState, 
-                                       boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mHandle)), 
+                                       boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle)), 
                                        state));
 }
 
 CommonAction* 
 TestServerSubscription::end()
 {
-   return new CommonAction(mUa, "end", boost::bind(&ServerSubscription::end, boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mHandle))));
+   return new CommonAction(mUa, "end", boost::bind(&ServerSubscription::end, boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle))));
 }
  
 CommonAction* 
-TestServerSubscription::send(resip::SharedPtr<SipMessage> msg)
+TestServerSubscription::send(std::shared_ptr<SipMessage> msg)
 {
    return new CommonAction(mUa, "send", 
-                           boost::bind(&ServerSubscription::send, boost::bind<ServerSubscription*>(&ServerSubscriptionHandle::get, boost::ref(mHandle)), 
+                           boost::bind(&ServerSubscription::send, boost::bind<ServerSubscription*>(static_cast<ServerSubscription*(ServerSubscriptionHandle::*)()>(&ServerSubscriptionHandle::get), boost::ref(mHandle)), 
                                        msg));
 }
 

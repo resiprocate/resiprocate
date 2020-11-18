@@ -3,6 +3,8 @@
 #include "ReconSubsystem.hxx"
 #include "UserAgentMasterProfile.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -27,13 +29,45 @@ UserAgentMasterProfile::UserAgentMasterProfile()
 #endif
 }
 
+void
+UserAgentMasterProfile::setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept
+{
+   mTransportSipMessageLoggingHandler = std::move(handler);
+}
+
+std::shared_ptr<Transport::SipMessageLoggingHandler>
+UserAgentMasterProfile::getTransportSipMessageLoggingHandler() const noexcept
+{
+   return mTransportSipMessageLoggingHandler;
+}
+
+void
+UserAgentMasterProfile::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> handler) noexcept
+{
+   mRTCPEventLoggingHandler = std::move(handler);
+}
+
+std::shared_ptr<flowmanager::RTCPEventLoggingHandler>
+UserAgentMasterProfile::getRTCPEventLoggingHandler() const noexcept
+{
+   return mRTCPEventLoggingHandler;
+}
+
 void 
 UserAgentMasterProfile::addTransport( TransportType protocol,
                                       int port, 
                                       IpVersion version,
+                                      StunSetting stun,
                                       const Data& ipInterface, 
                                       const Data& sipDomainname,
-                                      SecurityTypes::SSLType sslType)
+                                      const Data& privateKeyPassPhrase,
+                                      SecurityTypes::SSLType sslType,
+                                      unsigned transportFlags,
+                                      const Data& certificateFilename,
+                                      const Data& privateKeyFilename,
+                                      SecurityTypes::TlsClientVerificationMode cvm,
+                                      bool useEmailAsSIP,
+                                      unsigned int rcvBufLen)
 {
    TransportInfo info;
 
@@ -41,8 +75,16 @@ UserAgentMasterProfile::addTransport( TransportType protocol,
    info.mPort = port;
    info.mIPVersion = version;
    info.mIPInterface = ipInterface;
+   info.mStunEnabled = stun;
    info.mSipDomainname = sipDomainname;
+   info.mTlsPrivateKeyPassPhrase = privateKeyPassPhrase;
    info.mSslType = sslType;
+   info.mTransportFlags = transportFlags;
+   info.mTlsCertificate = certificateFilename;
+   info.mTlsPrivateKey = privateKeyFilename;
+   info.mCvm = cvm;
+   info.mUseEmailAsSIP = useEmailAsSIP;
+   info.mRcvBufLen = rcvBufLen;
 
    mTransports.push_back(info);
 }

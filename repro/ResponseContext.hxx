@@ -29,7 +29,7 @@ class RequestContext;
 class ResponseContext
 {
    public:
-      class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
+      class CompareStatus
       {
          public:
             bool operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const;
@@ -70,7 +70,7 @@ class ResponseContext
          @note Targets are not checked for duplicate uris until an attempt 
             is made to start them.
       */
-      bool addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately = false, bool checkDuplicates = true);
+      bool addTarget(std::unique_ptr<repro::Target> target, bool beginImmediately = false, bool checkDuplicates = true);
 
       /**
          Adds a batch of Targets. 
@@ -115,37 +115,49 @@ class ResponseContext
       
       /**
          Cancels all active client transactions. Does not clear Candidate
-         transactions.
+         transactions.  
+         
+         @param reasons Optional reasons header to be added to any
+                        resulting CANCEL requests.
          
          @returns true iff any transaction was placed in either the
          WaitingToCancel or Cancelled state.
       */ 
-      bool cancelActiveClientTransactions();
+      bool cancelActiveClientTransactions(const resip::Tokens* reasons = 0);
       
       /**
          Cancels all active client transactions. Also clears Candidate
-         transactions (they are transitioned directly to Terminated)
-         
+         transactions (they are transitioned directly to Terminated).
+
+         @param reasons Optional reasons header to be added to any
+         resulting CANCEL requests.
+
          @returns true iff any transaction was placed in either the
          WaitingToCancel, Cancelled, or Terminated state.
       */ 
-      bool cancelAllClientTransactions();
+      bool cancelAllClientTransactions(const resip::Tokens* reasons = 0);
       
       /**
-         Removes all Candidate transactions.
-         
+         Removes all Candidate transactions. 
+
+         @param reasons Optional reasons header to be added to any
+         resulting CANCEL requests.
+
          @returns true iff at least one Candidate transaction was removed.
       */
-      bool clearCandidateTransactions();
+      bool clearCandidateTransactions(const resip::Tokens* reasons = 0);
       
       /**
          Cancels this client transaction if active, or Terminates it if
-         Candidate.
-         
-         @returns true iff this transaction was placed in either the 
+         Candidate.    
+
+         @param reasons Optional reasons header to be added to any
+         resulting CANCEL requests.
+
+         @returns true iff this transaction was placed in either the
          WaitingToCancel, Cancelled, or Terminated state.
       */
-      bool cancelClientTransaction(const resip::Data& serial);
+      bool cancelClientTransaction(const resip::Data& serial, const resip::Tokens* reasons = 0);
             
       /**
          Self-explanatory
@@ -232,8 +244,7 @@ class ResponseContext
       void processTimerC();
 
       void beginClientTransaction(repro::Target* target);
-      void cancelClientTransaction(repro::Target* target);
-
+      void cancelClientTransaction(repro::Target* target, const resip::Tokens* reasons = 0);
 
       void terminateClientTransaction(const resip::Data& tid);
       void removeClientTransaction(const resip::Data& transactionId); 

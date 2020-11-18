@@ -5,9 +5,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/array.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include "RequestHandler.hxx"
 #include "StunTuple.hxx"
 #include "AsyncTcpSocketBase.hxx"
@@ -19,13 +16,17 @@ class ConnectionManager;
 
 /// Represents a single connection from a client.
 class TcpConnection
-  : public AsyncTcpSocketBase,
-    private boost::noncopyable
+  : public AsyncTcpSocketBase
 {
 public:
    /// Construct a connection with the given io_service.
    explicit TcpConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler);
+   TcpConnection(const TcpConnection&) = delete;
+   TcpConnection(TcpConnection&&) = delete;
    ~TcpConnection();
+
+   TcpConnection& operator=(const TcpConnection&) = delete;
+   TcpConnection& operator=(TcpConnection&&) = delete;
 
    /// Get the socket associated with the connection.
    asio::ip::tcp::socket& socket();
@@ -41,7 +42,7 @@ public:
 
 protected:
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(const asio::error_code& e);
 
    /// Handle completion of a send operation

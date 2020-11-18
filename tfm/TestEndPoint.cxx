@@ -1,5 +1,4 @@
 #include <boost/lexical_cast.hpp>
-#include <memory>
 
 #include "cppunit/TestCase.h"
 #include "rutil/Logger.hxx"
@@ -20,7 +19,7 @@ TestEndPoint::AlwaysTrue* TestEndPoint::AlwaysTruePred = new TestEndPoint::Alway
 
 TestEndPoint::GlobalFailure::GlobalFailure(const resip::Data& msg,
                                            const resip::Data& file, 
-                                           int line)
+                                           const int line)
    : TestException(msg, file, line)
 {
 }
@@ -36,10 +35,6 @@ TestEndPoint::TestEndPoint()
 {
 }
 
-TestEndPoint::~TestEndPoint() 
-{
-}
-
 int
 TestEndPoint::DebugTimeMult() 
 {
@@ -49,18 +44,18 @@ TestEndPoint::DebugTimeMult()
    return 1;
 }
 
-boost::weak_ptr<SequenceSet> 
-TestEndPoint::getSequenceSet() const 
+std::weak_ptr<SequenceSet>
+TestEndPoint::getSequenceSet() const noexcept
 {
    return mSequenceSet;
 }
 
 void
-TestEndPoint::setSequenceSet(boost::shared_ptr<SequenceSet> set)
+TestEndPoint::setSequenceSet(std::shared_ptr<SequenceSet> set)
 {
    //DebugLog(<< this << "->TestEndPoint::setSequenceSet(" << set << ")" << "(was " << mSequenceSet << ")");
 //   assert(set == 0 || mSequenceSet == 0 || mSequenceSet == set);
-   mSequenceSet = boost::weak_ptr<SequenceSet>(set);
+   mSequenceSet = std::weak_ptr<SequenceSet>(set);
 }
 
 bool 
@@ -73,22 +68,14 @@ TestEndPoint::Action::Action()
 {
 }
 
-TestEndPoint::Action::~Action() 
-{
-}
-
 void 
-TestEndPoint::Action::operator()(boost::shared_ptr<Event> event)
+TestEndPoint::Action::operator()(std::shared_ptr<Event> event)
 {
    (*this)();
 }
 
 TestEndPoint::EndPointAction::EndPointAction(TestEndPoint* endPoint)
    : mEndPoint(endPoint)
-{
-}           
-
-TestEndPoint::EndPointAction::~EndPointAction()
 {
 }
 
@@ -132,7 +119,7 @@ TestEndPoint::Note::operator()()
 }
 
 void 
-TestEndPoint::Note::operator()(boost::shared_ptr<Event> event)
+TestEndPoint::Note::operator()(std::shared_ptr<Event> event)
 {
    InfoLog(<<"##Note: " << mEndPoint->getName() << " " << mMessage << ", " << event->briefString());
 }
@@ -166,7 +153,7 @@ TestEndPoint::Execute::Execute(TestEndPoint* from,
 }
 
 void
-TestEndPoint::Execute::operator()(boost::shared_ptr<Event> event)
+TestEndPoint::Execute::operator()(std::shared_ptr<Event> event)
 {
    mExec(event);
 }
@@ -207,7 +194,7 @@ TestEndPoint::And::queue(SequenceClass* parent)
 }
 
 void
-TestEndPoint::And::setSequenceSet(boost::shared_ptr<SequenceSet> set)
+TestEndPoint::And::setSequenceSet(std::shared_ptr<SequenceSet> set)
 {
    for(list<SequenceClass*>::iterator seqit =  mSequences.begin();
        seqit != mSequences.end(); seqit++)
@@ -217,21 +204,21 @@ TestEndPoint::And::setSequenceSet(boost::shared_ptr<SequenceSet> set)
 }
 
 bool
-TestEndPoint::And::isMatch(boost::shared_ptr<Event> event) const
+TestEndPoint::And::isMatch(std::shared_ptr<Event> event) const
 {
    resip_assert(0);
    return false;   
 }
 
 resip::Data
-TestEndPoint::And::explainMismatch(boost::shared_ptr<Event> event) const
+TestEndPoint::And::explainMismatch(std::shared_ptr<Event> event) const
 {
    resip_assert(0);
    return Data::Empty;   
 }
 
 void
-TestEndPoint::And::onEvent(TestEndPoint& user, boost::shared_ptr<Event> event)
+TestEndPoint::And::onEvent(TestEndPoint& user, std::shared_ptr<Event> event)
 {
    resip_assert(0);
 }
@@ -292,20 +279,20 @@ TestEndPoint::Pause::Pause(int msec, TestEndPoint* endPoint)
 {
 }
 
-void TestEndPoint::Pause::exec(boost::shared_ptr<Event> event)
+void TestEndPoint::Pause::exec(std::shared_ptr<Event> event)
 {
    resip_assert(mNext);
-   boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
+   std::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
    resip_assert(sset.get());
-   sset->enqueue(boost::shared_ptr<Event>(new ExpectActionEvent(mNext, event)), mMsec);
+   sset->enqueue(std::make_shared<ExpectActionEvent>(mNext, event), mMsec);
 }
 
 void TestEndPoint::Pause::exec()
 {
    resip_assert(mNext);
-   boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
+   std::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
    resip_assert(sset.get());
-   sset->enqueue(boost::shared_ptr<Event>(new ExpectActionEvent(mNext, mEndPoint)), mMsec);
+   sset->enqueue(std::make_shared<ExpectActionEvent>(mNext, mEndPoint), mMsec);
 }
 
 resip::Data
@@ -339,10 +326,6 @@ TestEndPoint::ExpectBase::ExpectBase()
 {
 }
 
-TestEndPoint::ExpectBase::~ExpectBase() 
-{
-}
-
 bool 
 TestEndPoint::ExpectBase::queue(SequenceClass* parent) 
 {
@@ -350,9 +333,9 @@ TestEndPoint::ExpectBase::queue(SequenceClass* parent)
 }
 
 void 
-TestEndPoint::ExpectBase::setSequenceSet(boost::shared_ptr<SequenceSet> set)
+TestEndPoint::ExpectBase::setSequenceSet(std::shared_ptr<SequenceSet> set)
 {
-   getEndPoint()->setSequenceSet(set);
+   getEndPoint()->setSequenceSet(std::move(set));
 }
 
 EncodeStream& 
@@ -390,7 +373,7 @@ TestEndPoint::AssertException::getName() const
 }
 
 const char* 
-TestEndPoint::AssertException::name() const 
+TestEndPoint::AssertException::name() const noexcept
 {
    return "TestEndPoint::AssertException";
 }
@@ -403,7 +386,7 @@ TestEndPoint::Assert::Assert(TestEndPoint* from,
 }
 
 void
-TestEndPoint::Assert::operator()(boost::shared_ptr<Event> event)
+TestEndPoint::Assert::operator()(std::shared_ptr<Event> event)
 {
    if (!mPredicate(event))
    {

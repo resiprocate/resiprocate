@@ -1,14 +1,14 @@
 #ifndef ASYNCPROCESSOR_WORKER_HXX
 #define ASYNCPROCESSOR_WORKER_HXX 1
 
-#include "repro/Worker.hxx"
+#include "resip/stack/Worker.hxx"
 #include "repro/AsyncProcessor.hxx"
 #include "repro/AsyncProcessorMessage.hxx"
 
 namespace repro
 {
 
-class AsyncProcessorWorker : public Worker
+class AsyncProcessorWorker : public resip::Worker
 {
 public:
    AsyncProcessorWorker() {}
@@ -24,7 +24,7 @@ public:
       resip_assert(false);  // unexpected message type
       return false;
    }
-   virtual Worker* clone() const
+   virtual resip::Worker* clone() const
    {
       return new AsyncProcessorWorker();
    }

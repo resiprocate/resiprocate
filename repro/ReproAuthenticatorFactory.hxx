@@ -6,6 +6,7 @@
 
 #include "rutil/Data.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include "AuthenticatorFactory.hxx"
@@ -24,15 +25,15 @@ public:
 
    virtual bool certificateAuthEnabled() { return mEnableCertAuth; };
 
-   virtual resip::SharedPtr<resip::DumFeature> getCertificateAuthManager();
-   virtual std::auto_ptr<Processor> getCertificateAuthenticator();
+   virtual std::shared_ptr<resip::DumFeature> getCertificateAuthManager();
+   virtual std::unique_ptr<Processor> getCertificateAuthenticator();
 
    virtual bool digestAuthEnabled() { return mEnableDigestAuth; };
 
-   virtual resip::SharedPtr<resip::ServerAuthManager> getServerAuthManager();
-   virtual std::auto_ptr<Processor> getDigestAuthenticator();
+   virtual std::shared_ptr<resip::ServerAuthManager> getServerAuthManager();
+   virtual std::unique_ptr<Processor> getDigestAuthenticator();
 
-   virtual Dispatcher* getDispatcher();
+   virtual resip::Dispatcher* getDispatcher();
 
 private:
    void init();
@@ -55,10 +56,10 @@ private:
 
    resip::CommonNameMappings mCommonNameMappings;
 
-   std::auto_ptr<Dispatcher> mAuthRequestDispatcher;
+   std::unique_ptr<resip::Dispatcher> mAuthRequestDispatcher;
 
-   resip::SharedPtr<resip::DumFeature> mCertificateAuthManager;
-   resip::SharedPtr<resip::ServerAuthManager> mServerAuthManager;
+   std::shared_ptr<resip::DumFeature> mCertificateAuthManager;
+   std::shared_ptr<resip::ServerAuthManager> mServerAuthManager;
 };
 
 }

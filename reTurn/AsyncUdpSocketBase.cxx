@@ -18,14 +18,10 @@ AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService)
 {
 }
 
-AsyncUdpSocketBase::~AsyncUdpSocketBase() 
-{
-}
-
 unsigned int 
 AsyncUdpSocketBase::getSocketDescriptor() 
 { 
-   return (unsigned int)mSocket.native(); 
+   return (unsigned int)mSocket.native_handle(); 
 }
 
 asio::error_code 
@@ -89,7 +85,7 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
    }
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncUdpSocketBase::getSenderEndpointAddress() 
 { 
    return mSenderEndpoint.address(); 
@@ -129,7 +125,7 @@ AsyncUdpSocketBase::transportClose()
 {
    if (mOnBeforeSocketCloseFp)
    {
-      mOnBeforeSocketCloseFp((unsigned int)mSocket.native());
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.native_handle());
    }
 
    asio::error_code ec;
@@ -142,6 +138,7 @@ AsyncUdpSocketBase::transportClose()
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

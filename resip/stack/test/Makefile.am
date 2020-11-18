@@ -14,11 +14,9 @@ EXTRA_DIST += openldap.srv
 EXTRA_DIST += raw-tests.txt
 EXTRA_DIST += RSP-2 RSP-3
 EXTRA_DIST += runtests.sh
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += test.rc
 EXTRA_DIST += *.py
-EXTRA_DIST += torture-test.txt
 EXTRA_DIST += yahoo.dns
 EXTRA_DIST += testTFSM-clientinvite
 EXTRA_DIST += testTFSM-clientnoninvite
@@ -38,6 +36,7 @@ TESTS = \
 	testApplicationSip \
 	testConnectionBase \
 	testCorruption \
+	testDialogInfoContents \
 	testDigestAuthentication \
 	testEmbedded \
 	testEmptyHeader \
@@ -77,6 +76,7 @@ check_PROGRAMS = \
 	testClient \
 	testConnectionBase \
 	testCorruption \
+	testDialogInfoContents \
 	testDigestAuthentication \
 	testDtlsTransport \
 	testDns \
@@ -134,6 +134,7 @@ testApplicationSip_SOURCES = testApplicationSip.cxx TestSupport.cxx
 testClient_SOURCES = testClient.cxx
 testConnectionBase_SOURCES = testConnectionBase.cxx TestSupport.cxx
 testCorruption_SOURCES = testCorruption.cxx
+testDialogInfoContents_SOURCES = testDialogInfoContents.cxx TestSupport.cxx
 testDigestAuthentication_SOURCES = testDigestAuthentication.cxx TestSupport.cxx
 testDtlsTransport_SOURCES = testDtlsTransport.cxx
 testDtmfPayload_SOURCES = testDtmfPayload.cxx
@@ -186,7 +187,13 @@ noinst_HEADERS = digcalc.hxx \
 	testIM.hxx \
 	TestSupport.hxx \
 	Transceiver.hxx \
-	tassert.h
+	tassert.h \
+	testPortOffset.hxx
+
+EXTRA_PROGRAMS = fuzzStack
+
+fuzzStack_SOURCES = fuzzStack.cxx TestSupport.cxx
+fuzzStack_LDFLAGS = ${LIB_FUZZING_ENGINE}
 
 ##############################################################################
 # 

@@ -7,7 +7,7 @@
 #include <cmath>        // for sqrt
 #include <iostream>
 #include <vector>
-#include <memory>	// for auto_ptr
+#include <memory>	// for unique_ptr
 #include <set>
 
 // #include "rutil/Data.hxx"
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
       exit(-1);
    }
 
-   std::auto_ptr<TestDummyThread> dummyThread;
+   std::unique_ptr<TestDummyThread> dummyThread;
    if ( numThreads >= 0 )
    {
        dummyThread.reset(new TestDummyThread);

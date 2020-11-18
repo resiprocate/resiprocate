@@ -18,6 +18,8 @@
 #include "rutil/ResipAssert.h"
 #include "rutil/compat.hxx"
 
+#include <memory>
+
 namespace resip
 {
 
@@ -383,6 +385,13 @@ inline resip::ResipFastOStream & operator<<(resip::ResipFastOStream &ostr, const
    ostr.write(str.c_str(),str.size());
 
    return ostr;
+}
+
+template <typename T>
+ResipFastOStream& operator<<(ResipFastOStream& os, const std::shared_ptr<T>& ptr)
+{
+   os << ptr.get();
+   return os;
 }
 
 /** std::istream replacement

@@ -15,7 +15,9 @@
 
 #include "repro/AbstractDb.hxx"
 #include "repro/PostgreSqlDb.hxx"
+#include "repro/UserStore.hxx"
 
+#include "repro/TlsPeerIdentityStore.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -59,13 +61,15 @@ class PostgreSQLInitializer
 };
 static PostgreSQLInitializer g_PostgreSQLInitializer;
 
-PostgreSqlDb::PostgreSqlDb(const Data& connInfo,
+PostgreSqlDb::PostgreSqlDb(const resip::ConfigParse& config,
+                 const Data& connInfo,
                  const Data& server,
                  const Data& user, 
                  const Data& password, 
                  const Data& databaseName, 
                  unsigned int port, 
                  const Data& customUserAuthQuery) :
+   SqlDb(config),
    mDBConnInfo(connInfo),
    mDBServer(server),
    mDBUser(user),
@@ -256,6 +260,7 @@ PostgreSqlDb::query(const Data& queryCommand) const
 int
 PostgreSqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
+   StackLog(<<"executing query: " << queryCommand);
    PGresult* result=0;
    int rc = query(queryCommand, &result);
       
@@ -305,7 +310,7 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
       DataStream ds(command);
       // Use two queries together to simulate UPSERT
       // Real UPSERT is coming in PostgreSQL 9.5
-      ds << "UPDATE users SET"
+      ds << "UPDATE " << tableName(UserTable) << " SET"
          << " realm='" << rec.realm
          << "', passwordHash='" << rec.passwordHash
          << "', passwordHashAlt='" << rec.passwordHashAlt
@@ -315,7 +320,7 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
          << "' WHERE username = '" << rec.user
          << "' AND domain='" << rec.domain
          << "'; "
-         << "INSERT INTO users (username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
+         << "INSERT INTO " << tableName(UserTable) << " (username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
          << " SELECT '" 
          << rec.user << "', '"
          << rec.domain << "', '"
@@ -325,7 +330,7 @@ PostgreSqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& 
          << rec.name << "', '"
          << rec.email << "', '"
          << rec.forwardAddress << "'"
-         << " WHERE NOT EXISTS (SELECT 1 FROM users WHERE "
+         << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(UserTable) << " WHERE "
          << "username = '" << rec.user << "' AND domain = '" << rec.domain << "')";
    }
    return query(command, 0) == 0;
@@ -340,7 +345,7 @@ PostgreSqlDb::getUser( const AbstractDb::Key& key ) const
    Data command;
    {
       DataStream ds(command);
-      ds << "SELECT username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM users ";
+      ds << "SELECT username, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM " << tableName(UserTable) << " ";
       userWhereClauseToDataStream(key, ds);
    }
    
@@ -385,8 +390,8 @@ PostgreSqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       DataStream ds(command);
       Data user;
       Data domain;
-      getUserAndDomainFromKey(key, user, domain);
-      ds << "SELECT passwordHash FROM users WHERE username = '" << user << "' AND domain = '" << domain << "' ";
+      UserStore::getUserAndDomainFromKey(key, user, domain);
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE username = '" << user << "' AND domain = '" << domain << "' ";
    
       // Note: domain is empty when querying for HTTP admin user - for this special user, 
       // we will only check the repro db, by not adding the UNION statement below
@@ -421,7 +426,11 @@ PostgreSqlDb::firstUserKey()
       mRow[UserTable] = 0;
    }
    
-   Data command("SELECT username, domain FROM users");
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT username, domain FROM " << tableName(UserTable);
+   }
 
    if(query(command, &mResult[UserTable]) != 0)
    {
@@ -457,11 +466,127 @@ PostgreSqlDb::nextUserKey()
    Data user(PQgetvalue(result, mRow[UserTable], 0));
    Data domain(PQgetvalue(result, mRow[UserTable]++, 1));
    
-   return user+"@"+domain;
+   return UserStore::buildKey(user, domain);
 }
 
 
 bool 
+PostgreSqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::TlsPeerIdentityRecord& rec)
+{
+   Data command;
+   {
+      DataStream ds(command);
+      // Use two queries together to simulate UPSERT
+      // Real UPSERT is coming in PostgreSQL 9.5
+      ds /* << "UPDATE " << tableName(TlsPeerIdentityTable) << " SET"
+         << "' foo='" << rec.foo
+         << "' WHERE peerName = '" << rec.peerName
+         << "' AND authorizedIdentity ='" << rec.authorizedIdentity
+         << "'; " */
+         << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, authorizedIdentity)"
+         << " SELECT '"
+         << rec.peerName << "', '"
+         << rec.authorizedIdentity << "'"
+         << " WHERE NOT EXISTS (SELECT 1 FROM " << tableName(TlsPeerIdentityTable) << " WHERE "
+         << "peerName = '" << rec.peerName << "' AND authorizedIdentity = '" << rec.authorizedIdentity << "')";
+   }
+   return query(command, 0) == 0;
+}
+
+
+AbstractDb::TlsPeerIdentityRecord
+PostgreSqlDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
+{
+   AbstractDb::TlsPeerIdentityRecord  ret;
+
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable);
+      tlsPeerIdentityWhereClauseToDataStream(key, ds);
+   }
+ 
+   PGresult* result=0;
+   if(query(command, &result) != 0)
+   {
+      return ret;
+   }
+ 
+   if (result==0)
+   {
+      ErrLog( << "PostgreSQL failed: " << PQerrorMessage(mConn));
+      return ret;
+   }
+
+   if (PQntuples(result) > 0)
+   {
+      int col = 0;
+      ret.peerName        = Data(PQgetvalue(result, 0, col++));
+      ret.authorizedIdentity = Data(PQgetvalue(result, 0, col++));
+   }
+
+   PQclear(result);
+
+   return ret;
+}
+
+
+AbstractDb::Key
+PostgreSqlDb::firstTlsPeerIdentityKey()
+{
+   // free memory from previous search 
+   if (mResult[TlsPeerIdentityTable])
+   {
+      PQclear(mResult[TlsPeerIdentityTable]);
+      mResult[TlsPeerIdentityTable] = 0;
+      mRow[TlsPeerIdentityTable] = 0;
+   }
+ 
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable);
+   }
+
+   if(query(command, &mResult[TlsPeerIdentityTable]) != 0)
+   {
+      return Data::Empty;
+   }
+
+   if(mResult[TlsPeerIdentityTable] == 0)
+   {
+      ErrLog( << "PostgreSQL failed: " << PQerrorMessage(mConn));
+      return Data::Empty;
+   }
+
+   return nextTlsPeerIdentityKey();
+}
+
+
+AbstractDb::Key
+PostgreSqlDb::nextTlsPeerIdentityKey()
+{
+   if(mResult[TlsPeerIdentityTable] == 0)
+   {
+      return Data::Empty;
+   }
+
+   PGresult *result = mResult[TlsPeerIdentityTable];
+   if (mRow[TlsPeerIdentityTable] >= PQntuples(result))
+   {
+      PQclear(result);
+      mResult[TlsPeerIdentityTable] = 0;
+      mRow[TlsPeerIdentityTable] = 0;
+      return Data::Empty;
+   }
+   Data peerName(PQgetvalue(result, mRow[TlsPeerIdentityTable], 0));
+   Data authorizedIdentity(PQgetvalue(result, mRow[TlsPeerIdentityTable]++, 1));
+
+   return TlsPeerIdentityStore::buildKey(peerName, authorizedIdentity);
+}
+
+
+bool
 PostgreSqlDb::dbWriteRecord(const Table table, 
                        const resip::Data& pKey, 
                        const resip::Data& pData)
@@ -677,10 +802,21 @@ PostgreSqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
 {
    Data user;
    Data domain;
-   getUserAndDomainFromKey(key, user, domain);
+   UserStore::getUserAndDomainFromKey(key, user, domain);
    ds << " WHERE username='" << user
       << "' AND domain='" << domain
       << "'";      
+}
+
+void
+PostgreSqlDb::tlsPeerIdentityWhereClauseToDataStream(const Key& key, DataStream& ds) const
+{
+   Data peerName;
+   Data authorizedIdentity;
+   TlsPeerIdentityStore::getTlsPeerIdentityFromKey(key, peerName, authorizedIdentity);
+   ds << " WHERE peerName='" << peerName
+      << "' AND authorizedIdentity='" << authorizedIdentity
+      << "'";
 }
    
 #endif // USE_POSTGRESQL

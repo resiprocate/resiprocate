@@ -42,10 +42,10 @@ WsFrameExtractor::~WsFrameExtractor()
 
 }
 
-std::auto_ptr<Data>
+std::unique_ptr<Data>
 WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConnection)
 {
-   std::auto_ptr<Data> ret(0);
+   std::unique_ptr<Data> ret;
    dropConnection = false;
    Data::size_type pos = 0;
    while(input != 0 && pos < len)
@@ -133,7 +133,7 @@ WsFrameExtractor::processBytes(UInt8 *input, Data::size_type len, bool& dropConn
       StackLog(<<"no full messages available in queue"); 
       return ret;
    }
-   ret = std::auto_ptr<Data>(mMessages.front());
+   ret = std::unique_ptr<Data>(mMessages.front());
    mMessages.pop();
    StackLog(<<"returning a message, size = " << ret->size());
    return ret;

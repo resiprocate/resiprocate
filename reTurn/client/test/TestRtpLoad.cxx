@@ -27,6 +27,13 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+#include <boost/chrono.hpp>
+using namespace boost::chrono;
+#endif
+
 using namespace reTurn;
 using namespace std;
 
@@ -152,7 +159,7 @@ public:
    {
       if(++mNumSends <= NUM_RTP_PACKETS_TO_SIMULATE)
       {
-         mTimer.expires_from_now(boost::posix_time::milliseconds(PACKET_TIME_TO_SIMULATE));   
+         mTimer.expires_from_now(milliseconds(PACKET_TIME_TO_SIMULATE));
          mTimer.async_wait(boost::bind(&MyTurnAsyncSocketHandler::sendRtpSimPacket, this));
          //InfoLog(<< "Sending packet " << mNumReceives << "...");
          mTurnAsyncSocket->send(rtpPayload.data(), rtpPayload.size());  
@@ -282,7 +289,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSendFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
    {
       //InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data()); 
       if(++mNumReceives == NUM_RTP_PACKETS_TO_SIMULATE)
@@ -305,7 +312,7 @@ public:
 
 private:
    asio::io_service& mIOService;
-   asio::deadline_timer mTimer;
+   asio::steady_timer mTimer;
    TurnAsyncSocket* mTurnAsyncSocket;
    unsigned int mNumReceives;
    unsigned int mNumSends;
@@ -363,16 +370,16 @@ int main(int argc, char* argv[])
     MyTurnAsyncSocketHandler handler(ioService);
 
 #ifdef USE_SSL
-    asio::ssl::context sslContext(ioService, asio::ssl::context::tlsv1);
+    asio::ssl::context sslContext(asio::ssl::context::tlsv1);
     // Setup SSL context
     sslContext.set_verify_mode(asio::ssl::context::verify_peer);
     sslContext.load_verify_file("ca.pem");
 #endif
 
-    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
 #ifdef USE_SSL
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0)); port++;
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, &handler, asio::ip::address::from_string(address.c_str()), 0); port++;
 #endif
 
     handler.setTurnAsyncSocket(turnSocket.get());
@@ -393,7 +400,7 @@ int main(int argc, char* argv[])
     turnPeer.join();
 #endif
   }
-  catch (std::exception& e)
+  catch (const std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << "\n";
   }
@@ -405,6 +412,7 @@ int main(int argc, char* argv[])
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

@@ -52,7 +52,7 @@ Register::go()
          aor.uri().user() = Data(i);
          contact.uri().user() = Data(i);
          
-         auto_ptr<SipMessage> registration(Helper::makeRegister(registrand, aor, contact) );
+         unique_ptr<SipMessage> registration(Helper::makeRegister(registrand, aor, contact) );
          //registration->header(h_Contacts).push_back(contact);
          
          mTransceiver.send(target, *registration);
@@ -60,7 +60,7 @@ Register::go()
          SipMessage* reg = mTransceiver.receive(2000);
          if(reg)
          {         
-            auto_ptr<SipMessage> forDel(reg);
+            unique_ptr<SipMessage> forDel(reg);
             //validate here
             numRegistered++;
          }
@@ -72,7 +72,7 @@ Register::go()
       }
    }
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << mNumRegistrations << " peformed in " << elapsed << " ms, a rate of " 
+   cout << mNumRegistrations << " performed in " << elapsed << " ms, a rate of "
         << mNumRegistrations / ((float) elapsed / 1000.0) << " registrations per second." << endl;
 }
 /* ====================================================================

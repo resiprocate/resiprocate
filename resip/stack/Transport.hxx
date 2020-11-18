@@ -11,7 +11,10 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/SendData.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
+#include <utility>
+
 namespace resip
 {
 
@@ -73,20 +76,28 @@ class FdPollGrp;
 class Transport : public FdSetIOObserver
 {
    public:
-    class SipMessageLoggingHandler
+
+      class SipMessageLoggingHandler
       {
       public:
-          virtual ~SipMessageLoggingHandler(){}
+          SipMessageLoggingHandler() = default;
+          SipMessageLoggingHandler(const SipMessageLoggingHandler&) = delete;
+          SipMessageLoggingHandler(SipMessageLoggingHandler&&) = delete;
+          virtual ~SipMessageLoggingHandler() = default;
+
+          SipMessageLoggingHandler& operator=(const SipMessageLoggingHandler&) = delete;
+          SipMessageLoggingHandler& operator=(SipMessageLoggingHandler&&) = delete;
+
           virtual void outboundMessage(const Tuple &source, const Tuple &destination, const SipMessage &msg) = 0;
-          // Note:  retranmissions store already encoded messages, so callback doesn't send SipMessage it sends
+          // Note:  retransmissions store already encoded messages, so callback doesn't send SipMessage it sends
           //        the encoded version of the SipMessage instead.  If you need a SipMessage you will need to
           //        re-parse back into a SipMessage in the callback handler.
           virtual void outboundRetransmit(const Tuple &source, const Tuple &destination, const SendData &data) {}
           virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg) = 0;
       };
 
-      void setSipMessageLoggingHandler(SharedPtr<SipMessageLoggingHandler> handler) { mSipMessageLoggingHandler = handler; }
-      SipMessageLoggingHandler* getSipMessageLoggingHandler() { return 0 != mSipMessageLoggingHandler.get() ? mSipMessageLoggingHandler.get() : 0; }
+      void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandler = std::move(handler); }
+      SipMessageLoggingHandler* getSipMessageLoggingHandler() const noexcept { return mSipMessageLoggingHandler.get(); }
 
       /**
          @brief General exception class for Transport.
@@ -94,11 +105,11 @@ class Transport : public FdSetIOObserver
          This would be thrown if there was an attempt to bind to a port
          that is already in use.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line);
-            const char* name() const { return "TransportException"; }
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override { return "TransportException"; }
       };
       
       /**
@@ -151,6 +162,8 @@ class Transport : public FdSetIOObserver
 
       virtual ~Transport();
 
+      virtual void onReload();
+
       /**
          @note Subclasses override this method by checking whether
          there are unprocessed messages on the TransactionMessage
@@ -158,7 +171,7 @@ class Transport : public FdSetIOObserver
       */
       virtual bool isFinished() const=0;
       
-      std::auto_ptr<SendData> makeSendData( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
+      std::unique_ptr<SendData> makeSendData( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
       
       /**
          @todo !bwc! What we do with a SendData is flexible. It might make a
@@ -168,7 +181,7 @@ class Transport : public FdSetIOObserver
          @todo !bch! Should this be protected and not public?
                !bwc! TransportSelector uses this directly for retransmissions.
       */
-      virtual void send(std::auto_ptr<SendData> data)=0;
+      virtual void send(std::unique_ptr<SendData> data)=0;
 
       /**
          Called when a writer is done adding messages to the TxFifo; this is
@@ -285,10 +298,10 @@ class Transport : public FdSetIOObserver
       void makeFailedResponse(const SipMessage& msg,
                               int responseCode = 400,
                               const char * warning = 0);
-      std::auto_ptr<SendData> make503(SipMessage& msg,
+      std::unique_ptr<SendData> make503(SipMessage& msg,
                                       UInt16 retryAfter);
 
-      std::auto_ptr<SendData> make100(SipMessage& msg);
+      std::unique_ptr<SendData> make100(SipMessage& msg);
       void setRemoteSigcompId(SipMessage&msg, Data& id);
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
@@ -344,6 +357,7 @@ class Transport : public FdSetIOObserver
       virtual unsigned int getFifoSize() const=0;
 
       void callSocketFunc(Socket sock);
+      virtual void invokeAfterSocketCreationFunc() const = 0;  //used to invoke the after socket creation func immeidately for all existing sockets - can be used to modify QOS settings at runtime
 
       virtual void setCongestionManager(CongestionManager* manager)
       {
@@ -357,6 +371,11 @@ class Transport : public FdSetIOObserver
             return mCongestionManager->getRejectionBehavior(&mStateMachineFifo.getFifo());
          }
          return CongestionManager::NORMAL;
+      }
+
+      void flushStateMacFifo()
+      {
+          mStateMachineFifo.flush();
       }
 
       UInt32 getExpectedWaitForIncoming() const
@@ -388,7 +407,7 @@ class Transport : public FdSetIOObserver
       friend EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
 
       Data mTlsDomain;
-      SharedPtr<SipMessageLoggingHandler> mSipMessageLoggingHandler;
+      std::shared_ptr<SipMessageLoggingHandler> mSipMessageLoggingHandler;
 
    protected:
       AfterSocketCreationFuncPtr mSocketFunc;

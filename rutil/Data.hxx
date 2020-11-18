@@ -118,7 +118,7 @@ class Data
         @param capacity  The initial capacity of the buffer
 
         @param foo       This parameter is ignored; it is merely
-                         used to disambuguate this constructor
+                         used to disambiguate this constructor
                          from the constructor that takes a single
                          int. Always pass Data::Preallocate.
       */
@@ -138,7 +138,7 @@ class Data
         @param capacity  The initial capacity of the buffer
 
         @param foo       This parameter is ignored; it is merely
-                         used to disambuguate this constructor
+                         used to disambiguate this constructor
                          from the constructor that takes a single
                          int. Yes, it's ugly -- that's why it's
                          deprecated.
@@ -548,7 +548,7 @@ class Data
       /**
         Checks whether the Data is empty.
       */
-      bool empty() const { return mSize == 0; }
+      bool empty() const noexcept { return mSize == 0; }
 
       /**
         Returns the number of bytes in this Data.
@@ -556,7 +556,7 @@ class Data
         @note This does NOT indicate the capacity of the
               underlying buffer.
       */
-      size_type size() const { return mSize; }
+      size_type size() const noexcept { return mSize; }
 
       /**
         Returns a pointer to the contents of this Data. This
@@ -565,7 +565,7 @@ class Data
 
         @note The value returned is NOT necessarily null-terminated.
       */
-      inline const char* data() const
+      const char* data() const noexcept
       {
          return mBuf;
       }
@@ -587,7 +587,7 @@ class Data
       /**
         Returns a pointer to the beginning of the buffer used by the Data.
       */
-      inline const char* begin() const
+      const char* begin() const noexcept
       {
          return mBuf;
       }
@@ -595,7 +595,7 @@ class Data
       /**
         Returns a pointer to the end of the buffer used by the Data.
       */
-      inline const char* end() const
+      const char* end() const noexcept
       {
          return mBuf + mSize;
       }
@@ -1014,6 +1014,9 @@ static bool invokeDataInit = Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>(0))
 
 inline bool Data::isHex(unsigned char c)
 {
+   // Shut up the warning about invokeDataInit defined, but not used
+   if(0){(void) invokeDataInit;}
+
    return DataHelper::isCharHex[c];
 }
 

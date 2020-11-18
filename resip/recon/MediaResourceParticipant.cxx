@@ -215,10 +215,13 @@ MediaResourceParticipant::startPlay()
             if(participant)
             {
                StackLog(<<"sending tone to sipX connection: " << participant->getMediaConnectionId());
+#ifdef SIPX_TONES_INBAND
                // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
                status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
+#else
                // this is for newer sipXtapi API, option to suppress inband tones:
-               //status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */, !isDtmf /* inband */, true /* RFC 4733 */);
+               status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */, !isDtmf /* inband */, true /* RFC 4733 */);
+#endif
             }
             else
             {
@@ -420,10 +423,13 @@ MediaResourceParticipant::destroyParticipant()
                RemoteParticipant* participant = dynamic_cast<RemoteParticipant*>(mConversationManager.getParticipant(partHandle));
                if(participant)
                {
+#ifdef SIPX_TONES_INBAND
                   // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
                   status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
+#else
                   // this is for newer sipXtapi API, option to suppress inband tones:
-                  //status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
+                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
+#endif
                }
                else
                {

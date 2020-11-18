@@ -5,7 +5,7 @@
 #include <vector>
 #include "repro/Processor.hxx"
 #include "repro/ProcessorMessage.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 namespace repro
 {
@@ -57,7 +57,7 @@ public:
 class MyAsyncProcessor : public AsyncProcessor
 {
    public:
-      MyAsyncProcessor(ProxyConfig& config, Dispatcher* asyncDispatcher) :
+      MyAsyncProcessor(ProxyConfig& config, resip::Dispatcher* asyncDispatcher) :
          AsyncProcessor("MyAsyncProcessor", asyncDispatcher) {}
       ~MyAsyncProcessor() {}
 
@@ -79,7 +79,7 @@ class MyAsyncProcessor : public AsyncProcessor
             // Dispatch async request to worker thread pool
             MyAsyncProcessorAsyncMessage* async = new MyAsyncProcessorAsyncMessage(*this, rc.getTransactionId(), &rc.getProxy());
             async->mDataRequiredToCallBlockingFunction = "foo";
-            mAsyncDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
+            mAsyncDispatcher->post(std::unique_ptr<ApplicationMessage>(async));
             return WaitingForEvent;
          }
       }
@@ -106,7 +106,7 @@ class MyAsyncProcessor : public AsyncProcessor
 class AsyncProcessor : public Processor
 {
    public:
-      AsyncProcessor(const resip::Data& name, Dispatcher* asyncDispatcher, ChainType type=NO_TYPE) :
+      AsyncProcessor(const resip::Data& name, resip::Dispatcher* asyncDispatcher, ChainType type=NO_TYPE) :
          Processor(name, type),
          mAsyncDispatcher(asyncDispatcher) {}
       virtual ~AsyncProcessor() {}
@@ -119,7 +119,7 @@ class AsyncProcessor : public Processor
       virtual bool asyncProcess(AsyncProcessorMessage* msg)=0;
 
    protected:
-      Dispatcher* mAsyncDispatcher;
+      resip::Dispatcher* mAsyncDispatcher;
 };
 
 }

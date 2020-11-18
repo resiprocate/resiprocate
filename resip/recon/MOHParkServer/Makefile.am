@@ -9,7 +9,6 @@
 
 EXTRA_DIST = ca.pem
 EXTRA_DIST += doc
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += MOHParkServer.config
 EXTRA_DIST += music.wav

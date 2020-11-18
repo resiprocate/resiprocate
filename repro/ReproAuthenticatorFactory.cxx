@@ -3,6 +3,7 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
@@ -16,7 +17,7 @@
 #include "ReproServerAuthManager.hxx"
 #include "ReproTlsPeerAuthManager.hxx"
 #include "UserAuthGrabber.hxx"
-#include "Worker.hxx"
+#include "resip/stack/Worker.hxx"
 #include "monkeys/CertificateAuthenticator.hxx"
 #include "monkeys/DigestAuthenticator.hxx"
 #include "monkeys/RADIUSAuthenticator.hxx"
@@ -37,7 +38,6 @@ ReproAuthenticatorFactory::ReproAuthenticatorFactory(ProxyConfig& proxyConfig, S
       mRADIUSConfiguration(mProxyConfig.getConfigData("RADIUSConfiguration", "")),
       mStaticRealm(mProxyConfig.getConfigData("StaticRealm", "")),
       mDigestChallengeThirdParties(!mEnableCertAuth),
-      mAuthRequestDispatcher(0),
       mCertificateAuthManager((DumFeature*)0),
       mServerAuthManager((ServerAuthManager*)0)
 {
@@ -57,8 +57,8 @@ ReproAuthenticatorFactory::init()
       {
          numAuthGrabberWorkerThreads = 1; // must have at least one thread
       }
-      std::auto_ptr<Worker> grabber(new UserAuthGrabber(mProxyConfig.getDataStore()->mUserStore));
-      mAuthRequestDispatcher.reset(new Dispatcher(grabber, &mSipStack, numAuthGrabberWorkerThreads));
+      std::unique_ptr<Worker> grabber(new UserAuthGrabber(*mProxyConfig.getDataStore()));
+      mAuthRequestDispatcher.reset(new Dispatcher(std::move(grabber), &mSipStack, numAuthGrabberWorkerThreads));
    }
 
    // TODO: should be implemented using AbstractDb
@@ -131,7 +131,7 @@ ReproAuthenticatorFactory::loadCommonNameMappings()
    }
 }
 
-SharedPtr<DumFeature>
+std::shared_ptr<DumFeature>
 ReproAuthenticatorFactory::getCertificateAuthManager()
 {
    init();
@@ -140,22 +140,22 @@ ReproAuthenticatorFactory::getCertificateAuthManager()
       Store *db = mProxyConfig.getDataStore();
       resip_assert(db);
       AclStore& aclStore = db->mAclStore;
-      mCertificateAuthManager.reset(new ReproTlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), aclStore, true, mCommonNameMappings));
+      mCertificateAuthManager.reset(new ReproTlsPeerAuthManager(*mDum, mDum->dumIncomingTarget(), getDispatcher(), aclStore, true, mCommonNameMappings));
    }
    return mCertificateAuthManager;
 }
 
-std::auto_ptr<Processor>
+std::unique_ptr<Processor>
 ReproAuthenticatorFactory::getCertificateAuthenticator()
 {
    init();
    Store *db = mProxyConfig.getDataStore();
    resip_assert(db);
    AclStore& aclStore = db->mAclStore;
-   return std::auto_ptr<Processor>(new CertificateAuthenticator(mProxyConfig, &mSipStack, aclStore, true, mCommonNameMappings));
+   return std::unique_ptr<Processor>(new CertificateAuthenticator(mProxyConfig, getDispatcher(), &mSipStack, aclStore, true, mCommonNameMappings));
 }
 
-SharedPtr<ServerAuthManager>
+std::shared_ptr<ServerAuthManager>
 ReproAuthenticatorFactory::getServerAuthManager()
 {
    init();
@@ -189,22 +189,22 @@ ReproAuthenticatorFactory::getServerAuthManager()
    return mServerAuthManager;
 }
 
-std::auto_ptr<Processor>
+std::unique_ptr<Processor>
 ReproAuthenticatorFactory::getDigestAuthenticator()
 {
    init();
    if(mEnableRADIUS)
    {
 #ifdef USE_RADIUS_CLIENT
-      return std::auto_ptr<Processor>(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration, mStaticRealm));
+      return std::unique_ptr<Processor>(new RADIUSAuthenticator(mProxyConfig, mRADIUSConfiguration, mStaticRealm));
 #else
       ErrLog(<<"can't create RADIUSAuthenticator, not compiled with RADIUS support");
-      return std::auto_ptr<Processor>(0);
+      return nullptr;
 #endif
    }
    else
    {
-      return std::auto_ptr<Processor>(new DigestAuthenticator(mProxyConfig, getDispatcher(), mStaticRealm));
+      return std::unique_ptr<Processor>(new DigestAuthenticator(mProxyConfig, getDispatcher(), mStaticRealm));
    }
 }
 

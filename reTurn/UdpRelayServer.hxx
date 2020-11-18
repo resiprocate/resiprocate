@@ -1,12 +1,11 @@
 #ifndef UDP_RELAY_SERVER_HXX
-#define UDP_REALY_SERVER_HXX
+#define UDP_RELAY_SERVER_HXX
 
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
 #include <string>
-#include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
 #include "AsyncUdpSocketBase.hxx"
 
@@ -15,23 +14,27 @@ namespace reTurn {
 class StunTuple;
 
 class UdpRelayServer
-  : public AsyncUdpSocketBase, 
-    private boost::noncopyable
+  : public AsyncUdpSocketBase
 {
 public:
    /// Create the server to listen on the specified UDP address and port
    explicit UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation);
+   UdpRelayServer(const UdpRelayServer&) = delete;
+   UdpRelayServer(UdpRelayServer&&) = delete;
    ~UdpRelayServer();
+
+   UdpRelayServer& operator=(const UdpRelayServer&) = delete;
+   UdpRelayServer& operator=(UdpRelayServer&&) = delete;
 
    /// Starts processing
    bool startReceiving();
 
-   /// Causes this object to destroy itself safely (ie. waiting for ayncronous callbacks to finish)
+   /// Causes this object to destroy itself safely (ie. waiting for asynchronous callbacks to finish)
    void stop();
 
 private:
    /// Handle completion of a receive_from operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(const asio::error_code& e);
 
    /// Handle completion of a send operation
@@ -44,7 +47,7 @@ private:
    asio::error_code mLastSendErrorCode;  // Use to ensure we only log at Warning level once for a particular send error
 };
 
-typedef boost::shared_ptr<UdpRelayServer> UdpRelayServerPtr;
+typedef std::shared_ptr<UdpRelayServer> UdpRelayServerPtr;
 
 }
 

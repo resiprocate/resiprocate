@@ -1,6 +1,8 @@
 #include "repro/UserAuthGrabber.hxx"
 #include "repro/AbstractDb.hxx"
 #include "repro/UserInfoMessage.hxx"
+#include "repro/TlsPeerIdentityInfo.hxx"
+#include "resip/dum/TlsPeerIdentityInfoMessage.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
 #include "repro/stateAgents/PresenceSubscriptionHandler.hxx"
 #include "rutil/Logger.hxx"
@@ -11,8 +13,8 @@
 using namespace repro;
 using namespace resip;
 
-UserAuthGrabber::UserAuthGrabber(repro::UserStore& userStore) :
-   mUserStore(userStore)
+UserAuthGrabber::UserAuthGrabber(repro::Store& dataStore) :
+   mDataStore(dataStore)
 {
 }
 
@@ -26,7 +28,7 @@ UserAuthGrabber::process(resip::ApplicationMessage* msg)
    repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);    // auth for repro's DigestAuthenticator
    if (uinf)
    {
-      uinf->mRec.passwordHash = mUserStore.getUserAuthInfo(uinf->user(), uinf->realm());
+      uinf->mRec.passwordHash = mDataStore.mUserStore.getUserAuthInfo(uinf->user(), uinf->realm());
       uinf->setMode(resip::UserAuthInfo::RetrievedA1);
       DebugLog(<< "Grabbed user info for " << uinf->user() << "@" << uinf->realm() << " : " << uinf->A1());
       return true;
@@ -35,7 +37,7 @@ UserAuthGrabber::process(resip::ApplicationMessage* msg)
    resip::UserAuthInfo* uainf = dynamic_cast<resip::UserAuthInfo*>(msg);  // auth for DUM's ServerAuthManager
    if (uainf)
    {
-      uainf->setA1(mUserStore.getUserAuthInfo(uainf->getUser(), uainf->getRealm()));
+      uainf->setA1(mDataStore.mUserStore.getUserAuthInfo(uainf->getUser(), uainf->getRealm()));
       if (uainf->getA1().empty())
       {
          uainf->setMode(resip::UserAuthInfo::UserUnknown);
@@ -44,10 +46,26 @@ UserAuthGrabber::process(resip::ApplicationMessage* msg)
       return true;
    }
 
+   repro::TlsPeerIdentityInfo* tpaInfo = dynamic_cast<repro::TlsPeerIdentityInfo*>(msg);
+   if (tpaInfo)
+   {
+      tpaInfo->authorized() = mDataStore.mTlsPeerIdentityStore.isAuthorized(tpaInfo->peerNames(), tpaInfo->identities());
+      DebugLog(<< "Looked up authorization for " << tpaInfo << " result = " << tpaInfo->authorized());
+      return true;
+   }
+
+   resip::TlsPeerIdentityInfoMessage* tpaInfoMessage = dynamic_cast<resip::TlsPeerIdentityInfoMessage*>(msg);
+   if (tpaInfoMessage)
+   {
+      tpaInfoMessage->authorized() = mDataStore.mTlsPeerIdentityStore.isAuthorized(tpaInfoMessage->peerNames(), tpaInfoMessage->identities());
+      DebugLog(<< "Looked up authorization for " << tpaInfoMessage << " result = " << tpaInfoMessage->authorized());
+      return true;
+   }
+
    repro::PresenceUserExists* pue = dynamic_cast<repro::PresenceUserExists*>(msg);  // user exists query for Presence server
    if (pue)
    {
-      pue->setUserExists(!mUserStore.getUserInfo(UserStore::buildKey(pue->getUser(), pue->getDomain())).user.empty());
+      pue->setUserExists(!mDataStore.mUserStore.getUserInfo(UserStore::buildKey(pue->getUser(), pue->getDomain())).user.empty());
       DebugLog(<< "Checking existence for " << pue->getUser() << "@" << pue->getDomain() << " : user " << (pue->getUserExists() ? "exists" : "does not exist"));
       return true;
    }
@@ -59,7 +77,7 @@ UserAuthGrabber::process(resip::ApplicationMessage* msg)
 UserAuthGrabber* 
 UserAuthGrabber::clone() const
 {
-   return new UserAuthGrabber(mUserStore);
+   return new UserAuthGrabber(mDataStore);
 }
 
 /* ====================================================================

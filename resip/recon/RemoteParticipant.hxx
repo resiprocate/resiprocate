@@ -7,12 +7,13 @@
 #include "Participant.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 
-#include <rutil/SharedPtr.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
+
+#include <memory>
 
 namespace resip
 {
@@ -58,7 +59,7 @@ public:
    virtual bool isHolding() { return mLocalHold; }
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
-   virtual void initiateRemoteCall(const resip::NameAddr& destination, resip::SharedPtr<resip::UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
+   virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::shared_ptr<resip::UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
    virtual int getConnectionPortOnBridge();
    virtual int getMediaConnectionId();
    virtual void destroyParticipant();
@@ -70,6 +71,7 @@ public:
    virtual void redirect(resip::NameAddr& destination);
    virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle);
    virtual void checkHoldCondition();
+   virtual void setLocalHold(bool hold);
 
    virtual void setPendingOODReferInfo(resip::ServerOutOfDialogReqHandle ood, const resip::SipMessage& referMsg); // OOD-Refer (no Sub)
    virtual void setPendingOODReferInfo(resip::ServerSubscriptionHandle ss, const resip::SipMessage& referMsg); // OOD-Refer (with Sub)
@@ -127,6 +129,7 @@ public:
 private:       
    void hold();
    void unhold();
+   void setRemoteHold(bool remoteHold);
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
@@ -184,7 +187,7 @@ private:
       resip::InviteSessionHandle mDestInviteSessionHandle;
    };
    PendingRequest mPendingRequest;
-   std::auto_ptr<resip::SdpContents> mPendingOffer;
+   std::unique_ptr<resip::SdpContents> mPendingOffer;
 
    sdpcontainer::Sdp* mLocalSdp;
    sdpcontainer::Sdp* mRemoteSdp;

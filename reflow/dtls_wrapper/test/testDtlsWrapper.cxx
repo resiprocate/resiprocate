@@ -15,11 +15,11 @@ class TestDtlsSocketContext : public DtlsSocketContext
 {
    public:
      DtlsSocket *mOtherSocket;
-     char *mName;
+     const char *mName;
      
      //memory is only valid for duration of callback; must be copied if queueing
      //is required
-     TestDtlsSocketContext(char *name):
+     TestDtlsSocketContext(const char *name):
           mName(name){}
            
       virtual ~TestDtlsSocketContext(){}
@@ -76,22 +76,22 @@ int main(int argc,char **argv)
   X509 *clientCert,*serverCert;
   EVP_PKEY *clientKey,*serverKey;
 
-  createCert(resip::Data("sip:client@example.com"),365,1024,clientCert,clientKey);
-  createCert(resip::Data("sip:server@example.com"),365,1024,serverCert,serverKey);
+  createCert(resip::Data("sip:client@example.com"),365,2048,clientCert,clientKey);
+  createCert(resip::Data("sip:server@example.com"),365,2048,serverCert,serverKey);
   
-  DtlsFactory *clientFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),clientCert,clientKey);
-  DtlsFactory *serverFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),serverCert,serverKey);
+  unique_ptr<DtlsFactory> clientFactory(new DtlsFactory(std::unique_ptr<DtlsTimerContext>(new TestTimerContext()),clientCert,clientKey));
+  unique_ptr<DtlsFactory> serverFactory(new DtlsFactory(std::unique_ptr<DtlsTimerContext>(new TestTimerContext()),serverCert,serverKey));
   
   cout << "Created the factories\n";
 
   TestDtlsSocketContext *clientContext=new TestDtlsSocketContext("Client");
   TestDtlsSocketContext *serverContext=new TestDtlsSocketContext("Server");
   
-  DtlsSocket *clientSocket=clientFactory->createClient(std::auto_ptr<DtlsSocketContext>(clientContext));
-  DtlsSocket *serverSocket=serverFactory->createServer(std::auto_ptr<DtlsSocketContext>(serverContext));
+  unique_ptr<DtlsSocket> clientSocket(clientFactory->createClient(std::unique_ptr<DtlsSocketContext>(clientContext)));
+  unique_ptr<DtlsSocket> serverSocket(serverFactory->createServer(std::unique_ptr<DtlsSocketContext>(serverContext)));
 
-  clientContext->mOtherSocket=serverSocket;
-  serverContext->mOtherSocket=clientSocket;  
+  clientContext->mOtherSocket=serverSocket.get();
+  serverContext->mOtherSocket=clientSocket.get();
   
   clientSocket->startClient();
 }

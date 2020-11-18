@@ -1,6 +1,4 @@
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
+#include "rutil/compat.hxx"
 
 #include <string.h>
 #include <ctype.h>
@@ -26,9 +24,9 @@ struct days { const char *name; DayOfWeek type; };
 class DayOfWeekHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, GPERF_SIZE_TYPE len);
 public:
-  static const struct days *in_word_set (const char *str, unsigned int len);
+  static const struct days *in_word_set (const char *str, GPERF_SIZE_TYPE len);
 };
 
 // Implemented in gen/MonthHash.cxx
@@ -36,9 +34,9 @@ struct months { const char *name; Month type; };
 class MonthHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, GPERF_SIZE_TYPE len);
 public:
-  static const struct months *in_word_set (const char *str, unsigned int len);
+  static const struct months *in_word_set (const char *str, GPERF_SIZE_TYPE len);
 };
 }
 
@@ -195,8 +193,8 @@ DateCategory::setDatetime(time_t datetime)
 DayOfWeek
 DateCategory::DayOfWeekFromData(const Data& dow)
 {
-   register const char *str = dow.data();
-   register Data::size_type len = dow.size();
+   const char *str = dow.data();
+   Data::size_type len = dow.size();
 
    const struct days* _day = DayOfWeekHash::in_word_set(str, len);
    if(_day != 0)
@@ -212,8 +210,8 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 Month
 DateCategory::MonthFromData(const Data& mon)
 {
-   register const char *str = mon.data();
-   register Data::size_type len = mon.size();
+   const char *str = mon.data();
+   Data::size_type len = mon.size();
 
    const struct months* _month = MonthHash::in_word_set(str, len);
    if(_month != 0)

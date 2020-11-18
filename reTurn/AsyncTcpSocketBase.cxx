@@ -22,14 +22,10 @@ AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_service& ioService)
 {
 }
 
-AsyncTcpSocketBase::~AsyncTcpSocketBase() 
-{
-}
-
 unsigned int 
 AsyncTcpSocketBase::getSocketDescriptor() 
 { 
-   return (unsigned int)mSocket.native(); 
+   return (unsigned int)mSocket.native_handle(); 
 }
 
 asio::error_code 
@@ -118,7 +114,7 @@ AsyncTcpSocketBase::setConnectedAddressAndPort()
    mConnectedPort = mSocket.remote_endpoint(ec).port();
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncTcpSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 
@@ -175,14 +171,14 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       {
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
-      if(dataLen+4 < RECEIVE_BUFFER_SIZE)
+      if (dataLen + 4U < RECEIVE_BUFFER_SIZE)
       {
          asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
                           boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));
       }
       else
       {
-         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection.");
+         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accommodate incoming framed data (" << dataLen+4 << ") closing connection.");
          close();
       }
    }
@@ -205,7 +201,7 @@ AsyncTcpSocketBase::transportClose()
 {
    if (mOnBeforeSocketCloseFp)
    {
-      mOnBeforeSocketCloseFp((unsigned int)mSocket.native());
+      mOnBeforeSocketCloseFp((unsigned int)mSocket.native_handle());
    }
 
    asio::error_code ec;
@@ -218,6 +214,7 @@ AsyncTcpSocketBase::transportClose()
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

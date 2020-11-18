@@ -1,4 +1,4 @@
-/* C++ code produced by gperf version 3.0.3 */
+/* C++ code produced by gperf version 3.1 */
 /* Command-line: gperf -C -D -E -L C++ -t --key-positions='*' --compare-strncmp -Z MonthHash MonthHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -25,7 +25,7 @@
       && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
       && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
-#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
+#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
 #line 1 "MonthHash.gperf"
@@ -43,56 +43,56 @@ struct months { const char *name; Month type; };
 class MonthHash
 {
 private:
-  static inline unsigned int hash (const char *str, unsigned int len);
+  static inline unsigned int hash (const char *str, size_t len);
 public:
-  static const struct months *in_word_set (const char *str, unsigned int len);
+  static const struct months *in_word_set (const char *str, size_t len);
 };
 
 inline unsigned int
-MonthHash::hash (register const char *str, register unsigned int len)
+MonthHash::hash (const char *str, size_t len)
 {
   static const unsigned char asso_values[] =
     {
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 10, 44, 44,  4, 44,
-       4, 44, 44, 44,  0, 44, 44,  5, 15, 15,
-      44, 44, 44, 15, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44,  5,  0, 10,
-      44, 10, 44, 15, 44, 44, 44, 44,  4, 44,
-       0, 15,  5, 44,  5, 44, 10,  0, 10, 44,
-      44,  0, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44, 44, 44, 44, 44,
-      44, 44, 44, 44, 44, 44
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 10, 41, 41,  4, 41,
+       4, 41, 41, 41,  0, 41, 41,  5, 15, 15,
+      41, 41, 41, 15, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41,  5,  0, 10,
+      41, 10, 41, 15, 41, 41, 41, 41,  4, 41,
+       0, 15,  5, 41,  5, 41, 10,  0, 10, 41,
+      41,  0, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
+      41, 41, 41, 41, 41, 41
     };
-  return len + asso_values[(unsigned char)str[2]] + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]];
+  return asso_values[static_cast<unsigned char>(str[2])] + asso_values[static_cast<unsigned char>(str[1])] + asso_values[static_cast<unsigned char>(str[0])];
 }
 
 const struct months *
-MonthHash::in_word_set (register const char *str, register unsigned int len)
+MonthHash::in_word_set (const char *str, size_t len)
 {
   enum
     {
       TOTAL_KEYWORDS = 12,
       MIN_WORD_LENGTH = 3,
       MAX_WORD_LENGTH = 3,
-      MIN_HASH_VALUE = 3,
-      MAX_HASH_VALUE = 43
+      MIN_HASH_VALUE = 0,
+      MAX_HASH_VALUE = 40
     };
 
   static const struct months wordlist[] =
@@ -125,23 +125,22 @@ MonthHash::in_word_set (register const char *str, register unsigned int len)
 
   static const signed char lookup[] =
     {
-      -1, -1, -1,  0, -1, -1, -1,  1,  2, -1, -1, -1, -1,  3,
-      -1, -1, -1,  4,  5, -1, -1, -1, -1,  6, -1, -1, -1,  7,
-       8, -1, -1, -1, -1,  9, -1, -1, -1, -1, 10, -1, -1, -1,
-      -1, 11
+       0, -1, -1, -1,  1,  2, -1, -1, -1, -1,  3, -1, -1, -1,
+       4,  5, -1, -1, -1, -1,  6, -1, -1, -1,  7,  8, -1, -1,
+      -1, -1,  9, -1, -1, -1, -1, 10, -1, -1, -1, -1, 11
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = hash (str, len);
+      unsigned int key = hash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
+      if (key <= MAX_HASH_VALUE)
         {
-          register int index = lookup[key];
+          int index = lookup[key];
 
           if (index >= 0)
             {
-              register const char *s = wordlist[index].name;
+              const char *s = wordlist[index].name;
 
               if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
                 return &wordlist[index];

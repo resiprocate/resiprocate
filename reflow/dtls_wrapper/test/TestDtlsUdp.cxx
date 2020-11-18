@@ -1,4 +1,6 @@
- #include <iostream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 #if !defined(WIN32)
 #include <sys/types.h>
@@ -34,20 +36,18 @@ void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::strin
       return;
    }
 
-   char tmp[5];
-   const unsigned char* pp = pInMsg;
-
-   rOutDump += "\n\n***new data*** length: ";
-   rOutDump += ulInMsgLen;
-   rOutDump += " dump: ";
+   std::ostringstream ss;
+   ss << "\n\n***new data***";
+   ss << " length: " << ulInMsgLen;
+   ss << " dump:";
 
    for (unsigned int z=0; z < ulInMsgLen; z++)
    {
-      memset(tmp, 0, sizeof(tmp));
-      sprintf(tmp, "%02X ",pp[z]);
-      pp++;
-      rOutDump += tmp;
+      ss << ' ';
+      ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned>(pInMsg[z]);
    }
+
+   rOutDump = ss.str();
 }
 
 using namespace std;
@@ -151,12 +151,12 @@ TestDtlsUdpSocketContext::handshakeCompleted()
    cout << "Made SRTP policies\n";
    if(mSocket->getSocketType()==DtlsSocket::Client) 
    {
-      char *testData="test data";
+      const char *testData="test data";
       sendRtpData((const unsigned char *)testData,strlen(testData)+1);
 
 
 #if defined(WIN32)
-      char *testData2="test bobo";
+      const char *testData2="test bobo";
       sendRtpData((const unsigned char *)testData2,strlen(testData)+1);
 #endif
    }
@@ -173,13 +173,14 @@ void
 TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int len)
 {
    srtp_hdr_t *hdr;
-   unsigned char *ptr;
+   unsigned char *buffer, *ptr;
    int l=0;
 
    cerr << "Sending RTP packet of length " << len << endl;
 
-   ptr=(unsigned char *)malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
-   assert(ptr!=0);
+   buffer=(unsigned char *)malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
+   assert(buffer!=0);
+   ptr=buffer;
    hdr=(srtp_hdr_t *)ptr;
    ptr+=sizeof(srtp_hdr_t);
    l+=sizeof(srtp_hdr_t);
@@ -203,6 +204,8 @@ TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int le
       assert(r==0);
    }
    write((unsigned char *)hdr,l);
+
+   free(buffer);
 }
 
 void

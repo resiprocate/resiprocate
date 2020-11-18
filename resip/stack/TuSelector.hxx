@@ -31,7 +31,7 @@ class TuSelector
   
       TransactionUser* selectTransactionUser(const SipMessage& msg);
       bool haveTransactionUsers() const { return mTuSelectorMode; }
-      void registerTransactionUser(TransactionUser&);
+      void registerTransactionUser(TransactionUser&, const bool front = false);
       void requestTransactionUserShutdown(TransactionUser&);
       void unregisterTransactionUser(TransactionUser&);
       void process();

@@ -61,14 +61,15 @@
 #define gai_strerror strerror
 #endif
 
+#include <utility>
 #include <sys/types.h>
 
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression) :
-   mDns(dnsStub),
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression, bool useDnsVip) :
+   mDns(dnsStub, useDnsVip),
    mStateMacFifo(fifo),
    mSecurity(security),
    mCompression(compression),
@@ -165,7 +166,7 @@ TransportSelector::isFinished() const
 }
 
 void
-TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport, bool isStackRunning)
+TransportSelector::addTransport(std::unique_ptr<Transport> autoTransport, bool isStackRunning)
 {
    Transport* transport = autoTransport.release();
 
@@ -300,6 +301,8 @@ TransportSelector::removeTransport(unsigned int transportKey)
    Transport* transportToRemove = 0;
 
    // Find transport in global map and remove it
+   // Note: it is important that this map is removed from before rebuildAnyPortTransportMaps is called,
+   // since rebuildAnyPortTransportMaps uses this map.
    TransportKeyMap::iterator it = mTransports.find(transportKey);
    if(it != mTransports.end())
    {
@@ -316,10 +319,12 @@ TransportSelector::removeTransport(unsigned int transportKey)
       if(!isSecure(transportToRemove->transport()))
       {
          // Ensure transport is removed from all containers
-         mAnyInterfaceTransports.erase(transportToRemove->getTuple());
-         mAnyPortAnyInterfaceTransports.erase(transportToRemove->getTuple());
          mExactTransports.erase(transportToRemove->getTuple());
-         mAnyPortTransports.erase(transportToRemove->getTuple());
+         mAnyInterfaceTransports.erase(transportToRemove->getTuple());
+
+         // In the AnyPort maps 2 transports can end up overwriting each other in these maps - then when we remove one, there may be none left - even though we should have an
+         // entry.  The rebuilt method will dig through all transports again and rebuild these maps.
+         rebuildAnyPortTransportMaps();
       }
       else
       {
@@ -329,9 +334,19 @@ TransportSelector::removeTransport(unsigned int transportKey)
          mTlsTransports.erase(tlsKey);
       }
 
-      mTypeToTransportMap.erase(transportToRemove->getTuple());
+      // mTypeToTransportMap is a multimap - make sure to delete only this instance by looking up transportKey, instead of using 
+      // mTypeToTransportMap.erase(transportToRemove->getTuple()); which might end up deleting more than 1 transport
+      for (TypeToTransportMap::iterator itTypeToTransport = mTypeToTransportMap.begin(); itTypeToTransport != mTypeToTransportMap.end(); itTypeToTransport++)
+      {
+          if (itTypeToTransport->second->getKey() == transportKey)
+          {
+              mTypeToTransportMap.erase(itTypeToTransport);
+              break;
+          }
+      }
 
       // Remove transport types from Dns list of supported protocols
+      // Note:  DNS tracks use counts so that we will only remove this transport type if this is the last of the type to be removed
       mDns.removeTransportType(transportToRemove->transport(), transportToRemove->ipVersion());
 
       if (transportToRemove->shareStackProcessAndSelect())
@@ -356,6 +371,39 @@ TransportSelector::removeTransport(unsigned int transportKey)
          delete transportToRemove;
       }
    }
+}
+
+void
+TransportSelector::rebuildAnyPortTransportMaps()
+{
+    // These maps may contain less transports than what exists in the mTransports map, due to the fact that multiple transports can 
+    // have the same index.  In these cases the last transport added that matches the custom map compare function is the only one that ends 
+    // up in these maps.  Therefor we cannot just simply remove items and expect transprot selection to work as expected.  
+    // We will clear these maps here.  Iterate through the master transport list and rebuild them back up.  This isn't very efficient,
+    // but it only occurs when a transport is removed.
+
+    mAnyPortTransports.clear();
+    mAnyPortAnyInterfaceTransports.clear();
+
+    for (TransportKeyMap::iterator it = mTransports.begin(); it != mTransports.end(); it++)
+    {
+        if (!isSecure(it->second->transport()))
+        {
+            // Store the transport in the ANY interface maps if the tuple specifies ANY
+            // interface. Store the transport in the specific interface maps if the tuple
+            // specifies an interface. See TransportSelector::findTransport.
+            if (it->second->interfaceName().empty() ||
+                it->second->getTuple().isAnyInterface() ||
+                it->second->hasSpecificContact())
+            {
+                mAnyPortAnyInterfaceTransports[it->second->getTuple()] = it->second;
+            }
+            else
+            {
+                mAnyPortTransports[it->second->getTuple()] = it->second;
+            }
+        }
+    }
 }
 
 void
@@ -1266,7 +1314,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             handler->outboundMessage(source, target, *msg);
          }
 
-         std::auto_ptr<SendData> send(new SendData(target,
+         std::unique_ptr<SendData> send(new SendData(target,
                                                    resip::Data::Empty,
                                                    msg->getTransactionId(),
                                                    remoteSigcompId));
@@ -1294,7 +1342,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
             *sendData = *send;
          }
 
-         transport->send(send);
+         transport->send(std::move(send));
          return Sent;
       }
       else
@@ -1350,7 +1398,7 @@ TransportSelector::retransmit(const SendData& data)
          handler->outboundRetransmit(transport->getTuple(), data.destination, data);
       }
        
-      transport->send(std::auto_ptr<SendData>(data.clone()));
+      transport->send(std::unique_ptr<SendData>(data.clone()));
    }
 }
 
@@ -1365,7 +1413,7 @@ TransportSelector::closeConnection(const Tuple& peer)
                                    resip::Data::Empty,
                                    resip::Data::Empty);
       close->command = SendData::CloseConnection;
-      t->send(std::auto_ptr<SendData>(close));
+      t->send(std::unique_ptr<SendData>(close));
    }
 }
 
@@ -1397,8 +1445,25 @@ TransportSelector::enableFlowTimer(const resip::Tuple& flow)
                                     resip::Data::Empty,
                                     resip::Data::Empty);
       enableFlowTimer->command = SendData::EnableFlowTimer;
-      t->send(std::auto_ptr<SendData>(enableFlowTimer));
+      t->send(std::unique_ptr<SendData>(enableFlowTimer));
    }
+}
+
+void 
+TransportSelector::invokeAfterSocketCreationFunc(TransportType type)
+{
+    for (TransportKeyMap::iterator it = mTransports.begin(); it != mTransports.end(); it++)
+    {
+        if (type == UNKNOWN_TRANSPORT || type == it->second->transport())
+        {
+            it->second->invokeAfterSocketCreationFunc();
+        }
+    }
+    if (type == UNKNOWN_TRANSPORT)
+    {
+        // !slg! TODO - invoke for DNS?
+        //mDns.
+    }
 }
 
 Transport*

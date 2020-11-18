@@ -10,7 +10,10 @@
 
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
-#include "bf_dwrap.h"
+#include "bf_dwrap.hxx"
+
+#include <utility>
+
 using namespace std;
 using namespace dtls;
 
@@ -40,8 +43,8 @@ int dummy_cb(int d, X509_STORE_CTX *x)
    return 1;
 }
 
-DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
-   mSocketContext(socketContext),
+DtlsSocket::DtlsSocket(std::unique_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
+   mSocketContext(std::move(socketContext)),
    mFactory(factory),
    mReadTimer(0),
    mSocketType(type), 
@@ -242,15 +245,6 @@ DtlsSocket::getSrtpSessionKeys()
    resip_assert(mHandshakeCompleted);
 
    SrtpSessionKeys keys;
-   memset(&keys, 0x00, sizeof(keys));
-   keys.clientMasterKey = new unsigned char[SRTP_MASTER_KEY_KEY_LEN];
-   keys.clientMasterKeyLen = 0;
-   keys.clientMasterSalt = new unsigned char[SRTP_MASTER_KEY_SALT_LEN];
-   keys.clientMasterSaltLen = 0;
-   keys.serverMasterKey = new unsigned char[SRTP_MASTER_KEY_KEY_LEN];
-   keys.serverMasterKeyLen = 0;
-   keys.serverMasterSalt = new unsigned char[SRTP_MASTER_KEY_SALT_LEN];
-   keys.serverMasterSaltLen = 0;
 
    unsigned char material[SRTP_MASTER_KEY_LEN << 1];
    if (!SSL_export_keying_material(
@@ -264,18 +258,14 @@ DtlsSocket::getSrtpSessionKeys()
 
    size_t offset = 0;
 
-   memcpy(keys.clientMasterKey, &material[offset], SRTP_MASTER_KEY_KEY_LEN);
-   offset += SRTP_MASTER_KEY_KEY_LEN;
-   memcpy(keys.serverMasterKey, &material[offset], SRTP_MASTER_KEY_KEY_LEN);
-   offset += SRTP_MASTER_KEY_KEY_LEN;
-   memcpy(keys.clientMasterSalt, &material[offset], SRTP_MASTER_KEY_SALT_LEN);
-   offset += SRTP_MASTER_KEY_SALT_LEN;
-   memcpy(keys.serverMasterSalt, &material[offset], SRTP_MASTER_KEY_SALT_LEN);
-   offset += SRTP_MASTER_KEY_SALT_LEN;
-   keys.clientMasterKeyLen = SRTP_MASTER_KEY_KEY_LEN;
-   keys.serverMasterKeyLen = SRTP_MASTER_KEY_KEY_LEN;
-   keys.clientMasterSaltLen = SRTP_MASTER_KEY_SALT_LEN;
-   keys.serverMasterSaltLen = SRTP_MASTER_KEY_SALT_LEN;
+   keys.clientMasterKey.assign(material + offset, material + offset + SRTP_MASTER_KEY_KEY_LEN);
+   offset += keys.clientMasterKey.size();
+   keys.serverMasterKey.assign(material + offset, material + offset + SRTP_MASTER_KEY_KEY_LEN);
+   offset += keys.serverMasterKey.size();
+   keys.clientMasterSalt.assign(material + offset, material + offset + SRTP_MASTER_KEY_SALT_LEN);
+   offset += keys.clientMasterSalt.size();
+   keys.serverMasterSalt.assign(material + offset, material + offset + SRTP_MASTER_KEY_SALT_LEN);
+   offset += keys.serverMasterSalt.size();
 
    return keys;   
 }
@@ -338,19 +328,19 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    SrtpSessionKeys srtp_key = getSrtpSessionKeys();   
    /* set client_write key */  
    client_policy.key = client_master_key_and_salt;
-   if (srtp_key.clientMasterKeyLen != key_len)
+   if (srtp_key.clientMasterKey.size() != key_len)
    {
       cout << "error: unexpected client key length" << endl;
       resip_assert(0);
    }
-   if (srtp_key.clientMasterSaltLen != salt_len)
+   if (srtp_key.clientMasterSalt.size() != salt_len)
    {
       cout << "error: unexpected client salt length" << endl;
       resip_assert(0);      
    }
 
-   memcpy(client_master_key_and_salt, srtp_key.clientMasterKey, key_len);
-   memcpy(client_master_key_and_salt + key_len, srtp_key.clientMasterSalt, salt_len);
+   memcpy(client_master_key_and_salt, &srtp_key.clientMasterKey.front(), key_len);
+   memcpy(client_master_key_and_salt + key_len, &srtp_key.clientMasterSalt.front(), salt_len);
 
    //cout << "client master key and salt: " << 
    //   octet_string_hex_string(client_master_key_and_salt, key_len + salt_len) << endl;
@@ -366,19 +356,19 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    /* set server_write key */
    server_policy.key = server_master_key_and_salt;
 
-   if (srtp_key.serverMasterKeyLen != key_len)
+   if (srtp_key.serverMasterKey.size() != key_len)
    {
       cout << "error: unexpected server key length" << endl;
       resip_assert(0);
    }
-   if (srtp_key.serverMasterSaltLen != salt_len)
+   if (srtp_key.serverMasterSalt.size() != salt_len)
    {
       cout << "error: unexpected salt length" << endl;
       resip_assert(0);      
    }
 
-   memcpy(server_master_key_and_salt, srtp_key.serverMasterKey, key_len);
-   memcpy(server_master_key_and_salt + key_len, srtp_key.serverMasterSalt, salt_len);
+   memcpy(server_master_key_and_salt, &srtp_key.serverMasterKey.front(), key_len);
+   memcpy(server_master_key_and_salt + key_len, &srtp_key.serverMasterSalt.front(), salt_len);
    //cout << "server master key and salt: " << 
    //   octet_string_hex_string(server_master_key_and_salt, key_len + salt_len) << endl;
 

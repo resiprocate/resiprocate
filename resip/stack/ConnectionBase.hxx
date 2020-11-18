@@ -83,7 +83,7 @@ class ConnectionBase
       void decompressNewBytes(int bytesRead);
       std::pair<char*, size_t> getWriteBuffer();
       std::pair<char*, size_t> getCurrentWriteBuffer();
-      char* getWriteBufferForExtraBytes(int extraBytes);
+      char* getWriteBufferForExtraBytes(int bytesRead, int extraBytes);
       
       // for avoiding copies in external transports--not used in core resip
       void setBuffer(char* bytes, int count);
@@ -100,7 +100,7 @@ class ConnectionBase
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
       bool scanMsgHeader(int bytesRead);
-      std::auto_ptr<Data> makeWsHandshakeResponse();
+      std::unique_ptr<Data> makeWsHandshakeResponse();
       bool isUsingSecWebSocketKey();
       bool isUsingDeprecatedSecWebSocketKeys();
    protected:

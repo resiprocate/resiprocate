@@ -8,6 +8,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -23,14 +25,14 @@ ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
                                            DialogSet& dialogSet,
                                            const SipMessage& req)
    : NonDialogUsage(dum, dialogSet),
-     mResponse(new SipMessage)
+     mResponse(std::make_shared<SipMessage>())
 {
 
 }
 
 ServerOutOfDialogReq::~ServerOutOfDialogReq()
 {
-   mDialogSet.mServerOutOfDialogRequest = 0;
+   mDialogSet.mServerOutOfDialogRequest = nullptr;
 }
 
 void
@@ -78,7 +80,7 @@ ServerOutOfDialogReq::dispatch(const DumTimeout& msg)
 {
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerOutOfDialogReq::answerOptions()
 {
    mDum.makeResponse(*mResponse, mRequest, 200);
@@ -95,14 +97,14 @@ ServerOutOfDialogReq::answerOptions()
 }
 
 void 
-ServerOutOfDialogReq::send(SharedPtr<SipMessage> response)
+ServerOutOfDialogReq::send(std::shared_ptr<SipMessage> response)
 {
    resip_assert(response->isResponse());
-   mDum.send(response);
+   mDum.send(std::move(response));
    delete this;
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerOutOfDialogReq::accept(int statusCode)
 {   
    //!dcm! -- should any responses should include a contact?
@@ -110,7 +112,7 @@ ServerOutOfDialogReq::accept(int statusCode)
    return mResponse;
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerOutOfDialogReq::reject(int statusCode)
 {
    //!dcm! -- should any responses should include a contact?

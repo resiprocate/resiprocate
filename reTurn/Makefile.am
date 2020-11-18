@@ -4,7 +4,6 @@ EXTRA_DIST = dh2048.pem server.pem
 EXTRA_DIST += pkg
 EXTRA_DIST += README.txt
 EXTRA_DIST += *.sln
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += reTurnServer.config
 EXTRA_DIST += users.txt
@@ -19,23 +18,37 @@ SUBDIRS += test
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
+AM_CXXFLAGS += -DASIO_HAS_BOOST_BIND
+AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
+
+lib_LTLIBRARIES = libreTurnCommon.la
+
+libreTurnCommon_la_LIBADD = $(LIBSSL_LIBADD)
+libreTurnCommon_la_LIBADD += @LIBSTL_LIBADD@
+libreTurnCommon_la_LIBADD += @LIBLOG_LIBADD@
+libreTurnCommon_la_LIBADD += -lboost_system
+libreTurnCommon_la_LIBADD += @LIBPTHREAD_LIBADD@
+libreTurnCommon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
+
+
+libreTurnCommon_la_SOURCES = \
+	AsyncSocketBase.cxx \
+	AsyncTcpSocketBase.cxx \
+	AsyncTlsSocketBase.cxx \
+	AsyncUdpSocketBase.cxx \
+	ChannelManager.cxx \
+	DataBuffer.cxx \
+	RemotePeer.cxx \
+	ReTurnSubsystem.cxx \
+	StunMessage.cxx \
+	StunTuple.cxx
 
 sbin_PROGRAMS = reTurnServer
 reTurnServer_SOURCES = reTurnServer.cxx \
-	AsyncSocketBase.cxx \
-        AsyncUdpSocketBase.cxx \
-        AsyncTcpSocketBase.cxx \
-        AsyncTlsSocketBase.cxx \
-        ChannelManager.cxx \
         ConnectionManager.cxx \
-        DataBuffer.cxx \
-        RemotePeer.cxx \
         RequestHandler.cxx \
         ReTurnConfig.cxx \
-        ReTurnSubsystem.cxx \
         StunAuth.cxx \
-        StunMessage.cxx \
-        StunTuple.cxx \
         TcpConnection.cxx \
         TcpServer.cxx \
         TlsConnection.cxx \
@@ -80,7 +93,9 @@ nobase_reTurninclude_HEADERS = AsyncSocketBaseHandler.hxx \
 	reTurnServer.hxx
 
 #reTurnServer_LDADD = librepro.la
-reTurnServer_LDADD = ../rutil/librutil.la
+reTurnServer_LDADD = libreTurnCommon.la
+reTurnServer_LDADD += ../rutil/librutil.la
+reTurnServer_LDADD += -lboost_system
 #reTurnServer_LDADD += ../contrib/ares/libares.a
 #reTurnServer_LDADD += -L../contrib/ares -lares
 reTurnServer_LDADD += @LIBSTL_LIBADD@

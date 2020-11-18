@@ -14,7 +14,6 @@ EXTRA_DIST += ParameterHash.gperf
 EXTRA_DIST += parametersA.gperf
 EXTRA_DIST += Readme-Compliance.txt
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
 EXTRA_DIST += ssl/WinSecurity.cxx
 
 SUBDIRS = . test
@@ -71,6 +70,7 @@ libresip_la_SOURCES = \
 	Aor.cxx \
 	ApiCheck.cxx \
 	ApplicationSip.cxx \
+	BasicDomainMatcher.cxx \
 	BasicNonceHelper.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
@@ -81,10 +81,13 @@ libresip_la_SOURCES = \
 	CpimContents.cxx \
 	DataParameter.cxx \
 	DeprecatedDialog.cxx \
+	DialogInfoContents.cxx \
+	Dispatcher.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	DtlsMessage.cxx \
 	Embedded.cxx \
+	ExtendedDomainMatcher.cxx \
 	ExtensionParameter.cxx \
 	ExtensionHeader.cxx \
 	ExistsOrDataParameter.cxx \
@@ -94,6 +97,7 @@ libresip_la_SOURCES = \
 	QValueParameter.cxx \
 	GenericContents.cxx \
 	GenericPidfContents.cxx \
+	HEPSipMessageLoggingHandler.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	gen/HeaderHash.cxx \
@@ -134,6 +138,7 @@ libresip_la_SOURCES = \
 	SdpContents.cxx \
 	SecurityAttributes.cxx \
 	Compression.cxx \
+	SipConfigParse.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
@@ -172,6 +177,7 @@ libresip_la_SOURCES = \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
 	InvalidContents.cxx \
+	WorkerThread.cxx \
 	WsBaseTransport.cxx \
 	WsFrameExtractor.cxx \
 	WsTransport.cxx \
@@ -224,6 +230,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ApplicationMessage.hxx \
 	ApplicationSip.hxx \
 	Auth.hxx \
+	BasicDomainMatcher.hxx \
 	BasicNonceHelper.hxx \
 	BranchParameter.hxx \
 	CallId.hxx \
@@ -243,6 +250,9 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	DataParameter.hxx \
 	DateCategory.hxx \
 	DeprecatedDialog.hxx \
+	DialogInfoContents.hxx \
+	Dispatcher.hxx \
+	DomainMatcher.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsResultMessage.hxx \
@@ -254,6 +264,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ExistsOrDataParameter.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
+	ExtendedDomainMatcher.hxx \
 	ExtensionHeader.hxx \
 	ExtensionParameter.hxx \
 	ExternalBodyContents.hxx \
@@ -261,6 +272,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	GenericContents.hxx \
 	GenericPidfContents.hxx \
 	GenericUri.hxx \
+	HEPSipMessageLoggingHandler.hxx \
 	HeaderFieldValue.hxx \
 	HeaderFieldValueList.hxx \
 	HeaderHash.hxx \
@@ -273,6 +285,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	InteropHelper.hxx \
 	InterruptableStackThread.hxx \
 	InvalidContents.hxx \
+	InvokeAfterSocketCreationFunc.hxx \
 	KeepAliveMessage.hxx \
 	KeepAlivePong.hxx \
 	LazyParser.hxx \
@@ -320,6 +333,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	SendData.hxx \
 	SERNonceHelper.hxx \
 	ShutdownMessage.hxx \
+	SipConfigParse.hxx \
 	SipFrag.hxx \
 	SipMessage.hxx \
 	SipStack.hxx \
@@ -378,6 +392,8 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	ValueFifo.hxx \
 	Via.hxx \
 	WarningCategory.hxx \
+	Worker.hxx \
+	WorkerThread.hxx \
 	WsBaseTransport.hxx \
 	WsDecorator.hxx \
 	WsFrameExtractor.hxx \

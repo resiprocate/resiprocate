@@ -22,7 +22,9 @@
 #include "resip/stack/WsConnectionValidator.hxx"
 #include "resip/stack/WsCookieContextFactory.hxx"
 #include "rutil/dns/DnsStub.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
+#include <utility>
 
 /**
     Let external applications know that this version of the stack
@@ -96,6 +98,11 @@ class FdPollGrp;
           See EventStackThread. The SipStack does NOT take ownership;
           the application (or a helper such as EventStackSimpleMgr) must
           release this object after the SipStack is destructed.
+
+        mUseDnsVip
+           Set to true to enable Whitelisting of DNS entries.  A feature
+           that usually desired by UA's that want to stick to a known
+           good server / dns result.
 **/
 class SipStackOptions
 {
@@ -103,7 +110,8 @@ class SipStackOptions
       SipStackOptions()
          : mSecurity(0), mExtraNameserverList(0),
            mAsyncProcessHandler(0), mStateless(false),
-           mSocketFunc(0), mCompression(0), mPollGrp(0)
+           mSocketFunc(0), mCompression(0), mPollGrp(0),
+           mUseDnsVip(false)
       {
       }
 
@@ -114,6 +122,7 @@ class SipStackOptions
       AfterSocketCreationFuncPtr mSocketFunc;
       Compression *mCompression;
       FdPollGrp* mPollGrp;
+      bool mUseDnsVip;
 };
 
 
@@ -191,9 +200,14 @@ class SipStack : public FdSetIOObserver
                              SigComp. If set to 0, then SigComp compression
                              will be disabled.
 
-          @param pollGrp     Polling group to support file-io callbacks; if one 
-                              is not passed, one will be created. Ownership is 
-                              not taken.
+          @param pollGrp    Polling group to support file-io callbacks; if one 
+                            is not passed, one will be created. Ownership is 
+                            not taken.
+
+          @param useDnsVip
+                            Set to true to enable Whitelisting of DNS entries.  A feature
+                            that usually desired by UA's that want to stick to a known
+                            good server / dns result.
       */
       SipStack(Security* security=0,
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
@@ -201,7 +215,8 @@ class SipStack : public FdSetIOObserver
                bool stateless=false,
                AfterSocketCreationFuncPtr socketFunc = 0,
                Compression *compression = 0,
-               FdPollGrp* pollGrp = 0);
+               FdPollGrp* pollGrp = 0,
+               bool useDnsVip = false);
 
       virtual ~SipStack();
 
@@ -239,11 +254,27 @@ class SipStack : public FdSetIOObserver
       void shutdownAndJoinThreads();
 
       /**
+         @brief reload configuration
+         @details Perform actions typically associated with the HUP signal,
+             for example, reloading certificate files from disk.
+         @note If an application never calls this method, for example,
+             because it is on a platform without signal support, the
+             SipStack still works anyway.
+      */
+      void onReload();
+
+      /**
+         @brief reload the TLS X.509 certificates
+         @details reloads the X.509 certificate for each transport.
+      */
+      void reloadCertificates();
+
+      /**
         @brief thrown when the stack is unable to function.
         @details For instance, the stack cannot process messages because
         there are no transports associated with the stack.
       */
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
             /**
@@ -261,7 +292,7 @@ class SipStack : public FdSetIOObserver
             /**
               @brief what gets called instead of the pure virtual in the base
               */
-            const char* name() const { return "SipStack::Exception"; }
+            const char* name() const noexcept override { return "SipStack::Exception"; }
       };
 
       /**
@@ -272,11 +303,11 @@ class SipStack : public FdSetIOObserver
                                       you can call setSipMessageLoggingHandler on the
                                       Transport pointer returned from addTransport
 
-         @param handler               SharedPtr to a handler to call for inbound and
+         @param handler               std::shared_ptr to a handler to call for inbound and
                                       outbound SIP messages for all transports added
                                       after calling this.
       */
-      void setTransportSipMessageLoggingHandler(SharedPtr<Transport::SipMessageLoggingHandler> handler) { mTransportSipMessageLoggingHandler = handler; }
+      void setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) { mTransportSipMessageLoggingHandler = std::move(handler); }
 
       /**
          Used by the application to add in a new built-in transport.  The transport is
@@ -330,14 +361,14 @@ class SipStack : public FdSetIOObserver
                               const Data& ipInterface = Data::Empty,
                               const Data& sipDomainname = Data::Empty, // only used for TLS based stuff
                               const Data& privateKeyPassPhrase = Data::Empty,
-                              SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+                              SecurityTypes::SSLType sslType = SecurityTypes::SSLv23,
                               unsigned transportFlags = 0,
                               const Data& certificateFilename = "", const Data& privateKeyFilename = "",
                               SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None,
                               bool useEmailAsSIP = false,
-                              SharedPtr<WsConnectionValidator> = SharedPtr<WsConnectionValidator>(),
-                              SharedPtr<WsCookieContextFactory> = SharedPtr<WsCookieContextFactory>(),
-                              const Data& netns = Data::Empty
+                              std::shared_ptr<WsConnectionValidator> = nullptr,
+                              std::shared_ptr<WsCookieContextFactory> = nullptr,
+                              const Data& netNs = Data::Empty
                              );
 
       /**
@@ -347,7 +378,7 @@ class SipStack : public FdSetIOObserver
           @param transport Pointer to an externally created transport.  SipStack
                            assumes ownership.
       */
-      void addTransport(std::auto_ptr<Transport> transport);
+      void addTransport(std::unique_ptr<Transport> transport);
 
       /**
           Used to remove a previously added transport.
@@ -443,14 +474,14 @@ class SipStack : public FdSetIOObserver
       */
       void send(const SipMessage& msg, TransactionUser* tu=0);
 
-      void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu = 0);
+      void send(std::unique_ptr<SipMessage> msg, TransactionUser* tu = 0);
       
       /** @brief this is only if you want to send to a destination not in the route.
           @note You probably don't want to use it. */
-      void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
+      void sendTo(std::unique_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
       /** @brief this is only if you want to send to a destination not in the route.
           @note You probably don't want to use it. */
-      void sendTo(std::auto_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
+      void sendTo(std::unique_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
 
       /**
           @brief send a message to a destination not in the route
@@ -514,7 +545,7 @@ class SipStack : public FdSetIOObserver
 
           @param tu    TransactionUser to post to.
       */
-      void post(std::auto_ptr<ApplicationMessage> message,
+      void post(std::unique_ptr<ApplicationMessage> message,
                 unsigned int secondsLater,
                 TransactionUser* tu=0);
 
@@ -530,7 +561,7 @@ class SipStack : public FdSetIOObserver
 
           @param tu      TransactionUser to post to.
       */
-      void postMS(const std::auto_ptr<ApplicationMessage> message,
+      void postMS(std::unique_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu=0);
 
@@ -541,7 +572,7 @@ class SipStack : public FdSetIOObserver
           
           @param message ApplicationMessage to post
       */
-      void post(std::auto_ptr<ApplicationMessage> message);
+      void post(std::unique_ptr<ApplicationMessage> message);
 
       /**
           @brief Makes the message available to the TU later
@@ -610,8 +641,10 @@ class SipStack : public FdSetIOObserver
          the TU of the obligation to handle any INVITE/200 that come in (usually
          by sending an ACK to the 200, and then a BYE).
          @param tid The transaction identifier of the INVITE request sent.
+         @param reasons Optional reason headers to be added to any resulting CANCEL
+                       request.
       */
-      void cancelClientInviteTransaction(const Data& tid);
+      void cancelClientInviteTransaction(const Data& tid, const Tokens* reasons);
 
       /**
           @brief does the stack have new messages for the TU?
@@ -813,7 +846,7 @@ class SipStack : public FdSetIOObserver
           receiveAny, the SipStack will call postToTu on the appropriate
           Tu. Messages not associated with a registered TU go into SipStack::mTuFifo.
       */
-      void registerTransactionUser(TransactionUser&);
+      void registerTransactionUser(TransactionUser&, const bool front = false);
 
       /** @brief Queue a shutdown request to the specified TU **/
       void requestTransactionUserShutdown(TransactionUser&);
@@ -1054,6 +1087,15 @@ class SipStack : public FdSetIOObserver
       void terminateFlow(const resip::Tuple& flow);
       void enableFlowTimer(const resip::Tuple& flow);
 
+      // Will call the AfterSocketCreationFuncPtr that was provided at SIPStack creation
+      // time to all sockets that match the passed in type.  Use UNKNOWN_TRANSPORT
+      // in order to call for all transport types.
+      // The stack thread(s) must be running when this is called.
+      // Can be used to update QOS to a new value on existing sockets, without needing
+      // to restart the SipStack.
+      // Note:  DNS sockets are not currently supported
+      void invokeAfterSocketCreationFunc(TransportType type = UNKNOWN_TRANSPORT);
+
    private:
       /// Performs bulk of work of constructor.
       // WATCHOUT: can only be called once (just like constructor)
@@ -1114,7 +1156,6 @@ class SipStack : public FdSetIOObserver
 
       /** @brief All aspects of the Transaction State Machine / DNS resolver **/
       TransactionController* mTransactionController;
-      std::auto_ptr<ProducerFifoBuffer<TransactionMessage> > mStateMacFifoBuffer;
 
       TransactionControllerThread* mTransactionControllerThread;
       TransportSelectorThread* mTransportSelectorThread;
@@ -1151,7 +1192,7 @@ class SipStack : public FdSetIOObserver
 
       unsigned int mNextTransportKey;
 
-      SharedPtr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+      std::shared_ptr<Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
 
       friend class Executive;
       friend class StatelessHandler;

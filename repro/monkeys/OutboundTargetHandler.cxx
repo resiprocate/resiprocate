@@ -7,6 +7,8 @@
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 namespace repro
@@ -65,11 +67,11 @@ OutboundTargetHandler::process(RequestContext & rc)
             mRegStore.removeContact(inputUri,ot->rec());
             mRegStore.unlockRecord(inputUri);
 
-            std::auto_ptr<Target> newTarget(ot->nextInstance());
-            if(newTarget.get())
+            std::unique_ptr<Target> newTarget(ot->nextInstance());
+            if(newTarget)
             {
                // Try next reg-id
-               rsp.addTarget(newTarget);
+               rsp.addTarget(std::move(newTarget));
                return Processor::SkipAllChains;
             }
          }

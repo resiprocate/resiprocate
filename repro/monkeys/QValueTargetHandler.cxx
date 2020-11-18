@@ -73,8 +73,8 @@ QValueTargetHandler::process(RequestContext &rc)
          //to try)
          if(mCancelBetweenForkGroups && rsp.hasCandidateTransactions())
          {
-            std::vector<resip::Data>& cancelTids=fc->mTransactionsToCancel;
-            for(i=cancelTids.begin();i!=cancelTids.end();i++)
+            std::vector<resip::Data>& cancelTids = fc->mTransactionsToCancel;
+            for(i = cancelTids.begin(); i != cancelTids.end(); i++)
             {
                //Calling cancelClientTransaction on an already cancelled
                //target is safe, and usually more efficient than checking
@@ -231,7 +231,7 @@ QValueTargetHandler::process(RequestContext &rc)
          resip::ApplicationMessage* app=
                            dynamic_cast<resip::ApplicationMessage*>(fork);
                            
-         proxy->postMS(std::auto_ptr<resip::ApplicationMessage>(app),
+         proxy->postMS(std::unique_ptr<resip::ApplicationMessage>(app),
                               mDelayBetweenForkGroups);
       }
       else // Issue two seperate ForkControlMessages
@@ -244,7 +244,7 @@ QValueTargetHandler::process(RequestContext &rc)
             resip::ApplicationMessage* app=
                               dynamic_cast<resip::ApplicationMessage*>(cancel);
 
-            rc.getProxy().postMS(std::auto_ptr<resip::ApplicationMessage>(app),
+            rc.getProxy().postMS(std::unique_ptr<resip::ApplicationMessage>(app),
                                  mCancellationDelay);
          }
          if(!nextBeginTids.empty())
@@ -255,7 +255,7 @@ QValueTargetHandler::process(RequestContext &rc)
             resip::ApplicationMessage* app
                               =dynamic_cast<resip::ApplicationMessage*>(begin);
 
-            proxy->postMS(std::auto_ptr<resip::ApplicationMessage>(app),
+            proxy->postMS(std::unique_ptr<resip::ApplicationMessage>(app),
                                  mDelayBetweenForkGroups);
          }
       }

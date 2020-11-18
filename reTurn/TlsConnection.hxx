@@ -9,8 +9,6 @@
 
 #include <asio.hpp>
 #include <asio/ssl.hpp>
-#include <boost/array.hpp>
-#include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
 #include "AsyncTlsSocketBase.hxx"
 
@@ -22,13 +20,17 @@ typedef asio::ssl::stream<asio::ip::tcp::socket> ssl_socket;
 
 /// Represents a single connection from a client.
 class TlsConnection
-  : public AsyncTlsSocketBase,
-    private boost::noncopyable
+  : public AsyncTlsSocketBase
 {
 public:
   /// Construct a connection with the given io_service.
    explicit TlsConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, asio::ssl::context& context);
-  ~TlsConnection();
+   TlsConnection(const TlsConnection&) = delete;
+   TlsConnection(TlsConnection&&) = delete;
+   ~TlsConnection();
+
+   TlsConnection& operator=(const TlsConnection&) = delete;
+   TlsConnection& operator=(TlsConnection&&) = delete;
 
    /// Get the socket associated with the connection.
    ssl_socket::lowest_layer_type& socket();
@@ -48,7 +50,7 @@ protected:
    virtual void onServerHandshakeFailure(const asio::error_code& e);
 
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(const asio::error_code& e);
 
    /// Handle completion of a send operation

@@ -3,7 +3,6 @@
 
 #include "resip/dum/DialogSetId.hxx"
 #include "resip/dum/UserProfile.hxx"
-#include "rutil/SharedPtr.hxx"
 
 #include <map>
 #include <functional>
@@ -73,9 +72,6 @@ class ClientAuthManager
             unsigned int mNonceCount;
             Auth mAuth;            
 
-            // FH add the realm state so it can change
-            Auth *mAuthPtr;
-            
             // .dcm. only one credential per realm per challenge supported
             // typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;            
             // CredentialMap proxyCredentials;

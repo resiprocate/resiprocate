@@ -3,6 +3,7 @@
 
 #include <boost/function.hpp>
 
+#include "InstantMessage.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
@@ -17,8 +18,9 @@
 #include <resip/dum/PublicationHandler.hxx>
 #include <rutil/SelectInterruptor.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
+
+#include <memory>
 
 namespace recon
 {
@@ -77,7 +79,7 @@ public:
                                 connected.  To enable this behavior call:
                                 Connection::setEnablePostConnectSocketFuncCall();
    */
-   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0);
+   UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0, std::shared_ptr<InstantMessage> instantMessage = nullptr);
    virtual ~UserAgent();
 
    /**
@@ -97,7 +99,7 @@ public:
                       Application can do some work, but should call
                       process again ASAP.
    */
-   void process(int timeoutMs); // call this in a loop
+   virtual void process(int timeoutMs); // call this in a loop
 
    /**
      Used to initiate a shutdown of the useragent.  This function blocks 
@@ -163,7 +165,7 @@ public:
      @param defaultOutgoing Set to true to set this profile as the default 
                             profile to use for outbound calls.
    */
-   ConversationProfileHandle addConversationProfile(resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
+   ConversationProfileHandle addConversationProfile(std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
 
    /**
      Sets an existing Conversation Profile to the default profile to 
@@ -270,7 +272,15 @@ public:
    */
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode);   
 
+   /**
+      Used to send a MESSAGE SIP message.
+    */
+   const char* sendMessage(const resip::NameAddr& destination, const resip::Data& msg, const resip::Mime& mimeType);
+
 protected:
+   resip::SipStack& getSipStack() { return mStack; };
+   resip::DialogUsageManager& getDialogUsageManager();
+
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
 
@@ -297,6 +307,15 @@ protected:
    virtual int onRequestRetry(resip::ClientPublicationHandle h, int retrySeconds, const resip::SipMessage& status);
    virtual void onFailure(resip::ClientPublicationHandle h, const resip::SipMessage& status);
 
+   // UserProfile selection for incoming and outgoing calls, override to customize
+   std::shared_ptr<ConversationProfile> getDefaultOutgoingConversationProfile();
+   // Returns the ConversationProfile for a specific media address
+   std::shared_ptr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
+   virtual std::shared_ptr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
+   // Return the ConversationProfile suitable for creating an INVITE from a REFER
+   virtual std::shared_ptr<ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
+   std::shared_ptr<UserAgentMasterProfile> getUserAgentMasterProfile() const noexcept;
+
 private:
    friend class ConversationManager;
    friend class UserAgentShutdownCmd;
@@ -315,15 +334,11 @@ private:
    friend class RemoteParticipant;
    friend class DefaultDialogSet;
    friend class RemoteParticipantDialogSet;
-   resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
-   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
-   resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
-   resip::DialogUsageManager& getDialogUsageManager();
 
    void addTransports();
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
    void shutdownImpl(); 
-   void addConversationProfileImpl(ConversationProfileHandle handle, resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
+   void addConversationProfileImpl(ConversationProfileHandle handle, std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
    void setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle);
    void destroyConversationProfileImpl(ConversationProfileHandle handle);
    void createSubscriptionImpl(SubscriptionHandle handle, const resip::Data& eventType, const resip::NameAddr& target, unsigned int subscriptionTime, const resip::Mime& mimeType);
@@ -352,7 +367,7 @@ private:
    void unregisterPublication(UserAgentClientPublication *);
 
    // Conversation Profile Storage
-   typedef std::map<ConversationProfileHandle, resip::SharedPtr<ConversationProfile> > ConversationProfileMap;
+   typedef std::map<ConversationProfileHandle, std::shared_ptr<ConversationProfile> > ConversationProfileMap;
    ConversationProfileMap mConversationProfiles;
    resip::Mutex mConversationProfileHandleMutex;
    ConversationProfileHandle mCurrentConversationProfileHandle;
@@ -366,13 +381,15 @@ private:
    void unregisterRegistration(UserAgentRegistration *);
 
    ConversationManager* mConversationManager;
-   resip::SharedPtr<UserAgentMasterProfile> mProfile;
+   std::shared_ptr<UserAgentMasterProfile> mProfile;
+   std::shared_ptr<InstantMessage> mInstantMessage;
    resip::Security* mSecurity;
    resip::SelectInterruptor mSelectInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
    resip::InterruptableStackThread mStackThread;
    volatile bool mDumShutdown;
+
 };
  
 }

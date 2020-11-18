@@ -165,6 +165,28 @@ main(int argc, char* argv[])
     }
 
     //exit(0);
+
+    {
+       const char* txt = ("v=0\r\n"
+                          "o=Evil 3559 3228 IN IP4 192.168.2.122\r\n"
+                          "s=SIP Call\r\n"
+                          "t=0 0\r\n"
+                          "m=audio 17124 RTP/AVP 18\r\n"
+                          "c=IN IP4 192.168.2.122/127/2000000000\r\n" // way too many connections
+                          "a=rtpmap:18 G729/8000\r\n");
+
+       HeaderFieldValue hfv(txt, strlen(txt));
+       Mime type("application", "sdp");
+       SdpContents sdp(hfv, type);
+
+       try
+       {
+          sdp.checkParsed();
+       }
+       catch (const resip::ParseException&)
+       {
+       }
+    }
     
     {
        Data txt("v=0\r\n"
@@ -553,6 +575,21 @@ main(int argc, char* argv[])
        
        CritLog(<< "Received bad Dialogic fmtp line Ok");
     }
+
+   {
+      const char rawInput[] = "m= 1 \nc=IN  /9";
+      ParseBuffer input(rawInput, sizeof(rawInput));
+
+      try
+      {
+         SdpContents::Session::Medium medium;
+         medium.parse(input);
+      }
+      catch (ParseException& e)
+      {
+         // expected to fail, but don't do out-of-bounds access
+      }
+   }
 
    return 0;   
 }

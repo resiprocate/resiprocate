@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <utility>
 
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/InteropHelper.hxx"
@@ -62,14 +63,14 @@ resip::Data
 ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately)
 {
    InfoLog (<< "Adding candidate " << addr);
-   std::auto_ptr<Target> target(new Target(addr));
+   std::unique_ptr<Target> target(new Target(addr));
    Data tid=target->tid();
-   addTarget(target, beginImmediately);
+   addTarget(std::move(target), beginImmediately);
    return tid;
 }
 
 bool
-ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
+ResponseContext::addTarget(std::unique_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
 {
    if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
@@ -238,7 +239,7 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
 }
 
 bool 
-ResponseContext::cancelActiveClientTransactions()
+ResponseContext::cancelActiveClientTransactions(const resip::Tokens* reasons)
 {
    if(mRequestContext.mHaveSentFinalResponse)
    {
@@ -257,7 +258,7 @@ ResponseContext::cancelActiveClientTransactions()
    for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
         i != mActiveTransactionMap.end(); ++i)
    {
-      cancelClientTransaction(i->second);
+      cancelClientTransaction(i->second, reasons);
    }
       
    return true;
@@ -265,7 +266,7 @@ ResponseContext::cancelActiveClientTransactions()
 }
 
 bool
-ResponseContext::cancelAllClientTransactions()
+ResponseContext::cancelAllClientTransactions(const resip::Tokens* reasons)
 {
 
    InfoLog (<< "Cancel ALL client transactions: " << mCandidateTransactionMap.size()
@@ -282,25 +283,25 @@ ResponseContext::cancelAllClientTransactions()
       for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
            i != mActiveTransactionMap.end(); ++i)
       {
-         cancelClientTransaction(i->second);
+         cancelClientTransaction(i->second, reasons);
       }
    }
 
-   clearCandidateTransactions();
+   clearCandidateTransactions(reasons);
    
    return true;
 
 }
 
 bool
-ResponseContext::clearCandidateTransactions()
+ResponseContext::clearCandidateTransactions(const resip::Tokens* reasons)
 {
    bool result=false;
    for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
         j != mCandidateTransactionMap.end();)
    {
       result=true;
-      cancelClientTransaction(j->second);
+      cancelClientTransaction(j->second, reasons);
       mTerminatedTransactionMap[j->second->tid()] = j->second;
       TransactionMap::iterator temp = j;
       j++;
@@ -311,7 +312,7 @@ ResponseContext::clearCandidateTransactions()
 }
 
 bool 
-ResponseContext::cancelClientTransaction(const resip::Data& tid)
+ResponseContext::cancelClientTransaction(const resip::Data& tid, const resip::Tokens* reasons)
 {
 
    TransactionMap::iterator i = mActiveTransactionMap.find(tid);
@@ -319,7 +320,7 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
    {
       if(i!=mActiveTransactionMap.end())
       {
-         cancelClientTransaction(i->second);      
+         cancelClientTransaction(i->second, reasons);
          return true;
       }
    }
@@ -327,7 +328,7 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
    TransactionMap::iterator j = mCandidateTransactionMap.find(tid);
    if(j != mCandidateTransactionMap.end())
    {
-      cancelClientTransaction(j->second);
+      cancelClientTransaction(j->second, reasons);
       mTerminatedTransactionMap[tid] = j->second;
       mCandidateTransactionMap.erase(j);
       return true;
@@ -686,7 +687,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
    // in, we do care though.)
    if(!doPathInstead || recordRouted)
    {
-      std::auto_ptr<resip::MessageDecorator> rrDecorator(
+      std::unique_ptr<resip::MessageDecorator> rrDecorator(
                                  new RRDecorator(mRequestContext.mProxy,
                                                 receivedTransportTuple,
                                                 receivedTransportRecordRoute,
@@ -695,7 +696,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
                                                 mRequestContext.mProxy.getRecordRouteForced(),
                                                 doPathInstead,
                                                 mIsClientBehindNAT));
-      outgoing.addOutboundDecorator(rrDecorator);
+      outgoing.addOutboundDecorator(std::move(rrDecorator));
    }
 }
 
@@ -744,7 +745,7 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
       }
    }
 
-   if(flowToken.empty() && orig.header(h_Vias).size()==1)
+   if(flowToken.empty() && orig.header(h_Vias).size() == 1)
    {
       if(resip::InteropHelper::getRRTokenHackEnabled() ||
          mIsClientBehindNAT ||
@@ -759,6 +760,15 @@ ResponseContext::getInboundFlowToken(bool doPathInstead)
          Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
          flowToken = binaryFlowToken.base64encode();
       }
+   }
+
+   if (flowToken.empty() &&
+       resip::InteropHelper::getRRTokenHackEnabled() &&
+       InteropHelper::getAllowInboundFlowTokensForNonDirectClients())
+   {
+       resip::Data binaryFlowToken;
+       Tuple::writeBinaryToken(orig.getSource(), binaryFlowToken, Proxy::FlowTokenSalt);
+       flowToken = binaryFlowToken.base64encode();
    }
 
    return flowToken;
@@ -941,16 +951,23 @@ ResponseContext::processCancel(const SipMessage& request)
    resip_assert(request.isRequest());
    resip_assert(request.method() == CANCEL);
 
-   std::auto_ptr<SipMessage> ok(Helper::makeResponse(request, 200));   
+   std::unique_ptr<SipMessage> ok(Helper::makeResponse(request, 200));
    mRequestContext.sendResponse(*ok);
 
    if (!mRequestContext.mHaveSentFinalResponse)
    {
-      cancelAllClientTransactions();
+      if (request.exists(h_Reasons))
+      {
+         cancelAllClientTransactions(&request.header(h_Reasons));
+      }
+      else
+      {
+         cancelAllClientTransactions();
+      }
       if(!hasActiveTransactions())
       {
          SipMessage reqterm;
-         Helper::makeResponse(reqterm,mRequestContext.getOriginalRequest(),487);
+         Helper::makeResponse(reqterm, mRequestContext.getOriginalRequest(), 487);
          mRequestContext.sendResponse(reqterm);
       }
    }
@@ -990,20 +1007,26 @@ ResponseContext::processResponse(SipMessage& response)
       {
          return;
       }
-      else if (response.header(h_StatusLine).statusCode() > 199)
+      else if (response.header(h_StatusLine).statusCode() != 100)
       {
-         InfoLog( << "Received final response, but can't forward as there are "
-                        "no more Vias. Considering this branch failed. " 
-                        << response.brief() );
-         // .bwc. Treat as server error.
-         terminateClientTransaction(mCurrentResponseTid);
-         return;
-      }
-      else if(response.header(h_StatusLine).statusCode() != 100)
-      {
-         InfoLog( << "Received provisional response, but can't forward as there"
-                     " are no more Vias. Ignoring. " << response.brief() );
-         return;
+         if (!mRequestContext.handleMissingResponseVias(&response))
+         {
+            // If handle MissingResponseVias returns false, then processing does not continue
+            if (response.header(h_StatusLine).statusCode() > 199)
+            {
+               InfoLog(<< "Received final response, but can't forward as there are "
+                  "no more Vias. Considering this branch failed. "
+                  << response.brief());
+               // .bwc. Treat as server error.
+               terminateClientTransaction(mCurrentResponseTid);
+            }
+            else
+            {
+               InfoLog(<< "Received provisional response, but can't forward as there"
+                  " are no more Vias. Ignoring. " << response.brief());
+            }
+            return;
+         }
       }
    }
    else // We have a second Via
@@ -1084,7 +1107,7 @@ ResponseContext::processResponse(SipMessage& response)
    switch (code / 100)
    {
       case 1:
-         if(mRequestContext.getOriginalRequest().method()==INVITE)
+         if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
             mRequestContext.updateTimerC();
          }
@@ -1105,18 +1128,21 @@ ResponseContext::processResponse(SipMessage& response)
          terminateClientTransaction(mCurrentResponseTid);
          if (mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            cancelAllClientTransactions();
+            Tokens reasons;
+            Token reason("SIP");
+            reason.param(p_cause) = code;
+            reason.param(p_text) = "Call completed elsewhere";
+            reasons.push_back(reason);
+            cancelAllClientTransactions(&reasons);
             mRequestContext.mHaveSentFinalResponse = true;
-            mBestResponse.header(h_StatusLine).statusCode()=
-               response.header(h_StatusLine).statusCode();
+            mBestResponse.header(h_StatusLine).statusCode() = code;
             mRequestContext.sendResponse(response);
          }
          else if (!mRequestContext.mHaveSentFinalResponse)
          {
             clearCandidateTransactions();
             mRequestContext.mHaveSentFinalResponse = true;
-            mBestResponse.header(h_StatusLine).statusCode()=
-               response.header(h_StatusLine).statusCode();
+            mBestResponse.header(h_StatusLine).statusCode() = code;
 
             // If this is a registration response and we have flow timers enabled, and
             // we are doing outbound for this registration and there is no FlowTimer
@@ -1131,7 +1157,7 @@ ResponseContext::processResponse(SipMessage& response)
                mRequestContext.getProxy().getStack().enableFlowTimer(mRequestContext.getOriginalRequest().getSource());
             }
 
-            mRequestContext.sendResponse(response);            
+            mRequestContext.sendResponse(response);
          }
          break;
          
@@ -1169,8 +1195,7 @@ ResponseContext::processResponse(SipMessage& response)
                }
                else if (code / 100 == 3) // merge 3xx
                {
-
-                  if(mBestResponse.header(h_StatusLine).statusCode()/100!=3)
+                  if(mBestResponse.header(h_StatusLine).statusCode() / 100 != 3)
                   {
                      // .bwc. Do not merge contacts in 3xx with contacts from a
                      // previous 4xx or 5xx
@@ -1225,7 +1250,12 @@ ResponseContext::processResponse(SipMessage& response)
                if (mRequestContext.getOriginalRequest().method() == INVITE)
                {
                   // CANCEL INVITE branches
-                  cancelAllClientTransactions();
+                  Tokens reasons;
+                  Token reason("SIP");
+                  reason.param(p_cause) = code;
+                  reason.param(p_text) = response.header(h_StatusLine).reason();
+                  reasons.push_back(reason);
+                  cancelAllClientTransactions(&reasons);
                }
             }
             
@@ -1243,12 +1273,12 @@ ResponseContext::processResponse(SipMessage& response)
 }
 
 void
-ResponseContext::cancelClientTransaction(repro::Target* target)
+ResponseContext::cancelClientTransaction(repro::Target* target, const resip::Tokens* reasons)
 {
    if (target->status() == Target::Started)
    {
       InfoLog (<< "Cancel client transaction: " << target);
-      mRequestContext.cancelClientTransaction(target->via().param(p_branch).getTransactionId());
+      mRequestContext.cancelClientTransaction(target->via().param(p_branch).getTransactionId(), reasons);
 
       DebugLog(<< "Canceling a transaction with uri: " 
                << resip::Data::from(target->uri()) << " , to host: " 
@@ -1286,9 +1316,7 @@ ResponseContext::terminateClientTransaction(const resip::Data& tid)
       mCandidateTransactionMap.erase(j);
       return;   
    }
-      
 }
-
 
 int
 ResponseContext::getPriority(const resip::SipMessage& msg)
@@ -1439,12 +1467,18 @@ void
 ResponseContext::forwardBestResponse()
 {
    InfoLog (<< "Forwarding best response: " << mBestResponse.brief());
-   
-   clearCandidateTransactions();
+
+   Tokens reasons;
+   Token reason("SIP");
+   reason.param(p_cause) = mBestResponse.header(h_StatusLine).statusCode();
+   reason.param(p_text) = mBestResponse.header(h_StatusLine).reason();
+   reasons.push_back(reason);
+
+   clearCandidateTransactions(&reasons);
    
    if(mRequestContext.getOriginalRequest().method()==INVITE)
    {
-      cancelActiveClientTransactions();
+      cancelActiveClientTransactions(&reasons);
    }
    
    if(mBestResponse.header(h_StatusLine).statusCode() == 503)

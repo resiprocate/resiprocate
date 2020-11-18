@@ -1,14 +1,13 @@
 # $Id: $
 AUTOMAKE_OPTIONS = foreign
 
-#CFLAGS=@CFLAGS@ ${WARN_CFLAGS} ${ERROR_CFLAGS}
-
-#ALL_CFLAGS=${CPPFLAGS} ${CFLAGS} ${DEFS}
-
-#INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -I $(top_srcdir)
 
 lib_LTLIBRARIES = libresipares.la
 libresipares_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
+if MACOSX
+libresipares_la_LDFLAGS += -framework SystemConfiguration
+endif
 libresipares_la_SOURCES = \
 	ares__close_sockets.c ares__get_hostent.c ares__read_line.c \
 	ares_destroy.c ares_expand_name.c ares_fds.c ares_free_errmem.c \
@@ -31,17 +30,27 @@ man3_MANS = \
 	ares_free_errmem.3      ares_gethostbyname.3  ares_parse_a_reply.3  \
 	ares_search.3
 
-EXTRA_DIST = $(man3_MANS) adig.c ahost.c
-EXTRA_DIST += *.vcproj
+EXTRA_DIST = $(man3_MANS)
 EXTRA_DIST += *.vcxproj
 EXTRA_DIST += *.vcxproj.filters
 
-#adig: adig.o libares.a
-#	${CC} ${LDFLAGS} -o $@ adig.o libares.a ${LIBS}
+EXTRA_PROGRAMS = adig ahost aresfuzz aresfuzzname
 
-#ahost: ahost.o libares.a
-#	${CC} ${LDFLAGS} -o $@ ahost.o libares.a ${LIBS}
+adig_SOURCES = adig.c
+adig_LDADD = libresipares.la
 
+ahost_SOURCES = ahost.c
+ahost_LDADD = libresipares.la
+
+aresfuzz_SOURCES = ares-test-fuzz.c
+aresfuzz_LDFLAGS = ${LIB_FUZZING_ENGINE}
+aresfuzz_LDADD = libresipares.la
+nodist_EXTRA_aresfuzz_SOURCES = dummy.cpp # Enforce C++ linking
+
+aresfuzzname_SOURCES = ares-test-fuzz-name.c
+aresfuzzname_LDFLAGS = ${LIB_FUZZING_ENGINE}
+aresfuzzname_LDADD = libresipares.la
+nodist_EXTRA_aresfuzzname_SOURCES = dummy.cpp # Enforce C++ linking
 
 #distclean: clean
 #	rm -f config.cache config.log config.status Makefile

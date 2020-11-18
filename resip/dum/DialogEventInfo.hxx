@@ -83,22 +83,22 @@ class DialogEventInfo
       DialogId mDialogId;
       Direction mDirection;
       //ID of the dialog this dialog replaced.
-      std::auto_ptr<DialogId> mReplacesId;
+      std::unique_ptr<DialogId> mReplacesId;
       InviteSessionHandle mInviteSession;
 
-      std::auto_ptr<NameAddr> mReferredBy;
+      std::unique_ptr<NameAddr> mReferredBy;
 
 //could back-point to dialog for this information to save space
       NameAddrs mRouteSet; 
       NameAddr mLocalIdentity;
       NameAddr mRemoteIdentity;
       Uri mLocalTarget;
-      std::auto_ptr<Uri> mRemoteTarget;
+      std::unique_ptr<Uri> mRemoteTarget;
 
       UInt64 mCreationTimeSeconds;
 
-      std::auto_ptr<Contents> mLocalOfferAnswer;
-      std::auto_ptr<Contents> mRemoteOfferAnswer;
+      std::unique_ptr<Contents> mLocalOfferAnswer;
+      std::unique_ptr<Contents> mRemoteOfferAnswer;
 
    private:
       bool mReplaced;

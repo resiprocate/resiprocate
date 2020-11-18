@@ -10,14 +10,23 @@
 using namespace resip;
 using namespace repro;
 
-ReproTlsPeerAuthManager::ReproTlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, AclStore& aclStore, bool thirdPartyRequiresCertificate, CommonNameMappings& commonNameMappings) :
+ReproTlsPeerAuthManager::ReproTlsPeerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target, Dispatcher* authRequestDispatcher, AclStore& aclStore, bool thirdPartyRequiresCertificate, CommonNameMappings& commonNameMappings) :
    TlsPeerAuthManager(dum, target, std::set<resip::Data>(), thirdPartyRequiresCertificate, commonNameMappings),
+   mAuthRequestDispatcher(authRequestDispatcher),
    mAclStore(aclStore)
 {
 }
 
 ReproTlsPeerAuthManager::~ReproTlsPeerAuthManager()
 {
+}
+
+AsyncBool
+ReproTlsPeerAuthManager::asyncLookup(TlsPeerIdentityInfoMessage *info)
+{
+   std::unique_ptr<ApplicationMessage> app(info);
+   mAuthRequestDispatcher->post(app);
+   return Async;
 }
 
 bool

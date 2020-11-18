@@ -1,7 +1,6 @@
 
 EXTRA_DIST = ca.pem
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += testua_readme.txt
 
 LDADD = ../librecon.la

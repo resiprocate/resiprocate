@@ -230,10 +230,10 @@ ConfigParse::getConfigIndexKeys(const resip::Data& indexName, std::set<Data>& ke
 }
 
 bool 
-ConfigParse::getConfigValue(const resip::Data& name, resip::Data &value)
+ConfigParse::getConfigValue(const resip::Data& name, resip::Data &value) const
 {
    Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
+   ConfigValuesMap::const_iterator it = mConfigValues.find(lowerName);
    if(it != mConfigValues.end())
    {
       value = it->second;
@@ -244,7 +244,7 @@ ConfigParse::getConfigValue(const resip::Data& name, resip::Data &value)
 }
 
 Data 
-ConfigParse::getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty)
+ConfigParse::getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty) const
 {
    Data ret(defaultValue);
    if(getConfigValue(name, ret) && ret.empty() && useDefaultIfEmpty)

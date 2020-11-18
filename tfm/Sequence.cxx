@@ -14,7 +14,7 @@ using namespace boost;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-boost::shared_ptr<SequenceSet> SequenceClass::CPUSequenceSet;
+std::shared_ptr<SequenceSet> SequenceClass::CPUSequenceSet;
 bool SequenceClass::CPUSequenceSetCleanup = true;
 
 void SequenceClass::CPUSequenceSetup()
@@ -190,13 +190,9 @@ SequenceClass::prettyPrint(EncodeStream& str, bool& previousActive, int ind) con
 }
 
 bool
-SequenceClass::isMatch(boost::shared_ptr<Event> event) const
+SequenceClass::isMatch(std::shared_ptr<Event> event) const
 {
-#if BOOST_VERSION >= 103500
-   boost::shared_ptr<OptionalTimeoutEvent> to = dynamic_pointer_cast<OptionalTimeoutEvent>(event);
-#else
-   boost::shared_ptr<OptionalTimeoutEvent> to = shared_dynamic_cast<OptionalTimeoutEvent>(event);
-#endif
+   const auto to = std::dynamic_pointer_cast<OptionalTimeoutEvent>(event);
    for (std::list<TestEndPoint::ExpectBase*>::const_iterator i = mExpects.begin();
         i != mExpects.end(); i++)
    {
@@ -225,7 +221,7 @@ SequenceClass::isMatch(boost::shared_ptr<Event> event) const
 }
 
 void
-SequenceClass::handleEvent(boost::shared_ptr<Event> event)
+SequenceClass::handleEvent(std::shared_ptr<Event> event)
 {
    TestEndPoint* user = event->getEndPoint();
 
@@ -238,11 +234,7 @@ SequenceClass::handleEvent(boost::shared_ptr<Event> event)
       mUsedExpects.push_back(mExpects.front());
       mExpects.pop_front();
 
-#if BOOST_VERSION >= 103500
-      boost::shared_ptr<OptionalTimeoutEvent> ot = dynamic_pointer_cast<OptionalTimeoutEvent>(event);
-#else
-      boost::shared_ptr<OptionalTimeoutEvent> ot = shared_dynamic_cast<OptionalTimeoutEvent>(event);
-#endif
+      const auto ot = std::dynamic_pointer_cast<OptionalTimeoutEvent>(event);
       if (ot && ot->getExpect() == expect)
       {
          mTimerId=-7;
@@ -282,7 +274,7 @@ SequenceClass::handleEvent(boost::shared_ptr<Event> event)
             resip_assert(0);
          }
       }
-      catch (BaseException& e)
+      catch (const BaseException& e)
       {
          InfoLog(<< "Failed expect action with: " << e << " for " << event->briefString());
          Data errorMessage;
@@ -292,7 +284,7 @@ SequenceClass::handleEvent(boost::shared_ptr<Event> event)
          }
          fail(errorMessage);
       }
-      catch (std::exception& e)
+      catch (const std::exception& e)
       {
          InfoLog (<< "Failed expect action with: " << e.what() << " for " << event->briefString());
          Data errorMessage;
@@ -363,20 +355,20 @@ void SequenceClass::scheduleTimeout()
       // schedule sequence done event
       InfoLog(<< "Queuing Sequence done: hangAroundTime: " <<mHangAroundTimeMs);
       mTimingOut = true;
-      getSequenceSet()->enqueue(boost::shared_ptr<Event>(new SequenceDoneEvent(this)), mHangAroundTimeMs);
+      getSequenceSet()->enqueue(std::make_shared<SequenceDoneEvent>(this), mHangAroundTimeMs);
    }
    else
    {
       TestEndPoint::ExpectBase* f = mExpects.front();
       if (f->isOptional())
       {
-         mTimerId = getSequenceSet()->enqueue(boost::shared_ptr<Event>(new OptionalTimeoutEvent(*this, f)), 
+         mTimerId = getSequenceSet()->enqueue(std::make_shared<OptionalTimeoutEvent>(*this, f), 
                                               f->getTimeout());
          InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") optional");
       }
       else
       {
-         mTimerId = getSequenceSet()->enqueue(boost::shared_ptr<Event>(new TimeoutEvent(*this)), 
+         mTimerId = getSequenceSet()->enqueue(std::make_shared<TimeoutEvent>(*this), 
                                               f->getTimeout());
          InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") for " << *f << " with timeout "<< f->getTimeout());
       }
@@ -649,7 +641,7 @@ SequenceDoneEvent::briefString() const
 }
 
 void
-SequenceClass::setSequenceSet(boost::shared_ptr<SequenceSet> set)
+SequenceClass::setSequenceSet(std::shared_ptr<SequenceSet> set)
 {
    mSet = set;
    for (list<TestEndPoint::ExpectBase*>::const_iterator i = mExpects.begin();

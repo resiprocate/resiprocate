@@ -55,7 +55,7 @@ public:
                         class, then the setting will "fall through" to 
                         the base profile
    */  
-   ConversationProfile(resip::SharedPtr<resip::Profile> baseProfile);  
+   ConversationProfile(std::shared_ptr<resip::Profile> baseProfile);  
 
    /**
      Get the conversation profile handle.  Returns 0 if called before adding
@@ -192,6 +192,9 @@ public:
    virtual NatTraversalMode& natTraversalMode() { return mNatTraversalMode; }
    virtual const NatTraversalMode natTraversalMode() const { return mNatTraversalMode; }
 
+   virtual bool& forceCOMedia() { return mForceCOMedia; }
+   virtual const bool forceCOMedia() const { return mForceCOMedia; }
+
    /** 
      Get/Set the NAT traversal server hostname that will be used for if natTranversalMode
      is anything other than NoNatTraversal.  The server can be specified as an IP address
@@ -245,6 +248,7 @@ private:
    bool mSecureMediaRequired;
    SecureMediaCryptoSuite mDefaultSecureMediaCryptoSuite;
    NatTraversalMode mNatTraversalMode;
+   bool mForceCOMedia;
    resip::Data mNatTraversalServerHostname;
    unsigned short mNatTraversalServerPort;
    resip::Data mStunUsername;

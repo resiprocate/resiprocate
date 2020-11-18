@@ -13,6 +13,8 @@
 #include "p2p/NodeId.hxx"
 #include "p2p/Transporter.hxx"
 
+#include <memory>
+
 namespace p2p
 {
 
@@ -44,8 +46,8 @@ class SelectTransporter : public Transporter
       void addListenerImpl(resip::TransportType transport,
                            resip::GenericIPAddress &address);
    
-      void sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg);
-      void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data);
+      void sendImpl(NodeId nodeId, std::unique_ptr<p2p::Message> msg);
+      void sendImpl(FlowId flowId, std::unique_ptr<resip::Data> data);
    
   void collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned short appId);
 

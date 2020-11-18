@@ -23,18 +23,21 @@
 #endif
 
 #include <resip/recon/UserAgent.hxx>
+#include <resip/stack/Pidf.hxx>
 
 #include "Connection.hxx"
+#include "MyInstantMessage.hxx"
 
 namespace tr {
 
 class Connection;
+class MyInstantMessage;
 
 class MyUserAgent : public QObject, public recon::UserAgent, public resip::ThreadIf
 {
    Q_OBJECT
 public:
-   MyUserAgent(recon::ConversationManager* conversationManager, resip::SharedPtr<recon::UserAgentMasterProfile> profile, Connection& connection);
+   MyUserAgent(recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile, Connection& connection, std::shared_ptr<MyInstantMessage> instantMessage);
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
    virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
    virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
@@ -45,6 +48,12 @@ public:
    virtual void thread();
    virtual void setStatus(uint newStatus, uint reason);
    virtual void stop();
+   
+private:
+   std::vector<resip::Pidf::Tuple> getTuplesFromXML(const resip::Data& notifyData);
+   
+signals:
+   void setContactStatus(const QString& identifier, const QString& status);
 
 private:
    tr::Connection& mConnection;

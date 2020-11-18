@@ -10,8 +10,7 @@ SUBDIRS += . test
 
 EXTRA_DIST = fixupGperf
 EXTRA_DIST += mainpage.doc
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += WinCompat.cxx
 EXTRA_DIST += msvc/*.h
 EXTRA_DIST += dns/LocalDns.cxx
@@ -48,6 +47,7 @@ librutil_la_SOURCES = \
 	DnsUtil.cxx \
 	FileSystem.cxx \
 	GeneralCongestionManager.cxx \
+	GenericIPAddress.cxx \
 	HeapInstanceCounter.cxx \
 	KeyValueStore.cxx \
 	Lock.cxx \
@@ -96,7 +96,10 @@ librutil_la_SOURCES = \
 	dns/RROverlay.cxx \
 	\
 	stun/Stun.cxx \
-	stun/Udp.cxx
+	stun/Udp.cxx \
+	\
+	hep/HepAgent.cxx \
+	hep/ResipHep.cxx
 
 if USE_SSL
 librutil_la_SOURCES += \
@@ -112,12 +115,12 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	wince/WceCompat.hxx \
 	SysLogStream.hxx \
 	AsyncID.hxx \
+	AsyncBool.hxx \
 	ConfigParse.hxx \
 	CongestionManager.hxx \
 	GeneralCongestionManager.hxx \
 	HeapInstanceCounter.hxx \
 	KeyValueStore.hxx \
-	SharedCount.hxx \
 	FdSetIOObserver.hxx \
 	Fifo.hxx \
 	CircularBuffer.hxx \
@@ -141,7 +144,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	resipfaststreams.hxx \
 	Coders.hxx \
 	Sha1.hxx \
-	SharedPtr.hxx \
 	SelectInterruptor.hxx \
 	Socket.hxx \
 	dns/ExternalDnsFactory.hxx \
@@ -199,7 +201,9 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	StlPoolAllocator.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
-	ConsumerFifoBuffer.hxx
+	ConsumerFifoBuffer.hxx \
+	hep/HepAgent.hxx \
+	hep/ResipHep.hxx
 
 
 ##############################################################################

@@ -255,6 +255,12 @@ Uri::isEnumSearchable() const
    checkParsed();
    int digits = 0;
 
+   if(mScheme != Symbols::Tel)
+   {
+      StackLog(<< "not a tel Uri");
+      return false;
+   }
+
    if(mUser.size() < 4)
    {
       StackLog(<< "user part of Uri empty or too short for E.164");
@@ -787,13 +793,12 @@ Uri::getAorInternal(bool dropScheme, bool addPort, Data& aor) const
 
    addPort = addPort && mPort!=0;
 
-   bool hostIsIpV6Address = false;
+   bool hostIsIpV6Address = DnsUtil::isIpV6Address(mHost);
    if(!mHostCanonicalized)
    {
-      if (DnsUtil::isIpV6Address(mHost))
+      if (hostIsIpV6Address)
       {
          mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
-         hostIsIpV6Address = true;
       }
       else
       {
@@ -1083,6 +1088,11 @@ Uri::parse(ParseBuffer& pb)
    else
    {
       pb.reset(start);
+   }
+
+   if (pb.eof())
+   {
+      return;
    }
 
    mHostCanonicalized=false;

@@ -8,6 +8,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -23,13 +25,13 @@ ServerPagerMessage::ServerPagerMessage(DialogUsageManager& dum,
                                        const SipMessage& req) : 
    NonDialogUsage(dum, dialogSet),
    mRequest(req),
-   mResponse(new SipMessage)
+   mResponse(std::make_shared<SipMessage>())
 {
 }
 
 ServerPagerMessage::~ServerPagerMessage()
 {
-   mDialogSet.mServerPagerMessage = 0;
+   mDialogSet.mServerPagerMessage = nullptr;
 }
 
 
@@ -48,7 +50,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mServerPagerMessageHandle.isValid())
       {
@@ -56,7 +58,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ServerPagerMessageEndCommand";
    }
@@ -92,14 +94,14 @@ ServerPagerMessage::dispatch(const DumTimeout& msg)
 }
 
 void 
-ServerPagerMessage::send(SharedPtr<SipMessage> response)
+ServerPagerMessage::send(std::shared_ptr<SipMessage> response)
 {
    resip_assert(response->isResponse());
-   mDum.send(response);
+   mDum.send(std::move(response));
    delete this;
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerPagerMessage::accept(int statusCode)
 {   
    //!dcm! -- should any responses include a contact?
@@ -117,7 +119,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mServerPagerMessageHandle.isValid())
       {
@@ -125,7 +127,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ServerPagerMessageAcceptCommand";
    }
@@ -140,7 +142,7 @@ ServerPagerMessage::acceptCommand(int statusCode)
    mDum.post(new ServerPagerMessageAcceptCommand(getHandle(), statusCode));
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerPagerMessage::reject(int statusCode)
 {
    //!dcm! -- should any responses include a contact?
@@ -157,7 +159,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mServerPagerMessageHandle.isValid())
       {
@@ -165,7 +167,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ServerPagerMessageRejectCommand";
    }

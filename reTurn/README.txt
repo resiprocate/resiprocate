@@ -32,8 +32,7 @@ Current External Library Usage
         - Using BOOST in no-lib mode is fine
         - BOOST::bind is used in server transports
         - BOOST::crc_optimal is used for fingerprint CRC calculations
-        - BOOST::shared_ptr, array, enable_shared_from_this is used in server transports
-- RUTIL - Data class is used in StunMessage and StunAuth for strings and TurnData, SharedPtr is also used
+- RUTIL - Data class is used in StunMessage and StunAuth for strings and TurnData
 
 
 Feature                                Implemented  Tested  Notes

@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
    app.setApplicationName(QLatin1String("telepathy-resiprocate"));
 
    resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, "telepathy-resiprocate");
-   //GenericLogImpl::MaxLineCount = loggingFileMaxLineCount;
+   //Log::setMaxLineCount(loggingFileMaxLineCount);
 
    // Setup logging for the sipX media stack
    // It is bridged to the reSIProcate logger

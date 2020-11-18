@@ -5,6 +5,9 @@
 
 #include "UserAgent.hxx"
 
+#include <memory>
+#include <utility>
+
 namespace recon
 {
 
@@ -38,11 +41,11 @@ class AddConversationProfileCmd  : public resip::DumCommand
    public:  
       AddConversationProfileCmd(UserAgent* userAgent,
                                 ConversationProfileHandle handle,
-                                resip::SharedPtr<ConversationProfile> conversationProfile,
+                                std::shared_ptr<ConversationProfile> conversationProfile,
                                 bool defaultOutgoing)
          : mUserAgent(userAgent),
            mHandle(handle),
-           mConversationProfile(conversationProfile),
+           mConversationProfile(std::move(conversationProfile)),
            mDefaultOutgoing(defaultOutgoing) {}
       virtual void executeCommand()
       {
@@ -54,7 +57,7 @@ class AddConversationProfileCmd  : public resip::DumCommand
    private:
       UserAgent* mUserAgent;
       ConversationProfileHandle mHandle;
-      resip::SharedPtr<ConversationProfile> mConversationProfile;
+      std::shared_ptr<ConversationProfile> mConversationProfile;
       bool mDefaultOutgoing;
 };
 

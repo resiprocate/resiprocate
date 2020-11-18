@@ -1,22 +1,35 @@
 #include "resip/stack/WsConnectionBase.hxx"
 
+#include <utility>
+
 using namespace resip;
 
-WsConnectionBase::WsConnectionBase()
-   : mWsConnectionValidator(SharedPtr<WsConnectionValidator>()) // null pointer
+WsConnectionBase::WsConnectionBase(std::shared_ptr<WsConnectionValidator> wsConnectionValidator)
+   : mWsConnectionValidator(std::move(wsConnectionValidator))
 {
 }
 
-WsConnectionBase::WsConnectionBase(SharedPtr<WsConnectionValidator> wsConnectionValidator)
-   : mWsConnectionValidator(wsConnectionValidator)
+void WsConnectionBase::setCookies(const CookieList& cookies)
 {
+   mCookies = cookies;
 }
 
-WsConnectionBase::~WsConnectionBase()
+const CookieList& WsConnectionBase::getCookies() const noexcept
 {
+   return mCookies;
 }
 
-SharedPtr<WsConnectionValidator> WsConnectionBase::connectionValidator() const
+std::shared_ptr<WsCookieContext> WsConnectionBase::getWsCookieContext() const noexcept
+{
+   return mWsCookieContext;
+}
+
+void WsConnectionBase::setWsCookieContext(std::shared_ptr<WsCookieContext> wsCookieContext) noexcept
+{
+   mWsCookieContext = std::move(wsCookieContext);
+}
+
+std::shared_ptr<WsConnectionValidator> WsConnectionBase::connectionValidator() const noexcept
 {
    return mWsConnectionValidator;
 }

@@ -44,6 +44,8 @@
 #include "resip/stack/ssl/WssTransport.hxx"
 #endif
 
+#include <utility>
+
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
 #endif
@@ -72,7 +74,8 @@ SipStack::SipStack(Security* pSecurity,
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression,
-                   FdPollGrp *pollGrp) :
+                   FdPollGrp *pollGrp,
+                   bool useDnsVip) :
 #ifdef WIN32
    // If PollGrp is not passed in, then EventStackThead isn't being used and application
    // is most likely implementing a select/process loop to drive the stack - in this case
@@ -99,7 +102,7 @@ SipStack::SipStack(Security* pSecurity,
    mTuSelector(mTUFifo),
    mAppTimers(mTuSelector),
    mStatsManager(*this),
-   mTransactionController(new TransactionController(*this, mAsyncProcessHandler)),
+   mTransactionController(new TransactionController(*this, mAsyncProcessHandler, useDnsVip)),
    mTransactionControllerThread(0),
    mTransportSelectorThread(0),
    mInternalThreadsRunning(false),
@@ -201,7 +204,7 @@ SipStack::init(const SipStackOptions& options)
 
    // WATCHOUT: the transaction controller constructor will
    // grab the security, DnsStub, compression and statsManager
-   mTransactionController = new TransactionController(*this, mAsyncProcessHandler);
+   mTransactionController = new TransactionController(*this, mAsyncProcessHandler, options.mUseDnsVip);
    mTransactionController->transportSelector().setPollGrp(mPollGrp);
    mTransactionControllerThread = 0;
    mTransportSelectorThread = 0;
@@ -310,6 +313,21 @@ SipStack::shutdownAndJoinThreads()
    mInternalThreadsRunning=false;
 }
 
+void
+SipStack::onReload()
+{
+   reloadCertificates();
+}
+
+void
+SipStack::reloadCertificates()
+{
+   for(SecureTransportMap::iterator itS = mSecureTransports.begin(); itS != mSecureTransports.end(); itS++)
+   {
+      itS->second->onReload();
+   }
+}
+
 Transport*
 SipStack::addTransport( TransportType protocol,
                         int port,
@@ -323,8 +341,8 @@ SipStack::addTransport( TransportType protocol,
                         const Data& certificateFilename, const Data& privateKeyFilename,
                         SecurityTypes::TlsClientVerificationMode cvm,
                         bool useEmailAsSIP,
-                        SharedPtr<WsConnectionValidator> wsConnectionValidator,
-                        SharedPtr<WsCookieContextFactory> wsCookieContextFactory,
+                        std::shared_ptr<WsConnectionValidator> wsConnectionValidator,
+                        std::shared_ptr<WsCookieContextFactory> wsCookieContextFactory,
                         const Data& netNs)
 {
    resip_assert(!mShuttingDown);
@@ -467,12 +485,12 @@ SipStack::addTransport( TransportType protocol,
              << ": " << e);
       throw;
    }
-   addTransport(std::auto_ptr<Transport>(transport));
+   addTransport(std::unique_ptr<Transport>(transport));
    return transport;
 }
 
 void
-SipStack::addTransport(std::auto_ptr<Transport> transport)
+SipStack::addTransport(std::unique_ptr<Transport> transport)
 {
    // Ensure we will be able to add the transport in the transport selector by ensure we
    // don't have any transport collisions.  Note:  We store two set's here in order to 
@@ -551,7 +569,7 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    }
 
    // Set Sip Message Logging Handler if one was provided
-   if(mTransportSipMessageLoggingHandler.get())
+   if (mTransportSipMessageLoggingHandler)
    {
        transport->setSipMessageLoggingHandler(mTransportSipMessageLoggingHandler);
    }
@@ -559,12 +577,12 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    if(mProcessingHasStarted)
    {
        // Stack is running.  Need to queue add request for TransactionController Thread
-       mTransactionController->addTransport(transport);
+       mTransactionController->addTransport(std::move(transport));
    }
    else
    {
        // Stack isn't running yet - just add transport directly on transport selector from this thread
-       mTransactionController->transportSelector().addTransport(transport, false /* isStackRunning */); 
+       mTransactionController->transportSelector().addTransport(std::move(transport), false /* isStackRunning */); 
    }
 }
 
@@ -834,7 +852,7 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
 }
 
 void
-SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
+SipStack::send(std::unique_ptr<SipMessage> msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg->brief());
 
@@ -848,7 +866,7 @@ SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
 }
 
 void
-SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu)
+SipStack::sendTo(std::unique_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu)
 {
    if (tu) msg->setTransactionUser(tu);
    msg->setForceTarget(uri);
@@ -858,7 +876,7 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser*
 }
 
 void
-SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
+SipStack::sendTo(std::unique_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
    resip_assert(!mShuttingDown);
 
@@ -909,7 +927,7 @@ SipStack::checkAsyncProcessHandler()
 }
 
 void
-SipStack::post(std::auto_ptr<ApplicationMessage> message)
+SipStack::post(std::unique_ptr<ApplicationMessage> message)
 {
    resip_assert(!mShuttingDown);
    mTuSelector.add(message.release(), TimeLimitFifo<Message>::InternalElement);
@@ -946,16 +964,16 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
 }
 
 void
-SipStack::post(std::auto_ptr<ApplicationMessage> message,
+SipStack::post(std::unique_ptr<ApplicationMessage> message,
                unsigned int secondsLater,
                TransactionUser* tu)
 {
-   postMS(message, secondsLater*1000, tu);
+   postMS(std::move(message), secondsLater*1000, tu);
 }
 
 
 void
-SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
+SipStack::postMS( std::unique_ptr<ApplicationMessage> message,
                   unsigned int ms,
                   TransactionUser* tu)
 {
@@ -975,9 +993,9 @@ SipStack::abandonServerTransaction(const Data& tid)
 }
 
 void
-SipStack::cancelClientInviteTransaction(const Data& tid)
+SipStack::cancelClientInviteTransaction(const Data& tid, const Tokens* reasons)
 {
-   mTransactionController->cancelClientInviteTransaction(tid);
+   mTransactionController->cancelClientInviteTransaction(tid, reasons);
 }
 
 bool
@@ -1146,9 +1164,9 @@ SipStack::pollStatistics()
 }
 
 void
-SipStack::registerTransactionUser(TransactionUser& tu)
+SipStack::registerTransactionUser(TransactionUser& tu, const bool front)
 {
-   mTuSelector.registerTransactionUser(tu);
+   mTuSelector.registerTransactionUser(tu, front);
 }
 
 void
@@ -1247,9 +1265,11 @@ SipStack::dump(EncodeStream& strm)  const
    }
    strm << " ServerTransactionMap size=" << this->mTransactionController->mServerTransactionMap.size() << std::endl
         << " ClientTransactionMap size=" << this->mTransactionController->mClientTransactionMap.size() << std::endl
-        // !slg! TODO - There is technically a threading concern with the following three lines and the runtime addTransport call
-        << " Exact Transports=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
-        << " Any Transports=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl
+        // !slg! TODO - There is technically a threading concern with the following three lines and the runtime addTransport or removeTransport call
+        << " Exact interface / Specific port=" << Inserter(this->mTransactionController->mTransportSelector.mExactTransports) << std::endl
+        << " Any interface / Specific port=" << Inserter(this->mTransactionController->mTransportSelector.mAnyInterfaceTransports) << std::endl
+        << " Exact interface / Any port =" << Inserter(this->mTransactionController->mTransportSelector.mAnyPortTransports) << std::endl
+        << " Any interface / Any port=" << Inserter(this->mTransactionController->mTransportSelector.mAnyPortAnyInterfaceTransports) << std::endl
         << " TLS Transports=" << Inserter(this->mTransactionController->mTransportSelector.mTlsTransports) << std::endl;
    return strm;
 }
@@ -1270,6 +1290,13 @@ void
 SipStack::enableFlowTimer(const resip::Tuple& flow)
 {
    mTransactionController->enableFlowTimer(flow);
+}
+
+void
+SipStack::invokeAfterSocketCreationFunc(TransportType type)
+{
+    // Stack is assummed to be running.  Need to queue invoke request for TransactionController Thread
+    mTransactionController->invokeAfterSocketCreationFunc(type);
 }
 
 /* ====================================================================

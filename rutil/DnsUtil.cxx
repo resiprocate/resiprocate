@@ -303,7 +303,7 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
 
       // .bwc. I have tried using std::bitset instead of the 0 <= *last <= 9
       // check, but it is slower.
-      while(*last >= '0' && *last <= '9' && last - first <= 3 && last != end)
+      while(last != end && *last >= '0' && *last <= '9' && last - first <= 3)
       {
          // Skip at most 3 decimals, without going past the end of the buffer.
          ++last;
@@ -352,7 +352,7 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
 
       if(octets < 4)
       {
-         if(*last == '.')
+         if(last != end && *last == '.')
          {
             // Skip over the '.'
             ++last;

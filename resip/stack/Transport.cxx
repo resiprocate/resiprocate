@@ -80,6 +80,11 @@ Transport::~Transport()
 }
 
 void
+Transport::onReload()
+{
+}
+
+void
 Transport::error(int e)
 {
    DebugLog ( << ErrnoError::SearchErrorMsg(e) );
@@ -234,11 +239,11 @@ Transport::setTcpConnectState(const Data& tid, TcpConnectState::State state)
     }
 }
 
-std::auto_ptr<SendData>
+std::unique_ptr<SendData>
 Transport::makeSendData( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
    resip_assert(dest.getPort() != -1);
-   std::auto_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
+   std::unique_ptr<SendData> data(new SendData(dest, d, tid, sigcompId));
    return data;
 }
 
@@ -251,7 +256,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
 
   const Tuple& dest = msg.getSource();
 
-  std::auto_ptr<SipMessage> errMsg(Helper::makeResponse(msg,
+  std::unique_ptr<SipMessage> errMsg(Helper::makeResponse(msg,
                                                         responseCode,
                                                         warning ? warning : "Original request had no Vias"));
 
@@ -269,13 +274,13 @@ Transport::makeFailedResponse(const SipMessage& msg,
   // Calculate compartment ID for outbound message
   Data remoteSigcompId;
    setRemoteSigcompId(*errMsg,remoteSigcompId);
-  send(std::auto_ptr<SendData>(makeSendData(dest, encoded, Data::Empty, remoteSigcompId)));
+  send(makeSendData(dest, encoded, Data::Empty, remoteSigcompId));
 }
 
-std::auto_ptr<SendData>
+std::unique_ptr<SendData>
 Transport::make503(SipMessage& msg, UInt16 retryAfter)
 {
-  std::auto_ptr<SendData> result;
+  std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;
 
    try
@@ -306,10 +311,10 @@ Transport::make503(SipMessage& msg, UInt16 retryAfter)
   return result;
 }
 
-std::auto_ptr<SendData>
+std::unique_ptr<SendData>
 Transport::make100(SipMessage& msg)
 {
-  std::auto_ptr<SendData> result;
+  std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;
 
    try

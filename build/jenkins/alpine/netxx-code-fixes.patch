@@ -1,0 +1,101 @@
+--- src/Accept.cxx	Wed Jul 24 10:39:55 2013
++++ src/Accept.cxx	Wed Jul 22 13:05:38 2020
+@@ -69,8 +69,10 @@
+ 	sockaddr *sa = socket_address.get_sa();
+ 	size_type sa_size = socket_address.get_sa_size();
+ 
+-#	if defined(WIN32) || defined(__APPLE__) || defined (__CYGWIN__)
++#	if defined(WIN32) || defined (__CYGWIN__)
+ 	    int *sa_size_ptr = reinterpret_cast<int*>(&sa_size);
++#	elif defined(__APPLE__) 
++	    socklen_t *sa_size_ptr = reinterpret_cast<socklen_t*>(&sa_size); 
+ #	else
+ 	    size_type *sa_size_ptr = &sa_size;
+ #	endif
+--- src/Address.cxx	Wed Jul 24 10:39:55 2013
++++ src/Address.cxx	Wed Jul 22 13:05:38 2020
+@@ -57,6 +57,7 @@
+ 
+ // standard includes
+ #include <cstdlib>
++#include <cstring>
+ 
+ namespace {
+     const char const_local_service[] = "local";
+--- src/common.h	Wed Jul 24 10:39:55 2013
++++ src/common.h	Wed Jul 22 13:05:39 2020
+@@ -39,5 +39,7 @@
+ 
+ #include "compat.h"
+ #include "inet6.h"
++#include <cstring>
++#include <cstdlib>
+ 
+ #endif
+--- src/Datagram.cxx	Wed Jul 24 10:39:55 2013
++++ src/Datagram.cxx	Wed Jul 22 13:05:38 2020
+@@ -64,6 +64,7 @@
+ #include <memory>
+ #include <cstring>
+ #include <vector>
++#include <cstdlib>
+ 
+ namespace {
+     void call_connect(Netxx::Socket &socket, const Netxx::Peer &peer, std::vector<std::string> &files);
+--- src/Peer.cxx	Wed Jul 24 10:39:55 2013
++++ src/Peer.cxx	Wed Jul 22 13:05:38 2020
+@@ -58,6 +58,7 @@
+ #include <iostream>
+ #include <cstdlib>
+ #include <new>
++#include <cstring>
+ 
+ //####################################################################
+ namespace {
+@@ -165,8 +166,10 @@
+     } sau;
+ 
+ 
+-#   if defined(WIN32) || defined(__APPLE__) || defined(__CYGWIN__)
++#   if defined(WIN32) || defined(__CYGWIN__)
+ 	int *sa_size_ptr = reinterpret_cast<int*>(&sa_size);
++#   elif defined(__APPLE__) 
++        socklen_t *sa_size_ptr = reinterpret_cast<socklen_t*>(&sa_size);
+ #   else
+ 	size_type *sa_size_ptr = &sa_size;
+ #   endif
+--- src/Probe_select.cxx	Wed Jul 24 10:39:55 2013
++++ src/Probe_select.cxx	Wed Jul 22 13:05:38 2020
+@@ -63,6 +63,7 @@
+ #include <string>
+ #include <list>
+ #include <set>
++#include <cstring>
+ 
+ //####################################################################
+ namespace {
+--- src/RecvFrom.cxx	Wed Jul 24 10:39:55 2013
++++ src/RecvFrom.cxx	Wed Jul 22 13:05:38 2020
+@@ -70,8 +70,10 @@
+     size_type sa_size = socket_address.get_sa_size();
+     signed_size_type rc;
+ 
+-#   if defined(WIN32) || defined(__APPLE__) || defined(__CYGWIN__)
++#   if defined(WIN32) || defined(__CYGWIN__)
+ 	int *sa_size_ptr = reinterpret_cast<int*>(&sa_size);
++#   elif defined(__APPLE__) 
++	socklen_t  *sa_size_ptr = reinterpret_cast<socklen_t*>(&sa_size);
+ #   else
+ 	size_type *sa_size_ptr = &sa_size;
+ #   endif
+--- src/StreamBase.cxx	Wed Jul 24 10:39:55 2013
++++ src/StreamBase.cxx	Wed Jul 22 13:05:38 2020
+@@ -173,7 +173,7 @@
+ 
+ #		if defined(__APPLE__)
+ 		    int so_error, so_return;
+-		    int so_len(sizeof(so_error));
++		    socklen_t so_len(sizeof(so_error));
+ #		elif defined(WIN32)
+ 		    char so_error;
+ 		    int so_return;

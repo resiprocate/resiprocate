@@ -8,10 +8,15 @@
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/Tuple.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
+#include <utility>
 
 namespace resip
 {
+
+class XMLCursor;
+
 static const UInt64 NeverExpire = 0xFFFFFFFFFFFFFFFFULL;
 
 /** A single contact record, bound to an Aor during registration.
@@ -20,10 +25,22 @@ class ContactInstanceRecord
 {
    public:
       ContactInstanceRecord();
+      ContactInstanceRecord(const ContactInstanceRecord& rhs);
+      ContactInstanceRecord& operator=(const ContactInstanceRecord& rhs);
+      virtual ~ContactInstanceRecord();
+
       static ContactInstanceRecord makeRemoveDelta(const NameAddr& contact);
       static ContactInstanceRecord makeUpdateDelta(const NameAddr& contact, 
                                                    UInt64 expires,  // absolute time in secs
                                                    const SipMessage& msg);
+
+      // Stream ContactInstanceRecord in XML format
+      void stream(std::iostream& ss) const;
+
+      // Deserialize off xml tree
+      bool deserialize(resip::XMLCursor& xml, UInt64 now = 0);
+      /* @returns true if successfully deserialized
+       */
       
       NameAddr mContact;    // can contain callee caps and q-values
       UInt64 mRegExpires;   // in seconds
@@ -33,6 +50,7 @@ class ContactInstanceRecord
       NameAddrs mSipPath;   // Value of SIP Path header from the request
       Data mInstance;       // From the instance parameter; usually a UUID URI
       UInt32 mRegId;        // From regid parameter of Contact header
+      Data mUserAgent;      // From User-Agent header
       bool mSyncContact;    // This contact came from registration sync process, instead of direct SIP registration
       bool mUseFlowRouting; // Set to true when routing to this contact should use flow routing 
                             // Note:  There is no need to regsync this field, since such records will also have 
@@ -40,15 +58,17 @@ class ContactInstanceRecord
       // Data mServerSessionId;// if there is no SIP Path header, the connection/session identifier 
       // Uri gruu;  (GRUU is currently derived)
       void      *mUserInfo;       //!< can be used to map user record information (database record id for faster updates?)
+      Data* mUserData;      // Optional user/application specific string
       
       bool operator==(const ContactInstanceRecord& rhs) const;
+
 };
 
 typedef std::list<ContactInstanceRecord> ContactList;
 
 /** Used to reduce copying ContactInstanceRecord objects when processing registration.
 */
-typedef std::list<resip::SharedPtr<ContactInstanceRecord> > ContactPtrList;
+typedef std::list<std::shared_ptr<ContactInstanceRecord>> ContactPtrList;
 	
 /** Records a log of the database transacations that were performed when processing a local registration using the
     ServerRegistration::AsyncLocalStore.
@@ -70,19 +90,19 @@ class ContactRecordTransaction
       :mOp(none)
       {}
 
-   ContactRecordTransaction(Operation op, resip::SharedPtr<ContactInstanceRecord> rec)
-      :mOp(op),mRec(rec)
+   ContactRecordTransaction(Operation op, std::shared_ptr<ContactInstanceRecord> rec)
+      :mOp(op),mRec(std::move(rec))
       {}
 
    Operation mOp;  //!< the operation that was performed in this transaction.
    /** For create & update: the newly modified record; for remove: the removed record; for removeAll: 0.
    */
-   resip::SharedPtr<ContactInstanceRecord> mRec;  
+   std::shared_ptr<ContactInstanceRecord> mRec;
 };
 
 /** Contains a collection of database operations that were performed during REGISTER processing.
 */
-typedef std::deque<resip::SharedPtr<ContactRecordTransaction> > ContactRecordTransactionLog;
+typedef std::deque<std::shared_ptr<ContactRecordTransaction>> ContactRecordTransactionLog;
 
 class RegistrationBinding 
 {

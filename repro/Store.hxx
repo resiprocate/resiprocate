@@ -9,6 +9,7 @@
 #include "repro/StaticRegStore.hxx"
 #include "repro/FilterStore.hxx"
 #include "repro/SiloStore.hxx"
+#include "repro/TlsPeerIdentityStore.hxx"
 
 namespace repro
 {
@@ -31,6 +32,7 @@ class Store
       ~Store();
       
       UserStore mUserStore;
+      TlsPeerIdentityStore mTlsPeerIdentityStore;
       RouteStore mRouteStore; 
       AclStore mAclStore; 
       ConfigStore mConfigStore;

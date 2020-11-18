@@ -21,6 +21,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+const resip::Data UserStore::SEPARATOR("@");
+
 UserStore::UserStore(AbstractDb& db ) : mDb(db)
 { 
 }
@@ -134,8 +136,20 @@ UserStore::getNextKey()
 UserStore::Key
 UserStore::buildKey( const resip::Data& user, const resip::Data& realm)
 {
-   Data ret = user + Data("@") + realm;
+   Data ret = user + Data(SEPARATOR) + realm;
    return ret;
+}
+
+void
+UserStore::getUserAndDomainFromKey(const Key& key, Data& user, Data& domain)
+{
+   ParseBuffer pb(key);
+   const char* start = pb.position();
+   pb.skipToOneOf(SEPARATOR);
+   pb.data(user, start);
+   const char* anchor = pb.skipChar();
+   pb.skipToEnd();
+   pb.data(domain, anchor);
 }
 
 

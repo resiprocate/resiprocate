@@ -1,0 +1,5 @@
+usr/lib/*/librutil-*.so*
+usr/lib/*/libresip-*.so*
+usr/lib/*/libdum-*.so*
+usr/lib/*/libsipdial-*.so*
+usr/lib/*/librepro-*.so*

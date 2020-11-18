@@ -1,0 +1,9 @@
+# package follows naming convention of other members of the reSIProcate suite
+libresiprocate-turn-client-1.11 binary: package-name-doesnt-match-sonames
+# this is a false positive, libreTurnClient is Vovida licensed, not GPL
+libresiprocate-turn-client-1.11 binary: possible-gpl-code-linked-with-openssl
+# this is currently needed because the lintian check doesn't
+# seem to recognise libs created with libtool -release
+# (rather than the preferred libtool -version-info)
+# discussed on debian-mentors 2012-05-21
+libresiprocate-turn-client-1.11 binary: dev-pkg-without-shlib-symlink

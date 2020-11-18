@@ -1,6 +1,7 @@
 #if !defined(RESIP_SQLDB_HXX)
 #define RESIP_SQLDB_HXX 
 
+#include "rutil/ConfigParse.hxx"
 #include "rutil/Data.hxx"
 #include "repro/AbstractDb.hxx"
 
@@ -15,11 +16,14 @@ namespace repro
 class SqlDb: public AbstractDb
 {
    public:
-      SqlDb();
+      SqlDb(const resip::ConfigParse& config);
       
       virtual bool isSane() {return mConnected;}
 
       virtual void eraseUser( const Key& key );
+      virtual void eraseTlsPeerIdentity( const Key& key );
+
+      virtual bool isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const;
 
       // Perform a query that expects a single result/row - returns all column/field data in a vector
       virtual int singleResultQuery(const resip::Data& queryCommand, std::vector<resip::Data>& fields) const = 0;
@@ -28,13 +32,14 @@ class SqlDb: public AbstractDb
       virtual void setConnected(bool connected) const { mConnected = connected; }
       virtual bool isConnected() const { return mConnected; }
 
+      void setToData(const std::set<resip::Data>& items, resip::Data& result, const resip::Data& sep = ",", const char quote = '\'') const;
+
       // when multiple threads are in use with the same connection, you need to
       // mutex calls to mysql_query and mysql_store_result:
       // http://dev.mysql.com/doc/refman/5.1/en/threaded-clients.html
       mutable resip::Mutex mMutex;
 
-      const char* tableName( Table table ) const;
-      void getUserAndDomainFromKey(const AbstractDb::Key& key, resip::Data& user, resip::Data& domain) const;
+      resip::Data tableName( Table table ) const;
 
    private:
       // Db manipulation routines
@@ -49,8 +54,11 @@ class SqlDb: public AbstractDb
       virtual resip::Data& escapeString(const resip::Data& str, resip::Data& escapedStr) const = 0;
 
       mutable volatile bool mConnected;
+      resip::Data mTlsPeerAuthorizationQuery;
+      resip::Data mTableNamePrefix;
 
       virtual void userWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
+      virtual void tlsPeerIdentityWhereClauseToDataStream(const Key& key, resip::DataStream& ds) const = 0;
 };
 
 }

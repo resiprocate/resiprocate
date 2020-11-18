@@ -163,7 +163,7 @@ class SdpContents : public Contents
                   Data mParameters;  // Format parameters
                   Data mEncodingParameters;
 
-                  static std::auto_ptr<CodecMap> sStaticCodecs;
+                  static std::unique_ptr<CodecMap> sStaticCodecs;
                   static bool sStaticCodecsCreated;
                   friend EncodeStream& operator<<(EncodeStream&, const Codec&);
             };
@@ -1051,6 +1051,9 @@ class SdpContents : public Contents
 };
 
 static bool invokeSdpContentsInit = SdpContents::init();
+
+// Silence compiler warning for invokeSdpContentsInit defined, but not used
+static inline void foo(){if(0){(void) invokeSdpContentsInit;}};
 
 typedef SdpContents::Session::Codec Codec;
 

@@ -2,6 +2,9 @@
 
 set -e
 
+# Notes:
+#   we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
+#     (compile fails on clang)
 ./configure \
   --enable-assert-syslog \
   --with-popt \
@@ -9,18 +12,22 @@ set -e
   --with-mysql \
   --with-postgresql \
   --with-apps \
+  --with-telepathy \
   --enable-dtls \
   --enable-ipv6 \
   --with-radcli \
+  --with-qpid-proton \
   --with-repro \
+  --with-return \
   --enable-repro-plugins \
-  DEPS_PYTHON_CFLAGS="`/usr/bin/python2.7-config --cflags`" \
-  DEPS_PYTHON_LIBS="`/usr/bin/python2.7-config --ldflags`" \
-  PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
+  DEPS_PYTHON_CFLAGS="`/usr/bin/python3.7-config --cflags`" \
+  DEPS_PYTHON_LIBS="`/usr/bin/python3.7-config --ldflags`" \
+  PYCXX_SRCDIR=/usr/share/python3.7/CXX/Python3 \
   --with-python \
   --with-rend \
   --with-recon \
-  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20" \
+  --with-netsnmp \
+  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
   --with-c-ares
 

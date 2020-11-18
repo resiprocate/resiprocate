@@ -388,16 +388,15 @@ TcpBaseTransport::processAllWriteRequests()
 void
 TcpBaseTransport::process()
 {
-   mStateMachineFifo.flush();
-
    // called within SipStack's thread. There is some risk of
    // recursion here if connection starts doing anything fancy.
    // For backward-compat when not-epoll, don't handle transmit synchronously
    // now, but rather wait for the process() call
    if (mPollGrp)
    {
-      processAllWriteRequests();
+       processAllWriteRequests();
    }
+   mStateMachineFifo.flush();
 }
 
 void
@@ -410,21 +409,21 @@ TcpBaseTransport::process(FdSet& fdSet)
    // process the connections in ConnectionManager
    mConnectionManager.process(fdSet);
 
-   mStateMachineFifo.flush();
-
    // process our own listen/accept socket for incoming connections
    if (mFd!=INVALID_SOCKET && fdSet.readyToRead(mFd))
    {
       processListen();
    }
+
+   mStateMachineFifo.flush();
 }
 
 void
-TcpBaseTransport::processPollEvent(FdPollEventMask mask) {
-   if ( mask & FPEM_Read )
+TcpBaseTransport::processPollEvent(FdPollEventMask mask) 
+{
+   if (mask & FPEM_Read)
    {
-      while ( processListen() > 0 )
-         ;
+      while(processListen() > 0);
    }
 }
 
@@ -435,6 +434,14 @@ TcpBaseTransport::setRcvBufLen(int buflen)
    // need to store away the length and use when setting up new connections
 }
 
+void 
+TcpBaseTransport::invokeAfterSocketCreationFunc() const
+{
+    // Call for base socket
+    InternalTransport::invokeAfterSocketCreationFunc();
+    // Call for each connection
+    mConnectionManager.invokeAfterSocketCreationFunc();
+}
 
 
 /* ====================================================================

@@ -18,7 +18,7 @@ class FilterStore;
 class RequestFilter : public AsyncProcessor
 {
    public:
-      RequestFilter(ProxyConfig& config, Dispatcher* asyncDispatcher);
+      RequestFilter(ProxyConfig& config, resip::Dispatcher* asyncDispatcher);
       ~RequestFilter();
 
       // Processor virutal method

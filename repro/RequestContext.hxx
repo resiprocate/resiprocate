@@ -7,6 +7,7 @@
 #include "repro/ProcessorChain.hxx"
 #include "repro/ResponseContext.hxx"
 #include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Token.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/TimerCMessage.hxx"
 #include "rutil/resipfaststreams.hxx"
@@ -33,11 +34,12 @@ class RequestContext
       virtual ~RequestContext();
 
       virtual void process(resip::TransactionTerminated& msg);
-      virtual void process(std::auto_ptr<resip::SipMessage> sip);
-      virtual void process(std::auto_ptr<resip::ApplicationMessage> app);
+      virtual void process(std::unique_ptr<resip::SipMessage> sip);
+      virtual void process(std::unique_ptr<resip::ApplicationMessage> app);
       
       virtual void handleSelfAimedStrayAck(resip::SipMessage* sip);
-      virtual void cancelClientTransaction(const resip::Data& tid);
+      virtual bool handleMissingResponseVias(resip::SipMessage* response);  // return true to continue processing
+      virtual void cancelClientTransaction(const resip::Data& tid, const resip::Tokens* reasons = 0);
 
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
@@ -56,6 +58,8 @@ class RequestContext
       ResponseContext& getResponseContext();
       
       resip::NameAddr& getTopRoute();
+      bool isTopRouteFlowTupleSet();
+      resip::Tuple& getTopRouteFlowTuple();
       const resip::Data& getDigestRealm();
             
       virtual void send(resip::SipMessage& msg);
@@ -70,7 +74,7 @@ class RequestContext
       void setSessionCreatedEventSent() { mSessionCreatedEventSent = true; }
       void setSessionEstablishedEventSent() { mSessionEstablishedEventSent = true; }
 
-      void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds);
+      void postTimedMessage(std::unique_ptr<resip::ApplicationMessage> msg,int seconds);
 
       // Accessor for per-requset extensible state storage for monkeys
       resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
@@ -97,6 +101,8 @@ class RequestContext
       int mTransactionCount;
       Proxy& mProxy;
       resip::NameAddr mTopRoute;
+      bool mTopRouteFlowTupleSet;       // Provided so caller can avoid needing to compare mTopRouteFlowTuple to and empty Tuple() to check if set or not
+      resip::Tuple mTopRouteFlowTuple;  // extracted from mTopRoute if valid Flow-Token is present
       ResponseContext mResponseContext;
       int mTCSerial;
       bool mSessionCreatedEventSent;

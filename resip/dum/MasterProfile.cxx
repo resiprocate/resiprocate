@@ -54,7 +54,7 @@ MasterProfile::isSchemeSupported(const Data& scheme) const
 }
 
 void 
-MasterProfile::clearSupportedSchemes()
+MasterProfile::clearSupportedSchemes() noexcept
 {
    mSupportedSchemes.clear();
 }
@@ -64,6 +64,24 @@ MasterProfile::addSupportedMethod(const MethodTypes& method)
 {
    mSupportedMethodTypes.insert(method);
    mSupportedMethods.push_back(Token(getMethodName(method)));
+}
+
+void 
+MasterProfile::removeSupportedMethod(const MethodTypes& method)
+{
+   mSupportedMethodTypes.erase(method);
+   for (Tokens::iterator i = mSupportedMethods.begin();
+            i != mSupportedMethods.end(); ++i)
+   {
+       if (getMethodType(i->value()) == method)
+       {
+           mSupportedMethods.erase(i);
+           break;
+       }
+   }
+
+   // Should we clear the mimetypes as well?
+   // clearSupportedMimeTypes(method);
 }
 
 bool 
@@ -97,7 +115,7 @@ MasterProfile::getAllowedMethodsData() const
 }
 
 void 
-MasterProfile::clearSupportedMethods()
+MasterProfile::clearSupportedMethods() noexcept
 {
    mSupportedMethodTypes.clear();
    mSupportedMethods.clear();
@@ -148,31 +166,31 @@ MasterProfile::getSupportedOptionTags() const
 }
 
 void 
-MasterProfile::clearSupportedOptionTags()
+MasterProfile::clearSupportedOptionTags() noexcept
 {
    mSupportedOptionTags.clear();
 }
 
 void
-MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode)
+MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode) noexcept
 {
    mUacReliableProvisionalMode = mode;
 }
 
 void
-MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode)
+MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode) noexcept
 {
   mUasReliableProvisionalMode = mode;
 }
 
 MasterProfile::ReliableProvisionalMode
-MasterProfile::getUacReliableProvisionalMode() const
+MasterProfile::getUacReliableProvisionalMode() const noexcept
 {
    return mUacReliableProvisionalMode;
 }
 
 MasterProfile::ReliableProvisionalMode
-MasterProfile::getUasReliableProvisionalMode() const
+MasterProfile::getUasReliableProvisionalMode() const noexcept
 {
    return mUasReliableProvisionalMode;
 }
@@ -240,7 +258,7 @@ MasterProfile::clearSupportedMimeTypes(const MethodTypes& method)
 }
 
 void 
-MasterProfile::clearSupportedMimeTypes()
+MasterProfile::clearSupportedMimeTypes() noexcept
 {
    mSupportedMimeTypes.clear();
 }
@@ -264,7 +282,7 @@ MasterProfile::getSupportedEncodings() const
 }
 
 void 
-MasterProfile::clearSupportedEncodings()
+MasterProfile::clearSupportedEncodings() noexcept
 {
    mSupportedEncodings.clear();
 }
@@ -295,7 +313,7 @@ MasterProfile::getSupportedLanguages() const
 }
 
 void 
-MasterProfile::clearSupportedLanguages()
+MasterProfile::clearSupportedLanguages() noexcept
 {
    mSupportedLanguages.clear();
 }
@@ -326,104 +344,104 @@ MasterProfile::getAllowedEvents() const
 }
 
 void 
-MasterProfile::clearAllowedEvents()
+MasterProfile::clearAllowedEvents() noexcept
 {
    mAllowedEvents.clear();
 }
 
 bool& 
-MasterProfile::validateContentEnabled()
+MasterProfile::validateContentEnabled() noexcept
 {
    return mValidateContentEnabled;   
 }
 
 bool 
-MasterProfile::validateContentEnabled() const
+MasterProfile::validateContentEnabled() const noexcept
 {
    return mValidateContentEnabled;   
 }
 
 bool& 
-MasterProfile::validateContentLanguageEnabled()
+MasterProfile::validateContentLanguageEnabled() noexcept
 {
    return mValidateContentLanguageEnabled;   
 }
 
 bool 
-MasterProfile::validateContentLanguageEnabled() const
+MasterProfile::validateContentLanguageEnabled() const noexcept
 {
    return mValidateContentLanguageEnabled;   
 }
 
 bool& 
-MasterProfile::validateAcceptEnabled()
+MasterProfile::validateAcceptEnabled() noexcept
 {
    return mValidateAcceptEnabled;   
 }
 
 bool 
-MasterProfile::validateAcceptEnabled() const
+MasterProfile::validateAcceptEnabled() const noexcept
 {
    return mValidateAcceptEnabled;   
 }
 
 bool 
-MasterProfile::allowBadRegistrationEnabled() const
+MasterProfile::allowBadRegistrationEnabled() const noexcept
 {
    return mAllowBadRegistrationEnabled;   
 }
 
 bool& 
-MasterProfile::allowBadRegistrationEnabled()
+MasterProfile::allowBadRegistrationEnabled() noexcept
 {
    return mAllowBadRegistrationEnabled;   
 }
 
   
 UInt32 &
-MasterProfile::serverRegistrationMinExpiresTime(void)
+MasterProfile::serverRegistrationMinExpiresTime() noexcept
 {
    return mServerRegistrationMinExpires;
 }
 
-const UInt32 
-MasterProfile::serverRegistrationMinExpiresTime(void) const
+UInt32 
+MasterProfile::serverRegistrationMinExpiresTime() const noexcept
 {
    return mServerRegistrationMinExpires;
 }
 
 UInt32 &
-MasterProfile::serverRegistrationMaxExpiresTime(void)
+MasterProfile::serverRegistrationMaxExpiresTime() noexcept
 {
    return mServerRegistrationMaxExpires;
 }
 
-const UInt32 
-MasterProfile::serverRegistrationMaxExpiresTime(void) const
+UInt32 
+MasterProfile::serverRegistrationMaxExpiresTime() const noexcept
 {
    return mServerRegistrationMaxExpires;
 }
 
 UInt32 &
-MasterProfile::serverRegistrationDefaultExpiresTime(void)
+MasterProfile::serverRegistrationDefaultExpiresTime() noexcept
 {
    return mServerRegistrationDefaultExpires;
 }
 
-const UInt32 
-MasterProfile::serverRegistrationDefaultExpiresTime(void) const
+UInt32 
+MasterProfile::serverRegistrationDefaultExpiresTime() const noexcept
 {
    return mServerRegistrationDefaultExpires;
 }
 
 bool 
-MasterProfile::checkReqUriInMergeDetectionEnabled() const
+MasterProfile::checkReqUriInMergeDetectionEnabled() const noexcept
 {
    return mCheckReqUriInMergeDetectionEnabled;   
 }
 
 bool& 
-MasterProfile::checkReqUriInMergeDetectionEnabled()
+MasterProfile::checkReqUriInMergeDetectionEnabled() noexcept
 {
    return mCheckReqUriInMergeDetectionEnabled;   
 }
@@ -434,12 +452,12 @@ MasterProfile::clone() const
    return new MasterProfile(*this);
 }
 
-bool& MasterProfile::additionalTransactionTerminatingResponsesEnabled()
+bool& MasterProfile::additionalTransactionTerminatingResponsesEnabled() noexcept
 {
   return mAdditionalTransactionTerminatingResponsesEnabled;
 }
 
-bool MasterProfile::additionalTransactionTerminatingResponsesEnabled() const
+bool MasterProfile::additionalTransactionTerminatingResponsesEnabled() const noexcept
 {
   return mAdditionalTransactionTerminatingResponsesEnabled;
 }
@@ -463,7 +481,7 @@ const std::set<int>& MasterProfile::getAdditionalTransactionTerminatingResponses
   return mAdditionalTransactionTerminatingResponsess;
 }
 
-void MasterProfile::clearAdditionalTransactionTerminatingResponses(void)
+void MasterProfile::clearAdditionalTransactionTerminatingResponses() noexcept
 {
   mAdditionalTransactionTerminatingResponsess.clear();
 }

@@ -4,6 +4,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "resip/stack/Message.hxx"
+#include <set>
 #include <vector>
 
 namespace resip
@@ -31,6 +32,13 @@ class AbstractDb
             resip::Data name;
             resip::Data email;
             resip::Data forwardAddress;
+      };
+
+      class TlsPeerIdentityRecord
+      {
+         public:
+            resip::Data peerName;
+            resip::Data authorizedIdentity;
       };
 
       class RouteRecord
@@ -112,6 +120,14 @@ class AbstractDb
       virtual resip::Data getUserAuthInfo(const Key& key) const;
       virtual Key firstUserKey();// return empty if no more
       virtual Key nextUserKey(); // return empty if no more 
+
+      // functions for TlsPeerIdentity Records
+      virtual bool addTlsPeerIdentity(const Key& key, const TlsPeerIdentityRecord& rec);
+      virtual void eraseTlsPeerIdentity(const Key& key);
+      virtual TlsPeerIdentityRecord getTlsPeerIdentity(const Key& key) const;
+      virtual bool isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const;
+      virtual Key firstTlsPeerIdentityKey();// return empty if no more
+      virtual Key nextTlsPeerIdentityKey(); // return empty if no more
          
       // functions for Route Records
       virtual bool addRoute(const Key& key, const RouteRecord& rec);
@@ -169,6 +185,7 @@ class AbstractDb
          StaticRegTable,
          FilterTable,
          SiloTable,
+         TlsPeerIdentityTable,
          MaxTable  // This one MUST be last 
       } Table;
 

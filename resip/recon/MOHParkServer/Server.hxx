@@ -84,6 +84,7 @@ protected:
    virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle);
    virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held);
 
 private:
    friend class MOHManager;
@@ -92,7 +93,7 @@ private:
 
    bool mIsV6Avail;
    recon::UserAgent* mMyUserAgent;
-   resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
+   std::shared_ptr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
 
    typedef std::map<unsigned long, MOHManager*> MOHManagerMap;
    MOHManagerMap mMOHManagerMap;

@@ -5,6 +5,7 @@
 #include "rutil/ServerProcess.hxx"
 #include "resip/dum/TlsPeerAuthManager.hxx"
 #include "resip/stack/StatisticsHandler.hxx"
+#include "resip/stack/DomainMatcher.hxx"
 #include <memory>
 
 #include "repro/AuthenticatorFactory.hxx"
@@ -15,6 +16,7 @@ namespace resip
 {
    class TransactionUser;
    class SipStack;
+   class Dispatcher;
    class RegistrationPersistenceManager;
    class PublicationPersistenceManager;
    class FdPollGrp;
@@ -28,7 +30,6 @@ namespace repro
 {
 class ProxyConfig;
 class ProcessorChain;
-class Dispatcher;
 class AbstractDb;
 class ProcessorChain;
 class Proxy;
@@ -55,7 +56,7 @@ public:
    virtual bool run(int argc, char** argv);
    virtual void shutdown();
    virtual void restart();  // brings everydown and then backup again - leaves InMemoryRegistrationDb intact
-   virtual void onHUP();
+   virtual void onReload();
 
    virtual Proxy* getProxy() { return mProxy; }
 
@@ -77,10 +78,11 @@ protected:
    virtual void createRegSync();
    virtual void createCommandServer();
 
-   virtual resip::Data addDomains(resip::TransactionUser& tu, bool log);
+   virtual void initDomainMatcher();
+   virtual void addDomains(resip::TransactionUser& tu);
    virtual bool addTransports(bool& allTransportsSpecifyRecordRoute);
    // Override this and examine the processor name to selectively add custom processors before or after the standard ones
-   virtual void addProcessor(repro::ProcessorChain& chain, std::auto_ptr<repro::Processor> processor);
+   virtual void addProcessor(repro::ProcessorChain& chain, std::unique_ptr<repro::Processor> processor);
    virtual void makeRequestProcessorChain(repro::ProcessorChain& chain);
    virtual void makeResponseProcessorChain(repro::ProcessorChain& chain);
    virtual void makeTargetProcessorChain(repro::ProcessorChain& chain);
@@ -104,7 +106,7 @@ protected:
    resip::RegistrationPersistenceManager* mRegistrationPersistenceManager;
    resip::PublicationPersistenceManager* mPublicationPersistenceManager;
    AuthenticatorFactory* mAuthFactory;
-   Dispatcher* mAsyncProcessorDispatcher;
+   resip::Dispatcher* mAsyncProcessorDispatcher;
    ProcessorChain* mMonkeys;
    ProcessorChain* mLemurs;
    ProcessorChain* mBaboons;
@@ -119,6 +121,7 @@ protected:
    RegSyncClient* mRegSyncClient;
    RegSyncServer* mRegSyncServerV4;
    RegSyncServer* mRegSyncServerV6;
+   RegSyncServer* mRegSyncServerAMQP;
    RegSyncServerThread* mRegSyncServerThread;
    std::list<CommandServer*> mCommandServerList;
    CommandServerThread* mCommandServerThread;
@@ -126,6 +129,8 @@ protected:
    std::vector<Plugin*> mPlugins;
    typedef std::map<unsigned int, resip::NameAddr> TransportRecordRouteMap;
    TransportRecordRouteMap mStartupTransportRecordRoutes;
+   std::shared_ptr<resip::DomainMatcher> mDomainMatcher;
+   resip::Data mDefaultRealm;
 };
 
 }

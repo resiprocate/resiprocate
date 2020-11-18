@@ -1,0 +1,3 @@
+usr/bin/telepathy-resiprocate
+apps/telepathy/resiprocate.manager /usr/share/telepathy/managers/resiprocate.manager
+apps/telepathy/resiprocate.service /usr/share/dbus-1/services/org.freedesktop.Telepathy.ConnectionManager.resiprocate.service

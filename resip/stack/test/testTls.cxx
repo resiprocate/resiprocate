@@ -11,13 +11,9 @@
 #endif
 
 #include <sys/types.h>
-#include <unistd.h> // for sleep
+#include <rutil/Time.hxx> // for sleep
 #include <iostream>
 #include <memory>
-
-#ifdef __MINGW32__
-#define sleep(x) Sleep((x)*1000)
-#endif
 
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
@@ -25,6 +21,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/Uri.hxx"
 
 using namespace resip;
@@ -43,7 +40,7 @@ main(int argc, char* argv[])
    int seltime = 100;
 
    const int MaxStacks=100;
-   int numStacks=20;
+   int numStacks=5;
 
    //logLevel = "ALERT";
    //logLevel = "INFO";
@@ -64,8 +61,6 @@ main(int argc, char* argv[])
 #endif
 
    int runs = 3*numStacks*numStacks;
-
-   runs = 1;
    
    Log::initialize(logType, logLevel, argv[0]);
    cout << "Performing " << runs << " runs." << endl;
@@ -77,10 +72,12 @@ main(int argc, char* argv[])
    SipStack* stack[MaxStacks];
    for ( int s=0; s<numStacks; s++)
    {
-      stack[s] = new SipStack;
+      Security* pSecurity = new Security("./certs");
+      stack[s] = new SipStack(pSecurity);
 
-      Data domain = Data("example") + Data(s) +".com";
-      
+      //Data domain = Data("example") + Data(s) +".com";
+      Data domain = "localhost";
+
 #ifdef USE_DTLS
       stack[s]->addTransport(DTLS, 25000+s,version, StunDisabled, bindInterface, domain);
 #else
@@ -91,7 +88,7 @@ main(int argc, char* argv[])
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
-   target.uri().host() = Data("127.0.0.1");
+   target.uri().host() = Data("localhost");
    target.uri().port() = 25000;
 #ifdef USE_DTLS
    target.uri().param(p_transport) = "dtls";
@@ -186,7 +183,7 @@ main(int argc, char* argv[])
    InfoLog (<< "Finished " << count << " runs");
    
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+   cout << runs << " registrations performed in " << elapsed << " ms, a rate of "
         << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);
@@ -194,7 +191,7 @@ main(int argc, char* argv[])
 
    while (true)
    {
-      sleep(10);
+      sleepMs(10);
    }
 #endif 
    

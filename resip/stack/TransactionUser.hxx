@@ -6,9 +6,11 @@
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/CongestionManager.hxx"
+#include "resip/stack/DomainMatcher.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/MessageFilterRule.hxx"
 
+#include <memory>
 
 namespace resip
 {
@@ -96,6 +98,11 @@ class TransactionUser
             thread (ie: DUMThread) for execution there, will be thread safe.
       */
       void removeDomain(const Data& domain);
+
+      /**
+         @brief Replaces the default DomainMatcher
+      */
+      void setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher);
 
       /**
          @brief Return the name of this TransactionUser. Used in encode().
@@ -253,8 +260,7 @@ class TransactionUser
 
    private:
       MessageFilterRuleList mRuleList;
-      typedef std::set<Data> DomainList;
-      DomainList mDomainList;
+      std::shared_ptr<DomainMatcher> mDomainMatcher;
       bool mRegisteredForTransactionTermination;
       bool mRegisteredForConnectionTermination;
       bool mRegisteredForKeepAlivePongs;

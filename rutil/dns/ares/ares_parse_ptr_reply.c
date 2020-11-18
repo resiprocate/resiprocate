@@ -93,7 +93,10 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 	  /* Decode the RR data and set hostname to it. */
 	  status = ares_expand_name(aptr, abuf, alen, &rr_data, &len);
 	  if (status != ARES_SUCCESS)
-	    break;
+	    {
+	      free(rr_name);
+	      break;
+	    }
 	  if (hostname)
 	    free(hostname);
 	  hostname = rr_data;
@@ -104,7 +107,10 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 	  /* Decode the RR data and replace ptrname with it. */
 	  status = ares_expand_name(aptr, abuf, alen, &rr_data, &len);
 	  if (status != ARES_SUCCESS)
-	    break;
+	    {
+	      free(rr_name);
+	      break;
+	    }
 	  free(ptrname);
 	  ptrname = rr_data;
 	}

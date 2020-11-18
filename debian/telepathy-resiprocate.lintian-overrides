@@ -1,0 +1,4 @@
+# GPL code with the OpenSSL exception
+telepathy-resiprocate binary: possible-gpl-code-linked-with-openssl
+# binary is not run by the user from the command line
+telepathy-resiprocate binary: binary-without-manpage

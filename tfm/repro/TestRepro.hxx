@@ -7,7 +7,7 @@
 #include "repro/Registrar.hxx"
 #include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
@@ -16,7 +16,6 @@
 #include "resip/stack/EventStackThread.hxx"
 #include "rutil/FdPoll.hxx"
 #include "rutil/CongestionManager.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
 #include "tfm/repro/CommandLineParser.hxx"
 
@@ -49,7 +48,8 @@ class TestRepro : public TestProxy
                             int weight);
       virtual void deleteRoute(const resip::Data& matchingPattern, 
                                const resip::Data& method, 
-                               const resip::Data& event);
+                               const resip::Data& event,
+                               int priority);
       virtual bool addTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0, short mask = 0, short family=resip::V4);
       virtual void deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0, short mask = 0, short family=resip::V4);
 
@@ -60,10 +60,10 @@ class TestRepro : public TestProxy
       resip::EventStackThread* mStackThread;
       
       repro::Registrar mRegistrar;
-      resip::SharedPtr<resip::MasterProfile> mProfile;
+      std::shared_ptr<resip::MasterProfile> mProfile;
       repro::AbstractDb* mDb;
       TfmProxyConfig mConfig;
-      repro::Dispatcher* mAuthRequestDispatcher;
+      resip::Dispatcher* mAuthRequestDispatcher;
       repro::ProcessorChain mRequestProcessors;
       repro::ProcessorChain mResponseProcessors;
       repro::ProcessorChain mTargetProcessors;
@@ -71,7 +71,7 @@ class TestRepro : public TestProxy
       repro::Proxy mProxy;
       resip::DialogUsageManager* mDum;
       resip::DumThread* mDumThread;
-      std::auto_ptr<resip::CongestionManager> mCongestionManager;
+      std::unique_ptr<resip::CongestionManager> mCongestionManager;
 };
 
 #endif

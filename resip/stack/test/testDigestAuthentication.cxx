@@ -21,6 +21,7 @@
 #include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"
 #include "digcalc.hxx"
 
@@ -30,6 +31,7 @@ using namespace resip;
 int
 main(int arc, char** argv)
 {
+   Log::initialize(Log::Cout, Log::Stack, argv[0]);
    {
       Auth auth;
       auth.scheme() = "Digest";
@@ -369,10 +371,10 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));      
+      unique_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));
 
       Data realm = "localhost";
-      auto_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, false));
+      unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, false));
 
       assert(challenge->exists(h_ProxyAuthenticates));
       assert(challenge->header(h_ProxyAuthenticates).size() == 1);
@@ -443,10 +445,10 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));      
+      unique_ptr<SipMessage> request(TestSupport::makeMessage(txt.c_str()));
 
       Data realm = "localhost";
-      auto_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true));
+      unique_ptr<SipMessage> challenge(Helper::makeProxyChallenge(*request, realm, true));
 
       cerr << *challenge << endl;
 

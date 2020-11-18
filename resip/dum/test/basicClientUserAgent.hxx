@@ -41,7 +41,7 @@ public:
    bool process(int timeoutMs);  // returns false when shutdown is complete and process should no longer be called
 
    DialogUsageManager& getDialogUsageManager() { return *mDum; }
-   SharedPtr<UserProfile> getIncomingUserProfile(const SipMessage& msg) { return mProfile; } // This test program only uses the one global Master Profile - just return it
+   std::shared_ptr<UserProfile> getIncomingUserProfile(const SipMessage& msg) { return mProfile; } // This test program only uses the one global Master Profile - just return it
       
 protected:
    // Postable Handler ////////////////////////////////////////////////////////////
@@ -130,8 +130,8 @@ protected:
    friend class CallTimer;
    void onCallTimeout(BasicClientCall* call);
 
-   SharedPtr<MasterProfile> mProfile;
-   // Using pointers for the following classes so that we can control object descruction order
+   std::shared_ptr<MasterProfile> mProfile;
+   // Using pointers for the following classes so that we can control object destruction order
    Security* mSecurity;
    FdPollGrp* mPollGrp;
    EventThreadInterruptor* mInterruptor;

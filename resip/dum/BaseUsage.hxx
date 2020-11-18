@@ -8,21 +8,25 @@
 namespace resip
 {
 
-class DialogUsageManager;
 class Dialog;
+class DialogUsageManager;
 class DumTimeout;
-class SipMessage;
+class Message;
 class NameAddr;
+class SipMessage;
 
 class BaseUsage : public Handled
 {
    public:
-      class Exception : public BaseException
+      class Exception final : public BaseException
       {
          public:
-            Exception(const Data& msg,const Data& file,int line);
-            virtual const char* name() const;
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const noexcept override;
       };
+
+      /// @brief posts a message on dum
+      virtual void postDum(Message* messageForDum);
 
       virtual void end()=0;
       virtual EncodeStream& dump(EncodeStream& strm) const=0;

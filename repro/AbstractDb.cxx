@@ -228,6 +228,96 @@ AbstractDb::nextUserKey()
 {
    return dbNextKey(UserTable);
 }
+
+
+bool
+AbstractDb::addTlsPeerIdentity( const AbstractDb::Key& key, const AbstractDb::TlsPeerIdentityRecord& rec )
+{
+   resip_assert( !key.empty() );
+
+   Data data;
+   {
+      oDataStream s(data);
+
+      short version=1;
+      resip_assert( sizeof( version) == 2 );
+      s.write( (char*)(&version) , sizeof(version) );
+
+      encodeString( s, rec.peerName );
+      encodeString( s, rec.authorizedIdentity );
+
+      s.flush();
+   }
+
+   return dbWriteRecord(TlsPeerIdentityTable,key,data);
+}
+
+
+void
+AbstractDb::eraseTlsPeerIdentity( const AbstractDb::Key& key )
+{
+   dbEraseRecord( TlsPeerIdentityTable, key);
+}
+
+
+AbstractDb::TlsPeerIdentityRecord
+AbstractDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
+{
+   AbstractDb::TlsPeerIdentityRecord rec;
+   Data data;
+   bool stat = dbReadRecord( TlsPeerIdentityTable, key, data );
+   if ( !stat )
+   {
+      return rec;
+   }
+   if ( data.empty() )
+   {
+      return rec;
+   }
+
+   iDataStream s(data);
+
+   short version;
+   resip_assert( sizeof(version) == 2 );
+   s.read( (char*)(&version), sizeof(version) );
+
+   if ( version == 1 )
+   {
+      decodeString(s, rec.peerName);
+      decodeString(s, rec.authorizedIdentity);
+   }
+   else
+   {
+      // unknown version
+      ErrLog( <<"Data in TlsPeerIdentity database with unknown version " << version );
+      ErrLog( <<"record size is " << data.size() );
+   }
+
+   return rec;
+}
+
+
+bool
+AbstractDb::isAuthorized(const std::set<resip::Data>& peerNames, const std::set<resip::Data>& identities) const
+{
+   // FIXME
+   resip_assert("TlsPeerIdentity not implemented for this database backend");
+   return false;
+}
+
+
+AbstractDb::Key
+AbstractDb::firstTlsPeerIdentityKey()
+{
+   return dbFirstKey(TlsPeerIdentityTable);
+}
+
+
+AbstractDb::Key
+AbstractDb::nextTlsPeerIdentityKey()
+{
+   return dbNextKey(TlsPeerIdentityTable);
+}
  
 
 void 

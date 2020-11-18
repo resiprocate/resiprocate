@@ -163,10 +163,17 @@ TuSelector::size() const
 }
 
 void 
-TuSelector::registerTransactionUser(TransactionUser& tu)
+TuSelector::registerTransactionUser(TransactionUser& tu, const bool front)
 {
    mTuSelectorMode = true;
-   mTuList.push_back(Item(&tu));
+   if(front)
+   {
+      mTuList.insert(mTuList.begin(), Item(&tu));
+   }
+   else
+   {
+      mTuList.push_back(Item(&tu));
+   }
 }
 
 void

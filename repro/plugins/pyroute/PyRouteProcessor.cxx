@@ -61,7 +61,7 @@ PyRouteProcessor::process(RequestContext &context)
       return Processor::Continue;
    }
    work = new PyRouteWork(*this, context.getTransactionId(), &(context.getProxy()), msg);
-   std::auto_ptr<ApplicationMessage> app(work);
+   std::unique_ptr<ApplicationMessage> app(work);
    mDispatcher.post(app);
 
    return Processor::WaitingForEvent;

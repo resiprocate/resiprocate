@@ -1,12 +1,15 @@
 #if !defined(FlowDtlsTimerContext_hxx)
 #define FlowDtlsTimerContext_hxx 
 
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
+// a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
+#include <memory>
+
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
 
-#include <rutil/SharedPtr.hxx>
 #include "dtls_wrapper/DtlsTimer.hxx"
 
 /**
@@ -27,7 +30,7 @@ class FlowDtlsTimerContext: public dtls::DtlsTimerContext
 
    private:
      asio::io_service& mIOService;
-     std::map<dtls::DtlsTimer*, resip::SharedPtr<asio::deadline_timer> > mDeadlineTimers;  
+     std::map<dtls::DtlsTimer*, std::shared_ptr<asio::steady_timer> > mDeadlineTimers;  
 };
 
 }
@@ -37,6 +40,7 @@ class FlowDtlsTimerContext: public dtls::DtlsTimerContext
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

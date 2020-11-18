@@ -10,7 +10,10 @@
 
 #include "rutil/ssl/OpenSSLInit.hxx"
 
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
@@ -66,8 +69,13 @@ OpenSSLInit::OpenSSLInit()
 	CRYPTO_set_dynlock_lock_callback(::resip_OpenSSLInit_dynLockFunction);
 #endif
 
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
+#else
+	CRYPTO_set_mem_debug(1);
+#endif
+
 	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
 
 	SSL_library_init();
@@ -80,11 +88,22 @@ OpenSSLInit::OpenSSLInit()
 OpenSSLInit::~OpenSSLInit()
 {
    mInitialized = false;
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
    ERR_remove_state(0);// free thread error queue
+#elif OPENSSL_VERSION_NUMBER < 0x10100000L
+   ERR_remove_thread_state(NULL);// free thread error queue
+#endif
    EVP_cleanup();// Clean up data allocated during OpenSSL_add_all_algorithms
    CRYPTO_cleanup_all_ex_data();
    ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
-   sk_SSL_COMP_free (SSL_COMP_get_compression_methods()); 
+
+   // Warning: Unable to free compression methods on OpenSSL < 1.0.2
+   // For now we don't even try to free for older versions, see discussion in Debian bug #848652
+   // https://bugs.debian.org/848652
+   // No need to free for OpenSSL 1.1.0 and later, the library manages the memory by itself.
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L && OPENSSL_VERSION_NUMBER < 0x10100000L
+   SSL_COMP_free_compression_methods();
+#endif
 
 //	CRYPTO_mem_leaks_fp(stderr);
 

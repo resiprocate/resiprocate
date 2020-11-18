@@ -42,7 +42,9 @@ class TlsBaseTransport : public TcpBaseTransport
                    const Data& privateKeyPassPhrase = "");
       virtual  ~TlsBaseTransport();
 
-      SSL_CTX* getCtx() const;
+      void onReload();
+
+      SSL_CTX* getCtx();
 
       SecurityTypes::TlsClientVerificationMode getClientVerificationMode() 
          { return mClientVerificationMode; };
@@ -85,6 +87,10 @@ class TlsBaseTransport : public TcpBaseTransport
          as if it were a SIP URI.  This is convenient because many commercial
          CAs offer email certificates but not sip: certificates */
       bool mUseEmailAsSIP;
+      const Data mCertificateFilename;
+      const Data mPrivateKeyFilename;
+      const Data mPrivateKeyPassPhrase;
+      volatile bool mReloadCertificate;
 };
 
 }

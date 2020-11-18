@@ -5,14 +5,18 @@
 #include "config.h"
 #endif
 
+#include "FlowContext.hxx"
 #include "MediaStream.hxx"
 #include "FlowManagerException.hxx"
+#include "RTCPEventLoggingHandler.hxx"
 
 #include "dtls_wrapper/DtlsFactory.hxx"
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
 #include <map>
+#include <memory>
+#include <utility>
 
 using namespace reTurn;
 
@@ -46,15 +50,22 @@ public:
                                   const char* natTraversalServerHostname = 0, 
                                   unsigned short natTraversalServerPort = 0, 
                                   const char* stunUsername = 0,
-                                  const char* stunPassword = 0);
+                                  const char* stunPassword = 0,
+                                  bool forceCOMedia = false,
+                                  std::shared_ptr<FlowContext> context = nullptr);
 
    void initializeDtlsFactory(const char* certAor);
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }
+
+   void setRTCPEventLoggingHandler(std::shared_ptr<RTCPEventLoggingHandler> handler) { mRtcpEventLoggingHandler = std::move(handler); }
+   RTCPEventLoggingHandler* getRTCPEventLoggingHandler() { return 0 != mRtcpEventLoggingHandler.get() ? mRtcpEventLoggingHandler.get() : 0; }
 
 protected: 
 
 private:
    static void srtpEventHandler(srtp_event_data_t *data);
+
+   std::shared_ptr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
 
    // Member variables used to manager asio io service thread
    asio::io_service mIOService;

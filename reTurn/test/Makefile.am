@@ -1,12 +1,12 @@
 # $Id$
 
-EXTRA_DIST = *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
+EXTRA_DIST = *.vcxproj
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
 
 LDADD = ../client/libreTurnClient.la
+LDADD += ../libreTurnCommon.la
 LDADD += ../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 

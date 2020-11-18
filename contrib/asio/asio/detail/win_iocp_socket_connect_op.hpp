@@ -2,7 +2,7 @@
 // detail/win_iocp_socket_connect_op.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2019 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,11 +19,11 @@
 
 #if defined(ASIO_HAS_IOCP)
 
-#include "asio/detail/addressof.hpp"
 #include "asio/detail/bind_handler.hpp"
 #include "asio/detail/fenced_block.hpp"
 #include "asio/detail/handler_alloc_helpers.hpp"
 #include "asio/detail/handler_invoke_helpers.hpp"
+#include "asio/detail/memory.hpp"
 #include "asio/detail/reactor_op.hpp"
 #include "asio/detail/socket_ops.hpp"
 #include "asio/error.hpp"
@@ -43,32 +43,36 @@ public:
   {
   }
 
-  static bool do_perform(reactor_op* base)
+  static status do_perform(reactor_op* base)
   {
     win_iocp_socket_connect_op_base* o(
         static_cast<win_iocp_socket_connect_op_base*>(base));
 
-    return socket_ops::non_blocking_connect(o->socket_, o->ec_);
+    return socket_ops::non_blocking_connect(
+        o->socket_, o->ec_) ? done : not_done;
   }
 
   socket_type socket_;
   bool connect_ex_;
 };
 
-template <typename Handler>
+template <typename Handler, typename IoExecutor>
 class win_iocp_socket_connect_op : public win_iocp_socket_connect_op_base
 {
 public:
   ASIO_DEFINE_HANDLER_PTR(win_iocp_socket_connect_op);
 
-  win_iocp_socket_connect_op(socket_type socket, Handler& handler)
+  win_iocp_socket_connect_op(socket_type socket,
+      Handler& handler, const IoExecutor& io_ex)
     : win_iocp_socket_connect_op_base(socket,
         &win_iocp_socket_connect_op::do_complete),
-      handler_(ASIO_MOVE_CAST(Handler)(handler))
+      handler_(ASIO_MOVE_CAST(Handler)(handler)),
+      io_executor_(io_ex)
   {
+    handler_work<Handler, IoExecutor>::start(handler_, io_executor_);
   }
 
-  static void do_complete(io_service_impl* owner, operation* base,
+  static void do_complete(void* owner, operation* base,
       const asio::error_code& result_ec,
       std::size_t /*bytes_transferred*/)
   {
@@ -78,6 +82,7 @@ public:
     win_iocp_socket_connect_op* o(
         static_cast<win_iocp_socket_connect_op*>(base));
     ptr p = { asio::detail::addressof(o->handler_), o, o };
+    handler_work<Handler, IoExecutor> w(o->handler_, o->io_executor_);
 
     if (owner)
     {
@@ -87,7 +92,7 @@ public:
         ec = o->ec_;
     }
 
-    ASIO_HANDLER_COMPLETION((o));
+    ASIO_HANDLER_COMPLETION((*o));
 
     // Make a copy of the handler so that the memory can be deallocated before
     // the upcall is made. Even if we're not about to make an upcall, a
@@ -105,13 +110,14 @@ public:
     {
       fenced_block b(fenced_block::half);
       ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
-      asio_handler_invoke_helpers::invoke(handler, handler.handler_);
+      w.complete(handler, handler.handler_);
       ASIO_HANDLER_INVOCATION_END;
     }
   }
 
 private:
   Handler handler_;
+  IoExecutor io_executor_;
 };
 
 } // namespace detail

@@ -2,7 +2,7 @@
 // detail/reactive_socket_connect_op.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2019 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,10 +16,10 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "asio/detail/config.hpp"
-#include "asio/detail/addressof.hpp"
 #include "asio/detail/bind_handler.hpp"
 #include "asio/detail/buffer_sequence_adapter.hpp"
 #include "asio/detail/fenced_block.hpp"
+#include "asio/detail/memory.hpp"
 #include "asio/detail/reactor_op.hpp"
 #include "asio/detail/socket_ops.hpp"
 
@@ -37,32 +37,40 @@ public:
   {
   }
 
-  static bool do_perform(reactor_op* base)
+  static status do_perform(reactor_op* base)
   {
     reactive_socket_connect_op_base* o(
         static_cast<reactive_socket_connect_op_base*>(base));
 
-    return socket_ops::non_blocking_connect(o->socket_, o->ec_);
+    status result = socket_ops::non_blocking_connect(
+        o->socket_, o->ec_) ? done : not_done;
+
+    ASIO_HANDLER_REACTOR_OPERATION((*o, "non_blocking_connect", o->ec_));
+
+    return result;
   }
 
 private:
   socket_type socket_;
 };
 
-template <typename Handler>
+template <typename Handler, typename IoExecutor>
 class reactive_socket_connect_op : public reactive_socket_connect_op_base
 {
 public:
   ASIO_DEFINE_HANDLER_PTR(reactive_socket_connect_op);
 
-  reactive_socket_connect_op(socket_type socket, Handler& handler)
+  reactive_socket_connect_op(socket_type socket,
+      Handler& handler, const IoExecutor& io_ex)
     : reactive_socket_connect_op_base(socket,
         &reactive_socket_connect_op::do_complete),
-      handler_(ASIO_MOVE_CAST(Handler)(handler))
+      handler_(ASIO_MOVE_CAST(Handler)(handler)),
+      io_executor_(io_ex)
   {
+    handler_work<Handler, IoExecutor>::start(handler_, io_executor_);
   }
 
-  static void do_complete(io_service_impl* owner, operation* base,
+  static void do_complete(void* owner, operation* base,
       const asio::error_code& /*ec*/,
       std::size_t /*bytes_transferred*/)
   {
@@ -70,8 +78,9 @@ public:
     reactive_socket_connect_op* o
       (static_cast<reactive_socket_connect_op*>(base));
     ptr p = { asio::detail::addressof(o->handler_), o, o };
+    handler_work<Handler, IoExecutor> w(o->handler_, o->io_executor_);
 
-    ASIO_HANDLER_COMPLETION((o));
+    ASIO_HANDLER_COMPLETION((*o));
 
     // Make a copy of the handler so that the memory can be deallocated before
     // the upcall is made. Even if we're not about to make an upcall, a
@@ -89,13 +98,14 @@ public:
     {
       fenced_block b(fenced_block::half);
       ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
-      asio_handler_invoke_helpers::invoke(handler, handler);
+      w.complete(handler, handler.handler_);
       ASIO_HANDLER_INVOCATION_END;
     }
   }
 
 private:
   Handler handler_;
+  IoExecutor io_executor_;
 };
 
 } // namespace detail

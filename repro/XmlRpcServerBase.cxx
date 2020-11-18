@@ -108,7 +108,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
       return;
    }
    
-   // do the listen, seting the maximum queue size for compeletly established
+   // do the listen, seting the maximum queue size for completely established
    // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
    // queue size(see man listen)
    int e = listen(mFd,5);
@@ -122,9 +122,31 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer, Data ipAddr) :
    }
 }
 
+XmlRpcServerBase::XmlRpcServerBase(const Data& brokerUrl) :
+   mSane(true)
+{
+   // AMQP mode
+#ifdef BUILD_QPID_PROTON
+   mQpidProtonThread.reset(new QpidProtonThread(std::string(brokerUrl.c_str())));
+   InfoLog(<<"XmlRpcServerBase::XmlRpcServerBase: using Qpid Proton AMQP to send to " << brokerUrl);
+#else
+   ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Qpid Proton support not enabled at compile time");
+   mSane = false;
+#endif
+}
 
 XmlRpcServerBase::~XmlRpcServerBase()
 {
+#ifdef BUILD_QPID_PROTON
+   if(mQpidProtonThread.get())
+   {
+      // the thread may not have started or may have already been stopped
+      mQpidProtonThread->shutdown();
+      mQpidProtonThread->join();
+      return;
+   }
+#endif
+
 #if defined(WIN32)
    closesocket(mFd);
 #else
@@ -157,6 +179,13 @@ XmlRpcServerBase::buildFdSet(FdSet& fdset)
 void 
 XmlRpcServerBase::process(FdSet& fdset)
 {
+#ifdef BUILD_QPID_PROTON
+   if(mQpidProtonThread.get())
+   {
+      return;
+   }
+#endif
+
    // Process Response fifo first
    while (mResponseFifo.messageAvailable())
    {
@@ -254,6 +283,14 @@ XmlRpcServerBase::sendResponse(unsigned int connectionId,
                                const Data& responseData,
                                bool isFinal)
 {
+#ifdef BUILD_QPID_PROTON
+   // FIXME: response support not yet completed/tested
+   if(mQpidProtonThread.get())
+   {
+      mQpidProtonThread->sendMessage(responseData);
+      return;
+   }
+#endif
    mResponseFifo.add(new ResponseInfo(connectionId, requestId, responseData, isFinal));
    mSelectInterruptor.interrupt();
 }
@@ -262,8 +299,21 @@ void
 XmlRpcServerBase::sendEvent(unsigned int connectionId,
                             const Data& eventData)
 {
+#ifdef BUILD_QPID_PROTON
+   if(mQpidProtonThread.get())
+   {
+      mQpidProtonThread->sendMessage(eventData);
+      return;
+   }
+#endif
    mResponseFifo.add(new ResponseInfo(connectionId, 0 /* requestId */, eventData, true /* isFinal */));
    mSelectInterruptor.interrupt();
+}
+
+std::shared_ptr<ThreadIf>
+XmlRpcServerBase::getThread()
+{
+   return mQpidProtonThread;
 }
 
 bool 

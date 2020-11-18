@@ -3,6 +3,8 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+#define GPERF_SIZE_TYPE size_t
 #endif
 
 
@@ -52,7 +54,7 @@
 #include "wince/WceCompat.hxx"
 #endif // UNDER_CE
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #include <stdio.h>
 #ifndef snprintf
 #define snprintf c99_snprintf
@@ -187,14 +189,24 @@ template<typename _Tp>
 inline const _Tp&
 resipMin(const _Tp& __a, const _Tp& __b)
 {
-   if (__b < __a) return __b; return __a;
+   if (__b < __a)
+   {
+      return __b;
+   }
+
+   return __a;
 }
 
 template<typename _Tp>
 inline const _Tp&
 resipMax(const _Tp& __a, const _Tp& __b) 
 {
-   if (__a < __b) return __b; return __a;
+   if (__a < __b)
+   {
+      return __b;
+   }
+
+   return __a;
 }
 
 template<typename _Tp1, typename _Tp2>
@@ -286,6 +298,10 @@ hton64(const UInt64 input)
 // #undef USE_IPV6
 #endif
 #endif
+#endif
+
+#ifndef IPPROTO_SCTP
+#define IPPROTO_SCTP 132
 #endif
 
 // !bwc! Some poking around seems to indicate that icc supports gcc's function 

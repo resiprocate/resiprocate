@@ -68,7 +68,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       // Note:  These are not thread safe and should be called before run() only
       void setOptionsHandler(OptionsHandler* handler);
-      void setRequestContextFactory(std::auto_ptr<RequestContextFactory> requestContextFactory);
+      void setRequestContextFactory(std::unique_ptr<RequestContextFactory> requestContextFactory);
 
       virtual bool isShutDown() const ;
       virtual void thread();
@@ -80,9 +80,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool getRecordRouteForced() const { return mRecordRouteForced; }
       void setRecordRouteForced(bool forced) { mRecordRouteForced = forced; }
 
-      void setAssumePath(bool f) { mAssumePath = f; }
-      bool getAssumePath() const { return mAssumePath; }
-
       bool isPAssertedIdentityProcessingEnabled() { return mPAssertedIdentityProcessing; }
       bool isNeverStripProxyAuthorizationHeadersEnabled() { return mNeverStripProxyAuthorizationHeaders; }
       
@@ -92,9 +89,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
-      void postTimerC(std::auto_ptr<TimerCMessage> tc);
+      void postTimerC(std::unique_ptr<TimerCMessage> tc);
 
-      void postMS(std::auto_ptr<resip::ApplicationMessage> msg, int msec);
+      void postMS(std::unique_ptr<resip::ApplicationMessage> msg, int msec);
 
       bool compressionEnabled() const;
 
@@ -123,7 +120,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       mutable resip::Mutex mTransportRecordRouteMutex;
 
       bool mRecordRouteForced;
-      bool mAssumePath;
       bool mPAssertedIdentityProcessing;
       bool mNeverStripProxyAuthorizationHeaders;
       resip::Data mServerText;
@@ -147,7 +143,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       UserStore &mUserStore;
       std::set<resip::Data> mSupportedOptions;
       OptionsHandler* mOptionsHandler;
-      std::auto_ptr<RequestContextFactory> mRequestContextFactory;
+      std::unique_ptr<RequestContextFactory> mRequestContextFactory;
 
       bool mSessionAccountingEnabled;
       bool mRegistrationAccountingEnabled;

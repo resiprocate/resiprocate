@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <utility>
 
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
@@ -44,6 +45,7 @@ RequestContext::RequestContext(Proxy& proxy,
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
+   mTopRouteFlowTupleSet(false),
    mResponseContext(*this),
    mTCSerial(0),
    mSessionCreatedEventSent(false),
@@ -86,7 +88,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
+RequestContext::process(std::unique_ptr<resip::SipMessage> sipMessage)
 {
    bool original = false;
    InfoLog (<< "RequestContext::process(SipMessage) " << sipMessage->getTransactionId());
@@ -363,12 +365,12 @@ void
 RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
 {
    resip_assert(msg->isRequest());
-   if(msg->method()!=ACK)
+   if(msg->method() != ACK)
    {
       // !bwc! Somebody collided with an ACK/200. Send a failure response.
       SipMessage response;
       Helper::makeResponse(response,*msg,400);
-      response.header(h_StatusLine).reason()="Transaction-id collision";
+      response.header(h_StatusLine).reason() = "Transaction-id collision";
       send(response);
       return;
    }
@@ -378,8 +380,9 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
    try
    {
       // .slg. look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
-      if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
-          getProxy().isMyUri(msg->header(h_RequestLine).uri()))
+      if(!mTopRouteFlowTupleSet &&  // If we have a flow token in top route, then we don't need to route with RequestUri (so don't consider self aimed)
+         (!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
+         getProxy().isMyUri(msg->header(h_RequestLine).uri()))
       {
          // .bwc. Someone sent an ACK with us in the Request-Uri, and no
          // Route headers (after we have removed ourself). We will never perform 
@@ -652,7 +655,7 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<ApplicationMessage> app)
+RequestContext::process(std::unique_ptr<ApplicationMessage> app)
 {
    InfoLog (<< "RequestContext::process(ApplicationMessage) " << *app);
 
@@ -802,10 +805,17 @@ RequestContext::handleSelfAimedStrayAck(SipMessage* sip)
    InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");  
 }
 
-void
-RequestContext::cancelClientTransaction(const resip::Data& tid)
+bool
+RequestContext::handleMissingResponseVias(resip::SipMessage* response)
 {
-   getProxy().getStack().cancelClientInviteTransaction(tid);
+   // Default behaviour is to not continue processing, this can be overridden
+   return false;
+}
+
+void
+RequestContext::cancelClientTransaction(const resip::Data& tid, const resip::Tokens* reasons)
+{
+   getProxy().getStack().cancelClientInviteTransaction(tid, reasons);
 }
 
 void
@@ -819,15 +829,10 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
       
       mAck200ToRetransmit->header(h_Vias).push_front(Via());
 
-      // .bwc. Check for flow-token
-      if(!mTopRoute.uri().user().empty())
+      // .bwc. Check for flow-token use
+      if(mTopRouteFlowTupleSet)
       {
-         resip::Tuple dest(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
-         if(!(dest==resip::Tuple()))
-         {
-            // valid flow token
-            mAck200ToRetransmit->setDestination(dest);
-         }
+         mAck200ToRetransmit->setDestination(mTopRouteFlowTuple);
       }
    }
 
@@ -890,13 +895,13 @@ RequestContext::updateTimerC()
    InfoLog(<<"Updating timer C.");
    mTCSerial++;
    TimerCMessage* tc = new TimerCMessage(this->getTransactionId(),mTCSerial);
-   mProxy.postTimerC(std::auto_ptr<TimerCMessage>(tc));
+   mProxy.postTimerC(std::unique_ptr<TimerCMessage>(tc));
 }
 
 void
-RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds)
+RequestContext::postTimedMessage(std::unique_ptr<resip::ApplicationMessage> msg,int seconds)
 {
-   mProxy.postMS(msg,seconds);
+   mProxy.postMS(std::move(msg), seconds);
 }
 
 void
@@ -910,7 +915,7 @@ RequestContext::postAck200Done()
    // non-ACK transaction with the same tid during this time, and make
    // sure we don't explode violently when this happens.)
    mProxy.postMS(
-      std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+      std::unique_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
       64*resip::Timer::T1);
 }
 
@@ -964,7 +969,7 @@ RequestContext::sendResponse(SipMessage& msg)
                         " Via before modification (in orig request): " <<
                         mOriginalRequest->header(h_Vias).front());
          // .bwc. Compensate for malicous/broken UAS fiddling with Via stack.
-         msg.header(h_Vias).front()=mOriginalRequest->header(h_Vias).front();
+         msg.header(h_Vias).front() = mOriginalRequest->header(h_Vias).front();
       }
 
       DebugLog(<<"Ensuring orig tid matches tid of response: " <<
@@ -1045,6 +1050,17 @@ RequestContext::removeTopRouteIfSelf()
             // should we reject?
          }
       }
+
+      // Extract Flow Token from mTopRoute - if present
+      if (!mTopRoute.uri().user().empty())
+      {
+          resip::Tuple flowTuple(Tuple::makeTupleFromBinaryToken(mTopRoute.uri().user().base64decode(), Proxy::FlowTokenSalt));
+          if (!(flowTuple == Tuple()))
+          {
+             mTopRouteFlowTuple = flowTuple;
+             mTopRouteFlowTupleSet = true;
+          }
+      }
    }
 }
 
@@ -1064,6 +1080,18 @@ NameAddr&
 RequestContext::getTopRoute()
 {
    return mTopRoute;
+}
+
+bool
+RequestContext::isTopRouteFlowTupleSet()
+{
+    return mTopRouteFlowTupleSet;
+}
+
+Tuple&
+RequestContext::getTopRouteFlowTuple()
+{
+   return mTopRouteFlowTuple;
 }
 
 const resip::Data&

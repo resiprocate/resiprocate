@@ -2,7 +2,7 @@
 // detail/win_iocp_null_buffers_op.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2019 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,12 +19,12 @@
 
 #if defined(ASIO_HAS_IOCP)
 
-#include "asio/detail/addressof.hpp"
 #include "asio/detail/bind_handler.hpp"
 #include "asio/detail/buffer_sequence_adapter.hpp"
 #include "asio/detail/fenced_block.hpp"
 #include "asio/detail/handler_alloc_helpers.hpp"
 #include "asio/detail/handler_invoke_helpers.hpp"
+#include "asio/detail/memory.hpp"
 #include "asio/detail/reactor_op.hpp"
 #include "asio/detail/socket_ops.hpp"
 #include "asio/error.hpp"
@@ -34,27 +34,29 @@
 namespace asio {
 namespace detail {
 
-template <typename Handler>
+template <typename Handler, typename IoExecutor>
 class win_iocp_null_buffers_op : public reactor_op
 {
 public:
   ASIO_DEFINE_HANDLER_PTR(win_iocp_null_buffers_op);
 
   win_iocp_null_buffers_op(socket_ops::weak_cancel_token_type cancel_token,
-      Handler& handler)
+      Handler& handler, const IoExecutor& io_ex)
     : reactor_op(&win_iocp_null_buffers_op::do_perform,
         &win_iocp_null_buffers_op::do_complete),
       cancel_token_(cancel_token),
-      handler_(ASIO_MOVE_CAST(Handler)(handler))
+      handler_(ASIO_MOVE_CAST(Handler)(handler)),
+      io_executor_(io_ex)
   {
+    handler_work<Handler, IoExecutor>::start(handler_, io_executor_);
   }
 
-  static bool do_perform(reactor_op*)
+  static status do_perform(reactor_op*)
   {
-    return true;
+    return done;
   }
 
-  static void do_complete(io_service_impl* owner, operation* base,
+  static void do_complete(void* owner, operation* base,
       const asio::error_code& result_ec,
       std::size_t bytes_transferred)
   {
@@ -63,8 +65,9 @@ public:
     // Take ownership of the operation object.
     win_iocp_null_buffers_op* o(static_cast<win_iocp_null_buffers_op*>(base));
     ptr p = { asio::detail::addressof(o->handler_), o, o };
+    handler_work<Handler, IoExecutor> w(o->handler_, o->io_executor_);
 
-    ASIO_HANDLER_COMPLETION((o));
+    ASIO_HANDLER_COMPLETION((*o));
 
     // The reactor may have stored a result in the operation object.
     if (o->ec_)
@@ -99,7 +102,7 @@ public:
     {
       fenced_block b(fenced_block::half);
       ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_, handler.arg2_));
-      asio_handler_invoke_helpers::invoke(handler, handler.handler_);
+      w.complete(handler, handler.handler_);
       ASIO_HANDLER_INVOCATION_END;
     }
   }
@@ -107,6 +110,7 @@ public:
 private:
   socket_ops::weak_cancel_token_type cancel_token_;
   Handler handler_;
+  IoExecutor io_executor_;
 };
 
 } // namespace detail

@@ -16,7 +16,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/UserInfoMessage.hxx"
 #include "repro/UserStore.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -90,7 +90,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
          sipMessage->header(h_From).isAllContacts() )
       {
          InfoLog(<<"Malformed From header: cannot get realm to challenge with. Rejecting.");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
          return SkipAllChains;         
       }
@@ -156,7 +156,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       {
          case Helper::Failed:
             InfoLog (<< "Authentication failed for " << user << " at realm " << realm << ". Sending 403");
-            rc.sendResponse(*auto_ptr<SipMessage>
+            rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed")));
             return SkipAllChains;
         
@@ -173,7 +173,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
             {
                InfoLog(<<"From header is malformed in"
                               " digest response.");
-               rc.sendResponse(*auto_ptr<SipMessage>
+               rc.sendResponse(*unique_ptr<SipMessage>
                                (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
                return SkipAllChains;               
             }
@@ -279,7 +279,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                // !rwm! The user is trying to forge a request.  Respond with a 403
                InfoLog (<< "User: " << user << " at realm: " << realm << 
                            " trying to forge request from: " << sipMessage->header(h_From).uri());
-               rc.sendResponse(*auto_ptr<SipMessage>
+               rc.sendResponse(*unique_ptr<SipMessage>
                                (Helper::makeResponse(*sipMessage, 403)));
                return SkipAllChains;               
             }
@@ -295,7 +295,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
             InfoLog (<< "Authentication nonce badly formed for " << user);
             if(mRejectBadNonces)
             {
-               rc.sendResponse(*auto_ptr<SipMessage>
+               rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Where on earth did you get that nonce?")));
             }
             else
@@ -411,7 +411,7 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
 Processor::processor_action_t
 DigestAuthenticator::requestUserAuthInfo(RequestContext &rc, const Auth& auth, UserInfoMessage *userInfo)
 {
-   std::auto_ptr<ApplicationMessage> app(userInfo);
+   std::unique_ptr<ApplicationMessage> app(userInfo);
    mAuthRequestDispatcher->post(app);
    return WaitingForEvent;
 }

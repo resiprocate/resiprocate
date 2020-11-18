@@ -20,6 +20,9 @@
 
 #include "repro/AbstractDb.hxx"
 #include "repro/MySqlDb.hxx"
+#include "repro/UserStore.hxx"
+
+#include "repro/TlsPeerIdentityStore.hxx"
 
 
 using namespace resip;
@@ -64,12 +67,14 @@ class MySQLInitializer
 };
 static MySQLInitializer g_MySQLInitializer;
 
-MySqlDb::MySqlDb(const Data& server, 
+MySqlDb::MySqlDb(const resip::ConfigParse& config,
+                 const Data& server,
                  const Data& user, 
                  const Data& password, 
                  const Data& databaseName, 
                  unsigned int port, 
                  const Data& customUserAuthQuery) :
+   SqlDb(config),
    mDBServer(server),
    mDBUser(user),
    mDBPassword(password),
@@ -248,6 +253,7 @@ MySqlDb::query(const Data& queryCommand) const
 int
 MySqlDb::singleResultQuery(const Data& queryCommand, std::vector<Data>& fields) const
 {
+   StackLog(<<"executing query: " << queryCommand);
    MYSQL_RES* result=0;
    int rc = query(queryCommand, &result);
       
@@ -296,7 +302,7 @@ MySqlDb::addUser(const AbstractDb::Key& key, const AbstractDb::UserRecord& rec)
    Data command;
    {
       DataStream ds(command);
-      ds << "INSERT INTO users (user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
+      ds << "INSERT INTO " << tableName(UserTable) << " (user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress)"
          << " VALUES('" 
          << rec.user << "', '"
          << rec.domain << "', '"
@@ -329,7 +335,7 @@ MySqlDb::getUser( const AbstractDb::Key& key ) const
    Data command;
    {
       DataStream ds(command);
-      ds << "SELECT user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM users ";
+      ds << "SELECT user, domain, realm, passwordHash, passwordHashAlt, name, email, forwardAddress FROM " << tableName(UserTable) << " ";
       userWhereClauseToDataStream(key, ds);
    }
    
@@ -375,8 +381,8 @@ MySqlDb::getUserAuthInfo(  const AbstractDb::Key& key ) const
       DataStream ds(command);
       Data user;
       Data domain;
-      getUserAndDomainFromKey(key, user, domain);
-      ds << "SELECT passwordHash FROM users WHERE user = '" << user << "' AND domain = '" << domain << "' ";
+      UserStore::getUserAndDomainFromKey(key, user, domain);
+      ds << "SELECT passwordHash FROM " << tableName(UserTable) << " WHERE user = '" << user << "' AND domain = '" << domain << "' ";
    
       // Note: domain is empty when querying for HTTP admin user - for this special user, 
       // we will only check the repro db, by not adding the UNION statement below
@@ -410,7 +416,11 @@ MySqlDb::firstUserKey()
       mResult[UserTable] = 0;
    }
    
-   Data command("SELECT user, domain FROM users");
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT user, domain FROM " << tableName(UserTable);
+   }
 
    if(query(command, &mResult[UserTable]) != 0)
    {
@@ -445,11 +455,121 @@ MySqlDb::nextUserKey()
    Data user(row[0]);
    Data domain(row[1]);
    
-   return user+"@"+domain;
+   return UserStore::buildKey(user, domain);
 }
 
 
 bool 
+MySqlDb::addTlsPeerIdentity(const AbstractDb::Key& key, const AbstractDb::TlsPeerIdentityRecord& rec)
+{
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "INSERT INTO " << tableName(TlsPeerIdentityTable) << " (peerName, tlsPeerIdentity)"
+         << " VALUES('"
+         << rec.peerName << "', '"
+         << rec.authorizedIdentity << "')"
+         << " ON DUPLICATE KEY UPDATE"
+         << " peerName='" << rec.peerName
+         << "', authorizedIdentity ='" << rec.authorizedIdentity
+         << "'";
+   }
+   return query(command, 0) == 0;
+}
+
+
+AbstractDb::TlsPeerIdentityRecord
+MySqlDb::getTlsPeerIdentity( const AbstractDb::Key& key ) const
+{
+   AbstractDb::TlsPeerIdentityRecord  ret;
+
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable) << " ";
+      tlsPeerIdentityWhereClauseToDataStream(key, ds);
+   }
+
+   MYSQL_RES* result=0;
+   if(query(command, &result) != 0)
+   {
+      return ret;
+   }
+
+   if (result==0)
+   {
+      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      return ret;
+   }
+
+   MYSQL_ROW row = mysql_fetch_row(result);
+   if (row)
+   {
+      int col = 0;
+      ret.peerName        = Data(row[col++]);
+      ret.authorizedIdentity = Data(row[col++]);
+   }
+
+   mysql_free_result(result);
+
+   return ret;
+}
+
+
+AbstractDb::Key
+MySqlDb::firstTlsPeerIdentityKey()
+{
+   // free memory from previous search
+   if (mResult[TlsPeerIdentityTable])
+   {
+      mysql_free_result(mResult[TlsPeerIdentityTable]);
+      mResult[TlsPeerIdentityTable] = 0;
+   }
+ 
+   Data command;
+   {
+      DataStream ds(command);
+      ds << "SELECT peerName, authorizedIdentity FROM " << tableName(TlsPeerIdentityTable);
+   }
+
+   if(query(command, &mResult[TlsPeerIdentityTable]) != 0)
+   {
+      return Data::Empty;
+   }
+
+   if(mResult[TlsPeerIdentityTable] == 0)
+   {
+      ErrLog( << "MySQL store result failed: error=" << mysql_errno(mConn) << ": " << mysql_error(mConn));
+      return Data::Empty;
+   }
+
+   return nextTlsPeerIdentityKey();
+}
+
+
+AbstractDb::Key
+MySqlDb::nextTlsPeerIdentityKey()
+{
+   if(mResult[TlsPeerIdentityTable] == 0)
+   {
+      return Data::Empty;
+   }
+ 
+   MYSQL_ROW row = mysql_fetch_row(mResult[TlsPeerIdentityTable]);
+   if (!row)
+   {
+      mysql_free_result(mResult[TlsPeerIdentityTable]);
+      mResult[TlsPeerIdentityTable] = 0;
+      return Data::Empty;
+   }
+   Data peerName(row[0]);
+   Data authorizedIdentity(row[1]);
+ 
+   return TlsPeerIdentityStore::buildKey(peerName, authorizedIdentity);
+}
+
+
+bool
 MySqlDb::dbWriteRecord(const Table table, 
                        const resip::Data& pKey, 
                        const resip::Data& pData)
@@ -652,10 +772,21 @@ MySqlDb::userWhereClauseToDataStream(const Key& key, DataStream& ds) const
 {
    Data user;
    Data domain;
-   getUserAndDomainFromKey(key, user, domain);
+   UserStore::getUserAndDomainFromKey(key, user, domain);
    ds << " WHERE user='" << user
       << "' AND domain='" << domain
       << "'";      
+}
+
+void
+MySqlDb::tlsPeerIdentityWhereClauseToDataStream(const Key& key, DataStream& ds) const
+{
+   Data peerName;
+   Data authorizedIdentity;
+   TlsPeerIdentityStore::getTlsPeerIdentityFromKey(key, peerName, authorizedIdentity);
+   ds << " WHERE peerName='" << peerName
+      << "' AND authorizedIdentity='" << authorizedIdentity
+      << "'";
 }
    
 #endif // USE_MYSQL

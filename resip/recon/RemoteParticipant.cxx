@@ -31,6 +31,8 @@
 
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
+
 using namespace recon;
 using namespace sdpcontainer;
 using namespace resip;
@@ -123,23 +125,23 @@ RemoteParticipant::getLocalRTPPort()
 void 
 RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 {
-   SharedPtr<UserProfile> profile;
-   initiateRemoteCall(destination, profile, std::multimap<resip::Data,resip::Data>());
+   initiateRemoteCall(destination, nullptr, std::multimap<resip::Data,resip::Data>());
 }
 
 void
-RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    SdpContents offer;
-   SharedPtr<UserProfile> profile = callingProfile;
-   if(!profile)
+   auto profile = callingProfile;
+   if (!profile)
    {
+      DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling getDefaultOutgoingConversationProfile");
       profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
    }
    buildSdpOffer(mLocalHold, offer);
-   SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
+   auto invitemsg = mDum.makeInviteSession(
       destination, 
-      profile,
+      std::move(profile),
       &offer, 
       &mDialogSet);
 
@@ -163,7 +165,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, SharedPtr<Use
       }
    }
 
-   mDialogSet.sendInvite(invitemsg);
+   mDialogSet.sendInvite(std::move(invitemsg));
 
    // Clear any pending hold/unhold requests since our offer/answer here will handle it
    if(mPendingRequest.mType == Hold ||
@@ -259,9 +261,15 @@ RemoteParticipant::checkHoldCondition()
          break;
       }
    }
-   if(mLocalHold != shouldHold)
+   setLocalHold(shouldHold);
+}
+
+void
+RemoteParticipant::setLocalHold(bool _hold)
+{
+   if(mLocalHold != _hold)
    {
-      if(shouldHold)
+      if(_hold)
       {
          hold();
       }
@@ -354,9 +362,9 @@ RemoteParticipant::accept()
             {
                provideOffer(true /* postOfferAccept */);
             }
-            else if(mPendingOffer.get() != 0)
+            else if(mPendingOffer)
             {
-               provideAnswer(*mPendingOffer.get(), true /* postAnswerAccept */, false /* postAnswerAlert */);
+               provideAnswer(*mPendingOffer, true /* postAnswerAccept */, false /* postAnswerAlert */);
             }
             else  
             {
@@ -399,7 +407,7 @@ RemoteParticipant::alert(bool earlyFlag)
          ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
          if(sis && !sis->isAccepted())
          {
-            if(earlyFlag && mPendingOffer.get() != 0)
+            if(earlyFlag && mPendingOffer)
             {
                if(getLocalRTPPort() == 0)
                {
@@ -408,7 +416,7 @@ RemoteParticipant::alert(bool earlyFlag)
                   return;
                }
 
-               provideAnswer(*mPendingOffer.get(), false /* postAnswerAccept */, true /* postAnswerAlert */);
+               provideAnswer(*mPendingOffer, false /* postAnswerAccept */, true /* postAnswerAlert */);
                mPendingOffer.release();               
             }
             else
@@ -670,6 +678,17 @@ RemoteParticipant::unhold()
    }
 }
 
+void
+RemoteParticipant::setRemoteHold(bool remoteHold)
+{
+   bool stateChanged = (remoteHold != mRemoteHold);
+   mRemoteHold = remoteHold;
+   if(stateChanged)
+   {
+      mConversationManager.onParticipantRequestedHold(mHandle, mRemoteHold);
+   }
+}
+
 void 
 RemoteParticipant::setPendingOODReferInfo(ServerOutOfDialogReqHandle ood, const SipMessage& referMsg)
 {
@@ -691,7 +710,7 @@ RemoteParticipant::acceptPendingOODRefer()
 {
    if(mState == PendingOODRefer)
    {
-      SharedPtr<UserProfile> profile;
+      std::shared_ptr<UserProfile> profile;
       bool accepted = false;
       if(mPendingOODReferNoSubHandle.isValid())
       {
@@ -712,14 +731,14 @@ RemoteParticipant::acceptPendingOODRefer()
          buildSdpOffer(mLocalHold, offer);
 
          // Build the Invite
-         SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg, 
+         auto invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg, 
                                                                            profile,
                                                                            mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
                                                                            &offer, 
                                                                            DialogUsageManager::None,  //EncryptionLevel 
                                                                            0,     //Aleternative Contents
                                                                            &mDialogSet);
-         mDialogSet.sendInvite(invitemsg); 
+         mDialogSet.sendInvite(std::move(invitemsg)); 
 
          adjustRTPStreams(true);
 
@@ -765,18 +784,18 @@ RemoteParticipant::redirectPendingOODRefer(resip::NameAddr& destination)
    {
       if(mPendingOODReferNoSubHandle.isValid())
       {
-         SharedPtr<SipMessage> redirect = mPendingOODReferNoSubHandle->reject(302 /* Moved Temporarily */);
+         auto redirect = mPendingOODReferNoSubHandle->reject(302 /* Moved Temporarily */);
          redirect->header(h_Contacts).clear();
          redirect->header(h_Contacts).push_back(destination);
-         mPendingOODReferNoSubHandle->send(redirect);
+         mPendingOODReferNoSubHandle->send(std::move(redirect));
          mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
       }
       else if(mPendingOODReferSubHandle.isValid())
       {
-         SharedPtr<SipMessage> redirect = mPendingOODReferSubHandle->reject(302 /* Moved Temporarily */);
+         auto redirect = mPendingOODReferSubHandle->reject(302 /* Moved Temporarily */);
          redirect->header(h_Contacts).clear();
          redirect->header(h_Contacts).push_back(destination);
-         mPendingOODReferSubHandle->send(redirect);  
+         mPendingOODReferSubHandle->send(std::move(redirect));  
          mConversationManager.onParticipantTerminated(mHandle, 302 /* Moved Temporarily */);
       }
       else
@@ -825,25 +844,25 @@ RemoteParticipant::processReferNotify(const SipMessage& notify)
 void 
 RemoteParticipant::provideOffer(bool postOfferAccept)
 {
-   std::auto_ptr<SdpContents> offer(new SdpContents);
+   std::unique_ptr<SdpContents> offer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
    
    buildSdpOffer(mLocalHold, *offer);
 
-   mDialogSet.provideOffer(offer, mInviteSessionHandle, postOfferAccept);
+   mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
    mOfferRequired = false;
 }
 
 bool 
 RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert)
 {
-   auto_ptr<SdpContents> answer(new SdpContents);
+   std::unique_ptr<SdpContents> answer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
    bool answerOk = buildSdpAnswer(offer, *answer);
 
    if(answerOk)
    {
-      mDialogSet.provideAnswer(answer, mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
+      mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
    }
    else
    {
@@ -858,9 +877,10 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 {
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
-   std::auto_ptr<SdpContents> _sessionCaps;
+   std::unique_ptr<SdpContents> _sessionCaps;
    if(!profile) // This can happen for UAC calls
    {
+      DebugLog(<<"buildSdpOffer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
       profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
       // if using the default profile, we need a copy of the session caps that we can modify
       _sessionCaps.reset(new SdpContents(profile->sessionCaps()));
@@ -1189,6 +1209,12 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       sdpcontainer::SdpMediaLine::CodecList::const_iterator itCodec = sdpMediaLine.getCodecs().begin();
       for(; itCodec != sdpMediaLine.getCodecs().end(); itCodec++)
       {
+         unsigned int itCodecRate = itCodec->getRate();
+         if(itCodec->getMimeSubtype() == "G722" && itCodecRate != 8000)
+         {
+            WarningLog(<<"Peer is advertising G.722 with rate " << itCodecRate << ", overriding to 8000 (see RFC 3551 s4.5.2)");
+            itCodecRate = 8000;
+         }
          std::list<SdpContents::Session::Codec>::iterator bestCapsCodecMatchIt = mediaSessionCaps.codecs().end();
          bool modeInOffer = itCodec->getFormatParameters().prefix("mode=");
 
@@ -1197,7 +1223,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
               capsCodecsIt != mediaSessionCaps.codecs().end(); capsCodecsIt++)
          {
             if(isEqualNoCase(capsCodecsIt->getName(), itCodec->getMimeSubtype()) &&
-               (unsigned int)capsCodecsIt->getRate() == itCodec->getRate())
+               (unsigned int)capsCodecsIt->getRate() == itCodecRate)
             {
                bool modeInCaps = capsCodecsIt->parameters().prefix("mode=");
                if(!modeInOffer && !modeInCaps)
@@ -1289,6 +1315,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
       ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
       if(!profile)
       {
+         DebugLog(<<"initiateRemoteCall: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
          profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
       }
       answer = profile->sessionCaps();
@@ -1742,11 +1769,11 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 	  if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
 	     remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
 	  {
-		  mRemoteHold = true;
+             setRemoteHold(true);
 	  }
 	  else
 	  {
-		  mRemoteHold = false;
+             setRemoteHold(false);
 	  }
 
       // Check if any conversations are broadcast only - if so, then we need to send media to parties on hold
@@ -2213,7 +2240,7 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
       {
          // Don't set answer now - store offer and set when needed - so that sendHoldSdp() can be calculated at the right instant
          // we need to allow time for app to add to a conversation before alerting(with early flag) or answering
-         mPendingOffer = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(offer.clone()));
+         mPendingOffer = std::unique_ptr<SdpContents>(static_cast<SdpContents*>(offer.clone()));
          return;
       }
    }
@@ -2241,7 +2268,7 @@ RemoteParticipant::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
    InfoLog(<< "onOfferRequired: handle=" << mHandle << ", " << msg.brief());
    // We are being asked to provide SDP to the remote end - we should no longer be considering that
    // remote end wants us to be on hold
-   mRemoteHold = false;
+   setRemoteHold(false);
 
    if(mState == Connecting && !h->isAccepted())  
    {
@@ -2348,8 +2375,11 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       // Figure out hold SDP before removing ourselves from the conversation
       bool holdSdp = mLocalHold;  
 
+      // Choose the appropriate ConversationProfile
+      auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+
       // Create new Participant - but use same participant handle
-      RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
+      RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
 
@@ -2360,8 +2390,8 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       participant->buildSdpOffer(holdSdp, offer);  
 
       // Build the Invite
-      SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), &offer, participantDialogSet);
-      participantDialogSet->sendInvite(NewInviteMsg); 
+      auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
+      participantDialogSet->sendInvite(std::move(NewInviteMsg)); 
 
       // Set RTP stack to listen
       participant->adjustRTPStreams(true);
@@ -2382,8 +2412,11 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    // Figure out hold SDP before removing ourselves from the conversation
    bool holdSdp = mLocalHold;  
 
+   // Choose the appropriate ConversationProfile
+   auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+
    // Create new Participant - but use same participant handle
-   RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
+   RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
 
@@ -2394,8 +2427,8 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    participant->buildSdpOffer(holdSdp, offer);
 
    // Build the Invite
-   SharedPtr<SipMessage> NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, mDialogSet.getUserProfile(), &offer, participantDialogSet);
-   participantDialogSet->sendInvite(NewInviteMsg); 
+   auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, &offer, participantDialogSet);
+   participantDialogSet->sendInvite(std::move(NewInviteMsg)); 
 
    // Set RTP stack to listen
    participant->adjustRTPStreams(true);

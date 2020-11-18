@@ -21,7 +21,7 @@ class TestServerPagerMessage : public TestUsage
       SendingAction<resip::ServerPagerMessageHandle>* accept(int statusCode = 200);
       SendingAction<resip::ServerPagerMessageHandle>* reject(int responseCode);
       CommonAction* end();
-      CommonAction* send(resip::SharedPtr<resip::SipMessage> msg);
+      CommonAction* send(std::shared_ptr<resip::SipMessage> msg);
 
       bool isMyEvent(Event*);
 

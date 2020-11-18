@@ -5,6 +5,8 @@
 #include "ReconSubsystem.hxx"
 #include "ConversationProfile.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -24,12 +26,13 @@ ConversationProfile::ConversationProfile() :
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
+   mForceCOMedia(true),
    mNatTraversalServerPort(0)
 {
 }
 
-ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
-   UserProfile(baseProfile),
+ConversationProfile::ConversationProfile(std::shared_ptr<Profile> baseProfile) :
+   UserProfile(std::move(baseProfile)),
    mHandle(0),
    mAllowAutoAnswer(false),
    mAllowPriorityAutoAnswer(false),
@@ -39,6 +42,7 @@ ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
+   mForceCOMedia(true),
    mNatTraversalServerPort(0)
 {
 }

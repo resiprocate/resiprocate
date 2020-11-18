@@ -14,7 +14,6 @@
 #else
 #include <srtp/srtp.h>
 #endif
-#include <boost/shared_ptr.hpp>
 
 #include "reTurn/client/TurnAsyncUdpSocket.hxx"
 #include "reTurn/client/TurnAsyncTcpSocket.hxx"
@@ -23,6 +22,12 @@
 #include "reTurn/StunMessage.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
+
+#include "FlowContext.hxx"
+#include "RTCPEventLoggingHandler.hxx"
+
+#include <memory>
+#include <utility>
 
 using namespace reTurn;
 
@@ -44,6 +49,9 @@ class Flow : public TurnAsyncSocketHandler
 {
 public:
 
+   static int maxReceiveFifoDuration;
+   static int maxReceiveFifoSize;
+
    enum FlowState
    {
       Unconnected,
@@ -59,7 +67,10 @@ public:
         asio::ssl::context& sslContext,
         unsigned int componentId,
         const StunTuple& localBinding, 
-        MediaStream& mediaStream);
+        MediaStream& mediaStream,
+        bool forceCOMedia,
+        std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = nullptr,
+        std::shared_ptr<FlowContext> context = nullptr);
    ~Flow();
 
    void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
@@ -123,8 +134,18 @@ private:
    // MediaStream that this Flow belongs too
    MediaStream& mMediaStream;
 
+   // Use peer's RTP source IP instead of the peer's SDP connection IP
+   bool mForceCOMedia;
+
+   // Logging handler, if set
+   std::shared_ptr<RTCPEventLoggingHandler> mRtcpEventLoggingHandler;
+
+   // Flow context from application layer
+   std::shared_ptr<FlowContext> mFlowContext;
+
    // mTurnSocket has it's own threading protection
-   boost::shared_ptr<TurnAsyncSocket> mTurnSocket;
+   std::shared_ptr<TurnAsyncSocket> mTurnSocket;
+   bool mPrivatePeer;
 
    // These are only set once, then accessed - thus they do not require mutex protection
    UInt8 mAllocationProps;
@@ -149,13 +170,12 @@ private:
    class ReceivedData
    {
    public:
-      ReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) :
-         mAddress(address), mPort(port), mData(data) {}
-      ~ReceivedData() {}
+      ReceivedData(const asio::ip::address& address, unsigned short port, std::shared_ptr<DataBuffer> data) :
+         mAddress(address), mPort(port), mData(std::move(data)) {}
 
       asio::ip::address mAddress;
       unsigned short mPort;
-      boost::shared_ptr<DataBuffer> mData;
+      std::shared_ptr<DataBuffer> mData;
    };
    // FIFO for received data
    typedef resip::TimeLimitFifo<ReceivedData> ReceivedDataFifo;
@@ -191,7 +211,7 @@ private:
    virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e);
 
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data);
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
    virtual void onSendSuccess(unsigned int socketDesc);

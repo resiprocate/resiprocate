@@ -1,0 +1,57 @@
+
+CC=gcc
+TABLE_PREFIX=reSIProcate
+
+NETSNMPCONFIG=net-snmp-config
+
+
+# uncomment this if you have GNU make
+#NETSNMPCFLAGS := $(shell $(NETSNMPCONFIG) --base-cflags)
+#NETSNMPLIBS := $(shell $(NETSNMPCONFIG) --agent-libs)
+NETSNMPCFLAGS=`$(NETSNMPCONFIG) --base-cflags`
+NETSNMPLIBS=`$(NETSNMPCONFIG) --agent-libs`
+
+LIBS=$(NETSNMPLIBS)
+
+
+STRICT_FLAGS = -Wall -Wstrict-prototypes
+CFLAGS=-I. $(NETSNMPCFLAGS) $(STRICT_FLAGS)
+
+USER_SRCS = \
+	$(TABLE_PREFIX)_data_get.c \
+	$(TABLE_PREFIX)_data_set.c \
+	$(TABLE_PREFIX)_data_access.c
+
+SRCS = $(USER_SRCS) \
+	$(TABLE_PREFIX).c \
+	$(TABLE_PREFIX)_subagent.c \
+	$(TABLE_PREFIX)_interface.c
+
+USER_OBJS =  \
+	$(TABLE_PREFIX)_data_get.o \
+	$(TABLE_PREFIX)_data_set.o \
+	$(TABLE_PREFIX)_data_access.o 
+
+OBJS =  $(USER_OBJS) \
+	$(TABLE_PREFIX).o \
+	$(TABLE_PREFIX)_subagent.o \
+	$(TABLE_PREFIX)_interface.o
+
+TARGETS=$(TABLE_PREFIX)
+
+.SUFFIXES:
+.SUFFIXES: .c .o .deps
+
+
+all: $(TARGETS)
+
+user: $(USER_OBJS)
+
+$(TARGETS): $(LIB_DEPS)
+
+$(TABLE_PREFIX): $(OBJS) $(TABLE_PREFIX)_Makefile
+	$(CC) -o $(TABLE_PREFIX) $(OBJS) $(LIBS)
+
+clean:
+	rm -f $(OBJS) $(TARGETS)
+

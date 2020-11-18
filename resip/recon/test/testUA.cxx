@@ -63,7 +63,7 @@ using namespace std;
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then testUA will automatically answer incoming calls by adding to lowest numbered conversation
-SharedPtr<ConversationProfile> conversationProfile;
+std::shared_ptr<ConversationProfile> conversationProfile;
 
 static void
 signalHandler(int signo)
@@ -75,8 +75,8 @@ signalHandler(int signo)
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
+      UserAgent(conversationManager, std::move(profile)) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -251,6 +251,11 @@ public:
    virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
    {
       InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
+   }
+
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
+   {
+      InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
    void displayInfo()
@@ -1276,13 +1281,13 @@ main (int argc, char** argv)
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Add transports
-   profile->addTransport(UDP, sipPort, V4, address);
-   profile->addTransport(TCP, sipPort, V4, address);
+   profile->addTransport(UDP, sipPort, V4, StunDisabled, address);
+   profile->addTransport(TCP, sipPort, V4, StunDisabled, address);
 #ifdef USE_SSL
-   profile->addTransport(TLS, tlsPort, V4, address, tlsDomain);
+   profile->addTransport(TLS, tlsPort, V4, StunDisabled, address, tlsDomain);
 #endif
 
    // The following settings are used to avoid a kernel panic seen on an ARM embedded platform.
@@ -1415,7 +1420,7 @@ main (int argc, char** argv)
    // Setup ConversationProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   conversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(profile));
+   conversationProfile = std::make_shared<ConversationProfile>(profile);
    if(uri.uri().user() != "noreg" && !registrationDisabled)
    {
       conversationProfile->setDefaultRegistrationTime(3600);

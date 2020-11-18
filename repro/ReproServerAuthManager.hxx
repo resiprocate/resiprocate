@@ -3,11 +3,12 @@
 
 #include <map>
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
-#include "repro/Dispatcher.hxx"
+#include "resip/stack/Dispatcher.hxx"
 
 namespace resip
 {
@@ -23,7 +24,7 @@ class ReproServerAuthManager: public resip::ServerAuthManager
 {
    public:
       ReproServerAuthManager(resip::DialogUsageManager& dum, 
-                             Dispatcher* authRequestDispatcher,
+                             resip::Dispatcher* authRequestDispatcher,
                              AclStore& aclDb,
                              bool useAuthInt,
                              bool rejectBadNonces,
@@ -42,11 +43,11 @@ class ReproServerAuthManager: public resip::ServerAuthManager
       
       virtual bool useAuthInt() const;
       virtual bool rejectBadNonces() const;
-      virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
+      virtual resip::AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
       resip::DialogUsageManager& mDum;
-      Dispatcher* mAuthRequestDispatcher;
+      resip::Dispatcher* mAuthRequestDispatcher;
       AclStore&  mAclDb;
       bool mUseAuthInt;
       bool mRejectBadNonces;

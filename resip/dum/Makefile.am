@@ -1,8 +1,7 @@
 # $Id$
 
 EXTRA_DIST = Doxyfile
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += doc
 
 SUBDIRS = . test
@@ -83,6 +82,7 @@ libdum_la_SOURCES =   \
 	SubscriptionCreator.cxx \
 	SubscriptionState.cxx \
     TlsPeerAuthManager.cxx \
+	TlsPeerIdentityInfoMessage.cxx \
     WsCookieAuthManager.cxx \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
@@ -209,6 +209,7 @@ nobase_duminclude_HEADERS = AppDialog.hxx \
 	SubscriptionState.hxx \
 	TargetCommand.hxx \
         TlsPeerAuthManager.hxx \
+	TlsPeerIdentityInfoMessage.hxx \
         WsCookieAuthManager.hxx \
 	UsageUseException.hxx \
 	UserAuthInfo.hxx \

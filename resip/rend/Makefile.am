@@ -3,8 +3,7 @@
 EXTRA_DIST = readme.txt
 EXTRA_DIST += design-notes.txt
 EXTRA_DIST += flownotes.txt
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj
 
 SUBDIRS = . 
 

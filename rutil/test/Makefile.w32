@@ -20,7 +20,6 @@ all: \
 	testMD5Stream.obj testMD5Stream.exe \
 	testRandomHex.obj testRandomHex.exe \
 	testSHA1Stream.obj testSHA1Stream.exe \
-	testSharedPtr.obj testSharedPtr.exe \
 	testThreadIf.obj testThreadIf.exe \
 	testXMLCursor.obj testXMLCursor.exe \
 	run
@@ -48,7 +47,6 @@ run:
 	testMD5Stream.exe
 	testRandomHex.exe
 	testSHA1Stream.exe
-	testSharedPtr.exe
 	testThreadIf.exe
 	testXMLCursor.exe
 

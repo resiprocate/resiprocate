@@ -15,6 +15,8 @@
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -68,7 +70,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, mFirstRequest, code);
          response->header(h_Contacts) = contacts;
          send(response);
@@ -110,7 +112,7 @@ public:
 
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mServerInviteSessionHandle.isValid())
       {
@@ -118,7 +120,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ServerInviteSessionRedirectCommand";
    }
@@ -203,7 +205,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          break;
 
       case UAS_OfferReliableProvidedAnswer: 
-         if(mUnacknowledgedReliableProvisional.get())  // First 18x may not have containted answer and still be outstanding
+         if(mUnacknowledgedReliableProvisional.get())  // First 18x may not have contained answer and still be outstanding
          {
             InfoLog (<< "Waiting for PRACK. queued provisional, code=" << code << ", early=" << (earlyFlag ? "YES" : "NO") );
             queueResponse(code, earlyFlag);
@@ -240,7 +242,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mServerInviteSessionHandle.isValid())
       {
@@ -248,7 +250,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ServerInviteSessionProvisionalCommand";
    }
@@ -399,25 +401,25 @@ ServerInviteSession::provideAnswer(const Contents& answer)
    {
       case UAS_Offer:
          transition(UAS_OfferProvidedAnswer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
       case UAS_EarlyOffer:
          transition(UAS_EarlyProvidedAnswer);
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
          
       case UAS_OfferReliable: 
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          transition(UAS_OfferReliableProvidedAnswer);
          break;
 
       case UAS_NoAnswerReliableWaitingPrack: 
          // Store answer and wait for PRACK
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          break;
 
@@ -426,27 +428,27 @@ ServerInviteSession::provideAnswer(const Contents& answer)
             transition(UAS_NegotiatedReliable);
 
             // Send answer in 200/Update
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
             InviteSession::setOfferAnswer(*response, answer, 0);
             mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+            mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-            send(response);
+            send(std::move(response));
          }
          break;
          
       case UAS_ReceivedUpdateWaitingAnswer:
          {
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
             InviteSession::setOfferAnswer(*response, answer, 0);
             mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+            mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             InfoLog (<< "Sending " << response->brief());
             DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
-            send(response);
+            send(std::move(response));
 
             // send the queued 200/Invite
             updateCheckQueue();
@@ -454,7 +456,7 @@ ServerInviteSession::provideAnswer(const Contents& answer)
          break;
 
       case UAS_NoAnswerReliable:
-         mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+         mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
          transition(UAS_OfferReliableProvidedAnswer);
          break;
@@ -462,16 +464,16 @@ ServerInviteSession::provideAnswer(const Contents& answer)
       // If we received an offer in a PRACK then we transition to NegotiateReliable and expect
       // provideAnswer to be called to send the 200/Prack containing the answer.
       case UAS_NegotiatedReliable:
-         if(mPrackWithOffer.get())
+         if (mPrackWithOffer)
          {
-            mCurrentRemoteOfferAnswer = mProposedRemoteOfferAnswer;
+            mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
             mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
-            SharedPtr<SipMessage> p200(new SipMessage);
+            auto p200 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*p200, *mPrackWithOffer, 200);
             setOfferAnswer(*p200, mCurrentLocalOfferAnswer.get());
             mAnswerSentReliably = true;
             mPrackWithOffer.reset();
-            send(p200);
+            send(std::move(p200));
          }
          else
          {
@@ -573,7 +575,7 @@ ServerInviteSession::end(EndReason reason)
          else
          {
              // ACK has likely timed out - hangup immediately
-             SharedPtr<SipMessage> msg = sendBye();
+             const auto msg = sendBye();
              transition(Terminated);
              mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          }
@@ -624,13 +626,18 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, mFirstRequest, code);
          if(warning)
          {
             response->header(h_Warnings).push_back(*warning);
          }
          send(response);
+
+         if (mDum.mDialogEventStateManager)
+         {
+            mDum.mDialogEventStateManager->onTerminated(mDialog, *response, InviteSessionHandler::Rejected);
+         }
 
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Rejected); 
@@ -699,7 +706,7 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_NegotiatedReliable:
-         if(mUnacknowledgedReliableProvisional.get())
+         if (mUnacknowledgedReliableProvisional)
          {
             InfoLog (<< "Waiting for PRACK. queued provisional" );
             queueResponse(code, false);
@@ -750,7 +757,7 @@ public:
    {
    }
 
-   virtual void executeCommand()
+   void executeCommand() override
    {
       if(mServerInviteSessionHandle.isValid())
       {
@@ -758,7 +765,7 @@ public:
       }
    }
 
-   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
+   EncodeStream& encodeBrief(EncodeStream& strm) const override
    {
       return strm << "ServerInviteSessionAcceptCommand";
    }
@@ -900,9 +907,9 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
          if(duration>=64*Timer::T1)
          {
             InfoLog (<< "Reliable provisional timeout" );
-            SharedPtr<SipMessage> i504(new SipMessage);
+            auto i504 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*i504, mFirstRequest, 504);
-            send(i504);
+            send(std::move(i504));
  
             transition(Terminated);
  
@@ -951,7 +958,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    resip_assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
    storePeerCapabilities(msg);
 
    if (mDum.mDialogEventStateManager)
@@ -1007,11 +1014,13 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    }
 }
 
-// Offer, Early, EarlyNoOffer, NoOffer
+// UAS_Offer, UAS_EarlyOffer, UAS_EarlyProvidedAnswer, UAS_NoOffer, UAS_ProvidedOffer,
+// UAS_ProvidedOfferReliable, UAS_EarlyNoOffer, UAS_EarlyProvidedOffer, UAS_OfferProvidedAnswer,
+// UAS_NoOfferReliable, UAS_OfferReliable, UAS_NoAnswerReliable
 void
 ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
    switch (toEvent(msg, offerAnswer.get()))
    {
       case OnCancel:
@@ -1020,6 +1029,15 @@ ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
       case OnBye:
          dispatchBye(msg);
          break;
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          auto response = std::make_shared<SipMessage>();
+          mDialog.makeResponse(*response, msg, 200);
+          send(std::move(response));
+          break;
+      }
       default:
          if(msg.isRequest())
          {
@@ -1033,7 +1051,7 @@ void
 ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   std::unique_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchAccepted: " << msg.brief());
    
    switch (toEvent(msg, offerAnswer.get()))
@@ -1045,9 +1063,9 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
@@ -1061,17 +1079,17 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       case OnCancel:
       {
          // Cancel and 200 crossed
-         SharedPtr<SipMessage> c200(new SipMessage);
+         auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(c200);
+         send(std::move(c200));
          break;
       }
 
       case OnBye:
       {
-         SharedPtr<SipMessage> b200(new SipMessage);
+         auto b200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*b200, msg, 200);
-         send(b200);
+         send(std::move(b200));
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
@@ -1083,9 +1101,9 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          // should never get a prack here - we always queue up our 200/Inv response
          InfoLog (<< "spurious PRACK in state=" << toData(mState));
-         SharedPtr<SipMessage> p481(new SipMessage);
+         auto p481 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*p481, msg, 481);
-         send(p481);
+         send(std::move(p481));
          break;
       }
       
@@ -1102,7 +1120,7 @@ void
 ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchWaitingToOffer: " << msg.brief());
    
    switch (toEvent(msg, offerAnswer.get()))
@@ -1114,9 +1132,9 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
@@ -1136,17 +1154,17 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       case OnCancel:
       {
          // Cancel and 200 crossed
-         SharedPtr<SipMessage> c200(new SipMessage);
+         auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(c200);
+         send(std::move(c200));
          break;
       }
 
       case OnBye:
       {
-         SharedPtr<SipMessage> b200(new SipMessage);
+         auto b200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*b200, msg, 200);
-         send(b200);
+         send(std::move(b200));
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
@@ -1167,7 +1185,7 @@ void
 ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
    InfoLog (<< "dispatchWaitingToRequestOffer: " << msg.brief());
    
    switch (toEvent(msg, offerAnswer.get()))
@@ -1179,9 +1197,9 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
@@ -1200,17 +1218,17 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
       case OnCancel:
       {
          // Cancel and 200 crossed
-         SharedPtr<SipMessage> c200(new SipMessage);
+         auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(c200);
+         send(std::move(c200));
          break;
       }
 
       case OnBye:
       {
-         SharedPtr<SipMessage> b200(new SipMessage);
+         auto b200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*b200, msg, 200);
-         send(b200);
+         send(std::move(b200));
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
@@ -1231,7 +1249,7 @@ void
 ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1242,9 +1260,9 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
@@ -1272,9 +1290,9 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       case OnCancel:
       {
          // no transition
-         SharedPtr<SipMessage> c200(new SipMessage);
+         auto c200 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*c200, msg, 200);
-         send(c200);
+         send(std::move(c200));
          break;
       }
 
@@ -1282,9 +1300,9 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       {
          // should never get a prack here - we always queue up our 200/Inv response
          InfoLog (<< "spurious PRACK in state=" << toData(mState));
-         SharedPtr<SipMessage> p481(new SipMessage);
+         auto p481 = std::make_shared<SipMessage>();
          mDialog.makeResponse(*p481, msg, 481);
-         send(p481);
+         send(std::move(p481));
          break;
       }
 
@@ -1301,7 +1319,7 @@ void
 ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1313,15 +1331,25 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
           dispatchBye(msg);
           break;
 
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          auto response = std::make_shared<SipMessage>();
+          mDialog.makeResponse(*response, msg, 200);
+          send(std::move(response));
+          break;
+      }
+
       case OnPrack:
          if(handlePrack(msg))
          {
-            if(offerAnswer.get())  // Answer
+            if (offerAnswer)  // Answer
             {
                transition(UAS_NegotiatedReliable);
-               SharedPtr<SipMessage> p200(new SipMessage);
+               auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(p200);
+               send(std::move(p200));
 
                setCurrentLocalOfferAnswer(msg);
                mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
@@ -1336,14 +1364,14 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
                handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
 
                // 406 the Prack
-               SharedPtr<SipMessage> p406(new SipMessage);
+               auto p406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p406, msg, 406);
-               send(p406);
+               send(std::move(p406));
 
                // 406 the Invite
-               SharedPtr<SipMessage> i406(new SipMessage);
+               auto i406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*i406, mFirstRequest, 406);
-               send(i406);
+               send(std::move(i406));
 
                mDum.destroy(this);
             }
@@ -1376,9 +1404,9 @@ ServerInviteSession::handlePrack(const SipMessage& msg)
    }
 
    InfoLog (<< "spurious PRACK in state=" << toData(mState));
-   SharedPtr<SipMessage> p481(new SipMessage);
+   auto p481 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*p481, msg, 481);
-   send(p481);
+   send(std::move(p481));
    return false;
 }
 
@@ -1386,13 +1414,13 @@ void
 ServerInviteSession::prackCheckQueue()
 {
    InfoLog (<< "prackCheckQueue: " << mQueuedResponses.size() );
-   if(mQueuedResponses.size() > 0 && mQueuedResponses.front().first < 200)
+   if (!mQueuedResponses.empty() && mQueuedResponses.front().first < 200)
    {
       InfoLog (<< "Sending queued provisional" );
       sendProvisional(mQueuedResponses.front().first, mQueuedResponses.front().second);
       mQueuedResponses.pop_front();
    }
-   else if(mQueuedResponses.size() > 0 && mQueuedResponses.front().first < 300)
+   else if (!mQueuedResponses.empty() && mQueuedResponses.front().first < 300)
    {
       InfoLog (<< "Sending queued 200 OK" );
       InviteSessionHandler* handler = mDum.mInviteSessionHandler;
@@ -1413,9 +1441,9 @@ ServerInviteSession::updateCheckQueue()
 {
    // TODO  - should we be skipping over or ignoring any provisionals in the queue?
    InfoLog (<< "updateCheckQueue: " << mQueuedResponses.size() );
-   if(mQueuedResponses.size() > 0  && 
-      mQueuedResponses.front().first >= 200 &&
-      mQueuedResponses.front().first < 300)
+   if (!mQueuedResponses.empty() && 
+       mQueuedResponses.front().first >= 200 &&
+       mQueuedResponses.front().first < 300)
    {
       InfoLog (<< "Sending queued 200 OK" );
       InviteSessionHandler* handler = mDum.mInviteSessionHandler;
@@ -1430,7 +1458,7 @@ void
 ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1442,10 +1470,20 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
          dispatchBye(msg);
          break;
 
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          auto response = std::make_shared<SipMessage>();
+          mDialog.makeResponse(*response, msg, 200);
+          send(std::move(response));
+          break;
+      }
+
       case OnPrack:
          if(handlePrack(msg))
          {
-            if(offerAnswer.get())
+            if (offerAnswer)
             {
                // 2nd offer, we haven't answered the first one - log error an proceed by igoring body
                ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
@@ -1455,28 +1493,28 @@ ServerInviteSession::dispatchOfferReliableProvidedAnswer(const SipMessage& msg)
                handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
 
                // 406 the Prack
-               SharedPtr<SipMessage> p406(new SipMessage);
+               auto p406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p406, msg, 406);
-               send(p406);
+               send(std::move(p406));
 
                // 406 the Invite
-               SharedPtr<SipMessage> i406(new SipMessage);
+               auto i406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*i406, mFirstRequest, 406);
-               send(i406);
+               send(std::move(i406));
 
                mDum.destroy(this);
             }
             else
             {
                // Send 200/PRACK
-               SharedPtr<SipMessage> p200(new SipMessage);
+               auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(p200);
+               send(std::move(p200));
 
                // If we have a provisional to send with answer then transition to UAS_FirstSentAnswerReliable
-               if(mQueuedResponses.size() > 0 && 
-                  mQueuedResponses.front().first < 200 &&
-                  mQueuedResponses.front().second)  // Early flag is on
+               if (!mQueuedResponses.empty() && 
+                   mQueuedResponses.front().first < 200 &&
+                   mQueuedResponses.front().second)  // Early flag is on
                {
                   transition(UAS_FirstSentAnswerReliable);
                }
@@ -1499,7 +1537,7 @@ void
 ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1511,21 +1549,31 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
          dispatchBye(msg);
          break;
 
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          auto response = std::make_shared<SipMessage>();
+          mDialog.makeResponse(*response, msg, 200);
+          send(std::move(response));
+          break;
+      }
+
       case OnPrack:
          if(handlePrack(msg))
          {
-            if(offerAnswer.get())  // New offer
+            if (offerAnswer)  // New offer
             {
                // If we have an offer in the prack and the dum user also tried to provide a new offer, then
                // reject the dum api offer and pass the one from the wire to the application
-               if(mProposedLocalOfferAnswer.get())
+               if (mProposedLocalOfferAnswer)
                {
                    //!slg! -- should this be onIllegalNegotiation?
                    handler->onOfferRejected(getSessionHandle(), 0); 
                }
                // dispatch offer here and respond with 200OK in provideAnswer
                transition(UAS_NegotiatedReliable);
-               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
+               mPrackWithOffer = std::make_shared<SipMessage>(msg);
                mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
                mCurrentEncryptionLevel = getEncryptionLevel(msg);
                handler->onPrack(getHandle(), msg);
@@ -1536,15 +1584,15 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
             }
             else
             {
-               SharedPtr<SipMessage> p200(new SipMessage);
+               auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(p200);
+               send(std::move(p200));
                // check if we have a queued up offer then sent it - if not check prack queue
-               if(mProposedLocalOfferAnswer.get())
+               if (mProposedLocalOfferAnswer)
                {
                   transition(UAS_SentUpdate);
                   handler->onPrack(getHandle(), msg);
-                  sendUpdate(*mProposedLocalOfferAnswer.get());
+                  sendUpdate(*mProposedLocalOfferAnswer);
                }
                else
                {
@@ -1569,7 +1617,7 @@ void
 ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1581,12 +1629,22 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
           dispatchBye(msg);
           break;
 
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          auto response = std::make_shared<SipMessage>();
+          mDialog.makeResponse(*response, msg, 200);
+          send(std::move(response));
+          break;
+      }
+
       case OnPrack:
          if(handlePrack(msg))
          {
-            if(offerAnswer.get())
+            if (offerAnswer)
             {
-               // 2nd offer, we haven't answered the first one - log error an proceed by igoring body
+               // 2nd offer, we haven't answered the first one - log error an proceed by ignoring body
                ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
 
                mEndReason = IllegalNegotiation;
@@ -1594,23 +1652,23 @@ ServerInviteSession::dispatchNoAnswerReliableWaitingPrack(const SipMessage& msg)
                handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
 
                // 406 the Prack
-               SharedPtr<SipMessage> p406(new SipMessage);
+               auto p406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p406, msg, 406);
-               send(p406);
+               send(std::move(p406));
 
                // 406 the Invite
-               SharedPtr<SipMessage> i406(new SipMessage);
+               auto i406 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*i406, mFirstRequest, 406);
-               send(i406);
+               send(std::move(i406));
 
                mDum.destroy(this);
             }
             else
             {
                // Send 200/PRACK
-               SharedPtr<SipMessage> p200(new SipMessage);
+               auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(p200);
+               send(std::move(p200));
 
                transition(UAS_NoAnswerReliable);
                handler->onPrack(getHandle(), msg);
@@ -1632,7 +1690,7 @@ void
 ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1648,15 +1706,15 @@ ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
       case OnUpdateOffer:
       {
          // Glare
-         SharedPtr<SipMessage> response(new SipMessage);
+         auto response = std::make_shared<SipMessage>();
          mDialog.makeResponse(*response, msg, 491);
-         send(response);
+         send(std::move(response));
          break;
       }
 
       case On200Update:
          transition(UAS_NegotiatedReliable);
-         if (offerAnswer.get())
+         if (offerAnswer)
          {
             setCurrentLocalOfferAnswer(msg);
             mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
@@ -1692,7 +1750,7 @@ void
 ServerInviteSession::dispatchSentUpdateGlare(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1724,7 +1782,7 @@ void
 ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1736,9 +1794,19 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
           dispatchBye(msg);
           break;
 
+      case OnUpdate:
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          auto response = std::make_shared<SipMessage>();
+          mDialog.makeResponse(*response, msg, 200);
+          send(std::move(response));
+          break;
+      }
+
       case On200Update:
          transition(UAS_Accepted);
-         if (offerAnswer.get())
+         if (offerAnswer)
          {
             setCurrentLocalOfferAnswer(msg);
             mCurrentRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
@@ -1776,7 +1844,7 @@ ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 void
 ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1793,10 +1861,10 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
          // If we receive an UPDATE before we have generated a final response to a previous UPDATE on the 
          // same dialog, then we MUST return a 500 response with a Retry-After header (random duration 0-10 seconds)
          {
-            SharedPtr<SipMessage> u500(new SipMessage);
+            auto u500 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*u500, msg, 500);
             u500->header(h_RetryAfter).value() = Random::getRandom() % 10;
-            send(u500);
+            send(std::move(u500));
          }
          break;
 
@@ -1812,7 +1880,7 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
 void
 ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1829,9 +1897,9 @@ ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
          // A UAS that receives an UPDATE before it has generated a final response to a previous UPDATE on the 
          // same dialog MUST return a 500 response
          {
-            SharedPtr<SipMessage> u500(new SipMessage);
+            auto u500 = std::make_shared<SipMessage>();
             mDialog.makeResponse(*u500, msg, 500);
-            send(u500);
+            send(std::move(u500));
          }
          break;
 
@@ -1848,7 +1916,7 @@ void
 ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1863,10 +1931,10 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
       case OnPrack:
          if(handlePrack(msg))
          {
-            if(offerAnswer.get())  // New offer
+            if (offerAnswer)  // New offer
             {
                // dispatch offer here and respond with 200OK in provideAnswer
-               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
+               mPrackWithOffer = std::make_shared<SipMessage>(msg);
                mProposedRemoteOfferAnswer = InviteSession::makeOfferAnswer(*offerAnswer);
                mCurrentEncryptionLevel = getEncryptionLevel(msg);
                handler->onPrack(getHandle(), msg);
@@ -1877,9 +1945,9 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
             }
             else
             {
-               SharedPtr<SipMessage> p200(new SipMessage);
+               auto p200 = std::make_shared<SipMessage>();
                mDialog.makeResponse(*p200, msg, 200);
-               send(p200);
+               send(std::move(p200));
                handler->onPrack(getHandle(), msg);
                prackCheckQueue();
             }
@@ -1898,13 +1966,14 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
          break;
          
       case OnUpdate:
-         {
-            // UPDATE with no offer just respond with 200
-            SharedPtr<SipMessage> u200(new SipMessage);
-            mDialog.makeResponse(*u200, msg, 200);
-            send(u200);
-         }
-         break;
+      {
+          // Update with no SDP is a target refresh ?slg? just respond immediately - do we need a callback?
+          // Note: target refresh handling is in Dialog::handleTargetRefresh
+          auto response = std::make_shared<SipMessage>();
+          mDialog.makeResponse(*response, msg, 200);
+          send(std::move(response));
+          break;
+      }
 
       default:
          if(msg.isRequest())
@@ -1918,7 +1987,7 @@ ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
 void
 ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 {
-   std::auto_ptr<Contents> offerAnswer = InviteSession::getOfferAnswer(msg);
+   const auto offerAnswer = InviteSession::getOfferAnswer(msg);
 
    switch (toEvent(msg, offerAnswer.get()))
    {
@@ -1927,7 +1996,7 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         SharedPtr<SipMessage> msg = sendBye();
+         const auto msg = sendBye();
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye, msg.get());
          break;
@@ -1941,13 +2010,13 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 void
 ServerInviteSession::dispatchCancel(const SipMessage& msg)
 {
-   SharedPtr<SipMessage> c200(new SipMessage);
+   auto c200 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*c200, msg, 200);
-   send(c200);
+   send(std::move(c200));
 
-   SharedPtr<SipMessage> i487(new SipMessage);
+   auto i487 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*i487, mFirstRequest, 487);
-   send(i487);
+   send(std::move(i487));
 
    transition(Terminated);
 
@@ -1963,13 +2032,13 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 void
 ServerInviteSession::dispatchBye(const SipMessage& msg)
 {
-   SharedPtr<SipMessage> b200(new SipMessage);
+   auto b200 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*b200, msg, 200);
-   send(b200);
+   send(std::move(b200));
 // !dcm! -- pretty sure we shouldn't 487 after the BYE/200
-   SharedPtr<SipMessage> i487(new SipMessage);
+   auto i487 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*i487, mFirstRequest, 487);
-   send(i487);
+   send(std::move(i487));
 
    transition(Terminated);
 
@@ -1982,13 +2051,13 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 {
    InfoLog (<< "Unknown request (" << msg.brief() << ") received in state=" << toData(mState) << ", rejecting request and terminating call.");
 
-   SharedPtr<SipMessage> r500(new SipMessage);
+   auto r500 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*r500, msg, 500);
-   send(r500);
+   send(std::move(r500));
    
-   SharedPtr<SipMessage> i400(new SipMessage);
+   auto i400 = std::make_shared<SipMessage>();
    mDialog.makeResponse(*i400, mFirstRequest, 400);
-   send(i400);
+   send(std::move(i400));
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
@@ -1998,7 +2067,7 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 void 
 ServerInviteSession::startRetransmit1xxTimer()
 {
-   // RFC3261 13.3.1 says the UAS must send a non-100 provisional response every minute, to handle the possiblity of lost provisional responses
+   // RFC3261 13.3.1 says the UAS must send a non-100 provisional response every minute, to handle the posiblity of lost provisional responses
    int retransmissionTime = mDialog.mDialogSet.getUserProfile()->get1xxRetransmissionTime();
    if(retransmissionTime > 0 && m1xx->header(resip::h_StatusLine).statusCode() > 100)
    {
@@ -2102,7 +2171,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 
       // We are supposed to advertised our Allow header in reliable provisionals - Add Advertised 
       // Capabilities - allows UAC to detect UPDATE support before 200 response
-      mDum.setAdvertisedCapabilities(*m1xx.get(), mDialog.mDialogSet.getUserProfile());
+      mDum.setAdvertisedCapabilities(*m1xx, mDialog.mDialogSet.getUserProfile());
 
       resip_assert(!mUnacknowledgedReliableProvisional.get());
       mUnacknowledgedReliableProvisional = m1xx;
@@ -2144,7 +2213,7 @@ void
 ServerInviteSession::queueResponse(int code, bool earlyFlag)
 {
    InfoLog (<< "Response " << code << " queued." );
-   mQueuedResponses.push_back( std::make_pair(code, earlyFlag) );
+   mQueuedResponses.emplace_back(std::make_pair(code, earlyFlag));
 }
 
 void
@@ -2157,7 +2226,7 @@ ServerInviteSession::sendAccept(int code, Contents* offerAnswer)
       setOfferAnswer(*mInvite200, offerAnswer);
       mAnswerSentReliably = true;
    }
-   mCurrentRetransmit1xxSeq++; // Stop the 1xx timer - causes timer to be ignored on expirey
+   mCurrentRetransmit1xxSeq++; // Stop the 1xx timer - causes timer to be ignored on expiry
    startRetransmit200Timer();  // 2xx timer
    DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
 

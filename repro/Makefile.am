@@ -1,23 +1,27 @@
 # $Id$
 
 EXTRA_DIST = *.html
+EXTRA_DIST += database-migration.dia
+EXTRA_DIST += database-migration.pdf
 EXTRA_DIST += doc
 EXTRA_DIST += pkg
 EXTRA_DIST += Doxyfile
+EXTRA_DIST += migrate_bdb_pgsql.py
+EXTRA_DIST += migrate_mysql_pgsql_legacy.py
+EXTRA_DIST += migrate_sql_v2.py
 EXTRA_DIST += php
 EXTRA_DIST += README_MySQL.txt
 EXTRA_DIST += README_PostgreSQL.txt
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
-EXTRA_DIST += *.vcproj
+EXTRA_DIST += *.vcxproj
 #EXTRA_DIST += *.db
 EXTRA_DIST += VERSION
 EXTRA_DIST += webadmin
-EXTRA_DIST += WinSetup WinSetupx64
 EXTRA_DIST += repro.config
-EXTRA_DIST += repro.config.ws
 EXTRA_DIST += create_mysql_reprodb.sql
 EXTRA_DIST += create_postgresql_reprodb.sql
+EXTRA_DIST += create_postgresql_reprodb_v2.sql
 EXTRA_DIST += genUsers.cxx
+EXTRA_DIST += upgrade_mysql_reprodb.sql
 EXTRA_DIST += users.txt
 
 SUBDIRS = . test reprocmd accountingconsumers
@@ -49,7 +53,9 @@ librepro_la_LIBADD = -ldb_cxx
 librepro_la_LIBADD += ../resip/dum/libdum.la
 librepro_la_LIBADD += ../resip/stack/libresip.la
 librepro_la_LIBADD += ../rutil/librutil.la
+if HAVE_LIBDL
 librepro_la_LIBADD += -ldl
+endif
 
 librepro_la_SOURCES = \
 	RouteStore.cxx \
@@ -91,11 +97,10 @@ librepro_la_SOURCES = \
     ProcessorChain.cxx \
 	SqlDb.cxx \
 	Target.cxx \
+	TlsPeerIdentityStore.cxx \
     UserAuthGrabber.cxx \
-	WorkerThread.cxx \
 	XmlRpcConnection.cxx \
 	XmlRpcServerBase.cxx \
-	Dispatcher.cxx \
 	OutboundTarget.cxx \
 	PersistentMessageQueue.cxx \
 	QValueTarget.cxx \
@@ -136,7 +141,6 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	CommandServer.hxx \
 	CommandServerThread.hxx \
 	ConfigStore.hxx \
-	Dispatcher.hxx \
 	FilterStore.hxx \
 	ForkControlMessage.hxx \
 	HttpBase.hxx \
@@ -200,13 +204,13 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	Store.hxx \
 	Target.hxx \
 	TimerCMessage.hxx \
+	TlsPeerIdentityInfo.hxx \
+	TlsPeerIdentityStore.hxx \
 	UserAuthGrabber.hxx \
 	UserInfoMessage.hxx \
 	UserStore.hxx \
 	WebAdmin.hxx \
 	WebAdminThread.hxx \
-	Worker.hxx \
-	WorkerThread.hxx \
 	XmlRpcConnection.hxx \
 	XmlRpcServerBase.hxx
 
@@ -231,6 +235,12 @@ endif
 
 if USE_MAXMIND_GEOIP
 librepro_la_LIBADD += @LIBGEOIP_LIBADD@
+endif
+
+if BUILD_QPID_PROTON
+librepro_la_SOURCES += QpidProtonThread.cxx
+nobase_reproinclude_HEADERS += QpidProtonThread.hxx
+librepro_la_LIBADD += -lqpid-proton-cpp
 endif
 
 # reproInfo.hxx is created manually be other build systems

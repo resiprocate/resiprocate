@@ -205,7 +205,7 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onSendFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data());
 
@@ -286,17 +286,17 @@ int main(int argc, char* argv[])
 
 #ifdef USE_SSL
     // Setup SSL context
-    asio::ssl::context sslContext(ioService, asio::ssl::context::tlsv1);
+    asio::ssl::context sslContext(asio::ssl::context::tlsv1);
     // Enable certificate validation
     sslContext.set_verify_mode(asio::ssl::context::verify_peer |   // Verify the peer.
                                asio::ssl::context::verify_fail_if_no_peer_cert);  // Fail verification if the peer has no certificate.
     sslContext.load_verify_file("ca.pem");
 #endif
 
-    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncUdpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTcpSocket>(ioService, &handler, asio::ip::address::from_string(address.c_str()), 0);
 #ifdef USE_SSL
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::address::from_string(address.c_str()), 0));
+    //const std::shared_ptr<TurnAsyncSocket> turnSocket = std::make_shared<TurnAsyncTlsSocket>(ioService, sslContext, false /* validateServerCertificateHostname */, &handler, asio::ip::address::from_string(address.c_str()), 0);
 #endif
     //port=5349;
 
@@ -313,7 +313,7 @@ int main(int argc, char* argv[])
     turnPeer.shutdown();
     turnPeer.join();
   }
-  catch (std::exception& e)
+  catch (const std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << "\n";
   }
@@ -325,6 +325,7 @@ int main(int argc, char* argv[])
 /* ====================================================================
 
  Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

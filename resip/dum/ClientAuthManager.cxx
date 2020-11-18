@@ -8,6 +8,8 @@
 #include "rutil/Random.hxx"
 #include "resip/dum/ClientAuthExtension.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -288,8 +290,7 @@ ClientAuthManager::AuthState::addAuthentication(SipMessage& request)
 ClientAuthManager::RealmState::RealmState() :
    mIsProxyCredential(false),
    mState(Invalid),
-   mNonceCount(0),
-   mAuthPtr(NULL)
+   mNonceCount(0)
 {
 }
 
@@ -436,8 +437,8 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
    
    // Add client auth decorator so that we ensure any body hashes are calcuated after user defined outbound decorators that
    // may be modifying the message body
-   std::auto_ptr<MessageDecorator> clientAuthDecorator(new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, authQop, nonceCountString));
-   request.addOutboundDecorator(clientAuthDecorator);
+   std::unique_ptr<MessageDecorator> clientAuthDecorator(new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, authQop, nonceCountString));
+   request.addOutboundDecorator(std::move(clientAuthDecorator));
 }
 
 // bool

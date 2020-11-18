@@ -17,17 +17,16 @@ class InviteSessionCreator : public BaseCreator
    public:
       InviteSessionCreator(DialogUsageManager& dum, 
                            const NameAddr& target,
-                           SharedPtr<UserProfile> userProfile,
+                           std::shared_ptr<UserProfile> userProfile,
                            const Contents* initial, 
                            DialogUsageManager::EncryptionLevel level,
                            const Contents* alternative,
                            ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
 
-	  virtual ~InviteSessionCreator();
       void end();
 
       virtual void dispatch(const SipMessage& msg);
-      const Contents* getInitialOffer();
+      const Contents* getInitialOffer() const;
             
       ServerSubscriptionHandle getServerSubscription() { return mServerSub; }
 

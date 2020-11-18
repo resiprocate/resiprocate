@@ -22,6 +22,8 @@
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Uri.hxx"
 
+#include "testPortOffset.hxx"
+
 using namespace resip;
 using namespace std;
 
@@ -48,10 +50,10 @@ int main()
 {
   Security *sec = new Security();
   SipStack sipStack(sec, DnsStub::EmptyNameserverList, 0, false, &afterSocketCreationFunction);
-  sipStack.addTransport(UDP, 5060, V4, StunDisabled, Data::Empty, "127.0.0.1");
-  sipStack.addTransport(TCP, 5062, V4, StunDisabled, Data::Empty, "127.0.0.1");
-  //sipStack.addTransport(TLS, 5061, V4, StunDisabled, Data::Empty, "127.0.0.1");
-  //sipStack.addTransport(WSS, 8443, V4, StunDisabled, Data::Empty, "127.0.0.1");
+  sipStack.addTransport(UDP, resipTestPort(5060), V4, StunDisabled, Data::Empty, "127.0.0.1");
+  sipStack.addTransport(TCP, resipTestPort(5062), V4, StunDisabled, Data::Empty, "127.0.0.1");
+  //sipStack.addTransport(TLS, resipTestPort(5061), V4, StunDisabled, Data::Empty, "127.0.0.1");
+  //sipStack.addTransport(WSS, resipTestPort(8443), V4, StunDisabled, Data::Empty, "127.0.0.1");
   return 0;
 }
 

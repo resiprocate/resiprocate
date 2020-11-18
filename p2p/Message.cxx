@@ -442,11 +442,11 @@ Message::popNextDestinationId()
    mPDU.mHeader->mDestinationList.erase(mPDU.mHeader->mDestinationList.begin());
 }
 
-std::auto_ptr<Event> 
+std::unique_ptr<Event> 
 Message::event()
 {
    resip_assert(0);
-   return std::auto_ptr<Event>(0);
+   return nullptr;
 }
 
 void

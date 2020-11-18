@@ -287,7 +287,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
          addTransport(TCP, 5100);
          addTransport(TLS, 5101, V4, Data::Empty, me.uri().host(), Data::Empty);
          
-         mProfile = new MasterProfile;
+         mProfile = std::make_shared<MasterProfile>();
          mProfile->clearSupportedMethods();
          mProfile->addSupportedMethod(PUBLISH);
          mProfile->addSupportedMethod(SUBSCRIBE);
@@ -307,7 +307,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
          addServerPublicationHandler(Symbols::Certificate, &mCertUpdater);
          addOutOfDialogHandler(OPTIONS, this);
          
-         //setServerAuthManager(std::auto_ptr<ServerAuthManager>(new ServerAuthManager(mProfile)));
+         //setServerAuthManager(std::unique_ptr<ServerAuthManager>(new ServerAuthManager(mProfile)));
 
          DialogUsageManager::run();
       }
@@ -344,7 +344,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
       }
 
    private:
-      SharedPtr<MasterProfile> mProfile;
+      std::shared_ptr<MasterProfile> mProfile;
       CertSubscriptionHandler mCertServer;
       PrivateKeySubscriptionHandler mPrivateKeyServer;
       CertPublicationHandler mCertUpdater;

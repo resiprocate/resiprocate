@@ -2,8 +2,9 @@
 #define RESIP_REGISTRATIONHANDLER_HXX
 
 #include "resip/dum/Handles.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "resip/dum/ContactInstanceRecord.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -16,7 +17,7 @@ class ClientRegistrationHandler
 {
    public:
       virtual ~ClientRegistrationHandler() { }
-      /// Called when registraion succeeds or each time it is sucessfully
+      /// Called when registration succeeds or each time it is successfully
       /// refreshed (manual refreshes only). 
       virtual void onSuccess(ClientRegistrationHandle, const SipMessage& response)=0;
 
@@ -37,12 +38,17 @@ class ClientRegistrationHandler
       /// supports RFC5626 (outbound).
       /// Default implementation is to immediately re-Register in an attempt to form a new flow.
       virtual void onFlowTerminated(ClientRegistrationHandle);
+
+      /// Called before attempting to refresh a registration
+      /// Return true if the refresh should go ahead or false otherwise
+      /// Default implementation always returns true
+      virtual bool onRefreshRequired(ClientRegistrationHandle, const SipMessage& lastRequest);
 };
 
 class ServerRegistrationHandler
 {
    public:
-      virtual ~ServerRegistrationHandler() {}
+      virtual ~ServerRegistrationHandler() = default;
 
       /// Called when registration is refreshed
       virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
@@ -61,13 +67,13 @@ class ServerRegistrationHandler
       virtual void onQuery(ServerRegistrationHandle, const SipMessage& reg)=0;
 
       /// When processing a REGISTER request, return the desired expires value when processing the "Expires" header.
-      ///@param expires Set this to the desired expiration value for the set of contacts that do not explicitely 
+      ///@param expires Set this to the desired expiration value for the set of contacts that do not explicitly 
       ///   set the "expires" param.  
       ///@param returnCode If the REGISTER should be rejected, use this return code.  A value of 423 will result in
       ///the Min-Expires header added to the response.
       ///
       virtual void getGlobalExpires(const SipMessage& msg, 
-                                    SharedPtr<MasterProfile> masterProfile, 
+                                    const std::shared_ptr<MasterProfile>& masterProfile, 
                                     UInt32 &expires, 
                                     UInt32 &returnCode);
 
@@ -78,7 +84,7 @@ class ServerRegistrationHandler
       ///   the Min-Expires header added to the response.
       ///
       virtual void getContactExpires(const NameAddr &contact, 
-                                     SharedPtr<MasterProfile> masterProfile, 
+                                     const std::shared_ptr<MasterProfile>& masterProfile, 
                                      UInt32 &expires, 
                                      UInt32 &returnCode);
 
@@ -102,8 +108,8 @@ class ServerRegistrationHandler
        */
       virtual void asyncUpdateContacts(ServerRegistrationHandle,
                                        const Uri& aor,
-                                       std::auto_ptr<ContactPtrList> modifiedContactList, 
-                                       std::auto_ptr<ContactRecordTransactionLog> transactionLog)
+                                       std::unique_ptr<ContactPtrList> modifiedContactList,
+                                       std::unique_ptr<ContactRecordTransactionLog> transactionLog)
       {
       }
 
@@ -112,7 +118,7 @@ class ServerRegistrationHandler
       */
       virtual void asyncRemoveExpired(ServerRegistrationHandle, 
                                       const resip::Uri& aor,
-                                      std::auto_ptr<resip::ContactPtrList> contacts)
+                                      std::unique_ptr<resip::ContactPtrList> contacts)
       {
       }
 };

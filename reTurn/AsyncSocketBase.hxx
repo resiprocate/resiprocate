@@ -5,16 +5,18 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/enable_shared_from_this.hpp>
-
-#include <deque>
 
 #include "DataBuffer.hxx"
 #include "StunTuple.hxx"
 
-#define RECEIVE_BUFFER_SIZE 4096 // ?slg? should we shrink this to something closer to MTU (1500 bytes)? !hbr! never actually increase it otherwise re-assembled UDP packets get lost. (was 2048)
+#include <cstddef>
+#include <deque>
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
+
+constexpr size_t RECEIVE_BUFFER_SIZE = 4096; // ?slg? should we shrink this to something closer to MTU (1500 bytes)? !hbr! never actually increase it otherwise re-assembled UDP packets get lost. (was 2048)
 
 namespace reTurn {
 
@@ -22,10 +24,12 @@ class AsyncSocketBaseHandler;
 class AsyncSocketBaseDestroyedHandler;
 
 class AsyncSocketBase :
-   public boost::enable_shared_from_this<AsyncSocketBase>
+   public std::enable_shared_from_this<AsyncSocketBase>
 {
 public:
-   AsyncSocketBase(asio::io_service& ioService);
+   using BeforeClosedHandler = std::function<void(unsigned int)>;
+
+   explicit AsyncSocketBase(asio::io_service& ioService);
    virtual ~AsyncSocketBase();
 
    virtual unsigned int getSocketDescriptor() = 0;
@@ -36,35 +40,35 @@ public:
    virtual asio::error_code bind(const asio::ip::address& address, unsigned short port) = 0;
    virtual void connect(const std::string& address, unsigned short port) = 0;  
    /// Note: destination is ignored for TCP and TLS connections
-   virtual void send(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data);  // Send unframed data
-   virtual void send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data);  // send with turn framing
+   virtual void send(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data);  // Send unframed data
+   virtual void send(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data);  // send with turn framing
    /// Overlapped calls to receive functions have no effect
    virtual void receive();  
    virtual void framedReceive();  
    virtual void close();
 
-   bool isConnected() { return mConnected; }
-   asio::ip::address& getConnectedAddress() { return mConnectedAddress; }
-   unsigned short getConnectedPort() { return mConnectedPort; }
+   bool isConnected() const noexcept { return mConnected; }
+   asio::ip::address& getConnectedAddress() noexcept { return mConnectedAddress; }
+   unsigned short getConnectedPort() const noexcept { return mConnectedPort; }
 
-   virtual void setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp) { mOnBeforeSocketCloseFp = fp; }
+   virtual void setOnBeforeSocketClosedFp(BeforeClosedHandler fp) { mOnBeforeSocketCloseFp = std::move(fp); }
 
    /// Use these if you already operating within the ioService thread
-   virtual void doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos=0);
-   virtual void doSend(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos=0);
+   virtual void doSend(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data, size_t bufferStartPos = 0);
+   virtual void doSend(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data, size_t bufferStartPos = 0);
    virtual void doReceive();
    virtual void doFramedReceive();
 
    /// Class override callbacks
    virtual void onConnectSuccess() { resip_assert(false); }
    virtual void onConnectFailure(const asio::error_code& e) { resip_assert(false); }
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) = 0;
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data) = 0;
    virtual void onReceiveFailure(const asio::error_code& e) = 0;
    virtual void onSendSuccess() = 0;
    virtual void onSendFailure(const asio::error_code& e) = 0;
 
    /// Utility API
-   static boost::shared_ptr<DataBuffer> allocateBuffer(unsigned int size);
+   static std::shared_ptr<DataBuffer> allocateBuffer(size_t size);
 
    // Stubbed out async handlers needed by Protocol specific Subclasses of this - the requirement for these 
    // to be in the base class all revolves around the shared_from_this() use/requirement
@@ -80,13 +84,13 @@ public:
 protected:
    /// Handle completion of a sendData operation.
    virtual void handleSend(const asio::error_code& e);
-   virtual void handleReceive(const asio::error_code& e, std::size_t bytesTransferred);
+   virtual void handleReceive(const asio::error_code& e, size_t bytesTransferred);
 
    /// The io_service used to perform asynchronous operations.
    asio::io_service& mIOService;
 
    /// Receive Buffer and state
-   boost::shared_ptr<DataBuffer> mReceiveBuffer;
+   std::shared_ptr<DataBuffer> mReceiveBuffer;
    bool mReceiving;
 
    /// Connected Info and State
@@ -99,7 +103,7 @@ protected:
 
    /// Provides an opportunity for the app to clean up, e.g., QoS-related data or resources
    /// just before the socket is closed
-   boost::function<void(unsigned int)> mOnBeforeSocketCloseFp;
+   BeforeClosedHandler mOnBeforeSocketCloseFp;
 
 private:
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;
@@ -107,26 +111,26 @@ private:
    virtual void transportFramedReceive() = 0;
    virtual void transportClose() = 0;
 
-   virtual const asio::ip::address getSenderEndpointAddress() = 0;
+   virtual asio::ip::address getSenderEndpointAddress() = 0;
    virtual unsigned short getSenderEndpointPort() = 0;
 
    virtual void sendFirstQueuedData();
    class SendData
    {
    public:
-      SendData(const StunTuple& destination, boost::shared_ptr<DataBuffer>& frameData, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos = 0) :
-         mDestination(destination), mFrameData(frameData), mData(data), mBufferStartPos(bufferStartPos) {}
+      SendData(const StunTuple& destination, std::shared_ptr<DataBuffer> frameData, std::shared_ptr<DataBuffer> data, size_t bufferStartPos = 0) :
+         mDestination(destination), mFrameData(std::move(frameData)), mData(std::move(data)), mBufferStartPos(bufferStartPos) {}
       StunTuple mDestination;
-      boost::shared_ptr<DataBuffer> mFrameData;
-      boost::shared_ptr<DataBuffer> mData;
-      unsigned int mBufferStartPos;
+      std::shared_ptr<DataBuffer> mFrameData;
+      std::shared_ptr<DataBuffer> mData;
+      size_t mBufferStartPos;
    };
    /// Queue of data to send
    typedef std::deque<SendData> SendDataQueue;
    SendDataQueue mSendDataQueue;
 };
 
-typedef boost::shared_ptr<AsyncSocketBase> ConnectionPtr;
+typedef std::shared_ptr<AsyncSocketBase> ConnectionPtr;
 
 }
 

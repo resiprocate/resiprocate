@@ -12,6 +12,11 @@ TestTimerContext::TestTimerContext()
    mTimer=0;
 }
 
+TestTimerContext::~TestTimerContext()
+{
+   delete mTimer;
+}
+
 void
 TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime)
 {
@@ -57,6 +62,18 @@ TestTimerContext::updateTimer()
 
          fire(tmpTimer);
       }
+   }
+}
+
+int TestTimerContext::select(resip::FdSet& fdSet)
+{
+   if(mTimer)
+   {
+      return fdSet.selectMilliSeconds(getRemainingTime());
+   }
+   else
+   {
+      return fdSet.select();
    }
 }
 

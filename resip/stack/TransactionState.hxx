@@ -30,6 +30,9 @@ class TransactionState : public DnsHandler
 {
    public:
       RESIP_HeapCount(TransactionState);
+
+      static UInt64 DnsGreylistDurationMs;  // The amount of time to greylist a DNS entry for after receiving a transport error
+
       static void process(TransactionController& controller,
                            TransactionMessage* message); 
       static void processTimer(TransactionController& controller,
@@ -148,6 +151,8 @@ class TransactionState : public DnsHandler
       Machine mMachine;
       State mState;
       bool mIsAbandoned; // TU doesn't care about this transaction anymore.
+      Tokens* mPendingCancelReasons; // Using a pointer to keep storage to a minimum when not needed
+      void setPendingCancelReasons(const Tokens* reasons);
       
       // Indicates that the message has been sent with a reliable protocol. Set
       // by the TransportSelector
@@ -170,9 +175,9 @@ class TransactionState : public DnsHandler
       Tuple mResponseTarget; // used to reply to requests
 
       // used when the DnsResult moves to another transport on failure. Only
-      // used for outgoing stateful, so auto_ptr for space efficiency.
-      std::auto_ptr<NameAddr> mOriginalContact;
-      std::auto_ptr<Via> mOriginalVia;
+      // used for outgoing stateful, so unique_ptr for space efficiency.
+      std::unique_ptr<NameAddr> mOriginalContact;
+      std::unique_ptr<Via> mOriginalVia;
 
       const Data mId;
       const MethodTypes mMethod;

@@ -1,5 +1,6 @@
 #include "rutil/ResipAssert.h"
 
+#include "rutil/AsyncBool.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
@@ -45,7 +46,7 @@ ReproServerAuthManager::rejectBadNonces() const
    return mRejectBadNonces;
 }
 
-ServerAuthManager::AsyncBool
+AsyncBool
 ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());
@@ -68,7 +69,7 @@ ReproServerAuthManager::requestCredential(const Data& user,
 {
    // Build a UserAuthInfo object and pass to UserAuthGrabber to have a1 password filled in
    UserAuthInfo* async = new UserAuthInfo(user,realm,transactionId,&mDum);
-   std::auto_ptr<ApplicationMessage> app(async);
+   std::unique_ptr<ApplicationMessage> app(async);
    mAuthRequestDispatcher->post(app);
 }
  

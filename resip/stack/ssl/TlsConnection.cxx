@@ -12,7 +12,10 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Errdes.hxx"
 
+#include <openssl/opensslv.h>
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #include <openssl/e_os2.h>
+#endif
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
@@ -405,12 +408,12 @@ TlsConnection::read(char* buf, int count )
       return 0;
    }
       
-   if ( !isGood() )
+   if (!isGood())
    {
       return -1;
    }
 
-   int bytesRead = SSL_read(mSsl,buf,count);
+   int bytesRead = SSL_read(mSsl, buf, count);
    //StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, (bytesRead > 0)?(bytesRead):(0)) << "]");
 
    if (bytesRead > 0)
@@ -418,7 +421,7 @@ TlsConnection::read(char* buf, int count )
       int bytesPending = SSL_pending(mSsl);
       if (bytesPending > 0)
       {
-         char* buffer = getWriteBufferForExtraBytes(bytesPending);
+         char* buffer = getWriteBufferForExtraBytes(bytesRead, bytesPending);
          if (buffer)
          {
             //StackLog(<< "reading remaining buffered bytes");

@@ -127,21 +127,22 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
                                  ConversationHandle convHandle,
                                  const resip::NameAddr& destination,
                                  ConversationManager::ParticipantForkSelectMode forkSelectMode,
-                                 resip::SharedPtr<resip::UserProfile> callerProfile = resip::SharedPtr<resip::UserProfile>(),
+                                 std::shared_ptr<resip::UserProfile> callerProfile = nullptr,
                                  const std::multimap<resip::Data,resip::Data>& extraHeaders = (std::multimap<resip::Data,resip::Data>()))
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mConvHandle(convHandle),
            mDestination(destination),
            mForkSelectMode(forkSelectMode),
-           mCallerProfile(callerProfile),
+           mCallerProfile(std::move(callerProfile)),
            mExtraHeaders(extraHeaders) {}
       virtual void executeCommand()
       {
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode);
+            const auto _callerProfile = std::dynamic_pointer_cast<ConversationProfile>(mCallerProfile);
+            RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode, _callerProfile);
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
             if(participant)
             {
@@ -169,7 +170,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
       ConversationHandle mConvHandle;
       resip::NameAddr mDestination;
       ConversationManager::ParticipantForkSelectMode mForkSelectMode;
-      resip::SharedPtr<resip::UserProfile> mCallerProfile;
+      std::shared_ptr<resip::UserProfile> mCallerProfile;
       std::multimap<resip::Data,resip::Data> mExtraHeaders;
 };
 
@@ -658,6 +659,46 @@ class RedirectToParticipantCmd  : public resip::DumCommand
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       ParticipantHandle mDestPartHandle;
+};
+
+class HoldParticipantCmd  : public resip::DumCommand
+{
+   public:
+      HoldParticipantCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle,
+                          bool hold)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle),
+           mHold(hold) {}
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mHold)
+            {
+               // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
+               // media (ie. hold set to true).
+               if(remoteParticipant->getConversations().size() == 0)
+               {
+                  WarningLog(<< "HoldParticipantCmd: remote participants must to added to a conversation before hold can be used when in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
+            remoteParticipant->setLocalHold(mHold);
+         }
+         else
+         {
+            WarningLog(<< "HoldParticipantCmd: invalid remote participant handle.");
+         }
+      }
+      resip::Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+      bool mHold;
 };
 
 }
