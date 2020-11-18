@@ -47,75 +47,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-OSVER=`uname -r | tr '()/' " " | cut -f1 -d-`.0.0.0
-OS_MAJOR_VER=`echo $OSVER | cut -f1 -d.`
-OS_MINOR_VER=`echo $OSVER | cut -f2 -d.`
-OS_POINT_VER=`echo $OSVER | cut -f3 -d.`
-OS_PATCH_VER=`echo $OSVER | cut -f4 -d.`
-AC_DEFINE_UNQUOTED(OS_MAJOR_VER, $OS_MAJOR_VER)
-AH_TEMPLATE([OS_MAJOR_VER], [Major OS version])
-AC_DEFINE_UNQUOTED(OS_MINOR_VER, $OS_MINOR_VER)
-AH_TEMPLATE([OS_MINOR_VER], [Minor OS version])
-AC_DEFINE_UNQUOTED(OS_POINT_VER, $OS_POINT_VER)
-AH_TEMPLATE([OS_POINT_VER], [Point OS version])
-AC_DEFINE_UNQUOTED(OS_PATCH_VER, $OS_PATCH_VER)
-AH_TEMPLATE([OS_PATCH_VER], [Patch OS version])
-
-TOOLCHAIN_CPPFLAGS="-DRESIP_TOOLCHAIN_GNU"
-
-case $host_os in
-solaris*)
-#  CXXFLAGS="$CXXFLAGS -library=stlport4"
-#  CFLAGS="-mt"
-#  LDFLAGS="$LDFLAGS -DTHREAD=MULTI -mt -library=stlport4"
-  TOOLCHAIN_CPPFLAGS="-DRESIP_TOOLCHAIN_SUNPRO"
-  ;;
-*)
-  ;;
-esac
-
-OSTYPE=`uname`
-case $OSTYPE in
-solaris*)
-  OSTYPE=SunOS
-  ;;
-freebsd*)
-  OSTYPE=FreeBSD
-  ;;
-linux*)
-  OSTYPE=Linux
-  ;;
-darwin*)
-  OSTYPE=Darwin
-  ;;
-msys*)
-  OSTYPE=MinGW
-  ;;
-MINGW*)
-  OSTYPE=MinGW
-  ;;
-*)
-  echo "Using native OSTYPE value: $OSTYPE"
-  ;;
-esac
-
-ARCH=$host_cpu
-case $host_cpu in
-x86_64)
-#  LARCH=IA64
-  ;;
-i?86)
-  LARCH=IA32
-  ;;
-*)
-  LARCH="$host_cpu"
-  echo "Using native ARCH/LARCH value from \$host_cpu: $host_cpu"
-  ;;
-esac
-OSTYPE_UPPER=`echo $OSTYPE | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-ARCH_UPPER=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-LARCH_UPPER=`echo $LARCH | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-ARCH_CPPFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
+ARCH_CPPFLAGS="-D_REENTRANT"
 
 AM_CONDITIONAL([MACOSX], [false])
 AS_IF([test "x$host_vendor" = "xapple"], [
@@ -140,7 +72,7 @@ return 0;
 
 AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(RESIP_BIG_ENDIAN, , RESIP_BIG_ENDIAN)])
 
-CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS} ${TOOLCHAIN_CPPFLAGS}"
+CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS}"
 
 AH_TEMPLATE([HAVE_sockaddr_in_len], [Define if sockaddr_in.sin_len exists])
 AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,
