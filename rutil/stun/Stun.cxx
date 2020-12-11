@@ -1918,6 +1918,7 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
 #endif
 }
 
+
 void
 stunBuildReqSimple( StunMessage* msg,
                     const StunAtrString& username,
@@ -1927,8 +1928,14 @@ stunBuildReqSimple( StunMessage* msg,
    memset( msg , 0 , sizeof(*msg) );
 	
    msg->msgHdr.msgType = BindRequestMsg;
-	
-   for ( int i=0; i<16; i=i+4 )
+    
+   int magic_cookie = htonl(0x2112A442); /* RFC5389 chapter 6 */
+   msg->msgHdr.id.octet[0]= magic_cookie>>0;
+   msg->msgHdr.id.octet[1]= magic_cookie>>8;
+   msg->msgHdr.id.octet[2]= magic_cookie>>16;
+   msg->msgHdr.id.octet[3]= magic_cookie>>24;
+   
+   for ( int i=4; i<16; i=i+4 )
    {
       resip_assert(i+3<16);
       int r = stunRand();
