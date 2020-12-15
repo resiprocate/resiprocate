@@ -4,6 +4,7 @@
 
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Errdes.hxx"
 #include "resip/stack/TcpConnection.hxx"
 #include "resip/stack/Tuple.hxx"
 
@@ -33,6 +34,8 @@ TcpConnection::read( char* buf, int count )
    if (bytesRead == SOCKET_ERROR)
    {
       int e = getErrno();
+      DebugLog ( << ErrnoError::SearchErrorMsg(e) );
+      
       switch (e)
       {
          case EAGAIN:
@@ -58,11 +61,11 @@ TcpConnection::read( char* buf, int count )
             ErrLog (<< "buf is outside your accessible address space.");
             break;
          default:
-            ErrLog (<< "Some other error, code = " << e);
+            ErrLog (<< "Some other error, code = " << ErrnoError::SearchErrorMsg(e));
             break;
       }
 
-      InfoLog (<< "Failed read on " << getSocket() << " " << strerror(e));
+      InfoLog (<< "Failed read on " << getSocket() << " " << ErrnoError::SearchErrorMsg(e));
       Transport::error(e);
       setFailureReason(TransportFailure::ConnectionException, e+2000);
       return -1;
@@ -100,7 +103,7 @@ TcpConnection::write( const char* buf, const int count )
           // TCP buffers are backed up - we couldn't write anything - but we shouldn't treat this an error - return we wrote 0 bytes
           return 0;
       }
-      InfoLog (<< "Failed write on " << getSocket() << " " << strerror(e));
+      InfoLog (<< "Failed write on " << getSocket() << " " << ErrnoError::SearchErrorMsg(e));
       Transport::error(e);
       return -1;
    }

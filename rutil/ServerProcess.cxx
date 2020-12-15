@@ -19,6 +19,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Time.hxx"
+#include "rutil/Errdes.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
@@ -259,7 +260,7 @@ ServerProcess::daemonize()
    if ((pid = fork()) < 0) 
    {
       // fork() failed
-      ErrLog(<<"fork() failed: "<<strerror(errno));
+      ErrLog(<<"fork() failed: "<< ErrnoError::SearchErrorMsg(errno) );
       throw std::runtime_error(strerror(errno));
    }
    else if (pid != 0)
@@ -269,7 +270,7 @@ ServerProcess::daemonize()
    }
    if(chdir("/") < 0)
    {
-      ErrLog(<<"chdir() failed: "<<strerror(errno));
+      ErrLog(<<"chdir() failed: "<< ErrnoError::SearchErrorMsg(errno) );
       throw std::runtime_error(strerror(errno));
    }
    // Nothing should be writing to stdout/stderr after this
