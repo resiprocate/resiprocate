@@ -36,11 +36,12 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression,
                            unsigned transportFlags)
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),  
      mSigcompStack(0),
      mRxBuffer(0),
      mExternalUnknownDatagramHandler(0),
-     mInWritable(false)
+     mInWritable(false),
+     mStunSetting(stun)
 {
    mPollEventCnt = 0;
    mTxTryCnt = mTxMsgCnt = mTxFailCnt = 0;
@@ -434,7 +435,10 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
    {
       resip::Lock lock(myMutex);
       StunMessage resp;
-      memset(&resp, 0, sizeof(StunMessage));
+
+      // Change the stored stun result to parse failed since we now have response
+      // Once parsing is successful below, the return code will be updated
+      mStunResult = StunResultResponseParseFailed;
 
       if (stunParseMessage(buffer, len, resp, false))
       {
@@ -457,7 +461,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
             sin_addr.s_addr = htonl(resp.xorMappedAddress.ipv4.addr);
 #endif
             mStunMappedAddress = Tuple(sin_addr,resp.xorMappedAddress.ipv4.port, UDP);
-            mStunSuccess = true;
+            mStunResult = StunResultSuccess;
          }
          else if(resp.hasMappedAddress)
          {
@@ -467,7 +471,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
             sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
 #endif
             mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
-            mStunSuccess = true;
+            mStunResult = StunResultSuccess;
          }
       }
       return false;
@@ -476,6 +480,10 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
    // this must be a STUN request (or garbage)
    if (buffer[0] == 0 && buffer[1] == 1 && ipVersion() == V4)
    {
+      // Drop stun requests unless StunEnabled is set and return false to indicate
+      // we did not consume the buffer
+      if (mStunSetting == StunDisabled) return false;
+
       bool changePort = false;
       bool changeIp = false;
 
@@ -722,9 +730,11 @@ UdpTransport::stunSendTest(const Tuple&  dest)
    password.sizeValue = 0;
 
    StunMessage req;
-   memset(&req, 0, sizeof(StunMessage));
-
    stunBuildReqSimple(&req, username, changePort , changeIP , 1);
+
+   // Replace the first 4 bytes of the header with the correct magic cookie required for RFC5389
+   UInt32* magicCookieField = (UInt32*)req.msgHdr.id.octet;
+   *magicCookieField = htonl(StunMagicCookie);
 
    char* buf = new char[STUN_MAX_MESSAGE_SIZE];
    int len = STUN_MAX_MESSAGE_SIZE;
@@ -734,21 +744,21 @@ UdpTransport::stunSendTest(const Tuple&  dest)
    SendData* stunRequest = new SendData(dest, buf, rlen);
    mTxFifo.add(stunRequest);
 
-   mStunSuccess = false;
+   mStunResult = StunResultNoResponse;
 
    return true;
 }
 
-bool
+UdpTransport::StunResult
 UdpTransport::stunResult(Tuple& mappedAddress)
 {
    resip::Lock lock(myMutex);
 
-   if (mStunSuccess)
+   if (mStunResult == StunResultSuccess)
    {
       mappedAddress = mStunMappedAddress;
    }
-   return mStunSuccess;
+   return mStunResult;
 }
 
 void

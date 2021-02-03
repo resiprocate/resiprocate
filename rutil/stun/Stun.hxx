@@ -6,8 +6,14 @@
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
 
-// if you change this version, change in makefile too 
-#define STUN_VERSION "0.96"
+// !jr! Bumped version to 0.97 with changes to make this stun implementation more compliant with RFC5389/8489
+//      Updated code to send (and receive) XOR_MAPPED_ADDRESS as 0x0020 (instead of 0x8020)
+// Note: Magic cookie from RFC5389 is not used by default, but can be added by users of this implementation
+// Also, While the latest version here is *more* compliant, there are still areas of improvement for complete 
+// compliance.  In particular, some STUN attributes are not handled exactly as they should be, including missing
+// support for IPV6, correct handling of the MESSAGE-INTEGRITY(-SHA256) header, correct processing of other 
+// credential handling headers such as USERNAME, PASSWORD, REALM and NONCE
+#define STUN_VERSION "0.97"
 
 #define STUN_MAX_STRING 256
 #define STUN_MAX_UNKNOWN_ATTRIBUTES 8
@@ -46,22 +52,33 @@ const UInt8  IPv6Family = 0x02;
 const UInt32 ChangeIpFlag   = 0x04;
 const UInt32 ChangePortFlag = 0x02;
 
-// define  stun attribute
-const UInt16 MappedAddress    = 0x0001;
-const UInt16 ResponseAddress  = 0x0002;
-const UInt16 ChangeRequest    = 0x0003;
-const UInt16 SourceAddress    = 0x0004;
-const UInt16 ChangedAddress   = 0x0005;
-const UInt16 Username         = 0x0006;
-const UInt16 Password         = 0x0007;
-const UInt16 MessageIntegrity = 0x0008;
-const UInt16 ErrorCode        = 0x0009;
-const UInt16 UnknownAttribute = 0x000A;
-const UInt16 ReflectedFrom    = 0x000B;
-const UInt16 XorMappedAddress = 0x8020;
-const UInt16 XorOnly          = 0x0021;
-const UInt16 ServerName       = 0x8022;
-const UInt16 SecondaryAddress = 0x8050; // Non standard extention
+#define MAX_REALM_BYTES             763
+#define MAX_NONCE_BYTES             763
+
+// define  stun attributes - RFC5389
+// Comprehension required attributes
+const static UInt16 MappedAddress = 0x0001;
+const static UInt16 ResponseAddress = 0x0002;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+const static UInt16 ChangeRequest = 0x0003;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+const static UInt16 SourceAddress = 0x0004;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+const static UInt16 ChangedAddress = 0x0005;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+const static UInt16 Username = 0x0006;
+const static UInt16 Password = 0x0007;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+const static UInt16 MessageIntegrity = 0x0008;
+const static UInt16 ErrorCode = 0x0009;
+const static UInt16 UnknownAttribute = 0x000A;
+const static UInt16 ReflectedFrom = 0x000B;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+const static UInt16 Realm = 0x0014;
+const static UInt16 Nonce = 0x0015;
+const static UInt16 XorMappedAddress = 0x0020;
+const static UInt16 XorOnly = 0x0021; // Non standard extention
+const static UInt16 XorMappedAddress_old = 0x8020; // deprecated
+
+// Comprehension Optional Attributes
+const static UInt16 Software = 0x8022;
+const static UInt16 AlternateServer = 0x8023;
+const static UInt16 Fingerprint = 0x8028;
+const static UInt16 SecondaryAddress = 0x8050;  // Non standard extension
 
 // !jf! TURN specific message attributes - from turn-08
 const UInt16 TurnLifetime     = 0x000d;
@@ -94,6 +111,8 @@ const UInt16 TurnDataIndication = 0x0115;
 const UInt16 TurnSetActiveDestinationRequest = 0x0006;
 const UInt16 TurnSetActiveDestinationResponse = 0x0106;
 const UInt16 TurnSetActiveDestinationErrorResponse = 0x0116;
+
+const static UInt32 StunMagicCookie = 0x2112A442;
 
 typedef struct 
 {
@@ -167,81 +186,133 @@ enum StunHmacStatus
 };
 
 
-typedef struct
+struct StunMessage
 {
-      StunMsgHdr msgHdr;
-	
-      bool hasMappedAddress;
-      StunAtrAddress4  mappedAddress;
-	
-      bool hasResponseAddress;
-      StunAtrAddress4  responseAddress;
-	
-      bool hasChangeRequest;
-      StunAtrChangeRequest changeRequest;
-	
-      bool hasSourceAddress;
-      StunAtrAddress4 sourceAddress;
-	
-      bool hasChangedAddress;
-      StunAtrAddress4 changedAddress;
-	
-      bool hasUsername;
-      StunAtrString username;
-	
-      bool hasPassword;
-      StunAtrString password;
-	
-      bool hasMessageIntegrity;
-      StunAtrIntegrity messageIntegrity;
-	
-      bool hasErrorCode;
-      StunAtrError errorCode;
-	
-      bool hasUnknownAttributes;
-      StunAtrUnknown unknownAttributes;
-	
-      bool hasReflectedFrom;
-      StunAtrAddress4 reflectedFrom;
+    StunMessage() 
+    {
+       memset(&msgHdr, 0, sizeof(msgHdr));
 
-      bool hasXorMappedAddress;
-      StunAtrAddress4  xorMappedAddress;
+       hasMappedAddress = false;
+       hasResponseAddress = false;
+       hasChangeRequest = false;
+       hasSourceAddress = false;
+       hasChangedAddress = false;
+       hasUsername = false;
+       hasPassword = false;
+       hasMessageIntegrity = false;
+       hasErrorCode = false;
+       hasUnknownAttributes = false;
+       hasReflectedFrom = false;
+       hasRealm = false;
+       hasNonce = false;
+       hasXorMappedAddress = false;
+       hasSoftware = false;
+       hasSecondaryAddress = false;
+       hasAlternateServer = false;
+       hasFingerprint = false;
+       hasTurnLifetime = false;
+       hasTurnAlternateServer = false;
+       hasTurnMagicCookie = false;
+       hasTurnBandwidth = false;
+       hasTurnDestinationAddress = false;
+       hasTurnRemoteAddress = false;
+       hasTurnData = false;
+
+       xorOnly = false;
+    }
+    
+    ~StunMessage() 
+    {
+       if (hasRealm) delete realm;
+       if (hasNonce) delete nonce;
+       if (hasTurnData) delete turnData;
+    }
+
+   StunMsgHdr msgHdr;
 	
-      bool xorOnly;
+   bool hasMappedAddress;
+   StunAtrAddress4  mappedAddress;
+	
+   bool hasResponseAddress;
+   StunAtrAddress4  responseAddress;
+	
+   bool hasChangeRequest;
+   StunAtrChangeRequest changeRequest;
+	
+   bool hasSourceAddress;
+   StunAtrAddress4 sourceAddress;
+	
+   bool hasChangedAddress;
+   StunAtrAddress4 changedAddress;
+	
+   bool hasUsername;
+   StunAtrString username;
+	
+   bool hasPassword;
+   StunAtrString password;
+	
+   bool hasMessageIntegrity;
+   StunAtrIntegrity messageIntegrity;
+	
+   bool hasErrorCode;
+   StunAtrError errorCode;
+	
+   bool hasUnknownAttributes;
+   StunAtrUnknown unknownAttributes;
+	
+   bool hasReflectedFrom;
+   StunAtrAddress4 reflectedFrom;
 
-      bool hasServerName;
-      StunAtrString serverName;
-      
-      bool hasSecondaryAddress;
-      StunAtrAddress4 secondaryAddress;
+   bool hasRealm;
+   resip::Data* realm;
 
-      bool hasTurnLifetime;
-      UInt32 turnLifetime;
+   bool hasNonce;
+   resip::Data* nonce;
+
+   bool hasXorMappedAddress;
+   StunAtrAddress4  xorMappedAddress;
+	
+   bool xorOnly;
+
+   bool hasSoftware;
+   StunAtrString software;
       
-      bool hasTurnAlternateServer;
-      StunAtrAddress4 turnAlternateServer;
+   bool hasSecondaryAddress;
+   StunAtrAddress4 secondaryAddress;
+
+   bool hasAlternateServer;
+   StunAtrAddress4 alternateServer;
+
+   bool hasFingerprint;
+   UInt32 fingerprint;
+
+   bool hasTurnLifetime;
+   UInt32 turnLifetime;
       
-      bool hasTurnMagicCookie;
-      UInt32 turnMagicCookie;
+   bool hasTurnAlternateServer;
+   StunAtrAddress4 turnAlternateServer;
       
-      bool hasTurnBandwidth;
-      UInt32 turnBandwidth;
+   bool hasTurnMagicCookie;
+   UInt32 turnMagicCookie;
       
-      bool hasTurnDestinationAddress;
-      StunAtrAddress4 turnDestinationAddress;
+   bool hasTurnBandwidth;
+   UInt32 turnBandwidth;
       
-      bool hasTurnRemoteAddress;
-      StunAtrAddress4 turnRemoteAddress;
+   bool hasTurnDestinationAddress;
+   StunAtrAddress4 turnDestinationAddress;
       
-      bool hasTurnData;
-      resip::Data* turnData;
+   bool hasTurnRemoteAddress;
+   StunAtrAddress4 turnRemoteAddress;
       
-      //bool hasTurnNonce;
-      // turnNonce;
+   bool hasTurnData;
+   resip::Data* turnData;
       
-      //bool hasTurnRealm;
-      // turnRealm;
-} StunMessage; 
+   //bool hasTurnNonce;
+   // turnNonce;
+      
+   //bool hasTurnRealm;
+   // turnRealm;
+}; 
 
 
 // Define enum with different types of NAT 
@@ -327,7 +398,7 @@ stunGetSystemTimeSecs();
 
 /// find the IP address of a the specified stun server - return false is fails parse 
 bool  
-stunParseServerName( char* serverName, StunAddress4& stunServerAddr);
+stunParseServerName( char* software, StunAddress4& stunServerAddr);
 
 bool 
 stunParseHostName( char* peerName,
