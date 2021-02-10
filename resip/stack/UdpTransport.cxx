@@ -440,7 +440,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
       // Once parsing is successful below, the return code will be updated
       mStunResult = StunResultResponseParseFailed;
 
-      if (stunParseMessage(buffer, len, resp, true))
+      if (stunParseMessage(buffer, len, resp, false))
       {
          in_addr sin_addr;
          // Use XorMappedAddress if present - if not use MappedAddress

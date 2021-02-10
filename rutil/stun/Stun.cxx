@@ -222,7 +222,6 @@ bool
 stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose)
 {
    if (verbose) clog << "Received stun message: " << bufLen << " bytes" << endl;
-   memset(&msg, 0, sizeof(msg));
 	
    if (sizeof(StunMsgHdr) > bufLen)
    {
@@ -1353,11 +1352,6 @@ stunServerProcessMsg( char* buf,
                       bool* changeIp,
                       bool verbose)
 {
-    
-   // set up information for default response 
-	
-   memset( resp, 0 , sizeof(*resp) );
-	
    *changeIp = false;
    *changePort = false;
 	
