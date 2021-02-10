@@ -168,11 +168,14 @@ stunParseAtrString( char* body, unsigned int hdrLen,  StunAtrString& result )
    }
    else
    {
-      if (hdrLen % 4 != 0)
-      {
-         //clog << "Bad length string " << hdrLen << endl;
-         return false;
-      }
+      // !jr! Removed - newer RFCs don't require individual attributes to have this
+      // 4 byte boundary restriction.  (Note the overall structure of the 
+      // stun message attributes must still be padded to 4 byte boundaries)
+      //if (hdrLen % 4 != 0)
+      //{
+      //   //clog << "Bad length string " << hdrLen << endl;
+      //   return false;
+      //}
 		
       result.sizeValue = hdrLen;
       memcpy(&result.value, body, hdrLen);
@@ -249,10 +252,14 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
       StunAtrHdr* attr = reinterpret_cast<StunAtrHdr*>(body);
 		
       unsigned int attrLen = ntohs(attr->length);
+
+      // attrLen may not be on 4 byte boundary, in which case we need to pad to 4 bytes when advancing to next attribute
+      unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);
+
       int atrType = ntohs(attr->type);
-		
+
       if (verbose) clog << "Found attribute type=" << atrType << " length=" << attrLen << endl;
-      if ( attrLen+4 > size ) 
+      if (attrLen + attrLenPad + 4 > size)
       {
          clog << "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")"<< endl;
          return false;
@@ -498,7 +505,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
              break;
 		
          case Fingerprint:
-             if (msg.hasFingerprint)
+             if (!msg.hasFingerprint)
              {
                  msg.hasFingerprint = true;
                  if (stunParseAtrUInt32(body, attrLen, msg.fingerprint) == false)
@@ -598,8 +605,8 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             }
       }
 		
-      body += attrLen;
-      size -= attrLen;
+      body += attrLen + attrLenPad;
+      size -= attrLen + attrLenPad;
    }
     
    return true;
