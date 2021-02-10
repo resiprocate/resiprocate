@@ -190,35 +190,10 @@ struct StunMessage
 {
     StunMessage() 
     {
-       memset(&msgHdr, 0, sizeof(msgHdr));
-
-       hasMappedAddress = false;
-       hasResponseAddress = false;
-       hasChangeRequest = false;
-       hasSourceAddress = false;
-       hasChangedAddress = false;
-       hasUsername = false;
-       hasPassword = false;
-       hasMessageIntegrity = false;
-       hasErrorCode = false;
-       hasUnknownAttributes = false;
-       hasReflectedFrom = false;
-       hasRealm = false;
-       hasNonce = false;
-       hasXorMappedAddress = false;
-       hasSoftware = false;
-       hasSecondaryAddress = false;
-       hasAlternateServer = false;
-       hasFingerprint = false;
-       hasTurnLifetime = false;
-       hasTurnAlternateServer = false;
-       hasTurnMagicCookie = false;
-       hasTurnBandwidth = false;
-       hasTurnDestinationAddress = false;
-       hasTurnRemoteAddress = false;
-       hasTurnData = false;
-
-       xorOnly = false;
+       // !jr! Zeroing the entire structure which is a bit dangerous.
+       // If you add any complex types to this structure, be careful of
+       // the results.
+       memset(this, 0, sizeof(*this));
     }
     
     ~StunMessage() 
