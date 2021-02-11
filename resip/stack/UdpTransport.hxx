@@ -83,8 +83,16 @@ public:
    static const int MaxBufferSize = 8192;
 
    // STUN client functionality
+   enum StunResult
+   {
+       StunResultUnknown,
+       StunResultSuccess,
+       StunResultNoResponse,
+       StunResultResponseParseFailed
+   };
+
    bool stunSendTest(const Tuple& dest);
-   bool stunResult(Tuple& mappedAddress);
+   StunResult stunResult(Tuple& mappedAddress);
 
    /// Installs a handler for the unknown datagrams arriving on the udp transport.
    void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
@@ -114,7 +122,10 @@ private:
    MsgHeaderScanner mMsgHeaderScanner;
    mutable resip::Mutex  myMutex;
    Tuple mStunMappedAddress;
-   bool mStunSuccess;
+   
+   StunResult mStunResult;
+   StunSetting mStunSetting;
+
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
    bool mInWritable;
    bool mInActiveWrite;
