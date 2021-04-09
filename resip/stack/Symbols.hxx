@@ -130,6 +130,7 @@ class Symbols
       static const char* Hex; // from draft-ietf-cuss-sip-uui-17
       static const char* IsdnInterwork; // from draft-johnston-sipping-cc-uui-09
       static const char* IsdnUui; // from draft-johnston-sipping-cc-uui-09
+      static const char* TrickleIce; // from RFC 8840
 };
 
 }

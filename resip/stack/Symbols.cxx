@@ -130,6 +130,8 @@ const char* Symbols::Hex = "hex";
 const char* Symbols::IsdnInterwork = "isdn-interwork";
 const char* Symbols::IsdnUui = "isdn-uui";
 
+const char* Symbols::TrickleIce = "trickle-ice";  // from RFC 8840
+
 #if defined(WIN32)
 const char *Symbols::pathSep = "\\";
 #else
