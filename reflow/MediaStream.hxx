@@ -16,7 +16,8 @@
 #ifdef WIN32
 #include <srtp.h>
 #else
-#include <srtp/srtp.h>
+#include <srtp2/srtp.h>
+#include "Srtp2Helper.hxx"
 #endif
 
 #include "dtls_wrapper/DtlsFactory.hxx"

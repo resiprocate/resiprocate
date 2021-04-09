@@ -2,7 +2,7 @@ AM_CXXFLAGS = -I..
 
 LDADD = ../../../rutil/librutil.la
 LDADD += $(LIBSSL_LIBADD) @LIBSTL_LIBADD@ @LIBPTHREAD_LIBADD@
-LDADD += -lsrtp
+LDADD += -lsrtp2
 
 noinst_LTLIBRARIES = libdtlswrappertest.la
 
