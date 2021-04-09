@@ -125,7 +125,8 @@ CREATE TABLE IF NOT EXISTS filter (
 --        to regular columns as it can't be used in read-only mode,
 --        the code needs to be changed to perform read and write
 --        queries directly on the new table
---
+--        Depends on:
+--        https://www.resiprocate.org/bugzilla/show_bug.cgi?id=154
 
 
 CREATE TABLE IF NOT EXISTS siloavp (
