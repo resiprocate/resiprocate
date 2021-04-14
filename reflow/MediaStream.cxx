@@ -67,7 +67,7 @@ MediaStream::MediaStream(asio::io_service& ioService,
                           *this,
                           mForceCOMedia,
                           nullptr,
-                          std::move(context));
+                          context);
 
       mRtcpFlow = new Flow(ioService, 
 #ifdef USE_SSL

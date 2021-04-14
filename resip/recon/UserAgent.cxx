@@ -53,11 +53,12 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mProfile(std::move(profile)),
    mInstantMessage(std::move(instantMessage)),
 #if defined(USE_SSL)
-   mSecurity(new Security(mProfile->certPath())),
+   //mSecurity(new Security(mProfile->certPath())),
+   mSecurity(0),
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, profile->getAdditionalDnsServers(), &mSelectInterruptor, false /* stateless */, socketFunc),
+   mStack(mSecurity, mProfile->getAdditionalDnsServers(), &mSelectInterruptor, false /* stateless */, socketFunc),
    mDum(mStack),
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdown(false)
@@ -79,16 +80,16 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    resip_assert(mConversationManager);
    mConversationManager->setUserAgent(this);
 
-   mStack.setTransportSipMessageLoggingHandler(profile->getTransportSipMessageLoggingHandler());
-   mConversationManager->getFlowManager().setRTCPEventLoggingHandler(profile->getRTCPEventLoggingHandler());
+   mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
+   mConversationManager->getFlowManager().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
 
    addTransports();
 
    // Set Enum Suffixes
-   mStack.setEnumSuffixes(profile->getEnumSuffixes());
+   mStack.setEnumSuffixes(mProfile->getEnumSuffixes());
 
    // Enable/Disable Statistics Manager
-   mStack.statisticsManagerEnabled() = profile->statisticsManagerEnabled();
+   mStack.statisticsManagerEnabled() = mProfile->statisticsManagerEnabled();
    
    // Install Handlers
    mDum.setMasterProfile(mProfile);
