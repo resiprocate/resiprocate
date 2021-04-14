@@ -21,12 +21,16 @@ using namespace reconserver;
 using namespace std;
 
 
-MyUserAgent::MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
+MyUserAgent::MyUserAgent(ReConServerConfig& configParse, ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
    UserAgent(conversationManager, std::move(profile)),
    mMaxRegLoops(1000)
 {
-   mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
-   mSubscriptionForwarder.reset(new SubscriptionForwarder(configParse, getSipStack()));
+   ReConServerConfig::Application application = configParse.getConfigApplication("Application", ReConServerConfig::None);
+   if(application == ReConServerConfig::B2BUA)
+   {
+      mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
+      mSubscriptionForwarder.reset(new SubscriptionForwarder(configParse, getSipStack()));
+   }
 }
 
 void
@@ -93,8 +97,14 @@ MyUserAgent::process(int timeoutMs)
 {
    // Keep calling process() as long as there appear to be messages
    // available from the stack
-   for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
-   for(int i = 0; i < mMaxRegLoops && mSubscriptionForwarder->process() ; i++);
+   if(mRegistrationForwarder)
+   {
+      for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
+   }
+   if(mSubscriptionForwarder)
+   {
+      for(int i = 0; i < mMaxRegLoops && mSubscriptionForwarder->process() ; i++);
+   }
 
    UserAgent::process(timeoutMs);
 }

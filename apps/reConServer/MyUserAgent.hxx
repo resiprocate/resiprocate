@@ -25,7 +25,7 @@ namespace reconserver
 class MyUserAgent : public recon::UserAgent
 {
 public:
-   MyUserAgent(resip::ConfigParse& configParse, recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile);
+   MyUserAgent(reconserver::ReConServerConfig& configParse, recon::ConversationManager* conversationManager, std::shared_ptr<recon::UserAgentMasterProfile> profile);
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq);
    virtual void onSubscriptionTerminated(recon::SubscriptionHandle handle, unsigned int statusCode);
    virtual void onSubscriptionNotify(recon::SubscriptionHandle handle, const resip::Data& notifyData);
