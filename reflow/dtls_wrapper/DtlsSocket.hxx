@@ -15,8 +15,8 @@ extern "C"
 #include <srtp.h>
 #else
 #include <srtp2/srtp.h>
-#include "../Srtp2Helper.hxx"
 #endif
+#include "../Srtp2Helper.hxx"
 }
 
 #include <openssl/e_os2.h>
