@@ -18,7 +18,7 @@ UserAgentMasterProfile::UserAgentMasterProfile()
   mSubscriptionRetryInterval(60)
 {
 #ifdef WIN32
-   mCertPath = ".";
+   mCertPath = "./certs";
 #else
    const char* home_dir = getenv("HOME");
    if(home_dir)
