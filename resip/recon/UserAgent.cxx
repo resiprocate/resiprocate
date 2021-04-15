@@ -53,8 +53,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mProfile(std::move(profile)),
    mInstantMessage(std::move(instantMessage)),
 #if defined(USE_SSL)
-   //mSecurity(new Security(mProfile->certPath())),
-   mSecurity(0),
+   mSecurity(new Security(mProfile->certPath())),
 #else
    mSecurity(0),
 #endif
