@@ -217,47 +217,32 @@
     <ClCompile Include="testUA.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="testua_readme.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaAdapterLib\sipXmediaAdapterLib-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaAdapterLib\sipXmediaAdapterLib-msvc16.vcxproj">
       <Project>{9501c518-8693-42f3-86a4-39b14983ec6c}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\win32\VS2003\libspeexdsp\libspeexdsp.vcxproj">
-      <Project>{03207781-0d1c-4db3-a71d-45c608f28dbd}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\win32\VS2003\libspeex\libspeex.vcxproj">
-      <Project>{e972c52f-9e85-4d65-b19c-031e511e9db4}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\sipXmediaLib-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\sipXmediaLib-msvc16.vcxproj">
       <Project>{0ec8287a-481e-45dc-8f95-bad940ae1038}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgilbc\plgilbc-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgilbc\plgilbc-msvc16.vcxproj">
       <Project>{6442c7de-e500-4ba2-b821-98092f1edcaf}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgl16\plgl16-msvc8.vcxproj">
-      <Project>{82a7c86a-5f71-47c3-a74d-54c48c6cd5ee}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgpcmapcmu\plgpcmapcmu-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgpcmapcmu\plgpcmapcmu-msvc16.vcxproj">
       <Project>{a9c94d26-c90d-4860-8195-56929e893757}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgspeex\plgspeex-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgspeex\plgspeex-msvc16.vcxproj">
       <Project>{4f7fda11-42a4-4556-a631-15aa785cd1c1}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgtones\plgtones-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgtones\plgtones-msvc16.vcxproj">
       <Project>{f3bca14e-f24d-4570-833e-8c20c4c393f7}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXportLib\sipXportLib-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXportLib\sipXportLib-msvc16.vcxproj">
       <Project>{14631055-9d3f-47e5-b6a7-16bfc0cc8091}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\sipXtapi\sipXsdpLib\sipXsdpLib-msvc8.vcxproj">
+    <ProjectReference Include="..\..\..\..\sipXtapi\sipXsdpLib\sipXsdpLib-msvc16.vcxproj">
       <Project>{e1d81ea9-4ac3-4cf5-b600-090fd822b1f6}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\contrib\pcre\pcre_16_0.vcxproj">
@@ -306,5 +291,12 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\boost.1.75.0.0\build\boost.targets" Condition="Exists('..\packages\boost.1.75.0.0\build\boost.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\boost.1.75.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.75.0.0\build\boost.targets'))" />
+  </Target>
 </Project>
