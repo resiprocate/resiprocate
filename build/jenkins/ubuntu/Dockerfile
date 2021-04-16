@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:focal AS build-env
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get -y update && \

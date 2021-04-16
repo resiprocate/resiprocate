@@ -1,3 +1,6 @@
+/* groovylint-disable DuplicateStringLiteral */
+/* groovylint-disable LineLength */
+/* groovylint-disable NestedBlockDepth */
 
 pipeline {
     agent none
@@ -60,17 +63,35 @@ pipeline {
                             sh 'make -j'
                         }
                     }
+                    stage('Static Analysis') {
+                        when {
+                            expression { DISTRO == 'alpine' }
+                        }
+                        steps {
+                            sh 'compiledb make'
+                            sh 'clang-tidy --list-checks'
+                            sh "/usr/share/clang/run-clang-tidy.py -j8 2>/dev/null | sed -e 's|${WORKSPACE}/||g' > clang-tidy-results.txt || true"
+                            recordIssues(
+                                tools: [
+                                    clangTidy(pattern: 'clang-tidy-results.txt')
+                                ]
+                            )
+                        }
+                    }
                     stage('Test') {
                         steps {
                             sh 'make -j check TESTS='
                             sh 'make check'
+                            archiveArtifacts artifacts: '**/test-suite.log', allowEmptyArchive: true
                         }
                     }
                 }
                 post {
                     always {
-                        archiveArtifacts artifacts: '**/test-suite.log', allowEmptyArchive: true, fingerprint: true
                         recordIssues (
+                            filters: [
+                                excludeFile('/root/*')
+                            ],
                             tools: [
                                 gcc(
                                     id: "${DISTRO}-gcc",
@@ -78,9 +99,6 @@ pipeline {
                                 )
                             ]
                         )
-                    }
-                    cleanup {
-                        cleanWs()
                     }
                 }
             }
