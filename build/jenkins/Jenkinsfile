@@ -70,7 +70,7 @@ pipeline {
                         steps {
                             sh 'compiledb -n make'
                             sh 'clang-tidy --list-checks'
-                            sh "/usr/share/clang/run-clang-tidy.py -j8 2>/dev/null > clang-tidy-results.txt || true"
+                            sh '/usr/share/clang/run-clang-tidy.py -j8 2>/dev/null > clang-tidy-results.txt || true'
                             archiveArtifacts artifacts: 'clang-tidy-results.txt'
                             recordIssues(
                                 tools: [
