@@ -102,7 +102,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
 {
    if(mLocalRTPPort == 0 && !mAllocateLocalRTPPortFailed)
    {
-      mLocalRTPPort = mConversationManager.allocateRTPPort();
+      mLocalRTPPort = mConversationManager.getRTPPortManager()->allocateRTPPort();
       if(mLocalRTPPort == 0)
       {
          WarningLog(<< "Could not allocate a free RTP port for RemoteParticipantDialogSet!");
@@ -537,7 +537,7 @@ RemoteParticipantDialogSet::freeMediaResources()
    // Add the RTP port back to the pool
    if(mLocalRTPPort)
    {
-      mConversationManager.freeRTPPort(mLocalRTPPort);
+      mConversationManager.getRTPPortManager()->freeRTPPort(mLocalRTPPort);
       mLocalRTPPort = 0;
    }
 }

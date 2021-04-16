@@ -13,6 +13,7 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
+#include "RTPPortManager.hxx"
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
@@ -498,6 +499,7 @@ public:
    virtual void enableAutoGainControl(bool enable);  
    virtual void enableNoiseReduction(bool enable);   
    virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
+   virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
 
 protected:
 
@@ -612,8 +614,6 @@ private:
    friend class LocalParticipant;
    friend class BridgeMixer;
    friend class MediaInterface;
-   unsigned int allocateRTPPort();
-   void freeRTPPort(unsigned int port);
 
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 
@@ -663,8 +663,7 @@ private:
    void post(resip::Message *message);
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
 
-   std::deque<unsigned int> mRTPPortFreeList;
-   void initRTPPortFreeList();
+   std::shared_ptr<RTPPortManager> mRTPPortManager;
 
    MediaResourceCache mMediaResourceCache;
 

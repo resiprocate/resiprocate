@@ -150,7 +150,10 @@ ConversationManager::setUserAgent(UserAgent* userAgent)
    //mMediaFactory->getFactoryImplementation()->setRtpPortRange(mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(), 
    //                                                           mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
 
-   initRTPPortFreeList();
+   if(!mRTPPortManager)
+   {
+      mRTPPortManager.reset(new RTPPortManager(mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(), mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax()));
+   }
 }
 
 void
@@ -387,36 +390,6 @@ void
 ConversationManager::post(resip::ApplicationMessage& message, unsigned int ms)
 {
     mUserAgent->post(message, ms);
-}
-
-void 
-ConversationManager::initRTPPortFreeList()
-{
-   mRTPPortFreeList.clear();
-   for(unsigned int i = mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(); i <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax();)
-   {
-      mRTPPortFreeList.push_back(i);
-      i=i+2;  // only add even ports - note we are assuming rtpPortRangeMin is even
-   }
-}
- 
-unsigned int 
-ConversationManager::allocateRTPPort()
-{
-   unsigned int port = 0;
-   if(!mRTPPortFreeList.empty())
-   {
-      port = mRTPPortFreeList.front();
-      mRTPPortFreeList.pop_front();
-   }
-   return port;
-}
- 
-void
-ConversationManager::freeRTPPort(unsigned int port)
-{
-   resip_assert(port >= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin() && port <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
-   mRTPPortFreeList.push_back(port);
 }
 
 void 

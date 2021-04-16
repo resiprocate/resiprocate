@@ -45,6 +45,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         RelatedConversationSet.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
+        RTPPortManager.cxx \
         SipXHelper.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
@@ -70,6 +71,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         InstantMessage.hxx \
         UserAgentMasterProfile.hxx \
         RemoteParticipantDialogSet.hxx \
+        RTPPortManager.hxx \
         SipXHelper.hxx \
         Conversation.hxx \
         UserAgentDialogSetFactory.hxx \
