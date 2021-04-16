@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 	// sip logic
 	RegListener client;
 	auto profile = std::make_shared<MasterProfile>();   
-	unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
+	std::unique_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());
 
     SipStack clientStack;
 	DialogUsageManager clientDum(clientStack);
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
 			NameAddr naTo(to.c_str());
 			ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(naTo);
 			
-			unique_ptr<Contents> content(new PlainContents(Data("my first message!")));
+			std::unique_ptr<Contents> content(new PlainContents(Data("my first message!")));
 			cpmh.get()->page(std::move(content)); 
 		}
 	}   

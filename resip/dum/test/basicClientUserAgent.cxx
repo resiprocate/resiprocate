@@ -304,7 +304,7 @@ BasicClientUserAgent::BasicClientUserAgent(int argc, char** argv) :
    mDum->addServerSubscriptionHandler("basicClientTest", this);
 
    // Set AppDialogSetFactory
-   unique_ptr<AppDialogSetFactory> dsf(new ClientAppDialogSetFactory(*this));
+   std::unique_ptr<AppDialogSetFactory> dsf(new ClientAppDialogSetFactory(*this));
    mDum->setAppDialogSetFactory(std::move(dsf));
 
    mDum->setMasterProfile(mProfile);
@@ -467,7 +467,7 @@ BasicClientUserAgent::sendNotify()
       mServerSubscriptionHandle->send(mServerSubscriptionHandle->update(&plain));
 
       // start timer for next one
-      unique_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
+      std::unique_ptr<ApplicationMessage> timer(new NotifyTimer(*this, ++mCurrentNotifyTimerId));
       mStack->post(std::move(timer), NotifySendTime, mDum);
    }
 }

@@ -110,7 +110,7 @@ main (int argc, char** argv)
    clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
 
    // keep alive test.
-   unique_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
+   std::unique_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
    clientDum.setKeepAliveManager(std::move(keepAlive));
 
    clientDum.getMasterProfile()->setDefaultFrom(userAor);

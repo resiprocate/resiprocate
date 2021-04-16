@@ -38,7 +38,7 @@ namespace resip
 template <int S>
 struct DataLocalSize
 {
-      explicit DataLocalSize(size_t) {}
+      explicit DataLocalSize(size_t) noexcept {}
 };
 
 // .bwc. Pack class Data; has to come before doxygen block though.
@@ -1053,7 +1053,7 @@ inline bool isLessThanNoCase(const Data& left, const Data& right)
 template<class Predicate> EncodeStream& 
 Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
 {
-   static char hex[] = "0123456789ABCDEF";
+   constexpr char hex[] = "0123456789ABCDEF";
 
    if (empty())
    {
