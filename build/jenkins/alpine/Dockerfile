@@ -16,6 +16,7 @@ RUN apk add --no-cache abi-compliance-checker \
                        gnutls-dev \
                        gperf \
                        linux-headers \
+                       libsrtp-dev \
                        libtool \
                        make \
                        mariadb-connector-c-dev \
@@ -72,16 +73,6 @@ RUN tar -xf 4.0.0.tar.gz && \
     cd ../.. && \
     rm -fr soci-4.0.0 && \
     rm soci-code-fixes.patch
-
-ADD https://github.com/cisco/libsrtp/archive/v1.6.0.tar.gz /root/
-RUN tar -xf v1.6.0.tar.gz && \
-    rm v1.6.0.tar.gz && \
-    cd libsrtp-1.6.0 && \
-    ./configure --prefix=/usr && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -fr libsrtp-1.6.0
 
 RUN svn checkout svn://svn.camaya.net/gloox/branches/1.0 gloox && \
     cd gloox && \
