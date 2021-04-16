@@ -99,8 +99,16 @@ ConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
    if(count == 0)
    {
-      ErrLog( << "No static codecs or dynamic codec plugins at '" << codecPaths[0] << "' found.  Cannot start.");
-      exit(-1);
+      // the default path and CODEC_PLUGINS_FILTER don't appear to work on Linux
+      // also see the call to addCodecPaths above
+      InfoLog(<<"No statically linked codecs or no codecs found with default filter, trying without a filter");
+      pCodecFactory->loadAllDynCodecs(NULL, "");
+      pCodecFactory->getCodecInfoArray(count, codecInfoArray);
+      if(count == 0)
+      {
+         CritLog( << "No static codecs or dynamic codec plugins found in search paths.  Cannot start.");
+         exit(-1);
+      }
    }
 
    InfoLog( << "Loaded codecs are:");
