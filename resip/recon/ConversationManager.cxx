@@ -88,11 +88,11 @@ ConversationManager::init(int defaultSampleRate, int maxSampleRate)
    {
       OsConfigDb sipXconfig;
       sipXconfig.set("PHONESET_MAX_ACTIVE_CALLS_ALLOWED",300);  // This controls the maximum number of flowgraphs allowed - default is 16
-      mMediaFactory = sipXmediaFactoryFactory(&sipXconfig, 0, defaultSampleRate, maxSampleRate, mLocalAudioEnabled);
+      mMediaFactory = sipXmediaFactoryFactory(&sipXconfig, 0, maxSampleRate, defaultSampleRate, mLocalAudioEnabled);
    }
    else
    {
-      mMediaFactory = sipXmediaFactoryFactory(NULL, 0, defaultSampleRate, maxSampleRate, mLocalAudioEnabled);
+      mMediaFactory = sipXmediaFactoryFactory(NULL, 0, maxSampleRate, defaultSampleRate, mLocalAudioEnabled);
    }
 
    // Create MediaInterface
