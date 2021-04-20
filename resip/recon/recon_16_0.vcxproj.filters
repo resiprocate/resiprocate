@@ -35,6 +35,7 @@
     <ClCompile Include="SipXHelper.cxx" />
     <ClCompile Include="InstantMessage.cxx" />
     <ClCompile Include="UserAgentClientPublication.cxx" />
+    <ClCompile Include="RTPPortManager.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BridgeMixer.hxx" />
@@ -73,6 +74,7 @@
     <ClInclude Include="SipXHelper.hxx" />
     <ClInclude Include="InstantMessage.hxx" />
     <ClInclude Include="UserAgentClientPublication.hxx" />
+    <ClInclude Include="RTPPortManager.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

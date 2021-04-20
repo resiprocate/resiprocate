@@ -201,6 +201,7 @@
     <ClCompile Include="RelatedConversationSet.cxx" />
     <ClCompile Include="RemoteParticipant.cxx" />
     <ClCompile Include="RemoteParticipantDialogSet.cxx" />
+    <ClCompile Include="RTPPortManager.cxx" />
     <ClCompile Include="SipXHelper.cxx" />
     <ClCompile Include="sdp\Sdp.cxx" />
     <ClCompile Include="sdp\SdpCandidate.cxx" />
@@ -238,6 +239,7 @@
     <ClInclude Include="RelatedConversationSet.hxx" />
     <ClInclude Include="RemoteParticipant.hxx" />
     <ClInclude Include="RemoteParticipantDialogSet.hxx" />
+    <ClInclude Include="RTPPortManager.hxx" />
     <ClInclude Include="SipXHelper.hxx" />
     <ClInclude Include="sdp\Sdp.hxx" />
     <ClInclude Include="sdp\SdpCandidate.hxx" />

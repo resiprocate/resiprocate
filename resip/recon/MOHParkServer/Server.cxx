@@ -452,6 +452,7 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
 {
    unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
                                SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
+                               SdpCodec::SDP_CODEC_OPUS /* 147 - opus */,
                                SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
                                SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
                                SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,

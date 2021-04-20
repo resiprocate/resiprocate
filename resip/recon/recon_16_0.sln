@@ -16,21 +16,21 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reflow", "..\..\reflow\refl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnClient", "..\..\reTurn\client\reTurnClient_16_0.vcxproj", "{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXportLib-msvc16", "..\..\..\sipXtapi\sipXportLib\sipXportLib-msvc16.vcxproj", "{14631055-9D3F-47E5-B6A7-16BFC0CC8091}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXportLib", "..\..\..\sipXtapi\sipXportLib\sipXportLib-msvc16.vcxproj", "{14631055-9D3F-47E5-B6A7-16BFC0CC8091}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXsdpLib-msvc16", "..\..\..\sipXtapi\sipXsdpLib\sipXsdpLib-msvc16.vcxproj", "{E1D81EA9-4AC3-4CF5-B600-090FD822B1F6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXsdpLib", "..\..\..\sipXtapi\sipXsdpLib\sipXsdpLib-msvc16.vcxproj", "{E1D81EA9-4AC3-4CF5-B600-090FD822B1F6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXmediaAdapterLib-msvc16", "..\..\..\sipXtapi\sipXmediaAdapterLib\sipXmediaAdapterLib-msvc16.vcxproj", "{9501C518-8693-42F3-86A4-39B14983EC6C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXmediaAdapterLib", "..\..\..\sipXtapi\sipXmediaAdapterLib\sipXmediaAdapterLib-msvc16.vcxproj", "{9501C518-8693-42F3-86A4-39B14983EC6C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXmediaLib-msvc16", "..\..\..\sipXtapi\sipXmediaLib\sipXmediaLib-msvc16.vcxproj", "{0EC8287A-481E-45DC-8F95-BAD940AE1038}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXmediaLib", "..\..\..\sipXtapi\sipXmediaLib\sipXmediaLib-msvc16.vcxproj", "{0EC8287A-481E-45DC-8F95-BAD940AE1038}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libspeex", "..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\win32\VS2019\libspeex\libspeex.vcxproj", "{E972C52F-9E85-4D65-B19C-031E511E9DB4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgpcmapcmu-msvc16", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgpcmapcmu\plgpcmapcmu-msvc16.vcxproj", "{A9C94D26-C90D-4860-8195-56929E893757}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgpcmapcmu", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgpcmapcmu\plgpcmapcmu-msvc16.vcxproj", "{A9C94D26-C90D-4860-8195-56929E893757}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgtones-msvc16", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgtones\plgtones-msvc16.vcxproj", "{F3BCA14E-F24D-4570-833E-8C20C4C393F7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgtones", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgtones\plgtones-msvc16.vcxproj", "{F3BCA14E-F24D-4570-833E-8C20C4C393F7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgspeex-msvc16", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgspeex\plgspeex-msvc16.vcxproj", "{4F7FDA11-42A4-4556-A631-15AA785CD1C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgspeex", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgspeex\plgspeex-msvc16.vcxproj", "{4F7FDA11-42A4-4556-A631-15AA785CD1C1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testUA", "test\testUA_16_0.vcxproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC8}"
 EndProject
@@ -38,9 +38,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unitTests", "test\unitTests
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSRTP", "..\..\contrib\srtp\srtp_16_0.vcxproj", "{EEF031CB-FED8-451E-A471-91EC8D4F6750}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgilbc-msvc16", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgilbc\plgilbc-msvc16.vcxproj", "{6442C7DE-E500-4BA2-B821-98092F1EDCAF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgilbc", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgilbc\plgilbc-msvc16.vcxproj", "{6442C7DE-E500-4BA2-B821-98092F1EDCAF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libilbc-msvc16", "..\..\..\sipXtapi\sipXmediaLib\contrib\libilbc\VS2019\libilbc-msvc16.vcxproj", "{214007F3-D6E8-4B07-AC00-9FB673FF539E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libilbc", "..\..\..\sipXtapi\sipXmediaLib\contrib\libilbc\VS2019\libilbc-msvc16.vcxproj", "{214007F3-D6E8-4B07-AC00-9FB673FF539E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libspeexdsp", "..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\win32\VS2019\libspeexdsp\libspeexdsp.vcxproj", "{E42FDC95-7243-4219-9EA4-ACCE4AB97197}"
 EndProject
@@ -50,11 +50,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcre", "..\..\contrib\pcre\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libogg", "..\..\..\sipXtapi\sipXmediaLib\contrib\libopus\libogg\win32\VS2019\libogg.vcxproj", "{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opusenc", "..\..\..\sipXtapi\sipXmediaLib\contrib\libopus\libopusenc\win32\VS2019\opusenc.vcxproj", "{755C376F-0786-46A6-B706-A55E37430A4A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "openenc", "..\..\..\sipXtapi\sipXmediaLib\contrib\libopus\libopusenc\win32\VS2019\opusenc.vcxproj", "{755C376F-0786-46A6-B706-A55E37430A4A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opus", "..\..\..\sipXtapi\sipXmediaLib\contrib\libopus\opus\win32\VS2019\opus.vcxproj", "{219EC965-228A-1824-174D-96449D05F88A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opusfile", "..\..\..\sipXtapi\sipXmediaLib\contrib\libopus\opusfile\win32\VS2019\opusfile.vcxproj", "{1A4B5203-52EB-4805-9511-84B1BD094FCA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgl16", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgl16\plgl16-msvc16.vcxproj", "{A9C94D26-C90D-4860-8195-56929E893710}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plgopus", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plgopus\plgopus-msvc16.vcxproj", "{B9C94D26-C90D-4860-8195-56929E893777}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plggsm", "..\..\..\sipXtapi\sipXmediaLib\src\mp\codecs\plggsm\plggsm-msvc16.vcxproj", "{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgsm", "..\..\..\sipXtapi\sipXmediaLib\contrib\libgsm\libgsm-msvc16.vcxproj", "{993B6878-2EA7-49E0-AC6E-28C68592724B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -247,38 +255,70 @@ Global
 		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}.SSL-Release|Win32.ActiveCfg = Release|Win32
 		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}.SSL-Release|Win32.Build.0 = Release|Win32
 		{B933F895-8EFB-4FDD-A46D-09B8C00D1D26}.SSL-Release|x64.ActiveCfg = Release|x64
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|Win32.ActiveCfg = DebugDLL|Win32
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|Win32.Build.0 = DebugDLL|Win32
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|x64.ActiveCfg = DebugDLL|x64
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|x64.Build.0 = DebugDLL|x64
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|Win32.ActiveCfg = ReleaseDLL|Win32
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|Win32.Build.0 = ReleaseDLL|Win32
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|x64.ActiveCfg = ReleaseDLL|x64
-		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|x64.Build.0 = ReleaseDLL|x64
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|Win32.ActiveCfg = DebugDLL|Win32
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|Win32.Build.0 = DebugDLL|Win32
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|x64.ActiveCfg = DebugDLL|x64
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|x64.Build.0 = DebugDLL|x64
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|Win32.ActiveCfg = ReleaseDLL|Win32
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|Win32.Build.0 = ReleaseDLL|Win32
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|x64.ActiveCfg = ReleaseDLL|x64
-		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|x64.Build.0 = ReleaseDLL|x64
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|Win32.ActiveCfg = DebugDLL|Win32
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|Win32.Build.0 = DebugDLL|Win32
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|x64.ActiveCfg = DebugDLL|x64
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|x64.Build.0 = DebugDLL|x64
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|Win32.ActiveCfg = ReleaseDLL|Win32
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|Win32.Build.0 = ReleaseDLL|Win32
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|x64.ActiveCfg = ReleaseDLL|x64
-		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|x64.Build.0 = ReleaseDLL|x64
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|Win32.ActiveCfg = DebugDLL-NoHttp|Win32
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|Win32.Build.0 = DebugDLL-NoHttp|Win32
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|x64.ActiveCfg = DebugDLL-NoHttp|x64
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|x64.Build.0 = DebugDLL-NoHttp|x64
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|Win32.ActiveCfg = ReleaseDLL-NoHttp|Win32
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|Win32.Build.0 = ReleaseDLL-NoHttp|Win32
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|x64.ActiveCfg = ReleaseDLL-NoHttp|x64
-		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|x64.Build.0 = ReleaseDLL-NoHttp|x64
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Debug|x64.Build.0 = Debug|x64
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|Win32.Build.0 = Release|Win32
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|x64.ActiveCfg = Release|x64
+		{AFF27A26-C088-444B-BC2A-0BA94A02AFA7}.SSL-Release|x64.Build.0 = Release|x64
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Debug|x64.Build.0 = Debug|x64
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|Win32.Build.0 = Release|Win32
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|x64.ActiveCfg = Release|x64
+		{755C376F-0786-46A6-B706-A55E37430A4A}.SSL-Release|x64.Build.0 = Release|x64
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Debug|x64.Build.0 = Debug|x64
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|Win32.Build.0 = Release|Win32
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|x64.ActiveCfg = Release|x64
+		{219EC965-228A-1824-174D-96449D05F88A}.SSL-Release|x64.Build.0 = Release|x64
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|Win32.ActiveCfg = Debug-NoHTTP|Win32
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|Win32.Build.0 = Debug-NoHTTP|Win32
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|x64.ActiveCfg = Debug-NoHTTP|x64
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Debug|x64.Build.0 = Debug-NoHTTP|x64
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|Win32.ActiveCfg = Release-NoHTTP|Win32
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|Win32.Build.0 = Release-NoHTTP|Win32
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|x64.ActiveCfg = Release-NoHTTP|x64
+		{1A4B5203-52EB-4805-9511-84B1BD094FCA}.SSL-Release|x64.Build.0 = Release-NoHTTP|x64
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Debug|x64.Build.0 = Debug|x64
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Release|Win32.Build.0 = Release|Win32
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Release|x64.ActiveCfg = Release|x64
+		{A9C94D26-C90D-4860-8195-56929E893710}.SSL-Release|x64.Build.0 = Release|x64
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Debug|x64.Build.0 = Debug|x64
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Release|Win32.Build.0 = Release|Win32
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Release|x64.ActiveCfg = Release|x64
+		{B9C94D26-C90D-4860-8195-56929E893777}.SSL-Release|x64.Build.0 = Release|x64
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Debug|x64.Build.0 = Debug|x64
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Release|Win32.Build.0 = Release|Win32
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Release|x64.ActiveCfg = Release|x64
+		{8AE1AB5C-9815-42D8-9A09-0B4F1E64B4BB}.SSL-Release|x64.Build.0 = Release|x64
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Debug|x64.Build.0 = Debug|x64
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Release|Win32.Build.0 = Release|Win32
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Release|x64.ActiveCfg = Release|x64
+		{993B6878-2EA7-49E0-AC6E-28C68592724B}.SSL-Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
