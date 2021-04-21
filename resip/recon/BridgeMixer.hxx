@@ -6,11 +6,6 @@
 #define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
 #endif
 
-#include <mp/MprBridge.h>
-#include <mp/MpResourceTopology.h>
-#include <mi/CpMediaInterface.h>
-#include <mp/MpEncoderBase.h>  // required so that static methods in header get linked in
-
 namespace recon
 {
 class ConversationManager;
@@ -31,10 +26,8 @@ class BridgeMixer
 public:  
    /**
      Constructor
-
-     @param mediaInterface
    */
-   BridgeMixer(CpMediaInterface& mediaInterface);  
+   BridgeMixer();
    virtual ~BridgeMixer();
 
    /**
@@ -45,17 +38,13 @@ public:
 
      @param participant Participant to calculate mixer weights for
    */
-   void calculateMixWeightsForParticipant(Participant* participant);
+   virtual void calculateMixWeightsForParticipant(Participant* participant) = 0;
 
    /**
      Logs a multiline representation of the current state
      of the mixing matrix.
    */
-   void outputBridgeMixWeights();
-
-private:
-   MpBridgeGain mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
-   CpMediaInterface& mMediaInterface;
+   virtual void outputBridgeMixWeights() = 0;
 };
 
 }

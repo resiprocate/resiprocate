@@ -74,7 +74,7 @@ protected:
    void registerParticipant(Participant *, unsigned int inputGain=100, unsigned int outputGain=100);
    void unregisterParticipant(Participant *);
 
-   friend class BridgeMixer;
+   friend class SipXBridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 

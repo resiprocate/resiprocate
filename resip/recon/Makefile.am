@@ -47,6 +47,11 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         RemoteParticipantDialogSet.cxx \
         RTPPortManager.cxx \
         SipXHelper.cxx \
+        SipXBridgeMixer.cxx \
+        SipXConversationManager.cxx \
+        SipXLocalParticipant.cxx \
+        SipXRemoteParticipant.cxx \
+        SipXRemoteParticipantDialogSet.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
         UserAgentClientPublication.cxx \
@@ -73,6 +78,11 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         RemoteParticipantDialogSet.hxx \
         RTPPortManager.hxx \
         SipXHelper.hxx \
+        SipXBridgeMixer.hxx \
+        SipXConversationManager.hxx \
+        SipXLocalParticipant.hxx \
+        SipXRemoteParticipant.hxx \
+        SipXRemoteParticipantDialogSet.hxx \
         Conversation.hxx \
         UserAgentDialogSetFactory.hxx \
         sdp/SdpMediaLine.hxx \

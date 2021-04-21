@@ -38,6 +38,7 @@ int _kbhit() {
 }
 #endif
 
+#include "../SipXConversationManager.hxx"
 #include "../UserAgent.hxx"
 #include "../ReconSubsystem.hxx"
 
@@ -94,12 +95,12 @@ public:
    }
 };
 
-class MyConversationManager : public ConversationManager
+class MyConversationManager : public SipXConversationManager
 {
 public:
 
    MyConversationManager(bool localAudioEnabled)
-      : ConversationManager(localAudioEnabled),
+      : SipXConversationManager(localAudioEnabled),
         mLocalAudioEnabled(localAudioEnabled)
    { 
    };

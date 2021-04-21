@@ -1,23 +1,43 @@
-#include "BridgeMixer.hxx"
-#include "ReconSubsystem.hxx"
-#include "Participant.hxx"
-#include "RemoteParticipant.hxx"
-#include "Conversation.hxx"
+#if !defined(SipXLocalParticipant_hxx)
+#define SipXLocalParticipant_hxx
 
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
+#include "ConversationManager.hxx"
+#include "LocalParticipant.hxx"
 
-using namespace recon;
-
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
-
-BridgeMixer::BridgeMixer()
+namespace recon
 {
+class ConversationManager;
+
+/**
+  This class represents a local participant.
+  A local participant is a representation of the local source (speaker) 
+  and sink (microphone).  The local participant is generally only 
+  created once and is added to conversations in which the local speaker 
+  and/or microphone should be involved. 
+
+  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
+*/
+
+class SipXLocalParticipant : public LocalParticipant
+{
+   public:  
+      SipXLocalParticipant(ParticipantHandle partHandle,
+                       ConversationManager& conversationManager);  
+      virtual ~SipXLocalParticipant();
+
+      virtual int getConnectionPortOnBridge();
+      virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
+      virtual void destroyParticipant();
+
+   protected:     
+   private:
+      int mLocalPortOnBridge;
+};
+
 }
 
-BridgeMixer::~BridgeMixer()
-{
-}
+#endif
+
 
 /* ====================================================================
 

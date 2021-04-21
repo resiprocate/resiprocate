@@ -11,7 +11,7 @@
 
 namespace recon
 {
-class ConversationManager;
+class SipXConversationManager;
 
 // Wrapper class to allow CpMediaIterface to be stored in a SharedPtr.
 // Note:  CpMediaIterface cannot be directly stored in a SharePtr because 
@@ -20,13 +20,13 @@ class ConversationManager;
 class MediaInterface : public OsMsgDispatcher
 {
 public:
-   MediaInterface(ConversationManager& conversationManager, ConversationHandle ownerConversationHandle, CpMediaInterface* mediaInterface);
+   MediaInterface(SipXConversationManager& conversationManager, ConversationHandle ownerConversationHandle, CpMediaInterface* mediaInterface);
    ~MediaInterface() { mMediaInterface->release(); }
    CpMediaInterface* getInterface() { return mMediaInterface; }
 private:
    virtual OsStatus post(const OsMsg& msg);
 
-   ConversationManager& mConversationManager;
+   SipXConversationManager& mConversationManager;
    ConversationHandle mOwnerConversationHandle;
    CpMediaInterface* mMediaInterface;
 };

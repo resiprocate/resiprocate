@@ -1,18 +1,22 @@
-#if !defined(RemoteParticipantDialogSet_hxx)
-#define RemoteParticipantDialogSet_hxx
+#if !defined(SipXRemoteParticipantDialogSet_hxx)
+#define SipXRemoteParticipantDialogSet_hxx
 
 #include <map>
 #include <list>
-#include <resip/stack/SdpContents.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 
+// FlowManager Includes
+#include "reflow/FlowContext.hxx"
+#include "reflow/MediaStream.hxx"
+
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
+#include "RemoteParticipantDialogSet.hxx"
 
 namespace sdpcontainer
 {
@@ -29,6 +33,7 @@ namespace recon
 {
 class ConversationManager;
 class RemoteParticipant;
+class FlowManagerSipXSocket;
 
 /**
   This class is used by Invite DialogSets.  Non-Invite DialogSets
@@ -38,61 +43,73 @@ class RemoteParticipant;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipantDialogSet : public resip::AppDialogSet
+class SipXRemoteParticipantDialogSet : public recon::RemoteParticipantDialogSet, private flowmanager::MediaStreamHandler
 {
 public:
-   RemoteParticipantDialogSet(ConversationManager& conversationManager,        
+   SipXRemoteParticipantDialogSet(SipXConversationManager& sipXConversationManager,
                               ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
                               std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
-   virtual ~RemoteParticipantDialogSet();
+   virtual ~SipXRemoteParticipantDialogSet();
 
    virtual RemoteParticipant* createUACOriginalRemoteParticipant(ParticipantHandle handle);
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
+   virtual unsigned int getLocalRTPPort();
 
    virtual void setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp);
-   virtual resip::SdpContents* getProposedSdp() { return mProposedSdp; }
-   virtual void setUACConnected(const resip::DialogId& dialogId, ParticipantHandle partHandle);
-   virtual bool isUACConnected();
-   virtual bool isStaleFork(const resip::DialogId& dialogId);
+   virtual sdpcontainer::Sdp* getProposedSdpSipX() { return mProposedSdpSipX; }
 
-   virtual void removeDialog(const resip::DialogId& dialogId);
-   virtual ConversationManager::ParticipantForkSelectMode getForkSelectMode();
-   virtual ParticipantHandle getActiveRemoteParticipantHandle() { return mActiveRemoteParticipantHandle; }
-   virtual void setActiveRemoteParticipantHandle(ParticipantHandle handle) { mActiveRemoteParticipantHandle = handle; }
+   virtual void setPeerExpectsSAVPF(bool value) { mPeerExpectsSAVPF = value; }
+   virtual bool peerExpectsSAVPF() { return mPeerExpectsSAVPF; }
 
-   // DialogSetHandler
-   virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);
-   virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage& msg);
+   // sipX Media Stuff
+   virtual int getMediaConnectionId() { return mMediaConnectionId; }
+   virtual int getConnectionPortOnBridge();
+   virtual void freeMediaResources();
+
+   void setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
+   void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
+   void setRemoteSDPFingerprint(const resip::Data& fingerprint);
+   bool createSRTPSession(flowmanager::MediaStream::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen);
 
    // Media Stream Processing
    virtual void processMediaStreamReadyEvent(const StunTuple& remoteRtpTuple, const StunTuple& remoteRtcpTuple);
-   virtual void processMediaStreamErrorEvent(unsigned int errorCode);
 
-   void sendInvite(std::shared_ptr<resip::SipMessage> invite);
-   void provideOffer(std::unique_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept);
-   void provideAnswer(std::unique_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert);
-   void accept(resip::InviteSessionHandle& inviteSessionHandle);
+   ConversationProfile::SecureMediaMode getSecureMediaMode() { return mSecureMediaMode; }
+   flowmanager::MediaStream::SrtpCryptoSuite getSrtpCryptoSuite() { return mSrtpCryptoSuite; }
+   bool getSecureMediaRequired() { return mSecureMediaRequired; }
+
+   const resip::Data& getLocalSrtpSessionKey() { return mLocalSrtpSessionKey; }
 
 protected:
-   virtual std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&);
+   virtual bool isAsyncMediaSetup();
 
-   virtual bool isAsyncMediaSetup() = 0;
-
-   virtual void fixUpSdp(resip::SdpContents* sdp) = 0;
+   void fixUpSdp(resip::SdpContents* sdp);
 
 private:
-   ConversationManager& mConversationManager;   
+   SipXConversationManager& mSipXConversationManager;
    RemoteParticipant* mUACOriginalRemoteParticipant;
    std::list<ConversationHandle> mUACOriginalConversationHandles;
    unsigned int mNumDialogs;
+   unsigned int mLocalRTPPort;
+   bool mAllocateLocalRTPPortFailed;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
    std::shared_ptr<ConversationProfile> mConversationProfile;
+   std::shared_ptr<flowmanager::FlowContext> mFlowContext;
    resip::DialogId mUACConnectedDialogId;
    ParticipantHandle mActiveRemoteParticipantHandle;
    std::map<resip::DialogId, RemoteParticipant*> mDialogs;
+   bool mPeerExpectsSAVPF;
 
-   // SDP Negotiations that may need to be delayed due to media stack binding/allocation
+   // Media Stream stuff
+   flowmanager::MediaStream::NatTraversalMode mNatTraversalMode;
+   flowmanager::MediaStream* mMediaStream;
+   reTurn::StunTuple mRtpTuple;
+   reTurn::StunTuple mRtcpTuple;
+   FlowManagerSipXSocket* mRtpSocket;
+   FlowManagerSipXSocket* mRtcpSocket;
+
+   // SDP Negotiations that may need to be delayed due to FlowManager binding/allocation
    std::shared_ptr<resip::SipMessage> mPendingInvite;
    void doSendInvite(std::shared_ptr<resip::SipMessage> invite);
    class PendingOfferAnswer
@@ -107,7 +124,22 @@ private:
    };
    PendingOfferAnswer mPendingOfferAnswer;
    void doProvideOfferAnswer(bool offer, std::unique_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert);
-   resip::SdpContents* mProposedSdp;
+   sdpcontainer::Sdp* mProposedSdpSipX;  // stored here vs RemoteParticipant, since each forked leg needs access to the original offer
+
+   // Secure Media 
+   resip::Data mLocalSrtpSessionKey;
+   ConversationProfile::SecureMediaMode mSecureMediaMode;
+   bool mSecureMediaRequired;
+   flowmanager::MediaStream::SrtpCryptoSuite mSrtpCryptoSuite;
+
+   // sipX media stuff
+   virtual std::shared_ptr<MediaInterface> getMediaInterface();
+   std::shared_ptr<MediaInterface> mMediaInterface;
+   int mMediaConnectionId; 
+   int mConnectionPortOnBridge;
+
+   virtual void onMediaStreamReady(const StunTuple& remoteRtpTuple, const StunTuple& remoteRtcpTuple);
+   virtual void onMediaStreamError(unsigned int errorCode);
 };
 
 }

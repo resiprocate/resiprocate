@@ -1,23 +1,69 @@
+#if !defined(SipXBridgeMixer_hxx)
+#define SipXBridgeMixer_hxx
+
+#if (_MSC_VER >= 1600)
+#include <stdint.h>       // Use Visual Studio's stdint.h
+#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
+#endif
+
+#include <mp/MprBridge.h>
+#include <mp/MpResourceTopology.h>
+#include <mi/CpMediaInterface.h>
+#include <mp/MpEncoderBase.h>  // required so that static methods in header get linked in
+
 #include "BridgeMixer.hxx"
-#include "ReconSubsystem.hxx"
-#include "Participant.hxx"
-#include "RemoteParticipant.hxx"
-#include "Conversation.hxx"
 
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
-
-using namespace recon;
-
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
-
-BridgeMixer::BridgeMixer()
+namespace recon
 {
+class ConversationManager;
+class Participant;
+
+/**
+  This class is used to control the sipX Bridge Mixer mix matrix.
+
+  If there is ever a change required in the mixer bridge, the
+  application should call calculateMixWeightsForParticipant
+  in order to have the changes detected and applied.
+
+  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
+*/
+
+class SipXBridgeMixer : public BridgeMixer
+{
+public:  
+   /**
+     Constructor
+
+     @param mediaInterface
+   */
+   SipXBridgeMixer(CpMediaInterface& mediaInterface);
+   virtual ~SipXBridgeMixer();
+
+   /**
+     Calculates all of the current mixer settings required 
+     for the passed in participant and applies them.  
+     Calculations are based off of Participants membership
+     into Conversations and the input/output gain settings.
+
+     @param participant Participant to calculate mixer weights for
+   */
+   void calculateMixWeightsForParticipant(Participant* participant);
+
+   /**
+     Logs a multiline representation of the current state
+     of the mixing matrix.
+   */
+   void outputBridgeMixWeights();
+
+private:
+   MpBridgeGain mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
+   CpMediaInterface& mMediaInterface;
+};
+
 }
 
-BridgeMixer::~BridgeMixer()
-{
-}
+#endif
+
 
 /* ====================================================================
 

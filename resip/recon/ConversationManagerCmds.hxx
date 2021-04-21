@@ -80,7 +80,7 @@ class JoinConversationCmd  : public resip::DumCommand
            mDestConvHandle(destConvHandle) {}
       virtual void executeCommand()
       {
-         if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+         if(!mConversationManager->supportsJoin())
          {
             WarningLog(<< "JoinConversationCmd: command not allowed in sipXConversationMediaInterfaceMode.");
          }
@@ -142,7 +142,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
          if(conversation)
          {
             const auto _callerProfile = std::dynamic_pointer_cast<ConversationProfile>(mCallerProfile);
-            RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode, _callerProfile);
+            RemoteParticipantDialogSet* participantDialogSet = mConversationManager->createRemoteParticipantDialogSet(mForkSelectMode, _callerProfile);
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
             if(participant)
             {
@@ -227,7 +227,7 @@ class CreateLocalParticipantCmd  : public resip::DumCommand
            mPartHandle(partHandle) {}
       virtual void executeCommand()
       {
-         new LocalParticipant(mPartHandle, *mConversationManager);
+         mConversationManager.createLocalParticipantImpl(mPartHandle);
       }
       resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " CreateLocalParticipantCmd: "; return strm; }
@@ -277,7 +277,7 @@ class AddParticipantCmd  : public resip::DumCommand
 
          if(participant && conversation)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if(!mConversationManager->supportsJoin())
             {
                // Need to ensure, that we are not adding the participant to more than one conversation.
                if(participant->getConversations().size() > 0)
@@ -324,7 +324,7 @@ class RemoveParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(participant && conversation)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if(!mConversationManager->supportsJoin())
             {
                // Need to ensure, that only local participants can be removed from conversations
                if(!dynamic_cast<LocalParticipant*>(participant))
@@ -379,7 +379,7 @@ class MoveParticipantCmd  : public resip::DumCommand
                // No-Op
                return;
             }
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if(!mConversationManager->supportsJoin())
             {
                // Need to ensure, that only local participants can be moved between conversations
                if(!dynamic_cast<LocalParticipant*>(participant))
@@ -501,7 +501,7 @@ class AlertParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mEarlyFlag)
+            if(!mConversationManager->supportsJoin() && mEarlyFlag)
             {
                // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
                // media (ie. EarlyMediaFlag set to true).
@@ -539,7 +539,7 @@ class AnswerParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if(!mConversationManager->supportsJoin())
             {
                // Need to ensure, that the remote paticipant is added to a conversation before accepting the call
                if(remoteParticipant->getConversations().size() == 0)
@@ -675,7 +675,7 @@ class HoldParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mHold)
+            if(!mConversationManager->supportsJoin() && mHold)
             {
                // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
                // media (ie. hold set to true).

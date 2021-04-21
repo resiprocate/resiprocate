@@ -13,7 +13,6 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
-#include "RTPPortManager.hxx"
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
@@ -36,7 +35,9 @@ class Conversation;
 class Participant;
 class UserAgent;
 class ConversationProfile;
+class LocalParticipant;
 class RemoteParticipant;
+class RemoteParticipantDialogSet;
 
 
 /**
@@ -68,46 +69,8 @@ class ConversationManager  : public resip::InviteSessionHandler,
 {
 public:  
   
-   /**
-     Note:  sipXtapi Media Interfaces have a finite number of supported endpoints 
-          that are allowed in each bridge mixer - by default this value is 10 
-          (2 are used for local mic / speaker, 1 for a MediaParticipant, leaving
-           7 remaining for RemoteParticipants).  This limit is controlled by the 
-          preprocessor define DEFAULT_BRIDGE_MAX_IN_OUTPUTS (see 
-          http://www.resiprocate.org/Limitations_with_sipXtapi_media_Integration
-          for more details.
-   
-          sipXGlobalMediaInterfaceMode - uses 1 global sipXtapi media interface  and 
-          allows for participants to exist in multiple conversations at the same 
-          time and have the bridge mixer properly control their mixing.  In this
-          mode, there can only be a single MediaParticipant for all conversations.
-          This architecture/mode is appropriate for single user agent devices (ie. 
-          sip phones).
-
-          sipXConversationMediaInterfaceMode - uses 1 sipXtapi media interface per
-          conversation.  Using this mode, participants cannot exist in multiple
-          conversations at the same time, however the limit of 7 participants is
-          no longer global, it now applies to each conversation.  A separate 
-          media participant for each conversation can also exist.
-          This architecture/mode is appropriate for server applications, such as
-          multi-party conference servers (up to 7 participants per conference), 
-          music on hold servers and call park servers.  Other API's that won't
-          function in this mode are:
-            -joinConversation
-            -addParticipant - only applies to the LocalParticipant
-            -moveParticipant - only applies to the LocalParticipant
-          Note:  For inbound (UAS) Remote Participant sessions, ensure that you
-                 add the Remote Participant to a conversation before you return 
-                 call accept() for alert() with early media.
-   */
-   typedef enum 
-   {
-      sipXGlobalMediaInterfaceMode,  
-      sipXConversationMediaInterfaceMode
-   } MediaInterfaceMode;
-
-   ConversationManager(bool localAudioEnabled=true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode);
-   ConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate);
+   ConversationManager();
+   ConversationManager(int defaultSampleRate, int maxSampleRate);
    virtual ~ConversationManager();
 
    typedef enum 
@@ -361,14 +324,6 @@ public:
    */
    virtual void addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type);
 
-   /**
-     Builds a session capabilties SDPContents based on the passed in ipaddress
-     and codec ordering.
-     Note:  Codec ordering is an array of sipX internal codecId's.  Id's for 
-            codecs not loaded are ignored.
-   */
-   virtual void buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds, 
-                                         unsigned int codecIds[], resip::SdpContents& sessionCaps);
 
    ///////////////////////////////////////////////////////////////////////
    // Conversation Manager Handlers //////////////////////////////////////
@@ -488,18 +443,12 @@ public:
 
    virtual void onParticipantRequestedHold(ParticipantHandle partHandle, bool held) = 0;
 
-   ///////////////////////////////////////////////////////////////////////
-   // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
-   ///////////////////////////////////////////////////////////////////////
+   virtual bool supportsJoin() = 0;
 
-   virtual void setSpeakerVolume(int volume);
-   virtual void setMicrophoneGain(int gain);
-   virtual void muteMicrophone(bool mute);
-   virtual void enableEchoCancel(bool enable);       
-   virtual void enableAutoGainControl(bool enable);  
-   virtual void enableNoiseReduction(bool enable);   
-   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
-   virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
+   virtual LocalParticipant *createLocalParticipantImpl(ParticipantHandle partHandle) = 0;
+   virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSet(
+      ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
+      std::shared_ptr<ConversationProfile> conversationProfile = nullptr) = 0;
 
 protected:
 
@@ -569,9 +518,14 @@ protected:
 
    UserAgent* getUserAgent() { return mUserAgent; }
 
-private:
-   void init(int defaultSampleRate = 0, int maxSampleRate = 0);
+   ParticipantHandle getNewParticipantHandle();    // thread safe
 
+   void post(resip::Message *message);
+   void post(resip::ApplicationMessage& message, unsigned int ms=0);
+
+   virtual void setUserAgent(UserAgent *userAgent);
+
+private:
    friend class DefaultDialogSet;
    friend class Subscription;
 
@@ -591,7 +545,6 @@ private:
 
    friend class RemoteParticipant;
    friend class UserAgent;
-   void setUserAgent(UserAgent *userAgent);
 
    friend class DtmfEvent;
    friend class MediaEvent;
@@ -615,10 +568,9 @@ private:
    friend class BridgeMixer;
    friend class MediaInterface;
 
-   flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 
    // exists here (as opposed to RemoteParticipant) - since it is required for OPTIONS responses
-   virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer);
+   virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer) = 0;
 
    friend class MediaResourceParticipantDeleterCmd;
    friend class CreateConversationCmd;
@@ -653,33 +605,17 @@ private:
    ParticipantMap mParticipants;
    resip::Mutex mParticipantHandleMutex;
    ParticipantHandle mCurrentParticipantHandle;
-   ParticipantHandle getNewParticipantHandle();    // thread safe
+
    Participant* getParticipant(ParticipantHandle partHandle);
 
-   bool mLocalAudioEnabled;
-   MediaInterfaceMode mMediaInterfaceMode;
-   MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
 
-   void post(resip::Message *message);
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
 
-   std::shared_ptr<RTPPortManager> mRTPPortManager;
+
+
 
    MediaResourceCache mMediaResourceCache;
 
-   // FlowManager Instance
-   flowmanager::FlowManager mFlowManager;
-
-   // sipX Media related members
-   void createMediaInterfaceAndMixer(bool giveFocus, ConversationHandle ownerConversationHandle, 
-                                     std::shared_ptr<MediaInterface>& mediaInterface, BridgeMixer** bridgeMixer);
-   std::shared_ptr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
-   CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
-   BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
-   CpMediaInterfaceFactory* mMediaFactory;
-   std::shared_ptr<MediaInterface> mMediaInterface;  
-   BridgeMixer* mBridgeMixer;
-   int mSipXTOSValue;
+   virtual BridgeMixer* getBridgeMixer() = 0;
 };
 
 }

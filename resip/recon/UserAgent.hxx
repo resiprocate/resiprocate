@@ -318,6 +318,7 @@ protected:
 
 private:
    friend class ConversationManager;
+   friend class SipXConversationManager;
    friend class UserAgentShutdownCmd;
    friend class AddConversationProfileCmd;
    friend class SetDefaultOutgoingConversationProfileCmd;
