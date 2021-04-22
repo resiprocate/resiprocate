@@ -22,7 +22,8 @@ class BridgeMixer;
   setting to a conversation can change this.
 
   If a remote participant is a sole member in a conversation, 
-  then he/she will be put on hold.
+  then he/she will be put on hold for the default AutoHoldMode
+  of enabled.
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
@@ -32,8 +33,9 @@ class Conversation
 public:  
    Conversation(ConversationHandle handle, 
                 ConversationManager& conversationManager,
-                RelatedConversationSet* relatedConversationSet=0,  // Pass NULL to create new RelatedConversationSet 
-                bool broadcastOnly = false);   
+                RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
+                ConversationHandle sharedMediaInterfaceConvHandle,
+                ConversationManager::AutoHoldMode autoHoldMode);
    ~Conversation();
 
    void addParticipant(Participant* participant, unsigned int inputGain = 100, unsigned int outputGain = 100);
@@ -53,19 +55,6 @@ public:
 
    ConversationHandle getHandle() { return mHandle; }
 
-   void notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType);
-
-   /**
-     Notifies a Conversation when an RFC2833 DTMF event is received from a
-     particular remote participant.
-
-     @param mediaConnectionId sipX media connectionId for the participant who sent the signal
-     @param dtmf Integer representation of the DTMF tone received (from RFC2833 event codes)
-     @param duration Duration (in milliseconds) of the DTMF tone received
-     @param up Set to true if the DTMF key is up (otherwise down)
-   */
-   void notifyDtmfEvent(int mediaConnectionId, int dtmf, int duration, bool up);
-
 protected:
    friend class Participant;
    friend class LocalParticipant;
@@ -78,6 +67,9 @@ protected:
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
+   friend class AddParticipantCmd;
+   friend class JoinConversationCmd;
+   friend class MoveParticipantCmd;
    std::shared_ptr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
 
 private: 
@@ -91,12 +83,16 @@ private:
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;
    unsigned int mNumMediaParticipants;
-   bool mBroadcastOnly;
+   ConversationManager::AutoHoldMode mAutoHoldMode;
 
    // sipX Media related members
-   BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
+   friend class ConversationManager;
+   BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
+   std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
+   // Note: these are only set here if sipXConversationMediaInterfaceMode is used
    std::shared_ptr<MediaInterface> mMediaInterface;
-   BridgeMixer* mBridgeMixer;
+   std::shared_ptr<BridgeMixer> mBridgeMixer;
+   bool mSharingMediaInterfaceWithAnotherConversation;
 };
 
 }
@@ -106,6 +102,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

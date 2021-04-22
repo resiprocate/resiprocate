@@ -30,6 +30,32 @@ There are three types of participants:
 A typical phone conversation consists of 3 components: 1 conversation, 1 local participant
 and 1 remote participant.
 
+Notes on Mulitple Media Interface Mode:
+  By default uses 1 sipXtapi media interface per conversation.  If you use 
+  createSharedMediaInterfaceConversation instead of createConversation then you can
+  specify that 2 (multiple) conversations can share the same media interface. This 
+  allows participants to be moved between any conversations that share the same media 
+  interface.  Using this mode, participants can only exist in multiple conversations 
+  at the same time if those conversations share the same media interface.
+  This means the limit of 7 participants is no longer global, it now applies
+  to each media interface.  A separate media participant for each media 
+  interface can also exist.  This architecture/mode is appropriate for server
+  applications, such as multi-party conference servers (up to 7 participants 
+  per conference), music on hold servers and call park servers. 
+  API restrictions in this mode:
+    -joinConversation - restricted to functioning only if both source and 
+                        destination conversations share the same media inteface
+    -addParticipant - can only add a participant to multiple conversations if
+                      the conversations share the same media interface
+    -moveParticipant - for non-local participants, restricted to functioning 
+                       only if both source and destination conversations share
+                       the same media inteface
+    -alertParticipant - if you are using the EarlyFlag then the 
+                        RemoteParticipant must be added to a conversation
+                        before calling this
+    -answerParticipant - RemoteParticipant must be added to a conversation
+                         before calling this
+
 
 
 Startup Command Line Parameters
@@ -147,6 +173,10 @@ Command line options are:
        Note:  if local audio support is disabled, then local participants cannot
               be created.
 
+ -mm - multiple media interface mode - enable for media server mode (see notes above)
+ 
+ -ad - default auto hold mode to disabled 
+
  -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level
 
   By default the logging level is INFO, use this switch to change it.
@@ -166,8 +196,17 @@ When starting testUA, one Conversation (Handle=1) and one local participant (Han
 automatically created for convienience.
 
 The console then accepts the following commands:
-createConversation:      <'createconv'|'cc'>
-  Create a new empty conversation.
+createConversation:      <'createconv'|'cc'> [<autoholdmode:'y'|'n'|'b'>] 
+  Create a new empty conversation with the optionally specified autohold mode:
+  'y' = Enabled (default), 'n' = Disabled, 'b' = BroadcastOnly
+
+createSharedMediaInterfaceConversation:  <'createsharedconv'|'csc'> <convHandle> [<autoholdmode:'y'|'n'|'b'>] 
+  Create a new empty conversation with the optionally specified autohold mode:
+  'y' = Enabled (default), 'n' = Disabled, 'b' = BroadcastOnly
+  This new conversation will share the media interface from the passed in converation handle.  
+  This allows participants to be moved between these two conversations, or any conversations 
+  that share the same media interface.
+  Only applicable if Multiple Media Interface mode is enabled via the -mm command line option.
 
 destroyConversation:     <'destroyconv'|'dc'> <convHandle>
   Destroys conversation and ends all participants that solely belong to this conversation.
@@ -220,8 +259,10 @@ modifyParticipantContribution: <'partcontrib'|'pc'> <convHandle> <partHandle> <i
                                <outputGain> (gain in percentage)
   Sets a participants input and output gain towards the specified conversation.  
 
-outputBridgeMatrix:      <'bridgematrix'|'bm'>
+outputBridgeMatrix:      <'bridgematrix'|'bm'> [<convHandle>]
   Outputs the sipX mixing bridge matrix for debugging purposes.
+  If Multiple Media Interface mode is enabled via the -mm command line option, then you 
+  MUST provide a conversation handle.  Otherwise is it not required.
 
 alertPartcipant:         <'alert'|'al'> <partHandle> [<'noearly'>] 
                          (last arg is early flag, enabled by default)

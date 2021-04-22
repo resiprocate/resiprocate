@@ -727,8 +727,6 @@ void executeConversationTest(ConversationManager::MediaInterfaceMode mode)
    conversationProfileBob->setDefaultFrom(bobUri);
    conversationProfileBob->setUserAgent("Test-Bob");
 
-   InfoLog(<< "Tests for sipXGlobalMediaInterfaceMode");
-
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManagers and UserAgents
    //////////////////////////////////////////////////////////////////////////////
@@ -776,7 +774,7 @@ main (int argc, char** argv)
 #endif
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
-   resip::FindMemoryLeaks fml;
+   //resip::FindMemoryLeaks fml;  // TODO !slg! This seems to causing some kind of infinite loop in at least VS2019 x64 bit builds - commenting out for now
    {
 #endif
 
@@ -826,6 +824,7 @@ main (int argc, char** argv)
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

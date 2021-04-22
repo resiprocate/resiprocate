@@ -8,10 +8,9 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-DtmfEvent::DtmfEvent(ConversationManager& conversationManager, ConversationHandle conversationHandle, int connectionId, int dtmf, int duration, bool up) : 
+DtmfEvent::DtmfEvent(ConversationManager& conversationManager, ParticipantHandle partHandle, int dtmf, int duration, bool up) :
    mConversationManager(conversationManager),
-   mConversationHandle(conversationHandle),
-   mConnectionId(connectionId),
+   mParticipantHandle(partHandle),
    mDtmfTone(dtmf),
    mDuration(duration),
    mUp(up)
@@ -21,7 +20,7 @@ DtmfEvent::DtmfEvent(ConversationManager& conversationManager, ConversationHandl
 void 
 DtmfEvent::executeCommand()
 {
-   mConversationManager.notifyDtmfEvent(mConversationHandle, mConnectionId, mDtmfTone, mDuration, mUp);
+   mConversationManager.notifyDtmfEvent(mParticipantHandle, mDtmfTone, mDuration, mUp);
 }
 
 resip::Message* 
@@ -34,7 +33,7 @@ DtmfEvent::clone() const
 EncodeStream& 
 DtmfEvent::encode(EncodeStream& strm) const
 {
-   strm << " DtmfEvent: conversationHandle=" << mConversationHandle << ", connectionId=" << mConnectionId << ", tone=" << mDtmfTone << " duration=" << mDuration << " up=" << mUp;
+   strm << " DtmfEvent: participantHandle=" << mParticipantHandle << ", tone=" << mDtmfTone << " duration=" << mDuration << " up=" << mUp;
    return strm;
 }
 
@@ -47,6 +46,7 @@ DtmfEvent::encodeBrief(EncodeStream& strm) const
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

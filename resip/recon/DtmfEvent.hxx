@@ -17,7 +17,7 @@ class Message;
 class DtmfEvent : public resip::DumCommand
 {
    public:
-      DtmfEvent(ConversationManager& conversationManager, ConversationHandle conversationHandle, int connectionId, int dtmf, int duration, bool up);
+      DtmfEvent(ConversationManager& conversationManager, ParticipantHandle conversationHandle, int dtmf, int duration, bool up);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -26,8 +26,7 @@ class DtmfEvent : public resip::DumCommand
 
    private:
       ConversationManager& mConversationManager;
-      ConversationHandle mConversationHandle;
-      int mConnectionId;
+      ParticipantHandle mParticipantHandle;
       int mDtmfTone;
       int mDuration;
       bool mUp;
@@ -41,6 +40,7 @@ class DtmfEvent : public resip::DumCommand
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

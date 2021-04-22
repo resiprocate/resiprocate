@@ -60,6 +60,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+#define LOG_PREFIX
+
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then testUA will automatically answer incoming calls by adding to lowest numbered conversation
@@ -80,17 +82,17 @@ public:
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
-      InfoLog(<< "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
+      InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
    }
 
    virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
    {
-      InfoLog(<< "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
+      InfoLog(LOG_PREFIX << "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
    virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
    {
-      InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
+      InfoLog(LOG_PREFIX << "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
 };
 
@@ -98,25 +100,26 @@ class MyConversationManager : public ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled)
-      : ConversationManager(localAudioEnabled),
+   MyConversationManager(bool localAudioEnabled, bool multipleMediaInterfaces, bool defaultAutoHoldModeToDisabled)
+      : ConversationManager(localAudioEnabled, multipleMediaInterfaces ? MediaInterfaceMode::sipXConversationMediaInterfaceMode : MediaInterfaceMode::sipXGlobalMediaInterfaceMode),
         mLocalAudioEnabled(localAudioEnabled)
-   { 
-   };
+   {
+      mDefaultAutoHoldMode = defaultAutoHoldModeToDisabled ? ConversationManager::AutoHoldDisabled : ConversationManager::AutoHoldEnabled;
+   }
 
    virtual void startup()
    {      
       if(mLocalAudioEnabled)
       {
          // Create initial local participant and conversation  
-         addParticipant(createConversation(), createLocalParticipant());
+         addParticipant(createConversation(mDefaultAutoHoldMode), createLocalParticipant());
          resip::Uri uri("tone:dialtone;duration=1000");
          createMediaResourceParticipant(mConversationHandles.front(), uri);
       }
       else
       {
          // If no local audio - just create a starter conversation
-         createConversation();
+         createConversation(mDefaultAutoHoldMode);
       }
    
       // Load 2 items into cache for testing
@@ -133,9 +136,16 @@ public:
    }
 
    
-   virtual ConversationHandle createConversation()
+   virtual ConversationHandle createConversation(ConversationManager::AutoHoldMode autoHoldMode)
    {
-      ConversationHandle convHandle = ConversationManager::createConversation();
+      ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
+      mConversationHandles.push_back(convHandle);
+      return convHandle;
+   }
+
+   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedFlowConversation, ConversationManager::AutoHoldMode autoHoldMode)
+   {
+      ConversationHandle convHandle = ConversationManager::createSharedMediaInterfaceConversation(sharedFlowConversation, autoHoldMode);
       mConversationHandles.push_back(convHandle);
       return convHandle;
    }
@@ -163,13 +173,13 @@ public:
 
    virtual void onConversationDestroyed(ConversationHandle convHandle)
    {
-      InfoLog(<< "onConversationDestroyed: handle=" << convHandle);
+      InfoLog(LOG_PREFIX << "onConversationDestroyed: handle=" << convHandle);
       mConversationHandles.remove(convHandle);
    }
 
    virtual void onParticipantDestroyed(ParticipantHandle partHandle)
    {
-      InfoLog(<< "onParticipantDestroyed: handle=" << partHandle);
+      InfoLog(LOG_PREFIX << "onParticipantDestroyed: handle=" << partHandle);
       // Remove from whatever list it is in
       mRemoteParticipantHandles.remove(partHandle);
       mLocalParticipantHandles.remove(partHandle);
@@ -178,25 +188,28 @@ public:
 
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up)
    {
-      InfoLog(<< "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
+      InfoLog(LOG_PREFIX << "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
    }
 
    virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
    {
-      InfoLog(<< "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
       mRemoteParticipantHandles.push_back(partHandle);
       if(autoAnswerEnabled)
       {
          // If there are no conversations, then create one
          if(mConversationHandles.empty())
          {
-            ConversationHandle convHandle = createConversation();
-            // ensure a local participant is in the conversation - create one if one doesn't exist
-            if(mLocalParticipantHandles.empty())
+            ConversationHandle convHandle = createConversation(mDefaultAutoHoldMode);
+            if (mLocalAudioEnabled)
             {
-               createLocalParticipant();
+                // ensure a local participant is in the conversation - create one if one doesn't exist
+                if (mLocalParticipantHandles.empty())
+                {
+                    createLocalParticipant();
+                }
+                addParticipant(convHandle, mLocalParticipantHandles.front());
             }
-            addParticipant(convHandle, mLocalParticipantHandles.front());
          }
          addParticipant(mConversationHandles.front(), partHandle);
          answerParticipant(partHandle);
@@ -205,7 +218,7 @@ public:
 
    virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
    {
-      InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       /*
       if(mConvHandles.empty())
       {
@@ -216,18 +229,18 @@ public:
     
    virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
    {
-      InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
+      InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle);
    }
     
    virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
    {
-      InfoLog(<< "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
    }
 
    virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
                                       ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
    {
-      InfoLog(<< "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
+      InfoLog(LOG_PREFIX << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
       mConversationHandles.push_back(relatedConvHandle);
       mRemoteParticipantHandles.push_back(relatedPartHandle);
@@ -235,27 +248,27 @@ public:
 
    virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
    {
-      InfoLog(<< "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
    }
     
    virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
    {
-      InfoLog(<< "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
    }
 
    virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
    {
-      InfoLog(<< "onParticipantRedirectSuccess: handle=" << partHandle);
+      InfoLog(LOG_PREFIX << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
    virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
    {
-      InfoLog(<< "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
+      InfoLog(LOG_PREFIX << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
    {
-      InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+      InfoLog(LOG_PREFIX << "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
    void displayInfo()
@@ -270,7 +283,7 @@ public:
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
       if(!mLocalParticipantHandles.empty())
       {
@@ -280,7 +293,7 @@ public:
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
       if(!mRemoteParticipantHandles.empty())
       {
@@ -290,7 +303,7 @@ public:
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
       if(!mMediaParticipantHandles.empty())
       {
@@ -300,7 +313,7 @@ public:
          {
             output += Data(*it) + " ";
          }
-         InfoLog(<< output);
+         InfoLog(LOG_PREFIX << output);
       }
    }
 
@@ -309,6 +322,7 @@ public:
    std::list<ParticipantHandle> mRemoteParticipantHandles;
    std::list<ParticipantHandle> mMediaParticipantHandles;
    bool mLocalAudioEnabled;
+   ConversationManager::AutoHoldMode mDefaultAutoHoldMode;
 };
 
 void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
@@ -337,14 +351,28 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    }
 
    // Process commands
-   if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit"))
+   if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit") || isEqualNoCase(command, "x"))
    {
       finished=true;
       return;
    }   
    if(isEqualNoCase(command, "createconv") || isEqualNoCase(command, "cc"))
    {
-      myConversationManager.createConversation();
+      ConversationManager::AutoHoldMode autoHoldMode = myConversationManager.mDefaultAutoHoldMode;
+      if (arg[0] == "n") autoHoldMode = ConversationManager::AutoHoldDisabled;
+      else if (arg[0] == "y") autoHoldMode = ConversationManager::AutoHoldEnabled;
+      else if (arg[0] == "b") autoHoldMode = ConversationManager::AutoHoldBroadcastOnly;
+      myConversationManager.createConversation(autoHoldMode);
+      return;
+   }
+   if (isEqualNoCase(command, "createsharedconv") || isEqualNoCase(command, "csc"))
+   {
+      unsigned long handle = arg[0].convertUnsignedLong();
+      ConversationManager::AutoHoldMode autoHoldMode = myConversationManager.mDefaultAutoHoldMode;
+      if (arg[1] == "n") autoHoldMode = ConversationManager::AutoHoldDisabled;
+      else if (arg[0] == "y") autoHoldMode = ConversationManager::AutoHoldEnabled;
+      else if (arg[1] == "b") autoHoldMode = ConversationManager::AutoHoldBroadcastOnly;
+      myConversationManager.createSharedMediaInterfaceConversation(handle, autoHoldMode);
       return;
    }
    if(isEqualNoCase(command, "destroyconv") || isEqualNoCase(command, "dc"))
@@ -510,7 +538,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    }
    if(isEqualNoCase(command, "bridgematrix") || isEqualNoCase(command, "bm"))
    {
-      myConversationManager.outputBridgeMatrix();
+      unsigned long convHandle = arg[0].convertUnsignedLong();
+      myConversationManager.outputBridgeMatrix(convHandle);
       return;
    }   
    if(isEqualNoCase(command, "alert") || isEqualNoCase(command, "al"))
@@ -700,7 +729,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
             pb.skipChar(',');
          }
       }
-      unsigned int numCodecIds = idList.size();
+      unsigned int numCodecIds = (unsigned int)idList.size();
       if(numCodecIds > 0)
       {
          unsigned int* codecIdArray = new unsigned int[numCodecIds];
@@ -801,7 +830,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          pb.skipToOneOf(ParseBuffer::Whitespace);  // white space 
          Data port;
          pb.data(port, start);
-         natTraversalServerPort = port.convertUnsignedLong();
+         natTraversalServerPort = (unsigned short)port.convertUnsignedLong();
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
@@ -870,7 +899,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 #endif
 
    InfoLog( << "Possible commands are: " << endl
-         << "  createConversation:      <'createconv'|'cc'>" << endl
+         << "  createConversation:      <'createconv'|'cc'> [<autoholdmode:'y'|'n'|'b'>]" << endl
+         << "  createSharedMediaInterfaceConversation: <'createsharedconv'|'csc'> <convHandle> [<autoholdmode:'y'|'n'|'b'>]" << endl
          << "  destroyConversation:     <'destroyconv'|'dc'> <convHandle>" << endl
          << "  joinConversation:        <'joinconv'|'jc'> <sourceConvHandle> <destConvHandle>" << endl
          << endl 
@@ -883,7 +913,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  removePartcipant:        <'removepart'|'rp'> <convHandle> <partHandle>" << endl
          << "  moveParticipant:         <'movepart'|'mp'> <partHandle> <srcConvHandle> <dstConvHandle>" << endl
          << "  modifyParticipantContribution: <'partcontrib'|'pc'> <convHandle> <partHandle> <inputGain> <outputGain> (gain in percentage)" << endl
-         << "  outputBridgeMatrix:      <'bridgematrix'|'bm'>" << endl
+         << "  outputBridgeMatrix:      <'bridgematrix'|'bm'> [<convHandle>]" << endl
          << "  alertPartcipant:         <'alert'|'al'> <partHandle> [<'noearly'>] (last arg is early flag, enabled by default)" << endl
          << "  answerParticipant:       <'answer'|'an'> <partHandle>" << endl
          << "  rejectParticipant:       <'reject'|'rj'> <partHandle> [<statusCode>] (default status code is 486)" << endl
@@ -911,7 +941,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  displayInfo:             <'info'|'i'>" << endl
          << "  logDnsCache:             <'dns'|'ld'>" << endl
          << "  clearDnsCache:           <'cleardns'|'cd'>" << endl
-         << "  exitProgram:             <'exit'|'quit'|'q'>");
+         << "  exitProgram:             <'exit'|'quit'|'q'|'x'>");
 }
 
 #define KBD_BUFFER_SIZE 256
@@ -1002,6 +1032,8 @@ main (int argc, char** argv)
    Data stunUsername;
    Data stunPassword;
    bool localAudioEnabled = true;
+   bool multipleMediaInterfaceModeEnabled = false;
+   bool defaultAutoHoldModeToDisabled = false;
    unsigned short sipPort = 5062;
    unsigned short tlsPort = 5063;
    unsigned short mediaPortStart = 17384;
@@ -1059,7 +1091,9 @@ main (int argc, char** argv)
          cout << " -ns <server:port> - set the hostname and port of the NAT STUN/TURN server" << endl;
          cout << " -nu <username> - sets the STUN/TURN username to use for NAT server" << endl;
          cout << " -np <password> - sets the STUN/TURN password to use for NAT server" << endl;
-         cout << " -nl - no local audio support - removed local sound hardware requirement" << endl;
+         cout << " -nl - no local audio support - remove local sound hardware requirement" << endl;
+         cout << " -mm - multiple media interface mode - enable for media server mode" << endl;
+         cout << " -ad - default auto hold mode to disabled" << endl;
          cout << " -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level" << endl;
          cout << endl;
          cout << "Sample Command line:" << endl;
@@ -1081,6 +1115,14 @@ main (int argc, char** argv)
       else if(isEqualNoCase(commandName, "-nl"))
       {
          localAudioEnabled = false;
+      }
+      else if (isEqualNoCase(commandName, "-mm"))
+      {
+         multipleMediaInterfaceModeEnabled = true;
+      }
+      else if (isEqualNoCase(commandName, "-ad"))
+      {
+         defaultAutoHoldModeToDisabled = true;
       }
       else
       {
@@ -1190,7 +1232,7 @@ main (int argc, char** argv)
                pb.skipToOneOf(ParseBuffer::Whitespace);  // white space 
                Data port;
                pb.data(port, start);
-               natTraversalServerPort = port.convertUnsignedLong();
+               natTraversalServerPort = (unsigned short)port.convertUnsignedLong();
             }
          }
          else if(isEqualNoCase(commandName, "-nu"))
@@ -1274,6 +1316,8 @@ main (int argc, char** argv)
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
+   InfoLog( << "  Multiple Media Interface Mode Enabled = " << (multipleMediaInterfaceModeEnabled ? "true" : "false"));
+   InfoLog( << "  Default Auto Holde Mode = " << (defaultAutoHoldModeToDisabled ? "disabled" : "enabled"));
    InfoLog( << "  Log Level = " << logLevel);
    
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
@@ -1498,7 +1542,7 @@ main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager(localAudioEnabled);
+      MyConversationManager myConversationManager(localAudioEnabled, multipleMediaInterfaceModeEnabled, defaultAutoHoldModeToDisabled);
       MyUserAgent ua(&myConversationManager, profile);
       myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
@@ -1533,7 +1577,7 @@ main (int argc, char** argv)
 
       ua.shutdown();
    }
-   InfoLog(<< "testUA is shutdown.");
+   InfoLog(LOG_PREFIX << "testUA is shutdown.");
    OsSysLog::shutdown();
    sleepSeconds(2);
 
@@ -1545,6 +1589,7 @@ main (int argc, char** argv)
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

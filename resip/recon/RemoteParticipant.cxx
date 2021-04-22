@@ -1766,15 +1766,15 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
       }
 
-	  if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
-	     remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
-	  {
-             setRemoteHold(true);
-	  }
-	  else
-	  {
-             setRemoteHold(false);
-	  }
+      if (remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
+          remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+      {
+          setRemoteHold(true);
+      }
+      else
+      {
+          setRemoteHold(false);
+      }
 
       // Check if any conversations are broadcast only - if so, then we need to send media to parties on hold
       bool broadcastOnly = false;
@@ -2591,6 +2591,7 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -24,7 +24,7 @@ class MediaEvent : public resip::DumCommand
          PLAY_FINISHED
       } MediaEventType;
 
-      MediaEvent(ConversationManager& conversationManager, ConversationHandle conversationHandle, int connectionId, MediaEventType eventType);
+      MediaEvent(ConversationManager& conversationManager, ParticipantHandle partHandle, MediaEventType eventType);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -33,8 +33,7 @@ class MediaEvent : public resip::DumCommand
 
    private:
       ConversationManager& mConversationManager;
-      ConversationHandle mConversationHandle;  // set to 0 if media interface mode is global
-      int mConnectionId;
+      ParticipantHandle mParticipantHandle;
       MediaEventType mEventType;
 };
 
@@ -46,6 +45,7 @@ class MediaEvent : public resip::DumCommand
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

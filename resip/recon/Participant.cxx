@@ -102,7 +102,7 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
    mHandle = 0;             // Set to 0 so that we won't remove replaced reference from ConversationManager
    resip_assert(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXGlobalMediaInterfaceMode ||  // We are either running in sipXGlobalMediaInterfaceMode
           firstAssociatedConversation != 0);                                                                    // or we are running in sipXConversationMediaInterfaceMode and must have belonged to a conversation
-   applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge port matrix
+   applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge mix matrix
 }
 
 std::shared_ptr<MediaInterface> 
@@ -114,7 +114,9 @@ Participant::getMediaInterface()
       resip_assert(mConversationManager.getMediaInterface() != 0);
       return mConversationManager.getMediaInterface();
    case ConversationManager::sipXConversationMediaInterfaceMode:
-      resip_assert(mConversations.size() == 1);
+      // Note:  For this mode, the recon code ensures that all conversations a participant 
+      //        is added to will share the same media interface, so using the first 
+      //        conversation is sufficient.
       resip_assert(mConversations.begin()->second->getMediaInterface() != 0);
       return mConversations.begin()->second->getMediaInterface();
    default:
@@ -134,7 +136,9 @@ Participant::applyBridgeMixWeights()
       mixer = mConversationManager.getBridgeMixer();
       break;
    case ConversationManager::sipXConversationMediaInterfaceMode:
-      resip_assert(mConversations.size() == 1);
+      // Note:  For this mode, the recon code ensures that all conversations a participant 
+      //        is added to will share the same media interface, so using the first 
+      //        conversation is sufficient.
       resip_assert(mConversations.begin()->second->getBridgeMixer() != 0);
       mixer = mConversations.begin()->second->getBridgeMixer();
       break;
@@ -179,6 +183,7 @@ Participant::applyBridgeMixWeights(Conversation* removedConversation)
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -2,12 +2,15 @@
 #include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "DtmfEvent.hxx"
+#include "FlowManagerSipXSocket.hxx"
 
+#include <CpTopologyGraphInterface.h>
 #include <mi/MiNotification.h>
 #include <mi/MiDtmfNotf.h>
 #include <mi/MiRtpStreamActivityNotf.h>
 #include <mi/MiIntNotf.h>
 
+#include <rutil/Lock.hxx>
 #include <rutil/Logger.hxx>
 
 using namespace recon;
@@ -15,13 +18,60 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-MediaInterface::MediaInterface(ConversationManager& conversationManager, 
-                               ConversationHandle ownerConversationHandle, 
-                               CpMediaInterface* mediaInterface) :
+MediaInterface::MediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface) :
    mConversationManager(conversationManager),
-   mOwnerConversationHandle(ownerConversationHandle),
    mMediaInterface(mediaInterface)
 {
+}
+
+OsStatus 
+MediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, FlowManagerSipXSocket* rtpSocket, FlowManagerSipXSocket* rtcpSocket, bool isMulticast)
+{
+   assert(mMediaInterface);
+   OsStatus ret = ((CpTopologyGraphInterface*)mMediaInterface)->createConnection(connectionId, rtpSocket, rtcpSocket, isMulticast);
+   updateConnectionIdToPartipantHandleMapping(connectionId, partHandle);
+   return ret;
+}
+
+OsStatus 
+MediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, const char* localAddress, int localPort)
+{
+   assert(mMediaInterface);
+   OsStatus ret = ((CpTopologyGraphInterface*)mMediaInterface)->createConnection(connectionId, localAddress, localPort);
+   updateConnectionIdToPartipantHandleMapping(connectionId, partHandle);
+   return ret;
+}
+
+void 
+MediaInterface::updateConnectionIdToPartipantHandleMapping(int connectionId, ParticipantHandle partHandle)
+{
+   resip::Lock lock(mConnectionIdToParticipantHandleMapMutex);
+   mConnectionIdToPartipantHandleMap[connectionId] = partHandle;
+}
+
+OsStatus 
+MediaInterface::deleteConnection(int connectionId)
+{
+   assert(mMediaInterface);
+   OsStatus ret = mMediaInterface->deleteConnection(connectionId);
+   {
+      resip::Lock lock(mConnectionIdToParticipantHandleMapMutex);
+      mConnectionIdToPartipantHandleMap.erase(connectionId);
+   }
+   return ret;
+}
+
+ParticipantHandle 
+MediaInterface::getParticipantHandleForConnectionId(int connectionId)
+{
+   ParticipantHandle partHandle = 0;
+   resip::Lock lock(mConnectionIdToParticipantHandleMapMutex);
+   auto it = mConnectionIdToPartipantHandleMap.find(connectionId);
+   if (it != mConnectionIdToPartipantHandleMap.end())
+   {
+      partHandle = it->second;
+   }
+   return partHandle;
 }
 
 OsStatus 
@@ -47,11 +97,11 @@ MediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_PLAY_FINISHED:
          {
             // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(mConversationManager, pNotfMsg->getConnectionId(), mOwnerConversationHandle, MediaEvent::PLAY_FINISHED);
+            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::PLAY_FINISHED);
             mConversationManager.post(mevent);
             InfoLog( << "MediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << 
                ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", conversationHandle=" << mOwnerConversationHandle);
+               ", participantHandle=" << mLastMediaOperationParticipantHandle);
          }
          break;
       case MiNotification::MI_NOTF_PROGRESS:
@@ -83,12 +133,13 @@ MediaInterface::post(const OsMsg& msg)
             }
 
             // Get event into dum queue, so that callback is on dum thread
-            DtmfEvent* devent = new DtmfEvent(mConversationManager, mOwnerConversationHandle, pNotfMsg->getConnectionId(), pDtmfNotfMsg->getKeyCode(), durationMS, pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
+            ParticipantHandle partHandle = getParticipantHandleForConnectionId(pNotfMsg->getConnectionId());
+            DtmfEvent* devent = new DtmfEvent(mConversationManager, partHandle, pDtmfNotfMsg->getKeyCode(), durationMS, pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
             mConversationManager.post(devent);
 
             InfoLog( << "MediaInterface: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
                ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", conversationHandle=" << mOwnerConversationHandle <<
+               ", participantHandle=" << partHandle <<
                ", keyCode=" << pDtmfNotfMsg->getKeyCode() << 
                ", state=" << pDtmfNotfMsg->getKeyPressState() << 
                ", duration=" << pDtmfNotfMsg->getDuration());
@@ -147,7 +198,7 @@ MediaInterface::post(const OsMsg& msg)
 
 /* ====================================================================
 
- Copyright (c) 2010, SIP Spectrum, Inc.
+ Copyright (c) 2010-2021, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

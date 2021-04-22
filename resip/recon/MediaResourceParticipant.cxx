@@ -252,7 +252,8 @@ MediaResourceParticipant::startPlay()
 
          InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
 
-         OsStatus status = getMediaInterface()->getInterface()->playAudio(filepath.c_str(), 
+         MediaInterface* mediaInterface = getMediaInterface().get();
+         OsStatus status = mediaInterface->getInterface()->playAudio(filepath.c_str(),
                                                           mRepeat ? TRUE: FALSE /* repeast? */,
                                                           mRemoteOnly ? FALSE : TRUE /* local */, 
                                                           mLocalOnly ? FALSE : TRUE /* remote */,
@@ -260,6 +261,11 @@ MediaResourceParticipant::startPlay()
                                                           100 /* downScaling */);
          if(status == OS_SUCCESS)
          {
+            // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
+            // as the one that performed the last media operation, so that MediaInterface can generate the event 
+            // to the conversation manage with the correct participant handle.  Note:  this works because sipX
+            // only allows a single play from file or cache at a time per media interface.
+            mediaInterface->setMediaOperationPartipantHandle(mHandle);
             mPlaying = true;
          }
          else
@@ -276,7 +282,8 @@ MediaResourceParticipant::startPlay()
          int type;
          if(mConversationManager.mMediaResourceCache.getFromCache(mMediaUrl.host(), &buffer, &type))
          {
-            OsStatus status = getMediaInterface()->getInterface()->playBuffer((char*)buffer->data(),
+            MediaInterface* mediaInterface = getMediaInterface().get();
+            OsStatus status = mediaInterface->getInterface()->playBuffer((char*)buffer->data(),
                                                               buffer->size(), 
                                                               8000, /* rate */
                                                               type, 
@@ -288,6 +295,11 @@ MediaResourceParticipant::startPlay()
                                                               100 /* downScaling */);
             if(status == OS_SUCCESS)
             {
+               // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
+               // as the one that performed the last media operation, so that MediaInterface can generate the event 
+               // to the conversation manage with the correct participant handle.  Note:  this works because sipX
+               // only allows a single play from file or cache at a time per media interface.
+               mediaInterface->setMediaOperationPartipantHandle(mHandle);
                mPlaying = true;
             }
             else
@@ -563,6 +575,7 @@ MediaResourceParticipant::playerFailed(MpPlayerEvent& event)
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -210,12 +210,12 @@ RemoteParticipantDialogSet::getLocalRTPPort()
          mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow(), mConversationManager.mSipXTOSValue);
          mRtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow(), mConversationManager.mSipXTOSValue);
 
-         ret = ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->createConnection(mMediaConnectionId,mRtpSocket,mRtcpSocket,false);
+         ret = getMediaInterface()->createConnection(mMediaConnectionId, mActiveRemoteParticipantHandle, mRtpSocket, mRtcpSocket);
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
       }
       else
       {
-         ret = getMediaInterface()->getInterface()->createConnection(mMediaConnectionId,
+         ret = getMediaInterface()->createConnection(mMediaConnectionId, mActiveRemoteParticipantHandle
                                                      connectionAddr.c_str(),
                                                      mLocalRTPPort);
          mRtpTuple = localBinding;  // Just treat media stream as immediately ready using the localBinding in the SDP
@@ -511,7 +511,7 @@ RemoteParticipantDialogSet::freeMediaResources()
 {
    if(mMediaConnectionId)
    {
-      getMediaInterface()->getInterface()->deleteConnection(mMediaConnectionId);
+      getMediaInterface()->deleteConnection(mMediaConnectionId);
       mMediaConnectionId = 0;
    }
 
@@ -621,7 +621,7 @@ RemoteParticipantDialogSet::createUACOriginalRemoteParticipant(ParticipantHandle
    resip_assert(!mUACOriginalRemoteParticipant);
    RemoteParticipant *participant = new RemoteParticipant(handle, mConversationManager, mDum, *this);  
    mUACOriginalRemoteParticipant = participant;
-   mActiveRemoteParticipantHandle = participant->getParticipantHandle();  // Store this since it may not be safe to access mUACOriginalRemoteParticipant pointer after corresponding Dialog has been created
+   setActiveRemoteParticipantHandle(participant->getParticipantHandle()); // Store this since it may not be safe to access mUACOriginalRemoteParticipant pointer after corresponding Dialog has been created
    return participant;
 }
 
@@ -677,7 +677,7 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
    else
    {
       RemoteParticipant *participant = new RemoteParticipant(mConversationManager, mDum, *this);
-      mActiveRemoteParticipantHandle = participant->getParticipantHandle();
+      setActiveRemoteParticipantHandle(participant->getParticipantHandle());
       mDialogs[DialogId(msg)] = participant;  // Note:  !slg! DialogId is not quite right here, since there is no To Tag on the INVITE
       return participant;
    }
@@ -697,7 +697,7 @@ RemoteParticipantDialogSet::setUACConnected(const DialogId& dialogId, Participan
 {
    resip_assert(mUACConnectedDialogId.getCallId().empty());
    mUACConnectedDialogId = dialogId;
-   mActiveRemoteParticipantHandle = partHandle;
+   setActiveRemoteParticipantHandle(partHandle);
    if(mForkSelectMode == ConversationManager::ForkSelectAutomatic)
    {
       std::map<DialogId, RemoteParticipant*>::iterator it;
@@ -747,6 +747,18 @@ RemoteParticipantDialogSet::getForkSelectMode()
    return mForkSelectMode;
 }
 
+void 
+RemoteParticipantDialogSet::setActiveRemoteParticipantHandle(ParticipantHandle handle) 
+{ 
+   mActiveRemoteParticipantHandle = handle; 
+   // Maintain MediaInterface mapping if connectionId is already allocated
+   if (mMediaConnectionId > 0)
+   {
+      getMediaInterface()->updateConnectionIdToPartipantHandleMapping(mMediaConnectionId, mActiveRemoteParticipantHandle);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // DialogSetHandler ///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -775,6 +787,7 @@ RemoteParticipantDialogSet::onNonDialogCreatingProvisional(AppDialogSetHandle, c
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

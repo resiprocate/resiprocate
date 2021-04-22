@@ -67,7 +67,7 @@ public:
    virtual void removeDialog(const resip::DialogId& dialogId);
    virtual ConversationManager::ParticipantForkSelectMode getForkSelectMode();
    virtual ParticipantHandle getActiveRemoteParticipantHandle() { return mActiveRemoteParticipantHandle; }
-   virtual void setActiveRemoteParticipantHandle(ParticipantHandle handle) { mActiveRemoteParticipantHandle = handle; }
+   virtual void setActiveRemoteParticipantHandle(ParticipantHandle handle);
 
    // DialogSetHandler
    virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);
@@ -163,6 +163,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

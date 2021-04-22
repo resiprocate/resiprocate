@@ -46,7 +46,7 @@ MOHManager::startup(ConfigParser::MOHSettings& settings)
       !settings.mOutboundProxy.uri().host().empty() ? settings.mOutboundProxy : mServer.mConfig.mOutboundProxy);
 
    // Create an initial conversation and start music
-   ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);   
+   ConversationHandle convHandle = mServer.createConversation(ConversationManager::AutoHoldBroadcastOnly);
    mServer.createMediaResourceParticipant(convHandle, settings.mMOHFilenameUrl);  // Play Music
    mConversations[convHandle];
    mMusicFilenameChanged = false;
@@ -100,7 +100,7 @@ MOHManager::initializeSettings(const resip::Uri& musicFilename)
       mConversations.clear();
 
       // re-create an initial conversation and start music
-      ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);      
+      ConversationHandle convHandle = mServer.createConversation(ConversationManager::AutoHoldBroadcastOnly);
       mServer.createMediaResourceParticipant(convHandle, mMusicFilename);  // Play Music
       mConversations[convHandle];
    }
@@ -169,7 +169,7 @@ MOHManager::addParticipant(ParticipantHandle participantHandle, const Uri& heldU
    // No conversation found that we can use - create a new one
    if(!conversationToUse)
    {
-      conversationToUse = mServer.createConversation(true /* broadcast only*/);
+      conversationToUse = mServer.createConversation(ConversationManager::AutoHoldBroadcastOnly);
       InfoLog(MOHLOG_PREFIX << "addParticipant: created new conversation for music on hold, id=" << conversationToUse);
 
       // Play Music
@@ -224,7 +224,7 @@ MOHManager::removeParticipant(ParticipantHandle participantHandle)
                mConversations.clear();
 
                // re-create an initial conversation and start music
-               ConversationHandle convHandle = mServer.createConversation(true /* broadcast only*/);      
+               ConversationHandle convHandle = mServer.createConversation(ConversationManager::AutoHoldBroadcastOnly);
                mServer.createMediaResourceParticipant(convHandle, mMusicFilename);  // Play Music
                mConversations[convHandle];
                mMusicFilenameChanged = false;
@@ -256,6 +256,7 @@ MOHManager::getActiveCallsInfo(CallInfoList& callInfos)
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2010-2016, SIP Spectrum, Inc.
  All rights reserved.
 

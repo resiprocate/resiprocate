@@ -28,13 +28,15 @@ class CreateConversationCmd  : public resip::DumCommand
    public:  
       CreateConversationCmd(ConversationManager* conversationManager, 
                             ConversationHandle convHandle,
-                            bool broadcastOnly) 
+                            ConversationManager::AutoHoldMode autoHoldMode,
+                            ConversationHandle sharedFlowConvHandle) 
          : mConversationManager(conversationManager),
            mConvHandle(convHandle),
-           mBroadcastOnly(broadcastOnly) {}
+           mAutoHoldMode(autoHoldMode),
+           mSharedFlowConvHandle(sharedFlowConvHandle){}
       virtual void executeCommand()
       {
-            Conversation* conversation = new Conversation(mConvHandle, *mConversationManager, 0, mBroadcastOnly);
+            Conversation* conversation = new Conversation(mConvHandle, *mConversationManager, 0, mSharedFlowConvHandle, mAutoHoldMode);
             resip_assert(conversation);
       }
       resip::Message* clone() const { resip_assert(0); return 0; }
@@ -43,7 +45,8 @@ class CreateConversationCmd  : public resip::DumCommand
    private:
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
-      bool mBroadcastOnly;
+      ConversationManager::AutoHoldMode mAutoHoldMode;
+      ConversationHandle mSharedFlowConvHandle;
 };
 
 class DestroyConversationCmd  : public resip::DumCommand
@@ -80,33 +83,39 @@ class JoinConversationCmd  : public resip::DumCommand
            mDestConvHandle(destConvHandle) {}
       virtual void executeCommand()
       {
-         if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+         Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
+         Conversation* destConversation = mConversationManager->getConversation(mDestConvHandle);
+         if (sourceConversation && destConversation)
          {
-            WarningLog(<< "JoinConversationCmd: command not allowed in sipXConversationMediaInterfaceMode.");
+            if (sourceConversation == destConversation)
+            {
+               // NoOp
+               return;
+            }
+
+            // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
+            // media interface
+            if (mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            {
+               if (sourceConversation->getMediaInterface().get() != destConversation->getMediaInterface().get())
+               {
+                  WarningLog(<< "JoinConversationCmd: joined conversations must be using the same media interface.");
+                  return;
+               }
+            }
+
+            // Join source Conversation into dest Conversation and destroy source conversation
+            sourceConversation->join(destConversation);
          }
          else
          {
-            Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
-            Conversation* destConversation = mConversationManager->getConversation(mDestConvHandle);
-            if(sourceConversation && destConversation)
+            if (!sourceConversation)
             {
-               if(sourceConversation == destConversation)
-               {
-                  // NoOp
-                  return;
-               }
-               sourceConversation->join(destConversation);  // Join source Conversation into dest Conversation and destroy source conversation
+               WarningLog(<< "JoinConversationCmd: invalid source conversation handle.");
             }
-            else
+            if (!destConversation)
             {
-               if(!sourceConversation)
-               {
-                  WarningLog(<< "JoinConversationCmd: invalid source conversation handle.");
-               }
-               if(!destConversation)
-               {
-                  WarningLog(<< "JoinConversationCmd: invalid destination conversation handle.");
-               }
+               WarningLog(<< "JoinConversationCmd: invalid destination conversation handle.");
             }
          }
       }
@@ -279,11 +288,16 @@ class AddParticipantCmd  : public resip::DumCommand
          {
             if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
             {
-               // Need to ensure, that we are not adding the participant to more than one conversation.
+               // Participants can only belong to multiple conversations if they have the same media interface
                if(participant->getConversations().size() > 0)
                {
-                  WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations in sipXConversationMediaInterfaceMode.");
-                  return;
+                  // All conversations they are currently in will have the same media interface, just check that first conversation's media interface
+                  // matches the new conversation we are trying to add to.
+                  if (participant->getConversations().begin()->second->getMediaInterface().get() != conversation->getMediaInterface().get())
+                  {
+                     WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
+                     return;
+                  }
                }
             }
             conversation->addParticipant(participant);
@@ -324,15 +338,6 @@ class RemoveParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(participant && conversation)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
-            {
-               // Need to ensure, that only local participants can be removed from conversations
-               if(!dynamic_cast<LocalParticipant*>(participant))
-               {
-                  WarningLog(<< "RemoveParticipantCmd: only local participants can be removed from conversations in sipXConversationMediaInterfaceMode.");
-                  return;
-               }
-            }
             conversation->removeParticipant(participant);
          }
          else
@@ -379,26 +384,21 @@ class MoveParticipantCmd  : public resip::DumCommand
                // No-Op
                return;
             }
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+
+            // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
+            // media interface
+            if (mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
             {
-               // Need to ensure, that only local participants can be moved between conversations
-               if(!dynamic_cast<LocalParticipant*>(participant))
+               if (sourceConversation->getMediaInterface().get() != destConversation->getMediaInterface().get())
                {
-                  WarningLog(<< "MoveParticipantCmd: only local participants can be moved between conversations in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
                   return;
                }
-               // Remove from old before adding to new conversation (since participants can't belong to multiple conversations
-               // and only local participants can be moved in sipXConversationMediaInterfaceMode - no need to worry about the
-               // hold/unhold issue that is mentioned in the 2nd half of the else statement for sipXGlobalMediaInterfaceMode)
-               sourceConversation->removeParticipant(participant);
-               destConversation->addParticipant(participant);
             }
-            else
-            {
-               // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
-               destConversation->addParticipant(participant);
-               sourceConversation->removeParticipant(participant);
-            }
+
+            // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
+            destConversation->addParticipant(participant);
+            sourceConversation->removeParticipant(participant);
          }
          else
          {
@@ -473,18 +473,18 @@ class ModifyParticipantContributionCmd  : public resip::DumCommand
 class OutputBridgeMixWeightsCmd  : public resip::DumCommand
 {
    public:  
-      OutputBridgeMixWeightsCmd(ConversationManager* conversationManager) 
-         : mConversationManager(conversationManager) {}
+      OutputBridgeMixWeightsCmd(ConversationManager* conversationManager, ConversationHandle convHandle) 
+         : mConversationManager(conversationManager), mConversationHandle(convHandle) {}
       virtual void executeCommand()
       {
-         resip_assert(mConversationManager->getBridgeMixer()!=0);
-         mConversationManager->getBridgeMixer()->outputBridgeMixWeights();
+         mConversationManager->outputBridgeMatrixImpl(mConversationHandle);
       }
       resip::Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << " OutputBridgeMixWeightsCmd: "; return strm; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " OutputBridgeMixWeightsCmd: conversationHandle=" << mConversationHandle; return strm; }
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
+      ConversationHandle mConversationHandle;
 };
 
 class AlertParticipantCmd  : public resip::DumCommand
@@ -701,6 +701,27 @@ class HoldParticipantCmd  : public resip::DumCommand
       bool mHold;
 };
 
+class ApplicationTimerCmd : public resip::DumCommand
+{
+public:
+   ApplicationTimerCmd(ConversationManager* conversationManager,
+      unsigned int timerId, unsigned int timerData)
+      : mConversationManager(conversationManager),
+      mTimerId(timerId),
+      mTimerData(timerData) {}
+   virtual void executeCommand()
+   {
+      mConversationManager->onApplicationTimer(mTimerId, mTimerData);
+   }
+   resip::Message* clone() const { return new ApplicationTimerCmd(mConversationManager, mTimerId, mTimerData); }
+   EncodeStream& encode(EncodeStream& strm) const { strm << " ApplicationTimerCmd: "; return strm; }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+private:
+   ConversationManager* mConversationManager;
+   unsigned int mTimerId;
+   unsigned int mTimerData;
+};
+
 }
 
 #endif
@@ -708,6 +729,7 @@ class HoldParticipantCmd  : public resip::DumCommand
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

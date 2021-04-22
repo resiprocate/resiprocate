@@ -19,15 +19,17 @@ using namespace resip;
 Conversation::Conversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
                            RelatedConversationSet* relatedConversationSet,
-                           bool broadcastOnly)
+                           ConversationHandle sharedMediaInterfaceConvHandle,
+                           ConversationManager::AutoHoldMode autoHoldMode)
 : mHandle(handle),
   mConversationManager(conversationManager),
   mDestroying(false),
   mNumLocalParticipants(0),
   mNumRemoteParticipants(0),
   mNumMediaParticipants(0),
-  mBroadcastOnly(broadcastOnly),
-  mBridgeMixer(0)
+  mAutoHoldMode(autoHoldMode),
+  mBridgeMixer(0),
+  mSharingMediaInterfaceWithAnotherConversation(false)
 {
    mConversationManager.registerConversation(this);
 
@@ -44,10 +46,25 @@ Conversation::Conversation(ConversationHandle handle,
 
    if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
    {
-      mConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
-                                                        mHandle,
-                                                        mMediaInterface, 
-                                                        &mBridgeMixer);      
+      // Check if sharedMediaInterfaceConvHandle was passed in, and if so use the same media interface and bridge mixer that, that
+      // conversation is using
+      if (sharedMediaInterfaceConvHandle != 0)
+      {
+         Conversation* sharedFlowConversation = mConversationManager.getConversation(sharedMediaInterfaceConvHandle);
+         if (sharedFlowConversation)
+         {
+            mMediaInterface = sharedFlowConversation->getMediaInterface();
+            mBridgeMixer = sharedFlowConversation->getBridgeMixerShared();
+            mSharingMediaInterfaceWithAnotherConversation = true;
+         }
+      }
+      
+      if(!mSharingMediaInterfaceWithAnotherConversation)
+      {
+         mConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
+                                                           mMediaInterface,
+                                                           mBridgeMixer);
+      }
    }
 }
 
@@ -59,7 +76,8 @@ Conversation::~Conversation()
       mRelatedConversationSet->removeConversation(mHandle);
    }
    mConversationManager.onConversationDestroyed(mHandle);
-   delete mBridgeMixer;
+   mBridgeMixer.reset();       // Make sure the mixer is destroyed before the media interface
+   mMediaInterface.reset();
    InfoLog(<< "Conversation destroyed, handle=" << mHandle);
 }
 
@@ -112,18 +130,24 @@ Conversation::modifyParticipantContribution(Participant* participant, unsigned i
 bool 
 Conversation::shouldHold() 
 { 
-   // We should be offering a hold SDP if there is no LocalParticipant 
-   // in the conversation and there are no other remote participants     or
-   // there are no remote participants at all
-   return mBroadcastOnly ||
-          mNumRemoteParticipants == 0 ||
-          (mNumLocalParticipants == 0 && (mNumRemoteParticipants+mNumMediaParticipants) <= 1); 
+   switch (mAutoHoldMode)
+   {
+   case ConversationManager::AutoHoldDisabled:
+      return false;
+   case ConversationManager::AutoHoldBroadcastOnly:
+      return true;
+   default:  // Enabled
+      // We should be offering a hold SDP if there are no remote participants at all   OR
+      // there is no LocalParticipant in the conversation and there are no other remote or media participants
+      return mNumRemoteParticipants == 0 ||
+             (mNumLocalParticipants == 0 && (mNumRemoteParticipants + mNumMediaParticipants) <= 1);
+   }
 }  
 
 bool 
 Conversation::broadcastOnly() 
 { 
-   return mBroadcastOnly;
+   return mAutoHoldMode == ConversationManager::AutoHoldBroadcastOnly;
 }  
 
 void
@@ -145,7 +169,12 @@ Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant,
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet, mBroadcastOnly);
+   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet, 
+                                                 // If this conversation is sharing a media interface, then any related 
+                                                 // conversations will as well (use our handle as the original handle
+                                                 // passed in contructor could be gone)
+                                                 mSharingMediaInterfaceWithAnotherConversation ? mHandle: 0, 
+                                                 mAutoHoldMode);
 
    // Copy all participants to new Conversation, except origParticipant
    ParticipantMap::iterator i;
@@ -285,53 +314,10 @@ Conversation::unregisterParticipant(Participant *participant)
    }
 }
 
-void 
-Conversation::notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType)
-{
-   resip_assert(eventType == MediaEvent::PLAY_FINISHED);
-
-   if(eventType == MediaEvent::PLAY_FINISHED)
-   {
-      // sipX only allows you to have one active media participant per media interface
-      // actually playing a file (or from cache) at a time, so for now it is sufficient to have
-      // this event indicate that any active media participants (playing a file/cache) should be destroyed.
-      ParticipantMap::iterator it;
-      for(it = mParticipants.begin(); it != mParticipants.end();)
-      {
-         MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(it->second.getParticipant());
-         it++;  // increment iterator here, since destroy may end up calling unregisterParticipant
-         if(mrPart)
-         {
-            if(mrPart->getResourceType() == MediaResourceParticipant::File ||
-               mrPart->getResourceType() == MediaResourceParticipant::Cache)
-            {
-               mrPart->destroyParticipant();
-            }
-         }
-      }
-   }
-}
-
-void 
-Conversation::notifyDtmfEvent(int mediaConnectionId, int dtmf, int duration, bool up)
-{
-   ParticipantMap::iterator i = mParticipants.begin();
-   for(; i != mParticipants.end(); i++)
-   {
-      RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(i->second.getParticipant());
-      if(remoteParticipant)
-      {
-         if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
-         {
-            mConversationManager.onDtmfEvent(remoteParticipant->getParticipantHandle(), dtmf, duration, up);
-         }
-      }
-   }
-}
-
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
