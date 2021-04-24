@@ -346,7 +346,7 @@ RemoteParticipantDialogSet::onMediaStreamError(unsigned int errorCode)
 void 
 RemoteParticipantDialogSet::sendInvite(std::shared_ptr<SipMessage> invite)
 {
-   if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
+   if(!isAsyncMediaSetup())
    {
       doSendInvite(std::move(invite));
    }
@@ -362,7 +362,7 @@ RemoteParticipantDialogSet::doSendInvite(std::shared_ptr<SipMessage> invite)
 {
    // Fix up address and port in SDP if we have remote info
    // Note:  the only time we don't is if there was an error preparing the media stream
-   if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
+   if(!isAsyncMediaSetup())
    {
       SdpContents* sdp  = dynamic_cast<SdpContents*>(invite->getContents());
       if (sdp)
@@ -379,7 +379,7 @@ RemoteParticipantDialogSet::doSendInvite(std::shared_ptr<SipMessage> invite)
 void 
 RemoteParticipantDialogSet::provideOffer(std::unique_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept)
 {
-   if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
+   if(!isAsyncMediaSetup())
    {
       doProvideOfferAnswer(true /* offer */, std::move(offer), inviteSessionHandle, postOfferAccept, false);
    }
@@ -397,7 +397,7 @@ RemoteParticipantDialogSet::provideOffer(std::unique_ptr<resip::SdpContents> off
 void 
 RemoteParticipantDialogSet::provideAnswer(std::unique_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert)
 {
-   if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
+   if(!isAsyncMediaSetup())
    {
       doProvideOfferAnswer(false /* offer */, std::move(answer), inviteSessionHandle, postAnswerAccept, postAnswerAlert);
    }
@@ -419,7 +419,7 @@ RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::unique_ptr<res
    {
       // Fix up address and port in SDP if we have remote info
       // Note:  the only time we don't is if there was an error preparing the media stream
-      if(mRtpTuple.getTransportType() != reTurn::StunTuple::None)
+      if(!isAsyncMediaSetup())
       {
          sdp->session().media().front().port() = mRtpTuple.getPort();
          sdp->session().connection() = SdpContents::Session::Connection(mRtpTuple.getAddress().is_v4() ? SdpContents::IP4 : SdpContents::IP6, mRtpTuple.getAddress().to_string().c_str());  // c=
@@ -777,6 +777,12 @@ RemoteParticipantDialogSet::onNonDialogCreatingProvisional(AppDialogSetHandle, c
       InfoLog(<< "onNonDialogCreatingProvisional: handle=" << mUACOriginalRemoteParticipant->getParticipantHandle() << ", " << msg.brief());
       if(mUACOriginalRemoteParticipant->getParticipantHandle()) mConversationManager.onParticipantAlerting(mUACOriginalRemoteParticipant->getParticipantHandle(), msg);
    }
+}
+
+bool
+RemoteParticipantDialogSet::isAsyncMediaSetup()
+{
+   return mRtpTuple.getTransportType() == reTurn::StunTuple::None;
 }
 
 

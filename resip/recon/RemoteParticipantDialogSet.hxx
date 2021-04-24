@@ -95,6 +95,8 @@ public:
 protected:
    virtual std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&); 
 
+   virtual bool isAsyncMediaSetup();
+
 private:
    ConversationManager& mConversationManager;   
    RemoteParticipant* mUACOriginalRemoteParticipant;
