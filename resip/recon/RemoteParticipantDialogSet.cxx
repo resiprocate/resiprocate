@@ -611,7 +611,7 @@ RemoteParticipant*
 RemoteParticipantDialogSet::createUACOriginalRemoteParticipant(ParticipantHandle handle)
 {
    resip_assert(!mUACOriginalRemoteParticipant);
-   RemoteParticipant *participant = new RemoteParticipant(handle, mConversationManager, mDum, *this);  
+   RemoteParticipant *participant = mConversationManager.createRemoteParticipantInstance(handle, mDum, *this);
    mUACOriginalRemoteParticipant = participant;
    setActiveRemoteParticipantHandle(participant->getParticipantHandle()); // Store this since it may not be safe to access mUACOriginalRemoteParticipant pointer after corresponding Dialog has been created
    return participant;
@@ -633,7 +633,7 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
       if(mNumDialogs > 1)
       {
          // forking occured and we now have multiple dialogs in this dialog set
-         RemoteParticipant* participant = new RemoteParticipant(mConversationManager, mDum, *this);
+         RemoteParticipant* participant = mConversationManager.createRemoteParticipantInstance(mDum, *this);
 
          InfoLog(<< "Forking occurred for original UAC participant handle=" << mUACOriginalRemoteParticipant->getParticipantHandle() << 
                     " this is leg number " << mNumDialogs << " new handle=" << participant->getParticipantHandle());
@@ -668,7 +668,7 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
    }
    else
    {
-      RemoteParticipant *participant = new RemoteParticipant(mConversationManager, mDum, *this);
+      RemoteParticipant *participant = mConversationManager.createRemoteParticipantInstance(mDum, *this);
       setActiveRemoteParticipantHandle(participant->getParticipantHandle());
       mDialogs[DialogId(msg)] = participant;  // Note:  !slg! DialogId is not quite right here, since there is no To Tag on the INVITE
       return participant;

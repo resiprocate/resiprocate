@@ -2352,7 +2352,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
 
       // Create new Participant - but use same participant handle
-      RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
+      RemoteParticipantDialogSet* participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
 
@@ -2389,7 +2389,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
 
    // Create new Participant - but use same participant handle
-   RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode(), profile);
+   RemoteParticipantDialogSet* participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
 

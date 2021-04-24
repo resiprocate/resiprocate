@@ -30,6 +30,7 @@
 #include "Participant.hxx"
 #include "BridgeMixer.hxx"
 #include "DtmfEvent.hxx"
+#include "RemoteParticipant.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -1068,7 +1069,7 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
          }
 
          // Create new Participant
-         RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
+         RemoteParticipantDialogSet *participantDialogSet = createRemoteParticipantDialogSetInstance();
          RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
          // Set pending OOD info in Participant - causes accept or reject to be called later
@@ -1213,7 +1214,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             }
 
             // Create new Participant 
-            RemoteParticipantDialogSet *participantDialogSet = new RemoteParticipantDialogSet(*this);
+            RemoteParticipantDialogSet *participantDialogSet = createRemoteParticipantDialogSetInstance();
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
             // Set pending OOD info in Participant - causes accept or reject to be called later
@@ -1269,6 +1270,38 @@ ConversationManager::onTryingNextTarget(AppDialogSetHandle, const SipMessage& ms
    InfoLog(<< "onTryingNextTarget(AppDialogSetHandle): " << msg.brief());
    // Always allow redirection for now
    return true;
+}
+
+LocalParticipant *
+ConversationManager::createLocalParticipantInstance(ParticipantHandle partHandle)
+{
+   return new LocalParticipant(partHandle, *this);
+}
+
+MediaResourceParticipant *
+ConversationManager::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
+{
+   return new MediaResourceParticipant(partHandle, *this, mediaUrl);
+}
+
+RemoteParticipant *
+ConversationManager::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
+{
+   return new RemoteParticipant(*this, dum, rpds);
+}
+
+RemoteParticipant *
+ConversationManager::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
+{
+   return new RemoteParticipant(partHandle, *this, dum, rpds);
+}
+
+RemoteParticipantDialogSet *
+ConversationManager::createRemoteParticipantDialogSetInstance(
+      ConversationManager::ParticipantForkSelectMode forkSelectMode,
+      std::shared_ptr<ConversationProfile> conversationProfile)
+{
+   return new RemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
 }
 
 

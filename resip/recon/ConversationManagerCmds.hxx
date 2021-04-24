@@ -148,7 +148,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
          if(conversation)
          {
             const auto _callerProfile = std::dynamic_pointer_cast<ConversationProfile>(mCallerProfile);
-            RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(*mConversationManager, mForkSelectMode, _callerProfile);
+            RemoteParticipantDialogSet* participantDialogSet = mConversationManager->createRemoteParticipantDialogSetInstance(mForkSelectMode, _callerProfile);
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
             if(participant)
             {
@@ -196,7 +196,7 @@ class CreateMediaResourceParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(conversation)
          {
-            MediaResourceParticipant* mediaResourceParticipant = new MediaResourceParticipant(mPartHandle, *mConversationManager, mMediaUrl);
+            MediaResourceParticipant* mediaResourceParticipant = mConversationManager->createMediaResourceParticipantInstance(mPartHandle, mMediaUrl);
             if(mediaResourceParticipant)
             {
                conversation->addParticipant(mediaResourceParticipant);
@@ -233,7 +233,7 @@ class CreateLocalParticipantCmd  : public resip::DumCommand
            mPartHandle(partHandle) {}
       virtual void executeCommand()
       {
-         new LocalParticipant(mPartHandle, *mConversationManager);
+         mConversationManager->createLocalParticipantInstance(mPartHandle);
       }
       resip::Message* clone() const { resip_assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " CreateLocalParticipantCmd: "; return strm; }

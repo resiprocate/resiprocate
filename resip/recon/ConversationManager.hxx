@@ -36,7 +36,10 @@ class Conversation;
 class Participant;
 class UserAgent;
 class ConversationProfile;
+class LocalParticipant;
+class MediaResourceParticipant;
 class RemoteParticipant;
+class RemoteParticipantDialogSet;
 
 
 /**
@@ -609,6 +612,14 @@ public:
    virtual void enableNoiseReduction(bool enable);   
    virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
    virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
+
+   virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle);
+   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl);
+   virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
+   virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
+   virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(
+         ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
+         std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
    MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
 

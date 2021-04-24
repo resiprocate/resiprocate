@@ -29,7 +29,7 @@ UserAgentDialogSetFactory::createAppDialogSet(DialogUsageManager& dum,
    switch(msg.method())
    {
    case INVITE:
-      return new RemoteParticipantDialogSet(mConversationManager);
+      return mConversationManager.createRemoteParticipantDialogSetInstance();
       break;
    default:
       return new DefaultDialogSet(mConversationManager);
