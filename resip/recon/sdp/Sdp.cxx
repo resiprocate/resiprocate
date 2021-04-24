@@ -280,7 +280,7 @@ Sdp::getLocalFoundationId(SdpCandidate::SdpCandidateType candidateType,
 
    // Not found - insert
    char foundationId[15];
-   sprintf(foundationId, "%d", mFoundationIds.size() + 1);
+   sprintf(foundationId, "%ld", mFoundationIds.size() + 1);
    mFoundationIds[foundationId] = sdpFoundation;
 
    return foundationId;
