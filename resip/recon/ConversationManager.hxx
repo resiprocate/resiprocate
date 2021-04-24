@@ -683,6 +683,13 @@ protected:
 
    UserAgent* getUserAgent() { return mUserAgent; }
 
+   ParticipantHandle getNewParticipantHandle();    // thread safe
+
+   void post(resip::Message *message);
+   void post(resip::ApplicationMessage& message, unsigned int ms=0);
+
+   void setUserAgent(UserAgent *userAgent);
+
 private:
    void init(int defaultSampleRate = 0, int maxSampleRate = 0);
 
@@ -705,7 +712,6 @@ private:
 
    friend class RemoteParticipant;
    friend class UserAgent;
-   void setUserAgent(UserAgent *userAgent);
 
    friend class DtmfEvent;
    friend class MediaEvent;
@@ -769,14 +775,10 @@ private:
    ParticipantMap mParticipants;
    resip::Mutex mParticipantHandleMutex;
    ParticipantHandle mCurrentParticipantHandle;
-   ParticipantHandle getNewParticipantHandle();    // thread safe
    Participant* getParticipant(ParticipantHandle partHandle);
 
    bool mLocalAudioEnabled;
    MediaInterfaceMode mMediaInterfaceMode;
-
-   void post(resip::Message *message);
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
 
    std::shared_ptr<RTPPortManager> mRTPPortManager;
 
