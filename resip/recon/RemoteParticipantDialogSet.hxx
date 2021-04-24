@@ -97,6 +97,8 @@ protected:
 
    virtual bool isAsyncMediaSetup();
 
+   virtual void fixUpSdp(resip::SdpContents* sdp);
+
 private:
    ConversationManager& mConversationManager;   
    RemoteParticipant* mUACOriginalRemoteParticipant;

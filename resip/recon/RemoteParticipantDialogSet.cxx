@@ -365,11 +365,7 @@ RemoteParticipantDialogSet::doSendInvite(std::shared_ptr<SipMessage> invite)
    if(!isAsyncMediaSetup())
    {
       SdpContents* sdp  = dynamic_cast<SdpContents*>(invite->getContents());
-      if (sdp)
-      {
-         sdp->session().media().front().port() = mRtpTuple.getPort();
-         sdp->session().connection() = SdpContents::Session::Connection(mRtpTuple.getAddress().is_v4() ? SdpContents::IP4 : SdpContents::IP6, mRtpTuple.getAddress().to_string().c_str());  // c=
-      }
+      fixUpSdp(sdp);
    }
 
    // Send the invite
@@ -421,8 +417,7 @@ RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::unique_ptr<res
       // Note:  the only time we don't is if there was an error preparing the media stream
       if(!isAsyncMediaSetup())
       {
-         sdp->session().media().front().port() = mRtpTuple.getPort();
-         sdp->session().connection() = SdpContents::Session::Connection(mRtpTuple.getAddress().is_v4() ? SdpContents::IP4 : SdpContents::IP6, mRtpTuple.getAddress().to_string().c_str());  // c=
+         fixUpSdp(sdp.get());
       }
 
       if(offer)
@@ -783,6 +778,16 @@ bool
 RemoteParticipantDialogSet::isAsyncMediaSetup()
 {
    return mRtpTuple.getTransportType() == reTurn::StunTuple::None;
+}
+
+void
+RemoteParticipantDialogSet::fixUpSdp(SdpContents* sdp)
+{
+   if (sdp)
+   {
+      sdp->session().media().front().port() = mRtpTuple.getPort();
+      sdp->session().connection() = SdpContents::Session::Connection(mRtpTuple.getAddress().is_v4() ? SdpContents::IP4 : SdpContents::IP6, mRtpTuple.getAddress().to_string().c_str());  // c=
+   }
 }
 
 
