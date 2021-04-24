@@ -95,13 +95,10 @@ class JoinConversationCmd  : public resip::DumCommand
 
             // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
             // media interface
-            if (mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if (!mConversationManager->supportsJoin(mSourceConvHandle, mDestConvHandle))
             {
-               if (sourceConversation->getMediaInterface().get() != destConversation->getMediaInterface().get())
-               {
-                  WarningLog(<< "JoinConversationCmd: joined conversations must be using the same media interface.");
-                  return;
-               }
+               WarningLog(<< "JoinConversationCmd: not supported");
+               return;
             }
 
             // Join source Conversation into dest Conversation and destroy source conversation
@@ -286,14 +283,15 @@ class AddParticipantCmd  : public resip::DumCommand
 
          if(participant && conversation)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if(mConversationManager->supportsMultipleConversations())
             {
                // Participants can only belong to multiple conversations if they have the same media interface
                if(participant->getConversations().size() > 0)
                {
                   // All conversations they are currently in will have the same media interface, just check that first conversation's media interface
                   // matches the new conversation we are trying to add to.
-                  if (participant->getConversations().begin()->second->getMediaInterface().get() != conversation->getMediaInterface().get())
+                  ConversationHandle existingConversationHandle = participant->getConversations().begin()->second->getHandle();
+                  if (!mConversationManager->supportsJoin(existingConversationHandle, mConvHandle))
                   {
                      WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
                      return;
@@ -387,13 +385,10 @@ class MoveParticipantCmd  : public resip::DumCommand
 
             // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
             // media interface
-            if (mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if (!mConversationManager->supportsJoin(mSourceConvHandle, mDestConvHandle))
             {
-               if (sourceConversation->getMediaInterface().get() != destConversation->getMediaInterface().get())
-               {
-                  WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
-                  return;
-               }
+               WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
+               return;
             }
 
             // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
@@ -501,7 +496,7 @@ class AlertParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mEarlyFlag)
+            if(mConversationManager->supportsMultipleConversations() && mEarlyFlag)
             {
                // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
                // media (ie. EarlyMediaFlag set to true).
@@ -539,7 +534,7 @@ class AnswerParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+            if(mConversationManager->supportsMultipleConversations())
             {
                // Need to ensure, that the remote paticipant is added to a conversation before accepting the call
                if(remoteParticipant->getConversations().size() == 0)
@@ -675,7 +670,7 @@ class HoldParticipantCmd  : public resip::DumCommand
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            if(mConversationManager->getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode && mHold)
+            if(mConversationManager->supportsMultipleConversations() && mHold)
             {
                // Need to ensure, that the remote paticipant is added to a conversation before doing an opertation that requires
                // media (ie. hold set to true).

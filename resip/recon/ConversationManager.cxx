@@ -762,6 +762,40 @@ ConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
    bridgeMixer = std::make_shared<BridgeMixer>(*(mediaInterface->getInterface()));
 }
 
+bool
+ConversationManager::supportsMultipleConversations()
+{
+   return (getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode);
+}
+
+bool
+ConversationManager::supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
+{
+   Conversation* sourceConversation = getConversation(sourceConvHandle);
+   Conversation* destConversation = getConversation(destConvHandle);
+
+   if (sourceConversation && destConversation)
+   {
+      if(!supportsMultipleConversations())
+      {
+         return false;
+      }
+      return (sourceConversation->getMediaInterface().get() == destConversation->getMediaInterface().get());
+   }
+   else
+   {
+      if (!sourceConversation)
+      {
+         WarningLog(<< "supportsJoin: invalid source conversation handle.");
+      }
+      if (!destConversation)
+      {
+         WarningLog(<< "supportsJoin: invalid destination conversation handle.");
+      }
+   }
+   return false;
+}
+
 void
 ConversationManager::onNewSession(ClientInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {

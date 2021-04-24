@@ -612,6 +612,9 @@ public:
 
    MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
 
+   virtual bool supportsMultipleConversations();
+   virtual bool supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
+
 protected:
 
    // Invite Session Handler /////////////////////////////////////////////////////
