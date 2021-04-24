@@ -84,9 +84,6 @@ public:
    virtual void destroyConversations();
    virtual void adjustRTPStreams(bool sendingOffer=false);
 
-   // DTMF Handler
-   virtual void onDtmfEvent(int dtmf, int duration, bool up);
-
    // Invite Session Handler /////////////////////////////////////////////////////
    virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
    virtual void onNewSession(resip::ServerInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);

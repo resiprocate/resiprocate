@@ -1998,12 +1998,6 @@ RemoteParticipant::replaceWithParticipant(RemoteParticipant* replacingParticipan
 }
 
 void
-RemoteParticipant::onDtmfEvent(int dtmf, int duration, bool up)
-{
-   if(mHandle) mConversationManager.onDtmfEvent(mHandle, dtmf, duration, up);
-}
-
-void
 RemoteParticipant::onNewSession(ClientInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
    InfoLog(<< "onNewSession(Client): handle=" << mHandle << ", " << msg.brief());
