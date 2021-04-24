@@ -1,5 +1,5 @@
-#if !defined(MediaInterface_hxx)
-#define MediaInterface_hxx
+#if !defined(SipXMediaInterface_hxx)
+#define SipXMediaInterface_hxx
 
 #if (_MSC_VER >= 1600)
 #include <stdint.h>       // Use Visual Studio's stdint.h
@@ -22,11 +22,11 @@ class FlowManagerSipXSocket;
 //        to destroy the object.
 // Also manages a map of sipX connectionId to recon ParticipantHandles to
 // make event generation quick and easy.
-class MediaInterface : public OsMsgDispatcher
+class SipXMediaInterface : public OsMsgDispatcher
 {
 public:
-   MediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface);
-   ~MediaInterface() { mMediaInterface->release(); }
+   SipXMediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface);
+   ~SipXMediaInterface() { mMediaInterface->release(); }
 
    CpMediaInterface* getInterface() { return mMediaInterface; }
 

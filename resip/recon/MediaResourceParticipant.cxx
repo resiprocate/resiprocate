@@ -252,7 +252,7 @@ MediaResourceParticipant::startPlay()
 
          InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
 
-         MediaInterface* mediaInterface = getMediaInterface().get();
+         SipXMediaInterface* mediaInterface = getMediaInterface().get();
          OsStatus status = mediaInterface->getInterface()->playAudio(filepath.c_str(),
                                                           mRepeat ? TRUE: FALSE /* repeast? */,
                                                           mRemoteOnly ? FALSE : TRUE /* local */, 
@@ -282,7 +282,7 @@ MediaResourceParticipant::startPlay()
          int type;
          if(mConversationManager.mMediaResourceCache.getFromCache(mMediaUrl.host(), &buffer, &type))
          {
-            MediaInterface* mediaInterface = getMediaInterface().get();
+            SipXMediaInterface* mediaInterface = getMediaInterface().get();
             OsStatus status = mediaInterface->getInterface()->playBuffer((char*)buffer->data(),
                                                               buffer->size(), 
                                                               8000, /* rate */

@@ -1,4 +1,4 @@
-#include "MediaInterface.hxx"
+#include "SipXMediaInterface.hxx"
 #include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "DtmfEvent.hxx"
@@ -18,14 +18,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-MediaInterface::MediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface) :
+SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface) :
    mConversationManager(conversationManager),
    mMediaInterface(mediaInterface)
 {
 }
 
 OsStatus 
-MediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, FlowManagerSipXSocket* rtpSocket, FlowManagerSipXSocket* rtcpSocket, bool isMulticast)
+SipXMediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, FlowManagerSipXSocket* rtpSocket, FlowManagerSipXSocket* rtcpSocket, bool isMulticast)
 {
    assert(mMediaInterface);
    OsStatus ret = ((CpTopologyGraphInterface*)mMediaInterface)->createConnection(connectionId, rtpSocket, rtcpSocket, isMulticast);
@@ -34,7 +34,7 @@ MediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle
 }
 
 OsStatus 
-MediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, const char* localAddress, int localPort)
+SipXMediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, const char* localAddress, int localPort)
 {
    assert(mMediaInterface);
    OsStatus ret = ((CpTopologyGraphInterface*)mMediaInterface)->createConnection(connectionId, localAddress, localPort);
@@ -43,14 +43,14 @@ MediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle
 }
 
 void 
-MediaInterface::updateConnectionIdToPartipantHandleMapping(int connectionId, ParticipantHandle partHandle)
+SipXMediaInterface::updateConnectionIdToPartipantHandleMapping(int connectionId, ParticipantHandle partHandle)
 {
    resip::Lock lock(mConnectionIdToParticipantHandleMapMutex);
    mConnectionIdToPartipantHandleMap[connectionId] = partHandle;
 }
 
 OsStatus 
-MediaInterface::deleteConnection(int connectionId)
+SipXMediaInterface::deleteConnection(int connectionId)
 {
    assert(mMediaInterface);
    OsStatus ret = mMediaInterface->deleteConnection(connectionId);
@@ -62,7 +62,7 @@ MediaInterface::deleteConnection(int connectionId)
 }
 
 ParticipantHandle 
-MediaInterface::getParticipantHandleForConnectionId(int connectionId)
+SipXMediaInterface::getParticipantHandleForConnectionId(int connectionId)
 {
    ParticipantHandle partHandle = 0;
    resip::Lock lock(mConnectionIdToParticipantHandleMapMutex);
@@ -75,7 +75,7 @@ MediaInterface::getParticipantHandleForConnectionId(int connectionId)
 }
 
 OsStatus 
-MediaInterface::post(const OsMsg& msg)
+SipXMediaInterface::post(const OsMsg& msg)
 {
    if((OsMsg::MsgTypes)msg.getMsgType() == OsMsg::MI_NOTF_MSG)
    {
@@ -83,41 +83,41 @@ MediaInterface::post(const OsMsg& msg)
       switch((MiNotification::NotfType)pNotfMsg->getType())
       {
       case MiNotification::MI_NOTF_PLAY_STARTED:
-         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_PAUSED:
-         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_RESUMED:
-         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_STOPPED:
-         InfoLog( << "MediaInterface: received MI_NOTF_PLAY_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_PLAY_FINISHED:
          {
             // Queue event to conversation manager thread
             MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::PLAY_FINISHED);
             mConversationManager.post(mevent);
-            InfoLog( << "MediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << 
+            InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() <<
                ", connectionId=" << pNotfMsg->getConnectionId() << 
                ", participantHandle=" << mLastMediaOperationParticipantHandle);
          }
          break;
       case MiNotification::MI_NOTF_PROGRESS:
-         InfoLog( << "MediaInterface: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_STARTED:
-         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_STOPPED:
-         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_FINISHED:
-         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_ERROR:
-         InfoLog( << "MediaInterface: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_DTMF_RECEIVED:
          {
@@ -137,7 +137,7 @@ MediaInterface::post(const OsMsg& msg)
             DtmfEvent* devent = new DtmfEvent(mConversationManager, partHandle, pDtmfNotfMsg->getKeyCode(), durationMS, pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
             mConversationManager.post(devent);
 
-            InfoLog( << "MediaInterface: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
+            InfoLog( << "SipXMediaInterface: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() <<
                ", connectionId=" << pNotfMsg->getConnectionId() << 
                ", participantHandle=" << partHandle <<
                ", keyCode=" << pDtmfNotfMsg->getKeyCode() << 
@@ -146,19 +146,19 @@ MediaInterface::post(const OsMsg& msg)
          }
          break;
       case MiNotification::MI_NOTF_DELAY_SPEECH_STARTED:
-         InfoLog( << "MediaInterface: received MI_NOTF_DELAY_SPEECH_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_DELAY_SPEECH_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_DELAY_NO_DELAY:
-         InfoLog( << "MediaInterface: received MI_NOTF_DELAY_NO_DELAY, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_DELAY_NO_DELAY, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_DELAY_QUIESCENCE:
-         InfoLog( << "MediaInterface: received MI_NOTF_DELAY_QUIESCENCE, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         InfoLog( << "SipXMediaInterface: received MI_NOTF_DELAY_QUIESCENCE, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RX_STREAM_ACTIVITY: ///< Value for MiRtpStreamActivityNotf notifications.
          {
             MiRtpStreamActivityNotf* pRtpStreamActivityNotfMsg = (MiRtpStreamActivityNotf*)&msg;
          
-            InfoLog( << "MediaInterface: received MI_NOTF_RX_STREAM_ACTIVITY, sourceId=" << pNotfMsg->getSourceId().data() << 
+            InfoLog( << "SipXMediaInterface: received MI_NOTF_RX_STREAM_ACTIVITY, sourceId=" << pNotfMsg->getSourceId().data() <<
                ", connectionId=" << pNotfMsg->getConnectionId() <<
                ", state=" << (pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_START ? "STREAM_START" :
                               pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_STOP ? "STREAM_STOP" :
@@ -185,12 +185,12 @@ MediaInterface::post(const OsMsg& msg)
          break;
 
       default:
-         InfoLog(<< "MediaInterface: unrecognized MiNotification type = " << pNotfMsg->getType());
+         InfoLog(<< "SipXMediaInterface: unrecognized MiNotification type = " << pNotfMsg->getType());
       }
    }
    else
    {
-      InfoLog(<< "MediaInterface: unrecognized message type = " << msg.getMsgType());
+      InfoLog(<< "SipXMediaInterface: unrecognized message type = " << msg.getMsgType());
    }
    return OS_SUCCESS;
 }

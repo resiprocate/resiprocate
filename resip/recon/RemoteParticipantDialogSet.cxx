@@ -467,7 +467,7 @@ RemoteParticipantDialogSet::accept(resip::InviteSessionHandle& inviteSessionHand
    }
 }
 
-std::shared_ptr<MediaInterface>
+std::shared_ptr<SipXMediaInterface>
 RemoteParticipantDialogSet::getMediaInterface()
 {
    if(!mMediaInterface)

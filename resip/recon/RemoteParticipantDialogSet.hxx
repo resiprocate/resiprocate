@@ -146,8 +146,8 @@ private:
    flowmanager::MediaStream::SrtpCryptoSuite mSrtpCryptoSuite;
 
    // sipX media stuff
-   virtual std::shared_ptr<MediaInterface> getMediaInterface();
-   std::shared_ptr<MediaInterface> mMediaInterface;
+   virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();
+   std::shared_ptr<SipXMediaInterface> mMediaInterface;
    int mMediaConnectionId; 
    int mConnectionPortOnBridge;
 

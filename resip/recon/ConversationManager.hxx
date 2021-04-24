@@ -17,7 +17,7 @@
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
-#include "MediaInterface.hxx"
+#include "SipXMediaInterface.hxx"
 
 #include "reflow/FlowManager.hxx"
 
@@ -743,7 +743,7 @@ private:
    friend class MediaResourceParticipant;
    friend class LocalParticipant;
    friend class BridgeMixer;
-   friend class MediaInterface;
+   friend class SipXMediaInterface;
 
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 
@@ -799,13 +799,13 @@ private:
 
    // sipX Media related members
    void createMediaInterfaceAndMixer(bool giveFocus,
-                                     std::shared_ptr<MediaInterface>& mediaInterface, 
+                                     std::shared_ptr<SipXMediaInterface>& mediaInterface,
                                      std::shared_ptr<BridgeMixer>& bridgeMixer);
-   std::shared_ptr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
+   std::shared_ptr<SipXMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
    CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
    BridgeMixer* getBridgeMixer() { return mBridgeMixer.get(); }
    CpMediaInterfaceFactory* mMediaFactory;
-   std::shared_ptr<MediaInterface> mMediaInterface;  
+   std::shared_ptr<SipXMediaInterface> mMediaInterface;
    std::shared_ptr<BridgeMixer> mBridgeMixer;
    int mSipXTOSValue;
 };

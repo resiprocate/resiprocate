@@ -70,7 +70,7 @@ protected:
    friend class AddParticipantCmd;
    friend class JoinConversationCmd;
    friend class MoveParticipantCmd;
-   std::shared_ptr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
+   std::shared_ptr<SipXMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
 
 private: 
    ConversationHandle mHandle;
@@ -90,7 +90,7 @@ private:
    BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
    std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
-   std::shared_ptr<MediaInterface> mMediaInterface;
+   std::shared_ptr<SipXMediaInterface> mMediaInterface;
    std::shared_ptr<BridgeMixer> mBridgeMixer;
    bool mSharingMediaInterfaceWithAnotherConversation;
 };

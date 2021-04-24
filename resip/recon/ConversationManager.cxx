@@ -725,14 +725,14 @@ ConversationManager::notifyDtmfEvent(ParticipantHandle partHandle, int dtmf, int
 
 void 
 ConversationManager::createMediaInterfaceAndMixer(bool giveFocus, 
-                                                  std::shared_ptr<MediaInterface>& mediaInterface, 
+                                                  std::shared_ptr<SipXMediaInterface>& mediaInterface,
                                                   std::shared_ptr<BridgeMixer>& bridgeMixer)
 {
    UtlString localRtpInterfaceAddress("127.0.0.1");  // Will be overridden in RemoteParticipantDialogSet, when connection is created anyway
 
    // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
    // TODO SLG - if DISABLE_FLOWMANAGER define is on we should consider enabling stun or turn options
-   mediaInterface = std::make_shared<MediaInterface>(*this, mMediaFactory->createMediaInterface(NULL, 
+   mediaInterface = std::make_shared<SipXMediaInterface>(*this, mMediaFactory->createMediaInterface(NULL,
             localRtpInterfaceAddress, 
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 

@@ -105,7 +105,7 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
    applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge mix matrix
 }
 
-std::shared_ptr<MediaInterface> 
+std::shared_ptr<SipXMediaInterface>
 Participant::getMediaInterface()
 {
    switch(mConversationManager.getMediaInterfaceMode())

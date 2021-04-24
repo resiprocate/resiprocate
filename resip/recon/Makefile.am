@@ -36,7 +36,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         InstantMessage.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
-                MediaInterface.cxx \
+        SipXMediaInterface.cxx \
         MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
@@ -81,7 +81,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         sdp/SdpCandidatePair.hxx \
         sdp/SdpCandidate.hxx \
         sdp/Sdp.hxx \
-        MediaInterface.hxx \
+        SipXMediaInterface.hxx \
         UserAgentCmds.hxx \
         UserAgentRegistration.hxx \
         MediaEvent.hxx \
