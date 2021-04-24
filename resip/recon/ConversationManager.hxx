@@ -761,7 +761,6 @@ private:
    friend class RedirectToParticipantCmd;
    friend class HoldParticipantCmd;
 
-private:  
    UserAgent* mUserAgent;
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
