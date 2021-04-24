@@ -56,8 +56,8 @@ WebAdmin::WebAdmin(  Server& server,
                      int port, 
                      IpVersion version ):
    HttpBase( port, version, realm ),
-   mServer(server),
-   mNoWebChallenges( noChal ) 
+   mNoWebChallenges( noChal ),
+   mServer(server)
 {
 }
 
