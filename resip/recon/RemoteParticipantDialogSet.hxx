@@ -17,11 +17,6 @@
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
 
-namespace sdpcontainer
-{
-class Sdp; 
-}
-
 namespace resip
 {
 class DialogUsageManager;
@@ -56,7 +51,7 @@ public:
    virtual unsigned int getLocalRTPPort();
 
    virtual void setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp);
-   virtual sdpcontainer::Sdp* getProposedSdp() { return mProposedSdp; }
+   virtual std::shared_ptr<resip::SdpContents> getProposedSdp() { return mProposedSdp; }
    virtual void setUACConnected(const resip::DialogId& dialogId, ParticipantHandle partHandle);
    virtual bool isUACConnected();
    virtual bool isStaleFork(const resip::DialogId& dialogId);
@@ -138,7 +133,7 @@ private:
    };
    PendingOfferAnswer mPendingOfferAnswer;
    void doProvideOfferAnswer(bool offer, std::unique_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert);
-   sdpcontainer::Sdp* mProposedSdp;  // stored here vs RemoteParticipant, since each forked leg needs access to the original offer
+   std::shared_ptr<resip::SdpContents> mProposedSdp;  // stored here vs RemoteParticipant, since each forked leg needs access to the original offer
 
    // Secure Media 
    resip::Data mLocalSrtpSessionKey;

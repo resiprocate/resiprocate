@@ -189,8 +189,8 @@ private:
    PendingRequest mPendingRequest;
    std::unique_ptr<resip::SdpContents> mPendingOffer;
 
-   sdpcontainer::Sdp* mLocalSdp;
-   sdpcontainer::Sdp* mRemoteSdp;
+   std::shared_ptr<resip::SdpContents> mLocalSdp;
+   std::shared_ptr<resip::SdpContents> mRemoteSdp;
 
    ConversationMap mRelatedConversations;
 };

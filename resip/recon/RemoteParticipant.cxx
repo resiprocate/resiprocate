@@ -107,10 +107,6 @@ RemoteParticipant::~RemoteParticipant()
    }
    mConversations.clear();
 
-   // Delete Sdp memory
-   if(mLocalSdp) delete mLocalSdp;
-   if(mRemoteSdp) delete mRemoteSdp;
-
    InfoLog(<< "RemoteParticipant destroyed, handle=" << mHandle);
 }
 
@@ -1307,7 +1303,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
    //       for responding "best-effort" / optional SRTP (Dtls-SRTP) offers
 
    bool valid = false;
-   sdpcontainer::Sdp* remoteSdp = SdpHelperResip::createSdpFromResipSdp(offer);
+   std::shared_ptr<sdpcontainer::Sdp> remoteSdp(SdpHelperResip::createSdpFromResipSdp(offer));
 
    try
    {
@@ -1419,11 +1415,7 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
    if(valid)
    {
       setLocalSdp(answer);
-      setRemoteSdp(offer, remoteSdp);
-   }
-   else
-   {
-      delete remoteSdp;
+      setRemoteSdp(offer);
    }
    return valid;
 }
@@ -1586,32 +1578,19 @@ RemoteParticipant::setProposedSdp(const resip::SdpContents& sdp)
 void 
 RemoteParticipant::setLocalSdp(const resip::SdpContents& sdp)
 {
-   if(mLocalSdp) delete mLocalSdp;
-   mLocalSdp = 0;
    InfoLog(<< "setLocalSdp: handle=" << mHandle << ", localSdp=" << sdp);
-   mLocalSdp = SdpHelperResip::createSdpFromResipSdp(sdp);
+   mLocalSdp.reset(new SdpContents(sdp));
 }
 
 void 
 RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, bool answer)
 {
-   if(mRemoteSdp) delete mRemoteSdp;
-   mRemoteSdp = 0;
    InfoLog(<< "setRemoteSdp: handle=" << mHandle << ", remoteSdp=" << sdp);
-   mRemoteSdp = SdpHelperResip::createSdpFromResipSdp(sdp);
+   mRemoteSdp.reset(new SdpContents(sdp));
    if(answer && mDialogSet.getProposedSdp())
    {
-      if(mLocalSdp) delete mLocalSdp;
-      mLocalSdp = new sdpcontainer::Sdp(*mDialogSet.getProposedSdp());  // copied
+      mLocalSdp = mDialogSet.getProposedSdp();
    }
-}
-
-void 
-RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp) // Note: sdp only passed for logging purposes
-{
-   if(mRemoteSdp) delete mRemoteSdp;
-   InfoLog(<< "setRemoteSdp: handle=" << mHandle << ", remoteSdp=" << sdp);
-   mRemoteSdp = remoteSdp;
 }
 
 void
@@ -1622,8 +1601,8 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    Data remoteIPAddress;
    unsigned int remoteRtpPort=0;
    unsigned int remoteRtcpPort=0;
-   sdpcontainer::Sdp *localSdp = sendingOffer ? mDialogSet.getProposedSdp() : mLocalSdp;
-   sdpcontainer::Sdp *remoteSdp = sendingOffer ? 0 : mRemoteSdp;
+   std::shared_ptr<sdpcontainer::Sdp> localSdp(SdpHelperResip::createSdpFromResipSdp(sendingOffer ? *mDialogSet.getProposedSdp() : *mLocalSdp));
+   std::shared_ptr<sdpcontainer::Sdp> remoteSdp(sendingOffer ? 0 : SdpHelperResip::createSdpFromResipSdp(*mRemoteSdp));
    const sdpcontainer::SdpMediaLine::CodecList* localCodecs;
    const sdpcontainer::SdpMediaLine::CodecList* remoteCodecs;
    bool supportedCryptoSuite = false;

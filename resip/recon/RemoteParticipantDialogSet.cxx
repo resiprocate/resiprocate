@@ -85,9 +85,6 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
       delete mUACOriginalRemoteParticipant;
    }
 
-   // Delete Sdp memory
-   if(mProposedSdp) delete mProposedSdp;
-
    InfoLog(<< "RemoteParticipantDialogSet destroyed.  mActiveRemoteParticipantHandle=" << mActiveRemoteParticipantHandle);
 }
 
@@ -686,10 +683,8 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
 void 
 RemoteParticipantDialogSet::setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp)
 {
-   if(mProposedSdp) delete mProposedSdp;
-   mProposedSdp = 0;
    InfoLog(<< "setProposedSdp: handle=" << handle << ", proposedSdp=" << sdp);
-   mProposedSdp = SdpHelperResip::createSdpFromResipSdp(sdp);
+   mProposedSdp.reset(new SdpContents(sdp));
 }
 
 void 
