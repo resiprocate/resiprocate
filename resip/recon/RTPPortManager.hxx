@@ -14,8 +14,8 @@ public:
    void freeRTPPort(unsigned int port);
 
 private:
-   int mPortRangeMin;
-   int mPortRangeMax;
+   unsigned int mPortRangeMin;
+   unsigned int mPortRangeMax;
    std::deque<unsigned int> mRTPPortFreeList;
 };
 
