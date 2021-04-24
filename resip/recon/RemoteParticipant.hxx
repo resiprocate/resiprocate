@@ -123,6 +123,9 @@ public:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
+protected:
+   virtual bool mediaStackPortAvailable();
+
 private:       
    void hold();
    void unhold();

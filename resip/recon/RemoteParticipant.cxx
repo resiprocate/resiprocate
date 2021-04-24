@@ -346,7 +346,7 @@ RemoteParticipant::accept()
          ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
          if(sis && !sis->isAccepted())
          { 
-            if(getLocalRTPPort() == 0)
+            if(!mediaStackPortAvailable())
             {
                WarningLog(<< "RemoteParticipant::accept cannot accept call, since no free RTP ports, rejecting instead.");
                sis->reject(480);  // Temporarily Unavailable - no free RTP ports
@@ -409,7 +409,7 @@ RemoteParticipant::alert(bool earlyFlag)
          {
             if(earlyFlag && mPendingOffer)
             {
-               if(getLocalRTPPort() == 0)
+               if(!mediaStackPortAvailable())
                {
                   WarningLog(<< "RemoteParticipant::alert cannot alert call with early media, since no free RTP ports, rejecting instead.");
                   sis->reject(480);  // Temporarily Unavailable - no free RTP ports
@@ -2239,7 +2239,7 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
       }
    }
 
-   if(getLocalRTPPort() == 0)
+   if(!mediaStackPortAvailable())
    {
       WarningLog(<< "RemoteParticipant::onOffer cannot continue due to no free RTP ports, rejecting offer.");
       h->reject(480);  // Temporarily Unavailable
@@ -2272,7 +2272,7 @@ RemoteParticipant::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
    }
    else
    {
-      if(getLocalRTPPort() == 0)
+      if(!mediaStackPortAvailable())
       {
          WarningLog(<< "RemoteParticipant::onOfferRequired cannot continue due to no free RTP ports, rejecting offer request.");
          h->reject(480);  // Temporarily Unavailable
@@ -2580,6 +2580,12 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 {
    InfoLog(<< "onRequestRetry(ClientSub): handle=" << mHandle << ", " << notify.brief());
    return -1;
+}
+
+bool
+RemoteParticipant::mediaStackPortAvailable()
+{
+   return getLocalRTPPort() != 0;
 }
 
 
