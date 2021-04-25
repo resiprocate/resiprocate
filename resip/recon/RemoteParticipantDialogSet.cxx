@@ -83,7 +83,7 @@ RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
 }
 
 void 
-RemoteParticipantDialogSet::processMediaStreamReadyEvent()
+RemoteParticipantDialogSet::processMediaStreamReadyEvent(std::shared_ptr<MediaStreamReadyEvent::StreamParams> streamParams)
 {
    //InfoLog( << "processMediaStreamReadyEvent: rtpTuple=" << rtpTuple << " rtcpTuple=" << rtcpTuple);
 

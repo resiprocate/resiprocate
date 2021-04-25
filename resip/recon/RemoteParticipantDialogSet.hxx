@@ -12,6 +12,7 @@
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
+#include "MediaStreamEvent.hxx"
 
 namespace resip
 {
@@ -60,7 +61,7 @@ public:
    virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage& msg);
 
    // Media Stream Processing
-   virtual void processMediaStreamReadyEvent();
+   virtual void processMediaStreamReadyEvent(std::shared_ptr<MediaStreamReadyEvent::StreamParams> streamParams);
    virtual void processMediaStreamErrorEvent(unsigned int errorCode);
 
    void sendInvite(std::shared_ptr<resip::SipMessage> invite);

@@ -249,20 +249,21 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
 }
 
 void 
-SipXRemoteParticipantDialogSet::processMediaStreamReadyEvent(const StunTuple& rtpTuple, const StunTuple& rtcpTuple)
+SipXRemoteParticipantDialogSet::processMediaStreamReadyEvent(std::shared_ptr<MediaStreamReadyEvent::StreamParams> streamParams)
 {
-   InfoLog( << "processMediaStreamReadyEvent: rtpTuple=" << rtpTuple << " rtcpTuple=" << rtcpTuple);
-   mRtpTuple = rtpTuple;
-   mRtcpTuple = rtcpTuple;   // Check if we had operations pending on the media stream being ready
+   MediaStreamReadyEvent::ReTurnParams* params = dynamic_cast<MediaStreamReadyEvent::ReTurnParams*>(streamParams.get());
+   InfoLog( << "processMediaStreamReadyEvent: streamParams: " << *params);
+   mRtpTuple = params->getRtpTuple();
+   mRtcpTuple = params->getRtcpTuple();   // Check if we had operations pending on the media stream being ready
 
-   RemoteParticipantDialogSet::processMediaStreamReadyEvent();
+   RemoteParticipantDialogSet::processMediaStreamReadyEvent(streamParams);
 }
 
 void 
 SipXRemoteParticipantDialogSet::onMediaStreamReady(const StunTuple& rtpTuple, const StunTuple& rtcpTuple)
 {
    // Get event into dum queue, so that callback is on dum thread
-   MediaStreamReadyEvent* event = new MediaStreamReadyEvent(*this, rtpTuple, rtcpTuple);
+   MediaStreamReadyEvent* event = new MediaStreamReadyEvent(*this, std::make_shared<MediaStreamReadyEvent::ReTurnParams>(rtpTuple, rtcpTuple));
    mDum.post(event);
 }
 
