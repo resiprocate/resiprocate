@@ -201,7 +201,12 @@
     <ClCompile Include="RemoteParticipant.cxx" />
     <ClCompile Include="RemoteParticipantDialogSet.cxx" />
     <ClCompile Include="RTPPortManager.cxx" />
+    <ClCompile Include="SipXBridgeMixer.cxx" />
+    <ClCompile Include="SipXConversationManager.cxx" />
     <ClCompile Include="SipXHelper.cxx" />
+    <ClCompile Include="SipXLocalParticipant.cxx" />
+    <ClCompile Include="SipXRemoteParticipant.cxx" />
+    <ClCompile Include="SipXRemoteParticipantDialogSet.cxx" />
     <ClCompile Include="sdp\Sdp.cxx" />
     <ClCompile Include="sdp\SdpCandidate.cxx" />
     <ClCompile Include="sdp\SdpCandidatePair.cxx" />
@@ -239,7 +244,12 @@
     <ClInclude Include="RemoteParticipant.hxx" />
     <ClInclude Include="RemoteParticipantDialogSet.hxx" />
     <ClInclude Include="RTPPortManager.hxx" />
+    <ClInclude Include="SipXBridgeMixer.hxx" />
+    <ClInclude Include="SipXConversationManager.hxx" />
     <ClInclude Include="SipXHelper.hxx" />
+    <ClInclude Include="SipXLocalParticipant.hxx" />
+    <ClInclude Include="SipXRemoteParticipant.hxx" />
+    <ClInclude Include="SipXRemoteParticipantDialogSet.hxx" />
     <ClInclude Include="sdp\Sdp.hxx" />
     <ClInclude Include="sdp\SdpCandidate.hxx" />
     <ClInclude Include="sdp\SdpCandidatePair.hxx" />

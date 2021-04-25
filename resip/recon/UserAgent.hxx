@@ -318,6 +318,7 @@ protected:
 
 private:
    friend class ConversationManager;
+   friend class SipXConversationManager;
    friend class UserAgentShutdownCmd;
    friend class AddConversationProfileCmd;
    friend class SetDefaultOutgoingConversationProfileCmd;
@@ -332,8 +333,10 @@ private:
    //        loop only
    friend class UserAgentServerAuthManager;
    friend class RemoteParticipant;
+   friend class SipXRemoteParticipant;
    friend class DefaultDialogSet;
    friend class RemoteParticipantDialogSet;
+   friend class SipXRemoteParticipantDialogSet;
 
    void addTransports();
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
@@ -399,6 +402,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (c) 2016, SIP Spectrum, Inc.
 

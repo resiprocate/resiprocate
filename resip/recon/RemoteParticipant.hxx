@@ -54,14 +54,12 @@ public:
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual unsigned int getLocalRTPPort();
-   void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
+   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer) = 0;
    virtual bool isHolding() { return mLocalHold; }
+   virtual bool isRemoteHold() { return mRemoteHold; }
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
    virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::shared_ptr<resip::UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
-   virtual int getConnectionPortOnBridge();
-   virtual int getMediaConnectionId();
    virtual void destroyParticipant();
    virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
    virtual void removeFromConversation(Conversation *conversation);
@@ -82,7 +80,7 @@ public:
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
-   virtual void adjustRTPStreams(bool sendingOffer=false);
+   virtual void adjustRTPStreams(bool sendingOffer=false) = 0;
 
    // Invite Session Handler /////////////////////////////////////////////////////
    virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
@@ -124,21 +122,23 @@ public:
    virtual int onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
 protected:
-   virtual bool mediaStackPortAvailable();
+   void setRemoteHold(bool remoteHold);
+   void setProposedSdp(const resip::SdpContents& sdp);
+   void setLocalSdp(const resip::SdpContents& sdp);
+   std::shared_ptr<resip::SdpContents> getLocalSdp() { return mLocalSdp; };
+   void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
+   std::shared_ptr<resip::SdpContents> getRemoteSdp() { return mRemoteSdp; };
+
+   virtual bool mediaStackPortAvailable() = 0;
+
+   RemoteParticipantDialogSet& getDialogSet() { return mDialogSet; };
 
 private:       
    void hold();
    void unhold();
-   void setRemoteHold(bool remoteHold);
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
-   bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
-   bool formMidDialogSdpOfferOrAnswer(const resip::SdpContents& localSdp, const resip::SdpContents& remoteSdp, resip::SdpContents& newSdp, bool offer);
-   void setProposedSdp(const resip::SdpContents& sdp);
-   void setLocalSdp(const resip::SdpContents& sdp);
-   void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
-   void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
+   virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
    virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;
@@ -202,6 +202,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

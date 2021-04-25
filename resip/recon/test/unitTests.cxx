@@ -4,6 +4,7 @@
 
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
+#include "SipXConversationManager.hxx"
 
 #include <signal.h>
 #include "rutil/Log.hxx"
@@ -128,10 +129,10 @@ signalHandler(int signo)
 ///////////////////////////////////////////////////////////////////////////////
 //  ALICE
 ///////////////////////////////////////////////////////////////////////////////
-class AliceConversationManager : public ConversationManager
+class AliceConversationManager : public SipXConversationManager
 {
 public:
-   AliceConversationManager(ConversationManager::MediaInterfaceMode mode) : ConversationManager(true, mode)
+   AliceConversationManager(SipXConversationManager::MediaInterfaceMode mode) : SipXConversationManager(true, mode)
    { 
       mLogPrefix = "Alice: ";
    };
@@ -353,10 +354,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 //  BOB
 ///////////////////////////////////////////////////////////////////////////////
-class BobConversationManager : public ConversationManager
+class BobConversationManager : public SipXConversationManager
 {
 public:
-   BobConversationManager(ConversationManager::MediaInterfaceMode mode) : ConversationManager(true, mode)
+   BobConversationManager(SipXConversationManager::MediaInterfaceMode mode) : SipXConversationManager(true, mode)
    { 
       mLogPrefix = "Bob: ";
    };
@@ -710,7 +711,7 @@ std::shared_ptr<ConversationProfile> createConversationProfile(std::shared_ptr<U
    return conversationProfile;
 }
 
-void executeConversationTest(ConversationManager::MediaInterfaceMode mode)
+void executeConversationTest(SipXConversationManager::MediaInterfaceMode mode)
 {
    //////////////////////////////////////////////////////////////////////////////
    // Setup UserAgentMasterProfiles
@@ -800,7 +801,7 @@ main (int argc, char** argv)
    initNetwork();
 
    cout << "Tests for sipXConversationMediaInterfaceMode" << endl;
-   executeConversationTest(ConversationManager::sipXConversationMediaInterfaceMode);
+   executeConversationTest(SipXConversationManager::sipXConversationMediaInterfaceMode);
 
    // Reset counters, etc.
    SCENARIO = 1;
@@ -809,7 +810,7 @@ main (int argc, char** argv)
    finished = false;
 
    cout << "Tests for sipXGlobalMediaInterfaceMode" << endl;
-   executeConversationTest(ConversationManager::sipXGlobalMediaInterfaceMode);
+   executeConversationTest(SipXConversationManager::sipXGlobalMediaInterfaceMode);
 
    InfoLog(<< "unitTests is shutdown.");
    //sleepSeconds(10);
@@ -825,6 +826,7 @@ main (int argc, char** argv)
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

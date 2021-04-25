@@ -1,50 +1,37 @@
-#if !defined(BridgeMixer_hxx)
-#define BridgeMixer_hxx
+#if !defined(SipXLocalParticipant_hxx)
+#define SipXLocalParticipant_hxx
 
-#if (_MSC_VER >= 1600)
-#include <stdint.h>       // Use Visual Studio's stdint.h
-#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
-#endif
+#include "SipXConversationManager.hxx"
+#include "LocalParticipant.hxx"
 
 namespace recon
 {
 class ConversationManager;
-class Participant;
 
 /**
-  This class is used to control the sipX Bridge Mixer mix matrix.
-
-  If there is ever a change required in the mixer bridge, the
-  application should call calculateMixWeightsForParticipant
-  in order to have the changes detected and applied.
+  This class represents a local participant.
+  A local participant is a representation of the local source (speaker) 
+  and sink (microphone).  The local participant is generally only 
+  created once and is added to conversations in which the local speaker 
+  and/or microphone should be involved. 
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class BridgeMixer
+class SipXLocalParticipant : public LocalParticipant
 {
-public:  
-   /**
-     Constructor
-   */
-   BridgeMixer();
-   virtual ~BridgeMixer();
+   public:  
+      SipXLocalParticipant(ParticipantHandle partHandle,
+                       SipXConversationManager& conversationManager);
+      virtual ~SipXLocalParticipant();
 
-   /**
-     Calculates all of the current mixer settings required 
-     for the passed in participant and applies them.  
-     Calculations are based off of Participants membership
-     into Conversations and the input/output gain settings.
+      virtual int getConnectionPortOnBridge();
+      virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
 
-     @param participant Participant to calculate mixer weights for
-   */
-   virtual void calculateMixWeightsForParticipant(Participant* participant) = 0;
-
-   /**
-     Logs a multiline representation of the current state
-     of the mixing matrix.
-   */
-   virtual void outputBridgeMixWeights() = 0;
+   protected:     
+      SipXConversationManager& getSipXConversationManager() { return dynamic_cast<SipXConversationManager&>(mConversationManager); };
+   private:
+      int mLocalPortOnBridge;
 };
 
 }

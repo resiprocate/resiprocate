@@ -86,7 +86,7 @@ class B2BCallManager : public MyConversationManager
 {
 public:
 
-   B2BCallManager(recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
+   B2BCallManager(recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
    ~B2BCallManager();
 
    virtual void init(MyUserAgent& ua);

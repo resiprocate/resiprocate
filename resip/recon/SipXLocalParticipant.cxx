@@ -1,9 +1,9 @@
-#include "BridgeMixer.hxx"
+#include "SipXBridgeMixer.hxx"
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
-#include "LocalParticipant.hxx"
+#include "SipXLocalParticipant.hxx"
 #include <CpTopologyGraphInterface.h>
 
 #include <rutil/Log.hxx>
@@ -15,30 +15,42 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-LocalParticipant::LocalParticipant(ParticipantHandle partHandle,
-                                   ConversationManager& conversationManager)
-: Participant(partHandle, conversationManager)
+SipXLocalParticipant::SipXLocalParticipant(ParticipantHandle partHandle,
+                                   SipXConversationManager& conversationManager)
+: LocalParticipant(partHandle, conversationManager),
+  mLocalPortOnBridge(-1)
 {
-   InfoLog(<< "LocalParticipant created, handle=" << mHandle);
+   InfoLog(<< "SipXLocalParticipant created, handle=" << mHandle);
 }
 
-LocalParticipant::~LocalParticipant()
+SipXLocalParticipant::~SipXLocalParticipant()
 {
-   // unregister from Conversations
-   // Note:  ideally this functionality would exist in Participant Base class - but dynamic_cast required in unregisterParticipant will not work
-   ConversationMap::iterator it;
-   for(it = mConversations.begin(); it != mConversations.end(); it++)
+   InfoLog(<< "SipXLocalParticipant destroyed, handle=" << mHandle);
+}
+
+int 
+SipXLocalParticipant::getConnectionPortOnBridge()
+{
+   if(mLocalPortOnBridge == -1)
    {
-      it->second->unregisterParticipant(this);
+      resip_assert(getMediaInterface() != 0);       
+      ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
+      InfoLog(<< "SipXLocalParticipant getConnectionPortOnBridge, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
    }
-   mConversations.clear();
-   InfoLog(<< "LocalParticipant destroyed, handle=" << mHandle);
+   return mLocalPortOnBridge;
 }
 
-void
-LocalParticipant::destroyParticipant()
+void 
+SipXLocalParticipant::addToConversation(Conversation *conversation, unsigned int inputGain, unsigned int outputGain)
 {
-   delete this;
+    Participant::addToConversation(conversation, inputGain, outputGain);
+
+    if(getSipXConversationManager().getMediaInterfaceMode() == SipXConversationManager::sipXConversationMediaInterfaceMode)
+    {
+       // The Local participant is in a new Conversation, give that conversation focus
+       resip_assert(getMediaInterface() != 0);       
+       getMediaInterface()->getInterface()->giveFocus();
+    }
 }
 
 

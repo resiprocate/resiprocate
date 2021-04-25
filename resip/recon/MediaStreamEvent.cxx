@@ -1,6 +1,6 @@
 #include "MediaStreamEvent.hxx"
 
-#include "RemoteParticipantDialogSet.hxx"
+#include "SipXRemoteParticipantDialogSet.hxx"
 
 #include <rutil/Logger.hxx>
 
@@ -21,7 +21,7 @@ MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteP
 void 
 MediaStreamReadyEvent::executeCommand()
 {
-   mRemoteParticipantDialogSet.processMediaStreamReadyEvent(mRtpTuple, mRtcpTuple);
+   dynamic_cast<SipXRemoteParticipantDialogSet&>(mRemoteParticipantDialogSet).processMediaStreamReadyEvent(mRtpTuple, mRtcpTuple);
 }
 
 resip::Message* 
@@ -81,6 +81,7 @@ MediaStreamErrorEvent::encodeBrief(EncodeStream& strm) const
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

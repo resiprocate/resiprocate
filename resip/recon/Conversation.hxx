@@ -2,6 +2,7 @@
 #define Conversation_hxx
 
 #include "ConversationManager.hxx"
+#include "SipXConversationManager.hxx"
 #include "ConversationParticipantAssignment.hxx"
 
 namespace recon
@@ -59,11 +60,13 @@ protected:
    friend class Participant;
    friend class LocalParticipant;
    friend class RemoteParticipant;
+   friend class SipXRemoteParticipant;
    friend class MediaResourceParticipant;
    void registerParticipant(Participant *, unsigned int inputGain=100, unsigned int outputGain=100);
    void unregisterParticipant(Participant *);
 
    friend class BridgeMixer;
+   friend class SipXBridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
@@ -87,6 +90,7 @@ private:
 
    // sipX Media related members
    friend class ConversationManager;
+   friend class SipXConversationManager;
    BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
    std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
@@ -103,6 +107,7 @@ private:
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

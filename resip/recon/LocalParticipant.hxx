@@ -25,13 +25,10 @@ class LocalParticipant : public Participant
                        ConversationManager& conversationManager);  
       virtual ~LocalParticipant();
 
-      virtual int getConnectionPortOnBridge();
-      virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
       virtual void destroyParticipant();
 
    protected:     
    private:
-      int mLocalPortOnBridge;
 };
 
 }
@@ -41,6 +38,7 @@ class LocalParticipant : public Participant
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

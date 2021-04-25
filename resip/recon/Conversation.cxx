@@ -44,7 +44,7 @@ Conversation::Conversation(ConversationHandle handle,
    }
    InfoLog(<< "Conversation created, handle=" << mHandle);
 
-   if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+   if(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode() == SipXConversationManager::sipXConversationMediaInterfaceMode)
    {
       // Check if sharedMediaInterfaceConvHandle was passed in, and if so use the same media interface and bridge mixer that, that
       // conversation is using
@@ -61,10 +61,11 @@ Conversation::Conversation(ConversationHandle handle,
       
       if(!mSharingMediaInterfaceWithAnotherConversation)
       {
-         mConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
+         dynamic_cast<SipXConversationManager&>(mConversationManager).createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
                                                            mMediaInterface,
                                                            mBridgeMixer);
       }
+      InfoLog(<< "mBridgeMixer " << mBridgeMixer.use_count() << " " << mBridgeMixer.get());
    }
 }
 
@@ -318,6 +319,7 @@ Conversation::unregisterParticipant(Participant *participant)
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

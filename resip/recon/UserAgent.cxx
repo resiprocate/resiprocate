@@ -11,6 +11,8 @@
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
+#include "SipXConversationManager.hxx"
+
 #include "reflow/FlowManagerSubsystem.hxx"
 
 #include <reTurn/ReTurnSubsystem.hxx>
@@ -80,7 +82,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mConversationManager->setUserAgent(this);
 
    mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
-   mConversationManager->getFlowManager().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
+   dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
 
    addTransports();
 
@@ -617,7 +619,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, std::sha
    // the cert at runtime to equal the aor in the default conversation profile
    if(!mDefaultOutgoingConversationProfileHandle)
    {
-      mConversationManager->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
+      dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
    }
 #endif
 
@@ -861,6 +863,7 @@ UserAgent::onFailure(ClientPublicationHandle h, const SipMessage& status)
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (c) 2016, SIP Spectrum, Inc.
 

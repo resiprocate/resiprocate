@@ -1,5 +1,5 @@
-#if !defined(ConversationManager_hxx)
-#define ConversationManager_hxx
+#if !defined(SipXConversationManager_hxx)
+#define SipXConversationManager_hxx
 
 #include <boost/function.hpp>
 
@@ -13,11 +13,18 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
+#include "RTPPortManager.hxx"
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
+#include "ConversationManager.hxx"
+#include "SipXMediaInterface.hxx"
+
+#include "reflow/FlowManager.hxx"
 
 #include <memory>
+
+class CpMediaInterfaceFactory;
 
 namespace resip
 {
@@ -56,183 +63,98 @@ class RemoteParticipantDialogSet;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class ConversationManager : public resip::InviteSessionHandler,
-   public resip::DialogSetHandler,
-   public resip::OutOfDialogHandler,
-   public resip::ClientSubscriptionHandler,
-   public resip::ServerSubscriptionHandler,
-   public resip::RedirectHandler
+class SipXConversationManager : public ConversationManager
 {
 public:
 
-   ConversationManager();
-   virtual ~ConversationManager();
+   /**
+     Note:  sipXtapi Media Interfaces have a finite number of supported endpoints
+          that are allowed in each bridge mixer - by default this value is 10
+          (2 are used for local mic / speaker, 1 for a MediaParticipant, leaving
+           7 remaining for RemoteParticipants).  This limit is controlled by the
+          preprocessor define DEFAULT_BRIDGE_MAX_IN_OUTPUTS (see
+          http://www.resiprocate.org/Limitations_with_sipXtapi_media_Integration
+          for more details.
 
+          sipXGlobalMediaInterfaceMode - uses 1 global sipXtapi media interface  and
+          allows for participants to exist in multiple conversations at the same
+          time and have the bridge mixer properly control their mixing.  In this
+          mode, there can only be a single MediaParticipant for all conversations.
+          This architecture/mode is appropriate for single user agent devices (ie.
+          sip phones).
+
+          sipXConversationMediaInterfaceMode - by default uses 1 sipXtapi media
+          interface per conversation.  If you use createSharedMediaInterfaceConversation
+          instead of createConversation then you can specify that 2 (multiple)
+          conversations can share the same media interface. This allows participants
+          to be moved between any conversations that share the same media interface.
+          Using this mode, participants can only exist in multiple conversations
+          at the same time if those conversations share the same media interface.
+          This means the limit of 7 participants is no longer global, it now applies
+          to each media interface.  A separate media participant for each media
+          interface can also exist.  This architecture/mode is appropriate for server
+          applications, such as multi-party conference servers (up to 7 participants
+          per conference), music on hold servers and call park servers.
+          API restrictions in this mode:
+            -joinConversation - restricted to functioning only if both source and
+                                destination conversations share the same media inteface
+            -addParticipant - can only add a participant to multiple conversations if
+                              the conversations share the same media interface
+            -moveParticipant - for non-local participants, restricted to functioning
+                               only if both source and destination conversations share
+                               the same media inteface
+            -alertParticipant - if you are using the EarlyFlag then the
+                                RemoteParticipant must be added to a conversation
+                                before calling this
+            -answerParticipant - RemoteParticipant must be added to a conversation
+                                before calling this
+   */
    typedef enum
    {
-      // Create a conversation for each early fork. Accept the first fork 
-      // from which a 200 is received.  Automatically kill other forks. 
-      ForkSelectAutomatic,
-      // Create a conversation for each early fork. Let the application 
-      // dispose of extra forks. ex: app may form conference. 
-      ForkSelectManual
-   } ParticipantForkSelectMode;
+      sipXGlobalMediaInterfaceMode,
+      sipXConversationMediaInterfaceMode
+   } MediaInterfaceMode;
 
-   typedef enum
-   {
-      // Never auto hold, only hold if holdParticipant API is used
-      AutoHoldDisabled,
-      // Default.  Automatically put a RemoteParticipant on-hold if there 
-      // are no other participants in the conversation with them.
-      AutoHoldEnabled,
-      // Use this if you are broadcasting media to all participants and 
-      // don't need to receive any inbound media.  All participants in
-      // the conversation will be SIP held and will receive media from 
-      // an added MediaParticipant. Remote offers with inactive will be
-      // responded with sendonly as well. This option is useful for 
-      // implementing music on hold servers. 
-      AutoHoldBroadcastOnly
-   } AutoHoldMode;
+   SipXConversationManager(bool localAudioEnabled = true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode);
+   SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate);
+   virtual ~SipXConversationManager();
 
    ///////////////////////////////////////////////////////////////////////
    // Conversation methods  //////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////
 
    /**
+     Only applicable if sipXConversationMediaInterfaceMode is used.
+
      Create a new empty Conversation to which participants
-     can be added.
+     can be added.  This new conversation will share the media interface
+     from the passed in converation handle.  This allows participants to be
+     moved between these two conversations, or any conversations that share the
+     same media interface.  This method will fail (return 0) if this
+     ConversationManager is in sipXGlobalMediaInterfaceMode.
 
      @param autoHoldMode - enum specifying one of the following:
-      AutoHoldDisabled - Never auto hold, only hold if holdParticipant API 
+      AutoHoldDisabled - Never auto hold, only hold if holdParticipant API
                          is used
-      AutoHoldEnabled - Default.  Automatically put a RemoteParticipant 
-                        on-hold if there are no other participants in the 
+      AutoHoldEnabled - Default.  Automatically put a RemoteParticipant
+                        on-hold if there are no other participants in the
                         conversation with them.
-      AutoHoldBroadcastOnly - Use this if you are broadcasting media to all 
-                              participants and don't need to receive any 
-                              inbound media.  All participants in the 
-                              conversation will be SIP held and will receive 
-                              media from an added MediaParticipant. Remote 
-                              offers with inactive will be responded with 
-                              sendonly as well.  This option is useful for 
+      AutoHoldBroadcastOnly - Use this if you are broadcasting media to all
+                              participants and don't need to receive any
+                              inbound media.  All participants in the
+                              conversation will be SIP held and will receive
+                              media from an added MediaParticipant. Remote
+                              offers with inactive will be responded with
+                              sendonly as well.  This option is useful for
                               implementing music on hold servers.
 
      @return A handle to the newly created conversation.
    */
-   virtual ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled);
-
-   /**
-     Destroys an existing Conversation, and ends all
-     participants that solely belong to this conversation.
-
-     @param handle Handle of conversation to destroy
-   */
-   virtual void destroyConversation(ConversationHandle convHandle);
-
-   /**
-     Joins all participants from source conversation into
-     destination conversation and destroys source conversation.
-
-     @param sourceConvHandle Handle of source conversation
-     @param destConvHandle   Handle of destination conversation
-   */
-   virtual void joinConversation(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
+   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, AutoHoldMode autoHoldMode = AutoHoldEnabled);
 
    ///////////////////////////////////////////////////////////////////////
    // Participant methods  ///////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////
-
-   /**
-     Creates a new remote participant in the specified conversation
-     that is attempted to be reached at the specified address.
-     For SIP the address is a URI.  ForkSelectMode can be set to either
-     automatic or manual.  When ForkSelectMode is set to auto the
-     conversation manager will automatically dispose of any related
-     conversations that were created, due to forking.
-
-     @param convHandle Handle of the conversation to create the
-                       RemoteParticipant in
-     @param destination Uri of the remote participant to reach
-     @param forkSelectMode Determines behavior if forking occurs
-
-     @return A handle to the newly created remote participant
-   */
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, 
-                                                     const resip::NameAddr& destination, 
-                                                     ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
-
-   /**
-     Creates a new remote participant in the specified conversation
-     that is attempted to be reached at the specified address.
-     For SIP the address is a URI.  ForkSelectMode can be set to either
-     automatic or manual.  When ForkSelectMode is set to auto the
-     conversation manager will automatically dispose of any related
-     conversations that were created, due to forking.
-
-     @param convHandle Handle of the conversation to create the
-                       RemoteParticipant in
-     @param destination Uri of the remote participant to reach
-     @param forkSelectMode Determines behavior if forking occurs
-     @param callerProfile - a specific ConversationProfile to use 
-                           for this session
-     @param extraHeaders - a multimap of header names and values 
-                           to add to the resulting INVITE request
-
-     @return A handle to the newly created remote participant
-   */
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, 
-                                                     const resip::NameAddr& destination, 
-                                                     ParticipantForkSelectMode forkSelectMode, 
-                                                     const std::shared_ptr<resip::UserProfile>& callerProfile, 
-                                                     const std::multimap<resip::Data, resip::Data>& extraHeaders);
-
-   /**
-     Creates a new media resource participant in the specified conversation.
-     Media is played from a source specified by the url and may be a local
-     audio file, audio file fetched via HTTP or tones.  The URL can contain
-     parameters that specify properties of the media playback, such as
-     number of repeats.
-
-     Media Urls are of the following format:
-     tone:<tone> - Tones can be any DTMF digit 0-9,*,#,A-D or a special tone:
-                   dialtone, busy, fastbusy, ringback, ring, backspace, callwaiting,
-                   holding, or loudfastbusy
-     file:<filepath> - If filename only, then reads from application directory
-                       (Use | instead of : for drive specifier)
-     http:<http-url> - Standard HTTP url that reference an audio file to be fetched
-     cache:<cache-name> - You can play from a memory buffer/cache any items you
-                          have added with the addBufferToMediaResourceCache api.
-
-     optional arguments are: [;duration=<duration>][;local-only][;remote-only][;repeat][;prefetch]
-
-     @note 'repeat' option only makes sense for file and http URLs
-     @note 'prefetch' option only makes sense for http URLs
-     @note audio files may be AU, WAV or RAW formats.  Audiofiles
-           should be 16bit mono, 8khz, PCM to avoid runtime conversion.
-     @note http referenced audio files must be WAV files,
-           16 or 8bit, 8Khz, Mono.
-
-     Sample mediaUrls:
-        tone:0                             - play DTMF tone 0 until participant is destroyed
-        tone:1;duration=1000               - play DTMF tone 1 for 1000ms, then automatically destroy participant
-        tone:dialtone;local-only           - play special tone "Dialtone" to local speaker only, until participant is manually destroyed
-        tone:ringback;remote-only          - play special tone "Ringback" to remote participants only, until participant is manually destroyed
-        file://ringback.wav;local-only     - play the file ringback.wav to local speaker only, until completed (automatically destroyed) or participant is manually destroyed
-        file://ringback.wav;duration=1000  - play the file ringback.wav for 1000ms (or until completed, if shorter), then automatically destroy participant
-        file://ringback.wav;repeat         - play the file ringback.wav, repeating when complete until participant is destroyed
-        file://hi.wav;repeat;duration=9000 - play the file hi.wav for 9000ms, repeating as required, then automatically destroy the participant
-        cache:welcomeprompt;local-only     - plays a prompt from the media cache with key/name "welcomeprompt" to the local speaker only
-        http://www.wav.com/test.wav;repeat - play the file test.wav, repeating when complete until participant is destroyed
-        http://www.wav.com/test.wav;prefetch - play the file test.wav, ensure that some audio is prefetched in order to assure smooth playback,
-                                               until completed (automatically destroyed) or participant is manually destroyed
-
-     @param convHandle Handle of the conversation to create the
-                       RemoteParticipant in
-     @param mediaUrl   Url of media to play.  See above.
-
-     @return A handle to the newly created media participant
-   */
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const resip::Uri& mediaUrl);
 
    /**
      Creates a new local participant in the specified conversation.
@@ -246,62 +168,6 @@ public:
    virtual ParticipantHandle createLocalParticipant();
 
    /**
-     Ends connections to the participant and removes it from all active
-     conversations.
-
-     @param partHandle Handle of the participant to destroy
-   */
-   virtual void destroyParticipant(ParticipantHandle partHandle);
-
-   /**
-     Adds the specified participant to the specified conversation.
-
-     @param convHandle Handle of the conversation to add to
-     @param partHandle Handle of the participant to add
-
-     @note When running in sipXConversationMediaInterfaceMode you can
-           only add a non-local participant to multiple conversations if
-           they share the same media interface.
-   */
-   virtual void addParticipant(ConversationHandle convHandle, ParticipantHandle partHandle);
-
-   /**
-     Removed the specified participant from the specified conversation.
-     The participants media to/from the conversation is stopped.  If the
-     participant no longer exists in any conversation, then they are destroyed.
-     For a remote participant this means the call will be released.
-
-     @param convHandle Handle of the conversation to remove from
-     @param partHandle Handle of the participant to remove
-   */
-   virtual void removeParticipant(ConversationHandle convHandle, ParticipantHandle partHandle);
-
-   /**
-     Removed the specified participant from the specified conversation.
-     The participants media to/from the conversation is stopped.  If the
-     participant no longer exists in any conversation, then they are destroyed.
-     For a remote participant this means the call will be released.
-
-     @param partHandle Handle of the participant to move
-     @param sourceConvHandle Handle of the conversation to move from
-     @param destConvHandle   Handle of the conversation to move to
-
-     @note When running in sipXConversationMediaInterfaceMode you can
-           only move a non-local participant between conversations if
-           they share the same media interface.
-   */
-   virtual void moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
-
-   /**
-     Modifies how the participant contributes to the particular conversation.
-     The send and receive gain can be set to a number between 0 and 100.
-
-     @param convHandle Handle of the conversation to apply modification to
-     @param partHandle Handle of the participant to modify
-   */
-   virtual void modifyParticipantContribution(ConversationHandle convHandle, ParticipantHandle partHandle, unsigned int inputGain, unsigned int outputGain);
-
-   /**
      Logs a multiline representation of the current state
      of the mixing matrix.
 
@@ -312,78 +178,13 @@ public:
    virtual void outputBridgeMatrix(ConversationHandle convHandle = 0);
 
    /**
-     Signal to the participant that it should provide ringback.  Only
-     applicable to RemoteParticipants.  For SIP this causes a 180 to be sent.
-     The early flag indicates if we are sending early media or not.
-     (ie.  For SIP - SDP in 180).
-
-     @param partHandle Handle of the participant to alert
-     @param earlyFlag Set to true to send early media
+     Builds a session capabilties SDPContents based on the passed in ipaddress
+     and codec ordering.
+     Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
+            codecs not loaded are ignored.
    */
-   virtual void alertParticipant(ParticipantHandle partHandle, bool earlyFlag = true);
-
-   /**
-     Signal to the participant that the call is answered.  Only applicable
-     to RemoteParticipants.  For SIP this causes a 200 to be sent.
-
-     @param partHandle Handle of the participant to answer
-   */
-   virtual void answerParticipant(ParticipantHandle partHandle);
-
-   /**
-     Rejects an incoming remote participant with the specified code.
-     Can also be used to reject an outbound participant request (due to REFER).
-
-     @param partHandle Handle of the participant to reject
-     @param rejectCode Code sent to remote participant for rejection
-   */
-   virtual void rejectParticipant(ParticipantHandle partHandle, unsigned int rejectCode);
-
-   /**
-     Redirects the participant to another endpoint.  For SIP this would
-     either be a 302 response or would initiate blind transfer (REFER)
-     request, depending on the state.
-
-     @param partHandle Handle of the participant to redirect
-     @param destination Uri of destination to redirect to
-   */
-   virtual void redirectParticipant(ParticipantHandle partHandle, const resip::NameAddr& destination);
-
-   /**
-     This is used for attended transfer scenarios where both participants
-     are no longer managed by the conversation manager - for SIP this will
-     send a REFER with embedded Replaces header.  Note:  Replace option cannot
-     be used with early dialogs in SIP.
-
-     @param partHandle Handle of the participant to redirect
-     @param destPartHandle Handle ot the participant to redirect to
-   */
-   virtual void redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle);
-
-   virtual void holdParticipant(ParticipantHandle partHandle, bool hold);
-
-   /**
-     This function is used to add a chunk of memory to a media/prompt cache.
-     Cached prompts can later be played back via createMediaParticipant.
-     Note:  The caller is free to dispose of the memory upon return.
-
-     @param name   name of the cached item - used for playback
-     @param buffer Data object containing the media
-     @param type   Type of media that is being added. (RAW_PCM_16 = 0)
-   */
-   virtual void addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type);
-
-   /**
-     This function is used to start a timer on behalf of recon based application.
-     The onApplicationTimer callback will get called when the timer expires.
-     Note:  You cannot stop a running timer, so you may want to use a sequence
-            number as the timer data and ignore timers when they fire, if
-            they should be cancelled.
-
-     @param timerId   Application specified id for this timer instance returned in callback
-     @param timerData Application specified generic data returned in callback
-   */
-   virtual void startApplicationTimer(unsigned int timerId, unsigned int timerData, unsigned int durationMs);
+   virtual void buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds,
+      unsigned int codecIds[], resip::SdpContents& sessionCaps);
 
    // Override this to handle the callback
    virtual void onApplicationTimer(unsigned int timerId, unsigned int timerData) { }
@@ -511,16 +312,27 @@ public:
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
    ///////////////////////////////////////////////////////////////////////
 
-   virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) = 0;
-   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) = 0;
-   virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
-   virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
+   virtual void setSpeakerVolume(int volume);
+   virtual void setMicrophoneGain(int gain);
+   virtual void muteMicrophone(bool mute);
+   virtual void enableEchoCancel(bool enable);       
+   virtual void enableAutoGainControl(bool enable);  
+   virtual void enableNoiseReduction(bool enable);   
+   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
+   virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
+
+   virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle);
+   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl);
+   virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
+   virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
    virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(
          ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
-         std::shared_ptr<ConversationProfile> conversationProfile = nullptr) = 0;
+         std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
-   virtual bool supportsMultipleConversations() = 0;
-   virtual bool supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle) = 0;
+   MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
+
+   virtual bool supportsMultipleConversations();
+   virtual bool supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
 
 protected:
 
@@ -588,37 +400,22 @@ protected:
    virtual void onRedirectReceived(resip::AppDialogSetHandle, const resip::SipMessage& response);
    virtual bool onTryingNextTarget(resip::AppDialogSetHandle, const resip::SipMessage& request);
 
-   UserAgent* getUserAgent() { return mUserAgent; }
-
-   ParticipantHandle getNewParticipantHandle();    // thread safe
-
-   void post(resip::Message *message);
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
-
    virtual void setUserAgent(UserAgent *userAgent);
 
-   std::shared_ptr<BridgeMixer>& getBridgeMixer() { return mBridgeMixer; }
-
-   ConversationHandle getNewConversationHandle();  // thread safe
-   Conversation* getConversation(ConversationHandle convHandle);
-
 private:
+   void init(int defaultSampleRate = 0, int maxSampleRate = 0);
+
    friend class DefaultDialogSet;
    friend class Subscription;
 
    friend class UserAgentShutdownCmd;
-   void shutdown(void);
 
    // Note:  In general the following fns are not thread safe and must be called from dum process 
    //        loop only
    friend class Conversation;
    friend class OutputBridgeMixWeightsCmd;
-   void registerConversation(Conversation *);
-   void unregisterConversation(Conversation *);
 
    friend class Participant;
-   void registerParticipant(Participant *);
-   void unregisterParticipant(Participant *);
 
    friend class RemoteParticipant;
    friend class SipXRemoteParticipant;
@@ -626,18 +423,6 @@ private:
 
    friend class DtmfEvent;
    friend class MediaEvent;
-   void notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType);
-
-   /**
-     Notifies ConversationManager when an RFC2833 DTMF event is received from a
-     particular remote participant.
-
-     @param partHandle Handle of the remote participant that received the digit
-     @param dtmf Integer representation of the DTMF tone received (from RFC2833 event codes)
-     @param duration Duration (in milliseconds) of the DTMF tone received
-     @param up Set to true if the DTMF key is up (otherwise down)
-   */
-   void notifyDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up);
 
    friend class RemoteParticipantDialogSet;
    friend class SipXRemoteParticipantDialogSet;
@@ -646,11 +431,13 @@ private:
    friend class BridgeMixer;
    friend class SipXMediaInterface;
 
+   flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
+
    // exists here (as opposed to RemoteParticipant) - since it is required for OPTIONS responses
    virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer);
 
    friend class OutputBridgeMixWeightsCmd;
-   virtual void outputBridgeMatrixImpl(ConversationHandle convHandle = 0) = 0;
+   void outputBridgeMatrixImpl(ConversationHandle convHandle = 0);
 
    friend class MediaResourceParticipantDeleterCmd;
    friend class CreateConversationCmd;
@@ -671,22 +458,23 @@ private:
    friend class RedirectToParticipantCmd;
    friend class HoldParticipantCmd;
 
-   UserAgent* mUserAgent;
+   bool mLocalAudioEnabled;
+   MediaInterfaceMode mMediaInterfaceMode;
 
-   typedef std::map<ConversationHandle, Conversation *> ConversationMap;
-   ConversationMap mConversations;
-   resip::Mutex mConversationHandleMutex;
-   ConversationHandle mCurrentConversationHandle;
+   std::shared_ptr<RTPPortManager> mRTPPortManager;
 
-   typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
-   ParticipantMap mParticipants;
-   resip::Mutex mParticipantHandleMutex;
-   ParticipantHandle mCurrentParticipantHandle;
-   Participant* getParticipant(ParticipantHandle partHandle);
+   // FlowManager Instance
+   flowmanager::FlowManager mFlowManager;
 
-   MediaResourceCache mMediaResourceCache;
-
-   std::shared_ptr<BridgeMixer> mBridgeMixer;
+   // sipX Media related members
+   void createMediaInterfaceAndMixer(bool giveFocus,
+                                     std::shared_ptr<SipXMediaInterface>& mediaInterface,
+                                     std::shared_ptr<BridgeMixer>& bridgeMixer);
+   std::shared_ptr<SipXMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
+   CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
+   CpMediaInterfaceFactory* mMediaFactory;
+   std::shared_ptr<SipXMediaInterface> mMediaInterface;
+   int mSipXTOSValue;
 };
 
 }

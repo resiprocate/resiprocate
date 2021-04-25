@@ -100,7 +100,7 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
    }
    mConversations.clear();  // Clear so that we won't remove replaced reference from Conversation 
    mHandle = 0;             // Set to 0 so that we won't remove replaced reference from ConversationManager
-   resip_assert(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXGlobalMediaInterfaceMode ||  // We are either running in sipXGlobalMediaInterfaceMode
+   resip_assert(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode() == SipXConversationManager::sipXGlobalMediaInterfaceMode ||  // We are either running in sipXGlobalMediaInterfaceMode
           firstAssociatedConversation != 0);                                                                    // or we are running in sipXConversationMediaInterfaceMode and must have belonged to a conversation
    applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge mix matrix
 }
@@ -108,12 +108,12 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
 std::shared_ptr<SipXMediaInterface>
 Participant::getMediaInterface()
 {
-   switch(mConversationManager.getMediaInterfaceMode())
+   switch(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode())
    {
-   case ConversationManager::sipXGlobalMediaInterfaceMode:
-      resip_assert(mConversationManager.getMediaInterface() != 0);
-      return mConversationManager.getMediaInterface();
-   case ConversationManager::sipXConversationMediaInterfaceMode:
+   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
+      resip_assert(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterface() != 0);
+      return dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterface();
+   case SipXConversationManager::sipXConversationMediaInterfaceMode:
       // Note:  For this mode, the recon code ensures that all conversations a participant 
       //        is added to will share the same media interface, so using the first 
       //        conversation is sufficient.
@@ -129,13 +129,13 @@ void
 Participant::applyBridgeMixWeights()
 {
    BridgeMixer* mixer=0;
-   switch(mConversationManager.getMediaInterfaceMode())
+   switch(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode())
    {
-   case ConversationManager::sipXGlobalMediaInterfaceMode:
+   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
       resip_assert(mConversationManager.getBridgeMixer() != 0);
-      mixer = mConversationManager.getBridgeMixer();
+      mixer = mConversationManager.getBridgeMixer().get();
       break;
-   case ConversationManager::sipXConversationMediaInterfaceMode:
+   case SipXConversationManager::sipXConversationMediaInterfaceMode:
       // Note:  For this mode, the recon code ensures that all conversations a participant 
       //        is added to will share the same media interface, so using the first 
       //        conversation is sufficient.
@@ -161,13 +161,13 @@ void
 Participant::applyBridgeMixWeights(Conversation* removedConversation)
 {
    BridgeMixer* mixer=0;
-   switch(mConversationManager.getMediaInterfaceMode())
+   switch(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode())
    {
-   case ConversationManager::sipXGlobalMediaInterfaceMode:
+   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
       resip_assert(mConversationManager.getBridgeMixer() != 0);
-      mixer = mConversationManager.getBridgeMixer();
+      mixer = mConversationManager.getBridgeMixer().get();
       break;
-   case ConversationManager::sipXConversationMediaInterfaceMode:
+   case SipXConversationManager::sipXConversationMediaInterfaceMode:
       resip_assert(removedConversation->getBridgeMixer() != 0);
       mixer = removedConversation->getBridgeMixer();
       break;
@@ -184,6 +184,7 @@ Participant::applyBridgeMixWeights(Conversation* removedConversation)
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

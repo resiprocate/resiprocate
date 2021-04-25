@@ -113,7 +113,7 @@ public:
 MOHParkServerLogger g_MOHParkServerLogger;
 
 Server::Server(ConfigParser& config) : 
-   ConversationManager(false /* local audio? */, ConversationManager::sipXConversationMediaInterfaceMode),
+   SipXConversationManager(false /* local audio? */, SipXConversationManager::sipXConversationMediaInterfaceMode),
    mConfig(config),
    mIsV6Avail(false),
    mMyUserAgent(0),
@@ -467,7 +467,7 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
    unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
-   ConversationManager::buildSessionCapabilities(mConfig.mAddress, numCodecIds, codecIds, sessionCaps);
+   SipXConversationManager::buildSessionCapabilities(mConfig.mAddress, numCodecIds, codecIds, sessionCaps);
 }
 
 void 

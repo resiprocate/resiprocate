@@ -32,7 +32,12 @@
     <ClCompile Include="UserAgentMasterProfile.cxx" />
     <ClCompile Include="UserAgentRegistration.cxx" />
     <ClCompile Include="UserAgentServerAuthManager.cxx" />
+    <ClCompile Include="SipXBridgeMixer.cxx" />
+    <ClCompile Include="SipXConversationManager.cxx" />
     <ClCompile Include="SipXHelper.cxx" />
+    <ClCompile Include="SipXLocalParticipant.cxx" />
+    <ClCompile Include="SipXRemoteParticipant.cxx" />
+    <ClCompile Include="SipXRemoteParticipantDialogSet.cxx" />
     <ClCompile Include="InstantMessage.cxx" />
     <ClCompile Include="UserAgentClientPublication.cxx" />
     <ClCompile Include="RTPPortManager.cxx" />
@@ -71,7 +76,12 @@
     <ClInclude Include="UserAgentDialogSetFactory.hxx" />
     <ClInclude Include="UserAgentMasterProfile.hxx" />
     <ClInclude Include="UserAgentRegistration.hxx" />
+    <ClInclude Include="SipXBridgeMixer.hxx" />
+    <ClInclude Include="SipXConversationManager.hxx" />
     <ClInclude Include="SipXHelper.hxx" />
+    <ClInclude Include="SipXLocalParticipant.hxx" />
+    <ClInclude Include="SipXRemoteParticipant.hxx" />
+    <ClInclude Include="SipXRemoteParticipantDialogSet.hxx" />
     <ClInclude Include="InstantMessage.hxx" />
     <ClInclude Include="UserAgentClientPublication.hxx" />
     <ClInclude Include="RTPPortManager.hxx" />

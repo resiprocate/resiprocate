@@ -38,6 +38,7 @@ int _kbhit() {
 }
 #endif
 
+#include "../SipXConversationManager.hxx"
 #include "../UserAgent.hxx"
 #include "../ReconSubsystem.hxx"
 
@@ -96,12 +97,12 @@ public:
    }
 };
 
-class MyConversationManager : public ConversationManager
+class MyConversationManager : public SipXConversationManager
 {
 public:
 
    MyConversationManager(bool localAudioEnabled, bool multipleMediaInterfaces, bool defaultAutoHoldModeToDisabled)
-      : ConversationManager(localAudioEnabled, multipleMediaInterfaces ? MediaInterfaceMode::sipXConversationMediaInterfaceMode : MediaInterfaceMode::sipXGlobalMediaInterfaceMode),
+      : SipXConversationManager(localAudioEnabled, multipleMediaInterfaces ? MediaInterfaceMode::sipXConversationMediaInterfaceMode : MediaInterfaceMode::sipXGlobalMediaInterfaceMode),
         mLocalAudioEnabled(localAudioEnabled)
    {
       mDefaultAutoHoldMode = defaultAutoHoldModeToDisabled ? ConversationManager::AutoHoldDisabled : ConversationManager::AutoHoldEnabled;
@@ -145,7 +146,7 @@ public:
 
    virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedFlowConversation, ConversationManager::AutoHoldMode autoHoldMode)
    {
-      ConversationHandle convHandle = ConversationManager::createSharedMediaInterfaceConversation(sharedFlowConversation, autoHoldMode);
+      ConversationHandle convHandle = SipXConversationManager::createSharedMediaInterfaceConversation(sharedFlowConversation, autoHoldMode);
       mConversationHandles.push_back(convHandle);
       return convHandle;
    }

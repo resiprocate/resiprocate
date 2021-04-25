@@ -9,10 +9,6 @@
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 
-// FlowManager Includes
-#include "reflow/FlowContext.hxx"
-#include "reflow/MediaStream.hxx"
-
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
@@ -27,7 +23,6 @@ namespace recon
 {
 class ConversationManager;
 class RemoteParticipant;
-class FlowManagerSipXSocket;
 
 /**
   This class is used by Invite DialogSets.  Non-Invite DialogSets
@@ -37,7 +32,7 @@ class FlowManagerSipXSocket;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipantDialogSet : public resip::AppDialogSet, private flowmanager::MediaStreamHandler
+class RemoteParticipantDialogSet : public resip::AppDialogSet
 {
 public:
    RemoteParticipantDialogSet(ConversationManager& conversationManager,        
@@ -48,16 +43,12 @@ public:
 
    virtual RemoteParticipant* createUACOriginalRemoteParticipant(ParticipantHandle handle);
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
-   virtual unsigned int getLocalRTPPort();
 
    virtual void setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp);
    virtual std::shared_ptr<resip::SdpContents> getProposedSdp() { return mProposedSdp; }
    virtual void setUACConnected(const resip::DialogId& dialogId, ParticipantHandle partHandle);
    virtual bool isUACConnected();
    virtual bool isStaleFork(const resip::DialogId& dialogId);
-
-   virtual void setPeerExpectsSAVPF(bool value) { mPeerExpectsSAVPF = value; }
-   virtual bool peerExpectsSAVPF() { return mPeerExpectsSAVPF; }
 
    virtual void removeDialog(const resip::DialogId& dialogId);
    virtual ConversationManager::ParticipantForkSelectMode getForkSelectMode();
@@ -68,61 +59,41 @@ public:
    virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);
    virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage& msg);
 
-   // sipX Media Stuff
-   virtual int getMediaConnectionId() { return mMediaConnectionId; }
-   virtual int getConnectionPortOnBridge();
-   virtual void freeMediaResources();
-
-   void setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
-   void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
-   void setRemoteSDPFingerprint(const resip::Data& fingerprint);
-   bool createSRTPSession(flowmanager::MediaStream::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen);
-
    // Media Stream Processing
-   void processMediaStreamReadyEvent(const StunTuple& remoteRtpTuple, const StunTuple& remoteRtcpTuple);
-   void processMediaStreamErrorEvent(unsigned int errorCode);
+   virtual void processMediaStreamReadyEvent();
+   virtual void processMediaStreamErrorEvent(unsigned int errorCode);
 
    void sendInvite(std::shared_ptr<resip::SipMessage> invite);
    void provideOffer(std::unique_ptr<resip::SdpContents> offer, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAccept);
    void provideAnswer(std::unique_ptr<resip::SdpContents> answer, resip::InviteSessionHandle& inviteSessionHandle, bool postAnswerAccept, bool postAnswerAlert);
    void accept(resip::InviteSessionHandle& inviteSessionHandle);
    ConversationProfile::SecureMediaMode getSecureMediaMode() { return mSecureMediaMode; }
-   flowmanager::MediaStream::SrtpCryptoSuite getSrtpCryptoSuite() { return mSrtpCryptoSuite; }
+   void setSecureMediaMode(ConversationProfile::SecureMediaMode m) { mSecureMediaMode = m; };
    bool getSecureMediaRequired() { return mSecureMediaRequired; }
-
-   const resip::Data& getLocalSrtpSessionKey() { return mLocalSrtpSessionKey; }
+   void setSecureMediaRequired(bool r) { mSecureMediaRequired = r; };
 
 protected:
-   virtual std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&); 
+   RemoteParticipant* getUACOriginalRemoteParticipant() { return mUACOriginalRemoteParticipant; }
+   virtual std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&);
+   std::shared_ptr<ConversationProfile> getConversationProfile() { return mConversationProfile; };
 
-   virtual bool isAsyncMediaSetup();
+   virtual bool isAsyncMediaSetup() = 0;
 
-   virtual void fixUpSdp(resip::SdpContents* sdp);
+   virtual void fixUpSdp(resip::SdpContents* sdp) = 0;
+
+   std::map<resip::DialogId, RemoteParticipant*> mDialogs;
 
 private:
    ConversationManager& mConversationManager;   
    RemoteParticipant* mUACOriginalRemoteParticipant;
    std::list<ConversationHandle> mUACOriginalConversationHandles;
    unsigned int mNumDialogs;
-   unsigned int mLocalRTPPort;
-   bool mAllocateLocalRTPPortFailed;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
    std::shared_ptr<ConversationProfile> mConversationProfile;
-   std::shared_ptr<flowmanager::FlowContext> mFlowContext;
    resip::DialogId mUACConnectedDialogId;
    ParticipantHandle mActiveRemoteParticipantHandle;
-   std::map<resip::DialogId, RemoteParticipant*> mDialogs;
-   bool mPeerExpectsSAVPF;
 
-   // Media Stream stuff
-   flowmanager::MediaStream::NatTraversalMode mNatTraversalMode;
-   flowmanager::MediaStream* mMediaStream;
-   reTurn::StunTuple mRtpTuple;
-   reTurn::StunTuple mRtcpTuple;
-   FlowManagerSipXSocket* mRtpSocket;
-   FlowManagerSipXSocket* mRtcpSocket;
-
-   // SDP Negotiations that may need to be delayed due to FlowManager binding/allocation
+   // SDP Negotiations that may need to be delayed due to media stack binding/allocation
    std::shared_ptr<resip::SipMessage> mPendingInvite;
    void doSendInvite(std::shared_ptr<resip::SipMessage> invite);
    class PendingOfferAnswer
@@ -140,19 +111,8 @@ private:
    std::shared_ptr<resip::SdpContents> mProposedSdp;  // stored here vs RemoteParticipant, since each forked leg needs access to the original offer
 
    // Secure Media 
-   resip::Data mLocalSrtpSessionKey;
    ConversationProfile::SecureMediaMode mSecureMediaMode;
    bool mSecureMediaRequired;
-   flowmanager::MediaStream::SrtpCryptoSuite mSrtpCryptoSuite;
-
-   // sipX media stuff
-   virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();
-   std::shared_ptr<SipXMediaInterface> mMediaInterface;
-   int mMediaConnectionId; 
-   int mConnectionPortOnBridge;
-
-   virtual void onMediaStreamReady(const StunTuple& remoteRtpTuple, const StunTuple& remoteRtcpTuple);
-   virtual void onMediaStreamError(unsigned int errorCode);
 };
 
 }
@@ -163,6 +123,7 @@ private:
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
+  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

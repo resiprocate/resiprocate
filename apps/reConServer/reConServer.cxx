@@ -825,8 +825,8 @@ ReConServerProcess::main (int argc, char** argv)
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
-   ConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
-      ? ConversationManager::sipXGlobalMediaInterfaceMode : ConversationManager::sipXConversationMediaInterfaceMode;
+   SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
+      ? SipXConversationManager::sipXGlobalMediaInterfaceMode : SipXConversationManager::sipXConversationMediaInterfaceMode;
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
@@ -896,7 +896,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
    InfoLog( << "  Global Media Interface = " <<
-      ((mediaInterfaceMode == ConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
+      ((mediaInterfaceMode == SipXConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
    InfoLog( << "  Default sample rate = " << defaultSampleRate);
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));

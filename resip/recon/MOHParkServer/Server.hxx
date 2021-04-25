@@ -8,6 +8,8 @@
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
+#include "../SipXConversationManager.hxx"
+
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
 #else
@@ -21,7 +23,7 @@ namespace mohparkserver
 class WebAdminThread;
 class WebAdmin;
 
-class Server : public recon::ConversationManager
+class Server : public recon::SipXConversationManager
 {
 public:
    Server(ConfigParser& config);  

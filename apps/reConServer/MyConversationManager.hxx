@@ -8,16 +8,16 @@
 #endif
 
 #include <rutil/Data.hxx>
-#include <resip/recon/ConversationManager.hxx>
+#include <resip/recon/SipXConversationManager.hxx>
 
 namespace reconserver
 {
 
-class MyConversationManager : public recon::ConversationManager
+class MyConversationManager : public recon::SipXConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled, recon::ConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();

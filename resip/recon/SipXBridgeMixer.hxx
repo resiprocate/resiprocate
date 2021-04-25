@@ -1,10 +1,17 @@
-#if !defined(BridgeMixer_hxx)
-#define BridgeMixer_hxx
+#if !defined(SipXBridgeMixer_hxx)
+#define SipXBridgeMixer_hxx
 
 #if (_MSC_VER >= 1600)
 #include <stdint.h>       // Use Visual Studio's stdint.h
 #define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
 #endif
+
+#include <mp/MprBridge.h>
+#include <mp/MpResourceTopology.h>
+#include <mi/CpMediaInterface.h>
+#include <mp/MpEncoderBase.h>  // required so that static methods in header get linked in
+
+#include "BridgeMixer.hxx"
 
 namespace recon
 {
@@ -21,14 +28,16 @@ class Participant;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class BridgeMixer
+class SipXBridgeMixer : public BridgeMixer
 {
 public:  
    /**
      Constructor
+
+     @param mediaInterface
    */
-   BridgeMixer();
-   virtual ~BridgeMixer();
+   SipXBridgeMixer(CpMediaInterface& mediaInterface);
+   virtual ~SipXBridgeMixer();
 
    /**
      Calculates all of the current mixer settings required 
@@ -38,13 +47,17 @@ public:
 
      @param participant Participant to calculate mixer weights for
    */
-   virtual void calculateMixWeightsForParticipant(Participant* participant) = 0;
+   void calculateMixWeightsForParticipant(Participant* participant);
 
    /**
      Logs a multiline representation of the current state
      of the mixing matrix.
    */
-   virtual void outputBridgeMixWeights() = 0;
+   void outputBridgeMixWeights();
+
+private:
+   MpBridgeGain mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
+   CpMediaInterface& mMediaInterface;
 };
 
 }

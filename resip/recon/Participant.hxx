@@ -2,6 +2,7 @@
 #define Participant_hxx
 
 #include "ConversationManager.hxx"
+#include "SipXConversationManager.hxx"
 #include <map>
 
 namespace recon
@@ -60,6 +61,7 @@ class Participant
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -1,4 +1,4 @@
-#include "BridgeMixer.hxx"
+#include "SipXBridgeMixer.hxx"
 #include "ReconSubsystem.hxx"
 #include "MediaResourceParticipant.hxx"
 #include "ConversationManager.hxx"
@@ -11,6 +11,7 @@
 #include <rutil/WinLeakCheck.hxx>
 
 #include "ConversationManagerCmds.hxx"
+#include "SipXRemoteParticipant.hxx"
 
 // sipX includes
 #include <CpTopologyGraphInterface.h>
@@ -211,7 +212,7 @@ MediaResourceParticipant::startPlay()
          if(mMediaUrl.exists(p_participantonly))
          {
             int partHandle = mMediaUrl.param(p_participantonly).convertInt();
-            RemoteParticipant* participant = dynamic_cast<RemoteParticipant*>(mConversationManager.getParticipant(partHandle));
+            SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(mConversationManager.getParticipant(partHandle));
             if(participant)
             {
                StackLog(<<"sending tone to sipX connection: " << participant->getMediaConnectionId());
@@ -432,7 +433,7 @@ MediaResourceParticipant::destroyParticipant()
             {
                bool isDtmf = (mMediaUrl.host().size() == 1);
                int partHandle = mMediaUrl.param(p_participantonly).convertInt();
-               RemoteParticipant* participant = dynamic_cast<RemoteParticipant*>(mConversationManager.getParticipant(partHandle));
+               SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(mConversationManager.getParticipant(partHandle));
                if(participant)
                {
 #ifdef SIPX_TONES_INBAND
@@ -576,6 +577,7 @@ MediaResourceParticipant::playerFailed(MpPlayerEvent& event)
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
