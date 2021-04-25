@@ -31,6 +31,7 @@ DefaultDialogSet::selectUASUserProfile(const SipMessage& msg)
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

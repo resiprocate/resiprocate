@@ -165,6 +165,7 @@ int FlowManagerSipXSocket::write(const char* buffer, int bufferLength,
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.

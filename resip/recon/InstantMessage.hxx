@@ -54,6 +54,7 @@ class InstantMessage : public resip::ServerPagerMessageHandler,
 
 /* ====================================================================
  *
+ * Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  * Copyright 2016 Mateus Bellomo https://mateusbellomo.wordpress.com/  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -61,6 +61,7 @@ private:
 /* ====================================================================
 
  Copyright (c) 2010-2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
