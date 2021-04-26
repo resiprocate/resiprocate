@@ -62,6 +62,7 @@ protected:
    friend class RemoteParticipant;
    friend class SipXRemoteParticipant;
    friend class MediaResourceParticipant;
+   friend class SipXMediaResourceParticipant;
    void registerParticipant(Participant *, unsigned int inputGain=100, unsigned int outputGain=100);
    void unregisterParticipant(Participant *);
 

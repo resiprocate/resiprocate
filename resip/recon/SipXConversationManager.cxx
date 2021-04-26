@@ -31,6 +31,7 @@
 #include "SipXBridgeMixer.hxx"
 #include "DtmfEvent.hxx"
 #include "SipXLocalParticipant.hxx"
+#include "SipXMediaResourceParticipant.hxx"
 #include "SipXRemoteParticipant.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
@@ -998,7 +999,7 @@ SipXConversationManager::createLocalParticipantInstance(ParticipantHandle partHa
 MediaResourceParticipant *
 SipXConversationManager::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
 {
-   return new MediaResourceParticipant(partHandle, *this, mediaUrl);
+   return new SipXMediaResourceParticipant(partHandle, *this, mediaUrl);
 }
 
 RemoteParticipant *

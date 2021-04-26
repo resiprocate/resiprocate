@@ -642,6 +642,7 @@ private:
    friend class RemoteParticipantDialogSet;
    friend class SipXRemoteParticipantDialogSet;
    friend class MediaResourceParticipant;
+   friend class SipXMediaResourceParticipant;
    friend class LocalParticipant;
    friend class BridgeMixer;
    friend class SipXMediaInterface;

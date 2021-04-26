@@ -6,15 +6,28 @@
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 
-// sipX includes
-#include "mp/MpPlayerListener.h"
-
-class MpStreamPlayer;
-class MpPlayerEvent;
-
 namespace recon
 {
 class ConversationManager;
+
+// Used to delete a resource, from a media stack thread
+class MediaResourceParticipantDeleterCmd : public resip::DumCommand
+{
+   public:
+      MediaResourceParticipantDeleterCmd(ConversationManager& conversationManager, ParticipantHandle participantHandle) :
+         mConversationManager(conversationManager), mParticipantHandle(participantHandle) {}
+      ~MediaResourceParticipantDeleterCmd() {}
+
+      void executeCommand() { Participant* participant = mConversationManager.getParticipant(mParticipantHandle); if(participant) delete participant; }
+
+      Message* clone() const { resip_assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+
+   private:
+      ConversationManager& mConversationManager;
+      ParticipantHandle mParticipantHandle;
+};
 
 /**
   This class represents a media resource participant.
@@ -24,7 +37,7 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class MediaResourceParticipant : public Participant, public MpPlayerListener
+class MediaResourceParticipant : public Participant
 {
 public:  
    typedef enum
@@ -43,26 +56,28 @@ public:
    virtual ~MediaResourceParticipant();
 
    virtual void startPlay();
-   virtual int getConnectionPortOnBridge();
    virtual ResourceType getResourceType() { return mResourceType; }
-   virtual void destroyParticipant();
+   virtual void destroyParticipant() = 0;
 
-   // For Stream Player callbacks
-   virtual void playerRealized(MpPlayerEvent& event);
-   virtual void playerPrefetched(MpPlayerEvent& event);
-   virtual void playerPlaying(MpPlayerEvent& event);
-   virtual void playerPaused(MpPlayerEvent& event);
-   virtual void playerStopped(MpPlayerEvent& event);
-   virtual void playerFailed(MpPlayerEvent& event);
+protected:
+   virtual void startPlayImpl() = 0;
+   virtual ConversationManager& getConversationManager() { return mConversationManager; }
+   virtual resip::Uri& getMediaUrl() { return mMediaUrl; }
+   virtual bool isLocalOnly() { return mLocalOnly; }
+   virtual bool isRemoteOnly() { return mRemoteOnly; }
+   virtual bool isRepeat() { return mRepeat; }
+   virtual void setRepeat(bool repeat) { mRepeat = repeat; }
+   virtual bool isPrefetch() { return mPrefetch; }
+   virtual unsigned int getDurationMs() { return mDurationMs; }
+   virtual bool isPlaying() { return mPlaying; }
+   virtual void setPlaying(bool playing) { mPlaying = playing; }
+   virtual bool isDestroying() { return mDestroying; }
+   virtual void setDestroying(bool destroying) { mDestroying = destroying; }
 
-protected:       
 
 private:
    resip::Uri mMediaUrl;
    ResourceType mResourceType;
-   MpStreamPlayer* mStreamPlayer;
-   int mToneGenPortOnBridge;
-   int mFromFilePortOnBridge;
 
    // Play settings
    bool mLocalOnly;
