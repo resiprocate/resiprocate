@@ -159,8 +159,8 @@ WebAdmin::buildActiveCallsSubPage(DataStream& s)
       {
          Uri aor(i->mKey1);
          ContactInstanceRecord rec;
-         size_t bar1 = i->mKey2.find("|");
-         size_t bar2 = i->mKey2.find("|",bar1+1);
+         Data::size_type bar1 = i->mKey2.find("|");
+         Data::size_type bar2 = i->mKey2.find("|",bar1+1);
          
          if(bar1==Data::npos || bar2 == Data::npos)
          {
