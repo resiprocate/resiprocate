@@ -61,7 +61,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-#define LOG_PREFIX
+#define LOG_PREFIX << "[@@@@@@@@@@@]"
 
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
@@ -185,11 +185,31 @@ public:
       mRemoteParticipantHandles.remove(partHandle);
       mLocalParticipantHandles.remove(partHandle);
       mMediaParticipantHandles.remove(partHandle);
+      if (partHandle == mAlertPartHandle)
+      {
+         // We can remove init agent conversation now
+         destroyConversation(mConversationHandles.back());
+      }
    }
 
    virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up)
    {
       InfoLog(LOG_PREFIX << "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
+      if (partHandle == mAgentPartHandle && dtmf == 10 /* '*' */)
+      {
+         mAlertPartHandle = createMediaResourceParticipant(mConversationHandles.back(), Uri("tone:callwaiting;duration=1000"));
+         destroyParticipant(mMusicPartHandle);
+         addParticipant(mConversationHandles.front(), mAgentPartHandle);
+
+         // Silent Monitor test...
+         //ParticipantHandle silentMonitorPartHandle = createRemoteParticipant(mConversationHandles.front(), NameAddr("sip:1003@blitzzgod.com"));
+         //modifyParticipantContribution(mConversationHandles.front(), silentMonitorPartHandle, 100, 0);  // listen only
+
+         // Coaching test...
+         //ParticipantHandle silentMonitorPartHandle = createRemoteParticipant(mConversationHandles.back(), NameAddr("sip:1003@blitzzgod.com"));
+         //addParticipant(mConversationHandles.back(), mCallerPartHandle);
+         //modifyParticipantContribution(mConversationHandles.back(), mCallerPartHandle, 0, 100);  // caller receives no audio
+      }
    }
 
    virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
@@ -213,7 +233,17 @@ public:
             }
          }
          addParticipant(mConversationHandles.front(), partHandle);
+         mCallerPartHandle = partHandle;
+         mMusicPartHandle = createMediaResourceParticipant(mConversationHandles.front(), Uri("file:music.wav;repeat"));  // TODO SLG - temp
+
+         mRecordPartHandle = createMediaResourceParticipant(mConversationHandles.front(), Uri("record:recording.wav"));
+
+         //createMediaResourceParticipant(mConversationHandles.front(), Uri("cache:playback"));  // TODO SLG - temp
+
          answerParticipant(partHandle);
+
+         //ConversationHandle agentConversation = createSharedMediaInterfaceConversation(mConversationHandles.front(), mDefaultAutoHoldMode);
+         //mAgentPartHandle = createRemoteParticipant(agentConversation, NameAddr("sip:1002@blitzzgod.com"));
       }
    }
 
@@ -255,6 +285,9 @@ public:
    virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
    {
       InfoLog(LOG_PREFIX << "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
+      // We are connected to the agent now.  Start a timer to give time to raise phone cradle to ear.
+      // Wait for * instead
+      //startApplicationTimer(1, partHandle, 2000);
    }
 
    virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
@@ -270,6 +303,15 @@ public:
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
    {
       InfoLog(LOG_PREFIX << "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   }
+
+   virtual void onApplicationTimer(unsigned int timerId, unsigned int sequenceId)
+   {
+      InfoLog(LOG_PREFIX << "onApplicationTimer: timerId=" << timerId << " sequenceId=" << sequenceId);
+      // We are connected to the agent now.  Play alert tone, stop music and then connect to caller.
+      mAlertPartHandle = createMediaResourceParticipant(mConversationHandles.back(), Uri("tone:callwaiting;duration=1000"));
+      destroyParticipant(mMusicPartHandle);
+      addParticipant(mConversationHandles.front(), mAgentPartHandle);
    }
 
    void displayInfo()
@@ -324,6 +366,13 @@ public:
    std::list<ParticipantHandle> mMediaParticipantHandles;
    bool mLocalAudioEnabled;
    ConversationManager::AutoHoldMode mDefaultAutoHoldMode;
+
+   // temp
+   ParticipantHandle mCallerPartHandle;
+   ParticipantHandle mMusicPartHandle;
+   ParticipantHandle mAlertPartHandle;
+   ParticipantHandle mAgentPartHandle;
+   ParticipantHandle mRecordPartHandle;
 };
 
 void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
@@ -1318,7 +1367,7 @@ main (int argc, char** argv)
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
    InfoLog( << "  Multiple Media Interface Mode Enabled = " << (multipleMediaInterfaceModeEnabled ? "true" : "false"));
-   InfoLog( << "  Default Auto Holde Mode = " << (defaultAutoHoldModeToDisabled ? "disabled" : "enabled"));
+   InfoLog( << "  Default Auto Hold Mode = " << (defaultAutoHoldModeToDisabled ? "disabled" : "enabled"));
    InfoLog( << "  Log Level = " << logLevel);
    
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
