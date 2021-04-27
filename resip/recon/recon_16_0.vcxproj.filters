@@ -35,7 +35,7 @@
     <ClCompile Include="SipXBridgeMixer.cxx" />
     <ClCompile Include="SipXConversationManager.cxx" />
     <ClCompile Include="SipXHelper.cxx" />
-    <ClCompile Include="SipXMediaResourceParticipant.cxx" />/
+    <ClCompile Include="SipXMediaResourceParticipant.cxx" />
     <ClCompile Include="SipXLocalParticipant.cxx" />
     <ClCompile Include="SipXRemoteParticipant.cxx" />
     <ClCompile Include="SipXRemoteParticipantDialogSet.cxx" />
@@ -80,7 +80,7 @@
     <ClInclude Include="SipXBridgeMixer.hxx" />
     <ClInclude Include="SipXConversationManager.hxx" />
     <ClInclude Include="SipXHelper.hxx" />
-    <ClInclude Include="SipXMediaResourceParticipant.hxx" />/
+    <ClInclude Include="SipXMediaResourceParticipant.hxx" />
     <ClInclude Include="SipXLocalParticipant.hxx" />
     <ClInclude Include="SipXRemoteParticipant.hxx" />
     <ClInclude Include="SipXRemoteParticipantDialogSet.hxx" />
