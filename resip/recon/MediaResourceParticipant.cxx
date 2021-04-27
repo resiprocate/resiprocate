@@ -1,4 +1,4 @@
-#include "SipXBridgeMixer.hxx"
+#include "BridgeMixer.hxx"
 #include "ReconSubsystem.hxx"
 #include "MediaResourceParticipant.hxx"
 #include "ConversationManager.hxx"
@@ -11,13 +11,7 @@
 #include <rutil/WinLeakCheck.hxx>
 
 #include "ConversationManagerCmds.hxx"
-#include "SipXRemoteParticipant.hxx"
-
-// sipX includes
-#include <CpTopologyGraphInterface.h>
-#include <mp/dtmflib.h>
-#include <mp/MprFromFile.h>
-#include <mp/MpStreamPlayer.h>
+#include "RemoteParticipant.hxx"
 
 using namespace recon;
 using namespace resip;
@@ -49,37 +43,11 @@ static const Data callwaitingTone("callwaiting");
 static const Data holdingTone("holding");
 static const Data loudfastbusyTone("loudfastbusy");
 
-namespace recon
-{
-
-// Used to delete a resource, from a sipX thread
-class MediaResourceParticipantDeleterCmd : public DumCommand
-{
-   public:
-      MediaResourceParticipantDeleterCmd(ConversationManager& conversationManager, ParticipantHandle participantHandle) :
-         mConversationManager(conversationManager), mParticipantHandle(participantHandle) {}
-      ~MediaResourceParticipantDeleterCmd() {}
-
-      void executeCommand() { Participant* participant = mConversationManager.getParticipant(mParticipantHandle); if(participant) delete participant; }
-
-      Message* clone() const { resip_assert(0); return 0; }
-      EncodeStream& encode(EncodeStream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
-      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
-      
-   private:
-      ConversationManager& mConversationManager;
-      ParticipantHandle mParticipantHandle;
-};
-}
-
 MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
                                                    const Uri& mediaUrl)
 : Participant(partHandle, conversationManager),
   mMediaUrl(mediaUrl),
-  mStreamPlayer(0),
-  mToneGenPortOnBridge(-1),
-  mFromFilePortOnBridge(-1),
   mLocalOnly(false),
   mRemoteOnly(false),
   mRepeat(false),
@@ -125,22 +93,6 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
 
 MediaResourceParticipant::~MediaResourceParticipant()
 {
-   // Destroy stream player (if created)
-   if(mStreamPlayer)
-   {
-      mStreamPlayer->removeListener(this);
-      mStreamPlayer->destroy();
-   }
-
-   // unregister from Conversations
-   // Note:  ideally this functionality would exist in Participant Base class - but dynamic_cast required in unregisterParticipant will not work
-   ConversationMap::iterator it;
-   for(it = mConversations.begin(); it != mConversations.end(); it++)
-   {
-      it->second->unregisterParticipant(this);
-   }
-   mConversations.clear();
-
    InfoLog(<< "MediaResourceParticipant destroyed, handle=" << mHandle << " url=" << mMediaUrl);
 }
 
@@ -179,182 +131,7 @@ MediaResourceParticipant::startPlay()
          mMediaUrl.remove(p_prefetch);
       }
 
-      switch(mResourceType)
-      {
-      case Tone:
-      {
-         int toneid;
-         bool isDtmf = false;
-         if(mMediaUrl.host().size() == 1)
-         {
-            toneid = mMediaUrl.host().at(0);
-            isDtmf = true;
-         }
-         else
-         {
-            if(isEqualNoCase(mMediaUrl.host(), dialtoneTone)) toneid = DTMF_TONE_DIALTONE;
-            else if(isEqualNoCase(mMediaUrl.host(), busyTone)) toneid = DTMF_TONE_BUSY;
-            else if(isEqualNoCase(mMediaUrl.host(), ringbackTone)) toneid = DTMF_TONE_RINGBACK;
-            else if(isEqualNoCase(mMediaUrl.host(), ringTone)) toneid = DTMF_TONE_RINGTONE;
-            else if(isEqualNoCase(mMediaUrl.host(), fastbusyTone)) toneid = DTMF_TONE_CALLFAILED;
-            else if(isEqualNoCase(mMediaUrl.host(), backspaceTone)) toneid = DTMF_TONE_BACKSPACE;
-            else if(isEqualNoCase(mMediaUrl.host(), callwaitingTone)) toneid = DTMF_TONE_CALLWAITING;
-            else if(isEqualNoCase(mMediaUrl.host(), holdingTone)) toneid = DTMF_TONE_CALLHELD;
-            else if(isEqualNoCase(mMediaUrl.host(), loudfastbusyTone)) toneid = DTMF_TONE_LOUD_FAST_BUSY;
-            else
-            {
-               WarningLog(<< "MediaResourceParticipant::startPlay invalid tone identifier: " << mMediaUrl.host());
-               return;
-            }
-         }
-
-         OsStatus status = OS_FAILED;
-         if(mMediaUrl.exists(p_participantonly))
-         {
-            int partHandle = mMediaUrl.param(p_participantonly).convertInt();
-            SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(mConversationManager.getParticipant(partHandle));
-            if(participant)
-            {
-               StackLog(<<"sending tone to sipX connection: " << participant->getMediaConnectionId());
-#ifdef SIPX_TONES_INBAND
-               // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
-               status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
-#else
-               // this is for newer sipXtapi API, option to suppress inband tones:
-               status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */, !isDtmf /* inband */, true /* RFC 4733 */);
-#endif
-            }
-            else
-            {
-               WarningLog(<<"Participant " << partHandle << " no longer exists or invalid");
-            }
-         }
-         else
-         {
-            status = getMediaInterface()->getInterface()->startTone(toneid, mRemoteOnly ? FALSE : TRUE /* local */, mLocalOnly ? FALSE : TRUE /* remote */);
-         }
-         if(status == OS_SUCCESS)
-         {
-            mPlaying = true;
-         }
-         else
-         {
-            WarningLog(<< "MediaResourceParticipant::startPlay error calling startTone: " << status);
-         }
-      }
-      break;
-      case File:
-      {
-         Data filepath = mMediaUrl.host().urlDecoded();
-         if(filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
-         else if(filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
-         
-         filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
-
-         InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
-
-         SipXMediaInterface* mediaInterface = getMediaInterface().get();
-         OsStatus status = mediaInterface->getInterface()->playAudio(filepath.c_str(),
-                                                          mRepeat ? TRUE: FALSE /* repeast? */,
-                                                          mRemoteOnly ? FALSE : TRUE /* local */, 
-                                                          mLocalOnly ? FALSE : TRUE /* remote */,
-                                                          FALSE /* mixWithMic */,
-                                                          100 /* downScaling */);
-         if(status == OS_SUCCESS)
-         {
-            // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
-            // as the one that performed the last media operation, so that MediaInterface can generate the event 
-            // to the conversation manage with the correct participant handle.  Note:  this works because sipX
-            // only allows a single play from file or cache at a time per media interface.
-            mediaInterface->setMediaOperationPartipantHandle(mHandle);
-            mPlaying = true;
-         }
-         else
-         {
-            WarningLog(<< "MediaResourceParticipant::startPlay error calling playAudio: " << status);
-         }
-      }
-      break;
-      case Cache:
-      {
-         InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " cacheKey=" << mMediaUrl.host());
-
-         Data *buffer;
-         int type;
-         if(mConversationManager.mMediaResourceCache.getFromCache(mMediaUrl.host(), &buffer, &type))
-         {
-            SipXMediaInterface* mediaInterface = getMediaInterface().get();
-            OsStatus status = mediaInterface->getInterface()->playBuffer((char*)buffer->data(),
-                                                              buffer->size(), 
-                                                              8000, /* rate */
-                                                              type, 
-                                                              mRepeat ? TRUE: FALSE /* repeast? */,
-                                                              mRemoteOnly ? FALSE : TRUE /* local */, 
-                                                              mLocalOnly ? FALSE : TRUE /* remote */,
-                                                              NULL /* OsProtectedEvent */,
-                                                              FALSE /* mixWithMic */,
-                                                              100 /* downScaling */);
-            if(status == OS_SUCCESS)
-            {
-               // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
-               // as the one that performed the last media operation, so that MediaInterface can generate the event 
-               // to the conversation manage with the correct participant handle.  Note:  this works because sipX
-               // only allows a single play from file or cache at a time per media interface.
-               mediaInterface->setMediaOperationPartipantHandle(mHandle);
-               mPlaying = true;
-            }
-            else
-            {
-               WarningLog(<< "MediaResourceParticipant::startPlay error calling playAudio: " << status);
-            }
-         }
-         else
-         {
-            WarningLog(<< "MediaResourceParticipant::startPlay media not found in cache, key: " << mMediaUrl.host());
-         }
-      }
-      break;
-      case Http:
-      case Https:
-      {
-         int flags;
-
-         if(mLocalOnly)
-         {
-            flags = STREAM_SOUND_LOCAL;
-         }
-         else if(mRemoteOnly)
-         {
-            flags = STREAM_SOUND_REMOTE;
-         }
-         else 
-         {
-            flags = STREAM_SOUND_LOCAL | STREAM_SOUND_REMOTE;
-         }
-         OsStatus status = getMediaInterface()->getInterface()->createPlayer(&mStreamPlayer, Data::from(mMediaUrl).c_str(), flags);
-         if(status == OS_SUCCESS)
-         {
-            mStreamPlayer->addListener(this);
-            status = mStreamPlayer->realize(FALSE /* block? */);
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "MediaResourceParticipant::startPlay error calling StreamPlayer::realize: " << status);
-            }
-            else
-            {
-               mPlaying = true;
-            }
-         }
-         else
-         {
-            WarningLog(<< "MediaResourceParticipant::startPlay error calling createPlayer: " << status);
-         }
-      }
-      break;
-      case Invalid:
-         WarningLog(<< "MediaResourceParticipant::startPlay invalid resource type: " << mMediaUrl.scheme());
-         break;
-      }
+      startPlayImpl();
    }
    catch(BaseException &e)
    {
@@ -364,6 +141,7 @@ MediaResourceParticipant::startPlay()
    {
       WarningLog(<< "MediaResourceParticipant::startPlay unknown exception");
    }
+
 
    if(mPlaying)  // If play started successfully
    {
@@ -380,198 +158,6 @@ MediaResourceParticipant::startPlay()
    }
 }
 
-int 
-MediaResourceParticipant::getConnectionPortOnBridge()
-{
-   int connectionPort = -1;
-   switch(mResourceType)
-   {
-   case Tone:     
-      if(mToneGenPortOnBridge == -1)
-      {
-         resip_assert(getMediaInterface() != 0);     
-         ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
-         InfoLog(<< "MediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mToneGenPortOnBridge=" << mToneGenPortOnBridge);
-      }
-      connectionPort = mToneGenPortOnBridge;
-      break;
-   case File:
-   case Cache:
-   case Http:
-   case Https:
-      if(mFromFilePortOnBridge == -1)
-      {
-         resip_assert(getMediaInterface() != 0);     
-         ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
-         InfoLog(<< "MediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mFromFilePortOnBridge=" << mFromFilePortOnBridge);
-      }
-      connectionPort = mFromFilePortOnBridge;
-      break;
-   case Invalid:
-      WarningLog(<< "MediaResourceParticipant::getConnectionPortOnBridge invalid resource type: " << mResourceType);
-      break;
-   }
-   return connectionPort;
-}
-
-void
-MediaResourceParticipant::destroyParticipant()
-{
-   bool deleteNow = true;
-
-   if(mDestroying) return;
-   mDestroying = true;
-
-   if(mPlaying)
-   {
-      switch(mResourceType)
-      {
-      case Tone:
-         {
-            OsStatus status = OS_FAILED;
-            if(mMediaUrl.exists(p_participantonly))
-            {
-               bool isDtmf = (mMediaUrl.host().size() == 1);
-               int partHandle = mMediaUrl.param(p_participantonly).convertInt();
-               SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(mConversationManager.getParticipant(partHandle));
-               if(participant)
-               {
-#ifdef SIPX_TONES_INBAND
-                  // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
-                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
-#else
-                  // this is for newer sipXtapi API, option to suppress inband tones:
-                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
-#endif
-               }
-               else
-               {
-                  WarningLog(<<"Participant " << partHandle << " no longer exists or invalid");
-               }
-            }
-            else
-            {
-               status = getMediaInterface()->getInterface()->stopTone();
-            }
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopTone: " << status);
-            }
-         }
-         break;
-      case File:
-      case Cache:
-         {
-            OsStatus status = getMediaInterface()->getInterface()->stopAudio();
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopAudio: " << status);
-            }
-         }
-         break;
-      case Http:
-      case Https:
-         {
-            mRepeat = false;  // Required so that player will not just repeat on stopped event
-            OsStatus status = mStreamPlayer->stop();
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling StreamPlayer::stop: " << status);
-            }
-            else
-            {
-               deleteNow = false;  // Wait for play finished event to come in
-            }
-         }
-         break;
-      case Invalid:
-         WarningLog(<< "MediaResourceParticipant::destroyParticipant invalid resource type: " << mResourceType);
-         break;
-      }
-   }
-   if(deleteNow) delete this;
-}
-
-void 
-MediaResourceParticipant::playerRealized(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerRealized: handle=" << mHandle);
-   if(mPrefetch)
-   {
-      OsStatus status = mStreamPlayer->prefetch(FALSE);
-      if(status != OS_SUCCESS)
-      {
-         WarningLog(<< "MediaResourceParticipant::playerRealized error calling StreamPlayer::prefetch: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.post(cmd);
-      }
-   }
-   else
-   {
-      OsStatus status = mStreamPlayer->play(FALSE /*block?*/);
-      if(status != OS_SUCCESS)
-      {
-         WarningLog(<< "MediaResourceParticipant::playerRealized error calling StreamPlayer::play: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.post(cmd);
-      }
-   }
-}
-
-void 
-MediaResourceParticipant::playerPrefetched(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerPrefetched: handle=" << mHandle);
-   OsStatus status = mStreamPlayer->play(FALSE/*block?*/);
-   if(status != OS_SUCCESS)
-   {
-      WarningLog(<< "MediaResourceParticipant::playerPrefetched error calling StreamPlayer::play: " << status);
-       MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-       mConversationManager.post(cmd);
-   }
-}
-
-void 
-MediaResourceParticipant::playerPlaying(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerPlaying: handle=" << mHandle);
-}
-
-void 
-MediaResourceParticipant::playerPaused(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerPaused: handle=" << mHandle);
-}
-
-void 
-MediaResourceParticipant::playerStopped(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerStopped: handle=" << mHandle);
-   // We get this event when playing is completed
-   if(mRepeat)
-   {
-      OsStatus status = mStreamPlayer->rewind(FALSE/*block?*/);   // Generate playerPrefetched event
-      if(status != OS_SUCCESS)
-      {
-         WarningLog(<< "MediaResourceParticipant::playerStopped error calling StreamPlayer::rewind: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.post(cmd);
-      }
-   }
-   else
-   {
-      MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-      mConversationManager.post(cmd);
-   }
-}
- 
-void 
-MediaResourceParticipant::playerFailed(MpPlayerEvent& event)
-{
-   InfoLog(<< "MediaResourceParticipant::playerFailed: handle=" << mHandle);
-   MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-   mConversationManager.post(cmd);
-}
 
 
 /* ====================================================================
