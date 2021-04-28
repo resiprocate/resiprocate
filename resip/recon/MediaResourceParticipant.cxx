@@ -19,37 +19,22 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-static const resip::ExtensionParameter p_localonly("local-only");
-static const resip::ExtensionParameter p_remoteonly("remote-only");
-static const resip::ExtensionParameter p_participantonly("participant-only");
-static const resip::ExtensionParameter p_repeat("repeat");
-static const resip::ExtensionParameter p_prefetch("prefetch");
-
 // Url schemes
 static const Data toneScheme("tone");
 static const Data fileScheme("file");
 static const Data cacheScheme("cache");
 static const Data httpScheme("http");
 static const Data httpsScheme("https");
+static const Data recordScheme("record");
 
-// Special Tones
-static const Data dialtoneTone("dialtone");
-static const Data busyTone("busy");
-static const Data ringbackTone("ringback");
-static const Data ringTone("ring");
-static const Data fastbusyTone("fastbusy");
-static const Data backspaceTone("backspace");
-static const Data callwaitingTone("callwaiting");
-static const Data holdingTone("holding");
-static const Data loudfastbusyTone("loudfastbusy");
+static const resip::ExtensionParameter p_repeat("repeat");
+static const resip::ExtensionParameter p_prefetch("prefetch");
 
 MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
                                                    const Uri& mediaUrl)
 : Participant(partHandle, conversationManager),
   mMediaUrl(mediaUrl),
-  mLocalOnly(false),
-  mRemoteOnly(false),
   mRepeat(false),
   mPrefetch(false),
   mDurationMs(0),
@@ -80,6 +65,10 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
       {
          mResourceType = Https;
       }
+      else if (isEqualNoCase(mMediaUrl.scheme(), recordScheme))
+      {
+         mResourceType = Record;
+      }
    }
    catch(BaseException &e)
    {
@@ -96,6 +85,22 @@ MediaResourceParticipant::~MediaResourceParticipant()
    InfoLog(<< "MediaResourceParticipant destroyed, handle=" << mHandle << " url=" << mMediaUrl);
 }
 
+bool
+MediaResourceParticipant::hasInput()
+{
+   return mResourceType == Record;
+}
+
+bool
+MediaResourceParticipant::hasOutput()
+{
+   return mResourceType == Tone ||
+      mResourceType == File ||
+      mResourceType == Cache ||
+      mResourceType == Http ||
+      mResourceType == Https;
+}
+
 void 
 MediaResourceParticipant::startPlay()
 {
@@ -105,16 +110,6 @@ MediaResourceParticipant::startPlay()
       InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " url=" << mMediaUrl);
 
       // Common processing
-      if(mMediaUrl.exists(p_localonly))
-      {
-         mLocalOnly = true;
-         mMediaUrl.remove(p_localonly);
-      }
-      if(mMediaUrl.exists(p_remoteonly))
-      {
-         mRemoteOnly = true;
-         mMediaUrl.remove(p_remoteonly);
-      }
       if(mMediaUrl.exists(p_duration))
       {
          mDurationMs = mMediaUrl.param(p_duration);

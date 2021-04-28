@@ -46,17 +46,7 @@ Some Existing Limitations with sipX media Integration
         second media participant will override the first and both media participants will 
         be destroyed when the second file has completed playing.
 
-2.  The newer Topology Graph interface is used in recon to get Bridge Mixing support.  The
-    following is a list of features that have either been deprecated or are not yet 
-    implemented in this interface.
-
-    a.  Streaming media from an http URL has been deperecated - thus http URLs are not 
-        supported in the createMediaParticipant interface.
-   
-    b.  When playing media tones and files, the local-only and remote-only flags have not 
-        yet been implemented, and will not currently work.
-
-3.  A new Multiple Media Interface Mode has been implemented to help with limitation #1
+2.  A new Multiple Media Interface Mode has been implemented to help with limitation #1
     above.  This mode is more appropriate when using recon to implement a media server.
     By default, this mode uses 1 sipXtapi media interface per conversation, as opposed
 	to a single global media interface.  If you use 

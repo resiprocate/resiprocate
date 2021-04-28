@@ -50,6 +50,7 @@ private:
    MpStreamPlayer* mStreamPlayer;
    int mToneGenPortOnBridge;
    int mFromFilePortOnBridge;
+   int mRecordPortOnBridge;
 
 };
 

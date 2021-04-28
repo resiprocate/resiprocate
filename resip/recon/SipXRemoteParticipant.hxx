@@ -59,6 +59,8 @@ public:
    virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
 
    virtual int getConnectionPortOnBridge();
+   virtual bool hasInput() { return true; }
+   virtual bool hasOutput() { return true; }
    virtual int getMediaConnectionId();
 
    virtual void adjustRTPStreams(bool sendingOffer=false);

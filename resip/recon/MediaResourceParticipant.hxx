@@ -47,7 +47,8 @@ public:
       File,
       Cache,
       Http,
-      Https
+      Https,
+      Record
    } ResourceType;
 
    MediaResourceParticipant(ParticipantHandle partHandle,
@@ -56,6 +57,8 @@ public:
    virtual ~MediaResourceParticipant();
 
    virtual void startPlay();
+   virtual bool hasInput();
+   virtual bool hasOutput();
    virtual ResourceType getResourceType() { return mResourceType; }
    virtual void destroyParticipant() = 0;
 
@@ -63,8 +66,6 @@ protected:
    virtual void startPlayImpl() = 0;
    virtual ConversationManager& getConversationManager() { return mConversationManager; }
    virtual resip::Uri& getMediaUrl() { return mMediaUrl; }
-   virtual bool isLocalOnly() { return mLocalOnly; }
-   virtual bool isRemoteOnly() { return mRemoteOnly; }
    virtual bool isRepeat() { return mRepeat; }
    virtual void setRepeat(bool repeat) { mRepeat = repeat; }
    virtual bool isPrefetch() { return mPrefetch; }
@@ -80,8 +81,6 @@ private:
    ResourceType mResourceType;
 
    // Play settings
-   bool mLocalOnly;
-   bool mRemoteOnly;
    bool mRepeat;
    bool mPrefetch;
    unsigned int mDurationMs;
@@ -97,6 +96,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

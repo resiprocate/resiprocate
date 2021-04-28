@@ -34,16 +34,24 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
    int bridgePort = participant->getConnectionPortOnBridge();
    MpBridgeGain inputBridgeWeights[DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
 
-   InfoLog( << "calculatingMixWeigthsForParticipant, handle=" << participant->getParticipantHandle() << ", bridgePort=" << bridgePort);
+   InfoLog( << "calculatingMixWeigthsForParticipant, handle=" << participant->getParticipantHandle() << ", bridgePort=" << bridgePort << ", hasInput=" << participant->hasInput() << ", hasOutput=" << participant->hasOutput());
 
    if(bridgePort != -1)
    {
       // Default All Inputs/Outputs to 0, then calculate non-zero inputs/outputs
       for(int i = 0; i < DEFAULT_BRIDGE_MAX_IN_OUTPUTS; i++)
       {
-         mMixMatrix[i][bridgePort] = 0;
+         // If we have input capabilities, then clear out other participants outputs to us
+         if (participant->hasInput())
+         {
+            mMixMatrix[bridgePort][i] = 0;
+         }
+         // If we have output capabilites, then clear out other participants inputs from us
+         if (participant->hasOutput())
+         {
+            mMixMatrix[i][bridgePort] = 0;
+         }
          inputBridgeWeights[i] = 0;
-         mMixMatrix[bridgePort][i] = 0;
       }
 
       // Walk through all Conversations this Participant is in
@@ -66,21 +74,30 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
          }
          for(it2 = convParts.begin(); it2 != convParts.end(); it2++)
          {
-            //InfoLog( << "calculateMixWeightsForParticipant: part=" << participant->getParticipantHandle() << ", conv=" << it1->second->getHandle() << ", part=" << it2->second.getParticipant()->getParticipantHandle());
+            //InfoLog( << "calculateMixWeightsForParticipant: part=" << participant->getParticipantHandle() << ", conv=" << it1->second->getHandle() << ", otherpart=" << it2->second.getParticipant()->getParticipantHandle() << ", hasInput=" << it2->second.getParticipant()->hasInput() << ", hasOutput=" << it2->second.getParticipant()->hasOutput());
             // If we found a participant that is not ourself
             if(it2->second.getParticipant()->getParticipantHandle() != participant->getParticipantHandle())
             {
                int otherBridgePort = it2->second.getParticipant()->getConnectionPortOnBridge();
-               if(otherBridgePort != -1 && otherBridgePort != bridgePort)  // Note otherBridgePort can equal bridge port if multiple media participants of the same type exist
+               //if (otherBridgePort != -1 && otherBridgePort != bridgePort)  // Note otherBridgePort can equal bridge port if multiple media participants of the same type exist
+               if (otherBridgePort != -1)
                {
-                  //InfoLog( << "Setting mix level for bridge ports: " << bridgePort << " and " << otherBridgePort);
-                  // Calculate the mixed output gain
-                  unsigned int outputGain = ((it2->second.getOutputGain() * participantInputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
-                  mMixMatrix[bridgePort][otherBridgePort] = max((int)outputGain, mMixMatrix[bridgePort][otherBridgePort]);
+                  if (participant->hasInput() &&                  // Only look at outputs from other participants if we have an input,  and
+                      it2->second.getParticipant()->hasOutput())  // Only look at other participant if it has an output
+                  {
+                     // Calculate the mixed output gain from the other participant to us
+                     unsigned int outputGain = ((it2->second.getOutputGain() * participantInputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
+                     mMixMatrix[bridgePort][otherBridgePort] = max((int)outputGain, mMixMatrix[bridgePort][otherBridgePort]);
+                  }
 
-                  // Calculate the mixed input gain
-                  unsigned int inputGain = ((it2->second.getInputGain() * participantOutputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
-                  inputBridgeWeights[otherBridgePort] = mMixMatrix[otherBridgePort][bridgePort] = max((int)inputGain, mMixMatrix[otherBridgePort][bridgePort]);                   
+                  if (participant->hasOutput() &&                // Only look at inputs to other participants if we have an output, and
+                      it2->second.getParticipant()->hasInput())  // Only look at other participants that have an input and can accept our output
+                  {
+                     // Calculate the mixed input gain for the other participant
+                     unsigned int inputGain = ((it2->second.getInputGain() * participantOutputGain) / 100) * 10;  // 10 factor is to bring inline with MrpBridgeWeight int type
+                     inputBridgeWeights[otherBridgePort] = mMixMatrix[otherBridgePort][bridgePort] = max((int)inputGain, mMixMatrix[otherBridgePort][bridgePort]);
+                  }
+                  //InfoLog(<< "Setting mix level for bridge ports: " << bridgePort << " and " << otherBridgePort << ": outputGain=" << mMixMatrix[bridgePort][otherBridgePort]/10 << ", inputGain=" << inputBridgeWeights[otherBridgePort]/10);
                }
             }
          }
@@ -89,8 +106,16 @@ SipXBridgeMixer::calculateMixWeightsForParticipant(Participant* participant)
       //outputBridgeMixWeights();
 
       // Apply new bridge weights
-      MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
-      MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
+      if (participant->hasInput())
+      {
+         // Apply mix outputs for other participants if we have an input
+         MprBridge::setMixWeightsForOutput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, mMixMatrix[bridgePort]);
+      }
+      if (participant->hasOutput())
+      {
+         // Apply mix inputs to other participants if we have an output
+         MprBridge::setMixWeightsForInput(DEFAULT_BRIDGE_RESOURCE_NAME, *mMediaInterface.getMsgQ(), bridgePort, DEFAULT_BRIDGE_MAX_IN_OUTPUTS, inputBridgeWeights);
+      }
    }   
 }
 

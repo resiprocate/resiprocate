@@ -26,6 +26,8 @@ class SipXLocalParticipant : public LocalParticipant
       virtual ~SipXLocalParticipant();
 
       virtual int getConnectionPortOnBridge();
+      virtual bool hasInput() { return true; }
+      virtual bool hasOutput() { return true; }
       virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
 
    protected:     

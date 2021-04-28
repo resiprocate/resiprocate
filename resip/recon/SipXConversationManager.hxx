@@ -128,7 +128,7 @@ public:
 
      Create a new empty Conversation to which participants
      can be added.  This new conversation will share the media interface
-     from the passed in converation handle.  This allows participants to be
+     from the passed in conversation handle.  This allows participants to be
      moved between these two conversations, or any conversations that share the
      same media interface.  This method will fail (return 0) if this
      ConversationManager is in sipXGlobalMediaInterfaceMode.

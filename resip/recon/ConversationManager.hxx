@@ -189,7 +189,7 @@ public:
    /**
      Creates a new media resource participant in the specified conversation.
      Media is played from a source specified by the url and may be a local
-     audio file, audio file fetched via HTTP or tones.  The URL can contain
+     audio file or built-in tone.  The URL can contain
      parameters that specify properties of the media playback, such as
      number of repeats.
 
@@ -199,14 +199,14 @@ public:
                    holding, or loudfastbusy
      file:<filepath> - If filename only, then reads from application directory
                        (Use | instead of : for drive specifier)
-     http:<http-url> - Standard HTTP url that reference an audio file to be fetched
      cache:<cache-name> - You can play from a memory buffer/cache any items you
                           have added with the addBufferToMediaResourceCache api.
+     record:<filepath> - If filename only, then writes to application directory
+                         (Use | instead of : for drive specifier)
 
-     optional arguments are: [;duration=<duration>][;local-only][;remote-only][;repeat][;prefetch]
+     optional arguments are: [;duration=<duration>][;repeat]
 
-     @note 'repeat' option only makes sense for file and http URLs
-     @note 'prefetch' option only makes sense for http URLs
+     @note 'repeat' option only makes sense for file and cache playback
      @note audio files may be AU, WAV or RAW formats.  Audiofiles
            should be 16bit mono, 8khz, PCM to avoid runtime conversion.
      @note http referenced audio files must be WAV files,
@@ -215,19 +215,15 @@ public:
      Sample mediaUrls:
         tone:0                             - play DTMF tone 0 until participant is destroyed
         tone:1;duration=1000               - play DTMF tone 1 for 1000ms, then automatically destroy participant
-        tone:dialtone;local-only           - play special tone "Dialtone" to local speaker only, until participant is manually destroyed
-        tone:ringback;remote-only          - play special tone "Ringback" to remote participants only, until participant is manually destroyed
-        file://ringback.wav;local-only     - play the file ringback.wav to local speaker only, until completed (automatically destroyed) or participant is manually destroyed
+        tone:ringback                      - play special tone "Ringback" to conversation until participant is manually destroyed
+        file://ringback.wav                - play the file ringback.wav until completed (automatically destroyed) or participant is manually destroyed
         file://ringback.wav;duration=1000  - play the file ringback.wav for 1000ms (or until completed, if shorter), then automatically destroy participant
         file://ringback.wav;repeat         - play the file ringback.wav, repeating when complete until participant is destroyed
         file://hi.wav;repeat;duration=9000 - play the file hi.wav for 9000ms, repeating as required, then automatically destroy the participant
-        cache:welcomeprompt;local-only     - plays a prompt from the media cache with key/name "welcomeprompt" to the local speaker only
-        http://www.wav.com/test.wav;repeat - play the file test.wav, repeating when complete until participant is destroyed
-        http://www.wav.com/test.wav;prefetch - play the file test.wav, ensure that some audio is prefetched in order to assure smooth playback,
-                                               until completed (automatically destroyed) or participant is manually destroyed
+        cache:welcomeprompt                - plays a prompt from the media cache with key/name "welcomeprompt"
+        record:recording.wav               - records all participants audio mixed togehter in a WAV file, must be manually destroyed
 
-     @param convHandle Handle of the conversation to create the
-                       RemoteParticipant in
+     @param convHandle Handle of the conversation to create the MediaParticipant in
      @param mediaUrl   Url of media to play.  See above.
 
      @return A handle to the newly created media participant

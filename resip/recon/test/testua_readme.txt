@@ -227,17 +227,15 @@ createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual
 
 createMediaResourceParticipant: <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]
   Creates a new media resource participant in the specified conversation.  Media is played 
-  from a source specified by the url and may be a local audio file, audio file fetched via 
-  HTTP or tones.  The URL can contain parameters that specify properties of the media 
+  from a source specified by the url and may be a local audio file, or built-in tone.
+  The URL can contain parameters that specify properties of the media 
   playback, such as number of repeats.  
   Media Urls are of the following format: 
-       	"tone"|"file":<tone|filepath>[;duration=<duration>][;local-only]
-                                     [;remote-only][;repeat][;prefetch]
+       	"tone"|"file"|"cache"|"record":<tone|filepath>[;duration=<duration>][;repeat]
   Tones can be any DTMF digit 0-9,*,#,A-D or a special tone: 
     	dialtone, busy, fastbusy, ringback, ring, backspace, callwaiting, holding, or 
         loudfastbusy
-  Note: 'repeat' option only makes sense for file and http URLs
-  Note2: 'prefetch' option only makes sense for http URLs
+  Note: 'repeat' option only makes sense for file and cache playback
   Note3: audio files may be AU, WAV or RAW formats.  Audiofiles should be 16bit mono, 
          8khz, PCM to avoid runtime conversion.
 

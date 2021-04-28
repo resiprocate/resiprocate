@@ -42,13 +42,17 @@ class Participant
       virtual void replaceWithParticipant(Participant* replacingParticipant);
 
       virtual int getConnectionPortOnBridge() = 0;
+      virtual bool hasInput() = 0;
+      virtual bool hasOutput() = 0;
+
       virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();
       virtual void applyBridgeMixWeights();
-      virtual void applyBridgeMixWeights(Conversation* removedConversation);  
+      virtual void applyBridgeMixWeights(Conversation* removedConversation);
 
       virtual void destroyParticipant() = 0;
 
-   protected:       
+
+   protected:
       ParticipantHandle mHandle;
       ConversationManager &mConversationManager;
       ConversationMap mConversations;
@@ -61,6 +65,7 @@ class Participant
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
