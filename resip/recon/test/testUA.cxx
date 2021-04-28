@@ -61,12 +61,20 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-#define LOG_PREFIX
+//#define TESTUA_LOGFULLMESSAGES
+#ifdef TESTUA_LOGFULLMESSAGES
+  #define LOG_PREFIX << "[@@@@@@@@@@@]"    // Make it easier to see testUA output in console
+  #define OUTPUTMSG msg
+#else
+  #define LOG_PREFIX
+  #define OUTPUTMSG msg.brief()
+#endif
+
 
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then testUA will automatically answer incoming calls by adding to lowest numbered conversation
-std::shared_ptr<ConversationProfile> conversationProfile;
+std::shared_ptr<ConversationProfile> g_conversationProfile;
 
 static void
 signalHandler(int signo)
@@ -158,6 +166,17 @@ public:
       return partHandle;
    }
 
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle,
+      const resip::NameAddr& destination,
+      ParticipantForkSelectMode forkSelectMode,
+      const std::shared_ptr<resip::UserProfile>& callerProfile,
+      const std::multimap<resip::Data, resip::Data>& extraHeaders)
+   {
+      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode, callerProfile, extraHeaders);
+      mRemoteParticipantHandles.push_back(partHandle);
+      return partHandle;
+   }
+
    virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
    {
       ParticipantHandle partHandle = ConversationManager::createMediaResourceParticipant(convHandle, mediaUrl);
@@ -194,7 +213,7 @@ public:
 
    virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
    {
-      InfoLog(LOG_PREFIX << "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
       mRemoteParticipantHandles.push_back(partHandle);
       if(autoAnswerEnabled)
       {
@@ -219,7 +238,7 @@ public:
 
    virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
    {
-      InfoLog(LOG_PREFIX << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       /*
       if(mConvHandles.empty())
       {
@@ -230,12 +249,12 @@ public:
     
    virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
    {
-      InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle);
+      InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle << ", statusCode=" << statusCode);
    }
     
    virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
    {
-      InfoLog(LOG_PREFIX << "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantProceeding: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
    virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
@@ -249,12 +268,12 @@ public:
 
    virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
    {
-      InfoLog(LOG_PREFIX << "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantAlerting: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
     
    virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
    {
-      InfoLog(LOG_PREFIX << "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
+      InfoLog(LOG_PREFIX << "onParticipantConnected: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
    virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
@@ -270,6 +289,11 @@ public:
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
    {
       InfoLog(LOG_PREFIX << "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+   }
+
+   virtual void onApplicationTimer(unsigned int timerId, unsigned int sequenceId)
+   {
+      InfoLog(LOG_PREFIX << "onApplicationTimer: timerId=" << timerId << " sequenceId=" << sequenceId);
    }
 
    void displayInfo()
@@ -740,10 +764,10 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          {
             codecIdArray[index++] = (*it);
          }
-         Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
+         Data ipAddress(g_conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
+         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, g_conversationProfile->sessionCaps());
          delete [] codecIdArray;
       }
       return;
@@ -778,8 +802,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->secureMediaMode() = secureMediaMode;
-      conversationProfile->secureMediaRequired() = secureMediaRequired;      
+      g_conversationProfile->secureMediaMode() = secureMediaMode;
+      g_conversationProfile->secureMediaRequired() = secureMediaRequired;      
       InfoLog( << "Secure media mode set to: " << arg[0]);
       return;
    }
@@ -810,7 +834,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->natTraversalMode() = natTraversalMode;
+      g_conversationProfile->natTraversalMode() = natTraversalMode;
       InfoLog( << "NAT traversal mode set to: " << arg[0]);
       return;
    }
@@ -835,8 +859,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
-      conversationProfile->natTraversalServerPort() = natTraversalServerPort;
+      g_conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
+      g_conversationProfile->natTraversalServerPort() = natTraversalServerPort;
       InfoLog( << "NAT traversal STUN/TURN server set to: " << natTraversalServerHostname << ":" << natTraversalServerPort);
       return;
    }
@@ -844,7 +868,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    {
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->stunUsername() = arg[0];
+      g_conversationProfile->stunUsername() = arg[0];
       InfoLog( << "STUN/TURN user set to: " << arg[0]);
       return;
    }
@@ -852,7 +876,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    {
       // Note:  Technically modifying the conversation profile at runtime like this is not
       //        thread safe.  But it should be fine for this test consoles purposes.
-      conversationProfile->stunPassword() = arg[0];
+      g_conversationProfile->stunPassword() = arg[0];
       InfoLog( << "STUN/TURN password set to: " << arg[0]);
       return;
    }
@@ -1466,78 +1490,52 @@ main (int argc, char** argv)
    // Setup ConversationProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   conversationProfile = std::make_shared<ConversationProfile>(profile);
+   g_conversationProfile = std::make_shared<ConversationProfile>(profile);
    if(uri.uri().user() != "noreg" && !registrationDisabled)
    {
-      conversationProfile->setDefaultRegistrationTime(3600);
+      g_conversationProfile->setDefaultRegistrationTime(3600);
    }
    else
    {
-      conversationProfile->setDefaultRegistrationTime(0);
+      g_conversationProfile->setDefaultRegistrationTime(0);
    }
-   conversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
-   conversationProfile->setDefaultFrom(uri);
-   conversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
+   g_conversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
+   g_conversationProfile->setDefaultFrom(uri);
+   g_conversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
 
-#if 0  // Now auto-built 
-
-   // Create Session Capabilities and assign to coversation Profile
-   // Note:  port, sessionId and version will be replaced in actual offer/answer   int port = 16384;
-   // Build s=, o=, t=, and c= lines
-   SdpContents::Session::Origin origin("-", 0 /* sessionId */, 0 /* version */, SdpContents::IP4, address);   // o=   
-   SdpContents::Session session(0, origin, "-" /* s= */);
-   session.connection() = SdpContents::Session::Connection(SdpContents::IP4, address);  // c=
-   session.addTime(SdpContents::Session::Time(0, 0));
-
-   // Build Codecs and media offering
-   SdpContents::Session::Medium medium("audio", port, 1, "RTP/AVP");
-   // For G.722, it is necessary to patch sipXmediaLib/src/mp/codecs/plgg722/plgg722.c
-   // #define USE_8K_SAMPLES G722_SAMPLE_RATE_8000
-   // and change sample rate from 16000 to 8000
-   // (tested against a Polycom device configured for G.722 8000)
-   // http://www.mail-archive.com/sipxtapi-dev@list.sipfoundry.org/msg02522.html
-   // A more generic solution is needed long term, as G.722 is peculiar and
-   // implementations are not consistent:
-   //  https://lists.cs.columbia.edu/pipermail/sip-implementors/2007-August/017292.html
-   //SdpContents::Session::Codec g722codec("G722", 8000);
-   //g722codec.payloadType() = 9;  /* RFC3551 */ ;
-   //medium.addCodec(g722codec);
-   SdpContents::Session::Codec g711ucodec("PCMU", 8000);
-   g711ucodec.payloadType() = 0;  /* RFC3551 */ ;
-   medium.addCodec(g711ucodec);
-   SdpContents::Session::Codec g711acodec("PCMA", 8000);
-   g711acodec.payloadType() = 8;  /* RFC3551 */ ;
-   medium.addCodec(g711acodec);
-   SdpContents::Session::Codec speexCodec("SPEEX", 8000);
-   speexCodec.payloadType() = 110;  
-   speexCodec.parameters() = Data("mode=3");
-   medium.addCodec(speexCodec);
-   SdpContents::Session::Codec gsmCodec("GSM", 8000);
-   gsmCodec.payloadType() = 3;  /* RFC3551 */ ;
-   medium.addCodec(gsmCodec);
-   medium.addAttribute("ptime", Data(20));  // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
-   medium.addAttribute("sendrecv");
-
-   SdpContents::Session::Codec toneCodec("telephone-event", 8000);
-   toneCodec.payloadType() = 102;  
-   toneCodec.parameters() = Data("0-15");
-   medium.addCodec(toneCodec);
-   session.addMedium(medium);
-
-   conversationProfile->sessionCaps().session() = session;
-#endif
+   // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
+   // across machine re-starts and is unique to this application instance.  The one used 
+   // here is only as unique as the hostname of this machine.  If someone runs two 
+   // instances of this application on the same host for the same Aor, then things will 
+   // break.  See RFC5626 section 4.1
+   Data hostname = DnsUtil::getLocalHostName();
+   Data instanceHash = hostname.md5().uppercase();
+   assert(instanceHash.size() == 32);
+   Data instanceId(48, Data::Preallocate);
+   instanceId += "<urn:uuid:";
+   instanceId += instanceHash.substr(0, 8);
+   instanceId += "-";
+   instanceId += instanceHash.substr(8, 4);
+   instanceId += "-";
+   instanceId += instanceHash.substr(12, 4);
+   instanceId += "-";
+   instanceId += instanceHash.substr(16, 4);
+   instanceId += "-";
+   instanceId += instanceHash.substr(20, 12);
+   instanceId += ">";
+   g_conversationProfile->setInstanceId(instanceId);
 
    // Setup NatTraversal Settings
-   conversationProfile->natTraversalMode() = natTraversalMode;
-   conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
-   conversationProfile->natTraversalServerPort() = natTraversalServerPort;
-   conversationProfile->stunUsername() = stunUsername;
-   conversationProfile->stunPassword() = stunPassword;
+   g_conversationProfile->natTraversalMode() = natTraversalMode;
+   g_conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
+   g_conversationProfile->natTraversalServerPort() = natTraversalServerPort;
+   g_conversationProfile->stunUsername() = stunUsername;
+   g_conversationProfile->stunPassword() = stunPassword;
 
    // Secure Media Settings
-   conversationProfile->secureMediaMode() = secureMediaMode;
-   conversationProfile->secureMediaRequired() = secureMediaRequired;
-   conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
+   g_conversationProfile->secureMediaMode() = secureMediaMode;
+   g_conversationProfile->secureMediaRequired() = secureMediaRequired;
+   g_conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
@@ -1545,8 +1543,8 @@ main (int argc, char** argv)
    {
       MyConversationManager myConversationManager(localAudioEnabled, multipleMediaInterfaceModeEnabled, defaultAutoHoldModeToDisabled);
       MyUserAgent ua(&myConversationManager, profile);
-      myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
-      ua.addConversationProfile(conversationProfile);
+      myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, g_conversationProfile->sessionCaps());
+      ua.addConversationProfile(g_conversationProfile);
 
       //////////////////////////////////////////////////////////////////////////////
       // Startup and run...
