@@ -128,22 +128,42 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       &mDialogSet);
 
    std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
-   for( ; it != extraHeaders.end(); it++)
+   for (; it != extraHeaders.end(); it++)
    {
       resip::Data headerName(it->first);
       resip::Data value(it->second);
-      StackLog(<<"processing an extension header: " << headerName << ": " << value);
-      resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
-      if(hType == resip::Headers::UNKNOWN)
+      try
       {
-         resip::ExtensionHeader h_Tmp(headerName.c_str());
-         resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
-         resip::StringCategory sc(value);
-         pc.push_back(sc);
+         if (resip::isEqualNoCase(headerName, "Replaces"))
+         {
+            HeaderFieldValue hfv(value.data(), value.size());
+            CallId callid(hfv, Headers::UNKNOWN);
+            invitemsg->header(h_Replaces) = callid;
+         }
+         else if (resip::isEqualNoCase(headerName, "Remote-Party-ID"))
+         {
+            invitemsg->header(h_RemotePartyIds).push_back(NameAddr(value));
+         }
+         else
+         {
+            StackLog(<< "processing an extension header: " << headerName << ": " << value);
+            resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
+            if (hType == resip::Headers::UNKNOWN)
+            {
+               resip::ExtensionHeader h_Tmp(headerName.c_str());
+               resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
+               resip::StringCategory sc(value);
+               pc.push_back(sc);
+            }
+            else
+            {
+               WarningLog(<< "Discarding header '" << headerName << "', only extension headers and select standard headers permitted");
+            }
+         }
       }
-      else
+      catch (resip::BaseException& ex)
       {
-         WarningLog(<<"Discarding header '"<<headerName<<"', only extension headers permitted");
+         WarningLog(<< "Discarding header '" << headerName << "', invalid value format '" << value << "': " << ex);
       }
    }
 
