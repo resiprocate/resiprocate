@@ -401,7 +401,7 @@ RemoteParticipantDialogSet::onTrying(AppDialogSetHandle, const SipMessage& msg)
    if(!isUACConnected() && mUACOriginalRemoteParticipant)
    {
       InfoLog(<< "onTrying: handle=" << mUACOriginalRemoteParticipant->getParticipantHandle() << ", " << msg.brief());
-      //mConversationManager.onParticipantProceeding(mHandle, msg);
+      if (mUACOriginalRemoteParticipant->getParticipantHandle()) mConversationManager.onParticipantProceeding(mUACOriginalRemoteParticipant->getParticipantHandle(), msg);
    }
 }
 

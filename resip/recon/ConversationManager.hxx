@@ -456,6 +456,16 @@ public:
    virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
                                       ConversationHandle origConvHandle, ParticipantHandle origPartHandle) = 0;
 
+   
+   /**
+     Notifies an application that a remote participant call attempt is
+     proceeding at the first hop.  ie: SIP 100/trying
+
+     @param partHandle Handle of the participant that is alerting
+     @param msg SIP message that caused the proceeding
+   */
+   virtual void onParticipantProceeding(ParticipantHandle partHandle, const resip::SipMessage& msg) { }
+
    /**
      Notifies an application that a remote participant call attempt is 
      alerting the remote party.  

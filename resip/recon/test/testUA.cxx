@@ -88,18 +88,18 @@ class MyUserAgent : public UserAgent
 public:
    MyUserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
       UserAgent(conversationManager, std::move(profile)) {}
-
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+    
+   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq) override
    {
       InfoLog(LOG_PREFIX << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
    }
 
-   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode)
+   virtual void onSubscriptionTerminated(SubscriptionHandle handle, unsigned int statusCode) override
    {
       InfoLog(LOG_PREFIX << "onSubscriptionTerminated: handle=" << handle << " statusCode=" << statusCode);
    }
 
-   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
+   virtual void onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData) override
    {
       InfoLog(LOG_PREFIX << "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
    }
@@ -145,21 +145,21 @@ public:
    }
 
    
-   virtual ConversationHandle createConversation(ConversationManager::AutoHoldMode autoHoldMode)
+   virtual ConversationHandle createConversation(ConversationManager::AutoHoldMode autoHoldMode) override
    {
       ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
       mConversationHandles.push_back(convHandle);
       return convHandle;
    }
 
-   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedFlowConversation, ConversationManager::AutoHoldMode autoHoldMode)
+   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedFlowConversation, ConversationManager::AutoHoldMode autoHoldMode) override
    {
       ConversationHandle convHandle = SipXConversationManager::createSharedMediaInterfaceConversation(sharedFlowConversation, autoHoldMode);
       mConversationHandles.push_back(convHandle);
       return convHandle;
    }
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic)
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic) override
    {
       ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
       mRemoteParticipantHandles.push_back(partHandle);
@@ -170,34 +170,34 @@ public:
       const resip::NameAddr& destination,
       ParticipantForkSelectMode forkSelectMode,
       const std::shared_ptr<resip::UserProfile>& callerProfile,
-      const std::multimap<resip::Data, resip::Data>& extraHeaders)
+      const std::multimap<resip::Data, resip::Data>& extraHeaders) override
    {
       ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode, callerProfile, extraHeaders);
       mRemoteParticipantHandles.push_back(partHandle);
       return partHandle;
    }
 
-   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
+   virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl) override
    {
       ParticipantHandle partHandle = ConversationManager::createMediaResourceParticipant(convHandle, mediaUrl);
       mMediaParticipantHandles.push_back(partHandle);
       return partHandle;
    }
 
-   virtual ParticipantHandle createLocalParticipant()
+   virtual ParticipantHandle createLocalParticipant() override
    {
       ParticipantHandle partHandle = ConversationManager::createLocalParticipant();
       mLocalParticipantHandles.push_back(partHandle);
       return partHandle;
    }
 
-   virtual void onConversationDestroyed(ConversationHandle convHandle)
+   virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(LOG_PREFIX << "onConversationDestroyed: handle=" << convHandle);
       mConversationHandles.remove(convHandle);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle) override
    {
       InfoLog(LOG_PREFIX << "onParticipantDestroyed: handle=" << partHandle);
       // Remove from whatever list it is in
@@ -206,12 +206,12 @@ public:
       mMediaParticipantHandles.remove(partHandle);
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up)
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override
    {
       InfoLog(LOG_PREFIX << "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
       InfoLog(LOG_PREFIX << "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
       mRemoteParticipantHandles.push_back(partHandle);
@@ -236,7 +236,7 @@ public:
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
    {
       InfoLog(LOG_PREFIX << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       /*
@@ -247,12 +247,12 @@ public:
       }*/
    }
     
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(LOG_PREFIX << "onParticipantTerminated: handle=" << partHandle << ", statusCode=" << statusCode);
    }
     
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onParticipantProceeding: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
@@ -266,32 +266,32 @@ public:
       mRemoteParticipantHandles.push_back(relatedPartHandle);
    }
 
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onParticipantAlerting: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
     
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onParticipantConnected: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
+   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
    {
       InfoLog(LOG_PREFIX << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(LOG_PREFIX << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
-   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
    {
       InfoLog(LOG_PREFIX << "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int sequenceId)
+   virtual void onApplicationTimer(unsigned int timerId, unsigned int sequenceId) override
    {
       InfoLog(LOG_PREFIX << "onApplicationTimer: timerId=" << timerId << " sequenceId=" << sequenceId);
    }
