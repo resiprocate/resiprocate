@@ -133,6 +133,7 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
 SipXConversationManager::~SipXConversationManager()
 {
+   getBridgeMixer().reset();       // Make sure the mixer is destroyed before the media interface
    mMediaInterface.reset();    // Make sure inteface is destroyed before factory
    sipxDestroyMediaFactoryFactory();
 }
