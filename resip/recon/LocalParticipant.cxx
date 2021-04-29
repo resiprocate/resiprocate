@@ -24,14 +24,6 @@ LocalParticipant::LocalParticipant(ParticipantHandle partHandle,
 
 LocalParticipant::~LocalParticipant()
 {
-   // unregister from Conversations
-   // Note:  ideally this functionality would exist in Participant Base class - but dynamic_cast required in unregisterParticipant will not work
-   ConversationMap::iterator it;
-   for(it = mConversations.begin(); it != mConversations.end(); it++)
-   {
-      it->second->unregisterParticipant(this);
-   }
-   mConversations.clear();
    InfoLog(<< "LocalParticipant destroyed, handle=" << mHandle);
 }
 
