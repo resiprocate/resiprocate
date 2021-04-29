@@ -2,13 +2,6 @@
 #include "config.h"
 #endif
 
-// sipX includes
-#if (_MSC_VER >= 1600)
-#include <stdint.h>       // Use Visual Studio's stdint.h
-#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
-#endif
-#include <CpTopologyGraphInterface.h>
-
 #include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "RemoteParticipantDialogSet.hxx"
@@ -16,15 +9,6 @@
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "MediaStreamEvent.hxx"
-#include "FlowManagerSipXSocket.hxx"
-
-// Flowmanager Includes
-#include "reflow/FlowManager.hxx"
-#include "reflow/Flow.hxx"
-#include "reflow/MediaStream.hxx"
-
-#include "sdp/SdpHelperResip.hxx"
-#include "sdp/Sdp.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -34,7 +18,6 @@
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/ServerInviteSession.hxx>
 
-//#define DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
 #include <rutil/WinLeakCheck.hxx>
 
 #include <utility>
