@@ -21,12 +21,6 @@ class DialogUsageManager;
 class SipMessage;
 }
 
-namespace sdpcontainer
-{
-class Sdp; 
-class SdpMediaLine;
-}
-
 namespace recon
 {
 class ConversationManager;
