@@ -10,6 +10,7 @@ SUBDIRS += test
 SUBDIRS += MOHParkServer
 
 #AM_CXXFLAGS = -DUSE_ARES
+AM_CXXFLAGS = -DSIPX_NO_RECORD
 
 lib_LTLIBRARIES = librecon.la
 librecon_la_LIBADD = ../../reflow/libreflow.la

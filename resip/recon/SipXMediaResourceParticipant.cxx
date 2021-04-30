@@ -238,6 +238,9 @@ SipXMediaResourceParticipant::startPlayImpl()
 
    case Record:
    {
+#ifdef SIPX_NO_RECORD
+      ErrLog(<< "support for Record was not enabled at compile time");
+#else
       Data filepath = getMediaUrl().host().urlDecoded();
       if (filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
       else if (filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
@@ -267,6 +270,7 @@ SipXMediaResourceParticipant::startPlayImpl()
       {
          WarningLog(<< "SipXMediaResourceParticipant::startPlay error calling recordChannelAudio: " << status);
       }
+#endif
    }
    break;
 
@@ -304,6 +308,9 @@ SipXMediaResourceParticipant::getConnectionPortOnBridge()
       connectionPort = mFromFilePortOnBridge;
       break;
    case Record:
+#ifdef SIPX_NO_RECORD
+      ErrLog(<< "support for Record was not enabled at compile time");
+#else
       if (mRecordPortOnBridge == -1)
       {
          resip_assert(getMediaInterface() != 0);
@@ -311,6 +318,7 @@ SipXMediaResourceParticipant::getConnectionPortOnBridge()
          InfoLog(<< "SipXMediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mRecordPortOnBridge=" << mRecordPortOnBridge);
       }
       connectionPort = mRecordPortOnBridge;
+#endif
       break;
    case Invalid:
       WarningLog(<< "SipXMediaResourceParticipant::getConnectionPortOnBridge invalid resource type: " << getResourceType());
