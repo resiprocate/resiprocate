@@ -235,7 +235,7 @@ Conversation::destroy()
             }
             else
             {
-               removeParticipant(i->second.getParticipant());
+               removeParticipant(i->second.getParticipant());  // Can cause "this" to get deleted
             }
          }
       }
@@ -279,8 +279,6 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
 void 
 Conversation::unregisterParticipant(Participant *participant)
 {
-   // For some reason: Since this is called from the Subclasses Participant Destructor, the dynamic_casts
-   // don't work.
    if(getParticipant(participant->getParticipantHandle()) != 0)
    {
       mParticipants.erase(participant->getParticipantHandle());  // No need to notify this party, remove from map first
@@ -300,6 +298,10 @@ Conversation::unregisterParticipant(Participant *participant)
       {
          mNumMediaParticipants--;
       }
+      else
+      {
+         assert(false);
+      }
       if(!mDestroying && prevShouldHold != shouldHold())
       {
          notifyRemoteParticipantsOfHoldChange();
@@ -318,7 +320,7 @@ Conversation::unregisterParticipant(Participant *participant)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

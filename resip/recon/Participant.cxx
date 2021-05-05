@@ -75,6 +75,18 @@ Participant::removeFromConversation(Conversation *conversation)
    conversation->unregisterParticipant(this);
 }
 
+void
+Participant::unregisterFromAllConversations()
+{
+   // unregister from Conversations
+   ConversationMap::iterator it;
+   for (it = mConversations.begin(); it != mConversations.end(); it++)
+   {
+      it->second->unregisterParticipant(this);
+   }
+   mConversations.clear();
+}
+
 void 
 Participant::copyConversationsToParticipant(Participant* destParticipant)
 {
@@ -183,7 +195,7 @@ Participant::applyBridgeMixWeights(Conversation* removedConversation)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

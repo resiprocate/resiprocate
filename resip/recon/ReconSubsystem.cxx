@@ -1,11 +1,12 @@
 #include "ReconSubsystem.hxx"
 
-ReconSubsystem ReconSubsystem::RECON("USERAGENT");
+ReconSubsystem ReconSubsystem::RECON("RECON");
 
 
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

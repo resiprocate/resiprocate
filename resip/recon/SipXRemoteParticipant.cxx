@@ -75,14 +75,12 @@ SipXRemoteParticipant::SipXRemoteParticipant(SipXConversationManager& sipXConver
 
 SipXRemoteParticipant::~SipXRemoteParticipant()
 {
-   // unregister from Conversations
-   // Note:  ideally this functionality would exist in Participant Base class - but dynamic_cast required in unregisterParticipant will not work
-   ConversationMap::iterator it;
-   for(it = mConversations.begin(); it != mConversations.end(); it++)
-   {
-      it->second->unregisterParticipant(this);
-   }
-   mConversations.clear();
+   // Note:  Ideally this call would exist in the Participant Base class - but this call requires 
+   //        dynamic_casts and virtual methods to function correctly during destruction.
+   //        If the call is placed in the base Participant class then these things will not
+   //        function as desired because a classes type changes as the descructors unwind.
+   //        See https://stackoverflow.com/questions/10979250/usage-of-this-in-destructor.
+   unregisterFromAllConversations();
 
    InfoLog(<< "SipXRemoteParticipant destroyed, handle=" << mHandle);
 }

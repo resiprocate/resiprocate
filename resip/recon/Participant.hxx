@@ -34,6 +34,7 @@ class Participant
       virtual ParticipantHandle getParticipantHandle() { return mHandle; }
       virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
       virtual void removeFromConversation(Conversation *conversation);
+      virtual void unregisterFromAllConversations();
       virtual void copyConversationsToParticipant(Participant* destParticipant);
       virtual unsigned int getNumConversations() { return (unsigned int)mConversations.size(); }
       const ConversationMap& getConversations() { return mConversations; }
@@ -65,7 +66,7 @@ class Participant
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
