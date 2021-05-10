@@ -700,21 +700,23 @@ class ApplicationTimerCmd : public resip::DumCommand
 {
 public:
    ApplicationTimerCmd(ConversationManager* conversationManager,
-      unsigned int timerId, unsigned int timerData)
+      unsigned int timerId, unsigned int timerData1, unsigned int timerData2)
       : mConversationManager(conversationManager),
       mTimerId(timerId),
-      mTimerData(timerData) {}
+      mTimerData1(timerData1),
+      mTimerData2(timerData2) {}
    virtual void executeCommand()
    {
-      mConversationManager->onApplicationTimer(mTimerId, mTimerData);
+      mConversationManager->onApplicationTimer(mTimerId, mTimerData1, mTimerData2);
    }
-   resip::Message* clone() const { return new ApplicationTimerCmd(mConversationManager, mTimerId, mTimerData); }
-   EncodeStream& encode(EncodeStream& strm) const { strm << " ApplicationTimerCmd: "; return strm; }
+   resip::Message* clone() const { return new ApplicationTimerCmd(mConversationManager, mTimerId, mTimerData1, mTimerData2); }
+   EncodeStream& encode(EncodeStream& strm) const { strm << " ApplicationTimerCmd: timerId=" << mTimerId << ", data1=" << mTimerData1 << ", data2=" << mTimerData2; return strm; }
    EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
 private:
    ConversationManager* mConversationManager;
    unsigned int mTimerId;
-   unsigned int mTimerData;
+   unsigned int mTimerData1;
+   unsigned int mTimerData2;
 };
 
 }

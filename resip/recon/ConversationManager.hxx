@@ -376,13 +376,14 @@ public:
             number as the timer data and ignore timers when they fire, if
             they should be cancelled.
 
-     @param timerId   Application specified id for this timer instance returned in callback
-     @param timerData Application specified generic data returned in callback
+     @param timerId    Application specified id for this timer instance returned in callback
+     @param timerData1 Application specified generic data returned in callback
+     @param timerData2 Application specified generic data returned in callback
    */
-   virtual void startApplicationTimer(unsigned int timerId, unsigned int timerData, unsigned int durationMs);
+   virtual void startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, unsigned int durationMs);
 
    // Override this to handle the callback
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int timerData) { }
+   virtual void onApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2) { }
 
 
    ///////////////////////////////////////////////////////////////////////

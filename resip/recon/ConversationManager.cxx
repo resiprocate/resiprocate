@@ -219,9 +219,9 @@ ConversationManager::holdParticipant(ParticipantHandle partHandle, bool hold)
 }
 
 void 
-ConversationManager::startApplicationTimer(unsigned int timerId, unsigned int timerData, unsigned int durationMs)
+ConversationManager::startApplicationTimer(unsigned int timerId, unsigned int timerData1, unsigned int timerData2, unsigned int durationMs)
 {
-   ApplicationTimerCmd cmd(this, timerId, timerData);
+   ApplicationTimerCmd cmd(this, timerId, timerData1, timerData2);
    post(cmd, durationMs);
 }
 
