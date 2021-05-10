@@ -71,11 +71,22 @@ public:
    typedef enum
    {
       // Create a conversation for each early fork. Accept the first fork 
-      // from which a 200 is received.  Automatically kill other forks. 
+      // from which a 200 is received.  Automatically kill other forks on
+      // answer only.  In this mode, applications wishing to end a call 
+      // before answer must destory each related participant/conversation 
+      // seperately, causing a BYE to be sent to each leg that has 
+      // established an early dialog, followed by a CANCEL after all 
+      // related legs are destroyed
       ForkSelectAutomatic,
       // Create a conversation for each early fork. Let the application 
       // dispose of extra forks. ex: app may form conference. 
-      ForkSelectManual
+      ForkSelectManual,
+      // Create a conversation for each early fork. Accept the first fork 
+      // from which a 200 is received.  Automatically kill other forks on
+      // answer or if the original participant is destroyed.  Also issues 
+      // a single CANCEL request if original participant is destroyed before 
+      // answer.
+      ForkSelectAutomaticEx,
    } ParticipantForkSelectMode;
 
    typedef enum

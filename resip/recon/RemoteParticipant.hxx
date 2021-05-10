@@ -74,6 +74,7 @@ public:
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
+   virtual void notifyTerminating();
    virtual void adjustRTPStreams(bool sendingOffer=false) = 0;
 
    // Invite Session Handler /////////////////////////////////////////////////////
@@ -185,8 +186,6 @@ private:
 
    std::shared_ptr<resip::SdpContents> mLocalSdp;
    std::shared_ptr<resip::SdpContents> mRemoteSdp;
-
-   ConversationMap mRelatedConversations;
 };
 
 }

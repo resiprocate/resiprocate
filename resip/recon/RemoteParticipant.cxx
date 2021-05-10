@@ -191,13 +191,24 @@ RemoteParticipant::destroyParticipant()
       if(mState != Terminating)
       {
          stateTransition(Terminating);
-         if(mInviteSessionHandle.isValid())
+         if (!mDialogSet.isUACConnected() && mDialogSet.getForkSelectMode() == ConversationManager::ForkSelectAutomaticEx)
          {
-            mInviteSessionHandle->end();
+            // This will send a CANCEL if unanswered, in ForkSelectAutomaticEx mode we don't expect to
+            // manage destruction forked endpoints manually or individually.  This will also end
+            // all the other related conversations.
+            mDialogSet.endIncludeRelated(mHandle);
          }
          else
-         { 
-            mDialogSet.end();
+         {
+            if (mInviteSessionHandle.isValid())
+            {
+               // This will send a BYE.
+               mInviteSessionHandle->end();
+            }
+            else
+            {
+               mDialogSet.end();
+            }
          }
       }
    }
@@ -864,6 +875,29 @@ RemoteParticipant::destroyConversations()
    }
 }
 
+void RemoteParticipant::notifyTerminating()
+{
+   // The dialogset is being cancelled, we are now terminating
+   stateTransition(Terminating);
+
+   ConversationMap::iterator it;
+   for (it = mConversations.begin(); it != mConversations.end(); it++)
+   {
+      it->second->unregisterParticipant(this);
+   }
+   mConversations.clear();
+
+   // It can take up to 32 seconds for a cancelled leg Dialog/DialogSet to actually get destroyed, we
+   // don't want to make recon users wait this time, so signal the participant as destroyed immediately
+   // and let DUM handle the rest in the background.
+   if (mHandle != 0)
+   {
+      mConversationManager.onParticipantTerminated(mHandle, 0);
+      mConversationManager.onParticipantDestroyed(mHandle);
+      setHandle(0);        // unregister from Conversation Manager
+   }
+}
+
 void 
 RemoteParticipant::setProposedSdp(const resip::SdpContents& sdp)
 {
@@ -974,13 +1008,14 @@ RemoteParticipant::onFailure(ClientInviteSessionHandle h, const SipMessage& msg)
    stateTransition(Terminating);
    InfoLog(<< "onFailure: handle=" << mHandle << ", " << msg.brief());
    // If ForkSelectMode is automatic, then ensure we destory any conversations, except the original
-   if(mDialogSet.getForkSelectMode() == ConversationManager::ForkSelectAutomatic &&
+   if((mDialogSet.getForkSelectMode() == ConversationManager::ForkSelectAutomatic ||
+       mDialogSet.getForkSelectMode() == ConversationManager::ForkSelectAutomaticEx) &&
       mHandle != mDialogSet.getActiveRemoteParticipantHandle())
    {
       destroyConversations();
    }
 }
-      
+
 void
 RemoteParticipant::onEarlyMedia(ClientInviteSessionHandle h, const SipMessage& msg, const SdpContents& sdp)
 {

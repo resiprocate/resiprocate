@@ -306,6 +306,27 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
    }
 }
 
+void RemoteParticipantDialogSet::endIncludeRelated(ParticipantHandle requestingParticipant)
+{
+   AppDialogSet::end();
+
+   std::map<DialogId, RemoteParticipant*>::iterator it;
+   for (it = mDialogs.begin(); it != mDialogs.end(); it++)
+   {
+      // It can take up to 32 seconds for a cancelled leg Dialog/DialogSet to actually get destroyed, we
+      // don't want to make recon users wait this time, so signal the participant as destroyed immediately
+      // and let DUM handle the rest in the background.
+      it->second->notifyTerminating();
+
+      // Destroy all related conversations
+      if (it->second->getParticipantHandle() != requestingParticipant)
+      {
+         InfoLog(<< "Ending Participant=" << requestingParticipant << " with related dialogs, ending conversations for related participant=" << it->second->getParticipantHandle());
+         it->second->destroyConversations();
+      }
+   }
+}
+
 void 
 RemoteParticipantDialogSet::setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp)
 {
@@ -319,14 +340,15 @@ RemoteParticipantDialogSet::setUACConnected(const DialogId& dialogId, Participan
    resip_assert(mUACConnectedDialogId.getCallId().empty());
    mUACConnectedDialogId = dialogId;
    setActiveRemoteParticipantHandle(partHandle);
-   if(mForkSelectMode == ConversationManager::ForkSelectAutomatic)
+   if(mForkSelectMode == ConversationManager::ForkSelectAutomatic ||
+      mForkSelectMode == ConversationManager::ForkSelectAutomaticEx)
    {
       std::map<DialogId, RemoteParticipant*>::iterator it;
       for(it = mDialogs.begin(); it != mDialogs.end(); it++)
       {
          if(it->first != dialogId)
          {
-            InfoLog(<< "Connected to forked leg " << dialogId << " - stale dialog " << it->first << " and related conversation(s) will be ended.");      
+            InfoLog(<< "Connected to forked leg " << dialogId << " - stale dialog " << it->first << " and related conversation(s) will be ended.");
             it->second->destroyConversations();
          }
       }

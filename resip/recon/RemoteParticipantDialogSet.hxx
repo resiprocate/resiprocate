@@ -45,6 +45,7 @@ public:
    virtual RemoteParticipant* createUACOriginalRemoteParticipant(ParticipantHandle handle);
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
 
+   virtual void endIncludeRelated(ParticipantHandle requestingParticipant);
    virtual void setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp);
    virtual std::shared_ptr<resip::SdpContents> getProposedSdp() { return mProposedSdp; }
    virtual void setUACConnected(const resip::DialogId& dialogId, ParticipantHandle partHandle);
