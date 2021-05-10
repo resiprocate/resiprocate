@@ -54,6 +54,15 @@ public:
    std::shared_ptr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const noexcept;
 
    /**
+     Get/Set wether recon is allowed to log DTMF digits pressed.  Defaults to enabled. 
+     Disable for applications that accept credit card information for security purposes.
+
+     @return bool Set to false to disable logging DTMF digits
+   */
+   virtual bool& dtmfDigitLoggingEnabled();
+   virtual const bool dtmfDigitLoggingEnabled() const;
+
+   /**
      Adds a network transport to use for send/receiving SIP messages.
 
      @note This MUST be called before the UserAgent is created
@@ -206,6 +215,7 @@ private:
    bool mStatisticsManagerEnabled;
    std::shared_ptr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
    std::shared_ptr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
+   bool mDTMFDigitLoggingEnabled;
    std::vector<TransportInfo> mTransports;
    std::vector<resip::Data> mEnumSuffixes;
    resip::DnsStub::NameserverList mAdditionalDnsServers;
@@ -221,6 +231,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

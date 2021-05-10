@@ -20,7 +20,8 @@ using namespace resip;
 
 SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface) :
    mConversationManager(conversationManager),
-   mMediaInterface(mediaInterface)
+   mMediaInterface(mediaInterface),
+   mAllowLoggingDTMFDigits(true)
 {
 }
 
@@ -132,17 +133,30 @@ SipXMediaInterface::post(const OsMsg& msg)
                StackLog(<< "RTP clock rate = " << rtpClockRate << "Hz, duration (timestamp units) = " << duration << " = " << durationMS << "ms");
             }
 
-            // Get event into dum queue, so that callback is on dum thread
             ParticipantHandle partHandle = getParticipantHandleForConnectionId(pNotfMsg->getConnectionId());
+
+            if (mAllowLoggingDTMFDigits)
+            {
+               InfoLog(<< "SipXMediaInterface: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() <<
+                  ", connectionId=" << pNotfMsg->getConnectionId() <<
+                  ", participantHandle=" << partHandle <<
+                  ", keyCode=" << pDtmfNotfMsg->getKeyCode() <<
+                  ", state=" << pDtmfNotfMsg->getKeyPressState() <<
+                  ", duration=" << pDtmfNotfMsg->getDuration());
+            }
+            else
+            {
+               InfoLog(<< "SipXMediaInterface: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() <<
+                  ", connectionId=" << pNotfMsg->getConnectionId() <<
+                  ", participantHandle=" << partHandle <<
+                  ", keyCode=<HIDDEN>" <<
+                  ", state=" << pDtmfNotfMsg->getKeyPressState() <<
+                  ", duration=" << pDtmfNotfMsg->getDuration());
+            }
+
+            // Get event into dum queue, so that callback is on dum thread
             DtmfEvent* devent = new DtmfEvent(mConversationManager, partHandle, pDtmfNotfMsg->getKeyCode(), durationMS, pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
             mConversationManager.post(devent);
-
-            InfoLog( << "SipXMediaInterface: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() <<
-               ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", participantHandle=" << partHandle <<
-               ", keyCode=" << pDtmfNotfMsg->getKeyCode() << 
-               ", state=" << pDtmfNotfMsg->getKeyPressState() << 
-               ", duration=" << pDtmfNotfMsg->getDuration());
          }
          break;
       case MiNotification::MI_NOTF_DELAY_SPEECH_STARTED:

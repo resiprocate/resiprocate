@@ -29,6 +29,7 @@ public:
    ~SipXMediaInterface() { mMediaInterface->release(); }
 
    CpMediaInterface* getInterface() { return mMediaInterface; }
+   void allowLoggingDTMFDigits(bool allowLogging) { mAllowLoggingDTMFDigits = allowLogging; }
 
    // This version of createConnection is used when using FlowManager
    OsStatus createConnection(int& connectionId, ParticipantHandle partHandle, FlowManagerSipXSocket* rtpSocket, FlowManagerSipXSocket* rtcpSocket, bool isMulticast = false);
@@ -44,6 +45,7 @@ private:
 
    ConversationManager& mConversationManager;
    CpMediaInterface* mMediaInterface;
+   bool mAllowLoggingDTMFDigits;
 
    // Used to raise DtmfEvent with the source participant handle
    resip::Mutex mConnectionIdToParticipantHandleMapMutex;

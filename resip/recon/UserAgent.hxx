@@ -277,6 +277,8 @@ public:
     */
    const char* sendMessage(const resip::NameAddr& destination, const resip::Data& msg, const resip::Mime& mimeType);
 
+   std::shared_ptr<UserAgentMasterProfile> getUserAgentMasterProfile() const noexcept;
+
 protected:
    resip::SipStack& getSipStack() { return mStack; };
    resip::DialogUsageManager& getDialogUsageManager();
@@ -314,7 +316,6 @@ protected:
    virtual std::shared_ptr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
    // Return the ConversationProfile suitable for creating an INVITE from a REFER
    virtual std::shared_ptr<ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
-   std::shared_ptr<UserAgentMasterProfile> getUserAgentMasterProfile() const noexcept;
 
 private:
    friend class ConversationManager;

@@ -13,6 +13,7 @@ using namespace std;
 
 UserAgentMasterProfile::UserAgentMasterProfile()
 : mStatisticsManagerEnabled(false),
+  mDTMFDigitLoggingEnabled(true),
   mRTPPortRangeMin(16384),
   mRTPPortRangeMax(17385),
   mSubscriptionRetryInterval(60)
@@ -51,6 +52,18 @@ std::shared_ptr<flowmanager::RTCPEventLoggingHandler>
 UserAgentMasterProfile::getRTCPEventLoggingHandler() const noexcept
 {
    return mRTCPEventLoggingHandler;
+}
+
+bool&
+UserAgentMasterProfile::dtmfDigitLoggingEnabled()
+{
+   return mDTMFDigitLoggingEnabled;
+}
+
+const bool
+UserAgentMasterProfile::dtmfDigitLoggingEnabled() const
+{
+   return mDTMFDigitLoggingEnabled;
 }
 
 void 
@@ -206,6 +219,7 @@ UserAgentMasterProfile::subscriptionRetryInterval() const
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

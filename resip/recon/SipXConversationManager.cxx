@@ -143,6 +143,12 @@ SipXConversationManager::setUserAgent(UserAgent* userAgent)
 {
    ConversationManager::setUserAgent(userAgent);
 
+   if (mMediaInterface)
+   {
+      // Enable/Disable DTMF digit logging according to UserAgentMasterProfile setting
+      mMediaInterface->allowLoggingDTMFDigits(userAgent->getUserAgentMasterProfile()->dtmfDigitLoggingEnabled());
+   }
+
    // Note: This is not really required, since we are managing the port allocation - but no harm done
    // Really not needed now - since FlowManager integration
    //mMediaFactory->getFactoryImplementation()->setRtpPortRange(getUserAgent()->getUserAgentMasterProfile()->rtpPortRangeMin(),
@@ -473,6 +479,13 @@ SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
 
    // Turn on notifications for all resources...
    mediaInterface->getInterface()->setNotificationsEnabled(true);
+
+   // If we have a user agent set DTMF logging now, otherwise wait until setUserAgent is called
+   if (getUserAgent())
+   {
+      // Enable/Disable DTMF digit logging according to UserAgentMasterProfile setting
+      mediaInterface->allowLoggingDTMFDigits(getUserAgent()->getUserAgentMasterProfile()->dtmfDigitLoggingEnabled());
+   }
 
    if(giveFocus)
    {
