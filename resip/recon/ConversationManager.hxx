@@ -525,6 +525,14 @@ public:
 
    virtual void onParticipantRequestedHold(ParticipantHandle partHandle, bool held) = 0;
 
+   /**
+     Notifies an application about a failure in a media resource participant.
+
+     @param partHandle Handle of the participant that terminated
+     @param statusCode The status Code for the failure.
+   */
+   virtual void onMediaResourceParticipantFailed(ParticipantHandle partHandle) {}
+
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
    ///////////////////////////////////////////////////////////////////////
@@ -715,7 +723,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -98,18 +98,34 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_PLAY_FINISHED:
          {
             // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::PLAY_FINISHED);
+            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::RESOURCE_DONE);
             mConversationManager.post(mevent);
             InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() <<
                ", connectionId=" << pNotfMsg->getConnectionId() << 
                ", participantHandle=" << mLastMediaOperationParticipantHandle);
          }
          break;
+      case MiNotification::MI_NOTF_PLAY_ERROR:
+      {
+         // Queue event to conversation manager thread
+         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED);
+         mConversationManager.post(mevent);
+         InfoLog(<< "SipXMediaInterface: received MI_NOTF_PLAY_ERROR, sourceId=" << pNotfMsg->getSourceId().data() <<
+            ", connectionId=" << pNotfMsg->getConnectionId() <<
+            ", participantHandle=" << mLastMediaOperationParticipantHandle);
+      }
+      break;
       case MiNotification::MI_NOTF_PROGRESS:
          InfoLog( << "SipXMediaInterface: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_STARTED:
          InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_RECORD_PAUSED:
+         InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_RECORD_RESUMED:
+         InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_STOPPED:
          InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
@@ -118,8 +134,15 @@ SipXMediaInterface::post(const OsMsg& msg)
          InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_ERROR:
-         InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
-         break;
+      {
+         // Queue event to conversation manager thread
+         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED);
+         mConversationManager.post(mevent);
+         InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() <<
+            ", connectionId=" << pNotfMsg->getConnectionId() <<
+            ", participantHandle=" << mLastMediaOperationParticipantHandle);
+      }
+      break;
       case MiNotification::MI_NOTF_DTMF_RECEIVED:
          {
             MiDtmfNotf* pDtmfNotfMsg = (MiDtmfNotf*)&msg;
@@ -197,6 +220,27 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_VOICE_STOPPED:
          //InfoLog( << "MediaInterface: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+      case MiNotification::MI_NOTF_TONE_DETECT_ON:
+         InfoLog(<< "MediaInterface: received MI_NOTF_TONE_DETECT_ON, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_H264_SPS:
+         InfoLog(<< "MediaInterface: received MI_NOTF_H264_SPS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_H264_PPS:
+         InfoLog( << "MediaInterface: received MI_NOTF_H264_PPS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_TONE_DETECT_OFF:
+         InfoLog( << "MediaInterface: received MI_NOTF_TONE_DETECT_OFF, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_RECORDER_CIRCULARBUFFER_WATERMARK_REACHED:
+         InfoLog(<< "MediaInterface: received MI_NOTF_RECORDER_CIRCULARBUFFER_WATERMARK_REACHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_INPUT_DEVICE_NOT_PRESENT:
+         InfoLog(<< "MediaInterface: received MI_NOTF_INPUT_DEVICE_NOT_PRESENT, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_OUTPUT_DEVICE_NOT_PRESENT:
+         InfoLog(<< "MediaInterface: received MI_NOTF_OUTPUT_DEVICE_NOT_PRESENT, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
 
       default:
          InfoLog(<< "SipXMediaInterface: unrecognized MiNotification type = " << pNotfMsg->getType());
@@ -212,7 +256,7 @@ SipXMediaInterface::post(const OsMsg& msg)
 
 /* ====================================================================
 
- Copyright (c) 2010-2021, SIP Spectrum, Inc.
+ Copyright (c) 2010-2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  All rights reserved.
 

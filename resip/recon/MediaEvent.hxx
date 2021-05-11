@@ -21,7 +21,8 @@ class MediaEvent : public resip::DumCommand
    public:
       typedef enum 
       { 
-         PLAY_FINISHED
+         RESOURCE_DONE,
+         RESOURCE_FAILED
       } MediaEventType;
 
       MediaEvent(ConversationManager& conversationManager, ParticipantHandle partHandle, MediaEventType eventType);
@@ -45,7 +46,7 @@ class MediaEvent : public resip::DumCommand
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

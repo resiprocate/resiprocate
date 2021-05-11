@@ -56,22 +56,24 @@ public:
       const resip::Uri& mediaUrl);  
    virtual ~MediaResourceParticipant();
 
-   virtual void startPlay();
+   virtual void startResource();
    virtual bool hasInput();
    virtual bool hasOutput();
    virtual ResourceType getResourceType() { return mResourceType; }
-   virtual void destroyParticipant() = 0;
+   virtual void destroyParticipant();
+   virtual void resourceDone();
 
 protected:
-   virtual void startPlayImpl() = 0;
+   virtual void startResourceImpl() = 0;
+   virtual bool stopResource() = 0;  // returns true if it's ok to destroy now, or false if we need to wait for an event
    virtual ConversationManager& getConversationManager() { return mConversationManager; }
    virtual resip::Uri& getMediaUrl() { return mMediaUrl; }
    virtual bool isRepeat() { return mRepeat; }
    virtual void setRepeat(bool repeat) { mRepeat = repeat; }
    virtual bool isPrefetch() { return mPrefetch; }
    virtual unsigned int getDurationMs() { return mDurationMs; }
-   virtual bool isPlaying() { return mPlaying; }
-   virtual void setPlaying(bool playing) { mPlaying = playing; }
+   virtual bool isRunning() { return mRunning; }
+   virtual void setRunning(bool running) { mRunning = running; }
    virtual bool isDestroying() { return mDestroying; }
    virtual void setDestroying(bool destroying) { mDestroying = destroying; }
 
@@ -85,7 +87,7 @@ private:
    bool mPrefetch;
    unsigned int mDurationMs;
 
-   bool mPlaying;
+   bool mRunning;
    bool mDestroying;
 };
 
@@ -96,7 +98,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

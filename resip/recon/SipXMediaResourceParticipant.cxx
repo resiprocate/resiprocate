@@ -71,7 +71,7 @@ SipXMediaResourceParticipant::~SipXMediaResourceParticipant()
 }
 
 void 
-SipXMediaResourceParticipant::startPlayImpl()
+SipXMediaResourceParticipant::startResourceImpl()
 {
    switch(getResourceType())
    {
@@ -97,7 +97,7 @@ SipXMediaResourceParticipant::startPlayImpl()
          else if(isEqualNoCase(getMediaUrl().host(), loudfastbusyTone)) toneid = DTMF_TONE_LOUD_FAST_BUSY;
          else
          {
-            WarningLog(<< "SipXMediaResourceParticipant::startPlay invalid tone identifier: " << getMediaUrl().host());
+            WarningLog(<< "SipXMediaResourceParticipant::startResource invalid tone identifier: " << getMediaUrl().host());
             return;
          }
       }
@@ -109,7 +109,7 @@ SipXMediaResourceParticipant::startPlayImpl()
          SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(getConversationManager().getParticipant(partHandle));
          if(participant)
          {
-            StackLog(<<"SipXMediaResourceParticipant::startPlay: sending tone to sipX connection: " << participant->getMediaConnectionId());
+            StackLog(<<"SipXMediaResourceParticipant::startResource: sending tone to sipX connection: " << participant->getMediaConnectionId());
 #ifdef SIPX_TONES_INBAND
             // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
             status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, TRUE /* local - unused */, TRUE /* remote - unused */);
@@ -120,7 +120,7 @@ SipXMediaResourceParticipant::startPlayImpl()
          }
          else
          {
-            WarningLog(<<"SipXMediaResourceParticipant::startPlay Participant " << partHandle << " no longer exists or invalid");
+            WarningLog(<<"SipXMediaResourceParticipant::startResource Participant " << partHandle << " no longer exists or invalid");
          }
       }
       else
@@ -129,11 +129,11 @@ SipXMediaResourceParticipant::startPlayImpl()
       }
       if(status == OS_SUCCESS)
       {
-         setPlaying(true);
+         setRunning(true);
       }
       else
       {
-         WarningLog(<< "SipXMediaResourceParticipant::startPlay error calling startTone: " << status);
+         WarningLog(<< "SipXMediaResourceParticipant::startResource error calling startTone: " << status);
       }
    }
    break;
@@ -160,11 +160,11 @@ SipXMediaResourceParticipant::startPlayImpl()
          // to the conversation manage with the correct participant handle.  Note:  this works because sipX
          // only allows a single play from file or cache at a time per media interface.
          mediaInterface->setMediaOperationPartipantHandle(mHandle);
-         setPlaying(true);
+         setRunning(true);
       }
       else
       {
-         WarningLog(<< "SipXMediaResourceParticipant::startPlay error calling playAudio: " << status);
+         WarningLog(<< "SipXMediaResourceParticipant::startResource error calling playAudio: " << status);
       }
    }
    break;
@@ -191,16 +191,16 @@ SipXMediaResourceParticipant::startPlayImpl()
             // to the conversation manage with the correct participant handle.  Note:  this works because sipX
             // only allows a single play from file or cache at a time per media interface.
             mediaInterface->setMediaOperationPartipantHandle(mHandle);
-            setPlaying(true);
+            setRunning(true);
          }
          else
          {
-            WarningLog(<< "SipXMediaResourceParticipant::startPlay error calling playAudio: " << status);
+            WarningLog(<< "SipXMediaResourceParticipant::startResource error calling playAudio: " << status);
          }
       }
       else
       {
-         WarningLog(<< "SipXMediaResourceParticipant::startPlay media not found in cache, key: " << getMediaUrl().host());
+         WarningLog(<< "SipXMediaResourceParticipant::startResource media not found in cache, key: " << getMediaUrl().host());
       }
    }
    break;
@@ -220,16 +220,16 @@ SipXMediaResourceParticipant::startPlayImpl()
          status = mStreamPlayer->realize(FALSE /* block? */);
          if(status != OS_SUCCESS)
          {
-            WarningLog(<< "SipXMediaResourceParticipant::startPlay error calling StreamPlayer::realize: " << status);
+            WarningLog(<< "SipXMediaResourceParticipant::startResource error calling StreamPlayer::realize: " << status);
          }
          else
          {
-            setPlaying(true);
+            setRunning(true);
          }
       }
       else
       {
-         WarningLog(<< "SipXMediaResourceParticipant::startPlay error calling createPlayer: " << status);
+         WarningLog(<< "SipXMediaResourceParticipant::startResource error calling createPlayer: " << status);
       }
    }
    break;
@@ -262,20 +262,104 @@ SipXMediaResourceParticipant::startPlayImpl()
          filepath.c_str(), CpMediaInterface::CP_WAVE_PCM_16, FALSE /* append? */, 1 /* numChannels */, FALSE /* setupMixesAutomatically? */);
       if (status == OS_SUCCESS)
       {
-         setPlaying(true);
+         setRunning(true);
       }
       else
       {
-         WarningLog(<< "SipXMediaResourceParticipant::startPlay error calling recordChannelAudio: " << status);
+         WarningLog(<< "SipXMediaResourceParticipant::startResource error calling recordChannelAudio: " << status);
       }
 #endif
    }
    break;
 
    case Invalid:
-      WarningLog(<< "SipXMediaResourceParticipant::startPlay invalid resource type: " << getMediaUrl().scheme());
+      WarningLog(<< "SipXMediaResourceParticipant::startResource invalid resource type: " << getMediaUrl().scheme());
       break;
    }
+}
+
+bool
+SipXMediaResourceParticipant::stopResource()
+{
+   bool okToDeleteNow = true;
+
+   if (isRunning())
+   {
+      switch (getResourceType())
+      {
+      case Tone:
+      {
+         OsStatus status = OS_FAILED;
+         if (getMediaUrl().exists(p_participantonly))
+         {
+            bool isDtmf = (getMediaUrl().host().size() == 1);
+            int partHandle = getMediaUrl().param(p_participantonly).convertInt();
+            SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(getConversationManager().getParticipant(partHandle));
+            if (participant)
+            {
+#ifdef SIPX_TONES_INBAND
+               // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
+               status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
+#else
+               // this is for newer sipXtapi API, option to suppress inband tones:
+               status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
+#endif
+            }
+            else
+            {
+               WarningLog(<< "SipXMediaResourceParticipant::stopResource participant " << partHandle << " no longer exists or invalid");
+            }
+         }
+         else
+         {
+            status = getMediaInterface()->getInterface()->stopTone();
+         }
+         if (status != OS_SUCCESS)
+         {
+            WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling stopTone: " << status);
+         }
+      }
+      break;
+      case File:
+      case Cache:
+      {
+         OsStatus status = getMediaInterface()->getInterface()->stopAudio();
+         if (status != OS_SUCCESS)
+         {
+            WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling stopAudio: " << status);
+         }
+      }
+      break;
+      case Http:
+      case Https:
+      {
+         setRepeat(false);  // Required so that player will not just repeat on stopped event
+         OsStatus status = mStreamPlayer->stop();
+         if (status != OS_SUCCESS)
+         {
+            WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling StreamPlayer::stop: " << status);
+         }
+         else
+         {
+            okToDeleteNow = false;  // Wait for play finished event to come in
+         }
+      }
+      break;
+      case Record:
+      {
+         OsStatus status = getMediaInterface()->getInterface()->stopRecordChannelAudio(0 /* connectionId - not used by sipX */);
+         if (status != OS_SUCCESS)
+         {
+            WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling stopRecordChannelAudio: " << status);
+         }
+      }
+      break;
+      case Invalid:
+         WarningLog(<< "SipXMediaResourceParticipant::stopResource invalid resource type: " << getResourceType());
+         break;
+      }
+   }
+   return okToDeleteNow;
 }
 
 int 
@@ -323,93 +407,6 @@ SipXMediaResourceParticipant::getConnectionPortOnBridge()
       break;
    }
    return connectionPort;
-}
-
-void
-SipXMediaResourceParticipant::destroyParticipant()
-{
-   bool deleteNow = true;
-
-   if(isDestroying()) return;
-   setDestroying(true);
-
-   if(isPlaying())
-   {
-      switch(getResourceType())
-      {
-      case Tone:
-         {
-            OsStatus status = OS_FAILED;
-            if(getMediaUrl().exists(p_participantonly))
-            {
-               bool isDtmf = (getMediaUrl().host().size() == 1);
-               int partHandle = getMediaUrl().param(p_participantonly).convertInt();
-               SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(getConversationManager().getParticipant(partHandle));
-               if(participant)
-               {
-#ifdef SIPX_TONES_INBAND
-                  // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
-                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
-#else
-                  // this is for newer sipXtapi API, option to suppress inband tones:
-                  status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
-#endif
-               }
-               else
-               {
-                  WarningLog(<<"Participant " << partHandle << " no longer exists or invalid");
-               }
-            }
-            else
-            {
-               status = getMediaInterface()->getInterface()->stopTone();
-            }
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "SipXMediaResourceParticipant::destroyParticipant error calling stopTone: " << status);
-            }
-         }
-         break;
-      case File:
-      case Cache:
-         {
-            OsStatus status = getMediaInterface()->getInterface()->stopAudio();
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "SipXMediaResourceParticipant::destroyParticipant error calling stopAudio: " << status);
-            }
-         }
-         break;
-      case Http:
-      case Https:
-         {
-            setRepeat(false);  // Required so that player will not just repeat on stopped event
-            OsStatus status = mStreamPlayer->stop();
-            if(status != OS_SUCCESS)
-            {
-               WarningLog(<< "SipXMediaResourceParticipant::destroyParticipant error calling StreamPlayer::stop: " << status);
-            }
-            else
-            {
-               deleteNow = false;  // Wait for play finished event to come in
-            }
-         }
-         break;
-      case Record:
-      {
-         OsStatus status = getMediaInterface()->getInterface()->stopRecordChannelAudio(0 /* connectionId - not used by sipX */);
-         if (status != OS_SUCCESS)
-         {
-            WarningLog(<< "SipXMediaResourceParticipant::destroyParticipant error calling stopRecordChannelAudio: " << status);
-         }
-      }
-      break;
-      case Invalid:
-         WarningLog(<< "SipXMediaResourceParticipant::destroyParticipant invalid resource type: " << getResourceType());
-         break;
-      }
-   }
-   if(deleteNow) delete this;
 }
 
 void 
@@ -496,7 +493,7 @@ SipXMediaResourceParticipant::playerFailed(MpPlayerEvent& event)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

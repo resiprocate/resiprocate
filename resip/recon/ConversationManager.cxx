@@ -330,9 +330,9 @@ ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, cons
 void 
 ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType)
 {
-   resip_assert(eventType == MediaEvent::PLAY_FINISHED);
+   resip_assert(eventType == MediaEvent::RESOURCE_DONE || eventType == MediaEvent::RESOURCE_FAILED);
 
-   if(eventType == MediaEvent::PLAY_FINISHED)
+   if(eventType == MediaEvent::RESOURCE_DONE || eventType == MediaEvent::RESOURCE_FAILED)
    {
       Participant* participant = getParticipant(partHandle);
       if(participant)
@@ -340,11 +340,11 @@ ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::
          MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(participant);
          if(mrPart)
          {
-            if(mrPart->getResourceType() == MediaResourceParticipant::File ||
-               mrPart->getResourceType() == MediaResourceParticipant::Cache)
+            if (eventType == MediaEvent::RESOURCE_FAILED)
             {
-               mrPart->destroyParticipant();
+               onMediaResourceParticipantFailed(partHandle);
             }
+            mrPart->resourceDone();
          }
       }
    }
@@ -835,7 +835,7 @@ ConversationManager::onTryingNextTarget(AppDialogSetHandle, const SipMessage& ms
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

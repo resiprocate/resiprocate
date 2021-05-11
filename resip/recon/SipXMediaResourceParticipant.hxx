@@ -32,9 +32,9 @@ public:
       const resip::Uri& mediaUrl);  
    virtual ~SipXMediaResourceParticipant();
 
-   virtual void startPlayImpl();
+   virtual void startResourceImpl();
+   virtual bool stopResource();
    virtual int getConnectionPortOnBridge();
-   virtual void destroyParticipant();
 
    // For Stream Player callbacks
    virtual void playerRealized(MpPlayerEvent& event);
@@ -61,6 +61,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

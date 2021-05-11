@@ -38,7 +38,7 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
   mRepeat(false),
   mPrefetch(false),
   mDurationMs(0),
-  mPlaying(false),
+  mRunning(false),
   mDestroying(false)
 {
    InfoLog(<< "MediaResourceParticipant created, handle=" << mHandle << " url=" << mMediaUrl);
@@ -72,11 +72,11 @@ MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
    }
    catch(BaseException &e)
    {
-      WarningLog(<< "MediaResourceParticipant::MediaResourceParticipant exception: " << e);
+      WarningLog(<< "MediaResourceParticipant::MediaResourceParticipant exception for url=" << mMediaUrl << ": " << e);
    }
    catch(...)
    {
-      WarningLog(<< "MediaResourceParticipant::MediaResourceParticipant unknown exception");
+      WarningLog(<< "MediaResourceParticipant::MediaResourceParticipant unknown exception for url=" << mMediaUrl);
    }
 }
 
@@ -102,12 +102,12 @@ MediaResourceParticipant::hasOutput()
 }
 
 void 
-MediaResourceParticipant::startPlay()
+MediaResourceParticipant::startResource()
 {
-   resip_assert(!mPlaying);
+   resip_assert(!mRunning);
    try
    {
-      InfoLog(<< "MediaResourceParticipant playing, handle=" << mHandle << " url=" << mMediaUrl);
+      InfoLog(<< "MediaResourceParticipant::startResource, handle=" << mHandle << " url=" << mMediaUrl);
 
       // Common processing
       if(mMediaUrl.exists(p_duration))
@@ -126,19 +126,18 @@ MediaResourceParticipant::startPlay()
          mMediaUrl.remove(p_prefetch);
       }
 
-      startPlayImpl();
+      startResourceImpl();
    }
    catch(BaseException &e)
    {
-      WarningLog(<< "MediaResourceParticipant::startPlay exception: " << e);
+      WarningLog(<< "MediaResourceParticipant::startResource exception for url=" << mMediaUrl << ": " << e);
    }
    catch(...)
    {
-      WarningLog(<< "MediaResourceParticipant::startPlay unknown exception");
+      WarningLog(<< "MediaResourceParticipant::startResource unknown exception for url=" << mMediaUrl);
    }
 
-
-   if(mPlaying)  // If play started successfully
+   if(mRunning)  // If play started successfully
    {
       if(mDurationMs > 0)
       {
@@ -153,11 +152,31 @@ MediaResourceParticipant::startPlay()
    }
 }
 
+void
+MediaResourceParticipant::resourceDone()
+{
+   setRunning(false);
+   destroyParticipant(); // may destory this
+}
+
+void
+MediaResourceParticipant::destroyParticipant()
+{
+   bool deleteNow = true;
+
+   if (isDestroying()) return;
+   setDestroying(true);
+
+   deleteNow = stopResource();
+   
+   if (deleteNow) delete this;
+}
+
 
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
