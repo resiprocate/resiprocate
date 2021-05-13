@@ -17,6 +17,9 @@
 #include <CpTopologyGraphInterface.h>
 #include <mp/dtmflib.h>
 #include <mp/MprFromFile.h>
+// The ssrc_t typedef from MprEncode.h collides with one from libSrtp - we don't use it in this file, so just undefine it to avoid the compilation error
+#undef ssrc_t  
+#include <mp/MprEncode.h>
 #include <mp/MpStreamPlayer.h>
 
 using namespace recon;
@@ -103,20 +106,17 @@ SipXMediaResourceParticipant::startResourceImpl()
       }
 
       OsStatus status = OS_FAILED;
-      if(getMediaUrl().exists(p_participantonly))
+      if(isDtmf && getMediaUrl().exists(p_participantonly))
       {
-         int partHandle = getMediaUrl().param(p_participantonly).convertInt();
+         ParticipantHandle partHandle = getMediaUrl().param(p_participantonly).convertUnsignedLong();
          SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(getConversationManager().getParticipant(partHandle));
          if(participant)
          {
             StackLog(<<"SipXMediaResourceParticipant::startResource: sending tone to sipX connection: " << participant->getMediaConnectionId());
-#ifdef SIPX_TONES_INBAND
-            // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
-            status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, TRUE /* local - unused */, TRUE /* remote - unused */);
-#else
-            // this is for newer sipXtapi API, option to suppress inband tones:
-            status = getMediaInterface()->getInterface()->startChannelTone(participant->getMediaConnectionId(), toneid, TRUE /* local - unused */, TRUE /* remote - unused */, !isDtmf /* inband */, true /* RFC 4733 */);
-#endif
+            // Start RFC4733 out-of-band tone
+            UtlString encodeName(DEFAULT_ENCODE_RESOURCE_NAME);
+            MpResourceTopology::replaceNumInName(encodeName, participant->getMediaConnectionId());
+            status = MprEncode::startTone(encodeName, *getMediaInterface()->getInterface()->getMsgQ(), toneid);
          }
          else
          {
@@ -175,7 +175,7 @@ SipXMediaResourceParticipant::startResourceImpl()
 
       Data *buffer;
       int type;
-      if(getConversationManager().mMediaResourceCache.getFromCache(getMediaUrl().host(), &buffer, &type))
+      if(getConversationManager().getBufferFromMediaResourceCache(getMediaUrl().host(), &buffer, &type))
       {
          SipXMediaInterface* mediaInterface = getMediaInterface().get();
          OsStatus status = mediaInterface->getInterface()->playBuffer((char*)buffer->data(),
@@ -295,15 +295,12 @@ SipXMediaResourceParticipant::stopResource()
             bool isDtmf = (getMediaUrl().host().size() == 1);
             int partHandle = getMediaUrl().param(p_participantonly).convertInt();
             SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(getConversationManager().getParticipant(partHandle));
-            if (participant)
+            if (isDtmf && participant)
             {
-#ifdef SIPX_TONES_INBAND
-               // this uses the original API, where both inband and RFC2833 tones are always sent simultaneously:
-               status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId());
-#else
-               // this is for newer sipXtapi API, option to suppress inband tones:
-               status = getMediaInterface()->getInterface()->stopChannelTone(participant->getMediaConnectionId(), !isDtmf, true);
-#endif
+               // Stop RFC4733 out-of-band tone
+               UtlString encodeName(DEFAULT_ENCODE_RESOURCE_NAME);
+               MpResourceTopology::replaceNumInName(encodeName, participant->getMediaConnectionId());
+               status = MprEncode::stopTone(encodeName, *getMediaInterface()->getInterface()->getMsgQ());
             }
             else
             {
