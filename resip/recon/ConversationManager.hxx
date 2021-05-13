@@ -359,7 +359,7 @@ public:
    /**
      This is used for attended transfer scenarios where both participants
      are no longer managed by the conversation manager - for SIP this will
-     send a REFER with embedded Replaces header.  Note:  Replace option cannot
+     send a REFER with embedded Replaces header.  Note:  Replaces option cannot
      be used with early dialogs in SIP.
 
      @param partHandle Handle of the participant to redirect
@@ -367,11 +367,20 @@ public:
    */
    virtual void redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle);
 
+   /**
+     Manually puts a paricipant on hold, or takes off hold without needing to
+     move it in and out of any conversations.
+
+     @param partHandle Handle of the participant to redirect
+     @param hold true to put the remote participant on hold, false to unhold
+   */
    virtual void holdParticipant(ParticipantHandle partHandle, bool hold);
 
    /**
      This function is used to add a chunk of memory to a media/prompt cache.
      Cached prompts can later be played back via createMediaParticipant.
+     Expected format is 1-channel 16-bit 8Khz linear PCM (Assuming sipX and  
+     the media framework running at 8Khz).
      Note:  The caller is free to dispose of the memory upon return.
 
      @param name   name of the cached item - used for playback
@@ -380,6 +389,18 @@ public:
    */
    virtual void addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type);
 
+   /**
+     This function is used to retrieve a chunk of memory from the media/prompt cache.
+     This method is also called internally.  So appliations wishing to provide their own
+     cache logic can override this method.
+
+     @param name   name of the cached item - used for playback
+     @param buffer A pointer to Data object pointer object containing the media
+     @param type   A pointer to the Type of media from the cache. 
+                   (Currently always: RAW_PCM_16 = 0)
+   */
+   virtual bool getBufferFromMediaResourceCache(const resip::Data& name, resip::Data** buffer, int* type);
+   
    /**
      This function is used to start a timer on behalf of recon based application.
      The onApplicationTimer callback will get called when the timer expires.
@@ -628,6 +649,8 @@ protected:
    ConversationHandle getNewConversationHandle();  // thread safe
    Conversation* getConversation(ConversationHandle convHandle);
 
+   bool isShuttingDown() { return mShuttingDown; }
+
 private:
    friend class DefaultDialogSet;
    friend class Subscription;
@@ -699,6 +722,7 @@ private:
    friend class HoldParticipantCmd;
 
    UserAgent* mUserAgent;
+   bool mShuttingDown;
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;

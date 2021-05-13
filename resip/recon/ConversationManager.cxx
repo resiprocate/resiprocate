@@ -32,6 +32,7 @@ using namespace std;
 
 ConversationManager::ConversationManager()
 : mUserAgent(0),
+  mShuttingDown(false),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
   mBridgeMixer(0)
@@ -54,6 +55,8 @@ ConversationManager::setUserAgent(UserAgent* userAgent)
 void
 ConversationManager::shutdown()
 {
+   mShuttingDown = true;
+
    // Destroy each Conversation
    ConversationMap tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
    ConversationMap::iterator i;
@@ -77,6 +80,7 @@ ConversationManager::shutdown()
 ConversationHandle 
 ConversationManager::createConversation(AutoHoldMode autoHoldMode)
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ConversationHandle convHandle = getNewConversationHandle();
 
    CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, autoHoldMode, 0);
@@ -101,12 +105,14 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
 ParticipantHandle 
 ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    return createRemoteParticipant(convHandle, destination, forkSelectMode, nullptr, std::multimap<resip::Data,resip::Data>());
 }
 
 ParticipantHandle
 ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
 
    CreateRemoteParticipantCmd* cmd = new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode, callerProfile, extraHeaders);
@@ -118,6 +124,7 @@ ConversationManager::createRemoteParticipant(ConversationHandle convHandle, cons
 ParticipantHandle 
 ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
 
    CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl);
@@ -129,6 +136,7 @@ ConversationManager::createMediaResourceParticipant(ConversationHandle convHandl
 ParticipantHandle 
 ConversationManager::createLocalParticipant()
 {
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = 0;
    WarningLog(<< "createLocalParticipant called when local audio support is disabled.");
    return partHandle;
@@ -325,6 +333,12 @@ void
 ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type)
 {
    mMediaResourceCache.addToCache(name, buffer, type);
+}
+
+bool 
+ConversationManager::getBufferFromMediaResourceCache(const resip::Data& name, resip::Data** buffer, int* type)
+{
+   return mMediaResourceCache.getFromCache(name, buffer, type);
 }
 
 void 

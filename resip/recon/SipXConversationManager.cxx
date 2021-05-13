@@ -163,6 +163,7 @@ SipXConversationManager::setUserAgent(UserAgent* userAgent)
 ConversationHandle
 SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, AutoHoldMode autoHoldMode)
 {
+   if (isShuttingDown()) return 0;  // Don't allow new things to be created when we are shutting down
    if (mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
    {
       assert(false);
@@ -180,6 +181,7 @@ SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHand
 ParticipantHandle 
 SipXConversationManager::createLocalParticipant()
 {
+   if (isShuttingDown()) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = 0;
    if(mLocalAudioEnabled)
    {
@@ -565,7 +567,7 @@ SipXConversationManager::createRemoteParticipantDialogSetInstance(
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
