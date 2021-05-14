@@ -535,6 +535,11 @@ void DtlsTransport::_write( FdSet& fdset )
 
       count = SSL_write(ssl, sendData->data.data(),
                         (int)sendData->data.size());
+
+      if(count < expected)
+      {
+         WarningLog(<< "expected = " << expected << " but SSL_write only sent " << count);
+      }
    }
 
    /*
