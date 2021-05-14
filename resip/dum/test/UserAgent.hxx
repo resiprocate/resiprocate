@@ -7,7 +7,7 @@
 
 #include "CommandLineParser.hxx"
 
-#include "resip/stack/StackThread.hxx"
+#include "resip/stack/EventStackThread.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
@@ -138,7 +138,7 @@ class UserAgent : public CommandLineParser,
       Security* mSecurity;
       SipStack mStack;
       DialogUsageManager mDum;
-      StackThread mStackThread;
+      EventStackThread mStackThread;
 };
  
 }

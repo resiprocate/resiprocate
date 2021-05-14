@@ -11,7 +11,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/stack/SipStack.hxx"
-#include "resip/stack/StackThread.hxx"
+#include "resip/stack/EventStackThread.hxx"
 
 #include <memory>
 
@@ -83,7 +83,7 @@ class RegEventClient  : public resip::ClientSubscriptionHandler,
    protected:
       resip::Security* mSecurity;
       resip::SipStack mStack;
-      resip::StackThread mStackThread;
+      resip::EventStackThread mStackThread;
       resip::DialogUsageManager mDum;
       resip::DumThread mDumThread;
       
