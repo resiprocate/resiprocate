@@ -690,7 +690,6 @@ main (int argc, char** argv)
       uac.registered = true;
    }
 
-   bool finishedTest = false;
    bool stoppedRegistering = false;
    bool startedCallFlow = false;
    bool hungup = false;   
@@ -744,7 +743,6 @@ main (int argc, char** argv)
      {
         if (!stoppedRegistering)
         {
-           finishedTest = true;
            stoppedRegistering = true;
            dumUas->shutdown(&uasShutdownHandler);
            dumUac->shutdown(&uacShutdownHandler);
