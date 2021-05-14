@@ -99,11 +99,11 @@ MyUserAgent::process(int timeoutMs)
    // available from the stack
    if(mRegistrationForwarder)
    {
-      for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
+      for(unsigned int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
    }
    if(mSubscriptionForwarder)
    {
-      for(int i = 0; i < mMaxRegLoops && mSubscriptionForwarder->process() ; i++);
+      for(unsigned int i = 0; i < mMaxRegLoops && mSubscriptionForwarder->process() ; i++);
    }
 
    UserAgent::process(timeoutMs);

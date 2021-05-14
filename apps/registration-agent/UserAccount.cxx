@@ -231,7 +231,7 @@ UserAccount::onRefreshRequired(resip::ClientRegistrationHandle h, const resip::S
    {
       return true;
    }
-   UInt64 now = Timer::getTimeSecs();
+   time_t now = Timer::getTimeSecs();
    if(now > mExpires)
    {
       DebugLog(<<"now = " << now << " and contact expired at " << mExpires);

@@ -80,7 +80,7 @@ CommandThread::on_message(proton::delivery &d, proton::message &m)
    StackLog(<<"message creation time (ms): " << ct);
    if(ct > 0 && mMaximumAge > 0)
    {
-      UInt64 threshold = ResipClock::getTimeMs() - mMaximumAge;
+      const proton::timestamp::numeric_type threshold = ResipClock::getTimeMs() - mMaximumAge;
       if(ct < threshold)
       {
          DebugLog(<<"dropping a message because it is too old: " << threshold - ct << "ms");

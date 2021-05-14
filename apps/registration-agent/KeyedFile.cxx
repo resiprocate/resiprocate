@@ -55,7 +55,7 @@ BasicKeyedFileLine::onFileReload(const std::vector<Data>& columns)
    }
    else
    {
-      for(int i = 0; i < columns.size(); i++)
+      for(unsigned int i = 0; i < columns.size(); i++)
       {
          if(columns.at(i) != mColumns.at(i))
          {

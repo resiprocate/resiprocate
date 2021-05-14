@@ -135,7 +135,7 @@ CDRFile::logTimestamp(const uint64_t& t, bool last)
    char msbuf[5];
    /* Dividing (without remainder) by 1000 rounds the microseconds
       measure to the nearest millisecond. */
-   snprintf(msbuf, 5, ".%3.3ld", millis);
+   snprintf(msbuf, 5, ".%3.3d", millis);
 
    int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
 #if defined(WIN32) && defined(_M_ARM)

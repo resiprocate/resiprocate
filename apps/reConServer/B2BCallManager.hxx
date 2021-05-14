@@ -128,7 +128,7 @@ protected:
    std::map<recon::ConversationHandle, std::shared_ptr<B2BCall>> mCallsByConversation;
    std::map<recon::ParticipantHandle, std::shared_ptr<B2BCall>> mCallsByParticipant;
 
-   int mDbPoolSize;
+   unsigned int mDbPoolSize;
    bool mDatabaseCredentialsHashed;
    resip::Data mDatabaseQueryUserCredential;
    std::shared_ptr<soci::connection_pool> mPool;
