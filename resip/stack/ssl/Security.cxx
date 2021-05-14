@@ -113,7 +113,7 @@ static int
 verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 {
    char cBuf1[257];
-   char cBuf2[501];
+   char cBuf2[1024];
    X509 *pErrCert;
    int iErr = 0;
    int iDepth = 0;
@@ -124,7 +124,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
+   snprintf(cBuf2, 1023, ", iErr='%s' depth=%d %s\n", X509_verify_cert_error_string(iErr), iDepth, cBuf1);
    if(!iInCode)
    {
       ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(X509_STORE_CTX_get_error(pInStore)) << cBuf2 );
