@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
 
 	{
 		clientStack.process(100);
-        while(clientDum.process());
+                while(clientDum.process());
 		//if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
 		
 		if(first && client.isRegistered()) {
