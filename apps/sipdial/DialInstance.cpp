@@ -51,8 +51,8 @@ DialInstance::DialResult DialInstance::execute()
 
    mSipStack = new SipStack(security);
    mDum = new DialogUsageManager(*mSipStack);
-   //mDum->addTransport(UDP, 5067, V4);
-   mDum->addTransport(TLS, 5067, V4);
+   //mSipStack->addTransport(UDP, 5067, V4);
+   mSipStack->addTransport(TLS, 5067, V4);
    mDum->setMasterProfile(std::make_shared<MasterProfile>());
    mDum->setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
    MyInviteSessionHandler *ish = new MyInviteSessionHandler(*this);

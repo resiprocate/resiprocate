@@ -144,13 +144,13 @@ UserAgent::addTransport(TransportType type, int port)
          {
             if (!mNoV4)
             {
-               mDum.addTransport(type, port+i, V4, Data::Empty, mTlsDomain);
+               mStack.addTransport(type, port+i, V4, StunDisabled, Data::Empty, mTlsDomain);
                return;
             }
 
             if (!mNoV6)
             {
-               mDum.addTransport(type, port+i, V6, Data::Empty, mTlsDomain);
+               mStack.addTransport(type, port+i, V6, StunDisabled, Data::Empty, mTlsDomain);
                return;
             }
          }

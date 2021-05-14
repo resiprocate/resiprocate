@@ -209,13 +209,13 @@ Server::Server(int argc, char** argv) :
    // Add transports
    try
    {
-      UdpTransport* udpTransport = (UdpTransport*)mStack.addTransport(UDP, mSipPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress);
+      mStack.addTransport(UDP, mSipPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress);
       mStack.addTransport(TCP, mSipPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress);
       mStack.addTransport(TLS, mTlsPort, DnsUtil::isIpV6Address(mAddress) ? V6 : V4, StunEnabled, mAddress, mTlsDomain);
       if(mAddress.empty() && mIsV6Avail)
       {
          // if address is empty (ie. all interfaces), then create V6 transports too
-         udpTransport = (UdpTransport*)mStack.addTransport(UDP, mSipPort, V6, StunEnabled, mAddress);
+         mStack.addTransport(UDP, mSipPort, V6, StunEnabled, mAddress);
          mStack.addTransport(TCP, mSipPort, V6, StunEnabled, mAddress);
          mStack.addTransport(TLS, mTlsPort, V6, StunEnabled, mAddress, mTlsDomain);
       }

@@ -75,8 +75,8 @@ RegEventClient::RegEventClient(std::shared_ptr<MasterProfile> profile) :
    mDumThread(mDum),
    mProfile(std::move(profile))
 {
-   mDum.addTransport(UDP, 5060);
-   mDum.addTransport(TCP, 5060);
+   mStack.addTransport(UDP, 5060);
+   mStack.addTransport(TCP, 5060);
 
    mProfile->addSupportedMethod(NOTIFY);
    mProfile->addAllowedEvent(regEvent);
