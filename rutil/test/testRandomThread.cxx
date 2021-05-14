@@ -279,14 +279,12 @@ doVariationTest(int numCycles, int numThreads, int numPass, int storeBytes)
 
 int main(int argc, char** argv)
 {
-   bool doSweep = true;
    int numCycles = 2;
    int numThreads = 3;
    int numPass = 10;
    int storeBytes = 0;
 
    {
-      doSweep = false;
       if(argc >= 2)
          numCycles = atoi(argv[1]);
       if(argc >= 3)
