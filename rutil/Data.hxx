@@ -1119,6 +1119,13 @@ operator+(const char* c, const Data& d)
    return Data(c) + d;
 }
 
+bool operator==(const Data& lhs, const Data& rhs);
+bool operator==(const Data& lhs, const char* rhs);
+
+bool operator<(const Data& lhs, const Data& rhs);
+bool operator<(const Data& lhs, const char* rhs);
+bool operator<(const char* lhs, const Data& rhs);
+
 }
 
 HashValue(resip::Data);

@@ -62,6 +62,8 @@ class Subsystem
       friend EncodeStream& operator<<(EncodeStream& strm, const Subsystem& ss);
 };
 
+EncodeStream& operator<<(EncodeStream& strm, const Subsystem& ss);
+
 
 // in order to have subsystems in your application, subclass from this class
 /*

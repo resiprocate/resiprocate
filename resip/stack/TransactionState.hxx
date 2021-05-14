@@ -200,6 +200,7 @@ class TransactionState : public DnsHandler
       friend class TransactionController;
 };
 
+EncodeStream& operator<<(EncodeStream& strm, const TransactionState& state);
 
 }
 

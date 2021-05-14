@@ -31,6 +31,9 @@ class DialogId
       DialogSetId mDialogSetId;
       Data mRemoteTag;
 };
+
+EncodeStream& operator<<(EncodeStream&, const DialogId& id);
+
 }
 
 HashValue(resip::DialogId);

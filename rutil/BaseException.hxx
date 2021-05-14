@@ -38,6 +38,11 @@ class BaseException : public std::exception
 #endif
       friend std::ostream& operator<<(std::ostream& strm, const BaseException& e);
 };
+
+#ifndef RESIP_USE_STL_STREAMS
+EncodeStream& operator<<(EncodeStream& strm, const BaseException& e);
+#endif
+std::ostream& operator<<(std::ostream& strm, const BaseException& e);
  
 }
 
