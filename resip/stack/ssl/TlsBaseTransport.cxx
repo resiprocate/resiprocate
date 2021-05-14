@@ -65,7 +65,10 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
          break;
       case SecurityTypes::TLSv1:
          DebugLog(<<"Using TLSv1_method");
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
          mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+#pragma GCC diagnostic pop
          break;
       default:
          throw invalid_argument("Unrecognised SecurityTypes::SSLType value");
