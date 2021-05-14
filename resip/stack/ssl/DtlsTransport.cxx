@@ -123,8 +123,8 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 
    mTuple.setType( DTLS );
 
-   mClientCtx = mSecurity->createDomainCtx(DTLSv1_client_method(), Data::Empty, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
-   mServerCtx = mSecurity->createDomainCtx(DTLSv1_server_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
+   mClientCtx = mSecurity->createDomainCtx(DTLS_client_method(), Data::Empty, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
+   mServerCtx = mSecurity->createDomainCtx(DTLS_server_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase) ;
    resip_assert( mClientCtx ) ;
    resip_assert( mServerCtx ) ;
 

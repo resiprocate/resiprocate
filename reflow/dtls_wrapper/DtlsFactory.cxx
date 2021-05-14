@@ -28,7 +28,7 @@ DtlsFactory::DtlsFactory(std::unique_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PK
 {
    int r;
 
-   mContext=SSL_CTX_new(DTLSv1_method());
+   mContext=SSL_CTX_new(DTLS_method());
    resip_assert(mContext);
 
    r=SSL_CTX_use_certificate(mContext, cert);
