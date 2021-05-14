@@ -41,7 +41,7 @@ WsTransport::WsTransport(Fifo<TransactionMessage>& fifo, int portNum,
 Connection*
 WsTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    Connection* conn = new WsConnection(this,who, fd, mCompression, mConnectionValidator, server);
    return conn;
 }

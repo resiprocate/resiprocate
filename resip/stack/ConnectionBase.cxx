@@ -1093,7 +1093,7 @@ ConnectionBase::setBuffer(char* bytes, int count)
 Transport* 
 ConnectionBase::transport() const
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    return mTransport;
 }
 

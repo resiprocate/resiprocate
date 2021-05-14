@@ -84,7 +84,7 @@ NameAddr::operator=(const NameAddr& rhs)
 {
    if (this != &rhs)
    {
-      resip_assert( &rhs != 0 );
+      resip_assert_not_null( &rhs );
       
       ParserCategory::operator=(rhs);
       mAllContacts = rhs.mAllContacts;

@@ -129,7 +129,7 @@ DnsResult::transition(Type t)
 void
 DnsResult::destroy()
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    //DebugLog (<< "DnsResult::destroy() " << *this);
    
    if (mType == Pending)

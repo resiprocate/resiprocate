@@ -52,7 +52,7 @@ WssTransport::WssTransport(Fifo<TransactionMessage>& fifo,
 Connection*
 WssTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    Connection* conn = new WssConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression,
                                         mConnectionValidator);

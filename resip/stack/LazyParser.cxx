@@ -55,7 +55,7 @@ LazyParser::~LazyParser()
 LazyParser&
 LazyParser::operator=(const LazyParser& rhs)
 {
-   resip_assert( &rhs != 0 );
+   resip_assert_not_null( &rhs );
    
    if (this != &rhs)
    {
