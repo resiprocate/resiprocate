@@ -228,8 +228,17 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    // Make sure that necessary algorithms exist:
    resip_assert(EVP_sha1());
 
-   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
-   resip_assert(rsa);    // couldn't make key pair
+   BIGNUM *bn;
+   bn = BN_new();
+   BN_set_word(bn, RSA_F4);
+
+   RSA *rsa;
+   rsa = RSA_new();
+   resip_assert(rsa);
+
+   ret = RSA_generate_key_ex(rsa, keyLen, bn, NULL);
+   BN_free(bn);
+   resip_assert(ret);    // couldn't make key pair
    
    EVP_PKEY* privkey = EVP_PKEY_new();
    resip_assert(privkey);
