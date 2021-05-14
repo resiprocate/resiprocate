@@ -16,6 +16,16 @@ StackThread::~StackThread()
    //InfoLog (<< "StackThread::~StackThread()");
 }
 
+/*
+ * StackThread uses the deprecated SipStack API calls,
+ * buildFdSet(fdset) and process(fdset).
+ *
+ * To avoid using these calls, use EventStackThread or call the
+ * new SipStack::process(unsigned int) directly.
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 void
 StackThread::thread()
 {
@@ -44,6 +54,8 @@ StackThread::thread()
    }
    WarningLog (<< "Shutting down stack thread");
 }
+
+#pragma GCC diagnostic pop
 
 void
 StackThread::buildFdSet(FdSet& fdset)
