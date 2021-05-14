@@ -121,12 +121,14 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_RECORD_STARTED:
          InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+#ifndef SIPX_NO_RECORD
       case MiNotification::MI_NOTF_RECORD_PAUSED:
          InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_RESUMED:
          InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+#endif
       case MiNotification::MI_NOTF_RECORD_STOPPED:
          InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
@@ -220,15 +222,18 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_VOICE_STOPPED:
          //InfoLog( << "MediaInterface: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+#ifndef SIPX_NO_RECORD
       case MiNotification::MI_NOTF_TONE_DETECT_ON:
          InfoLog(<< "MediaInterface: received MI_NOTF_TONE_DETECT_ON, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+#endif
       case MiNotification::MI_NOTF_H264_SPS:
          InfoLog(<< "MediaInterface: received MI_NOTF_H264_SPS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_H264_PPS:
          InfoLog( << "MediaInterface: received MI_NOTF_H264_PPS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+#ifndef SIPX_NO_RECORD
       case MiNotification::MI_NOTF_TONE_DETECT_OFF:
          InfoLog( << "MediaInterface: received MI_NOTF_TONE_DETECT_OFF, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
@@ -241,6 +246,7 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_OUTPUT_DEVICE_NOT_PRESENT:
          InfoLog(<< "MediaInterface: received MI_NOTF_OUTPUT_DEVICE_NOT_PRESENT, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+#endif
 
       default:
          InfoLog(<< "SipXMediaInterface: unrecognized MiNotification type = " << pNotfMsg->getType());
