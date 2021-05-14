@@ -69,8 +69,10 @@ AddAor::encodeBrief(resip::ResipFastOStream& strm) const
 
 RegEventClient::RegEventClient(std::shared_ptr<MasterProfile> profile) :
    mSecurity(0),
-   mStack(mSecurity),
-   mStackThread(mStack),
+   mPollGrp(FdPollGrp::create()),
+   mSelIntr(new EventThreadInterruptor(*mPollGrp)),
+   mStack(mSecurity, DnsStub::EmptyNameserverList, mSelIntr),
+   mStackThread(mStack, *mSelIntr, *mPollGrp),
    mDum(mStack),
    mDumThread(mDum),
    mProfile(std::move(profile))

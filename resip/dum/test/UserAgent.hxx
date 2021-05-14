@@ -135,6 +135,8 @@ class UserAgent : public CommandLineParser,
       void addTransport(TransportType type, int port);
 
       std::shared_ptr<MasterProfile> mProfile;
+      FdPollGrp *mPollGrp;
+      EventThreadInterruptor *mSelIntr;
       Security* mSecurity;
       SipStack mStack;
       DialogUsageManager mDum;

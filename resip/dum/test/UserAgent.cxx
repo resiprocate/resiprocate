@@ -5,6 +5,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Pidf.hxx"
+#include "resip/stack/EventStackThread.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/ServerInviteSession.hxx"
@@ -34,15 +35,16 @@ using namespace std;
 UserAgent::UserAgent(int argc, char** argv) : 
    CommandLineParser(argc, argv),
    mProfile(std::make_shared<MasterProfile>()),
+   mPollGrp(FdPollGrp::create()),
+   mSelIntr(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
    mSecurity(new Security(mCertPath)),
-   mStack(mSecurity),
 #else
    mSecurity(0),
-   mStack(mSecurity),
 #endif
+   mStack(mSecurity, DnsStub::EmptyNameserverList, mSelIntr),
    mDum(mStack),
-   mStackThread(mStack)
+   mStackThread(mStack, *mSelIntr, *mPollGrp)
 {
    Log::initialize(mLogType, mLogLevel, argv[0]);
 
