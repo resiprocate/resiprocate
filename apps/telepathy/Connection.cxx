@@ -42,10 +42,10 @@ static const QString c_fileWithContacts = QLatin1String("data.txt");
 
 tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString &cmName, const QString &protocolName, const QVariantMap &parameters)
    : Tp::BaseConnection(dbusConnection, cmName, protocolName, parameters),
+     ua(0),
      mUAProfile(std::make_shared<TelepathyMasterProfile>(parameters)),
      mConversationProfile(std::make_shared<TelepathyConversationProfile>(mUAProfile, parameters)),
      mInstantMessage(std::make_shared<MyInstantMessage>()),
-     ua(0),
      nextHandleId(1)
 {
    std::vector<unsigned int> _codecIds;

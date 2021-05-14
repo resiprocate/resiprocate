@@ -39,9 +39,9 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),  
      mSigcompStack(0),
      mRxBuffer(0),
+     mStunSetting(stun),
      mExternalUnknownDatagramHandler(0),
-     mInWritable(false),
-     mStunSetting(stun)
+     mInWritable(false)
 {
    mPollEventCnt = 0;
    mTxTryCnt = mTxMsgCnt = mTxFailCnt = 0;
