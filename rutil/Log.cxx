@@ -602,7 +602,13 @@ Log::timestamp(Data& res)
    char msbuf[5];
    /* Dividing (without remainder) by 1000 rounds the microseconds
       measure to the nearest millisecond. */
-   snprintf(msbuf, 5, ".%3.3ld", long(tv.tv_usec / 1000));
+   result = snprintf(msbuf, 5, ".%3.3ld", long(tv.tv_usec / 1000));
+   if(result < 0)
+   {
+      // snprint can error (negative return code) and the compiler now generates a warning
+      // if we don't act on the return code
+      memcpy(msbuf, "0000", 5);
+   }
 
    int datebufCharsRemaining = datebufSize - (int)strlen(datebuf);
 #if defined(WIN32) && defined(_M_ARM)
