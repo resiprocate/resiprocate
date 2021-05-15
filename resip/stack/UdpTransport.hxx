@@ -128,7 +128,6 @@ private:
 
    ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
    bool mInWritable;
-   bool mInActiveWrite;
 };
 
 }

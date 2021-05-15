@@ -162,7 +162,6 @@ class DtlsTransport : public UdpTransport
       DtlsTimerQueue      mTimer ;
       Security*           mSecurity ;
       DtlsConnectionMap   mDtlsConnections ;  /* IP addr/port -> transport */
-      unsigned char       mDummyBuf[ 4 ] ;
       BIO*                mDummyBio ;
       const Data          mDomain;
 

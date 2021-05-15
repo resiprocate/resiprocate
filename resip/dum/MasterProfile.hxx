@@ -202,7 +202,6 @@ class MasterProfile : public UserProfile
       bool mValidateContentLanguageEnabled;
       bool mValidateAcceptEnabled;
       bool mAllowBadRegistrationEnabled;    
-      bool mHasServerRegistrationMinExpires;      
       bool mCheckReqUriInMergeDetectionEnabled;
       ReliableProvisionalMode mUacReliableProvisionalMode;
       ReliableProvisionalMode mUasReliableProvisionalMode;

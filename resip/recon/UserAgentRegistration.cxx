@@ -16,7 +16,6 @@ using namespace std;
 UserAgentRegistration::UserAgentRegistration(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),
   mUserAgent(userAgent),
-  mDum(dum),
   mConversationProfileHandle(handle),
   mEnded(false)
 {

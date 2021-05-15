@@ -17,7 +17,6 @@ MasterProfile::MasterProfile() :
    mValidateContentLanguageEnabled(false),
    mValidateAcceptEnabled(false),
    mAllowBadRegistrationEnabled(false),
-   mHasServerRegistrationMinExpires(false),
    mCheckReqUriInMergeDetectionEnabled(false),
    mUacReliableProvisionalMode(Never),
    mUasReliableProvisionalMode(Never),

@@ -18,7 +18,6 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            const Contents* alternative,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum, std::move(userProfile)),
-     mState(Initialized),
      mServerSub(serverSub),
      mEncryptionLevel(level)
 {

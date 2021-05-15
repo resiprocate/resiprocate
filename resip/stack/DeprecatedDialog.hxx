@@ -131,8 +131,6 @@ class DeprecatedDialog
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
       
-      bool secure; // indicates the messages in this Dialog must use TLS
-
       UInt64 expireyTimeAbsoluteMs;
       
       friend EncodeStream& operator<<(EncodeStream&, const DeprecatedDialog&);
