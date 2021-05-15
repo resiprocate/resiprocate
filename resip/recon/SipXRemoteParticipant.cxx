@@ -1128,8 +1128,9 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop sending.");
    }
 
-   if(mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
+   if((mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
       mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY)
+            && localCodecs)
    {
       if(!getMediaInterface()->getInterface()->isReceivingRtpAudio(getSipXDialogSet().getMediaConnectionId()))
       {
