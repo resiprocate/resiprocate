@@ -49,11 +49,7 @@ class Server : public ThreadIf
          int calls = mNumCalls;
          while(calls > 0)
          {
-            FdSet fdset;
-            mStack.buildFdSet(fdset);
-            int err = fdset.selectMilliSeconds(0);
-            assert (err != -1);
-            mStack.process(fdset);
+            mStack.process(1000);
             
             SipMessage* received = mStack.receive();
             if (received)

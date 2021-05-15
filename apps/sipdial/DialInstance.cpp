@@ -62,17 +62,8 @@ DialInstance::DialResult DialInstance::execute()
 
    while(mSipStack != 0) 
    {
-      FdSet fdset;
-      mSipStack->buildFdSet(fdset);
-      int err = fdset.selectMilliSeconds(resipMin((int)mSipStack->getTimeTillNextProcessMS(), 50));
-      if(err == -1) {
-         if(errno != EINTR) {
-            //B2BUA_LOG_ERR("fdset.select returned error code %d", err);
-            resip_assert(0);  // FIXME
-         }
-      }
       // Process all SIP stack activity
-      mSipStack->process(fdset);
+      mSipStack->process(50);
       while(mDum->process());
 
       // FIXME - we should wait a little and make sure it really worked

@@ -66,11 +66,7 @@ class Client : public ThreadIf
          
          while(true)
          {
-            FdSet fdset;
-            mStack.buildFdSet(fdset);
-            int err = fdset.selectMilliSeconds(5);
-            assert (err != -1);
-            mStack.process(fdset);
+            mStack.process(5);
             
             SipMessage* received = mStack.receive();
             if (received)
@@ -135,11 +131,7 @@ class Server : public ThreadIf
 
          while(true)
          {
-            FdSet fdset;
-            mStack.buildFdSet(fdset);
-            int err = fdset.selectMilliSeconds(5);
-            assert (err != -1);
-            mStack.process(fdset);
+            mStack.process(5);
             
             SipMessage* received = mStack.receive();
             if (received)

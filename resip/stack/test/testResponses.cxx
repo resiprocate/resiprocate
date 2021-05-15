@@ -86,10 +86,7 @@ main(int argc, char* argv[])
    bool needToProcessSend = false;
    while (optLoop || count > 0 || needToProcessSend)
    {
-      FdSet fdset; 
-      stack->buildFdSet(fdset);
-
-      stack->process(fdset);
+      stack->process(1000);
       needToProcessSend = false;
 
       Message* msg = stack->receive();
