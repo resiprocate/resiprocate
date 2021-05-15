@@ -43,8 +43,8 @@ class ClientSubscription: public BaseSubscription
 
    protected:
       virtual ~ClientSubscription();
-      virtual void onReadyToSend(SipMessage& msg);
-      virtual void send(std::shared_ptr<SipMessage> msg);
+      virtual void onReadyToSend(SipMessage& msg) override;
+      virtual void send(std::shared_ptr<SipMessage> msg) override;
       virtual void flowTerminated();
 
    private:

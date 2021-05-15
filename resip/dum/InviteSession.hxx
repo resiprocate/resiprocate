@@ -71,7 +71,7 @@ class InviteSession : public DialogUsage
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(const Data& userReason);
       virtual void end(EndReason reason);
-      virtual void end(); // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
+      virtual void end() override; // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
       /** Rejects an offer at the SIP level.  Can also be used to 
           send a 488 to a reINVITE or UPDATE */
@@ -294,7 +294,7 @@ class InviteSession : public DialogUsage
 
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
       virtual ~InviteSession();
-      virtual void onReadyToSend(SipMessage& msg);
+      virtual void onReadyToSend(SipMessage& msg) override;
       virtual void flowTerminated();
 
       void dispatch(const SipMessage& msg) override;

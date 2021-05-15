@@ -59,7 +59,7 @@ class ServerSubscription : public BaseSubscription
 
    protected:
       virtual ~ServerSubscription();
-      void onReadyToSend(SipMessage& msg);
+      virtual void onReadyToSend(SipMessage& msg) override;
       virtual void flowTerminated();
       
    private:
