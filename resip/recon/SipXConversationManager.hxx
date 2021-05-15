@@ -186,9 +186,6 @@ public:
    virtual void buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds,
       unsigned int codecIds[], resip::SdpContents& sessionCaps);
 
-   // Override this to handle the callback
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int timerData) { }
-
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
    ///////////////////////////////////////////////////////////////////////
