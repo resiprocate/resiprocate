@@ -572,6 +572,7 @@ public:
 protected:
 
    // Invite Session Handler /////////////////////////////////////////////////////
+   using InviteSessionHandler::onReadyToSend;
    virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
    virtual void onNewSession(resip::ServerInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
    virtual void onFailure(resip::ClientInviteSessionHandle h, const resip::SipMessage& msg);
@@ -606,6 +607,7 @@ protected:
    virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage& msg);
 
    // ClientSubscriptionHandler ///////////////////////////////////////////////////
+   using ClientSubscriptionHandler::onReadyToSend;
    virtual void onUpdatePending(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
    virtual void onUpdateActive(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
    virtual void onUpdateExtension(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOrder);
