@@ -257,6 +257,8 @@ SipStackAndThread::SipStackAndThread(const char *tType,
       mThread = new EventStackThread(*mStack, *mEventIntr, *mPollGrp);
    } 
    else 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
    if (mSelIntr) 
    {
       mThread = new InterruptableStackThread(*mStack, *mSelIntr);
@@ -265,6 +267,7 @@ SipStackAndThread::SipStackAndThread(const char *tType,
    {
       mThread = new StackThread(*mStack);
    }
+#pragma GCC diagnostic pop
 }
 
 void
@@ -301,6 +304,11 @@ static void
 waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
                  SelectInterruptor *commonIntr, int& thisseltime, bool& isStrange)
 {
+   /* This method is only used when testing legacy reSIProcate code, so we
+    * can use #pragma to ignore deprecated API calls
+    */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
    FdSet fdset;
    receiver->buildFdSet(fdset);
    sender->buildFdSet(fdset);
@@ -325,6 +333,7 @@ waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
    }
    receiver->process(fdset);
    sender->process(fdset);
+#pragma GCC diagnostic pop
 }
 
 struct StackThreadPair
