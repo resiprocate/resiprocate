@@ -20,7 +20,11 @@ std::ostream&
 operator<<(std::ostream& ostrm, const RendDlgAcctKey& key)
 {
    static const char *DlgCatNames[] = { "Nul", "Sub", "Pub", "Reg" };
+   // checking whether mCat is valid generates a compiler warning, need to use pragma to suppress it
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-compare"
    const char* catName = key.mCat >= 4 ? "Unk" : DlgCatNames[key.mCat];
+#pragma clang diagnostic pop
 
    ostrm << "["<<catName <<",f="<<key.mFromIdx<<",t="<<key.mToIdx<<",r="<<key.mRepeatIdx <<"]";
    return ostrm;
