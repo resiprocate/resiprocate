@@ -5,20 +5,16 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
-#include "rutil/Logger.hxx"
-#include "AppSubsystem.hxx"
 #include "SNMPThread.hxx"
 
 #include "SNMP_reSIProcate.hxx"
 
-#define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
-
 using namespace registrationagent;
-using namespace resip;
 using namespace std;
 
-SnmpThread::SnmpThread(const Data& socket)
-    : mAccountsTotal(0),
+SnmpThread::SnmpThread(const std::string& socket)
+    : mShutdown(false),
+      mAccountsTotal(0),
       mAccountsFailed(0),
       mSocket(socket)
 {
@@ -75,7 +71,7 @@ SnmpThread::thread()
 
    snmp_shutdown("reSIProcate");
    SOCK_CLEANUP;
-   InfoLog(<<"SnmpThread::thread stopped");
+   //InfoLog(<<"SnmpThread::thread stopped");
 }
 
 void
@@ -83,9 +79,23 @@ SnmpThread::shutdown()
 {
    if(isShutdown())
    {
-      DebugLog(<<"shutdown already in progress!");
+      //DebugLog(<<"shutdown already in progress!");
       return;
    }
+   mShutdown = true;
+}
+
+void
+SnmpThread::run()
+{
+   mShutdown = false;
+   mThread = std::make_shared<std::thread>([this] { thread(); });
+}
+
+void
+SnmpThread::join()
+{
+   mThread->join();
 }
 
 void

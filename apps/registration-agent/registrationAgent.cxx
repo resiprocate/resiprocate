@@ -187,7 +187,7 @@ class MyClientRegistrationAgent : public ServerProcess
          Data snmpSocket(cfg.getConfigData("SNMPMasterSocket", "", true));
          if(!snmpSocket.empty())
          {
-            mSnmp.reset(new SnmpThread(snmpSocket));
+            mSnmp.reset(new SnmpThread(snmpSocket.c_str()));
             mSnmp->run();
          }
 
