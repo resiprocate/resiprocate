@@ -923,8 +923,9 @@ RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, bool answer)
 }
 
 void 
-RemoteParticipant::replaceWithParticipant(RemoteParticipant* replacingParticipant)
+RemoteParticipant::replaceWithParticipant(Participant* _replacingParticipant)
 {
+   RemoteParticipant* replacingParticipant = dynamic_cast<RemoteParticipant*>(_replacingParticipant);
     // Copy our local hold setting to the replacing participant to replace us
     replacingParticipant->mLocalHold = mLocalHold;         
 

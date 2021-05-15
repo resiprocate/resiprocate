@@ -134,7 +134,7 @@ private:
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
-   virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
+   virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;
    resip::InviteSessionHandle mInviteSessionHandle; 
