@@ -9,7 +9,7 @@
 #include "UserAgentMasterProfile.hxx"
 #include "HandleTypes.hxx"
 
-#include <resip/stack/InterruptableStackThread.hxx>
+#include <resip/stack/EventStackThread.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/RegistrationHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
@@ -388,10 +388,11 @@ private:
    std::shared_ptr<UserAgentMasterProfile> mProfile;
    std::shared_ptr<InstantMessage> mInstantMessage;
    resip::Security* mSecurity;
-   resip::SelectInterruptor mSelectInterruptor;
+   resip::FdPollGrp *mPollGrp;
+   resip::EventThreadInterruptor *mSelectInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
-   resip::InterruptableStackThread mStackThread;
+   resip::EventStackThread mStackThread;
    volatile bool mDumShutdown;
 
 };

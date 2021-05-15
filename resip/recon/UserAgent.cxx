@@ -59,9 +59,11 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, mProfile->getAdditionalDnsServers(), &mSelectInterruptor, false /* stateless */, socketFunc),
+   mPollGrp(FdPollGrp::create()),
+   mSelectInterruptor(new EventThreadInterruptor(*mPollGrp)),
+   mStack(mSecurity, mProfile->getAdditionalDnsServers(), mSelectInterruptor, false /* stateless */, socketFunc),
    mDum(mStack),
-   mStackThread(mStack, mSelectInterruptor),
+   mStackThread(mStack, *mSelectInterruptor, *mPollGrp),
    mDumShutdown(false)
 {
 #if defined(USE_SSL)

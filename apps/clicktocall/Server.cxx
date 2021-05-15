@@ -137,9 +137,11 @@ Server::Server(int argc, char** argv) :
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, mDnsServers, &mSelectInterruptor),
+   mPollGrp(FdPollGrp::create()),
+   mSelectInterruptor(new EventThreadInterruptor(*mPollGrp)),
+   mStack(mSecurity, mDnsServers, mSelectInterruptor),
    mDum(mStack),
-   mStackThread(mStack, mSelectInterruptor),
+   mStackThread(mStack, *mSelectInterruptor, *mPollGrp),
    mDumShutdown(false),
    mCurrentB2BSessionHandle(1),
    mIsV6Avail(false),

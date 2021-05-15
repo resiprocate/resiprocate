@@ -4,8 +4,7 @@
 #include <map>
 
 #include <resip/stack/TransactionUser.hxx>
-#include <resip/stack/InterruptableStackThread.hxx>
-#include <rutil/SelectInterruptor.hxx>
+#include <resip/stack/EventStackThread.hxx>
 #include <resip/stack/UdpTransport.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/DumShutdownHandler.hxx>
@@ -204,10 +203,11 @@ private:
 
    std::shared_ptr<resip::MasterProfile> mProfile;
    resip::Security* mSecurity;
-   resip::SelectInterruptor mSelectInterruptor;
+   resip::FdPollGrp *mPollGrp;
+   resip::EventThreadInterruptor *mSelectInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
-   resip::InterruptableStackThread mStackThread;
+   resip::EventStackThread mStackThread;
    volatile bool mDumShutdown;
 
    typedef std::map<B2BSessionHandle, B2BSession*> B2BSessionMap;
