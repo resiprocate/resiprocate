@@ -291,7 +291,7 @@ public:
       InfoLog(LOG_PREFIX << "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int sequenceId) override
+   virtual void onApplicationTimer(unsigned int timerId, unsigned int sequenceId, unsigned int timerData2) override
    {
       InfoLog(LOG_PREFIX << "onApplicationTimer: timerId=" << timerId << " sequenceId=" << sequenceId);
    }
