@@ -78,15 +78,15 @@ MyConversationManager::startup()
 }
 
 ConversationHandle
-MyConversationManager::createConversation()
+MyConversationManager::createConversation(AutoHoldMode autoHoldMode)
 {
-   ConversationHandle convHandle = ConversationManager::createConversation();
+   ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
    mConversationHandles.push_back(convHandle);
    return convHandle;
 }
 
 ParticipantHandle
-MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
+MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
    ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
    mRemoteParticipantHandles.push_back(partHandle);

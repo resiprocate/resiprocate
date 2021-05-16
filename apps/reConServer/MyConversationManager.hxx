@@ -22,10 +22,8 @@ public:
 
    virtual void startup();
    
-   using recon::ConversationManager::createConversation;
-   virtual recon::ConversationHandle createConversation();
-   using recon::ConversationManager::createRemoteParticipant;
-   virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
+   virtual recon::ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override;
+   virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, const resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic) override;
    virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl);
    virtual recon::ParticipantHandle createLocalParticipant();
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
