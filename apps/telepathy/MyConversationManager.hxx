@@ -49,22 +49,22 @@ public:
    
    virtual recon::ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override;
    virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, const resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = recon::ConversationManager::ForkSelectAutomatic) override;
-   virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl);
-   virtual recon::ParticipantHandle createLocalParticipant();
-   virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
-   virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle);
-   virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up);
-   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile);
-   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile);
-   virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl) override;
+   virtual recon::ParticipantHandle createLocalParticipant() override;
+   virtual void onConversationDestroyed(recon::ConversationHandle convHandle) override;
+   virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle) override;
+   virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up) override;
+   virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile) override;
+   virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile) override;
+   virtual void onParticipantTerminated(recon::ParticipantHandle partHandle, unsigned int statusCode) override;
+   virtual void onParticipantProceeding(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
    virtual void onRelatedConversation(recon::ConversationHandle relatedConvHandle, recon::ParticipantHandle relatedPartHandle, 
-                                      recon::ConversationHandle origConvHandle, recon::ParticipantHandle origPartHandle);
-   virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
-   virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
-   virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle);
-   virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode);
-   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held);
+                                      recon::ConversationHandle origConvHandle, recon::ParticipantHandle origPartHandle) override;
+   virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
+   virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
+   virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle) override;
+   virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode) override;
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override;
    virtual void displayInfo();
 
 protected:
