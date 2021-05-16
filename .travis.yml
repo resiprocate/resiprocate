@@ -8,7 +8,7 @@ env:
 before_install:
  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ focal main universe"
  - sudo apt-get update -qq
- - sudo apt-get install -qq gperf libboost-all-dev libc-ares-dev libdb++-dev libpopt-dev libssl-dev perl libmysqlclient-dev libpq-dev libcppunit-dev autotools-dev libpcre3-dev libxerces-c-dev curl libcajun-dev libsrtp2-dev libgloox-dev libtelepathy-qt5-dev libsnmp-dev
+ - sudo apt-get install -qq gperf libboost-all-dev libc-ares-dev libdb++-dev libpopt-dev libssl-dev perl libmysqlclient-dev libpq-dev libcppunit-dev autotools-dev libpcre3-dev libxerces-c-dev curl libsrtp2-dev libgloox-dev libtelepathy-qt5-dev libsnmp-dev
  - sudo apt-get install -qq --force-yes autoconf-archive
  - sudo apt-get install -qq debian-archive-keyring
  - wget -q -O - https://ftp-master.debian.org/keys/release-10.asc | sudo apt-key add -
@@ -19,7 +19,7 @@ before_install:
  - sudo dpkg -i debify-archive-keyring_2019.01_all.deb
  - sudo add-apt-repository -y "deb http://apt.debify.org/debify debify-buster-backports main"
  - sudo apt-get update -qq
- - sudo apt-get install -qq --force-yes -t buster libradcli-dev libsoci-dev libqpid-proton-cpp12-dev libasio-dev python3-dev python3-cxx-dev
+ - sudo apt-get install -qq --force-yes -t buster libradcli-dev libsoci-dev libqpid-proton-cpp12-dev libasio-dev python3-dev python3-cxx-dev libcajun-dev
  - sudo apt-get install -qq --force-yes -t debify-buster-backports libsipxtapi-dev
 compiler:
   - gcc
