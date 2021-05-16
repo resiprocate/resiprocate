@@ -688,7 +688,7 @@ AresDns::errorMessage(long errorCode)
    size_t len = strlen(aresMsg);
    char* errorString = new char[len+1];
 
-   strncpy(errorString, aresMsg, len);
+   snprintf(errorString, len+1, "%s", aresMsg);
    errorString[len] = '\0';
    return errorString;
 }
