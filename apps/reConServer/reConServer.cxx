@@ -970,7 +970,7 @@ ReConServerProcess::main (int argc, char** argv)
          {
             int idx = it->first;
             SipConfigParse tc(it->second);
-            Data transportPrefix = "Transport" + idx;
+            Data transportPrefix = "Transport" + Data(idx);
             DebugLog(<< "checking values for transport: " << idx);
             Data interfaceSettings = tc.getConfigData("Interface", Data::Empty, true);
 
