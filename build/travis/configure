@@ -12,6 +12,11 @@ fi
 
 WARNING_CONFIG="-Wno-unknown-pragmas -Wno-unknown-warning-option"
 
+# this makes the build more strict:
+# any warning will become an error,
+# as an error, it will fail the build
+WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
+
 # Notes:
 #   we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
 #     (compile fails on clang)
