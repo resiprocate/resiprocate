@@ -8,6 +8,8 @@ then
   PYCFG_CFLAGS=`echo "${PYCFG_CFLAGS}" | sed -e 's!-specs=/usr/share/dpkg/no-pie-compile.specs!!g'`
 fi
 
+WARNING_CONFIG="-Wno-unknown-pragmas"
+
 # Notes:
 #   we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
 #     (compile fails on clang)
@@ -33,7 +35,7 @@ fi
   --with-rend \
   --with-recon \
   --with-netsnmp \
-  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \
+  CPPFLAGS="-I/usr/include/postgresql -I/usr/include/sipxtapi -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -DRESIP_DIGEST_LOGGING -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags` ${WARNING_CONFIG}" \
   CXXFLAGS="-Wformat -Werror=format-security -fpermissive" \
   --with-c-ares
 
