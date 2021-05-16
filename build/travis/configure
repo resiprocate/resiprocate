@@ -10,7 +10,7 @@ then
   PYCFG_CFLAGS=`echo "${PYCFG_CFLAGS}" | sed -e 's!-specs=/usr/share/dpkg/no-pie-compile.specs!!g'`
 fi
 
-WARNING_CONFIG="-Wno-unknown-pragmas"
+WARNING_CONFIG="-Wno-unknown-pragmas -Wno-unknown-warning-option"
 
 # Notes:
 #   we don't enable ichat-gw because of https://www.resiprocate.org/bugzilla/show_bug.cgi?id=133
