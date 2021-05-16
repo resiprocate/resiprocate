@@ -152,22 +152,22 @@ public:
       createRemoteParticipant(convHandle, bobUri, ConversationManager::ForkSelectAutomatic);
    }
 
-   virtual void onConversationDestroyed(ConversationHandle convHandle)
+   virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(<< mLogPrefix << "onConversationDestroyed: handle=" << convHandle);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantDestroyed: handle=" << partHandle);
    }
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq) override
    {
       InfoLog(<< mLogPrefix << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onIncomingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -215,12 +215,12 @@ public:
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantTerminated: handle=" << partHandle << " status=" << statusCode);
 
@@ -274,20 +274,20 @@ public:
       mConvHandles.clear();
    }
     
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
    }
 
    virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
-                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
+                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle) override
    {
       InfoLog(<< mLogPrefix << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
       mConvHandles.push_back(relatedConvHandle);
    }
 
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -303,7 +303,7 @@ public:
       }
    }
     
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -328,22 +328,22 @@ public:
       }
    }
 
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
+   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
-   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
    {
       InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override {}
 
 private:
    std::list<ConversationHandle> mConvHandles;
@@ -373,17 +373,17 @@ public:
    {
    }
 
-   virtual void onConversationDestroyed(ConversationHandle convHandle)
+   virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(<< mLogPrefix << "onConversationDestroyed: handle=" << convHandle);
    }
 
-   virtual void onParticipantDestroyed(ParticipantHandle partHandle)
+   virtual void onParticipantDestroyed(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantDestroyed: handle=" << partHandle);
    }
 
-   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
+   virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq) override
    {
       InfoLog(<< mLogPrefix << "onApplicationTimeout: id=" << id << " dur=" << durationMs << " seq=" << seq);
 
@@ -422,7 +422,7 @@ public:
       }
    }
 
-   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+   virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onIncomingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -445,7 +445,7 @@ public:
       }
    }
 
-   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
+   virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
    {
       InfoLog(<< mLogPrefix << "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
       if(mConvHandles.empty())
@@ -455,7 +455,7 @@ public:
       }
    }
 
-   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantTerminated: handle=" << partHandle << " status=" << statusCode);
 
@@ -511,20 +511,20 @@ public:
       mConvHandles.clear();
    }
     
-   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantProceeding(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantProceeding: handle=" << partHandle << " msg=" << msg.brief());
    }
 
    virtual void onRelatedConversation(ConversationHandle relatedConvHandle, ParticipantHandle relatedPartHandle, 
-                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle)
+                                      ConversationHandle origConvHandle, ParticipantHandle origPartHandle) override
    {
       InfoLog(<< mLogPrefix << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
       mConvHandles.push_back(relatedConvHandle);
    }
 
-   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantAlerting(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantAlerting: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -540,7 +540,7 @@ public:
       }
    }
     
-   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
+   virtual void onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg) override
    {
       InfoLog(<< mLogPrefix << "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
       switch(SCENARIO)
@@ -561,12 +561,12 @@ public:
       }
    }
 
-   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle)
+   virtual void onParticipantRedirectSuccess(ParticipantHandle partHandle) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectSuccess: handle=" << partHandle);
    }
 
-   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode)
+   virtual void onParticipantRedirectFailure(ParticipantHandle partHandle, unsigned int statusCode) override
    {
       InfoLog(<< mLogPrefix << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
       switch(SCENARIO)
@@ -583,12 +583,12 @@ public:
       }
    }
 
-   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held)
+   virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override
    {
       InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) override {}
 
 private:
    std::list<ConversationHandle> mConvHandles;
