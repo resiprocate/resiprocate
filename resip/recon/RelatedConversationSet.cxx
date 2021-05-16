@@ -20,9 +20,10 @@ RelatedConversationSet::RelatedConversationSet(ConversationManager& conversation
 : mConversationManager(conversationManager),
   mInitialConversationHandle(initialConversationHandle)
 {
-   mRelatedConversationMap[initialConversationHandle] = initialConversation;
+   mRelatedConversationMap[mInitialConversationHandle] = initialConversation;
 
-   //InfoLog(<< "RelatedConversationSet created, initialConversationHandle=" << mInitialConversationHandle);
+   DebugLog(<< "RelatedConversationSet created, initialConversationHandle=" << mInitialConversationHandle
+      << " supportsMultipleConversations == " << mConversationManager.supportsMultipleConversations());
 }
 
 RelatedConversationSet::~RelatedConversationSet()

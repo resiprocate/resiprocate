@@ -48,8 +48,11 @@ SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle par
 : MediaResourceParticipant(partHandle, conversationManager, mediaUrl),
   mStreamPlayer(0),
   mToneGenPortOnBridge(-1),
-  mFromFilePortOnBridge(-1),
+  mFromFilePortOnBridge(-1)
+#ifndef SIPX_NO_RECORD
+  ,
   mRecordPortOnBridge(-1)
+#endif
 {
    InfoLog(<< "SipXMediaResourceParticipant created, handle=" << mHandle << " url=" << getMediaUrl());
 }

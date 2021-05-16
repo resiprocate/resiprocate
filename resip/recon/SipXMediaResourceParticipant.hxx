@@ -50,7 +50,9 @@ private:
    MpStreamPlayer* mStreamPlayer;
    int mToneGenPortOnBridge;
    int mFromFilePortOnBridge;
+#ifndef SIPX_NO_RECORD
    int mRecordPortOnBridge;
+#endif
 
 };
 

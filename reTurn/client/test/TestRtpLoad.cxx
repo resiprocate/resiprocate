@@ -152,7 +152,7 @@ private:
 class MyTurnAsyncSocketHandler : public TurnAsyncSocketHandler
 {
 public:
-   MyTurnAsyncSocketHandler(asio::io_service& ioService) : mIOService(ioService), mTimer(ioService), mNumReceives(0), mNumSends(0) {}
+   MyTurnAsyncSocketHandler(asio::io_service& ioService) : mTimer(ioService), mNumReceives(0), mNumSends(0) {}
    virtual ~MyTurnAsyncSocketHandler() {}
 
    void sendRtpSimPacket()
@@ -311,13 +311,11 @@ public:
    void setTurnAsyncSocket(TurnAsyncSocket* turnAsyncSocket) { mTurnAsyncSocket = turnAsyncSocket; }
 
 private:
-   asio::io_service& mIOService;
    asio::steady_timer mTimer;
    TurnAsyncSocket* mTurnAsyncSocket;
    unsigned int mNumReceives;
    unsigned int mNumSends;
    time_t mStartTime;
-   UInt64 mRTPSendTime;
 };
 
 int main(int argc, char* argv[])

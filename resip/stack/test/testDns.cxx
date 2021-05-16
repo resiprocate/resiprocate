@@ -36,7 +36,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-const char bf[] = "\033[01;34m";
 const char gf[] = "\033[01;32m";
 const char rf[] = "\033[01;31m";
 const char ub[] = "\033[01;00m";
