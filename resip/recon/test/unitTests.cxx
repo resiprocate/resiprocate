@@ -137,11 +137,9 @@ public:
       mLogPrefix = "Alice: ";
    };
 
-   using ConversationManager::createConversation;
-
-   virtual ConversationHandle createConversation()
+   virtual ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override
    {
-      ConversationHandle convHandle = ConversationManager::createConversation();
+      ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
       mConvHandles.push_back(convHandle);
       return convHandle;
    }
@@ -364,11 +362,9 @@ public:
       mLogPrefix = "Bob: ";
    };
 
-   using ConversationManager::createConversation;
-
-   virtual ConversationHandle createConversation()
+   virtual ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override
    {
-      ConversationHandle convHandle = ConversationManager::createConversation();
+      ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
       mConvHandles.push_back(convHandle);
       return convHandle;
    }
