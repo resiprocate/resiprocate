@@ -11,7 +11,7 @@ class SnmpThread
 {
 public:
    SnmpThread(const std::string& socket);
-   ~SnmpThread();
+   virtual ~SnmpThread();
 
    virtual void thread();
    virtual void shutdown();
