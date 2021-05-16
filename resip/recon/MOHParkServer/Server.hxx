@@ -91,7 +91,8 @@ protected:
 private:
    friend class MOHManager;
    friend class ParkManager;
-   void buildSessionCapabilities(resip::SdpContents& sessionCaps);
+   using SipXConversationManager::buildSessionCapabilities;
+   virtual void buildSessionCapabilities(resip::SdpContents& sessionCaps);
 
    bool mIsV6Avail;
    recon::UserAgent* mMyUserAgent;

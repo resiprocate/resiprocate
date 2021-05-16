@@ -51,12 +51,15 @@ protected:
    void onDumCanBeDeleted();
 
    // Registration Handler ////////////////////////////////////////////////////////
+   using ClientRegistrationHandler::onFlowTerminated;
    virtual void onSuccess(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
    virtual void onFailure(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
    virtual void onRemoved(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
    virtual int onRequestRetry(resip::ClientRegistrationHandle h, int retryMinimum, const resip::SipMessage& msg);
 
    // ClientSubscriptionHandler ///////////////////////////////////////////////////
+   using ClientSubscriptionHandler::onReadyToSend;
+   using ClientSubscriptionHandler::onFlowTerminated;
    virtual void onUpdatePending(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
    virtual void onUpdateActive(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
    virtual void onUpdateExtension(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOrder);
@@ -101,6 +104,7 @@ protected:
    virtual void onNonDialogCreatingProvisional(resip::AppDialogSetHandle, const resip::SipMessage& msg);
 
    // ServerSubscriptionHandler ///////////////////////////////////////////////////
+   using ServerSubscriptionHandler::onFlowTerminated;
    virtual void onNewSubscription(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
    virtual void onNewSubscriptionFromRefer(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);
    virtual void onRefresh(resip::ServerSubscriptionHandle, const resip::SipMessage& sub);

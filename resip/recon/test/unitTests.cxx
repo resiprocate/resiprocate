@@ -137,6 +137,8 @@ public:
       mLogPrefix = "Alice: ";
    };
 
+   using ConversationManager::createConversation;
+
    virtual ConversationHandle createConversation()
    {
       ConversationHandle convHandle = ConversationManager::createConversation();
@@ -361,6 +363,8 @@ public:
    { 
       mLogPrefix = "Bob: ";
    };
+
+   using ConversationManager::createConversation;
 
    virtual ConversationHandle createConversation()
    {

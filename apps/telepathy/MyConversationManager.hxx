@@ -47,7 +47,9 @@ public:
 
    virtual void startup();
    
+   using recon::ConversationManager::createConversation;
    virtual recon::ConversationHandle createConversation();
+   using recon::ConversationManager::createRemoteParticipant;
    virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = recon::ConversationManager::ForkSelectAutomatic);
    virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl);
    virtual recon::ParticipantHandle createLocalParticipant();
