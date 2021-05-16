@@ -26,7 +26,7 @@ public:
    UdpServer& operator=(const UdpServer&) = delete;
    UdpServer& operator=(UdpServer&&) = delete;
 
-   virtual void start();
+   virtual void start() override;
 
    /// This method is used if this UdpServer supports RFC3489 operation - note turnFraming in constructor must be false
    void setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort);
