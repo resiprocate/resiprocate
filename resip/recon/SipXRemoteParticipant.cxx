@@ -815,8 +815,8 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    unsigned int remoteRtcpPort=0;
    std::shared_ptr<sdpcontainer::Sdp> localSdp(SdpHelperResip::createSdpFromResipSdp(sendingOffer ? *getDialogSet().getProposedSdp() : *getLocalSdp()));
    std::shared_ptr<sdpcontainer::Sdp> remoteSdp(sendingOffer ? 0 : SdpHelperResip::createSdpFromResipSdp(*getRemoteSdp()));
-   const sdpcontainer::SdpMediaLine::CodecList* localCodecs;
-   const sdpcontainer::SdpMediaLine::CodecList* remoteCodecs;
+   const sdpcontainer::SdpMediaLine::CodecList* localCodecs = 0;
+   const sdpcontainer::SdpMediaLine::CodecList* remoteCodecs = 0;
    bool supportedCryptoSuite = false;
    bool supportedFingerprint = false;
 
