@@ -342,17 +342,15 @@ ConversationManager::getBufferFromMediaResourceCache(const resip::Data& name, re
 }
 
 void 
-ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType)
+ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType, MediaEvent::MediaDirection direction)
 {
-   resip_assert(eventType == MediaEvent::RESOURCE_DONE || eventType == MediaEvent::RESOURCE_FAILED);
-
-   if(eventType == MediaEvent::RESOURCE_DONE || eventType == MediaEvent::RESOURCE_FAILED)
+   Participant* participant = getParticipant(partHandle);
+   if (participant)
    {
-      Participant* participant = getParticipant(partHandle);
-      if(participant)
+      if (eventType == MediaEvent::RESOURCE_DONE || eventType == MediaEvent::RESOURCE_FAILED)
       {
          MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(participant);
-         if(mrPart)
+         if (mrPart)
          {
             if (eventType == MediaEvent::RESOURCE_FAILED)
             {
@@ -360,6 +358,10 @@ ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::
             }
             mrPart->resourceDone();
          }
+      }
+      else if (eventType == MediaEvent::VOICE_STARTED || eventType == MediaEvent::VOICE_STOPPED)
+      {
+         onParticipantVoiceActivity(partHandle, eventType == MediaEvent::VOICE_STARTED ? true : false, direction == MediaEvent::DIRECTION_IN);
       }
    }
 }

@@ -5,6 +5,7 @@
 #include "FlowManagerSipXSocket.hxx"
 
 #include <CpTopologyGraphInterface.h>
+#include <mp/MpResourceTopology.h>
 #include <mi/MiNotification.h>
 #include <mi/MiDtmfNotf.h>
 #include <mi/MiRtpStreamActivityNotf.h>
@@ -21,7 +22,9 @@ using namespace resip;
 SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface) :
    mConversationManager(conversationManager),
    mMediaInterface(mediaInterface),
-   mAllowLoggingDTMFDigits(true)
+   mAllowLoggingDTMFDigits(true),
+   mLastPlayMediaOperationParticipantHandle(0),
+   mLastRecordMediaOperationParticipantHandle(0)
 {
 }
 
@@ -98,21 +101,21 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_PLAY_FINISHED:
          {
             // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::RESOURCE_DONE);
+            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastPlayMediaOperationParticipantHandle, MediaEvent::RESOURCE_DONE, MediaEvent::DIRECTION_OUT);
             mConversationManager.post(mevent);
             InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() <<
                ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", participantHandle=" << mLastMediaOperationParticipantHandle);
+               ", participantHandle=" << mLastPlayMediaOperationParticipantHandle);
          }
          break;
       case MiNotification::MI_NOTF_PLAY_ERROR:
       {
          // Queue event to conversation manager thread
-         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED);
+         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastPlayMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED, MediaEvent::DIRECTION_OUT);
          mConversationManager.post(mevent);
          InfoLog(<< "SipXMediaInterface: received MI_NOTF_PLAY_ERROR, sourceId=" << pNotfMsg->getSourceId().data() <<
             ", connectionId=" << pNotfMsg->getConnectionId() <<
-            ", participantHandle=" << mLastMediaOperationParticipantHandle);
+            ", participantHandle=" << mLastPlayMediaOperationParticipantHandle);
       }
       break;
       case MiNotification::MI_NOTF_PROGRESS:
@@ -133,16 +136,23 @@ SipXMediaInterface::post(const OsMsg& msg)
          InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_RECORD_FINISHED:
-         InfoLog( << "SipXMediaInterface: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         {
+            // Queue event to conversation manager thread
+            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastRecordMediaOperationParticipantHandle, MediaEvent::RESOURCE_DONE, MediaEvent::DIRECTION_IN);
+            mConversationManager.post(mevent);
+            InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() <<
+               ", connectionId=" << pNotfMsg->getConnectionId() <<
+               ", participantHandle=" << mLastRecordMediaOperationParticipantHandle);
+         }
          break;
       case MiNotification::MI_NOTF_RECORD_ERROR:
       {
          // Queue event to conversation manager thread
-         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED);
+         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastRecordMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED, MediaEvent::DIRECTION_IN);
          mConversationManager.post(mevent);
          InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() <<
             ", connectionId=" << pNotfMsg->getConnectionId() <<
-            ", participantHandle=" << mLastMediaOperationParticipantHandle);
+            ", participantHandle=" << mLastRecordMediaOperationParticipantHandle);
       }
       break;
       case MiNotification::MI_NOTF_DTMF_RECEIVED:
@@ -209,18 +219,34 @@ SipXMediaInterface::post(const OsMsg& msg)
          }
          break;
       case MiNotification::MI_NOTF_ENERGY_LEVEL:       ///< Audio energy level (MiIntNotf)
-         {
-            //MiIntNotf* pIntNotfMsg = (MiIntNotf*)&msg;
-            //InfoLog( << "MediaInterface: received MI_NOTF_ENERGY_LEVEL, sourceId=" << pNotfMsg->getSourceId().data() << 
-            //   ", connectionId=" << pNotfMsg->getConnectionId() <<
-            //   ", value=" << pIntNotfMsg->getValue());
-         }
+         //{
+         //   MiIntNotf* pIntNotfMsg = (MiIntNotf*)&msg;
+         //   DebugLog( << "MediaInterface: received MI_NOTF_ENERGY_LEVEL, sourceId=" << pNotfMsg->getSourceId().data() << 
+         //      ", connectionId=" << pNotfMsg->getConnectionId() <<
+         //      ", value=" << pIntNotfMsg->getValue());
+         //}
          break;
       case MiNotification::MI_NOTF_VOICE_STARTED:
-         //InfoLog( << "MediaInterface: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         {
+            MediaEvent::MediaDirection direction = (pNotfMsg->getSourceId().contains(DIRECTION_IN_SUFFIX) || pNotfMsg->getSourceId().contains(MIC_NAME_SUFFIX)) ? MediaEvent::DIRECTION_IN : MediaEvent::DIRECTION_OUT;
+            DebugLog(<< "MediaInterface: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId() << ", direction=" << (direction == MediaEvent::DIRECTION_IN ? "IN" : "OUT"));
+            ParticipantHandle partHandle = getParticipantHandleForConnectionId(pNotfMsg->getConnectionId());
+   
+            // Get event into dum queue, so that callback is on dum thread
+            MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::VOICE_STARTED, direction);
+            mConversationManager.post(mevent);
+         }
          break;
       case MiNotification::MI_NOTF_VOICE_STOPPED:
-         //InfoLog( << "MediaInterface: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         {
+            MediaEvent::MediaDirection direction = (pNotfMsg->getSourceId().contains(DIRECTION_IN_SUFFIX) || pNotfMsg->getSourceId().contains(MIC_NAME_SUFFIX)) ? MediaEvent::DIRECTION_IN : MediaEvent::DIRECTION_OUT;
+            DebugLog(<< "MediaInterface: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId() << ", direction=" << (direction == MediaEvent::DIRECTION_IN ? "IN" : "OUT"));
+            ParticipantHandle partHandle = getParticipantHandleForConnectionId(pNotfMsg->getConnectionId());
+
+            // Get event into dum queue, so that callback is on dum thread
+            MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::VOICE_STOPPED, direction);
+            mConversationManager.post(mevent);
+         }
          break;
 #ifndef SIPX_NO_RECORD
       case MiNotification::MI_NOTF_TONE_DETECT_ON:

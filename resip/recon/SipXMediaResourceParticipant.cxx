@@ -29,6 +29,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 static const resip::ExtensionParameter p_participantonly("participant-only");
+static const resip::ExtensionParameter p_append("append");
+static const resip::ExtensionParameter p_silencetime("silencetime");  // in milliseconds
 
 // Special Tones
 static const Data dialtoneTone("dialtone");
@@ -159,10 +161,10 @@ SipXMediaResourceParticipant::startResourceImpl()
       if(status == OS_SUCCESS)
       {
          // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
-         // as the one that performed the last media operation, so that MediaInterface can generate the event
+         // as the one that performed the last play media operation, so that MediaInterface can generate the event 
          // to the conversation manage with the correct participant handle.  Note:  this works because sipX
          // only allows a single play from file or cache at a time per media interface.
-         mediaInterface->setMediaOperationPartipantHandle(mHandle);
+         mediaInterface->setPlayMediaOperationPartipantHandle(mHandle);
          setRunning(true);
       }
       else
@@ -190,10 +192,10 @@ SipXMediaResourceParticipant::startResourceImpl()
          if(status == OS_SUCCESS)
          {
             // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
-            // as the one that performed the last media operation, so that MediaInterface can generate the event 
+            // as the one that performed the last play media operation, so that MediaInterface can generate the event 
             // to the conversation manage with the correct participant handle.  Note:  this works because sipX
             // only allows a single play from file or cache at a time per media interface.
-            mediaInterface->setMediaOperationPartipantHandle(mHandle);
+            mediaInterface->setPlayMediaOperationPartipantHandle(mHandle);
             setRunning(true);
          }
          else
@@ -227,6 +229,11 @@ SipXMediaResourceParticipant::startResourceImpl()
          }
          else
          {
+            // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
+            // as the one that performed the last play media operation, so that MediaInterface can generate the event 
+            // to the conversation manage with the correct participant handle.  Note:  this works because sipX
+            // only allows a single play from file or cache at a time per media interface.
+            getMediaInterface()->setPlayMediaOperationPartipantHandle(mHandle);
             setRunning(true);
          }
       }
@@ -248,11 +255,17 @@ SipXMediaResourceParticipant::startResourceImpl()
 
       filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
 
-      InfoLog(<< "SipXMediaResourceParticipant recording, handle=" << mHandle << " filepath=" << filepath);
+      bool append = getMediaUrl().exists(p_append);
+      int silenceTimeMs = -1;  // disabled
+      if (getMediaUrl().exists(p_silencetime))
+      {
+         silenceTimeMs = getMediaUrl().param(p_silencetime).convertInt();
+      }
+
+      InfoLog(<< "SipXMediaResourceParticipant recording, handle=" << mHandle << " filepath=" << filepath << ", append=" << (append ? "YES" : "NO") << ", maxDurationMs=" << getDurationMs() << ", silenceTimeMs=" << silenceTimeMs);
 
       SipXMediaInterface* mediaInterface = getMediaInterface().get();
 
-      // TODO - add a URL parameter for the append to file option
       // TODO - add URL parameter support for selecting between the following file formats: CP_WAVE_PCM_16, CP_WAVE_GSM, CP_OGG_OPUS
       // Note:  locking to single channel recording for now.  Will record all participants in a conversation in a mixed single
       //        channel file.  In order to support multi-channel recording a few things need to happen:
@@ -261,10 +274,22 @@ SipXMediaResourceParticipant::startResourceImpl()
       //        3.  Control mixes with SipXBridgeMixer for multiple recording outputs.  sipX sets up mixes when you start recording
       //            but they are not alterened when additional RTP streams (remote Participants) come and go.
       //        4.  The MAXIMUM_RECORDER_CHANNELS=1 define needs to change in sipXmedaLib and sipXmediaAdpaterLib project files
-      OsStatus status = mediaInterface->getInterface()->recordChannelAudio(0 /* connectionId - not used by sipX */,
-         filepath.c_str(), CpMediaInterface::CP_WAVE_PCM_16, FALSE /* append? */, 1 /* numChannels */, FALSE /* setupMixesAutomatically? */);
+      OsStatus status = mediaInterface->getInterface()->recordChannelAudio(
+         0 /* connectionId - not used by sipX */,
+         filepath.c_str(), 
+         CpMediaInterface::CP_WAVE_PCM_16, 
+         append /* append? */, 
+         1 /* numChannels */, 
+         getDurationMs() /* maxTime Ms */,
+         silenceTimeMs /* silenceLength Ms, -1 to disable */,
+         FALSE /* setupMixesAutomatically? */);
       if (status == OS_SUCCESS)
       {
+         // Recoding an audio file, can generate a finished event on the MediaInterface, set our participant handle
+         // as the one that performed the last record media operation, so that MediaInterface can generate the event 
+         // to the conversation manage with the correct participant handle.  Note:  this works because sipX
+         // only allows a single record at a time per media interface.
+         mediaInterface->setRecordMediaOperationPartipantHandle(mHandle);
          setRunning(true);
       }
       else

@@ -22,10 +22,18 @@ class MediaEvent : public resip::DumCommand
       typedef enum 
       { 
          RESOURCE_DONE,
-         RESOURCE_FAILED
+         RESOURCE_FAILED,
+         VOICE_STARTED,
+         VOICE_STOPPED
       } MediaEventType;
 
-      MediaEvent(ConversationManager& conversationManager, ParticipantHandle partHandle, MediaEventType eventType);
+      typedef enum
+      {
+         DIRECTION_IN,
+         DIRECTION_OUT
+      } MediaDirection;
+
+      MediaEvent(ConversationManager& conversationManager, ParticipantHandle partHandle, MediaEventType eventType, MediaDirection direction);
       virtual void executeCommand();
 
       Message* clone() const;
@@ -36,6 +44,7 @@ class MediaEvent : public resip::DumCommand
       ConversationManager& mConversationManager;
       ParticipantHandle mParticipantHandle;
       MediaEventType mEventType;
+      MediaDirection mDirection;
 };
 
 

@@ -214,6 +214,9 @@ public:
                           have added with the addBufferToMediaResourceCache api.
      record:<filepath> - If filename only, then writes to application directory
                          (Use | instead of : for drive specifier)
+                         ;duration parameter specified max recording length in Ms
+                         ;append parameter specifies to append to an existing recording
+                         ;silencetime parameter specifies ms of silence to end recording
 
      optional arguments are: [;duration=<duration>][;repeat]
 
@@ -233,6 +236,8 @@ public:
         file://hi.wav;repeat;duration=9000 - play the file hi.wav for 9000ms, repeating as required, then automatically destroy the participant
         cache:welcomeprompt                - plays a prompt from the media cache with key/name "welcomeprompt"
         record:recording.wav               - records all participants audio mixed togehter in a WAV file, must be manually destroyed
+        record:recording.wav;duration=30000;silencetime=5000 - records all participants audio mixed togehter in a WAV file, for up to 5 mins, stop 
+                                                               automatically when voice is missing for 5 seconds
 
      @param convHandle Handle of the conversation to create the MediaParticipant in
      @param mediaUrl   Url of media to play.  See above.
@@ -547,6 +552,15 @@ public:
    virtual void onParticipantRequestedHold(ParticipantHandle partHandle, bool held) = 0;
 
    /**
+     Notifies an application when voice activity is detected to on or off from a remote participant.
+
+     @param partHandle Handle of the remote participant, -1 if local mic or speaker
+     @param on         true if voice is detected, false when voice detection has stopped
+     @param inbound    true if this event if for an inbound RTP stream, false for outbound RTP streams
+   */
+   virtual void onParticipantVoiceActivity(recon::ParticipantHandle partHandle, bool on, bool inbound) {}
+
+   /**
      Notifies an application about a failure in a media resource participant.
 
      @param partHandle Handle of the participant that terminated
@@ -677,7 +691,7 @@ private:
 
    friend class DtmfEvent;
    friend class MediaEvent;
-   void notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType);
+   void notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType, MediaEvent::MediaDirection direction);
 
    /**
      Notifies ConversationManager when an RFC2833 DTMF event is received from a

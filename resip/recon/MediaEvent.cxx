@@ -10,17 +10,19 @@ using namespace resip;
 
 MediaEvent::MediaEvent(ConversationManager& conversationManager, 
                        ParticipantHandle partHandle, 
-                       MediaEventType eventType) : 
+                       MediaEventType eventType,
+                       MediaDirection direction) :
    mConversationManager(conversationManager),
    mParticipantHandle(partHandle),
-   mEventType(eventType)
+   mEventType(eventType),
+   mDirection(direction)
 {
 }
 
 void 
 MediaEvent::executeCommand()
 {
-   mConversationManager.notifyMediaEvent(mParticipantHandle, mEventType);
+   mConversationManager.notifyMediaEvent(mParticipantHandle, mEventType, mDirection);
 }
 
 resip::Message* 
@@ -33,7 +35,7 @@ MediaEvent::clone() const
 EncodeStream& 
 MediaEvent::encode(EncodeStream& strm) const
 {
-   strm << " MediaEvent: participantHandle=" << mParticipantHandle << ", event=" << mEventType;
+   strm << " MediaEvent: participantHandle=" << mParticipantHandle << ", event=" << mEventType << ", direction=" << (mDirection == DIRECTION_IN ? "IN" : "OUT");
    return strm;
 }
 
@@ -46,7 +48,7 @@ MediaEvent::encodeBrief(EncodeStream& strm) const
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -37,7 +37,8 @@ public:
    OsStatus createConnection(int& connectionId, ParticipantHandle partHandle, const char* localAddress, int localPort);
    void updateConnectionIdToPartipantHandleMapping(int connectionId, ParticipantHandle partHandle);
    OsStatus deleteConnection(int connectionId);
-   void setMediaOperationPartipantHandle(ParticipantHandle partHandle) { mLastMediaOperationParticipantHandle = partHandle; }
+   void setPlayMediaOperationPartipantHandle(ParticipantHandle partHandle) { mLastPlayMediaOperationParticipantHandle = partHandle; }
+   void setRecordMediaOperationPartipantHandle(ParticipantHandle partHandle) { mLastRecordMediaOperationParticipantHandle = partHandle; }
 
 private:
    ParticipantHandle getParticipantHandleForConnectionId(int connectionId);
@@ -52,7 +53,8 @@ private:
    std::map<int, ParticipantHandle> mConnectionIdToPartipantHandleMap;
 
    // Used to raise MediaEvent with the source participant handle
-   ParticipantHandle mLastMediaOperationParticipantHandle;
+   ParticipantHandle mLastPlayMediaOperationParticipantHandle;
+   ParticipantHandle mLastRecordMediaOperationParticipantHandle;
 };
 
 }
