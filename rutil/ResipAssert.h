@@ -122,7 +122,7 @@
 
 #define resip_assert_not_null(x)                    \
 {                                                   \
-   resip_assert(((void*)(x)) != 0)                             \
+   resip_assert(((void*)(x)) != 0);                 \
 }
 
 #endif // __ASSERTION_H
