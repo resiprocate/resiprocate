@@ -165,7 +165,7 @@ public:
 
      @return A handle to the newly created local participant
    */
-   virtual ParticipantHandle createLocalParticipant();
+   virtual ParticipantHandle createLocalParticipant() override;
 
    /**
      Logs a multiline representation of the current state
@@ -175,7 +175,7 @@ public:
                          is the only valid value.  Otherwise you must
                          specify a specific conversation to view.
    */
-   virtual void outputBridgeMatrix(ConversationHandle convHandle = 0);
+   virtual void outputBridgeMatrix(ConversationHandle convHandle = 0) override;
 
    /**
      Builds a session capabilties SDPContents based on the passed in ipaddress
@@ -203,21 +203,21 @@ public:
       RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode) override;
-   virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle);
-   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl);
-   virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
-   virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
+   virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) override;
+   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) override;
+   virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
+   virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) override;
    virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(
          ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
-         std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
+         std::shared_ptr<ConversationProfile> conversationProfile = nullptr) override;
 
    MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
 
-   virtual bool supportsMultipleConversations();
-   virtual bool supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle);
+   virtual bool supportsMultipleConversations() override;
+   virtual bool supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle) override;
 
 protected:
-   virtual void setUserAgent(UserAgent *userAgent);
+   virtual void setUserAgent(UserAgent *userAgent) override;
 
 private:
    void init(int defaultSampleRate = 0, int maxSampleRate = 0);
@@ -252,10 +252,10 @@ private:
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 
    // exists here (as opposed to RemoteParticipant) - since it is required for OPTIONS responses
-   virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer);
+   virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer) override;
 
    friend class OutputBridgeMixWeightsCmd;
-   void outputBridgeMatrixImpl(ConversationHandle convHandle = 0);
+   void outputBridgeMatrixImpl(ConversationHandle convHandle = 0) override;
 
    friend class MediaResourceParticipantDeleterCmd;
    friend class CreateConversationCmd;
