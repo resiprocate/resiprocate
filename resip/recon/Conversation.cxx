@@ -170,7 +170,7 @@ Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant,
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet, 
+   Conversation* conversation = mConversationManager.createConversationInstance(relatedConvHandle, mRelatedConversationSet,
                                                  // If this conversation is sharing a media interface, then any related 
                                                  // conversations will as well (use our handle as the original handle
                                                  // passed in contructor could be gone)

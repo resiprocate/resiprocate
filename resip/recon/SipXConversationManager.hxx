@@ -199,6 +199,10 @@ public:
    virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
    virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
 
+   virtual Conversation *createConversationInstance(ConversationHandle handle,
+      RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
+      ConversationHandle sharedMediaInterfaceConvHandle,
+      ConversationManager::AutoHoldMode autoHoldMode) override;
    virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle);
    virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl);
    virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);

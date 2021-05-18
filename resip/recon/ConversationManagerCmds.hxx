@@ -36,7 +36,7 @@ class CreateConversationCmd  : public resip::DumCommand
            mSharedFlowConvHandle(sharedFlowConvHandle){}
       virtual void executeCommand()
       {
-            Conversation* conversation = new Conversation(mConvHandle, *mConversationManager, 0, mSharedFlowConvHandle, mAutoHoldMode);
+            Conversation* conversation = mConversationManager->createConversationInstance(mConvHandle, 0, mSharedFlowConvHandle, mAutoHoldMode);
             resip_assert(conversation);
       }
       resip::Message* clone() const { resip_assert(0); return 0; }

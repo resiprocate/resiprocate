@@ -27,6 +27,7 @@ class DialogUsageManager;
 namespace recon
 {
 class Conversation;
+class RelatedConversationSet;
 class Participant;
 class UserAgent;
 class ConversationProfile;
@@ -572,6 +573,10 @@ public:
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
    ///////////////////////////////////////////////////////////////////////
 
+   virtual Conversation *createConversationInstance(ConversationHandle handle,
+      RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
+      ConversationHandle sharedMediaInterfaceConvHandle,
+      ConversationManager::AutoHoldMode autoHoldMode) = 0;
    virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) = 0;
    virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) = 0;
    virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;

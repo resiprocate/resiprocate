@@ -33,6 +33,7 @@
 #include "SipXLocalParticipant.hxx"
 #include "SipXMediaResourceParticipant.hxx"
 #include "SipXRemoteParticipant.hxx"
+#include "Conversation.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -529,6 +530,15 @@ SipXConversationManager::supportsJoin(ConversationHandle sourceConvHandle, Conve
       }
    }
    return false;
+}
+
+Conversation *
+SipXConversationManager::createConversationInstance(ConversationHandle handle,
+      RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
+      ConversationHandle sharedMediaInterfaceConvHandle,
+      ConversationManager::AutoHoldMode autoHoldMode)
+{
+   return new Conversation(handle, *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
 }
 
 LocalParticipant *
