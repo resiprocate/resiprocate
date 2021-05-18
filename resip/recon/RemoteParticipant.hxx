@@ -33,7 +33,7 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipant : public Participant, public resip::AppDialog
+class RemoteParticipant : public virtual Participant, public resip::AppDialog
 {
 public:
    RemoteParticipant(ParticipantHandle partHandle,   // UAC

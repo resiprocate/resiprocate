@@ -8,6 +8,7 @@
 #include "RemoteParticipant.hxx"
 #include "SipXRemoteParticipant.hxx"
 #include "SipXRemoteParticipantDialogSet.hxx"
+#include "SipXParticipant.hxx"
 
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
@@ -41,7 +42,7 @@ class SipXConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SipXRemoteParticipant : public RemoteParticipant
+class SipXRemoteParticipant : public virtual RemoteParticipant, public virtual SipXParticipant
 {
 public:
    SipXRemoteParticipant(ParticipantHandle partHandle,   // UAC

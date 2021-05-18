@@ -1,47 +1,59 @@
-#if !defined(SipXLocalParticipant_hxx)
-#define SipXLocalParticipant_hxx
-
-#include "SipXConversationManager.hxx"
-#include "LocalParticipant.hxx"
+#include "ConversationManager.hxx"
+#include "ReconSubsystem.hxx"
 #include "SipXParticipant.hxx"
+#include "Conversation.hxx"
+#include "UserAgent.hxx"
 
-namespace recon
+#include <rutil/Log.hxx>
+#include <rutil/Logger.hxx>
+
+using namespace recon;
+using namespace resip;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+
+SipXParticipant::SipXParticipant(ParticipantHandle partHandle,
+                         SipXConversationManager& sipXConversationManager)
+: Participant(partHandle, sipXConversationManager),
+  mSipXConversationManager(sipXConversationManager)
 {
-class ConversationManager;
-
-/**
-  This class represents a local participant.
-  A local participant is a representation of the local source (speaker) 
-  and sink (microphone).  The local participant is generally only 
-  created once and is added to conversations in which the local speaker 
-  and/or microphone should be involved. 
-
-  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
-*/
-
-class SipXLocalParticipant : public virtual LocalParticipant, public virtual SipXParticipant
-{
-   public:  
-      SipXLocalParticipant(ParticipantHandle partHandle,
-                       SipXConversationManager& conversationManager);
-      virtual ~SipXLocalParticipant();
-
-      virtual int getConnectionPortOnBridge();
-      virtual bool hasInput() { return true; }
-      virtual bool hasOutput() { return true; }
-      virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
-
-   private:
-      int mLocalPortOnBridge;
-};
-
 }
 
-#endif
+SipXParticipant::SipXParticipant(SipXConversationManager& sipXConversationManager)
+: Participant(sipXConversationManager),
+  mSipXConversationManager(sipXConversationManager)
+{
+}
 
+SipXParticipant::~SipXParticipant()
+{
+}
+
+
+std::shared_ptr<SipXMediaInterface>
+SipXParticipant::getMediaInterface()
+{
+   switch(mSipXConversationManager.getMediaInterfaceMode())
+   {
+   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
+      resip_assert(mSipXConversationManager.getMediaInterface() != 0);
+      return mSipXConversationManager.getMediaInterface();
+   case SipXConversationManager::sipXConversationMediaInterfaceMode:
+      // Note:  For this mode, the recon code ensures that all conversations a participant 
+      //        is added to will share the same media interface, so using the first 
+      //        conversation is sufficient.
+      resip_assert(mConversations.begin()->second->getMediaInterface() != 0);
+      return mConversations.begin()->second->getMediaInterface();
+   default:
+      resip_assert(false);
+      return nullptr;
+   }
+}
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -112,50 +112,27 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
    }
    mConversations.clear();  // Clear so that we won't remove replaced reference from Conversation 
    mHandle = 0;             // Set to 0 so that we won't remove replaced reference from ConversationManager
-   resip_assert(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode() == SipXConversationManager::sipXGlobalMediaInterfaceMode ||  // We are either running in sipXGlobalMediaInterfaceMode
+   resip_assert((!mConversationManager.supportsMultipleConversations()) ||  // We are either running in sipXGlobalMediaInterfaceMode
           firstAssociatedConversation != 0);                                                                    // or we are running in sipXConversationMediaInterfaceMode and must have belonged to a conversation
    applyBridgeMixWeights(firstAssociatedConversation);  // Ensure we remove ourselves from the bridge mix matrix
-}
-
-std::shared_ptr<SipXMediaInterface>
-Participant::getMediaInterface()
-{
-   switch(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode())
-   {
-   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
-      resip_assert(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterface() != 0);
-      return dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterface();
-   case SipXConversationManager::sipXConversationMediaInterfaceMode:
-      // Note:  For this mode, the recon code ensures that all conversations a participant 
-      //        is added to will share the same media interface, so using the first 
-      //        conversation is sufficient.
-      resip_assert(mConversations.begin()->second->getMediaInterface() != 0);
-      return mConversations.begin()->second->getMediaInterface();
-   default:
-      resip_assert(false);
-      return nullptr;
-   }
 }
 
 void
 Participant::applyBridgeMixWeights()
 {
    BridgeMixer* mixer=0;
-   switch(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode())
+   if(!mConversationManager.supportsMultipleConversations())
    {
-   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
       resip_assert(mConversationManager.getBridgeMixer() != 0);
       mixer = mConversationManager.getBridgeMixer().get();
-      break;
-   case SipXConversationManager::sipXConversationMediaInterfaceMode:
+   }
+   else
+   {
       // Note:  For this mode, the recon code ensures that all conversations a participant 
       //        is added to will share the same media interface, so using the first 
       //        conversation is sufficient.
       resip_assert(mConversations.begin()->second->getBridgeMixer() != 0);
       mixer = mConversations.begin()->second->getBridgeMixer();
-      break;
-   default:
-      break;
    }
    resip_assert(mixer);
    if(mixer)
@@ -173,18 +150,15 @@ void
 Participant::applyBridgeMixWeights(Conversation* removedConversation)
 {
    BridgeMixer* mixer=0;
-   switch(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode())
+   if(!mConversationManager.supportsMultipleConversations())
    {
-   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
       resip_assert(mConversationManager.getBridgeMixer() != 0);
       mixer = mConversationManager.getBridgeMixer().get();
-      break;
-   case SipXConversationManager::sipXConversationMediaInterfaceMode:
+   }
+   else
+   {
       resip_assert(removedConversation->getBridgeMixer() != 0);
       mixer = removedConversation->getBridgeMixer();
-      break;
-   default:
-      break;
    }
    resip_assert(mixer);
    if(mixer)

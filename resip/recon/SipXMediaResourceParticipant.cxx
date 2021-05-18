@@ -45,9 +45,11 @@ static const Data loudfastbusyTone("loudfastbusy");
 
 
 SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle partHandle,
-                                                   ConversationManager& conversationManager,
+                                                   SipXConversationManager& sipXConversationManager,
                                                    const Uri& mediaUrl)
-: MediaResourceParticipant(partHandle, conversationManager, mediaUrl),
+: Participant(partHandle, sipXConversationManager),
+  MediaResourceParticipant(partHandle, sipXConversationManager, mediaUrl),
+  SipXParticipant(partHandle, sipXConversationManager),
   mStreamPlayer(0),
   mToneGenPortOnBridge(-1),
   mFromFilePortOnBridge(-1)

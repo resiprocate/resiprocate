@@ -284,13 +284,13 @@ SipXRemoteParticipantDialogSet::getMediaInterface()
       // Get the media interface from the active participant
       if(getUACOriginalRemoteParticipant())
       {
-         mMediaInterface = getUACOriginalRemoteParticipant()->getMediaInterface();
+         mMediaInterface = dynamic_cast<SipXParticipant*>(getUACOriginalRemoteParticipant())->getMediaInterface();
       }
       else if(mDialogs.size() > 0)
       {
          // All participants in the set will have the same media interface - query from first
          resip_assert(mDialogs.begin()->second);
-         mMediaInterface = mDialogs.begin()->second->getMediaInterface();
+         mMediaInterface = dynamic_cast<SipXParticipant*>(mDialogs.begin()->second)->getMediaInterface();
       }
    }
    resip_assert(mMediaInterface);

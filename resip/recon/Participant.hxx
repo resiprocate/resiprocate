@@ -2,7 +2,6 @@
 #define Participant_hxx
 
 #include "ConversationManager.hxx"
-#include "SipXConversationManager.hxx"
 #include <map>
 
 namespace recon
@@ -46,7 +45,6 @@ class Participant
       virtual bool hasInput() = 0;
       virtual bool hasOutput() = 0;
 
-      virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();
       virtual void applyBridgeMixWeights();
       virtual void applyBridgeMixWeights(Conversation* removedConversation);
 

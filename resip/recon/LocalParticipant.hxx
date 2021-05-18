@@ -18,7 +18,7 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class LocalParticipant : public Participant
+class LocalParticipant : public virtual Participant
 {
    public:  
       LocalParticipant(ParticipantHandle partHandle,

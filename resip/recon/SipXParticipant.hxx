@@ -1,38 +1,37 @@
-#if !defined(SipXLocalParticipant_hxx)
-#define SipXLocalParticipant_hxx
+#if !defined(SipXParticipant_hxx)
+#define SipXParticipant_hxx
 
-#include "SipXConversationManager.hxx"
-#include "LocalParticipant.hxx"
-#include "SipXParticipant.hxx"
+#include "Participant.hxx"
+#include <map>
 
 namespace recon
 {
-class ConversationManager;
+class SipXConversationManager;
 
 /**
-  This class represents a local participant.
-  A local participant is a representation of the local source (speaker) 
-  and sink (microphone).  The local participant is generally only 
-  created once and is added to conversations in which the local speaker 
-  and/or microphone should be involved. 
+  This is the base class for a RemoteParticipant, LocalParticipant and a
+  MediaResourceParticipant.  It implements the common functionality of all
+  participants, such as managing which Conversations that are participant
+  belongs to.
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SipXLocalParticipant : public virtual LocalParticipant, public virtual SipXParticipant
+class SipXParticipant : public virtual Participant
 {
    public:  
-      SipXLocalParticipant(ParticipantHandle partHandle,
-                       SipXConversationManager& conversationManager);
-      virtual ~SipXLocalParticipant();
 
-      virtual int getConnectionPortOnBridge();
-      virtual bool hasInput() { return true; }
-      virtual bool hasOutput() { return true; }
-      virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
+      SipXParticipant(ParticipantHandle partHandle,
+                  SipXConversationManager& conversationManager);
 
-   private:
-      int mLocalPortOnBridge;
+      SipXParticipant(SipXConversationManager& conversationManager);
+
+      virtual ~SipXParticipant();
+
+      virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();
+
+   protected:
+      SipXConversationManager &mSipXConversationManager;
 };
 
 }
@@ -42,6 +41,7 @@ class SipXLocalParticipant : public virtual LocalParticipant, public virtual Sip
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

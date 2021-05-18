@@ -58,6 +58,7 @@ public:
 
 protected:
    friend class Participant;
+   friend class SipXParticipant;
    friend class LocalParticipant;
    friend class SipXLocalParticipant;
    friend class RemoteParticipant;

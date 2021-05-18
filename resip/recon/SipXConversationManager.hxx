@@ -229,6 +229,7 @@ private:
    friend class OutputBridgeMixWeightsCmd;
 
    friend class Participant;
+   friend class SipXParticipant;
 
    friend class RemoteParticipant;
    friend class SipXRemoteParticipant;

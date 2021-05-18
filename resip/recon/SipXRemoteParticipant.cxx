@@ -59,7 +59,9 @@ SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
                                      SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: RemoteParticipant(partHandle, sipXConversationManager, dum, remoteParticipantDialogSet)
+: Participant(partHandle, sipXConversationManager),
+  RemoteParticipant(partHandle, sipXConversationManager, dum, remoteParticipantDialogSet),
+  SipXParticipant(partHandle, sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -68,7 +70,9 @@ SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
 SipXRemoteParticipant::SipXRemoteParticipant(SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: RemoteParticipant(sipXConversationManager, dum, remoteParticipantDialogSet)
+: Participant(sipXConversationManager),
+  RemoteParticipant(sipXConversationManager, dum, remoteParticipantDialogSet),
+  SipXParticipant(sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -270,7 +274,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 #ifdef USE_SSL
    else if(getDialogSet().getSecureMediaMode() == ConversationProfile::SrtpDtls)
    {
-      if(dynamic_cast<SipXConversationManager&>(mConversationManager).getFlowManager().getDtlsFactory())
+      if(mSipXConversationManager.getFlowManager().getDtlsFactory())
       {
          // Note:  We could add the fingerprint and setup attributes to the "SDP Capabilties Negotiation" 
          //        potential configuration if secure media is not required - but other implementations 
@@ -279,7 +283,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 
          // Add fingerprint attribute
          char fingerprint[100];
-         dynamic_cast<SipXConversationManager&>(mConversationManager).getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
+         mSipXConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
          //offer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
          offer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
          //offer.session().addAttribute("acap", "1 fingerprint:SHA-1 " + Data(fingerprint));
@@ -405,7 +409,7 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
          }
       }
 #ifdef USE_SSL
-      else if(dynamic_cast<SipXConversationManager&>(mConversationManager).getFlowManager().getDtlsFactory() &&
+      else if(mSipXConversationManager.getFlowManager().getDtlsFactory() &&
               (getDialogSet().getSecureMediaMode() == ConversationProfile::SrtpDtls ||
                protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP))  // allow accepting of DTLS SAVP profiles, even if DTLS-SRTP is not enabled as a SecureMedia mode
       {
@@ -419,7 +423,7 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
 
             // Add fingerprint attribute to answer
             char fingerprint[100];
-            dynamic_cast<SipXConversationManager&>(mConversationManager).getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
+            mSipXConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
             //answer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
             answer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
 

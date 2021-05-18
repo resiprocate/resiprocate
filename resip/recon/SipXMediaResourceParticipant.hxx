@@ -5,6 +5,7 @@
 
 #include "ConversationManager.hxx"
 #include "MediaResourceParticipant.hxx"
+#include "SipXParticipant.hxx"
 
 // sipX includes
 #include "mp/MpPlayerListener.h"
@@ -24,11 +25,11 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SipXMediaResourceParticipant : public MediaResourceParticipant, public MpPlayerListener
+class SipXMediaResourceParticipant : public virtual MediaResourceParticipant, public virtual SipXParticipant, public MpPlayerListener
 {
 public:  
    SipXMediaResourceParticipant(ParticipantHandle partHandle,
-      ConversationManager& conversationManager,
+      SipXConversationManager& sipXConversationManager,
       const resip::Uri& mediaUrl);  
    virtual ~SipXMediaResourceParticipant();
 

@@ -37,7 +37,7 @@ class MediaResourceParticipantDeleterCmd : public resip::DumCommand
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class MediaResourceParticipant : public Participant
+class MediaResourceParticipant : public virtual Participant
 {
 public:  
    typedef enum
