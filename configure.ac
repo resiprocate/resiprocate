@@ -265,6 +265,13 @@ AC_ARG_WITH(recon,
  [AC_DEFINE_UNQUOTED(BUILD_RECON, , BUILD_RECON)
  AM_CONDITIONAL(BUILD_RECON, true)], )
 
+AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, false)
+AC_ARG_ENABLE(recon-local-hw-tests,
+[  --enable-recon-local-hw-tests Attempt to use local audio hardware in unit tests],
+ [AC_DEFINE_UNQUOTED(RECON_LOCAL_HW_TESTS, , RECON_LOCAL_HW_TESTS)
+ AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, true)
+], )
+
 AM_CONDITIONAL(BUILD_P2P, false)
 AC_ARG_WITH(p2p,
 [  --with-p2p              Build P2P, links against S2C and SSL, unfinished],
