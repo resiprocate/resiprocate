@@ -2,6 +2,7 @@
 #define SipXParticipant_hxx
 
 #include "Participant.hxx"
+#include "SipXMediaInterface.hxx"
 #include <map>
 
 namespace recon
