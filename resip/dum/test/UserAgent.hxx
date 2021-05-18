@@ -136,7 +136,7 @@ class UserAgent : public CommandLineParser,
 
       std::shared_ptr<MasterProfile> mProfile;
       FdPollGrp *mPollGrp;
-      EventThreadInterruptor *mSelIntr;
+      EventThreadInterruptor *mEventIntr;
       Security* mSecurity;
       SipStack mStack;
       DialogUsageManager mDum;

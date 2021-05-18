@@ -293,7 +293,7 @@ private:
    std::shared_ptr<resip::MasterProfile> mProfile;
    resip::Security* mSecurity;
    resip::FdPollGrp *mPollGrp;
-   resip::EventThreadInterruptor *mSelectInterruptor;
+   resip::EventThreadInterruptor *mEventInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
    resip::EventStackThread mStackThread;

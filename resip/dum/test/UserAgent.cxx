@@ -36,15 +36,15 @@ UserAgent::UserAgent(int argc, char** argv) :
    CommandLineParser(argc, argv),
    mProfile(std::make_shared<MasterProfile>()),
    mPollGrp(FdPollGrp::create()),
-   mSelIntr(new EventThreadInterruptor(*mPollGrp)),
+   mEventIntr(new EventThreadInterruptor(*mPollGrp)),
 #if defined(USE_SSL)
    mSecurity(new Security(mCertPath)),
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, DnsStub::EmptyNameserverList, mSelIntr),
+   mStack(mSecurity, DnsStub::EmptyNameserverList, mEventIntr, false /* stateless */, 0, 0, mPollGrp),
    mDum(mStack),
-   mStackThread(mStack, *mSelIntr, *mPollGrp)
+   mStackThread(mStack, *mEventIntr, *mPollGrp)
 {
    Log::initialize(mLogType, mLogLevel, argv[0]);
 

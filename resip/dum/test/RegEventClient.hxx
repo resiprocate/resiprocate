@@ -83,7 +83,7 @@ class RegEventClient  : public resip::ClientSubscriptionHandler,
    protected:
       resip::Security* mSecurity;
       resip::FdPollGrp *mPollGrp;
-      resip::EventThreadInterruptor *mSelIntr;
+      resip::EventThreadInterruptor *mEventIntr;
       resip::SipStack mStack;
       resip::EventStackThread mStackThread;
       resip::DialogUsageManager mDum;
