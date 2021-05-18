@@ -2,13 +2,6 @@
 #include "config.h"
 #endif
 
-#include "SipXConversationManager.hxx"
-
-#include "sdp/SdpHelperResip.hxx"
-#include "sdp/Sdp.hxx"
-
-#include <sdp/SdpCodec.h>  // sipX SdpCodec
-
 #include "RemoteParticipant.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
@@ -34,7 +27,6 @@
 #include <utility>
 
 using namespace recon;
-using namespace sdpcontainer;
 using namespace resip;
 using namespace std;
 

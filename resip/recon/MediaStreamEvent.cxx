@@ -1,6 +1,6 @@
 #include "MediaStreamEvent.hxx"
 
-#include "SipXRemoteParticipantDialogSet.hxx"
+#include "RemoteParticipantDialogSet.hxx"
 
 #include <rutil/Logger.hxx>
 

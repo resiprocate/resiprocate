@@ -4,7 +4,6 @@
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
 #include "LocalParticipant.hxx"
-#include <CpTopologyGraphInterface.h>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
