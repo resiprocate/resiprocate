@@ -228,6 +228,7 @@ SipXMediaInterface::post(const OsMsg& msg)
          break;
       case MiNotification::MI_NOTF_VOICE_STARTED:
          {
+#ifndef SIPX_NO_RECORD
             MediaEvent::MediaDirection direction = (pNotfMsg->getSourceId().contains(DIRECTION_IN_SUFFIX) || pNotfMsg->getSourceId().contains(MIC_NAME_SUFFIX)) ? MediaEvent::DIRECTION_IN : MediaEvent::DIRECTION_OUT;
             DebugLog(<< "MediaInterface: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId() << ", direction=" << (direction == MediaEvent::DIRECTION_IN ? "IN" : "OUT"));
             ParticipantHandle partHandle = getParticipantHandleForConnectionId(pNotfMsg->getConnectionId());
@@ -235,10 +236,12 @@ SipXMediaInterface::post(const OsMsg& msg)
             // Get event into dum queue, so that callback is on dum thread
             MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::VOICE_STARTED, direction);
             mConversationManager.post(mevent);
+#endif
          }
          break;
       case MiNotification::MI_NOTF_VOICE_STOPPED:
          {
+#ifndef SIPX_NO_RECORD
             MediaEvent::MediaDirection direction = (pNotfMsg->getSourceId().contains(DIRECTION_IN_SUFFIX) || pNotfMsg->getSourceId().contains(MIC_NAME_SUFFIX)) ? MediaEvent::DIRECTION_IN : MediaEvent::DIRECTION_OUT;
             DebugLog(<< "MediaInterface: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId() << ", direction=" << (direction == MediaEvent::DIRECTION_IN ? "IN" : "OUT"));
             ParticipantHandle partHandle = getParticipantHandleForConnectionId(pNotfMsg->getConnectionId());
@@ -246,6 +249,7 @@ SipXMediaInterface::post(const OsMsg& msg)
             // Get event into dum queue, so that callback is on dum thread
             MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::VOICE_STOPPED, direction);
             mConversationManager.post(mevent);
+#endif
          }
          break;
 #ifndef SIPX_NO_RECORD
