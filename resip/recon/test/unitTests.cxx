@@ -16,6 +16,8 @@
 extern int sdpTests(void);
 #endif 
 
+//#define RECON_LOCAL_HW_TESTS
+
 ///////////////////////////////////////////////////////////////////////////
 // SCENARIOS UNDER TEST
 //
@@ -149,11 +151,11 @@ public:
       ConversationHandle convHandle = createConversation();    
 #ifdef RECON_LOCAL_HW_TESTS
       mLocalParticipant = createLocalParticipant();
+      addParticipant(convHandle, mLocalParticipant);
 #else
       Uri tone0("tone:0");
       mLocalParticipant = createMediaResourceParticipant(convHandle, tone0);
 #endif
-      addParticipant(convHandle, mLocalParticipant);
       createRemoteParticipant(convHandle, bobUri, ConversationManager::ForkSelectAutomatic);
    }
 

@@ -283,14 +283,15 @@ class AddParticipantCmd  : public resip::DumCommand
 
          if (participant && conversation)
          {
-            // Participants can only belong to multiple conversations if they have the same media interface
-            if (participant->getConversations().size() > 0)
+            // Non-local Participants can only belong to multiple conversations if they have the same media interface
+            LocalParticipant* localPart = dynamic_cast<LocalParticipant*>(participant);
+            if (!localPart && participant->getConversations().size() > 0)
             {
                // All conversations they are currently in will have the same media interface, just check that first conversation's media interface
                // matches the new conversation we are trying to add to.
                if (!mConversationManager->canConversationsMixParticipants(participant->getConversations().begin()->second, conversation))
                {
-                  WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "AddParticipantCmd: non-local participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
                   return;
                }
             }
@@ -332,6 +333,17 @@ class RemoveParticipantCmd  : public resip::DumCommand
          Conversation* conversation = mConversationManager->getConversation(mConvHandle);
          if(participant && conversation)
          {
+            // When using multiple media interfaces, only local participants can exist outside of any conversations.  We need to
+            // prevent removal of other participant types from all conversations in this mode.
+            if (mConversationManager->supportsMultipleMediaInterfaces() && participant->getNumConversations() == 1)
+            {
+               LocalParticipant* localPart = dynamic_cast<LocalParticipant*>(participant);
+               if (!localPart)
+               {
+                  WarningLog(<< "RemoveParticipantCmd: you cannot remove non-local participants from all conversations when in sipXConversationMediaInterfaceMode.");
+                  return;
+               }
+            }
             conversation->removeParticipant(participant);
          }
          else
@@ -379,12 +391,16 @@ class MoveParticipantCmd  : public resip::DumCommand
                return;
             }
 
-            // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
-            // media interface
-            if (!mConversationManager->canConversationsMixParticipants(sourceConversation, destConversation))
+            LocalParticipant* localPart = dynamic_cast<LocalParticipant*>(participant);
+            if (!localPart)
             {
-               WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
-               return;
+               // Safety check for non-local participants when running in sipXConversationMediaInterfaceMode 
+               // - ensure both conversation are using the same media interface
+               if (!mConversationManager->canConversationsMixParticipants(sourceConversation, destConversation))
+               {
+                  WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
+                  return;
+               }
             }
 
             // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
