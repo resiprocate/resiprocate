@@ -44,7 +44,7 @@ Conversation::Conversation(ConversationHandle handle,
    }
    InfoLog(<< "Conversation created, handle=" << mHandle);
 
-   if(mConversationManager.supportsMultipleConversations())
+   if(mConversationManager.supportsMultipleMediaInterfaces())
    {
       // Check if sharedMediaInterfaceConvHandle was passed in, and if so use the same media interface and bridge mixer that, that
       // conversation is using

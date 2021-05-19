@@ -24,7 +24,7 @@ SipXConversation::SipXConversation(ConversationHandle handle,
 : Conversation(handle, sipXConversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
   mSipXConversationManager(sipXConversationManager)
 {
-   if(mSipXConversationManager.supportsMultipleConversations())
+   if(mSipXConversationManager.supportsMultipleMediaInterfaces())
    {
       if (isSharingMediaInterfaceWithAnotherConversation())
       {

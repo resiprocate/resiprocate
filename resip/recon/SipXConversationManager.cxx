@@ -499,37 +499,19 @@ SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
 }
 
 bool
-SipXConversationManager::supportsMultipleConversations()
+SipXConversationManager::supportsMultipleMediaInterfaces()
 {
    return (getMediaInterfaceMode() == SipXConversationManager::sipXConversationMediaInterfaceMode);
 }
 
 bool
-SipXConversationManager::supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
+SipXConversationManager::canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2)
 {
-   SipXConversation* sourceConversation = dynamic_cast<SipXConversation*>(getConversation(sourceConvHandle));
-   SipXConversation* destConversation = dynamic_cast<SipXConversation*>(getConversation(destConvHandle));
+   assert(conversation1);
+   assert(conversation2);
 
-   if (sourceConversation && destConversation)
-   {
-      if(!supportsMultipleConversations())
-      {
-         return false;
-      }
-      return (sourceConversation->getMediaInterface().get() == destConversation->getMediaInterface().get());
-   }
-   else
-   {
-      if (!sourceConversation)
-      {
-         WarningLog(<< "supportsJoin: invalid source conversation handle.");
-      }
-      if (!destConversation)
-      {
-         WarningLog(<< "supportsJoin: invalid destination conversation handle.");
-      }
-   }
-   return false;
+   // You can only add non-local participants to 2 different conversations if they share the same MediaInterface
+   return (((SipXConversation*)conversation1)->getMediaInterface().get() == ((SipXConversation*)conversation2)->getMediaInterface().get());
 }
 
 Conversation *

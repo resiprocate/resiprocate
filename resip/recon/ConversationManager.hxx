@@ -585,8 +585,8 @@ public:
          ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
          std::shared_ptr<ConversationProfile> conversationProfile = nullptr) = 0;
 
-   virtual bool supportsMultipleConversations() = 0;
-   virtual bool supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle) = 0;
+   virtual bool supportsMultipleMediaInterfaces() = 0;
+   virtual bool canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
 
 protected:
 

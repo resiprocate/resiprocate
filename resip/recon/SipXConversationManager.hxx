@@ -213,8 +213,8 @@ public:
 
    MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
 
-   virtual bool supportsMultipleConversations() override;
-   virtual bool supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle) override;
+   virtual bool supportsMultipleMediaInterfaces() override;
+   virtual bool canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2) override;
 
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
@@ -303,7 +303,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
