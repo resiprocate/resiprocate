@@ -44,7 +44,7 @@ Conversation::Conversation(ConversationHandle handle,
    }
    InfoLog(<< "Conversation created, handle=" << mHandle);
 
-   if(dynamic_cast<SipXConversationManager&>(mConversationManager).getMediaInterfaceMode() == SipXConversationManager::sipXConversationMediaInterfaceMode)
+   if(mConversationManager.supportsMultipleConversations())
    {
       // Check if sharedMediaInterfaceConvHandle was passed in, and if so use the same media interface and bridge mixer that, that
       // conversation is using
@@ -53,19 +53,10 @@ Conversation::Conversation(ConversationHandle handle,
          Conversation* sharedFlowConversation = mConversationManager.getConversation(sharedMediaInterfaceConvHandle);
          if (sharedFlowConversation)
          {
-            mMediaInterface = sharedFlowConversation->getMediaInterface();
             mBridgeMixer = sharedFlowConversation->getBridgeMixerShared();
             mSharingMediaInterfaceWithAnotherConversation = true;
          }
       }
-      
-      if(!mSharingMediaInterfaceWithAnotherConversation)
-      {
-         dynamic_cast<SipXConversationManager&>(mConversationManager).createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
-                                                           mMediaInterface,
-                                                           mBridgeMixer);
-      }
-      InfoLog(<< "mBridgeMixer " << mBridgeMixer.use_count() << " " << mBridgeMixer.get());
    }
 }
 
@@ -78,7 +69,6 @@ Conversation::~Conversation()
    }
    mConversationManager.onConversationDestroyed(mHandle);
    mBridgeMixer.reset();       // Make sure the mixer is destroyed before the media interface
-   mMediaInterface.reset();
    InfoLog(<< "Conversation destroyed, handle=" << mHandle);
 }
 

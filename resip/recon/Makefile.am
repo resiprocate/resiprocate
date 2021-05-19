@@ -39,6 +39,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         MediaEvent.cxx \
         SipXConversationManager.cxx \
         SipXMediaInterface.cxx \
+        SipXConversation.cxx \
         SipXBridgeMixer.cxx \
         SipXParticipant.cxx \
         SipXLocalParticipant.cxx \
@@ -91,6 +92,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         sdp/Sdp.hxx \
         SipXConversationManager.hxx \
         SipXMediaInterface.hxx \
+        SipXConversation.hxx \
         SipXBridgeMixer.hxx \
         SipXParticipant.hxx \
         SipXLocalParticipant.hxx \

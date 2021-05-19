@@ -33,6 +33,7 @@
     <ClCompile Include="UserAgentRegistration.cxx" />
     <ClCompile Include="UserAgentServerAuthManager.cxx" />
     <ClCompile Include="SipXBridgeMixer.cxx" />
+    <ClCompile Include="SipXConversation.cxx" />
     <ClCompile Include="SipXConversationManager.cxx" />
     <ClCompile Include="SipXHelper.cxx" />
     <ClCompile Include="SipXParticipant.cxx" />
@@ -79,6 +80,7 @@
     <ClInclude Include="UserAgentMasterProfile.hxx" />
     <ClInclude Include="UserAgentRegistration.hxx" />
     <ClInclude Include="SipXBridgeMixer.hxx" />
+    <ClInclude Include="SipXConversation.hxx" />
     <ClInclude Include="SipXConversationManager.hxx" />
     <ClInclude Include="SipXHelper.hxx" />
     <ClInclude Include="SipXParticipant.hxx" />

@@ -230,6 +230,7 @@ private:
    // Note:  In general the following fns are not thread safe and must be called from dum process 
    //        loop only
    friend class Conversation;
+   friend class SipXConversation;
    friend class OutputBridgeMixWeightsCmd;
 
    friend class Participant;

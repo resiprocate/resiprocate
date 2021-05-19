@@ -1,57 +1,52 @@
-#include "SipXConversationManager.hxx"
-#include "ReconSubsystem.hxx"
-#include "SipXParticipant.hxx"
 #include "SipXConversation.hxx"
+#include "Participant.hxx"
+#include "LocalParticipant.hxx"
+#include "RemoteParticipant.hxx"
+#include "MediaResourceParticipant.hxx"
 #include "UserAgent.hxx"
+#include "RelatedConversationSet.hxx"
+#include "ReconSubsystem.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
+#include <rutil/WinLeakCheck.hxx>
 
 using namespace recon;
 using namespace resip;
-using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-SipXParticipant::SipXParticipant(ParticipantHandle partHandle,
-                         SipXConversationManager& sipXConversationManager)
-: Participant(partHandle, sipXConversationManager),
+SipXConversation::SipXConversation(ConversationHandle handle,
+                           SipXConversationManager& sipXConversationManager,
+                           RelatedConversationSet* relatedConversationSet,
+                           ConversationHandle sharedMediaInterfaceConvHandle,
+                           ConversationManager::AutoHoldMode autoHoldMode)
+: Conversation(handle, sipXConversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
   mSipXConversationManager(sipXConversationManager)
 {
-}
-
-SipXParticipant::SipXParticipant(SipXConversationManager& sipXConversationManager)
-: Participant(sipXConversationManager),
-  mSipXConversationManager(sipXConversationManager)
-{
-}
-
-SipXParticipant::~SipXParticipant()
-{
-}
-
-
-std::shared_ptr<SipXMediaInterface>
-SipXParticipant::getMediaInterface()
-{
-   switch(mSipXConversationManager.getMediaInterfaceMode())
+   if(mSipXConversationManager.supportsMultipleConversations())
    {
-   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
-      resip_assert(mSipXConversationManager.getMediaInterface() != 0);
-      return mSipXConversationManager.getMediaInterface();
-   case SipXConversationManager::sipXConversationMediaInterfaceMode:
-   {
-      // Note:  For this mode, the recon code ensures that all conversations a participant 
-      //        is added to will share the same media interface, so using the first 
-      //        conversation is sufficient.
-      SipXConversation *firstConversation = dynamic_cast<SipXConversation*>(mConversations.begin()->second);
-      resip_assert(firstConversation->getMediaInterface() != 0);
-      return firstConversation->getMediaInterface();
+      if (isSharingMediaInterfaceWithAnotherConversation())
+      {
+         SipXConversation* sharedFlowConversation = dynamic_cast<SipXConversation*>(mSipXConversationManager.getConversation(sharedMediaInterfaceConvHandle));
+         mMediaInterface = sharedFlowConversation->getMediaInterface();
+      }
+      else
+      {
+         std::shared_ptr<BridgeMixer> mixer;
+         mSipXConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
+                                                           mMediaInterface,
+                                                           mixer);
+         setBridgeMixer(mixer);
+      }
    }
-   default:
-      resip_assert(false);
-      return nullptr;
-   }
+   InfoLog(<< "mBridgeMixer " << getBridgeMixerShared().use_count() << " " << getBridgeMixer());
+}
+
+SipXConversation::~SipXConversation()
+{
+   getBridgeMixerShared().reset();       // Make sure the mixer is destroyed before the media interface
+   mMediaInterface.reset();
 }
 
 /* ====================================================================

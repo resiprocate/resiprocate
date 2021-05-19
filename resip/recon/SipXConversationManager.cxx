@@ -26,7 +26,7 @@
 #include "UserAgent.hxx"
 #include "SipXConversationManager.hxx"
 #include "ConversationManagerCmds.hxx"
-#include "Conversation.hxx"
+#include "SipXConversation.hxx"
 #include "Participant.hxx"
 #include "SipXBridgeMixer.hxx"
 #include "DtmfEvent.hxx"
@@ -507,8 +507,8 @@ SipXConversationManager::supportsMultipleConversations()
 bool
 SipXConversationManager::supportsJoin(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
 {
-   Conversation* sourceConversation = getConversation(sourceConvHandle);
-   Conversation* destConversation = getConversation(destConvHandle);
+   SipXConversation* sourceConversation = dynamic_cast<SipXConversation*>(getConversation(sourceConvHandle));
+   SipXConversation* destConversation = dynamic_cast<SipXConversation*>(getConversation(destConvHandle));
 
    if (sourceConversation && destConversation)
    {
@@ -538,7 +538,7 @@ SipXConversationManager::createConversationInstance(ConversationHandle handle,
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode)
 {
-   return new Conversation(handle, *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
+   return new SipXConversation(handle, *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
 }
 
 LocalParticipant *
