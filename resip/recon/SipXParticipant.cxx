@@ -1,4 +1,4 @@
-#include "ConversationManager.hxx"
+#include "SipXConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "SipXParticipant.hxx"
 #include "Conversation.hxx"
