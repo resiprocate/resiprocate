@@ -179,26 +179,6 @@ SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHand
    return convHandle;
 }
 
-ParticipantHandle 
-SipXConversationManager::createLocalParticipant()
-{
-   if (isShuttingDown()) return 0;  // Don't allow new things to be created when we are shutting down
-   ParticipantHandle partHandle = 0;
-   if(mLocalAudioEnabled)
-   {
-      partHandle = getNewParticipantHandle();
-
-      CreateLocalParticipantCmd* cmd = new CreateLocalParticipantCmd(this, partHandle);
-      post(cmd);
-   }
-   else
-   {
-      WarningLog(<< "createLocalParticipant called when local audio support is disabled.");
-   }
-
-   return partHandle;
-}
-
 void 
 SipXConversationManager::outputBridgeMatrix(ConversationHandle convHandle)
 {

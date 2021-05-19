@@ -138,7 +138,18 @@ ConversationManager::createLocalParticipant()
 {
    if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = 0;
-   WarningLog(<< "createLocalParticipant called when local audio support is disabled.");
+   if (supportsLocalAudio())
+   {
+      partHandle = getNewParticipantHandle();
+
+      CreateLocalParticipantCmd* cmd = new CreateLocalParticipantCmd(this, partHandle);
+      post(cmd);
+   }
+   else
+   {
+      WarningLog(<< "createLocalParticipant called when local audio support is disabled.");
+   }
+
    return partHandle;
 }
 

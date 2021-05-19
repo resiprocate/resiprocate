@@ -248,7 +248,7 @@ public:
    virtual ParticipantHandle createMediaResourceParticipant(ConversationHandle convHandle, const resip::Uri& mediaUrl);
 
    /**
-     Creates a new local participant in the specified conversation.
+     Creates a new local participant in the specified conversation (if supported).
      A local participant is a representation of the local source (speaker)
      and sink (microphone).  The local participant is generally only
      created once and is added to conversations in which the local speaker
@@ -587,6 +587,7 @@ public:
 
    virtual bool supportsMultipleMediaInterfaces() = 0;
    virtual bool canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
+   virtual bool supportsLocalAudio() = 0;
 
 protected:
 

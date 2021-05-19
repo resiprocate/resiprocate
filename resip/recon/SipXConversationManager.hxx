@@ -157,17 +157,6 @@ public:
    ///////////////////////////////////////////////////////////////////////
 
    /**
-     Creates a new local participant in the specified conversation.
-     A local participant is a representation of the local source (speaker)
-     and sink (microphone).  The local participant is generally only
-     created once and is added to conversations in which the local speaker
-     and/or microphone should be involved.
-
-     @return A handle to the newly created local participant
-   */
-   virtual ParticipantHandle createLocalParticipant() override;
-
-   /**
      Logs a multiline representation of the current state
      of the mixing matrix.
 
@@ -215,6 +204,7 @@ public:
 
    virtual bool supportsMultipleMediaInterfaces() override;
    virtual bool canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2) override;
+   virtual bool supportsLocalAudio() override { return mLocalAudioEnabled; }
 
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
