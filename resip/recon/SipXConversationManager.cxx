@@ -7,9 +7,10 @@
 #include <os/OsConfigDb.h>
 #include <mp/MpCodecFactory.h>
 #include <mp/MprBridge.h>
+#include <mp/MpResourceFactory.h>
 #include <mp/MpResourceTopology.h>
 #include <mi/CpMediaInterfaceFactoryFactory.h>
-#include <mi/CpMediaInterface.h>
+#include <CpTopologyGraphFactoryImpl.h>
 
 // resip includes
 #include <rutil/Log.hxx>
@@ -46,6 +47,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+
 SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode)
 : ConversationManager(),
   mLocalAudioEnabled(localAudioEnabled),
@@ -79,18 +81,30 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
    UtlString codecPaths[] = {"."};
 #endif
    int codecPathsNum = sizeof(codecPaths)/sizeof(codecPaths[0]);
-   OsStatus rc = CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths);
+   OsStatus rc = CpTopologyGraphFactoryImpl::addCodecPaths(codecPathsNum, codecPaths);
    resip_assert(OS_SUCCESS == rc);
 
    if(mMediaInterfaceMode == sipXConversationMediaInterfaceMode)
    {
       OsConfigDb sipXconfig;
       sipXconfig.set("PHONESET_MAX_ACTIVE_CALLS_ALLOWED",300);  // This controls the maximum number of flowgraphs allowed - default is 16
-      mMediaFactory = sipXmediaFactoryFactory(&sipXconfig, 0, maxSampleRate, defaultSampleRate, mLocalAudioEnabled);
+      mMediaFactory = dynamic_cast<CpTopologyGraphFactoryImpl*>(sipXmediaFactoryFactory(&sipXconfig, 0, maxSampleRate, defaultSampleRate, mLocalAudioEnabled)->getFactoryImplementation());
    }
    else
    {
-      mMediaFactory = sipXmediaFactoryFactory(NULL, 0, maxSampleRate, defaultSampleRate, mLocalAudioEnabled);
+      mMediaFactory = dynamic_cast<CpTopologyGraphFactoryImpl*>(sipXmediaFactoryFactory(nullptr, 0, maxSampleRate, defaultSampleRate, mLocalAudioEnabled)->getFactoryImplementation());
+   }
+
+   if (mMediaFactory == nullptr)
+   {
+      CritLog(<< "Error creating media factory for sipX Topology Graph.  Cannot start.");
+      exit(-1);
+   }
+
+   if(!adjustInitialResourceTopologyForRecon())
+   {
+      CritLog(<< "Error adjusting resource Topology.  Cannot start.");
+      exit(-1);
    }
 
    // Create MediaInterface
@@ -134,7 +148,7 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
 SipXConversationManager::~SipXConversationManager()
 {
-   getBridgeMixer().reset();       // Make sure the mixer is destroyed before the media interface
+   getBridgeMixer().reset();   // Make sure the mixer is destroyed before the media interface
    mMediaInterface.reset();    // Make sure inteface is destroyed before factory
    sipxDestroyMediaFactoryFactory();
 }
@@ -152,8 +166,8 @@ SipXConversationManager::setUserAgent(UserAgent* userAgent)
 
    // Note: This is not really required, since we are managing the port allocation - but no harm done
    // Really not needed now - since FlowManager integration
-   //mMediaFactory->getFactoryImplementation()->setRtpPortRange(getUserAgent()->getUserAgentMasterProfile()->rtpPortRangeMin(),
-   //                                                           getUserAgent()->getUserAgentMasterProfile()->rtpPortRangeMax());
+   //mMediaFactory->setRtpPortRange(getUserAgent()->getUserAgentMasterProfile()->rtpPortRangeMin(),
+   //                               getUserAgent()->getUserAgentMasterProfile()->rtpPortRangeMax());
 
    if(!mRTPPortManager)
    {
@@ -242,7 +256,7 @@ SipXConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents
 void
 SipXConversationManager::setSpeakerVolume(int volume)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setSpeakerVolume(volume);
+   OsStatus status =  mMediaFactory->setSpeakerVolume(volume);
    if(status != OS_SUCCESS)
    {
       WarningLog(<< "setSpeakerVolume failed: status=" << status);
@@ -252,7 +266,7 @@ SipXConversationManager::setSpeakerVolume(int volume)
 void 
 SipXConversationManager::setMicrophoneGain(int gain)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setMicrophoneGain(gain);
+   OsStatus status =  mMediaFactory->setMicrophoneGain(gain);
    if(status != OS_SUCCESS)
    {
       WarningLog(<< "setMicrophoneGain failed: status=" << status);
@@ -262,7 +276,7 @@ SipXConversationManager::setMicrophoneGain(int gain)
 void 
 SipXConversationManager::muteMicrophone(bool mute)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->muteMicrophone(mute? TRUE : FALSE);
+   OsStatus status =  mMediaFactory->muteMicrophone(mute? TRUE : FALSE);
    if(status != OS_SUCCESS)
    {
       WarningLog(<< "muteMicrophone failed: status=" << status);
@@ -272,7 +286,7 @@ SipXConversationManager::muteMicrophone(bool mute)
 void 
 SipXConversationManager::enableEchoCancel(bool enable)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioAECMode(enable ? MEDIA_AEC_CANCEL : MEDIA_AEC_DISABLED);
+   OsStatus status =  mMediaFactory->setAudioAECMode(enable ? MEDIA_AEC_CANCEL : MEDIA_AEC_DISABLED);
    if(status != OS_SUCCESS)
    {
       WarningLog(<< "enableEchoCancel failed: status=" << status);
@@ -287,7 +301,7 @@ SipXConversationManager::enableEchoCancel(bool enable)
 void 
 SipXConversationManager::enableAutoGainControl(bool enable)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->enableAGC(enable ? TRUE : FALSE);
+   OsStatus status =  mMediaFactory->enableAGC(enable ? TRUE : FALSE);
    if(status != OS_SUCCESS)
    {
       WarningLog(<< "enableAutoGainControl failed: status=" << status);
@@ -302,7 +316,7 @@ SipXConversationManager::enableAutoGainControl(bool enable)
 void 
 SipXConversationManager::enableNoiseReduction(bool enable)
 {
-   OsStatus status =  mMediaFactory->getFactoryImplementation()->setAudioNoiseReductionMode(enable ? MEDIA_NOISE_REDUCTION_MEDIUM /* arbitrary */ : MEDIA_NOISE_REDUCTION_DISABLED);
+   OsStatus status =  mMediaFactory->setAudioNoiseReductionMode(enable ? MEDIA_NOISE_REDUCTION_MEDIUM /* arbitrary */ : MEDIA_NOISE_REDUCTION_DISABLED);
    if(status != OS_SUCCESS)
    {
       WarningLog(<< "enableNoiseReduction failed: status=" << status);
@@ -454,7 +468,9 @@ SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
             NULL,  /* TURN User */
             NULL,  /* TURN Password */
             25,    /* TURN Keepalive period (seconds) */
-            false)); /* enable ICE? */
+            false, /* enable ICE? */
+            0,     /* samplesPerSec, 0 = default */
+            nullptr)); /* pDispatcher - set below in setNotificationDispatcher call */
 
    // Register the NotificationDispatcher class (derived from OsMsgDispatcher)
    // as the sipX notification dispatcher
@@ -485,7 +501,7 @@ SipXConversationManager::supportsMultipleMediaInterfaces()
 }
 
 bool
-SipXConversationManager::canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2)
+SipXConversationManager::canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2)
 {
    assert(conversation1);
    assert(conversation2);
@@ -535,6 +551,43 @@ SipXConversationManager::createRemoteParticipantDialogSetInstance(
    return new SipXRemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
 }
 
+bool
+SipXConversationManager::adjustInitialResourceTopologyForRecon()
+{
+#ifdef WORK_IN_PROGRESS
+   MpResourceTopology* resourceTopology = mMediaFactory->getInitialResourceTopology();
+
+   // Add in an extra player and recorder
+   OsStatus osresult = resourceTopology->addResource(DEFAULT_FROM_FILE_RESOURCE_TYPE, "FromFile2", MP_INVALID_CONNECTION_ID, -1);
+   resip_assert(result == OS_SUCCESS);
+   if (result == OS_SUCCESS)
+   {
+      result = resourceTopology->addResource(DEFAULT_RECORDER_RESOURCE_TYPE, "Recorder2", MP_INVALID_CONNECTION_ID, -1);
+   }
+   resip_assert(result == OS_SUCCESS);
+   if (result == OS_SUCCESS)
+   {
+      result = resourceTopology->addConnection("FromFile2", 0, DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT);
+   }
+   resip_assert(result == OS_SUCCESS);
+   if (result == OS_SUCCESS)
+   {
+      result = resourceTopology->addConnection(DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT, "Recorder2", 0);
+   }
+   resip_assert(result == OS_SUCCESS);
+
+   //UtlString resourcesDump;
+   //resourceTopology->dumpResources(resourcesDump);
+   //UtlString connectionsDump;
+   //resourceTopology->dumpConnections(connectionsDump);
+   //cout << resourcesDump.data();
+   //cout << connectionsDump.data();
+
+   return result == OS_SUCCESS;
+#endif
+
+   return true;
+}
 
 
 /* ====================================================================

@@ -586,7 +586,7 @@ public:
          std::shared_ptr<ConversationProfile> conversationProfile = nullptr) = 0;
 
    virtual bool supportsMultipleMediaInterfaces() = 0;
-   virtual bool canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
+   virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
    virtual bool supportsLocalAudio() = 0;
 
 protected:

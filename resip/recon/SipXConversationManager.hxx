@@ -24,7 +24,7 @@
 
 #include <memory>
 
-class CpMediaInterfaceFactory;
+class CpTopologyGraphFactoryImpl;
 
 namespace resip
 {
@@ -70,18 +70,20 @@ public:
    /**
      Note:  sipXtapi Media Interfaces have a finite number of supported endpoints
           that are allowed in each bridge mixer - by default this value is 10
-          (2 are used for local mic / speaker, 1 for a MediaParticipant, leaving
-           7 remaining for RemoteParticipants).  This limit is controlled by the
-          preprocessor define DEFAULT_BRIDGE_MAX_IN_OUTPUTS (see
+          (1 used for local mic / speaker, 1 for a WAV Player/Recorder and 1 for a 
+          Tone Player, leaving 7 remaining for RemoteParticipants - 8 if local audio  
+           is disabled). The limit of 10 is controlled by the preprocessor define 
+          DEFAULT_BRIDGE_MAX_IN_OUTPUTS (see
           http://www.resiprocate.org/Limitations_with_sipXtapi_media_Integration
           for more details.
 
-          sipXGlobalMediaInterfaceMode - uses 1 global sipXtapi media interface  and
+          sipXGlobalMediaInterfaceMode - uses 1 global sipXtapi media interface and
           allows for participants to exist in multiple conversations at the same
           time and have the bridge mixer properly control their mixing.  In this
-          mode, there can only be a single MediaParticipant for all conversations.
-          This architecture/mode is appropriate for single user agent devices (ie.
-          sip phones).
+          mode, there can only be a single MediaParticipant at a time performing
+          each operation (ie.  1 playing a WAV, 1 recording and one playing a tone
+          is allowed, but only 1 of each type) for all conversations. This 
+          architecture/mode is appropriate for single user agent devices (ie. sip phones).
 
           sipXConversationMediaInterfaceMode - by default uses 1 sipXtapi media
           interface per conversation.  If you use createSharedMediaInterfaceConversation
@@ -90,24 +92,28 @@ public:
           to be moved between any conversations that share the same media interface.
           Using this mode, participants can only exist in multiple conversations
           at the same time if those conversations share the same media interface.
-          This means the limit of 7 participants is no longer global, it now applies
-          to each media interface.  A separate media participant for each media
-          interface can also exist.  This architecture/mode is appropriate for server
-          applications, such as multi-party conference servers (up to 7 participants
-          per conference), music on hold servers and call park servers.
+          This means the limit of 7 (or 8 if local media is disabled) participants 
+          is no longer global, it now applies to each media interface.  A separate 
+          media participant (of each type) for each media interface can also exist.
+          This architecture/mode is appropriate for server applications, such as 
+          multi-party conference servers (up to 8 participants per conference), 
+          music on hold servers and call park servers. 
           API restrictions in this mode:
-            -joinConversation - restricted to functioning only if both source and
+            -joinConversation  -restricted to functioning only if both source and
                                 destination conversations share the same media inteface
-            -addParticipant - can only add a participant to multiple conversations if
-                              the conversations share the same media interface
-            -moveParticipant - for non-local participants, restricted to functioning
-                               only if both source and destination conversations share
-                               the same media inteface
-            -alertParticipant - if you are using the EarlyFlag then the
+            -addParticipant    -can only add a participant to multiple conversations if
+                                the conversations share the same media interface
+            -moveParticipant   -can only move a participant to another conversation if
+                                both source and destination conversations share the same 
+                                media inteface
+            -alertParticipant  -if you are using the EarlyFlag then the
                                 RemoteParticipant must be added to a conversation
                                 before calling this
-            -answerParticipant - RemoteParticipant must be added to a conversation
+            -answerParticipant -RemoteParticipant must be added to a conversation
                                 before calling this
+          Note: Only LocalParticipants can only exist outside of a conversation.  If they
+                exist in multiple conversations then those conversations must have the
+                same media interface.
    */
    typedef enum
    {
@@ -203,7 +209,7 @@ public:
    MediaInterfaceMode getMediaInterfaceMode() const { return mMediaInterfaceMode; }
 
    virtual bool supportsMultipleMediaInterfaces() override;
-   virtual bool canConversationsMixParticipants(Conversation* conversation1, Conversation* conversation2) override;
+   virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) override;
    virtual bool supportsLocalAudio() override { return mLocalAudioEnabled; }
 
 protected:
@@ -280,10 +286,12 @@ private:
                                      std::shared_ptr<SipXMediaInterface>& mediaInterface,
                                      std::shared_ptr<BridgeMixer>& bridgeMixer);
    std::shared_ptr<SipXMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface.get()); return mMediaInterface; }
-   CpMediaInterfaceFactory* getMediaInterfaceFactory() { return mMediaFactory; }
-   CpMediaInterfaceFactory* mMediaFactory;
+   CpTopologyGraphFactoryImpl* getMediaInterfaceFactory() { return mMediaFactory; }
+   CpTopologyGraphFactoryImpl* mMediaFactory;
    std::shared_ptr<SipXMediaInterface> mMediaInterface;
    int mSipXTOSValue;
+
+   bool adjustInitialResourceTopologyForRecon();
 };
 
 }

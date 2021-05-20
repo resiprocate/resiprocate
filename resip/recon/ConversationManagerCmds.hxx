@@ -29,14 +29,14 @@ class CreateConversationCmd  : public resip::DumCommand
       CreateConversationCmd(ConversationManager* conversationManager, 
                             ConversationHandle convHandle,
                             ConversationManager::AutoHoldMode autoHoldMode,
-                            ConversationHandle sharedFlowConvHandle) 
+                            ConversationHandle sharedMediaInterfaceConvHandle)
          : mConversationManager(conversationManager),
            mConvHandle(convHandle),
            mAutoHoldMode(autoHoldMode),
-           mSharedFlowConvHandle(sharedFlowConvHandle){}
+           mSharedMediaInterfaceConvHandle(sharedMediaInterfaceConvHandle){}
       virtual void executeCommand()
       {
-            Conversation* conversation = mConversationManager->createConversationInstance(mConvHandle, 0, mSharedFlowConvHandle, mAutoHoldMode);
+            Conversation* conversation = mConversationManager->createConversationInstance(mConvHandle, 0, mSharedMediaInterfaceConvHandle, mAutoHoldMode);
             resip_assert(conversation);
       }
       resip::Message* clone() const { resip_assert(0); return 0; }
@@ -46,7 +46,7 @@ class CreateConversationCmd  : public resip::DumCommand
       ConversationManager* mConversationManager;
       ConversationHandle mConvHandle;
       ConversationManager::AutoHoldMode mAutoHoldMode;
-      ConversationHandle mSharedFlowConvHandle;
+      ConversationHandle mSharedMediaInterfaceConvHandle;
 };
 
 class DestroyConversationCmd  : public resip::DumCommand
@@ -95,7 +95,7 @@ class JoinConversationCmd  : public resip::DumCommand
 
             // Safety check when running in sipXConversationMediaInterfaceMode - ensure both conversation are using the same
             // media interface
-            if (!mConversationManager->canConversationsMixParticipants(sourceConversation, destConversation))
+            if (!mConversationManager->canConversationsShareParticipants(sourceConversation, destConversation))
             {
                WarningLog(<< "JoinConversationCmd: not supported for sourceConv=" << mSourceConvHandle << ", and destConv=" << mDestConvHandle);
                return;
@@ -283,15 +283,14 @@ class AddParticipantCmd  : public resip::DumCommand
 
          if (participant && conversation)
          {
-            // Non-local Participants can only belong to multiple conversations if they have the same media interface
-            LocalParticipant* localPart = dynamic_cast<LocalParticipant*>(participant);
-            if (!localPart && participant->getConversations().size() > 0)
+            // Participants can only belong to multiple conversations if they have the same media interface
+            if (participant->getConversations().size() > 0)
             {
                // All conversations they are currently in will have the same media interface, just check that first conversation's media interface
                // matches the new conversation we are trying to add to.
-               if (!mConversationManager->canConversationsMixParticipants(participant->getConversations().begin()->second, conversation))
+               if (!mConversationManager->canConversationsShareParticipants(participant->getConversations().begin()->second, conversation))
                {
-                  WarningLog(<< "AddParticipantCmd: non-local participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
+                  WarningLog(<< "AddParticipantCmd: participants cannot belong to multiple conversations that don't share a media interface in sipXConversationMediaInterfaceMode.");
                   return;
                }
             }
@@ -383,24 +382,20 @@ class MoveParticipantCmd  : public resip::DumCommand
          Participant* participant = mConversationManager->getParticipant(mPartHandle);
          Conversation* sourceConversation = mConversationManager->getConversation(mSourceConvHandle);
          Conversation* destConversation   = mConversationManager->getConversation(mDestConvHandle);
-         if(participant && sourceConversation && destConversation)
+         if (participant && sourceConversation && destConversation)
          {
-            if(sourceConversation == destConversation)
+            if (sourceConversation == destConversation)
             {
                // No-Op
                return;
             }
 
-            LocalParticipant* localPart = dynamic_cast<LocalParticipant*>(participant);
-            if (!localPart)
+            // Safety check, mostly for when running in sipXConversationMediaInterfaceMode 
+            // - ensure both conversation are using the same media interface
+            if (!mConversationManager->canConversationsShareParticipants(sourceConversation, destConversation))
             {
-               // Safety check for non-local participants when running in sipXConversationMediaInterfaceMode 
-               // - ensure both conversation are using the same media interface
-               if (!mConversationManager->canConversationsMixParticipants(sourceConversation, destConversation))
-               {
-                  WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
-                  return;
-               }
+               WarningLog(<< "MoveParticipantCmd: failed, both conversations must be using the same media interface.");
+               return;
             }
 
             // Add to new conversation and remove from old (add before remove, so that hold/unhold won't happen)
