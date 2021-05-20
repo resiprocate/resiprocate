@@ -31,17 +31,7 @@ using namespace std;
 static const resip::ExtensionParameter p_participantonly("participant-only");
 static const resip::ExtensionParameter p_append("append");
 static const resip::ExtensionParameter p_silencetime("silencetime");  // in milliseconds
-
-// Special Tones
-static const Data dialtoneTone("dialtone");
-static const Data busyTone("busy");
-static const Data ringbackTone("ringback");
-static const Data ringTone("ring");
-static const Data fastbusyTone("fastbusy");
-static const Data backspaceTone("backspace");
-static const Data callwaitingTone("callwaiting");
-static const Data holdingTone("holding");
-static const Data loudfastbusyTone("loudfastbusy");
+static const resip::ExtensionParameter p_format("format");
 
 
 SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle partHandle,
@@ -264,7 +254,34 @@ SipXMediaResourceParticipant::startResourceImpl()
          silenceTimeMs = getMediaUrl().param(p_silencetime).convertInt();
       }
 
-      InfoLog(<< "SipXMediaResourceParticipant recording, handle=" << mHandle << " filepath=" << filepath << ", append=" << (append ? "YES" : "NO") << ", maxDurationMs=" << getDurationMs() << ", silenceTimeMs=" << silenceTimeMs);
+      CpMediaInterface::CpAudioFileFormat format = CpMediaInterface::CP_WAVE_PCM_16;  // Default recording format
+      Data formatString(recordingFormatWAVPCM16);
+      if (getMediaUrl().exists(p_format))
+      {
+         Data& urlFormatString = getMediaUrl().param(p_format);
+         if (isEqualNoCase(urlFormatString, recordingFormatWAVMULAW))
+         {
+            format = CpMediaInterface::CP_WAVE_MULAW;
+            formatString = recordingFormatWAVMULAW;
+         }
+         else if (isEqualNoCase(urlFormatString, recordingFormatWAVALAW))
+         {
+            format = CpMediaInterface::CP_WAVE_ALAW;
+            formatString = recordingFormatWAVALAW;
+         }
+         else if (isEqualNoCase(urlFormatString, recordingFormatWAVGSM))
+         {
+            format = CpMediaInterface::CP_WAVE_GSM;
+            formatString = recordingFormatWAVGSM;
+         }
+         else if (isEqualNoCase(urlFormatString, recordingFormatOGGOPUS))
+         {
+            format = CpMediaInterface::CP_OGG_OPUS;
+            formatString = recordingFormatOGGOPUS;
+         }
+      }
+
+      InfoLog(<< "SipXMediaResourceParticipant recording, handle=" << mHandle << " filepath=" << filepath << ", format=" << formatString << ", append=" << (append ? "YES" : "NO") << ", maxDurationMs=" << getDurationMs() << ", silenceTimeMs=" << silenceTimeMs);
 
       SipXMediaInterface* mediaInterface = getMediaInterface().get();
 
@@ -276,11 +293,12 @@ SipXMediaResourceParticipant::startResourceImpl()
       //        3.  Control mixes with SipXBridgeMixer for multiple recording outputs.  sipX sets up mixes when you start recording
       //            but they are not alterened when additional RTP streams (remote Participants) come and go.
       //        4.  The MAXIMUM_RECORDER_CHANNELS=1 define needs to change in sipXmedaLib and sipXmediaAdpaterLib project files
+      // Note: Automatic trimming of silence is not supported for OPUS recordings.
       OsStatus status = mediaInterface->getInterface()->recordChannelAudio(
          0 /* connectionId - not used by sipX */,
          filepath.c_str(), 
-         CpMediaInterface::CP_WAVE_PCM_16, 
-         append /* append? */, 
+         format, 
+         append /* append? */,
          1 /* numChannels */, 
          getDurationMs() /* maxTime Ms */,
          silenceTimeMs /* silenceLength Ms, -1 to disable */,

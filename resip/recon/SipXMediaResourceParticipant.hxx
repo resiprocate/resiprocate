@@ -2,6 +2,7 @@
 #define SipXMediaResourceParticipant_hxx
 
 #include <resip/stack/Uri.hxx>
+#include <rutil/Data.hxx>
 
 #include "ConversationManager.hxx"
 #include "MediaResourceParticipant.hxx"
@@ -23,6 +24,24 @@ class MpPlayerEvent;
 namespace recon
 {
 class ConversationManager;
+
+// Recording Formats
+static const resip::Data recordingFormatWAVPCM16("WAV_PCM16");
+static const resip::Data recordingFormatWAVMULAW("WAV_MULAW");
+static const resip::Data recordingFormatWAVALAW("WAV_ALAW");
+static const resip::Data recordingFormatWAVGSM("WAV_GSM");
+static const resip::Data recordingFormatOGGOPUS("OGG_OPUS");
+
+// Special Tones
+static const resip::Data dialtoneTone("dialtone");
+static const resip::Data busyTone("busy");
+static const resip::Data ringbackTone("ringback");
+static const resip::Data ringTone("ring");
+static const resip::Data fastbusyTone("fastbusy");
+static const resip::Data backspaceTone("backspace");
+static const resip::Data callwaitingTone("callwaiting");
+static const resip::Data holdingTone("holding");
+static const resip::Data loudfastbusyTone("loudfastbusy");
 
 /**
   This class represents a media resource participant.
