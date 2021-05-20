@@ -30,6 +30,13 @@ class Sdp;
 class SdpMediaLine;
 }
 
+// Disable warning 4250
+// VS2019 give a 4250 warning:  
+// SipXRemoteParticipant.hxx(80,1): warning C4250: 'recon::SipXRemoteParticipant': inherits 'recon::RemoteParticipant::recon::RemoteParticipant::addToConversation' via dominance
+#if defined(WIN32) && !defined(__GNUC__)
+#pragma warning( disable : 4250 )
+#endif
+
 namespace recon
 {
 class SipXConversationManager;
@@ -84,6 +91,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

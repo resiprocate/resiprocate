@@ -13,6 +13,13 @@
 class MpStreamPlayer;
 class MpPlayerEvent;
 
+// Disable warning 4250
+// VS2019 give a 4250 warning:  
+// SipXMediaResourceParticipant.hxx(58,1): warning C4250: 'recon::SipXMediaResourceParticipant': inherits 'recon::MediaResourceParticipant::recon::MediaResourceParticipant::hasInput' via dominance
+#if defined(WIN32) && !defined(__GNUC__)
+#pragma warning( disable : 4250 )
+#endif
+
 namespace recon
 {
 class ConversationManager;

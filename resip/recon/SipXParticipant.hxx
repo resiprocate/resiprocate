@@ -10,10 +10,9 @@ namespace recon
 class SipXConversationManager;
 
 /**
-  This is the base class for a RemoteParticipant, LocalParticipant and a
-  MediaResourceParticipant.  It implements the common functionality of all
-  participants, such as managing which Conversations that are participant
-  belongs to.
+  This is the base class for a SipXRemoteParticipant, SipXLocalParticipant and a
+  SipXMediaResourceParticipant.  It implements the common functionality of all
+  SipX participants, such as managing the media interface.
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */

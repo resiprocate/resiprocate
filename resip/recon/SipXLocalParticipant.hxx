@@ -5,6 +5,13 @@
 #include "LocalParticipant.hxx"
 #include "SipXParticipant.hxx"
 
+// Disable warning 4250
+// VS2019 give a 4250 warning:  
+// SipXLocalParticipant.hxx(36,1): warning C4250: 'recon::SipXLocalParticipant': inherits 'recon::LocalParticipant::recon::LocalParticipant::destroyParticipant' via dominance
+#if defined(WIN32) && !defined(__GNUC__)
+#pragma warning( disable : 4250 )
+#endif
+
 namespace recon
 {
 class ConversationManager;
@@ -42,6 +49,7 @@ class SipXLocalParticipant : public virtual LocalParticipant, public virtual Sip
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -30,7 +30,6 @@ SipXParticipant::~SipXParticipant()
 {
 }
 
-
 std::shared_ptr<SipXMediaInterface>
 SipXParticipant::getMediaInterface()
 {
