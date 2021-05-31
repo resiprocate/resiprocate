@@ -496,7 +496,7 @@ Log::tags(Log::Level level,
           int line,
           EncodeStream& strm)
 {
-   char buffer[256];
+   char buffer[256] = "";
    Data ts(Data::Borrow, buffer, sizeof(buffer));
 #if defined( __APPLE__ )
   strm << mDescriptions[level+1] << Log::delim
