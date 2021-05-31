@@ -7,6 +7,10 @@ set -e
 # some things are disabled in the Fedora builds because the dependencies
 # are not packaged or not tested yet
 
+# RHEL / Rocky Linux / CentOS users need to enable EPEL:
+
+# sudo dnf install epel-release
+
 # The typical command to install dependencies looks like this:
 
 # dnf install gcc-c++ libtool automake autoconf asio-devel boost-devel cajun-jsonapi-devel c-ares-devel cppunit-devel gperf libdb-cxx-devel libdb-devel openssl-devel mariadb-connector-c-devel pcre-devel popt-devel postgresql-devel python3-devel python3-pycxx-devel radcli-devel xerces-c-devel net-snmp-devel qpid-proton-cpp-devel
