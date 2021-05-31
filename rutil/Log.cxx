@@ -550,7 +550,7 @@ Log::tags(Log::Level level,
 Data
 Log::timestamp()
 {
-   char buffer[256];
+   char buffer[256] = "";
    Data result(Data::Borrow, buffer, sizeof(buffer));
    return timestamp(result);
 }
