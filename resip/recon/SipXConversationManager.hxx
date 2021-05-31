@@ -42,6 +42,8 @@ class MediaResourceParticipant;
 class RemoteParticipant;
 class RemoteParticipantDialogSet;
 
+static const char* DEFAULT_FROM_FILE_2_RESOURCE_NAME = "FromFile2";
+static const char* DEFAULT_RECORDER_2_RESOURCE_NAME = "Recorder2";
 
 /**
   This class is one of two main classes of concern to an application
@@ -72,7 +74,10 @@ public:
           that are allowed in each bridge mixer - by default this value is 10
           (1 used for local mic / speaker, 1 for a WAV Player/Recorder and 1 for a 
           Tone Player, leaving 7 remaining for RemoteParticipants - 8 if local audio  
-           is disabled). The limit of 10 is controlled by the preprocessor define 
+          is disabled).  Also, if enableExtraPlayAndRecordResources is passed in as true
+          then an extra slot if taken for an additional player and recorder.
+
+          The limit of 10 is controlled by the preprocessor define 
           DEFAULT_BRIDGE_MAX_IN_OUTPUTS (see
           http://www.resiprocate.org/Limitations_with_sipXtapi_media_Integration
           for more details.
@@ -82,8 +87,10 @@ public:
           time and have the bridge mixer properly control their mixing.  In this
           mode, there can only be a single MediaParticipant at a time performing
           each operation (ie.  1 playing a WAV, 1 recording and one playing a tone
-          is allowed, but only 1 of each type) for all conversations. This 
-          architecture/mode is appropriate for single user agent devices (ie. sip phones).
+          is allowed, but only 1 of each type) for all conversations.  If 
+          enableExtraPlayAndRecordResources is enabled then you are allowed to have 2
+          players and 2 recorders.  This architecture/mode is appropriate for single 
+          user agent devices (ie. sip phones).
 
           sipXConversationMediaInterfaceMode - by default uses 1 sipXtapi media
           interface per conversation.  If you use createSharedMediaInterfaceConversation
@@ -92,11 +99,10 @@ public:
           to be moved between any conversations that share the same media interface.
           Using this mode, participants can only exist in multiple conversations
           at the same time if those conversations share the same media interface.
-          This means the limit of 7 (or 8 if local media is disabled) participants 
-          is no longer global, it now applies to each media interface.  A separate 
-          media participant (of each type) for each media interface can also exist.
-          This architecture/mode is appropriate for server applications, such as 
-          multi-party conference servers (up to 8 participants per conference), 
+          This means the limit of remote participants is no longer global, it now 
+          applies to each media interface.  The limit on media participants is per 
+          media interface.  This architecture/mode is appropriate for server applications, 
+          such as multi-party conference servers (up to 8 participants per conference), 
           music on hold servers and call park servers. 
           API restrictions in this mode:
             -joinConversation  -restricted to functioning only if both source and
@@ -121,8 +127,8 @@ public:
       sipXConversationMediaInterfaceMode
    } MediaInterfaceMode;
 
-   SipXConversationManager(bool localAudioEnabled = true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode);
-   SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate);
+   SipXConversationManager(bool localAudioEnabled = true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode, bool enableExtraPlayAndRecordResources = false);
+   SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources);
    virtual ~SipXConversationManager();
 
    ///////////////////////////////////////////////////////////////////////
@@ -211,6 +217,7 @@ public:
    virtual bool supportsMultipleMediaInterfaces() override;
    virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) override;
    virtual bool supportsLocalAudio() override { return mLocalAudioEnabled; }
+   virtual bool extraPlayAndRecordResourcesEnabled() { return mEnableExtraPlayAndRecordResources; }
 
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
@@ -275,6 +282,7 @@ private:
 
    bool mLocalAudioEnabled;
    MediaInterfaceMode mMediaInterfaceMode;
+   bool mEnableExtraPlayAndRecordResources;
 
    std::shared_ptr<RTPPortManager> mRTPPortManager;
 
@@ -291,7 +299,7 @@ private:
    std::shared_ptr<SipXMediaInterface> mMediaInterface;
    int mSipXTOSValue;
 
-   bool adjustInitialResourceTopologyForRecon();
+   bool addExtraPlayAndRecordResourcesToTopology();
 };
 
 }

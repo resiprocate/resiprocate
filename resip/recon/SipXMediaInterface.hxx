@@ -6,9 +6,10 @@
 #define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
 #endif
 #include <os/OsMsgDispatcher.h>
-#include <mi/CpMediaInterface.h>
+#include <CpTopologyGraphInterface.h>
 #include <map>
 #include <rutil/Mutex.hxx>
+#include "MediaResourceParticipant.hxx"
 #include "HandleTypes.hxx"
 
 namespace recon
@@ -25,10 +26,20 @@ class FlowManagerSipXSocket;
 class SipXMediaInterface : public OsMsgDispatcher
 {
 public:
-   SipXMediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface);
+   class MediaResourceAllocationInfo
+   {
+   public:
+      MediaResourceAllocationInfo(const resip::Data& sipXResourceName) :
+         mSipXResourceName(sipXResourceName),
+         mAllocatedParticipantHandle(0) {}
+      resip::Data mSipXResourceName;
+      recon::ParticipantHandle mAllocatedParticipantHandle;
+   };
+
+   SipXMediaInterface(ConversationManager& conversationManager, CpTopologyGraphInterface* mediaInterface);
    ~SipXMediaInterface() { mMediaInterface->release(); }
 
-   CpMediaInterface* getInterface() { return mMediaInterface; }
+   CpTopologyGraphInterface* getInterface() { return mMediaInterface; }
    void allowLoggingDTMFDigits(bool allowLogging) { mAllowLoggingDTMFDigits = allowLogging; }
 
    // This version of createConnection is used when using FlowManager
@@ -37,24 +48,27 @@ public:
    OsStatus createConnection(int& connectionId, ParticipantHandle partHandle, const char* localAddress, int localPort);
    void updateConnectionIdToPartipantHandleMapping(int connectionId, ParticipantHandle partHandle);
    OsStatus deleteConnection(int connectionId);
-   void setPlayMediaOperationPartipantHandle(ParticipantHandle partHandle) { mLastPlayMediaOperationParticipantHandle = partHandle; }
-   void setRecordMediaOperationPartipantHandle(ParticipantHandle partHandle) { mLastRecordMediaOperationParticipantHandle = partHandle; }
+
+   bool allocateAvailableResourceForMediaOperation(MediaResourceParticipant::ResourceType resourceType, ParticipantHandle partHandle, resip::Data& allocatedResourceName);
+   void unallocateResourceForMediaOperation(MediaResourceParticipant::ResourceType resourceType, ParticipantHandle partHandle);
 
 private:
    ParticipantHandle getParticipantHandleForConnectionId(int connectionId);
+   ParticipantHandle getParticipantHandleForMediaResource(MediaResourceParticipant::ResourceType resourceType, const resip::Data& sipXResourceName);
    virtual OsStatus post(const OsMsg& msg);
 
    ConversationManager& mConversationManager;
-   CpMediaInterface* mMediaInterface;
+   CpTopologyGraphInterface* mMediaInterface;
    bool mAllowLoggingDTMFDigits;
 
    // Used to raise DtmfEvent with the source participant handle
    resip::Mutex mConnectionIdToParticipantHandleMapMutex;
    std::map<int, ParticipantHandle> mConnectionIdToPartipantHandleMap;
 
-   // Used to raise MediaEvent with the source participant handle
-   ParticipantHandle mLastPlayMediaOperationParticipantHandle;
-   ParticipantHandle mLastRecordMediaOperationParticipantHandle;
+   // Used to raise MediaEvent with the source participant handle, and to track which resources are currently in use / allocated
+   resip::Mutex mMediaResourceAllocationsMutex;
+   std::map<MediaResourceParticipant::ResourceType, std::list<MediaResourceAllocationInfo>> mMediaResourceAllocations;
+   std::list<MediaResourceAllocationInfo>& getAllocationResourceInfos(MediaResourceParticipant::ResourceType resourceType);
 };
 
 }
@@ -64,7 +78,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2010-2021, SIP Spectrum, Inc.
+ Copyright (c) 2010-2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  All rights reserved.
 

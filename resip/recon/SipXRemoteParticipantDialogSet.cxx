@@ -189,7 +189,7 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
       }
       else
       {
-         ret = getMediaInterface()->createConnection(mMediaConnectionId, getActiveRemoteParticipantHandle()
+         ret = getMediaInterface()->createConnection(mMediaConnectionId, getActiveRemoteParticipantHandle(),
                                                      connectionAddr.c_str(),
                                                      mLocalRTPPort);
          mRtpTuple = localBinding;  // Just treat media stream as immediately ready using the localBinding in the SDP
@@ -241,7 +241,7 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
       }
 
       //InfoLog(<< "About to get Connection Port on Bridge for MediaConnectionId: " << mMediaConnectionId);
-      ret = ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getConnectionPortOnBridge(mMediaConnectionId, 0, mConnectionPortOnBridge);
+      ret = getMediaInterface()->getInterface()->getConnectionPortOnBridge(mMediaConnectionId, 0, mConnectionPortOnBridge);
       InfoLog( << "RTP Port allocated=" << mLocalRTPPort << " (sipXmediaConnectionId=" << mMediaConnectionId << ", BridgePort=" << mConnectionPortOnBridge << ", ret=" << ret << ")");
    }
 

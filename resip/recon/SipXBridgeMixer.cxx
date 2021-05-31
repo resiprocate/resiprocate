@@ -17,7 +17,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-SipXBridgeMixer::SipXBridgeMixer(CpMediaInterface& mediaInterface) :
+SipXBridgeMixer::SipXBridgeMixer(CpTopologyGraphInterface& mediaInterface) :
    mMediaInterface(mediaInterface)
 {
    // Set default to 0 gain for entire matrix
@@ -177,6 +177,7 @@ SipXBridgeMixer::outputBridgeMixWeights()
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -48,20 +48,22 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 
-SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode)
+SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, bool enableExtraPlayAndRecordResources)
 : ConversationManager(),
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
+  mEnableExtraPlayAndRecordResources(enableExtraPlayAndRecordResources),
   mMediaFactory(0),
   mSipXTOSValue(0)
 {
    init();
 }
 
-SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate)
+SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources)
 : ConversationManager(),
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
+  mEnableExtraPlayAndRecordResources(enableExtraPlayAndRecordResources),
   mMediaFactory(0),
   mSipXTOSValue(0)
 {
@@ -72,14 +74,31 @@ void
 SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
 {
 #ifdef _DEBUG
-#if _WIN64
-   UtlString codecPaths[] = {".", "../x64/Debug"};
+
+  #if _WIN64
+     UtlString codecPaths[] = {".", "../x64/Debug"};
+  #else
+    #if _WIN32
+      UtlString codecPaths[] = { ".", "../Win32/Debug" };
+    #else
+      UtlString codecPaths[] = { "." };
+    #endif
+  #endif
+
 #else
-    UtlString codecPaths[] = { ".", "../Win32/Debug" };
+
+  #if _WIN64
+    UtlString codecPaths[] = { ".", "../x64/Release" };
+  #else
+    #if _WIN32
+      UtlString codecPaths[] = { ".", "../Win32/Release" };
+    #else
+      UtlString codecPaths[] = { "." };
+    #endif
+  #endif
+
 #endif
-#else
-   UtlString codecPaths[] = {"."};
-#endif
+
    int codecPathsNum = sizeof(codecPaths)/sizeof(codecPaths[0]);
    OsStatus rc = CpTopologyGraphFactoryImpl::addCodecPaths(codecPathsNum, codecPaths);
    resip_assert(OS_SUCCESS == rc);
@@ -101,10 +120,13 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
       exit(-1);
    }
 
-   if(!adjustInitialResourceTopologyForRecon())
+   if (mEnableExtraPlayAndRecordResources)
    {
-      CritLog(<< "Error adjusting resource Topology.  Cannot start.");
-      exit(-1);
+      if (!addExtraPlayAndRecordResourcesToTopology())
+      {
+         CritLog(<< "Error adjusting resource Topology.  Cannot start.");
+         exit(-1);
+      }
    }
 
    // Create MediaInterface
@@ -454,7 +476,7 @@ SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
 
    // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
    // TODO SLG - if DISABLE_FLOWMANAGER define is on we should consider enabling stun or turn options
-   mediaInterface = std::make_shared<SipXMediaInterface>(*this, mMediaFactory->createMediaInterface(NULL,
+   mediaInterface = std::make_shared<SipXMediaInterface>(*this, (CpTopologyGraphInterface*)mMediaFactory->createMediaInterface(NULL,
             localRtpInterfaceAddress, 
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 
@@ -552,27 +574,26 @@ SipXConversationManager::createRemoteParticipantDialogSetInstance(
 }
 
 bool
-SipXConversationManager::adjustInitialResourceTopologyForRecon()
+SipXConversationManager::addExtraPlayAndRecordResourcesToTopology()
 {
-#ifdef WORK_IN_PROGRESS
    MpResourceTopology* resourceTopology = mMediaFactory->getInitialResourceTopology();
 
    // Add in an extra player and recorder
-   OsStatus osresult = resourceTopology->addResource(DEFAULT_FROM_FILE_RESOURCE_TYPE, "FromFile2", MP_INVALID_CONNECTION_ID, -1);
+   OsStatus result = resourceTopology->addResource(DEFAULT_FROM_FILE_RESOURCE_TYPE, DEFAULT_FROM_FILE_2_RESOURCE_NAME, MP_INVALID_CONNECTION_ID, -1);
    resip_assert(result == OS_SUCCESS);
    if (result == OS_SUCCESS)
    {
-      result = resourceTopology->addResource(DEFAULT_RECORDER_RESOURCE_TYPE, "Recorder2", MP_INVALID_CONNECTION_ID, -1);
+      result = resourceTopology->addResource(DEFAULT_RECORDER_RESOURCE_TYPE, DEFAULT_RECORDER_2_RESOURCE_NAME, MP_INVALID_CONNECTION_ID, -1);
    }
    resip_assert(result == OS_SUCCESS);
    if (result == OS_SUCCESS)
    {
-      result = resourceTopology->addConnection("FromFile2", 0, DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT);
+      result = resourceTopology->addConnection(DEFAULT_FROM_FILE_2_RESOURCE_NAME, 0, DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT);
    }
    resip_assert(result == OS_SUCCESS);
    if (result == OS_SUCCESS)
    {
-      result = resourceTopology->addConnection(DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT, "Recorder2", 0);
+      result = resourceTopology->addConnection(DEFAULT_BRIDGE_RESOURCE_NAME, MpResourceTopology::MP_TOPOLOGY_NEXT_AVAILABLE_PORT, DEFAULT_RECORDER_2_RESOURCE_NAME, 0);
    }
    resip_assert(result == OS_SUCCESS);
 
@@ -584,9 +605,6 @@ SipXConversationManager::adjustInitialResourceTopologyForRecon()
    //cout << connectionsDump.data();
 
    return result == OS_SUCCESS;
-#endif
-
-   return true;
 }
 
 
