@@ -1063,6 +1063,7 @@ void
 RemoteParticipant::onConnectedConfirmed(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onConnectedConfirmed: handle=" << mHandle << ", " << msg.brief());
+   if (mHandle) mConversationManager.onParticipantConnectedConfirmed(mHandle, msg);
    stateTransition(Connected);
 }
 
@@ -1520,7 +1521,7 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

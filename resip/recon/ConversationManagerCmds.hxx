@@ -200,7 +200,7 @@ class CreateMediaResourceParticipantCmd  : public resip::DumCommand
             if(mediaResourceParticipant)
             {
                conversation->addParticipant(mediaResourceParticipant);
-               mediaResourceParticipant->startResource();
+               mediaResourceParticipant->startResource();  // Note: Can call delete this (MediaResourceParticipant) on failures
             }
             else
             {
