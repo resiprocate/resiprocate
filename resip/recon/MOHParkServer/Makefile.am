@@ -22,7 +22,9 @@ LDADD += ../../../rutil/librutil.la
 LDADD += -lsipXport
 LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
+if USE_SIPXTAPI
 sbin_PROGRAMS = MOHParkServer
+endif
 
 MOHParkServer_SOURCES = \
         AppSubsystem.cxx \
@@ -49,4 +51,5 @@ noinst_HEADERS = \
         Server.hxx \
         WebAdmin.hxx \
         WebAdminThread.hxx
+
 

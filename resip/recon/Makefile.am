@@ -33,19 +33,9 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         ConversationProfile.cxx \
         DefaultDialogSet.cxx \
         DtmfEvent.cxx \
-        FlowManagerSipXSocket.cxx \
         InstantMessage.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
-        SipXConversationManager.cxx \
-        SipXMediaInterface.cxx \
-        SipXConversation.cxx \
-        SipXBridgeMixer.cxx \
-        SipXParticipant.cxx \
-        SipXLocalParticipant.cxx \
-        SipXMediaResourceParticipant.cxx \
-        SipXRemoteParticipant.cxx \
-        SipXRemoteParticipantDialogSet.cxx \
         MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
@@ -55,20 +45,33 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
         RTPPortManager.cxx \
-        SipXHelper.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
         UserAgentClientPublication.cxx \
         UserAgentDialogSetFactory.cxx \
         UserAgentMasterProfile.cxx \
         UserAgentRegistration.cxx \
-        UserAgentServerAuthManager.cxx \
+        UserAgentServerAuthManager.cxx
+
+if USE_SIPXTAPI
+librecon_la_SOURCES += FlowManagerSipXSocket.cxx \
+        SipXConversationManager.cxx \
+        SipXMediaInterface.cxx \
+        SipXConversation.cxx \
+        SipXBridgeMixer.cxx \
+        SipXParticipant.cxx \
+        SipXLocalParticipant.cxx \
+        SipXMediaResourceParticipant.cxx \
+        SipXRemoteParticipant.cxx \
+        SipXRemoteParticipantDialogSet.cxx \
+        SipXHelper.cxx \
         sdp/Sdp.cxx \
         sdp/SdpCandidate.cxx \
         sdp/SdpCandidatePair.cxx \
         sdp/SdpCodec.cxx \
         sdp/SdpHelperResip.cxx \
         sdp/SdpMediaLine.cxx
+endif
 
 reconincludedir = $(includedir)/recon
 nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
@@ -84,21 +87,6 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         SipXHelper.hxx \
         Conversation.hxx \
         UserAgentDialogSetFactory.hxx \
-        sdp/SdpMediaLine.hxx \
-        sdp/SdpCodec.hxx \
-        sdp/SdpHelperResip.hxx \
-        sdp/SdpCandidatePair.hxx \
-        sdp/SdpCandidate.hxx \
-        sdp/Sdp.hxx \
-        SipXConversationManager.hxx \
-        SipXMediaInterface.hxx \
-        SipXConversation.hxx \
-        SipXBridgeMixer.hxx \
-        SipXParticipant.hxx \
-        SipXLocalParticipant.hxx \
-        SipXMediaResourceParticipant.hxx \
-        SipXRemoteParticipant.hxx \
-        SipXRemoteParticipantDialogSet.hxx \
         UserAgentCmds.hxx \
         UserAgentRegistration.hxx \
         MediaEvent.hxx \
@@ -113,10 +101,28 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         BridgeMixer.hxx \
         HandleTypes.hxx \
         MediaStreamEvent.hxx \
-        FlowManagerSipXSocket.hxx \
         ConversationProfile.hxx \
         ConversationManager.hxx \
         DtmfEvent.hxx
+
+if USE_SIPXTAPI
+nobase_reconinclude_HEADERS += sdp/SdpMediaLine.hxx \
+        sdp/SdpCodec.hxx \
+        sdp/SdpHelperResip.hxx \
+        sdp/SdpCandidatePair.hxx \
+        sdp/SdpCandidate.hxx \
+        sdp/Sdp.hxx \
+        SipXConversationManager.hxx \
+        SipXMediaInterface.hxx \
+        SipXConversation.hxx \
+        SipXBridgeMixer.hxx \
+        SipXParticipant.hxx \
+        SipXLocalParticipant.hxx \
+        SipXMediaResourceParticipant.hxx \
+        SipXRemoteParticipant.hxx \
+        SipXRemoteParticipantDialogSet.hxx \
+        FlowManagerSipXSocket.hxx
+endif
 
 ##############################################################################
 # 
