@@ -42,9 +42,6 @@ class MediaResourceParticipant;
 class RemoteParticipant;
 class RemoteParticipantDialogSet;
 
-static const char* DEFAULT_FROM_FILE_2_RESOURCE_NAME = "FromFile2";
-static const char* DEFAULT_RECORDER_2_RESOURCE_NAME = "Recorder2";
-
 /**
   This class is one of two main classes of concern to an application
   using the UserAgent library.  This class should be subclassed by 
@@ -68,6 +65,9 @@ static const char* DEFAULT_RECORDER_2_RESOURCE_NAME = "Recorder2";
 class SipXConversationManager : public ConversationManager
 {
 public:
+
+   static constexpr char DEFAULT_FROM_FILE_2_RESOURCE_NAME[] = "FromFile2";
+   static constexpr char DEFAULT_RECORDER_2_RESOURCE_NAME[] = "Recorder2";
 
    /**
      Note:  sipXtapi Media Interfaces have a finite number of supported endpoints

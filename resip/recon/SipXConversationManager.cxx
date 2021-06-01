@@ -47,6 +47,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+constexpr char SipXConversationManager::DEFAULT_FROM_FILE_2_RESOURCE_NAME[];
+constexpr char SipXConversationManager::DEFAULT_RECORDER_2_RESOURCE_NAME[];
 
 SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, bool enableExtraPlayAndRecordResources)
 : ConversationManager(),
