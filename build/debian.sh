@@ -37,6 +37,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-telepathy \
               --with-ichat-gw \
               --with-recon \
+              --with-sipxtapi \
               --with-qpid-proton \
               --with-netsnmp
 

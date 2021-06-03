@@ -5,7 +5,9 @@ EXTRA_DIST += *.wav
 EXTRA_DIST += reconserver.init
 EXTRA_DIST += reconserver.service
 
+if USE_SIPXTAPI
 sbin_PROGRAMS = reConServer
+endif
 
 dist_man_MANS = reConServer.8
 

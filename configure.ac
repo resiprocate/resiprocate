@@ -261,9 +261,15 @@ AC_ARG_WITH(telepathy,
 
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
-[  --with-recon            Build recon, links against sipX],
+[  --with-recon            Build recon],
  [AC_DEFINE_UNQUOTED(BUILD_RECON, , BUILD_RECON)
  AM_CONDITIONAL(BUILD_RECON, true)], )
+
+AM_CONDITIONAL(USE_SIPXTAPI, false)
+AC_ARG_WITH(sipxtapi,
+[  --with-sipxtapi         Build recon with sipXtapi support],
+ [AC_DEFINE_UNQUOTED(USE_SIPXTAPI, , USE_SIPXTAPI)
+ AM_CONDITIONAL(USE_SIPXTAPI, true)], )
 
 AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, false)
 AC_ARG_ENABLE(recon-local-hw-tests,

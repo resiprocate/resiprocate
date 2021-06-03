@@ -31,8 +31,8 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));
    if (((SipXConversationManager*)&conversationManager)->extraPlayAndRecordResourcesEnabled())
    {
-      mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_2_RESOURCE_NAME));
-      mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_2_RESOURCE_NAME));
+      mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
+      mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_RECORDER_2_RESOURCE_NAME));
    }
 }
 

@@ -36,7 +36,7 @@ using namespace resip;
 using namespace recon;
 
 MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled, Connection *connection)
-      : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate),
+      : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
         mLocalAudioEnabled(localAudioEnabled),
         mAutoAnswerEnabled(autoAnswerEnabled),
         mConnection(connection)

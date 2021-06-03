@@ -1188,7 +1188,7 @@ operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
 {
    if(addr.family == StunMessage::IPv6Family)
    {
-      asio::ip::address_v6::bytes_type bytes;
+      asio::ip::address_v6::bytes_type bytes = {};
       memcpy(bytes.data(), &addr.addr.ipv6, bytes.size());
       asio::ip::address_v6 addrv6(bytes);
 
