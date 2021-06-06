@@ -9,6 +9,10 @@ if USE_SIPXTAPI
 sbin_PROGRAMS = reConServer
 endif
 
+if USE_KURENTO
+sbin_PROGRAMS = reConServer
+endif
+
 dist_man_MANS = reConServer.8
 
 reConServer_SOURCES = reConServer.cxx
@@ -39,12 +43,18 @@ reConServer_SOURCES += playback_prompt.h
 reConServer_SOURCES += record_prompt.h
 
 reConServer_LDADD = ../../resip/recon/librecon.la
+if USE_SIPXTAPI
 reConServer_LDADD += ../../reflow/libreflow.la
 reConServer_LDADD += -lsipXsdp
 reConServer_LDADD += -lsipXmediaProcessing
 reConServer_LDADD += -lsipXmedia
 reConServer_LDADD += -lsipXport
 reConServer_LDADD += -lsipXtack
+endif
+if USE_KURENTO
+reConServer_LDADD += -lKurentoClientLib
+reConServer_LDADD += -lboost_system
+endif
 reConServer_LDADD += ../../resip/dum/libdum.la
 reConServer_LDADD += ../../resip/stack/libresip.la
 reConServer_LDADD += ../../rutil/librutil.la

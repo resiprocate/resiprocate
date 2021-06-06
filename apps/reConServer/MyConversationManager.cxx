@@ -1,11 +1,11 @@
-
-#include "MyConversationManager.hxx"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <rutil/Log.hxx>
+
+#include "MyConversationManager.hxx"
+
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
@@ -19,8 +19,13 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
+MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
+#ifdef USE_KURENTO
+// FIXME: see comments in MyConversationManager.hxx
+      : KurentoConversationManager("localhost:8888", defaultSampleRate, maxSampleRate),
+#else
       : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
+#endif
         mLocalAudioEnabled(localAudioEnabled),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 

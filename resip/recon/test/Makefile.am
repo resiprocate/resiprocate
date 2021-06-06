@@ -35,6 +35,8 @@ testUA_SOURCES = testUA.cxx playback_prompt.h record_prompt.h
 sdpTests_SOURCES = sdpTests.cxx
 unitTests_SOURCES = unitTests.cxx
 testUA_LDADD = -lsipXport
+testUA_LDADD += -lKurentoClientLib
+testUA_LDADD += -lboost_system
 testUA_LDADD += $(LDADD)
 
 endif

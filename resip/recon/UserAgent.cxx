@@ -84,7 +84,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mConversationManager->setUserAgent(this);
 
    mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
-   dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
+   // FIXME dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
 
    addTransports();
 
@@ -621,7 +621,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, std::sha
    // the cert at runtime to equal the aor in the default conversation profile
    if(!mDefaultOutgoingConversationProfileHandle)
    {
-      dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
+      // FIXME dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
    }
 #endif
 

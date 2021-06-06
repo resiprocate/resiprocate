@@ -40,7 +40,9 @@ int _kbhit() {
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/recon/UserAgent.hxx"
 #include "AppSubsystem.hxx"
+#ifdef USE_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
+#endif
 
 #include <os/OsSysLog.h>
 
@@ -385,6 +387,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
       return;
    }
+#ifdef PREFER_SIPXTAPI
    if(isEqualNoCase(command, "volume") || isEqualNoCase(command, "sv"))
    {
       unsigned long volume = arg[0].convertUnsignedLong();
@@ -426,6 +429,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       myConversationManager.enableNoiseReduction(enable);
       return;
    }
+#endif
    if(isEqualNoCase(command, "subscribe") || isEqualNoCase(command, "cs"))
    {
       unsigned int subTime = arg[2].convertUnsignedLong();
@@ -502,7 +506,9 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
+#ifdef PREFER_SIPXTAPI
          myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
+#endif
          delete [] codecIdArray;
       }
       return;
@@ -825,8 +831,10 @@ ReConServerProcess::main (int argc, char** argv)
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
+#ifdef USE_SIPXTAPI
    SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
       ? SipXConversationManager::sipXGlobalMediaInterfaceMode : SipXConversationManager::sipXConversationMediaInterfaceMode;
+#endif
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
@@ -864,9 +872,11 @@ ReConServerProcess::main (int argc, char** argv)
    Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str());
    Log::setMaxLineCount(loggingFileMaxLineCount);
 
+#ifdef USE_SIPXTAPI
    // Setup logging for the sipX media stack
    // It is bridged to the reSIProcate logger
    SipXHelper::setupLoggingBridge("reConServer");
+#endif
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
 
@@ -895,8 +905,10 @@ ReConServerProcess::main (int argc, char** argv)
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
+#ifdef USE_SIPXTAPI
    InfoLog( << "  Global Media Interface = " <<
       ((mediaInterfaceMode == SipXConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
+#endif
    InfoLog( << "  Default sample rate = " << defaultSampleRate);
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
@@ -1310,7 +1322,10 @@ ReConServerProcess::main (int argc, char** argv)
             assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
+#ifdef PREFER_SIPXTAPI
+      // FIXME - how to do this for Kurento?
       mConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+#endif
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1334,7 +1349,10 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
+#ifdef PREFER_SIPXTAPI
+      // FIXME - how to do this for Kurento?
             mConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+#endif
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else

@@ -1,7 +1,9 @@
-#if !defined(Conversation_hxx)
-#define Conversation_hxx
+#if !defined(KurentoConversation_hxx)
+#define KurentoConversation_hxx
 
+#include "Conversation.hxx"
 #include "ConversationManager.hxx"
+#include "KurentoConversationManager.hxx"
 #include "ConversationParticipantAssignment.hxx"
 
 namespace recon
@@ -24,88 +26,44 @@ class BridgeMixer;
   If a remote participant is a sole member in a conversation, 
   then he/she will be put on hold for the default AutoHoldMode
   of enabled.
-
-  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class Conversation 
+class KurentoConversation : public Conversation
 {
-protected:
-   Conversation(ConversationHandle handle, 
-                ConversationManager& conversationManager,
+public:  
+   KurentoConversation(ConversationHandle handle,
+                KurentoConversationManager& kurentoConversationManager,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,
                 ConversationManager::AutoHoldMode autoHoldMode);
-public:
-   virtual ~Conversation();
-
-   void addParticipant(Participant* participant, unsigned int inputGain = 100, unsigned int outputGain = 100);
-   void removeParticipant(Participant* participant);
-   void modifyParticipantContribution(Participant* participant, unsigned int inputGain, unsigned int outputGain);
-
-   unsigned int getNumLocalParticipants() { return mNumLocalParticipants; }
-   unsigned int getNumRemoteParticipants() { return mNumRemoteParticipants; }
-   bool shouldHold();
-   bool broadcastOnly();
-   void notifyRemoteParticipantsOfHoldChange();
-
-   void createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle);
-   void join(Conversation* conversation);  // move all non-duplicate participants from this conversation to passed in conversation and destroy this one
-
-   void destroy();
-
-   ConversationHandle getHandle() { return mHandle; }
+   virtual ~KurentoConversation();
 
 protected:
    friend class Participant;
-   friend class SipXParticipant;
+   friend class KurentoParticipant;
    friend class LocalParticipant;
-   friend class SipXLocalParticipant;
+   friend class KurentoLocalParticipant;
    friend class RemoteParticipant;
-   friend class SipXRemoteParticipant;
+   friend class KurentoRemoteParticipant;
    friend class MediaResourceParticipant;
-   friend class SipXMediaResourceParticipant;
-   void registerParticipant(Participant *, unsigned int inputGain=100, unsigned int outputGain=100);
-   void unregisterParticipant(Participant *);
+   friend class KurentoMediaResourceParticipant;
 
    friend class BridgeMixer;
-   friend class SipXBridgeMixer;
    friend class KurentoBridgeMixer;
-   typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
-   ParticipantMap& getParticipants() { return mParticipants; }  
 
    friend class AddParticipantCmd;
    friend class JoinConversationCmd;
    friend class MoveParticipantCmd;
-
-   // sipX Media related members
-   // Note: these are only set here if sipXConversationMediaInterfaceMode is used
-   friend class ConversationManager;
-   friend class SipXConversationManager;
-   friend class KurentoConversationManager;
-   BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
-   std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
-   virtual void setBridgeMixer(std::shared_ptr<BridgeMixer> mixer) { mBridgeMixer = mixer; }
-   virtual bool isSharingMediaInterfaceWithAnotherConversation() { return mSharingMediaInterfaceWithAnotherConversation; }
-
+   //std::shared_ptr<KurentoMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
 
 private: 
-   ConversationHandle mHandle;
-   ConversationManager& mConversationManager;
-   RelatedConversationSet *mRelatedConversationSet;
-
-   ParticipantMap mParticipants;
-   Participant* getParticipant(ParticipantHandle partHandle);
-   bool mDestroying;
-   unsigned int mNumLocalParticipants;
-   unsigned int mNumRemoteParticipants;
-   unsigned int mNumMediaParticipants;
-   ConversationManager::AutoHoldMode mAutoHoldMode;
+   KurentoConversationManager& mKurentoConversationManager;
 
    // sipX Media related members
+   friend class ConversationManager;
+   friend class KurentoConversationManager;
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
-   std::shared_ptr<BridgeMixer> mBridgeMixer;
-   bool mSharingMediaInterfaceWithAnotherConversation;
+   //std::shared_ptr<KurentoMediaInterface> mMediaInterface;
 };
 
 }

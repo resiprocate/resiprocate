@@ -1,6 +1,7 @@
 # $Id$
 
 EXTRA_DIST = readme.txt
+EXTRA_DIST += readme_Kurento.txt
 EXTRA_DIST += *.sln
 EXTRA_DIST += *.vcxproj *.vcxproj.filters
 EXTRA_DIST += doc
@@ -22,6 +23,9 @@ librecon_la_LIBADD += -lsipXmediaProcessing
 librecon_la_LIBADD += -lsipXmedia
 librecon_la_LIBADD += -lsipXsdp
 librecon_la_LIBADD += -lsipXport
+if USE_KURENTO
+librecon_la_LIBADD += -lKurentoClientLib
+endif
 librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp2
 librecon_la_LIBADD += @LIBPTHREAD_LIBADD@
 librecon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
@@ -73,6 +77,15 @@ librecon_la_SOURCES += FlowManagerSipXSocket.cxx \
         sdp/SdpMediaLine.cxx
 endif
 
+if USE_KURENTO
+librecon_la_SOURCES += KurentoBridgeMixer.cxx \
+        KurentoConversation.cxx \
+        KurentoConversationManager.cxx \
+        KurentoParticipant.cxx \
+        KurentoRemoteParticipant.cxx \
+        KurentoRemoteParticipantDialogSet.cxx
+endif
+
 reconincludedir = $(includedir)/recon
 nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         LocalParticipant.hxx \
@@ -122,6 +135,15 @@ nobase_reconinclude_HEADERS += sdp/SdpMediaLine.hxx \
         SipXRemoteParticipant.hxx \
         SipXRemoteParticipantDialogSet.hxx \
         FlowManagerSipXSocket.hxx
+endif
+
+if USE_KURENTO
+nobase_reconinclude_HEADERS += KurentoBridgeMixer.hxx \
+        KurentoConversation.hxx \
+        KurentoConversationManager.hxx \
+        KurentoParticipant.hxx \
+        KurentoRemoteParticipantDialogSet.hxx \
+        KurentoRemoteParticipant.hxx
 endif
 
 ##############################################################################

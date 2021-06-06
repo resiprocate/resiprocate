@@ -36,7 +36,7 @@ AM_MISSING_PROG([GPERF], [gperf])
 
 AC_GPERFVER
 
-AX_CXX_COMPILE_STDCXX(11)
+AX_CXX_COMPILE_STDCXX(14)
 
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
@@ -270,6 +270,12 @@ AC_ARG_WITH(sipxtapi,
 [  --with-sipxtapi         Build recon with sipXtapi support],
  [AC_DEFINE_UNQUOTED(USE_SIPXTAPI, , USE_SIPXTAPI)
  AM_CONDITIONAL(USE_SIPXTAPI, true)], )
+
+AM_CONDITIONAL(USE_KURENTO, false)
+AC_ARG_WITH(kurento,
+[  --with-kurento          Build recon with Kurento support],
+ [AC_DEFINE_UNQUOTED(USE_KURENTO, , USE_KURENTO)
+ AM_CONDITIONAL(USE_KURENTO, true)], )
 
 AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, false)
 AC_ARG_ENABLE(recon-local-hw-tests,

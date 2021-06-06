@@ -121,6 +121,7 @@ void
 Participant::applyBridgeMixWeights()
 {
    BridgeMixer* mixer=0;
+   return; // FIXME Kurento
    if(!mConversationManager.supportsMultipleMediaInterfaces())
    {
       resip_assert(mConversationManager.getBridgeMixer() != 0);
@@ -150,6 +151,7 @@ void
 Participant::applyBridgeMixWeights(Conversation* removedConversation)
 {
    BridgeMixer* mixer=0;
+   return; // FIXME Kurento
    if(!mConversationManager.supportsMultipleMediaInterfaces())
    {
       resip_assert(mConversationManager.getBridgeMixer() != 0);

@@ -8,12 +8,26 @@
 #endif
 
 #include <rutil/Data.hxx>
+#ifdef USE_SIPXTAPI
 #include <resip/recon/SipXConversationManager.hxx>
+#endif
+#ifdef USE_KURENTO
+#include <resip/recon/KurentoConversationManager.hxx>
+#endif
 
 namespace reconserver
 {
 
+#ifdef USE_KURENTO
+#define PREFER_KURENTO
+// FIXME: hard-coded to use Kurento when selected at compile time
+// Need to have both USE_KURENTO and USE_SIPXTAPI as we haven't removed
+// some references to sipXtapi in parts of the code
+class MyConversationManager : public recon::KurentoConversationManager
+#else
+#define PREFER_SIPXTAPI
 class MyConversationManager : public recon::SipXConversationManager
+#endif
 {
 public:
 
