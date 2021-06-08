@@ -13,6 +13,49 @@ Rocky Linux or Alma Linux (successors to CentOS):
 
   Install using default options.
 
+Ensure you have sudo permissions
+
+  On RHEL and similar hosts, login as root on the console
+  and run this command with your username:
+
+    usermod -aG wheel daniel
+
+Enable EPEL
+
+  sudo dnf install epel-release
+
+Install reSIProcate dependencies from RHEL8 and EPEL
+
+  sudo dnf install libtool automake autoconf \
+                   python3-devel python3-pycxx-devel \
+                   radcli-devel \
+                   c-ares-devel \
+                   boost-devel \
+                   openssl-devel \
+                   mariadb-connector-c-devel \
+                   pcre-devel \
+                   popt-devel \
+                   postgresql-devel \
+                   xerces-c-devel \
+                   net-snmp-devel \
+                   qpid-proton-cpp-devel
+
+Install dependencies built manually for RHEL8/EPEL
+
+  cd ~/rpmbuild
+  sudo rpm -i x86_64/asio-devel-1.16.1-3.el8.x86_64.rpm
+  sudo rpm -U x86_64/libdb-5.3.28-46.el8.x86_64.rpm \
+              x86_64/libdb-cxx-5.3.28-46.el8.x86_64.rpm \
+              x86_64/libdb-cxx-devel-5.3.28-46.el8.x86_64.rpm \
+              x86_64/libdb-devel-5.3.28-46.el8.x86_64.rpm \
+              x86_64/libdb-utils-5.3.28-46.el8.x86_64.rpm
+  sudo rpm -i x86_64/cppunit-1.15.1-5.el8.x86_64.rpm \
+              x86_64/cppunit-devel-1.15.1-5.el8.x86_64.rpm
+  sudo rpm -i x86_64/gperf-3.1-11.el8.x86_64.rpm
+  sudo rpm -i noarch/cajun-jsonapi-devel-2.0.3-13.el8.noarch.rpm
+
+Install Docker (for Podman, alternative to Docker, see below)
+
   sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 
   sudo dnf install docker-ce
@@ -21,6 +64,14 @@ Rocky Linux or Alma Linux (successors to CentOS):
   systemctl is-active docker
   systemctl is-enabled docker
   sudo usermod -aG docker $USER
+
+Installing Podman (RHEL alternative to Docker):
+
+  sudo dnf install podman
+  alias docker=podman
+
+  (and use podman instead of docker in subsequent commands,
+   select the docker.io images when prompted...)
 
 Install the Kurento Docker image:
 
