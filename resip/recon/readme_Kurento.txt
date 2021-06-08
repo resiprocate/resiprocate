@@ -1,6 +1,27 @@
 
 The Kurento integration is currently a work in progress
 
+Kurento can be installed using packages or using Docker.
+We have currently tested this using Docker.
+
+To install Docker on RHEL8 or derivative OS such as
+Rocky Linux or Alma Linux (successors to CentOS):
+
+  Download your preferred OS installation ISO:
+    Rocky Linux:   https://rockylinux.org/download
+    AlmaLinux:     https://almalinux.org/
+
+  Install using default options.
+
+  sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+  sudo dnf install docker-ce
+  systemctl is-active docker
+  sudo systemctl enable --now docker
+  systemctl is-active docker
+  systemctl is-enabled docker
+  sudo usermod -aG docker $USER
+
 Install the Kurento Docker image:
 
   docker pull kurento/kurento-media-server:latest
@@ -30,4 +51,5 @@ Run reConServer in gdb:
 
   libtool --mode=execute gdb apps/reConServer/reConServer
   set args apps/reConServer/reConServer.config.test-local
+  run
 
