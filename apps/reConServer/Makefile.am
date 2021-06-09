@@ -60,7 +60,7 @@ reConServer_LDADD += ../../resip/stack/libresip.la
 reConServer_LDADD += ../../rutil/librutil.la
 reConServer_LDADD += -lssl -lcrypto -lpthread
 reConServer_LDADD += -lsoci_core -lsoci_postgresql -ldl
-ifdef USE_SOCI_MYSQL
+if USE_SOCI_MYSQL
 reConServer_LDADD += -lsoci_mysql -lmysqlclient
 endif
 
