@@ -40,11 +40,13 @@ reConServer_SOURCES += record_prompt.h
 
 reConServer_LDADD = ../../resip/recon/librecon.la
 reConServer_LDADD += ../../reflow/libreflow.la
+if USE_SIPXTAPI
 reConServer_LDADD += -lsipXsdp
 reConServer_LDADD += -lsipXmediaProcessing
 reConServer_LDADD += -lsipXmedia
 reConServer_LDADD += -lsipXport
 reConServer_LDADD += -lsipXtack
+endif
 reConServer_LDADD += ../../resip/dum/libdum.la
 reConServer_LDADD += ../../resip/stack/libresip.la
 reConServer_LDADD += ../../rutil/librutil.la
