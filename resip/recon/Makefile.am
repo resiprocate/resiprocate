@@ -22,7 +22,11 @@ librecon_la_LIBADD += -lsipXmediaProcessing
 librecon_la_LIBADD += -lsipXmedia
 librecon_la_LIBADD += -lsipXsdp
 librecon_la_LIBADD += -lsipXport
+if USE_SRTP1
+librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
+else
 librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp2
+endif
 librecon_la_LIBADD += @LIBPTHREAD_LIBADD@
 librecon_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
