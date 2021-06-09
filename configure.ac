@@ -265,6 +265,12 @@ AC_ARG_WITH(recon,
  [AC_DEFINE_UNQUOTED(BUILD_RECON, , BUILD_RECON)
  AM_CONDITIONAL(BUILD_RECON, true)], )
 
+AM_CONDITIONAL(USE_SRTP1, false)
+AC_ARG_WITH(srtp1,
+[  --with-srtp1            Use srtp 1.x instead of current version],
+ [AC_DEFINE_UNQUOTED(USE_SRTP1, , USE_SRTP1)
+ AM_CONDITIONAL(USE_SRTP1, true)], )
+
 AM_CONDITIONAL(USE_SIPXTAPI, false)
 AC_ARG_WITH(sipxtapi,
 [  --with-sipxtapi         Build recon with sipXtapi support],

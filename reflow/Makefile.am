@@ -18,7 +18,11 @@ lib_LTLIBRARIES = libreflow.la
 libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la
 libreflow_la_LIBADD += ../rutil/librutil.la
 libreflow_la_LIBADD += -lsipXmediaProcessing
+if USE_SRTP1
+libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
+else
 libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp2
+endif
 libreflow_la_LIBADD += @LIBSTL_LIBADD@
 libreflow_la_LIBADD += @LIBPTHREAD_LIBADD@
 libreflow_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
