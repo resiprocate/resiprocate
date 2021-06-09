@@ -1,6 +1,5 @@
 
-EXTRA_DIST = README.windows
-EXTRA_DIST += sip.mcp.xml
+EXTRA_DIST = sip.mcp.xml
 EXTRA_DIST += update-svn-ignores.sh
 
 SUBDIRS = stack dum certs

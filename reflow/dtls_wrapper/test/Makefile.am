@@ -8,6 +8,10 @@ else
 LDADD += -lsrtp2
 endif
 
+if USE_SRTP1
+# srtp_priv.h isn't shipped in the packages for srtp2
+# see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169
+# Therefore, we don't try to build the test at present.
 noinst_LTLIBRARIES = libdtlswrappertest.la
 
 libdtlswrappertest_la_SOURCES = \
@@ -19,6 +23,10 @@ libdtlswrappertest_la_SOURCES = \
 	CreateCert.cxx \
 	TestDtlsUdp.cxx \
 	TestTimerContext.cxx
+
+noinst_HEADERS = CreateCert.hxx \
+	TestDtlsUdp.hxx \
+	TestTimerContext.hxx
 
 libdtlswrappertest_la_LIBADD = \
 	$(LIBSSL_LIBADD)
@@ -32,6 +40,7 @@ noinst_PROGRAMS = \
 	$(TESTS) \
 	testDtlsClient \
 	testDtlsServer 
+endif
 
 testDtlsWrapper_SOURCES = testDtlsWrapper.cxx
 testDtlsClient_SOURCES = testDtlsClient.cxx

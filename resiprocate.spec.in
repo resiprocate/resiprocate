@@ -23,7 +23,7 @@ BuildRequires: libdb-cxx-devel
 %if %use_systemd
 BuildRequires: systemd
 %endif
-BuildRequires: db4-devel
+BuildRequires: libdb-devel
 BuildRequires: openssl-devel >= 1.1.0
 %define use_mariadb 0%{?fedora} >= 30 || 0%{?rhel} >= 8
 %if %use_mariadb
