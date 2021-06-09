@@ -25,7 +25,6 @@
 
 extern "C" 
 {
-#include <srtp2/srtp.h>
 #include "../../Srtp2Helper.hxx"
 // this file isn't shipped in the packages for srtp2
 // see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169

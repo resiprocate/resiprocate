@@ -9,12 +9,7 @@
 #include <rutil/TimeLimitFifo.hxx>
 #include <rutil/Mutex.hxx>
 
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp2/srtp.h>
 #include "Srtp2Helper.hxx"
-#endif
 
 #include "reTurn/client/TurnAsyncUdpSocket.hxx"
 #include "reTurn/client/TurnAsyncTcpSocket.hxx"
