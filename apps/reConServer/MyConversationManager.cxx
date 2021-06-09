@@ -19,22 +19,22 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
 #ifdef USE_KURENTO
 // FIXME: see comments in MyConversationManager.hxx
-      : KurentoConversationManager("localhost:8888", defaultSampleRate, maxSampleRate),
+MyConversationManager::MyConversationManager(bool autoAnswerEnabled)
+      : KurentoConversationManager("localhost:8888"), // FIXME URI
 #else
+MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
       : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
 #endif
-        mLocalAudioEnabled(localAudioEnabled),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
 }
 
 void
 MyConversationManager::startup()
-{      
-   if(mLocalAudioEnabled)
+{
+   if(supportsLocalAudio())
    {
       // Create initial local participant and conversation  
       addParticipant(createConversation(), createLocalParticipant());
@@ -129,7 +129,7 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
       {
          ConversationHandle convHandle = createConversation();
          // ensure a local participant is in the conversation - create one if one doesn't exist
-         if(mLocalAudioEnabled && mLocalParticipantHandles.empty())
+         if(supportsLocalAudio() && mLocalParticipantHandles.empty())
          {
             createLocalParticipant();
          }

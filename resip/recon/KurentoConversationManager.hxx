@@ -184,7 +184,7 @@ public:
 
    virtual bool supportsMultipleMediaInterfaces() override;
    virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) override;
-   virtual bool supportsLocalAudio() override { return mLocalAudioEnabled; }
+   virtual bool supportsLocalAudio() override { return false; }
    virtual bool extraPlayAndRecordResourcesEnabled() { return mEnableExtraPlayAndRecordResources; }
 
    kurento_client::KurentoClient& getKurentoClient() { return mKurentoClient; };
@@ -248,7 +248,6 @@ private:
    friend class RedirectToParticipantCmd;
    friend class HoldParticipantCmd;
 
-   bool mLocalAudioEnabled;
    bool mEnableExtraPlayAndRecordResources;
 
    // Kurento Media related members

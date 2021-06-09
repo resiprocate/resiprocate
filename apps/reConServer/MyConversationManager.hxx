@@ -33,7 +33,11 @@ class MyConversationManager : public recon::SipXConversationManager
 {
 public:
 
+#ifdef PREFER_KURENTO
+   MyConversationManager(bool autoAnswerEnabled);
+#else
    MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+#endif
    virtual ~MyConversationManager() {};
 
    virtual void startup();
@@ -63,7 +67,6 @@ protected:
    std::list<recon::ParticipantHandle> mLocalParticipantHandles;
    std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
    std::list<recon::ParticipantHandle> mMediaParticipantHandles;
-   bool mLocalAudioEnabled;
    bool mAutoAnswerEnabled;
 };
 

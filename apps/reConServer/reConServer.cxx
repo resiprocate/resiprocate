@@ -61,6 +61,7 @@ int _kbhit() {
 
 #include <resip/stack/HEPSipMessageLoggingHandler.hxx>
 #include <reflow/HEPRTCPEventLoggingHandler.hxx>
+#include <reflow/Flow.hxx>
 
 using namespace reconserver;
 using namespace recon;
@@ -845,6 +846,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Used by ConversationManager::buildSessionCapabilities(...) to create
    // our local SDP
    std::vector<unsigned int> _codecIds;
+#ifdef USE_SIPXTAPI
    if(enableOpus)
    {
       _codecIds.push_back(SdpCodec::SDP_CODEC_OPUS);        // Opus
@@ -865,6 +867,7 @@ ReConServerProcess::main (int argc, char** argv)
    _codecIds.push_back(SdpCodec::SDP_CODEC_PCMA);           // 8 - pcma
    _codecIds.push_back(SdpCodec::SDP_CODEC_G729);           // 18 - G.729
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
+#endif
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
 
@@ -1305,7 +1308,11 @@ ReConServerProcess::main (int argc, char** argv)
       switch(application)
       {
          case ReConServerConfig::None:
+#ifdef PREFER_KURENTO
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(autoAnswerEnabled));
+#else
             mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+#endif
             break;
          case ReConServerConfig::B2BUA:
             {
@@ -1313,7 +1320,11 @@ ReConServerProcess::main (int argc, char** argv)
                {
                   mCDRFile = std::make_shared<CDRFile>(cdrLogFilename);
                }
+#ifdef PREFER_KURENTO
+               b2BCallManager = new B2BCallManager(reConServerConfig, mCDRFile);
+#else
                b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
+#endif
                mConversationManager.reset(b2BCallManager);
             }
             break;
@@ -1381,7 +1392,9 @@ ReConServerProcess::main (int argc, char** argv)
       mUserAgent->shutdown();
    }
    InfoLog(<< "reConServer is shutdown.");
+#ifdef USE_SIPXTAPI
    OsSysLog::shutdown();
+#endif
    ::sleepSeconds(2);
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 

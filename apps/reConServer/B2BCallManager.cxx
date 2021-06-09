@@ -53,8 +53,13 @@ B2BCall::peer(const recon::ParticipantHandle& partHandle)
    return (partHandle == mPartA) ? mPartB : mPartA;
 }
 
+#ifdef PREFER_KURENTO
+B2BCallManager::B2BCallManager(ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
+   : MyConversationManager(false),
+#else
 B2BCallManager::B2BCallManager(recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
    : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
+#endif
      mB2BCallLogger(std::move(b2bCallLogger))
 { 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
