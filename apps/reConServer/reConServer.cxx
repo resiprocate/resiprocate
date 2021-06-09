@@ -42,9 +42,8 @@ int _kbhit() {
 #include "AppSubsystem.hxx"
 #ifdef USE_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
-#endif
-
 #include <os/OsSysLog.h>
+#endif
 
 #include "reConServerConfig.hxx"
 #include "reConServer.hxx"

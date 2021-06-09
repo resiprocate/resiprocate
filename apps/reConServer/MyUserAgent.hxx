@@ -1,7 +1,9 @@
 #ifndef MYUSERAGENT_HXX
 #define MYUSERAGENT_HXX
 
+#ifdef USE_SIPXTAPI
 #include <os/OsIntTypes.h>
+#endif
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"

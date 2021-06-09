@@ -19,10 +19,12 @@ librecon_la_LIBADD += ../../reTurn/client/libreTurnClient.la
 librecon_la_LIBADD += ../dum/libdum.la
 librecon_la_LIBADD += ../stack/libresip.la
 librecon_la_LIBADD += ../../rutil/librutil.la
+if USE_SIPXTAPI
 librecon_la_LIBADD += -lsipXmediaProcessing
 librecon_la_LIBADD += -lsipXmedia
 librecon_la_LIBADD += -lsipXsdp
 librecon_la_LIBADD += -lsipXport
+endif
 if USE_KURENTO
 librecon_la_LIBADD += -lKurentoClientLib
 endif

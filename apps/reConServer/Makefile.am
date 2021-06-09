@@ -43,8 +43,8 @@ reConServer_SOURCES += playback_prompt.h
 reConServer_SOURCES += record_prompt.h
 
 reConServer_LDADD = ../../resip/recon/librecon.la
-if USE_SIPXTAPI
 reConServer_LDADD += ../../reflow/libreflow.la
+if USE_SIPXTAPI
 reConServer_LDADD += -lsipXsdp
 reConServer_LDADD += -lsipXmediaProcessing
 reConServer_LDADD += -lsipXmedia

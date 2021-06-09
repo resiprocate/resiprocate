@@ -17,7 +17,9 @@ AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
 lib_LTLIBRARIES = libreflow.la
 libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la
 libreflow_la_LIBADD += ../rutil/librutil.la
+if USE_SIPXTAPI
 libreflow_la_LIBADD += -lsipXmediaProcessing
+endif
 if USE_SRTP1
 libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
 else
