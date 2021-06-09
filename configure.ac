@@ -159,6 +159,14 @@ AC_ARG_WITH(mysql,
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
+# can't have both MariaDB C client and SOCI MySQL at the same
+# time in some environments, e.g. CentOS 8.1
+AM_CONDITIONAL(USE_SOCI_MYSQL, false)
+AC_ARG_WITH(soci-mysql,
+[  --with-soci-mysql       Build recon with SOCI MySQL support],
+ [AC_DEFINE_UNQUOTED(USE_SOCI_MYSQL, , USE_SOCI_MYSQL)
+ AM_CONDITIONAL(USE_SOCI_MYSQL, true)], )
+
 AM_CONDITIONAL(USE_POSTGRESQL, false)
 AC_ARG_WITH(postgresql,
 [  --with-postgresql       Link against PostgreSQL client libraries],
