@@ -171,7 +171,7 @@ MIB files describing the properties exposed by the SNMP agents
 in reSIProcate-based processes.  These are typically installed on the
 monitoring host that polls the reSIProcate services.
 
-%packages reconserver
+%package reconserver
 Summary: Conferencing and SBC process
 
 %description reconserver
@@ -204,7 +204,7 @@ RETURN_CFG=--with-return
 SRTP1=--with-srtp1
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} ${RETURN_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp --with-qpid-proton --with-recon --with-kurento ${SRTP1}
+CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -I/usr/include/soci" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} ${RETURN_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp --with-qpid-proton --with-recon --with-kurento ${SRTP1}
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 rm -rf resip/stack/gen/*.cxx
@@ -260,6 +260,16 @@ sed -i \
  -e 's!^TlsTempDhFilename = dh2048.pem!TlsTempDhFilename = %{_sysconfdir}/reTurn/dh2048.pem!' \
             %{buildroot}%{_sysconfdir}/reTurn/reTurnServer.config
 %endif
+install -m 0755 -d %{buildroot}%{_sharedstatedir}/repro
+rm -f %{buildroot}%{_libdir}/lib*.a
+rm -f %{buildroot}%{_libdir}/lib*.la
+rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.a
+rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.la
+install -m 0755 -d %{buildroot}/%{_docdir}/repro/examples/pyroute
+install -p -D -m644 repro/plugins/pyroute/*.py %{buildroot}/%{_docdir}/repro/examples/pyroute
+install -p -D -m644 repro/plugins/pyroute/README.txt %{buildroot}/%{_docdir}/repro/examples/pyroute
+install -m 0755 -d %{buildroot}%{_sysconfdir}/reConServer
+install -p -D -m640 apps/reConServer/reConServer.config %{buildroot}%{_sysconfdir}/reConServer/reConServer.config
 sed -i \
  -e 's!^#CAFile = /etc/pki/tls/cert.pem$!CAFile = /etc/pki/tls/cert.pem!' \
  -e 's!^LoggingType = cout$!LoggingType = syslog!' \
@@ -271,16 +281,6 @@ sed -i \
  -e 's!^#RunAsGroup = recon$!RunAsGroup = reconserver!' \
  -e 's!^Daemonize = false$!Daemonize = true!' \
             %{buildroot}%{_sysconfdir}/reConServer/reConServer.config
-install -m 0755 -d %{buildroot}%{_sharedstatedir}/repro
-rm -f %{buildroot}%{_libdir}/lib*.a
-rm -f %{buildroot}%{_libdir}/lib*.la
-rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.a
-rm -f %{buildroot}%{_libdir}/resiprocate/repro/plugins/lib*.la
-install -m 0755 -d %{buildroot}/%{_docdir}/repro/examples/pyroute
-install -p -D -m644 repro/plugins/pyroute/*.py %{buildroot}/%{_docdir}/repro/examples/pyroute
-install -p -D -m644 repro/plugins/pyroute/README.txt %{buildroot}/%{_docdir}/repro/examples/pyroute
-nstall -m 0755 -d %{buildroot}%{_sysconfdir}/reConServer
-install -p -D -m640 apps/reConServer/reConServer.config %{buildroot}%{_sysconfdir}/reConServer/reConServer.config
 
 %pre repro
 getent group repro >/dev/null || groupadd -r repro
@@ -432,6 +432,8 @@ fi
 %files libs
 %doc COPYING
 %{_libdir}/libdum-*.so
+%{_libdir}/librecon-*.so
+%{_libdir}/libreflow-*.so
 %{_libdir}/librepro-*.so
 %{_libdir}/libresip-*.so
 %if %build_return
@@ -447,6 +449,10 @@ fi
 %dir %{_includedir}/reTurn/
 %dir %{_includedir}/reTurn/client/
 %endif
+%dir %{_includedir}/recon/
+%dir %{_includedir}/reflow/
+%dir %{_includedir}/reflow/dtls_wrapper/
+%dir %{_includedir}/reflow/rtcp/
 %dir %{_includedir}/repro/
 %dir %{_includedir}/repro/monkeys/
 %dir %{_includedir}/repro/stateAgents/
@@ -466,6 +472,10 @@ fi
 %{_includedir}/reTurn/*.hxx
 %{_includedir}/reTurn/client/*.hxx
 %endif
+%{_includedir}/recon/*.hxx
+%{_includedir}/reflow/*.hxx
+%{_includedir}/reflow/dtls_wrapper/*.hxx
+%{_includedir}/reflow/rtcp/*.h
 %{_includedir}/repro/*.hxx
 %{_includedir}/repro/*/*.hxx
 %{_includedir}/resip/dum/*.hxx
@@ -477,6 +487,8 @@ fi
 %{_includedir}/rutil/*/*.hxx
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libdum.so
+%{_libdir}/librecon.so
+%{_libdir}/libreflow.so
 %{_libdir}/librepro.so
 %{_libdir}/libresip.so
 %if %build_return
@@ -540,14 +552,14 @@ fi
 
 %files reconserver
 %attr(0640,root,reconserver) %config(noreplace) %{_sysconfdir}/reConServer/reConServer.config
-%attr(0640,root,reconserver) %config(noreplace) %{_sysconfdir}/reConServer/users.txt
 %config(missingok) %ghost %{_sysconfdir}/reConServer/dh2048.pem
 %if %use_systemd
 %{_unitdir}/reconserver.service
 %else
 %{_initddir}/reconserver
 %endif
-%{_sbindir}/reconserver
+%{_sbindir}/reConServer
+%{_mandir}/man8/reConServer*.8*
 
 %changelog
 * Wed Jun 09 2021 Daniel Pocock <daniel@pocock.pro> - @VERSION@-1
