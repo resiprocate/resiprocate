@@ -44,7 +44,7 @@ Install reSIProcate dependencies from RHEL8 and EPEL
                    xerces-c-devel \
                    net-snmp-devel \
                    qpid-proton-cpp-devel \
-                   soci-devel soci-postgresql
+                   soci-devel soci-postgresql-devel
 
 Install dependencies built manually for RHEL8/EPEL
 
