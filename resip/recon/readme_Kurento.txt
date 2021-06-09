@@ -33,6 +33,9 @@ Install reSIProcate dependencies from RHEL8 and EPEL
 
   sudo dnf install libtool automake autoconf \
                    python3-devel python3-pycxx-devel \
+                   libdb-cxx libdb-cxx-devel \
+                   cppunit cppunit-devel \
+                   gperf \
                    radcli-devel \
                    c-ares-devel \
                    boost-devel \
@@ -50,14 +53,6 @@ Install dependencies built manually for RHEL8/EPEL
 
   cd ~/rpmbuild
   sudo rpm -i x86_64/asio-devel-1.16.1-3.el8.x86_64.rpm
-  sudo rpm -U x86_64/libdb-5.3.28-46.el8.x86_64.rpm \
-              x86_64/libdb-cxx-5.3.28-46.el8.x86_64.rpm \
-              x86_64/libdb-cxx-devel-5.3.28-46.el8.x86_64.rpm \
-              x86_64/libdb-devel-5.3.28-46.el8.x86_64.rpm \
-              x86_64/libdb-utils-5.3.28-46.el8.x86_64.rpm
-  sudo rpm -i x86_64/cppunit-1.15.1-5.el8.x86_64.rpm \
-              x86_64/cppunit-devel-1.15.1-5.el8.x86_64.rpm
-  sudo rpm -i x86_64/gperf-3.1-11.el8.x86_64.rpm
   sudo rpm -i noarch/cajun-jsonapi-devel-2.0.3-13.el8.noarch.rpm
 
 Install Docker (for Podman, alternative to Docker, see below)
