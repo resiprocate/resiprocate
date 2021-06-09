@@ -49,7 +49,6 @@ protected:
    std::list<recon::ParticipantHandle> mLocalParticipantHandles;
    std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
    std::list<recon::ParticipantHandle> mMediaParticipantHandles;
-   bool mLocalAudioEnabled;
    bool mAutoAnswerEnabled;
 };
 
