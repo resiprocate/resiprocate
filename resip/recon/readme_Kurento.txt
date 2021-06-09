@@ -20,6 +20,11 @@ Ensure you have sudo permissions
 
     usermod -aG wheel daniel
 
+Enable powertools (for *-devel packages)
+
+  sudo dnf -y install dnf-plugins-core
+  sudo dnf config-manager --set-enabled powertools
+
 Enable EPEL
 
   sudo dnf install epel-release
@@ -38,7 +43,8 @@ Install reSIProcate dependencies from RHEL8 and EPEL
                    postgresql-devel \
                    xerces-c-devel \
                    net-snmp-devel \
-                   qpid-proton-cpp-devel
+                   qpid-proton-cpp-devel \
+                   soci-devel soci-postgresql
 
 Install dependencies built manually for RHEL8/EPEL
 
