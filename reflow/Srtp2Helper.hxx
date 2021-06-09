@@ -1,12 +1,14 @@
 #if !defined(Srtp2Helper_hxx)
 #define Srtp2Helper_hxx
 
+#if defined (USE_SRTP1)
+#include <srtp/srtp.h>
+#else  // using srtp2
 #ifdef WIN32
 #include <srtp.h>
-#elif defined (USE_SRTP1)
-#include <srtp/srtp.h>
 #else
 #include <srtp2/srtp.h>
+#endif
 
 // grep 'not declared' /tmp/errs.log | cut -f5- -d: | sort -u | sed -e 's/ was not declared in this scope; did you mean//' | tr -d "'?" | while read ; do echo "#define$REPLY" ; done
 
