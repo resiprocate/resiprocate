@@ -33,7 +33,7 @@ MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipX
 
 void
 MyConversationManager::startup()
-{
+{      
    if(supportsLocalAudio())
    {
       // Create initial local participant and conversation  
