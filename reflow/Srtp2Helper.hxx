@@ -3,7 +3,7 @@
 
 #ifdef WIN32
 #include <srtp.h>
-#elif USE_SRTP1
+#elif defined (USE_SRTP1)
 #include <srtp/srtp.h>
 #else
 #include <srtp2/srtp.h>
