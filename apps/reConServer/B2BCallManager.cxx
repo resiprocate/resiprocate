@@ -14,7 +14,9 @@
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
+#ifdef USE_SOCI_MYSQL
 #include "mysql/soci-mysql.h"
+#endif
 #include "postgresql/soci-postgresql.h"
 
 #include "MyUserAgent.hxx"
@@ -122,10 +124,12 @@ B2BCallManager::B2BCallManager(recon::SipXConversationManager::MediaInterfaceMod
       {
          _dbType = &soci::postgresql;
       }
+#ifdef USE_SOCI_MYSQL
       else if(dbType == "mysql")
       {
          _dbType = &soci::mysql;
       }
+#endif
       else
       {
          CritLog(<<"unrecognized DatabaseType: " << dbType.c_str());

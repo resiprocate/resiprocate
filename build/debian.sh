@@ -39,6 +39,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-recon \
               --with-sipxtapi \
               --with-kurento \
+              --with-soci-mysql \
               --with-qpid-proton \
               --with-netsnmp
 
