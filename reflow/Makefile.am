@@ -4,10 +4,7 @@ EXTRA_DIST = ReadMe.txt
 EXTRA_DIST += *.vcxproj
 
 SUBDIRS = .
-# srtp_priv.h isn't shipped in the packages for srtp2
-# see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169
-# Therefore, we don't try to build the test at present.
-#SUBDIRS += dtls_wrapper/test
+SUBDIRS += dtls_wrapper/test
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
