@@ -349,11 +349,11 @@ if [ $1 -eq 1 ] ; then
     /sbin/chkconfig --add reconserver
 fi
 %endif
-if [ ! -e %{_sysconfdir}/reconserver/dh2048.pem ] ;
+if [ ! -e %{_sysconfdir}/reConServer/dh2048.pem ] ;
 then
-  /usr/bin/openssl dhparam -outform PEM -out %{_sysconfdir}/reconserver/dh2048.pem 2048
-  chown root:reconserver %{_sysconfdir}/reconserver/dh2048.pem
-  chmod 0640 %{_sysconfdir}/reconserver/dh2048.pem
+  /usr/bin/openssl dhparam -outform PEM -out %{_sysconfdir}/reConServer/dh2048.pem 2048
+  chown root:reconserver %{_sysconfdir}/reConServer/dh2048.pem
+  chmod 0640 %{_sysconfdir}/reConServer/dh2048.pem
 fi
 
 
