@@ -204,7 +204,7 @@ RETURN_CFG=--with-return
 SRTP1=--with-srtp1
 %endif
 export LDFLAGS="${LDFLAGS} -L%{_libdir}/mysql -L%{_libdir}/libdb4"
-CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -I/usr/include/soci" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} ${RETURN_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp --with-qpid-proton --with-recon --with-kurento ${SRTP1}
+CPPFLAGS="`net-snmp-config --base-cflags`" CXXFLAGS="%{optflags} -I%{_includedir}/libdb4 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D_REENTRANT -I/usr/include/soci" %configure --with-c-ares --with-ssl --with-mysql --with-postgresql ${RADIUS_CFG} ${RETURN_CFG} --with-repro --enable-repro-plugins --with-apps --enable-ipv6 --enable-dtls --with-python DEPS_PYTHON_CFLAGS="`${PYCONFIG} --cflags`" DEPS_PYTHON_LIBS="`${PYCONFIG} --ldflags`" PYCXX_SRCDIR=/usr/src/CXX/Python3 --enable-assert-syslog --with-netsnmp --with-qpid-proton --with-recon --with-kurento ${SRTP1}
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 rm -rf resip/stack/gen/*.cxx
