@@ -23,8 +23,10 @@ StackThread::~StackThread()
  * To avoid using these calls, use EventStackThread or call the
  * new SipStack::process(unsigned int) directly.
  */
+#ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 void
 StackThread::thread()
@@ -55,7 +57,9 @@ StackThread::thread()
    WarningLog (<< "Shutting down stack thread");
 }
 
+#ifndef WIN32
 #pragma GCC diagnostic pop
+#endif
 
 void
 StackThread::buildFdSet(FdSet& fdset)
