@@ -8,7 +8,7 @@
 
 #include <mp/MprBridge.h>
 #include <mp/MpResourceTopology.h>
-#include <mi/CpMediaInterface.h>
+#include <CpTopologyGraphInterface.h>
 #include <mp/MpEncoderBase.h>  // required so that static methods in header get linked in
 
 #include "BridgeMixer.hxx"
@@ -36,7 +36,7 @@ public:
 
      @param mediaInterface
    */
-   SipXBridgeMixer(CpMediaInterface& mediaInterface);
+   SipXBridgeMixer(CpTopologyGraphInterface& mediaInterface);
    virtual ~SipXBridgeMixer();
 
    /**
@@ -57,7 +57,7 @@ public:
 
 private:
    MpBridgeGain mMixMatrix[DEFAULT_BRIDGE_MAX_IN_OUTPUTS][DEFAULT_BRIDGE_MAX_IN_OUTPUTS];
-   CpMediaInterface& mMediaInterface;
+   CpTopologyGraphInterface& mMediaInterface;
 };
 
 }
@@ -67,6 +67,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

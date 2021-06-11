@@ -37,5 +37,8 @@ EXTRA_DIST = *.sln
 EXTRA_DIST += resiprocate.spec
 
 EXTRA_DIST += RELEASE-PROCESS.txt
+EXTRA_DIST += README_RPM-based-Linux.txt
 EXTRA_DIST += build/configure-android.sh
+EXTRA_DIST += build/debian.sh
+EXTRA_DIST += build/fedora.sh
 

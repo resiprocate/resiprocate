@@ -839,9 +839,11 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
    }
 #endif 
 
-   if(!mReceivedDataFifo.add(new ReceivedData(address, port, data), ReceivedDataFifo::EnforceTimeDepth))
+   ReceivedData* receivedData = new ReceivedData(address, port, data);
+   if(!mReceivedDataFifo.add(receivedData, ReceivedDataFifo::EnforceTimeDepth))
    {
-      WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full - discarding data!  componentId=" << mComponentId);
+      WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full (countDepth=" << mReceivedDataFifo.getCountDepth() << ", timeDepth=" << mReceivedDataFifo.getTimeDepth() << ") - discarding data!  socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+      delete receivedData;
    }
    else
    {

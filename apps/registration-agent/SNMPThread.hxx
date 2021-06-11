@@ -1,6 +1,7 @@
 #ifndef SNMPTHREAD_HXX
 #define SNMPTHREAD_HXX
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <thread>

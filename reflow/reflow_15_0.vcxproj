@@ -187,6 +187,7 @@
     <ClInclude Include="FlowManagerException.hxx" />
     <ClInclude Include="FlowManagerSubsystem.hxx" />
     <ClInclude Include="MediaStream.hxx" />
+    <ClInclude Include="Srtp2Helper.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

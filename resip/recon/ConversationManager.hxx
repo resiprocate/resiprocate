@@ -524,6 +524,15 @@ public:
    virtual void onParticipantConnected(ParticipantHandle partHandle, const resip::SipMessage& msg) = 0;
 
    /**
+     Notifies an application that an inbound remote participant call 
+     now fully connected after answering (ie: ACK was received).
+
+     @param partHandle Handle of the participant that is connected confirmed
+     @param msg SIP message that caused the connection
+   */
+   virtual void onParticipantConnectedConfirmed(ParticipantHandle partHandle, const resip::SipMessage& msg) {}
+
+   /**
      Notifies an application that a redirect request has succeeded.  
      Indicates blind transfer or attended transfer status. 
 

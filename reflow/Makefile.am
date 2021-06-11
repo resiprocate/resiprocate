@@ -4,10 +4,7 @@ EXTRA_DIST = ReadMe.txt
 EXTRA_DIST += *.vcxproj
 
 SUBDIRS = .
-# srtp_priv.h isn't shipped in the packages for srtp2
-# see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169
-# Therefore, we don't try to build the test at present.
-#SUBDIRS += dtls_wrapper/test
+SUBDIRS += dtls_wrapper/test
 
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CXXFLAGS = -I $(top_srcdir)
@@ -17,8 +14,14 @@ AM_CXXFLAGS += -DBOOST_ASIO_HAS_STD_CHRONO
 lib_LTLIBRARIES = libreflow.la
 libreflow_la_LIBADD = ../reTurn/client/libreTurnClient.la
 libreflow_la_LIBADD += ../rutil/librutil.la
+if USE_SIPXTAPI
 libreflow_la_LIBADD += -lsipXmediaProcessing
+endif
+if USE_SRTP1
+libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
+else
 libreflow_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp2
+endif
 libreflow_la_LIBADD += @LIBSTL_LIBADD@
 libreflow_la_LIBADD += @LIBPTHREAD_LIBADD@
 libreflow_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic

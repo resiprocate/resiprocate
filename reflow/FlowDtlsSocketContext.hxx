@@ -9,12 +9,7 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp2/srtp.h>
 #include "Srtp2Helper.hxx"
-#endif
 
 #include "dtls_wrapper/DtlsSocket.hxx"
 #include "Flow.hxx"

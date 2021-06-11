@@ -1,7 +1,9 @@
 #ifndef B2BCALLMANAGER_HXX
 #define B2BCALLMANAGER_HXX
 
+#ifdef USE_SIPXTAPI
 #include <os/OsIntTypes.h>
+#endif
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"

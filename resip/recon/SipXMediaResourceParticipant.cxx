@@ -41,18 +41,15 @@ SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle par
   MediaResourceParticipant(partHandle, sipXConversationManager, mediaUrl),
   SipXParticipant(partHandle, sipXConversationManager),
   mStreamPlayer(0),
-  mToneGenPortOnBridge(-1),
-  mFromFilePortOnBridge(-1)
-#ifndef SIPX_NO_RECORD
-  ,
-  mRecordPortOnBridge(-1)
-#endif
+  mPortOnBridge(-1)
 {
    InfoLog(<< "SipXMediaResourceParticipant created, handle=" << mHandle << " url=" << getMediaUrl());
 }
 
 SipXMediaResourceParticipant::~SipXMediaResourceParticipant()
 {
+   getMediaInterface()->unallocateResourceForMediaOperation(getResourceType(), mHandle);
+      
    // Destroy stream player (if created)
    if(mStreamPlayer)
    {
@@ -73,6 +70,16 @@ SipXMediaResourceParticipant::~SipXMediaResourceParticipant()
 void 
 SipXMediaResourceParticipant::startResourceImpl()
 {
+   // Check if we have allocated a media resource yet or not
+   if (mSipXResourceName.empty())
+   {
+      if (!getMediaInterface()->allocateAvailableResourceForMediaOperation(getResourceType(), mHandle, mSipXResourceName))
+      {
+         WarningLog(<< "SipXMediaResourceParticipant::startResource no available allocation for media participant of type=" << getResourceType());
+         return;
+      }
+   }
+
    switch(getResourceType())
    {
    case Tone:
@@ -109,20 +116,32 @@ SipXMediaResourceParticipant::startResourceImpl()
          SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(getConversationManager().getParticipant(partHandle));
          if(participant)
          {
-            StackLog(<<"SipXMediaResourceParticipant::startResource: sending tone to sipX connection: " << participant->getMediaConnectionId());
+            StackLog(<< "SipXMediaResourceParticipant::startResource: sending tone to sipX connection: " << participant->getMediaConnectionId());
+#if SIPX_NO_RECORD
             // Start RFC4733 out-of-band tone
             UtlString encodeName(DEFAULT_ENCODE_RESOURCE_NAME);
             MpResourceTopology::replaceNumInName(encodeName, participant->getMediaConnectionId());
             status = MprEncode::startTone(encodeName, *getMediaInterface()->getInterface()->getMsgQ(), toneid);
+#else
+            status = getMediaInterface()->getInterface()->startChannelOnlyTone(participant->getMediaConnectionId(), toneid);
+#endif
+            // We are NOT using the actual Tone resource from sipX when doing participant only, so we can free the allocation now, 
+            // so that multiple participant only tone resources can be started.
+            getMediaInterface()->unallocateResourceForMediaOperation(getResourceType(), mHandle);
          }
          else
          {
-            WarningLog(<<"SipXMediaResourceParticipant::startResource Participant " << partHandle << " no longer exists or invalid");
+            WarningLog(<< "SipXMediaResourceParticipant::startResource Participant " << partHandle << " no longer exists or invalid");
          }
       }
       else
       {
+#if SIPX_NO_RECORD
          status = getMediaInterface()->getInterface()->startTone(toneid, TRUE /* local - unused */, TRUE /* remote - unused */);
+#else
+         // Note:  We are passing rfc4733Enabled as false, since sipX will send RFC4733 to all active RTP connections, and they may be in entirely different recon conversations
+         status = getMediaInterface()->getInterface()->startTone(mSipXResourceName.c_str(), toneid, FALSE /* rfc4733Enabled? */);
+#endif
       }
       if(status == OS_SUCCESS)
       {
@@ -138,25 +157,24 @@ SipXMediaResourceParticipant::startResourceImpl()
    case File:
    {
       Data filepath = getMediaUrl().host().urlDecoded();
-      if(filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
-      else if(filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
+      if (filepath.size() > 3 && filepath.substr(0, 3) == Data("///")) filepath = filepath.substr(2);
+      else if (filepath.size() > 2 && filepath.substr(0, 2) == Data("//")) filepath = filepath.substr(1);
 
       filepath.replace("|", ":");  // For Windows filepath processing - convert | to :
 
       InfoLog(<< "SipXMediaResourceParticipant playing, handle=" << mHandle << " filepath=" << filepath);
 
       SipXMediaInterface* mediaInterface = getMediaInterface().get();
+#if SIPX_NO_RECORD
       OsStatus status = mediaInterface->getInterface()->playAudio(filepath.c_str(),
-                                                                  isRepeat() ? TRUE : FALSE /* repeast? */,
-                                                                  TRUE /* local - unused */, TRUE /* remote - unused */);
+         isRepeat() ? TRUE : FALSE /* repeast? */,
+         TRUE /* local - unused */, TRUE /* remote - unused */);
+#else
+      OsStatus status = mediaInterface->getInterface()->playAudio(mSipXResourceName.c_str(), filepath.c_str(), isRepeat() ? TRUE : FALSE /* repeat? */);
+#endif
 
       if(status == OS_SUCCESS)
       {
-         // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
-         // as the one that performed the last play media operation, so that MediaInterface can generate the event 
-         // to the conversation manage with the correct participant handle.  Note:  this works because sipX
-         // only allows a single play from file or cache at a time per media interface.
-         mediaInterface->setPlayMediaOperationPartipantHandle(mHandle);
          setRunning(true);
       }
       else
@@ -170,24 +188,28 @@ SipXMediaResourceParticipant::startResourceImpl()
    {
       InfoLog(<< "SipXMediaResourceParticipant playing, handle=" << mHandle << " cacheKey=" << getMediaUrl().host());
 
-      Data *buffer;
+      Data* buffer;
       int type;
-      if(getConversationManager().getBufferFromMediaResourceCache(getMediaUrl().host(), &buffer, &type))
+      if (getConversationManager().getBufferFromMediaResourceCache(getMediaUrl().host(), &buffer, &type))
       {
          SipXMediaInterface* mediaInterface = getMediaInterface().get();
+#if SIPX_NO_RECORD
          OsStatus status = mediaInterface->getInterface()->playBuffer((char*)buffer->data(),
-                                                                      buffer->size(),
-                                                                      8000, /* rate */
-                                                                      type,
-                                                                      isRepeat() ? TRUE : FALSE /* repeat? */,
-                                                                      TRUE /* local - unused */, TRUE /* remote - unused */);
-         if(status == OS_SUCCESS)
+            buffer->size(),
+            8000, /* rate */
+            type,
+            isRepeat() ? TRUE : FALSE /* repeat? */,
+            TRUE /* local - unused */, TRUE /* remote - unused */);
+#else
+         OsStatus status = mediaInterface->getInterface()->playBuffer(mSipXResourceName.c_str(), 
+            (char*)buffer->data(),
+            buffer->size(),
+            8000, /* rate */
+            type,
+            isRepeat() ? TRUE : FALSE /* repeat? */);
+#endif
+         if (status == OS_SUCCESS)
          {
-            // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
-            // as the one that performed the last play media operation, so that MediaInterface can generate the event 
-            // to the conversation manage with the correct participant handle.  Note:  this works because sipX
-            // only allows a single play from file or cache at a time per media interface.
-            mediaInterface->setPlayMediaOperationPartipantHandle(mHandle);
             setRunning(true);
          }
          else
@@ -221,11 +243,6 @@ SipXMediaResourceParticipant::startResourceImpl()
          }
          else
          {
-            // Playing an audio file, generates a finished event on the MediaInterface, set our participant handle
-            // as the one that performed the last play media operation, so that MediaInterface can generate the event 
-            // to the conversation manage with the correct participant handle.  Note:  this works because sipX
-            // only allows a single play from file or cache at a time per media interface.
-            getMediaInterface()->setPlayMediaOperationPartipantHandle(mHandle);
             setRunning(true);
          }
       }
@@ -285,7 +302,6 @@ SipXMediaResourceParticipant::startResourceImpl()
 
       SipXMediaInterface* mediaInterface = getMediaInterface().get();
 
-      // TODO - add URL parameter support for selecting between the following file formats: CP_WAVE_PCM_16, CP_WAVE_GSM, CP_OGG_OPUS
       // Note:  locking to single channel recording for now.  Will record all participants in a conversation in a mixed single
       //        channel file.  In order to support multi-channel recording a few things need to happen:
       //        1.  Fix bugs in sipX with multi-channel GSM WAV recording, or disallow.
@@ -294,22 +310,17 @@ SipXMediaResourceParticipant::startResourceImpl()
       //            but they are not alterened when additional RTP streams (remote Participants) come and go.
       //        4.  The MAXIMUM_RECORDER_CHANNELS=1 define needs to change in sipXmedaLib and sipXmediaAdpaterLib project files
       // Note: Automatic trimming of silence is not supported for OPUS recordings.
-      OsStatus status = mediaInterface->getInterface()->recordChannelAudio(
-         0 /* connectionId - not used by sipX */,
-         filepath.c_str(), 
-         format, 
+      OsStatus status = mediaInterface->getInterface()->recordAudio(
+         mSipXResourceName.c_str(),
+         filepath.c_str(),
+         format,
          append /* append? */,
-         1 /* numChannels */, 
+         1 /* numChannels */,
          getDurationMs() /* maxTime Ms */,
          silenceTimeMs /* silenceLength Ms, -1 to disable */,
          FALSE /* setupMixesAutomatically? */);
       if (status == OS_SUCCESS)
       {
-         // Recoding an audio file, can generate a finished event on the MediaInterface, set our participant handle
-         // as the one that performed the last record media operation, so that MediaInterface can generate the event 
-         // to the conversation manage with the correct participant handle.  Note:  this works because sipX
-         // only allows a single record at a time per media interface.
-         mediaInterface->setRecordMediaOperationPartipantHandle(mHandle);
          setRunning(true);
       }
       else
@@ -338,17 +349,21 @@ SipXMediaResourceParticipant::stopResource()
       case Tone:
       {
          OsStatus status = OS_FAILED;
-         if (getMediaUrl().exists(p_participantonly))
+         bool isDtmf = (getMediaUrl().host().size() == 1);
+         if (isDtmf && getMediaUrl().exists(p_participantonly))
          {
-            bool isDtmf = (getMediaUrl().host().size() == 1);
             int partHandle = getMediaUrl().param(p_participantonly).convertInt();
             SipXRemoteParticipant* participant = dynamic_cast<SipXRemoteParticipant*>(getConversationManager().getParticipant(partHandle));
-            if (isDtmf && participant)
+            if (participant)
             {
+#ifdef SIPX_NO_RECORD
                // Stop RFC4733 out-of-band tone
                UtlString encodeName(DEFAULT_ENCODE_RESOURCE_NAME);
                MpResourceTopology::replaceNumInName(encodeName, participant->getMediaConnectionId());
                status = MprEncode::stopTone(encodeName, *getMediaInterface()->getInterface()->getMsgQ());
+#else
+               status = getMediaInterface()->getInterface()->stopChannelOnlyTone(participant->getMediaConnectionId());
+#endif
             }
             else
             {
@@ -357,7 +372,11 @@ SipXMediaResourceParticipant::stopResource()
          }
          else
          {
+#ifdef SIPX_NO_RECORD
             status = getMediaInterface()->getInterface()->stopTone();
+#else
+            status = getMediaInterface()->getInterface()->stopTone(mSipXResourceName.c_str(), FALSE);
+#endif
          }
          if (status != OS_SUCCESS)
          {
@@ -368,7 +387,12 @@ SipXMediaResourceParticipant::stopResource()
       case File:
       case Cache:
       {
+#ifdef SIPX_NO_RECORD
          OsStatus status = getMediaInterface()->getInterface()->stopAudio();
+#else
+         resip_assert(!mSipXResourceName.empty());
+         OsStatus status = getMediaInterface()->getInterface()->stopAudio(mSipXResourceName.c_str());
+#endif
          if (status != OS_SUCCESS)
          {
             WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling stopAudio: " << status);
@@ -392,11 +416,13 @@ SipXMediaResourceParticipant::stopResource()
       break;
       case Record:
       {
-         OsStatus status = getMediaInterface()->getInterface()->stopRecordChannelAudio(0 /* connectionId - not used by sipX */);
+#ifndef SIPX_NO_RECORD
+         OsStatus status = getMediaInterface()->getInterface()->stopRecordAudio(mSipXResourceName.c_str());
          if (status != OS_SUCCESS)
          {
             WarningLog(<< "SipXMediaResourceParticipant::stopResource error calling stopRecordChannelAudio: " << status);
          }
+#endif
       }
       break;
       case Invalid:
@@ -410,48 +436,35 @@ SipXMediaResourceParticipant::stopResource()
 int 
 SipXMediaResourceParticipant::getConnectionPortOnBridge()
 {
-   int connectionPort = -1;
-   switch(getResourceType())
+   if (mPortOnBridge == -1)
    {
-   case Tone:     
-      if(mToneGenPortOnBridge == -1)
+      resip_assert(getMediaInterface() != 0);
+
+      // Check if we have allocated a media resource yet or not
+      if (mSipXResourceName.empty())
       {
-         resip_assert(getMediaInterface() != 0);     
-         ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
-         InfoLog(<< "SipXMediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mToneGenPortOnBridge=" << mToneGenPortOnBridge);
+         if (!getMediaInterface()->allocateAvailableResourceForMediaOperation(getResourceType(), mHandle, mSipXResourceName))
+         {
+            WarningLog(<< "SipXMediaResourceParticipant::getConnectionPortOnBridge no available allocation for media participant of type=" << getResourceType());
+            return -1;
+         }
       }
-      connectionPort = mToneGenPortOnBridge;
-      break;
-   case File:
-   case Cache:
-   case Http:
-   case Https:
-      if(mFromFilePortOnBridge == -1)
+      if (getResourceType() == Record)
       {
-         resip_assert(getMediaInterface() != 0);     
-         ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
-         InfoLog(<< "SipXMediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mFromFilePortOnBridge=" << mFromFilePortOnBridge);
-      }
-      connectionPort = mFromFilePortOnBridge;
-      break;
-   case Record:
 #ifdef SIPX_NO_RECORD
-      ErrLog(<< "support for Record was not enabled at compile time");
+         ErrLog(<< "support for Record was not enabled at compile time");
 #else
-      if (mRecordPortOnBridge == -1)
-      {
-         resip_assert(getMediaInterface() != 0);
-         ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceOutputPortOnBridge(DEFAULT_RECORDER_RESOURCE_NAME, 0, mRecordPortOnBridge);
-         InfoLog(<< "SipXMediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mRecordPortOnBridge=" << mRecordPortOnBridge);
-      }
-      connectionPort = mRecordPortOnBridge;
+         getMediaInterface()->getInterface()->getResourceOutputPortOnBridge(mSipXResourceName.c_str(), 0, mPortOnBridge);
 #endif
-      break;
-   case Invalid:
-      WarningLog(<< "SipXMediaResourceParticipant::getConnectionPortOnBridge invalid resource type: " << getResourceType());
-      break;
+      }
+      else
+      { 
+         getMediaInterface()->getInterface()->getResourceInputPortOnBridge(mSipXResourceName.c_str(), 0, mPortOnBridge);
+      }
+      InfoLog(<< "SipXMediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mPortOnBridge=" << mPortOnBridge);
    }
-   return connectionPort;
+   assert(mPortOnBridge != -1);
+   return mPortOnBridge;
 }
 
 void 

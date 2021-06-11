@@ -1,5 +1,5 @@
 #include "SipXMediaInterface.hxx"
-#include "ConversationManager.hxx"
+#include "SipXConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "DtmfEvent.hxx"
 #include "FlowManagerSipXSocket.hxx"
@@ -19,20 +19,28 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager, CpMediaInterface* mediaInterface) :
+SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager, CpTopologyGraphInterface* mediaInterface) :
    mConversationManager(conversationManager),
    mMediaInterface(mediaInterface),
-   mAllowLoggingDTMFDigits(true),
-   mLastPlayMediaOperationParticipantHandle(0),
-   mLastRecordMediaOperationParticipantHandle(0)
+   mAllowLoggingDTMFDigits(true)
 {
+   // Add the available sipX resources.  Note:  This list must match what is provided by the sipX CpTopologyGraphImpl
+   // default initial resources, plus any customizations done in SipXConversationManager::addExtraPlayAndRecordResourcesToTopology
+   mMediaResourceAllocations[MediaResourceParticipant::Tone].push_back(MediaResourceAllocationInfo(DEFAULT_TONE_GEN_RESOURCE_NAME));
+   mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_RESOURCE_NAME));  // Note:  File resource also tracks Cache type
+   mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));
+   if (((SipXConversationManager*)&conversationManager)->extraPlayAndRecordResourcesEnabled())
+   {
+      mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
+      mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_RECORDER_2_RESOURCE_NAME));
+   }
 }
 
 OsStatus 
 SipXMediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, FlowManagerSipXSocket* rtpSocket, FlowManagerSipXSocket* rtcpSocket, bool isMulticast)
 {
    assert(mMediaInterface);
-   OsStatus ret = ((CpTopologyGraphInterface*)mMediaInterface)->createConnection(connectionId, rtpSocket, rtcpSocket, isMulticast);
+   OsStatus ret = mMediaInterface->createConnection(connectionId, rtpSocket, rtcpSocket, isMulticast);
    updateConnectionIdToPartipantHandleMapping(connectionId, partHandle);
    return ret;
 }
@@ -41,7 +49,7 @@ OsStatus
 SipXMediaInterface::createConnection(int& connectionId, ParticipantHandle partHandle, const char* localAddress, int localPort)
 {
    assert(mMediaInterface);
-   OsStatus ret = ((CpTopologyGraphInterface*)mMediaInterface)->createConnection(connectionId, localAddress, localPort);
+   OsStatus ret = mMediaInterface->createConnection(connectionId, localAddress, localPort);
    updateConnectionIdToPartipantHandleMapping(connectionId, partHandle);
    return ret;
 }
@@ -78,6 +86,71 @@ SipXMediaInterface::getParticipantHandleForConnectionId(int connectionId)
    return partHandle;
 }
 
+ParticipantHandle 
+SipXMediaInterface::getParticipantHandleForMediaResource(MediaResourceParticipant::ResourceType resourceType, const resip::Data& sipXResourceName)
+{
+   ParticipantHandle partHandle = 0;
+   resip::Lock lock(mMediaResourceAllocationsMutex);
+   std::list<MediaResourceAllocationInfo>& resourceInfos = getAllocationResourceInfos(resourceType);
+   // Walk the list and find the resource name
+   for (auto it = resourceInfos.begin(); it != resourceInfos.end(); it++)
+   {
+      if (it->mSipXResourceName == sipXResourceName)
+      {
+         assert(it->mAllocatedParticipantHandle != 0);
+         partHandle = it->mAllocatedParticipantHandle;
+         break;
+      }
+   }
+   return partHandle;
+}
+
+// ensure mutex is grabbed before calling
+std::list<SipXMediaInterface::MediaResourceAllocationInfo>& SipXMediaInterface::getAllocationResourceInfos(MediaResourceParticipant::ResourceType resourceType)
+{
+   if (resourceType == MediaResourceParticipant::Cache)
+   {
+      // Cache and File resources are the same sipX resource, track both under the File type
+      resourceType = MediaResourceParticipant::File;
+   }
+   assert(mMediaResourceAllocations.find(resourceType) != mMediaResourceAllocations.end());
+   return mMediaResourceAllocations[resourceType];
+}
+
+bool 
+SipXMediaInterface::allocateAvailableResourceForMediaOperation(MediaResourceParticipant::ResourceType resourceType, ParticipantHandle partHandle, Data& allocatedResourceName)
+{
+   resip::Lock lock(mMediaResourceAllocationsMutex);
+   std::list<MediaResourceAllocationInfo>& resourceInfos = getAllocationResourceInfos(resourceType);
+   // Walk the list and find an unallocated resource
+   for (auto it = resourceInfos.begin(); it != resourceInfos.end(); it++)
+   {
+      if (it->mAllocatedParticipantHandle == 0)
+      {
+         allocatedResourceName = it->mSipXResourceName;
+         it->mAllocatedParticipantHandle = partHandle;
+         return true;
+      }
+   }
+   return false;
+}
+
+void 
+SipXMediaInterface::unallocateResourceForMediaOperation(MediaResourceParticipant::ResourceType resourceType, ParticipantHandle partHandle)
+{
+   resip::Lock lock(mMediaResourceAllocationsMutex);
+   std::list<MediaResourceAllocationInfo>& resourceInfos = getAllocationResourceInfos(resourceType);
+   // Walk the list and find the allocated resource, then disassociate the participant handle to signify it is unallocated
+   for (auto it = resourceInfos.begin(); it != resourceInfos.end(); it++)
+   {
+      if (it->mAllocatedParticipantHandle == partHandle)
+      {
+         it->mAllocatedParticipantHandle = 0;
+         break;
+      }
+   }
+}
+
 OsStatus 
 SipXMediaInterface::post(const OsMsg& msg)
 {
@@ -101,23 +174,23 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_PLAY_FINISHED:
          {
             // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastPlayMediaOperationParticipantHandle, MediaEvent::RESOURCE_DONE, MediaEvent::DIRECTION_OUT);
+            ParticipantHandle partHandle = getParticipantHandleForMediaResource(MediaResourceParticipant::File, pNotfMsg->getSourceId().data());
+            MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::RESOURCE_DONE, MediaEvent::DIRECTION_OUT);
             mConversationManager.post(mevent);
-            InfoLog( << "SipXMediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() <<
-               ", connectionId=" << pNotfMsg->getConnectionId() << 
-               ", participantHandle=" << mLastPlayMediaOperationParticipantHandle);
+            InfoLog(<< "SipXMediaInterface: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() <<
+               ", connectionId=" << pNotfMsg->getConnectionId() << ", participantHandle=" << partHandle);
          }
          break;
       case MiNotification::MI_NOTF_PLAY_ERROR:
-      {
-         // Queue event to conversation manager thread
-         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastPlayMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED, MediaEvent::DIRECTION_OUT);
-         mConversationManager.post(mevent);
-         InfoLog(<< "SipXMediaInterface: received MI_NOTF_PLAY_ERROR, sourceId=" << pNotfMsg->getSourceId().data() <<
-            ", connectionId=" << pNotfMsg->getConnectionId() <<
-            ", participantHandle=" << mLastPlayMediaOperationParticipantHandle);
-      }
-      break;
+         {
+            // Queue event to conversation manager thread
+            ParticipantHandle partHandle = getParticipantHandleForMediaResource(MediaResourceParticipant::File, pNotfMsg->getSourceId().data());
+            MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::RESOURCE_FAILED, MediaEvent::DIRECTION_OUT);
+            mConversationManager.post(mevent);
+            InfoLog(<< "SipXMediaInterface: received MI_NOTF_PLAY_ERROR, sourceId=" << pNotfMsg->getSourceId().data() <<
+               ", connectionId=" << pNotfMsg->getConnectionId() <<  ", participantHandle=" << partHandle);
+         }
+         break;
       case MiNotification::MI_NOTF_PROGRESS:
          InfoLog( << "SipXMediaInterface: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
@@ -138,21 +211,21 @@ SipXMediaInterface::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_RECORD_FINISHED:
          {
             // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(mConversationManager, mLastRecordMediaOperationParticipantHandle, MediaEvent::RESOURCE_DONE, MediaEvent::DIRECTION_IN);
+            ParticipantHandle partHandle = getParticipantHandleForMediaResource(MediaResourceParticipant::Record, pNotfMsg->getSourceId().data());
+            MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::RESOURCE_DONE, MediaEvent::DIRECTION_IN);
             mConversationManager.post(mevent);
             InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() <<
-               ", connectionId=" << pNotfMsg->getConnectionId() <<
-               ", participantHandle=" << mLastRecordMediaOperationParticipantHandle);
+               ", connectionId=" << pNotfMsg->getConnectionId() << ", participantHandle=" << partHandle);
          }
          break;
       case MiNotification::MI_NOTF_RECORD_ERROR:
       {
          // Queue event to conversation manager thread
-         MediaEvent* mevent = new MediaEvent(mConversationManager, mLastRecordMediaOperationParticipantHandle, MediaEvent::RESOURCE_FAILED, MediaEvent::DIRECTION_IN);
+         ParticipantHandle partHandle = getParticipantHandleForMediaResource(MediaResourceParticipant::Record, pNotfMsg->getSourceId().data());
+         MediaEvent* mevent = new MediaEvent(mConversationManager, partHandle, MediaEvent::RESOURCE_FAILED, MediaEvent::DIRECTION_IN);
          mConversationManager.post(mevent);
          InfoLog(<< "SipXMediaInterface: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() <<
-            ", connectionId=" << pNotfMsg->getConnectionId() <<
-            ", participantHandle=" << mLastRecordMediaOperationParticipantHandle);
+            ", connectionId=" << pNotfMsg->getConnectionId() << ", participantHandle=" << partHandle);
       }
       break;
       case MiNotification::MI_NOTF_DTMF_RECEIVED:

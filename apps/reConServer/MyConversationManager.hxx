@@ -1,7 +1,9 @@
 #ifndef MYCONVERSATIONMANAGER_HXX
 #define MYCONVERSATIONMANAGER_HXX
 
+#ifdef USE_SIPXTAPI
 #include <os/OsIntTypes.h>
+#endif
 
 #if defined(HAVE_CONFIG_H)
   #include "config.h"
@@ -47,7 +49,6 @@ protected:
    std::list<recon::ParticipantHandle> mLocalParticipantHandles;
    std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
    std::list<recon::ParticipantHandle> mMediaParticipantHandles;
-   bool mLocalAudioEnabled;
    bool mAutoAnswerEnabled;
 };
 

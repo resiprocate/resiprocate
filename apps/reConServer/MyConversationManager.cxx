@@ -20,8 +20,7 @@ using namespace recon;
 using namespace reconserver;
 
 MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
-      : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate),
-        mLocalAudioEnabled(localAudioEnabled),
+      : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
 }
@@ -29,7 +28,7 @@ MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterf
 void
 MyConversationManager::startup()
 {      
-   if(mLocalAudioEnabled)
+   if(supportsLocalAudio())
    {
       // Create initial local participant and conversation  
       addParticipant(createConversation(), createLocalParticipant());
@@ -124,7 +123,7 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
       {
          ConversationHandle convHandle = createConversation();
          // ensure a local participant is in the conversation - create one if one doesn't exist
-         if(mLocalAudioEnabled && mLocalParticipantHandles.empty())
+         if(supportsLocalAudio() && mLocalParticipantHandles.empty())
          {
             createLocalParticipant();
          }

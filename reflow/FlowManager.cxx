@@ -19,12 +19,7 @@
 #include <rutil/Random.hxx>
 #include <rutil/Timer.hxx>
 
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp2/srtp.h>
 #include "Srtp2Helper.hxx"
-#endif
 
 #ifdef USE_SSL  
 #include <openssl/x509.h>

@@ -11,11 +11,6 @@
 #include <vector>
 extern "C" 
 {
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp2/srtp.h>
-#endif
 #include "../Srtp2Helper.hxx"
 }
 

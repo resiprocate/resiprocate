@@ -5,7 +5,9 @@ EXTRA_DIST += *.wav
 EXTRA_DIST += reconserver.init
 EXTRA_DIST += reconserver.service
 
+if USE_SIPXTAPI
 sbin_PROGRAMS = reConServer
+endif
 
 dist_man_MANS = reConServer.8
 
@@ -38,16 +40,21 @@ reConServer_SOURCES += record_prompt.h
 
 reConServer_LDADD = ../../resip/recon/librecon.la
 reConServer_LDADD += ../../reflow/libreflow.la
+if USE_SIPXTAPI
 reConServer_LDADD += -lsipXsdp
 reConServer_LDADD += -lsipXmediaProcessing
 reConServer_LDADD += -lsipXmedia
 reConServer_LDADD += -lsipXport
 reConServer_LDADD += -lsipXtack
+endif
 reConServer_LDADD += ../../resip/dum/libdum.la
 reConServer_LDADD += ../../resip/stack/libresip.la
 reConServer_LDADD += ../../rutil/librutil.la
 reConServer_LDADD += -lssl -lcrypto -lpthread
-reConServer_LDADD += -lsoci_core -lsoci_mysql -lsoci_postgresql -ldl -lmysqlclient
+reConServer_LDADD += -lsoci_core -lsoci_postgresql -ldl
+if USE_SOCI_MYSQL
+reConServer_LDADD += -lsoci_mysql -lmysqlclient
+endif
 
 BUILT_SOURCES = playback_prompt.h record_prompt.h
 

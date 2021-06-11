@@ -25,11 +25,10 @@
 
 extern "C" 
 {
-#include <srtp2/srtp.h>
 #include "../../Srtp2Helper.hxx"
 // this file isn't shipped in the packages for srtp2
 // see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169
-#include <srtp2/srtp_priv.h>
+#include <srtp/srtp_priv.h>
 }
 
 void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::string &rOutDump)

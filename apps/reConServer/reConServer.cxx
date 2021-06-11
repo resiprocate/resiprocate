@@ -40,9 +40,11 @@ int _kbhit() {
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/recon/UserAgent.hxx"
 #include "AppSubsystem.hxx"
-#include <resip/recon/SipXHelper.hxx>
 
+#ifdef USE_SIPXTAPI
+#include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
+#endif
 
 #include "reConServerConfig.hxx"
 #include "reConServer.hxx"

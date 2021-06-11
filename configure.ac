@@ -159,6 +159,14 @@ AC_ARG_WITH(mysql,
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
+# can't have both MariaDB C client and SOCI MySQL at the same
+# time in some environments, e.g. CentOS 8.1
+AM_CONDITIONAL(USE_SOCI_MYSQL, false)
+AC_ARG_WITH(soci-mysql,
+[  --with-soci-mysql       Build recon with SOCI MySQL support],
+ [AC_DEFINE_UNQUOTED(USE_SOCI_MYSQL, , USE_SOCI_MYSQL)
+ AM_CONDITIONAL(USE_SOCI_MYSQL, true)], )
+
 AM_CONDITIONAL(USE_POSTGRESQL, false)
 AC_ARG_WITH(postgresql,
 [  --with-postgresql       Link against PostgreSQL client libraries],
@@ -261,9 +269,21 @@ AC_ARG_WITH(telepathy,
 
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
-[  --with-recon            Build recon, links against sipX],
+[  --with-recon            Build recon],
  [AC_DEFINE_UNQUOTED(BUILD_RECON, , BUILD_RECON)
  AM_CONDITIONAL(BUILD_RECON, true)], )
+
+AM_CONDITIONAL(USE_SRTP1, false)
+AC_ARG_WITH(srtp1,
+[  --with-srtp1            Use srtp 1.x instead of current version],
+ [AC_DEFINE_UNQUOTED(USE_SRTP1, , USE_SRTP1)
+ AM_CONDITIONAL(USE_SRTP1, true)], )
+
+AM_CONDITIONAL(USE_SIPXTAPI, false)
+AC_ARG_WITH(sipxtapi,
+[  --with-sipxtapi         Build recon with sipXtapi support],
+ [AC_DEFINE_UNQUOTED(USE_SIPXTAPI, , USE_SIPXTAPI)
+ AM_CONDITIONAL(USE_SIPXTAPI, true)], )
 
 AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, false)
 AC_ARG_ENABLE(recon-local-hw-tests,

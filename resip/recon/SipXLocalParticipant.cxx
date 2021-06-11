@@ -43,7 +43,7 @@ SipXLocalParticipant::getConnectionPortOnBridge()
    if(mLocalPortOnBridge == -1)
    {
       resip_assert(getMediaInterface() != 0);       
-      ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
+      getMediaInterface()->getInterface()->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
       InfoLog(<< "SipXLocalParticipant getConnectionPortOnBridge, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
    }
    return mLocalPortOnBridge;
@@ -65,6 +65,7 @@ SipXLocalParticipant::addToConversation(Conversation *conversation, unsigned int
 
 /* ====================================================================
 
+ Copuright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

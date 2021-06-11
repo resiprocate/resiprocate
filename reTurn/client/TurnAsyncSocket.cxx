@@ -29,7 +29,7 @@ namespace reTurn {
 unsigned int TurnAsyncSocket::UnspecifiedLifetime = 0xFFFFFFFF;
 unsigned int TurnAsyncSocket::UnspecifiedBandwidth = 0xFFFFFFFF; 
 unsigned short TurnAsyncSocket::UnspecifiedToken = 0;
-asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
+asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress;
 
 TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService, 
                                  AsyncSocketBase& asyncSocketBase,

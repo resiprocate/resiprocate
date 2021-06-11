@@ -74,13 +74,9 @@ public:
 protected:       
 
 private:
+   resip::Data mSipXResourceName;
    MpStreamPlayer* mStreamPlayer;
-   int mToneGenPortOnBridge;
-   int mFromFilePortOnBridge;
-#ifndef SIPX_NO_RECORD
-   int mRecordPortOnBridge;
-#endif
-
+   int mPortOnBridge;
 };
 
 }
