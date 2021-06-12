@@ -192,6 +192,8 @@ public:
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
 
+   virtual const resip::Uri& getKurentoUri() const { return mKurentoUri; }
+
 private:
    void init(int defaultSampleRate = 0, int maxSampleRate = 0);
 
