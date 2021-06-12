@@ -839,6 +839,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
    bool enableOpus = reConServerConfig.getConfigBool("EnableOpus", false);
+   Uri kurentoUri = reConServerConfig.getConfigUri("KurentoURI", Uri("kurento:127.0.0.1:8888"));
    ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
 
 
@@ -915,6 +916,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
    InfoLog( << "  Enable Opus codec = " << (enableOpus ? "true" : "false"));
+   InfoLog( << "  Kurento URI = " << kurentoUri);
    InfoLog( << "  Log Type = " << loggingType);
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
@@ -1309,7 +1311,7 @@ ReConServerProcess::main (int argc, char** argv)
       {
          case ReConServerConfig::None:
 #ifdef PREFER_KURENTO
-            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(autoAnswerEnabled));
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(kurentoUri, autoAnswerEnabled));
 #else
             mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
 #endif
@@ -1321,7 +1323,7 @@ ReConServerProcess::main (int argc, char** argv)
                   mCDRFile = std::make_shared<CDRFile>(cdrLogFilename);
                }
 #ifdef PREFER_KURENTO
-               b2BCallManager = new B2BCallManager(reConServerConfig, mCDRFile);
+               b2BCallManager = new B2BCallManager(kurentoUri, reConServerConfig, mCDRFile);
 #else
                b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
 #endif

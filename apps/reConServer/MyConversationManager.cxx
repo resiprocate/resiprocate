@@ -21,8 +21,8 @@ using namespace reconserver;
 
 #ifdef USE_KURENTO
 // FIXME: see comments in MyConversationManager.hxx
-MyConversationManager::MyConversationManager(bool autoAnswerEnabled)
-      : KurentoConversationManager("localhost:8888"), // FIXME URI
+MyConversationManager::MyConversationManager(const Uri& kurentoUri, bool autoAnswerEnabled)
+      : KurentoConversationManager(kurentoUri),
 #else
 MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
       : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),

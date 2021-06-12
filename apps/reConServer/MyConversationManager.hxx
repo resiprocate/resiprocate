@@ -34,7 +34,7 @@ class MyConversationManager : public recon::SipXConversationManager
 public:
 
 #ifdef PREFER_KURENTO
-   MyConversationManager(bool autoAnswerEnabled);
+   MyConversationManager(const resip::Uri& kurentoUri, bool autoAnswerEnabled);
 #else
    MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
 #endif
