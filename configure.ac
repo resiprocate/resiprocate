@@ -159,6 +159,14 @@ AC_ARG_WITH(mysql,
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
 
+# some systems may have a newer version of libpq that is not
+# compatible with the packaged version of soci_postgresql
+AM_CONDITIONAL(USE_SOCI_POSTGRESQL, false)
+AC_ARG_WITH(soci-postgresql,
+[  --with-soci-postgresql  Build recon with SOCI PostgreSQL support],
+ [AC_DEFINE_UNQUOTED(USE_SOCI_POSTGRESQL, , USE_SOCI_POSTGRESQL)
+ AM_CONDITIONAL(USE_SOCI_POSTGRESQL, true)], )
+
 # can't have both MariaDB C client and SOCI MySQL at the same
 # time in some environments, e.g. CentOS 8.1
 AM_CONDITIONAL(USE_SOCI_MYSQL, false)
