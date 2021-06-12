@@ -113,8 +113,8 @@ public:
                 same media interface.
    */
 
-   KurentoConversationManager(const resip::Data& kurentoUri);
-   KurentoConversationManager(const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate);
+   KurentoConversationManager(const resip::Uri& kurentoUri);
+   KurentoConversationManager(const resip::Uri& kurentoUri, int defaultSampleRate, int maxSampleRate);
    virtual ~KurentoConversationManager();
 
    ///////////////////////////////////////////////////////////////////////

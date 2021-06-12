@@ -40,7 +40,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-KurentoConversationManager::KurentoConversationManager(const resip::Data& kurentoUri)
+KurentoConversationManager::KurentoConversationManager(const resip::Uri& kurentoUri)
 : ConversationManager(),
   mKurentoUri(kurentoUri),
   mKurentoTOSValue(0)
@@ -48,7 +48,7 @@ KurentoConversationManager::KurentoConversationManager(const resip::Data& kurent
    init();
 }
 
-KurentoConversationManager::KurentoConversationManager(const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate)
+KurentoConversationManager::KurentoConversationManager(const resip::Uri& kurentoUri, int defaultSampleRate, int maxSampleRate)
 : ConversationManager(),
   mKurentoUri(kurentoUri),
   mKurentoTOSValue(0)
@@ -62,9 +62,8 @@ KurentoConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
    // Connect to the Kurento server
 
-   Uri uri(mKurentoUri);
-   std::string kHost = std::string(uri.host().c_str());
-   std::string kPort = std::to_string(uri.port());
+   std::string kHost = std::string(mKurentoUri.host().c_str());
+   std::string kPort = std::to_string(mKurentoUri.port());
 
    mKurentoClient.getMConnectionHandler()->createConnection(kHost, kPort);
 
