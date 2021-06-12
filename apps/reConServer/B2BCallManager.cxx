@@ -14,10 +14,12 @@
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
+#ifdef USE_SOCI_POSTGRESQL
+#include "postgresql/soci-postgresql.h"
+#endif
 #ifdef USE_SOCI_MYSQL
 #include "mysql/soci-mysql.h"
 #endif
-#include "postgresql/soci-postgresql.h"
 
 #include "MyUserAgent.hxx"
 #include "CredentialGrabber.hxx"
@@ -127,14 +129,20 @@ B2BCallManager::B2BCallManager(recon::SipXConversationManager::MediaInterfaceMod
       const soci::backend_factory *_dbType = 0;
       if(dbType == "postgresql")
       {
+#ifdef USE_SOCI_POSTGRESQL
          _dbType = &soci::postgresql;
+#else
+         CritLog(<<"soci_postgresql not selected at compile time");
+#endif
       }
-#ifdef USE_SOCI_MYSQL
       else if(dbType == "mysql")
       {
+#ifdef USE_SOCI_MYSQL
          _dbType = &soci::mysql;
-      }
+#else
+         CritLog(<<"soci_mysql not selected at compile time");
 #endif
+      }
       else
       {
          CritLog(<<"unrecognized DatabaseType: " << dbType.c_str());
