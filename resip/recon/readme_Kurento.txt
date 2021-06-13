@@ -55,6 +55,21 @@ Install dependencies built manually for RHEL8/EPEL
   sudo rpm -i x86_64/asio-devel-1.16.1-3.el8.x86_64.rpm
   sudo rpm -i noarch/cajun-jsonapi-devel-2.0.3-13.el8.noarch.rpm
 
+You can install Kurento using a Docker image or you can setup
+another host running Ubuntu for the Kurento native packages.  Some
+people have had problems with UDP packets and Docker and using
+the packages instead of Docker may resolve this.  We tested
+Ubuntu bionic 18.04 LTS downloaded from here:
+
+  https://releases.ubuntu.com/18.04/
+
+  ISO download: ubuntu-18.04.5-live-server-amd64.iso
+
+and then we used these instructions to install the packages in
+the Ubuntu host:
+
+  https://doc-kurento.readthedocs.io/en/stable/user/installation.html#local-installation
+
 Install Docker (for Podman, alternative to Docker, see below)
 
   sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
@@ -81,7 +96,15 @@ Install the Kurento Docker image:
 Running the Kurento Docker image:
 
   docker run -d --name kms --network host \
+     -e KMS_STUN_IP=${STUN_SERVER} -e KMS_STUN_PORT=${STUN_PORT} \
+     -e KMS_TURN_URL=user:password@host:port \
      kurento/kurento-media-server:latest
+
+You may also want to consider adding this argument:
+
+     -e KMS_EXTERNAL_IPV4=${YOUR KMS SERVER PUBLIC IP}
+
+to avoid relying on STUN and TURN servers.
 
 Monitoring logs from Kurento Docker image:
 
@@ -101,7 +124,7 @@ Check if Kurento has opened ports for the peer:
 
 Run reConServer in gdb:
 
-  libtool --mode=execute gdb apps/reConServer/reConServer
-  set args apps/reConServer/reConServer.config.test-local
+  libtool --mode=execute gdb --args \
+      apps/reConServer/reConServer \
+      apps/reConServer/reConServer.config.test-local
   run
-
