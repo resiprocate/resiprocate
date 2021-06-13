@@ -222,7 +222,9 @@ To use the debugger, we need help from libtool to match
 the binary and libraries in our source tree.  gdb will not
 work if you try to run it directly.  Here is an example:
 
-  libtool --mode=execute gdb apps/reConServer/reConServer
+  libtool --mode=execute gdb --args \
+      apps/reConServer/reConServer \
+      apps/reConServer/reConServer.config
 
 Building reSIProcate RPM packages
 ---------------------------------
