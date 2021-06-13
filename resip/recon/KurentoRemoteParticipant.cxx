@@ -121,8 +121,9 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       connectToKurento(client);
 
       client.createMediaPipeline();
-      client.createRtpEndpoint();
+      client.createRtpEndpoint("RtpEndpoint");
       client.invokeConnect();
+      client.gatherCandidates();
       client.invokeProcessOffer();
       client.describeObject();
 
@@ -130,8 +131,9 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 
       StackLog(<<"offer FROM Kurento: " << _offer.c_str());
 
-      ParseBuffer pb(_offer.c_str(), _offer.size());
-      offer.parse(pb);
+      HeaderFieldValue hfv(_offer.data(), _offer.size());
+      Mime type("application", "sdp");
+      offer = SdpContents(hfv, type);
 
       setProposedSdp(offer);
    }
@@ -176,34 +178,77 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       {
          StackLog(<<"found medium type " << it->first << " "  << it->second << " instance(s)");
       }
-      for(std::set<resip::Data>::const_iterator it = mediumTransports.cbegin();
-               it != mediumTransports.end();
-               it++)
-      {
-         StackLog(<<"found protocol " << *it);
-      }
+      bool isWebRTC = std::find(mediumTransports.cbegin(),
+               mediumTransports.end(),
+               "RTP/SAVPF") != mediumTransports.end();
+      DebugLog(<<"peer is " << (isWebRTC ? "WebRTC":"not WebRTC"));
 
       std::ostringstream _offer;
       _offer << offer;
 
-      StackLog(<<"offer TO Kurento: " << _offer.str());
+      const std::string& kOffer = _offer.str();
+      StackLog(<<"offer TO Kurento: " << kOffer);
 
       kurento_client::KurentoClient& client = mKurentoConversationManager.getKurentoClient();
       connectToKurento(client);
 
-      client.setMSdp(_offer.str());
-      client.createMediaPipeline();
-      client.createRtpEndpoint();
-      client.invokeConnect();
-      client.invokeProcessOffer();
+      client.setMSdp(kOffer);
+      std::string pipelineId(client.getMediaPipelineId());
+
+      int iceDelay = 0;
+      if(isWebRTC)
+      {
+         // delay while ICE gathers candidates from STUN and TURN
+         iceDelay = 10000;
+      }
+      if(pipelineId.empty())
+      {
+         DebugLog(<<"creating new pipeline for first participant");
+         client.createMediaPipeline();
+         client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
+         //client.setExternalIPv4("1.2.3.4");
+         // this creates a loopback connection for a single RemoteParticipant
+         //client.invokeConnect();
+         if(isWebRTC)
+         {
+            client.addListener("IceCandidateFound");
+            client.addListener("IceGatheringDone");
+            client.gatherCandidates();
+         }
+         sleepMs(iceDelay);
+         client.invokeProcessOffer();
+      }
+      else
+      {
+         std::string sessionId(client.getSessionId());
+         std::string otherEndpointId(client.getRtpEndpointId());
+         DebugLog(<<"joining participant to existing pipeline: " << pipelineId
+            << " session: " << sessionId
+            << " other endpoint: " << otherEndpointId);
+         client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
+         std::string ourEndpointId(client.getRtpEndpointId());
+         DebugLog(<<"our endpoint: " << ourEndpointId);
+         //client.setExternalIPv4("1.2.3.4", ourEndpointId.c_str(), sessionId.c_str());
+         client.invokeConnect(ourEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
+         client.invokeConnect(otherEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
+         if(isWebRTC)
+         {
+            client.addListener("IceCandidateFound", ourEndpointId.c_str(), sessionId.c_str());
+            client.addListener("IceGatheringDone", ourEndpointId.c_str(), sessionId.c_str());
+            client.gatherCandidates(ourEndpointId.c_str(), sessionId.c_str());
+         }
+         sleepMs(iceDelay);
+         client.invokeProcessOffer(ourEndpointId.c_str(), sessionId.c_str());
+      }
       client.describeObject();
 
       std::string _answer(client.getMReturnedSdp());
 
       StackLog(<<"answer FROM Kurento: " << _answer);
 
-      ParseBuffer pb(_answer.c_str(), _answer.size());
-      answer.parse(pb);
+      HeaderFieldValue hfv(_answer.data(), _answer.size());
+      Mime type("application", "sdp");
+      answer = SdpContents(hfv, type);
 
       valid = true;
    }
