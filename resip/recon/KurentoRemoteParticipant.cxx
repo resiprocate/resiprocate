@@ -208,7 +208,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
          //client.setExternalIPv4("1.2.3.4");
          // this creates a loopback connection for a single RemoteParticipant
-         //client.invokeConnect();
+         client.invokeConnect();
          if(isWebRTC)
          {
             client.addListener("IceCandidateFound");
@@ -225,6 +225,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          DebugLog(<<"joining participant to existing pipeline: " << pipelineId
             << " session: " << sessionId
             << " other endpoint: " << otherEndpointId);
+         client.invokeDisconnect(otherEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
          client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
          std::string ourEndpointId(client.getRtpEndpointId());
          DebugLog(<<"our endpoint: " << ourEndpointId);
