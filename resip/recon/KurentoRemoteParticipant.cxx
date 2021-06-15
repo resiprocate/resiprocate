@@ -195,6 +195,8 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       client.setMSdp(kOffer);
       std::string pipelineId(client.getMediaPipelineId());
 
+      std::string _answer;
+
       int iceDelay = 0;
       if(isWebRTC)
       {
@@ -213,10 +215,20 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          {
             client.addListener("IceCandidateFound");
             client.addListener("IceGatheringDone");
-            client.gatherCandidates();
+            //client.gatherCandidates();
          }
          sleepMs(iceDelay);
          client.invokeProcessOffer();
+         if(isWebRTC)
+         {
+            client.gatherCandidates();
+            sleepMs(iceDelay);
+            _answer = client.getLocalSessionDescriptor();
+         }
+         else
+         {
+            _answer = client.getMReturnedSdp();
+         }
       }
       else
       {
@@ -239,11 +251,15 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
             client.gatherCandidates(ourEndpointId.c_str(), sessionId.c_str());
          }
          sleepMs(iceDelay);
-         client.invokeProcessOffer(ourEndpointId.c_str(), sessionId.c_str());
+         _answer = client.invokeProcessOffer(ourEndpointId.c_str(), sessionId.c_str());
+         if(isWebRTC)
+         {
+            client.gatherCandidates();
+            sleepMs(iceDelay);
+            _answer = client.getLocalSessionDescriptor();
+         }
       }
       client.describeObject();
-
-      std::string _answer(client.getMReturnedSdp());
 
       StackLog(<<"answer FROM Kurento: " << _answer);
 
