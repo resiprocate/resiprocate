@@ -36,6 +36,12 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+void
+ReConKurentoClientLogSink::log(const char *s)
+{
+   DebugLog(<< s);
+}
+
 /* Technically, there are a range of features that need to be implemented
    to be fully (S)AVPF compliant.
    However, it is speculated that (S)AVPF peers will communicate with legacy
@@ -60,6 +66,9 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
   KurentoParticipant(partHandle, kurentoConversationManager)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
+
+   // FIXME, this could be much better
+   KurentoClientLogSink::impl = new ReConKurentoClientLogSink(); // FIXME
 }
 
 // UAS - or forked leg
@@ -71,6 +80,9 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(KurentoConversationManager& k
   KurentoParticipant(kurentoConversationManager)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
+
+   // FIXME, this could be much better
+   KurentoClientLogSink::impl = new ReConKurentoClientLogSink(); // FIXME
 }
 
 KurentoRemoteParticipant::~KurentoRemoteParticipant()

@@ -18,6 +18,14 @@
 
 #include <memory>
 
+#include <kurento-client/KurentoClientLogDefs.h>
+
+class ReConKurentoClientLogSink : public KurentoClientLogSink
+{
+public:
+   virtual void log(const char *s) override;
+};
+
 namespace resip
 {
 class DialogUsageManager;
