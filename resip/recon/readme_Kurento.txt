@@ -70,6 +70,15 @@ the Ubuntu host:
 
   https://doc-kurento.readthedocs.io/en/stable/user/installation.html#local-installation
 
+In some situations it is recommended to tell Kurento to listen
+to a specific network interface, this makes the discovery of
+valid IP addresses faster and more reliable:
+
+  vi /etc/kurento/modules/kurento/WebRtcEndpoint.conf.ini
+
+    networkInterfaces=ens3
+    externalIPv4=1.2.3.4
+
 Install Docker (for Podman, alternative to Docker, see below)
 
   sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
@@ -105,6 +114,23 @@ You may also want to consider adding this argument:
      -e KMS_EXTERNAL_IPV4=${YOUR KMS SERVER PUBLIC IP}
 
 to avoid relying on STUN and TURN servers.
+
+Monitoring logs from Kurento on Ubuntu:
+
+  See the logging parameters in the file:
+    /etc/default/kurento-media-server
+
+  For example, to log absolutely everything, comment out other GST_DEBUG
+  lines and use the following:
+    export GST_DEBUG="7"
+
+  To find the log files:
+    cd /var/log/kurento-media-server
+    ls
+
+  To search for the JSON messages between reSIProcate and Kurento:
+
+    egrep 'processMessage|sendEvent()' kurento-pidxxx.log
 
 Monitoring logs from Kurento Docker image:
 
