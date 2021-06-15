@@ -201,7 +201,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       if(isWebRTC)
       {
          // delay while ICE gathers candidates from STUN and TURN
-         iceDelay = 10000;
+         iceDelay = 1500;
       }
       if(pipelineId.empty())
       {
