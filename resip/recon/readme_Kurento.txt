@@ -121,16 +121,29 @@ Monitoring logs from Kurento on Ubuntu:
     /etc/default/kurento-media-server
 
   For example, to log absolutely everything, comment out other GST_DEBUG
-  lines and use the following:
+  lines and use the following but beware that a single media stream
+  generates so much logging that it can create latency for the media
+  stream.  WebRTC ICE negotiation may fail or produce unpredictable
+  results due to packets delayed by latency.
+
     export GST_DEBUG="7"
 
+  If you do require the most intense level of logging then please consider
+  logging to a ramdisk (tmpfs) and other strategies.
+
   To find the log files:
+
     cd /var/log/kurento-media-server
     ls
 
   To search for the JSON messages between reSIProcate and Kurento:
 
     egrep 'processMessage|sendEvent()' kurento-pidxxx.log
+    egrep 'jsonrpc"' kurento-pidxxx.log
+
+  To search for WebRTC ICE activity:
+
+    egrep -i 'kmsicenice' kurento-pidxxx.log
 
 Monitoring logs from Kurento Docker image:
 
