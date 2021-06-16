@@ -402,7 +402,8 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                }
 
                // The message body is complete.
-               mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
+               if (contentLength > 0)
+                        mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
                CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
                if (b==CongestionManager::REJECTING_NON_ESSENTIAL
                      || (b==CongestionManager::REJECTING_NEW_WORK
