@@ -8,6 +8,7 @@
 #include <resip/stack/Tuple.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/ParseBuffer.hxx>
+#include <rutil/Errdes.hxx>
 #include <resip/stack/Transport.hxx>
 
 #include "AppSubsystem.hxx"
@@ -36,7 +37,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
    {
       int e = getErrno();
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed to create socket: " << strerror(e));
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed to create socket: " << ErrnoError::SearchErrorMsg(e) );
       mSane = false;
       return;
    }
@@ -53,7 +54,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
    {
       int e = getErrno();
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << ErrnoError::SearchErrorMsg(e) );
       mSane = false;
       return;
    }
@@ -70,7 +71,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
       }
       else
       {
-         ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not bind to " << mTuple);
+         ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not bind to " << mTuple << " " << ErrnoError::SearchErrorMsg(e) );
       }
       mSane = false;
       return;
@@ -81,7 +82,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
    {
       int e = getErrno();
       logSocketError(e);
-      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not make HTTP socket non-blocking " << port);
+      ErrLog(<< "XmlRpcServerBase::XmlRpcServerBase: Could not make HTTP socket non-blocking " << port << " " << ErrnoError::SearchErrorMsg(e) );
       mSane = false;
       return;
    }
@@ -94,7 +95,7 @@ XmlRpcServerBase::XmlRpcServerBase(int port, IpVersion ipVer) :
    if (e != 0)
    {
       int e = getErrno();
-      InfoLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed listen " << strerror(e));
+      InfoLog(<< "XmlRpcServerBase::XmlRpcServerBase: Failed listen " << ErrnoError::SearchErrorMsg(e) );
       mSane = false;
       return;
    }
@@ -158,13 +159,15 @@ XmlRpcServerBase::process(FdSet& fdset)
       if (sock == SOCKET_ERROR)
       {
          int e = getErrno();
+         DebugLog ( << ErrnoError::SearchErrorMsg(e) );
+
          switch (e)
          {
             case EWOULDBLOCK:
                return;
             default:
                logSocketError(e);
-               ErrLog(<< "XmlRpcServerBase::process: Some error reading from socket: " << e);
+               ErrLog(<< "XmlRpcServerBase::process: Some error reading from socket: " << ErrnoError::SearchErrorMsg(e) );
          }
          return;
       }
@@ -237,25 +240,26 @@ XmlRpcServerBase::closeOldestConnection()
 void
 XmlRpcServerBase::logSocketError(int e)
 {
+   DebugLog ( << ErrnoError::SearchErrorMsg(e) );
    switch (e)
    {
       case EAGAIN:
-         InfoLog (<< "No data ready to read" << strerror(e));
+         InfoLog (<< "No data ready to read" << ErrnoError::SearchErrorMsg(e));
          break;
       case EINTR:
-         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strerror(e));
+         InfoLog (<< "The call was interrupted by a signal before any data was read : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EIO:
-         InfoLog (<< "I/O error : " << strerror(e));
+         InfoLog (<< "I/O error : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EBADF:
-         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strerror(e));
+         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EINVAL:
-         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strerror(e));
+         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << ErrnoError::SearchErrorMsg(e));
          break;
       case EFAULT:
-         InfoLog (<< "buf is outside your accessible address space : " << strerror(e));
+         InfoLog (<< "buf is outside your accessible address space : " << ErrnoError::SearchErrorMsg(e));
          break;
 
 #if defined(WIN32)
@@ -353,7 +357,7 @@ XmlRpcServerBase::logSocketError(int e)
 #endif
 
       default:
-         InfoLog (<< "Some other error (" << e << "): " << strerror(e));
+         InfoLog (<< "Some other error (" << e << "): " << ErrnoError::SearchErrorMsg(e));
          break;
    }
 }

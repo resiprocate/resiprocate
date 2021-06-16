@@ -49,6 +49,7 @@
 #endif
 
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Errdes.hxx"
 
 #include <openssl/opensslv.h>
 #if !defined(LIBRESSL_VERSION_NUMBER)
@@ -188,6 +189,8 @@ DtlsTransport::_read( FdSet& fdset )
    if ( len == SOCKET_ERROR )
    {
       int err = getErrno() ;
+      DebugLog ( << ErrnoError::SearchErrorMsg(err));
+
       if ( err != EAGAIN && err != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
       {
          error( err ) ;
@@ -260,6 +263,7 @@ DtlsTransport::_read( FdSet& fdset )
    if ( len <= 0 )
    {
       char errorString[1024];
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err));
 
       switch( err )
       {
@@ -280,6 +284,9 @@ DtlsTransport::_read( FdSet& fdset )
             break ;
          case SSL_ERROR_SYSCALL:
             {
+               int e = getErrno();
+               DebugLog ( << ErrnoError::SearchErrorMsg(e));
+
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS read condition SSL_ERROR_SYSCALL on"
                          << " addr = " << inet_ntoa(((struct sockaddr_in *)&peer)->sin_addr)
@@ -555,6 +562,7 @@ void DtlsTransport::_write( FdSet& fdset )
       int err = SSL_get_error( ssl, count ) ;
 
       char errorString[1024];
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err));
 
       switch( err )
       {
@@ -579,6 +587,7 @@ void DtlsTransport::_write( FdSet& fdset )
             {
                int e = getErrno();
                error(e);
+               DebugLog ( << ErrnoError::SearchErrorMsg(e));
 
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS write condition SSL_ERROR_SYSCALL "
@@ -640,6 +649,7 @@ DtlsTransport::_doHandshake( void )
       int err = SSL_get_error(ssl, ret);
 
       char errorString[1024];
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err));
 
       switch (err)
       {
@@ -658,6 +668,9 @@ DtlsTransport::_doHandshake( void )
             break;
          case SSL_ERROR_SYSCALL:
             {
+               int e = getErrno();
+               DebugLog ( << ErrnoError::SearchErrorMsg(e));
+               
                ERR_error_string_n(ERR_get_error(), errorString, sizeof(errorString));
                DebugLog( << "Got DTLS handshake code SSL_ERROR_SYSCALL"
                          << " error = " << errorString );

@@ -18,7 +18,7 @@
 #include "repro/HttpConnection.hxx"
 #include "repro/WebAdmin.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
+#include "rutil/Errdes.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -69,7 +69,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
    if ( mFd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << ErrnoError::SearchErrorMsg(e) );
       sane = false;
       return;
    }
@@ -85,7 +85,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
 #endif
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << ErrnoError::SearchErrorMsg(e) );
       sane = false;
       return;
    }
@@ -97,7 +97,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
       if ( ::setsockopt(mFd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) )
       {
           int e = getErrno();
-          ErrLog(<< "HttpBase::HttpBase: Couldn't set sockoptions IPV6_V6ONLY: " << strerror(e));
+          ErrLog(<< "HttpBase::HttpBase: Couldn't set sockoptions IPV6_V6ONLY: " << ErrnoError::SearchErrorMsg(e) );
           sane = false;
           return;
       }
@@ -110,13 +110,14 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {
       int e = getErrno();
+      DebugLog ( << ErrnoError::SearchErrorMsg(e) );
       if ( e == EADDRINUSE )
       {
          ErrLog (<< mTuple << " already in use ");
       }
       else
       {
-         ErrLog (<< "Could not bind to " << mTuple);
+         ErrLog (<< "Could not bind to " << mTuple << " " << ErrnoError::SearchErrorMsg(e) );
       }
       sane = false;
       return;
@@ -138,7 +139,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm, const resip::D
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << ErrnoError::SearchErrorMsg(e) );
       sane = false;
       return;
    }
@@ -172,6 +173,7 @@ HttpBase::process(FdSet& fdset)
       if ( sock == SOCKET_ERROR )
       {
          int e = getErrno();
+         DebugLog ( << ErrnoError::SearchErrorMsg(e) );
          switch (e)
          {
             case EAGAIN:
@@ -181,7 +183,7 @@ HttpBase::process(FdSet& fdset)
                // !jf! this can not be ready in some cases 
                return;
             default:
-               ErrLog(<< "Some error reading from socket: " << e);
+               ErrLog(<< "Some error reading from socket: " << ErrnoError::SearchErrorMsg(e) );
                // .bwc. This is almost certainly a bad assert that a nefarious
                // endpoint could hit.
                // assert(0); // Transport::error(e);

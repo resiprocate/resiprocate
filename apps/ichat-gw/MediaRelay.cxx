@@ -15,6 +15,7 @@
 #include "AppSubsystem.hxx"
 #include "MediaRelay.hxx"
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Errdes.hxx>
 
 #include <utility>
 
@@ -173,7 +174,7 @@ MediaRelay::createRelaySocket(resip::Tuple& tuple)
    if ( fd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "MediaRelay::createRelaySocket - Failed to create socket: " << strerror(e));
+      ErrLog (<< "MediaRelay::createRelaySocket - Failed to create socket: " << ErrnoError::SearchErrorMsg(e) );
       return INVALID_SOCKET;
    }
 
@@ -190,7 +191,7 @@ MediaRelay::createRelaySocket(resip::Tuple& tuple)
       }
       else
       {
-         ErrLog (<< "MediaRelay::createRelaySocket - Could not bind to " << tuple << ", error=" << e);
+         ErrLog (<< "MediaRelay::createRelaySocket - Could not bind to " << tuple << ", error=" << ErrnoError::SearchErrorMsg(e) );
       }
       return INVALID_SOCKET;
    }
@@ -202,7 +203,7 @@ MediaRelay::createRelaySocket(resip::Tuple& tuple)
       if(::getsockname(fd, &tuple.getMutableSockaddr(), &len) == SOCKET_ERROR)
       {
          int e = getErrno();
-         ErrLog (<<"MediaRelay::createRelaySocket - getsockname failed, error=" << e);
+         ErrLog (<<"MediaRelay::createRelaySocket - getsockname failed, error=" << ErrnoError::SearchErrorMsg(e) );
          return INVALID_SOCKET;
       }
    }
@@ -428,7 +429,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       if ( count == SOCKET_ERROR )
       {
          int e = getErrno();
-         InfoLog (<< "MediaRelay::processWrites: port=" << relayPort->mLocalV4Tuple.getPort() << ", Failed (" << e << ") sending to " << tuple);
+         InfoLog (<< "MediaRelay::processWrites: port=" << relayPort->mLocalV4Tuple.getPort() << ", Failed (" << ErrnoError::SearchErrorMsg(e) << ") sending to " << tuple);
       }
       else
       {
@@ -472,7 +473,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       if ( count == SOCKET_ERROR )
       {
          int e = getErrno();
-         InfoLog (<< "MediaRelay::processWrites: port=" << relayPort->mLocalV4Tuple.getPort() << ", Failed (" << e << ") sending to " << tuple);
+         InfoLog (<< "MediaRelay::processWrites: port=" << relayPort->mLocalV4Tuple.getPort() << ", Failed (" << ErrnoError::SearchErrorMsg(e) << ") sending to " << tuple);
       }
       else
       {
@@ -520,7 +521,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
          int err = getErrno();
          if ( err != EWOULDBLOCK  )
          {
-            ErrLog (<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", Error calling recvfrom: " << err);
+            ErrLog (<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", Error calling recvfrom: " << ErrnoError::SearchErrorMsg(err));
          }
          buffer.reset();
       }
