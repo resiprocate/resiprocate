@@ -111,6 +111,7 @@ class Symbols
       static const char* TargetDialog;
       static const char* Path;
       static const char* Outbound;
+      static const char* Join;
       static const char* Undefined;
 
       static const char* Pending;

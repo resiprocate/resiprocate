@@ -110,6 +110,7 @@ const char* Symbols::AnswerMode   = "answermode";
 const char* Symbols::TargetDialog = "tdialog";
 const char* Symbols::Path         = "path";
 const char* Symbols::Outbound     = "outbound";
+const char* Symbols::Join         = "join";
 const char* Symbols::Undefined    = "UNDEFINED";
 
 const char* Symbols::Pending = "pending";
