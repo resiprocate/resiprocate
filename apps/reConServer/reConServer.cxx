@@ -806,7 +806,9 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int maxReceiveFifoSize = reConServerConfig.getConfigInt("MaxReceiveFifoSize", 1000);
    unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPort", 5062);
    unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
+   unsigned short wsPort = reConServerConfig.getConfigUnsignedShort("WSPort", 5064);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
+   unsigned short wssPort = reConServerConfig.getConfigUnsignedShort("WSSPort", 5065);
    unsigned short mediaPortStart = reConServerConfig.getConfigUnsignedShort("MediaPortStart", 17384);
    Data tlsDomain = reConServerConfig.getConfigData("TLSDomain", DnsUtil::getLocalHostName(), true);
    NameAddr outboundProxy = reConServerConfig.getConfigNameAddr("OutboundProxyUri", NameAddr(), true);
@@ -890,10 +892,12 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  STUN/TURN password = " << stunPassword);
    InfoLog( << "  TCP Port = " << tcpPort);
    InfoLog( << "  UDP Port = " << udpPort);
+   InfoLog( << "  WS Port = " << wsPort);
    InfoLog( << "  Media Port Range Start = " << mediaPortStart);
 #ifdef USE_SSL
    InfoLog( << "  TLS Port = " << tlsPort);
    InfoLog( << "  TLS Domain = " << tlsDomain);
+   InfoLog( << "  WSS Port = " << wssPort);
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
@@ -1049,10 +1053,18 @@ ReConServerProcess::main (int argc, char** argv)
          {
             profile->addTransport(TCP, tcpPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
          }
+         if(wsPort)
+         {
+            profile->addTransport(WS, wsPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
+         }
 #ifdef USE_SSL
          if(tlsPort)
          {
             profile->addTransport(TLS, tlsPort, V4, StunEnabled, address, tlsDomain, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
+         }
+         if(wssPort)
+         {
+            profile->addTransport(WSS, wssPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
          }
 #endif
       }

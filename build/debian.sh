@@ -30,14 +30,15 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-return \
               --enable-repro-plugins \
               --with-python \
-                DEPS_PYTHON_CFLAGS="`/usr/bin/python3.7-config --cflags`" \
-                DEPS_PYTHON_LIBS="`/usr/bin/python3.7-config --ldflags`" \
-                PYCXX_SRCDIR=/usr/share/python3.7/CXX/Python3 \
+                DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
+                DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
+                PYCXX_SRCDIR=/usr/src/CXX/Python3 \
               --with-apps \
               --with-telepathy \
               --with-ichat-gw \
               --with-recon \
               --with-sipxtapi \
+              --with-soci-postgresql \
               --with-soci-mysql \
               --with-qpid-proton \
               --with-netsnmp
