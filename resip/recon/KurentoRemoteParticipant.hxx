@@ -23,7 +23,7 @@
 class ReConKurentoClientLogSink : public KurentoClientLogSink
 {
 public:
-   virtual void log(const char *s) override;
+   virtual void log(KurentoClientLogSink::Level level, const char *s) override;
 };
 
 namespace resip

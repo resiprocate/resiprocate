@@ -37,9 +37,29 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 void
-ReConKurentoClientLogSink::log(const char *s)
+ReConKurentoClientLogSink::log(KurentoClientLogSink::Level level, const char *s)
 {
-   DebugLog(<< s);
+   switch(level)
+   {
+   case Crit:
+      CritLog(<< s);
+      break;
+   case Err:
+      ErrLog(<< s);
+      break;
+   case Warning:
+      WarningLog(<< s);
+      break;
+   case Info:
+      InfoLog(<< s);
+      break;
+   case Debug:
+      DebugLog(<< s);
+      break;
+   default:
+      ErrLog(<< "unrecognized log level from KurentoClient: " << level);
+      ErrLog(<< s);
+   }
 }
 
 /* Technically, there are a range of features that need to be implemented
