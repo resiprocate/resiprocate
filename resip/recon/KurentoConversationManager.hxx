@@ -56,7 +56,7 @@ class RemoteParticipantDialogSet;
   -Managing local audio properties
 */
 
-class KurentoConversationManager : public ConversationManager
+class KurentoConversationManager : public ConversationManager, public kurento_client::websocket::connection_metadata::kevent_handler
 {
 public:
 
@@ -188,6 +188,8 @@ public:
    virtual bool extraPlayAndRecordResourcesEnabled() { return mEnableExtraPlayAndRecordResources; }
 
    kurento_client::KurentoClient& getKurentoClient() { return mKurentoClient; };
+
+   virtual void on_event(const std::string& event_name, const json::Object& message) override;
 
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;

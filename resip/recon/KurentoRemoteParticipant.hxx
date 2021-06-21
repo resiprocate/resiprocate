@@ -81,6 +81,9 @@ protected:
 
 private:       
    bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
+
+   void setEndpointId(const resip::Data& endpointId);
+   resip::Data mEndpointId;
 };
 
 }

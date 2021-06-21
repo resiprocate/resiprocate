@@ -240,6 +240,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          DebugLog(<<"creating new pipeline for first participant");
          client.createMediaPipeline();
          client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
+         setEndpointId(client.getRtpEndpointId().c_str());
          //client.setExternalIPv4("1.2.3.4");
          // this creates a loopback connection for a single RemoteParticipant
          client.invokeConnect();
@@ -339,6 +340,12 @@ KurentoRemoteParticipant::connectToKurento(kurento_client::KurentoClient& client
    std::string kPort = std::to_string(kurento.port());
    DebugLog(<<"trying to connect to Kurento host " << kHost << ":" << kPort);
    client.getMConnectionHandler()->createConnection(kHost, kPort);
+}
+
+void
+KurentoRemoteParticipant::setEndpointId(const Data& endpointId)
+{
+   mEndpointId = endpointId;
 }
 
 

@@ -30,6 +30,8 @@
 #include "Conversation.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
+#include "cajun/json/elements.h"
+
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
 #endif
@@ -64,6 +66,8 @@ KurentoConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
    std::string kHost = std::string(mKurentoUri.host().c_str());
    std::string kPort = std::to_string(mKurentoUri.port());
+
+   kurento_client::websocket::connection_metadata::m_kevent_handler = this;  // FIXME Kurento, static member
 
    mKurentoClient.getMConnectionHandler()->createConnection(kHost, kPort);
 
@@ -220,6 +224,25 @@ KurentoConversationManager::createRemoteParticipantDialogSetInstance(
       std::shared_ptr<ConversationProfile> conversationProfile)
 {
    return new KurentoRemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
+}
+
+void
+KurentoConversationManager::on_event(const std::string& event_name, const json::Object& message)
+{
+   DebugLog(<<"Kurento event: " << event_name);
+
+   const json::String& sourceId = message["params"]["value"]["data"]["source"];
+
+   // IceGatheringDone
+   //  - lookup source or object, the UUID of WebRtcEndpoint
+
+   // MediaStateChanged
+   // newState CONNECTED
+
+   // IceCandidate
+   //  - lookup source or object, the UUID of WebRtcEndpoint
+
+   // IceComponentStateChange
 }
 
 /* ====================================================================
