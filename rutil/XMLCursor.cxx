@@ -359,6 +359,7 @@ XMLCursor::getAttributes() const
       Data value;
 
       pb.skipToOneOf(ParseBuffer::Whitespace, RA_QUOTE_SLASH);
+      pb.skipWhitespace();
 
       while (!pb.eof() && 
              *pb.position() != RA_QUOTE[0] &&

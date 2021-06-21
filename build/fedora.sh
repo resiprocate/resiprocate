@@ -39,6 +39,9 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
                 DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
                 PYCXX_SRCDIR=/usr/src/CXX/Python3 \
               --with-apps \
+              --with-recon \
+              --with-soci-postgresql \
+              --with-soci-mysql \
               --with-qpid-proton \
               --with-netsnmp
 

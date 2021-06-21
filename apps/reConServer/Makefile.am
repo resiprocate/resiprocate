@@ -51,7 +51,13 @@ reConServer_LDADD += ../../resip/dum/libdum.la
 reConServer_LDADD += ../../resip/stack/libresip.la
 reConServer_LDADD += ../../rutil/librutil.la
 reConServer_LDADD += -lssl -lcrypto -lpthread
-reConServer_LDADD += -lsoci_core -lsoci_mysql -lsoci_postgresql -ldl -lmysqlclient
+reConServer_LDADD += -lsoci_core -ldl
+if USE_SOCI_POSTGRESQL
+reConServer_LDADD += -lsoci_postgresql
+endif
+if USE_SOCI_MYSQL
+reConServer_LDADD += -lsoci_mysql -lmysqlclient
+endif
 
 BUILT_SOURCES = playback_prompt.h record_prompt.h
 

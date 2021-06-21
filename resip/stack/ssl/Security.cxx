@@ -1166,10 +1166,14 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    mRootSslCerts = X509_STORE_new();
    resip_assert(mRootTlsCerts && mRootSslCerts);
 
+#ifndef WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
+#ifndef WIN32
 #pragma GCC diagnostic pop
+#endif
    if (!mTlsCtx)
    {
       ErrLog(<< "SSL_CTX_new failed, dumping OpenSSL error stack:");
