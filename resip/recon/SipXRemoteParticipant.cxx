@@ -1099,14 +1099,14 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             UtlString codecString;
             codecs[numCodecs-1]->toString(codecString);
 
-            InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", sending to destination address " << remoteIPAddress << ":" << 
-                       remoteRtpPort << " (RTCP on " << remoteRtcpPort << "): " << codecString.data());
+            DebugLog(<< "adjustRTPStreams: handle=" << mHandle << ", sending codec: " << codecString.data());
          }
       }
 
       if(numCodecs > 0)
       {
-         InfoLog(<<"adjustRTPStreams: handle=" << mHandle << ", starting to send for " << numCodecs << " codecs");
+         InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", starting to send for " << numCodecs << " codecs to destination address " << remoteIPAddress << ":" <<
+            remoteRtpPort << " (RTCP on " << remoteRtcpPort << ")");
          int ret = getMediaInterface()->getInterface()->startRtpSend(getSipXDialogSet().getMediaConnectionId(), numCodecs, codecs);
          if(ret != OS_SUCCESS)
          {
@@ -1154,9 +1154,10 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
                                                  itLocalCodec->getFormatParameters().c_str());
             UtlString codecString;
             codecs[numCodecs-1]->toString(codecString);
-            InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", receving: " << codecString.data());            
+            DebugLog(<< "adjustRTPStreams: handle=" << mHandle << ", receiving: " << codecString.data());
          }
-          
+         InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", starting to receive for " << numCodecs << " codecs");
+
          getMediaInterface()->getInterface()->startRtpReceive(getSipXDialogSet().getMediaConnectionId(), numCodecs, codecs);
          for(int i = 0; i < numCodecs; i++)
          {
@@ -1164,7 +1165,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
          delete [] codecs;
       }
-      InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", receiving...");
+      DebugLog(<< "adjustRTPStreams: handle=" << mHandle << ", receiving...");
    }
    else
    {
@@ -1173,7 +1174,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
       //{
       //   getMediaInterface()->getInterface()->stopRtpReceive(getSipXDialogSet().getMediaConnectionId());
       //}
-      InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop receiving (mLocalHold=" << isHolding() << ").");
+      //InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop receiving (mLocalHold=" << isHolding() << ").");
    }
 }
 
