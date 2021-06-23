@@ -459,7 +459,7 @@ RemoteParticipant::reject(unsigned int rejectCode)
 }
 
 void
-RemoteParticipant::redirect(NameAddr& destination)
+RemoteParticipant::redirect(NameAddr& destination, unsigned int redirectCode)
 {
    try
    {
@@ -474,7 +474,13 @@ RemoteParticipant::redirect(NameAddr& destination)
                NameAddrs destinations;
                destinations.push_back(destination);
                mConversationManager.onParticipantRedirectSuccess(mHandle);
-               sis->redirect(destinations);
+               // If provided redirect code is not valid, then set it to the commonly used 302 code
+               if (redirectCode < 300 || redirectCode > 399)
+               {
+                  WarningLog(<< "RemoteParticipant::redirect: invalid redirect code of " << redirectCode << " provided, using 302 instead");
+                  redirectCode = 302;
+               }
+               sis->redirect(destinations, redirectCode);
             }
             else if(mInviteSessionHandle->isConnected()) // redirect via blind transfer 
             {

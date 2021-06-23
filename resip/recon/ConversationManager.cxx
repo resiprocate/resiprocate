@@ -217,9 +217,9 @@ ConversationManager::rejectParticipant(ParticipantHandle partHandle, unsigned in
 }
 
 void 
-ConversationManager::redirectParticipant(ParticipantHandle partHandle, const NameAddr& destination)
+ConversationManager::redirectParticipant(ParticipantHandle partHandle, const NameAddr& destination, unsigned int redirectCode)
 {
-   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination);
+   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination, redirectCode);
    post(cmd);
 }
 

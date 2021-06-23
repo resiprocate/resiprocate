@@ -600,16 +600,18 @@ class RedirectParticipantCmd  : public resip::DumCommand
    public:  
       RedirectParticipantCmd(ConversationManager* conversationManager, 
                              ParticipantHandle partHandle,
-                             const resip::NameAddr& destination) 
+                             const resip::NameAddr& destination,
+                             unsigned int redirectCode) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
-           mDestination(destination) {}
+           mDestination(destination),
+           mRedirectCode(redirectCode) {}
       virtual void executeCommand()
       {
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            remoteParticipant->redirect(mDestination);
+            remoteParticipant->redirect(mDestination, mRedirectCode);
          }
          else
          {
@@ -623,6 +625,7 @@ class RedirectParticipantCmd  : public resip::DumCommand
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       resip::NameAddr mDestination;
+      unsigned int mRedirectCode;
 };
 
 class RedirectToParticipantCmd  : public resip::DumCommand

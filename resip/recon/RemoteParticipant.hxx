@@ -60,7 +60,7 @@ public:
    virtual void accept();
    virtual void alert(bool earlyFlag);
    virtual void reject(unsigned int rejectCode);
-   virtual void redirect(resip::NameAddr& destination);
+   virtual void redirect(resip::NameAddr& destination, unsigned int redirectCode = 302);
    virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle);
    virtual void checkHoldCondition();
    virtual void setLocalHold(bool hold);

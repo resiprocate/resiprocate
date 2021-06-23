@@ -359,8 +359,9 @@ public:
 
      @param partHandle Handle of the participant to redirect
      @param destination Uri of destination to redirect to
+     @param redirectCode Only used if call isn't answered yet, must be >= 300 and <= 399.
    */
-   virtual void redirectParticipant(ParticipantHandle partHandle, const resip::NameAddr& destination);
+   virtual void redirectParticipant(ParticipantHandle partHandle, const resip::NameAddr& destination, unsigned int redirectCode = 302);
 
    /**
      This is used for attended transfer scenarios where both participants
