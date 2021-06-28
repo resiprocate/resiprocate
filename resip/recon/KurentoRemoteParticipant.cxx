@@ -116,6 +116,10 @@ KurentoRemoteParticipant::~KurentoRemoteParticipant()
    //        See https://stackoverflow.com/questions/10979250/usage-of-this-in-destructor.
    unregisterFromAllConversations();
 
+   if(!mEndpointId.empty())
+   {
+      mKurentoConversationManager.unregisterEndpoint(mEndpointId);
+   }
    InfoLog(<< "KurentoRemoteParticipant destroyed, handle=" << mHandle);
 }
 
@@ -154,6 +158,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       kurento_client::KurentoClient& client = mKurentoConversationManager.getKurentoClient();
 
       client.createRtpEndpoint("RtpEndpoint");
+      setEndpointId(client.getRtpEndpointId().c_str());
       client.invokeConnect();
       client.gatherCandidates();
       client.invokeProcessOffer();
@@ -227,11 +232,11 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
 
       std::string _answer;
 
-      int iceDelay = 0;
+      mIceGatheringDone = true;
       if(isWebRTC)
       {
          // delay while ICE gathers candidates from STUN and TURN
-         iceDelay = 3000;
+         mIceGatheringDone = false;
       }
       if(pipelineId.empty())
       {
@@ -248,14 +253,15 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          {
             client.addListener("IceCandidateFound");
             client.addListener("IceGatheringDone");
-            //client.gatherCandidates();
          }
-         sleepMs(iceDelay);
          client.invokeProcessOffer();
          if(isWebRTC)
          {
             client.gatherCandidates();
-            sleepMs(iceDelay);
+            while(!mIceGatheringDone)
+            {
+               sleepMs(10);
+            }
             _answer = client.getLocalSessionDescriptor();
          }
          else
@@ -270,6 +276,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          std::string otherEndpointId = mOtherEndpointId; // is a caller currently online in loopback?
          client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
          std::string ourEndpointId(client.getRtpEndpointId());
+         setEndpointId(ourEndpointId.c_str());
          DebugLog(<<"our endpoint: " << ourEndpointId);
          if(otherEndpointId.empty())
          {
@@ -294,14 +301,15 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          {
             client.addListener("IceCandidateFound", ourEndpointId.c_str(), sessionId.c_str());
             client.addListener("IceGatheringDone", ourEndpointId.c_str(), sessionId.c_str());
-            client.gatherCandidates(ourEndpointId.c_str(), sessionId.c_str());
          }
-         sleepMs(iceDelay);
          _answer = client.invokeProcessOffer(ourEndpointId.c_str(), sessionId.c_str());
          if(isWebRTC)
          {
             client.gatherCandidates();
-            sleepMs(iceDelay);
+            while(!mIceGatheringDone)
+            {
+               sleepMs(10);
+            }
             _answer = client.getLocalSessionDescriptor();
          }
       }
@@ -348,6 +356,7 @@ void
 KurentoRemoteParticipant::setEndpointId(const Data& endpointId)
 {
    mEndpointId = endpointId;
+   mKurentoConversationManager.registerEndpoint(endpointId, getKurentoDialogSet());
 }
 
 

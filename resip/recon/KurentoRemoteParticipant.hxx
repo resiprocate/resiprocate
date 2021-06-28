@@ -72,6 +72,8 @@ public:
 
    virtual void adjustRTPStreams(bool sendingOffer=false);
 
+   void onIceGatheringDone() { mIceGatheringDone = true; };
+
 protected:
    virtual bool mediaStackPortAvailable();
 
@@ -83,6 +85,7 @@ private:
    void setEndpointId(const resip::Data& endpointId);
    resip::Data mEndpointId;
    static std::string mOtherEndpointId;
+   volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primite, e.g. condition_variable
 };
 
 }

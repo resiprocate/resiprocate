@@ -181,6 +181,15 @@ KurentoRemoteParticipantDialogSet::setActiveRemoteParticipantHandle(ParticipantH
    }
 }
 
+void
+KurentoRemoteParticipantDialogSet::onKurentoEvent(const std::string& event_name, const json::Object& message)
+{
+   if(event_name == "IceGatheringDone")
+   {
+      dynamic_cast<KurentoRemoteParticipant*>(mDialogs.begin()->second)->onIceGatheringDone();
+   }
+}
+
 bool
 KurentoRemoteParticipantDialogSet::isAsyncMediaSetup()
 {

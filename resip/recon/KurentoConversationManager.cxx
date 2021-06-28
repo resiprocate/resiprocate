@@ -235,6 +235,10 @@ KurentoConversationManager::on_event(const std::string& event_name, const json::
 
    const json::String& sourceId = message["params"]["value"]["data"]["source"];
 
+   Data _sourceId(sourceId.Value());
+
+   DebugLog(<<"Source: " << _sourceId);
+
    // IceGatheringDone
    //  - lookup source or object, the UUID of WebRtcEndpoint
 
@@ -245,7 +249,34 @@ KurentoConversationManager::on_event(const std::string& event_name, const json::
    //  - lookup source or object, the UUID of WebRtcEndpoint
 
    // IceComponentStateChange
+
+   EndpointMap::iterator it = mEndpoints.find(_sourceId);
+   if(it == mEndpoints.end())
+   {
+      DebugLog(<<"Unknown endpoint");
+   }
+   else
+   {
+      it->second->onKurentoEvent(event_name, message);
+   }
 }
+
+void
+KurentoConversationManager::registerEndpoint(const resip::Data& endpointId, KurentoRemoteParticipantDialogSet& krpds)
+{
+   mEndpoints[endpointId] = &krpds; // FIXME Kurento - pointer is not a good idea
+}
+
+void
+KurentoConversationManager::unregisterEndpoint(const resip::Data& endpointId)
+{
+   EndpointMap::iterator it = mEndpoints.find(endpointId);
+   if(it != mEndpoints.end())
+   {
+      mEndpoints.erase(it);
+   }
+}
+
 
 /* ====================================================================
 

@@ -37,6 +37,7 @@ class LocalParticipant;
 class MediaResourceParticipant;
 class RemoteParticipant;
 class RemoteParticipantDialogSet;
+class KurentoRemoteParticipantDialogSet;
 
 /**
   This class is one of two main classes of concern to an application
@@ -189,6 +190,9 @@ public:
 
    kurento_client::KurentoClient& getKurentoClient() { return mKurentoClient; };
 
+   virtual void registerEndpoint(const resip::Data& endpointId, KurentoRemoteParticipantDialogSet& krpds);
+   virtual void unregisterEndpoint(const resip::Data& endpointId);
+
    virtual void on_event(const std::string& event_name, const json::Object& message) override;
 
 protected:
@@ -260,6 +264,9 @@ private:
    int mKurentoTOSValue;  // FIXME Kurento - need to pass to Kurento, maybe move to superclass too
 
    bool addExtraPlayAndRecordResourcesToTopology();
+
+   typedef std::map<resip::Data, KurentoRemoteParticipantDialogSet*> EndpointMap;
+   EndpointMap mEndpoints;
 };
 
 }

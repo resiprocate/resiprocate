@@ -69,6 +69,8 @@ public:
 
    const resip::Data& getLocalSrtpSessionKey() { return mLocalSrtpSessionKey; }
 
+   void onKurentoEvent(const std::string& event_name, const json::Object& message);
+
 protected:
    virtual bool isAsyncMediaSetup();
 
