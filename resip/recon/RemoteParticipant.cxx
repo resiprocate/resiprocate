@@ -60,6 +60,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
   mOfferRequired(false),
   mLocalHold(true),
   mRemoteHold(false),
+  mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
   mLocalSdp(0),
   mRemoteSdp(0)
 {
@@ -194,6 +195,11 @@ RemoteParticipant::destroyParticipant()
          {
             if (mInviteSessionHandle.isValid())
             {
+               // Make sure any active Refer subscriptions are ended
+               if (mReferSubscriptionHandle.isValid())
+               {
+                  mReferSubscriptionHandle->end();
+               }
                // This will send a BYE.
                mInviteSessionHandle->end();
             }
@@ -308,10 +314,10 @@ RemoteParticipant::stateTransition(State state)
          unhold();
          break;
       case Redirect:
-         redirect(mPendingRequest.mDestination);
+         redirect(mPendingRequest.mDestination, mPendingRequest.mRedirectSuccessCondition, mPendingRequest.mRedirectSuccessCondition);
          break;
       case RedirectTo:
-         redirectToParticipant(mPendingRequest.mDestInviteSessionHandle);
+         redirectToParticipant(mPendingRequest.mDestInviteSessionHandle, mPendingRequest.mRedirectSuccessCondition);
          break;
       case None:
          break;
@@ -459,31 +465,39 @@ RemoteParticipant::reject(unsigned int rejectCode)
 }
 
 void
-RemoteParticipant::redirect(NameAddr& destination, unsigned int redirectCode)
+RemoteParticipant::redirect(NameAddr& destination, unsigned int redirectCode, ConversationManager::RedirectSuccessCondition successCondition)
 {
    try
    {
+      // First look for redirect conditions, ie: UAS call that isn't answered yet
+      // In this case we don't care about any pending requests, since we are rejecting the call
+      if (mState == Connecting && mInviteSessionHandle.isValid())
+      {
+         ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
+         // If this is a UAS session and we haven't sent a final response yet - then redirect via 302 response
+         if (sis && !sis->isAccepted())
+         {
+            NameAddrs destinations;
+            destinations.push_back(destination);
+            mConversationManager.onParticipantRedirectSuccess(mHandle);
+            // If provided redirect code is not valid, then set it to the commonly used 302 code
+            if (redirectCode < 300 || redirectCode > 399)
+            {
+               WarningLog(<< "RemoteParticipant::redirect: invalid redirect code of " << redirectCode << " provided, using 302 instead");
+               redirectCode = 302;
+            }
+            sis->redirect(destinations, redirectCode);
+            return;
+         }
+      }
+      // Next look for Refer conditions
       if(mPendingRequest.mType == None)
       {
          if((mState == Connecting || mState == Accepted || mState == Connected) && mInviteSessionHandle.isValid())
          {
-            ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mInviteSessionHandle.get());
-            // If this is a UAS session and we haven't sent a final response yet - then redirect via 302 response
-            if(sis && !sis->isAccepted() && mState == Connecting)
+            if(mInviteSessionHandle->isConnected()) // redirect via blind transfer 
             {
-               NameAddrs destinations;
-               destinations.push_back(destination);
-               mConversationManager.onParticipantRedirectSuccess(mHandle);
-               // If provided redirect code is not valid, then set it to the commonly used 302 code
-               if (redirectCode < 300 || redirectCode > 399)
-               {
-                  WarningLog(<< "RemoteParticipant::redirect: invalid redirect code of " << redirectCode << " provided, using 302 instead");
-                  redirectCode = 302;
-               }
-               sis->redirect(destinations, redirectCode);
-            }
-            else if(mInviteSessionHandle->isConnected()) // redirect via blind transfer 
-            {
+               mRedirectSuccessCondition = successCondition;
                mInviteSessionHandle->refer(NameAddr(destination.uri()) /* remove tags */, true /* refersub */);
                stateTransition(Redirecting);
             }
@@ -491,6 +505,8 @@ RemoteParticipant::redirect(NameAddr& destination, unsigned int redirectCode)
             {
                mPendingRequest.mType = Redirect;
                mPendingRequest.mDestination = destination;
+               mPendingRequest.mRedirectCode = redirectCode;
+               mPendingRequest.mRedirectSuccessCondition = successCondition;
             }
          }
          else if(mState == PendingOODRefer)
@@ -501,6 +517,8 @@ RemoteParticipant::redirect(NameAddr& destination, unsigned int redirectCode)
          {
             mPendingRequest.mType = Redirect;
             mPendingRequest.mDestination = destination;
+            mPendingRequest.mRedirectCode = redirectCode;
+            mPendingRequest.mRedirectSuccessCondition = successCondition;
          }
       }
       else
@@ -520,7 +538,7 @@ RemoteParticipant::redirect(NameAddr& destination, unsigned int redirectCode)
 }
 
 void
-RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInviteSessionHandle)
+RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInviteSessionHandle, ConversationManager::RedirectSuccessCondition successCondition)
 {
    try
    {
@@ -541,6 +559,7 @@ RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInv
                }
                else if(mInviteSessionHandle->isConnected()) // redirect via attended transfer (with replaces)
                {
+                  mRedirectSuccessCondition = successCondition;
                   mInviteSessionHandle->refer(NameAddr(destParticipantInviteSessionHandle->peerAddr().uri()) /* remove tags */, destParticipantInviteSessionHandle /* session to replace)  */, true /* refersub */);
                   stateTransition(Redirecting);
                }
@@ -548,12 +567,14 @@ RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInv
                {
                   mPendingRequest.mType = RedirectTo;
                   mPendingRequest.mDestInviteSessionHandle = destParticipantInviteSessionHandle;
+                  mPendingRequest.mRedirectSuccessCondition = successCondition;
                }
             }
             else
             {
                mPendingRequest.mType = RedirectTo;
                mPendingRequest.mDestInviteSessionHandle = destParticipantInviteSessionHandle;
+               mPendingRequest.mRedirectSuccessCondition = successCondition;
             }
          }
          else
@@ -798,9 +819,11 @@ RemoteParticipant::redirectPendingOODRefer(resip::NameAddr& destination)
 }
 
 void
-RemoteParticipant::processReferNotify(const SipMessage& notify)
+RemoteParticipant::processReferNotify(ClientSubscriptionHandle h, const SipMessage& notify)
 {
    unsigned int code = 400;  // Bad Request - default if for some reason a valid sipfrag is not present
+
+   mReferSubscriptionHandle = h;
 
    SipFrag* frag  = dynamic_cast<SipFrag*>(notify.getContents());
    if (frag)
@@ -812,12 +835,33 @@ RemoteParticipant::processReferNotify(const SipMessage& notify)
       }
    }
 
-   // Check if success or failure response code was in SipFrag
-   if(code >= 200 && code < 300)
+   // Check if response code in SipFrag meets our completion conditions
+   if (mRedirectSuccessCondition == ConversationManager::RedirectSuccessOnTrying && code == 100)
+   {
+      if (mState == Redirecting)
+      {
+         if (mHandle) mConversationManager.onParticipantRedirectSuccess(mHandle);
+         h->end();  // We don't care about any more updates, end the implied subscription
+         stateTransition(Connected);
+      }
+   }
+   else if ((mRedirectSuccessCondition == ConversationManager::RedirectSuccessOnTrying ||
+             mRedirectSuccessCondition == ConversationManager::RedirectSuccessOnRinging) &&
+            code >= 180 && code <= 189)
+   {
+      if (mState == Redirecting)
+      {
+         if (mHandle) mConversationManager.onParticipantRedirectSuccess(mHandle);
+         h->end();  // We don't care about any more updates, end the implied subscription
+         stateTransition(Connected);
+      }
+   }
+   else if(code >= 200 && code < 300)
    {
       if(mState == Redirecting)
       {
          if (mHandle) mConversationManager.onParticipantRedirectSuccess(mHandle);
+         h->end();  // We don't care about any more updates, end the implied subscription - shouldn't be required here, since 200's are normally sent with subscription state terminated
          stateTransition(Connected);
       }
    }
@@ -1444,7 +1488,7 @@ RemoteParticipant::onUpdatePending(ClientSubscriptionHandle h, const SipMessage&
    if (notify.exists(h_Event) && notify.header(h_Event).value() == "refer")
    {
       h->acceptUpdate();
-      processReferNotify(notify);
+      processReferNotify(h, notify);
    }
    else
    {
@@ -1459,7 +1503,7 @@ RemoteParticipant::onUpdateActive(ClientSubscriptionHandle h, const SipMessage& 
    if (notify.exists(h_Event) && notify.header(h_Event).value() == "refer")
    {
       h->acceptUpdate();
-      processReferNotify(notify);
+      processReferNotify(h, notify);
    }
    else
    {
@@ -1474,7 +1518,7 @@ RemoteParticipant::onUpdateExtension(ClientSubscriptionHandle h, const SipMessag
    if (notify.exists(h_Event) && notify.header(h_Event).value() == "refer")
    {
       h->acceptUpdate();
-      processReferNotify(notify);
+      processReferNotify(h, notify);
    }
    else
    {
@@ -1491,7 +1535,7 @@ RemoteParticipant::onTerminated(ClientSubscriptionHandle h, const SipMessage* no
       if (notify->isRequest() && notify->exists(h_Event) && notify->header(h_Event).value() == "refer")
       {
          // Note:  Final notify is sometimes only passed in the onTerminated callback
-         processReferNotify(*notify);
+         processReferNotify(h, *notify);
       }
       else if(notify->isResponse() && mState == Redirecting)
       {

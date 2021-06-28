@@ -217,16 +217,16 @@ ConversationManager::rejectParticipant(ParticipantHandle partHandle, unsigned in
 }
 
 void 
-ConversationManager::redirectParticipant(ParticipantHandle partHandle, const NameAddr& destination, unsigned int redirectCode)
+ConversationManager::redirectParticipant(ParticipantHandle partHandle, const NameAddr& destination, unsigned int redirectCode, RedirectSuccessCondition successCondition)
 {
-   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination, redirectCode);
+   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination, redirectCode, successCondition);
    post(cmd);
 }
 
 void 
-ConversationManager::redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle)
+ConversationManager::redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle, RedirectSuccessCondition successCondition)
 {
-   RedirectToParticipantCmd* cmd = new RedirectToParticipantCmd(this, partHandle, destPartHandle);
+   RedirectToParticipantCmd* cmd = new RedirectToParticipantCmd(this, partHandle, destPartHandle, successCondition);
    post(cmd);
 }
 

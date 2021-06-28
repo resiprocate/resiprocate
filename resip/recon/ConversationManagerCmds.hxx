@@ -601,17 +601,19 @@ class RedirectParticipantCmd  : public resip::DumCommand
       RedirectParticipantCmd(ConversationManager* conversationManager, 
                              ParticipantHandle partHandle,
                              const resip::NameAddr& destination,
-                             unsigned int redirectCode) 
+                             unsigned int redirectCode,
+                             ConversationManager::RedirectSuccessCondition successCondition)
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mDestination(destination),
-           mRedirectCode(redirectCode) {}
+           mRedirectCode(redirectCode),
+           mSuccessCondition(successCondition) {}
       virtual void executeCommand()
       {
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          if(remoteParticipant)
          {
-            remoteParticipant->redirect(mDestination, mRedirectCode);
+            remoteParticipant->redirect(mDestination, mRedirectCode, mSuccessCondition);
          }
          else
          {
@@ -626,6 +628,7 @@ class RedirectParticipantCmd  : public resip::DumCommand
       ParticipantHandle mPartHandle;
       resip::NameAddr mDestination;
       unsigned int mRedirectCode;
+      ConversationManager::RedirectSuccessCondition mSuccessCondition;
 };
 
 class RedirectToParticipantCmd  : public resip::DumCommand
@@ -633,17 +636,19 @@ class RedirectToParticipantCmd  : public resip::DumCommand
    public:  
       RedirectToParticipantCmd(ConversationManager* conversationManager, 
                                ParticipantHandle partHandle,
-                               ParticipantHandle destPartHandle) 
+                               ParticipantHandle destPartHandle,
+                               ConversationManager::RedirectSuccessCondition successCondition)
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
-           mDestPartHandle(destPartHandle) {}
+           mDestPartHandle(destPartHandle),
+           mSuccessCondition(successCondition) {}
       virtual void executeCommand()
       {
          RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
          RemoteParticipant* destRemoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mDestPartHandle));
          if(remoteParticipant && destRemoteParticipant)
          {
-            remoteParticipant->redirectToParticipant(destRemoteParticipant->getInviteSessionHandle());
+            remoteParticipant->redirectToParticipant(destRemoteParticipant->getInviteSessionHandle(), mSuccessCondition);
          }
          else
          {
@@ -664,6 +669,7 @@ class RedirectToParticipantCmd  : public resip::DumCommand
       ConversationManager* mConversationManager;
       ParticipantHandle mPartHandle;
       ParticipantHandle mDestPartHandle;
+      ConversationManager::RedirectSuccessCondition mSuccessCondition;
 };
 
 class HoldParticipantCmd  : public resip::DumCommand
