@@ -159,7 +159,6 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       client.invokeConnect();
       client.gatherCandidates();
       client.invokeProcessOffer();
-      client.describeObject();
 
       std::string _offer(client.getMReturnedSdp());
 
@@ -308,7 +307,6 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
             _answer = client.getLocalSessionDescriptor();
          }
       }
-      client.describeObject();
 
       StackLog(<<"answer FROM Kurento: " << _answer);
 
