@@ -23,7 +23,6 @@ class SipMessage;
 
 namespace recon
 {
-class ConversationManager;
 
 /**
   This class represent a remote participant.  A remote participant is a 
@@ -60,8 +59,8 @@ public:
    virtual void accept();
    virtual void alert(bool earlyFlag);
    virtual void reject(unsigned int rejectCode);
-   virtual void redirect(resip::NameAddr& destination);
-   virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle);
+   virtual void redirect(resip::NameAddr& destination, unsigned int redirectCode = 302, ConversationManager::RedirectSuccessCondition successCondition = ConversationManager::RedirectSuccessOnConnected);
+   virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle, ConversationManager::RedirectSuccessCondition successCondition = ConversationManager::RedirectSuccessOnConnected);
    virtual void checkHoldCondition();
    virtual void setLocalHold(bool hold);
 
@@ -70,7 +69,7 @@ public:
    virtual void acceptPendingOODRefer();
    virtual void rejectPendingOODRefer(unsigned int statusCode);
    virtual void redirectPendingOODRefer(resip::NameAddr& destination);
-   virtual void processReferNotify(const resip::SipMessage& notify);
+   virtual void processReferNotify(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
@@ -137,8 +136,9 @@ private:
    virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;
-   resip::InviteSessionHandle mInviteSessionHandle; 
-   RemoteParticipantDialogSet& mDialogSet;   
+   resip::InviteSessionHandle mInviteSessionHandle;
+   resip::ClientSubscriptionHandle mReferSubscriptionHandle;
+   RemoteParticipantDialogSet& mDialogSet;
    resip::DialogId mDialogId;
 
    typedef enum
@@ -164,7 +164,8 @@ private:
    resip::SipMessage mPendingOODReferMsg;
    resip::ServerOutOfDialogReqHandle mPendingOODReferNoSubHandle;
    resip::ServerSubscriptionHandle mPendingOODReferSubHandle;
-
+   ConversationManager::RedirectSuccessCondition mRedirectSuccessCondition;
+   
    typedef enum
    {
       None = 0,
@@ -180,6 +181,8 @@ private:
       PendingRequestType mType;
       resip::NameAddr mDestination;
       resip::InviteSessionHandle mDestInviteSessionHandle;
+      unsigned int mRedirectCode;
+      ConversationManager::RedirectSuccessCondition mRedirectSuccessCondition;
    };
    PendingRequest mPendingRequest;
    std::unique_ptr<resip::SdpContents> mPendingOffer;

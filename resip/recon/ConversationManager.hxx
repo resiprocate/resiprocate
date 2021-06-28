@@ -106,6 +106,13 @@ public:
       AutoHoldBroadcastOnly
    } AutoHoldMode;
 
+   typedef enum
+   {
+      RedirectSuccessOnTrying,    // Consider redirect to be successful on Notify SipFrag 100
+      RedirectSuccessOnRinging,   // Consider redirect to be successful on Notify SipFrag 18x
+      RedirectSuccessOnConnected  // Consider redirect to be successful on Notify SipFrag 2xx
+   } RedirectSuccessCondition;
+
    ///////////////////////////////////////////////////////////////////////
    // Conversation methods  //////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////
@@ -359,8 +366,11 @@ public:
 
      @param partHandle Handle of the participant to redirect
      @param destination Uri of destination to redirect to
+     @param redirectCode Only used if call isn't answered yet, must be >= 300 and <= 399.
+     @param successCondition Only used if call is answered and REFER is sent
+                             Specifies when an onParticipantRedirectSuccess is generated
    */
-   virtual void redirectParticipant(ParticipantHandle partHandle, const resip::NameAddr& destination);
+   virtual void redirectParticipant(ParticipantHandle partHandle, const resip::NameAddr& destination, unsigned int redirectCode = 302, RedirectSuccessCondition successCondition = RedirectSuccessOnConnected);
 
    /**
      This is used for attended transfer scenarios where both participants
@@ -370,8 +380,9 @@ public:
 
      @param partHandle Handle of the participant to redirect
      @param destPartHandle Handle ot the participant to redirect to
+     @param successCondition Specifies when an onParticipantRedirectSuccess is generated
    */
-   virtual void redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle);
+   virtual void redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle, RedirectSuccessCondition successCondition = RedirectSuccessOnConnected);
 
    /**
      Manually puts a paricipant on hold, or takes off hold without needing to

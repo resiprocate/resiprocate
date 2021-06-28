@@ -251,7 +251,11 @@ inline bool Object::Member::operator == (const Member& member) const
           element == member.element;
 }
 
+#if !_HAS_CXX17
 class Object::Finder : public std::unary_function<Object::Member, bool>
+#else
+class Object::Finder
+#endif
 {
 public:
    Finder(const std::string& name) : m_name(name) {}

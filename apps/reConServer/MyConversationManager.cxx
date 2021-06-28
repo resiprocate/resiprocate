@@ -124,19 +124,27 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
    mRemoteParticipantHandles.push_back(partHandle);
    if(mAutoAnswerEnabled)
    {
-      // If there are no conversations, then create one
-      if(mConversationHandles.empty())
+      const resip::Data& room = msg.header(h_RequestLine).uri().user();
+      RoomMap::const_iterator it = mRooms.find(room);
+      if(it == mRooms.end())
       {
+         InfoLog(<<"creating Conversation for room: " << room);
          ConversationHandle convHandle = createConversation();
+         mRooms[room] = convHandle;
          // ensure a local participant is in the conversation - create one if one doesn't exist
          if(supportsLocalAudio() && mLocalParticipantHandles.empty())
          {
             createLocalParticipant();
          }
-         addParticipant(convHandle, mLocalParticipantHandles.front());
+         addParticipant(convHandle, partHandle);
+         answerParticipant(partHandle);
       }
-      addParticipant(mConversationHandles.front(), partHandle);
-      answerParticipant(partHandle);
+      else
+      {
+         InfoLog(<<"found Conversation for room: " << room);
+         addParticipant(it->second, partHandle);
+         answerParticipant(partHandle);
+      }
    }
 }
 
