@@ -236,7 +236,8 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       }
       if(pipelineId.empty())
       {
-         DebugLog(<<"creating new pipeline for first participant");
+         // should never get here, pipeline is now created in KurentoConversationManager
+         ErrLog(<<"creating new pipeline for first participant");
          client.createMediaPipeline();
          client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
          setEndpointId(client.getRtpEndpointId().c_str());

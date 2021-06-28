@@ -71,6 +71,7 @@ KurentoConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
    DebugLog(<<"trying to connect to Kurento host " << kHost << ":" << kPort);
    mKurentoClient.getMConnectionHandler()->createConnection(kHost, kPort);
+   mKurentoClient.createMediaPipeline();
 
 }
 
