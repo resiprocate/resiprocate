@@ -69,6 +69,7 @@ KurentoConversationManager::init(int defaultSampleRate, int maxSampleRate)
 
    kurento_client::websocket::connection_metadata::m_kevent_handler = this;  // FIXME Kurento, static member
 
+   DebugLog(<<"trying to connect to Kurento host " << kHost << ":" << kPort);
    mKurentoClient.getMConnectionHandler()->createConnection(kHost, kPort);
 
 }

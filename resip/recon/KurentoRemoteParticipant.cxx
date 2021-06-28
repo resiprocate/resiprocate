@@ -152,7 +152,6 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
    try
    {
       kurento_client::KurentoClient& client = mKurentoConversationManager.getKurentoClient();
-      connectToKurento(client);
 
       client.createMediaPipeline();
       client.createRtpEndpoint("RtpEndpoint");
@@ -223,7 +222,6 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       StackLog(<<"offer TO Kurento: " << kOffer);
 
       kurento_client::KurentoClient& client = mKurentoConversationManager.getKurentoClient();
-      connectToKurento(client);
 
       client.setMSdp(kOffer);
       std::string pipelineId(client.getMediaPipelineId());
@@ -344,16 +342,6 @@ bool
 KurentoRemoteParticipant::mediaStackPortAvailable()
 {
    return true; // FIXME Kurento - can we check with Kurento somehow?
-}
-
-void
-KurentoRemoteParticipant::connectToKurento(kurento_client::KurentoClient& client)
-{
-   const Uri& kurento = mKurentoConversationManager.getKurentoUri();
-   std::string kHost = std::string(kurento.host().c_str());
-   std::string kPort = std::to_string(kurento.port());
-   DebugLog(<<"trying to connect to Kurento host " << kHost << ":" << kPort);
-   client.getMConnectionHandler()->createConnection(kHost, kPort);
 }
 
 void

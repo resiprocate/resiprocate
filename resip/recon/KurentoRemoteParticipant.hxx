@@ -77,8 +77,6 @@ protected:
 
    virtual KurentoRemoteParticipantDialogSet& getKurentoDialogSet() { return dynamic_cast<KurentoRemoteParticipantDialogSet&>(getDialogSet()); };
 
-   virtual void connectToKurento(kurento_client::KurentoClient& client);
-
 private:       
    bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
 
