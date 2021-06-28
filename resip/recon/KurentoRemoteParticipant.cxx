@@ -153,7 +153,6 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
    {
       kurento_client::KurentoClient& client = mKurentoConversationManager.getKurentoClient();
 
-      client.createMediaPipeline();
       client.createRtpEndpoint("RtpEndpoint");
       client.invokeConnect();
       client.gatherCandidates();
