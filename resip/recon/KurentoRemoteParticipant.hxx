@@ -74,6 +74,10 @@ public:
 
    void onIceGatheringDone() { mIceGatheringDone = true; };
 
+   virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100) override;
+   virtual void removeFromConversation(Conversation *conversation) override;
+   virtual void updateConversation();
+
 protected:
    virtual bool mediaStackPortAvailable();
 
@@ -84,7 +88,6 @@ private:
 
    void setEndpointId(const resip::Data& endpointId);
    resip::Data mEndpointId;
-   static std::string mOtherEndpointId;
    volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primite, e.g. condition_variable
 };
 

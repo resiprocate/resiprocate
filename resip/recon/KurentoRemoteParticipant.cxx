@@ -36,8 +36,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-std::string KurentoRemoteParticipant::mOtherEndpointId;
-
 void
 ReConKurentoClientLogSink::log(KurentoClientLogSink::Level level, const char *s)
 {
@@ -239,31 +237,14 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          mIceGatheringDone = false;
       }
       std::string sessionId(client.getSessionId());
-      //std::string otherEndpointId(client.getRtpEndpointId());
-      std::string otherEndpointId = mOtherEndpointId; // is a caller currently online in loopback?
       client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
       std::string ourEndpointId(client.getRtpEndpointId());
       setEndpointId(ourEndpointId.c_str());
       DebugLog(<<"our endpoint: " << ourEndpointId);
-      if(otherEndpointId.empty())
-      {
-         DebugLog(<<"joining participant to existing pipeline: " << pipelineId
-                  << " session: " << sessionId
-                  << " for loopback");
-         client.invokeConnect(ourEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
-         mOtherEndpointId = client.getRtpEndpointId(); // save it for the next caller
-      }
-      else
-      {
-         DebugLog(<<"joining participant to existing pipeline: " << pipelineId
-                  << " session: " << sessionId
-                  << " other endpoint: " << otherEndpointId);
-         client.invokeDisconnect(otherEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
-         //client.setExternalIPv4("1.2.3.4", ourEndpointId.c_str(), sessionId.c_str());
-         client.invokeConnect(ourEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
-         client.invokeConnect(otherEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
-         mOtherEndpointId.clear(); // next caller to come in will go to loopback
-      }
+      DebugLog(<<"joining participant to existing pipeline: " << pipelineId
+               << " session: " << sessionId
+               << " for loopback");
+      client.invokeConnect(ourEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
       if(isWebRTC)
       {
          client.addListener("IceCandidateFound", ourEndpointId.c_str(), sessionId.c_str());
@@ -299,6 +280,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       setRemoteSdp(offer);
    }
 
+   updateConversation();
    return valid;
 }
 
@@ -310,6 +292,67 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    // FIXME Kurento - sometimes true
    setRemoteHold(false);
 
+}
+
+void
+KurentoRemoteParticipant::addToConversation(Conversation *conversation, unsigned int inputGain, unsigned int outputGain)
+{
+   RemoteParticipant::addToConversation(conversation, inputGain, outputGain);
+}
+
+void
+KurentoRemoteParticipant::updateConversation()
+{
+   const ConversationMap& cm = getConversations();
+   Conversation* conversation = cm.begin()->second;
+   Conversation::ParticipantMap& m = conversation->getParticipants();
+   if(m.size() < 2)
+   {
+      DebugLog(<<"we are first in the conversation");
+      return;
+   }
+   if(m.size() > 2)
+   {
+      WarningLog(<<"participants already here, can't join, size = " << m.size());
+      return;
+   }
+   DebugLog(<<"joining a Conversation with an existing Participant");
+
+   kurento_client::KurentoClient& client = mKurentoConversationManager.getKurentoClient();
+   std::string sessionId(client.getSessionId());
+
+   if(mEndpointId.empty())
+   {
+      DebugLog(<<"our endpointId is missing");
+      return;
+   }
+   std::string ourEndpointId(mEndpointId.c_str());
+   // remove our loopback
+   client.invokeDisconnect(ourEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
+
+   KurentoRemoteParticipant* krp = 0;
+   Conversation::ParticipantMap::iterator it = m.begin();
+   while(it != m.end() && krp == 0)
+   {
+      krp = dynamic_cast<KurentoRemoteParticipant*>(it->second.getParticipant());
+      if(krp == this)
+      {
+         krp = 0;
+      }
+   }
+   std::string otherEndpointId(krp->mEndpointId.c_str());
+   // remove the peer's loopback
+   client.invokeDisconnect(otherEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
+
+   // now join them together
+   client.invokeConnect(ourEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
+   client.invokeConnect(otherEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
+}
+
+void
+KurentoRemoteParticipant::removeFromConversation(Conversation *conversation)
+{
+   RemoteParticipant::removeFromConversation(conversation);
 }
 
 bool
