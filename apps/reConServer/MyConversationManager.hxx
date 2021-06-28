@@ -49,6 +49,8 @@ protected:
    std::list<recon::ParticipantHandle> mLocalParticipantHandles;
    std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
    std::list<recon::ParticipantHandle> mMediaParticipantHandles;
+   typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
+   RoomMap mRooms;
    bool mAutoAnswerEnabled;
 };
 
