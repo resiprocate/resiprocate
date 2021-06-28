@@ -36,6 +36,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+std::string KurentoRemoteParticipant::mOtherEndpointId;
+
 void
 ReConKurentoClientLogSink::log(KurentoClientLogSink::Level level, const char *s)
 {
@@ -244,6 +246,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
          //client.setExternalIPv4("1.2.3.4");
          // this creates a loopback connection for a single RemoteParticipant
          client.invokeConnect();
+         mOtherEndpointId = client.getRtpEndpointId(); // save it for the next caller
          if(isWebRTC)
          {
             client.addListener("IceCandidateFound");
@@ -266,17 +269,30 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       else
       {
          std::string sessionId(client.getSessionId());
-         std::string otherEndpointId(client.getRtpEndpointId());
-         DebugLog(<<"joining participant to existing pipeline: " << pipelineId
-            << " session: " << sessionId
-            << " other endpoint: " << otherEndpointId);
-         client.invokeDisconnect(otherEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
+         //std::string otherEndpointId(client.getRtpEndpointId());
+         std::string otherEndpointId = mOtherEndpointId; // is a caller currently online in loopback?
          client.createRtpEndpoint(isWebRTC ? "WebRtcEndpoint" : "RtpEndpoint");
          std::string ourEndpointId(client.getRtpEndpointId());
          DebugLog(<<"our endpoint: " << ourEndpointId);
-         //client.setExternalIPv4("1.2.3.4", ourEndpointId.c_str(), sessionId.c_str());
-         client.invokeConnect(ourEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
-         client.invokeConnect(otherEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
+         if(otherEndpointId.empty())
+         {
+            DebugLog(<<"joining participant to existing pipeline: " << pipelineId
+                     << " session: " << sessionId
+                     << " for loopback");
+            client.invokeConnect(ourEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
+            mOtherEndpointId = client.getRtpEndpointId(); // save it for the next caller
+         }
+         else
+         {
+            DebugLog(<<"joining participant to existing pipeline: " << pipelineId
+                     << " session: " << sessionId
+                     << " other endpoint: " << otherEndpointId);
+            client.invokeDisconnect(otherEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
+            //client.setExternalIPv4("1.2.3.4", ourEndpointId.c_str(), sessionId.c_str());
+            client.invokeConnect(ourEndpointId.c_str(), otherEndpointId.c_str(), sessionId.c_str());
+            client.invokeConnect(otherEndpointId.c_str(), ourEndpointId.c_str(), sessionId.c_str());
+            mOtherEndpointId.clear(); // next caller to come in will go to loopback
+         }
          if(isWebRTC)
          {
             client.addListener("IceCandidateFound", ourEndpointId.c_str(), sessionId.c_str());

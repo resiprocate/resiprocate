@@ -84,6 +84,7 @@ private:
 
    void setEndpointId(const resip::Data& endpointId);
    resip::Data mEndpointId;
+   static std::string mOtherEndpointId;
 };
 
 }
