@@ -58,6 +58,7 @@ endif
 if USE_SOCI_MYSQL
 reConServer_LDADD += -lsoci_mysql -lmysqlclient
 endif
+reConServer_LDADD += -lfmt
 
 BUILT_SOURCES = playback_prompt.h record_prompt.h
 
