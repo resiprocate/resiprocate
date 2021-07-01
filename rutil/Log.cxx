@@ -1,6 +1,8 @@
 #include "rutil/Socket.hxx"
 
 #include "rutil/ResipAssert.h"
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -106,15 +108,16 @@ LogStaticInitializer::~LogStaticInitializer()
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName)
+Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName, const char* messageStructure)
 {
-   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName);
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName, Data(messageStructure));
 }
 
 void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
                 const char *logFileName, ExternalLogger* externalLogger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                const Data& messageStructure)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -127,7 +130,13 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
    Level level = Log::Info;
    level = toLevel(leveld);
 
-   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName);
+   MessageStructure _messageStructure = Unstructured;
+   if (isEqualNoCase(messageStructure, "JSON_CEE"))
+   {
+      _messageStructure = JSON_CEE;
+   }
+
+   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName, _messageStructure);
 }
 
 int
@@ -229,12 +238,13 @@ void
 Log::initialize(Type type, Level level, const Data& appName, 
                 const char * logFileName,
                 ExternalLogger* externalLogger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                MessageStructure messageStructure)
 {
    Lock lock(_mutex);
    mDefaultLoggerData.reset();   
    
-   mDefaultLoggerData.set(type, level, logFileName, externalLogger);
+   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure);
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
@@ -276,9 +286,10 @@ Log::initialize(Type type,
                 Level level,
                 const Data& appName,
                 ExternalLogger& logger,
-                const Data& syslogFacilityName)
+                const Data& syslogFacilityName,
+                MessageStructure messageStructure)
 {
-   initialize(type, level, appName, 0, &logger, syslogFacilityName);
+   initialize(type, level, appName, 0, &logger, syslogFacilityName, messageStructure);
 }
 
 void
@@ -483,7 +494,8 @@ Log::tags(Log::Level level,
           const Subsystem& subsystem,
           const char* pfile,
           int line,
-          EncodeStream& strm)
+          EncodeStream& strm,
+          MessageStructure messageStructure)
 {
    char buffer[256] = "";
    Data ts(Data::Borrow, buffer, sizeof(buffer));
@@ -506,23 +518,49 @@ Log::tags(Log::Level level,
    pthread_t threadId = pthread_self();
    const char* file = pfile;
 #endif
-   if(resip::Log::getLoggerData().type() == Syslog)
+
+   switch(messageStructure)
    {
-      strm // << mDescriptions[level+1] << Log::delim
-   //        << timestamp(ts) << Log::delim
-   //        << mHostname << Log::delim
-   //        << mAppName << Log::delim
-           << subsystem << Log::delim
-           << threadId << Log::delim
-           << file << ":" << line;
-   }
-   else
-      strm << mDescriptions[level+1] << Log::delim
-           << timestamp(ts) << Log::delim  
-           << mAppName << Log::delim
-           << subsystem << Log::delim 
-           << threadId << Log::delim
-           << file << ":" << line;
+   case JSON_CEE:
+      auto now = std::chrono::high_resolution_clock::now();
+      std::time_t now_t = std::chrono::high_resolution_clock::to_time_t(now);
+      auto now_ns = now.time_since_epoch().count() % 1000000000;
+
+      if(resip::Log::getLoggerData().type() == Syslog)
+      {
+         strm << "@cee: ";
+      }
+      strm << "{";
+      strm << "\"pri\":\"" << mDescriptions[level+1] << "\","; // FIXME CEE priority names
+      strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
+           << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\","; // FIXME ISO8601
+      strm << "\"appname\":\"" << mAppName << "\",";
+      strm << "\"subsys\":\"" << subsystem << "\",";
+      strm << "\"proc!tid\":\"" << threadId << "\",";
+      strm << "\"file!name\":\"" << file << "\",";
+      strm << "\"file!line\":\"" << line << "\",";
+      strm << "\"msg\":\"";
+      break;
+   case Unstructured:
+   default:
+      if(resip::Log::getLoggerData().type() == Syslog)
+      {
+         strm // << mDescriptions[level+1] << Log::delim
+      //        << timestamp(ts) << Log::delim
+      //        << mHostname << Log::delim
+      //        << mAppName << Log::delim
+              << subsystem << Log::delim
+              << threadId << Log::delim
+              << file << ":" << line;
+      }
+      else
+         strm << mDescriptions[level+1] << Log::delim
+              << timestamp(ts) << Log::delim
+              << mAppName << Log::delim
+              << subsystem << Log::delim
+              << threadId << Log::delim
+              << file << ":" << line;
+      }
    return strm;
 }
 
@@ -710,18 +748,20 @@ Log::setServiceLevel(int service, Level l)
 Log::LocalLoggerId Log::localLoggerCreate(Log::Type type,
                                           Log::Level level,
                                           const char * logFileName,
-                                          ExternalLogger* externalLogger)
+                                          ExternalLogger* externalLogger,
+                                          MessageStructure messageStructure)
 {
-   return mLocalLoggerMap.create(type, level, logFileName, externalLogger);
+   return mLocalLoggerMap.create(type, level, logFileName, externalLogger, messageStructure);
 }
 
 int Log::localLoggerReinitialize(Log::LocalLoggerId loggerId,
                                  Log::Type type,
                                  Log::Level level,
                                  const char * logFileName,
-                                 ExternalLogger* externalLogger)
+                                 ExternalLogger* externalLogger,
+                                 MessageStructure messageStructure)
 {
-   return mLocalLoggerMap.reinitialize(loggerId, type, level, logFileName, externalLogger);
+   return mLocalLoggerMap.reinitialize(loggerId, type, level, logFileName, externalLogger, messageStructure);
 }
 
 int Log::localLoggerRemove(Log::LocalLoggerId loggerId)
@@ -798,12 +838,13 @@ Log::OutputToWin32DebugWindow(const Data& result)
 Log::LocalLoggerId Log::LocalLoggerMap::create(Log::Type type,
                                                     Log::Level level,
                                                     const char * logFileName,
-                                                    ExternalLogger* externalLogger)
+                                                    ExternalLogger* externalLogger,
+                                                    MessageStructure messageStructure)
 {
    Lock lock(mLoggerInstancesMapMutex);
    Log::LocalLoggerId id = ++mLastLocalLoggerId;
    Log::ThreadData *pNewData = new Log::ThreadData(id, type, level, logFileName,
-                                                   externalLogger);
+                                                   externalLogger, messageStructure);
    mLoggerInstancesMap[id].first = pNewData;
    mLoggerInstancesMap[id].second = 0;
    return id;
@@ -813,7 +854,8 @@ int Log::LocalLoggerMap::reinitialize(Log::LocalLoggerId loggerId,
                                       Log::Type type,
                                       Log::Level level,
                                       const char * logFileName,
-                                      ExternalLogger* externalLogger)
+                                      ExternalLogger* externalLogger,
+                                      MessageStructure messageStructure)
 {
    Lock lock(mLoggerInstancesMapMutex);
    LoggerInstanceMap::iterator it = mLoggerInstancesMap.find(loggerId);
@@ -824,7 +866,7 @@ int Log::LocalLoggerMap::reinitialize(Log::LocalLoggerId loggerId,
       return 1;
    }
    it->second.first->reset();
-   it->second.first->set(type, level, logFileName, externalLogger);
+   it->second.first->set(type, level, logFileName, externalLogger, messageStructure);
    return 0;
 }
 
@@ -888,8 +930,12 @@ Log::Guard::Guard(resip::Log::Level level,
 	
    if (resip::Log::getLoggerData().mType != resip::Log::OnlyExternalNoHeaders)
    {
-      Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
-      mStream << resip::Log::delim;
+      MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
+      Log::tags(mLevel, mSubsystem, mFile, mLine, mStream, messageStructure);
+      if(messageStructure == Unstructured)
+      {
+         mStream << resip::Log::delim;
+      }
       mStream.flush();
 
       mHeaderLength = mData.size();
@@ -902,6 +948,12 @@ Log::Guard::Guard(resip::Log::Level level,
 
 Log::Guard::~Guard()
 {
+   MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
+   if(messageStructure == JSON_CEE)
+   {
+      mStream << "\"}";
+   }
+
    mStream.flush();
 
    if (resip::Log::getExternal())
