@@ -10,7 +10,9 @@
 #endif
 
 #include <rutil/Data.hxx>
+#ifdef USE_SIPXTAPI
 #include <resip/recon/SipXConversationManager.hxx>
+#endif
 
 namespace reconserver
 {

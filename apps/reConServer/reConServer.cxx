@@ -841,8 +841,10 @@ ReConServerProcess::main (int argc, char** argv)
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
+#ifdef USE_SIPXTAPI
    SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
       ? SipXConversationManager::sipXGlobalMediaInterfaceMode : SipXConversationManager::sipXConversationMediaInterfaceMode;
+#endif
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
@@ -854,6 +856,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Used by ConversationManager::buildSessionCapabilities(...) to create
    // our local SDP
    std::vector<unsigned int> _codecIds;
+#ifdef USE_SIPXTAPI
    if(enableOpus)
    {
       _codecIds.push_back(SdpCodec::SDP_CODEC_OPUS);        // Opus
@@ -874,15 +877,18 @@ ReConServerProcess::main (int argc, char** argv)
    _codecIds.push_back(SdpCodec::SDP_CODEC_PCMA);           // 8 - pcma
    _codecIds.push_back(SdpCodec::SDP_CODEC_G729);           // 18 - G.729
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
+#endif
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
 
    Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str());
    Log::setMaxLineCount(loggingFileMaxLineCount);
 
+#ifdef USE_SIPXTAPI
    // Setup logging for the sipX media stack
    // It is bridged to the reSIProcate logger
    SipXHelper::setupLoggingBridge("reConServer");
+#endif
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
 
@@ -913,8 +919,10 @@ ReConServerProcess::main (int argc, char** argv)
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
+#ifdef USE_SIPXTAPI
    InfoLog( << "  Global Media Interface = " <<
       ((mediaInterfaceMode == SipXConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
+#endif
    InfoLog( << "  Default sample rate = " << defaultSampleRate);
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
@@ -1390,7 +1398,9 @@ ReConServerProcess::main (int argc, char** argv)
       mUserAgent->shutdown();
    }
    InfoLog(<< "reConServer is shutdown.");
+#ifdef USE_SIPXTAPI
    OsSysLog::shutdown();
+#endif
    ::sleepSeconds(2);
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
