@@ -935,12 +935,12 @@ Log::Guard::Guard(resip::Log::Level level,
    if (resip::Log::getLoggerData().mType != resip::Log::OnlyExternalNoHeaders)
    {
       MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
-      Log::tags(mLevel, mSubsystem, mFile, mLine, mStream, messageStructure);
       if(messageStructure == Unstructured)
       {
+         Log::tags(mLevel, mSubsystem, mFile, mLine, mStream, messageStructure);
          mStream << resip::Log::delim;
+         mStream.flush();
       }
-      mStream.flush();
 
       mHeaderLength = mData.size();
    }
@@ -955,7 +955,44 @@ Log::Guard::~Guard()
    MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
    if(messageStructure == JSON_CEE)
    {
-      mStream << "\"}";
+      mStream.flush();
+      Data msg;
+      oDataStream o(msg);
+      // add the JSON message attributes
+      Log::tags(mLevel, mSubsystem, mFile, mLine, o, messageStructure);
+
+      // JSON encode the message body
+      // FIXME - this could be done on the fly in DataStream
+
+      const char* _data = mData.data();
+      for(Data::size_type i = 0; i < mData.size(); i++)
+      {
+         switch(_data[i]) // FIXME use a lookup table
+         {
+         case '\\':
+            o << "\\";
+            break;
+         case '"':
+            o << "\\\"";
+            break;
+         case '\t':
+            o << "\\t";
+            break;
+         case '\n':
+            o << "\\n";
+            break;
+         case '\r':
+            o << "\\r";
+            break;
+         default:
+            o << _data[i];
+         }
+      }
+      // add the trailing JSON
+      o << "\"}";
+      o.flush();
+
+      mData.takeBuf(msg);
    }
 
    mStream.flush();
