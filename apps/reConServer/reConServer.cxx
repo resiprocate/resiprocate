@@ -824,7 +824,14 @@ ReConServerProcess::main (int argc, char** argv)
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
    Data loggingFilenameTemplate = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    fmt::memory_buffer _loggingFilename;
-   fmt::format_to(_loggingFilename, loggingFilenameTemplate.c_str(), fmt::arg("pid", getpid()), fmt::arg("timestamp", time(0)));
+   fmt::format_to(_loggingFilename,
+      loggingFilenameTemplate.c_str(),
+#ifdef WIN32
+      fmt::arg("pid", (int)GetCurrentProcess()),
+#else
+      fmt::arg("pid", getpid()),
+#endif
+      fmt::arg("timestamp", time(0)));
    Data loggingFilename(_loggingFilename.data());
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
    Data cdrLogFilename = reConServerConfig.getConfigData("CDRLogFile", "", true);
