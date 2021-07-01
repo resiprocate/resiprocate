@@ -249,7 +249,7 @@ main(int argc, char* argv[])
    testThreadLocalLoggers(argv[0]);
 
    Log::initialize(Log::Cout, Log::Info, argv[0], 0, 0, "LOG_DAEMON", Log::MessageStructure::JSON_CEE);
-   InfoLog(<<"This should appear-back to Cout as JSON");
+   InfoLog(<<"This should appear-back to Cout as JSON, \"Hello World\"");
 
    return 0;
 }
