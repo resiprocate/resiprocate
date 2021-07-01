@@ -488,13 +488,10 @@ Log::tags(Log::Level level,
    char buffer[256] = "";
    Data ts(Data::Borrow, buffer, sizeof(buffer));
 #if defined( __APPLE__ )
-  strm << mDescriptions[level+1] << Log::delim
-        << timestamp(ts) << Log::delim  
-        << mAppName << Log::delim
-        << subsystem << Log::delim 
-        << pthread_self() << Log::delim
-        << pfile << ":" << line;
+   pthread_t threadId = pthread_self();
+   const char* file = pfile;
 #elif defined( WIN32 )
+   int threadId = (int)GetCurrentThreadId();
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
           *file != '\\')
@@ -505,13 +502,10 @@ Log::tags(Log::Level level,
    {
       ++file;
    }
-   strm << mDescriptions[level+1] << Log::delim
-        << timestamp(ts) << Log::delim  
-        << mAppName << Log::delim
-        << subsystem << Log::delim 
-        << GetCurrentThreadId() << Log::delim
-        << file << ":" << line;
 #else // #if defined( WIN32 ) || defined( __APPLE__ )
+   pthread_t threadId = pthread_self();
+   const char* file = pfile;
+#endif
    if(resip::Log::getLoggerData().type() == Syslog)
    {
       strm // << mDescriptions[level+1] << Log::delim
@@ -519,18 +513,16 @@ Log::tags(Log::Level level,
    //        << mHostname << Log::delim
    //        << mAppName << Log::delim
            << subsystem << Log::delim
-           << pthread_self() << Log::delim
-           << pfile << ":" << line;
+           << threadId << Log::delim
+           << file << ":" << line;
    }
    else
       strm << mDescriptions[level+1] << Log::delim
            << timestamp(ts) << Log::delim  
-   //        << mHostname << Log::delim  
            << mAppName << Log::delim
            << subsystem << Log::delim 
-           << pthread_self() << Log::delim
-           << pfile << ":" << line;
-#endif
+           << threadId << Log::delim
+           << file << ":" << line;
    return strm;
 }
 
