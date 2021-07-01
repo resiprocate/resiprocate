@@ -36,7 +36,7 @@ AM_MISSING_PROG([GPERF], [gperf])
 
 AC_GPERFVER
 
-AX_CXX_COMPILE_STDCXX(14)
+AX_CXX_COMPILE_STDCXX(11)
 
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
