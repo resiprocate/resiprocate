@@ -522,24 +522,26 @@ Log::tags(Log::Level level,
    switch(messageStructure)
    {
    case JSON_CEE:
-      auto now = std::chrono::high_resolution_clock::now();
-      std::time_t now_t = std::chrono::high_resolution_clock::to_time_t(now);
-      auto now_ns = now.time_since_epoch().count() % 1000000000;
-
-      if(resip::Log::getLoggerData().type() == Syslog)
       {
-         strm << "@cee: ";
+         auto now = std::chrono::high_resolution_clock::now();
+         std::time_t now_t = std::chrono::high_resolution_clock::to_time_t(now);
+         auto now_ns = now.time_since_epoch().count() % 1000000000;
+
+         if(resip::Log::getLoggerData().type() == Syslog)
+         {
+            strm << "@cee: ";
+         }
+         strm << "{";
+         strm << "\"pri\":\"" << mDescriptions[level+1] << "\","; // FIXME CEE priority names
+         strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
+              << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\","; // FIXME ISO8601
+         strm << "\"appname\":\"" << mAppName << "\",";
+         strm << "\"subsys\":\"" << subsystem << "\",";
+         strm << "\"proc!tid\":\"" << threadId << "\",";
+         strm << "\"file!name\":\"" << file << "\",";
+         strm << "\"file!line\":\"" << line << "\",";
+         strm << "\"msg\":\"";
       }
-      strm << "{";
-      strm << "\"pri\":\"" << mDescriptions[level+1] << "\","; // FIXME CEE priority names
-      strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
-           << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\","; // FIXME ISO8601
-      strm << "\"appname\":\"" << mAppName << "\",";
-      strm << "\"subsys\":\"" << subsystem << "\",";
-      strm << "\"proc!tid\":\"" << threadId << "\",";
-      strm << "\"file!name\":\"" << file << "\",";
-      strm << "\"file!line\":\"" << line << "\",";
-      strm << "\"msg\":\"";
       break;
    case Unstructured:
    default:
@@ -554,6 +556,7 @@ Log::tags(Log::Level level,
               << file << ":" << line;
       }
       else
+      {
          strm << mDescriptions[level+1] << Log::delim
               << timestamp(ts) << Log::delim
               << mAppName << Log::delim
@@ -561,6 +564,7 @@ Log::tags(Log::Level level,
               << threadId << Log::delim
               << file << ":" << line;
       }
+   }
    return strm;
 }
 
