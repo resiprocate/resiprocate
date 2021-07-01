@@ -64,6 +64,7 @@ ReTurnConfig::ReTurnConfig() :
    mSyslogFacility("LOG_DAEMON"),
    mLoggingLevel("INFO"),
    mLoggingFilename("reTurnServer.log"),
+   mLoggingMessageStructure("Unstructured"),
    mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
    mDaemonize(false),
    mPidFile(""),
@@ -101,6 +102,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mSyslogFacility = getConfigData("SyslogFacility", "LOG_DAEMON");
    mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
    mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
+   mLoggingMessageStructure = getConfigData("LogMessageStructure", "Unstructured", true);
    mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", mLoggingFileMaxLineCount);
    mDaemonize = getConfigBool("Daemonize", mDaemonize);
    mPidFile = getConfigData("PidFile", mPidFile);
