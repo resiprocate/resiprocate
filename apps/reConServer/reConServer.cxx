@@ -882,7 +882,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
 
-   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, loggingMessageStructure);
+   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, "LOG_DAEMON", loggingMessageStructure);
    Log::setMaxLineCount(loggingFileMaxLineCount);
 
 #ifdef USE_SIPXTAPI
