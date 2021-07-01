@@ -37,12 +37,6 @@ unsigned int Log::MaxLineCount = 0; // no limit by default
 unsigned int Log::MaxByteCount = 0; // no limit by default
 bool Log::KeepAllLogFiles = false;  // do not keep all log files by default
 
-#ifdef WIN32
-int Log::mPid=0;
-#else 
-pid_t Log::mPid=0;
-#endif
-
 volatile short Log::touchCount = 0;
 
 
@@ -275,11 +269,6 @@ Log::initialize(Type type, Level level, const Data& appName,
    char buffer[1024];  
    gethostname(buffer, sizeof(buffer));
    mHostname = buffer;
-#ifdef WIN32 
-   mPid = (int)GetCurrentProcess();
-#else
-   mPid = getpid();
-#endif
 }
 
 void
@@ -530,7 +519,6 @@ Log::tags(Log::Level level,
    //        << mHostname << Log::delim
    //        << mAppName << Log::delim
            << subsystem << Log::delim
-   //        << mPid << Log::delim
            << pthread_self() << Log::delim
            << pfile << ":" << line;
    }
@@ -540,7 +528,6 @@ Log::tags(Log::Level level,
    //        << mHostname << Log::delim  
            << mAppName << Log::delim
            << subsystem << Log::delim 
-   //        << mPid << Log::delim
            << pthread_self() << Log::delim
            << pfile << ":" << line;
 #endif

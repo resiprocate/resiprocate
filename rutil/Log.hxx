@@ -346,11 +346,6 @@ class Log
       static Data mAppName;
       static Data mHostname;
       static int mSyslogFacility;
-#ifndef WIN32
-      static pid_t mPid;
-#else   
-      static int mPid;
-#endif
       static const char mDescriptions[][32];
 
       static ThreadData &getLoggerData()
