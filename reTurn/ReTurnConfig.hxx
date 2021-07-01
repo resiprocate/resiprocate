@@ -82,6 +82,7 @@ public:
    resip::Data mSyslogFacility;
    resip::Data mLoggingLevel;
    resip::Data mLoggingFilename;
+   resip::Data mLoggingMessageStructure;
    unsigned int mLoggingFileMaxLineCount;
    bool mDaemonize;
    resip::Data mPidFile;

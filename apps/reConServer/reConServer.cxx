@@ -833,6 +833,7 @@ ReConServerProcess::main (int argc, char** argv)
 #endif
       fmt::arg("timestamp", time(0)));
    Data loggingFilename(_loggingFilename.data());
+   Data loggingMessageStructure = reConServerConfig.getConfigData("LogMessageStructure", "Unstructured", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
    Data cdrLogFilename = reConServerConfig.getConfigData("CDRLogFile", "", true);
    Data captureHost = reConServerConfig.getConfigData("CaptureHost", "");
@@ -881,7 +882,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
 
-   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str());
+   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, loggingMessageStructure);
    Log::setMaxLineCount(loggingFileMaxLineCount);
 
 #ifdef USE_SIPXTAPI
