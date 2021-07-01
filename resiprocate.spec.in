@@ -15,6 +15,7 @@ BuildRequires: boost-devel
 BuildRequires: cajun-jsonapi-devel
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
+BuildRequires: fmt-devel
 BuildRequires: gperf
 %if 0%{?fedora} >= 34 || 0%{?rhel} >= 8
 BuildRequires: libdb-cxx-devel
