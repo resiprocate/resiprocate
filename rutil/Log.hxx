@@ -178,27 +178,31 @@ class Log
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
                              const Data& syslogFacility = "LOG_DAEMON",
-                             MessageStructure messageStructure = Unstructured);
+                             MessageStructure messageStructure = Unstructured,
+                             const Data& instanceName = "");
       static void initialize(const Data& type,
                              const Data& level,
                              const Data& appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
                              const Data& syslogFacility = "LOG_DAEMON",
-                             const Data& messageStructure = "Unstructured");
+                             const Data& messageStructure = "Unstructured",
+                             const Data& instanceName = "");
       static void initialize(const char* type,
                              const char* level,
                              const char* appName,
                              const char * logFileName = 0,
                              ExternalLogger* externalLogger = 0,
                              const char* syslogFacility = "LOG_DAEMON",
-                             const char* messageStructure = "Unstructured");
+                             const char* messageStructure = "Unstructured",
+                             const char* instanceName = "");
       static void initialize(Type type,
                              Level level,
                              const Data& appName,
                              ExternalLogger& logger,
                              const Data& syslogFacility = "LOG_DAEMON",
-                             MessageStructure messageStructure = Unstructured);
+                             MessageStructure messageStructure = Unstructured,
+                             const Data& instanceName = "");
 
       /** @brief Set logging level for current thread.
       * If thread has no local logger attached, then set global logging level.
@@ -293,12 +297,14 @@ class Log
             ThreadData(LocalLoggerId id, Type type=Cout, Level level=Info,
                        const char *logFileName=NULL,
                        ExternalLogger *pExternalLogger=NULL,
-                       MessageStructure messageStructure = Unstructured)
+                       MessageStructure messageStructure = Unstructured,
+                       const Data& instanceName = "")
                : mLevel(level),
                  mMaxLineCount(0),
                  mMaxByteCount(0),
                  mExternalLogger(pExternalLogger),
                  mMessageStructure(messageStructure),
+                 mInstanceName(instanceName),
                  mKeepAllLogFiles(false),
                  mKeepAllLogFilesSet(false),
                  mId(id),
@@ -316,7 +322,8 @@ class Log
             void set(Type type=Cout, Level level=Info,
                      const char *logFileName=NULL,
                      ExternalLogger *pExternalLogger=NULL,
-                     MessageStructure messageStructure = Unstructured)
+                     MessageStructure messageStructure = Unstructured,
+                     const Data& instanceName = "")
             {
                mType = type;
                mLevel = level;
@@ -327,6 +334,7 @@ class Log
                }
                mExternalLogger = pExternalLogger;
                mMessageStructure = messageStructure;
+               mInstanceName = instanceName;
             }
 
             LocalLoggerId id() const {return mId;}
@@ -349,6 +357,7 @@ class Log
 
          protected:
             volatile MessageStructure mMessageStructure;
+            Data mInstanceName;
 
             volatile bool mKeepAllLogFiles;
             volatile bool mKeepAllLogFilesSet;
@@ -367,6 +376,7 @@ class Log
       static Data mFqdn;
       static int mSyslogFacility;
       static const char mDescriptions[][32];
+      static Data mInstanceName;
 
       static ThreadData &getLoggerData()
       {
@@ -452,7 +462,8 @@ public:
       const char* file,
       int line,
       const Data& message,
-      const Data& messageWithHeaders) = 0;
+      const Data& messageWithHeaders,
+      const Data& instanceName) = 0;
 };
 
 /// Class to initialize Log class static variables.

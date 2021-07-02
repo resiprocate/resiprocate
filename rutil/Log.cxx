@@ -29,6 +29,7 @@ using namespace std;
 const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
+Data Log::mInstanceName;
 Data Log::mHostname;
 Data Log::mFqdn;
 #ifndef WIN32
@@ -109,16 +110,17 @@ LogStaticInitializer::~LogStaticInitializer()
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName, const char* messageStructure)
+Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName, const char* messageStructure, const char* instanceName)
 {
-   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName, Data(messageStructure));
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName, Data(messageStructure), Data(instanceName));
 }
 
 void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
                 const char *logFileName, ExternalLogger* externalLogger,
                 const Data& syslogFacilityName,
-                const Data& messageStructure)
+                const Data& messageStructure,
+                const Data& instanceName)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -137,7 +139,7 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
       _messageStructure = JSON_CEE;
    }
 
-   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName, _messageStructure);
+   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName, _messageStructure, instanceName);
 }
 
 int
@@ -240,12 +242,13 @@ Log::initialize(Type type, Level level, const Data& appName,
                 const char * logFileName,
                 ExternalLogger* externalLogger,
                 const Data& syslogFacilityName,
-                MessageStructure messageStructure)
+                MessageStructure messageStructure,
+                const Data& instanceName)
 {
    Lock lock(_mutex);
    mDefaultLoggerData.reset();   
    
-   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure);
+   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
@@ -255,6 +258,8 @@ Log::initialize(Type type, Level level, const Data& appName,
    pb.skipBackToChar('/');
 #endif
    mAppName = pb.position();
+
+   mInstanceName = instanceName;
 
 #ifndef WIN32
    if (!syslogFacilityName.empty())
@@ -315,9 +320,10 @@ Log::initialize(Type type,
                 const Data& appName,
                 ExternalLogger& logger,
                 const Data& syslogFacilityName,
-                MessageStructure messageStructure)
+                MessageStructure messageStructure,
+                const Data& instanceName)
 {
-   initialize(type, level, appName, 0, &logger, syslogFacilityName, messageStructure);
+   initialize(type, level, appName, 0, &logger, syslogFacilityName, messageStructure, instanceName);
 }
 
 void
@@ -565,6 +571,10 @@ Log::tags(Log::Level level,
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\","; // FIXME ISO8601
          strm << "\"pname\":\"" << mAppName << "\",";
+         if(!mInstanceName.empty())
+         {
+            strm << "\"appname\":\"" << mInstanceName << "\",";
+         }
          strm << "\"subsys\":\"" << subsystem << "\",";
 #ifdef WIN32
          strm << "\"proc!id\":" << GetCurrentProcessId() << ",";
@@ -593,7 +603,12 @@ Log::tags(Log::Level level,
       {
          strm << mDescriptions[level+1] << Log::delim
               << timestamp(ts) << Log::delim
-              << mAppName << Log::delim
+              << mAppName;
+         if(!mInstanceName.empty())
+         {
+            strm << '[' << mInstanceName << ']';
+         }
+         strm << Log::delim
               << subsystem << Log::delim
               << threadId << Log::delim
               << file << ":" << line;
@@ -1042,7 +1057,8 @@ Log::Guard::~Guard()
                                         mFile,
                                         mLine, 
                                         rest, 
-                                        mData))
+                                        mData,
+                                        mInstanceName))
       {
          return;
       }
