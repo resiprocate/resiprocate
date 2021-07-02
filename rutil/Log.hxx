@@ -364,6 +364,7 @@ class Log
       static ThreadData mDefaultLoggerData; ///< Default logger settings.
       static Data mAppName;
       static Data mHostname;
+      static Data mFqdn;
       static int mSyslogFacility;
       static const char mDescriptions[][32];
 

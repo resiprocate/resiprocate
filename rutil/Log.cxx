@@ -30,6 +30,7 @@ const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
+Data Log::mFqdn;
 #ifndef WIN32
 int Log::mSyslogFacility = LOG_DAEMON;
 #else
@@ -285,6 +286,26 @@ Log::initialize(Type type, Level level, const Data& appName,
    else
    {
       mHostname = buffer;
+   }
+
+   {
+      struct addrinfo hints, *info;
+      int gai_result;
+
+      memset (&hints, 0, sizeof (hints));
+      hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_flags = AI_CANONNAME;
+
+      if ((gai_result = getaddrinfo (buffer, 0, &hints, &info)) != 0) {
+         mFqdn = mHostname;
+      } else if (info == NULL) {
+         mFqdn = mHostname;
+      } else {
+         mFqdn = info->ai_canonname;
+      }
+
+      freeaddrinfo (info);
    }
 }
 
