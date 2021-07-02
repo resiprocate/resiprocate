@@ -66,6 +66,7 @@ ReTurnConfig::ReTurnConfig() :
    mLoggingFilename("reTurnServer.log"),
    mLoggingMessageStructure("Unstructured"),
    mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
+   mLoggingInstanceName(""),
    mDaemonize(false),
    mPidFile(""),
    mRunAsUser(""),
@@ -104,6 +105,7 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
    mLoggingMessageStructure = getConfigData("LogMessageStructure", "Unstructured", true);
    mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", mLoggingFileMaxLineCount);
+   mLoggingInstanceName = getConfigData("LoggingInstanceName", "", true);
    mDaemonize = getConfigBool("Daemonize", mDaemonize);
    mPidFile = getConfigData("PidFile", mPidFile);
    mRunAsUser = getConfigData("RunAsUser", mRunAsUser);

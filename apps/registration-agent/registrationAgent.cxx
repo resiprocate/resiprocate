@@ -79,7 +79,8 @@ class MyClientRegistrationAgent : public ServerProcess
          Data logLevel = cfg.getConfigData("LogLevel", "INFO", true);
          Data logFilename = cfg.getConfigData("LogFilename", "registrationAgent.log", true);
          Data logMessageStructure = cfg.getConfigData("LogMessageStructure", "Unstructured", true);
-         Log::initialize(loggingType, logLevel, argv[0], logFilename.c_str(), 0, "LOG_DAEMON", logMessageStructure);
+         Data loggingInstanceName = cfg.getConfigData("LoggingInstanceName", "", true);
+         Log::initialize(loggingType, logLevel, argv[0], logFilename.c_str(), 0, "LOG_DAEMON", logMessageStructure, loggingInstanceName);
 
          InfoLog(<<"Starting client registration agent");
 
