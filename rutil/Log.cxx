@@ -560,14 +560,20 @@ Log::tags(Log::Level level,
             strm << "@cee: ";
          }
          strm << "{";
+         strm << "\"hostname\":\"" << mFqdn << "\",";
          strm << "\"pri\":\"" << mDescriptions[level+1] << "\","; // FIXME CEE priority names
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\","; // FIXME ISO8601
-         strm << "\"appname\":\"" << mAppName << "\",";
+         strm << "\"pname\":\"" << mAppName << "\",";
          strm << "\"subsys\":\"" << subsystem << "\",";
-         strm << "\"proc!tid\":\"" << threadId << "\",";
+#ifdef WIN32
+         strm << "\"proc!id\":" << GetCurrentProcessId() << ",";
+#else
+         strm << "\"proc!id\":" << getpid() << ",";
+#endif
+         strm << "\"proc!tid\":" << threadId << ",";
          strm << "\"file!name\":\"" << file << "\",";
-         strm << "\"file!line\":\"" << line << "\",";
+         strm << "\"file!line\":" << line << ",";
          strm << "\"msg\":\"";
       }
       break;
