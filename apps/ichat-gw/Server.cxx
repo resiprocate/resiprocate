@@ -132,7 +132,8 @@ public:
                            const char* file,
                            int line,
                            const Data& message,
-                           const Data& messageWithHeaders)
+                           const Data& messageWithHeaders,
+                           const Data& instanceName)
    {
       // Log any warnings/errors to the screen and all Gateway logging messages
       if(level <= Log::Warning || subsystem.getSubsystem() == AppSubsystem::GATEWAY.getSubsystem())
