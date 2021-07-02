@@ -29,7 +29,9 @@ using namespace std;
 const Data Log::delim(" | ");
 Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
+Data Log::mInstanceName;
 Data Log::mHostname;
+Data Log::mFqdn;
 #ifndef WIN32
 int Log::mSyslogFacility = LOG_DAEMON;
 #else
@@ -108,16 +110,17 @@ LogStaticInitializer::~LogStaticInitializer()
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName, const char* messageStructure)
+Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger, const char* syslogFacilityName, const char* messageStructure, const char* instanceName)
 {
-   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName, Data(messageStructure));
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger, syslogFacilityName, Data(messageStructure), Data(instanceName));
 }
 
 void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
                 const char *logFileName, ExternalLogger* externalLogger,
                 const Data& syslogFacilityName,
-                const Data& messageStructure)
+                const Data& messageStructure,
+                const Data& instanceName)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -136,7 +139,7 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
       _messageStructure = JSON_CEE;
    }
 
-   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName, _messageStructure);
+   Log::initialize(type, level, appName, logFileName, externalLogger, syslogFacilityName, _messageStructure, instanceName);
 }
 
 int
@@ -239,12 +242,13 @@ Log::initialize(Type type, Level level, const Data& appName,
                 const char * logFileName,
                 ExternalLogger* externalLogger,
                 const Data& syslogFacilityName,
-                MessageStructure messageStructure)
+                MessageStructure messageStructure,
+                const Data& instanceName)
 {
    Lock lock(_mutex);
    mDefaultLoggerData.reset();   
    
-   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure);
+   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
@@ -254,6 +258,8 @@ Log::initialize(Type type, Level level, const Data& appName,
    pb.skipBackToChar('/');
 #endif
    mAppName = pb.position();
+
+   mInstanceName = instanceName;
 
 #ifndef WIN32
    if (!syslogFacilityName.empty())
@@ -277,8 +283,35 @@ Log::initialize(Type type, Level level, const Data& appName,
 #endif
 
    char buffer[1024];  
-   gethostname(buffer, sizeof(buffer));
-   mHostname = buffer;
+   buffer[1023] = '\0';
+   if(gethostname(buffer, sizeof(buffer)) == -1)
+   {
+      mHostname = "?";
+   }
+   else
+   {
+      mHostname = buffer;
+   }
+
+   {
+      struct addrinfo hints, *info;
+      int gai_result;
+
+      memset (&hints, 0, sizeof (hints));
+      hints.ai_family = AF_UNSPEC;    /*either IPV4 or IPV6 */
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_flags = AI_CANONNAME;
+
+      if ((gai_result = getaddrinfo (buffer, 0, &hints, &info)) != 0) {
+         mFqdn = mHostname;
+      } else if (info == NULL) {
+         mFqdn = mHostname;
+      } else {
+         mFqdn = info->ai_canonname;
+      }
+
+      freeaddrinfo (info);
+   }
 }
 
 void
@@ -287,9 +320,10 @@ Log::initialize(Type type,
                 const Data& appName,
                 ExternalLogger& logger,
                 const Data& syslogFacilityName,
-                MessageStructure messageStructure)
+                MessageStructure messageStructure,
+                const Data& instanceName)
 {
-   initialize(type, level, appName, 0, &logger, syslogFacilityName, messageStructure);
+   initialize(type, level, appName, 0, &logger, syslogFacilityName, messageStructure, instanceName);
 }
 
 void
@@ -532,14 +566,24 @@ Log::tags(Log::Level level,
             strm << "@cee: ";
          }
          strm << "{";
+         strm << "\"hostname\":\"" << mFqdn << "\",";
          strm << "\"pri\":\"" << mDescriptions[level+1] << "\","; // FIXME CEE priority names
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\","; // FIXME ISO8601
-         strm << "\"appname\":\"" << mAppName << "\",";
+         strm << "\"pname\":\"" << mAppName << "\",";
+         if(!mInstanceName.empty())
+         {
+            strm << "\"appname\":\"" << mInstanceName << "\",";
+         }
          strm << "\"subsys\":\"" << subsystem << "\",";
-         strm << "\"proc!tid\":\"" << threadId << "\",";
+#ifdef WIN32
+         strm << "\"proc!id\":" << GetCurrentProcessId() << ",";
+#else
+         strm << "\"proc!id\":" << getpid() << ",";
+#endif
+         strm << "\"proc!tid\":" << threadId << ",";
          strm << "\"file!name\":\"" << file << "\",";
-         strm << "\"file!line\":\"" << line << "\",";
+         strm << "\"file!line\":" << line << ",";
          strm << "\"msg\":\"";
       }
       break;
@@ -559,7 +603,12 @@ Log::tags(Log::Level level,
       {
          strm << mDescriptions[level+1] << Log::delim
               << timestamp(ts) << Log::delim
-              << mAppName << Log::delim
+              << mAppName;
+         if(!mInstanceName.empty())
+         {
+            strm << '[' << mInstanceName << ']';
+         }
+         strm << Log::delim
               << subsystem << Log::delim
               << threadId << Log::delim
               << file << ":" << line;
@@ -1008,7 +1057,8 @@ Log::Guard::~Guard()
                                         mFile,
                                         mLine, 
                                         rest, 
-                                        mData))
+                                        mData,
+                                        mInstanceName))
       {
          return;
       }

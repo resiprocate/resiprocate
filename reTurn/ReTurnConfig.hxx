@@ -84,6 +84,7 @@ public:
    resip::Data mLoggingFilename;
    resip::Data mLoggingMessageStructure;
    unsigned int mLoggingFileMaxLineCount;
+   resip::Data mLoggingInstanceName;
    bool mDaemonize;
    resip::Data mPidFile;
    resip::Data mRunAsUser;
