@@ -277,8 +277,15 @@ Log::initialize(Type type, Level level, const Data& appName,
 #endif
 
    char buffer[1024];  
-   gethostname(buffer, sizeof(buffer));
-   mHostname = buffer;
+   buffer[1023] = '\0';
+   if(gethostname(buffer, sizeof(buffer)) == -1)
+   {
+      mHostname = "?";
+   }
+   else
+   {
+      mHostname = buffer;
+   }
 }
 
 void
