@@ -1013,27 +1013,25 @@ Log::Guard::~Guard()
       // JSON encode the message body
       // FIXME - this could be done on the fly in DataStream
 
+      static const char *json_special = "\"\\/\b\f\n\r\t";
+      static const char *json_special_replace = "\"\\/bfnrt";
       const char* _data = mData.data();
       for(Data::size_type i = 0; i < mData.size(); i++)
       {
-         switch(_data[i]) // FIXME use a lookup table
+         const char& c = _data[i];
+         const char *special = strchr (json_special, c);
+         if (special != NULL)
          {
-         case '\\':
-            o << "\\";
-            break;
-         case '"':
-            o << "\\\"";
-            break;
-         case '\t':
-            o << "\\t";
-            break;
-         case '\n':
-            o << "\\n";
-            break;
-         case '\r':
-            o << "\\r";
-            break;
-         default:
+            const char *replace = json_special_replace + (special - json_special);
+            o << '\\' << *replace;
+         }
+         else if (c < 0x20)
+         {
+            /* Everything below 0x20 must be escaped */
+            o << "\\u00" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)c;
+         }
+         else
+         {
             o << _data[i];
          }
       }
