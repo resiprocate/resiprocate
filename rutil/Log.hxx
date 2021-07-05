@@ -376,6 +376,8 @@ class Log
       static Data mFqdn;
       static int mSyslogFacility;
       static const char mDescriptions[][32];
+      static const char mCEEPri[][32];
+      static const int mSyslogPriority[];
       static Data mInstanceName;
 
       static ThreadData &getLoggerData()

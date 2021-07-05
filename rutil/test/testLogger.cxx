@@ -256,7 +256,7 @@ main(int argc, char* argv[])
    InfoLog(<<"This should appear-back to\tCout as JSON,\n\"Hello World\"");
 
    Log::initialize(Log::Cout, Log::Info, argv[0], 0, 0, "LOG_DAEMON", Log::MessageStructure::JSON_CEE, "TestDev");
-   InfoLog(<<"This should appear-back to Cout as JSON, \"Hello World\"");
+   ErrLog(<<"This should appear-back to Cout as JSON, \"Hello World\"");
 
    return 0;
 }
