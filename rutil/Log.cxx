@@ -61,6 +61,12 @@ ThreadIf::TlsKey* Log::mLocalLoggerKey;
 const char
 Log::mDescriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
 
+const char
+Log::mCEEPri[][32] = {      "",     "CRIT",  "CRIT",  "CRIT", "ERROR", "WARN",  "DEBUG", "DEBUG", "DEBUG", "DEBUG", "ERROR", ""};
+
+const int
+Log::mSyslogPriority[] = { 0, LOG_CRIT, LOG_CRIT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG, LOG_ERR, 0 };
+
 Mutex Log::_mutex;
 
 extern "C"
@@ -567,9 +573,10 @@ Log::tags(Log::Level level,
          }
          strm << "{";
          strm << "\"hostname\":\"" << mFqdn << "\",";
-         strm << "\"pri\":\"" << mDescriptions[level+1] << "\","; // FIXME CEE priority names
+         strm << "\"pri\":\"" << mCEEPri[level+1] << "\",";
+         strm << "\"syslog!pri\":" << mSyslogPriority[level+1] << "\",";
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
-              << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\","; // FIXME ISO8601
+              << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\",";
          strm << "\"pname\":\"" << mAppName << "\",";
          if(!mInstanceName.empty())
          {
