@@ -574,7 +574,7 @@ Log::tags(Log::Level level,
          strm << "{";
          strm << "\"hostname\":\"" << mFqdn << "\",";
          strm << "\"pri\":\"" << mCEEPri[level+1] << "\",";
-         strm << "\"syslog!pri\":" << mSyslogPriority[level+1] << "\",";
+         strm << "\"syslog!pri\":" << mSyslogPriority[level+1] << ",";
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\",";
          strm << "\"pname\":\"" << mAppName << "\",";
