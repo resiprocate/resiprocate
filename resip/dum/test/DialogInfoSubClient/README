@@ -1,0 +1,12 @@
+DialogInfoSubClient
+
+Dialog-info+xml subscription client test program.
+
+This dum test/sample program is a derivative of the basicClient program, however
+it has been modified to subscribe to the dialog-info+xml event package.  Notifies
+containing dialog-info+xml bodies are displayed in the log output, and a couple of
+additional features are available for testing:
+1.  Pressing 'a' toggles 'auto-answer' for incoming calls off/on.
+2.  Pressing 'h' toggles the hold state on/off for any active calls.
+3.  Pressing 'j' sends an INVITE with Join header to the first dialog in the dialog-info+xml events
+4.  Pressing 'p' sends an INVITE with Replaces header to the first dialog in the dialog-info+xml events
