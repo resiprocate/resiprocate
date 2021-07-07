@@ -64,6 +64,16 @@ Log::mDescriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", 
 const char
 Log::mCEEPri[][32] = {      "",     "CRIT",  "CRIT",  "CRIT", "ERROR", "WARN",  "DEBUG", "DEBUG", "DEBUG", "DEBUG", "ERROR", ""};
 
+#ifdef WIN32
+#define LOG_EMERG   0 /* system is unusable */
+#define LOG_ALERT   1 /* action must be taken immediately */
+#define LOG_CRIT    2 /* critical conditions */
+#define LOG_ERR     3 /* error conditions */
+#define LOG_WARNING 4 /* warning conditions */
+#define LOG_NOTICE  5 /* normal but significant condition */
+#define LOG_INFO    6 /* informational */
+#define LOG_DEBUG   7 /* debug-level messages */
+#endif
 const int
 Log::mSyslogPriority[] = { 0, LOG_CRIT, LOG_CRIT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG, LOG_ERR, 0 };
 
@@ -564,7 +574,7 @@ Log::tags(Log::Level level,
    case JSON_CEE:
       {
          auto now = std::chrono::high_resolution_clock::now();
-         std::time_t now_t = std::chrono::high_resolution_clock::to_time_t(now);
+         std::time_t now_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
          auto now_ns = now.time_since_epoch().count() % 1000000000;
 
          if(resip::Log::getLoggerData().type() == Syslog)
