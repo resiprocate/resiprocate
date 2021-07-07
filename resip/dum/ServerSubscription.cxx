@@ -74,6 +74,10 @@ ServerSubscription::getTimeLeft()
 std::shared_ptr<SipMessage>
 ServerSubscription::accept(int statusCode)
 {
+   if (!mLastResponse)
+   {
+      throw UsageUseException("mLastResponse is not set, likely trying to respond a 2nd time", __FILE__, __LINE__);
+   }
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;
    Helper::getResponseCodeReason(statusCode, mLastResponse->header(h_StatusLine).reason());
@@ -87,6 +91,10 @@ ServerSubscription::reject(int statusCode)
    if (statusCode < 300)
    {
       throw UsageUseException("Must reject with a code greater than or equal to 300", __FILE__, __LINE__);
+   }
+   if (!mLastResponse)
+   {
+      throw UsageUseException("mLastResponse is not set, likely trying to respond a 2nd time", __FILE__, __LINE__);
    }
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;

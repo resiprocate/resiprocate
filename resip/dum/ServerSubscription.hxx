@@ -31,6 +31,7 @@ class ServerSubscription : public BaseSubscription
       //currently must be called for a refresh as well as initial creation.
       std::shared_ptr<SipMessage> accept(int statusCode = 202);
       std::shared_ptr<SipMessage> reject(int responseCode);
+      bool isResponsePending() { return mLastResponse.get() != 0; } // Note: mLastResponse is cleared out when send is called
 
       //used to accept a refresh when there is no useful state to convey to the
       //client     
