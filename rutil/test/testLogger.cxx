@@ -258,6 +258,11 @@ main(int argc, char* argv[])
    Log::initialize(Log::Cout, Log::Info, argv[0], 0, 0, "LOG_DAEMON", Log::MessageStructure::JSON_CEE, "TestDev");
    ErrLog(<<"This should appear-back to Cout as JSON, \"Hello World\"");
 
+#ifndef WIN32
+   Log::initialize(Log::Syslog, Log::Info, argv[0], 0, 0, "LOG_LOCAL4", Log::MessageStructure::JSON_CEE, "TestDev");
+   ErrLog(<<"This should appear on Syslog as JSON, \"Hello World\" LOG_LOCAL4");
+#endif
+
    return 0;
 }
 

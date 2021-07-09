@@ -149,8 +149,8 @@ PresenceSubscriptionHandler::notifyPresence(resip::ServerSubscriptionHandle h, b
    }
    catch (BaseException& ex)
    {
-      ErrLog(<< "PresenceSubscriptionHandler::notifyPresence: problem creating aor for registration lookup: " << ex);
-      if (sendAcceptReject)
+      ErrLog(<< "PresenceSubscriptionHandler::notifyPresence: problem notifying presence: " << ex);
+      if (sendAcceptReject && h->isResponsePending())
       {
          h->send(h->reject(500));
       }
@@ -555,7 +555,7 @@ PresenceSubscriptionHandler::onDocumentRemoved(bool sync, const Data& eventType,
 
 /* ====================================================================
 *
-* Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2015-2021 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
