@@ -821,6 +821,7 @@ ReConServerProcess::main (int argc, char** argv)
 #endif
    uri = reConServerConfig.getConfigNameAddr("SIPUri", uri, true);
    Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
+   Data syslogFacilityName = reConServerConfig.getConfigData("SyslogFacility", "LOG_DAEMON", true);
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
    Data loggingFilenameTemplate = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    fmt::memory_buffer _loggingFilename;
@@ -883,7 +884,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
 
-   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, "LOG_DAEMON", loggingMessageStructure, loggingInstanceName);
+   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, syslogFacilityName, loggingMessageStructure, loggingInstanceName);
    Log::setMaxLineCount(loggingFileMaxLineCount);
 
 #ifdef USE_SIPXTAPI
@@ -930,6 +931,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
    InfoLog( << "  Enable Opus codec = " << (enableOpus ? "true" : "false"));
    InfoLog( << "  Log Type = " << loggingType);
+   InfoLog( << "  Syslog Facility = " << syslogFacilityName);
    InfoLog( << "  Log Level = " << loggingLevel);
    InfoLog( << "  Log Filename = " << loggingFilename);
    InfoLog( << "  Daemonize = " << (daemonize ? "true" : "false"));
