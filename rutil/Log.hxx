@@ -103,7 +103,7 @@ class Log
       /**
          @brief Implementation for logging macros.
 
-         Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
+         Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__, __func__) << ... ;
       */
       class Guard
       {
@@ -113,7 +113,8 @@ class Log
             Guard(Level level,
                   const Subsystem& system,
                   const char* file,
-                  int line);
+                  int line,
+                  const char* methodName);
 
             /** Commit logging */
             ~Guard();
@@ -127,6 +128,7 @@ class Log
             resip::Data::size_type mHeaderLength;
             const char* mFile;
             int mLine;
+            const char* mMethodName;
             char mBuffer[128];
             Data mData;
             oDataStream mStream;
@@ -156,6 +158,7 @@ class Log
                                 const Subsystem& subsystem, 
                                 const char* file,
                                 int line,
+                                const char* methodName,
                                 EncodeStream& strm,
                                 MessageStructure messageStructure);
 

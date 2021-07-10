@@ -544,6 +544,7 @@ Log::tags(Log::Level level,
           const Subsystem& subsystem,
           const char* pfile,
           int line,
+          const char* methodName,
           EncodeStream& strm,
           MessageStructure messageStructure)
 {
@@ -584,7 +585,7 @@ Log::tags(Log::Level level,
          strm << "{";
          strm << "\"hostname\":\"" << mFqdn << "\",";
          strm << "\"pri\":\"" << mCEEPri[level+1] << "\",";
-         strm << "\"syslog!pri\":" << mSyslogPriority[level+1] << ",";
+         strm << "\"syslog!level\":" << mSyslogPriority[level+1] << ",";
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\",";
          strm << "\"pname\":\"" << mAppName << "\",";
@@ -594,13 +595,14 @@ Log::tags(Log::Level level,
          }
          strm << "\"subsys\":\"" << subsystem << "\",";
 #ifdef WIN32
-         strm << "\"proc!id\":" << GetCurrentProcessId() << ",";
+         strm << "\"proc!id\":\"" << GetCurrentProcessId() << "\",";
 #else
-         strm << "\"proc!id\":" << getpid() << ",";
+         strm << "\"proc!id\":\"" << getpid() << "\",";
 #endif
          strm << "\"proc!tid\":" << threadId << ",";
          strm << "\"file!name\":\"" << file << "\",";
          strm << "\"file!line\":" << line << ",";
+         strm << "\"native!function\":\"" << methodName << "\",";
          strm << "\"msg\":\"";
       }
       break;
@@ -989,11 +991,13 @@ void Log::LocalLoggerMap::decreaseUseCount(Log::LocalLoggerId loggerId)
 Log::Guard::Guard(resip::Log::Level level,
                   const resip::Subsystem& subsystem,
                   const char* file,
-                  int line) :
+                  int line,
+                  const char* methodName) :
    mLevel(level),
    mSubsystem(subsystem),
    mFile(file),
    mLine(line),
+   mMethodName(methodName),
    mData(Data::Borrow, mBuffer, sizeof(mBuffer)),
    mStream(mData.clear())
 {
@@ -1003,7 +1007,7 @@ Log::Guard::Guard(resip::Log::Level level,
       MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
       if(messageStructure == Unstructured)
       {
-         Log::tags(mLevel, mSubsystem, mFile, mLine, mStream, messageStructure);
+         Log::tags(mLevel, mSubsystem, mFile, mLine, mMethodName, mStream, messageStructure);
          mStream << resip::Log::delim;
          mStream.flush();
       }
@@ -1025,7 +1029,7 @@ Log::Guard::~Guard()
       Data msg;
       oDataStream o(msg);
       // add the JSON message attributes
-      Log::tags(mLevel, mSubsystem, mFile, mLine, o, messageStructure);
+      Log::tags(mLevel, mSubsystem, mFile, mLine, mMethodName, o, messageStructure);
 
       // JSON encode the message body
       // FIXME - this could be done on the fly in DataStream

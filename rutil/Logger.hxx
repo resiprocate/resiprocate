@@ -152,7 +152,7 @@ genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub)
    {                                                                    \
       if (genericLogCheckLevel(level_, system_))                        \
       {                                                                 \
-         resip::Log::Guard _resip_log_guard(level_, system_, __FILE__, __LINE__); \
+         resip::Log::Guard _resip_log_guard(level_, system_, __FILE__, __LINE__, __func__); \
          _resip_log_guard.asStream()  args_;                            \
       }                                                                 \
    } while (false)
