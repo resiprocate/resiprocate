@@ -585,7 +585,7 @@ Log::tags(Log::Level level,
          strm << "{";
          strm << "\"hostname\":\"" << mFqdn << "\",";
          strm << "\"pri\":\"" << mCEEPri[level+1] << "\",";
-         strm << "\"syslog!pri\":" << mSyslogPriority[level+1] << ",";
+         strm << "\"syslog!level\":" << mSyslogPriority[level+1] << ",";
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\",";
          strm << "\"pname\":\"" << mAppName << "\",";
@@ -595,13 +595,14 @@ Log::tags(Log::Level level,
          }
          strm << "\"subsys\":\"" << subsystem << "\",";
 #ifdef WIN32
-         strm << "\"proc!id\":" << GetCurrentProcessId() << ",";
+         strm << "\"proc!id\":\"" << GetCurrentProcessId() << "\",";
 #else
-         strm << "\"proc!id\":" << getpid() << ",";
+         strm << "\"proc!id\":\"" << getpid() << "\",";
 #endif
          strm << "\"proc!tid\":" << threadId << ",";
          strm << "\"file!name\":\"" << file << "\",";
          strm << "\"file!line\":" << line << ",";
+         strm << "\"native!function\":\"" << methodName << "\",";
          strm << "\"msg\":\"";
       }
       break;
