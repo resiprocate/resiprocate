@@ -544,6 +544,7 @@ Log::tags(Log::Level level,
           const Subsystem& subsystem,
           const char* pfile,
           int line,
+          const char* methodName,
           EncodeStream& strm,
           MessageStructure messageStructure)
 {
@@ -989,11 +990,13 @@ void Log::LocalLoggerMap::decreaseUseCount(Log::LocalLoggerId loggerId)
 Log::Guard::Guard(resip::Log::Level level,
                   const resip::Subsystem& subsystem,
                   const char* file,
-                  int line) :
+                  int line,
+                  const char* methodName) :
    mLevel(level),
    mSubsystem(subsystem),
    mFile(file),
    mLine(line),
+   mMethodName(methodName),
    mData(Data::Borrow, mBuffer, sizeof(mBuffer)),
    mStream(mData.clear())
 {
@@ -1003,7 +1006,7 @@ Log::Guard::Guard(resip::Log::Level level,
       MessageStructure messageStructure = resip::Log::getLoggerData().mMessageStructure;
       if(messageStructure == Unstructured)
       {
-         Log::tags(mLevel, mSubsystem, mFile, mLine, mStream, messageStructure);
+         Log::tags(mLevel, mSubsystem, mFile, mLine, mMethodName, mStream, messageStructure);
          mStream << resip::Log::delim;
          mStream.flush();
       }
@@ -1025,7 +1028,7 @@ Log::Guard::~Guard()
       Data msg;
       oDataStream o(msg);
       // add the JSON message attributes
-      Log::tags(mLevel, mSubsystem, mFile, mLine, o, messageStructure);
+      Log::tags(mLevel, mSubsystem, mFile, mLine, mMethodName, o, messageStructure);
 
       // JSON encode the message body
       // FIXME - this could be done on the fly in DataStream
