@@ -120,6 +120,10 @@ Monitoring logs from Kurento on Ubuntu:
   See the logging parameters in the file:
     /etc/default/kurento-media-server
 
+  The default logging levels are selected for production use and
+  don't provide sufficient information for problems encountered
+  in development.
+
   For example, to log absolutely everything, comment out other GST_DEBUG
   lines and use the following but beware that a single media stream
   generates so much logging that it can create latency for the media
@@ -130,6 +134,13 @@ Monitoring logs from Kurento on Ubuntu:
 
   If you do require the most intense level of logging then please consider
   logging to a ramdisk (tmpfs) and other strategies.
+
+  A more practical GST_DEBUG setting for logging in a development environment:
+
+    export GST_DEBUG="4,Kurento*:4,kms*:4,sdp*:4,webrtc*:4,*rtpendpoint:4,rtp*handler:4,rtpsynchronizer:4,agnosticbin:4,kmsiceniceagent:6,KurentoWebSocketTransport:5,kmssdpsession:5"
+
+  This helps us to see the communications between Kurento and reConServer,
+  the key stages of call setup and ICE negotiation.
 
   To find the log files:
 
