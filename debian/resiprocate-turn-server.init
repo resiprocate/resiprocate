@@ -10,8 +10,8 @@
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME=reTurnServer
 BIN=reTurnServer
+NAME=${BIN}
 DESC="TURN relay"
 DAEMON=/usr/sbin/$BIN
 USER=return
@@ -30,7 +30,7 @@ if [ -f /etc/default/$NAME ] ; then
 	. /etc/default/$NAME
 fi
 
-DAEMON_OPTS="/etc/reTurn/reTurnServer.config --Daemonize=true --PidFile=${PIDFILE}"
+DAEMON_OPTS="/etc/reTurn/${NAME}.config --Daemonize=true --PidFile=${PIDFILE}"
 
 if [ ! -d "$PIDFILE_DIR" ];then
 	log_daemon_message "$NAME creating directory for PID file: $PIDFILE_DIR"
