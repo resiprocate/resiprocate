@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:3.12 AS build-env
 
 RUN apk add --no-cache abi-compliance-checker \
                        asio-dev \
@@ -6,6 +6,8 @@ RUN apk add --no-cache abi-compliance-checker \
                        automake \
                        boost-dev \
                        c-ares-dev \
+                       clang \
+                       clang-extra-tools \
                        cmake \
                        coreutils \
                        cppunit-dev \
@@ -16,6 +18,7 @@ RUN apk add --no-cache abi-compliance-checker \
                        gnutls-dev \
                        gperf \
                        linux-headers \
+                       libsrtp-dev \
                        libtool \
                        make \
                        mariadb-connector-c-dev \
@@ -28,6 +31,7 @@ RUN apk add --no-cache abi-compliance-checker \
                        pkgconfig \
                        popt-dev \
                        postgresql-dev \
+                       py3-pip \
                        python3-dev \
                        qtchooser \
                        subversion \
@@ -36,6 +40,8 @@ RUN apk add --no-cache abi-compliance-checker \
                        util-linux-dev \
                        xerces-c-dev \
                        xxd && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
+    pip install compiledb && \
     adduser --system --uid 1000 jenkins
 
 WORKDIR /root
@@ -72,16 +78,6 @@ RUN tar -xf 4.0.0.tar.gz && \
     cd ../.. && \
     rm -fr soci-4.0.0 && \
     rm soci-code-fixes.patch
-
-ADD https://github.com/cisco/libsrtp/archive/v1.6.0.tar.gz /root/
-RUN tar -xf v1.6.0.tar.gz && \
-    rm v1.6.0.tar.gz && \
-    cd libsrtp-1.6.0 && \
-    ./configure --prefix=/usr && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -fr libsrtp-1.6.0
 
 RUN svn checkout svn://svn.camaya.net/gloox/branches/1.0 gloox && \
     cd gloox && \

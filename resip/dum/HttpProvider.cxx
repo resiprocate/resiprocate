@@ -10,7 +10,7 @@ std::unique_ptr<HttpProviderFactory> HttpProvider::mFactory;
 Mutex HttpProvider::mMutex;      
 
 void 
-HttpProvider::setFactory(std::unique_ptr<HttpProviderFactory> fact)
+HttpProvider::setFactory(std::unique_ptr<HttpProviderFactory> fact) noexcept
 {
    mFactory = std::move(fact);
 }

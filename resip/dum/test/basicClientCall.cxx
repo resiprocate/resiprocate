@@ -103,7 +103,7 @@ BasicClientCall::timerExpired()
    }
 
    // start timer for next one
-   unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+   std::unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
    mUserAgent.mStack->post(std::move(timer), CallTimerTime, &mUserAgent.getDialogUsageManager());
 }
 
@@ -188,7 +188,7 @@ BasicClientCall::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferA
          if(mPlacedCall)
          {
             // Restart Call Timer
-             unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+            std::unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
             mUserAgent.mStack->post(std::move(timer), CallTimerTime, &mUserAgent.getDialogUsageManager());
          }
 
@@ -257,7 +257,7 @@ BasicClientCall::onConnected(ClientInviteSessionHandle h, const SipMessage& msg)
       mInviteSessionHandle = h->getSessionHandle();  
 
       // start call timer
-      unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
+      std::unique_ptr<ApplicationMessage> timer(new CallTimer(mUserAgent, this));
       mUserAgent.mStack->post(std::move(timer), CallTimerTime, &mUserAgent.getDialogUsageManager());
    }
    else

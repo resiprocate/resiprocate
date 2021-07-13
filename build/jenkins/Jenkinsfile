@@ -1,3 +1,6 @@
+/* groovylint-disable DuplicateStringLiteral */
+/* groovylint-disable LineLength */
+/* groovylint-disable NestedBlockDepth */
 
 pipeline {
     agent none
@@ -5,7 +8,7 @@ pipeline {
         timestamps()
     }
     stages {
-        stage('Build'){
+        stage('Build') {
             matrix {
                 axes {
                     axis {
@@ -16,16 +19,17 @@ pipeline {
                 agent {
                     dockerfile {
                         dir "build/jenkins/${DISTRO}"
+                        additionalBuildArgs '--load'
                     }
                 }
                 stages {
-                    stage('Bootstrap'){
+                    stage('Bootstrap') {
                         steps {
                             sh 'autoreconf --install'
                             sh 'rm resip/stack/gen/*'
                         }
                     }
-                    stage('Configure'){
+                    stage('Configure') {
                         steps {
                             sh "./configure --enable-assert-syslog \
                                             --enable-dtls \
@@ -54,22 +58,41 @@ pipeline {
                                             PYCXX_SRCDIR=/usr/share/python3.8/CXX/Python3"
                         }
                     }
-                    stage('Build'){
+                    stage('Build') {
                         steps {
                             sh 'make -j'
                         }
                     }
-                    stage('Test'){
+                    stage('Static Analysis') {
+                        when {
+                            expression { DISTRO == 'alpine' }
+                        }
+                        steps {
+                            sh 'compiledb -n make'
+                            sh 'clang-tidy --list-checks'
+                            sh '/usr/share/clang/run-clang-tidy.py -j8 2>/dev/null > clang-tidy-results.txt || true'
+                            archiveArtifacts artifacts: 'clang-tidy-results.txt'
+                            recordIssues(
+                                tools: [
+                                    clangTidy(pattern: 'clang-tidy-results.txt')
+                                ]
+                            )
+                        }
+                    }
+                    stage('Test') {
                         steps {
                             sh 'make -j check TESTS='
                             sh 'make check'
+                            archiveArtifacts artifacts: '**/test-suite.log', allowEmptyArchive: true
                         }
                     }
                 }
                 post {
                     always {
-                        archiveArtifacts artifacts: "**/test-suite.log", allowEmptyArchive: true, fingerprint: true
                         recordIssues (
+                            filters: [
+                                excludeFile('/root/*')
+                            ],
                             tools: [
                                 gcc(
                                     id: "${DISTRO}-gcc",
@@ -77,9 +100,6 @@ pipeline {
                                 )
                             ]
                         )
-                    }
-                    cleanup {
-                        cleanWs()
                     }
                 }
             }

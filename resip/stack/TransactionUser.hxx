@@ -102,7 +102,7 @@ class TransactionUser
       /**
          @brief Replaces the default DomainMatcher
       */
-      void setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher);
+      void setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher) noexcept;
 
       /**
          @brief Return the name of this TransactionUser. Used in encode().

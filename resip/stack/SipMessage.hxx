@@ -559,8 +559,8 @@ class SipMessage : public TransactionMessage
       
       SipMessage& mergeUri(const Uri& source);      
 
-      void setSecurityAttributes(std::unique_ptr<SecurityAttributes>);
-      const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
+      void setSecurityAttributes(std::unique_ptr<SecurityAttributes>) noexcept;
+      const SecurityAttributes* getSecurityAttributes() const noexcept { return mSecurityAttributes.get(); }
 
       /// @brief Call a MessageDecorator to process the message before it is
       /// sent to the transport

@@ -307,7 +307,7 @@ class SipStack : public FdSetIOObserver
                                       outbound SIP messages for all transports added
                                       after calling this.
       */
-      void setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) { mTransportSipMessageLoggingHandler = std::move(handler); }
+      void setTransportSipMessageLoggingHandler(std::shared_ptr<Transport::SipMessageLoggingHandler> handler) noexcept { mTransportSipMessageLoggingHandler = std::move(handler); }
 
       /**
          Used by the application to add in a new built-in transport.  The transport is

@@ -1729,7 +1729,7 @@ SipMessage::mergeUri(const Uri& source)
 }
 
 void 
-SipMessage::setSecurityAttributes(unique_ptr<SecurityAttributes> sec)
+SipMessage::setSecurityAttributes(std::unique_ptr<SecurityAttributes> sec) noexcept
 {
    mSecurityAttributes = std::move(sec);
 }
