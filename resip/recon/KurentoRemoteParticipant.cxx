@@ -241,6 +241,13 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& 
       std::string ourEndpointId(client.getRtpEndpointId());
       setEndpointId(ourEndpointId.c_str());
       DebugLog(<<"our endpoint: " << ourEndpointId);
+      client.addListener("Error", ourEndpointId.c_str(), sessionId.c_str());
+      client.addListener("MediaFlowInStateChange", ourEndpointId.c_str(), sessionId.c_str());
+      client.addListener("MediaFlowOutStateChange", ourEndpointId.c_str(), sessionId.c_str());
+      client.addListener("ConnectionStateChanged", ourEndpointId.c_str(), sessionId.c_str());
+      client.addListener("MediaStateChanged", ourEndpointId.c_str(), sessionId.c_str());
+      client.addListener("MediaTranscodingStateChange", ourEndpointId.c_str(), sessionId.c_str());
+
       DebugLog(<<"joining participant to existing pipeline: " << pipelineId
                << " session: " << sessionId
                << " for loopback");
