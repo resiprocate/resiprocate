@@ -309,8 +309,11 @@ Log::initialize(Type type, Level level, const Data& appName,
       mHostname = buffer;
    }
 
+   // Note: for Windows users, you must call initNetwork to initialize WinSock before calling 
+   //       Log::initialize in order for getaddrinfo to be successful
    {
-      struct addrinfo hints, *info;
+      struct addrinfo hints;
+      struct addrinfo* info = nullptr;
       int gai_result;
 
       memset (&hints, 0, sizeof (hints));
