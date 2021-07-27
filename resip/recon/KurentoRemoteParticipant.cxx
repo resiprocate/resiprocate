@@ -178,11 +178,19 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 }
 
 bool
-KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
+KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& __offer, SdpContents& answer)
 {
    // FIXME Kurento - this needs to be async
 
    bool valid = false;
+
+   SdpContents offer = __offer;
+   while(offer.session().media().size() > 2)
+   {
+      // FIXME hack to remove BFCP
+      DebugLog(<<"more than 2 media descriptors, removing the last");
+      offer.session().media().pop_back();
+   }
 
    try
    {
