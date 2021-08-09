@@ -19,7 +19,7 @@ public:
    ClientAuthDecorator(bool isProxyCredential, const Auth& auth, const UserProfile::DigestCredential& credential, const Data& authQop, const Data& nonceCountString) :
       mIsProxyCredential(isProxyCredential), mAuth(auth), mCredential(credential), mAuthQop(authQop), mNonceCountString(nonceCountString) {}
    virtual ~ClientAuthDecorator() {}
-   virtual void decorateMessage(SipMessage &msg, 
+   virtual void decorateMessage(SipMessage &msg,
                                 const Tuple &source,
                                 const Tuple &destination,
                                 const Data& sigcompId)
@@ -27,70 +27,70 @@ public:
       Data cnonce = Random::getCryptoRandomHex(16);
 
       Auths & target = mIsProxyCredential ? msg.header(h_ProxyAuthorizations) : msg.header(h_Authorizations);
-   
+
       DebugLog( << " Add auth, " << this << " in response to: " << mAuth);
       Auth auth;
       if (ClientAuthExtension::instance().algorithmAndQopSupported(mAuth))
       {
          DebugLog(<<"Using extension to make auth response");
-      
+
          if(mCredential.isPasswordA1Hash)
          {
             ClientAuthExtension::instance().makeChallengeResponseAuthWithA1(msg,
                                                             mCredential.user,
                                                             mCredential.password,
-                                                            mAuth, 
+                                                            mAuth,
                                                             cnonce,
-                                                            mAuthQop, 
+                                                            mAuthQop,
                                                             mNonceCountString,
-                                                            auth);      
+                                                            auth);
          }
          else
          {
             ClientAuthExtension::instance().makeChallengeResponseAuth(msg,
                                                             mCredential.user,
                                                             mCredential.password,
-                                                            mAuth, 
+                                                            mAuth,
                                                             cnonce,
-                                                            mAuthQop, 
+                                                            mAuthQop,
                                                             mNonceCountString,
-                                                            auth);      
+                                                            auth);
          }
       }
       else
       {
          if(mCredential.isPasswordA1Hash)
          {
-            Helper::makeChallengeResponseAuthWithA1(msg, 
-                                           mCredential.user, 
-                                           mCredential.password, 
-                                           mAuth, 
-                                           cnonce, 
-                                           mAuthQop, 
-                                           mNonceCountString, 
+            Helper::makeChallengeResponseAuthWithA1(msg,
+                                           mCredential.user,
+                                           mCredential.password,
+                                           mAuth,
+                                           cnonce,
+                                           mAuthQop,
+                                           mNonceCountString,
                                            auth);
          }
          else
          {
-            Helper::makeChallengeResponseAuth(msg, 
-                                           mCredential.user, 
-                                           mCredential.password, 
-                                           mAuth, 
-                                           cnonce, 
-                                           mAuthQop, 
-                                           mNonceCountString, 
+            Helper::makeChallengeResponseAuth(msg,
+                                           mCredential.user,
+                                           mCredential.password,
+                                           mAuth,
+                                           cnonce,
+                                           mAuthQop,
+                                           mNonceCountString,
                                            auth);
          }
       }
       target.push_back(auth);
-   
+
       DebugLog(<<"ClientAuthDecorator, proxy: " << mIsProxyCredential << " " << target.back());
    }
-   virtual void rollbackMessage(SipMessage& msg) 
+   virtual void rollbackMessage(SipMessage& msg)
    {
       Auths & target = mIsProxyCredential ? msg.header(h_ProxyAuthorizations) : msg.header(h_Authorizations);
       target.pop_back();
-   }  
+   }
    virtual MessageDecorator* clone() const { return new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, mAuthQop, mNonceCountString); }
 private:
     bool mIsProxyCredential;
@@ -101,18 +101,18 @@ private:
 };
 
 
-ClientAuthManager::ClientAuthManager() 
+ClientAuthManager::ClientAuthManager()
 {
 }
 
-bool 
+bool
 ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, const SipMessage& response)
 {
    try
    {
       resip_assert( response.isResponse() );
       resip_assert( origRequest.isRequest() );
-      
+
       DialogSetId id(origRequest);
 
       const int& code = response.header(h_StatusLine).statusCode();
@@ -122,24 +122,24 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       }
       else if (! (  code == 401 || code == 407 )) // challenge success
       {
-         AttemptedAuthMap::iterator it = mAttemptedAuths.find(id);     
+         AttemptedAuthMap::iterator it = mAttemptedAuths.find(id);
          if (it != mAttemptedAuths.end())
          {
-            DebugLog (<< "ClientAuthManager::handle: transitioning " << id << "to cached");         
+            DebugLog (<< "ClientAuthManager::handle: transitioning " << id << "to cached");
 
             // cache the result
             it->second.authSucceeded();
-         }      
+         }
          return false;
-      }   
+      }
 
       // 401 or 407...
       if (!(response.exists(h_WWWAuthenticates) || response.exists(h_ProxyAuthenticates)))
       {
-         DebugLog (<< "Invalid challenge for " << id  << ", nothing to respond to; fail");         
+         DebugLog (<< "Invalid challenge for " << id  << ", nothing to respond to; fail");
          return false;
       }
-   
+
       AuthState& authState = mAttemptedAuths[id];
 
       // based on the UserProfile and the challenge, store credentials in the
@@ -161,7 +161,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       resip_assert(0);
       ErrLog(<< "Unexpected exception in ClientAuthManager::handle " << e);
       return false;
-   }      
+   }
 }
 
 void
@@ -174,7 +174,7 @@ ClientAuthManager::addAuthentication(SipMessage& request)
    }
 }
 
-void 
+void
 ClientAuthManager::clearAuthenticationState(const DialogSetId& dsId)
 {
    AttemptedAuthMap::iterator it = mAttemptedAuths.find(dsId);
@@ -184,7 +184,7 @@ ClientAuthManager::clearAuthenticationState(const DialogSetId& dsId)
    }
 }
 
-void 
+void
 ClientAuthManager::dialogSetDestroyed(const DialogSetId& id)
 {
    clearAuthenticationState(id);
@@ -197,19 +197,19 @@ ClientAuthManager::AuthState::AuthState() :
 {
 }
 
-bool 
+bool
 ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const SipMessage& challenge)
 {
    if (mFailed)
    {
       return false;
-   }   
+   }
    bool handled = true;
    if (challenge.exists(h_WWWAuthenticates))
    {
-      for (Auths::const_iterator i = challenge.header(h_WWWAuthenticates).begin();  
-         i != challenge.header(h_WWWAuthenticates).end(); ++i)                    
-      {    
+      for (Auths::const_iterator i = challenge.header(h_WWWAuthenticates).begin();
+         i != challenge.header(h_WWWAuthenticates).end(); ++i)
+      {
          if (i->exists(p_realm))
          {
             if (!mRealms[i->param(p_realm)].handleAuth(userProfile, *i, false))
@@ -226,9 +226,9 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
    }
    if (challenge.exists(h_ProxyAuthenticates))
    {
-      for(Auths::const_iterator i = challenge.header(h_ProxyAuthenticates).begin();  
-          i != challenge.header(h_ProxyAuthenticates).end(); ++i)                    
-      {    
+      for(Auths::const_iterator i = challenge.header(h_ProxyAuthenticates).begin();
+          i != challenge.header(h_ProxyAuthenticates).end(); ++i)
+      {
          if (i->exists(p_realm))
          {
             if (!mRealms[i->param(p_realm)].handleAuth(userProfile, *i, true))
@@ -254,7 +254,7 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
    return handled;
 }
 
-void 
+void
 ClientAuthManager::AuthState::authSucceeded()
 {
    for(RealmStates::iterator i = mRealms.begin(); i!=mRealms.end(); i++)
@@ -270,11 +270,11 @@ ClientAuthManager::AuthState::authSucceeded()
    }
 }
 
-void 
+void
 ClientAuthManager::AuthState::addAuthentication(SipMessage& request)
 {
    request.remove(h_ProxyAuthorizations);
-   request.remove(h_Authorizations);  
+   request.remove(h_Authorizations);
 
    if (mFailed) return;
 
@@ -283,7 +283,7 @@ ClientAuthManager::AuthState::addAuthentication(SipMessage& request)
       i->second.addAuthentication(request);
    }
 }
-   
+
 
 ClientAuthManager::RealmState::RealmState() :
    mIsProxyCredential(false),
@@ -292,7 +292,7 @@ ClientAuthManager::RealmState::RealmState() :
 {
 }
 
-Data RealmStates[] = 
+Data RealmStates[] =
 {
    "invalid",
    "cached",
@@ -302,12 +302,12 @@ Data RealmStates[] =
 };
 
 const Data&
-ClientAuthManager::RealmState::getStateString(State s) 
+ClientAuthManager::RealmState::getStateString(State s)
 {
    return RealmStates[s];
 }
 
-void 
+void
 ClientAuthManager::RealmState::transition(State s)
 {
    DebugLog(<< "ClientAuthManager::RealmState::transition from " << getStateString(mState) << " to " << getStateString(s));
@@ -329,13 +329,13 @@ ClientAuthManager::RealmState::authSucceeded()
          break;
       case Failed:
          resip_assert(0);
-         break;         
+         break;
    };
 }
 
-bool 
+bool
 ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential)
-{   
+{
    DebugLog( << "ClientAuthManager::RealmState::handleAuth: " << this << " " << auth << " is proxy: " << isProxyCredential);
    mIsProxyCredential = isProxyCredential;   //this changing dynamically would
                                              //be very bizarre..should trap w/ enum
@@ -344,7 +344,7 @@ ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& 
       case Invalid:
          mAuth = auth;
          transition(Current);
-         break;         
+         break;
       case Current:
          if (auth.exists(p_stale) && auth.param(p_stale) == "true")
          {
@@ -357,15 +357,15 @@ ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& 
             DebugLog (<< "Different nonce, was: " << mAuth.param(p_nonce) << " now " << auth.param(p_nonce));
             mAuth = auth;
             clear();
-            transition(TryOnce);            
+            transition(TryOnce);
          }
          else
          {
             DebugLog( << "Challenge response already failed for: " << auth);
-            transition(Failed);            
+            transition(Failed);
             return false;
          }
-         break;         
+         break;
       case TryOnce:
          DebugLog( << "Extra chance still failed: " << auth);
          transition(Failed);
@@ -375,7 +375,7 @@ ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& 
          mAuth = auth;
          clear();
          transition(Current);
-         break;         
+         break;
       case Failed:
          return false;
    }
@@ -396,34 +396,34 @@ ClientAuthManager::RealmState::clear()
 {
    mNonceCount = 0;
 }
-                     
-bool 
+
+bool
 ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Auth& auth)
 {
-   if (!(Helper::algorithmAndQopSupported(auth) 
+   if (!(Helper::algorithmAndQopSupported(auth)
          || (ClientAuthExtension::instance().algorithmAndQopSupported(auth))))
    {
       DebugLog(<<"Unsupported algorithm or qop: " << auth);
       return false;
    }
 
-   const Data& realm = auth.param(p_realm);                   
+   const Data& realm = auth.param(p_realm);
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
    mCredential = userProfile.getDigestCredential(realm);
-   if (mCredential.realm.empty())                       
-   {                                        
+   if (mCredential.realm.empty())
+   {
       DebugLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
       // DebugLog (<< auth);
       // DebugLog (<< response);
       return false;
-   }                     
-   return true;   
+   }
+   return true;
 }
 
-void 
+void
 ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
 {
-   resip_assert(mState != Failed);
+   //resip_assert(mState != Failed);
    if (mState == Failed) return;
 
    Data nonceCountString;
@@ -432,7 +432,7 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
    {
        Helper::updateNonceCount(mNonceCount, nonceCountString);
    }
-   
+
    // Add client auth decorator so that we ensure any body hashes are calcuated after user defined outbound decorators that
    // may be modifying the message body
    std::auto_ptr<MessageDecorator> clientAuthDecorator(new ClientAuthDecorator(mIsProxyCredential, mAuth, mCredential, authQop, nonceCountString));
@@ -458,22 +458,22 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -483,7 +483,7 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -497,9 +497,9 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
