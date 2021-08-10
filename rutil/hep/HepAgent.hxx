@@ -26,7 +26,7 @@ class HepAgent
       HepAgent(const Data &captureHost, int capturePort, int captureAgentID);
       virtual ~HepAgent();
       template <class T>
-      virtual void sendToHOMER(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const HEPEventType eventType, const T& msg, const Data& correlationId)
+      void sendToHOMER(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const HEPEventType eventType, const T& msg, const Data& correlationId)
       {
          struct hep_generic *hg;
          hep_chunk_ip4_t src_ip4, dst_ip4;
