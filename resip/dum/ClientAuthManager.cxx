@@ -320,7 +320,7 @@ ClientAuthManager::RealmState::authSucceeded()
    switch(mState)
    {
       case Invalid:
-         resip_assert(0);
+         //resip_assert(0);
          break;
       case Current:
       case Cached:
@@ -328,7 +328,7 @@ ClientAuthManager::RealmState::authSucceeded()
          transition(Cached);
          break;
       case Failed:
-         resip_assert(0);
+         //resip_assert(0);
          break;
    };
 }
