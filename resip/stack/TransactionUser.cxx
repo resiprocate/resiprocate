@@ -113,7 +113,7 @@ TransactionUser::removeDomain(const Data& domain)
 }
 
 void
-TransactionUser::setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher)
+TransactionUser::setDomainMatcher(std::shared_ptr<DomainMatcher> domainMatcher) noexcept
 {
    mDomainMatcher = std::move(domainMatcher);
 }

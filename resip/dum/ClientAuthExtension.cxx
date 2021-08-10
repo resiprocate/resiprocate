@@ -7,7 +7,7 @@ using namespace resip;
 std::unique_ptr<ClientAuthExtension> ClientAuthExtension::mInstance(new ClientAuthExtension());
 
 void 
-ClientAuthExtension::setInstance(std::unique_ptr<ClientAuthExtension> ext)
+ClientAuthExtension::setInstance(std::unique_ptr<ClientAuthExtension> ext) noexcept
 {
    mInstance = std::move(ext);
 }

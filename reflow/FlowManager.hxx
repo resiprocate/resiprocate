@@ -57,8 +57,8 @@ public:
    void initializeDtlsFactory(const char* certAor);
    dtls::DtlsFactory* getDtlsFactory() { return mDtlsFactory; }
 
-   void setRTCPEventLoggingHandler(std::shared_ptr<RTCPEventLoggingHandler> handler) { mRtcpEventLoggingHandler = std::move(handler); }
-   RTCPEventLoggingHandler* getRTCPEventLoggingHandler() { return 0 != mRtcpEventLoggingHandler.get() ? mRtcpEventLoggingHandler.get() : 0; }
+   void setRTCPEventLoggingHandler(std::shared_ptr<RTCPEventLoggingHandler> handler) noexcept { mRtcpEventLoggingHandler = std::move(handler); }
+   RTCPEventLoggingHandler* getRTCPEventLoggingHandler() const noexcept { return 0 != mRtcpEventLoggingHandler.get() ? mRtcpEventLoggingHandler.get() : 0; }
 
 protected: 
 

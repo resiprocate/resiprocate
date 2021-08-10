@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:focal AS build-env
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get -y update && \
@@ -25,6 +25,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                        libsipxtapi-dev \
                        libsnmp-dev \
                        libsoci-dev \
+                       libsrtp2-dev \
                        libssl-dev \
                        libtelepathy-qt5-dev \
                        libtool \
@@ -37,16 +38,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     adduser --system --uid 1000 jenkins
 
 WORKDIR /root
-
-ADD https://github.com/cisco/libsrtp/archive/v1.6.0.tar.gz /root/
-RUN tar -xf v1.6.0.tar.gz && \
-    rm v1.6.0.tar.gz && \
-    cd libsrtp-1.6.0 && \
-    ./configure --prefix=/usr && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -fr libsrtp-1.6.0
 
 ENV CPATH="/usr/include/postgresql:${CPATH}"
 

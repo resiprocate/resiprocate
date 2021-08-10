@@ -132,27 +132,27 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       Data getHostAddress();
 
-      void setAppDialogSetFactory(std::unique_ptr<AppDialogSetFactory>);
+      void setAppDialogSetFactory(std::unique_ptr<AppDialogSetFactory>) noexcept;
 
       void setMasterProfile(const std::shared_ptr<MasterProfile>& masterProfile);
       std::shared_ptr<MasterProfile>& getMasterProfile();
       std::shared_ptr<UserProfile>& getMasterUserProfile();
       
       //optional handler to track the progress of DialogSets
-      void setDialogSetHandler(DialogSetHandler* handler);
+      void setDialogSetHandler(DialogSetHandler* handler) noexcept;
 
-      void setKeepAliveManager(std::unique_ptr<KeepAliveManager> keepAlive);
+      void setKeepAliveManager(std::unique_ptr<KeepAliveManager> keepAlive) noexcept;
 
       //There is a default RedirectManager.  Setting one may cause the old one
       //to be deleted. 
-      void setRedirectManager(std::unique_ptr<RedirectManager> redirect);
+      void setRedirectManager(std::unique_ptr<RedirectManager> redirect) noexcept;
       //informational, so a RedirectHandler is not required
-      void setRedirectHandler(RedirectHandler* handler);      
-      RedirectHandler* getRedirectHandler() const;      
+      void setRedirectHandler(RedirectHandler* handler) noexcept;
+      RedirectHandler* getRedirectHandler() const noexcept;
 
       /// If there is no ClientAuthManager, when the client receives a 401/407,
       /// pass it up through the normal BaseUsageHandler
-      void setClientAuthManager(std::unique_ptr<ClientAuthManager> client);
+      void setClientAuthManager(std::unique_ptr<ClientAuthManager> client) noexcept;
 
       /// If there is no ServerAuthManager, the server does not authenticate requests
       void setServerAuthManager(std::shared_ptr<ServerAuthManager> server);
@@ -180,8 +180,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       void setRequestValidationHandler(RequestValidationHandler*);
 
-      void setClientPagerMessageHandler(ClientPagerMessageHandler*);
-      void setServerPagerMessageHandler(ServerPagerMessageHandler*);
+      void setClientPagerMessageHandler(ClientPagerMessageHandler*) noexcept;
+      void setServerPagerMessageHandler(ServerPagerMessageHandler*) noexcept;
 
       /// Add/Remove External Message Handler
       /// do following op when processing thread in not running
@@ -335,7 +335,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addIncomingFeature(std::shared_ptr<DumFeature> feat);
       void addOutgoingFeature(std::shared_ptr<DumFeature> feat);
 
-      void setOutgoingMessageInterceptor(std::shared_ptr<DumFeature> feat);
+      void setOutgoingMessageInterceptor(std::shared_ptr<DumFeature> feat) noexcept;
 
       TargetCommand::Target& dumIncomingTarget();
 
