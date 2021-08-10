@@ -113,9 +113,17 @@ main(int argc, char* argv[])
                } 
                break;
 
+            case 'd':  // disconnect
+            case 'e':  // end
+               {
+                  ua.endCalls();
+                  InfoLog(<< "Ending all calls");
+               }
+               break;
+
             case 'h':
                {
-                  ua.toggleHoldCalls();
+                  ua.toggleHold();
                   InfoLog(<< "Toggling calls from active to held (or vis versa)");
                } 
                break;
