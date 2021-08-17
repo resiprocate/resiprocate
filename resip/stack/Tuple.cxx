@@ -542,6 +542,7 @@ Tuple::ipVersion() const
 static Tuple v4privateaddrbase1("10.0.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase2("172.16.0.0",0,UNKNOWN_TRANSPORT);
 static Tuple v4privateaddrbase3("192.168.0.0",0,UNKNOWN_TRANSPORT);
+static Tuple v4sharedaddrbase1("100.64.0.0",0,UNKNOWN_TRANSPORT);
 
 #ifdef USE_IPV6
 static Tuple v6privateaddrbase("fc00::",0,UNKNOWN_TRANSPORT);
@@ -552,10 +553,11 @@ Tuple::isPrivateAddress() const
 {
    if(ipVersion()==V4)
    {
-      // RFC 1918
+      // RFC 1918 & RFC 6598
       return isEqualWithMask(v4privateaddrbase1,8,true,true) ||  // 10.0.0.0        -   10.255.255.255  (10/8 prefix)
              isEqualWithMask(v4privateaddrbase2,12,true,true) || // 172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
              isEqualWithMask(v4privateaddrbase3,16,true,true) || // 192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
+             isEqualWithMask(v4sharedaddrbase1,10,true,true) ||  // 100.64.0.0      -   100.127.255.255 (100.64/110 prefix)
              isLoopback();
    }
 #ifdef USE_IPV6
