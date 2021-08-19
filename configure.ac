@@ -346,6 +346,14 @@ AX_HAVE_EPOLL(
 AC_CHECK_LIB(dl, dlopen)
 AM_CONDITIONAL(HAVE_LIBDL, [test x"$ac_cv_lib_dl_dlopen" = xyes])
 
+AM_CONDITIONAL(BUILD_GSTREAMER, false)
+AC_ARG_WITH(gstreamer,
+[  --with-gstreamer        Build components requiring GStreamer],
+ [AC_DEFINE_UNQUOTED(BUILD_GSTREAMER, , BUILD_GSTREAMER)
+ AM_CONDITIONAL(BUILD_GSTREAMER, true)
+ PKG_CHECK_MODULES([GSTREAMERMM_1_0], [gstreamermm-1.0])
+], )
+
 AM_MAINTAINER_MODE
 
 AC_OUTPUT(Makefile \
