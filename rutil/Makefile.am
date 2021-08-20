@@ -27,6 +27,7 @@ librutil_la_LIBADD = $(LIBSSL_LIBADD)
 librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
 librutil_la_LIBADD += $(LIBARES_LIBADD)
 librutil_la_LIBADD += @LIBSTL_LIBADD@
+librutil_la_LIBADD += $(DEPS_FMT_LIBS)
 librutil_la_LIBADD += @LIBLOG_LIBADD@
 #librutil_la_LIBADD += -lrt
 librutil_la_LIBADD += @LIBPTHREAD_LIBADD@
