@@ -130,6 +130,8 @@ AC_ARG_WITH(sigcomp,
 [  --with-sigcomp          Link against Open SigComp libraries for SigComp],
  AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP), )
 
+PKG_CHECK_MODULES([DEPS_FMT], [fmt])
+
 AC_ARG_ENABLE(android,
 [  --enable-android        Enable Android build],
    [AC_SUBST(LIBPTHREAD_LIBADD, "")
