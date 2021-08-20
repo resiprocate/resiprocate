@@ -40,19 +40,22 @@ Data myIP;
 class CodecConfig
 {
    public:
-      CodecConfig(const Data& name, const Data& decoder, const Data& encoder, const Data& depay, const Data&pay) :
-         mName(name), mDecoder(decoder), mEncoder(encoder), mDepay(depay), mPay(pay) {}
+      CodecConfig(const Data& name, const Data& decoder, const Data& encoder, const Data& depay, const Data& pay, const Data& fmtp) :
+         mName(name), mDecoder(decoder), mEncoder(encoder), mDepay(depay), mPay(pay), mFmtp(fmtp) {}
       Data mName;
       Data mDecoder;
       Data mEncoder;
       Data mDepay;
       Data mPay;
+      Data mFmtp;
 };
 
-CodecConfig h264("H264", "avdec_h264", "avenc_h264_omx", "rtph264depay", "rtph264pay");
-//CodecConfig h264x("H264", "x264dec", "x264enc", "rtph264depay", "rtph264pay");
+CodecConfig h264("H264", "avdec_h264", "avenc_h264_omx", "rtph264depay", "rtph264pay",
+   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+//CodecConfig h264x("H264", "x264dec", "x264enc", "rtph264depay", "rtph264pay",
+//   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
 CodecConfig h264x("H264", "avdec_h264", "x264enc", "rtph264depay", "rtph264pay");
-CodecConfig vp8("VP8", "vp8dec", "vp8enc", "rtpvp8depay", "rtpvp8pay");
+CodecConfig vp8("VP8", "vp8dec", "vp8enc", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP");
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -780,8 +783,7 @@ class TestUas : public TestInviteSessionHandler
                         "a=sendrecv\r\n"
                         "a=rtcp:8005\r\n"
                         "a=rtpmap:97 " + mCodecConfig.mName + "/90000\r\n"
-                        //"a=fmtp:97 profile-level-id=HiP\r\n"
-                        "a=fmtp:97 packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16\r\n"
+                        "a=fmtp:97 " + mCodecConfig.mFmtp + "\r\n"
                         //"a=ssrc:2005192486 cname:user269660271@host-9999cdcf\r\n"
                         );
          
