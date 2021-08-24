@@ -54,7 +54,8 @@ CodecConfig h264("H264", "avdec_h264", "avenc_h264_omx", "rtph264depay", "rtph26
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
 //CodecConfig h264x("H264", "x264dec", "x264enc", "rtph264depay", "rtph264pay",
 //   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
-CodecConfig h264x("H264", "avdec_h264", "x264enc", "rtph264depay", "rtph264pay");
+CodecConfig h264x("H264", "avdec_h264", "x264enc", "rtph264depay", "rtph264pay",
+   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
 CodecConfig vp8("VP8", "vp8dec", "vp8enc", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP");
 
 /////////////////////////////////////////////////////////////////////////////////
