@@ -322,23 +322,11 @@ class Log
             }
             ~ThreadData() { reset(); }
 
-            void set(Type type=Cout, Level level=Info,
-                     const char *logFileName=NULL,
-                     ExternalLogger *pExternalLogger=NULL,
-                     MessageStructure messageStructure = Unstructured,
-                     const Data& instanceName = "")
-            {
-               mType = type;
-               mLevel = level;
-
-               if (logFileName)
-               {
-                  mLogFileName = logFileName;
-               }
-               mExternalLogger = pExternalLogger;
-               mMessageStructure = messageStructure;
-               mInstanceName = instanceName;
-            }
+            void set(Type type = Cout, Level level = Info,
+               const char* logFileName = NULL,
+               ExternalLogger* pExternalLogger = NULL,
+               MessageStructure messageStructure = Unstructured,
+               const Data& instanceName = "");
 
             LocalLoggerId id() const {return mId;}
             unsigned int maxLineCount() { return mMaxLineCount ? mMaxLineCount : MaxLineCount; }  // return local max, if not set use global max

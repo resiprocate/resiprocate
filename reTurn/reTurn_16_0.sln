@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestRTPLoad", "client\test\TestRTPLoad_16_0.vcxproj", "{73151749-13F0-4093-97F1-A6952E876543}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmt", "..\contrib\fmt\fmt_16_0.vcxproj", "{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -175,6 +177,22 @@ Global
 		{73151749-13F0-4093-97F1-A6952E876543}.SSL-Release|Win32.Build.0 = SSL-Release|Win32
 		{73151749-13F0-4093-97F1-A6952E876543}.SSL-Release|x64.ActiveCfg = SSL-Release|x64
 		{73151749-13F0-4093-97F1-A6952E876543}.SSL-Release|x64.Build.0 = SSL-Release|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Debug|Win32.Build.0 = Debug|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Debug|x64.ActiveCfg = Debug|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Debug|x64.Build.0 = Debug|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Release|Win32.ActiveCfg = Release|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Release|Win32.Build.0 = Release|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Release|x64.ActiveCfg = Release|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.Release|x64.Build.0 = Release|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Debug|x64.ActiveCfg = Debug|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Debug|x64.Build.0 = Debug|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Release|Win32.Build.0 = Release|Win32
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Release|x64.ActiveCfg = Release|x64
+		{5BFE7A8E-474A-4E9F-9903-04BA9B5ABF03}.SSL-Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
