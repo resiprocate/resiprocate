@@ -951,7 +951,7 @@ DialogSet::findDialog(const DialogId id)
 }
 
 void
-DialogSet::end()
+DialogSet::end(const resip::ParserContainer<resip::Token>& endReasons = resip::ParserContainer<resip::Token>())
 {
    switch(mState)
    {
@@ -967,6 +967,11 @@ DialogSet::end()
             mState = Terminating;
             // !jf! this should be made exception safe
             std::shared_ptr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
+            if (!endReasons.empty())
+            {
+               cancel->header(h_Reasons) = endReasons;
+            }
+
             mDum.send(cancel);
 
             if (mDum.mDialogEventStateManager)
