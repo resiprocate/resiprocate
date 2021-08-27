@@ -307,8 +307,8 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
       "profile", codecConfig.mH264Profile.c_str());
     venc->link(v_pay, v_caps_h264);
   }
-  /*v_depay->link(v_queue);
-  v_queue->link(v_pay);*/
+  //v_depay->link(v_queue);
+  //v_queue->link(v_pay);
   v_pay->link_pads("src", rtpbin, "send_rtp_sink_1");
   //v_queue->link_pads("src", rtpbin, "send_rtp_sink_1");
 
