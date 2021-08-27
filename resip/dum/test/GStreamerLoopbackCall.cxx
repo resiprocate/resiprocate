@@ -40,8 +40,16 @@ Data myIP;
 class CodecConfig
 {
    public:
-      CodecConfig(const Data& name, const Data& decoder, const Data& encoder, const Data& h264Profile, const Data& depay, const Data& pay, const Data& fmtp) :
-         mName(name), mDecoder(decoder), mEncoder(encoder), mH264Profile(h264Profile), mDepay(depay), mPay(pay), mFmtp(fmtp) {}
+      CodecConfig(const Data& name,
+                  const Data& decoder,
+                  const Data& encoder,
+                  const Data& h264Profile,
+                  const Data& depay,
+                  const Data& pay,
+                  const Data& fmtp) :
+         mName(name),
+         mDecoder(decoder), mEncoder(encoder), mH264Profile(h264Profile),
+         mDepay(depay), mPay(pay), mFmtp(fmtp) {}
       Data mName;
       Data mDecoder;
       Data mEncoder;
@@ -135,156 +143,165 @@ class GstThread : public ThreadIf
 
       void on_demux_pad_added(const RefPtr<Pad>& newPad)
       {
-  DebugLog(<<"Dynamic pad created. Linking demuxer/decoder " << newPad->get_name() );
-  RefPtr<Pad> sinkPad;
-  if(newPad->get_name().find("recv_rtp_src_0_") == 0)
-  {
-    DebugLog(<<"audio pad");
-    sinkPad = a_rtppcmadepay->get_static_pad("sink");
-  }
-  else if(newPad->get_name().find("recv_rtp_src_1_") == 0)
-  {
-    DebugLog(<<"video pad");
-    sinkPad = v_depay->get_static_pad("sink");
-    //sinkPad = v_queue->get_static_pad("sink");
-  }
-  else
-  {
-    DebugLog(<<"pad not handled");
-    return;
-  }
-  DebugLog(<<"found sinkPad");
-  PadLinkReturn ret = newPad->link(sinkPad);
+         DebugLog(<<"Dynamic pad created. Linking demuxer/decoder " << newPad->get_name() );
+         RefPtr<Pad> sinkPad;
+         if(newPad->get_name().find("recv_rtp_src_0_") == 0)
+         {
+            DebugLog(<<"audio pad");
+            sinkPad = a_rtppcmadepay->get_static_pad("sink");
+         }
+         else if(newPad->get_name().find("recv_rtp_src_1_") == 0)
+         {
+            DebugLog(<<"video pad");
+            sinkPad = v_depay->get_static_pad("sink");
+            //sinkPad = v_queue->get_static_pad("sink");
+         }
+         else
+         {
+            DebugLog(<<"pad not handled");
+            return;
+         }
+         DebugLog(<<"found sinkPad");
+         PadLinkReturn ret = newPad->link(sinkPad);
 
-  if (ret != PAD_LINK_OK && ret != PAD_LINK_WAS_LINKED)
-  {
-    DebugLog(<< "Linking of pads " << newPad->get_name() << " and " <<
-      sinkPad->get_name() << " failed.");
-  }
-  DebugLog(<<"linking done");
-  GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline");
-}
+         if (ret != PAD_LINK_OK && ret != PAD_LINK_WAS_LINKED)
+         {
+            DebugLog(<< "Linking of pads " << newPad->get_name() << " and " <<
+            sinkPad->get_name() << " failed.");
+         }
+         DebugLog(<<"linking done");
+         GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()),
+                                   GST_DEBUG_GRAPH_SHOW_ALL,
+                                   "test-pipeline");
+      }
 
    public:
 
-      GstThread(const CodecConfig& codecConfig, const Data& peerAddress, int localAudio, int peerAudio, int localVideo, int peerVideo)
+      GstThread(const CodecConfig& codecConfig,
+                const Data& peerAddress,
+                int localAudio, int peerAudio,
+                int localVideo, int peerVideo)
       {
 
-  pipeline = Pipeline::create("test-pipeline");
-  main_loop = Glib::MainLoop::create();
-  RefPtr<Bus> bus = pipeline->get_bus();
-  bus->add_watch(sigc::mem_fun(*this, &GstThread::on_bus_message));
+         pipeline = Pipeline::create("test-pipeline");
+         main_loop = Glib::MainLoop::create();
+         RefPtr<Bus> bus = pipeline->get_bus();
+         bus->add_watch(sigc::mem_fun(*this, &GstThread::on_bus_message));
 
-  DebugLog(<<"Creating elements");
+         DebugLog(<<"Creating elements");
 
-  RefPtr<Element> audio_source = ElementFactory::create_element("udpsrc"),
-     audio_source_rtcp = ElementFactory::create_element("udpsrc"),
-     video_source = ElementFactory::create_element("udpsrc"),
-     video_source_rtcp = ElementFactory::create_element("udpsrc"),
-     audio_sink = ElementFactory::create_element("multiudpsink"),
-     audio_sink_rtcp = ElementFactory::create_element("multiudpsink"),
-     video_sink = ElementFactory::create_element("multiudpsink"),
-     video_sink_rtcp = ElementFactory::create_element("multiudpsink");
+         RefPtr<Element> audio_source = ElementFactory::create_element("udpsrc"),
+            audio_source_rtcp = ElementFactory::create_element("udpsrc"),
+            video_source = ElementFactory::create_element("udpsrc"),
+            video_source_rtcp = ElementFactory::create_element("udpsrc"),
+            audio_sink = ElementFactory::create_element("multiudpsink"),
+            audio_sink_rtcp = ElementFactory::create_element("multiudpsink"),
+            video_sink = ElementFactory::create_element("multiudpsink"),
+            video_sink_rtcp = ElementFactory::create_element("multiudpsink");
 
-  RefPtr<Element> rtpbin = ElementFactory::create_element("rtpbin");
-  a_rtppcmadepay = ElementFactory::create_element("rtppcmadepay");
-  v_depay = ElementFactory::create_element(codecConfig.mDepay.c_str());
-  RefPtr<Element> v_parse;
-  if(codecConfig.mName == "H264")
-  {
-    v_parse = ElementFactory::create_element("h264parse");
-  }
-  else if(codecConfig.mName == "VP8")
-  {
-    v_parse = ElementFactory::create_element("vp8parse"); // from gst-kurento-plugins
-  }
-  else
-  {
-    ErrLog(<<"v_parse: unsupported video codec " << codecConfig.mName);
-    throw;
-  }
-  RefPtr<Element> a_queue = ElementFactory::create_element("queue");
-  v_queue = ElementFactory::create_element("queue");
-  RefPtr<Element> alawdec = ElementFactory::create_element("alawdec");
-  RefPtr<Element> alawenc = ElementFactory::create_element("alawenc");
-  RefPtr<Element> vdec = ElementFactory::create_element(codecConfig.mDecoder.c_str());
-  RefPtr<Element> venc = ElementFactory::create_element(codecConfig.mEncoder.c_str());
-  RefPtr<Element> a_rtppcmapay = ElementFactory::create_element("rtppcmapay");
-  RefPtr<Element> v_pay = ElementFactory::create_element(codecConfig.mPay.c_str());
+         RefPtr<Element> rtpbin = ElementFactory::create_element("rtpbin");
+         a_rtppcmadepay = ElementFactory::create_element("rtppcmadepay");
+         v_depay = ElementFactory::create_element(codecConfig.mDepay.c_str());
+         RefPtr<Element> v_parse;
+         if(codecConfig.mName == "H264")
+         {
+            v_parse = ElementFactory::create_element("h264parse");
+         }
+         else if(codecConfig.mName == "VP8")
+         {
+            v_parse = ElementFactory::create_element("vp8parse"); // from gst-kurento-plugins
+         }
+         else
+         {
+            ErrLog(<<"v_parse: unsupported video codec " << codecConfig.mName);
+            throw;
+         }
+         RefPtr<Element> a_queue = ElementFactory::create_element("queue");
+         v_queue = ElementFactory::create_element("queue");
+         RefPtr<Element> alawdec = ElementFactory::create_element("alawdec");
+         RefPtr<Element> alawenc = ElementFactory::create_element("alawenc");
+         RefPtr<Element> vdec = ElementFactory::create_element(codecConfig.mDecoder.c_str());
+         RefPtr<Element> venc = ElementFactory::create_element(codecConfig.mEncoder.c_str());
+         RefPtr<Element> a_rtppcmapay = ElementFactory::create_element("rtppcmapay");
+         RefPtr<Element> v_pay = ElementFactory::create_element(codecConfig.mPay.c_str());
 
-  if (!audio_source || !audio_source_rtcp || !video_source || !video_source_rtcp || !audio_sink || !audio_sink_rtcp || !video_sink || !video_sink_rtcp || !rtpbin || !a_rtppcmadepay || !v_depay || !a_queue || !v_queue || !a_rtppcmapay || !v_pay)
-  {
-    ErrLog(<< "One element could not be created.");
-    throw;
-  }
+         if (!audio_source || !audio_source_rtcp || !video_source || !video_source_rtcp || !audio_sink || !audio_sink_rtcp || !video_sink || !video_sink_rtcp || !rtpbin || !a_rtppcmadepay || !v_depay || !a_queue || !v_queue || !a_rtppcmapay || !v_pay)
+         {
+            ErrLog(<< "One element could not be created.");
+            throw;
+         }
 
-  DebugLog(<<"Creating caps");
+         DebugLog(<<"Creating caps");
 
-Glib::RefPtr<Gst::Caps> a_caps = Gst::Caps::create_simple("application/x-rtp",
-  "media", "audio",
-  "clock-rate", 8000,
-  "encoding-name", "PCMA",
-  "payload", 8);
+         Glib::RefPtr<Gst::Caps> a_caps = Gst::Caps::create_simple(
+            "application/x-rtp",
+            "media", "audio",
+            "clock-rate", 8000,
+            "encoding-name", "PCMA",
+            "payload", 8);
 
-Glib::RefPtr<Gst::Caps> v_caps = Gst::Caps::create_simple("application/x-rtp",
-  "media", "video",
-  "clock-rate", 90000,
-  "encoding-name", codecConfig.mName.c_str(),
-  "payload", 97);
+         Glib::RefPtr<Gst::Caps> v_caps = Gst::Caps::create_simple(
+            "application/x-rtp",
+            "media", "video",
+            "clock-rate", 90000,
+            "encoding-name", codecConfig.mName.c_str(),
+            "payload", 97);
 
 #define P_CLIENTS(a,p) (a + ":" + Data(p))
-Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp");
 
-  DebugLog(<<"setting properties");
+         Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple(
+            "application/x-rtcp");
 
-  audio_source->set_property<Glib::ustring>("address", myIP.c_str());
-  audio_source->set_property<gint32>("port", localAudio);
+         DebugLog(<<"setting properties");
 
-  audio_source_rtcp->set_property<Glib::ustring>("address", myIP.c_str());
-  audio_source_rtcp->set_property<gint32>("port", localAudio+1);
+         audio_source->set_property<Glib::ustring>("address", myIP.c_str());
+         audio_source->set_property<gint32>("port", localAudio);
 
-  video_source->set_property<Glib::ustring>("address", myIP.c_str());
-  video_source->set_property<gint32>("port", localVideo);
+         audio_source_rtcp->set_property<Glib::ustring>("address", myIP.c_str());
+         audio_source_rtcp->set_property<gint32>("port", localAudio+1);
 
-  video_source_rtcp->set_property<Glib::ustring>("address", myIP.c_str());
-  video_source_rtcp->set_property<gint32>("port", localVideo+1);
+         video_source->set_property<Glib::ustring>("address", myIP.c_str());
+         video_source->set_property<gint32>("port", localVideo);
 
-  Data peerAudioClient = P_CLIENTS(peerAddress, peerAudio);
-  audio_sink->set_property<Glib::ustring>("clients", peerAudioClient.c_str());
-  DebugLog(<<"peerAudioClient = " << peerAudioClient);
-  audio_sink->set_property("sync", false);
-  audio_sink->set_property("async", false);
+         video_source_rtcp->set_property<Glib::ustring>("address", myIP.c_str());
+         video_source_rtcp->set_property<gint32>("port", localVideo+1);
 
-  Data peerAudioClientRtcp = P_CLIENTS(peerAddress, peerAudio+1);
-  audio_sink_rtcp->set_property<Glib::ustring>("clients", peerAudioClientRtcp.c_str());
-  audio_sink_rtcp->set_property("sync", false);
-  audio_sink_rtcp->set_property("async", false);
+         Data peerAudioClient = P_CLIENTS(peerAddress, peerAudio);
+         audio_sink->set_property<Glib::ustring>("clients", peerAudioClient.c_str());
+         DebugLog(<<"peerAudioClient = " << peerAudioClient);
+         audio_sink->set_property("sync", false);
+         audio_sink->set_property("async", false);
 
-  Data peerVideoClient = P_CLIENTS(peerAddress, peerVideo);
-  video_sink->set_property<Glib::ustring>("clients", peerVideoClient.c_str());
-  video_sink->set_property("sync", false);
-  video_sink->set_property("async", false);
+         Data peerAudioClientRtcp = P_CLIENTS(peerAddress, peerAudio+1);
+         audio_sink_rtcp->set_property<Glib::ustring>("clients", peerAudioClientRtcp.c_str());
+         audio_sink_rtcp->set_property("sync", false);
+         audio_sink_rtcp->set_property("async", false);
 
-  Data peerVideoClientRtcp = P_CLIENTS(peerAddress, peerVideo+1);
-  video_sink_rtcp->set_property<Glib::ustring>("clients", peerVideoClientRtcp.c_str());
-  video_sink_rtcp->set_property("sync", false);
-  video_sink_rtcp->set_property("async", false);
+         Data peerVideoClient = P_CLIENTS(peerAddress, peerVideo);
+         video_sink->set_property<Glib::ustring>("clients", peerVideoClient.c_str());
+         video_sink->set_property("sync", false);
+         video_sink->set_property("async", false);
 
-  v_pay->set_property<gint32>("pt", 97);
+         Data peerVideoClientRtcp = P_CLIENTS(peerAddress, peerVideo+1);
+         video_sink_rtcp->set_property<Glib::ustring>("clients", peerVideoClientRtcp.c_str());
+         video_sink_rtcp->set_property("sync", false);
+         video_sink_rtcp->set_property("async", false);
 
-  // the names and values vary depending on which H.264 encoder is selected
+         v_pay->set_property<gint32>("pt", 97);
 
-  // openh264enc
-  //venc->set_property("rate-control", 1); // bitrate
-  //venc->set_property<guint32>("max-bitrate", 5000000);
+         // the names and values vary depending on which H.264 encoder is selected
 
-  // vaapih264enc
-  // venc->set_property<guint32>("bitrate", 5000);
-  // venc->set_property<guint32>("quality-level", 7);
+         // openh264enc
+         //venc->set_property("rate-control", 1); // bitrate
+         //venc->set_property<guint32>("max-bitrate", 5000000);
 
-  DebugLog(<<"adding elements to pipeline");
+         // vaapih264enc
+         // venc->set_property<guint32>("bitrate", 5000);
+         // venc->set_property<guint32>("quality-level", 7);
+
+         DebugLog(<<"adding elements to pipeline");
   
-  pipeline->add(audio_source)->
+         pipeline->add(audio_source)->
             add(audio_source_rtcp)->
             add(video_source)->
             add(video_source_rtcp)->
@@ -305,117 +322,118 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
             pipeline->add(a_rtppcmapay)->
             add(v_pay);
 
-  DebugLog(<<"adding handlers");
+         DebugLog(<<"adding handlers");
 
-  rtpbin->signal_pad_added().connect(sigc::mem_fun(*this, &GstThread::on_demux_pad_added));
+         rtpbin->signal_pad_added().connect(sigc::mem_fun(*this, &GstThread::on_demux_pad_added));
 
-  DebugLog(<<"linking pads, audio source");
+         DebugLog(<<"linking pads, audio source");
 
-  audio_source->link_pads("src", rtpbin, "recv_rtp_sink_0", a_caps);
-  a_rtppcmadepay->link(alawdec);
-  alawdec->link(a_queue);
-  a_queue->link(alawenc);
-  alawenc->link(a_rtppcmapay);
-  a_rtppcmapay->link_pads("src", rtpbin, "send_rtp_sink_0");
+         audio_source->link_pads("src", rtpbin, "recv_rtp_sink_0", a_caps);
+         a_rtppcmadepay->link(alawdec);
+         alawdec->link(a_queue);
+         a_queue->link(alawenc);
+         alawenc->link(a_rtppcmapay);
+         a_rtppcmapay->link_pads("src", rtpbin, "send_rtp_sink_0");
 
-  DebugLog(<<"linking pads, video source");
+         DebugLog(<<"linking pads, video source");
 
-  video_source->link_pads("src", rtpbin, "recv_rtp_sink_1", v_caps);
-  v_depay->link(v_parse);
-  v_parse->link(vdec);
-  vdec->link(v_queue);
-  v_queue->link(venc);
-  if(codecConfig.mH264Profile.empty())
-  {
-    venc->link(v_pay);
-  }
-  else
-  {
-    Glib::RefPtr<Gst::Caps> v_caps_h264 = Gst::Caps::create_simple("video/x-h264",
-      "profile", codecConfig.mH264Profile.c_str());
-    venc->link(v_pay, v_caps_h264);
-  }
-  //v_depay->link(v_queue);
-  //v_queue->link(v_pay);
-  v_pay->link_pads("src", rtpbin, "send_rtp_sink_1");
-  //v_queue->link_pads("src", rtpbin, "send_rtp_sink_1");
+         video_source->link_pads("src", rtpbin, "recv_rtp_sink_1", v_caps);
+         v_depay->link(v_parse);
+         v_parse->link(vdec);
+         vdec->link(v_queue);
+         v_queue->link(venc);
+         if(codecConfig.mH264Profile.empty())
+         {
+           venc->link(v_pay);
+         }
+         else
+         {
+           Glib::RefPtr<Gst::Caps> v_caps_h264 = Gst::Caps::create_simple("video/x-h264",
+             "profile", codecConfig.mH264Profile.c_str());
+           venc->link(v_pay, v_caps_h264);
+         }
+         //v_depay->link(v_queue);
+         //v_queue->link(v_pay);
+         v_pay->link_pads("src", rtpbin, "send_rtp_sink_1");
+         //v_queue->link_pads("src", rtpbin, "send_rtp_sink_1");
 
-  DebugLog(<<"linking pads, audio sink");
+         DebugLog(<<"linking pads, audio sink");
 
-  rtpbin->link_pads("send_rtp_src_0", audio_sink, "sink");
+         rtpbin->link_pads("send_rtp_src_0", audio_sink, "sink");
 
-  DebugLog(<<"linking pads, video sink");
+         DebugLog(<<"linking pads, video sink");
 
-  rtpbin->link_pads("send_rtp_src_1", video_sink, "sink");
+         rtpbin->link_pads("send_rtp_src_1", video_sink, "sink");
 
-  DebugLog(<<"Linking pads for RTCP");
+         DebugLog(<<"Linking pads for RTCP");
 
-  audio_source_rtcp->link_pads("src", rtpbin, "recv_rtcp_sink_0", rtcp_caps);
-  rtpbin->link_pads("send_rtcp_src_0", audio_sink_rtcp, "sink", rtcp_caps);
+         audio_source_rtcp->link_pads("src", rtpbin, "recv_rtcp_sink_0", rtcp_caps);
+         rtpbin->link_pads("send_rtcp_src_0", audio_sink_rtcp, "sink", rtcp_caps);
 
-  video_source_rtcp->link_pads("src", rtpbin, "recv_rtcp_sink_1", rtcp_caps);
-  rtpbin->link_pads("send_rtcp_src_1", video_sink_rtcp, "sink", rtcp_caps);
+         video_source_rtcp->link_pads("src", rtpbin, "recv_rtcp_sink_1", rtcp_caps);
+         rtpbin->link_pads("send_rtcp_src_1", video_sink_rtcp, "sink", rtcp_caps);
 
-  DebugLog(<<"setting state to play");
+         DebugLog(<<"setting state to play");
 
-  pipeline->set_state(STATE_PLAYING);
-}
+         pipeline->set_state(STATE_PLAYING);
+      }
 
-      ~GstThread() { shutdown(); join(); }
+      ~GstThread()
+      {
+         shutdown();
+         join();
+      }
 
       void thread()
       {
-
          DebugLog(<<"storing a DOT file");
          GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline");
 
-  DebugLog(<<"running the Gst main loop");
-  main_loop->run();
+         DebugLog(<<"running the Gst main loop");
+         main_loop->run();
 
-  DebugLog(<<"done, storing a DOT file");
+         DebugLog(<<"done, storing a DOT file");
          GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline");
-  pipeline->set_state(STATE_NULL);
+         pipeline->set_state(STATE_NULL);
       }
-
-
 };
 
 static Log::Level
 gst_debug_level_to_severity_level (GstDebugLevel level)
 {
-  switch (level) {
-  case GST_LEVEL_ERROR:   return Log::Err;
-  case GST_LEVEL_WARNING: return Log::Warning;
-  case GST_LEVEL_FIXME:   return Log::Info;
-  case GST_LEVEL_INFO:    return Log::Info;
-  case GST_LEVEL_DEBUG:   return Log::Debug;
-  case GST_LEVEL_LOG:     return Log::Stack;
-  case GST_LEVEL_TRACE:   return Log::Stack;
-  default:                return Log::None;
-  }
+   switch (level) {
+      case GST_LEVEL_ERROR:   return Log::Err;
+      case GST_LEVEL_WARNING: return Log::Warning;
+      case GST_LEVEL_FIXME:   return Log::Info;
+      case GST_LEVEL_INFO:    return Log::Info;
+      case GST_LEVEL_DEBUG:   return Log::Debug;
+      case GST_LEVEL_LOG:     return Log::Stack;
+      case GST_LEVEL_TRACE:   return Log::Stack;
+      default:                return Log::None;
+   }
 }
 
 static void
-resip_log_function (GstDebugCategory *category, GstDebugLevel level,
-                  const gchar *file,
-                  const gchar *function, gint line, GObject *object,
-                  GstDebugMessage *message, gpointer user_data) G_GNUC_NO_INSTRUMENT;
+resip_log_function(GstDebugCategory *category, GstDebugLevel level,
+                   const gchar *file,
+                   const gchar *function, gint line, GObject *object,
+                   GstDebugMessage *message, gpointer user_data) G_GNUC_NO_INSTRUMENT;
 
 static void
-resip_log_function (GstDebugCategory *category, GstDebugLevel level,
-                  const gchar *file,
-                  const gchar *function, gint line, GObject *object,
-                  GstDebugMessage *message, gpointer user_data)
+resip_log_function(GstDebugCategory *category, GstDebugLevel level,
+                   const gchar *file,
+                   const gchar *function, gint line, GObject *object,
+                   GstDebugMessage *message, gpointer user_data)
 {
-  if (level > gst_debug_category_get_threshold (category) ) {
-    return;
-  }
+   if (level > gst_debug_category_get_threshold (category) ) {
+      return;
+   }
 
-  Log::Level level_ = gst_debug_level_to_severity_level (level);
+   Log::Level level_ = gst_debug_level_to_severity_level (level);
 
-  if (level_ == Log::None) {
-    return;
-  }
+   if (level_ == Log::None) {
+      return;
+   }
 
    Subsystem& system_ = Subsystem::APP;
    do
@@ -976,14 +994,14 @@ main (int argc, char** argv)
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    Log::initialize(Log::File, resip::Log::Stack, argv[0], "testing.log");
 
-  // For GStreamer
-  const char* _argv[] =  { argv[0], "--gst-debug", "5", NULL };
-  int _argc = 3;
-  char** __argv = (char**)_argv;
-  //Gst::init(_argc, __argv);
-  gst_debug_remove_log_function (gst_debug_log_default);
-  gst_debug_add_log_function(resip_log_function, nullptr, nullptr);
-  Gst::init(_argc, __argv);
+   // For GStreamer
+   const char* _argv[] =  { argv[0], "--gst-debug", "5", NULL };
+   int _argc = 3;
+   char** __argv = (char**)_argv;
+   //Gst::init(_argc, __argv);
+   gst_debug_remove_log_function (gst_debug_log_default);
+   gst_debug_add_log_function(resip_log_function, nullptr, nullptr);
+   Gst::init(_argc, __argv);
 
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
@@ -1136,61 +1154,61 @@ main (int argc, char** argv)
 
    while (!(uasShutdownHandler.dumShutDown && uacShutdownHandler.dumShutDown))
    {
-     if (!uacShutdownHandler.dumShutDown)
-     {
-        stackUac.process(50);
-        while(dumUac->process());
-     }
-     if (!uasShutdownHandler.dumShutDown)
-     {
-        stackUas.process(50);
-        while(dumUas->process());
-     }
+      if (!uacShutdownHandler.dumShutDown)
+      {
+         stackUac.process(50);
+         while(dumUac->process());
+      }
+      if (!uasShutdownHandler.dumShutDown)
+      {
+         stackUas.process(50);
+         while(dumUas->process());
+      }
 
-     if (!(uas.done && uac.done))
-     {
-        if (uas.registered && uac.registered && !startedCallFlow)
-        {
-           if (!startedCallFlow)
-           {
-              startedCallFlow = true;
-              if ( doReg ) {
-                 InfoLog(<< "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! ");
-              }
+      if (!(uas.done && uac.done))
+      {
+         if (uas.registered && uac.registered && !startedCallFlow)
+         {
+            if (!startedCallFlow)
+            {
+               startedCallFlow = true;
+               if ( doReg ) {
+                  InfoLog(<< "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! ");
+               }
 
-              // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
-              //cout << "UAC: Sending Options Request to UAS." << endl;
-              //dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
+               //cout << "UAC: Sending Options Request to UAS." << endl;
+               //dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
-              //cout << "UAC: Sending Invite Request to UAS." << endl;
-              //dumUac->send(dumUac->makeInviteSession(uasAor, uac.mSdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
-           }
-        }
+               //cout << "UAC: Sending Invite Request to UAS." << endl;
+               //dumUac->send(dumUac->makeInviteSession(uasAor, uac.mSdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+            }
+         }
 
-        // Check if we should hangup yet
-        if (bHangupAt!=0)
-        {
-           if (time(NULL)>bHangupAt && !hungup)
-           {
-              //hungup = true;
-              //uas.hangup();
-           }
-        }
-     }
-     else
-     {
-        if (!stoppedRegistering)
-        {
-           stoppedRegistering = true;
-           dumUas->shutdown(&uasShutdownHandler);
-           dumUac->shutdown(&uacShutdownHandler);
+         // Check if we should hangup yet
+         if (bHangupAt!=0)
+         {
+            if (time(NULL)>bHangupAt && !hungup)
+            {
+               //hungup = true;
+               //uas.hangup();
+            }
+         }
+      }
+      else
+      {
+         if (!stoppedRegistering)
+         {
+            stoppedRegistering = true;
+            dumUas->shutdown(&uasShutdownHandler);
+            dumUac->shutdown(&uacShutdownHandler);
             if ( doReg ) 
             {
-              uas.registerHandle->stopRegistering();
-              uac.registerHandle->stopRegistering();
+               uas.registerHandle->stopRegistering();
+               uac.registerHandle->stopRegistering();
             }
-        }
-     }
+         }
+      }
    }
 
    // OK to delete DUM objects now
