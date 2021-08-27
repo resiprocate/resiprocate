@@ -121,7 +121,8 @@ class Tuple
       void setType(TransportType type) { mTransportType = type; }
       void setPort(int port);
       int getPort() const;
-      inline FlowKey getFlowKey() const { return mFlowKey; } 
+      inline FlowKey getFlowKey() const { return mFlowKey; }
+      void setFlowKey(FlowKey flowKey) { mFlowKey = flowKey;  } 
 
       /// @deprecated use ipVersion()
       /// @todo !dcm! -- should deprecate asap
