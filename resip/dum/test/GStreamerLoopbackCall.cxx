@@ -63,6 +63,12 @@ CodecConfig h264o("H264", "openh264dec", "openh264enc", "baseline", "rtph264depa
 // sudo apt install gstreamer1.0-vaapi
 CodecConfig h264v("H264", "vaapih264dec", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // garbled video stream
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+//CodecConfig h264m("H264", "vaapih264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works for a few seconds then replays
+//CodecConfig h264m("H264", "openh264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // not working
+CodecConfig h264m("H264", "avdec_h264", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
+//CodecConfig h264m("H264", "vaapih264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
+//CodecConfig h264m("H264", "avdec_h264", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // not working
+   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
 CodecConfig vp8("VP8", "vp8dec", "vp8enc", "", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP");
 
 /////////////////////////////////////////////////////////////////////////////////
