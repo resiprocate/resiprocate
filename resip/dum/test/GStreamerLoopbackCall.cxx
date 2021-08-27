@@ -174,6 +174,20 @@ class GstThread : public ThreadIf
   RefPtr<Element> v_rtpssrcdemux = ElementFactory::create_element("rtpssrcdemux");
   a_rtppcmadepay = ElementFactory::create_element("rtppcmadepay");
   v_depay = ElementFactory::create_element(codecConfig.mDepay.c_str());
+  RefPtr<Element> v_parse;
+  if(codecConfig.mName == "H264")
+  {
+    v_parse = ElementFactory::create_element("h264parse");
+  }
+  else if(codecConfig.mName == "VP8")
+  {
+    v_parse = ElementFactory::create_element("vp8parse"); // from gst-kurento-plugins
+  }
+  else
+  {
+    ErrLog(<<"v_parse: unsupported video codec " << codecConfig.mName);
+    throw;
+  }
   RefPtr<Element> a_queue = ElementFactory::create_element("queue");
   v_queue = ElementFactory::create_element("queue");
   RefPtr<Element> alawdec = ElementFactory::create_element("alawdec");
@@ -266,7 +280,8 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
             add(a_rtpssrcdemux)->
             add(v_rtpssrcdemux)->
             add(a_rtppcmadepay)->
-            add(v_depay);
+            add(v_depay)->
+            add(v_parse);
             pipeline->add(a_queue)->
             add(v_queue);
             pipeline->add(alawdec)->
@@ -298,7 +313,8 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
 
   video_source->link_pads("src", rtpbin, "recv_rtp_sink_1", v_caps);
   //rtpbin->link_pads("recv_rtp_src_1", v_rtpssrcdemux, "sink");
-  v_depay->link(vdec);
+  v_depay->link(v_parse);
+  v_parse->link(vdec);
   vdec->link(v_queue);
   v_queue->link(venc);
   if(codecConfig.mH264Profile.empty())
