@@ -40,26 +40,27 @@ Data myIP;
 class CodecConfig
 {
    public:
-      CodecConfig(const Data& name, const Data& decoder, const Data& encoder, const Data& depay, const Data& pay, const Data& fmtp) :
-         mName(name), mDecoder(decoder), mEncoder(encoder), mDepay(depay), mPay(pay), mFmtp(fmtp) {}
+      CodecConfig(const Data& name, const Data& decoder, const Data& encoder, const Data& h264Profile, const Data& depay, const Data& pay, const Data& fmtp) :
+         mName(name), mDecoder(decoder), mEncoder(encoder), mH264Profile(h264Profile), mDepay(depay), mPay(pay), mFmtp(fmtp) {}
       Data mName;
       Data mDecoder;
       Data mEncoder;
+      Data mH264Profile;
       Data mDepay;
       Data mPay;
       Data mFmtp;
 };
 
-CodecConfig h264("H264", "avdec_h264", "avenc_h264_omx", "rtph264depay", "rtph264pay",
+CodecConfig h264("H264", "avdec_h264", "avenc_h264_omx", "baseline", "rtph264depay", "rtph264pay",
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
-//CodecConfig h264x("H264", "x264dec", "x264enc", "rtph264depay", "rtph264pay",
+//CodecConfig h264x("H264", "x264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay",
 //   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
-CodecConfig h264x("H264", "avdec_h264", "x264enc", "rtph264depay", "rtph264pay",
+CodecConfig h264x("H264", "avdec_h264", "x264enc", "baseline", "rtph264depay", "rtph264pay",
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
 // need to recompile the package gstreamer1.0-plugins-bad selecting the openh264 config option
-CodecConfig h264o("H264", "openh264dec", "openh264enc", "rtph264depay", "rtph264pay",
+CodecConfig h264o("H264", "openh264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay",
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
-CodecConfig vp8("VP8", "vp8dec", "vp8enc", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP");
+CodecConfig vp8("VP8", "vp8dec", "vp8enc", "", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP");
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -291,7 +292,16 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
   v_depay->link(vdec);
   vdec->link(v_queue);
   v_queue->link(venc);
-  venc->link(v_pay);
+  if(codecConfig.mH264Profile.empty())
+  {
+    venc->link(v_pay);
+  }
+  else
+  {
+    Glib::RefPtr<Gst::Caps> v_caps_h264 = Gst::Caps::create_simple("video/x-h264",
+      "profile", codecConfig.mH264Profile.c_str());
+    venc->link(v_pay, v_caps_h264);
+  }
   /*v_depay->link(v_queue);
   v_queue->link(v_pay);*/
   v_pay->link_pads("src", rtpbin, "send_rtp_sink_1");
