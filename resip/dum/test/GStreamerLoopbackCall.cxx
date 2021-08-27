@@ -272,6 +272,16 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
 
   v_pay->set_property<gint32>("pt", 97);
 
+  // the names and values vary depending on which H.264 encoder is selected
+
+  // openh264enc
+  //venc->set_property("rate-control", 1); // bitrate
+  //venc->set_property<guint32>("max-bitrate", 5000000);
+
+  // vaapih264enc
+  // venc->set_property<guint32>("bitrate", 5000);
+  // venc->set_property<guint32>("quality-level", 7);
+
   DebugLog(<<"adding elements to pipeline");
   
   pipeline->add(audio_source)->
