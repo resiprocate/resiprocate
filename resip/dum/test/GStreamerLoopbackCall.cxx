@@ -51,24 +51,42 @@ class CodecConfig
       Data mFmtp;
 };
 
-CodecConfig h264("H264", "avdec_h264", "avenc_h264_omx", "baseline", "rtph264depay", "rtph264pay",
+// Obtain a list of all H.264 plugins currently installed with
+// the command:
+//
+//   gst-inspect-1.0  | grep 264
+
+// OpenMAX IL https://www.phoronix.com/scan.php?page=news_item&px=Libav-OMX-H264-MPEG4
+// https://www.khronos.org/openmaxil
+// VA-API is more advanced
+CodecConfig h264omx("H264", "avdec_h264", "avenc_h264_omx", "baseline", "rtph264depay", "rtph264pay", // not working
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
-//CodecConfig h264x("H264", "x264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay",
-//   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
-CodecConfig h264x("H264", "avdec_h264", "x264enc", "baseline", "rtph264depay", "rtph264pay",
+
+// Decode: libav
+// Encode: x264 (GPL 2) https://www.videolan.org/developers/x264.html
+//    (x264 doesn't provide a decoder)
+CodecConfig h264avx("H264", "avdec_h264", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+
 // need to recompile the package gstreamer1.0-plugins-bad selecting the openh264 config option
-CodecConfig h264o("H264", "openh264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay",
+CodecConfig h264o("H264", "openh264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works for 30 seconds
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+
+// VA-API for AMD and Intel GPU hardware decoding / encoding
+// improves quality while using less CPU and giving real-time performance
 // sudo apt install gstreamer1.0-vaapi
 CodecConfig h264v("H264", "vaapih264dec", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // garbled video stream
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+
+// mix and match decoder and encoder
 //CodecConfig h264m("H264", "vaapih264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works for a few seconds then replays
 //CodecConfig h264m("H264", "openh264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // not working
 CodecConfig h264m("H264", "avdec_h264", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
 //CodecConfig h264m("H264", "vaapih264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
 //CodecConfig h264m("H264", "avdec_h264", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // not working
    "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+
+// VP8 with the open source reference implementation
 CodecConfig vp8("VP8", "vp8dec", "vp8enc", "", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP");
 
 /////////////////////////////////////////////////////////////////////////////////
