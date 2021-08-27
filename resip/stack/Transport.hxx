@@ -96,7 +96,8 @@ class Transport : public FdSetIOObserver
           virtual void inboundMessage(const Tuple& source, const Tuple& destination, const SipMessage &msg) = 0;
       };
 
-      void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandler = std::move(handler); }
+      void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandler = handler; }
+      void unsetSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandler.reset(); }
       SipMessageLoggingHandler* getSipMessageLoggingHandler() const noexcept { return mSipMessageLoggingHandler.get(); }
 
       /**
