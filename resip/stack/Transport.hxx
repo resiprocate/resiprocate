@@ -97,6 +97,7 @@ class Transport : public FdSetIOObserver
       };
 
       void setSipMessageLoggingHandler(std::shared_ptr<SipMessageLoggingHandler> handler) noexcept { mSipMessageLoggingHandler = handler; }
+      void unsetSipMessageLoggingHandler() noexcept { mSipMessageLoggingHandler.reset(); }
       SipMessageLoggingHandler* getSipMessageLoggingHandler() const noexcept { return mSipMessageLoggingHandler.get(); }
 
       /**
