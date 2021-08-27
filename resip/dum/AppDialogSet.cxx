@@ -29,11 +29,11 @@ AppDialogSet::destroy()
 }
 
 void 
-AppDialogSet::end()
+AppDialogSet::end(const resip::ParserContainer<resip::Token> & endReasons)
 {
    if (mDialogSet)
    {
-      mDialogSet->end();
+      mDialogSet->end(endReasons);
    }
 }
 

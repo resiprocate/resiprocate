@@ -37,7 +37,7 @@ class DialogSet
       std::shared_ptr<UserProfile> getUserProfile() const;
       void setUserProfile(std::shared_ptr<UserProfile> userProfile);
 
-      void end();
+      void end(const resip::ParserContainer<resip::Token>& endReasons = resip::ParserContainer<resip::Token>());
       void dispatch(const SipMessage& msg);
       
       ClientRegistrationHandle getClientRegistration();

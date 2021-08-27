@@ -24,7 +24,7 @@ class AppDialogSet : public Handled
       // wants to manage memory on its own. 
       virtual void destroy();
 
-      virtual void end();
+      virtual void end(const resip::ParserContainer<resip::Token> & endReasons = resip::ParserContainer<resip::Token>());
 
       // Asynchronously calls end() through a DUM command
       virtual void endCommand();
