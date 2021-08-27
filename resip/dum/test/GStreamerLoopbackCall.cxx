@@ -86,7 +86,6 @@ class GstThread : public ThreadIf
 
       RefPtr<Pipeline> pipeline;
 
-      //RefPtr<Element> a_rtpssrcdemux, v_rtpssrcdemux;
       RefPtr<Element> a_rtppcmadepay, v_depay;
       RefPtr<Element> v_queue;
 
@@ -170,8 +169,6 @@ class GstThread : public ThreadIf
      video_sink_rtcp = ElementFactory::create_element("multiudpsink");
 
   RefPtr<Element> rtpbin = ElementFactory::create_element("rtpbin");
-  RefPtr<Element> a_rtpssrcdemux = ElementFactory::create_element("rtpssrcdemux");
-  RefPtr<Element> v_rtpssrcdemux = ElementFactory::create_element("rtpssrcdemux");
   a_rtppcmadepay = ElementFactory::create_element("rtppcmadepay");
   v_depay = ElementFactory::create_element(codecConfig.mDepay.c_str());
   RefPtr<Element> v_parse;
@@ -197,7 +194,7 @@ class GstThread : public ThreadIf
   RefPtr<Element> a_rtppcmapay = ElementFactory::create_element("rtppcmapay");
   RefPtr<Element> v_pay = ElementFactory::create_element(codecConfig.mPay.c_str());
 
-  if (!audio_source || !audio_source_rtcp || !video_source || !video_source_rtcp || !audio_sink || !audio_sink_rtcp || !video_sink || !video_sink_rtcp || !rtpbin || !a_rtpssrcdemux || !v_rtpssrcdemux || !a_rtppcmadepay || !v_depay || !a_queue || !v_queue || !a_rtppcmapay || !v_pay)
+  if (!audio_source || !audio_source_rtcp || !video_source || !video_source_rtcp || !audio_sink || !audio_sink_rtcp || !video_sink || !video_sink_rtcp || !rtpbin || !a_rtppcmadepay || !v_depay || !a_queue || !v_queue || !a_rtppcmapay || !v_pay)
   {
     ErrLog(<< "One element could not be created.");
     throw;
@@ -234,36 +231,27 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
   video_source_rtcp->set_property<Glib::ustring>("address", myIP.c_str());
   video_source_rtcp->set_property<gint32>("port", localVideo+1);
 
-  //audio_sink->set_property<Glib::ustring>("host", peerAddress.c_str());
-  //audio_sink->set_property<gint32>("port", peerAudio);
   Data peerAudioClient = P_CLIENTS(peerAddress, peerAudio);
   audio_sink->set_property<Glib::ustring>("clients", peerAudioClient.c_str());
   DebugLog(<<"peerAudioClient = " << peerAudioClient);
   audio_sink->set_property("sync", false);
   audio_sink->set_property("async", false);
 
-  //audio_sink_rtcp->set_property<Glib::ustring>("host", peerAddress.c_str());
-  //audio_sink_rtcp->set_property<gint32>("port", peerAudio+1);
   Data peerAudioClientRtcp = P_CLIENTS(peerAddress, peerAudio+1);
   audio_sink_rtcp->set_property<Glib::ustring>("clients", peerAudioClientRtcp.c_str());
   audio_sink_rtcp->set_property("sync", false);
   audio_sink_rtcp->set_property("async", false);
 
-  //video_sink->set_property<Glib::ustring>("host", peerAddress.c_str());
-  //video_sink->set_property<gint32>("port", peerVideo);
   Data peerVideoClient = P_CLIENTS(peerAddress, peerVideo);
   video_sink->set_property<Glib::ustring>("clients", peerVideoClient.c_str());
   video_sink->set_property("sync", false);
   video_sink->set_property("async", false);
 
-  //video_sink_rtcp->set_property<Glib::ustring>("host", peerAddress.c_str());
-  //video_sink_rtcp->set_property<gint32>("port", peerVideo+1);
   Data peerVideoClientRtcp = P_CLIENTS(peerAddress, peerVideo+1);
   video_sink_rtcp->set_property<Glib::ustring>("clients", peerVideoClientRtcp.c_str());
   video_sink_rtcp->set_property("sync", false);
   video_sink_rtcp->set_property("async", false);
 
-  //v_pay->set_property<gint32>("payload", 97);
   v_pay->set_property<gint32>("pt", 97);
 
   DebugLog(<<"adding elements to pipeline");
@@ -277,8 +265,6 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
             add(video_sink)->
             add(video_sink_rtcp)->
             add(rtpbin)->
-            add(a_rtpssrcdemux)->
-            add(v_rtpssrcdemux)->
             add(a_rtppcmadepay)->
             add(v_depay)->
             add(v_parse);
@@ -293,16 +279,11 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
 
   DebugLog(<<"adding handlers");
 
-  //a_rtpssrcdemux->signal_pad_added().connect(sigc::mem_fun(*this, &GstThread::on_demux_pad_added_a));
-  //v_rtpssrcdemux->signal_pad_added().connect(sigc::mem_fun(*this, &GstThread::on_demux_pad_added_v));
-
   rtpbin->signal_pad_added().connect(sigc::mem_fun(*this, &GstThread::on_demux_pad_added));
-  //rtpbin->signal_pad_added().connect(sigc::mem_fun(*this, &GstThread::on_demux_pad_added_v));
 
   DebugLog(<<"linking pads, audio source");
 
   audio_source->link_pads("src", rtpbin, "recv_rtp_sink_0", a_caps);
-  //rtpbin->link_pads("recv_rtp_src_0", a_rtpssrcdemux, "sink");
   a_rtppcmadepay->link(alawdec);
   alawdec->link(a_queue);
   a_queue->link(alawenc);
@@ -312,7 +293,6 @@ Glib::RefPtr<Gst::Caps> rtcp_caps = Gst::Caps::create_simple("application/x-rtcp
   DebugLog(<<"linking pads, video source");
 
   video_source->link_pads("src", rtpbin, "recv_rtp_sink_1", v_caps);
-  //rtpbin->link_pads("recv_rtp_src_1", v_rtpssrcdemux, "sink");
   v_depay->link(v_parse);
   v_parse->link(vdec);
   vdec->link(v_queue);
