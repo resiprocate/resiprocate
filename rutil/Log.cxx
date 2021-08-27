@@ -23,7 +23,9 @@
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#ifdef USE_FMT
 #include <fmt/format.h>
+#endif
 
 using namespace resip;
 using namespace std;
@@ -266,22 +268,7 @@ Log::initialize(Type type, Level level, const Data& appName,
    Lock lock(_mutex);
    mDefaultLoggerData.reset();   
 
-   const char *_logFileName = logFileName;
-   if(_logFileName != 0)
-   {
-      fmt::memory_buffer _loggingFilename;
-      fmt::format_to(_loggingFilename,
-         _logFileName,
-#ifdef WIN32
-         fmt::arg("pid", (int)GetCurrentProcess()),
-#else
-         fmt::arg("pid", getpid()),
-#endif
-         fmt::arg("timestamp", time(0)));
-      _logFileName = _loggingFilename.data();
-   }
-
-   mDefaultLoggerData.set(type, level, _logFileName, externalLogger, messageStructure, instanceName);
+   mDefaultLoggerData.set(type, level, logFileName, externalLogger, messageStructure, instanceName);
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
@@ -1187,6 +1174,42 @@ Log::ThreadData::Instance(unsigned int bytesToWrite)
          resip_assert(0);
          return std::cout;
    }
+}
+
+void 
+Log::ThreadData::set(Type type, Level level,
+                     const char* logFileName,
+                     ExternalLogger* pExternalLogger,
+                     MessageStructure messageStructure,
+                     const Data& instanceName)
+{
+   mType = type;
+   mLevel = level;
+
+   if (logFileName)
+   {
+#ifdef USE_FMT
+      fmt::memory_buffer _loggingFilename;
+      fmt::format_to(_loggingFilename,
+                     logFileName,
+#ifdef WIN32
+                     fmt::arg("pid", (int)GetCurrentProcess()),
+#else
+                     fmt::arg("pid", getpid()),
+#endif
+                     fmt::arg("timestamp", time(0)));
+      mLogFileName = Data(_loggingFilename.data(), _loggingFilename.size());
+#else
+      mLogFileName = logFileName;
+#endif
+   }
+   else
+   {
+      mLogFileName.clear();
+   }
+   mExternalLogger = pExternalLogger;
+   mMessageStructure = messageStructure;
+   mInstanceName = instanceName;
 }
 
 void 

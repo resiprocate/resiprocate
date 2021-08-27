@@ -186,11 +186,14 @@ SipXMediaResourceParticipant::startResourceImpl()
 
    case Cache:
    {
-      InfoLog(<< "SipXMediaResourceParticipant playing, handle=" << mHandle << " cacheKey=" << getMediaUrl().host());
+      Data cacheKey = getMediaUrl().host().urlDecoded();
+      cacheKey.replace("|", ":");  // For Windows filepath processing - convert | to :
+
+      InfoLog(<< "SipXMediaResourceParticipant playing, handle=" << mHandle << " cacheKey=" << cacheKey);
 
       Data* buffer;
       int type;
-      if (getConversationManager().getBufferFromMediaResourceCache(getMediaUrl().host(), &buffer, &type))
+      if (getConversationManager().getBufferFromMediaResourceCache(cacheKey, &buffer, &type))
       {
          SipXMediaInterface* mediaInterface = getMediaInterface().get();
 #if SIPX_NO_RECORD
