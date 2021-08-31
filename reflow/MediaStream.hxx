@@ -9,10 +9,18 @@
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
 #include <memory>
 
-#include <asio.hpp>
+namespace asio
+{
+   class io_context;
+   typedef io_context io_service;
 #ifdef USE_SSL
-#include <asio/ssl.hpp>
+   namespace ssl
+   {
+      class context;
+   }
 #endif
+}
+
 #include "Srtp2Helper.hxx"
 
 #include "dtls_wrapper/DtlsFactory.hxx"
