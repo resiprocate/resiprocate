@@ -744,6 +744,7 @@ ReproRunner::createSipStack()
    {
       security->addCAFile(*caFile);
    }
+   BaseSecurity::setAllowWildcardCertificates(mProxyConfig->getConfigBool("AllowWildcardCertificates", false));
 #endif
 
 #ifdef USE_SIGCOMP

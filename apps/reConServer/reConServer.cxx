@@ -17,8 +17,6 @@
 #endif
 #include <sys/ioctl.h>
 
-#include <fmt/format.h>
-
 int _kbhit() {
     static const int STDIN = 0;
     static bool initialized = false;
@@ -827,17 +825,7 @@ ReConServerProcess::main (int argc, char** argv)
    Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
    Data syslogFacilityName = reConServerConfig.getConfigData("SyslogFacility", "LOG_DAEMON", true);
    Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
-   Data loggingFilenameTemplate = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
-   fmt::memory_buffer _loggingFilename;
-   fmt::format_to(_loggingFilename,
-      loggingFilenameTemplate.c_str(),
-#ifdef WIN32
-      fmt::arg("pid", (int)GetCurrentProcess()),
-#else
-      fmt::arg("pid", getpid()),
-#endif
-      fmt::arg("timestamp", time(0)));
-   Data loggingFilename(_loggingFilename.data());
+   Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
    Data loggingMessageStructure = reConServerConfig.getConfigData("LogMessageStructure", "Unstructured", true);
    Data loggingInstanceName = reConServerConfig.getConfigData("LoggingInstanceName", "", true);
    unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);

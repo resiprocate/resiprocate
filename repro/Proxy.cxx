@@ -128,13 +128,13 @@ Proxy::~Proxy()
 }
 
 void 
-Proxy::setOptionsHandler(OptionsHandler* handler)
+Proxy::setOptionsHandler(OptionsHandler* handler) noexcept
 {
    mOptionsHandler = handler;
 }
  
 void 
-Proxy::setRequestContextFactory(std::unique_ptr<RequestContextFactory> requestContextFactory)
+Proxy::setRequestContextFactory(std::unique_ptr<RequestContextFactory> requestContextFactory) noexcept
 {
    mRequestContextFactory = std::move(requestContextFactory);
 }
@@ -146,7 +146,7 @@ Proxy::isShutDown() const
 }
 
 UserStore&
-Proxy::getUserStore()
+Proxy::getUserStore() noexcept
 {
    return mUserStore;
 }

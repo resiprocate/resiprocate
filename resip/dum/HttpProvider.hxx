@@ -21,7 +21,7 @@ class HttpProvider
 {
    public:
       //HttpProvider assumes memory
-      static void setFactory(std::unique_ptr<HttpProviderFactory> fact);
+      static void setFactory(std::unique_ptr<HttpProviderFactory> fact) noexcept;
       //ptr so users can check for existence
       static HttpProvider* instance();
       

@@ -379,7 +379,94 @@ main(int argc, char** argv)
          assert(false);
       }
    }
-   
+
+   // RFC7463 specfic tests
+   {
+      // Building doc from page 56/57 of RFC7463 (with some additions to test more of the RFC7463 elements)
+      // Note: this example has a bug in it, it uses to-tag and from-tag, instead of local-tag and remote-tag
+      DialogInfoContents di;
+      di.setEntity(Uri("sip:HelpDesk@example.com:5060"));
+      di.setVersion(10);
+      di.setDialogInfoState(DialogInfoContents::Full);
+
+      DialogInfoContents::Dialog dialog;
+      dialog.setId("id3d4f9c83");
+      dialog.setCallId("dc95da63-60db1abd-d5a74b48");
+      dialog.setLocalTag("605AD957-1F6305C2");
+      dialog.setAppearance(1);
+      dialog.setExclusive(false);
+      dialog.addJoinedDialog("14-1541707345", "44BAD75D-E3128D42", "d3b06488-1dd1-11b2-88c5-b03162323164+d3e48f4c");
+      dialog.addJoinedDialog("14-1541707345-2", "44BAD75D-E3128D42-2", "d3b06488-1dd1-11b2-88c5-b03162323164+d3e48f4c-2");
+      dialog.addReplacedDialog("repCallId", "repLocal", "repRemote");
+      dialog.addReplacedDialog("repCallId-2", "repLocal-2", "repRemote-2");
+      dialog.setState(DialogInfoContents::Trying);
+
+      dialog.localParticipant().setTarget(NameAddr("sip:alice@ua1.example.com"));
+      dialog.remoteParticipant().setTarget(Uri("sip:bob@example.com"));
+
+      di.addDialog(dialog);
+
+      cout << di << endl;
+
+      // Now create a Data blob and try and parse our own output
+      Data dialogInfoData = Data::from(di);
+      HeaderFieldValue hfv(dialogInfoData.data(), dialogInfoData.size());
+      DialogInfoContents di2(hfv, DialogInfoContents::getStaticType());
+      assert(di2.getVersion() == di.getVersion());
+      assert(di2.getDialogInfoState() == di.getDialogInfoState());
+      assert(di2.getEntity() == di.getEntity());
+      assert(di2.getDialogs().size() == 1);
+
+      assert(di2.getDialogs().front().getId() == di.getDialogs().front().getId());
+      assert(di2.getDialogs().front().getCallId() == di.getDialogs().front().getCallId());
+      assert(di2.getDialogs().front().getLocalTag() == di.getDialogs().front().getLocalTag());
+      assert(di2.getDialogs().front().getRemoteTag() == di.getDialogs().front().getRemoteTag());
+      assert(di2.getDialogs().front().getState() == di.getDialogs().front().getState());
+      assert(di2.getDialogs().front().hasDuration() == di.getDialogs().front().hasDuration());
+
+      assert(di2.getDialogs().front().localParticipant().getTarget() == di.getDialogs().front().localParticipant().getTarget());
+      assert(di2.getDialogs().front().remoteParticipant().getTarget() == di.getDialogs().front().remoteParticipant().getTarget());
+
+      assert(di2.getDialogs().front().hasAppearance() == true);
+      assert(di2.getDialogs().front().getAppearance() == 1);
+      assert(di2.getDialogs().front().hasAppearance() == di.getDialogs().front().hasAppearance());
+      assert(di2.getDialogs().front().getAppearance() == di.getDialogs().front().getAppearance());
+
+      assert(di2.getDialogs().front().hasExclusive() == true);
+      assert(di2.getDialogs().front().getExclusive() == false);
+      assert(di2.getDialogs().front().hasExclusive() == di.getDialogs().front().hasExclusive());
+      assert(di2.getDialogs().front().getExclusive() == di.getDialogs().front().getExclusive());
+
+      assert(di2.getDialogs().front().getJoinedDialogs().size() == 2);
+      assert(di2.getDialogs().front().getJoinedDialogs().front().mCallId == di.getDialogs().front().getJoinedDialogs().front().mCallId);
+      assert(di2.getDialogs().front().getJoinedDialogs().front().mLocalTag == di.getDialogs().front().getJoinedDialogs().front().mLocalTag);
+      assert(di2.getDialogs().front().getJoinedDialogs().front().mRemoteTag == di.getDialogs().front().getJoinedDialogs().front().mRemoteTag);
+      assert(di2.getDialogs().front().getJoinedDialogs().back().mCallId == di.getDialogs().front().getJoinedDialogs().back().mCallId);
+      assert(di2.getDialogs().front().getJoinedDialogs().back().mLocalTag == di.getDialogs().front().getJoinedDialogs().back().mLocalTag);
+      assert(di2.getDialogs().front().getJoinedDialogs().back().mRemoteTag == di.getDialogs().front().getJoinedDialogs().back().mRemoteTag);
+
+      assert(di2.getDialogs().front().getReplacedDialogs().size() == 2);
+      assert(di2.getDialogs().front().getReplacedDialogs().front().mCallId == di.getDialogs().front().getReplacedDialogs().front().mCallId);
+      assert(di2.getDialogs().front().getReplacedDialogs().front().mLocalTag == di.getDialogs().front().getReplacedDialogs().front().mLocalTag);
+      assert(di2.getDialogs().front().getReplacedDialogs().front().mRemoteTag == di.getDialogs().front().getReplacedDialogs().front().mRemoteTag);
+      assert(di2.getDialogs().front().getReplacedDialogs().back().mCallId == di.getDialogs().front().getReplacedDialogs().back().mCallId);
+      assert(di2.getDialogs().front().getReplacedDialogs().back().mLocalTag == di.getDialogs().front().getReplacedDialogs().back().mLocalTag);
+      assert(di2.getDialogs().front().getReplacedDialogs().back().mRemoteTag == di.getDialogs().front().getReplacedDialogs().back().mRemoteTag);
+
+
+      // Test assingment and copy construction
+      DialogInfoContents copy(di);
+      assert(copy.getVersion() == di.getVersion());
+      assert(copy.getDialogInfoState() == di.getDialogInfoState());
+      assert(copy.getEntity() == di.getEntity());
+      assert(copy.getDialogs().size() == 1);
+      DialogInfoContents assign = di;
+      assert(assign.getVersion() == di.getVersion());
+      assert(assign.getDialogInfoState() == di.getDialogInfoState());
+      assert(assign.getEntity() == di.getEntity());
+      assert(assign.getDialogs().size() == 1);
+   }
+
    cerr << "All OK" << endl;
    return 0;
 }

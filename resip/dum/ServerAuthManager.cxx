@@ -205,7 +205,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    {
       InfoLog (<< "Nonce expired for " << userAuth->getUser());
 
-      issueChallenge(requestWithAuth);
+      issueChallenge(requestWithAuth, true);
       delete requestWithAuth;
       return 0;
    }
@@ -459,13 +459,13 @@ ServerAuthManager::issueChallengeIfRequired(SipMessage *sipMsg)
 }
 
 void
-ServerAuthManager::issueChallenge(SipMessage *sipMsg) 
+ServerAuthManager::issueChallenge(SipMessage *sipMsg, bool stale)
 {
   //assume TransactionUser has matched/repaired a realm
   std::shared_ptr<SipMessage> challenge(Helper::makeChallenge(*sipMsg,
                                                         getChallengeRealm(*sipMsg), 
                                                         useAuthInt(), 
-                                                        false /*stale*/,
+                                                        stale,
                                                         proxyAuthenticationMode()));
 
   InfoLog (<< "Sending challenge to " << sipMsg->brief());

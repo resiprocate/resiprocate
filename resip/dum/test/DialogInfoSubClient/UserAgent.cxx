@@ -150,7 +150,38 @@ class NotifyTimer : public resip::DumCommand
       unsigned int mTimerId;
 };
 
-class InvokePick : public resip::DumCommand
+class EndCalls : public resip::DumCommandAdapter
+{
+public:
+   EndCalls(UserAgent& userAgent) : mUserAgent(userAgent) {}
+   EndCalls(const EndCalls& rhs) : mUserAgent(rhs.mUserAgent) {}
+   ~EndCalls() {}
+
+   void executeCommand() { mUserAgent.onEndCalls(); }
+
+   EncodeStream& encode(EncodeStream& strm) const { strm << "EndCalls"; return strm; }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+
+private:
+   UserAgent& mUserAgent;
+};
+
+class ToggleHold : public resip::DumCommandAdapter
+{
+public:
+   ToggleHold(UserAgent& userAgent) : mUserAgent(userAgent) {}
+   ToggleHold(const ToggleHold& rhs) : mUserAgent(rhs.mUserAgent) {}
+   ~ToggleHold() {}
+
+   void executeCommand() { mUserAgent.onToggleHold(); }
+
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << "ToggleHold"; return strm; }
+
+private:
+   UserAgent& mUserAgent;
+};
+
+class InvokePick : public resip::DumCommandAdapter
 {
 public:
    InvokePick(UserAgent& userAgent) : mUserAgent(userAgent) {}
@@ -159,15 +190,13 @@ public:
 
    void executeCommand() { mUserAgent.onInvokePick(); }
 
-   resip::Message* clone() const { return new InvokePick(*this); }
-   EncodeStream& encode(EncodeStream& strm) const { strm << "InvokePick"; return strm; }
-   EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << "InvokePick"; return strm; }
 
 private:
    UserAgent& mUserAgent;
 };
 
-class InvokeJoin : public resip::DumCommand
+class InvokeJoin : public resip::DumCommandAdapter
 {
 public:
    InvokeJoin(UserAgent& userAgent) : mUserAgent(userAgent) {}
@@ -176,9 +205,7 @@ public:
 
    void executeCommand() { mUserAgent.onInvokeJoin(); }
 
-   resip::Message* clone() const { return new InvokeJoin(*this); }
-   EncodeStream& encode(EncodeStream& strm) const { strm << "InvokeJoin"; return strm; }
-   EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << "InvokeJoin"; return strm; }
 
 private:
    UserAgent& mUserAgent;
@@ -446,6 +473,20 @@ UserAgent::shutdown()
 }
 
 void
+UserAgent::endCalls()
+{
+   // queue message to dum thread
+   mDum->post(new EndCalls(*this));
+}
+
+void
+UserAgent::toggleHold()
+{
+   // queue message to dum thread
+   mDum->post(new ToggleHold(*this));
+}
+
+void
 UserAgent::invokePick()
 {
    // queue message to dum thread
@@ -457,24 +498,6 @@ UserAgent::invokeJoin()
 {
    // queue message to dum thread
    mDum->post(new InvokeJoin(*this));
-}
-
-int UserAgent::toggleHoldCalls()
-{
-   mHoldCalls = !mHoldCalls;
-
-   int callsToggled = 0;
-   for(std::set<Call*>::iterator callIt = mCallList.begin();
-       callIt != mCallList.end();
-       callIt++)
-   {
-      if((*callIt)->toggleHold())
-      {
-         callsToggled++;
-      } 
-   }
-
-   return(callsToggled);
 }
 
 bool
@@ -500,13 +523,7 @@ UserAgent::process(int timeoutMs)
             mClientSubscriptionHandle->end();
          }
 
-         // End all calls - copy list in case delete/unregister of call is immediate
-         std::set<Call*> tempCallList = mCallList;
-         std::set<Call*>::iterator it = tempCallList.begin();
-         for(; it != tempCallList.end(); it++)
-         {
-            (*it)->terminateCall();
-         }
+         onEndCalls();
 
          mDum->shutdown(this);
          mDumShutdownRequested = false;
@@ -700,37 +717,6 @@ UserAgent::processDialogInfoEvent(ClientSubscriptionHandle h, const resip::SipMe
    }
 }
 
-void 
-UserAgent::onInvokePick()
-{
-   if (mSubTargetDialogId.getCallId().empty())
-   {
-      InfoLog(<< "onInvokePick: subscribe target has no calls.");
-   }
-   else
-   {
-      InfoLog(<< "onInvokePick: callId=" << mSubTargetDialogId.getCallId() << ", localTag=" << mSubTargetDialogId.getLocalTag() << ", remoteTag=" << mSubTargetDialogId.getRemoteTag());
-
-      Call* newCall = new Call(*this);
-      newCall->initiateCall(mSubscribeTarget, mProfile, &mSubTargetDialogId, false);
-   }
-}
-
-void
-UserAgent::onInvokeJoin()
-{
-   if (mSubTargetDialogId.getCallId().empty())
-   {
-      InfoLog(<< "onInvokeJoin: subscribe target has no calls.");
-   }
-   else
-   {
-      InfoLog(<< "onInvokeJoin: callId=" << mSubTargetDialogId.getCallId() << ", localTag=" << mSubTargetDialogId.getLocalTag() << ", remoteTag=" << mSubTargetDialogId.getRemoteTag());
-
-      Call* newCall = new Call(*this);
-      newCall->initiateCall(mSubscribeTarget, mProfile, &mSubTargetDialogId, true);
-   }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Registration Handler ////////////////////////////////////////////////////////
@@ -1310,6 +1296,65 @@ UserAgent::onTryingNextTarget(AppDialogSetHandle, const SipMessage& msg)
    return true;
 }
 
+void UserAgent::onEndCalls()
+{
+   // End all calls - copy list in case delete/unregister of call is immediate
+   std::set<Call*> tempCallList = mCallList;
+   std::set<Call*>::iterator it = tempCallList.begin();
+   for (; it != tempCallList.end(); it++)
+   {
+      (*it)->terminateCall();
+   }
+}
+
+void UserAgent::onToggleHold()
+{
+   mHoldCalls = !mHoldCalls;
+
+   int callsToggled = 0;
+   for (std::set<Call*>::iterator callIt = mCallList.begin();
+      callIt != mCallList.end();
+      callIt++)
+   {
+      if ((*callIt)->toggleHold())
+      {
+         callsToggled++;
+      }
+   }
+   InfoLog(<< "onToggleHold: toggled " << callsToggled << " calls.");
+}
+
+void
+UserAgent::onInvokePick()
+{
+   if (mSubTargetDialogId.getCallId().empty())
+   {
+      InfoLog(<< "onInvokePick: subscribe target has no calls.");
+   }
+   else
+   {
+      InfoLog(<< "onInvokePick: callId=" << mSubTargetDialogId.getCallId() << ", localTag=" << mSubTargetDialogId.getLocalTag() << ", remoteTag=" << mSubTargetDialogId.getRemoteTag());
+
+      Call* newCall = new Call(*this);
+      newCall->initiateCall(mSubscribeTarget, mProfile, &mSubTargetDialogId, false);
+   }
+}
+
+void
+UserAgent::onInvokeJoin()
+{
+   if (mSubTargetDialogId.getCallId().empty())
+   {
+      InfoLog(<< "onInvokeJoin: subscribe target has no calls.");
+   }
+   else
+   {
+      InfoLog(<< "onInvokeJoin: callId=" << mSubTargetDialogId.getCallId() << ", localTag=" << mSubTargetDialogId.getLocalTag() << ", remoteTag=" << mSubTargetDialogId.getRemoteTag());
+
+      Call* newCall = new Call(*this);
+      newCall->initiateCall(mSubscribeTarget, mProfile, &mSubTargetDialogId, true);
+   }
+}
 
 
 

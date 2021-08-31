@@ -107,11 +107,11 @@ Call::timerExpired()
    if(mTimerExpiredCounter < CallTimeCounterToByeOn)
    {
       // First few times, send a message to the other party
-      if(mInviteSessionHandle.isValid())
-      {
-         PlainContents plain("test message");
-         mInviteSessionHandle->message(plain);
-      }
+      //if(mInviteSessionHandle.isValid())
+      //{
+      //   PlainContents plain("test message");
+      //   mInviteSessionHandle->message(plain);
+      //}
    }
    else 
    {

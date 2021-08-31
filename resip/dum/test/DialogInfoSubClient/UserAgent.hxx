@@ -40,13 +40,14 @@ public:
    virtual void shutdown();
 
    // User commands
+   void endCalls();
+   // Toggles calls, switching from held to active or vis versa, returns the number of calls toggled
+   void toggleHold();
+   bool shouldHoldCalls() { return(mHoldCalls); };
    void invokePick();
    void invokeJoin();
    bool toggleRingAnswer(){mRingNoAnswer = !mRingNoAnswer; return(mRingNoAnswer);}
    bool ringNoAnswer(){return(mRingNoAnswer);}
-    // Toggles calls, switching from held to active or vis versa, returns the number of calls toggled
-   int toggleHoldCalls();
-   bool shouldHoldCalls(){return(mHoldCalls);};
 
    bool process(int timeoutMs);  // returns false when shutdown is complete and process should no longer be called
 
@@ -145,6 +146,10 @@ protected:
    friend class CallTimer;
    void onCallTimeout(Call* call);
    void processDialogInfoEvent(resip::ClientSubscriptionHandle h, const resip::SipMessage& msg);
+   friend class EndCalls;
+   void onEndCalls();
+   friend class ToggleHold;
+   void onToggleHold();
    friend class InvokePick;
    void onInvokePick();
    friend class InvokeJoin;

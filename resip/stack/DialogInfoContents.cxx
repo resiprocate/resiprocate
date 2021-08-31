@@ -19,6 +19,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 const static Data BaseDialogInfoNamespaceUri("urn:ietf:params:xml:ns:dialog-info");
+const static Data SharedAppearanceDialogInfoNamespaceUri("urn:ietf:params:xml:ns:sa-dialog-info");
+const static Data SharedAppearanceDialogInfoNamespacePrefix("sa:");
 
 const static Data DefaultEncodeIndent("  ");
 
@@ -138,6 +140,18 @@ DialogInfoContents::directionStringToEnum(const Data& directionString)
    return MaxOrUnsetDirection;
 }
 
+bool 
+DialogInfoContents::compareTag(const Data& tagName, const Data& compareToTagNoPrefix, const Data& namespacePrefix)
+{
+   if (namespacePrefix.empty())
+   {
+      return tagName == compareToTagNoPrefix;
+   }
+   Data compareToTagWithPrefix(namespacePrefix);
+   compareToTagWithPrefix += compareToTagNoPrefix;
+   return tagName == compareToTagWithPrefix;
+}
+
 const DialogInfoContents DialogInfoContents::Empty;
 
 DialogInfoContents::DialogInfoContents()
@@ -175,8 +189,24 @@ DialogInfoContents::getStaticType()
 EncodeStream& 
 DialogInfoContents::encodeParsed(EncodeStream& str) const
 {
+   bool hasSharedAppearanceElements = false;
+
+   // Check if any dialogs have shared appearance elements, if so, we need to add the namespace
+   for (DialogList::const_iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   {
+      if (it->hasExclusive() || it->hasAppearance() || !it->getReplacedDialogs().empty() || !it->getJoinedDialogs().empty())
+      {
+         hasSharedAppearanceElements = true;
+         break;  // no need to continue, we found at least one
+      }
+   }
+
    str << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;
    str << "<dialog-info xmlns=\"" << BaseDialogInfoNamespaceUri << "\"" << Symbols::CRLF;
+   if (hasSharedAppearanceElements)
+   {
+      str << "             xmlns:" << SharedAppearanceDialogInfoNamespacePrefix << "=\"" << SharedAppearanceDialogInfoNamespaceUri << "\"" << Symbols::CRLF;
+   }
    str << "             version=\"" << mVersion << "\" state=\"" << dialogInfoStateToString(mDialogInfoState) << "\"" << Symbols::CRLF;
    str << "             entity=\"" << Data::from(mEntity).xmlCharDataEncode() << "\">" << Symbols::CRLF;
 
@@ -254,10 +284,10 @@ DialogInfoContents::Dialog::encodeParsed(EncodeStream& str, const Data& indent) 
    }
 
    // Encode replaces element
-   if (!mReplacesCallId.empty())
+   if (!mReplaces.mCallId.empty())
    {
-      str << indent << indent << "<replaces call-id=\"" << mReplacesCallId.xmlCharDataEncode() << "\"" << Symbols::CRLF;
-      str << indent << indent << "          local-tag=\"" << mReplacesLocalTag.xmlCharDataEncode() << "\" remote-tag=\"" << mReplacesRemoteTag.xmlCharDataEncode() << "\"/>" << Symbols::CRLF;
+      str << indent << indent << "<replaces call-id=\"" << mReplaces.mCallId.xmlCharDataEncode() << "\"" << Symbols::CRLF;
+      str << indent << indent << "          local-tag=\"" << mReplaces.mLocalTag.xmlCharDataEncode() << "\" remote-tag=\"" << mReplaces.mRemoteTag.xmlCharDataEncode() << "\"/>" << Symbols::CRLF;
    }
 
    // Encode referred by element
@@ -284,6 +314,42 @@ DialogInfoContents::Dialog::encodeParsed(EncodeStream& str, const Data& indent) 
 
    // Encode remote participant (if set)
    mRemoteParticipant.encode(str, "remote", indent);
+
+
+   //////////////////////////////////////
+   // Encode RFC7463 Specific Elements
+   //////////////////////////////////////
+
+   // Encode shared appearance number
+   if (mHasAppearance)
+   {
+      str << indent << indent << "<" << SharedAppearanceDialogInfoNamespacePrefix << "appearance>" << mAppearance << "</" << SharedAppearanceDialogInfoNamespacePrefix << "appearance>" << Symbols::CRLF;
+   }
+
+   // Encode exclusive flag
+   if (mHasExclusive)
+   {
+      str << indent << indent << "<" << SharedAppearanceDialogInfoNamespacePrefix << "exclusive>" << (mExclusive ? "true" : "false") << "</" << SharedAppearanceDialogInfoNamespacePrefix << "exclusive>" << Symbols::CRLF;
+   }
+
+   // Encode replaced-dialog's
+   for (auto replacedDialogsIterator = mReplacedDialogs.begin(); replacedDialogsIterator != mReplacedDialogs.end(); replacedDialogsIterator++)
+   {
+      str << indent << indent << "<" << SharedAppearanceDialogInfoNamespacePrefix << "replaced-dialog" << Symbols::CRLF
+          << indent << indent << indent << "call-id=\"" << replacedDialogsIterator->mCallId.xmlCharDataEncode() << "\"" << Symbols::CRLF
+          << indent << indent << indent << "local-tag=\"" << replacedDialogsIterator->mLocalTag.xmlCharDataEncode() << "\"" << Symbols::CRLF
+          << indent << indent << indent << "remote-tag=\"" << replacedDialogsIterator->mRemoteTag.xmlCharDataEncode() << "\"/>" << Symbols::CRLF;
+   }
+
+   // Encode joined-dialog's
+   for (auto joinedDialogsIterator = mJoinedDialogs.begin(); joinedDialogsIterator != mJoinedDialogs.end(); joinedDialogsIterator++)
+   {
+      str << indent << indent << "<" << SharedAppearanceDialogInfoNamespacePrefix << "joined-dialog" << Symbols::CRLF
+         << indent << indent << indent << "call-id=\"" << joinedDialogsIterator->mCallId.xmlCharDataEncode() << "\"" << Symbols::CRLF
+         << indent << indent << indent << "local-tag=\"" << joinedDialogsIterator->mLocalTag.xmlCharDataEncode() << "\"" << Symbols::CRLF
+         << indent << indent << indent << "remote-tag=\"" << joinedDialogsIterator->mRemoteTag.xmlCharDataEncode() << "\"/>" << Symbols::CRLF;
+   }
+
 
    // User specific/non-standard Dialog elements
    for(std::multimap<Data, Data>::const_iterator elementIterator = mExtraDialogElements.begin(); 
@@ -438,6 +504,7 @@ DialogInfoContents::parse(ParseBuffer& pb)
    const XMLCursor::AttributeMap& attr = xml.getAttributes();
    XMLCursor::AttributeMap::const_iterator itAttr = attr.begin();
    bool baseDialogInfoNamespaceUriFound = false;
+   bool sharedAppearanceDialogInfoNamespaceUriFound = false;
    for (; itAttr != attr.end(); itAttr++)
    {
       if (itAttr->first.prefix("xmlns"))
@@ -451,11 +518,16 @@ DialogInfoContents::parse(ParseBuffer& pb)
             const char* anchor = pb.position();
             pb.skipToEnd();
             pb.data(prefix, anchor);
-            prefix += Symbols::COLON;
          }
          if (isEqualNoCase(itAttr->second, BaseDialogInfoNamespaceUri))
          {
             baseDialogInfoNamespaceUriFound = true;
+            mBaseDialogInfoNamespacePrefix = prefix;
+         }
+         else if (isEqualNoCase(itAttr->second, SharedAppearanceDialogInfoNamespaceUri))
+         {
+            sharedAppearanceDialogInfoNamespaceUriFound = true;
+            mSharedAppearanceDialogInfoNamespacePrefix = prefix;
          }
       }
       else if (itAttr->first == "version")
@@ -486,7 +558,7 @@ DialogInfoContents::parse(ParseBuffer& pb)
    {
       do
       {
-         if (xml.getTag() == "dialog")
+         if (compareTag(xml.getTag(), "dialog", mBaseDialogInfoNamespacePrefix))
          {
             parseDialog(xml);
          }
@@ -539,14 +611,11 @@ DialogInfoContents::parseDialog(XMLCursor& xml)
       // ?slg? - throw or be tolerant?
    }
 
-   // Clear out any remnent parsed dialog child elements
-   dialog.mExtraDialogElements.clear();
-
    if (xml.firstChild())
    {
       do
       {
-         if (xml.getTag() == "state")
+         if (compareTag(xml.getTag(), "state", mBaseDialogInfoNamespacePrefix))
          {
             const XMLCursor::AttributeMap& attr = xml.getAttributes();
             for (itAttr = attr.begin(); itAttr != attr.end(); itAttr++)
@@ -570,7 +639,7 @@ DialogInfoContents::parseDialog(XMLCursor& xml)
                xml.parent();
             }
          }
-         else if (xml.getTag() == "duration")
+         else if (compareTag(xml.getTag(), "duration", mBaseDialogInfoNamespacePrefix))
          {
             if (xml.firstChild())
             {
@@ -579,40 +648,21 @@ DialogInfoContents::parseDialog(XMLCursor& xml)
                xml.parent();
             }
          }
-         else if (xml.getTag() == "replaces")
+         else if (compareTag(xml.getTag(), "replaces", mBaseDialogInfoNamespacePrefix))
          {
-            const XMLCursor::AttributeMap& attr = xml.getAttributes();
-            for (itAttr = attr.begin(); itAttr != attr.end(); itAttr++)
-            {
-               if (itAttr->first == "call-id")
-               {
-                  dialog.mReplacesCallId = itAttr->second.xmlCharDataDecode();
-               }
-               else if (itAttr->first == "local-tag")
-               {
-                  dialog.mReplacesLocalTag = itAttr->second.xmlCharDataDecode();
-               }
-               else if (itAttr->first == "remote-tag")
-               {
-                  dialog.mReplacesRemoteTag = itAttr->second.xmlCharDataDecode();
-               }
-               else
-               {
-                  DebugLog(<< "Unknown dialog/replaces attribute: " << itAttr->first << "=" << itAttr->second);
-               }
-            }
+            parseDialogIdInfo(xml, dialog.mReplaces);
          }
-         else if (xml.getTag() == "referred-by")
+         else if (compareTag(xml.getTag(), "referred-by", mBaseDialogInfoNamespacePrefix))
          {
             parseNameAddrElement(xml, dialog.mReferredBy);
          }
-         else if (xml.getTag() == "route-set")
+         else if (compareTag(xml.getTag(), "route-set", mBaseDialogInfoNamespacePrefix))
          {
             if (xml.firstChild())
             {
                do
                {
-                  if (xml.getTag() == "hop")
+                  if (compareTag(xml.getTag(), "hop", mBaseDialogInfoNamespacePrefix))
                   {
                      NameAddr nameAddr;
                      if (parseUriValue(xml, nameAddr.uri()))
@@ -628,13 +678,48 @@ DialogInfoContents::parseDialog(XMLCursor& xml)
                xml.parent();
             }
          }
-         else if (xml.getTag() == "local")
+         else if (compareTag(xml.getTag(), "local", mBaseDialogInfoNamespacePrefix))
          {
-            dialog.mLocalParticipant.parse(xml);
+            dialog.mLocalParticipant.parse(xml, mBaseDialogInfoNamespacePrefix);
          }
-         else if (xml.getTag() == "remote")
+         else if (compareTag(xml.getTag(), "remote", mBaseDialogInfoNamespacePrefix))
          {
-            dialog.mRemoteParticipant.parse(xml);
+            dialog.mRemoteParticipant.parse(xml, mBaseDialogInfoNamespacePrefix);
+         }
+         // Now Look for RFC7463 tags
+         else if (compareTag(xml.getTag(), "appearance", mSharedAppearanceDialogInfoNamespacePrefix))
+         {
+            if (xml.firstChild())
+            {
+               dialog.mAppearance = xml.getValue().convertUnsignedLong();
+               dialog.mHasAppearance = true;
+               xml.parent();
+            }
+         }
+         else if (compareTag(xml.getTag(), "exclusive", mSharedAppearanceDialogInfoNamespacePrefix))
+         {
+            if (xml.firstChild())
+            {
+               dialog.mExclusive = isEqualNoCase(xml.getValue(), "true");
+               dialog.mHasExclusive = true;
+               xml.parent();
+            }
+         }
+         else if (compareTag(xml.getTag(), "replaced-dialog", mSharedAppearanceDialogInfoNamespacePrefix))
+         {
+            Dialog::DialogIdInfo dialogIdInfo;
+            if (parseDialogIdInfo(xml, dialogIdInfo))
+            {
+               dialog.mReplacedDialogs.push_back(dialogIdInfo);
+            }
+         }
+         else if (compareTag(xml.getTag(), "joined-dialog", mSharedAppearanceDialogInfoNamespacePrefix))
+         {
+            Dialog::DialogIdInfo dialogIdInfo;
+            if (parseDialogIdInfo(xml, dialogIdInfo))
+            {
+               dialog.mJoinedDialogs.push_back(dialogIdInfo);
+            }
          }
          else
          {
@@ -656,6 +741,32 @@ DialogInfoContents::parseDialog(XMLCursor& xml)
 
    //DebugLog(<< "Pushing " << mDialogs.size() << "'th dialog " << dialog.mId << " parsed into DialogInfoCOntents::mDialogs");
    mDialogs.push_back(dialog);
+}
+
+bool
+DialogInfoContents::parseDialogIdInfo(XMLCursor& xml, Dialog::DialogIdInfo& dialogIdInfo)
+{
+   const XMLCursor::AttributeMap& attr = xml.getAttributes();
+   for (XMLCursor::AttributeMap::const_iterator itAttr = attr.begin(); itAttr != attr.end(); itAttr++)
+   {
+      if (itAttr->first == "call-id")
+      {
+         dialogIdInfo.mCallId = itAttr->second.xmlCharDataDecode();
+      }
+      else if (itAttr->first == "local-tag")
+      {
+         dialogIdInfo.mLocalTag = itAttr->second.xmlCharDataDecode();
+      }
+      else if (itAttr->first == "remote-tag")
+      {
+         dialogIdInfo.mRemoteTag = itAttr->second.xmlCharDataDecode();
+      }
+      else
+      {
+         DebugLog(<< "Unknown dialog/replaces attribute: " << itAttr->first << "=" << itAttr->second);
+      }
+   }
+   return !dialogIdInfo.mCallId.empty() && !dialogIdInfo.mLocalTag.empty() && !dialogIdInfo.mRemoteTag.empty();
 }
 
 bool
@@ -698,17 +809,17 @@ DialogInfoContents::parseNameAddrElement(XMLCursor& xml, NameAddr& nameAddr)
 }
 
 void
-DialogInfoContents::Dialog::Participant::parse(XMLCursor& xml)
+DialogInfoContents::Dialog::Participant::parse(XMLCursor& xml, const Data& namespacePrefix)
 {
    if (xml.firstChild())
    {
       do
       {
-         if (xml.getTag() == "identity")
+         if (compareTag(xml.getTag(), "identity", namespacePrefix))
          {
             parseNameAddrElement(xml, mIdentity);
          }
-         else if (xml.getTag() == "target")
+         else if (compareTag(xml.getTag(), "target", namespacePrefix))
          {
             try
             {
@@ -730,7 +841,7 @@ DialogInfoContents::Dialog::Participant::parse(XMLCursor& xml)
                {
                   do
                   {
-                     if (xml.getTag() == "param")
+                     if (compareTag(xml.getTag(), "param", namespacePrefix))
                      {
                         parseParam(xml);
                      }
@@ -747,7 +858,7 @@ DialogInfoContents::Dialog::Participant::parse(XMLCursor& xml)
                DebugLog(<< "Could not parse dialog/participatn/target uri value: " << xml.getValue().xmlCharDataDecode() << ": " << ex);
             }
          }
-         else if (xml.getTag() == "session-description")
+         else if (compareTag(xml.getTag(), "session-description", namespacePrefix))
          {
             const XMLCursor::AttributeMap& attr = xml.getAttributes();
             XMLCursor::AttributeMap::const_iterator itAttr = attr.begin();
@@ -768,7 +879,7 @@ DialogInfoContents::Dialog::Participant::parse(XMLCursor& xml)
                xml.parent();
             }
          }
-         else if (xml.getTag() == "cseq")
+         else if (compareTag(xml.getTag(), "cseq", namespacePrefix))
          {
             if (xml.firstChild())
             {

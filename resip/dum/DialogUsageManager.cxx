@@ -299,7 +299,7 @@ DialogUsageManager::forceShutdown(DumShutdownHandler* h)
    DialogUsageManager::onAllHandlesDestroyed();
 }
 
-void DialogUsageManager::setAppDialogSetFactory(std::unique_ptr<AppDialogSetFactory> factory)
+void DialogUsageManager::setAppDialogSetFactory(std::unique_ptr<AppDialogSetFactory> factory) noexcept
 {
    mAppDialogSetFactory = std::move(factory);
 }
@@ -325,29 +325,29 @@ void DialogUsageManager::setMasterProfile(const std::shared_ptr<MasterProfile>& 
    mMasterUserProfile = masterProfile; // required so that we can return a reference to std::shared_ptr<UserProfile> in getMasterUserProfile
 }
 
-void DialogUsageManager::setKeepAliveManager(std::unique_ptr<KeepAliveManager> manager)
+void DialogUsageManager::setKeepAliveManager(std::unique_ptr<KeepAliveManager> manager) noexcept
 {
    mKeepAliveManager = std::move(manager);
    mKeepAliveManager->setDialogUsageManager(this);
 }
 
-void DialogUsageManager::setRedirectManager(std::unique_ptr<RedirectManager> manager)
+void DialogUsageManager::setRedirectManager(std::unique_ptr<RedirectManager> manager) noexcept
 {
    mRedirectManager = std::move(manager);
 }
 
-void DialogUsageManager::setRedirectHandler(RedirectHandler* handler)
+void DialogUsageManager::setRedirectHandler(RedirectHandler* handler) noexcept
 {
    mRedirectHandler = handler;
 }
 
-RedirectHandler* DialogUsageManager::getRedirectHandler() const
+RedirectHandler* DialogUsageManager::getRedirectHandler() const noexcept
 {
    return mRedirectHandler;
 }
 
 void
-DialogUsageManager::setClientAuthManager(std::unique_ptr<ClientAuthManager> manager)
+DialogUsageManager::setClientAuthManager(std::unique_ptr<ClientAuthManager> manager) noexcept
 {
    mClientAuthManager = std::move(manager);
 }
@@ -373,7 +373,7 @@ DialogUsageManager::setServerRegistrationHandler(ServerRegistrationHandler* hand
 }
 
 void
-DialogUsageManager::setDialogSetHandler(DialogSetHandler* handler)
+DialogUsageManager::setDialogSetHandler(DialogSetHandler* handler) noexcept
 {
    mDialogSetHandler = handler;
 }
@@ -471,13 +471,13 @@ DialogUsageManager::addOutOfDialogHandler(MethodTypes type, OutOfDialogHandler* 
 }
 
 void
-DialogUsageManager::setClientPagerMessageHandler(ClientPagerMessageHandler* handler)
+DialogUsageManager::setClientPagerMessageHandler(ClientPagerMessageHandler* handler) noexcept
 {
    mClientPagerMessageHandler = handler;
 }
 
 void
-DialogUsageManager::setServerPagerMessageHandler(ServerPagerMessageHandler* handler)
+DialogUsageManager::setServerPagerMessageHandler(ServerPagerMessageHandler* handler) noexcept
 {
    mServerPagerMessageHandler = handler;
 }
@@ -1126,7 +1126,7 @@ void DialogUsageManager::outgoingProcess(std::unique_ptr<Message> message)
 }
 
 void
-DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, unique_ptr<SipMessage> msg)
+DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, std::unique_ptr<SipMessage> msg)
 {
    //a little inefficient, branch parameter might be better
    DialogId id(*msg);
@@ -2443,7 +2443,7 @@ DialogUsageManager::addOutgoingFeature(std::shared_ptr<DumFeature> feat)
 }
 
 void
-DialogUsageManager::setOutgoingMessageInterceptor(std::shared_ptr<DumFeature> feat)
+DialogUsageManager::setOutgoingMessageInterceptor(std::shared_ptr<DumFeature> feat) noexcept
 {
    mOutgoingMessageInterceptor = std::move(feat);
 }
