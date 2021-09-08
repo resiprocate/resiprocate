@@ -592,7 +592,9 @@ Log::tags(Log::Level level,
          strm << "{";
          strm << "\"hostname\":\"" << mFqdn << "\",";
          strm << "\"pri\":\"" << mCEEPri[level+1] << "\",";
-         strm << "\"syslog!level\":" << mSyslogPriority[level+1] << ",";
+         strm << "\"syslog\":{";
+         strm << "\"level\":" << mSyslogPriority[level+1];
+         strm << "},"; // "syslog"
          strm << "\"time\":\"" << std::put_time(gmtime(&now_t), "%FT%T.")
               << std::setfill('0') << std::setw(9) << now_ns << "Z" << "\",";
          strm << "\"pname\":\"" << mAppName << "\",";
@@ -601,15 +603,21 @@ Log::tags(Log::Level level,
             strm << "\"appname\":\"" << mInstanceName << "\",";
          }
          strm << "\"subsys\":\"" << subsystem << "\",";
+         strm << "\"proc\":{";
 #ifdef WIN32
-         strm << "\"proc!id\":\"" << GetCurrentProcessId() << "\",";
+         strm << "\"id\":\"" << GetCurrentProcessId() << "\",";
 #else
-         strm << "\"proc!id\":\"" << getpid() << "\",";
+         strm << "\"id\":\"" << getpid() << "\",";
 #endif
-         strm << "\"proc!tid\":" << threadId << ",";
-         strm << "\"file!name\":\"" << file << "\",";
-         strm << "\"file!line\":" << line << ",";
-         strm << "\"native!function\":\"" << methodName << "\",";
+         strm << "\"tid\":" << threadId;
+         strm << "},"; // "proc"
+         strm << "\"file\":{";
+         strm << "\"name\":\"" << file << "\",";
+         strm << "\"line\":" << line;
+         strm << "},"; // "file"
+         strm << "\"native\":{";
+         strm << "\"function\":\"" << methodName << "\"";
+         strm << "},"; // "native"
          strm << "\"msg\":\"";
       }
       break;
