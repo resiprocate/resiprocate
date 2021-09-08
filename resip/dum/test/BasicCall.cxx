@@ -325,7 +325,7 @@ class TestUac : public TestInviteSessionHandler
       {
          cout << name << ": InviteSession-onOffer(SDP)" << endl;
          //sdp->encode(cout);
-         is->provideAnswer(sdp);
+         is->provideAnswer(mSdp);
       }
 
       using TestInviteSessionHandler::onConnected;
@@ -458,7 +458,7 @@ class TestUas : public TestInviteSessionHandler
          cout << name << ": InviteSession-onOffer(SDP)" << endl;
          //sdp->encode(cout);
          cout << name << ": Sending 200 response with SDP answer." << endl;
-         is->provideAnswer(sdp);
+         is->provideAnswer(mSdp);
          mSis->accept();
       }
 
