@@ -836,7 +836,7 @@ main (int argc, char** argv)
    const char* _argv[] =  { argv[0], "--gst-debug", "5", NULL };
    int _argc = 3;
    char** __argv = (char**)_argv;
-   //Gst::init(_argc, __argv);
+   // FIXME: are there C++ equivalents of these functions?
    gst_debug_remove_log_function (gst_debug_log_default);
    gst_debug_add_log_function(gst2resip_log_function, nullptr, nullptr);
    Gst::init(_argc, __argv);
