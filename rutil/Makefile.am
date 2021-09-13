@@ -107,6 +107,14 @@ librutil_la_SOURCES += \
 	ssl/SHA1Stream.cxx
 endif
 
+if BUILD_GSTREAMER
+librutil_la_SOURCES += \
+	GStreamerUtils.cxx
+librutil_la_CXXFLAGS = $(GSTREAMERMM_1_0_CFLAGS)
+librutil_la_LIBADD += $(GSTREAMERMM_1_0_LIBS)
+# $(LDADD)
+endif
+
 rutilincludedir = $(includedir)/rutil
 nobase_rutilinclude_HEADERS = compat.hxx \
 	ResipAssert.h \
@@ -119,6 +127,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ConfigParse.hxx \
 	CongestionManager.hxx \
 	GeneralCongestionManager.hxx \
+	GStreamerUtils.hxx \
 	HeapInstanceCounter.hxx \
 	KeyValueStore.hxx \
 	FdSetIOObserver.hxx \

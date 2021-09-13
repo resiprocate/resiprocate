@@ -21,6 +21,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/GStreamerUtils.hxx"
 
 #include <sstream>
 #include <time.h>
@@ -397,58 +398,6 @@ class GstThread : public ThreadIf
          pipeline->set_state(STATE_NULL);
       }
 };
-
-static Log::Level
-gst_debug_level_to_severity_level (GstDebugLevel level)
-{
-   switch (level) {
-      case GST_LEVEL_ERROR:   return Log::Err;
-      case GST_LEVEL_WARNING: return Log::Warning;
-      case GST_LEVEL_FIXME:   return Log::Info;
-      case GST_LEVEL_INFO:    return Log::Info;
-      case GST_LEVEL_DEBUG:   return Log::Debug;
-      case GST_LEVEL_LOG:     return Log::Stack;
-      case GST_LEVEL_TRACE:   return Log::Stack;
-      default:                return Log::None;
-   }
-}
-
-static void
-resip_log_function(GstDebugCategory *category, GstDebugLevel level,
-                   const gchar *file,
-                   const gchar *function, gint line, GObject *object,
-                   GstDebugMessage *message, gpointer user_data) G_GNUC_NO_INSTRUMENT;
-
-static void
-resip_log_function(GstDebugCategory *category, GstDebugLevel level,
-                   const gchar *file,
-                   const gchar *function, gint line, GObject *object,
-                   GstDebugMessage *message, gpointer user_data)
-{
-   if (level > gst_debug_category_get_threshold (category) ) {
-      return;
-   }
-
-   Log::Level level_ = gst_debug_level_to_severity_level (level);
-
-   if (level_ == Log::None) {
-      return;
-   }
-
-   Subsystem& system_ = Subsystem::APP;
-   do
-   {
-      if (genericLogCheckLevel(level_, system_))
-      {
-         resip::Log::Guard _resip_log_guard(level_, system_, file, line, function);
-         _resip_log_guard.asStream() << "[" << category->name << "]: ";
-         // FIXME - include the GObject *object with debug_object (object)
-         _resip_log_guard.asStream() << gst_debug_message_get (message);
-      }
-   }
-   while(false);
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -1000,7 +949,7 @@ main (int argc, char** argv)
    char** __argv = (char**)_argv;
    //Gst::init(_argc, __argv);
    gst_debug_remove_log_function (gst_debug_log_default);
-   gst_debug_add_log_function(resip_log_function, nullptr, nullptr);
+   gst_debug_add_log_function(gst2resip_log_function, nullptr, nullptr);
    Gst::init(_argc, __argv);
 
 
