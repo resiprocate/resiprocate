@@ -830,7 +830,7 @@ class TestUas : public TestInviteSessionHandler
            pHangupAt(pH),
            hfv(0),
            mNumExpectedInfos(2),
-           mCodecConfig(h264x)
+           mCodecConfig(h264avx)
       { 
          txt = new Data("v=0\r\n"
                         "o=- 3838180699 3838180699 IN IP4 " + myIP + "\r\n"
