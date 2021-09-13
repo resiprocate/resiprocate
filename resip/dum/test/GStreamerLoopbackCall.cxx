@@ -645,117 +645,6 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       }
 };
 
-class TestUac : public TestInviteSessionHandler
-{
-   public:
-      bool done;
-      SdpContents* mSdp;     
-      HeaderFieldValue* hfv;      
-      Data* txt;
-      int mNumExpectedMessages;
-
-      TestUac() 
-         : TestInviteSessionHandler("UAC"), 
-           done(false),
-           mSdp(0),
-           hfv(0),
-           txt(0),
-           mNumExpectedMessages(2)
-      {
-         txt = new Data("v=0\r\n"
-                        "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
-                        "s=reSIProcate GStreamer Echo Test\r\n"
-                        "c=IN IP4 192.168.2.15\r\n"
-                        "t=0 0\r\n"
-                        "m=audio 8000 RTP/AVP 8 3 98 97 101\r\n"
-                        "a=rtpmap:8 pcma/8000\r\n"
-                        "a=rtpmap:3 gsm/8000\r\n"
-                        "a=rtpmap:98 iLBC\r\n"
-                        "a=rtpmap:97 speex/8000\r\n"
-                        "a=rtpmap:101 telephone-event/8000\r\n"
-                        "a=fmtp:101 0-15\r\n");
-         
-         hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
-         Mime type("application", "sdp");
-         mSdp = new SdpContents(*hfv, type);
-      }
-
-      virtual ~TestUac()
-      {
-         assert(mNumExpectedMessages == 0);
-         delete mSdp;
-         delete txt;
-         delete hfv;
-      }
-
-      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
-      {
-         InfoLog(<< name << ": InviteSession-onOffer(SDP)");
-         //sdp->encode(cout);
-         is->provideAnswer(sdp);
-      }
-
-      using TestInviteSessionHandler::onConnected;
-      virtual void onConnected(ClientInviteSessionHandle is, const SipMessage& msg)
-      {
-         InfoLog(<< name << ": ClientInviteSession-onConnected - " << msg.brief());
-         InfoLog(<< "Connected now - requestingOffer from UAS");
-         is->requestOffer();
-
-         // At this point no NIT should have been sent
-         assert(!is->getLastSentNITRequest());
-
-         // Send a first MESSAGE from UAC with some contents (we use a fake PlainContents contents here for
-         // simplicity)
-         PlainContents contents("Hi there!!!");
-         is->message(contents);
-
-         // Immediately send another one, which will end up queued on the
-         // InviteSession's NIT queue
-         PlainContents contentsOther("Hi again!!!");
-         is->message(contentsOther);
-      }
-
-      virtual void onMessageSuccess(InviteSessionHandle is, const SipMessage& msg)
-      {
-         InfoLog(<< name << ": InviteSession-onMessageSuccess - " << msg.brief());
-
-         assert(is->getLastSentNITRequest());
-         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastSentNITRequest()->getContents());
-         assert(pContents != NULL);
-
-         if(mNumExpectedMessages == 2)
-         {
-            assert(pContents->text() == Data("Hi there!!!"));
-            mNumExpectedMessages--;
-         }
-         else if(mNumExpectedMessages == 1)
-         {
-            assert(pContents->text() == Data("Hi again!!!"));
-            mNumExpectedMessages--;
-         }
-      }
-
-      virtual void onInfo(InviteSessionHandle is, const SipMessage& msg)
-      {
-         InfoLog(<< name << ": InviteSession-onInfo - " << msg.brief());
-         is->acceptNIT();
-      }
-
-      virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
-      {
-         if(msg)
-         {
-            InfoLog(<< name << ": InviteSession-onTerminated - " << msg->brief());
-         }
-         else
-         {
-            InfoLog(<< name << ": InviteSession-onTerminated");
-         }
-         done = true;
-      }
-};
-
 class TestUas : public TestInviteSessionHandler
 {
 
@@ -958,24 +847,20 @@ main (int argc, char** argv)
    {
 #endif
    bool doReg = false;
-   NameAddr uacAor;
    NameAddr uasAor;
    Uri uasContact;
-   Data uacPasswd;
    Data uasPasswd;
    bool useOutbound = false;
    Uri outboundUri;
 
    if ( argc == 1 ) 
    {
-      uacAor = NameAddr("sip:UAC@127.0.0.1:12005");
       uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
       InfoLog(<< "Skipping registration (no arguments).");
    } 
    else if ( argc == 2 )
    {
       myIP = Data(argv[1]);
-      uacAor = NameAddr("sip:UAC@" + myIP + ":12005");
       uasAor = NameAddr("sip:UAS@" + myIP + ":12010");
       uasContact = Uri("sip:" + myIP + ":12010");
       InfoLog(<< "Skipping registration (no arguments).");
@@ -989,8 +874,6 @@ main (int argc, char** argv)
          return 1;
       }
       doReg = true;
-      uacAor = NameAddr(argv[1]);
-      uacPasswd = Data(argv[2]);
       uasAor = NameAddr(argv[3]);
       uasPasswd = Data(argv[4]);
       if ( argc >= 6 ) 
@@ -999,42 +882,6 @@ main (int argc, char** argv)
          outboundUri = Uri(Data(argv[5]));
       }
    }
-
-   //set up UAC
-   SipStack stackUac;
-   DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
-   stackUac.addTransport(UDP, 12005);
-   stackUac.addTransport(TCP, 12005);
-
-   auto uacMasterProfile = std::make_shared<MasterProfile>();
-   std::unique_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
-   dumUac->setMasterProfile(uacMasterProfile);
-   dumUac->setClientAuthManager(std::move(uacAuth));
-
-   TestUac uac;
-   dumUac->setInviteSessionHandler(&uac);
-   dumUac->setClientRegistrationHandler(&uac);
-   dumUac->addOutOfDialogHandler(OPTIONS, &uac);
-
-   unique_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
-   dumUac->setAppDialogSetFactory(std::move(uac_dsf));
-
-   if ( doReg ) 
-   {
-      dumUac->getMasterProfile()->setDigestCredential(uacAor.uri().host(), uacAor.uri().user(), uacPasswd);
-   }
-   if (useOutbound) 
-   {
-       dumUac->getMasterProfile()->setOutboundProxy(outboundUri);
-       dumUac->getMasterProfile()->addSupportedOptionTag(Token(Symbols::Outbound));
-   }
-
-   dumUac->getMasterProfile()->setDefaultFrom(uacAor);
-   dumUac->getMasterProfile()->addSupportedMethod(INFO);
-   dumUac->getMasterProfile()->addSupportedMethod(MESSAGE);
-   dumUac->getMasterProfile()->addSupportedMimeType(INFO, PlainContents::getStaticType());
-   dumUac->getMasterProfile()->addSupportedMimeType(MESSAGE, PlainContents::getStaticType());
-   dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
 
    //set up UAS
    SipStack stackUas;
@@ -1074,25 +921,9 @@ main (int argc, char** argv)
    std::unique_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
    dumUas->setAppDialogSetFactory(std::move(uas_dsf));
 
-   if (doReg) 
-   {
-      auto regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
-      InfoLog(<< "Sending register for Uas: " << endl << regMessage);
-      dumUas->send(std::move(regMessage));
-   } 
-   else 
+   if (!doReg) 
    {
       uas.registered = true;
-   }
-   if (doReg) 
-   {
-      auto regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAC(Registration)"));
-      InfoLog(<< "Sending register for Uac: " << endl << regMessage);
-      dumUac->send(std::move(regMessage));
-   } 
-   else 
-   {
-      uac.registered = true;
    }
 
    bool stoppedRegistering = false;
@@ -1103,20 +934,15 @@ main (int argc, char** argv)
 
    while (!(uasShutdownHandler.dumShutDown && uacShutdownHandler.dumShutDown))
    {
-      if (!uacShutdownHandler.dumShutDown)
-      {
-         stackUac.process(50);
-         while(dumUac->process());
-      }
       if (!uasShutdownHandler.dumShutDown)
       {
          stackUas.process(50);
          while(dumUas->process());
       }
 
-      if (!(uas.done && uac.done))
+      if (!(uas.done))
       {
-         if (uas.registered && uac.registered && !startedCallFlow)
+         if (uas.registered && !startedCallFlow)
          {
             if (!startedCallFlow)
             {
@@ -1124,13 +950,6 @@ main (int argc, char** argv)
                if ( doReg ) {
                   InfoLog(<< "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! ");
                }
-
-               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
-               //cout << "UAC: Sending Options Request to UAS." << endl;
-               //dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
-
-               //cout << "UAC: Sending Invite Request to UAS." << endl;
-               //dumUac->send(dumUac->makeInviteSession(uasAor, uac.mSdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
             }
          }
 
@@ -1150,18 +969,15 @@ main (int argc, char** argv)
          {
             stoppedRegistering = true;
             dumUas->shutdown(&uasShutdownHandler);
-            dumUac->shutdown(&uacShutdownHandler);
             if ( doReg ) 
             {
                uas.registerHandle->stopRegistering();
-               uac.registerHandle->stopRegistering();
             }
          }
       }
    }
 
    // OK to delete DUM objects now
-   delete dumUac; 
    delete dumUas;
 
    InfoLog(<< "!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! ");
