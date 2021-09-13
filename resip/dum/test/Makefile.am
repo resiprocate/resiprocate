@@ -45,13 +45,6 @@ testPubDocument_SOURCES = testPubDocument.cxx
 testRequestValidationHandler_SOURCES = testRequestValidationHandler.cxx $(SHARED_SRCS)
 treg_SOURCES = treg.cxx $(SHARED_SRCS)
 
-if BUILD_GSTREAMER
-check_PROGRAMS += GStreamerLoopbackCall
-GStreamerLoopbackCall_SOURCES = GStreamerLoopbackCall.cxx $(SHARED_SRCS)
-GStreamerLoopbackCall_CXXFLAGS = $(GSTREAMERMM_1_0_CFLAGS)
-GStreamerLoopbackCall_LDADD = $(GSTREAMERMM_1_0_LIBS) $(LDADD)
-endif
-
 noinst_HEADERS = basicClientCall.hxx \
 	basicClientCmdLineParser.hxx \
 	basicClientUserAgent.hxx \
