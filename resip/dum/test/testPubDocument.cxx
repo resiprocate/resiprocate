@@ -101,7 +101,7 @@ int main(int argc, const char* argv[])
     assert(reconstituted.mETag == eTag);
     assert(reconstituted.mEventType == eventType);
     assert(reconstituted.mDocumentKey == aorString);
-    assert(reconstituted.mExpirationTime = expirationTime);
+    assert(reconstituted.mExpirationTime == expirationTime);
 
     assert(reconstituted.mContents->getContents());
     cout << "Content type: " << reconstituted.mContents->getType() << endl;
