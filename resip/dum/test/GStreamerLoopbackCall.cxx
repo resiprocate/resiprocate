@@ -388,13 +388,13 @@ class GstThread : public ThreadIf
       void thread()
       {
          DebugLog(<<"storing a DOT file");
-         GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline");
+         GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline-pre");
 
          DebugLog(<<"running the Gst main loop");
          main_loop->run();
 
          DebugLog(<<"done, storing a DOT file");
-         GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline");
+         GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline-post");
          pipeline->set_state(STATE_NULL);
       }
 };
