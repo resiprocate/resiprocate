@@ -850,19 +850,20 @@ main (int argc, char** argv)
    NameAddr uasAor;
    Uri uasContact;
    Data uasPasswd;
+   int uasPort = 12010;
    bool useOutbound = false;
    Uri outboundUri;
 
    if ( argc == 1 ) 
    {
-      uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
+      uasAor = NameAddr("sip:UAS@127.0.0.1" + Data(uasPort));
       InfoLog(<< "Skipping registration (no arguments).");
    } 
    else if ( argc == 2 )
    {
       myIP = Data(argv[1]);
-      uasAor = NameAddr("sip:UAS@" + myIP + ":12010");
-      uasContact = Uri("sip:" + myIP + ":12010");
+      uasAor = NameAddr("sip:UAS@" + myIP + ":" + Data(uasPort));
+      uasContact = Uri("sip:" + myIP + ":" + Data(uasPort));
       InfoLog(<< "Skipping registration (no arguments).");
    }
    else 
@@ -886,8 +887,8 @@ main (int argc, char** argv)
    //set up UAS
    SipStack stackUas;
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
-   stackUas.addTransport(UDP, 12010);
-   stackUas.addTransport(TCP, 12010);
+   stackUas.addTransport(UDP, uasPort);
+   stackUas.addTransport(TCP, uasPort);
    
    auto uasMasterProfile = std::make_shared<MasterProfile>();
    std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
