@@ -31,7 +31,6 @@
 #include <glibmm/main.h>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
-/* #define NO_REGISTRATION 1 -- This is now run-time option */
 
 using namespace resip;
 using namespace std;
