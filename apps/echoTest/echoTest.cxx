@@ -660,6 +660,9 @@ class TestUas : public TestInviteSessionHandler
 
       CodecConfig mCodecConfig;
 
+      int mAudioPort = 8002;
+      int mVideoPort = 8004;
+
       TestUas(time_t* pH) 
          : TestInviteSessionHandler("UAS"), 
            done(false),
@@ -677,13 +680,13 @@ class TestUas : public TestInviteSessionHandler
                         "a=ice-pwd:da9801364d7cd7d3a87f7f2f\r\n"
                         "a=ice-ufrag:91f7ed7e\r\n"
                         "a=rtcp-xr:rcvr-rtt=all:10000 stat-summary=loss,dup,jitt,TTL voip-metrics\r\n"
-                        "m=audio 8002 RTP/AVP 8\r\n"
+                        "m=audio " + Data(mAudioPort) + " RTP/AVP 8\r\n"
                         "a=sendrecv\r\n"
-                        "a=rtcp:8003\r\n"
+                        "a=rtcp:" + Data(mAudioPort+1) + "\r\n"
                         //"a=ssrc:2337389544 cname:user269660271@host-9999cdcf\r\n"
-                        "m=video 8004 RTP/AVP 97\r\n"
+                        "m=video " + Data(mVideoPort) + " RTP/AVP 97\r\n"
                         "a=sendrecv\r\n"
-                        "a=rtcp:8005\r\n"
+                        "a=rtcp:" + Data(mVideoPort+1) + "\r\n"
                         "a=rtpmap:97 " + mCodecConfig.mName + "/90000\r\n"
                         "a=fmtp:97 " + mCodecConfig.mFmtp + "\r\n"
                         //"a=ssrc:2005192486 cname:user269660271@host-9999cdcf\r\n"
@@ -727,7 +730,7 @@ class TestUas : public TestInviteSessionHandler
          const int& peerAudio = sdp.session().media().begin()->port();
          const int& peerVideo = (++sdp.session().media().begin())->port();
          // FIXME shared_ptr
-         GstThread* t = new GstThread(mCodecConfig, peerIp, 8002, peerAudio, 8004, peerVideo);
+         GstThread* t = new GstThread(mCodecConfig, peerIp, mAudioPort, peerAudio, mVideoPort, peerVideo);
          t->run();
          InfoLog(<< name << ": Sending 200 response with SDP answer.");
          is->provideAnswer(*mSdp);
