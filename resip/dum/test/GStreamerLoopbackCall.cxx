@@ -664,7 +664,7 @@ class TestUac : public TestInviteSessionHandler
       {
          txt = new Data("v=0\r\n"
                         "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
-                        "s=X-Lite\r\n"
+                        "s=reSIProcate GStreamer Echo Test\r\n"
                         "c=IN IP4 192.168.2.15\r\n"
                         "t=0 0\r\n"
                         "m=audio 8000 RTP/AVP 8 3 98 97 101\r\n"
@@ -783,7 +783,7 @@ class TestUas : public TestInviteSessionHandler
       { 
          txt = new Data("v=0\r\n"
                         "o=- 3838180699 3838180699 IN IP4 " + myIP + "\r\n"
-                        "s=Kurento Media Server\r\n"
+                        "s=reSIProcate GStreamer Echo Test\r\n"
                         "c=IN IP4 " + myIP + "\r\n"
                         "t=0 0\r\n"
                         "a=ice-pwd:da9801364d7cd7d3a87f7f2f\r\n"
