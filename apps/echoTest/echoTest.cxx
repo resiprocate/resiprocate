@@ -3,6 +3,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/HEPSipMessageLoggingHandler.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/ClientRegistration.hxx"
@@ -22,6 +23,8 @@
 #include "rutil/Random.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/GStreamerUtils.hxx"
+#include "rutil/ServerProcess.hxx"
+#include "rutil/hep/HepAgent.hxx"
 
 #include <sstream>
 #include <time.h>
@@ -30,8 +33,11 @@
 #include <gstreamermm.h>
 #include <glibmm/main.h>
 
+#include "EchoTestConfig.hxx"
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
+using namespace echotest;
 using namespace resip;
 using namespace std;
 
@@ -650,27 +656,24 @@ class TestUas : public TestInviteSessionHandler
    public:
       bool done;
       bool requestedOffer;
-      time_t* pHangupAt;
 
       SdpContents* mSdp;
       HeaderFieldValue* hfv;
       Data* txt;      
 
-      int mNumExpectedInfos;
-
       CodecConfig mCodecConfig;
 
-      int mAudioPort = 8002;
-      int mVideoPort = 8004;
+      int mAudioPort;
+      int mVideoPort;
 
-      TestUas(time_t* pH) 
+      TestUas(int audioPort, int videoPort)
          : TestInviteSessionHandler("UAS"), 
            done(false),
            requestedOffer(false),
-           pHangupAt(pH),
            hfv(0),
-           mNumExpectedInfos(2),
-           mCodecConfig(h264avx)
+           mCodecConfig(h264avx),
+           mAudioPort(audioPort),
+           mVideoPort(videoPort)
       { 
          txt = new Data("v=0\r\n"
                         "o=- 3838180699 3838180699 IN IP4 " + myIP + "\r\n"
@@ -699,7 +702,6 @@ class TestUas : public TestInviteSessionHandler
 
       ~TestUas()
       {
-         assert(mNumExpectedInfos == 0);
          delete mSdp;
          delete txt;
          delete hfv;
@@ -749,42 +751,11 @@ class TestUas : public TestInviteSessionHandler
          
          // At this point no NIT should have been sent
          assert(!is->getLastSentNITRequest());
-
-         // Send a first INFO from UAS with some contents (we use a fake PlainContents contents here for
-         // simplicity)
-         //PlainContents contents("Hello there!!!");
-         //is->info(contents);
-
-         // Immediately send another one, which will end up queued on the
-         // InviteSession's NIT queue
-         //PlainContents contentsOther("Hello again!!!");
-         //is->info(contentsOther);
       }
 
       virtual void onInfoSuccess(InviteSessionHandle is, const SipMessage& msg)
       {
          InfoLog(<< name << ": InviteSession-onInfoSuccess - " << msg.brief());
-
-         assert(is->getLastSentNITRequest());
-         PlainContents* pContents = dynamic_cast<PlainContents*>(is->getLastSentNITRequest()->getContents());
-         assert(pContents != NULL);
-
-         if(mNumExpectedInfos == 2)
-         {
-            assert(pContents->text() == Data("Hello there!!!"));
-            mNumExpectedInfos--;
-         }
-         else if(mNumExpectedInfos == 1)
-         {
-            assert(pContents->text() == Data("Hello again!!!"));
-            mNumExpectedInfos--;
-
-            // Schedule a BYE in 5 seconds
-            if(*pHangupAt == 0)
-            {
-               *pHangupAt = time(NULL) + 5;
-            }
-         }
       }
 
       virtual void onMessage(InviteSessionHandle is, const SipMessage& msg)
@@ -824,170 +795,168 @@ class TestShutdownHandler : public DumShutdownHandler
       }
 };
 
-
-int 
-main (int argc, char** argv)
+class EchoTestServer : public resip::ServerProcess
 {
-   //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
-   //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
-   //Log::initialize(Log::Cout, resip::Log::Stack, argv[0]);
-   //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
-   Log::initialize(Log::File, resip::Log::Stack, argv[0], "testing.log");
+   private:
+      SipStack* stackUas;
+      DialogUsageManager* dumUas;
 
-   // For GStreamer
-   const char* _argv[] =  { argv[0], "--gst-debug", "5", NULL };
-   int _argc = 3;
-   char** __argv = (char**)_argv;
-   // FIXME: are there C++ equivalents of these functions?
-   gst_debug_remove_log_function (gst_debug_log_default);
-   gst_debug_add_log_function(gst2resip_log_function, nullptr, nullptr);
-   Gst::init(_argc, __argv);
+   public:
+      EchoTestServer()
+      {
+      };
+
+      ~EchoTestServer()
+      {
+         delete dumUas;
+         delete stackUas;
+      };
+
+      int
+      main (int argc, char** argv)
+      {
+         installSignalHandler();
+
+         Data defaultConfigFilename("echoTest.config");
+         EchoTestConfig echoTestConfig;
+         try
+         {
+            echoTestConfig.parseConfig(argc, argv, defaultConfigFilename);
+         }
+         catch(std::exception& e)
+         {
+            ErrLog(<< "Exception parsing configuration: " << e.what());
+            return -1;
+         }
+
+         Data loggingType = echoTestConfig.getConfigData("LoggingType", "cout", true);
+         Data syslogFacilityName = echoTestConfig.getConfigData("SyslogFacility", "LOG_DAEMON", true);
+         Data loggingLevel = echoTestConfig.getConfigData("LoggingLevel", "INFO", true);
+         Data loggingFilename = echoTestConfig.getConfigData("LogFilename", "echoTest.log", true);
+         Data loggingMessageStructure = echoTestConfig.getConfigData("LogMessageStructure", "Unstructured", true);
+         Data loggingInstanceName = echoTestConfig.getConfigData("LoggingInstanceName", "", true);
+         unsigned int loggingFileMaxLineCount = echoTestConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
+         Data captureHost = echoTestConfig.getConfigData("CaptureHost", "");
+         int capturePort = echoTestConfig.getConfigInt("CapturePort", 9060);
+         int captureAgentID = echoTestConfig.getConfigInt("CaptureAgentID", 2002);
+
+         Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, syslogFacilityName, loggingMessageStructure, loggingInstanceName);
+         Log::setMaxLineCount(loggingFileMaxLineCount);
+
+         // For GStreamer
+         const char* _argv[] =  { argv[0], "--gst-debug", "5", NULL };
+         int _argc = 3;
+         char** __argv = (char**)_argv;
+         // FIXME: are there C++ equivalents of these functions?
+         gst_debug_remove_log_function (gst_debug_log_default);
+         gst_debug_add_log_function(gst2resip_log_function, nullptr, nullptr);
+         Gst::init(_argc, __argv);
 
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
-   FindMemoryLeaks fml;
-   {
+         FindMemoryLeaks fml;
+         {
 #endif
-   bool doReg = false;
-   NameAddr uasAor;
-   Uri uasContact;
-   Data uasPasswd;
-   int uasPort = 12010;
-   bool useOutbound = false;
-   Uri outboundUri;
+         bool doReg = echoTestConfig.getConfigBool("Register", false);
+         NameAddr uasAor;
+         Uri uasContact;
+         Data uasPasswd;
+         int uasUdpPort = echoTestConfig.getConfigInt("UDPPort", 12010);
+         int uasTcpPort = echoTestConfig.getConfigInt("TCPPort", 12010);
+         Uri outboundUri = echoTestConfig.getConfigUri("OutboundProxyUri", Uri());
+         bool useOutbound = (outboundUri != Uri());
+         myIP = echoTestConfig.getConfigData("IPAddress", "127.0.0.1");
 
-   if ( argc == 1 ) 
-   {
-      uasAor = NameAddr("sip:UAS@127.0.0.1" + Data(uasPort));
-      InfoLog(<< "Skipping registration (no arguments).");
-   } 
-   else if ( argc == 2 )
-   {
-      myIP = Data(argv[1]);
-      uasAor = NameAddr("sip:UAS@" + myIP + ":" + Data(uasPort));
-      uasContact = Uri("sip:" + myIP + ":" + Data(uasPort));
-      InfoLog(<< "Skipping registration (no arguments).");
-   }
-   else 
-   {
-      if ( argc < 5 ) 
-      {
-         cerr << "usage: " << argv[0] <<
-                 " sip:user1 passwd1 sip:user2 passwd2 [outbound]" << endl;
-         return 1;
+         uasAor = echoTestConfig.getConfigNameAddr("SIPUri", NameAddr("sip:UAS@" + myIP + ":" + Data(uasUdpPort)));
+         uasContact = Uri("sip:" + myIP + ":" + Data(uasUdpPort));
+         uasPasswd = echoTestConfig.getConfigData("Password", Data::Empty);
+
+         //set up UAS
+         stackUas = new SipStack();
+         dumUas = new DialogUsageManager(*stackUas);
+         stackUas->addTransport(UDP, uasUdpPort);
+         stackUas->addTransport(TCP, uasTcpPort);
+         
+         auto uasMasterProfile = std::make_shared<MasterProfile>();
+         std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
+         dumUas->setMasterProfile(uasMasterProfile);
+         dumUas->setClientAuthManager(std::move(uasAuth));
+         uasMasterProfile->setOverrideHostAndPort(uasContact);
+
+         if(doReg) 
+         {
+            dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
+         }
+         if(useOutbound) 
+         {
+            dumUas->getMasterProfile()->setOutboundProxy(outboundUri);
+            dumUas->getMasterProfile()->addSupportedOptionTag(Token(Symbols::Outbound));
+         }
+
+         dumUas->getMasterProfile()->setDefaultFrom(uasAor);
+         dumUas->getMasterProfile()->addSupportedMethod(INFO);
+         dumUas->getMasterProfile()->addSupportedMethod(MESSAGE);
+         dumUas->getMasterProfile()->addSupportedMimeType(INFO, PlainContents::getStaticType());
+         dumUas->getMasterProfile()->addSupportedMimeType(MESSAGE, PlainContents::getStaticType());
+         dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
+
+         int mediaPortStart = echoTestConfig.getConfigInt("MediaPortStart", 8002);
+         TestUas uas(mediaPortStart, mediaPortStart+2);
+         dumUas->setClientRegistrationHandler(&uas);
+         dumUas->setInviteSessionHandler(&uas);
+         dumUas->addOutOfDialogHandler(OPTIONS, &uas);
+
+         std::unique_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
+         dumUas->setAppDialogSetFactory(std::move(uas_dsf));
+
+         if (!doReg) 
+         {
+            uas.registered = true;
+         }
+
+         if(!captureHost.empty())
+         {
+            const auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
+            stackUas->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
+            // FIXME - need to integrate GStreamer RTCP code with HEP:
+            // setRTCPEventLoggingHandler(std::make_shared<HEPRTCPEventLoggingHandler>(agent));
+         }
+
+         TestShutdownHandler uasShutdownHandler("UAS");   
+
+         mainLoop();
+
+         // FIXME: shutdown the DUM and SipStack
+
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)
+         } // FindMemoryLeaks fml
+#endif
+         return 0;
       }
-      doReg = true;
-      uasAor = NameAddr(argv[3]);
-      uasPasswd = Data(argv[4]);
-      if ( argc >= 6 ) 
+
+      void
+      doWait()
       {
-         useOutbound = true;
-         outboundUri = Uri(Data(argv[5]));
+         stackUas->process(50);
       }
-   }
 
-   //set up UAS
-   SipStack stackUas;
-   DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
-   stackUas.addTransport(UDP, uasPort);
-   stackUas.addTransport(TCP, uasPort);
-   
-   auto uasMasterProfile = std::make_shared<MasterProfile>();
-   std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
-   dumUas->setMasterProfile(uasMasterProfile);
-   dumUas->setClientAuthManager(std::move(uasAuth));
-   uasMasterProfile->setOverrideHostAndPort(uasContact);
-
-   if(doReg) 
-   {
-      dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
-   }
-   if(useOutbound) 
-   {
-      dumUas->getMasterProfile()->setOutboundProxy(outboundUri);
-      dumUas->getMasterProfile()->addSupportedOptionTag(Token(Symbols::Outbound));
-   }
-
-   dumUas->getMasterProfile()->setDefaultFrom(uasAor);
-   dumUas->getMasterProfile()->addSupportedMethod(INFO);
-   dumUas->getMasterProfile()->addSupportedMethod(MESSAGE);
-   dumUas->getMasterProfile()->addSupportedMimeType(INFO, PlainContents::getStaticType());
-   dumUas->getMasterProfile()->addSupportedMimeType(MESSAGE, PlainContents::getStaticType());
-   dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
-
-   time_t bHangupAt = 0;
-   TestUas uas(&bHangupAt);
-   dumUas->setClientRegistrationHandler(&uas);
-   dumUas->setInviteSessionHandler(&uas);
-   dumUas->addOutOfDialogHandler(OPTIONS, &uas);
-
-   std::unique_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
-   dumUas->setAppDialogSetFactory(std::move(uas_dsf));
-
-   if (!doReg) 
-   {
-      uas.registered = true;
-   }
-
-   bool stoppedRegistering = false;
-   bool startedCallFlow = false;
-   bool hungup = false;   
-   TestShutdownHandler uasShutdownHandler("UAS");   
-   TestShutdownHandler uacShutdownHandler("UAC");   
-
-   while (!(uasShutdownHandler.dumShutDown && uacShutdownHandler.dumShutDown))
-   {
-      if (!uasShutdownHandler.dumShutDown)
+      void
+      onLoop()
       {
-         stackUas.process(50);
          while(dumUas->process());
       }
 
-      if (!(uas.done))
+      void
+      onReload()
       {
-         if (uas.registered && !startedCallFlow)
-         {
-            if (!startedCallFlow)
-            {
-               startedCallFlow = true;
-               if ( doReg ) {
-                  InfoLog(<< "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! ");
-               }
-            }
-         }
-
-         // Check if we should hangup yet
-         if (bHangupAt!=0)
-         {
-            if (time(NULL)>bHangupAt && !hungup)
-            {
-               //hungup = true;
-               //uas.hangup();
-            }
-         }
       }
-      else
-      {
-         if (!stoppedRegistering)
-         {
-            stoppedRegistering = true;
-            dumUas->shutdown(&uasShutdownHandler);
-            if ( doReg ) 
-            {
-               uas.registerHandle->stopRegistering();
-            }
-         }
-      }
-   }
 
-   // OK to delete DUM objects now
-   delete dumUas;
+};
 
-   InfoLog(<< "!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! ");
-#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
-   }
-#endif
-
+int main(int argc, char** argv)
+{
+   EchoTestServer proc;
+   return proc.main(argc, argv);
 }
 
 /* ====================================================================
