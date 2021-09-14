@@ -412,6 +412,13 @@ class GstThread : public ThreadIf
          GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(pipeline->gobj()), GST_DEBUG_GRAPH_SHOW_ALL, "test-pipeline-post");
          pipeline->set_state(STATE_NULL);
       }
+
+      void
+      shutdown() override
+      {
+         ThreadIf::shutdown();
+         main_loop->quit();
+      }
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -676,6 +683,9 @@ class TestUas : public TestInviteSessionHandler
       int mAudioPort;
       int mVideoPort;
 
+      typedef std::map<DialogId, shared_ptr<GstThread>> MediaThreads;
+      MediaThreads mMediaThreads;
+
       TestUas(const Data& pipelineId, int audioPort, int videoPort)
          : TestInviteSessionHandler("UAS"), 
            done(false),
@@ -763,9 +773,15 @@ class TestUas : public TestInviteSessionHandler
          sis->provisional(180);
       }
 
-      virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
+      virtual void onTerminated(InviteSessionHandle is, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
          InfoLog(<< name << ": InviteSession-onTerminated - ");
+         MediaThreads::const_iterator it = mMediaThreads.find(is->getDialogId());
+         if(it != mMediaThreads.end())
+         {
+            shared_ptr<GstThread> t = it->second;
+            t->shutdown();
+         }
          done = true;
       }
 
@@ -781,7 +797,8 @@ class TestUas : public TestInviteSessionHandler
          const int& peerAudio = sdp.session().media().begin()->port();
          const int& peerVideo = (++sdp.session().media().begin())->port();
          // FIXME shared_ptr
-         GstThread* t = new GstThread(codecConfig, peerIp, mAudioPort, peerAudio, mVideoPort, peerVideo);
+         shared_ptr<GstThread> t = make_shared<GstThread>(codecConfig, peerIp, mAudioPort, peerAudio, mVideoPort, peerVideo);
+         mMediaThreads[is->getDialogId()] = t;
          t->run();
          InfoLog(<< name << ": Sending 200 response with SDP answer.");
          is->provideAnswer(*mSdp);
