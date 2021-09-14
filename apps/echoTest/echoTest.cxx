@@ -29,6 +29,7 @@
 #include <sstream>
 #include <time.h>
 #include <utility>
+#include <map>
 
 #include <gstreamermm.h>
 #include <glibmm/main.h>
@@ -65,43 +66,50 @@ class CodecConfig
       Data mFmtp;
 };
 
-// Obtain a list of all H.264 plugins currently installed with
-// the command:
-//
-//   gst-inspect-1.0  | grep 264
+typedef std::map<Data,std::shared_ptr<CodecConfig>> Pipelines;
+Pipelines mPipelines;
 
-// OpenMAX IL https://www.phoronix.com/scan.php?page=news_item&px=Libav-OMX-H264-MPEG4
-// https://www.khronos.org/openmaxil
-// VA-API is more advanced
-CodecConfig h264omx("H264", "avdec_h264", "avenc_h264_omx", "baseline", "rtph264depay", "rtph264pay", // not working
-   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+void
+initPipelines()
+{
+   // Obtain a list of all H.264 plugins currently installed with
+   // the command:
+   //
+   //   gst-inspect-1.0  | grep 264
 
-// Decode: libav
-// Encode: x264 (GPL 2) https://www.videolan.org/developers/x264.html
-//    (x264 doesn't provide a decoder)
-CodecConfig h264avx("H264", "avdec_h264", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works
-   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+   // OpenMAX IL https://www.phoronix.com/scan.php?page=news_item&px=Libav-OMX-H264-MPEG4
+   // https://www.khronos.org/openmaxil
+   // VA-API is more advanced
+   mPipelines.insert({"h264omx", make_shared<CodecConfig>("H264", "avdec_h264", "avenc_h264_omx", "baseline", "rtph264depay", "rtph264pay", // not working
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
 
-// need to recompile the package gstreamer1.0-plugins-bad selecting the openh264 config option
-CodecConfig h264o("H264", "openh264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works for 30 seconds
-   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+   // Decode: libav
+   // Encode: x264 (GPL 2) https://www.videolan.org/developers/x264.html
+   //    (x264 doesn't provide a decoder)
+   mPipelines.insert({"h264avx", make_shared<CodecConfig>("H264", "avdec_h264", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
 
-// VA-API for AMD and Intel GPU hardware decoding / encoding
-// improves quality while using less CPU and giving real-time performance
-// sudo apt install gstreamer1.0-vaapi
-CodecConfig h264v("H264", "vaapih264dec", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // garbled video stream
-   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+   // need to recompile the package gstreamer1.0-plugins-bad selecting the openh264 config option
+   mPipelines.insert({"h264o", make_shared<CodecConfig>("H264", "openh264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works for 30 seconds
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
 
-// mix and match decoder and encoder
-//CodecConfig h264m("H264", "vaapih264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works for a few seconds then replays
-//CodecConfig h264m("H264", "openh264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // not working
-CodecConfig h264m("H264", "avdec_h264", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
-//CodecConfig h264m("H264", "vaapih264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
-//CodecConfig h264m("H264", "avdec_h264", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // not working
-   "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16");
+   // VA-API for AMD and Intel GPU hardware decoding / encoding
+   // improves quality while using less CPU and giving real-time performance
+   // sudo apt install gstreamer1.0-vaapi
+   mPipelines.insert({"h264v", make_shared<CodecConfig>("H264", "vaapih264dec", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // garbled video stream
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
 
-// VP8 with the open source reference implementation
-CodecConfig vp8("VP8", "vp8dec", "vp8enc", "", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP");
+   // mix and match decoder and encoder
+   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "vaapih264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works for a few seconds then replays
+   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "openh264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // not working
+   mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "avdec_h264", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
+   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "vaapih264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
+   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "avdec_h264", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // not working
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
+
+   // VP8 with the open source reference implementation
+   mPipelines.insert({"vp8", make_shared<CodecConfig>("VP8", "vp8dec", "vp8enc", "", "rtpvp8depay", "rtpvp8pay", "profile-level-id=HiP")});
+}
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -183,7 +191,7 @@ class GstThread : public ThreadIf
 
    public:
 
-      GstThread(const CodecConfig& codecConfig,
+      GstThread(shared_ptr<CodecConfig> codecConfig,
                 const Data& peerAddress,
                 int localAudio, int peerAudio,
                 int localVideo, int peerVideo)
@@ -207,29 +215,31 @@ class GstThread : public ThreadIf
 
          RefPtr<Element> rtpbin = ElementFactory::create_element("rtpbin");
          a_rtppcmadepay = ElementFactory::create_element("rtppcmadepay");
-         v_depay = ElementFactory::create_element(codecConfig.mDepay.c_str());
+         v_depay = ElementFactory::create_element(codecConfig->mDepay.c_str());
          RefPtr<Element> v_parse;
-         if(codecConfig.mName == "H264")
+         if(codecConfig->mName == "H264")
          {
             v_parse = ElementFactory::create_element("h264parse");
          }
-         else if(codecConfig.mName == "VP8")
+         else if(codecConfig->mName == "VP8")
          {
             v_parse = ElementFactory::create_element("vp8parse"); // from gst-kurento-plugins
          }
          else
          {
-            ErrLog(<<"v_parse: unsupported video codec " << codecConfig.mName);
+            ErrLog(<<"v_parse: unsupported video codec " << codecConfig->mName);
             throw;
          }
          RefPtr<Element> a_queue = ElementFactory::create_element("queue");
          v_queue = ElementFactory::create_element("queue");
          RefPtr<Element> alawdec = ElementFactory::create_element("alawdec");
          RefPtr<Element> alawenc = ElementFactory::create_element("alawenc");
-         RefPtr<Element> vdec = ElementFactory::create_element(codecConfig.mDecoder.c_str());
-         RefPtr<Element> venc = ElementFactory::create_element(codecConfig.mEncoder.c_str());
+         DebugLog(<<"selected pipeline: decoder = " << codecConfig->mDecoder <<
+                                      " encoder = " << codecConfig->mEncoder);
+         RefPtr<Element> vdec = ElementFactory::create_element(codecConfig->mDecoder.c_str());
+         RefPtr<Element> venc = ElementFactory::create_element(codecConfig->mEncoder.c_str());
          RefPtr<Element> a_rtppcmapay = ElementFactory::create_element("rtppcmapay");
-         RefPtr<Element> v_pay = ElementFactory::create_element(codecConfig.mPay.c_str());
+         RefPtr<Element> v_pay = ElementFactory::create_element(codecConfig->mPay.c_str());
 
          if (!audio_source || !audio_source_rtcp || !video_source || !video_source_rtcp || !audio_sink || !audio_sink_rtcp || !video_sink || !video_sink_rtcp || !rtpbin || !a_rtppcmadepay || !v_depay || !a_queue || !v_queue || !a_rtppcmapay || !v_pay)
          {
@@ -250,7 +260,7 @@ class GstThread : public ThreadIf
             "application/x-rtp",
             "media", "video",
             "clock-rate", 90000,
-            "encoding-name", codecConfig.mName.c_str(),
+            "encoding-name", codecConfig->mName.c_str(),
             "payload", 97);
 
 #define P_CLIENTS(a,p) (a + ":" + Data(p))
@@ -348,14 +358,14 @@ class GstThread : public ThreadIf
          v_parse->link(vdec);
          vdec->link(v_queue);
          v_queue->link(venc);
-         if(codecConfig.mH264Profile.empty())
+         if(codecConfig->mH264Profile.empty())
          {
            venc->link(v_pay);
          }
          else
          {
            Glib::RefPtr<Gst::Caps> v_caps_h264 = Gst::Caps::create_simple("video/x-h264",
-             "profile", codecConfig.mH264Profile.c_str());
+             "profile", codecConfig->mH264Profile.c_str());
            venc->link(v_pay, v_caps_h264);
          }
          //v_depay->link(v_queue);
@@ -661,17 +671,17 @@ class TestUas : public TestInviteSessionHandler
       HeaderFieldValue* hfv;
       Data* txt;      
 
-      CodecConfig mCodecConfig;
+      shared_ptr<CodecConfig> mDefaultCodecConfig;
 
       int mAudioPort;
       int mVideoPort;
 
-      TestUas(int audioPort, int videoPort)
+      TestUas(const Data& pipelineId, int audioPort, int videoPort)
          : TestInviteSessionHandler("UAS"), 
            done(false),
            requestedOffer(false),
            hfv(0),
-           mCodecConfig(h264avx),
+           mDefaultCodecConfig(mPipelines[pipelineId]),
            mAudioPort(audioPort),
            mVideoPort(videoPort)
       { 
@@ -690,8 +700,8 @@ class TestUas : public TestInviteSessionHandler
                         "m=video " + Data(mVideoPort) + " RTP/AVP 97\r\n"
                         "a=sendrecv\r\n"
                         "a=rtcp:" + Data(mVideoPort+1) + "\r\n"
-                        "a=rtpmap:97 " + mCodecConfig.mName + "/90000\r\n"
-                        "a=fmtp:97 " + mCodecConfig.mFmtp + "\r\n"
+                        "a=rtpmap:97 " + mDefaultCodecConfig->mName + "/90000\r\n"
+                        "a=fmtp:97 " + mDefaultCodecConfig->mFmtp + "\r\n"
                         //"a=ssrc:2005192486 cname:user269660271@host-9999cdcf\r\n"
                         );
          
@@ -705,6 +715,42 @@ class TestUas : public TestInviteSessionHandler
          delete mSdp;
          delete txt;
          delete hfv;
+      }
+
+      shared_ptr<CodecConfig>
+      updateSdp(const Data& pipelineId)
+      {
+         shared_ptr<CodecConfig> codecConfig(mDefaultCodecConfig);
+         Pipelines::const_iterator it = mPipelines.find(pipelineId);
+         if(it != mPipelines.end())
+         {
+            codecConfig = it->second;
+         }
+
+         txt = new Data("v=0\r\n"
+                        "o=- 3838180699 3838180699 IN IP4 " + myIP + "\r\n"
+                        "s=reSIProcate GStreamer Echo Test\r\n"
+                        "c=IN IP4 " + myIP + "\r\n"
+                        "t=0 0\r\n"
+                        "a=ice-pwd:da9801364d7cd7d3a87f7f2f\r\n"
+                        "a=ice-ufrag:91f7ed7e\r\n"
+                        "a=rtcp-xr:rcvr-rtt=all:10000 stat-summary=loss,dup,jitt,TTL voip-metrics\r\n"
+                        "m=audio " + Data(mAudioPort) + " RTP/AVP 8\r\n"
+                        "a=sendrecv\r\n"
+                        "a=rtcp:" + Data(mAudioPort+1) + "\r\n"
+                        //"a=ssrc:2337389544 cname:user269660271@host-9999cdcf\r\n"
+                        "m=video " + Data(mVideoPort) + " RTP/AVP 97\r\n"
+                        "a=sendrecv\r\n"
+                        "a=rtcp:" + Data(mVideoPort+1) + "\r\n"
+                        "a=rtpmap:97 " + codecConfig->mName + "/90000\r\n"
+                        "a=fmtp:97 " + codecConfig->mFmtp + "\r\n"
+                        //"a=ssrc:2005192486 cname:user269660271@host-9999cdcf\r\n"
+                        );
+
+         hfv = new HeaderFieldValue(txt->data(), (unsigned int)txt->size());
+         Mime type("application", "sdp");
+         mSdp = new SdpContents(*hfv, type);
+         return codecConfig;
       }
 
       using TestInviteSessionHandler::onNewSession;
@@ -726,13 +772,16 @@ class TestUas : public TestInviteSessionHandler
       virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
       {
          InfoLog(<< name << ": InviteSession-onOffer(SDP)");
+         const Data& callee = msg.header(h_RequestLine).uri().user();
+         InfoLog(<< name << ": call is for: " << callee);
+         shared_ptr<CodecConfig> codecConfig = updateSdp(callee);
          //sdp->encode(cout);
          InfoLog(<< name << ": starting GStreamer media thread");
          const Data& peerIp = sdp.session().connection().getAddress();
          const int& peerAudio = sdp.session().media().begin()->port();
          const int& peerVideo = (++sdp.session().media().begin())->port();
          // FIXME shared_ptr
-         GstThread* t = new GstThread(mCodecConfig, peerIp, mAudioPort, peerAudio, mVideoPort, peerVideo);
+         GstThread* t = new GstThread(codecConfig, peerIp, mAudioPort, peerAudio, mVideoPort, peerVideo);
          t->run();
          InfoLog(<< name << ": Sending 200 response with SDP answer.");
          is->provideAnswer(*mSdp);
@@ -852,6 +901,7 @@ class EchoTestServer : public resip::ServerProcess
          gst_debug_add_log_function(gst2resip_log_function, nullptr, nullptr);
          Gst::init(_argc, __argv);
 
+         initPipelines();
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
          FindMemoryLeaks fml;
@@ -900,8 +950,9 @@ class EchoTestServer : public resip::ServerProcess
          dumUas->getMasterProfile()->addSupportedMimeType(MESSAGE, PlainContents::getStaticType());
          dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
 
+         Data pipelineId = echoTestConfig.getConfigData("DefaultPipelineId", "h264avx");
          int mediaPortStart = echoTestConfig.getConfigInt("MediaPortStart", 8002);
-         TestUas uas(mediaPortStart, mediaPortStart+2);
+         TestUas uas(pipelineId, mediaPortStart, mediaPortStart+2);
          dumUas->setClientRegistrationHandler(&uas);
          dumUas->setInviteSessionHandler(&uas);
          dumUas->addOutOfDialogHandler(OPTIONS, &uas);
