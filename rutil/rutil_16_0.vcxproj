@@ -460,6 +460,7 @@
     <ClCompile Include="FileSystem.cxx" />
     <ClCompile Include="GeneralCongestionManager.cxx" />
     <ClCompile Include="GenericIPAddress.cxx" />
+    <ClCompile Include="GStreamerUtils.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
     <ClCompile Include="hep\HepAgent.cxx" />
     <ClCompile Include="hep\ResipHep.cxx" />
@@ -548,6 +549,7 @@
     <ClInclude Include="FiniteFifo.hxx" />
     <ClInclude Include="GeneralCongestionManager.hxx" />
     <ClInclude Include="GenericIPAddress.hxx" />
+    <ClInclude Include="GStreamerUtils.hxx" />
     <ClInclude Include="HashMap.hxx" />
     <ClInclude Include="HeapInstanceCounter.hxx" />
     <ClInclude Include="hep\HepAgent.hxx" />
