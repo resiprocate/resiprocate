@@ -485,11 +485,12 @@ UserAgent::post(resip::Message* pMsg)
 void
 UserAgent::addTransports()
 {
-   const std::vector<UserAgentMasterProfile::TransportInfo>& transports = mProfile->getTransports();
-   std::vector<UserAgentMasterProfile::TransportInfo>::const_iterator i;
+   std::vector<UserAgentMasterProfile::TransportInfo>& transports = mProfile->getTransports();
+   std::vector<UserAgentMasterProfile::TransportInfo>::iterator i;
+   int lastActualPort = 0;
    for(i = transports.begin(); i != transports.end(); i++)
    {
-      const UserAgentMasterProfile::TransportInfo& ti = *i;
+      UserAgentMasterProfile::TransportInfo& ti = *i;
       try
       {
 #ifdef USE_SSL
@@ -507,8 +508,9 @@ UserAgent::addTransports()
             }
          }
 #endif
+         
          Transport *t = mStack.addTransport(ti.mProtocol,
-                                 ti.mPort,
+                                 ti.mPort == -1 ? lastActualPort : ti.mPort, // Port as -1 is special designation that we should use the actual port from the last transport added
                                  ti.mIPVersion,
                                  StunEnabled,
                                  ti.mIPInterface,       // interface to bind to
@@ -533,6 +535,11 @@ UserAgent::addTransports()
                resip_assert(0);
 #endif
             }
+
+            // Fill in actual port used
+            ti.mActualPort = t->getTuple().getPort();
+            // Store last actual port, incase next transport uses special port of -1 to indicate use of last actual port
+            lastActualPort = ti.mActualPort;
          }
       }
       catch (BaseException& e)
