@@ -895,19 +895,11 @@ class EchoTestServer : public resip::ServerProcess
             return -1;
          }
 
-         Data loggingType = echoTestConfig.getConfigData("LoggingType", "cout", true);
-         Data syslogFacilityName = echoTestConfig.getConfigData("SyslogFacility", "LOG_DAEMON", true);
-         Data loggingLevel = echoTestConfig.getConfigData("LoggingLevel", "INFO", true);
-         Data loggingFilename = echoTestConfig.getConfigData("LogFilename", "echoTest.log", true);
-         Data loggingMessageStructure = echoTestConfig.getConfigData("LogMessageStructure", "Unstructured", true);
-         Data loggingInstanceName = echoTestConfig.getConfigData("LoggingInstanceName", "", true);
-         unsigned int loggingFileMaxLineCount = echoTestConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
+         Log::initialize(echoTestConfig, argv[0]);
+
          Data captureHost = echoTestConfig.getConfigData("CaptureHost", "");
          int capturePort = echoTestConfig.getConfigInt("CapturePort", 9060);
          int captureAgentID = echoTestConfig.getConfigInt("CaptureAgentID", 2002);
-
-         Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, syslogFacilityName, loggingMessageStructure, loggingInstanceName);
-         Log::setMaxLineCount(loggingFileMaxLineCount);
 
          // For GStreamer
          const char* _argv[] =  { argv[0], "--gst-debug", "5", NULL };
