@@ -323,18 +323,11 @@ ReproRunner::run(int argc, char** argv)
    }
 
    // Initialize resip logger
-   Log::setMaxByteCount(mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */));
-   Log::setKeepAllLogFiles(mProxyConfig->getConfigBool("KeepAllLogFiles", false));
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
-   Data syslogFacilityName = mProxyConfig->getConfigData("SyslogFacility", "LOG_DAEMON", true);
-   Data loggingMessageStructure = mProxyConfig->getConfigData("LogMessageStructure", "Unstructured", true);
-   Data loggingInstanceName = mProxyConfig->getConfigData("LoggingInstanceName", "", true);
-   Log::initialize(loggingType, 
-                   mProxyConfig->getConfigData("LogLevel", "INFO", true), 
-                   mArgv[0], 
-                   mProxyConfig->getConfigData("LogFilename", "repro.log", true).c_str(),
-                   isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0, // if logging to file then write WARNINGS, and Errors to console still
-                   syslogFacilityName, loggingMessageStructure, loggingInstanceName);
+   Log::initialize(
+      *mProxyConfig,
+      mArgv[0],
+      isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0);
 
    InfoLog( << "Starting repro version " << VersionUtils::instance().releaseVersion() << "...");
 

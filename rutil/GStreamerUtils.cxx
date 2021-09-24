@@ -13,7 +13,8 @@ extern "C"
 Log::Level
 gst_debug_level_to_severity_level (GstDebugLevel level)
 {
-   switch (level) {
+   switch (level) 
+   {
       case GST_LEVEL_ERROR:   return Log::Err;
       case GST_LEVEL_WARNING: return Log::Warning;
       case GST_LEVEL_FIXME:   return Log::Info;
@@ -31,13 +32,15 @@ gst2resip_log_function(GstDebugCategory *category, GstDebugLevel level,
                    const gchar *function, gint line, GObject *object,
                    GstDebugMessage *message, gpointer user_data)
 {
-   if (level > gst_debug_category_get_threshold (category) ) {
+   if (level > gst_debug_category_get_threshold (category) ) 
+   {
       return;
    }
 
    Log::Level level_ = gst_debug_level_to_severity_level (level);
 
-   if (level_ == Log::None) {
+   if (level_ == Log::None) 
+   {
       return;
    }
 

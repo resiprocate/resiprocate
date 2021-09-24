@@ -350,6 +350,39 @@ Log::initialize(Type type,
 }
 
 void
+Log::initialize(const ConfigParse& configParse, const Data& appName, ExternalLogger* externalLogger)
+{
+   Log::setMaxByteCount(configParse.getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */));
+
+   Log::setKeepAllLogFiles(configParse.getConfigBool("KeepAllLogFiles", false));
+
+   Data loggingType = configParse.getConfigData("LoggingType", "cout", true);
+   Data syslogFacilityName = configParse.getConfigData("SyslogFacility", "LOG_DAEMON", true);
+   // Most applications now use LogLevel
+   // Some applications had been using LoggingLevel, that is not deprecated
+   Data loggingLevel = configParse.getConfigData("LogLevel",
+      configParse.getConfigData("LoggingLevel", "INFO", true), true);
+   Data loggingFilename = configParse.getConfigData("LogFilename",
+      configParse.getConfigData("LoggingFilename", appName + Data(".log")), true);
+   configParse.AddBasePathIfRequired(loggingFilename);
+   Data loggingMessageStructure = configParse.getConfigData("LogMessageStructure", "Unstructured", true);
+   Data loggingInstanceName = configParse.getConfigData("LoggingInstanceName", "", true);
+
+   Log::initialize(
+      loggingType,
+      loggingLevel,
+      appName.c_str(),
+      loggingFilename.c_str(),
+      externalLogger,
+      syslogFacilityName,
+      loggingMessageStructure,
+      loggingInstanceName);
+
+   unsigned int loggingFileMaxLineCount = configParse.getConfigUnsignedLong("LogFileMaxLines", 50000);
+   Log::setMaxLineCount(loggingFileMaxLineCount);
+}
+
+void
 Log::setLevel(Level level)
 {
    Lock lock(_mutex);

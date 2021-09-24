@@ -86,6 +86,7 @@ UserAgentMasterProfile::addTransport( TransportType protocol,
 
    info.mProtocol = protocol;
    info.mPort = port;
+   info.mActualPort = 0; // Only set after UserAgent is created and transports are added.  Useful if mPort is specified as ephemeral (0).
    info.mIPVersion = version;
    info.mIPInterface = ipInterface;
    info.mStunEnabled = stun;
@@ -102,8 +103,8 @@ UserAgentMasterProfile::addTransport( TransportType protocol,
    mTransports.push_back(info);
 }
 
-const std::vector<UserAgentMasterProfile::TransportInfo>& 
-UserAgentMasterProfile::getTransports() const
+std::vector<UserAgentMasterProfile::TransportInfo>& 
+UserAgentMasterProfile::getTransports()
 {
    return mTransports;
 }
