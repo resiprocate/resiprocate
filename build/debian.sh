@@ -41,6 +41,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-soci-postgresql \
               --with-soci-mysql \
               --with-qpid-proton \
-              --with-netsnmp
+              --with-netsnmp \
+              --with-gstreamer
 
 

@@ -12,8 +12,6 @@
 namespace resip
 {
 
-class Data;
-
 class MasterProfile : public UserProfile
 {
    public:  

@@ -203,12 +203,12 @@ ConfigParse::parseConfigFile(const Data& filename)
 }
 
 void
-ConfigParse::getConfigIndexKeys(const resip::Data& indexName, std::set<Data>& keys)
+ConfigParse::getConfigIndexKeys(const resip::Data& indexName, std::set<Data>& keys) const
 {
    Data::size_type numPos = indexName.size();
    Data indexNameLower(indexName);
    indexNameLower.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.begin();
+   ConfigValuesMap::const_iterator it = mConfigValues.begin();
    for(; it != mConfigValues.end(); it++)
    {
       const Data& keyName = it->first;
@@ -255,10 +255,10 @@ ConfigParse::getConfigData(const resip::Data& name, const resip::Data& defaultVa
 }
 
 bool 
-ConfigParse::getConfigValue(const resip::Data& name, bool &value)
+ConfigParse::getConfigValue(const resip::Data& name, bool &value) const
 {
    Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
+   ConfigValuesMap::const_iterator it = mConfigValues.find(lowerName);
    if(it != mConfigValues.end())
    {
       if(it->second == "1" || 
@@ -285,7 +285,7 @@ ConfigParse::getConfigValue(const resip::Data& name, bool &value)
 }
 
 bool 
-ConfigParse::getConfigBool(const resip::Data& name, bool defaultValue)
+ConfigParse::getConfigBool(const resip::Data& name, bool defaultValue) const
 {
    bool ret = defaultValue;
    getConfigValue(name, ret);
@@ -293,10 +293,10 @@ ConfigParse::getConfigBool(const resip::Data& name, bool defaultValue)
 }
 
 bool 
-ConfigParse::getConfigValue(const resip::Data& name, unsigned long &value)
+ConfigParse::getConfigValue(const resip::Data& name, unsigned long &value) const
 {
    Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
+   ConfigValuesMap::const_iterator it = mConfigValues.find(lowerName);
    if(it != mConfigValues.end())
    {
       value = it->second.convertUnsignedLong();
@@ -307,7 +307,7 @@ ConfigParse::getConfigValue(const resip::Data& name, unsigned long &value)
 }
 
 unsigned long 
-ConfigParse::getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue)
+ConfigParse::getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue) const
 {
    unsigned long ret = defaultValue;
    getConfigValue(name, ret);
@@ -315,10 +315,10 @@ ConfigParse::getConfigUnsignedLong(const resip::Data& name, unsigned long defaul
 }
 
 bool 
-ConfigParse::getConfigValue(const resip::Data& name, int &value)
+ConfigParse::getConfigValue(const resip::Data& name, int &value) const
 {
    Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
+   ConfigValuesMap::const_iterator it = mConfigValues.find(lowerName);
    if(it != mConfigValues.end())
    {
       value = it->second.convertInt();
@@ -330,7 +330,7 @@ ConfigParse::getConfigValue(const resip::Data& name, int &value)
 
 
 int 
-ConfigParse::getConfigInt(const resip::Data& name, int defaultValue)
+ConfigParse::getConfigInt(const resip::Data& name, int defaultValue) const
 {
    int ret = defaultValue;
    getConfigValue(name, ret);
@@ -338,10 +338,10 @@ ConfigParse::getConfigInt(const resip::Data& name, int defaultValue)
 }
 
 bool
-ConfigParse::getConfigValue(const resip::Data& name, unsigned short &value)
+ConfigParse::getConfigValue(const resip::Data& name, unsigned short &value) const
 {
    Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
+   ConfigValuesMap::const_iterator it = mConfigValues.find(lowerName);
    if(it != mConfigValues.end())
    {
       value = it->second.convertInt();
@@ -353,7 +353,7 @@ ConfigParse::getConfigValue(const resip::Data& name, unsigned short &value)
 
 
 unsigned short
-ConfigParse::getConfigUnsignedShort(const resip::Data& name, int defaultValue)
+ConfigParse::getConfigUnsignedShort(const resip::Data& name, int defaultValue) const
 {
    int ret = defaultValue;
    getConfigValue(name, ret);
@@ -361,12 +361,12 @@ ConfigParse::getConfigUnsignedShort(const resip::Data& name, int defaultValue)
 }
 
 bool 
-ConfigParse::getConfigValue(const resip::Data& name, std::vector<resip::Data> &value)
+ConfigParse::getConfigValue(const resip::Data& name, std::vector<resip::Data> &value) const
 {
    Data lowerName(name);  lowerName.lowercase();
-   std::pair<ConfigValuesMap::iterator,ConfigValuesMap::iterator> valuesIts = mConfigValues.equal_range(lowerName);
+   std::pair<ConfigValuesMap::const_iterator,ConfigValuesMap::const_iterator> valuesIts = mConfigValues.equal_range(lowerName);
    bool found = false;
-   for (ConfigValuesMap::iterator it=valuesIts.first; it!=valuesIts.second; ++it)
+   for (ConfigValuesMap::const_iterator it=valuesIts.first; it!=valuesIts.second; ++it)
    {
       found = true;
       ParseBuffer pb(it->second);
@@ -389,12 +389,12 @@ ConfigParse::getConfigValue(const resip::Data& name, std::vector<resip::Data> &v
 }
 
 bool
-ConfigParse::getConfigValue(const resip::Data& name, std::set<resip::Data> &value)
+ConfigParse::getConfigValue(const resip::Data& name, std::set<resip::Data> &value) const
 {
    Data lowerName(name);  lowerName.lowercase();
-   std::pair<ConfigValuesMap::iterator,ConfigValuesMap::iterator> valuesIts = mConfigValues.equal_range(lowerName);
+   std::pair<ConfigValuesMap::const_iterator,ConfigValuesMap::const_iterator> valuesIts = mConfigValues.equal_range(lowerName);
    bool found = false;
-   for (ConfigValuesMap::iterator it=valuesIts.first; it!=valuesIts.second; ++it)
+   for (ConfigValuesMap::const_iterator it=valuesIts.first; it!=valuesIts.second; ++it)
    {
       found = true;
       ParseBuffer pb(it->second);
@@ -417,13 +417,13 @@ ConfigParse::getConfigValue(const resip::Data& name, std::set<resip::Data> &valu
 }
 
 ConfigParse::NestedConfigMap
-ConfigParse::getConfigNested(const resip::Data& mapsPrefix)
+ConfigParse::getConfigNested(const resip::Data& mapsPrefix) const
 {
    NestedConfigMap m;
    Data::size_type numPos = mapsPrefix.size();
    Data mapsPrefixLower(mapsPrefix);
    mapsPrefixLower.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.begin();
+   ConfigValuesMap::const_iterator it = mConfigValues.begin();
    for(; it != mConfigValues.end(); it++)
    {
       const Data& keyName = it->first;
@@ -473,7 +473,7 @@ ConfigParse::insertConfigValue(const resip::Data& name, const resip::Data& value
 }
 
 resip::Data
-ConfigParse::removePath(const resip::Data& fileAndPath)
+ConfigParse::removePath(const resip::Data& fileAndPath) const
 {
    Data filenameOnly;
    ParseBuffer pb(fileAndPath);
@@ -488,7 +488,7 @@ ConfigParse::removePath(const resip::Data& fileAndPath)
 }
 
 bool 
-ConfigParse::AddBasePathIfRequired(Data& filename)
+ConfigParse::AddBasePathIfRequired(Data& filename) const
 {
    if(!filename.empty())
    {
@@ -516,7 +516,7 @@ operator<<(EncodeStream& strm, const ConfigParse& config)
    {
       sortedMap.insert(std::multimap<Data, Data>::value_type(it->first, it->second));
    }
-   std::multimap<Data, Data>::iterator it2 = sortedMap.begin();
+   std::multimap<Data, Data>::const_iterator it2 = sortedMap.begin();
    for(; it2 != sortedMap.end(); it2++)
    {
       strm << it2->first << " = " << it2->second << endl;

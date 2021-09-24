@@ -31,6 +31,7 @@ public:
    public:
       resip::TransportType mProtocol;
       int mPort;
+      int mActualPort; // Only set after UserAgent is created and transports are added.  Useful if mPort is specified as ephemeral (0).
       resip::IpVersion mIPVersion;
       resip::StunSetting mStunEnabled;
       resip::Data mIPInterface;
@@ -94,9 +95,11 @@ public:
    /**
      Gets a vector of the transports previously added.
 
-     @return Reference to a vector of TransportInfo's
+     @return Reference to a vector of TransportInfo's.  Note:  Not returning 
+             as const since we want to set the actual port used if a an 
+             ephemeral port was specified
    */
-   const std::vector<TransportInfo>& getTransports() const;
+   std::vector<TransportInfo>& getTransports();
 
    /**
      Adds a domain suffix used in ENUM DNS queries.  

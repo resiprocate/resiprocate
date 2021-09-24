@@ -40,6 +40,7 @@ WARNING_CONFIG="-Werror  ${WARNING_CONFIG}"
   PYCXX_SRCDIR=/usr/share/python${PYTHON_MAJOR_VERSION}/CXX/Python3 \
   --with-python \
   --with-rend \
+  --with-gstreamer \
   --with-recon \
   --with-sipxtapi \
   --with-soci-mysql \
