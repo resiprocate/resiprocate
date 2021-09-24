@@ -550,6 +550,7 @@
     <ClInclude Include="Lockable.hxx" />
     <ClInclude Include="Log.hxx" />
     <ClInclude Include="Logger.hxx" />
+    <ClInclude Include="MediaConstants.hxx" />
     <ClInclude Include="MD5Stream.hxx" />
     <ClInclude Include="Mutex.hxx" />
     <ClInclude Include="PoolBase.hxx" />

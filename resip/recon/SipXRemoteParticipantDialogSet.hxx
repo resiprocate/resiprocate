@@ -9,10 +9,6 @@
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 
-// FlowManager Includes
-#include "reflow/FlowContext.hxx"
-#include "reflow/MediaStream.hxx"
-
 #include "SipXConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
@@ -64,12 +60,12 @@ public:
    void setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void setRemoteSDPFingerprint(const resip::Data& fingerprint);
-   bool createSRTPSession(flowmanager::MediaStream::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen);
+   bool createSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen);
 
    // Media Stream Processing
    virtual void processMediaStreamReadyEvent(std::shared_ptr<MediaStreamReadyEvent::StreamParams> streamParams);
 
-   flowmanager::MediaStream::SrtpCryptoSuite getSrtpCryptoSuite() { return mSrtpCryptoSuite; }
+   resip::MediaConstants::SrtpCryptoSuite getSrtpCryptoSuite() { return mSrtpCryptoSuite; }
 
    const resip::Data& getLocalSrtpSessionKey() { return mLocalSrtpSessionKey; }
 
@@ -95,7 +91,7 @@ private:
 
    // Secure Media 
    resip::Data mLocalSrtpSessionKey;
-   flowmanager::MediaStream::SrtpCryptoSuite mSrtpCryptoSuite;
+   resip::MediaConstants::SrtpCryptoSuite mSrtpCryptoSuite;
 
    // sipX media stuff
    virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();

@@ -241,7 +241,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 
       switch(getSipXDialogSet().getSrtpCryptoSuite())
       {
-      case flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32:
+      case MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32:
          crypto = "1 AES_CM_128_HMAC_SHA1_32 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode();
          audioMedium->addAttribute("crypto", crypto);
          crypto = "2 AES_CM_128_HMAC_SHA1_80 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode();
@@ -905,12 +905,12 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
                      switch(itCrypto->getSuite())
                      {
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
-                        if(!getSipXDialogSet().createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
+                        if(!getSipXDialogSet().createSRTPSession(MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
                            InfoLog(<<"Failed creating SRTP session");
                         supportedCryptoSuite = true;
                         break;
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
-                        if(!getSipXDialogSet().createSRTPSession(flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
+                        if(!getSipXDialogSet().createSRTPSession(MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
                            InfoLog(<<"Failed creating SRTP session");
                         supportedCryptoSuite = true;
                         break;

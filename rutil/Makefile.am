@@ -145,6 +145,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	RWMutex.hxx \
 	Subsystem.hxx \
 	Logger.hxx \
+	MediaConstants.hxx \
 	MD5Stream.hxx \
 	DnsUtil.hxx \
 	Timer.hxx \
