@@ -1,11 +1,12 @@
 
-#include "MyConversationManager.hxx"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <rutil/Log.hxx>
+
+#include "MyConversationManager.hxx"
+
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
