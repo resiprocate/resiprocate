@@ -215,7 +215,7 @@ tr::Connection::setContactsInFile()
       {
 	 if ( it.key() != selfHandle() )
 	 {
-	    stream << it.value() << " " << mAliases[it.key()] << endl;
+	    stream << it.value() << " " << mAliases[it.key()] << Qt::endl;
 	 }
       }
       file.close();
@@ -470,8 +470,8 @@ tr::Connection::onMessageReceived(const resip::SipMessage& message)
    uint targetHandle = ensureHandle(targetID);
    uint initiatorHandle = ensureHandle(from.uri().getAorNoPort().c_str());
    
-   qDebug() << "onMessageReceived() initiatorHandle = " << initiatorHandle << " initiatorID = " << mHandles[initiatorHandle] << endl;
-   qDebug() << "onMessageReceived() targetHandle = " << targetHandle << " targetID = " << targetID << endl;
+   qDebug() << "onMessageReceived() initiatorHandle = " << initiatorHandle << " initiatorID = " << mHandles[initiatorHandle] << Qt::endl;
+   qDebug() << "onMessageReceived() targetHandle = " << targetHandle << " targetID = " << targetID << Qt::endl;
    
    QVariantMap request;
    request[TP_QT_IFACE_CHANNEL + QLatin1String(".ChannelType")] = TP_QT_IFACE_CHANNEL_TYPE_TEXT;
