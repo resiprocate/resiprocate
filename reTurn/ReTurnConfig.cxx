@@ -60,13 +60,6 @@ ReTurnConfig::ReTurnConfig() :
    mTlsPrivateKeyPassword(""),
    mUsersDatabaseFilename(""),
    mUserDatabaseHashedPasswords(false),
-   mLoggingType("cout"),
-   mSyslogFacility("LOG_DAEMON"),
-   mLoggingLevel("INFO"),
-   mLoggingFilename("reTurnServer.log"),
-   mLoggingMessageStructure("Unstructured"),
-   mLoggingFileMaxLineCount(50000),  // 50000 about 5M size
-   mLoggingInstanceName(""),
    mDaemonize(false),
    mPidFile(""),
    mRunAsUser(""),
@@ -99,13 +92,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
    mTlsTempDhFilename = getConfigData("TlsTempDhFilename", mTlsTempDhFilename);
    mTlsPrivateKeyPassword = getConfigData("TlsPrivateKeyPassword", mTlsPrivateKeyPassword);
    mUserDatabaseHashedPasswords = getConfigBool("UserDatabaseHashedPasswords", mUserDatabaseHashedPasswords);
-   mLoggingType = getConfigData("LoggingType", mLoggingType);
-   mSyslogFacility = getConfigData("SyslogFacility", "LOG_DAEMON");
-   mLoggingLevel = getConfigData("LoggingLevel", mLoggingLevel);
-   mLoggingFilename = getConfigData("LogFilename", mLoggingFilename);
-   mLoggingMessageStructure = getConfigData("LogMessageStructure", "Unstructured", true);
-   mLoggingFileMaxLineCount = getConfigUnsignedLong("LogFileMaxLines", mLoggingFileMaxLineCount);
-   mLoggingInstanceName = getConfigData("LoggingInstanceName", "", true);
    mDaemonize = getConfigBool("Daemonize", mDaemonize);
    mPidFile = getConfigData("PidFile", mPidFile);
    mRunAsUser = getConfigData("RunAsUser", mRunAsUser);
@@ -138,7 +124,6 @@ void ReTurnConfig::parseConfig(int argc, char** argv, const resip::Data& default
       throw ConfigParse::Exception("Missing user database option! Expected \"UserDatabaseFile = file location\".", __FILE__, __LINE__);
    }
 
-   AddBasePathIfRequired(mLoggingFilename);
    AddBasePathIfRequired(mTlsServerCertificateFilename);
    AddBasePathIfRequired(mTlsServerPrivateKeyFilename);
    AddBasePathIfRequired(mTlsTempDhFilename);
