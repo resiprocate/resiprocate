@@ -40,6 +40,7 @@ int _kbhit() {
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/recon/UserAgent.hxx"
 #include "AppSubsystem.hxx"
+
 #ifdef USE_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
@@ -61,7 +62,6 @@ int _kbhit() {
 
 #include <resip/stack/HEPSipMessageLoggingHandler.hxx>
 #include <reflow/HEPRTCPEventLoggingHandler.hxx>
-#include <reflow/Flow.hxx>
 
 using namespace reconserver;
 using namespace recon;
