@@ -27,6 +27,7 @@ namespace asio
 #include "FlowContext.hxx"
 #include "Flow.hxx"
 #include "RTCPEventLoggingHandler.hxx"
+#include "rutil/MediaConstants.hxx"
 
 using namespace reTurn;
 
@@ -63,12 +64,6 @@ public:
       TurnAllocation
    };
 
-   enum SrtpCryptoSuite
-   {
-      SRTP_AES_CM_128_HMAC_SHA1_32,
-      SRTP_AES_CM_128_HMAC_SHA1_80
-   };
-
    MediaStream(asio::io_service& ioService,
                asio::ssl::context& sslContext,
                MediaStreamHandler& mediaStreamHandler,
@@ -89,8 +84,8 @@ public:
    Flow* getRtcpFlow() { return mRtcpFlow; }
 
    // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
-   bool createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
-   bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
+   bool createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
+   bool createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
 
 protected:
    friend class Flow;
@@ -100,8 +95,8 @@ protected:
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;
    resip::Mutex mMutex;
-   SrtpCryptoSuite mCryptoSuiteIn;
-   SrtpCryptoSuite mCryptoSuiteOut;
+   resip::MediaConstants::SrtpCryptoSuite mCryptoSuiteIn;
+   resip::MediaConstants::SrtpCryptoSuite mCryptoSuiteOut;
    uint8_t mSRTPMasterKeyIn[SRTP_MASTER_KEY_LEN];
    uint8_t mSRTPMasterKeyOut[SRTP_MASTER_KEY_LEN];
    srtp_policy_t mSRTPPolicyIn;

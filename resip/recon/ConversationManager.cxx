@@ -286,13 +286,19 @@ ConversationManager::unregisterParticipant(Participant *participant)
 void 
 ConversationManager::post(resip::Message *msg)
 {
-   mUserAgent->getDialogUsageManager().post(msg);
+   if (mUserAgent)
+   {
+      mUserAgent->getDialogUsageManager().post(msg);
+   }
 }
 
 void 
 ConversationManager::post(resip::ApplicationMessage& message, unsigned int ms)
 {
-    mUserAgent->post(message, ms);
+   if (mUserAgent)
+   {
+      mUserAgent->post(message, ms);
+   }
 }
 
 void 

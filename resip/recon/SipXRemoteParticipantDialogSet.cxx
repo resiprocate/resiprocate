@@ -157,10 +157,10 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
       switch(profile->secureMediaDefaultCryptoSuite())
       {
       case ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_32:
-         mSrtpCryptoSuite = flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_32;
+         mSrtpCryptoSuite = resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32;
          break;
       default:
-         mSrtpCryptoSuite = flowmanager::MediaStream::SRTP_AES_CM_128_HMAC_SHA1_80;
+         mSrtpCryptoSuite = resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80;
          break;
       }
  
@@ -404,7 +404,7 @@ SipXRemoteParticipantDialogSet::setRemoteSDPFingerprint(const resip::Data& finge
 }
 
 bool 
-SipXRemoteParticipantDialogSet::createSRTPSession(MediaStream::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen)
+SipXRemoteParticipantDialogSet::createSRTPSession(MediaConstants::SrtpCryptoSuite cryptoSuite, const char* remoteKey, unsigned int remoteKeyLen)
 {
    if(mMediaStream)
    {
