@@ -818,13 +818,6 @@ ReConServerProcess::main (int argc, char** argv)
    Data serverText = reConServerConfig.getConfigData("ServerText", "reConServer");
 #endif
    uri = reConServerConfig.getConfigNameAddr("SIPUri", uri, true);
-   Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
-   Data syslogFacilityName = reConServerConfig.getConfigData("SyslogFacility", "LOG_DAEMON", true);
-   Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
-   Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
-   Data loggingMessageStructure = reConServerConfig.getConfigData("LogMessageStructure", "Unstructured", true);
-   Data loggingInstanceName = reConServerConfig.getConfigData("LoggingInstanceName", "", true);
-   unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
    Data cdrLogFilename = reConServerConfig.getConfigData("CDRLogFile", "", true);
    Data captureHost = reConServerConfig.getConfigData("CaptureHost", "");
    int capturePort = reConServerConfig.getConfigInt("CapturePort", 9060);
@@ -872,8 +865,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int *codecIds = &_codecIds[0];
    unsigned int numCodecIds = _codecIds.size();
 
-   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, syslogFacilityName, loggingMessageStructure, loggingInstanceName);
-   Log::setMaxLineCount(loggingFileMaxLineCount);
+   Log::initialize(reConServerConfig, argv[0]);
 
 #ifdef USE_SIPXTAPI
    // Setup logging for the sipX media stack
@@ -918,10 +910,6 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
    InfoLog( << "  Enable Opus codec = " << (enableOpus ? "true" : "false"));
-   InfoLog( << "  Log Type = " << loggingType);
-   InfoLog( << "  Syslog Facility = " << syslogFacilityName);
-   InfoLog( << "  Log Level = " << loggingLevel);
-   InfoLog( << "  Log Filename = " << loggingFilename);
    InfoLog( << "  Daemonize = " << (daemonize ? "true" : "false"));
    InfoLog( << "  KeyboardInput = " << (mKeyboardInput ? "true" : "false"));
    InfoLog( << "  PidFile = " << pidFile);
