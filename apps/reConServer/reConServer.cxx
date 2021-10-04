@@ -1298,7 +1298,9 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->secureMediaRequired() = secureMediaRequired;
    conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
+#ifdef USE_SIPXTAPI
    Flow::maxReceiveFifoSize = maxReceiveFifoSize;
+#endif
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
