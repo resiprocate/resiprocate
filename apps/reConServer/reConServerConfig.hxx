@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #include <map>
-#include <asio.hpp>
 #include <rutil/ConfigParse.hxx>
 #include <rutil/Data.hxx>
 #include <rutil/Log.hxx>

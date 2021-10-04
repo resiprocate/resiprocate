@@ -479,7 +479,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
-      std::list<unsigned int> idList;
+      std::vector<unsigned int> idList;
       ParseBuffer pb(arg[0]);
       pb.skipWhitespace();
       while(!pb.eof())
@@ -493,23 +493,14 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
             pb.skipChar(',');
          }
       }
-      unsigned int numCodecIds = idList.size();
-      if(numCodecIds > 0)
+      if(!idList.empty())
       {
-         unsigned int* codecIdArray = new unsigned int[numCodecIds];
-         unsigned int index = 0;
-         std::list<unsigned int>::iterator it = idList.begin();
-         for(;it != idList.end(); it++)
-         {
-            codecIdArray[index++] = (*it);
-         }
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
 #ifdef PREFER_SIPXTAPI
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
+         myConversationManager.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
 #endif
-         delete [] codecIdArray;
       }
       return;
    }
@@ -867,8 +858,6 @@ ReConServerProcess::main (int argc, char** argv)
    _codecIds.push_back(SdpCodec::SDP_CODEC_G729);           // 18 - G.729
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
 #endif
-   unsigned int *codecIds = &_codecIds[0];
-   unsigned int numCodecIds = _codecIds.size();
 
    Log::initialize(reConServerConfig, argv[0]);
 
@@ -1342,7 +1331,7 @@ ReConServerProcess::main (int argc, char** argv)
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
 #ifdef PREFER_SIPXTAPI
       // FIXME - how to do this for Kurento?
-      mConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      mConversationManager->buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
 #endif
       mUserAgent->addConversationProfile(conversationProfile);
 
@@ -1369,7 +1358,7 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
 #ifdef PREFER_SIPXTAPI
       // FIXME - how to do this for Kurento?
-            mConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+            mConversationManager->buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
 #endif
             mUserAgent->addConversationProfile(internalProfile, false);
          }
