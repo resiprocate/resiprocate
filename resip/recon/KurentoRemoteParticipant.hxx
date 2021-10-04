@@ -18,13 +18,7 @@
 
 #include <memory>
 
-#include <kurento-client/KurentoClientLogDefs.h>
-
-class ReConKurentoClientLogSink : public KurentoClientLogSink
-{
-public:
-   virtual void log(KurentoClientLogSink::Level level, const char *s) override;
-};
+#include <media/kurento/Object.hxx>
 
 namespace resip
 {
@@ -84,10 +78,9 @@ protected:
    virtual KurentoRemoteParticipantDialogSet& getKurentoDialogSet() { return dynamic_cast<KurentoRemoteParticipantDialogSet&>(getDialogSet()); };
 
 private:       
-   bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
+   resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationAnswerReady c) override;
 
-   void setEndpointId(const resip::Data& endpointId);
-   resip::Data mEndpointId;
+   std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
    volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primite, e.g. condition_variable
 };
 

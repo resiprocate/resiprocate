@@ -837,7 +837,7 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
    bool enableOpus = reConServerConfig.getConfigBool("EnableOpus", false);
-   Uri kurentoUri = reConServerConfig.getConfigUri("KurentoURI", Uri("kurento:127.0.0.1:8888"));
+   Data kurentoUri = reConServerConfig.getConfigData("KurentoURI", "ws://127.0.0.1:8888/kurento");
    ReConServerConfig::Application application = reConServerConfig.getConfigApplication("Application", ReConServerConfig::None);
 
 

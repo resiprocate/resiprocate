@@ -4,9 +4,6 @@
 #define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
 #endif
 
-// Kurento includes
-#include <kurento-client/KurentoClient.h>
-
 // resip includes
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -42,18 +39,20 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-KurentoConversationManager::KurentoConversationManager(const resip::Uri& kurentoUri)
+KurentoConversationManager::KurentoConversationManager(const Data& kurentoUri)
 : ConversationManager(),
   mKurentoUri(kurentoUri),
-  mKurentoTOSValue(0)
+  mKurentoManager(5000),  // FIXME - make this value configurable
+  mKurentoTOSValue(0) // FIXME - make this value configurable
 {
    init();
 }
 
-KurentoConversationManager::KurentoConversationManager(const resip::Uri& kurentoUri, int defaultSampleRate, int maxSampleRate)
+KurentoConversationManager::KurentoConversationManager(const Data& kurentoUri, int defaultSampleRate, int maxSampleRate)
 : ConversationManager(),
   mKurentoUri(kurentoUri),
-  mKurentoTOSValue(0)
+  mKurentoManager(5000),  // FIXME - make this value configurable
+  mKurentoTOSValue(0) // FIXME - make this value configurable
 {
    init(defaultSampleRate, maxSampleRate);
 }
@@ -61,18 +60,13 @@ KurentoConversationManager::KurentoConversationManager(const resip::Uri& kurento
 void
 KurentoConversationManager::init(int defaultSampleRate, int maxSampleRate)
 {
-
    // Connect to the Kurento server
-
-   std::string kHost = std::string(mKurentoUri.host().c_str());
-   std::string kPort = std::to_string(mKurentoUri.port());
-
-   kurento_client::websocket::connection_metadata::m_kevent_handler = this;  // FIXME Kurento, static member
-
-   DebugLog(<<"trying to connect to Kurento host " << kHost << ":" << kPort);
-   mKurentoClient.getMConnectionHandler()->createConnection(kHost, kPort);
-   mKurentoClient.createMediaPipeline();
-
+   DebugLog(<<"trying to connect to Kurento host " << mKurentoUri);
+   mKurentoConnection = mKurentoManager.getKurentoConnection(mKurentoUri.c_str()); // FIXME wait for connection
+   mPipeline = make_shared<kurento::MediaPipeline>(mKurentoConnection);
+   mPipeline->create([this]{
+      DebugLog(<<"pipeline created with ID " << mPipeline->getId());
+   });  // FIXME - wait for creation
 }
 
 KurentoConversationManager::~KurentoConversationManager()
@@ -226,55 +220,6 @@ KurentoConversationManager::createRemoteParticipantDialogSetInstance(
       std::shared_ptr<ConversationProfile> conversationProfile)
 {
    return new KurentoRemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
-}
-
-void
-KurentoConversationManager::on_event(const std::string& event_name, const json::Object& message)
-{
-   DebugLog(<<"Kurento event: " << event_name);
-
-   const json::String& sourceId = message["params"]["value"]["data"]["source"];
-
-   Data _sourceId(sourceId.Value());
-
-   DebugLog(<<"Source: " << _sourceId);
-
-   // IceGatheringDone
-   //  - lookup source or object, the UUID of WebRtcEndpoint
-
-   // MediaStateChanged
-   // newState CONNECTED
-
-   // IceCandidate
-   //  - lookup source or object, the UUID of WebRtcEndpoint
-
-   // IceComponentStateChange
-
-   EndpointMap::iterator it = mEndpoints.find(_sourceId);
-   if(it == mEndpoints.end())
-   {
-      DebugLog(<<"Unknown endpoint");
-   }
-   else
-   {
-      it->second->onKurentoEvent(event_name, message);
-   }
-}
-
-void
-KurentoConversationManager::registerEndpoint(const resip::Data& endpointId, KurentoRemoteParticipantDialogSet& krpds)
-{
-   mEndpoints[endpointId] = &krpds; // FIXME Kurento - pointer is not a good idea
-}
-
-void
-KurentoConversationManager::unregisterEndpoint(const resip::Data& endpointId)
-{
-   EndpointMap::iterator it = mEndpoints.find(endpointId);
-   if(it != mEndpoints.end())
-   {
-      mEndpoints.erase(it);
-   }
 }
 
 

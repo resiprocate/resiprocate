@@ -7,6 +7,7 @@
 #include "Participant.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 
+#include <rutil/AsyncBool.hxx>
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
@@ -127,12 +128,15 @@ protected:
 
    RemoteParticipantDialogSet& getDialogSet() { return mDialogSet; };
 
+   typedef std::function<void(bool answerOk, std::unique_ptr<resip::SdpContents> answer)>
+   ContinuationAnswerReady;
+
 private:       
    void hold();
    void unhold();
    void provideOffer(bool postOfferAccept);
-   bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
+   resip::AsyncBool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
+   virtual resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationAnswerReady c) = 0;
    virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;

@@ -22,7 +22,7 @@ using namespace reconserver;
 
 #ifdef USE_KURENTO
 // FIXME: see comments in MyConversationManager.hxx
-MyConversationManager::MyConversationManager(const Uri& kurentoUri, bool autoAnswerEnabled)
+MyConversationManager::MyConversationManager(const Data& kurentoUri, bool autoAnswerEnabled)
       : KurentoConversationManager(kurentoUri),
 #else
 MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)

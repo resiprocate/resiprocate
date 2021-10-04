@@ -1,9 +1,6 @@
 #if !defined(KurentoConversationManager_hxx)
 #define KurentoConversationManager_hxx
 
-// Kurento includes
-#include <kurento-client/KurentoClient.h>
-
 #include <boost/function.hpp>
 
 #include "BridgeMixer.hxx"
@@ -16,9 +13,11 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
+#include <media/kurento/KurentoManager.hxx>
+#include <media/kurento/Object.hxx>
+
 #include "HandleTypes.hxx"
 #include "ConversationManager.hxx"
-// FIXME Kurento #include "KurentoMediaInterface.hxx"
 
 #include <memory>
 
@@ -57,7 +56,7 @@ class KurentoRemoteParticipantDialogSet;
   -Managing local audio properties
 */
 
-class KurentoConversationManager : public ConversationManager, public kurento_client::websocket::connection_metadata::kevent_handler
+class KurentoConversationManager : public ConversationManager
 {
 public:
 
@@ -114,8 +113,8 @@ public:
                 same media interface.
    */
 
-   KurentoConversationManager(const resip::Uri& kurentoUri);
-   KurentoConversationManager(const resip::Uri& kurentoUri, int defaultSampleRate, int maxSampleRate);
+   KurentoConversationManager(const resip::Data& kurentoUri);
+   KurentoConversationManager(const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate);
    virtual ~KurentoConversationManager();
 
    ///////////////////////////////////////////////////////////////////////
@@ -188,17 +187,8 @@ public:
    virtual bool supportsLocalAudio() override { return false; }
    virtual bool extraPlayAndRecordResourcesEnabled() { return mEnableExtraPlayAndRecordResources; }
 
-   kurento_client::KurentoClient& getKurentoClient() { return mKurentoClient; };
-
-   virtual void registerEndpoint(const resip::Data& endpointId, KurentoRemoteParticipantDialogSet& krpds);
-   virtual void unregisterEndpoint(const resip::Data& endpointId);
-
-   virtual void on_event(const std::string& event_name, const json::Object& message) override;
-
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
-
-   virtual const resip::Uri& getKurentoUri() const { return mKurentoUri; }
 
 private:
    void init(int defaultSampleRate = 0, int maxSampleRate = 0);
@@ -259,14 +249,13 @@ private:
    bool mEnableExtraPlayAndRecordResources;
 
    // Kurento Media related members
-   resip::Uri mKurentoUri;
-   kurento_client::KurentoClient mKurentoClient;
+   resip::Data mKurentoUri;
+   kurento::KurentoManager mKurentoManager;
+   kurento::KurentoConnection::ptr mKurentoConnection; // FIXME - make sure it is valid whenever it is used
+   std::shared_ptr<kurento::MediaPipeline> mPipeline;
    int mKurentoTOSValue;  // FIXME Kurento - need to pass to Kurento, maybe move to superclass too
 
    bool addExtraPlayAndRecordResourcesToTopology();
-
-   typedef std::map<resip::Data, KurentoRemoteParticipantDialogSet*> EndpointMap;
-   EndpointMap mEndpoints;
 };
 
 }

@@ -41,6 +41,8 @@
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Random.hxx>
 
+#include <KurentoConversationManager.hxx>
+
 #include <utility>
 
 using namespace recon;
@@ -203,11 +205,20 @@ void
 UserAgent::process(int timeoutMs)
 {
    mDum.process(timeoutMs);
+
+   // FIXME - provide a way for modules to register to be called from the event loop
+   KurentoConversationManager *kcm = dynamic_cast<KurentoConversationManager*>(mConversationManager);
+   if(kcm != 0)
+   {
+      kcm->mKurentoManager.process();
+   }
 }
 
 void
 UserAgent::shutdown()
 {
+   // FIXME - Kurento client shutdown and join()
+
    UserAgentShutdownCmd* cmd = new UserAgentShutdownCmd(this);
    mDum.post(cmd);
 

@@ -56,7 +56,7 @@ B2BCall::peer(const recon::ParticipantHandle& partHandle)
 }
 
 #ifdef PREFER_KURENTO
-B2BCallManager::B2BCallManager(const resip::Uri& kurentoUri, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
+B2BCallManager::B2BCallManager(const resip::Data& kurentoUri, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
    : MyConversationManager(kurentoUri, false),
 #else
 B2BCallManager::B2BCallManager(recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)

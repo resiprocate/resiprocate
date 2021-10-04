@@ -354,7 +354,7 @@ RemoteParticipant::accept()
             }
             else if(mPendingOffer)
             {
-               provideAnswer(*mPendingOffer, true /* postAnswerAccept */, false /* postAnswerAlert */);
+               AsyncBool result = provideAnswer(*mPendingOffer, true /* postAnswerAccept */, false /* postAnswerAlert */);
             }
             else  
             {
@@ -364,7 +364,7 @@ RemoteParticipant::accept()
                // we need to ensure the accept call is also delayed until the answer completes.
                mDialogSet.accept(mInviteSessionHandle);
             }
-            stateTransition(Accepted);
+            stateTransition(Accepted);  // FIXME - after Async
          }
       }
       // Accept Pending OOD Refer if required
@@ -406,8 +406,11 @@ RemoteParticipant::alert(bool earlyFlag)
                   return;
                }
 
-               provideAnswer(*mPendingOffer, false /* postAnswerAccept */, true /* postAnswerAlert */);
-               mPendingOffer.release();               
+               AsyncBool result = provideAnswer(*mPendingOffer, false /* postAnswerAccept */, true /* postAnswerAlert */);
+               if(result != Async)
+               {
+                  mPendingOffer.release();  // FIXME async release
+               }
             }
             else
             {
@@ -887,23 +890,23 @@ RemoteParticipant::provideOffer(bool postOfferAccept)
    mOfferRequired = false;
 }
 
-bool 
+AsyncBool
 RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert)
 {
-   std::unique_ptr<SdpContents> answer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
-   bool answerOk = buildSdpAnswer(offer, *answer);
+   buildSdpAnswer(offer, [this, postAnswerAccept, postAnswerAlert](bool answerOk, std::unique_ptr<SdpContents> answer){
+      resip_assert(mInviteSessionHandle.isValid()); // FIXME - don't assert, just log and return?
+      if(answerOk)
+      {
+         mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
+      }
+      else
+      {
+         mInviteSessionHandle->reject(488);
+      }
+   });
 
-   if(answerOk)
-   {
-      mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
-   }
-   else
-   {
-      mInviteSessionHandle->reject(488);
-   }
-
-   return answerOk;
+   return Async; // FIXME, do callers use this?
 }
 
 void 
@@ -1232,12 +1235,19 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
    }
    else
    {
-      if(provideAnswer(offer, mState==Replacing /* postAnswerAccept */, false /* postAnswerAlert */))
+      AsyncBool result = provideAnswer(offer, mState==Replacing /* postAnswerAccept */, false /* postAnswerAlert */);
+      switch(result)
       {
+      case True:
+      case Async:   // FIXME - must async invoke the code for True
          if(mState == Replacing)
          {
             stateTransition(Connecting);
          }
+         break;
+      default:
+         // FIXME ignore, log or fail?
+         break;
       }
    }
 }

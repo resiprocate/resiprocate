@@ -547,14 +547,16 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
    return valid;
 }
 
-bool
-SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
+AsyncBool
+SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationAnswerReady c)
 {
    // Note: this implementation has minimal support for draft-ietf-mmusic-sdp-capabilities-negotiation
    //       for responding "best-effort" / optional SRTP (Dtls-SRTP) offers
 
-   bool valid = false;
+   AsyncBool valid = False;
    std::shared_ptr<sdpcontainer::Sdp> remoteSdp(SdpHelperResip::createSdpFromResipSdp(offer));
+   std::unique_ptr<SdpContents> _answer(new SdpContents);
+   SdpContents& answer = *_answer;
 
    try
    {
@@ -622,7 +624,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& ans
                // We have a valid potential media - line - copy over normal media line to make 
                // further processing easier
                *(*itMediaLine) = *itPotentialMediaLine;  
-               valid = true;
+               valid = True;
                break;
             }
          }         
@@ -645,7 +647,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& ans
             }
             else
             {
-               valid = true;
+               valid = True;
             }
          }
       }  // end loop through m= offers
@@ -653,21 +655,22 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& ans
    catch(BaseException &e)
    {
       WarningLog( << "buildSdpAnswer: exception parsing SDP offer: " << e.getMessage());
-      valid = false;
+      valid = False;
    }
    catch(...)
    {
       WarningLog( << "buildSdpAnswer: unknown exception parsing SDP offer");
-      valid = false;
+      valid = False;
    }
 
    //InfoLog( << "SDPOffer: " << offer);
    //InfoLog( << "SDPAnswer: " << answer);
-   if(valid)
+   if(valid == True)
    {
       setLocalSdp(answer);
       setRemoteSdp(offer);
    }
+   c(valid == True, std::move(_answer));
    return valid;
 }
 
