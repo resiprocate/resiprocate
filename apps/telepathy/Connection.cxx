@@ -62,8 +62,6 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_5);        // 97 - speex NB 5,950bps
    _codecIds.push_back(SdpCodec::SDP_CODEC_GSM);            // 3 - GSM
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
-   unsigned int *codecIds = &_codecIds[0];
-   unsigned int numCodecIds = _codecIds.size();
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
@@ -75,7 +73,7 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    bool autoAnswerEnabled = false;
    myConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this));
    ua = new MyUserAgent(myConversationManager.get(), mUAProfile, *this, mInstantMessage);
-   myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), numCodecIds, codecIds, mConversationProfile->sessionCaps());
+   myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), _codecIds, mConversationProfile->sessionCaps());
    ua->addConversationProfile(mConversationProfile);
 
    /* Connection.Interface.Contacts */

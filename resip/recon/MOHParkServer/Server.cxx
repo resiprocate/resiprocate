@@ -451,7 +451,7 @@ Server::shutdown()
 void 
 Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
 {
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
+   std::vector<unsigned int> codecIds = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */,
                                SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
                                SdpCodec::SDP_CODEC_G729A /* 18 - g729 */,
                                SdpCodec::SDP_CODEC_OPUS /* 147 - opus */,
@@ -468,8 +468,7 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
                                SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
-   SipXConversationManager::buildSessionCapabilities(mConfig.mAddress, numCodecIds, codecIds, sessionCaps);
+   SipXConversationManager::buildSessionCapabilities(mConfig.mAddress, codecIds, sessionCaps);
 }
 
 void 

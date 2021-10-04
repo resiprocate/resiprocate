@@ -477,7 +477,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
-      std::list<unsigned int> idList;
+      std::vector<unsigned int> idList;
       ParseBuffer pb(arg[0]);
       pb.skipWhitespace();
       while(!pb.eof())
@@ -491,21 +491,12 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
             pb.skipChar(',');
          }
       }
-      unsigned int numCodecIds = idList.size();
-      if(numCodecIds > 0)
+      if(!idList.empty())
       {
-         unsigned int* codecIdArray = new unsigned int[numCodecIds];
-         unsigned int index = 0;
-         std::list<unsigned int>::iterator it = idList.begin();
-         for(;it != idList.end(); it++)
-         {
-            codecIdArray[index++] = (*it);
-         }
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
-         delete [] codecIdArray;
+         myConversationManager.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
       }
       return;
    }
@@ -862,8 +853,6 @@ ReConServerProcess::main (int argc, char** argv)
    _codecIds.push_back(SdpCodec::SDP_CODEC_G729);           // 18 - G.729
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
 #endif
-   unsigned int *codecIds = &_codecIds[0];
-   unsigned int numCodecIds = _codecIds.size();
 
    Log::initialize(reConServerConfig, argv[0]);
 
@@ -1326,7 +1315,7 @@ ReConServerProcess::main (int argc, char** argv)
             assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
-      mConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      mConversationManager->buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1350,7 +1339,7 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-            mConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+            mConversationManager->buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else
