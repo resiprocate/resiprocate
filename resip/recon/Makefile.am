@@ -27,7 +27,6 @@ librecon_la_LIBADD += -lsipXport
 endif
 if USE_KURENTO
 librecon_la_LIBADD += ../../media/kurento/libkurentoclient.la
-librecon_la_LIBADD += -lKurentoClientLib
 endif
 if USE_SRTP1
 librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
