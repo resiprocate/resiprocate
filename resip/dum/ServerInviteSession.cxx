@@ -521,6 +521,13 @@ ServerInviteSession::end(const Data& userReason)
    end(InviteSession::UserSpecified);
 }
 
+void
+ServerInviteSession::end(const ParserContainer<Token>& endReasons)
+{
+   mUserEndReasons = endReasons;
+   end(InviteSession::UserSpecified);
+}
+
 void 
 ServerInviteSession::end(EndReason reason)
 {

@@ -40,6 +40,7 @@ class ClientInviteSession : public InviteSession
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       void end(const Data& userReason) override;
+      void end(const ParserContainer<Token>& endReasons);
       void end(EndReason reason) override;
       void end() override;
 

@@ -352,11 +352,24 @@ Dialog::cancel()
 }
 
 void
-Dialog::end()
+Dialog::end(const Data& endReason, const ParserContainer<Token>& endReasons)
 {
    if (mInviteSession)
    {
-      mInviteSession->end();
+      // Currently End reasons are only passed to Invite sessions
+      if (endReasons.size() > 0)
+      {
+         mInviteSession->end(endReasons);
+
+      }
+      else if (endReason.size() > 0)
+      {
+         mInviteSession->end(endReason);
+      }
+      else
+      {
+         mInviteSession->end();
+      }
    }
 
    // End Subscriptions

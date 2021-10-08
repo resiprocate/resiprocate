@@ -326,6 +326,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   
                   auto bye = std::make_shared<SipMessage>();
                   dialog.makeRequest(*bye, BYE);
+                  addEndReasonToMessage(*bye);
                   dialog.send(bye);
                   
                   if (mDum.mDialogEventStateManager)
@@ -427,7 +428,8 @@ DialogSet::dispatch(const SipMessage& msg)
                   
                auto bye = std::make_shared<SipMessage>();
                dialog.makeRequest(*bye, BYE);
-               dialog.send(std::move(bye));                  
+               addEndReasonToMessage(*bye);
+               dialog.send(std::move(bye));
 
                // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
             }
@@ -919,6 +921,35 @@ DialogSet::findDialog(const DialogId id)
    }
 }
 
+void 
+DialogSet::end(const Data& endReason)
+{
+   mEndReason = endReason;
+   end();
+}
+
+void 
+DialogSet::end(const ParserContainer<Token>& endReasons)
+{
+   mEndReasons = endReasons;
+   end();
+}
+
+void 
+DialogSet::addEndReasonToMessage(SipMessage& msg)
+{
+   if (mEndReasons.size() > 0)
+   {
+      msg.header(h_Reasons) = mEndReasons;
+   }
+   else if (mEndReason.size() > 0)
+   {
+      Token reason("SIP");
+      reason.param(p_text) = mEndReason;
+      msg.header(h_Reasons).push_back(reason);
+   }
+}
+
 void
 DialogSet::end()
 {
@@ -928,7 +959,7 @@ DialogSet::end()
          mState = WaitingToEnd;
          break;
       case WaitingToEnd:
-         break;         
+         break;
       case ReceivedProvisional:
       {
          if (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE)
@@ -936,6 +967,7 @@ DialogSet::end()
             mState = Terminating;
             // !jf! this should be made exception safe
             std::shared_ptr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
+            addEndReasonToMessage(*cancel);
             mDum.send(cancel);
 
             if (mDum.mDialogEventStateManager)
@@ -977,7 +1009,7 @@ DialogSet::end()
                {
                   try
                   {
-                     it->second->end();
+                     it->second->end(mEndReason, mEndReasons);
                   }
                   catch (UsageUseException& e)
                   {
@@ -995,7 +1027,7 @@ DialogSet::end()
          {
             try
             {
-               it->second->end();
+               it->second->end(mEndReason, mEndReasons);
             }
             catch(UsageUseException& e)
             {
