@@ -126,5 +126,5 @@ tr::TextChannel::processReceivedMessage(const resip::SipMessage& message, uint s
 void
 tr::TextChannel::messageAcknowledged(const QString &messageId)
 {
-   qDebug() << "TextChannel::messageAcknowledged() not implemented" << endl;
+   qDebug() << "TextChannel::messageAcknowledged() not implemented" << Qt::endl;
 }

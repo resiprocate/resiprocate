@@ -353,8 +353,8 @@ SipXConversationManager::enableNoiseReduction(bool enable)
 }
 
 void 
-SipXConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds,
-                                              unsigned int codecIds[], resip::SdpContents& sessionCaps)
+SipXConversationManager::buildSessionCapabilities(const resip::Data& ipaddress,
+                                              const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps)
 {
    sessionCaps = SdpContents::Empty;  // clear out passed in SdpContents
 
@@ -393,9 +393,11 @@ SipXConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, 
    SdpContents::Session::Medium medium("audio", 0, 1, "RTP/AVP");
 
    bool firstCodecAdded = false;
-   for(unsigned int idIter = 0; idIter < numCodecIds; idIter++)
+   for(std::vector<unsigned int>::const_iterator idIter = codecIds.begin();
+      idIter != codecIds.end(); idIter++)
    {
-      const SdpCodec* sdpcodec = codecList.getCodec((SdpCodec::SdpCodecTypes)codecIds[idIter]);
+      const unsigned int& codecId = *idIter;
+      const SdpCodec* sdpcodec = codecList.getCodec((SdpCodec::SdpCodecTypes)codecId);
       if(sdpcodec)
       {
          UtlString mediaType;
@@ -444,7 +446,7 @@ SipXConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, 
                }
             }
 
-            DebugLog(<< "Added codec to session capabilites: id=" << codecIds[idIter] 
+            DebugLog(<< "Added codec to session capabilites: id=" << codecId
                     << " type=" << mimeSubType.data()
                     << " rate=" << sdpcodec->getSampleRate()
                     << " plen=" << sdpcodec->getPacketLength()

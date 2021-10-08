@@ -184,8 +184,8 @@ public:
      Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
             codecs not loaded are ignored.
    */
-   virtual void buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds,
-      unsigned int codecIds[], resip::SdpContents& sessionCaps);
+   virtual void buildSessionCapabilities(const resip::Data& ipaddress,
+      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps);
 
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?

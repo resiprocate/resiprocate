@@ -815,7 +815,7 @@ main (int argc, char** argv)
    cout << "Tests for sipXConversationMediaInterfaceMode" << endl;
    executeConversationTest(SipXConversationManager::sipXConversationMediaInterfaceMode);
 
-#ifdef WIN32  // FIXME need to update sipXtapi on Linux distributions
+#ifdef RECON_LOCAL_HW_TESTS
    // Reset counters, etc.
    SCENARIO = 1;
    LAST_SCENARIO = 4;
