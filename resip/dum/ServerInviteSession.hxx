@@ -53,6 +53,7 @@ class ServerInviteSession: public InviteSession
 
       /** Makes the specific dialog end. Will send a 480. */
       virtual void end(const Data& userReason);
+      virtual void end(const ParserContainer<Token>& endReasons);
       virtual void end(EndReason reason);
       virtual void end();
 

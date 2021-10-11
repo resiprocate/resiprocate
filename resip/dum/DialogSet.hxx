@@ -37,6 +37,8 @@ class DialogSet
       std::shared_ptr<UserProfile> getUserProfile() const;
       void setUserProfile(std::shared_ptr<UserProfile> userProfile);
 
+      void end(const Data& endReason);
+      void end(const ParserContainer<Token>& endReasons);
       void end();
       void dispatch(const SipMessage& msg);
       
@@ -123,6 +125,11 @@ class DialogSet
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
       std::shared_ptr<UserProfile> mUserProfile;
+
+      // Used when EndReason(s) are specified
+      Data mEndReason;
+      ParserContainer<Token> mEndReasons;
+      void addEndReasonToMessage(SipMessage& msg);
 
       friend EncodeStream& operator<<(EncodeStream& strm, const DialogSet& ds);
 };

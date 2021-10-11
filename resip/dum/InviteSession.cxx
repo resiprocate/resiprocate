@@ -657,12 +657,19 @@ InviteSession::end(const Data& userReason)
    end(UserSpecified);
 }
 
+void 
+InviteSession::end(const ParserContainer<Token>& endReasons)
+{
+   mUserEndReasons = endReasons;
+   end(UserSpecified);
+}
+
 void
 InviteSession::end(EndReason reason)
 {
    if (mEndReason == NotSpecified)
    {
-      mEndReason = reason;   
+      mEndReason = reason;
    }
    
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
@@ -742,9 +749,11 @@ InviteSession::end(EndReason reason)
 class InviteSessionEndCommand : public DumCommandAdapter
 {
 public:
-   InviteSessionEndCommand(const InviteSessionHandle& inviteSessionHandle, InviteSession::EndReason reason)
+   InviteSessionEndCommand(const InviteSessionHandle& inviteSessionHandle, InviteSession::EndReason reason, const Data& userEndReason = Data::Empty, ParserContainer<Token> userEndReasons = ParserContainer<Token>())
       : mInviteSessionHandle(inviteSessionHandle),
-        mReason(reason)
+        mReason(reason),
+        mUserEndReason(userEndReason),
+        mUserEndReasons(userEndReasons)
    {
    }
 
@@ -752,7 +761,21 @@ public:
    {
       if(mInviteSessionHandle.isValid())
       {
-         mInviteSessionHandle->end(mReason);
+         if (mReason == InviteSession::UserSpecified)
+         {
+            if (mUserEndReasons.size() > 0)
+            {
+               mInviteSessionHandle->end(mUserEndReasons);
+            }
+            else
+            {
+               mInviteSessionHandle->end(mUserEndReason);
+            }
+         }
+         else
+         {
+            mInviteSessionHandle->end(mReason);
+         }
       }
    }
 
@@ -763,12 +786,26 @@ public:
 private:
    InviteSessionHandle mInviteSessionHandle;
    InviteSession::EndReason mReason;
+   Data mUserEndReason;
+   ParserContainer<Token> mUserEndReasons;
 };
 
 void
 InviteSession::endCommand(EndReason reason)
 {
    mDum.post(new InviteSessionEndCommand(getSessionHandle(), reason));
+}
+
+void
+InviteSession::endCommand(const Data& userReason)
+{
+   mDum.post(new InviteSessionEndCommand(getSessionHandle(), InviteSession::UserSpecified, userReason));
+}
+
+void
+InviteSession::endCommand(const ParserContainer<Token>& endReasons)
+{
+   mDum.post(new InviteSessionEndCommand(getSessionHandle(), InviteSession::UserSpecified, Data::Empty, endReasons));
 }
 
 void
@@ -3155,10 +3192,17 @@ InviteSession::sendBye()
    Data txt;
    if (mEndReason != NotSpecified)
    {
-      Token reason("SIP");
-      txt = getEndReasonString(mEndReason);
-      reason.param(p_text) = txt;
-      bye->header(h_Reasons).push_back(reason);      
+      if (mEndReason == UserSpecified && mUserEndReasons.size() > 0)
+      {
+         bye->header(h_Reasons) = mUserEndReasons;
+      }
+      else
+      {
+         Token reason("SIP");
+         txt = getEndReasonString(mEndReason);
+         reason.param(p_text) = txt;
+         bye->header(h_Reasons).push_back(reason);
+      }
    }
 
    if (mDum.mDialogEventStateManager)

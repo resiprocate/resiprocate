@@ -37,11 +37,43 @@ AppDialogSet::end()
    }
 }
 
+void 
+AppDialogSet::end(const Data& reason)
+{
+   if (mDialogSet)
+   {
+      mDialogSet->end(reason);
+   }
+}
+
+void 
+AppDialogSet::end(const ParserContainer<Token>& endReasons)
+{
+   if (mDialogSet)
+   {
+      mDialogSet->end(endReasons);
+   }
+}
+
 void
 AppDialogSet::endCommand()
 {
    AppDialogSetHandle handle = getHandle();
    mDum.post(new AppDialogSetEndCommand(handle));
+}
+
+void
+AppDialogSet::endCommand(const Data& reason)
+{
+   AppDialogSetHandle handle = getHandle();
+   mDum.post(new AppDialogSetEndCommand(handle, reason));
+}
+
+void
+AppDialogSet::endCommand(const ParserContainer<Token>& endReasons)
+{
+   AppDialogSetHandle handle = getHandle();
+   mDum.post(new AppDialogSetEndCommand(handle, Data::Empty, endReasons));
 }
 
 std::shared_ptr<UserProfile>  

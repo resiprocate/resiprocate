@@ -1306,7 +1306,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          // Call back anyone who wants to perform outbound decoration
          msg->callOutboundDecorators(source, target,remoteSigcompId);
 
-         Transport::SipMessageLoggingHandler* handler = transport->getSipMessageLoggingHandler();
+         std::shared_ptr<Transport::SipMessageLoggingHandler> handler = transport->getSipMessageLoggingHandler();
          if(handler)
          {
             handler->outboundMessage(source, target, *msg);
@@ -1390,7 +1390,7 @@ TransportSelector::retransmit(const SendData& data)
    if(transport)
    {
       // If this is not true, it means the transport has been removed.
-      Transport::SipMessageLoggingHandler* handler = transport->getSipMessageLoggingHandler();
+      std::shared_ptr<Transport::SipMessageLoggingHandler> handler = transport->getSipMessageLoggingHandler();
       if(handler)
       {
          handler->outboundRetransmit(transport->getTuple(), data.destination, data);

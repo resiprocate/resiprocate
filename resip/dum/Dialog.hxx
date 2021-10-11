@@ -68,7 +68,7 @@ class Dialog
       //returns an invalid handle if there is no session
       InviteSessionHandle getInviteSession();
       
-      void end();
+      void end(const Data& endReason, const ParserContainer<Token>& endReasons);
       void dispatch(const SipMessage& msg);
       void processNotify(const SipMessage& notify);
       
