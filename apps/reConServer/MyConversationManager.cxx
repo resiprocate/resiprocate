@@ -190,6 +190,12 @@ MyConversationManager::onParticipantConnected(ParticipantHandle partHandle, cons
 }
 
 void
+MyConversationManager::onParticipantConnectedConfirmed(ParticipantHandle partHandle, const SipMessage& msg)
+{
+   InfoLog(<< "onParticipantConnectedConfirmed: handle=" << partHandle << " msg=" << msg.brief());
+}
+
+void
 MyConversationManager::onParticipantRedirectSuccess(ParticipantHandle partHandle)
 {
    InfoLog(<< "onParticipantRedirectSuccess: handle=" << partHandle);
