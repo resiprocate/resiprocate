@@ -304,6 +304,8 @@ ConversationManager::post(resip::ApplicationMessage& message, unsigned int ms)
 void 
 ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& offer)
 {
+   // FIXME Kurento: need to build an OPTIONS response that resembles Kurento SDP
+
    // copy over session capabilities
    offer = profile->sessionCaps();
 
