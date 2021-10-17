@@ -64,7 +64,7 @@ public:
    virtual ~SipXRemoteParticipant();
 
    virtual unsigned int getLocalRTPPort();
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
+   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c);
 
    virtual int getConnectionPortOnBridge();
    virtual bool hasInput() { return true; }
@@ -80,7 +80,7 @@ protected:
 
 private:       
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
-   resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationAnswerReady c) override;
+   resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
    bool formMidDialogSdpOfferOrAnswer(const resip::SdpContents& localSdp, const resip::SdpContents& remoteSdp, resip::SdpContents& newSdp, bool offer);
 };
 

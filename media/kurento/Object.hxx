@@ -98,6 +98,7 @@ class BaseRtpEndpoint : public Element
       void setExternalIPv4(ContinuationVoid c, const std::string& addr);
       void setExternalIPv6(ContinuationVoid c, const std::string& addr);
       void generateOffer(ContinuationString s);
+      void processAnswer(ContinuationString s, const std::string& sdp);
       void processOffer(ContinuationString s, const std::string& sdp);
       void getLocalSessionDescriptor(ContinuationString s);
 

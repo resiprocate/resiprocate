@@ -120,8 +120,10 @@ SipXRemoteParticipant::getMediaConnectionId()
 }
 
 void
-SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
+SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 {
+   std::unique_ptr<SdpContents> _offer(new SdpContents);
+   SdpContents& offer = *_offer;
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = dynamic_cast<ConversationProfile*>(getDialogSet().getUserProfile().get());
    std::unique_ptr<SdpContents> _sessionCaps;
@@ -334,6 +336,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       }
    }
    setProposedSdp(offer);
+   c(true, std::move(_offer));
 }
 
 bool
@@ -548,7 +551,7 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
 }
 
 AsyncBool
-SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationAnswerReady c)
+SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpReady c)
 {
    // Note: this implementation has minimal support for draft-ietf-mmusic-sdp-capabilities-negotiation
    //       for responding "best-effort" / optional SRTP (Dtls-SRTP) offers

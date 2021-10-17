@@ -164,6 +164,12 @@ Object::onSubscribeSuccess(ContinuationVoid c, const json::Object& message)
 void
 Object::onVoidSuccess(ContinuationVoid c, const json::Object& message)
 {
+   if(message.Find(JSON_RPC_ERROR) != message.end())
+   {
+      json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_DATA][JSON_RPC_ERROR_MESSAGE];
+      ErrLog(<<"Error from Kurento: " << errorMessage.Value());
+      resip_assert(0); // FIXME - pass up to the application
+   }
    DebugLog(<<"successfully executed RPC method without a return value");
    c();
 }
@@ -171,6 +177,12 @@ Object::onVoidSuccess(ContinuationVoid c, const json::Object& message)
 void
 Object::onStringSuccess(ContinuationString c, const json::Object& message)
 {
+   if(message.Find(JSON_RPC_ERROR) != message.end())
+   {
+      json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_DATA][JSON_RPC_ERROR_MESSAGE];
+      ErrLog(<<"Error from Kurento: " << errorMessage.Value());
+      resip_assert(0); // FIXME - pass up to the application
+   }
    DebugLog(<<"successfully executed RPC method returning string");
    json::String value = message[JSON_RPC_RESULT][JSON_RPC_VALUE];
    std::string& _value = value.Value();
@@ -251,6 +263,14 @@ void
 BaseRtpEndpoint::generateOffer(ContinuationString c)
 {
    invokeStringMethod("generateOffer", c);
+}
+
+void
+BaseRtpEndpoint::processAnswer(ContinuationString c, const std::string& sdp)
+{
+   json::Object params;
+   params["answer"] = json::String(sdp);
+   invokeStringMethod("processAnswer", c, params);
 }
 
 void

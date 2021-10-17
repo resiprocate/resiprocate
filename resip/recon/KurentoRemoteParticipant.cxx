@@ -107,45 +107,124 @@ KurentoRemoteParticipant::getMediaConnectionId()
 }
 
 void
-KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
+KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 {
-   // FIXME Kurento - this needs to be async
-
-   // FIXME Kurento - use holdSdp
-
    // FIXME Kurento - include video, SRTP, WebRTC?
 
    try
    {
-      // FIXME: replace the following code for new media/kurento async API
+      bool endpointExists = true;
+      bool isWebRTC = false; // FIXME - define per RemoteParticipant
+      if(!mEndpoint)
+      {
+         endpointExists = false;
+         if(isWebRTC)
+         {
+            // delay while ICE gathers candidates from STUN and TURN
+            mIceGatheringDone = false;
+            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoConversationManager.mPipeline));
+         }
+         else
+         {
+            mEndpoint.reset(new kurento::RtpEndpoint(mKurentoConversationManager.mPipeline));
+         }
+      }
 
-      //kurento_client::KurentoClient& client = mKurentoConversationManager.getKurentoClient();
+      // FIXME - add listeners for Kurento events
 
-      //client.createRtpEndpoint("RtpEndpoint");
-      //setEndpointId(client.getRtpEndpointId().c_str());
-      //client.invokeConnect();
-      //client.gatherCandidates();
-      //client.invokeProcessOffer();
+      kurento::ContinuationString cOnOfferReady = [this, holdSdp, c](const std::string& offer){
+         StackLog(<<"offer FROM Kurento: " << offer);
+         HeaderFieldValue hfv(offer.data(), offer.size());
+         Mime type("application", "sdp");
+         std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
+         if(holdSdp)
+         {
+            SdpContents::Session::MediumContainer::iterator it = _offer->session().media().begin();
+            for(;it != _offer->session().media().end(); it++)
+            {
+               SdpContents::Session::Medium& m = *it;
+               if(m.exists("sendrecv"))
+               {
+                  m.clearAttribute("sendrecv");
+                  m.addAttribute("sendonly");
+               }
+               if(m.exists("recvonly"))
+               {
+                  m.clearAttribute("recvonly");
+                  m.addAttribute("inactive");
+               }
+            }
+         }
+         else
+         {
+            SdpContents::Session::MediumContainer::iterator it = _offer->session().media().begin();
+            for(;it != _offer->session().media().end(); it++)
+            {
+               SdpContents::Session::Medium& m = *it;
+               if(m.exists("sendonly"))
+               {
+                  m.clearAttribute("sendonly");
+                  m.addAttribute("sendrecv");
+               }
+               if(m.exists("inactive"))
+               {
+                  m.clearAttribute("inactive");
+                  m.addAttribute("recvonly");
+               }
+            }
+         }
+         setProposedSdp(*_offer);
+         c(true, std::move(_offer));
+      };
 
-      std::string _offer; // FIXME
-      //std::string _offer(client.getMReturnedSdp());
+      kurento::ContinuationVoid cConnected = [this, isWebRTC, c, cOnOfferReady]{
+         mEndpoint->generateOffer([this, isWebRTC, c, cOnOfferReady](const std::string& offer){
+            if(isWebRTC)
+            {
+               std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
 
-      StackLog(<<"offer FROM Kurento: " << _offer.c_str());
+               std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
+                        std::make_shared<kurento::EventContinuation>([this, cOnOfferReady]{
+                  mIceGatheringDone = true;
+                  mEndpoint->getLocalSessionDescriptor(cOnOfferReady);
+               });
+               webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
 
-      HeaderFieldValue hfv(_offer.data(), _offer.size());
-      Mime type("application", "sdp");
-      offer = SdpContents(hfv, type);
+               webRtc->gatherCandidates([]{
+                        // FIXME - handle the case where it fails
+                        // on success, we continue from the IceGatheringDone event handler
+               }); // gatherCandidates
+            }
+            else
+            {
+               cOnOfferReady(offer);
+            }
+         }); // generateOffer
+      };
 
-      setProposedSdp(offer);
+      if(endpointExists)
+      {
+         std::ostringstream offerMangledBuf;
+         offerMangledBuf << *getLocalSdp();
+         std::shared_ptr<std::string> offerMangledStr = std::make_shared<std::string>(offerMangledBuf.str());
+         cOnOfferReady(*offerMangledStr);
+      }
+      else{
+         mEndpoint->create([this, cConnected]{
+            mEndpoint->connect(cConnected, *mEndpoint); // connect
+         }); // create
+      }
+
    }
    catch(exception& e)
    {
       ErrLog(<<"something went wrong: " << e.what());
+      c(false, nullptr);
    }
 }
 
 AsyncBool
-KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationAnswerReady c)
+KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpReady c)
 {
    AsyncBool valid = False;
 
@@ -196,16 +275,21 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationA
 
       StackLog(<<"offer TO Kurento: " << *offerMangledStr);
 
+      bool endpointExists = true;
       mIceGatheringDone = true;
-      if(isWebRTC)  // FIXME - maybe an endpoint already exists?  If so, use it
+      if(!mEndpoint)
       {
-         // delay while ICE gathers candidates from STUN and TURN
-         mIceGatheringDone = false;
-         mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoConversationManager.mPipeline));
-      }
-      else
-      {
-         mEndpoint.reset(new kurento::RtpEndpoint(mKurentoConversationManager.mPipeline));
+         endpointExists = false;
+         if(isWebRTC)
+         {
+            // delay while ICE gathers candidates from STUN and TURN
+            mIceGatheringDone = false;
+            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoConversationManager.mPipeline));
+         }
+         else
+         {
+            mEndpoint.reset(new kurento::RtpEndpoint(mKurentoConversationManager.mPipeline));
+         }
       }
 
       // FIXME - add listeners for Kurento events
@@ -215,38 +299,63 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationA
          HeaderFieldValue hfv(answer.data(), answer.size());
          Mime type("application", "sdp");
          std::unique_ptr<SdpContents> _answer(new SdpContents(hfv, type));
+         if(isHolding())
+         {
+            SdpContents::Session::MediumContainer::iterator it = _answer->session().media().begin();
+            for(;it != _answer->session().media().end(); it++)
+            {
+               SdpContents::Session::Medium& m = *it;
+               if(m.exists("sendrecv"))
+               {
+                  m.clearAttribute("sendrecv");
+                  m.addAttribute("sendonly");
+               }
+               if(m.exists("recvonly"))
+               {
+                  m.clearAttribute("recvonly");
+                  m.addAttribute("inactive");
+               }
+            }
+         }
          setLocalSdp(*_answer);
          setRemoteSdp(*offerMangled);
-         updateConversation();
          c(true, std::move(_answer));
       };
 
-      mEndpoint->create([this, offerMangled, offerMangledStr, isWebRTC, c, cOnAnswerReady]{
-         mEndpoint->connect([this, offerMangled, offerMangledStr, isWebRTC, c, cOnAnswerReady]{
-            mEndpoint->processOffer([this, offerMangled, isWebRTC, c, cOnAnswerReady](const std::string& answer){
-               if(isWebRTC)
-               {
-                  std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, c, cOnAnswerReady]{
+         mEndpoint->processOffer([this, offerMangled, isWebRTC, c, cOnAnswerReady](const std::string& answer){
+            if(isWebRTC)
+            {
+               std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
 
-                  std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
-                        std::make_shared<kurento::EventContinuation>([this, cOnAnswerReady]{
-                     mIceGatheringDone = true;
-                     mEndpoint->getLocalSessionDescriptor(cOnAnswerReady);
-                  });
-                  webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
+               std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
+                     std::make_shared<kurento::EventContinuation>([this, cOnAnswerReady]{
+                  mIceGatheringDone = true;
+                  mEndpoint->getLocalSessionDescriptor(cOnAnswerReady);
+               });
+               webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
 
-                  webRtc->gatherCandidates([]{
-                     // FIXME - handle the case where it fails
-                     // on success, we continue from the IceGatheringDone event handler
-                  }); // gatherCandidates
-               }
-               else
-               {
-                  cOnAnswerReady(answer);
-               }
-            }, *offerMangledStr); // processOffer
-         }, *mEndpoint); // connect
-      }); // create
+               webRtc->gatherCandidates([]{
+                  // FIXME - handle the case where it fails
+                  // on success, we continue from the IceGatheringDone event handler
+               }); // gatherCandidates
+            }
+            else
+            {
+               cOnAnswerReady(answer);
+            }
+         }, *offerMangledStr); // processOffer
+      };
+
+      if(endpointExists)
+      {
+         cConnected();
+      }
+      else{
+         mEndpoint->create([this, cConnected]{
+            mEndpoint->connect(cConnected, *mEndpoint); // connect
+         }); // create
+      }
 
       valid = Async;
    }
@@ -272,57 +381,6 @@ void
 KurentoRemoteParticipant::addToConversation(Conversation *conversation, unsigned int inputGain, unsigned int outputGain)
 {
    RemoteParticipant::addToConversation(conversation, inputGain, outputGain);
-}
-
-void
-KurentoRemoteParticipant::updateConversation()
-{
-   const ConversationMap& cm = getConversations();
-   Conversation* conversation = cm.begin()->second;
-   Conversation::ParticipantMap& m = conversation->getParticipants();
-   if(m.size() < 2)
-   {
-      DebugLog(<<"we are first in the conversation");
-      return;
-   }
-   if(m.size() > 2)
-   {
-      WarningLog(<<"participants already here, can't join, size = " << m.size());
-      return;
-   }
-   DebugLog(<<"joining a Conversation with an existing Participant");
-
-   if(mEndpoint.get() == 0)
-   {
-      DebugLog(<<"our endpoint is not initialized"); // FIXME
-      return;
-   }
-   mEndpoint->disconnect([this, conversation]{
-      // Find the other Participant / endpoint
-
-      // FIXME - only two Participants currently supported,
-      // match the Participants by room name instead
-
-      Conversation::ParticipantMap& m = conversation->getParticipants();
-      KurentoRemoteParticipant* krp = 0;
-      Conversation::ParticipantMap::iterator it = m.begin();
-      while(it != m.end() && krp == 0)
-      {
-         krp = dynamic_cast<KurentoRemoteParticipant*>(it->second.getParticipant());
-         if(krp == this)
-         {
-            krp = 0;
-         }
-      }
-      resip_assert(krp);
-      std::shared_ptr<kurento::Element> otherEndpoint(krp->mEndpoint);
-
-      otherEndpoint->disconnect([this, otherEndpoint]{
-        mEndpoint->connect([]{}, *otherEndpoint);
-        otherEndpoint->connect([]{}, *mEndpoint);
-      }, *otherEndpoint); // otherEndpoint->disconnect()
-   }, *mEndpoint);  // mEndpoint->disconnect()
-
 }
 
 void

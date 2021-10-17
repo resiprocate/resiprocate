@@ -54,6 +54,7 @@ reConServer_LDADD += -lsipXtack
 endif
 if USE_KURENTO
 reConServer_LDADD += -lboost_system
+reConServer_LDADD += ../../media/kurento/libkurentoclient.la
 endif
 reConServer_LDADD += ../../resip/dum/libdum.la
 reConServer_LDADD += ../../resip/stack/libresip.la

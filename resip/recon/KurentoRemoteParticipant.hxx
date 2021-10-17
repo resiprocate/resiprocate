@@ -57,7 +57,7 @@ public:
 
    virtual ~KurentoRemoteParticipant();
 
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
+   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c);
 
    virtual int getConnectionPortOnBridge();
    virtual bool hasInput() { return true; }
@@ -70,7 +70,8 @@ public:
 
    virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100) override;
    virtual void removeFromConversation(Conversation *conversation) override;
-   virtual void updateConversation();
+
+   virtual std::shared_ptr<kurento::BaseRtpEndpoint> getEndpoint() { return mEndpoint; }; // FIXME Kurento
 
 protected:
    virtual bool mediaStackPortAvailable();
@@ -78,7 +79,7 @@ protected:
    virtual KurentoRemoteParticipantDialogSet& getKurentoDialogSet() { return dynamic_cast<KurentoRemoteParticipantDialogSet&>(getDialogSet()); };
 
 private:       
-   resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationAnswerReady c) override;
+   resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
 
    std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
    volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primite, e.g. condition_variable

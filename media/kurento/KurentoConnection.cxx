@@ -32,7 +32,7 @@ KurentoConnection::~KurentoConnection()
 void
 KurentoConnection::onOpen(client* wSClient, websocketpp::connection_hdl h)
 {
-   ErrLog(<<"onOpen");
+   InfoLog(<<"onOpen");
    processSendQueue();
    // FIXME
 }
@@ -41,14 +41,14 @@ void
 KurentoConnection::onFail(client* wSClient, websocketpp::connection_hdl h)
 {
    ErrLog(<<"onFail");
-   // FIXME
+   resip_assert(0);  // FIXME - reconnect?
 }
 
 void
 KurentoConnection::onClose(client* wSClient, websocketpp::connection_hdl h)
 {
    ErrLog(<<"onClose");
-   // FIXME
+   resip_assert(0);  // FIXME - reconnect?
 }
 
 void
@@ -193,7 +193,7 @@ KurentoConnection::processSendQueue()
       }
       else
       {
-         ErrLog(<<"connection to Kurento is not in the open state"); // FIXME
+         ErrLog(<<"connection to Kurento is not in the open state, message has been queued"); // FIXME
          return;
       }
    }

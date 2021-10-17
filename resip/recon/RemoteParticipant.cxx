@@ -106,74 +106,82 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 void
 RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
-   SdpContents offer;
-   auto profile = callingProfile;
-   if (!profile)
-   {
-      DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling getDefaultOutgoingConversationProfile");
-      profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
-   }
-   buildSdpOffer(mLocalHold, offer);
-   auto invitemsg = mDum.makeInviteSession(
-      destination, 
-      std::move(profile),
-      &offer, 
-      &mDialogSet);
-
-   std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
-   for (; it != extraHeaders.end(); it++)
-   {
-      resip::Data headerName(it->first);
-      resip::Data value(it->second);
-      try
+   buildSdpOffer(mLocalHold, [this, destination, callingProfile, extraHeaders](bool success, std::unique_ptr<SdpContents> _offer){
+      if(!success)
       {
-         if (resip::isEqualNoCase(headerName, "Replaces"))
+         // FIXME
+         ErrLog(<<"something went wrong");
+         return;
+      }
+      SdpContents& offer = *_offer;
+      auto profile = callingProfile;
+      if (!profile)
+      {
+         DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling getDefaultOutgoingConversationProfile");
+         profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
+      }
+      auto invitemsg = mDum.makeInviteSession(
+               destination,
+               std::move(profile),
+               &offer,
+               &mDialogSet);
+
+      std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
+      for (; it != extraHeaders.end(); it++)
+      {
+         resip::Data headerName(it->first);
+         resip::Data value(it->second);
+         try
          {
-            HeaderFieldValue hfv(value.data(), value.size());
-            CallId callid(hfv, Headers::UNKNOWN);
-            invitemsg->header(h_Replaces) = callid;
-         }
-         else if (resip::isEqualNoCase(headerName, "Remote-Party-ID"))
-         {
-            invitemsg->header(h_RemotePartyIds).push_back(NameAddr(value));
-         }
-         else
-         {
-            StackLog(<< "processing an extension header: " << headerName << ": " << value);
-            resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
-            if (hType == resip::Headers::UNKNOWN)
+            if (resip::isEqualNoCase(headerName, "Replaces"))
             {
-               resip::ExtensionHeader h_Tmp(headerName.c_str());
-               resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
-               resip::StringCategory sc(value);
-               pc.push_back(sc);
+               HeaderFieldValue hfv(value.data(), value.size());
+               CallId callid(hfv, Headers::UNKNOWN);
+               invitemsg->header(h_Replaces) = callid;
+            }
+            else if (resip::isEqualNoCase(headerName, "Remote-Party-ID"))
+            {
+               invitemsg->header(h_RemotePartyIds).push_back(NameAddr(value));
             }
             else
             {
-               WarningLog(<< "Discarding header '" << headerName << "', only extension headers and select standard headers permitted");
+               StackLog(<< "processing an extension header: " << headerName << ": " << value);
+               resip::Headers::Type hType = resip::Headers::getType(headerName.data(), (int)headerName.size());
+               if (hType == resip::Headers::UNKNOWN)
+               {
+                  resip::ExtensionHeader h_Tmp(headerName.c_str());
+                  resip::ParserContainer<resip::StringCategory>& pc = invitemsg->header(h_Tmp);
+                  resip::StringCategory sc(value);
+                  pc.push_back(sc);
+               }
+               else
+               {
+                  WarningLog(<< "Discarding header '" << headerName << "', only extension headers and select standard headers permitted");
+               }
             }
          }
+         catch (resip::BaseException& ex)
+         {
+            WarningLog(<< "Discarding header '" << headerName << "', invalid value format '" << value << "': " << ex);
+         }
       }
-      catch (resip::BaseException& ex)
+
+      mDialogSet.sendInvite(std::move(invitemsg));
+
+      // Clear any pending hold/unhold requests since our offer/answer here will handle it
+      if(mPendingRequest.mType == Hold ||
+               mPendingRequest.mType == Unhold)
       {
-         WarningLog(<< "Discarding header '" << headerName << "', invalid value format '" << value << "': " << ex);
+         mPendingRequest.mType = None;
       }
-   }
 
-   mDialogSet.sendInvite(std::move(invitemsg));
+      // Adjust RTP streams
+      adjustRTPStreams(true);
 
-   // Clear any pending hold/unhold requests since our offer/answer here will handle it
-   if(mPendingRequest.mType == Hold ||
-      mPendingRequest.mType == Unhold)
-   {
-      mPendingRequest.mType = None;
-   }
+      // Special case of this call - since call in addToConversation will not work, since we didn't know our bridge port at that time
+      applyBridgeMixWeights();
 
-   // Adjust RTP streams
-   adjustRTPStreams(true);
-
-   // Special case of this call - since call in addToConversation will not work, since we didn't know our bridge port at that time
-   applyBridgeMixWeights();
+   });
 }
 
 void 
@@ -741,22 +749,28 @@ RemoteParticipant::acceptPendingOODRefer()
       if(accepted)
       {
          // Create offer
-         SdpContents offer;
-         buildSdpOffer(mLocalHold, offer);
+         buildSdpOffer(mLocalHold, [this, profile](bool success, std::unique_ptr<SdpContents> _offer){
+            if(!success)
+            {
+               // FIXME
+               ErrLog(<<"something went wrong");
+               return;
+            }
+            SdpContents& offer = *_offer;
+            // Build the Invite
+            auto invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg,
+                     profile,
+                     mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
+                     &offer,
+                     DialogUsageManager::None,  //EncryptionLevel
+                     0,     //Alternative Contents
+                     &mDialogSet);
+            mDialogSet.sendInvite(std::move(invitemsg));
 
-         // Build the Invite
-         auto invitemsg = mDum.makeInviteSessionFromRefer(mPendingOODReferMsg, 
-                                                                           profile,
-                                                                           mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
-                                                                           &offer, 
-                                                                           DialogUsageManager::None,  //EncryptionLevel 
-                                                                           0,     //Aleternative Contents
-                                                                           &mDialogSet);
-         mDialogSet.sendInvite(std::move(invitemsg)); 
+            adjustRTPStreams(true);
 
-         adjustRTPStreams(true);
-
-         stateTransition(Connecting);
+            stateTransition(Connecting);
+         });
       }
       else
       {
@@ -881,13 +895,17 @@ RemoteParticipant::processReferNotify(ClientSubscriptionHandle h, const SipMessa
 void 
 RemoteParticipant::provideOffer(bool postOfferAccept)
 {
-   std::unique_ptr<SdpContents> offer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
    
-   buildSdpOffer(mLocalHold, *offer);
-
-   mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
-   mOfferRequired = false;
+   buildSdpOffer(mLocalHold,[this, postOfferAccept](bool success, std::unique_ptr<SdpContents> offer){
+      if(!success)
+      {
+         ErrLog(<<"buildSdpOffer failed");
+         return;
+      }
+      mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
+      mOfferRequired = false;
+   });
 }
 
 AsyncBool
@@ -1376,15 +1394,21 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       replaceWithParticipant(participant);      // adjust conversation mappings 
 
       // Create offer
-      SdpContents offer;
-      participant->buildSdpOffer(holdSdp, offer);  
+      participant->buildSdpOffer(holdSdp, [this, msg, profile, ss, participantDialogSet, participant](bool success, unique_ptr<SdpContents> _offer){
+         if(!success)
+         {
+            ErrLog(<<"something went wrong");
+            return;
+         }
+         SdpContents& offer = *_offer;
+         // Build the Invite
+         auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
+         participantDialogSet->sendInvite(std::move(NewInviteMsg));
 
-      // Build the Invite
-      auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, ss->getHandle(), &offer, DialogUsageManager::None, 0, participantDialogSet);
-      participantDialogSet->sendInvite(std::move(NewInviteMsg)); 
+         // Set RTP stack to listen
+         participant->adjustRTPStreams(true);
+      });
 
-      // Set RTP stack to listen
-      participant->adjustRTPStreams(true);
    }
    catch(BaseException &e)
    {
@@ -1413,15 +1437,20 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    replaceWithParticipant(participant);      // adjust conversation mappings
 
    // Create offer
-   SdpContents offer;
-   participant->buildSdpOffer(holdSdp, offer);
+   participant->buildSdpOffer(holdSdp, [this, msg, profile, participantDialogSet, participant](bool success, unique_ptr<SdpContents> _offer){
+      if(!success)
+      {
+         ErrLog(<<"something went wrong");
+         return;
+      }
+      SdpContents& offer = *_offer;
+      // Build the Invite
+      auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, &offer, participantDialogSet);
+      participantDialogSet->sendInvite(std::move(NewInviteMsg));
 
-   // Build the Invite
-   auto NewInviteMsg = mDum.makeInviteSessionFromRefer(msg, profile, &offer, participantDialogSet);
-   participantDialogSet->sendInvite(std::move(NewInviteMsg)); 
-
-   // Set RTP stack to listen
-   participant->adjustRTPStreams(true);
+      // Set RTP stack to listen
+      participant->adjustRTPStreams(true);
+   });
 }
 
 void

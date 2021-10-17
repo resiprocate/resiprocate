@@ -57,12 +57,14 @@ public:
                                       recon::ConversationHandle origConvHandle, recon::ParticipantHandle origPartHandle) override;
    virtual void onParticipantAlerting(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
    virtual void onParticipantConnected(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
+   virtual void onParticipantConnectedConfirmed(recon::ParticipantHandle partHandle, const resip::SipMessage& msg) override;
    virtual void onParticipantRedirectSuccess(recon::ParticipantHandle partHandle) override;
    virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode) override;
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override;
    virtual void displayInfo();
 
 protected:
+   virtual void onIncomingKurento(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    std::list<recon::ConversationHandle> mConversationHandles;
    std::list<recon::ParticipantHandle> mLocalParticipantHandles;
    std::list<recon::ParticipantHandle> mRemoteParticipantHandles;

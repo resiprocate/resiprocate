@@ -48,7 +48,11 @@ public:
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer) = 0;
+
+   typedef std::function<void(bool sdpOk, std::unique_ptr<resip::SdpContents> sdp)>
+   ContinuationSdpReady;
+   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c) = 0;
+
    virtual bool isHolding() { return mLocalHold; }
    virtual bool isRemoteHold() { return mRemoteHold; }
 
@@ -128,15 +132,12 @@ protected:
 
    RemoteParticipantDialogSet& getDialogSet() { return mDialogSet; };
 
-   typedef std::function<void(bool answerOk, std::unique_ptr<resip::SdpContents> answer)>
-   ContinuationAnswerReady;
-
 private:       
    void hold();
    void unhold();
    void provideOffer(bool postOfferAccept);
    resip::AsyncBool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   virtual resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationAnswerReady c) = 0;
+   virtual resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) = 0;
    virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;

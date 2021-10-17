@@ -4,6 +4,10 @@
 #include "ConversationManager.hxx"
 #include "ConversationParticipantAssignment.hxx"
 
+namespace reconserver
+{
+class MyConversationManager;  // FIXME Kurento
+}
 namespace recon
 {
 class Participant;
@@ -96,6 +100,7 @@ private:
    RelatedConversationSet *mRelatedConversationSet;
 
    ParticipantMap mParticipants;
+   friend class reconserver::MyConversationManager; // FIXME Kurento
    Participant* getParticipant(ParticipantHandle partHandle);
    bool mDestroying;
    unsigned int mNumLocalParticipants;
