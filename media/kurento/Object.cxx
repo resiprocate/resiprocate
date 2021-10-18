@@ -55,6 +55,12 @@ Object::subscribe(const std::string& eventName, ContinuationVoid c)
 }
 
 void
+Object::release(ContinuationVoid c)
+{
+   invokeVoidMethod("release", c);
+}
+
+void
 Object::onEvent(const std::string& eventType, const json::Object& message)
 {
    if(mEventListeners.find(eventType) == mEventListeners.end())
@@ -166,7 +172,7 @@ Object::onVoidSuccess(ContinuationVoid c, const json::Object& message)
 {
    if(message.Find(JSON_RPC_ERROR) != message.end())
    {
-      json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_DATA][JSON_RPC_ERROR_MESSAGE];
+      json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_MESSAGE];
       ErrLog(<<"Error from Kurento: " << errorMessage.Value());
       resip_assert(0); // FIXME - pass up to the application
    }
@@ -179,7 +185,7 @@ Object::onStringSuccess(ContinuationString c, const json::Object& message)
 {
    if(message.Find(JSON_RPC_ERROR) != message.end())
    {
-      json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_DATA][JSON_RPC_ERROR_MESSAGE];
+      json::String errorMessage = message[JSON_RPC_ERROR][JSON_RPC_ERROR_MESSAGE];
       ErrLog(<<"Error from Kurento: " << errorMessage.Value());
       resip_assert(0); // FIXME - pass up to the application
    }

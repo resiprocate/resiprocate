@@ -316,7 +316,7 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
 
    // Set local port in offer
    // for now we only allow 1 audio media
-   resip_assert(offer.session().media().size() == 1);
+   resip_assert(offer.session().media().size() > 0);
    resip_assert(offer.session().media().front().name() == "audio");
 }
 

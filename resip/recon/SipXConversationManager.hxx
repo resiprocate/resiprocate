@@ -185,7 +185,7 @@ public:
             codecs not loaded are ignored.
    */
    virtual void buildSessionCapabilities(const resip::Data& ipaddress,
-      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps);
+      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps) override;
 
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
@@ -254,9 +254,6 @@ private:
    friend class SipXMediaInterface;
 
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
-
-   // exists here (as opposed to RemoteParticipant) - since it is required for OPTIONS responses
-   virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer) override;
 
    friend class OutputBridgeMixWeightsCmd;
    void outputBridgeMatrixImpl(ConversationHandle convHandle = 0) override;

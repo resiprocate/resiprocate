@@ -201,12 +201,12 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
       resip_assert(krp);
       std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
 
-      otherEndpoint->disconnect([this, answeredEndpoint, otherEndpoint, krp]{
-         answeredEndpoint->connect([this, answeredEndpoint]{
-            //setLocalHold(false); // FIXME
+      otherEndpoint->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+         answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+            //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
          }, *otherEndpoint);
          otherEndpoint->connect([this, krp]{
-            //krp->setLocalHold(false); // FIXME
+            //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
          }, *answeredEndpoint);
       }, *otherEndpoint); // otherEndpoint->disconnect()
    }, *answeredEndpoint);  // answeredEndpoint->disconnect()

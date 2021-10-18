@@ -143,31 +143,41 @@ KurentoConversationManager::outputBridgeMatrixImpl(ConversationHandle convHandle
    }
 }
 
-void 
-KurentoConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& offer)
+void
+KurentoConversationManager::buildSessionCapabilities(const resip::Data& ipaddress,
+                               const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps)
 {
-   // copy over session capabilities
-   offer = profile->sessionCaps();
-
-   // Set sessionid and version for this offer
-   UInt64 currentTime = Timer::getTimeMicroSec();
-   offer.session().origin().getSessionId() = currentTime;
-   offer.session().origin().getVersion() = currentTime;  
-
-   // Set local port in offer
-   // for now we only allow 1 audio media
-   resip_assert(offer.session().media().size() == 1);
-   resip_assert(offer.session().media().front().name() == "audio");
-}
-
-//void
-//KurentoConversationManager::buildSessionCapabilities(const resip::Data& ipaddress, unsigned int numCodecIds,
-//                                              unsigned int codecIds[], resip::SdpContents& sessionCaps)
-//{
    // FIXME Kurento:
    // - check who calls this (called from testUA, reConServer, ...
    // - adapt for Kurento
-//}
+
+   // as a hack, we populate it with a static copy of the SDP from Kurento
+
+   // FIXME: ipaddress is assumed to be IP4
+   Data caps("v=0\r\n"
+             "o=- 3843572881 3843572881 IN IP4 " + ipaddress + "\r\n"
+             "s=Kurento Media Server\r\n"
+             "c=IN IP4 " + ipaddress + "\r\n"
+             "t=0 0\r\n"
+             "m=audio 34712 RTP/AVP 0\r\n"
+             "a=sendrecv\r\n"
+             "a=rtcp:34713\r\n"
+             "a=rtpmap:0 PCMU/8000\r\n"
+             "a=ssrc:866007149 cname:user2141419334@host-99aef493\r\n"
+             "m=video 2962 RTP/AVP 97 126\r\n"
+             "a=sendrecv\r\n"
+             "a=rtcp:2963\r\n"
+             "a=rtpmap:97 H264/90000\r\n"
+             "a=rtpmap:126 H264/90000\r\n"
+             "a=fmtp:97 packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16\r\n"
+             "a=fmtp:126 packetization-mode=1;profile-level-id=428016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16\r\n"
+             "a=ssrc:1014502683 cname:user2141419334@host-99aef493\r\n");
+
+   HeaderFieldValue hfv(caps.data(), caps.size());
+   Mime type("application", "sdp");
+   SdpContents sdp(hfv, type);
+   sessionCaps = sdp;
+}
 
 bool
 KurentoConversationManager::supportsMultipleMediaInterfaces()

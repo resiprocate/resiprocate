@@ -24,6 +24,7 @@ class Object : public KurentoResponseHandler
       void processResponse(const std::string& id, std::shared_ptr<KurentoResponseHandler> krh, const json::Object& message) override;
 
       virtual void create(ContinuationVoid c) { createObject(c); };
+      virtual void release(ContinuationVoid c);
 
       virtual void onEvent(const std::string& eventType, const json::Object& message);
       template <typename T>

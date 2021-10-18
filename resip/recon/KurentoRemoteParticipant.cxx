@@ -322,7 +322,18 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          c(true, std::move(_answer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, c, cOnAnswerReady]{
+      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, endpointExists, c, cOnAnswerReady]{
+         if(endpointExists)
+         {
+            // FIXME - Kurento should handle hold/resume
+            // but it fails with SDP_END_POINT_ALREADY_NEGOTIATED
+            // if we call processOffer more than once
+            std::ostringstream answerBuf;
+            answerBuf << *getLocalSdp();
+            std::shared_ptr<std::string> answerStr = std::make_shared<std::string>(answerBuf.str());
+            cOnAnswerReady(*answerStr);
+            return;
+         }
          mEndpoint->processOffer([this, offerMangled, isWebRTC, c, cOnAnswerReady](const std::string& answer){
             if(isWebRTC)
             {

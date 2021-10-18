@@ -498,9 +498,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-#ifdef PREFER_SIPXTAPI
          myConversationManager.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
-#endif
       }
       return;
    }
@@ -1329,10 +1327,7 @@ ReConServerProcess::main (int argc, char** argv)
             assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
-#ifdef PREFER_SIPXTAPI
-      // FIXME - how to do this for Kurento?
       mConversationManager->buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
-#endif
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1356,10 +1351,7 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-#ifdef PREFER_SIPXTAPI
-      // FIXME - how to do this for Kurento?
             mConversationManager->buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
-#endif
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else

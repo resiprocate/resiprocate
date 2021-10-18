@@ -164,6 +164,16 @@ public:
    */
    virtual void outputBridgeMatrix(ConversationHandle convHandle = 0) override;
 
+   /**
+     Builds a session capabilties SDPContents based on the passed in ipaddress
+     and codec ordering.
+     Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
+            codecs not loaded are ignored.
+   */
+   virtual void buildSessionCapabilities(const resip::Data& ipaddress,
+      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps) override;
+
+
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
    ///////////////////////////////////////////////////////////////////////
@@ -220,9 +230,6 @@ private:
    friend class LocalParticipant;
    friend class BridgeMixer;
    friend class KurentoMediaInterface;
-
-   // exists here (as opposed to RemoteParticipant) - since it is required for OPTIONS responses
-   virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer) override;
 
    friend class OutputBridgeMixWeightsCmd;
    void outputBridgeMatrixImpl(ConversationHandle convHandle = 0) override;
