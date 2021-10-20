@@ -1,11 +1,12 @@
 
-#include "MyConversationManager.hxx"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <rutil/Log.hxx>
+
+#include "MyConversationManager.hxx"
+
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
@@ -186,6 +187,12 @@ void
 MyConversationManager::onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
 {
    InfoLog(<< "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
+}
+
+void
+MyConversationManager::onParticipantConnectedConfirmed(ParticipantHandle partHandle, const SipMessage& msg)
+{
+   InfoLog(<< "onParticipantConnectedConfirmed: handle=" << partHandle << " msg=" << msg.brief());
 }
 
 void

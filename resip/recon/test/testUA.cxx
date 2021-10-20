@@ -740,7 +740,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
-      std::list<unsigned int> idList;
+      std::vector<unsigned int> idList;
       ParseBuffer pb(arg[0]);
       pb.skipWhitespace();
       while(!pb.eof())
@@ -757,18 +757,10 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       unsigned int numCodecIds = (unsigned int)idList.size();
       if(numCodecIds > 0)
       {
-         unsigned int* codecIdArray = new unsigned int[numCodecIds];
-         unsigned int index = 0;
-         std::list<unsigned int>::iterator it = idList.begin();
-         for(;it != idList.end(); it++)
-         {
-            codecIdArray[index++] = (*it);
-         }
          Data ipAddress(g_conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, g_conversationProfile->sessionCaps());
-         delete [] codecIdArray;
+         myConversationManager.buildSessionCapabilities(ipAddress, idList, g_conversationProfile->sessionCaps());
       }
       return;
    }
@@ -1065,7 +1057,7 @@ main (int argc, char** argv)
    Data tlsDomain = DnsUtil::getLocalHostName();
    NameAddr outboundProxy;
    Data logLevel("INFO");
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
+   std::vector<unsigned int> codecIds = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */,
                                SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
                                SdpCodec::SDP_CODEC_G729A /* 18 - g729 */,
                                SdpCodec::SDP_CODEC_OPUS /* 147 - opus */,
@@ -1079,7 +1071,6 @@ main (int argc, char** argv)
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                //SdpCodec::SDP_CODEC_G722 /* 9 - G.722 */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
 
    // Loop through command line arguments and process them
    for(int i = 1; i < argc; i++)
@@ -1544,7 +1535,7 @@ main (int argc, char** argv)
    {
       MyConversationManager myConversationManager(localAudioEnabled, multipleMediaInterfaceModeEnabled, defaultAutoHoldModeToDisabled);
       MyUserAgent ua(&myConversationManager, profile);
-      myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, g_conversationProfile->sessionCaps());
+      myConversationManager.buildSessionCapabilities(address, codecIds, g_conversationProfile->sessionCaps());
       ua.addConversationProfile(g_conversationProfile);
 
       //////////////////////////////////////////////////////////////////////////////

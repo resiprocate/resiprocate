@@ -352,11 +352,24 @@ Dialog::cancel()
 }
 
 void
-Dialog::end()
+Dialog::end(const Data& endReason, const ParserContainer<Token>& endReasons)
 {
    if (mInviteSession)
    {
-      mInviteSession->end();
+      // Currently End reasons are only passed to Invite sessions
+      if (endReasons.size() > 0)
+      {
+         mInviteSession->end(endReasons);
+
+      }
+      else if (endReason.size() > 0)
+      {
+         mInviteSession->end(endReason);
+      }
+      else
+      {
+         mInviteSession->end();
+      }
    }
 
    // End Subscriptions
@@ -578,17 +591,7 @@ Dialog::dispatch(const SipMessage& msg)
          break;
          case REFER:
          {
-//             if (mInviteSession == 0)
-//             {
-//                InfoLog (<< "Received an in dialog refer in a non-invite dialog: " << request.brief());
-//                SipMessage failure;
-//                makeResponse(failure, request, 603);
-//                mDum.sendResponse(failure);
-//                return;
-//             }
-//             else 
-
-            if  (!request.exists(h_ReferTo))
+            if (!request.exists(h_ReferTo))
             {
                InfoLog (<< "Received refer w/out a Refer-To: " << request.brief());
                SipMessage failure;
@@ -604,10 +607,17 @@ Dialog::dispatch(const SipMessage& msg)
                      (request.exists(h_Requires) &&
                      request.header(h_Requires).find(Token("norefersub"))))
                {
-                  resip_assert(mInviteSession);
+                  if (mInviteSession == 0)
+                  {
+                     InfoLog(<< "Received an in dialog refer with no subscription in a non-invite dialog: " << request.brief());
+                     SipMessage failure;
+                     makeResponse(failure, request, 603);
+                     mDum.sendResponse(failure);
+                     return;
+                  }
                   mInviteSession->referNoSub(msg);
                }
-               else
+               else  // else we need a subscription
                {
                   ServerSubscription* server = findMatchingServerSub(request);
                   ServerSubscriptionHandle serverHandle;

@@ -207,6 +207,13 @@ ClientInviteSession::end(const Data& userReason)
 }
 
 void
+ClientInviteSession::end(const ParserContainer<Token>& endReasons)
+{
+   mUserEndReasons = endReasons;
+   end(InviteSession::UserSpecified);
+}
+
+void
 ClientInviteSession::end(EndReason reason)
 {
    InfoLog (<< toData(mState) << ": end");

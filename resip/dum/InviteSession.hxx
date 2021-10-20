@@ -70,6 +70,7 @@ class InviteSession : public DialogUsage
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(const Data& userReason);
+      virtual void end(const ParserContainer<Token>& endReasons);
       virtual void end(EndReason reason);
       virtual void end() override; // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
@@ -130,7 +131,9 @@ class InviteSession : public DialogUsage
       virtual void provideAnswerCommand(const Contents& answer);
       /** Asynchronously makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void endCommand(EndReason reason = NotSpecified);
-      /** Asynchronously rejects an offer at the SIP level.  Can also be used to 
+      virtual void endCommand(const Data& userReason);
+      virtual void endCommand(const resip::ParserContainer<resip::Token>& endReasons);
+      /** Asynchronously rejects an offer at the SIP level.  Can also be used to
           send a 488 to a reINVITE or UPDATE */
       virtual void rejectCommand(int statusCode, WarningCategory *warning = 0);
       virtual void referCommand(const NameAddr& referTo, bool referSub = true);
@@ -415,6 +418,7 @@ class InviteSession : public DialogUsage
 
       // Used when a user-specified EndReason is needed
       Data mUserEndReason;
+      ParserContainer<Token> mUserEndReasons;  // This is used if set, otherwise mUserEndReason is used, if set
 
       // Used to respond to 2xx retransmissions.
       typedef HashMap<Data, std::shared_ptr<SipMessage>> AckMap;

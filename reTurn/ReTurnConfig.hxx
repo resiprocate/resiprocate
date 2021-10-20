@@ -78,13 +78,6 @@ public:
    resip::Data mUsersDatabaseFilename;
    bool mUserDatabaseHashedPasswords;
 
-   resip::Data mLoggingType;
-   resip::Data mSyslogFacility;
-   resip::Data mLoggingLevel;
-   resip::Data mLoggingFilename;
-   resip::Data mLoggingMessageStructure;
-   unsigned int mLoggingFileMaxLineCount;
-   resip::Data mLoggingInstanceName;
    bool mDaemonize;
    resip::Data mPidFile;
    resip::Data mRunAsUser;

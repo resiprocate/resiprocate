@@ -477,7 +477,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
-      std::list<unsigned int> idList;
+      std::vector<unsigned int> idList;
       ParseBuffer pb(arg[0]);
       pb.skipWhitespace();
       while(!pb.eof())
@@ -491,21 +491,12 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
             pb.skipChar(',');
          }
       }
-      unsigned int numCodecIds = idList.size();
-      if(numCodecIds > 0)
+      if(!idList.empty())
       {
-         unsigned int* codecIdArray = new unsigned int[numCodecIds];
-         unsigned int index = 0;
-         std::list<unsigned int>::iterator it = idList.begin();
-         for(;it != idList.end(); it++)
-         {
-            codecIdArray[index++] = (*it);
-         }
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
-         delete [] codecIdArray;
+         myConversationManager.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
       }
       return;
    }
@@ -818,13 +809,6 @@ ReConServerProcess::main (int argc, char** argv)
    Data serverText = reConServerConfig.getConfigData("ServerText", "reConServer");
 #endif
    uri = reConServerConfig.getConfigNameAddr("SIPUri", uri, true);
-   Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
-   Data syslogFacilityName = reConServerConfig.getConfigData("SyslogFacility", "LOG_DAEMON", true);
-   Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
-   Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
-   Data loggingMessageStructure = reConServerConfig.getConfigData("LogMessageStructure", "Unstructured", true);
-   Data loggingInstanceName = reConServerConfig.getConfigData("LoggingInstanceName", "", true);
-   unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
    Data cdrLogFilename = reConServerConfig.getConfigData("CDRLogFile", "", true);
    Data captureHost = reConServerConfig.getConfigData("CaptureHost", "");
    int capturePort = reConServerConfig.getConfigInt("CapturePort", 9060);
@@ -869,11 +853,8 @@ ReConServerProcess::main (int argc, char** argv)
    _codecIds.push_back(SdpCodec::SDP_CODEC_G729);           // 18 - G.729
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
 #endif
-   unsigned int *codecIds = &_codecIds[0];
-   unsigned int numCodecIds = _codecIds.size();
 
-   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str(), 0, syslogFacilityName, loggingMessageStructure, loggingInstanceName);
-   Log::setMaxLineCount(loggingFileMaxLineCount);
+   Log::initialize(reConServerConfig, argv[0]);
 
 #ifdef USE_SIPXTAPI
    // Setup logging for the sipX media stack
@@ -918,10 +899,6 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
    InfoLog( << "  Enable Opus codec = " << (enableOpus ? "true" : "false"));
-   InfoLog( << "  Log Type = " << loggingType);
-   InfoLog( << "  Syslog Facility = " << syslogFacilityName);
-   InfoLog( << "  Log Level = " << loggingLevel);
-   InfoLog( << "  Log Filename = " << loggingFilename);
    InfoLog( << "  Daemonize = " << (daemonize ? "true" : "false"));
    InfoLog( << "  KeyboardInput = " << (mKeyboardInput ? "true" : "false"));
    InfoLog( << "  PidFile = " << pidFile);
@@ -1310,7 +1287,9 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->secureMediaRequired() = secureMediaRequired;
    conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
+#ifdef USE_SIPXTAPI
    Flow::maxReceiveFifoSize = maxReceiveFifoSize;
+#endif
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
@@ -1336,7 +1315,7 @@ ReConServerProcess::main (int argc, char** argv)
             assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
-      mConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      mConversationManager->buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1360,7 +1339,7 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-            mConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+            mConversationManager->buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else

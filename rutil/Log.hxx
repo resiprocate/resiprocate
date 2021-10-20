@@ -10,6 +10,7 @@
 
 #include <set>
 
+#include "rutil/ConfigParse.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
 #include "rutil/HashMap.hxx"
@@ -206,6 +207,9 @@ class Log
                              const Data& syslogFacility = "LOG_DAEMON",
                              MessageStructure messageStructure = Unstructured,
                              const Data& instanceName = "");
+      static void initialize(const ConfigParse& configParse,
+                             const Data& appName,
+                             ExternalLogger* externalLogger = 0);
 
       /** @brief Set logging level for current thread.
       * If thread has no local logger attached, then set global logging level.

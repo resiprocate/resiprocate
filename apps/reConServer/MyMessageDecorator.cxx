@@ -59,6 +59,11 @@ MyMessageDecorator::decorateMessage(SipMessage &msg,
       }
       else
       {
+         if(!sdp->session().isConnection())
+         {
+            ErrLog(<<"SDP is missing the connection parameter");
+            return;
+         }
          SdpContents::Session::Connection& c = sdp->session().connection();
          StackLog(<<"session connection address = " << c.getAddress());
          if(c.getAddress() == "0.0.0.0")
