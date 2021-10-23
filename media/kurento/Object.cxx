@@ -302,6 +302,15 @@ RtpEndpoint::~RtpEndpoint()
 {
 }
 
+SipRtpEndpoint::SipRtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline)
+   : BaseRtpEndpoint("SipRtpEndpoint", mediaPipeline)
+{
+}
+
+SipRtpEndpoint::~SipRtpEndpoint()
+{
+}
+
 WebRtcEndpoint::WebRtcEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline)
    : BaseRtpEndpoint("WebRtcEndpoint", mediaPipeline)
 {

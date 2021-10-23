@@ -57,7 +57,10 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(partHandle, kurentoConversationManager),
   RemoteParticipant(partHandle, kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(partHandle, kurentoConversationManager)
+  KurentoParticipant(partHandle, kurentoConversationManager),
+  mRemoveExtraMediaDescriptors(false),
+  mSipRtpEndpoint(true),
+  mReuseSdpAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -68,7 +71,10 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(KurentoConversationManager& k
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(kurentoConversationManager),
   RemoteParticipant(kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(kurentoConversationManager)
+  KurentoParticipant(kurentoConversationManager),
+  mRemoveExtraMediaDescriptors(false),
+  mSipRtpEndpoint(true),
+  mReuseSdpAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -106,6 +112,14 @@ KurentoRemoteParticipant::getMediaConnectionId()
    return getKurentoDialogSet().getMediaConnectionId();
 }
 
+kurento::BaseRtpEndpoint*
+KurentoRemoteParticipant::newEndpoint()
+{
+   return mSipRtpEndpoint ?
+            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::SipRtpEndpoint(mKurentoConversationManager.mPipeline)) :
+            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::RtpEndpoint(mKurentoConversationManager.mPipeline));
+}
+
 void
 KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 {
@@ -126,7 +140,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          }
          else
          {
-            mEndpoint.reset(new kurento::RtpEndpoint(mKurentoConversationManager.mPipeline));
+            mEndpoint.reset(newEndpoint());
          }
       }
 
@@ -229,7 +243,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
    AsyncBool valid = False;
 
    std::shared_ptr<SdpContents> offerMangled = std::make_shared<SdpContents>(offer);
-   while(offerMangled->session().media().size() > 2)
+   while(mRemoveExtraMediaDescriptors && offerMangled->session().media().size() > 2)
    {
       // FIXME hack to remove BFCP
       DebugLog(<<"more than 2 media descriptors, removing the last");
@@ -288,7 +302,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          }
          else
          {
-            mEndpoint.reset(new kurento::RtpEndpoint(mKurentoConversationManager.mPipeline));
+            mEndpoint.reset(newEndpoint());
          }
       }
 
@@ -323,7 +337,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       };
 
       kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, endpointExists, c, cOnAnswerReady]{
-         if(endpointExists)
+         if(endpointExists && mReuseSdpAnswer)
          {
             // FIXME - Kurento should handle hold/resume
             // but it fails with SDP_END_POINT_ALREADY_NEGOTIATED

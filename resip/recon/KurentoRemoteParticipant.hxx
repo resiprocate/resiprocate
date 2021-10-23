@@ -78,11 +78,17 @@ protected:
 
    virtual KurentoRemoteParticipantDialogSet& getKurentoDialogSet() { return dynamic_cast<KurentoRemoteParticipantDialogSet&>(getDialogSet()); };
 
-private:       
+private:
+   kurento::BaseRtpEndpoint* newEndpoint();
    resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
 
    std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
-   volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primite, e.g. condition_variable
+   volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primitive, e.g. condition_variable
+
+public: // FIXME
+   bool mRemoveExtraMediaDescriptors;
+   bool mSipRtpEndpoint;
+   bool mReuseSdpAnswer;
 };
 
 }

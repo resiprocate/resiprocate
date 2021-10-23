@@ -1304,7 +1304,7 @@ ReConServerProcess::main (int argc, char** argv)
       {
          case ReConServerConfig::None:
 #ifdef PREFER_KURENTO
-            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(kurentoUri, autoAnswerEnabled));
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(reConServerConfig, kurentoUri, autoAnswerEnabled));
 #else
             mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
 #endif

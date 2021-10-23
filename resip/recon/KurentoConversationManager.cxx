@@ -215,13 +215,17 @@ KurentoConversationManager::createMediaResourceParticipantInstance(ParticipantHa
 RemoteParticipant *
 KurentoConversationManager::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   return new KurentoRemoteParticipant(*this, dum, rpds);
+   KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(*this, dum, rpds);
+   configureRemoteParticipant(rp);
+   return rp;
 }
 
 RemoteParticipant *
 KurentoConversationManager::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   return new KurentoRemoteParticipant(partHandle, *this, dum, rpds);
+   KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(partHandle, *this, dum, rpds);
+   configureRemoteParticipant(rp);
+   return rp;
 }
 
 RemoteParticipantDialogSet *

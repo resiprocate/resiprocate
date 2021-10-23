@@ -58,7 +58,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
   mDialogId(Data::Empty, Data::Empty, Data::Empty),
   mState(Connecting),
   mOfferRequired(false),
-  mLocalHold(false), // FIXME Kurento
+  mLocalHold(true),
   mRemoteHold(false),
   mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
   mLocalSdp(0),
@@ -78,7 +78,7 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
   mDialogId(Data::Empty, Data::Empty, Data::Empty),
   mState(Connecting),
   mOfferRequired(false),
-  mLocalHold(false), // FIXME Kurento
+  mLocalHold(true),
   mLocalSdp(0),
   mRemoteSdp(0)
 {

@@ -93,9 +93,9 @@ class BaseRtpEndpoint : public Element
 {
    protected:
       BaseRtpEndpoint(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline);
-      virtual ~BaseRtpEndpoint();
 
    public:
+      virtual ~BaseRtpEndpoint();
       void setExternalIPv4(ContinuationVoid c, const std::string& addr);
       void setExternalIPv6(ContinuationVoid c, const std::string& addr);
       void generateOffer(ContinuationString s);
@@ -110,6 +110,13 @@ class RtpEndpoint : public BaseRtpEndpoint
    public:
       RtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline);
       virtual ~RtpEndpoint();
+};
+
+class SipRtpEndpoint : public BaseRtpEndpoint
+{
+   public:
+      SipRtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline);
+      virtual ~SipRtpEndpoint();
 };
 
 class WebRtcEndpoint : public BaseRtpEndpoint

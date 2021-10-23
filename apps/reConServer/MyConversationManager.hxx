@@ -17,6 +17,8 @@
 #include <resip/recon/KurentoConversationManager.hxx>
 #endif
 
+#include "reConServerConfig.hxx"
+
 namespace reconserver
 {
 
@@ -34,7 +36,8 @@ class MyConversationManager : public recon::SipXConversationManager
 public:
 
 #ifdef PREFER_KURENTO
-   MyConversationManager(const resip::Data& kurentoUri, bool autoAnswerEnabled);
+   MyConversationManager(const ReConServerConfig& config, const resip::Data& kurentoUri, bool autoAnswerEnabled);
+   ReConServerConfig mConfig;
 #else
    MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
 #endif
@@ -48,6 +51,7 @@ public:
    virtual recon::ParticipantHandle createLocalParticipant() override;
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle) override;
    virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle) override;
+   virtual void onParticipantDestroyedKurento(recon::ParticipantHandle partHandle);
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up) override;
    virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile) override;
    virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile) override;
@@ -64,6 +68,7 @@ public:
    virtual void displayInfo();
 
 protected:
+   virtual void configureRemoteParticipant(recon::KurentoRemoteParticipant *rp) override;
    virtual void onIncomingKurento(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    std::list<recon::ConversationHandle> mConversationHandles;
    std::list<recon::ParticipantHandle> mLocalParticipantHandles;

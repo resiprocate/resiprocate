@@ -702,6 +702,8 @@ protected:
 
    bool isShuttingDown() { return mShuttingDown; }
 
+   Participant* getParticipant(ParticipantHandle partHandle); // FIXME, should be private
+
 private:
    friend class DefaultDialogSet;
    friend class Subscription;
@@ -784,7 +786,6 @@ private:
    ParticipantMap mParticipants;
    resip::Mutex mParticipantHandleMutex;
    ParticipantHandle mCurrentParticipantHandle;
-   Participant* getParticipant(ParticipantHandle partHandle);
 
    MediaResourceCache mMediaResourceCache;
 

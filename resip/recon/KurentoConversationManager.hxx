@@ -32,6 +32,7 @@ class Conversation;
 class Participant;
 class UserAgent;
 class ConversationProfile;
+class KurentoRemoteParticipant;
 class LocalParticipant;
 class MediaResourceParticipant;
 class RemoteParticipant;
@@ -263,6 +264,8 @@ private:
    int mKurentoTOSValue;  // FIXME Kurento - need to pass to Kurento, maybe move to superclass too
 
    bool addExtraPlayAndRecordResourcesToTopology();
+
+   virtual void configureRemoteParticipant(KurentoRemoteParticipant *rp) = 0;
 };
 
 }

@@ -26,8 +26,9 @@ using namespace reconserver;
 
 #ifdef USE_KURENTO
 // FIXME: see comments in MyConversationManager.hxx
-MyConversationManager::MyConversationManager(const Data& kurentoUri, bool autoAnswerEnabled)
+MyConversationManager::MyConversationManager(const ReConServerConfig& config, const Data& kurentoUri, bool autoAnswerEnabled)
       : KurentoConversationManager(kurentoUri),
+        mConfig(config),
 #else
 MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
       : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
@@ -110,6 +111,7 @@ void
 MyConversationManager::onParticipantDestroyed(ParticipantHandle partHandle)
 {
    InfoLog(<< "onParticipantDestroyed: handle=" << partHandle);
+   // FIXME - why is this duplicated here, why not call superclass?
    // Remove from whatever list it is in
    mRemoteParticipantHandles.remove(partHandle);
    mLocalParticipantHandles.remove(partHandle);
@@ -189,10 +191,10 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
 
       Conversation::ParticipantMap& m = conversation->getParticipants();
       KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
-      Conversation::ParticipantMap::iterator it = m.begin();
-      while(it != m.end() && krp == 0)
+      Conversation::ParticipantMap::iterator _it = m.begin();
+      for(;_it != m.end() && krp == 0; _it++)
       {
-         krp = dynamic_cast<KurentoRemoteParticipant*>(it->second.getParticipant());
+         krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
          if(krp == _p)
          {
             krp = 0;
@@ -213,6 +215,55 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
 }
 
 void
+MyConversationManager::onParticipantDestroyedKurento(ParticipantHandle partHandle)
+{
+   RoomMap::const_iterator it = mRooms.begin();
+   for(;it != mRooms.end();it++)
+   {
+      Conversation* conversation = getConversation(it->second);
+      KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(conversation->getParticipant(partHandle));
+      if(_p)
+      {
+         DebugLog(<<"found participant in room " << it->first);
+         std::shared_ptr<kurento::BaseRtpEndpoint> myEndpoint = _p->getEndpoint();
+         Conversation::ParticipantMap& m = conversation->getParticipants();
+         KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
+         Conversation::ParticipantMap::iterator _it = m.begin();
+         for(;_it != m.end() && krp == 0; _it++)
+         {
+            krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
+            if(krp == _p)
+            {
+               krp = 0;
+            }
+         }
+         if(krp)
+         {
+            std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
+
+            otherEndpoint->connect([this, myEndpoint, otherEndpoint, krp]{
+               DebugLog(<<"otherEndpoint now in loopback");
+               /*myEndpoint->release([this, myEndpoint, otherEndpoint, krp]{
+                  DebugLog(<<"release completed");
+               });*/
+
+            }, *otherEndpoint);
+         }
+         else
+         {
+            /*myEndpoint->release([this]{
+               DebugLog(<<"release completed");
+            });*/
+         }
+
+         return;
+      }
+
+   }
+
+}
+
+void
 MyConversationManager::onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
@@ -228,6 +279,7 @@ void
 MyConversationManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
+   onParticipantDestroyedKurento(partHandle);
 }
  
 void
@@ -282,6 +334,14 @@ void
 MyConversationManager::onParticipantRequestedHold(ParticipantHandle partHandle, bool held)
 {
    InfoLog(<< "onParticipantRequestedHold: handle=" << partHandle << " held=" << held);
+}
+
+void
+MyConversationManager::configureRemoteParticipant(KurentoRemoteParticipant *rp)
+{
+   rp->mRemoveExtraMediaDescriptors = mConfig.getConfigBool("KurentoRemoveExtraMediaDescriptors", false);
+   rp->mSipRtpEndpoint = mConfig.getConfigBool("KurentoSipRtpEndpoint", true);
+   rp->mReuseSdpAnswer = mConfig.getConfigBool("KurentoReuseSdpAnswer", false);
 }
 
 void
