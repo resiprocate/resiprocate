@@ -30,6 +30,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
               --with-return \
               --enable-repro-plugins \
               --with-python \
+                DEPS_PYTHON_VERSION=`python3 -c "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"` \
                 DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
                 DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
                 PYCXX_SRCDIR=/usr/src/CXX/Python3 \

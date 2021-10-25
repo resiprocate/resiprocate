@@ -79,6 +79,8 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
   mState(Connecting),
   mOfferRequired(false),
   mLocalHold(true),
+  mRemoteHold(false),
+  mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
   mLocalSdp(0),
   mRemoteSdp(0)
 {
