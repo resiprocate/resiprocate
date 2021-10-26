@@ -38,7 +38,7 @@ class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
       {
       };
 
-      ~PyRoutePlugin()
+      virtual ~PyRoutePlugin()
       {
          if(mDispatcher)
          {
@@ -151,6 +151,15 @@ class PyRoutePlugin : public Plugin, public Py::ExtensionModule<PyRoutePlugin>
             }
             return false;
          }
+
+         // Using the line
+         //     import resip
+         // in a script fails with an error "No module named 'resip'".
+         // Therefore, we force it to be included in the dictionary for the
+         // script we are invoking.
+         PyObject *thisModule = module().ptr();
+         PyDict_SetItemString(PyModule_GetDict(pyModule), "resip", thisModule);
+
          mPyModule.reset(new Py::Module(pyModule));
 
          if(mPyModule->getDict().hasKey("on_load"))

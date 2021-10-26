@@ -62,9 +62,17 @@ PyRouteProcessor::process(RequestContext &context)
    }
    work = new PyRouteWork(*this, context.getTransactionId(), &(context.getProxy()), msg);
    std::unique_ptr<ApplicationMessage> app(work);
-   mDispatcher.post(app);
-
-   return Processor::WaitingForEvent;
+   if(mDispatcher.post(app))
+   {
+      return Processor::WaitingForEvent;
+   }
+   else
+   {
+      ErrLog(<<"mDispatcher.post failed, maybe not accepting work");
+      context.sendResponse(*std::unique_ptr<SipMessage>
+         (Helper::makeResponse(msg, 500, "Internal error")));
+      return Processor::SkipAllChains;
+   }
 }
 
 /* ====================================================================
