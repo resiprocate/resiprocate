@@ -29,6 +29,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
   ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls $RADIUS_LIB --with-ssl \
               --enable-assert-syslog \
               --with-c-ares \
+              --with-fmt \
               --with-mysql \
               --with-postgresql \
               --with-repro \
