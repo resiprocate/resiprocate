@@ -139,6 +139,14 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
          {
             invitemsg->header(h_RemotePartyIds).push_back(NameAddr(value));
          }
+         else if (resip::isEqualNoCase(headerName, "Privacy"))
+         {
+            invitemsg->header(h_Privacies).push_back(PrivacyCategory(value));
+         }
+         else if (resip::isEqualNoCase(headerName, "P-Asserted-Identity"))
+         {
+            invitemsg->header(h_PAssertedIdentities).push_back(NameAddr(value));
+         }
          else
          {
             StackLog(<< "processing an extension header: " << headerName << ": " << value);
