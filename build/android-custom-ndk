@@ -3,7 +3,8 @@ set -e
 
 # The Android API level from
 # https://developer.android.com/studio/releases/platforms
-PLATFORM=android-9
+API_LEVEL=21
+PLATFORM=android-${API_LEVEL}
 
 # We only build a subset of the reSIProcate stack for Android.
 # Here we specify which directories we attempt to build.
@@ -35,15 +36,21 @@ then
   exit 1
 fi
 
-# you need OpenSSL from
-#  https://github.com/guardianproject/openssl-android.git
-# clone it and run "prebuilt/deploy-prebuilt.sh" or just "ndk-build"
-export OPENSSL_HOME=${HOME}/ws/openssl/openssl-android
+# This is where we download OpenSSL to be compiled
+# with the same toolchain.
+OPENSSL_URL=https://www.openssl.org/source/openssl-1.1.1l.tar.gz
 
-if [ ! -d ${OPENSSL_HOME} ];
+if [ "${BUILD_OPENSSL}" == 1 ];
 then
-  echo "Can't find ${OPENSSL_HOME}"
-  exit 1
+  OPENSSL_PREBUILT=`mktemp -d`
+  RESIP_BUILD_DIR="`pwd`"
+  cd ${OPENSSL_PREBUILT}
+  wget ${OPENSSL_URL}
+  OPENSSL_TGZ=`echo ${OPENSSL_URL} | tr '/' '\n' | tail -1`
+  tar xzf ${OPENSSL_TGZ}
+  OPENSSL_DIR_BASE=`basename ${OPENSSL_TGZ} .tar.gz`
+  OPENSSL_DIR=`readlink -f ${OPENSSL_DIR_BASE}`
+  cd "${RESIP_BUILD_DIR}"
 fi
 
 # Determine how many CPU cores are available for parallel compilation
@@ -80,46 +87,104 @@ do
 
   source ${MOD_SRC}
 
-  # We use the script provided by the NDK to make a standalone toolchain
-  # in the temporary location
-  # A standalone toolchain combines the following:
-  # - the compiler for the target CPU
-  # - the headers and system libraries for the target Android API level
-  # https://developer.android.com/ndk/guides/standalone_toolchain
-  MY_NDK=`mktemp -d`
-  echo "Creating a toolchain in ${MY_NDK}"
-  ${NDK_HOME}/build/tools/make-standalone-toolchain.sh --platform=${PLATFORM} \
-    --install-dir=${MY_NDK} --system=linux-x86_64 --arch=${MOD_ARCH}
+  OPENSSL_NDK_DIST=${NDK_DIST}/openssl/${MOD_NAME}
+  # Build OpenSSL for this architecture if requested to do so
+  if [ -z "${OPENSSL_DIR}" ];
+  then
+    OPENSSL_HEADER_CHECK=${OPENSSL_NDK_DIST}/include/openssl/opensslv.h
+    if [ ! -e ${OPENSSL_HEADER_CHECK} ];
+    then
+      echo "Could not find ${OPENSSL_HEADER_CHECK} - please try setting BUILD_OPENSSL=1"
+      exit 1
+    fi
+  else
+    export OPENSSL_INSTALL=${OPENSSL_DIR}/../install-${MOD_ARCH}
+    (
+      cd ${OPENSSL_DIR}
+      export ANDROID_NDK_HOME=${NDK_HOME}
+      PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$ANDROID_NDK_HOME/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:$PATH
+      if [ ${MOD_ARCH} == x86 ];
+      then
+        ./Configure android-${MOD_ARCH} -D__ANDROID_API__=${API_LEVEL} 386
+      else
+        ./Configure android-${MOD_ARCH} -D__ANDROID_API__=${API_LEVEL}
+      fi
+      # make sure builds for other architectures are cleaned up before
+      # we begin
+      make clean
+      make -j${PAR}
+      make -j${PAR} DESTDIR=${OPENSSL_INSTALL} install
+      mkdir -p ${OPENSSL_NDK_DIST}
+      # store a permanent copy for future use
+      cp -r ${OPENSSL_INSTALL}/usr/local/include ${OPENSSL_INSTALL}/usr/local/lib/* ${OPENSSL_NDK_DIST}
+    )
+  fi
 
   # This is a target triplet, it is the argument to the --host parameter
   # of GNU configure
   # https://www.gnu.org/software/automake/manual/html_node/Cross_002dCompilation.html
   # https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/html_node/Specifying-Target-Triplets.html
   export CROSS_COMPILE
-  # and it is also the prefix added to the filenames of tools for that
-  # cross-compile.
-  export TOOLCHAIN_PREFIX=${CROSS_COMPILE}
 
-  # File locations for the toolchain we just built:
-  export SYSROOT=${MY_NDK}/sysroot
-  export PATH=${MY_NDK}/bin:$PATH
+  if [ $API_LEVEL -lt 20 ];
+  then
+    # and for GNU tools, CROSS_COMPILE is also the prefix added to the filenames of tools for that
+    # cross-compile.
+    #export TOOLCHAIN_PREFIX=${CROSS_COMPILE}
 
-  # Names of the tools we are using, configure reads these from
-  # the environment.
-  export CPP=${TOOLCHAIN_PREFIX}-cpp
-  export AR=${TOOLCHAIN_PREFIX}-ar
-  export AS=${TOOLCHAIN_PREFIX}-as
-  export NM=${TOOLCHAIN_PREFIX}-nm
-  export CC=${TOOLCHAIN_PREFIX}-gcc
-  export CXX=${TOOLCHAIN_PREFIX}-g++
-  export LD=${TOOLCHAIN_PREFIX}-ld
-  export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
+    # We use the script provided by the NDK to make a standalone toolchain
+    # in the temporary location
+    # A standalone toolchain combines the following:
+    # - the compiler for the target CPU
+    # - the headers and system libraries for the target Android API level
+    # https://developer.android.com/ndk/guides/standalone_toolchain
+    MY_NDK=`mktemp -d`
+    echo "Creating a toolchain in ${MY_NDK}"
+    ${NDK_HOME}/build/tools/make-standalone-toolchain.sh --platform=${PLATFORM} \
+      --install-dir=${MY_NDK} --system=linux-x86_64 --arch=${MOD_ARCH}
+
+    # File locations for the toolchain we just built:
+    export SYSROOT=${MY_NDK}/sysroot
+    export PATH=${MY_NDK}/bin:$PATH
+
+    # Names of the tools we are using, configure reads these from
+    # the environment.
+    export CPP=${TOOLCHAIN_PREFIX}-cpp
+    export AR=${TOOLCHAIN_PREFIX}-ar
+    export AS=${TOOLCHAIN_PREFIX}-as
+    export NM=${TOOLCHAIN_PREFIX}-nm
+    export CC=${TOOLCHAIN_PREFIX}-gcc
+    export CXX=${TOOLCHAIN_PREFIX}-g++
+    export LD=${TOOLCHAIN_PREFIX}-ld
+    export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
+
+    CXX_STL="-lgnustl_shared"
+  else
+    # newer CLang build
+
+    # based on these instructions:
+    # https://developer.android.com/ndk/guides/other_build_systems#autoconf
+    export TOOLCHAIN=${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64
+    export TARGET=${CROSS_COMPILE}
+
+    export SYSROOT=${MY_NDK}/sysroot
+
+    export AR=$TOOLCHAIN/bin/llvm-ar
+    export CC=$TOOLCHAIN/bin/$TARGET${API_LEVEL}-clang
+    export AS=$CC
+    export CXX=$TOOLCHAIN/bin/$TARGET${API_LEVEL}-clang++
+    export LD=$TOOLCHAIN/bin/ld
+    export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
+    export STRIP=$TOOLCHAIN/bin/llvm-strip
+
+    CXX_STL="-lc++_shared"
+  fi
 
   # Set *FLAGS for the build, once again, configure reads these from
   # the environment.
-  export CPPFLAGS="${CPPFLAGS} -I${OPENSSL_HOME}/include"
+  export CPPFLAGS="${CPPFLAGS} -fPIC -I${OPENSSL_NDK_DIST}/include"
   export CXXFLAGS="${CXXFLAGS} -Os"
-  export LDFLAGS="${LDFLAGS} -L${OPENSSL_HOME}/libs/${MOD_NAME}"
+  export LDFLAGS="${LDFLAGS} -L${OPENSSL_NDK_DIST} ${CXX_STL}"
 
   autoreconf -fi
 
@@ -135,6 +200,11 @@ do
     --enable-android \
     --with-ssl \
     "$@"
+
+  # these need asio and boost headers
+  # reTurn can be modified to use C++11 std::bind and friends to
+  # reduce dependency on boost
+  # --with-return --with-recon
 
   # We build the specified directories one by one.
   for proj in $PROJECTS ;
