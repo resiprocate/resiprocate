@@ -1,14 +1,26 @@
 #!/bin/bash
 set -e
 
+# The Android API level from
+# https://developer.android.com/studio/releases/platforms
 PLATFORM=android-9
 
+# We only build a subset of the reSIProcate stack for Android.
+# Here we specify which directories we attempt to build.
 PROJECTS="rutil resip/stack resip/dum"
 
+# This is a tree where we place the compiled libraries
+# and also an Android.mk for the Android SDK to use when
+# building an app.
 NDK_DIST=${HOME}/ndk-prebuilt
 PROJECT=resip
 PROJECT_DIST=${NDK_DIST}/${PROJECT}
 
+# This directory contains files with settings for each
+# architecture we build.
+# The detailed list of supported architectures (Android ABI)
+# is here:
+# https://developer.android.com/ndk/guides/abis
 MODS_DIR=build/android/modulations
 
 if [ -z "${NDK_HOME}" ];
@@ -34,16 +46,20 @@ then
   exit 1
 fi
 
+# Determine how many CPU cores are available for parallel compilation
 CPUS=`cat /proc/cpuinfo | grep -c ^proc`
 PAR=`expr $CPUS + 1`
 
+# Temporary directory used for make install (DESTDIR)
 STAGE_PREBUILT=`mktemp -d`
 
 function cleanup {
+  # Remove compiled artifacts
   if [ ! -z "${STAGE_PREBUILT}" ];
   then
     rm -rf "${STAGE_PREBUILT}"
   fi
+  # Remove our transient toolchain
   if [ ! -z "${MY_NDK}" ];
   then
     rm -rf "${MY_NDK}"
@@ -64,18 +80,32 @@ do
 
   source ${MOD_SRC}
 
+  # We use the script provided by the NDK to make a standalone toolchain
+  # in the temporary location
+  # A standalone toolchain combines the following:
+  # - the compiler for the target CPU
+  # - the headers and system libraries for the target Android API level
+  # https://developer.android.com/ndk/guides/standalone_toolchain
   MY_NDK=`mktemp -d`
   echo "Creating a toolchain in ${MY_NDK}"
-
   ${NDK_HOME}/build/tools/make-standalone-toolchain.sh --platform=${PLATFORM} \
     --install-dir=${MY_NDK} --system=linux-x86_64 --arch=${MOD_ARCH}
 
+  # This is a target triplet, it is the argument to the --host parameter
+  # of GNU configure
+  # https://www.gnu.org/software/automake/manual/html_node/Cross_002dCompilation.html
+  # https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.70/html_node/Specifying-Target-Triplets.html
   export CROSS_COMPILE
+  # and it is also the prefix added to the filenames of tools for that
+  # cross-compile.
   export TOOLCHAIN_PREFIX=${CROSS_COMPILE}
 
+  # File locations for the toolchain we just built:
   export SYSROOT=${MY_NDK}/sysroot
-
   export PATH=${MY_NDK}/bin:$PATH
+
+  # Names of the tools we are using, configure reads these from
+  # the environment.
   export CPP=${TOOLCHAIN_PREFIX}-cpp
   export AR=${TOOLCHAIN_PREFIX}-ar
   export AS=${TOOLCHAIN_PREFIX}-as
@@ -85,12 +115,19 @@ do
   export LD=${TOOLCHAIN_PREFIX}-ld
   export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
 
+  # Set *FLAGS for the build, once again, configure reads these from
+  # the environment.
   export CPPFLAGS="${CPPFLAGS} -I${OPENSSL_HOME}/include"
   export CXXFLAGS="${CXXFLAGS} -Os"
   export LDFLAGS="${LDFLAGS} -L${OPENSSL_HOME}/libs/${MOD_NAME}"
 
   autoreconf -fi
 
+  # To make the paths shorter, we simply install to /libs
+  # Inside the Android APK package file they will be in
+  # the /lib directory.
+  # To compile other parts of the reSIProcate stack, add
+  # them to this configure command, for example, --with-repro
   ./configure \
     --libdir=/libs/${MOD_NAME} \
     --host=${CROSS_COMPILE} \
@@ -99,12 +136,17 @@ do
     --with-ssl \
     "$@"
 
+  # We build the specified directories one by one.
   for proj in $PROJECTS ;
   do
+    # We clean any leftovers from another architecture that
+    # was built in a previous modulation.
     make -C $proj clean
+    # Compile and install to the staging directory in one step.
     make -C $proj -j${PAR} DESTDIR=${STAGE_PREBUILT} install
   done
 
+  # Run the unit tests
   #for proj in $PROJECTS ;
   #do
   #  make -C $proj -i -j$PAR check
@@ -115,6 +157,9 @@ do
 
 done
 
+# After completing the build for every architecture, copy
+# both the libraries and Android.mk into the ${PROJECT_DIST}
+# where they can be used by the SDK when building apps.
 echo "Copying libs into place ..."
 mkdir -p ${PROJECT_DIST}
 cp -r ${STAGE_PREBUILT}/libs/* ${PROJECT_DIST}
