@@ -429,6 +429,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AbstractFifo.cxx" />
+    <ClCompile Include="Crc32.cxx" />
     <ClCompile Include="dns\AresDns.cxx" />
     <ClCompile Include="BaseException.cxx" />
     <ClCompile Include="Coders.cxx" />
@@ -450,6 +451,7 @@
     <ClCompile Include="FileSystem.cxx" />
     <ClCompile Include="GeneralCongestionManager.cxx" />
     <ClCompile Include="GenericIPAddress.cxx" />
+    <ClCompile Include="GStreamerUtils.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
     <ClCompile Include="hep\HepAgent.cxx" />
     <ClCompile Include="hep\ResipHep.cxx" />
@@ -505,6 +507,7 @@
     <ClInclude Include="AbstractFifo.hxx" />
     <ClInclude Include="CongestionManager.hxx" />
     <ClInclude Include="ConsumerFifoBuffer.hxx" />
+    <ClInclude Include="Crc32.hxx" />
     <ClInclude Include="DinkyPool.hxx" />
     <ClInclude Include="dns\AresCompat.hxx" />
     <ClInclude Include="dns\AresDns.hxx" />
@@ -538,6 +541,7 @@
     <ClInclude Include="FiniteFifo.hxx" />
     <ClInclude Include="GeneralCongestionManager.hxx" />
     <ClInclude Include="GenericIPAddress.hxx" />
+    <ClInclude Include="GStreamerUtils.hxx" />
     <ClInclude Include="HashMap.hxx" />
     <ClInclude Include="HeapInstanceCounter.hxx" />
     <ClInclude Include="hep\HepAgent.hxx" />
@@ -574,8 +578,6 @@
     <ClInclude Include="dns\RRVip.hxx" />
     <ClInclude Include="RWMutex.hxx" />
     <ClInclude Include="ssl\SHA1Stream.hxx" />
-    <ClInclude Include="SharedCount.hxx" />
-    <ClInclude Include="SharedPtr.hxx" />
     <ClInclude Include="Socket.hxx" />
     <ClInclude Include="StlPoolAllocator.hxx" />
     <ClInclude Include="stun\Stun.hxx" />

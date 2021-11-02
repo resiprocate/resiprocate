@@ -430,6 +430,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AbstractFifo.cxx" />
+    <ClCompile Include="Crc32.cxx" />
     <ClCompile Include="dns\AresDns.cxx" />
     <ClCompile Include="BaseException.cxx" />
     <ClCompile Include="Coders.cxx" />
@@ -507,6 +508,7 @@
     <ClInclude Include="AbstractFifo.hxx" />
     <ClInclude Include="CongestionManager.hxx" />
     <ClInclude Include="ConsumerFifoBuffer.hxx" />
+    <ClInclude Include="Crc32.hxx" />
     <ClInclude Include="DinkyPool.hxx" />
     <ClInclude Include="dns\AresCompat.hxx" />
     <ClInclude Include="dns\AresDns.hxx" />
