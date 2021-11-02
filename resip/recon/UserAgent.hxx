@@ -1,8 +1,6 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
-#include <boost/function.hpp>
-
 #include "InstantMessage.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"

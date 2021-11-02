@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#include <boost/function.hpp>
-
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/Timer.hxx>

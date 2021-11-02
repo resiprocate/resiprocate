@@ -4,7 +4,7 @@
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
 
-#include <boost/bind.hpp>
+#include <functional>
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -30,23 +30,29 @@ AsyncSocketBase::~AsyncSocketBase()
 void 
 AsyncSocketBase::send(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.dispatch(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
+   shared_ptr<AsyncSocketBase> _this = shared_from_this();
+   mIOService.dispatch(std::bind([_this, destination, data](){
+	   _this->doSend(destination, data, 0);
+   }));
 }
 
 void 
 AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
+   shared_ptr<AsyncSocketBase> _this = shared_from_this();
+   mIOService.dispatch(std::bind([_this, destination, channel, data](){
+      _this->doSend(destination, channel, data, 0);
+   }));
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data, const size_t bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data, const std::size_t bufferStartPos)
 {
    doSend(destination, NO_CHANNEL, data, bufferStartPos);
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data, const size_t bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data, const std::size_t bufferStartPos)
 {
    bool writeInProgress = !mSendDataQueue.empty();
    if (channel == NO_CHANNEL)

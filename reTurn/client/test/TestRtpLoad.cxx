@@ -30,8 +30,8 @@
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
-#include <boost/chrono.hpp>
-using namespace boost::chrono;
+#include <chrono>
+using namespace std::chrono;
 #endif
 
 using namespace reTurn;
@@ -160,7 +160,7 @@ public:
       if(++mNumSends <= NUM_RTP_PACKETS_TO_SIMULATE)
       {
          mTimer.expires_from_now(milliseconds(PACKET_TIME_TO_SIMULATE));
-         mTimer.async_wait(boost::bind(&MyTurnAsyncSocketHandler::sendRtpSimPacket, this));
+         mTimer.async_wait(std::bind(&MyTurnAsyncSocketHandler::sendRtpSimPacket, this));
          //InfoLog(<< "Sending packet " << mNumReceives << "...");
          mTurnAsyncSocket->send(rtpPayload.data(), rtpPayload.size());  
       }

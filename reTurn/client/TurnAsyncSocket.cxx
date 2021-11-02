@@ -5,7 +5,7 @@
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
-#include <boost/bind.hpp>
+#include <functional>
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
@@ -19,8 +19,8 @@ using namespace resip;
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
-#include <boost/chrono.hpp>
-using namespace boost::chrono;
+#include <chrono>
+using namespace std::chrono;
 #endif
 
 namespace reTurn {
@@ -1200,7 +1200,7 @@ TurnAsyncSocket::RequestEntry::startTimer()
    //std::cout << "RequestEntry::startTimer() " << mTimeout << " " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
    // start the request timer
    mRequestTimer.expires_from_now(milliseconds(mTimeout));  
-   mRequestTimer.async_wait(weak_bind<RequestEntry, void(const asio::error_code&)>(shared_from_this(), boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, asio::placeholders::error)));
+   mRequestTimer.async_wait(weak_bind<RequestEntry, void(const asio::error_code&)>(shared_from_this(), std::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, std::placeholders::_1)));
 }
 
 void
@@ -1310,7 +1310,7 @@ void
 TurnAsyncSocket::startAllocationTimer()
 {
    mAllocationTimer.expires_from_now(seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
-   mAllocationTimer.async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::allocationTimerExpired, this, asio::placeholders::error)));
+   mAllocationTimer.async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>(mAsyncSocketBase.shared_from_this(), std::bind(&TurnAsyncSocket::allocationTimerExpired, this, std::placeholders::_1)));
 }
 
 void
@@ -1338,7 +1338,7 @@ TurnAsyncSocket::startChannelBindingTimer(unsigned short channel)
       it = ret.first;
    }
    it->second->expires_from_now(seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
-   it->second->async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, asio::placeholders::error, channel)));
+   it->second->async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>( mAsyncSocketBase.shared_from_this(), std::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, std::placeholders::_1, channel)));
 }
 
 void

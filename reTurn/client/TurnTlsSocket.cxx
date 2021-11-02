@@ -4,7 +4,7 @@
 #endif
 
 #ifdef USE_SSL
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "TurnTlsSocket.hxx"
 #include <openssl/opensslv.h>
@@ -225,14 +225,14 @@ void
 TurnTlsSocket::readHeader()
 {
    asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
-                    boost::bind(&TurnTlsSocket::handleReadHeader, this, asio::placeholders::error));
+                    std::bind(&TurnTlsSocket::handleReadHeader, this, std::placeholders::_1));
 }
 
 void 
 TurnTlsSocket::readBody(unsigned int len)
 {
    asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
-                    boost::bind(&TurnTlsSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+                    std::bind(&TurnTlsSocket::handleRawRead, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void

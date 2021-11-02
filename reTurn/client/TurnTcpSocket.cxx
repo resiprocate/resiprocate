@@ -107,14 +107,14 @@ void
 TurnTcpSocket::readHeader()
 {
    asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
-                    boost::bind(&TurnTcpSocket::handleReadHeader, this, asio::placeholders::error));
+                    std::bind(&TurnTcpSocket::handleReadHeader, this, std::placeholders::_1));
 }
 
 void 
 TurnTcpSocket::readBody(unsigned int len)
 {
    asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
-                    boost::bind(&TurnTcpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+                    std::bind(&TurnTcpSocket::handleRawRead, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void

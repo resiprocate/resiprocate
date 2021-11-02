@@ -177,7 +177,7 @@ private:
    template < typename P, typename F > class weak_bind
    {
    public:
-      // !jjg! WARNING! if you are using boost::bind(..) to create the second
+      // !jjg! WARNING! if you are using std::bind(..) to create the second
       // argument for this constructor BE CAREFUL that you are passing 'this' and
       // not 'shared_from_this()' to the bind(..) -- otherwise you will defeat the
       // purpose of this class holding a weak_ptr

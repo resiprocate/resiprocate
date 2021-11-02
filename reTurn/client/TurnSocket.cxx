@@ -25,8 +25,8 @@ using namespace resip;
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
-#include <boost/chrono.hpp>
-using namespace boost::chrono;
+#include <chrono>
+using namespace std::chrono;
 #endif
 
 namespace reTurn {
@@ -860,7 +860,7 @@ TurnSocket::startReadTimer(unsigned int timeout)
    if(timeout != 0)
    {
       mReadTimer.expires_from_now(milliseconds(timeout));
-      mReadTimer.async_wait(boost::bind(&TurnSocket::handleRawReadTimeout, this, asio::placeholders::error));
+      mReadTimer.async_wait(std::bind(&TurnSocket::handleRawReadTimeout, this, std::placeholders::_1));
    }
 }
 
