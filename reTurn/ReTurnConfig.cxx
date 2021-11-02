@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 
 #include <asio/placeholders.hpp>
-#include <boost/bind.hpp>
+#include <functional>
 #include "ReTurnConfig.hxx"
 
 #include "ReTurnSubsystem.hxx"
@@ -31,8 +31,8 @@ using namespace resip;
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
-#include <boost/chrono.hpp>
-using namespace boost::chrono;
+#include <chrono>
+using namespace std::chrono;
 #endif
 
 namespace reTurn {
@@ -369,7 +369,7 @@ ReTurnUserFileScanner::start()
    if(timerInterval > 0)
    {
       mTimer.expires_from_now(seconds(timerInterval));
-      mTimer.async_wait(boost::bind(&ReTurnUserFileScanner::timeout, this, asio::placeholders::error));
+      mTimer.async_wait(std::bind(&ReTurnUserFileScanner::timeout, this, std::placeholders::_1));
    }
 }
 

@@ -5,7 +5,6 @@
 #ifdef USE_SSL
 #include <asio.hpp>
 #include <asio/ssl.hpp>
-#include <boost/function.hpp>
 #include <iostream>
 
 #include <rutil/Log.hxx>

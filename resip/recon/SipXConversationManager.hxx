@@ -1,8 +1,6 @@
 #if !defined(SipXConversationManager_hxx)
 #define SipXConversationManager_hxx
 
-#include <boost/function.hpp>
-
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>

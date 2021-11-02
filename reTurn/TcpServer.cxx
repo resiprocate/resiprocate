@@ -1,5 +1,5 @@
 #include "TcpServer.hxx"
-#include <boost/bind.hpp>
+#include <functional>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
@@ -38,7 +38,7 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
 void 
 TcpServer::start()
 {
-   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), std::bind(&TcpServer::handleAccept, this, std::placeholders::_1));
 }
 
 void 
@@ -49,7 +49,7 @@ TcpServer::handleAccept(const asio::error_code& e)
       mConnectionManager.start(mNewConnection);
 
       mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
-      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), std::bind(&TcpServer::handleAccept, this, std::placeholders::_1));
    }
    else
    {
@@ -58,7 +58,7 @@ TcpServer::handleAccept(const asio::error_code& e)
       {
          // Retry if too many open files (ie. out of socket descriptors)
          mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
-         mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+         mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), std::bind(&TcpServer::handleAccept, this, std::placeholders::_1));
       }
    }
 }

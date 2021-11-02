@@ -1,4 +1,4 @@
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "UdpRelayServer.hxx"
 #include "StunMessage.hxx"

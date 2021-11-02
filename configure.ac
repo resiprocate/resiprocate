@@ -130,13 +130,17 @@ AC_ARG_WITH(sigcomp,
 [  --with-sigcomp          Link against Open SigComp libraries for SigComp],
  AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP), )
 
-PKG_CHECK_MODULES([DEPS_FMT], [fmt])
+AM_CONDITIONAL(USE_FMT, false)
+AC_ARG_WITH(fmt,
+[  --with-fmt              Link against fmt library],
+ [AC_DEFINE_UNQUOTED(USE_FMT, , USE_FMT)
+ PKG_CHECK_MODULES([DEPS_FMT], [fmt])
+ AM_CONDITIONAL(USE_FMT, true)])
 
 AC_ARG_ENABLE(android,
 [  --enable-android        Enable Android build],
    [AC_SUBST(LIBPTHREAD_LIBADD, "")
-   AC_SUBST(LIBLOG_LIBADD, "-llog")
-   AC_SUBST(LIBSTL_LIBADD, "-lgnustl_shared")],
+   AC_SUBST(LIBLOG_LIBADD, "-llog")],
    [AC_SUBST(LIBPTHREAD_LIBADD, "-lpthread")
    AC_SUBST(LIBLOG_LIBADD, "")
    AC_SUBST(LIBSTL_LIBADD, "")])

@@ -77,7 +77,7 @@ TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
 {
    startReadTimer(timeout);
 
-   mSocket.async_receive_from(asio::buffer(mReadBuffer, sizeof(mReadBuffer)), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   mSocket.async_receive_from(asio::buffer(mReadBuffer, sizeof(mReadBuffer)), mSenderEndpoint, 0, std::bind(&TurnUdpSocket::handleRawRead, this, std::placeholders::_1, std::placeholders::_2));
 
    // Wait for timer and read to end
    mIOService.run();

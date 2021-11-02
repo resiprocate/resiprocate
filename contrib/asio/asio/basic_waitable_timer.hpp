@@ -2,7 +2,7 @@
 // basic_waitable_timer.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2019 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,6 +17,7 @@
 
 #include "asio/detail/config.hpp"
 #include <cstddef>
+#include "asio/any_io_executor.hpp"
 #include "asio/detail/chrono_time_traits.hpp"
 #include "asio/detail/deadline_timer_service.hpp"
 #include "asio/detail/handler_type_requirements.hpp"
@@ -24,7 +25,6 @@
 #include "asio/detail/non_const_lvalue.hpp"
 #include "asio/detail/throw_error.hpp"
 #include "asio/error.hpp"
-#include "asio/executor.hpp"
 #include "asio/wait_traits.hpp"
 
 #if defined(ASIO_HAS_MOVE)
@@ -41,7 +41,7 @@ namespace asio {
 // Forward declaration with defaulted arguments.
 template <typename Clock,
     typename WaitTraits = asio::wait_traits<Clock>,
-    typename Executor = executor>
+    typename Executor = any_io_executor>
 class basic_waitable_timer;
 
 #endif // !defined(ASIO_BASIC_WAITABLE_TIMER_FWD_DECL)
@@ -144,6 +144,14 @@ class basic_waitable_timer
 public:
   /// The type of the executor associated with the object.
   typedef Executor executor_type;
+
+  /// Rebinds the timer type to another executor.
+  template <typename Executor1>
+  struct rebind_executor
+  {
+    /// The timer type when rebound to the specified executor.
+    typedef basic_waitable_timer<Clock, WaitTraits, Executor1> other;
+  };
 
   /// The clock type.
   typedef Clock clock_type;
@@ -308,6 +316,54 @@ public:
   basic_waitable_timer& operator=(basic_waitable_timer&& other)
   {
     impl_ = std::move(other.impl_);
+    return *this;
+  }
+
+  // All timers have access to each other's implementations.
+  template <typename Clock1, typename WaitTraits1, typename Executor1>
+  friend class basic_waitable_timer;
+
+  /// Move-construct a basic_waitable_timer from another.
+  /**
+   * This constructor moves a timer from one object to another.
+   *
+   * @param other The other basic_waitable_timer object from which the move will
+   * occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_waitable_timer(const executor_type&)
+   * constructor.
+   */
+  template <typename Executor1>
+  basic_waitable_timer(
+      basic_waitable_timer<Clock, WaitTraits, Executor1>&& other,
+      typename enable_if<
+          is_convertible<Executor1, Executor>::value
+      >::type* = 0)
+    : impl_(std::move(other.impl_))
+  {
+  }
+
+  /// Move-assign a basic_waitable_timer from another.
+  /**
+   * This assignment operator moves a timer from one object to another. Cancels
+   * any outstanding asynchronous operations associated with the target object.
+   *
+   * @param other The other basic_waitable_timer object from which the move will
+   * occur.
+   *
+   * @note Following the move, the moved-from object is in the same state as if
+   * constructed using the @c basic_waitable_timer(const executor_type&)
+   * constructor.
+   */
+  template <typename Executor1>
+  typename enable_if<
+    is_convertible<Executor1, Executor>::value,
+    basic_waitable_timer&
+  >::type operator=(basic_waitable_timer<Clock, WaitTraits, Executor1>&& other)
+  {
+    basic_waitable_timer tmp(std::move(other));
+    impl_ = std::move(tmp.impl_);
     return *this;
   }
 #endif // defined(ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
@@ -691,13 +747,17 @@ public:
    * immediate completion, invocation of the handler will be performed in a
    * manner equivalent to using asio::post().
    */
-  template <typename WaitHandler>
-  ASIO_INITFN_RESULT_TYPE(WaitHandler,
+  template <
+      ASIO_COMPLETION_TOKEN_FOR(void (asio::error_code))
+        WaitHandler ASIO_DEFAULT_COMPLETION_TOKEN_TYPE(executor_type)>
+  ASIO_INITFN_AUTO_RESULT_TYPE(WaitHandler,
       void (asio::error_code))
-  async_wait(ASIO_MOVE_ARG(WaitHandler) handler)
+  async_wait(
+      ASIO_MOVE_ARG(WaitHandler) handler
+        ASIO_DEFAULT_COMPLETION_TOKEN(executor_type))
   {
     return async_initiate<WaitHandler, void (asio::error_code)>(
-        initiate_async_wait(), handler, this);
+        initiate_async_wait(this), handler);
   }
 
 private:
@@ -706,21 +766,36 @@ private:
   basic_waitable_timer& operator=(
       const basic_waitable_timer&) ASIO_DELETED;
 
-  struct initiate_async_wait
+  class initiate_async_wait
   {
+  public:
+    typedef Executor executor_type;
+
+    explicit initiate_async_wait(basic_waitable_timer* self)
+      : self_(self)
+    {
+    }
+
+    executor_type get_executor() const ASIO_NOEXCEPT
+    {
+      return self_->get_executor();
+    }
+
     template <typename WaitHandler>
-    void operator()(ASIO_MOVE_ARG(WaitHandler) handler,
-        basic_waitable_timer* self) const
+    void operator()(ASIO_MOVE_ARG(WaitHandler) handler) const
     {
       // If you get an error on the following line it means that your handler
       // does not meet the documented type requirements for a WaitHandler.
       ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
 
       detail::non_const_lvalue<WaitHandler> handler2(handler);
-      self->impl_.get_service().async_wait(
-          self->impl_.get_implementation(), handler2.value,
-          self->impl_.get_implementation_executor());
+      self_->impl_.get_service().async_wait(
+          self_->impl_.get_implementation(),
+          handler2.value, self_->impl_.get_executor());
     }
+
+  private:
+    basic_waitable_timer* self_;
   };
 
   detail::io_object_impl<

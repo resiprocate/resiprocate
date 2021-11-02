@@ -1,6 +1,6 @@
 #include "UdpServer.hxx"
 #include "StunMessage.hxx"
-#include <boost/bind.hpp>
+#include <functional>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
@@ -13,8 +13,8 @@ using namespace resip;
 #ifdef BOOST_ASIO_HAS_STD_CHRONO
 using namespace std::chrono;
 #else
-#include <boost/chrono.hpp>
-using namespace boost::chrono;
+#include <chrono>
+using namespace std::chrono;
 #endif
 
 namespace reTurn {
@@ -217,7 +217,7 @@ UdpServer::ResponseEntry::ResponseEntry(UdpServer* requestUdpServer, UdpServer* 
 {
    // start timer
    mCleanupTimer.expires_from_now(seconds(10));  // Transaction Responses are cached for 10 seconds
-   mCleanupTimer.async_wait(boost::bind(&UdpServer::cleanupResponseMap, requestUdpServer, asio::placeholders::error, responseMessage->mHeader.magicCookieAndTid));
+   mCleanupTimer.async_wait(std::bind(&UdpServer::cleanupResponseMap, requestUdpServer, std::placeholders::_1, responseMessage->mHeader.magicCookieAndTid));
 }
 
 UdpServer::ResponseEntry::~ResponseEntry() 

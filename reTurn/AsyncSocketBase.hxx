@@ -54,8 +54,8 @@ public:
    virtual void setOnBeforeSocketClosedFp(BeforeClosedHandler fp) { mOnBeforeSocketCloseFp = std::move(fp); }
 
    /// Use these if you already operating within the ioService thread
-   virtual void doSend(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data, size_t bufferStartPos = 0);
-   virtual void doSend(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data, size_t bufferStartPos = 0);
+   virtual void doSend(const StunTuple& destination, unsigned short channel, const std::shared_ptr<DataBuffer>& data, const std::size_t bufferStartPos = 0);
+   virtual void doSend(const StunTuple& destination, const std::shared_ptr<DataBuffer>& data, const std::size_t bufferStartPos = 0);
    virtual void doReceive();
    virtual void doFramedReceive();
 

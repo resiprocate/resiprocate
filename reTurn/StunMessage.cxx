@@ -3,11 +3,10 @@
   #include "config.h"
 #endif
 
-#include <boost/crc.hpp>
-
 #include "StunMessage.hxx"
 
 #include <rutil/compat.hxx>
+#include <rutil/Crc32.hxx>
 #include <rutil/Timer.hxx>
 #include <rutil/Random.hxx>
 #include <rutil/DataStream.hxx>
@@ -1655,9 +1654,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasFingerprint)
    {
       StackLog(<< "Calculating fingerprint for data of size " << ptr-buf);
-      boost::crc_32_type stun_crc;
-      stun_crc.process_bytes(buf, ptr-buf); // Calculate CRC across entire message, except the fingerprint attribute
-      UInt32 fingerprint = stun_crc.checksum() ^ STUN_CRC_FINAL_XOR;
+      UInt32 fingerprint = crc32_fast(buf, ptr-buf) ^ STUN_CRC_FINAL_XOR;
       ptr = encodeAtrUInt32(ptr, Fingerprint, fingerprint);
    }
 
@@ -1881,17 +1878,17 @@ StunMessage::checkFingerprint()
    if(mHasFingerprint)
    {
       StackLog(<< "Calculating fingerprint to check for data of size " << mBuffer.size() - 8);
-      boost::crc_32_type stun_crc;
-      stun_crc.process_bytes(mBuffer.data(), mBuffer.size()-8); // Calculate CRC across entire message, except the fingerprint attribute
 
-      unsigned long crc = stun_crc.checksum() ^ STUN_CRC_FINAL_XOR;
+      // Calculate CRC across entire message, except the fingerprint attribute
+      unsigned long crc_checksum = crc32_fast(mBuffer.data(), mBuffer.size()-8);
+      unsigned long crc = crc_checksum ^ STUN_CRC_FINAL_XOR;
       if(crc == mFingerprint)
       {
          return true;
       }
       else
       {
-         WarningLog(<< "Fingerprint=" << mFingerprint << " does not match CRC=" << stun_crc.checksum());
+         WarningLog(<< "Fingerprint=" << mFingerprint << " does not match CRC=" << crc_checksum);
          return false;
       }
    }

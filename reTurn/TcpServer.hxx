@@ -6,7 +6,6 @@
 #include <asio/ssl.hpp>
 #endif
 #include <string>
-#include <boost/noncopyable.hpp>
 #include "TcpConnection.hxx"
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
@@ -14,9 +13,12 @@
 namespace reTurn {
 
 class TcpServer
-  : private boost::noncopyable
 {
 public:
+  // noncopyable
+  TcpServer(const TcpServer&) = delete;
+  TcpServer& operator=(const TcpServer&) = delete;
+
   /// Create the server to listen on the specified TCP address and port
   explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port);
 

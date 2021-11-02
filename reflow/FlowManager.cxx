@@ -10,7 +10,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
 #include <map>
 
 #include <rutil/Log.hxx>
