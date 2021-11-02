@@ -22,7 +22,7 @@
     <ProjectName>cppunit</ProjectName>
     <ProjectGuid>{D23D6465-7EA9-45FD-9784-54DBF8A1A5CE}</ProjectGuid>
     <RootNamespace>cppunit</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
