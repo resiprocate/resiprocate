@@ -167,9 +167,12 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
    }
    Conversation* conversation = getConversation(it->second);
    unsigned int numRemoteParticipants = conversation->getNumRemoteParticipants();
+   KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(conversation->getParticipant(partHandle));
+   std::shared_ptr<kurento::BaseRtpEndpoint> answeredEndpoint = _p->getEndpoint();
    if(numRemoteParticipants < 2)
    {
       DebugLog(<<"we are first in the conversation");
+      _p->waitingMode();
       return;
    }
    if(numRemoteParticipants > 2)
@@ -179,14 +182,12 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
    }
    DebugLog(<<"joining a Conversation with an existing Participant");
 
-   KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(conversation->getParticipant(partHandle));
-   std::shared_ptr<kurento::BaseRtpEndpoint> answeredEndpoint = _p->getEndpoint();
    if(!answeredEndpoint)
    {
       DebugLog(<<"our endpoint is not initialized"); // FIXME
       return;
    }
-   answeredEndpoint->disconnect([this, _p, answeredEndpoint, conversation]{
+   _p->mPlayer->disconnect([this, _p, answeredEndpoint, conversation]{
       // Find the other Participant / endpoint
 
       Conversation::ParticipantMap& m = conversation->getParticipants();
@@ -203,15 +204,15 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
       resip_assert(krp);
       std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
 
-      otherEndpoint->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-         answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-            //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
-         }, *otherEndpoint);
-         otherEndpoint->connect([this, krp]{
+      krp->mPlayer->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+         otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
             //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
+            answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+               //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
+            }, *otherEndpoint);
          }, *answeredEndpoint);
-      }, *otherEndpoint); // otherEndpoint->disconnect()
-   }, *answeredEndpoint);  // answeredEndpoint->disconnect()
+      }); // otherEndpoint->disconnect()
+   });  // answeredEndpoint->disconnect()
 }
 
 void
@@ -240,14 +241,10 @@ MyConversationManager::onParticipantDestroyedKurento(ParticipantHandle partHandl
          if(krp)
          {
             std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
-
-            otherEndpoint->connect([this, myEndpoint, otherEndpoint, krp]{
-               DebugLog(<<"otherEndpoint now in loopback");
-               /*myEndpoint->release([this, myEndpoint, otherEndpoint, krp]{
-                  DebugLog(<<"release completed");
-               });*/
-
-            }, *otherEndpoint);
+            std::shared_ptr<kurento::PlayerEndpoint> otherPlayer = krp->mPlayer;
+            otherPlayer->play([this, myEndpoint, otherEndpoint, krp, otherPlayer]{
+               krp->waitingMode();
+            }); // FIXME Kurento should be looping
          }
          else
          {

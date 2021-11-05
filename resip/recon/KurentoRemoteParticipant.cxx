@@ -283,6 +283,18 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
                "RTP/SAVPF") != mediumTransports.end();
       DebugLog(<<"peer is " << (isWebRTC ? "WebRTC":"not WebRTC"));
 
+      for(SdpContents::Session::MediumContainer::iterator it = offerMangled->session().media().begin();
+                     it != offerMangled->session().media().end();
+                     it++)
+      {
+         SdpContents::Session::Medium& m = *it;
+         if(!isWebRTC)
+         {
+            m.port() = 9;
+            m.addAttribute(Data("direction"), Data("active"));
+         }
+      }
+
       std::ostringstream offerMangledBuf;
       offerMangledBuf << *offerMangled;
       std::shared_ptr<std::string> offerMangledStr = std::make_shared<std::string>(offerMangledBuf.str());
@@ -376,9 +388,24 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       {
          cConnected();
       }
-      else{
+      else
+      {
+         //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoConversationManager.mPipeline, "videoconvert"));
+         //mMultiqueue.reset(new kurento::PassthroughElement(mKurentoConversationManager.mPipeline));
+         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoConversationManager.mPipeline, "file:///tmp/test.mp4"));
          mEndpoint->create([this, cConnected]{
-            mEndpoint->connect(cConnected, *mEndpoint); // connect
+            //mMultiqueue->create([this, cConnected]{
+               // mMultiqueue->connect([this, cConnected]{
+                  // mEndpoint->connect([this, cConnected]{
+                     mPlayer->create([this, cConnected]{
+                        mPlayer->play([this, cConnected]{
+                           cConnected();
+                           //mPlayer->connect(cConnected, *mEndpoint); // connect
+                        });
+                     });
+                  // }, *mMultiqueue); // mEndpoint->connect
+               // }, *mEndpoint); // mMultiqueue->connect
+            //}); // mMultiqueue->create
          }); // create
       }
 
@@ -418,6 +445,13 @@ bool
 KurentoRemoteParticipant::mediaStackPortAvailable()
 {
    return true; // FIXME Kurento - can we check with Kurento somehow?
+}
+
+void
+KurentoRemoteParticipant::waitingMode()
+{
+   mPlayer->connect([]{DebugLog(<<"connected in loopback/video, waiting for peer");}, *mEndpoint);
+   //mEndpoint->connect([]{DebugLog(<<"connected in loopback/video, waiting for peer");}, *mEndpoint);
 }
 
 
