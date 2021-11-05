@@ -12,6 +12,15 @@ using namespace kurento;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
+const char *MediaProfileSpecType::JPEG_VIDEO_ONLY = "JPEG_VIDEO_ONLY";
+const char *MediaProfileSpecType::KURENTO_SPLIT_RECORDER = "KURENTO_SPLIT_RECORDER";
+const char *MediaProfileSpecType::MP4 = "MP4";
+const char *MediaProfileSpecType::MP4_AUDIO_ONLY = "MP4_AUDIO_ONLY";
+const char *MediaProfileSpecType::MP4_VIDEO_ONLY = "MP4_VIDEO_ONLY";
+const char *MediaProfileSpecType::WEBM = "WEBM";
+const char *MediaProfileSpecType::WEBM_AUDIO_ONLY = "WEBM_AUDIO_ONLY";
+const char *MediaProfileSpecType::WEBM_VIDEO_ONLY = "WEBM_VIDEO_ONLY";
+
 Object::Object(const std::string& name, std::shared_ptr<KurentoConnection> connection)
    : mName(name),
      mConnection(connection)
@@ -206,18 +215,18 @@ MediaPipeline::~MediaPipeline()
 {
 }
 
-Element::Element(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline)
+MediaElement::MediaElement(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline)
    : Object(name, mediaPipeline->getConnection()),
      mMediaPipeline(mediaPipeline)
 {
 }
 
-Element::~Element()
+MediaElement::~MediaElement()
 {
 }
 
 void
-Element::create(ContinuationVoid c)
+MediaElement::create(ContinuationVoid c)
 {
    json::Object params;
    params[JSON_RPC_MEDIAPIPELINE] = json::String(mMediaPipeline->getId());
@@ -225,23 +234,166 @@ Element::create(ContinuationVoid c)
 }
 
 void
-Element::connect(ContinuationVoid c, Element& element)
+MediaElement::create(ContinuationVoid c, const json::Object& extraParams)
 {
-   json::Object params;
-   params[JSON_RPC_SINK] = json::String(element.getId());
-   invokeVoidMethod("connect", c, params);
+   json::Object params(extraParams);
+   params[JSON_RPC_MEDIAPIPELINE] = json::String(mMediaPipeline->getId());
+   createObject(c, params);
 }
 
 void
-Element::disconnect(ContinuationVoid c, Element& element)
+MediaElement::connect(ContinuationVoid c, MediaElement& element)
+{
+   const std::string& peerId = element.getId();
+
+   json::Object params;
+   params[JSON_RPC_SINK] = json::String(peerId);
+   invokeVoidMethod("connect", c, params);
+   mConnectedTo = peerId;
+   element.setConnectedTo(getId());
+}
+
+void
+MediaElement::disconnect(ContinuationVoid c, MediaElement& element)
 {
    json::Object params;
    params[JSON_RPC_SINK] = json::String(element.getId());
    invokeVoidMethod("disconnect", c, params);
+   mConnectedTo.clear();
+   element.setConnectedTo("");
+}
+
+void
+MediaElement::disconnect(ContinuationVoid c)
+{
+   if(mConnectedTo.empty()) { c(); return; }; // FIXME
+   json::Object params;
+   params[JSON_RPC_SINK] = json::String(mConnectedTo);
+   invokeVoidMethod("disconnect", c, params);
+   mConnectedTo.clear();
+   //element.setConnectedTo(""); // FIXME
+}
+
+PassthroughElement::PassthroughElement(std::shared_ptr<MediaPipeline> mediaPipeline)
+   : MediaElement("Passthrough", mediaPipeline)
+{
+}
+
+PassthroughElement::~PassthroughElement()
+{
+}
+
+GStreamerFilter::GStreamerFilter(std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& command)
+   : MediaElement("GStreamerFilter", mediaPipeline),
+  mCommand(command)
+{
+}
+
+GStreamerFilter::~GStreamerFilter()
+{
+}
+
+void GStreamerFilter::create(ContinuationVoid c)
+{
+   json::Object params;
+   params["command"] = json::String(mCommand);
+   MediaElement::create(c, params);
+}
+
+Endpoint::Endpoint(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline)
+   : MediaElement(name, mediaPipeline)
+{
+}
+
+Endpoint::~Endpoint()
+{
+}
+
+UriEndpoint::UriEndpoint(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& uri)
+   : Endpoint(name, mediaPipeline),
+	 mUri(uri)
+{
+}
+
+UriEndpoint::~UriEndpoint()
+{
+}
+
+void
+UriEndpoint::create(ContinuationVoid c)
+{
+   json::Object params;
+   params["uri"] = json::String(mUri);
+   MediaElement::create(c, params);
+}
+
+void
+UriEndpoint::create(ContinuationVoid c, const json::Object& extraParams)
+{
+   json::Object params(extraParams);
+   params["uri"] = json::String(mUri);
+   MediaElement::create(c, params);
+}
+
+void
+UriEndpoint::pause(ContinuationVoid c)
+{
+   invokeVoidMethod("pause", c);
+}
+
+void
+UriEndpoint::stop(ContinuationVoid c)
+{
+   invokeVoidMethod("stop", c);
+}
+
+PlayerEndpoint::PlayerEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& uri)
+   : UriEndpoint("PlayerEndpoint", mediaPipeline, uri)
+{
+}
+
+PlayerEndpoint::~PlayerEndpoint()
+{
+}
+
+void
+PlayerEndpoint::play(ContinuationVoid c)
+{
+	invokeVoidMethod("play", c);
+}
+
+RecorderEndpoint::RecorderEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& uri, const char *mediaProfile)
+   : UriEndpoint("RecorderEndpoint", mediaPipeline, uri),
+     mMediaProfile(mediaProfile)
+{
+}
+
+RecorderEndpoint::~RecorderEndpoint()
+{
+}
+
+void
+RecorderEndpoint::create(ContinuationVoid c)
+{
+   json::Object params;
+   params["mediaProfile"] = json::String(mMediaProfile);
+   UriEndpoint::create(c, params);
+}
+
+void
+RecorderEndpoint::record(ContinuationVoid c)
+{
+        invokeVoidMethod("record", c);
+}
+
+void
+RecorderEndpoint::stopAndWait(ContinuationVoid c)
+{
+        invokeVoidMethod("stopAndWait", c);
 }
 
 BaseRtpEndpoint::BaseRtpEndpoint(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline)
-   : Element(name, mediaPipeline)
+   : Endpoint(name, mediaPipeline)
 {
 }
 

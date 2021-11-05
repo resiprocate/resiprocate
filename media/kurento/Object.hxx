@@ -12,6 +12,18 @@
 namespace kurento
 {
 
+class MediaProfileSpecType
+{
+   static const char *JPEG_VIDEO_ONLY;
+   static const char *KURENTO_SPLIT_RECORDER;
+   static const char *MP4;
+   static const char *MP4_AUDIO_ONLY;
+   static const char *MP4_VIDEO_ONLY;
+   static const char *WEBM;
+   static const char *WEBM_AUDIO_ONLY;
+   static const char *WEBM_VIDEO_ONLY;
+};
+
 class Object : public KurentoResponseHandler
 {
    public:
@@ -73,23 +85,89 @@ class MediaPipeline : public Object
       virtual ~MediaPipeline();
 };
 
-class Element : public Object
+class MediaElement : public Object
 {
    public:
       virtual void create(ContinuationVoid c) override;
 
-      void connect(ContinuationVoid c, Element& element);
-      void disconnect(ContinuationVoid c, Element& element);
+      void connect(ContinuationVoid c, MediaElement& element);
+      void disconnect(ContinuationVoid c, MediaElement& element);
+      void disconnect(ContinuationVoid c);
 
    protected:
-      Element(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline);
-      virtual ~Element();
+      MediaElement(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline);
+      virtual ~MediaElement();
+      virtual void create(ContinuationVoid c, const json::Object& extraPparams);
 
    private:
+      virtual void setConnectedTo(const std::string& connectedTo) { mConnectedTo = connectedTo; };
+
       std::shared_ptr<MediaPipeline> mMediaPipeline;
+      std::string mConnectedTo;
 };
 
-class BaseRtpEndpoint : public Element
+class PassthroughElement : public MediaElement
+{
+   public:
+      PassthroughElement(std::shared_ptr<MediaPipeline> mediaPipeline);
+      virtual ~PassthroughElement();
+};
+
+class GStreamerFilter : public MediaElement
+{
+   public:
+      GStreamerFilter(std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& command);
+      virtual ~GStreamerFilter();
+      virtual void create(ContinuationVoid c) override;
+   private:
+      std::string mCommand;
+};
+
+class Endpoint : public MediaElement
+{
+   protected:
+      Endpoint(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline);
+      virtual ~Endpoint();
+};
+
+class UriEndpoint : public Endpoint
+{
+   public:
+	  virtual void create(ContinuationVoid c) override;
+
+	  void pause(ContinuationVoid c);
+	  void stop(ContinuationVoid c);
+
+   protected:
+      UriEndpoint(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& uri);
+      virtual ~UriEndpoint();
+      virtual void create(ContinuationVoid c, const json::Object& extraParams) override;
+
+   private:
+      std::string mUri;
+};
+
+class PlayerEndpoint : public UriEndpoint
+{
+   public:
+ 	   PlayerEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& uri);
+	   virtual ~PlayerEndpoint();
+	   void play(ContinuationVoid c);
+};
+
+class RecorderEndpoint : public UriEndpoint
+{
+   public:
+      RecorderEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline, const std::string& uri, const char *mediaProfile);
+      virtual ~RecorderEndpoint();
+      virtual void create(ContinuationVoid c) override;
+      void record(ContinuationVoid c);
+      void stopAndWait(ContinuationVoid c);
+   private:
+      const char *mMediaProfile;
+};
+
+class BaseRtpEndpoint : public Endpoint
 {
    protected:
       BaseRtpEndpoint(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline);
