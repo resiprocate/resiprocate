@@ -100,11 +100,15 @@ initPipelines()
       "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
 
    // mix and match decoder and encoder
-   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "vaapih264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works for a few seconds then replays
-   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "openh264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // not working
-   mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "avdec_h264", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
-   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "vaapih264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
-   //mPipelines.insert({"h264m", make_shared<CodecConfig>("H264", "avdec_h264", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // not working
+   mPipelines.insert({"h264m-av-open", make_shared<CodecConfig>("H264", "avdec_h264", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
+   mPipelines.insert({"h264m-vaapi-x264", make_shared<CodecConfig>("H264", "vaapih264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // works for a few seconds then replays
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
+   mPipelines.insert({"h264m-open-x264", make_shared<CodecConfig>("H264", "openh264dec", "x264enc", "baseline", "rtph264depay", "rtph264pay", // not working
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
+   mPipelines.insert({"h264m-vaapi-open", make_shared<CodecConfig>("H264", "vaapih264dec", "openh264enc", "baseline", "rtph264depay", "rtph264pay", // works
+      "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
+   mPipelines.insert({"h264m-av-vaapi", make_shared<CodecConfig>("H264", "avdec_h264", "vaapih264enc", "constrained-baseline", "rtph264depay", "rtph264pay", // not working
       "packetization-mode=0;profile-level-id=420016;max-br=5000;max-mbps=245000;max-fs=9000;max-smbps=245000;max-fps=6000;max-rcmd-nalu-size=3456000;sar-supported=16")});
 
    // VP8 with the open source reference implementation
