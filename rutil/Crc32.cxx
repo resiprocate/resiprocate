@@ -70,6 +70,11 @@ Permission is granted to anyone to use this software for any purpose, including 
   #endif
 #endif
 
+// handle clang macos compilation
+#if defined(__APPLE__)
+  #define __BYTE_ORDER __DARWIN_BYTE_ORDER
+#endif
+
 // abort if byte order is undefined
 #if !defined(__BYTE_ORDER)
 #error undefined byte order, compile with -D__BYTE_ORDER=1234 (if little endian) or -D__BYTE_ORDER=4321 (big endian)
