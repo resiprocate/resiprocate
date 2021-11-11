@@ -285,7 +285,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -299,7 +299,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -312,7 +312,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -324,7 +324,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -336,7 +336,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -348,7 +348,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -359,7 +359,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -371,7 +371,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release-MT|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -385,7 +385,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -399,7 +399,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/openssl/include;$(ProjectDir)../contrib/openssl/inc32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -413,7 +413,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/opensslx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -427,7 +427,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)dns/ares;$(ProjectDir)../;$(ProjectDir)../contrib/fmt/include;$(ProjectDir)../contrib/opensslx64/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NO_IPHLPAPI;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_FMT;USE_ARES;USE_IPV6;USE_SSL;_DEBUG;_LIB;LEAK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>

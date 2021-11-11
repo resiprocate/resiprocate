@@ -14,7 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dum", "resip\dum\dum_16_0.v
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reflow", "reflow\reflow_16_0.vcxproj", "{D2AB531B-86AC-43DD-A330-9809B4F1BB53}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnClient", "..\..\reTurn\client\reTurnClient_16_0.vcxproj", "{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnClient", "reTurn\client\reTurnClient_16_0.vcxproj", "{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXportLib", "..\sipXtapi\sipXportLib\sipXportLib-msvc16.vcxproj", "{14631055-9D3F-47E5-B6A7-16BFC0CC8091}"
 EndProject
