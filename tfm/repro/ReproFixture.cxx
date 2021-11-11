@@ -112,6 +112,9 @@ ReproFixture::initialize(CommandLineParser& args)
    cullenTls = makeReproUser(*proxy, "cullen", "localhost",TLS, security);
 #endif
 #endif
+
+   // Ensure ACL is not hanging around from last run
+   proxy->deleteTrustedHost("127.0.0.1", UDP, 0, 8, V4);
 }
 
 
