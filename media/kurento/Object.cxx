@@ -454,13 +454,22 @@ RtpEndpoint::~RtpEndpoint()
 {
 }
 
-SipRtpEndpoint::SipRtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline)
-   : BaseRtpEndpoint("SipRtpEndpoint", mediaPipeline)
+SipRtpEndpoint::SipRtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline, bool cryptoAgnostic)
+   : BaseRtpEndpoint("SipRtpEndpoint", mediaPipeline),
+     mCryptoAgnostic(cryptoAgnostic)
 {
 }
 
 SipRtpEndpoint::~SipRtpEndpoint()
 {
+}
+
+void
+SipRtpEndpoint::create(ContinuationVoid c)
+{
+   json::Object params;
+   params["cryptoAgnostic"] = json::Boolean(mCryptoAgnostic);
+   BaseRtpEndpoint::create(c, params);
 }
 
 WebRtcEndpoint::WebRtcEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline)

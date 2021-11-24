@@ -193,8 +193,11 @@ class RtpEndpoint : public BaseRtpEndpoint
 class SipRtpEndpoint : public BaseRtpEndpoint
 {
    public:
-      SipRtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline);
+      SipRtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline, bool cryptoAgnostic = true);
       virtual ~SipRtpEndpoint();
+      virtual void create(ContinuationVoid c) override;
+   private:
+      bool mCryptoAgnostic;
 };
 
 class WebRtcEndpoint : public BaseRtpEndpoint
