@@ -609,6 +609,45 @@ RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInv
    }
 }
 
+void
+RemoteParticipant::info(const Contents& contents)
+{
+   try
+   {
+      if(mPendingRequest.mType == None)
+      {
+         if(mState == Connected)
+         {
+            if(mInviteSessionHandle.isValid())
+            {
+               DebugLog(<<"sending an INFO message");
+               mInviteSessionHandle->info(contents);
+            }
+            else
+            {
+               WarningLog(<< "RemoteParticipant::info error: mInviteSessionHandle not valid");
+            }
+         }
+         else
+         {
+            WarningLog(<< "RemoteParticipant::info error: mState not connected");
+         }
+      }
+      else
+      {
+         WarningLog(<< "RemoteParticipant::info error: request pending");
+      }
+   }
+   catch(BaseException &e)
+   {
+      WarningLog(<< "RemoteParticipant::info exception: " << e);
+   }
+   catch(...)
+   {
+      WarningLog(<< "RemoteParticipant::info unknown exception");
+   }
+}
+
 void 
 RemoteParticipant::hold()
 {

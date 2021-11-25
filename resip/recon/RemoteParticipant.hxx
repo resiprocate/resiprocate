@@ -61,6 +61,7 @@ public:
    virtual void reject(unsigned int rejectCode);
    virtual void redirect(resip::NameAddr& destination, unsigned int redirectCode = 302, ConversationManager::RedirectSuccessCondition successCondition = ConversationManager::RedirectSuccessOnConnected);
    virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle, ConversationManager::RedirectSuccessCondition successCondition = ConversationManager::RedirectSuccessOnConnected);
+   virtual void info(const resip::Contents& contents);
    virtual void checkHoldCondition();
    virtual void setLocalHold(bool hold);
 
