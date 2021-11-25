@@ -61,9 +61,9 @@ static const int WaitFor100 = 1000;
 static const int WaitFor180 = 1000;
 static const int WaitFor487 = 1000;
 static const int WaitForAck = 1000;  //immediate ACK for 4xx and CANCEL; not ACK for 200
-static const int WaitForCommand = 1000;
+static const int WaitForCommand = 2000;
 static const int WaitForResponse = 1000;
-static const int WaitForRegistration = 5000;
+static const int WaitForRegistration = 8000;
 static const int PauseTime = 100;
 static const int WaitForPause = 1100;
 static const int WaitForEndOfTest = 1000;
@@ -4960,7 +4960,7 @@ class DumTestCase : public DumFixture
              jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              jason->expect(Invite_Answer, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction()),
              scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()),
-             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, 150000 + WaitForCommand, uac.noAction()),  // Wait 2.5 mins + 1000ms buffer time
+             jason->expect(Invite_Provisional, *TestEndPoint::AlwaysTruePred, 150000 + WaitForCommand, uac.noAction()),  // Wait 2.5 mins + 2000ms buffer time
              scott->expect(Invite_Prack, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.accept()),
              And(Sub(jason->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uac.noAction())),
                  Sub(scott->expect(Invite_Connected, *TestEndPoint::AlwaysTruePred, WaitForCommand, uas.noAction()))),

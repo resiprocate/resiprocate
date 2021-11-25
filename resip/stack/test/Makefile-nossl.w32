@@ -1,7 +1,7 @@
 # This makefile can be called by VS nmake, after all of the resiprocate libraries (Debug) have already been compiled via the GUI 
 
 CFLAGS=/Od /I "../../" /I "../../../" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "USE_IPV6" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Zi /TP
-RESIPLIBS=..\..\..\Win32\Debug\rutil.lib ..\..\..\Win32\Debug\resiprocate.lib ..\..\..\Win32\Debug\ares.lib
+RESIPLIBS=..\..\..\Win32\Debug\rutil.lib ..\..\..\Win32\Debug\resiprocate.lib ..\..\..\Win32\Debug\ares.lib ..\..\..\Win32\Debug\fmt.lib
 LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib winmm.lib Iphlpapi.lib Dnsapi.lib crypt32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
 
 #Note:  The following should be aligned with Makefile

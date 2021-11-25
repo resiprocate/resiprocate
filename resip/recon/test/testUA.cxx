@@ -1035,6 +1035,8 @@ main (int argc, char** argv)
       exit( -1 );
    }
 
+   initNetwork();
+
    // Defaults
    bool registrationDisabled = false;
    bool keepAlivesDisabled = false;
@@ -1309,8 +1311,6 @@ main (int argc, char** argv)
    Log::initialize("Cout", logLevel, "testUA");
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
-
-   initNetwork();
 
    InfoLog( << "testUA settings:");
    InfoLog( << "  No Keepalives = " << (keepAlivesDisabled ? "true" : "false"));

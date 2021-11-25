@@ -78,10 +78,10 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
 #ifdef _DEBUG
 
   #if _WIN64
-     UtlString codecPaths[] = {".", "../x64/Debug"};
+     UtlString codecPaths[] = {".", "../../../x64/Debug"};
   #else
     #if _WIN32
-      UtlString codecPaths[] = { ".", "../Win32/Debug" };
+      UtlString codecPaths[] = { ".", "../../../Win32/Debug" };
     #else
       UtlString codecPaths[] = { "." };
     #endif
@@ -90,10 +90,10 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
 #else
 
   #if _WIN64
-    UtlString codecPaths[] = { ".", "../x64/Release" };
+    UtlString codecPaths[] = { ".", "../../../x64/Release" };
   #else
     #if _WIN32
-      UtlString codecPaths[] = { ".", "../Win32/Release" };
+      UtlString codecPaths[] = { ".", "../../../Win32/Release" };
     #else
       UtlString codecPaths[] = { "." };
     #endif
