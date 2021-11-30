@@ -13,12 +13,33 @@ namespace kurento
 
 class Event
 {
+   public:
+      static std::shared_ptr<Event> make_event(const std::string& eventType, const json::Object& message);
+      virtual ~Event(); // FIXME
+
+
    protected:
       Event(const std::string& name);
-      virtual ~Event();
 
    private:
+      friend std::ostream& operator<<(std::ostream& strm, const Event& e);
+
       std::string mName;
+};
+
+inline std::ostream& operator<<(std::ostream& strm, const Event& e)
+{
+   strm << e.mName;
+   return strm;
+}
+
+class OnIceCandidateFoundEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnIceCandidateFoundEvent(const json::Object& message);
+      virtual ~OnIceCandidateFoundEvent();
 };
 
 class OnIceGatheringDoneEvent : public Event
@@ -30,6 +51,60 @@ class OnIceGatheringDoneEvent : public Event
       virtual ~OnIceGatheringDoneEvent();
 };
 
+class OnConnectionStateChangedEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnConnectionStateChangedEvent(const json::Object& message);
+      virtual ~OnConnectionStateChangedEvent();
+};
+
+class OnMediaStateChangedEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnMediaStateChangedEvent(const json::Object& message);
+      virtual ~OnMediaStateChangedEvent();
+};
+
+class OnMediaTranscodingStateChangeEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnMediaTranscodingStateChangeEvent(const json::Object& message);
+      virtual ~OnMediaTranscodingStateChangeEvent();
+};
+
+class OnMediaFlowInStateChangeEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnMediaFlowInStateChangeEvent(const json::Object& message);
+      virtual ~OnMediaFlowInStateChangeEvent();
+};
+
+class OnMediaFlowOutStateChangeEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnMediaFlowOutStateChangeEvent(const json::Object& message);
+      virtual ~OnMediaFlowOutStateChangeEvent();
+};
+
+class OnErrorEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnErrorEvent(const json::Object& message);
+      virtual ~OnErrorEvent();
+};
+
 class EventListener
 {
    public:
@@ -37,14 +112,17 @@ class EventListener
       virtual void onEvent(std::shared_ptr<Event> event) = 0;
 };
 
+typedef std::function<void (std::shared_ptr<Event> event) >
+ContinuationEvent;
+
 class EventContinuation : public EventListener
 {
    public:
-      EventContinuation(ContinuationVoid c) : mContinuation(c) {};
+      EventContinuation(ContinuationEvent c) : mContinuation(c) {};
       virtual ~EventContinuation() {};
-      virtual void onEvent(std::shared_ptr<Event> event) { mContinuation(); };
+      virtual void onEvent(std::shared_ptr<Event> event) override { mContinuation(event); };
    private:
-      ContinuationVoid mContinuation;
+      ContinuationEvent mContinuation;
 };
 
 }

@@ -4,7 +4,14 @@
 
 using namespace kurento;
 
+const std::string OnIceCandidateFoundEvent::EVENT_NAME = "IceCandidateFound";
 const std::string OnIceGatheringDoneEvent::EVENT_NAME = "IceGatheringDone";
+const std::string OnConnectionStateChangedEvent::EVENT_NAME = "ConnectionStateChanged";
+const std::string OnMediaStateChangedEvent::EVENT_NAME = "MediaStateChanged";
+const std::string OnMediaTranscodingStateChangeEvent::EVENT_NAME = "MediaTranscodingStateChange";
+const std::string OnMediaFlowInStateChangeEvent::EVENT_NAME = "MediaFlowInStateChange";
+const std::string OnMediaFlowOutStateChangeEvent::EVENT_NAME = "MediaFlowOutStateChange";
+const std::string OnErrorEvent::EVENT_NAME = "Error";
 
 Event::Event(const std::string& name)
    : mName(name)
@@ -12,6 +19,40 @@ Event::Event(const std::string& name)
 }
 
 Event::~Event()
+{
+}
+
+std::shared_ptr<Event>
+Event::make_event(const std::string& eventType, const json::Object& message)
+{
+   Event* event = 0;
+
+   if(eventType == OnIceCandidateFoundEvent::EVENT_NAME) {
+      event = new OnIceCandidateFoundEvent(message);
+   } else if(eventType == OnIceGatheringDoneEvent::EVENT_NAME) {
+      event = new OnIceGatheringDoneEvent(message);
+   } else if(eventType == OnConnectionStateChangedEvent::EVENT_NAME) {
+      event = new OnConnectionStateChangedEvent(message);
+   } else if(eventType == OnMediaStateChangedEvent::EVENT_NAME) {
+      event = new OnMediaStateChangedEvent(message);
+   } else if(eventType == OnMediaTranscodingStateChangeEvent::EVENT_NAME) {
+      event = new OnMediaTranscodingStateChangeEvent(message);
+   } else if(eventType == OnMediaFlowInStateChangeEvent::EVENT_NAME) {
+      event = new OnMediaFlowInStateChangeEvent(message);
+   } else if(eventType == OnMediaFlowOutStateChangeEvent::EVENT_NAME) {
+      event = new OnMediaFlowOutStateChangeEvent(message);
+   } else if(eventType == OnErrorEvent::EVENT_NAME) {
+      event = new OnErrorEvent(message);
+   }
+   return std::shared_ptr<Event>(event);
+}
+
+OnIceCandidateFoundEvent::OnIceCandidateFoundEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnIceCandidateFoundEvent::~OnIceCandidateFoundEvent()
 {
 }
 
@@ -24,6 +65,59 @@ OnIceGatheringDoneEvent::~OnIceGatheringDoneEvent()
 {
 }
 
+OnConnectionStateChangedEvent::OnConnectionStateChangedEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnConnectionStateChangedEvent::~OnConnectionStateChangedEvent()
+{
+}
+
+OnMediaStateChangedEvent::OnMediaStateChangedEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnMediaStateChangedEvent::~OnMediaStateChangedEvent()
+{
+}
+
+OnMediaTranscodingStateChangeEvent::OnMediaTranscodingStateChangeEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnMediaTranscodingStateChangeEvent::~OnMediaTranscodingStateChangeEvent()
+{
+}
+
+OnMediaFlowInStateChangeEvent::OnMediaFlowInStateChangeEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnMediaFlowInStateChangeEvent::~OnMediaFlowInStateChangeEvent()
+{
+}
+
+OnMediaFlowOutStateChangeEvent::OnMediaFlowOutStateChangeEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnMediaFlowOutStateChangeEvent::~OnMediaFlowOutStateChangeEvent()
+{
+}
+
+OnErrorEvent::OnErrorEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnErrorEvent::~OnErrorEvent()
+{
+}
 
 /* ====================================================================
 

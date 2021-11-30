@@ -39,7 +39,6 @@ class Object : public KurentoResponseHandler
       virtual void release(ContinuationVoid c);
 
       virtual void onEvent(const std::string& eventType, const json::Object& message);
-      template <typename T>
       void sendNotifications(const std::string& eventType, const json::Object& message);
 
    protected:
@@ -93,6 +92,13 @@ class MediaElement : public Object
       void connect(ContinuationVoid c, MediaElement& element);
       void disconnect(ContinuationVoid c, MediaElement& element);
       void disconnect(ContinuationVoid c);
+
+      void addErrorListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
+      void addConnectionStateChangedListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
+      void addMediaStateChangedListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
+      void addMediaTranscodingStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
+      void addMediaFlowInStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
+      void addMediaFlowOutStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
 
    protected:
       MediaElement(const std::string& name, std::shared_ptr<MediaPipeline> mediaPipeline);
@@ -209,6 +215,7 @@ class WebRtcEndpoint : public BaseRtpEndpoint
       void gatherCandidates(ContinuationVoid c);
       //void addIceCandidate(ContinuationVoid c, const std::string& candidate);
 
+      void addOnIceCandidateFoundListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
       void addOnIceGatheringDoneListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
 
 };

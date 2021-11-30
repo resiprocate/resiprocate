@@ -198,7 +198,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
                std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
 
                std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
-                        std::make_shared<kurento::EventContinuation>([this, cOnOfferReady]{
+                        std::make_shared<kurento::EventContinuation>([this, cOnOfferReady](std::shared_ptr<kurento::Event> event){
                   mIceGatheringDone = true;
                   mEndpoint->getLocalSessionDescriptor(cOnOfferReady);
                });
@@ -320,6 +320,16 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
 
       // FIXME - add listeners for Kurento events
 
+      std::shared_ptr<kurento::EventContinuation> elError =
+            std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+         ErrLog(<<"Error from Kurento MediaObject: " << *event);
+      });
+
+      std::shared_ptr<kurento::EventContinuation> elEventDebug =
+            std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+         DebugLog(<<"received event: " << *event);
+      });
+
       kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, c](const std::string& answer){
          StackLog(<<"answer FROM Kurento: " << answer);
          HeaderFieldValue hfv(answer.data(), answer.size());
@@ -348,7 +358,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          c(true, std::move(_answer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, endpointExists, c, cOnAnswerReady]{
+      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, elEventDebug, endpointExists, c, cOnAnswerReady]{
          if(endpointExists && mReuseSdpAnswer)
          {
             // FIXME - Kurento should handle hold/resume
@@ -360,17 +370,18 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             cOnAnswerReady(*answerStr);
             return;
          }
-         mEndpoint->processOffer([this, offerMangled, isWebRTC, c, cOnAnswerReady](const std::string& answer){
+         mEndpoint->processOffer([this, offerMangled, isWebRTC, elEventDebug, c, cOnAnswerReady](const std::string& answer){
             if(isWebRTC)
             {
                std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
 
                std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
-                     std::make_shared<kurento::EventContinuation>([this, cOnAnswerReady]{
+                     std::make_shared<kurento::EventContinuation>([this, cOnAnswerReady](std::shared_ptr<kurento::Event> event){
                   mIceGatheringDone = true;
                   mEndpoint->getLocalSessionDescriptor(cOnAnswerReady);
                });
                webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
+               webRtc->addOnIceCandidateFoundListener(elEventDebug, [this](){});
 
                webRtc->gatherCandidates([]{
                   // FIXME - handle the case where it fails
@@ -393,7 +404,13 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoConversationManager.mPipeline, "videoconvert"));
          //mMultiqueue.reset(new kurento::PassthroughElement(mKurentoConversationManager.mPipeline));
          mPlayer.reset(new kurento::PlayerEndpoint(mKurentoConversationManager.mPipeline, "file:///tmp/test.mp4"));
-         mEndpoint->create([this, cConnected]{
+         mEndpoint->create([this, elError, elEventDebug, cConnected]{
+            mEndpoint->addErrorListener(elError, [this](){});
+            mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
+            mEndpoint->addMediaStateChangedListener(elEventDebug, [this](){});
+            mEndpoint->addMediaTranscodingStateChangeListener(elEventDebug, [this](){});
+            mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [this](){});
+            mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [this](){});
             //mMultiqueue->create([this, cConnected]{
                // mMultiqueue->connect([this, cConnected]{
                   // mEndpoint->connect([this, cConnected]{

@@ -78,22 +78,18 @@ Object::onEvent(const std::string& eventType, const json::Object& message)
       return;
    }
 
-   if(eventType == OnIceGatheringDoneEvent::EVENT_NAME)
-   {
-      sendNotifications<OnIceGatheringDoneEvent>(eventType, message);
-   }
-   else
-   {
-      ErrLog(<<"unknown eventType " << eventType);
-      return;
-   }
+   sendNotifications(eventType, message);
 }
 
-template <typename T>
 void
 Object::sendNotifications(const std::string& eventType, const json::Object& message)
 {
-   std::shared_ptr<T> event = std::make_shared<T>(message);
+   std::shared_ptr<Event> event = Event::make_event(eventType, message);
+
+   if(!event) {
+      ErrLog(<<"failed to construct event for type: " << eventType);
+      return;
+   }
 
    EventListenerList listeners = mEventListeners[eventType];
    EventListenerList::const_iterator it;
@@ -272,6 +268,42 @@ MediaElement::disconnect(ContinuationVoid c)
    invokeVoidMethod("disconnect", c, params);
    mConnectedTo.clear();
    //element.setConnectedTo(""); // FIXME
+}
+
+void
+MediaElement::addErrorListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnErrorEvent::EVENT_NAME, l, c);
+}
+
+void
+MediaElement::addConnectionStateChangedListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnConnectionStateChangedEvent::EVENT_NAME, l, c);
+}
+
+void
+MediaElement::addMediaStateChangedListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnMediaStateChangedEvent::EVENT_NAME, l, c);
+}
+
+void
+MediaElement::addMediaTranscodingStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnMediaTranscodingStateChangeEvent::EVENT_NAME, l, c);
+}
+
+void
+MediaElement::addMediaFlowInStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnMediaFlowInStateChangeEvent::EVENT_NAME, l, c);
+}
+
+void
+MediaElement::addMediaFlowOutStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnMediaFlowOutStateChangeEvent::EVENT_NAME, l, c);
 }
 
 PassthroughElement::PassthroughElement(std::shared_ptr<MediaPipeline> mediaPipeline)
@@ -493,6 +525,12 @@ WebRtcEndpoint::addIceCandidate(ContinuationVoid c, const std::string& candidate
 {
    invokeVoidMethod("addIceCandidate", c);
 }*/
+
+void
+WebRtcEndpoint::addOnIceCandidateFoundListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnIceCandidateFoundEvent::EVENT_NAME, l, c);
+}
 
 void
 WebRtcEndpoint::addOnIceGatheringDoneListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
