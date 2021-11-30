@@ -184,7 +184,7 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
 
    if(!answeredEndpoint)
    {
-      DebugLog(<<"our endpoint is not initialized"); // FIXME
+      ErrLog(<<"our endpoint is not initialized"); // FIXME
       return;
    }
    _p->mPlayer->disconnect([this, _p, answeredEndpoint, conversation]{
