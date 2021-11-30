@@ -56,7 +56,8 @@ class Object : public KurentoResponseHandler
 
    private:
 
-      std::string makeRpcCall(const std::string& methodName, const json::Object& params, ContinuationInternal c);
+      std::string makeRpcCallStatic(const std::string& methodName, const json::Object& params, ContinuationInternal c);
+      std::string makeRpcCall(const std::string& methodName, json::Object& params, ContinuationInternal c);
 
       void subscribe(const std::string& eventName, ContinuationVoid c);
 

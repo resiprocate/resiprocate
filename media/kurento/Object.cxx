@@ -33,13 +33,21 @@ Object::~Object()
 }
 
 std::string
-Object::makeRpcCall(const std::string& methodName, const json::Object& params, ContinuationInternal c)
+Object::makeRpcCallStatic(const std::string& methodName, const json::Object& params, ContinuationInternal c)
 {
    std::string reqId = mConnection->sendRequest(
             KurentoResponseHandler::shared_from_this(),
             methodName, params);
    mContinuations[reqId] = c;
    return reqId;
+}
+
+std::string
+Object::makeRpcCall(const std::string& methodName, json::Object& params, ContinuationInternal c)
+{
+   resip_assert(!mId.empty());  // FIXME Kurento logging, throw
+   params[JSON_RPC_OBJECT] = json::String(mId);
+   return makeRpcCallStatic(methodName, params, c);
 }
 
 void
@@ -50,14 +58,13 @@ Object::createObject(ContinuationVoid c, const json::Object& constructorParams)
    params["constructorParams"] = constructorParams;
    params["properties"] = json::Object();
    ContinuationInternal ci = std::bind(&Object::onConstructorSuccess, this, c, _1);
-   std::string reqId = makeRpcCall("create", params, ci);
+   std::string reqId = makeRpcCallStatic("create", params, ci);
 }
 
 void
 Object::subscribe(const std::string& eventName, ContinuationVoid c)
 {
    json::Object params;
-   params[JSON_RPC_OBJECT] = json::String(mId);
    params[JSON_RPC_TYPE] = json::String(eventName);
    ContinuationInternal ci = std::bind(&Object::onSubscribeSuccess, this, c, _1);
    std::string reqId = makeRpcCall("subscribe", params, ci);
@@ -117,7 +124,6 @@ void
 Object::invokeVoidMethod(const std::string& methodName, ContinuationVoid c, const json::Object& methodParams)
 {
    json::Object params;
-   params[JSON_RPC_OBJECT] = json::String(mId);
    params["operation"] = json::String(methodName);
    params["operationParams"] = methodParams;
    params["properties"] = json::Object();
@@ -131,7 +137,6 @@ void
 Object::invokeStringMethod(const std::string& methodName, ContinuationString c, const json::Object& methodParams)
 {
    json::Object params;
-   params[JSON_RPC_OBJECT] = json::String(mId);
    params["operation"] = json::String(methodName);
    params["operationParams"] = methodParams;
    params["properties"] = json::Object();
