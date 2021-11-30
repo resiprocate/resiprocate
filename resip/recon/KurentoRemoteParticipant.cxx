@@ -153,6 +153,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
          if(holdSdp)
          {
+            DebugLog(<<"holdSdp is true");
             SdpContents::Session::MediumContainer::iterator it = _offer->session().media().begin();
             for(;it != _offer->session().media().end(); it++)
             {
