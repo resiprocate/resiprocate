@@ -8,6 +8,9 @@
 #include "RemoteParticipantDialogSet.hxx"
 
 #include <rutil/AsyncBool.hxx>
+
+#include <resip/stack/MediaControlContents.hxx>
+
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
@@ -76,6 +79,8 @@ public:
    virtual void rejectPendingOODRefer(unsigned int statusCode);
    virtual void redirectPendingOODRefer(resip::NameAddr& destination);
    virtual void processReferNotify(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
+
+   virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();

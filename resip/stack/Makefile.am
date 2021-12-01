@@ -108,6 +108,7 @@ libresip_la_SOURCES = \
 	UInt32Parameter.cxx \
 	InternalTransport.cxx \
 	LazyParser.cxx \
+	MediaControlContents.cxx \
 	Message.cxx \
 	MessageWaitingContents.cxx \
 	gen/MethodHash.cxx \
@@ -290,6 +291,7 @@ nobase_resipinclude_HEADERS = AbandonServerTransaction.hxx \
 	KeepAlivePong.hxx \
 	LazyParser.hxx \
 	MarkListener.hxx \
+	MediaControlContents.hxx \
 	MessageDecorator.hxx \
 	MessageFilterRule.hxx \
 	Message.hxx \
