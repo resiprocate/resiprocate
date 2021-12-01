@@ -1351,22 +1351,44 @@ RemoteParticipant::onRemoteSdpChanged(InviteSessionHandle h, const SipMessage& m
    adjustRTPStreams();
 }
 
+bool
+RemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& mediaControl)
+{
+   InfoLog(<<"onMediaControlEvent: not implemented by this ConversationManager");
+   return false;
+}
+
 void
 RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
 {
    InfoLog(<< "onInfo: handle=" << mHandle << ", " << msg.brief());
    if(mHandle)
    {
-      DtmfPayloadContents* contents = dynamic_cast<DtmfPayloadContents*>(msg.getContents());
-      if(contents)
+      bool accepted = false;
+
+      DtmfPayloadContents* dtmfContents = dynamic_cast<DtmfPayloadContents*>(msg.getContents());
+      if(dtmfContents)
       {
-         DtmfPayloadContents::DtmfPayload& payload = contents->dtmfPayload();
+         DtmfPayloadContents::DtmfPayload& payload = dtmfContents->dtmfPayload();
          mConversationManager.onDtmfEvent(mHandle, payload.getEventCode(), payload.getDuration(), true);
          session->acceptNIT();
+         accepted = true;
       }
-      else
+
+      MediaControlContents* mediaControlContents = dynamic_cast<MediaControlContents*>(msg.getContents());
+      if(mediaControlContents)
       {
-         WarningLog(<<"INFO message without dtmf-relay payload, rejecting");
+         MediaControlContents::MediaControl& payload = mediaControlContents->mediaControl();
+         if(onMediaControlEvent(payload))
+         {
+            session->acceptNIT();
+            accepted = true;
+         }
+      }
+
+      if(!accepted)
+      {
+         WarningLog(<<"INFO message without recognized payload content-type, rejecting");
          session->rejectNIT();
       }
    }
