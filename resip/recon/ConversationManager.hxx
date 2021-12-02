@@ -330,6 +330,15 @@ public:
    virtual void outputBridgeMatrix(ConversationHandle convHandle = 0);
 
    /**
+     Builds a session capabilties SDPContents based on the passed in ipaddress
+     and codec ordering.
+     Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
+            codecs not loaded are ignored.
+   */
+   virtual void buildSessionCapabilities(const resip::Data& ipaddress,
+      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps) = 0;
+
+   /**
      Signal to the participant that it should provide ringback.  Only
      applicable to RemoteParticipants.  For SIP this causes a 180 to be sent.
      The early flag indicates if we are sending early media or not.
