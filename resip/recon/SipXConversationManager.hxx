@@ -253,9 +253,6 @@ private:
 
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 
-   // exists here (as opposed to RemoteParticipant) - since it is required for OPTIONS responses
-   virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer) override;
-
    friend class OutputBridgeMixWeightsCmd;
    void outputBridgeMatrixImpl(ConversationHandle convHandle = 0) override;
 

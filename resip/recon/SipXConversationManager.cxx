@@ -260,23 +260,6 @@ SipXConversationManager::outputBridgeMatrixImpl(ConversationHandle convHandle)
    }
 }
 
-void 
-SipXConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& offer)
-{
-   // copy over session capabilities
-   offer = profile->sessionCaps();
-
-   // Set sessionid and version for this offer
-   UInt64 currentTime = Timer::getTimeMicroSec();
-   offer.session().origin().getSessionId() = currentTime;
-   offer.session().origin().getVersion() = currentTime;  
-
-   // Set local port in offer
-   // for now we only allow 1 audio media
-   resip_assert(offer.session().media().size() == 1);
-   resip_assert(offer.session().media().front().name() == "audio");
-}
-
 void
 SipXConversationManager::setSpeakerVolume(int volume)
 {
