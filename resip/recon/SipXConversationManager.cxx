@@ -594,6 +594,24 @@ SipXConversationManager::addExtraPlayAndRecordResourcesToTopology()
    return result == OS_SUCCESS;
 }
 
+void
+SipXConversationManager::process()
+{
+   // do nothing
+}
+
+void
+SipXConversationManager::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
+{
+   getFlowManager().setRTCPEventLoggingHandler(h);
+}
+
+void
+SipXConversationManager::initializeDtlsFactory(const resip::Data& defaultAoR)
+{
+   getFlowManager().initializeDtlsFactory(defaultAoR.c_str());
+}
+
 
 /* ====================================================================
 

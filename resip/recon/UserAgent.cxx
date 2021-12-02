@@ -88,7 +88,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mConversationManager->setUserAgent(this);
 
    mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
-   // FIXME dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
+   mConversationManager->setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
 
    addTransports();
 
@@ -205,13 +205,7 @@ void
 UserAgent::process(int timeoutMs)
 {
    mDum.process(timeoutMs);
-
-   // FIXME - provide a way for modules to register to be called from the event loop
-   KurentoConversationManager *kcm = dynamic_cast<KurentoConversationManager*>(mConversationManager);
-   if(kcm != 0)
-   {
-      kcm->mKurentoManager.process();
-   }
+   mConversationManager->process();
 }
 
 void
@@ -641,7 +635,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, std::sha
    // the cert at runtime to equal the aor in the default conversation profile
    if(!mDefaultOutgoingConversationProfileHandle)
    {
-      // FIXME dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
+      mConversationManager->initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor());
    }
 #endif
 

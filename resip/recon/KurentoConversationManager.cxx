@@ -236,6 +236,24 @@ KurentoConversationManager::createRemoteParticipantDialogSetInstance(
    return new KurentoRemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
 }
 
+void
+KurentoConversationManager::process()
+{
+   mKurentoManager.process();
+}
+
+void
+KurentoConversationManager::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
+{
+   // FIXME Kurento
+}
+
+void
+KurentoConversationManager::initializeDtlsFactory(const resip::Data& defaultAoR)
+{
+   // FIXME Kurento
+}
+
 
 /* ====================================================================
 
