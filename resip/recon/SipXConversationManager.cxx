@@ -594,6 +594,12 @@ SipXConversationManager::addExtraPlayAndRecordResourcesToTopology()
    return result == OS_SUCCESS;
 }
 
+void
+SipXConversationManager::initializeDtlsFactory(const resip::Data& defaultAoR)
+{
+   getFlowManager().initializeDtlsFactory(defaultAoR.c_str());
+}
+
 
 /* ====================================================================
 

@@ -722,6 +722,8 @@ private:
    friend class SipXRemoteParticipant;
    friend class UserAgent;
 
+   virtual void initializeDtlsFactory(const resip::Data& defaultAoR) = 0;
+
    friend class DtmfEvent;
    friend class MediaEvent;
    void notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType, MediaEvent::MediaDirection direction);
