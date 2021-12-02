@@ -15,10 +15,9 @@ EXTRA_DIST += WinCompat.cxx
 EXTRA_DIST += msvc/*.h
 EXTRA_DIST += dns/LocalDns.cxx
 
-#AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
-AM_CXXFLAGS = -I $(top_srcdir) 
+librutil_la_CXXFLAGS = -I $(top_srcdir)
 if USE_ARES
-AM_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
+librutil_la_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
 endif
 
 lib_LTLIBRARIES = librutil.la
@@ -111,7 +110,7 @@ endif
 if BUILD_GSTREAMER
 librutil_la_SOURCES += \
 	GStreamerUtils.cxx
-librutil_la_CXXFLAGS = $(GSTREAMERMM_1_0_CFLAGS)
+librutil_la_CXXFLAGS += $(GSTREAMERMM_1_0_CFLAGS)
 librutil_la_LIBADD += $(GSTREAMERMM_1_0_LIBS)
 # $(LDADD)
 endif
