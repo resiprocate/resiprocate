@@ -86,7 +86,7 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mConversationManager->setUserAgent(this);
 
    mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
-   dynamic_cast<SipXConversationManager*>(mConversationManager)->getFlowManager().setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
+   mConversationManager->setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
 
    addTransports();
 

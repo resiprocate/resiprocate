@@ -11,6 +11,8 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
+#include <reflow/RTCPEventLoggingHandler.hxx>
+
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
@@ -722,6 +724,7 @@ private:
    friend class SipXRemoteParticipant;
    friend class UserAgent;
 
+   virtual void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h) = 0;
    virtual void initializeDtlsFactory(const resip::Data& defaultAoR) = 0;
 
    friend class DtmfEvent;

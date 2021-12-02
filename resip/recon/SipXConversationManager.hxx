@@ -251,6 +251,7 @@ private:
    friend class BridgeMixer;
    friend class SipXMediaInterface;
 
+   virtual void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h) override;
    virtual void initializeDtlsFactory(const resip::Data& defaultAoR) override;
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 
