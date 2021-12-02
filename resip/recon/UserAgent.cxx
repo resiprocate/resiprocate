@@ -203,6 +203,7 @@ void
 UserAgent::process(int timeoutMs)
 {
    mDum.process(timeoutMs);
+   mConversationManager->process();
 }
 
 void

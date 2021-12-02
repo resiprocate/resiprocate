@@ -595,6 +595,12 @@ SipXConversationManager::addExtraPlayAndRecordResourcesToTopology()
 }
 
 void
+SipXConversationManager::process()
+{
+   // do nothing
+}
+
+void
 SipXConversationManager::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
 {
    getFlowManager().setRTCPEventLoggingHandler(h);
