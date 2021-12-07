@@ -1024,12 +1024,15 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target, SendData* sendData)
          {
             source = determineSourceInterface(msg, target);
             transport = findTransportBySource(source, msg);
-            DebugLog(<< "Found transport: " << source);
 
             // .bwc. determineSourceInterface might give us a port
-            if(transport && source.getPort()==0)
+            if(transport)
             {
-               source.setPort(transport->port());
+               DebugLog(<< "Found transport: " << source);
+               if (source.getPort()==0)
+               {
+                  source.setPort(transport->port());
+               }
             }
          }
 

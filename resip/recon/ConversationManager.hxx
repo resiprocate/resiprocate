@@ -11,6 +11,8 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <rutil/Mutex.hxx>
 
+#include <reflow/RTCPEventLoggingHandler.hxx>
+
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
@@ -328,6 +330,15 @@ public:
                          specify a specific conversation to view.
    */
    virtual void outputBridgeMatrix(ConversationHandle convHandle = 0);
+
+   /**
+     Builds a session capabilties SDPContents based on the passed in ipaddress
+     and codec ordering.
+     Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
+            codecs not loaded are ignored.
+   */
+   virtual void buildSessionCapabilities(const resip::Data& ipaddress,
+      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps) = 0;
 
    /**
      Signal to the participant that it should provide ringback.  Only
@@ -712,6 +723,13 @@ private:
    friend class RemoteParticipant;
    friend class SipXRemoteParticipant;
    friend class UserAgent;
+
+   /* Called periodically in the event loop to give the ConversationManager
+      the opportunity to do any pending work */
+   virtual void process() = 0;
+
+   virtual void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h) = 0;
+   virtual void initializeDtlsFactory(const resip::Data& defaultAoR) = 0;
 
    friend class DtmfEvent;
    friend class MediaEvent;

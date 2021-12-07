@@ -56,6 +56,7 @@
     <ClCompile Include="InvalidContents.cxx" />
     <ClCompile Include="KeepAliveMessage.cxx" />
     <ClCompile Include="LazyParser.cxx" />
+    <ClCompile Include="MediaControlContents.cxx" />
     <ClCompile Include="Message.cxx" />
     <ClCompile Include="MessageFilterRule.cxx" />
     <ClCompile Include="MessageWaitingContents.cxx" />
@@ -218,6 +219,7 @@
     <ClInclude Include="KeepAlivePong.hxx" />
     <ClInclude Include="LazyParser.hxx" />
     <ClInclude Include="MarkListener.hxx" />
+    <ClInclude Include="MediaControlContents.hxx" />
     <ClInclude Include="Message.hxx" />
     <ClInclude Include="MessageDecorator.hxx" />
     <ClInclude Include="MessageFilterRule.hxx" />

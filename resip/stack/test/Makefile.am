@@ -43,6 +43,7 @@ TESTS = \
 	testExternalLogger \
     testGenericPidfContents \
 	testIM \
+	testMediaControl \
 	testMessageWaiting \
 	testMultipartMixedContents \
 	testMultipartRelated \
@@ -86,6 +87,7 @@ check_PROGRAMS = \
     testGenericPidfContents \
 	testIM \
 	testLockStep \
+	testMediaControl \
 	testMessageWaiting \
 	testMultipartMixedContents \
 	testMultipartRelated \
@@ -145,6 +147,7 @@ testExternalLogger_SOURCES = testExternalLogger.cxx
 testGenericPidfContents_SOURCES = testGenericPidfContents.cxx TestSupport.cxx
 testIM_SOURCES = testIM.cxx
 testLockStep_SOURCES = testLockStep.cxx
+testMediaControl_SOURCES = testMediaControl.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx TestSupport.cxx
 testMultipartRelated_SOURCES = testMultipartRelated.cxx TestSupport.cxx
