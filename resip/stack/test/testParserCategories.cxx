@@ -1726,6 +1726,28 @@ main(int arc, char** argv)
       assert(dsData == "Sun, 14 Jan 2222 07:04:05 GMT");
    }
 
+   {
+      TR _tr("Date testing - No day of week");
+      const char* dateString = "04 Nov 2002 17:34:15 GMT";
+      HeaderFieldValue hfv(dateString, strlen(dateString));
+
+      DateCategory date(hfv, Headers::UNKNOWN);
+
+      assert(date.dayOfWeek() == NA);
+      assert(date.dayOfMonth() == 04);
+      assert(date.month() == Nov);
+      assert(date.year() == 2002);
+      assert(date.hour() == 17);
+      assert(date.minute() == 34);
+      assert(date.second() == 15);
+
+      Data dsData;
+      {
+         DataStream s(dsData);
+         date.encode(s);
+      }
+      assert(dsData == dateString);
+   }
 
    {
       TR _tr("Mime types 1");

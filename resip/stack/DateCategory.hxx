@@ -19,7 +19,8 @@ enum DayOfWeek {
    Wed,
    Thu,
    Fri,
-   Sat
+   Sat,
+   NA
 };
 
 extern Data DayOfWeekData[];
