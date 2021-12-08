@@ -187,7 +187,9 @@ class BaseRtpEndpoint : public Endpoint
       void processAnswer(ContinuationString s, const std::string& sdp);
       void processOffer(ContinuationString s, const std::string& sdp);
       void getLocalSessionDescriptor(ContinuationString s);
+      void sendPictureFastUpdate(ContinuationVoid c);
 
+      void addKeyframeRequiredListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
 };
 
 class RtpEndpoint : public BaseRtpEndpoint

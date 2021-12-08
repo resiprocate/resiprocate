@@ -331,6 +331,15 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          DebugLog(<<"received event: " << *event);
       });
 
+      std::shared_ptr<kurento::EventContinuation> elEventKeyframeRequired =
+            std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+         DebugLog(<<"received event: " << *event);
+         // send a SIP INFO request to the participant as per RFC 5168 media_control
+         MediaControlContents mcc;
+         mcc.mediaControl() = MediaControlContents::MediaControl({ Data("1") }, true);
+         info(mcc);
+      });
+
       kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, c](const std::string& answer){
          StackLog(<<"answer FROM Kurento: " << answer);
          HeaderFieldValue hfv(answer.data(), answer.size());
@@ -405,13 +414,14 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoConversationManager.mPipeline, "videoconvert"));
          //mMultiqueue.reset(new kurento::PassthroughElement(mKurentoConversationManager.mPipeline));
          mPlayer.reset(new kurento::PlayerEndpoint(mKurentoConversationManager.mPipeline, "file:///tmp/test.mp4"));
-         mEndpoint->create([this, elError, elEventDebug, cConnected]{
+         mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});
             mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
             mEndpoint->addMediaStateChangedListener(elEventDebug, [this](){});
             mEndpoint->addMediaTranscodingStateChangeListener(elEventDebug, [this](){});
             mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [this](){});
             mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [this](){});
+            mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [this](){});
             //mMultiqueue->create([this, cConnected]{
                // mMultiqueue->connect([this, cConnected]{
                   // mEndpoint->connect([this, cConnected]{
@@ -468,8 +478,18 @@ KurentoRemoteParticipant::mediaStackPortAvailable()
 void
 KurentoRemoteParticipant::waitingMode()
 {
-   mPlayer->connect([]{DebugLog(<<"connected in loopback/video, waiting for peer");}, *mEndpoint);
-   //mEndpoint->connect([]{DebugLog(<<"connected in loopback/video, waiting for peer");}, *mEndpoint);
+   mEndpoint->connect([]{
+      // FIXME - do anything else here?
+      DebugLog(<<"connected in loopback/video, waiting for peer");
+   }, *mEndpoint);
+}
+
+bool
+KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& mediaControl)
+{
+   InfoLog(<<"onMediaControlEvent: sending to Kurento");
+   //mEndpoint->sendPictureFastUpdate([this](){});   // FIXME uncomment
+   return true;
 }
 
 

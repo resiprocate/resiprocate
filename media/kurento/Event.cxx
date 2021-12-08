@@ -11,6 +11,7 @@ const std::string OnMediaStateChangedEvent::EVENT_NAME = "MediaStateChanged";
 const std::string OnMediaTranscodingStateChangeEvent::EVENT_NAME = "MediaTranscodingStateChange";
 const std::string OnMediaFlowInStateChangeEvent::EVENT_NAME = "MediaFlowInStateChange";
 const std::string OnMediaFlowOutStateChangeEvent::EVENT_NAME = "MediaFlowOutStateChange";
+const std::string OnKeyframeRequiredEvent::EVENT_NAME = "KeyframeRequired";
 const std::string OnErrorEvent::EVENT_NAME = "Error";
 
 Event::Event(const std::string& name)
@@ -41,6 +42,8 @@ Event::make_event(const std::string& eventType, const json::Object& message)
       event = new OnMediaFlowInStateChangeEvent(message);
    } else if(eventType == OnMediaFlowOutStateChangeEvent::EVENT_NAME) {
       event = new OnMediaFlowOutStateChangeEvent(message);
+   } else if(eventType == OnKeyframeRequiredEvent::EVENT_NAME) {
+      event = new OnKeyframeRequiredEvent(message);
    } else if(eventType == OnErrorEvent::EVENT_NAME) {
       event = new OnErrorEvent(message);
    }
@@ -107,6 +110,15 @@ OnMediaFlowOutStateChangeEvent::OnMediaFlowOutStateChangeEvent(const json::Objec
 }
 
 OnMediaFlowOutStateChangeEvent::~OnMediaFlowOutStateChangeEvent()
+{
+}
+
+OnKeyframeRequiredEvent::OnKeyframeRequiredEvent(const json::Object& message)
+   : Event(EVENT_NAME)
+{
+}
+
+OnKeyframeRequiredEvent::~OnKeyframeRequiredEvent()
 {
 }
 

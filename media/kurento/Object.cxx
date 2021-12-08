@@ -482,6 +482,18 @@ BaseRtpEndpoint::getLocalSessionDescriptor(ContinuationString c)
    invokeStringMethod("getLocalSessionDescriptor", c);
 }
 
+void
+BaseRtpEndpoint::sendPictureFastUpdate(ContinuationVoid c)
+{
+   invokeVoidMethod("sendPictureFastUpdate", c);
+}
+
+void
+BaseRtpEndpoint::addKeyframeRequiredListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+   addListener(OnKeyframeRequiredEvent::EVENT_NAME, l, c);
+}
+
 RtpEndpoint::RtpEndpoint(std::shared_ptr<MediaPipeline> mediaPipeline)
    : BaseRtpEndpoint("RtpEndpoint", mediaPipeline)
 {

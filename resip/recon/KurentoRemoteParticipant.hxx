@@ -77,6 +77,8 @@ public:
 
    virtual void waitingMode();
 
+   virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
+
 protected:
    virtual bool mediaStackPortAvailable();
 

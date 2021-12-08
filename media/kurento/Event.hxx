@@ -96,6 +96,15 @@ class OnMediaFlowOutStateChangeEvent : public Event
       virtual ~OnMediaFlowOutStateChangeEvent();
 };
 
+class OnKeyframeRequiredEvent : public Event
+{
+   public:
+      static const std::string EVENT_NAME;
+
+      OnKeyframeRequiredEvent(const json::Object& message);
+      virtual ~OnKeyframeRequiredEvent();
+};
+
 class OnErrorEvent : public Event
 {
    public:
