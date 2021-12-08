@@ -803,7 +803,7 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
 void 
 Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<reTurn::DataBuffer>& data)
 {
-   DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+   StackLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
 
    if(address != mTurnSocket->getConnectedAddress() || port != mTurnSocket->getConnectedPort())
    {
