@@ -4,11 +4,13 @@
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>
+#include <resip/stack/Contents.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
+#include <resip/dum/PagerMessageHandler.hxx>
 #include <rutil/Mutex.hxx>
 
 #include <reflow/RTCPEventLoggingHandler.hxx>
@@ -62,7 +64,9 @@ class ConversationManager : public resip::InviteSessionHandler,
    public resip::OutOfDialogHandler,
    public resip::ClientSubscriptionHandler,
    public resip::ServerSubscriptionHandler,
-   public resip::RedirectHandler
+   public resip::RedirectHandler,
+   public resip::ClientPagerMessageHandler,
+   public resip::ServerPagerMessageHandler
 {
 public:
 
@@ -173,25 +177,6 @@ public:
                        RemoteParticipant in
      @param destination Uri of the remote participant to reach
      @param forkSelectMode Determines behavior if forking occurs
-
-     @return A handle to the newly created remote participant
-   */
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, 
-                                                     const resip::NameAddr& destination, 
-                                                     ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic);
-
-   /**
-     Creates a new remote participant in the specified conversation
-     that is attempted to be reached at the specified address.
-     For SIP the address is a URI.  ForkSelectMode can be set to either
-     automatic or manual.  When ForkSelectMode is set to auto the
-     conversation manager will automatically dispose of any related
-     conversations that were created, due to forking.
-
-     @param convHandle Handle of the conversation to create the
-                       RemoteParticipant in
-     @param destination Uri of the remote participant to reach
-     @param forkSelectMode Determines behavior if forking occurs
      @param callerProfile - a specific ConversationProfile to use 
                            for this session
      @param extraHeaders - a multimap of header names and values 
@@ -201,9 +186,23 @@ public:
    */
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, 
                                                      const resip::NameAddr& destination, 
-                                                     ParticipantForkSelectMode forkSelectMode, 
-                                                     const std::shared_ptr<resip::UserProfile>& callerProfile, 
-                                                     const std::multimap<resip::Data, resip::Data>& extraHeaders);
+                                                     ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic,
+                                                     const std::shared_ptr<ConversationProfile>& callerProfile = nullptr,
+                                                     const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>());
+
+   /**
+     Creates a new remote IM participant that will be attempted to be reached
+     when sendIMToParticipant is called.  For SIP the address is a URI.
+     Uses the specified conversation profile.
+
+     @param destination Uri of the remote IM participant
+     @param conversationProfile - a specific ConversationProfile to use
+                           for this session
+
+     @return A handle to the newly created remote IM participant
+   */
+   virtual ParticipantHandle createRemoteIMParticipant(const resip::NameAddr& destination,
+                                                       const std::shared_ptr<ConversationProfile>& conversationProfile = nullptr);
 
    /**
      Creates a new media resource participant in the specified conversation.
@@ -403,6 +402,14 @@ public:
    virtual void holdParticipant(ParticipantHandle partHandle, bool hold);
 
    /**
+     Sends a MESSAGE with specified Contents to RemoteParticipant or a RemoteIMParticipant.
+
+     @param partHandle Handle of the participant to send to
+     @param contents Body of SIP MESSAGE request to send
+   */
+   virtual void sendIMToParticipant(ParticipantHandle partHandle, std::unique_ptr<resip::Contents> contents);
+
+   /**
      This function is used to add a chunk of memory to a media/prompt cache.
      Cached prompts can later be played back via createMediaParticipant.
      Expected format is 1-channel 16-bit 8Khz linear PCM (Assuming sipX and  
@@ -460,6 +467,39 @@ public:
      @param autoAnswer Set to true if auto answer has been requested
    */
    virtual void onIncomingParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) = 0;
+
+   /**
+     Notifies an application about a new remote IM participant that has sent a message
+
+     @param partHandle Handle of the new incoming IM participant
+     @param msg Includes information about the sender such as name and address, and the body of the initial IM message.
+                Note:  If answerParticpant is called then the same message will be sent to the app again in a call to 
+                       onReceiveIMFromParticipant.  Content processing should be done in the onReceiveIMFromParticipant
+                       callback.
+   */
+   virtual void onIncomingIMParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) { rejectParticipant(partHandle, 501); }
+
+   /**
+     Notifies an application about a subsequent message from remote and existing IM participant
+
+     @param partHandle Handle of the remote IM participant that sent the message
+     @param msg Includes information about the sender such as name and address, and the body of the IM message
+
+     @return bool indicating if message should be relayed to other appropriate participants in any conversations
+             this participant belongs to.
+   */
+   virtual bool onReceiveIMFromParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg) { return false; }
+
+   /**
+     Notifies an application that a send IM call has failed.
+
+     @param partHandle Handle of the participant that had the failure.  Can be a
+                       message from an IM relay if application returns true from
+                       onReceiveIMFromParticipant.
+     @param status     The SIP message indicating the failure status.
+     @param contents   The contents of the message that failed to send.
+   */
+   virtual void onParticipantSendIMFailure(ParticipantHandle partHandle, const resip::SipMessage& status, std::unique_ptr<resip::Contents> contents) {}
 
    /**
      Notifies an application about a new remote participant that is trying 
@@ -686,6 +726,14 @@ protected:
    virtual void onRedirectReceived(resip::AppDialogSetHandle, const resip::SipMessage& response);
    virtual bool onTryingNextTarget(resip::AppDialogSetHandle, const resip::SipMessage& request);
 
+   // ClientPagerMessageHandler ///////////////////////////////////////////////////
+   virtual void onSuccess(resip::ClientPagerMessageHandle, const resip::SipMessage& status);
+   virtual void onFailure(resip::ClientPagerMessageHandle, const resip::SipMessage& status, std::unique_ptr<resip::Contents> contents);
+
+   // ServerPagerMessageHandler ///////////////////////////////////////////////////
+   virtual void onMessageArrived(resip::ServerPagerMessageHandle, const resip::SipMessage& message);
+
+
    UserAgent* getUserAgent() { return mUserAgent; }
 
    ParticipantHandle getNewParticipantHandle();    // thread safe
@@ -721,6 +769,7 @@ private:
    void unregisterParticipant(Participant *);
 
    friend class RemoteParticipant;
+   friend class RemoteIMParticipant;
    friend class SipXRemoteParticipant;
    friend class UserAgent;
 
@@ -778,6 +827,8 @@ private:
    friend class RedirectParticipantCmd;
    friend class RedirectToParticipantCmd;
    friend class HoldParticipantCmd;
+   friend class CreateRemoteIMParticipantCmd;
+   friend class SendIMToParticipantCmd;
 
    UserAgent* mUserAgent;
    bool mShuttingDown;

@@ -5,6 +5,7 @@
 
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
+#include "IMParticipantBase.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 
 #include <resip/stack/MediaControlContents.hxx>
@@ -34,15 +35,17 @@ namespace recon
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipant : public virtual Participant, public resip::AppDialog
+class RemoteParticipant : public IMParticipantBase, public virtual Participant, public resip::AppDialog
 {
 public:
-   RemoteParticipant(ParticipantHandle partHandle,   // UAC
+   // UAC
+   RemoteParticipant(ParticipantHandle partHandle,
                      ConversationManager& conversationManager, 
                      resip::DialogUsageManager& dum,
-                     RemoteParticipantDialogSet& remoteParticipantDialogSet);  
+                     RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   RemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
+   // UAS or forked leg
+   RemoteParticipant(ConversationManager& conversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
@@ -54,7 +57,7 @@ public:
    virtual bool isRemoteHold() { return mRemoteHold; }
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
-   virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::shared_ptr<resip::UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
+   virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::shared_ptr<ConversationProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
    virtual void destroyParticipant();
    virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
    virtual void removeFromConversation(Conversation *conversation);
@@ -66,6 +69,7 @@ public:
    virtual void info(const resip::Contents& contents);
    virtual void checkHoldCondition();
    virtual void setLocalHold(bool hold);
+   virtual void sendInstantMessage(std::unique_ptr<resip::Contents> contents) override;
 
    virtual void setPendingOODReferInfo(resip::ServerOutOfDialogReqHandle ood, const resip::SipMessage& referMsg); // OOD-Refer (no Sub)
    virtual void setPendingOODReferInfo(resip::ServerSubscriptionHandle ss, const resip::SipMessage& referMsg); // OOD-Refer (with Sub)

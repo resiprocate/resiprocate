@@ -62,6 +62,8 @@ Participant::addToConversation(Conversation* conversation, unsigned int inputGai
    resip_assert(conversation);
    if(mConversations.find(conversation->getHandle()) != mConversations.end()) return;  // already present
 
+   InfoLog(<< "Participant handle=" << mHandle << " added to conversation=" << conversation->getHandle() << ", inputGain=" << inputGain << ", outputGain=" << outputGain);
+
    mConversations[conversation->getHandle()] = conversation;
    conversation->registerParticipant(this, inputGain, outputGain);
 }
@@ -70,7 +72,7 @@ void
 Participant::removeFromConversation(Conversation *conversation)
 {
    resip_assert(conversation);
-   //InfoLog(<< "Participant handle=" << mHandle << " removed from conversation=" << conversation->getHandle());
+   InfoLog(<< "Participant handle=" << mHandle << " removed from conversation=" << conversation->getHandle());
    mConversations.erase(conversation->getHandle());  // Note: this must come before next line - since unregisterParticipant may end up destroying conversation
    conversation->unregisterParticipant(this);
 }

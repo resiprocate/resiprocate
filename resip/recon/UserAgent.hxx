@@ -1,7 +1,6 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
-#include "InstantMessage.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "UserAgentMasterProfile.hxx"
@@ -77,7 +76,7 @@ public:
                                 connected.  To enable this behavior call:
                                 Connection::setEnablePostConnectSocketFuncCall();
    */
-   UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0, std::shared_ptr<InstantMessage> instantMessage = nullptr);
+   UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> masterProfile, resip::AfterSocketCreationFuncPtr socketFunc=0);
    virtual ~UserAgent();
 
    /**
@@ -332,6 +331,7 @@ private:
    //        loop only
    friend class UserAgentServerAuthManager;
    friend class RemoteParticipant;
+   friend class RemoteIMParticipant;
    friend class SipXRemoteParticipant;
    friend class DefaultDialogSet;
    friend class RemoteParticipantDialogSet;
@@ -384,7 +384,6 @@ private:
 
    ConversationManager* mConversationManager;
    std::shared_ptr<UserAgentMasterProfile> mProfile;
-   std::shared_ptr<InstantMessage> mInstantMessage;
    resip::Security* mSecurity;
    resip::FdPollGrp *mPollGrp;
    resip::EventThreadInterruptor *mEventInterruptor;
@@ -403,8 +402,8 @@ private:
 /* ====================================================================
 
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2016-2021, SIP Spectrum, Inc. http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2016, SIP Spectrum, Inc.
 
  All rights reserved.
 

@@ -39,7 +39,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         ConversationProfile.cxx \
         DefaultDialogSet.cxx \
         DtmfEvent.cxx \
-        InstantMessage.cxx \
+        IMParticipantBase.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
         MediaResourceParticipant.cxx \
@@ -50,6 +50,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         RelatedConversationSet.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
+        RemoteIMParticipant.cxx \
         RTPPortManager.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
@@ -86,7 +87,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         RelatedConversationSet.hxx \
         UserAgentServerAuthManager.hxx \
         ConversationManagerCmds.hxx \
-        InstantMessage.hxx \
+        IMParticipantBase.hxx \
         UserAgentMasterProfile.hxx \
         RemoteParticipantDialogSet.hxx \
         RTPPortManager.hxx \
@@ -103,6 +104,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         UserAgent.hxx \
         ConversationParticipantAssignment.hxx \
         RemoteParticipant.hxx \
+        RemoteIMParticipant.hxx \
         MediaResourceParticipant.hxx \
         BridgeMixer.hxx \
         HandleTypes.hxx \

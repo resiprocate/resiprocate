@@ -515,7 +515,7 @@ SipXConversationManager::canConversationsShareParticipants(Conversation* convers
    assert(conversation1);
    assert(conversation2);
 
-   // You can only add non-local participants to 2 different conversations if they share the same MediaInterface
+   // You can only add non-local (excluding RemoteIM) participants to 2 different conversations if they share the same MediaInterface
    return (((SipXConversation*)conversation1)->getMediaInterface().get() == ((SipXConversation*)conversation2)->getMediaInterface().get());
 }
 

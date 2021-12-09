@@ -8,6 +8,8 @@
 #include <resip/dum/ServerInviteSession.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerOutOfDialogReq.hxx>
+#include <resip/dum/ClientPagerMessage.hxx>
+#include <resip/dum/ServerPagerMessage.hxx>
 
 #include "ReconSubsystem.hxx"
 #include "UserAgent.hxx"
@@ -18,6 +20,7 @@
 #include "BridgeMixer.hxx"
 #include "DtmfEvent.hxx"
 #include "RemoteParticipant.hxx"
+#include "RemoteIMParticipant.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -102,15 +105,8 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
    post(cmd);
 }
 
-ParticipantHandle 
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
-{
-   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
-   return createRemoteParticipant(convHandle, destination, forkSelectMode, nullptr, std::multimap<resip::Data,resip::Data>());
-}
-
 ParticipantHandle
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<ConversationProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
@@ -120,6 +116,19 @@ ConversationManager::createRemoteParticipant(ConversationHandle convHandle, cons
 
    return partHandle;
 }
+
+ParticipantHandle 
+ConversationManager::createRemoteIMParticipant(const resip::NameAddr& destination, const std::shared_ptr<ConversationProfile>& conversationProfile)
+{
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
+   ParticipantHandle partHandle = getNewParticipantHandle();
+
+   CreateRemoteIMParticipantCmd* cmd = new CreateRemoteIMParticipantCmd(this, partHandle, destination, conversationProfile);
+   post(cmd);
+
+   return partHandle;
+}
+
 
 ParticipantHandle 
 ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
@@ -234,6 +243,13 @@ void
 ConversationManager::holdParticipant(ParticipantHandle partHandle, bool hold)
 {
    HoldParticipantCmd* cmd = new HoldParticipantCmd(this, partHandle, hold);
+   post(cmd);
+}
+
+void 
+ConversationManager::sendIMToParticipant(ParticipantHandle partHandle, std::unique_ptr<Contents> contents)
+{
+   SendIMToParticipantCmd* cmd = new SendIMToParticipantCmd(this, partHandle, std::move(contents));
    post(cmd);
 }
 
@@ -626,7 +642,6 @@ int
 ConversationManager::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const SipMessage& msg)
 {
    return dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onRequestRetry(h, retryMinimum, msg);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -863,6 +878,61 @@ ConversationManager::onTryingNextTarget(AppDialogSetHandle, const SipMessage& ms
    InfoLog(<< "onTryingNextTarget(AppDialogSetHandle): " << msg.brief());
    // Always allow redirection for now
    return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ClientPagerMessageHandler ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void 
+ConversationManager::onSuccess(ClientPagerMessageHandle h, const SipMessage& status)
+{
+   return dynamic_cast<RemoteIMParticipant*>(h->getAppDialogSet().get())->onSuccess(h, status);
+}
+
+void 
+ConversationManager::onFailure(ClientPagerMessageHandle h, const SipMessage& status, std::unique_ptr<Contents> contents)
+{
+   return dynamic_cast<RemoteIMParticipant*>(h->getAppDialogSet().get())->onFailure(h, status, std::move(contents));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ServerPagerMessageHandler ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void 
+ConversationManager::onMessageArrived(ServerPagerMessageHandle h, const SipMessage& message)
+{
+   RemoteIMParticipant* remoteIMParticipant = nullptr;
+
+   // First see if we already have a RemoteIMParticipant for this CallId yet or not
+   for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
+   {
+      remoteIMParticipant = dynamic_cast<RemoteIMParticipant*>(i->second);
+      if (remoteIMParticipant != nullptr && remoteIMParticipant->doesMessageMatch(message))
+      {
+         // Found existing remoteIMParticipant, break out
+         break;
+      }
+      remoteIMParticipant = nullptr;
+   }
+
+   if (remoteIMParticipant == nullptr && mUserAgent != nullptr)
+   {
+      // If we make it here, we didn't find an existing RemoteIMParticipant via the callId,
+      // for From header matching create a new one now.
+      remoteIMParticipant = new RemoteIMParticipant(getNewParticipantHandle(), *this);
+   }
+
+   if (remoteIMParticipant)
+   {
+      remoteIMParticipant->onMessageArrived(h, message);
+   }
+   else
+   {
+      h->send(h->reject(500)); // Reject with internal server error
+   }
+   
 }
 
 

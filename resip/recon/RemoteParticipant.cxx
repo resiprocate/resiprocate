@@ -3,6 +3,7 @@
 #endif
 
 #include "RemoteParticipant.hxx"
+#include "IMParticipantBase.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
@@ -46,43 +47,45 @@ using namespace std;
 */
 //#define RTP_SAVPF_FUDGE
 
-// UAC
+// UAC / Outbound
 RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
                                      DialogUsageManager& dum,
-                                     RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, conversationManager),
-  AppDialog(dum),
-  mDum(dum),
-  mDialogSet(remoteParticipantDialogSet),
-  mDialogId(Data::Empty, Data::Empty, Data::Empty),
-  mState(Connecting),
-  mOfferRequired(false),
-  mLocalHold(true),
-  mRemoteHold(false),
-  mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
-  mLocalSdp(0),
-  mRemoteSdp(0)
+                                     RemoteParticipantDialogSet& remoteParticipantDialogSet) :
+   IMParticipantBase(true /* prependSenderInfoToIMs? */),
+   Participant(partHandle, conversationManager),
+   AppDialog(dum),
+   mDum(dum),
+   mDialogSet(remoteParticipantDialogSet),
+   mDialogId(Data::Empty, Data::Empty, Data::Empty),
+   mState(Connecting),
+   mOfferRequired(false),
+   mLocalHold(true),
+   mRemoteHold(false),
+   mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
+   mLocalSdp(0),
+   mRemoteSdp(0)
 {
    InfoLog(<< "RemoteParticipant created (UAC), handle=" << mHandle);
 }
 
-// UAS - or forked leg
+// UAS / Inbound - or forked leg
 RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager, 
                                      DialogUsageManager& dum, 
-                                     RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(conversationManager),
-  AppDialog(dum),
-  mDum(dum),
-  mDialogSet(remoteParticipantDialogSet),
-  mDialogId(Data::Empty, Data::Empty, Data::Empty),
-  mState(Connecting),
-  mOfferRequired(false),
-  mLocalHold(true),
-  mRemoteHold(false),
-  mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
-  mLocalSdp(0),
-  mRemoteSdp(0)
+                                     RemoteParticipantDialogSet& remoteParticipantDialogSet) :
+   IMParticipantBase(false /* prependSenderInfoToIMs? */),
+   Participant(conversationManager),
+   AppDialog(dum),
+   mDum(dum),
+   mDialogSet(remoteParticipantDialogSet),
+   mDialogId(Data::Empty, Data::Empty, Data::Empty),
+   mState(Connecting),
+   mOfferRequired(false),
+   mLocalHold(true),
+   mRemoteHold(false),
+   mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
+   mLocalSdp(0),
+   mRemoteSdp(0)
 {
    InfoLog(<< "RemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -106,7 +109,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 }
 
 void
-RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<ConversationProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    SdpContents offer;
    auto profile = callingProfile;
@@ -277,6 +280,29 @@ RemoteParticipant::setLocalHold(bool _hold)
       {
          unhold();
       }
+   }
+}
+
+void 
+RemoteParticipant::sendInstantMessage(std::unique_ptr<resip::Contents> contents)
+{
+   try
+   {
+      if (mState != Terminating)
+      {
+         if (mInviteSessionHandle.isValid())
+         {
+            mInviteSessionHandle->message(*contents.get());
+         }
+      }
+   }
+   catch (BaseException& e)
+   {
+      WarningLog(<< "RemoteParticipant::sendInstantMessage exception: " << e);
+   }
+   catch (...)
+   {
+      WarningLog(<< "RemoteParticipant::sendInstantMessage unknown exception");
    }
 }
 
@@ -1525,9 +1551,28 @@ RemoteParticipant::onReferRejected(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-RemoteParticipant::onMessage(InviteSessionHandle, const SipMessage& msg)
+RemoteParticipant::onMessage(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onMessage: handle=" << mHandle << ", " << msg.brief());
+
+   bool relay = false;
+   if (mHandle) relay = mConversationManager.onReceiveIMFromParticipant(mHandle, msg);
+
+   // Relay to others in our conversations, if requested to do so
+   if (relay)
+   {
+      Data remoteDisplayName = h->peerAddr().displayName();
+      if (remoteDisplayName.empty())
+      {
+         remoteDisplayName = h->peerAddr().uri().user();
+      }
+
+      ConversationMap::iterator it;
+      for (it = mConversations.begin(); it != mConversations.end(); it++)
+      {
+         it->second->relayInstantMessageToRemoteParticipants(mHandle, remoteDisplayName, msg);
+      }
+   }
 }
 
 void
@@ -1537,9 +1582,14 @@ RemoteParticipant::onMessageSuccess(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-RemoteParticipant::onMessageFailure(InviteSessionHandle, const SipMessage& msg)
+RemoteParticipant::onMessageFailure(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onMessageFailure: handle=" << mHandle << ", " << msg.brief());
+   auto failedMessage = h->getLastSentNITRequest();
+   assert(failedMessage->getContents() != nullptr);
+
+   std::unique_ptr<Contents> contents(failedMessage->getContents()->clone());
+   if (mHandle) mConversationManager.onParticipantSendIMFailure(mHandle, msg, std::move(contents));
 }
 
 void

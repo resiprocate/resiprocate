@@ -45,9 +45,12 @@ public:
 
    unsigned int getNumLocalParticipants() { return mNumLocalParticipants; }
    unsigned int getNumRemoteParticipants() { return mNumRemoteParticipants; }
+   unsigned int getNumRemoteIMParticipants() { return mNumRemoteIMParticipants; }
+   unsigned int getNumMediaParticipants() { return mNumMediaParticipants; }
    bool shouldHold();
    bool broadcastOnly();
    void notifyRemoteParticipantsOfHoldChange();
+   void relayInstantMessageToRemoteParticipants(ParticipantHandle sourceParticipant, const resip::Data& senderDisplayName, const resip::SipMessage& msg);
 
    void createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle);
    void join(Conversation* conversation);  // move all non-duplicate participants from this conversation to passed in conversation and destroy this one
@@ -97,6 +100,7 @@ private:
    bool mDestroying;
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;
+   unsigned int mNumRemoteIMParticipants;
    unsigned int mNumMediaParticipants;
    ConversationManager::AutoHoldMode mAutoHoldMode;
 
