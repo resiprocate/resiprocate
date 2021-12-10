@@ -424,14 +424,14 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [this](){});
             //mMultiqueue->create([this, cConnected]{
                // mMultiqueue->connect([this, cConnected]{
-                  // mEndpoint->connect([this, cConnected]{
-                     mPlayer->create([this, cConnected]{
-                        mPlayer->play([this, cConnected]{
+                   mEndpoint->connect([this, cConnected]{
+                     //mPlayer->create([this, cConnected]{
+                        //mPlayer->play([this, cConnected]{
                            cConnected();
                            //mPlayer->connect(cConnected, *mEndpoint); // connect
-                        });
-                     });
-                  // }, *mMultiqueue); // mEndpoint->connect
+                        //});
+                     // });
+                   }, *mEndpoint); // mEndpoint->connect
                // }, *mEndpoint); // mMultiqueue->connect
             //}); // mMultiqueue->create
          }); // create
@@ -488,7 +488,7 @@ bool
 KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& mediaControl)
 {
    InfoLog(<<"onMediaControlEvent: sending to Kurento");
-   //mEndpoint->sendPictureFastUpdate([this](){});   // FIXME uncomment
+   mEndpoint->sendPictureFastUpdate([this](){});   // FIXME uncomment
    return true;
 }
 
