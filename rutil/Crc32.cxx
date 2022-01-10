@@ -61,6 +61,11 @@ Permission is granted to anyone to use this software for any purpose, including 
   // defines __BYTE_ORDER as __LITTLE_ENDIAN or __BIG_ENDIAN
   #include <sys/param.h>
 
+  // handle clang macos compilation
+  #if defined(__APPLE__) && !defined(__BYTE_ORDER)
+    #define __BYTE_ORDER __DARWIN_BYTE_ORDER
+  #endif
+
   // intrinsics / prefetching
   #ifdef __GNUC__
     #define PREFETCH(location) __builtin_prefetch(location)
