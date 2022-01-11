@@ -177,8 +177,8 @@ public:
                        RemoteParticipant in
      @param destination Uri of the remote participant to reach
      @param forkSelectMode Determines behavior if forking occurs
-     @param callerProfile - a specific ConversationProfile to use 
-                           for this session
+     @param conversationProfile - a specific ConversationProfile to use 
+                                 for this session
      @param extraHeaders - a multimap of header names and values 
                            to add to the resulting INVITE request
 
@@ -187,22 +187,45 @@ public:
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, 
                                                      const resip::NameAddr& destination, 
                                                      ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic,
-                                                     const std::shared_ptr<ConversationProfile>& callerProfile = nullptr,
+                                                     const std::shared_ptr<ConversationProfile>& conversationProfile = nullptr,
                                                      const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>());
 
    /**
      Creates a new remote IM participant that will be attempted to be reached
-     when sendIMToParticipant is called.  For SIP the address is a URI.
+     when sendIMToParticipant is called.  This IM Participant will use Pager Mode
+     IM sending.  ie:  Out-of-dialog SIP MESSAGE requests.
      Uses the specified conversation profile.
 
      @param destination Uri of the remote IM participant
-     @param conversationProfile - a specific ConversationProfile to use
-                           for this session
+     @param conversationProfile - a specific ConversationProfile to use 
+                                  for this session
 
      @return A handle to the newly created remote IM participant
    */
-   virtual ParticipantHandle createRemoteIMParticipant(const resip::NameAddr& destination,
-                                                       const std::shared_ptr<ConversationProfile>& conversationProfile = nullptr);
+   virtual ParticipantHandle createRemoteIMPagerParticipant(const resip::NameAddr& destination,
+                                                            const std::shared_ptr<ConversationProfile>& conversationProfile = nullptr);
+
+   /**
+     Creates a new remote IM participant that will attempted to be reached
+     immediately at the specified address.  This IM Partcipant will use an
+     INVITE session with m=message specifier in the SDP. ForkSelectMode can 
+     be set to either automatic or manual.  When ForkSelectMode is set to auto the
+     conversation manager will automatically dispose of any related
+     conversations that were created, due to forking.
+
+     @param destination Uri of the remote participant to reach
+     @param forkSelectMode Determines behavior if forking occurs
+     @param conversationProfile - a specific ConversationProfile to use
+                                  for this session
+     @param extraHeaders - a multimap of header names and values
+                           to add to the resulting INVITE request
+
+     @return A handle to the newly created remote participant
+   */
+   virtual ParticipantHandle createRemoteIMSessionParticipant(const resip::NameAddr& destination,
+      ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic,
+      const std::shared_ptr<ConversationProfile>& callerProfile = nullptr,
+      const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>());
 
    /**
      Creates a new media resource participant in the specified conversation.
@@ -402,7 +425,8 @@ public:
    virtual void holdParticipant(ParticipantHandle partHandle, bool hold);
 
    /**
-     Sends a MESSAGE with specified Contents to RemoteParticipant or a RemoteIMParticipant.
+     Sends a MESSAGE with specified Contents to RemoteParticipant, 
+     RemoteIMPagerParticipant, or a RemoteIMSessionParticipant
 
      @param partHandle Handle of the participant to send to
      @param contents Body of SIP MESSAGE request to send
@@ -469,7 +493,7 @@ public:
    virtual void onIncomingParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) = 0;
 
    /**
-     Notifies an application about a new remote IM participant that has sent a message
+     Notifies an application about a new remote IM pager mode participant that has sent a message
 
      @param partHandle Handle of the new incoming IM participant
      @param msg Includes information about the sender such as name and address, and the body of the initial IM message.
@@ -477,7 +501,16 @@ public:
                        onReceiveIMFromParticipant.  Content processing should be done in the onReceiveIMFromParticipant
                        callback.
    */
-   virtual void onIncomingIMParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) { rejectParticipant(partHandle, 501); }
+   virtual void onIncomingIMPagerParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) { rejectParticipant(partHandle, 501); }
+
+   /**
+     Notifies an application about a new remote IM session mode participant that has sent an INVITE
+
+     @param partHandle Handle of the new incoming IM participant
+     @param msg Includes information about the sender such as name and address
+     @param autoAnswer Set to true if auto answer has been requested
+   */
+   virtual void onIncomingIMSessionParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) { rejectParticipant(partHandle, 501); }
 
    /**
      Notifies an application about a subsequent message from remote and existing IM participant
@@ -638,21 +671,22 @@ public:
    */
    virtual void onMediaResourceParticipantFailed(ParticipantHandle partHandle) {}
 
-   ///////////////////////////////////////////////////////////////////////
-   // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
-   ///////////////////////////////////////////////////////////////////////
-
-   virtual Conversation *createConversationInstance(ConversationHandle handle,
+   virtual Conversation* createConversationInstance(ConversationHandle handle,
       RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode) = 0;
-   virtual LocalParticipant *createLocalParticipantInstance(ParticipantHandle partHandle) = 0;
-   virtual MediaResourceParticipant *createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) = 0;
-   virtual RemoteParticipant *createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
-   virtual RemoteParticipant *createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
-   virtual RemoteParticipantDialogSet *createRemoteParticipantDialogSetInstance(
+   virtual LocalParticipant* createLocalParticipantInstance(ParticipantHandle partHandle) = 0;
+   virtual MediaResourceParticipant* createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) = 0;
+   virtual RemoteParticipant* createAppropriateRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
+   virtual RemoteParticipant* createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
+   virtual RemoteParticipant* createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
+   virtual RemoteParticipant* createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
+   virtual RemoteParticipantDialogSet* createRemoteParticipantDialogSetInstance(
          ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
          std::shared_ptr<ConversationProfile> conversationProfile = nullptr) = 0;
+   virtual RemoteParticipantDialogSet* createRemoteIMSessionParticipantDialogSetInstance(
+      ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
+      std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
    virtual bool supportsMultipleMediaInterfaces() = 0;
    virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
@@ -769,8 +803,9 @@ private:
    void unregisterParticipant(Participant *);
 
    friend class RemoteParticipant;
-   friend class RemoteIMParticipant;
+   friend class RemoteIMPagerParticipant;
    friend class SipXRemoteParticipant;
+   friend class RemoteIMSessionParticipant;
    friend class UserAgent;
 
    /* Called periodically in the event loop to give the ConversationManager
@@ -827,7 +862,7 @@ private:
    friend class RedirectParticipantCmd;
    friend class RedirectToParticipantCmd;
    friend class HoldParticipantCmd;
-   friend class CreateRemoteIMParticipantCmd;
+   friend class CreateRemoteIMPagerParticipantCmd;
    friend class SendIMToParticipantCmd;
 
    UserAgent* mUserAgent;
@@ -856,7 +891,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

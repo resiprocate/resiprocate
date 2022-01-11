@@ -4,6 +4,7 @@
 
 #include "RemoteParticipant.hxx"
 #include "IMParticipantBase.hxx"
+#include "RemoteIMSessionParticipant.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
@@ -200,7 +201,7 @@ RemoteParticipant::destroyParticipant()
          if (!mDialogSet.isUACConnected() && mDialogSet.getForkSelectMode() == ConversationManager::ForkSelectAutomaticEx)
          {
             // This will send a CANCEL if unanswered, in ForkSelectAutomaticEx mode we don't expect to
-            // manage destruction forked endpoints manually or individually.  This will also end
+            // manage destruction of forked endpoints manually or individually.  This will also end
             // all the other related conversations.
             mDialogSet.endIncludeRelated(mHandle);
          }
@@ -1117,7 +1118,13 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
    }
   
    // notify of new participant
-   if(mHandle) mConversationManager.onIncomingParticipant(mHandle, msg, autoAnswer, *profile);
+   notifyIncomingParticipant(msg, autoAnswer, *profile);
+}
+
+void 
+RemoteParticipant::notifyIncomingParticipant(const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+{
+   if(mHandle) mConversationManager.onIncomingParticipant(mHandle, msg, autoAnswer, conversationProfile);
 }
 
 void
@@ -1456,7 +1463,17 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
 
       // Create new Participant - but use same participant handle
-      RemoteParticipantDialogSet* participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      RemoteParticipantDialogSet* participantDialogSet;
+      if (dynamic_cast<RemoteIMSessionParticipant*>(this) != nullptr)
+      {
+         // If current participant is an IMSession participant then create new IM Session participant to handle refer
+         participantDialogSet = mConversationManager.createRemoteIMSessionParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      }
+      else
+      {
+         // otherwise, create a normal media based RemoteParticipant
+         participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      }
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
 
@@ -1493,7 +1510,17 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
 
    // Create new Participant - but use same participant handle
-   RemoteParticipantDialogSet* participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+   RemoteParticipantDialogSet* participantDialogSet;
+   if (dynamic_cast<RemoteIMSessionParticipant*>(this) != nullptr)
+   {
+      // If current participant is an IMSession participant then create new IM Session participant to handle refer
+      participantDialogSet = mConversationManager.createRemoteIMSessionParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+   }
+   else
+   {
+      // otherwise, create a normal media based RemoteParticipant
+      participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+   }
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
 
@@ -1555,8 +1582,16 @@ RemoteParticipant::onMessage(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onMessage: handle=" << mHandle << ", " << msg.brief());
 
+   h->acceptNIT();
+
    bool relay = false;
    if (mHandle) relay = mConversationManager.onReceiveIMFromParticipant(mHandle, msg);
+
+   // Don't relay if sending the message to ourselves, this could end up in an infinite loop if both clients are using recon
+   if (h->peerAddr().uri().getAOR(false) == h->myAddr().uri().getAOR(false))
+   {
+      relay = false;
+   }
 
    // Relay to others in our conversations, if requested to do so
    if (relay)
@@ -1692,7 +1727,7 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

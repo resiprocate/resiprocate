@@ -1,14 +1,13 @@
-#if !defined(SipXRemoteParticipant_hxx)
-#define SipXRemoteParticipant_hxx
+#if !defined(RemoteIMSessionParticipant_hxx)
+#define RemoteIMSessionParticipant_hxx
 
 #include <map>
 
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 #include "RemoteParticipant.hxx"
-#include "SipXRemoteParticipant.hxx"
-#include "SipXRemoteParticipantDialogSet.hxx"
-#include "SipXParticipant.hxx"
+#include "RemoteIMSessionParticipantDialogSet.hxx"
+#include "Participant.hxx"
 
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
@@ -24,63 +23,60 @@ class DialogUsageManager;
 class SipMessage;
 }
 
-namespace sdpcontainer
-{
-class Sdp; 
-class SdpMediaLine;
-}
-
 // Disable warning 4250
 // VS2019 give a 4250 warning:  
-// SipXRemoteParticipant.hxx(80,1): warning C4250: 'recon::SipXRemoteParticipant': inherits 'recon::RemoteParticipant::recon::RemoteParticipant::addToConversation' via dominance
+// RemoteIMSessionParticipant.hxx(70, 1): warning C4250 : 'recon::RemoteIMSessionParticipant' : inherits 'recon::RemoteParticipant::recon::RemoteParticipant::addToConversation' via dominance
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4250 )
 #endif
 
 namespace recon
 {
-class SipXConversationManager;
+class ConversationManager;
 
 /**
-  This class represent a remote participant.  A remote participant is a 
+  This class represents an IM Session remote participant.  A remote participant is a 
   participant with a network connection to a remote entity.  This
-  implementation is for a SIP / RTP connections.
+  implementation is for a SIP / IM Sessions.
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SipXRemoteParticipant : public virtual RemoteParticipant, public virtual SipXParticipant
+class RemoteIMSessionParticipant : public virtual RemoteParticipant, public virtual Participant
 {
 public:
-   SipXRemoteParticipant(ParticipantHandle partHandle,   // UAC
-                     SipXConversationManager& conversationManager,
+   RemoteIMSessionParticipant(ParticipantHandle partHandle,   // UAC
+                     ConversationManager& conversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   SipXRemoteParticipant(SipXConversationManager& conversationManager,            // UAS or forked leg
+   RemoteIMSessionParticipant(ConversationManager& conversationManager,   // UAS or forked leg
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   virtual ~SipXRemoteParticipant();
+   virtual ~RemoteIMSessionParticipant();
 
-   virtual unsigned int getLocalRTPPort();
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
+   // We want to no-op for local holds, since they don't make sense for message sessions
+   virtual void checkHoldCondition() override {}
+   virtual void setLocalHold(bool hold) override {}
+   virtual void notifyIncomingParticipant(const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override;
+   virtual void hold() override {}
+   virtual void unhold() override {}
 
-   virtual int getConnectionPortOnBridge();
-   virtual bool hasInput() { return true; }
-   virtual bool hasOutput() { return true; }
-   virtual int getMediaConnectionId();
+   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer) override;
+   virtual void adjustRTPStreams(bool sendingOffer = false) override {} // nothing to do, we don't manage RTP streams
 
-   virtual void adjustRTPStreams(bool sendingOffer=false);
+   virtual int getConnectionPortOnBridge() { return -1; } // doesn't interact with mixing bridge
+   virtual bool hasInput() { return false; }
+   virtual bool hasOutput() { return false; }
 
 protected:
-   virtual bool mediaStackPortAvailable();
 
-   virtual SipXRemoteParticipantDialogSet& getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet&>(getDialogSet()); };
+   virtual RemoteIMSessionParticipantDialogSet& getIMSessionDialogSet() { return dynamic_cast<RemoteIMSessionParticipantDialogSet&>(getDialogSet()); }
+   virtual bool mediaStackPortAvailable() { return true; } // doesn't use media stack, just return availabiltiy as true
 
-private:       
-   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
-   bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
+private:
+   bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) override;
 };
 
 }
@@ -90,8 +86,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
- Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2022, SIP Spectrum, Inc.  http://www.sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

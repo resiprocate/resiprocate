@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "RemoteIMParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
@@ -27,7 +27,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 // For incoming
-RemoteIMParticipant::RemoteIMParticipant(ParticipantHandle partHandle,
+RemoteIMPagerParticipant::RemoteIMPagerParticipant(ParticipantHandle partHandle,
                                          ConversationManager& conversationManager) : 
    IMParticipantBase(false /* prependSenderInfoToIMs? */),
    Participant(partHandle, conversationManager),
@@ -36,19 +36,19 @@ RemoteIMParticipant::RemoteIMParticipant(ParticipantHandle partHandle,
    mNumOutstandingSends(0),
    mDelayedDestroyPending(false)
 {
-   InfoLog(<< "RemoteIMParticipant created, handle=" << mHandle);
+   InfoLog(<< "RemoteIMPagerParticipant created, handle=" << mHandle);
    mConversationProfile = nullptr;
 }
 
-// For createRemoteIMParticipant
-RemoteIMParticipant::RemoteIMParticipant(ParticipantHandle partHandle, ConversationManager& conversationManager,
+// For createRemoteIMPagerParticipant
+RemoteIMPagerParticipant::RemoteIMPagerParticipant(ParticipantHandle partHandle, ConversationManager& conversationManager,
                                          const NameAddr& destination, std::shared_ptr<ConversationProfile> conversationProfile) :
    IMParticipantBase(true /* prependSenderInfoToIMs? */),
    Participant(partHandle, conversationManager),
    AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
    mDum(conversationManager.getUserAgent()->getDialogUsageManager())
 {
-   InfoLog(<< "RemoteIMParticipant created, handle=" << mHandle);
+   InfoLog(<< "RemoteIMPagerParticipant created, handle=" << mHandle);
    mRemoteUri = destination;
    mRemoteAorNoPort = mRemoteUri.uri().getAorNoPort();
 
@@ -64,7 +64,7 @@ RemoteIMParticipant::RemoteIMParticipant(ParticipantHandle partHandle, Conversat
    mLocalAorNoPort = mConversationProfile->getDefaultFrom().uri().getAorNoPort();
 }
 
-RemoteIMParticipant::~RemoteIMParticipant()
+RemoteIMPagerParticipant::~RemoteIMPagerParticipant()
 {
    // Note:  Ideally this call would exist in the Participant Base class - but this call requires 
    //        dynamic_casts and virtual methods to function correctly during destruction.
@@ -73,11 +73,11 @@ RemoteIMParticipant::~RemoteIMParticipant()
    //        See https://stackoverflow.com/questions/10979250/usage-of-this-in-destructor.
    unregisterFromAllConversations();
 
-   InfoLog(<< "RemoteIMParticipant destroyed, handle=" << mHandle);
+   InfoLog(<< "RemoteIMPagerParticipant destroyed, handle=" << mHandle);
 }
 
 void
-RemoteIMParticipant::destroyParticipant()
+RemoteIMPagerParticipant::destroyParticipant()
 {
    if (mNumOutstandingSends > 0)
    {
@@ -103,16 +103,16 @@ RemoteIMParticipant::destroyParticipant()
    }
    catch (BaseException& e)
    {
-      WarningLog(<< "RemoteIMParticipant::destroyParticipant exception: " << e);
+      WarningLog(<< "RemoteIMPagerParticipant::destroyParticipant exception: " << e);
    }
    catch (...)
    {
-      WarningLog(<< "RemoteIMParticipant::destroyParticipant unknown exception");
+      WarningLog(<< "RemoteIMPagerParticipant::destroyParticipant unknown exception");
    }
 }
 
 void
-RemoteIMParticipant::sendInstantMessage(std::unique_ptr<Contents> contents)
+RemoteIMPagerParticipant::sendInstantMessage(std::unique_ptr<Contents> contents)
 {
    if (!mClientPagerMessageHandle.isValid())
    {
@@ -124,7 +124,7 @@ RemoteIMParticipant::sendInstantMessage(std::unique_ptr<Contents> contents)
 }
 
 void
-RemoteIMParticipant::accept()
+RemoteIMPagerParticipant::accept()
 {
    try
    {
@@ -145,16 +145,16 @@ RemoteIMParticipant::accept()
    }
    catch(BaseException &e)
    {
-      WarningLog(<< "RemoteIMParticipant::accept exception: " << e);
+      WarningLog(<< "RemoteIMPagerParticipant::accept exception: " << e);
    }
    catch(...)
    {
-      WarningLog(<< "RemoteIMParticipant::accept unknown exception");
+      WarningLog(<< "RemoteIMPagerParticipant::accept unknown exception");
    }
 }
 
 void 
-RemoteIMParticipant::reject(unsigned int rejectCode)
+RemoteIMPagerParticipant::reject(unsigned int rejectCode)
 {
    try
    {
@@ -167,22 +167,22 @@ RemoteIMParticipant::reject(unsigned int rejectCode)
    }
    catch(BaseException &e)
    {
-      WarningLog(<< "RemoteIMParticipant::reject exception: " << e);
+      WarningLog(<< "RemoteIMPagerParticipant::reject exception: " << e);
    }
    catch(...)
    {
-      WarningLog(<< "RemoteIMParticipant::reject unknown exception");
+      WarningLog(<< "RemoteIMPagerParticipant::reject unknown exception");
    }
 }
 
 bool 
-RemoteIMParticipant::doesMessageMatch(resip::SipMessage message)
+RemoteIMPagerParticipant::doesMessageMatch(resip::SipMessage message)
 {
    Data messageToAor = message.header(h_To).uri().getAorNoPort();
    Data messageFromAor = message.header(h_From).uri().getAorNoPort();
    bool matches = mLocalAorNoPort == messageToAor && mRemoteAorNoPort == messageFromAor;
 
-   DebugLog(<< "RemoteIMParticipant::doesMessageMatch: partHandle=" << mHandle << ", LocalAor=" << mLocalAorNoPort << ", msgTo=" << messageToAor << ", RemoteAor=" << mRemoteAorNoPort << ", msgFrom=" << messageFromAor << (matches ? " - YES" : " - NO"));
+   DebugLog(<< "RemoteIMPagerParticipant::doesMessageMatch: partHandle=" << mHandle << ", LocalAor=" << mLocalAorNoPort << ", msgTo=" << messageToAor << ", RemoteAor=" << mRemoteAorNoPort << ", msgFrom=" << messageFromAor << (matches ? " - YES" : " - NO"));
    
    return matches;
 }
@@ -191,7 +191,7 @@ RemoteIMParticipant::doesMessageMatch(resip::SipMessage message)
 // ClientPagerMessageHandler ///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void
-RemoteIMParticipant::onSuccess(ClientPagerMessageHandle h, const SipMessage& status)
+RemoteIMPagerParticipant::onSuccess(ClientPagerMessageHandle h, const SipMessage& status)
 {
    // Note: there is an odd case where we have delayed destruction (ie: mDelayedDestroyPending)
    //       and we execute the delayed destroy before mNumOutstandingSends reaches 0 (because of a 
@@ -214,7 +214,7 @@ RemoteIMParticipant::onSuccess(ClientPagerMessageHandle h, const SipMessage& sta
 }
 
 void
-RemoteIMParticipant::onFailure(ClientPagerMessageHandle h, const SipMessage& status, std::unique_ptr<Contents> contents)
+RemoteIMPagerParticipant::onFailure(ClientPagerMessageHandle h, const SipMessage& status, std::unique_ptr<Contents> contents)
 {
    // Note: there is an odd case where we have delayed destruction (ie: mDelayedDestroyPending)
    //       and we execute the delayed destroy before mNumOutstandingSends reaches 0 (because of a 
@@ -249,9 +249,9 @@ RemoteIMParticipant::onFailure(ClientPagerMessageHandle h, const SipMessage& sta
 // ServerPagerMessageHandler ///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void
-RemoteIMParticipant::onMessageArrived(ServerPagerMessageHandle h, const SipMessage& msg)
+RemoteIMPagerParticipant::onMessageArrived(ServerPagerMessageHandle h, const SipMessage& msg)
 {
-   InfoLog(<< "RemoteIMParticipant::onMessageArrived: handle=" << mHandle << ", " << msg.brief());
+   InfoLog(<< "RemoteIMPagerParticipant::onMessageArrived: handle=" << mHandle << ", " << msg.brief());
 
    mServerPagerMessageHandle = h;
 
@@ -278,7 +278,7 @@ RemoteIMParticipant::onMessageArrived(ServerPagerMessageHandle h, const SipMessa
       mLocalAorNoPort = msg.header(h_To).uri().getAorNoPort();
 
       // notify of new participant
-      if (mHandle) mConversationManager.onIncomingIMParticipant(mHandle, msg, *mConversationProfile);
+      if (mHandle) mConversationManager.onIncomingIMPagerParticipant(mHandle, msg, *mConversationProfile);
    }
    else
    {
@@ -298,12 +298,16 @@ RemoteIMParticipant::onMessageArrived(ServerPagerMessageHandle h, const SipMessa
 }
 
 void
-RemoteIMParticipant::relayInstantMessageToConversations(const SipMessage& msg)
+RemoteIMPagerParticipant::relayInstantMessageToConversations(const SipMessage& msg)
 {
-   ConversationMap::iterator it;
-   for (it = mConversations.begin(); it != mConversations.end(); it++)
+   // Don't relay if sending the message to ourselves, this could end up in an infinite loop if both clients are using recon
+   if (msg.header(h_To).uri().getAOR(false) != msg.header(h_From).uri().getAOR(false))
    {
-      it->second->relayInstantMessageToRemoteParticipants(mHandle, mRemoteDisplayName, msg);
+      ConversationMap::iterator it;
+      for (it = mConversations.begin(); it != mConversations.end(); it++)
+      {
+         it->second->relayInstantMessageToRemoteParticipants(mHandle, mRemoteDisplayName, msg);
+      }
    }
 }
 

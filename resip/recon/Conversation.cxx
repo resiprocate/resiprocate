@@ -2,7 +2,8 @@
 #include "Participant.hxx"
 #include "LocalParticipant.hxx"
 #include "RemoteParticipant.hxx"
-#include "RemoteIMParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
+#include "RemoteIMSessionParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
@@ -307,7 +308,8 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
       {
          mNumMediaParticipants++;
       }
-      else if (dynamic_cast<RemoteIMParticipant*>(participant))
+      else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
+               dynamic_cast<RemoteIMSessionParticipant*>(participant))
       {
          mNumRemoteIMParticipants++;
       }
@@ -351,7 +353,8 @@ Conversation::unregisterParticipant(Participant *participant)
          assert(mNumMediaParticipants != 0);
          mNumMediaParticipants--;
       }
-      else if (dynamic_cast<RemoteIMParticipant*>(participant))
+      else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
+               dynamic_cast<RemoteIMSessionParticipant*>(participant))
       {
          assert(mNumRemoteIMParticipants != 0);
          mNumRemoteIMParticipants--;
@@ -378,7 +381,7 @@ Conversation::unregisterParticipant(Participant *participant)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

@@ -50,7 +50,9 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         RelatedConversationSet.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
-        RemoteIMParticipant.cxx \
+        RemoteIMPagerParticipant.cxx \
+        RemoteIMSessionParticipant.cxx \
+        RemoteIMSessionParticipantDialogSet.cxx \
         RTPPortManager.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
@@ -104,7 +106,9 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         UserAgent.hxx \
         ConversationParticipantAssignment.hxx \
         RemoteParticipant.hxx \
-        RemoteIMParticipant.hxx \
+        RemoteIMPagerParticipant.hxx \
+        RemoteIMSessionParticipant.hxx \
+        RemoteIMSessionParticipantDialogSet.hxx \
         MediaResourceParticipant.hxx \
         BridgeMixer.hxx \
         HandleTypes.hxx \

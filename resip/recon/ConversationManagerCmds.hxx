@@ -7,7 +7,7 @@
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
 #include "RemoteParticipant.hxx"
-#include "RemoteIMParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
 #include "LocalParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
 
@@ -149,7 +149,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommandAdapter
          if(conversation)
          {
             RemoteParticipantDialogSet* participantDialogSet = mConversationManager->createRemoteParticipantDialogSetInstance(mForkSelectMode, mCallerProfile);
-            RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle); 
+            RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle);
             if(participant)
             {
                conversation->addParticipant(participant);
@@ -178,10 +178,10 @@ class CreateRemoteParticipantCmd  : public resip::DumCommandAdapter
       std::multimap<resip::Data,resip::Data> mExtraHeaders;
 };
 
-class CreateRemoteIMParticipantCmd : public resip::DumCommandAdapter
+class CreateRemoteIMPagerParticipantCmd : public resip::DumCommandAdapter
 {
 public:
-   CreateRemoteIMParticipantCmd(ConversationManager* conversationManager,
+   CreateRemoteIMPagerParticipantCmd(ConversationManager* conversationManager,
       ParticipantHandle partHandle,
       const resip::NameAddr& destination,
       std::shared_ptr<ConversationProfile> conversationProfile = nullptr)
@@ -191,14 +191,53 @@ public:
       mConversationProfile(std::move(conversationProfile)) {}
    virtual void executeCommand()
    {
-      new RemoteIMParticipant(mPartHandle, *mConversationManager, mDestination, mConversationProfile);
+      new RemoteIMPagerParticipant(mPartHandle, *mConversationManager, mDestination, mConversationProfile);
    }
-   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateRemoteIMParticipantCmd: "; return strm; }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateRemoteIMPagerParticipantCmd: "; return strm; }
 private:
    ConversationManager* mConversationManager;
    ParticipantHandle mPartHandle;
    resip::NameAddr mDestination;
    std::shared_ptr<ConversationProfile> mConversationProfile;
+};
+
+class CreateRemoteIMSessionParticipantCmd : public resip::DumCommandAdapter
+{
+public:
+   CreateRemoteIMSessionParticipantCmd(ConversationManager* conversationManager,
+      ParticipantHandle partHandle,
+      const resip::NameAddr& destination,
+      ConversationManager::ParticipantForkSelectMode forkSelectMode,
+      std::shared_ptr<ConversationProfile> callerProfile = nullptr,
+      const std::multimap<resip::Data, resip::Data>& extraHeaders = (std::multimap<resip::Data, resip::Data>()))
+      : mConversationManager(conversationManager),
+      mPartHandle(partHandle),
+      mDestination(destination),
+      mForkSelectMode(forkSelectMode),
+      mCallerProfile(std::move(callerProfile)),
+      mExtraHeaders(extraHeaders) {}
+   virtual void executeCommand()
+   {
+      RemoteParticipantDialogSet* participantDialogSet = mConversationManager->createRemoteIMSessionParticipantDialogSetInstance(mForkSelectMode, mCallerProfile);
+      RemoteParticipant* participant = participantDialogSet->createUACOriginalRemoteParticipant(mPartHandle);
+      if (participant)
+      {
+         participant->initiateRemoteCall(mDestination, mCallerProfile, mExtraHeaders);
+      }
+      else
+      {
+         WarningLog(<< "CreateRemoteIMSessionParticipantCmd: error creating UACOriginalRemoteParticipant.");
+         mConversationManager->onParticipantDestroyed(mPartHandle);
+      }
+   }
+   EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " CreateRemoteIMSessionParticipantCmd: "; return strm; }
+private:
+   ConversationManager* mConversationManager;
+   ParticipantHandle mPartHandle;
+   resip::NameAddr mDestination;
+   ConversationManager::ParticipantForkSelectMode mForkSelectMode;
+   std::shared_ptr<ConversationProfile> mCallerProfile;
+   std::multimap<resip::Data, resip::Data> mExtraHeaders;
 };
 
 class CreateMediaResourceParticipantCmd : public resip::DumCommandAdapter
@@ -564,10 +603,10 @@ class AnswerParticipantCmd : public resip::DumCommandAdapter
             return;
          }
 
-         RemoteIMParticipant* remoteIMParticipant = dynamic_cast<RemoteIMParticipant*>(participant);
-         if (remoteIMParticipant)
+         RemoteIMPagerParticipant* remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(participant);
+         if (remoteIMPagerParticipant)
          {
-            remoteIMParticipant->accept();
+            remoteIMPagerParticipant->accept();
             return;
          }
 
@@ -598,10 +637,10 @@ class RejectParticipantCmd : public resip::DumCommandAdapter
             return;
          }
 
-         RemoteIMParticipant* remoteIMParticipant = dynamic_cast<RemoteIMParticipant*>(participant);
-         if (remoteIMParticipant)
+         RemoteIMPagerParticipant* remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(participant);
+         if (remoteIMPagerParticipant)
          {
-            remoteIMParticipant->reject(mRejectCode);
+            remoteIMPagerParticipant->reject(mRejectCode);
             return;
          }
 
@@ -783,7 +822,7 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

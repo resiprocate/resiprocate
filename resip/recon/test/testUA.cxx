@@ -171,9 +171,19 @@ public:
       return partHandle;
    }
 
-   virtual ParticipantHandle createRemoteIMParticipant(const NameAddr& destination, const std::shared_ptr<ConversationProfile>& callerProfile = nullptr) override
+   virtual ParticipantHandle createRemoteIMPagerParticipant(const NameAddr& destination, const std::shared_ptr<ConversationProfile>& callerProfile = nullptr) override
    {
-      ParticipantHandle partHandle = ConversationManager::createRemoteIMParticipant(destination, callerProfile);
+      ParticipantHandle partHandle = ConversationManager::createRemoteIMPagerParticipant(destination, callerProfile);
+      mRemoteIMParticipantHandles.push_back(partHandle);
+      return partHandle;
+   }
+
+   virtual ParticipantHandle createRemoteIMSessionParticipant(const NameAddr& destination, 
+      ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic,
+      const std::shared_ptr<ConversationProfile>& callerProfile = nullptr,
+      const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>()) override
+   {
+      ParticipantHandle partHandle = ConversationManager::createRemoteIMSessionParticipant(destination, forkSelectMode, callerProfile, extraHeaders);
       mRemoteIMParticipantHandles.push_back(partHandle);
       return partHandle;
    }
@@ -238,9 +248,9 @@ public:
       }
    }
 
-   virtual void onIncomingIMParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile)
+   virtual void onIncomingIMPagerParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) override
    {
-      InfoLog(LOG_PREFIX << "onIncomingIMParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
+      InfoLog(LOG_PREFIX << "onIncomingIMPagerParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       mRemoteIMParticipantHandles.push_back(partHandle);
       if (autoAnswerEnabled)
       {
@@ -248,7 +258,17 @@ public:
       }
    }
 
-   virtual bool onReceiveIMFromParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg)
+   virtual void onIncomingIMSessionParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
+   {
+      InfoLog(LOG_PREFIX << "onIncomingIMSessionParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
+      mRemoteIMParticipantHandles.push_back(partHandle);
+      if (autoAnswerEnabled)
+      {
+         answerParticipant(partHandle);  // sends a 200 OK response
+      }
+   }
+
+   virtual bool onReceiveIMFromParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg) override
    {
       InfoLog(LOG_PREFIX << "onReceiveIMFromParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
       PlainContents* plainContents = dynamic_cast<PlainContents*>(msg.getContents());
@@ -259,7 +279,7 @@ public:
       return true;
    }
    
-   virtual void onParticipantSendIMFailure(ParticipantHandle partHandle, const SipMessage& msg, std::unique_ptr<Contents> contents)
+   virtual void onParticipantSendIMFailure(ParticipantHandle partHandle, const SipMessage& msg, std::unique_ptr<Contents> contents) override
    {
       InfoLog(LOG_PREFIX << "onParticipantSendIMFailure: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
@@ -474,12 +494,16 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "createremote") || isEqualNoCase(command, "crp"))
    {
       unsigned long handle = arg[0].convertUnsignedLong();
-      ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomatic;
       if(handle != 0 && !arg[1].empty())
       {
+         ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomaticEx;
          if(!arg[2].empty() && isEqualNoCase(arg[2], "manual"))
          {
             mode = ConversationManager::ForkSelectManual;
+         }
+         else if (!arg[2].empty() && isEqualNoCase(arg[2], "auto"))
+         {
+            mode = ConversationManager::ForkSelectAutomatic;
          }
          try
          {
@@ -495,29 +519,60 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       else
       {
-         InfoLog( << "Invalid command format: <'createremote'|'crp'> <convHandle> <destURI> [<'manual'>] (last arg is fork select mode, 'auto' is default).");
+         InfoLog( << "Invalid command format: <'createremote'|'crp'> <convHandle> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default).");
       }
       return;
    }
-   if (isEqualNoCase(command, "createremoteim") || isEqualNoCase(command, "crip"))
+   if (isEqualNoCase(command, "createremoteimpager") || isEqualNoCase(command, "crip"))
    {
       if (!arg[0].empty())
       {
          try
          {
             NameAddr dest(arg[0]);
-            myConversationManager.createRemoteIMParticipant(dest);
+            myConversationManager.createRemoteIMPagerParticipant(dest);
          }
          catch (...)
          {
             NameAddr dest(uri);
             dest.uri().user() = arg[0];
-            myConversationManager.createRemoteIMParticipant(dest);
+            myConversationManager.createRemoteIMPagerParticipant(dest);
          }
       }
       else
       {
          InfoLog(<< "Invalid command format: <'createremoteim'|'crip'> <destURI>");
+      }
+      return;
+   }
+   if (isEqualNoCase(command, "createremoteimsession") || isEqualNoCase(command, "cris"))
+   {
+      if (!arg[0].empty())
+      {
+         ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomaticEx;
+         if (!arg[1].empty() && isEqualNoCase(arg[1], "manual"))
+         {
+            mode = ConversationManager::ForkSelectManual;
+         }
+         else if (!arg[1].empty() && isEqualNoCase(arg[1], "auto"))
+         {
+            mode = ConversationManager::ForkSelectAutomatic;
+         }
+         try
+         {
+            NameAddr dest(arg[0]);
+            myConversationManager.createRemoteIMSessionParticipant(dest, mode);
+         }
+         catch (...)
+         {
+            NameAddr dest(uri);
+            dest.uri().user() = arg[0];
+            myConversationManager.createRemoteIMSessionParticipant(dest, mode);
+         }
+      }
+      else
+      {
+         InfoLog(<< "Invalid command format: <'createremoteimsession'|'cris'> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default).");
       }
       return;
    }
@@ -998,9 +1053,10 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  joinConversation:        <'joinconv'|'jc'> <sourceConvHandle> <destConvHandle>" << endl
          << endl 
          << "  createLocalParticipant:  <'createlocal'|'clp'>" << endl
-         << "  createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual'>] (last arg is fork select mode, 'auto' is default)" << endl 
-         << "  createRemoteIMParticipant: <'createremoteim'|'crip'> <convHandle> <destURI>" << endl
-         << "  createMediaResourceParticipant: <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]" << endl
+         << "  createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default)" << endl 
+         << "  createRemoteIMPagerParticipant:   <'createremoteimpager'|'crip'> <convHandle> <destURI>" << endl
+         << "  createRemoteIMSessionParticipant: <'createremoteimsession'|'cris'> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default)" << endl
+         << "  createMediaResourceParticipant:   <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]" << endl
          << "  destroyParticipant:      <'destroypart'|'dp'> <parthandle>" << endl
          << endl 
          << "  addPartcipant:           <'addpart'|'ap'> <convHandle> <partHandle>" << endl

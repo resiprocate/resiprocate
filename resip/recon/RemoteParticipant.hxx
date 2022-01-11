@@ -136,9 +136,11 @@ protected:
 
    RemoteParticipantDialogSet& getDialogSet() { return mDialogSet; };
 
+   virtual void notifyIncomingParticipant(const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
+   virtual void hold();
+   virtual void unhold();
+
 private:       
-   void hold();
-   void unhold();
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
@@ -207,6 +209,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

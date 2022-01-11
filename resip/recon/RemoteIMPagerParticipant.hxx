@@ -1,5 +1,5 @@
-#if !defined(RemoteIMParticipant_hxx)
-#define RemoteIMParticipant_hxx
+#if !defined(RemoteIMPagerParticipant_hxx)
+#define RemoteIMPagerParticipant_hxx
 
 #include <map>
 
@@ -29,14 +29,14 @@ namespace recon
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteIMParticipant : public IMParticipantBase, public Participant, public resip::AppDialogSet
+class RemoteIMPagerParticipant : public IMParticipantBase, public Participant, public resip::AppDialogSet
 {
 public:
-   RemoteIMParticipant(ParticipantHandle partHandle, ConversationManager& conversationManager);  // For incoming
-   RemoteIMParticipant(ParticipantHandle partHandle, ConversationManager& conversationManager,   // For createRemoteIMParticipant
+   RemoteIMPagerParticipant(ParticipantHandle partHandle, ConversationManager& conversationManager);  // For incoming
+   RemoteIMPagerParticipant(ParticipantHandle partHandle, ConversationManager& conversationManager,   // For createRemoteIMPagerParticipant
       const resip::NameAddr& destination, std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
-   virtual ~RemoteIMParticipant();
+   virtual ~RemoteIMPagerParticipant();
 
 
    virtual int getConnectionPortOnBridge() override { return -1; }  // Is not involved in audio mixing bridge
