@@ -317,7 +317,7 @@ AC_ARG_WITH(python,
 [  --with-python           Build components requiring Python],
  [AC_DEFINE_UNQUOTED(BUILD_PYTHON, , BUILD_PYTHON)
  AM_CONDITIONAL(BUILD_PYTHON, true)
- PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 3.6])
+ PKG_CHECK_MODULES([DEPS_PYTHON], [python3 >= 3.6])
  AC_SUBST(DEPS_PYTHON_VERSION)
  AC_SUBST(PYCXX_SRCDIR)
  if [ ! test -e "${PYCXX_SRCDIR}/cxx_extensions.cxx" ];
