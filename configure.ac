@@ -5,10 +5,6 @@ AC_CONFIG_SRCDIR(repro/repro.cxx)
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
 AC_SUBST(SO_RELEASE)
 
-#LIBTOOL_VERSION_RELEASE="-version-info 0:0:0 -release @SO_RELEASE@"
-LIBTOOL_VERSION_RELEASE="-release $SO_RELEASE"
-AC_SUBST(LIBTOOL_VERSION_RELEASE)
-
 
 ########## End of release/version data ######################
 
@@ -136,6 +132,19 @@ AC_ARG_WITH(fmt,
  [AC_DEFINE_UNQUOTED(USE_FMT, , USE_FMT)
  PKG_CHECK_MODULES([DEPS_FMT], [fmt])
  AM_CONDITIONAL(USE_FMT, true)])
+
+#LIBTOOL_VERSION_RELEASE="-version-info 0:0:0 -release @SO_RELEASE@"
+LIBTOOL_VERSION_RELEASE="-release $SO_RELEASE"
+AC_SUBST(LIBTOOL_VERSION_RELEASE)
+AC_ARG_ENABLE(versioned-soname,
+[  --enable-versioned-soname Enable version in SONAME],
+   [ if test "$enableval" = no; then
+       LIBTOOL_VERSION_RELEASE=""
+       AC_SUBST(LIBTOOL_VERSION_RELEASE)
+     fi
+   ],
+   [
+   ])
 
 AC_ARG_ENABLE(android,
 [  --enable-android        Enable Android build],
