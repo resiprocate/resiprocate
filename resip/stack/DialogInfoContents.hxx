@@ -107,7 +107,7 @@ public:
       };
 
       Dialog() : mDirection(MaxOrUnsetDirection), mState(Trying), mStateEvent(MaxOrUnsetDialogStateEvent), mStateCode(0), mDuration(0),
-         mHasDuration(false), mHasAppearance(false), mAppearance(0), mExclusive(false), mHasExclusive(false) {}
+         mHasDuration(false), mAppearance(0), mHasAppearance(false), mExclusive(false), mHasExclusive(false) {}
 
       // Accesors for data
       void setId(const Data& id) { mId = id; }
