@@ -101,9 +101,9 @@ AC_ARG_WITH(c-ares,
      AC_MSG_ERROR([unable to find ares_init(), install libcares and/or set LDFLAGS, or use contrib/ares])
    ])],
  [ AC_DEFINE_UNQUOTED(USE_ARES, , USE_ARES)
-   CXXFLAGS="$CXXFLAGS -I`pwd`/rutil/dns/ares"
-   LDFLAGS="$LDFLAGS -L`pwd`/rutil/dns/ares"
-   AC_SUBST(LIBARES_LIBADD, "`pwd`/rutil/dns/ares/libresipares.la")
+   CXXFLAGS="$CXXFLAGS -I\$(top_srcdir)/rutil/dns/ares"
+   LDFLAGS="$LDFLAGS -L\$(top_builddir)/rutil/dns/ares"
+   AC_SUBST(LIBARES_LIBADD, "\$(top_builddir)/rutil/dns/ares/libresipares.la")
    # We no longer check for this because it gets built by us:
    #AC_SEARCH_LIBS(ares_init, ares, , [
    #  AC_MSG_ERROR([unable to find ares_init(), must build contrib/ares or specify --with-c-ares])
