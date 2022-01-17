@@ -63,3 +63,6 @@ jobs:
 
       - name: Build
         run: ./build/travis/build
+
+      - name: Test
+        run: ./build/travis/build check

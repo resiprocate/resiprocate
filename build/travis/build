@@ -20,7 +20,7 @@ then
   COVERITY_UNSUPPORTED=1 \
     PATH=/tmp/coverity-scan/cov-analysis/bin:${PATH} \
     cov-build --dir cov-int \
-    make ${MAKE_ARGS}
+    make ${MAKE_ARGS} "${@}"
 
   # submit the coverity artifacts to their scanning service:
   tar czf resiprocate-coverity.tgz cov-int
@@ -33,14 +33,5 @@ then
     --form description="Travis auto build" \
     http://scan5.coverity.com/cgi-bin/upload.py
 else
-  make ${MAKE_ARGS}
+  make ${MAKE_ARGS} "${@}"
 fi
-
-# we run the test cases after the Coverity scan for now, because
-# the Coverity scan might find false positives in the test code
-# it would be better to find a way to tell Coverity that the test
-# code is not released code, as scanning the test code may allow
-# it to evaluate more code paths through the stack itself
-
-make ${MAKE_ARGS} check
-
