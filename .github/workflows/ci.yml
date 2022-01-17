@@ -59,7 +59,7 @@ jobs:
       - name: Configure
         env:
           TRAVIS_COMPILER: ${{ matrix.compiler }}
-        run: ./build/travis/configure
+        run: ./build/travis/configure --disable-static
 
       - name: Build
         run: ./build/travis/build
