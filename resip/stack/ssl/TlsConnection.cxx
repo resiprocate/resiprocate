@@ -10,6 +10,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Errdes.hxx"
 
 #include <openssl/opensslv.h>
 #if !defined(LIBRESSL_VERSION_NUMBER)
@@ -149,6 +150,8 @@ TlsConnection::~TlsConnection()
    if(ret < 0)
    {
       int err = SSL_get_error(mSsl, ret);
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err) );
+
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
@@ -157,11 +160,11 @@ TlsConnection::~TlsConnection()
             {
                // WANT_READ or WANT_WRITE can arise for bi-directional shutdown on
                // non-blocking sockets, safe to ignore
-               StackLog( << "Got TLS shutdown error condition of " << err  );
+               StackLog( << "Got TLS shutdown error condition of " << OpenSSLError::SearchErrorMsg(err)  );
             }
             break;
          default:
-            ErrLog(<<"Unexpected error in SSL_shutdown");
+            ErrLog(<<"Unexpected error in SSL_shutdown " << OpenSSLError::SearchErrorMsg(err)  );
             handleOpenSSLErrorQueue(ret, err, "SSL_shutdown");
       }
    }
@@ -228,7 +231,8 @@ TlsConnection::checkState()
    if ( ok <= 0 )
    {
       int err = SSL_get_error(mSsl,ok);
-         
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err) );
+
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
@@ -263,6 +267,8 @@ TlsConnection::checkState()
             if(err == SSL_ERROR_SYSCALL)
             {
                int e = getErrno();
+               DebugLog ( << ErrnoError::SearchErrorMsg(e) );
+
                switch(e)
                {
                   case EINTR:
@@ -441,6 +447,7 @@ TlsConnection::read(char* buf, int count )
       else if (bytesPending < 0)
       {
          int err = SSL_get_error(mSsl, bytesPending);
+         DebugLog ( << OpenSSLError::SearchErrorMsg(err) );
          handleOpenSSLErrorQueue(bytesPending, err, "SSL_pending");
          return -1;
       }
@@ -449,13 +456,15 @@ TlsConnection::read(char* buf, int count )
    if (bytesRead <= 0)
    {
       int err = SSL_get_error(mSsl,bytesRead);
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err) );
+
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
          case SSL_ERROR_WANT_WRITE:
          case SSL_ERROR_NONE:
          {
-            StackLog( << "Got TLS read got condition of " << err  );
+            StackLog( << "Got TLS read got condition of " << OpenSSLError::SearchErrorMsg(err)  );
             return 0;
          }
          break;
@@ -542,6 +551,8 @@ TlsConnection::write( const char* buf, int count )
    if (ret < 0 )
    {
       int err = SSL_get_error(mSsl,ret);
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err) );
+
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
@@ -612,6 +623,7 @@ TlsConnection::isGood() // has data that can be read
    if ( mode < 0 )
    {
       int err = SSL_get_error(mSsl, mode);
+      DebugLog ( << OpenSSLError::SearchErrorMsg(err) );
       handleOpenSSLErrorQueue(mode, err, "SSL_get_shutdown");
       return false;
    }

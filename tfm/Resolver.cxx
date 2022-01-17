@@ -18,6 +18,7 @@
 
 #include "resip/stack/SipStack.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Errdes.hxx"
 #include "tfm/Resolver.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
@@ -308,7 +309,7 @@ Resolver::getHostName()
    char buffer[255];
    if (gethostname(buffer, sizeof(buffer)) < 0)
    {
-      InfoLog (<< "Failed gethostname() " << strerror(errno));
+      InfoLog (<< "Failed gethostname() " << ErrnoError::SearchErrorMsg(errno) );
       return "localhost";
    }
    else

@@ -12,6 +12,7 @@
 #include <resip/stack/Tuple.hxx>
 #include <rutil/DnsUtil.hxx>
 #include <rutil/ParseBuffer.hxx>
+#include <rutil/Errdes.hxx>
 #include <resip/stack/Transport.hxx>
 
 #include "AppSubsystem.hxx"
@@ -67,7 +68,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if ( mFd == INVALID_SOCKET )
    {
       int e = getErrno();
-      ErrLog (<< "Failed to create socket: " << strerror(e));
+      ErrLog (<< "Failed to create socket: " << ErrnoError::SearchErrorMsg(e) );
       sane = false;
       return;
    }
@@ -83,7 +84,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
 #endif
    {
       int e = getErrno();
-      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << ErrnoError::SearchErrorMsg(e) );
       sane = false;
       return;
    }
@@ -93,6 +94,8 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {
       int e = getErrno();
+      DebugLog ( << ErrnoError::SearchErrorMsg(e) );
+
       if ( e == EADDRINUSE )
       {
          ErrLog (<< mTuple << " already in use ");
@@ -121,7 +124,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if (e != 0 )
    {
       int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
+      InfoLog (<< "Failed listen " << ErrnoError::SearchErrorMsg(e) );
       sane = false;
       return;
    }
@@ -155,13 +158,15 @@ HttpBase::process(FdSet& fdset)
       if ( sock == SOCKET_ERROR )
       {
          int e = getErrno();
+         DebugLog ( << ErrnoError::SearchErrorMsg(e) );
+
          switch (e)
          {
             case EWOULDBLOCK:
                // !jf! this can not be ready in some cases 
                return;
             default:
-               ErrLog(<< "Some error reading from socket: " << e);
+               ErrLog(<< "Some error reading from socket: " << ErrnoError::SearchErrorMsg(e) );
                // .bwc. This is almost certainly a bad assert that a nefarious
                // endpoint could hit.
                // assert(0); // Transport::error(e);
