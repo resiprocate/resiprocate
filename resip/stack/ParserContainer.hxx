@@ -177,10 +177,8 @@ class ParserContainer : public ParserContainerBase
             iterator operator++(int) {iterator it(mIt++,mRef); return it;}
             iterator operator--() {iterator it(--mIt,mRef); return it;}
             iterator operator--(int) {iterator it(mIt--,mRef); return it;}
-            bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
-            bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
+            friend bool operator!=(const iterator& lhs, const iterator& rhs) { return lhs.mIt != rhs.mIt; }
+            friend bool operator==(const iterator& lhs, const iterator& rhs) { return lhs.mIt == rhs.mIt; }
             iterator& operator=(const iterator& rhs) 
             {
                mIt = rhs.mIt; 
@@ -212,10 +210,8 @@ class ParserContainer : public ParserContainerBase
             const_iterator operator++(int) {const_iterator it(mIt++,mRef); return it;}
             const_iterator operator--() {const_iterator it(--mIt,mRef); return it;}
             const_iterator operator--(int) {const_iterator it(mIt--,mRef); return it;}
-            bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
-            bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
-            bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
+            friend bool operator!=(const const_iterator& lhs, const const_iterator& rhs) { return lhs.mIt != rhs.mIt; }
+            friend bool operator==(const const_iterator& lhs, const const_iterator& rhs) { return lhs.mIt == rhs.mIt; }
             const_iterator& operator=(const const_iterator& rhs) 
             {
                mIt = rhs.mIt;
