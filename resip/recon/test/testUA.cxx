@@ -772,7 +772,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       Data plaintext = arg[1];
       if (partHandle != 0 && !plaintext.empty())
       {
-         std::unique_ptr<PlainContents> plainContents = std::make_unique<PlainContents>(plaintext);
+         std::unique_ptr<PlainContents> plainContents(new PlainContents(plaintext));
          myConversationManager.sendIMToParticipant(partHandle, std::move(plainContents));
       }
       else
