@@ -2,11 +2,15 @@
 #include "Participant.hxx"
 #include "LocalParticipant.hxx"
 #include "RemoteParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
+#include "RemoteIMSessionParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
 #include "ReconSubsystem.hxx"
 
+#include <resip/stack/Contents.hxx>
+#include <resip/stack/PlainContents.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
@@ -26,6 +30,7 @@ Conversation::Conversation(ConversationHandle handle,
   mDestroying(false),
   mNumLocalParticipants(0),
   mNumRemoteParticipants(0),
+  mNumRemoteIMParticipants(0),
   mNumMediaParticipants(0),
   mAutoHoldMode(autoHoldMode),
   mBridgeMixer(0),
@@ -156,6 +161,58 @@ Conversation::notifyRemoteParticipantsOfHoldChange()
 }
 
 void 
+Conversation::relayInstantMessageToRemoteParticipants(ParticipantHandle sourceParticipant, const resip::Data& senderDisplayName, const resip::SipMessage& msg)
+{
+   // First check if sourceParticipant exists in thei conversation and has any Output Gain 
+   // for this conversation.  Only allow relaying if they are allowed output to this conversation.
+   ParticipantMap::iterator it = mParticipants.find(sourceParticipant);
+   if (it == mParticipants.end())
+   {
+      // Source Participant is not part of the conversation, strange, don't continue
+      assert(false);  // shouldn't happen
+      return;
+   }
+   if (it->second.getOutputGain() == 0)
+   {
+      // Source participant doesn't have output permission for this conversation, don't relay
+      return;
+   }
+
+   Data prefixText;
+   if (!senderDisplayName.empty())
+   {
+      DataStream ds(prefixText);
+      ds << "[" << senderDisplayName << "] ";
+   }
+   ParticipantMap::iterator i;
+   for (i = mParticipants.begin(); i != mParticipants.end(); i++)
+   {
+      // Only relay if this participant is not the sourceParticipant (so we don't send back to ourself) 
+      // Skip participants if they don't have any inputGain from this conversation.
+      if (i->second.getParticipant()->getParticipantHandle() != sourceParticipant &&
+          i->second.getInputGain() > 0)
+      {
+         IMParticipantBase* imParticipant = dynamic_cast<IMParticipantBase*>(i->second.getParticipant());
+         if (imParticipant)
+         {
+            Contents* contentsToSend = msg.getContents()->clone();
+            if (!prefixText.empty() && imParticipant->getPrependSenderInfoToIMs())
+            {
+               PlainContents* plainContents = dynamic_cast<PlainContents*>(contentsToSend);
+               if (plainContents)
+               {
+                  // Prepend prefix to Plain text
+                  plainContents->text() = prefixText + plainContents->text();
+               }
+            }
+            std::unique_ptr<Contents> contents(contentsToSend);
+            imParticipant->sendInstantMessage(std::move(contents));
+         }
+      }
+   }
+}
+
+void 
 Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle)
 {
    // Create new Related Conversation
@@ -239,19 +296,26 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
       bool prevShouldHold = shouldHold();
-      RemoteParticipant* remote;
-      MediaResourceParticipant* media;
       if(dynamic_cast<LocalParticipant*>(participant))
       {
          mNumLocalParticipants++;
       }
-      else if((remote = dynamic_cast<RemoteParticipant*>(participant)))
+      else if(dynamic_cast<RemoteParticipant*>(participant))
       {
          mNumRemoteParticipants++;
       }
-      else if((media = dynamic_cast<MediaResourceParticipant*>(participant)))
+      else if(dynamic_cast<MediaResourceParticipant*>(participant))
       {
          mNumMediaParticipants++;
+      }
+      else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
+               dynamic_cast<RemoteIMSessionParticipant*>(participant))
+      {
+         mNumRemoteIMParticipants++;
+      }
+      else
+      {
+         assert(false);
       }
       if(prevShouldHold != shouldHold())
       {
@@ -273,20 +337,27 @@ Conversation::unregisterParticipant(Participant *participant)
    {
       mParticipants.erase(participant->getParticipantHandle());  // No need to notify this party, remove from map first
 
-      RemoteParticipant* remote;
-      MediaResourceParticipant* media;
       bool prevShouldHold = shouldHold();
       if(dynamic_cast<LocalParticipant*>(participant))
       {
+         assert(mNumLocalParticipants != 0);
          mNumLocalParticipants--;
       }
-      else if((remote = dynamic_cast<RemoteParticipant*>(participant)))
+      else if(dynamic_cast<RemoteParticipant*>(participant))
       {
+         assert(mNumRemoteParticipants != 0);
          mNumRemoteParticipants--;
       }
-      else if((media = dynamic_cast<MediaResourceParticipant*>(participant)))
+      else if(dynamic_cast<MediaResourceParticipant*>(participant))
       {
+         assert(mNumMediaParticipants != 0);
          mNumMediaParticipants--;
+      }
+      else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
+               dynamic_cast<RemoteIMSessionParticipant*>(participant))
+      {
+         assert(mNumRemoteIMParticipants != 0);
+         mNumRemoteIMParticipants--;
       }
       else
       {
@@ -310,7 +381,7 @@ Conversation::unregisterParticipant(Participant *participant)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

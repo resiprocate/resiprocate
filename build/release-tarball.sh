@@ -9,7 +9,7 @@
 #
 # - at the moment, the supported platform for official bootstraps
 #
-#                Debian 10.0 (buster)
+#                Debian 11.x (bullseye)
 #
 # - to avoid errors about the `zip' and `compress' commands, run
 #   the following:
@@ -31,9 +31,9 @@ autoreconf --install && \
               --with-return \
               --enable-repro-plugins \
               --with-python \
-                DEPS_PYTHON_CFLAGS="`/usr/bin/python3.7-config --cflags`" \
-                DEPS_PYTHON_LIBS="`/usr/bin/python3.7-config --ldflags`" \
-                PYCXX_SRCDIR=/usr/share/python3.7/CXX/Python3 \
+                DEPS_PYTHON_CFLAGS="`/usr/bin/python3.9-config --cflags`" \
+                DEPS_PYTHON_LIBS="`/usr/bin/python3.9-config --ldflags`" \
+                PYCXX_SRCDIR=/usr/share/python3.9/CXX/Python3 \
               --with-tfm \
               --with-apps \
               --with-telepathy \

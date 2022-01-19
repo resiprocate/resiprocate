@@ -2,8 +2,7 @@
 
 EXTRA_DIST = readme.txt
 EXTRA_DIST += readme_Kurento.txt
-EXTRA_DIST += *.sln
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += doc
 
 SUBDIRS = .
@@ -43,7 +42,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         ConversationProfile.cxx \
         DefaultDialogSet.cxx \
         DtmfEvent.cxx \
-        InstantMessage.cxx \
+        IMParticipantBase.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
         MediaResourceParticipant.cxx \
@@ -54,6 +53,9 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         RelatedConversationSet.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
+        RemoteIMPagerParticipant.cxx \
+        RemoteIMSessionParticipant.cxx \
+        RemoteIMSessionParticipantDialogSet.cxx \
         RTPPortManager.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
@@ -99,7 +101,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         RelatedConversationSet.hxx \
         UserAgentServerAuthManager.hxx \
         ConversationManagerCmds.hxx \
-        InstantMessage.hxx \
+        IMParticipantBase.hxx \
         UserAgentMasterProfile.hxx \
         RemoteParticipantDialogSet.hxx \
         RTPPortManager.hxx \
@@ -116,6 +118,9 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         UserAgent.hxx \
         ConversationParticipantAssignment.hxx \
         RemoteParticipant.hxx \
+        RemoteIMPagerParticipant.hxx \
+        RemoteIMSessionParticipant.hxx \
+        RemoteIMSessionParticipantDialogSet.hxx \
         MediaResourceParticipant.hxx \
         BridgeMixer.hxx \
         HandleTypes.hxx \

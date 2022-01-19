@@ -8,6 +8,8 @@
 #include <resip/dum/ServerInviteSession.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerOutOfDialogReq.hxx>
+#include <resip/dum/ClientPagerMessage.hxx>
+#include <resip/dum/ServerPagerMessage.hxx>
 
 #include "ReconSubsystem.hxx"
 #include "UserAgent.hxx"
@@ -18,6 +20,9 @@
 #include "BridgeMixer.hxx"
 #include "DtmfEvent.hxx"
 #include "RemoteParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
+#include "RemoteIMSessionParticipant.hxx"
+#include "RemoteIMSessionParticipantDialogSet.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -102,20 +107,37 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
    post(cmd);
 }
 
-ParticipantHandle 
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
-{
-   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
-   return createRemoteParticipant(convHandle, destination, forkSelectMode, nullptr, std::multimap<resip::Data,resip::Data>());
-}
-
 ParticipantHandle
-ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<UserProfile>& callerProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+ConversationManager::createRemoteParticipant(ConversationHandle convHandle, const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<ConversationProfile>& conversationProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = getNewParticipantHandle();
 
-   CreateRemoteParticipantCmd* cmd = new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode, callerProfile, extraHeaders);
+   CreateRemoteParticipantCmd* cmd = new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode, conversationProfile, extraHeaders);
+   post(cmd);
+
+   return partHandle;
+}
+
+ParticipantHandle 
+ConversationManager::createRemoteIMPagerParticipant(const resip::NameAddr& destination, const std::shared_ptr<ConversationProfile>& conversationProfile)
+{
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
+   ParticipantHandle partHandle = getNewParticipantHandle();
+
+   CreateRemoteIMPagerParticipantCmd* cmd = new CreateRemoteIMPagerParticipantCmd(this, partHandle, destination, conversationProfile);
+   post(cmd);
+
+   return partHandle;
+}
+
+ParticipantHandle 
+ConversationManager::createRemoteIMSessionParticipant(const resip::NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<ConversationProfile>& conversationProfile, const std::multimap<resip::Data, resip::Data>& extraHeaders)
+{
+   if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
+   ParticipantHandle partHandle = getNewParticipantHandle();
+
+   CreateRemoteIMSessionParticipantCmd* cmd = new CreateRemoteIMSessionParticipantCmd(this, partHandle, destination, forkSelectMode, conversationProfile, extraHeaders);
    post(cmd);
 
    return partHandle;
@@ -234,6 +256,13 @@ void
 ConversationManager::holdParticipant(ParticipantHandle partHandle, bool hold)
 {
    HoldParticipantCmd* cmd = new HoldParticipantCmd(this, partHandle, hold);
+   post(cmd);
+}
+
+void 
+ConversationManager::sendIMToParticipant(ParticipantHandle partHandle, std::unique_ptr<Contents> contents)
+{
+   SendIMToParticipantCmd* cmd = new SendIMToParticipantCmd(this, partHandle, std::move(contents));
    post(cmd);
 }
 
@@ -390,6 +419,38 @@ ConversationManager::notifyDtmfEvent(ParticipantHandle partHandle, int dtmf, int
 {
    // Call virtual method that applications can override
    onDtmfEvent(partHandle, dtmf, duration, up);
+}
+
+RemoteParticipant* 
+ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
+{
+   if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
+   {
+      return new RemoteIMSessionParticipant(*this, dum, rpds);
+   }
+   else
+   {
+      return createRemoteParticipantInstance(dum, rpds);
+   }
+}
+
+RemoteParticipant* 
+ConversationManager::createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
+{
+   if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
+   {
+      return new RemoteIMSessionParticipant(partHandle, *this, dum, rpds);
+   }
+   else
+   {
+      return createRemoteParticipantInstance(partHandle, dum, rpds);
+   }
+}
+
+RemoteParticipantDialogSet* 
+ConversationManager::createRemoteIMSessionParticipantDialogSetInstance(ParticipantForkSelectMode forkSelectMode, std::shared_ptr<ConversationProfile> conversationProfile)
+{
+   return new RemoteIMSessionParticipantDialogSet(*this, forkSelectMode, conversationProfile);
 }
 
 void
@@ -628,7 +689,6 @@ int
 ConversationManager::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const SipMessage& msg)
 {
    return dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onRequestRetry(h, retryMinimum, msg);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -868,9 +928,64 @@ ConversationManager::onTryingNextTarget(AppDialogSetHandle, const SipMessage& ms
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// ClientPagerMessageHandler ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void 
+ConversationManager::onSuccess(ClientPagerMessageHandle h, const SipMessage& status)
+{
+   return dynamic_cast<RemoteIMPagerParticipant*>(h->getAppDialogSet().get())->onSuccess(h, status);
+}
+
+void 
+ConversationManager::onFailure(ClientPagerMessageHandle h, const SipMessage& status, std::unique_ptr<Contents> contents)
+{
+   return dynamic_cast<RemoteIMPagerParticipant*>(h->getAppDialogSet().get())->onFailure(h, status, std::move(contents));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ServerPagerMessageHandler ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+void 
+ConversationManager::onMessageArrived(ServerPagerMessageHandle h, const SipMessage& message)
+{
+   RemoteIMPagerParticipant* remoteIMPagerParticipant = nullptr;
+
+   // First see if we already have a RemoteIMPagerParticipant for this CallId yet or not
+   for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
+   {
+      remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(i->second);
+      if (remoteIMPagerParticipant != nullptr && remoteIMPagerParticipant->doesMessageMatch(message))
+      {
+         // Found existing remoteIMPagerParticipant, break out
+         break;
+      }
+      remoteIMPagerParticipant = nullptr;
+   }
+
+   if (remoteIMPagerParticipant == nullptr && mUserAgent != nullptr)
+   {
+      // If we make it here, we didn't find an existing RemoteIMPagerParticipant via the callId,
+      // for From header matching create a new one now.
+      remoteIMPagerParticipant = new RemoteIMPagerParticipant(getNewParticipantHandle(), *this);
+   }
+
+   if (remoteIMPagerParticipant)
+   {
+      remoteIMPagerParticipant->onMessageArrived(h, message);
+   }
+   else
+   {
+      h->send(h->reject(500)); // Reject with internal server error
+   }
+   
+}
+
+
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

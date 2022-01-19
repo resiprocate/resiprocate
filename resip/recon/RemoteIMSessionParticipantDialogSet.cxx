@@ -1,62 +1,52 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+// sipX includes
+#if (_MSC_VER >= 1600)
+#include <stdint.h>       // Use Visual Studio's stdint.h
+#define _MSC_STDINT_H_    // This define will ensure that stdint.h in sipXport tree is not used
+#endif
+
 #include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
-#include "UserAgentDialogSetFactory.hxx"
-#include "RemoteParticipant.hxx"
 #include "RemoteIMSessionParticipantDialogSet.hxx"
-#include "DefaultDialogSet.hxx"
+#include "RemoteIMSessionParticipant.hxx"
+#include "Conversation.hxx"
+#include "UserAgent.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <resip/stack/SipMessage.hxx>
-#include <resip/dum/AppDialogSet.hxx>
+
 #include <rutil/WinLeakCheck.hxx>
 
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+#include <utility>
 
 using namespace recon;
 using namespace resip;
 using namespace std;
 
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgentDialogSetFactory::UserAgentDialogSetFactory(ConversationManager& conversationManager) :
-    mConversationManager(conversationManager)
+RemoteIMSessionParticipantDialogSet::RemoteIMSessionParticipantDialogSet(ConversationManager& conversationManager,
+                                                       ConversationManager::ParticipantForkSelectMode forkSelectMode,
+                                                       std::shared_ptr<ConversationProfile> conversationProfile) :
+   RemoteParticipantDialogSet(conversationManager, forkSelectMode, conversationProfile),
+   mConversationManager(conversationManager)
 {
+
+   InfoLog(<< "RemoteIMSessionParticipantDialogSet created.");
 }
 
-AppDialogSet* 
-UserAgentDialogSetFactory::createAppDialogSet(DialogUsageManager& dum,
-                                              const SipMessage& msg)
+RemoteIMSessionParticipantDialogSet::~RemoteIMSessionParticipantDialogSet()
 {
-   switch(msg.method())
-   {
-   case INVITE:
-   {
-      SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-      if (sdp)
-      {
-         for (auto it = sdp->session().media().begin(); it != sdp->session().media().end(); it++)
-         {
-            if (it->name() == "message")
-            {
-               // If there is a message media line, then we assume no audio/video are present and we create an RemoteIMSessionParticipantDialogSet
-               return mConversationManager.createRemoteIMSessionParticipantDialogSetInstance();
-            }
-         }
-      }
-      return mConversationManager.createRemoteParticipantDialogSetInstance();
-      break;
-   }
-   default:
-      return new DefaultDialogSet(mConversationManager);
-      break;
-   }
+   InfoLog(<< "RemoteIMSessionParticipantDialogSet destroyed.  mActiveRemoteParticipantHandle=" << getActiveRemoteParticipantHandle());
 }
 
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc.  http://www.sipspectrum.com
- Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2022, SIP Spectrum, Inc.  http://www.sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

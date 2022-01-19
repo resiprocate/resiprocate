@@ -1,62 +1,64 @@
-#include "ConversationManager.hxx"
-#include "ReconSubsystem.hxx"
-#include "UserAgentDialogSetFactory.hxx"
-#include "RemoteParticipant.hxx"
-#include "RemoteIMSessionParticipantDialogSet.hxx"
-#include "DefaultDialogSet.hxx"
+#if !defined(RemoteIMSessionParticipantDialogSet_hxx)
+#define RemoteIMSessionParticipantDialogSet_hxx
 
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
-#include <resip/stack/SipMessage.hxx>
+#include <map>
+#include <list>
 #include <resip/dum/AppDialogSet.hxx>
-#include <rutil/WinLeakCheck.hxx>
+#include <resip/dum/AppDialog.hxx>
+#include <resip/dum/InviteSessionHandler.hxx>
+#include <resip/dum/DialogSetHandler.hxx>
+#include <resip/dum/SubscriptionHandler.hxx>
 
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+#include "ConversationManager.hxx"
+#include "ConversationProfile.hxx"
+#include "Participant.hxx"
+#include "RemoteParticipantDialogSet.hxx"
 
-using namespace recon;
-using namespace resip;
-using namespace std;
-
-
-UserAgentDialogSetFactory::UserAgentDialogSetFactory(ConversationManager& conversationManager) :
-    mConversationManager(conversationManager)
+namespace resip
 {
+class DialogUsageManager;
+class SipMessage;
 }
 
-AppDialogSet* 
-UserAgentDialogSetFactory::createAppDialogSet(DialogUsageManager& dum,
-                                              const SipMessage& msg)
+namespace recon
 {
-   switch(msg.method())
-   {
-   case INVITE:
-   {
-      SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-      if (sdp)
-      {
-         for (auto it = sdp->session().media().begin(); it != sdp->session().media().end(); it++)
-         {
-            if (it->name() == "message")
-            {
-               // If there is a message media line, then we assume no audio/video are present and we create an RemoteIMSessionParticipantDialogSet
-               return mConversationManager.createRemoteIMSessionParticipantDialogSetInstance();
-            }
-         }
-      }
-      return mConversationManager.createRemoteParticipantDialogSetInstance();
-      break;
-   }
-   default:
-      return new DefaultDialogSet(mConversationManager);
-      break;
-   }
+class ConversationManager;
+class RemoteParticipant;
+class RemoteIMSessionParticipant;
+
+/**
+  This class is used by Invite DialogSets used for IM Sessions only (m=message SDP).  Other Invite DialogSets
+  are managed by SipXRemoteParticipantDialogSet, and Non-Invite DialogSets are managed by DefaultDialogSet.
+
+  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
+*/
+
+class RemoteIMSessionParticipantDialogSet : public RemoteParticipantDialogSet
+{
+public:
+   RemoteIMSessionParticipantDialogSet(ConversationManager& conversationManager,
+                              ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
+                              std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
+
+   virtual ~RemoteIMSessionParticipantDialogSet();
+
+protected:
+   virtual bool isAsyncMediaSetup() { return false; }
+
+   virtual void fixUpSdp(resip::SdpContents* sdp) { }
+
+private:
+   ConversationManager& mConversationManager;
+};
+
 }
+
+#endif
 
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc.  http://www.sipspectrum.com
- Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2022, SIP Spectrum, Inc.  http://www.sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

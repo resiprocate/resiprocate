@@ -48,6 +48,7 @@ int _kbhit() {
 #include "playback_prompt.h"
 #include "record_prompt.h"
 
+#include <resip/stack/PlainContents.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -159,21 +160,31 @@ public:
       return convHandle;
    }
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic) override
+   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle,
+      const resip::NameAddr& destination,
+      ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic,
+      const std::shared_ptr<ConversationProfile>& callerProfile = nullptr,
+      const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>()) override
    {
-      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
+      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode, callerProfile, extraHeaders);
       mRemoteParticipantHandles.push_back(partHandle);
       return partHandle;
    }
 
-   virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle,
-      const resip::NameAddr& destination,
-      ParticipantForkSelectMode forkSelectMode,
-      const std::shared_ptr<resip::UserProfile>& callerProfile,
-      const std::multimap<resip::Data, resip::Data>& extraHeaders) override
+   virtual ParticipantHandle createRemoteIMPagerParticipant(const NameAddr& destination, const std::shared_ptr<ConversationProfile>& callerProfile = nullptr) override
    {
-      ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode, callerProfile, extraHeaders);
-      mRemoteParticipantHandles.push_back(partHandle);
+      ParticipantHandle partHandle = ConversationManager::createRemoteIMPagerParticipant(destination, callerProfile);
+      mRemoteIMParticipantHandles.push_back(partHandle);
+      return partHandle;
+   }
+
+   virtual ParticipantHandle createRemoteIMSessionParticipant(const NameAddr& destination, 
+      ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic,
+      const std::shared_ptr<ConversationProfile>& callerProfile = nullptr,
+      const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>()) override
+   {
+      ParticipantHandle partHandle = ConversationManager::createRemoteIMSessionParticipant(destination, forkSelectMode, callerProfile, extraHeaders);
+      mRemoteIMParticipantHandles.push_back(partHandle);
       return partHandle;
    }
 
@@ -202,6 +213,7 @@ public:
       InfoLog(LOG_PREFIX << "onParticipantDestroyed: handle=" << partHandle);
       // Remove from whatever list it is in
       mRemoteParticipantHandles.remove(partHandle);
+      mRemoteIMParticipantHandles.remove(partHandle);
       mLocalParticipantHandles.remove(partHandle);
       mMediaParticipantHandles.remove(partHandle);
    }
@@ -234,6 +246,42 @@ public:
          addParticipant(mConversationHandles.front(), partHandle);
          answerParticipant(partHandle);
       }
+   }
+
+   virtual void onIncomingIMPagerParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg, ConversationProfile& conversationProfile) override
+   {
+      InfoLog(LOG_PREFIX << "onIncomingIMPagerParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
+      mRemoteIMParticipantHandles.push_back(partHandle);
+      if (autoAnswerEnabled)
+      {
+         answerParticipant(partHandle);  // sends a 200 OK response
+      }
+   }
+
+   virtual void onIncomingIMSessionParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile) override
+   {
+      InfoLog(LOG_PREFIX << "onIncomingIMSessionParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
+      mRemoteIMParticipantHandles.push_back(partHandle);
+      if (autoAnswerEnabled)
+      {
+         answerParticipant(partHandle);  // sends a 200 OK response
+      }
+   }
+
+   virtual bool onReceiveIMFromParticipant(ParticipantHandle partHandle, const resip::SipMessage& msg) override
+   {
+      InfoLog(LOG_PREFIX << "onReceiveIMFromParticipant: handle=" << partHandle << " msg=" << OUTPUTMSG);
+      PlainContents* plainContents = dynamic_cast<PlainContents*>(msg.getContents());
+      if (plainContents)
+      {
+         InfoLog(LOG_PREFIX << "onReceiveIMFromParticipant: handle=" << partHandle << " IM Text=" << plainContents->text());
+      }
+      return true;
+   }
+   
+   virtual void onParticipantSendIMFailure(ParticipantHandle partHandle, const SipMessage& msg, std::unique_ptr<Contents> contents) override
+   {
+      InfoLog(LOG_PREFIX << "onParticipantSendIMFailure: handle=" << partHandle << " msg=" << OUTPUTMSG);
    }
 
    virtual void onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile) override
@@ -330,6 +378,16 @@ public:
          }
          InfoLog(LOG_PREFIX << output);
       }
+      if (!mRemoteIMParticipantHandles.empty())
+      {
+         output = "Remote IM Participant handles: ";
+         std::list<ParticipantHandle>::iterator it;
+         for (it = mRemoteIMParticipantHandles.begin(); it != mRemoteIMParticipantHandles.end(); it++)
+         {
+            output += Data(*it) + " ";
+         }
+         InfoLog(LOG_PREFIX << output);
+      }
       if(!mMediaParticipantHandles.empty())
       {
          output = "Media Participant handles: ";
@@ -345,6 +403,7 @@ public:
    std::list<ConversationHandle> mConversationHandles;
    std::list<ParticipantHandle> mLocalParticipantHandles;
    std::list<ParticipantHandle> mRemoteParticipantHandles;
+   std::list<ParticipantHandle> mRemoteIMParticipantHandles;
    std::list<ParticipantHandle> mMediaParticipantHandles;
    bool mLocalAudioEnabled;
    ConversationManager::AutoHoldMode mDefaultAutoHoldMode;
@@ -435,12 +494,16 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "createremote") || isEqualNoCase(command, "crp"))
    {
       unsigned long handle = arg[0].convertUnsignedLong();
-      ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomatic;
       if(handle != 0 && !arg[1].empty())
       {
+         ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomaticEx;
          if(!arg[2].empty() && isEqualNoCase(arg[2], "manual"))
          {
             mode = ConversationManager::ForkSelectManual;
+         }
+         else if (!arg[2].empty() && isEqualNoCase(arg[2], "auto"))
+         {
+            mode = ConversationManager::ForkSelectAutomatic;
          }
          try
          {
@@ -456,7 +519,60 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
       else
       {
-         InfoLog( << "Invalid command format: <'createremote'|'crp'> <convHandle> <destURI> [<'manual'>] (last arg is fork select mode, 'auto' is default).");
+         InfoLog( << "Invalid command format: <'createremote'|'crp'> <convHandle> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default).");
+      }
+      return;
+   }
+   if (isEqualNoCase(command, "createremoteimpager") || isEqualNoCase(command, "crip"))
+   {
+      if (!arg[0].empty())
+      {
+         try
+         {
+            NameAddr dest(arg[0]);
+            myConversationManager.createRemoteIMPagerParticipant(dest);
+         }
+         catch (...)
+         {
+            NameAddr dest(uri);
+            dest.uri().user() = arg[0];
+            myConversationManager.createRemoteIMPagerParticipant(dest);
+         }
+      }
+      else
+      {
+         InfoLog(<< "Invalid command format: <'createremoteim'|'crip'> <destURI>");
+      }
+      return;
+   }
+   if (isEqualNoCase(command, "createremoteimsession") || isEqualNoCase(command, "cris"))
+   {
+      if (!arg[0].empty())
+      {
+         ConversationManager::ParticipantForkSelectMode mode = ConversationManager::ForkSelectAutomaticEx;
+         if (!arg[1].empty() && isEqualNoCase(arg[1], "manual"))
+         {
+            mode = ConversationManager::ForkSelectManual;
+         }
+         else if (!arg[1].empty() && isEqualNoCase(arg[1], "auto"))
+         {
+            mode = ConversationManager::ForkSelectAutomatic;
+         }
+         try
+         {
+            NameAddr dest(arg[0]);
+            myConversationManager.createRemoteIMSessionParticipant(dest, mode);
+         }
+         catch (...)
+         {
+            NameAddr dest(uri);
+            dest.uri().user() = arg[0];
+            myConversationManager.createRemoteIMSessionParticipant(dest, mode);
+         }
+      }
+      else
+      {
+         InfoLog(<< "Invalid command format: <'createremoteimsession'|'cris'> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default).");
       }
       return;
    }
@@ -647,6 +763,21 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       else
       {
          InfoLog( << "Invalid command format: <'redirectTo'|'rt'> <partHandle> <destPartHandle>");
+      }
+      return;
+   }
+   if (isEqualNoCase(command, "sendIM") || isEqualNoCase(command, "si"))
+   {
+      unsigned long partHandle = arg[0].convertUnsignedLong();
+      Data plaintext = arg[1];
+      if (partHandle != 0 && !plaintext.empty())
+      {
+         std::unique_ptr<PlainContents> plainContents = std::make_unique<PlainContents>(plaintext);
+         myConversationManager.sendIMToParticipant(partHandle, std::move(plainContents));
+      }
+      else
+      {
+         InfoLog(<< "Invalid command format: <'sendIM'|'si'> <partHandle> <plaintext>");
       }
       return;
    }
@@ -922,8 +1053,10 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  joinConversation:        <'joinconv'|'jc'> <sourceConvHandle> <destConvHandle>" << endl
          << endl 
          << "  createLocalParticipant:  <'createlocal'|'clp'>" << endl
-         << "  createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual'>] (last arg is fork select mode, 'auto' is default)" << endl 
-         << "  createMediaResourceParticipant: <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]" << endl 
+         << "  createRemoteParticipant: <'createremote'|'crp'> <convHandle> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default)" << endl 
+         << "  createRemoteIMPagerParticipant:   <'createremoteimpager'|'crip'> <convHandle> <destURI>" << endl
+         << "  createRemoteIMSessionParticipant: <'createremoteimsession'|'cris'> <destURI> [<'manual|auto'>] (last arg is fork select mode, 'autoex' is default)" << endl
+         << "  createMediaResourceParticipant:   <'createmedia'|'cmp'> <convHandle> <mediaURL> [<durationMs>]" << endl
          << "  destroyParticipant:      <'destroypart'|'dp'> <parthandle>" << endl
          << endl 
          << "  addPartcipant:           <'addpart'|'ap'> <convHandle> <partHandle>" << endl
@@ -936,6 +1069,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  rejectParticipant:       <'reject'|'rj'> <partHandle> [<statusCode>] (default status code is 486)" << endl
          << "  redirectPartcipant:      <'redirect'|'rd'> <partHandle> <destURI>" << endl
          << "  redirectToPartcipant:    <'redirectTo'|'rt'> <partHandle> <destPartHandle>" << endl
+         << "  sendIMToParticipant:     <'sendIM'|'si'> <partHandle> <plaintext>" << endl
          << endl 
          << "  setSpeakerVolume:        <'volume'|'sv'> <volume>" << endl
          << "  setMicrophoneGain:       <'gain'|'sg'> <gain>" << endl
@@ -1053,8 +1187,8 @@ main (int argc, char** argv)
    bool localAudioEnabled = true;
    bool multipleMediaInterfaceModeEnabled = false;
    bool defaultAutoHoldModeToDisabled = false;
-   unsigned short sipPort = 5062;
-   unsigned short tlsPort = 5063;
+   unsigned short sipPort = 0;
+   unsigned short tlsPort = 0;
    unsigned short mediaPortStart = 17384;
    Data tlsDomain = DnsUtil::getLocalHostName();
    NameAddr outboundProxy;
@@ -1413,22 +1547,24 @@ main (int argc, char** argv)
 
    profile->clearSupportedMimeTypes();
    profile->addSupportedMimeType(INVITE, Mime("application", "sdp"));
-   profile->addSupportedMimeType(INVITE, Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(INVITE, Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));  
+   profile->addSupportedMimeType(INVITE, Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(INVITE, Mime("multipart", "signed"));
+   profile->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));
    profile->addSupportedMimeType(OPTIONS,Mime("application", "sdp"));
-   profile->addSupportedMimeType(OPTIONS,Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "alternative"));  
-   profile->addSupportedMimeType(PRACK,  Mime("application", "sdp"));  
-   profile->addSupportedMimeType(PRACK,  Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(PRACK,  Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(PRACK,  Mime("multipart", "alternative"));  
-   profile->addSupportedMimeType(UPDATE, Mime("application", "sdp"));  
-   profile->addSupportedMimeType(UPDATE, Mime("multipart", "mixed"));  
-   profile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));  
-   profile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));  
-   profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
+   profile->addSupportedMimeType(OPTIONS,Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "signed"));
+   profile->addSupportedMimeType(OPTIONS, Mime("multipart", "alternative"));
+   profile->addSupportedMimeType(PRACK,  Mime("application", "sdp"));
+   profile->addSupportedMimeType(PRACK,  Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(PRACK,  Mime("multipart", "signed"));
+   profile->addSupportedMimeType(PRACK,  Mime("multipart", "alternative"));
+   profile->addSupportedMimeType(UPDATE, Mime("application", "sdp"));
+   profile->addSupportedMimeType(UPDATE, Mime("multipart", "mixed"));
+   profile->addSupportedMimeType(UPDATE, Mime("multipart", "signed"));
+   profile->addSupportedMimeType(UPDATE, Mime("multipart", "alternative"));
+   profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));
+   profile->addSupportedMimeType(MESSAGE, Mime("text", "plain"));
+   profile->addSupportedMimeType(MESSAGE, Mime("application", "im-iscomposing+xml"));
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(INVITE);
@@ -1436,13 +1572,13 @@ main (int argc, char** argv)
    profile->addSupportedMethod(CANCEL);
    profile->addSupportedMethod(OPTIONS);
    profile->addSupportedMethod(BYE);
-   profile->addSupportedMethod(REFER);    
-   profile->addSupportedMethod(NOTIFY);    
-   profile->addSupportedMethod(SUBSCRIBE); 
-   profile->addSupportedMethod(UPDATE);    
-   profile->addSupportedMethod(PRACK);     
-   //profile->addSupportedMethod(INFO);    
-   //profile->addSupportedMethod(MESSAGE);
+   profile->addSupportedMethod(REFER);
+   profile->addSupportedMethod(NOTIFY);
+   profile->addSupportedMethod(SUBSCRIBE);
+   profile->addSupportedMethod(UPDATE);
+   profile->addSupportedMethod(PRACK);
+   profile->addSupportedMethod(INFO);
+   profile->addSupportedMethod(MESSAGE);
 
    profile->clearSupportedOptionTags();
    profile->addSupportedOptionTag(Token(Symbols::Replaces));      
@@ -1495,28 +1631,6 @@ main (int argc, char** argv)
    g_conversationProfile->setDefaultFrom(uri);
    g_conversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
 
-   // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
-   // across machine re-starts and is unique to this application instance.  The one used 
-   // here is only as unique as the hostname of this machine.  If someone runs two 
-   // instances of this application on the same host for the same Aor, then things will 
-   // break.  See RFC5626 section 4.1
-   Data hostname = DnsUtil::getLocalHostName();
-   Data instanceHash = hostname.md5().uppercase();
-   assert(instanceHash.size() == 32);
-   Data instanceId(48, Data::Preallocate);
-   instanceId += "<urn:uuid:";
-   instanceId += instanceHash.substr(0, 8);
-   instanceId += "-";
-   instanceId += instanceHash.substr(8, 4);
-   instanceId += "-";
-   instanceId += instanceHash.substr(12, 4);
-   instanceId += "-";
-   instanceId += instanceHash.substr(16, 4);
-   instanceId += "-";
-   instanceId += instanceHash.substr(20, 12);
-   instanceId += ">";
-   g_conversationProfile->setInstanceId(instanceId);
-
    // Setup NatTraversal Settings
    g_conversationProfile->natTraversalMode() = natTraversalMode;
    g_conversationProfile->natTraversalServerHostname() = natTraversalServerHostname;
@@ -1536,6 +1650,29 @@ main (int argc, char** argv)
       MyConversationManager myConversationManager(localAudioEnabled, multipleMediaInterfaceModeEnabled, defaultAutoHoldModeToDisabled);
       MyUserAgent ua(&myConversationManager, profile);
       myConversationManager.buildSessionCapabilities(address, codecIds, g_conversationProfile->sessionCaps());
+
+      // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
+      // across machine re-starts and is unique to this application instance.  The one used 
+      // here is only as unique as the hostname and the actual SIP listening port.  If someone runs two 
+      // instances of this application on the same host and SIP port for the same Aor, then things will 
+      // break.  See RFC5626 section 4.1
+      Data hostnameAndPort = DnsUtil::getLocalHostName() + Data(profile->getTransports().front().mActualPort);
+      Data instanceHash = hostnameAndPort.md5().uppercase();
+      assert(instanceHash.size() == 32);
+      Data instanceId(48, Data::Preallocate);
+      instanceId += "<urn:uuid:";
+      instanceId += instanceHash.substr(0, 8);
+      instanceId += "-";
+      instanceId += instanceHash.substr(8, 4);
+      instanceId += "-";
+      instanceId += instanceHash.substr(12, 4);
+      instanceId += "-";
+      instanceId += instanceHash.substr(16, 4);
+      instanceId += "-";
+      instanceId += instanceHash.substr(20, 12);
+      instanceId += ">";
+      g_conversationProfile->setInstanceId(instanceId);
+
       ua.addConversationProfile(g_conversationProfile);
 
       //////////////////////////////////////////////////////////////////////////////

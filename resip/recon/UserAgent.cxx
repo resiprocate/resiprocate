@@ -51,13 +51,12 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc, std::shared_ptr<InstantMessage> instantMessage) : 
+UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc) : 
    mCurrentSubscriptionHandle(1),
    mCurrentConversationProfileHandle(1),
    mDefaultOutgoingConversationProfileHandle(0),
    mConversationManager(conversationManager),
    mProfile(std::move(profile)),
-   mInstantMessage(std::move(instantMessage)),
 #if defined(USE_SSL)
    mSecurity(new Security(mProfile->certPath())),
 #else
@@ -111,14 +110,8 @@ UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<U
    mDum.addOutOfDialogHandler(REFER, mConversationManager);
    mDum.addClientSubscriptionHandler("refer", mConversationManager);
    mDum.addServerSubscriptionHandler("refer", mConversationManager);
-
-   // If application didn't create an IM object, we use a default one
-   if(!mInstantMessage)
-   {
-      mInstantMessage = std::make_shared<InstantMessage>();
-   }
-   mDum.setServerPagerMessageHandler(mInstantMessage.get());
-   mDum.setClientPagerMessageHandler(mInstantMessage.get());
+   mDum.setServerPagerMessageHandler(mConversationManager);
+   mDum.setClientPagerMessageHandler(mConversationManager);
 
    //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    //mDum.addClientPublicationHandler(Symbols::Presence, this);
@@ -399,7 +392,6 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
       NameAddrs::const_iterator naIt;
       for(naIt = contacts.begin(); naIt != contacts.end(); naIt++)
       {
-         InfoLog( << "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri());
          if ((*naIt).uri() == requestUri &&             // uri's match 
              (!requestUri.exists(p_rinstance) ||        // and request Uri doesn't have rinstance parameter OR 
               ((*naIt).uri().exists(p_rinstance) && requestUri.param(p_rinstance) == (*naIt).uri().param(p_rinstance))))  // rinstance parameter matches
@@ -407,8 +399,17 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
             ConversationProfileMap::iterator conIt = mConversationProfiles.find(regIt->first);
             if(conIt != mConversationProfiles.end())
             {
+               InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - MATCHED!");
                return conIt->second;
             }
+            else
+            {
+               InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - matched, but conversation profile not found");
+            }
+         }
+         else
+         {
+            InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - no match");
          }
       }
    }
@@ -418,10 +419,14 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
    ConversationProfileMap::iterator conIt;
    for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
    {
-      InfoLog( << "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor());
       if(isEqualNoCase(toAor, conIt->second->getDefaultFrom().uri().getAor()))
       {
+         InfoLog(<< "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor() << " - MATCHED!");
          return conIt->second;
+      }
+      else
+      {
+         InfoLog(<< "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor() << " - no match");
       }
    }
 
@@ -578,24 +583,6 @@ void
 UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyData)
 {
    // Default implementation is to do nothing - application should override this
-}
-
-const char*
-UserAgent::sendMessage(const NameAddr& destination, const Data& msg, const Mime& mimeType)
-{
-   if(!mDum.getMasterProfile()->isMethodSupported(MESSAGE))
-   {
-      WarningLog (<< "MESSAGE method not detected in list of supported methods, adding it belatedly" );
-      mDum.getMasterProfile()->addSupportedMethod(MESSAGE);
-   }
-   
-   ClientPagerMessageHandle cpmh = mDum.makePagerMessage(destination);
-   std::unique_ptr<Contents> msgContent(new PlainContents(msg, mimeType));
-   cpmh.get()->page(std::move(msgContent));
-   const auto sipMessage = cpmh.get()->getMessageRequestSharedPtr();
-   mDum.send(sipMessage);
-
-   return sipMessage->header(h_CallId).value().c_str();
 }
 
 void 

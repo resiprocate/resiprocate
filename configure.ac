@@ -5,10 +5,6 @@ AC_CONFIG_SRCDIR(repro/repro.cxx)
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
 AC_SUBST(SO_RELEASE)
 
-#LIBTOOL_VERSION_RELEASE="-version-info 0:0:0 -release @SO_RELEASE@"
-LIBTOOL_VERSION_RELEASE="-release $SO_RELEASE"
-AC_SUBST(LIBTOOL_VERSION_RELEASE)
-
 
 ########## End of release/version data ######################
 
@@ -101,9 +97,9 @@ AC_ARG_WITH(c-ares,
      AC_MSG_ERROR([unable to find ares_init(), install libcares and/or set LDFLAGS, or use contrib/ares])
    ])],
  [ AC_DEFINE_UNQUOTED(USE_ARES, , USE_ARES)
-   CXXFLAGS="$CXXFLAGS -I`pwd`/rutil/dns/ares"
-   LDFLAGS="$LDFLAGS -L`pwd`/rutil/dns/ares"
-   AC_SUBST(LIBARES_LIBADD, "`pwd`/rutil/dns/ares/libresipares.la")
+   CXXFLAGS="$CXXFLAGS -I\$(top_srcdir)/rutil/dns/ares"
+   LDFLAGS="$LDFLAGS -L\$(top_builddir)/rutil/dns/ares"
+   AC_SUBST(LIBARES_LIBADD, "\$(top_builddir)/rutil/dns/ares/libresipares.la")
    # We no longer check for this because it gets built by us:
    #AC_SEARCH_LIBS(ares_init, ares, , [
    #  AC_MSG_ERROR([unable to find ares_init(), must build contrib/ares or specify --with-c-ares])
@@ -136,6 +132,19 @@ AC_ARG_WITH(fmt,
  [AC_DEFINE_UNQUOTED(USE_FMT, , USE_FMT)
  PKG_CHECK_MODULES([DEPS_FMT], [fmt])
  AM_CONDITIONAL(USE_FMT, true)])
+
+#LIBTOOL_VERSION_RELEASE="-version-info 0:0:0 -release @SO_RELEASE@"
+LIBTOOL_VERSION_RELEASE="-release $SO_RELEASE"
+AC_SUBST(LIBTOOL_VERSION_RELEASE)
+AC_ARG_ENABLE(versioned-soname,
+[  --enable-versioned-soname Enable version in SONAME],
+   [ if test "$enableval" = no; then
+       LIBTOOL_VERSION_RELEASE=""
+       AC_SUBST(LIBTOOL_VERSION_RELEASE)
+     fi
+   ],
+   [
+   ])
 
 AC_ARG_ENABLE(android,
 [  --enable-android        Enable Android build],
@@ -323,7 +332,7 @@ AC_ARG_WITH(python,
 [  --with-python           Build components requiring Python],
  [AC_DEFINE_UNQUOTED(BUILD_PYTHON, , BUILD_PYTHON)
  AM_CONDITIONAL(BUILD_PYTHON, true)
- PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 3.6])
+ PKG_CHECK_MODULES([DEPS_PYTHON], [python3 >= 3.6])
  AC_SUBST(DEPS_PYTHON_VERSION)
  AC_SUBST(PYCXX_SRCDIR)
  if [ ! test -e "${PYCXX_SRCDIR}/cxx_extensions.cxx" ];

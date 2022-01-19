@@ -174,9 +174,12 @@
     <ClCompile Include="DefaultDialogSet.cxx" />
     <ClCompile Include="DtmfEvent.cxx" />
     <ClCompile Include="FlowManagerSipXSocket.cxx" />
-    <ClCompile Include="InstantMessage.cxx" />
+    <ClCompile Include="IMParticipantBase.cxx" />
+    <ClCompile Include="RemoteIMSessionParticipant.cxx" />
+    <ClCompile Include="RemoteIMSessionParticipantDialogSet.cxx" />
     <ClCompile Include="LocalParticipant.cxx" />
     <ClCompile Include="MediaEvent.cxx" />
+    <ClCompile Include="RemoteIMPagerParticipant.cxx" />
     <ClCompile Include="SipXMediaInterface.cxx" />
     <ClCompile Include="MediaResourceCache.cxx" />
     <ClCompile Include="MediaResourceParticipant.cxx" />
@@ -220,9 +223,12 @@
     <ClInclude Include="DefaultDialogSet.hxx" />
     <ClInclude Include="DtmfEvent.hxx" />
     <ClInclude Include="FlowManagerSipXSocket.hxx" />
-    <ClInclude Include="InstantMessage.hxx" />
+    <ClInclude Include="IMParticipantBase.hxx" />
+    <ClInclude Include="RemoteIMSessionParticipant.hxx" />
+    <ClInclude Include="RemoteIMSessionParticipantDialogSet.hxx" />
     <ClInclude Include="LocalParticipant.hxx" />
     <ClInclude Include="MediaEvent.hxx" />
+    <ClInclude Include="RemoteIMPagerParticipant.hxx" />
     <ClInclude Include="SipXMediaInterface.hxx" />
     <ClInclude Include="MediaResourceCache.hxx" />
     <ClInclude Include="MediaResourceParticipant.hxx" />

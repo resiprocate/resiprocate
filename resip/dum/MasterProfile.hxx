@@ -35,7 +35,7 @@ class MasterProfile : public UserProfile
 
       /// Default is none. Do not use to enable PRACK(100rel) support. 
       virtual void addSupportedOptionTag(const Token& tag);        
-      virtual Tokens getUnsupportedOptionsTags(const Tokens& requires); // Returns list of unsupported option tags
+      virtual Tokens getUnsupportedOptionsTags(const Tokens& requiresOptionTags); // Returns list of unsupported option tags
       virtual Tokens getSupportedOptionTags() const;
       virtual void clearSupportedOptionTags() noexcept;
 

@@ -1,62 +1,24 @@
-#include "ConversationManager.hxx"
-#include "ReconSubsystem.hxx"
-#include "UserAgentDialogSetFactory.hxx"
-#include "RemoteParticipant.hxx"
-#include "RemoteIMSessionParticipantDialogSet.hxx"
-#include "DefaultDialogSet.hxx"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
-#include <resip/stack/SipMessage.hxx>
-#include <resip/dum/AppDialogSet.hxx>
+#include "IMParticipantBase.hxx"
+
 #include <rutil/WinLeakCheck.hxx>
-
-#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 using namespace recon;
 using namespace resip;
 using namespace std;
 
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgentDialogSetFactory::UserAgentDialogSetFactory(ConversationManager& conversationManager) :
-    mConversationManager(conversationManager)
-{
-}
 
-AppDialogSet* 
-UserAgentDialogSetFactory::createAppDialogSet(DialogUsageManager& dum,
-                                              const SipMessage& msg)
-{
-   switch(msg.method())
-   {
-   case INVITE:
-   {
-      SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-      if (sdp)
-      {
-         for (auto it = sdp->session().media().begin(); it != sdp->session().media().end(); it++)
-         {
-            if (it->name() == "message")
-            {
-               // If there is a message media line, then we assume no audio/video are present and we create an RemoteIMSessionParticipantDialogSet
-               return mConversationManager.createRemoteIMSessionParticipantDialogSetInstance();
-            }
-         }
-      }
-      return mConversationManager.createRemoteParticipantDialogSetInstance();
-      break;
-   }
-   default:
-      return new DefaultDialogSet(mConversationManager);
-      break;
-   }
-}
+// Nothing needed here right now, leaving in place incase we need to add new methods outside the header file
 
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc.  http://www.sipspectrum.com
- Copyright (c) 2007-2008, Plantronics, Inc.
+ Copyright (c) 2021, SIP Spectrum, Inc. http://www.sipspectrum.com
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

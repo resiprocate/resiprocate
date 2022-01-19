@@ -319,15 +319,25 @@ void
 DateCategory::parse(ParseBuffer& pb)
 {
    // Mon, 04 Nov 2002 17:34:15 GMT
+   // Note: Day of Week is optional, so this is also valid: 04 Nov 2002 17:34:15 GMT
 
    const char* anchor = pb.skipWhitespace();
 
+   // If comma is present, then DayOfWeek is present
    pb.skipToChar(Symbols::COMMA[0]);
-   Data dayOfWeek;
-   pb.data(dayOfWeek, anchor);
-   mDayOfWeek = DateCategory::DayOfWeekFromData(dayOfWeek);
+   if (!pb.eof())
+   {
+      Data dayOfWeek;
+      pb.data(dayOfWeek, anchor);
+      mDayOfWeek = DateCategory::DayOfWeekFromData(dayOfWeek);
 
-   pb.skipChar(Symbols::COMMA[0]);
+      pb.skipChar(Symbols::COMMA[0]);
+   }
+   else
+   {
+      pb.reset(pb.start());
+      mDayOfWeek = DayOfWeek::NA;
+   }
 
    pb.skipWhitespace();
 
@@ -390,8 +400,11 @@ static void pad2(const int x, EncodeStream& str)
 EncodeStream& 
 DateCategory::encodeParsed(EncodeStream& str) const
 {
-   str << DayOfWeekData[mDayOfWeek] // Mon
-       << Symbols::COMMA[0] << Symbols::SPACE[0];
+   if (mDayOfWeek != DayOfWeek::NA)
+   {
+      str << DayOfWeekData[mDayOfWeek] // Mon
+         << Symbols::COMMA[0] << Symbols::SPACE[0];
+   }
    
    pad2(mDayOfMonth, str);  //  04
 

@@ -3,6 +3,8 @@
 #endif
 
 #include "RemoteParticipant.hxx"
+#include "IMParticipantBase.hxx"
+#include "RemoteIMSessionParticipant.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
@@ -46,43 +48,45 @@ using namespace std;
 */
 //#define RTP_SAVPF_FUDGE
 
-// UAC
+// UAC / Outbound
 RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
                                      DialogUsageManager& dum,
-                                     RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, conversationManager),
-  AppDialog(dum),
-  mDum(dum),
-  mDialogSet(remoteParticipantDialogSet),
-  mDialogId(Data::Empty, Data::Empty, Data::Empty),
-  mState(Connecting),
-  mOfferRequired(false),
-  mLocalHold(false),  // FIXME Kurento
-  mRemoteHold(false),
-  mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
-  mLocalSdp(0),
-  mRemoteSdp(0)
+                                     RemoteParticipantDialogSet& remoteParticipantDialogSet) :
+   IMParticipantBase(true /* prependSenderInfoToIMs? */),
+   Participant(partHandle, conversationManager),
+   AppDialog(dum),
+   mDum(dum),
+   mDialogSet(remoteParticipantDialogSet),
+   mDialogId(Data::Empty, Data::Empty, Data::Empty),
+   mState(Connecting),
+   mOfferRequired(false),
+   mLocalHold(false),  // FIXME Kurento
+   mRemoteHold(false),
+   mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
+   mLocalSdp(0),
+   mRemoteSdp(0)
 {
    InfoLog(<< "RemoteParticipant created (UAC), handle=" << mHandle);
 }
 
-// UAS - or forked leg
+// UAS / Inbound - or forked leg
 RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager, 
                                      DialogUsageManager& dum, 
-                                     RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(conversationManager),
-  AppDialog(dum),
-  mDum(dum),
-  mDialogSet(remoteParticipantDialogSet),
-  mDialogId(Data::Empty, Data::Empty, Data::Empty),
-  mState(Connecting),
-  mOfferRequired(false),
-  mLocalHold(false),  // FIXME Kurento
-  mRemoteHold(false),
-  mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
-  mLocalSdp(0),
-  mRemoteSdp(0)
+                                     RemoteParticipantDialogSet& remoteParticipantDialogSet) :
+   IMParticipantBase(false /* prependSenderInfoToIMs? */),
+   Participant(conversationManager),
+   AppDialog(dum),
+   mDum(dum),
+   mDialogSet(remoteParticipantDialogSet),
+   mDialogId(Data::Empty, Data::Empty, Data::Empty),
+   mState(Connecting),
+   mOfferRequired(false),
+   mLocalHold(false),  // FIXME Kurento
+   mRemoteHold(false),
+   mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
+   mLocalSdp(0),
+   mRemoteSdp(0)
 {
    InfoLog(<< "RemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -106,7 +110,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 }
 
 void
-RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
+RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<ConversationProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
    buildSdpOffer(mLocalHold, [this, destination, callingProfile, extraHeaders](bool success, std::unique_ptr<SdpContents> _offer){
       if(!success)
@@ -205,7 +209,7 @@ RemoteParticipant::destroyParticipant()
          if (!mDialogSet.isUACConnected() && mDialogSet.getForkSelectMode() == ConversationManager::ForkSelectAutomaticEx)
          {
             // This will send a CANCEL if unanswered, in ForkSelectAutomaticEx mode we don't expect to
-            // manage destruction forked endpoints manually or individually.  This will also end
+            // manage destruction of forked endpoints manually or individually.  This will also end
             // all the other related conversations.
             mDialogSet.endIncludeRelated(mHandle);
          }
@@ -285,6 +289,29 @@ RemoteParticipant::setLocalHold(bool _hold)
       {
          unhold();
       }
+   }
+}
+
+void 
+RemoteParticipant::sendInstantMessage(std::unique_ptr<resip::Contents> contents)
+{
+   try
+   {
+      if (mState != Terminating)
+      {
+         if (mInviteSessionHandle.isValid())
+         {
+            mInviteSessionHandle->message(*contents.get());
+         }
+      }
+   }
+   catch (BaseException& e)
+   {
+      WarningLog(<< "RemoteParticipant::sendInstantMessage exception: " << e);
+   }
+   catch (...)
+   {
+      WarningLog(<< "RemoteParticipant::sendInstantMessage unknown exception");
    }
 }
 
@@ -1112,7 +1139,13 @@ RemoteParticipant::onNewSession(ServerInviteSessionHandle h, InviteSession::Offe
    }
   
    // notify of new participant
-   if(mHandle) mConversationManager.onIncomingParticipant(mHandle, msg, autoAnswer, *profile);
+   notifyIncomingParticipant(msg, autoAnswer, *profile);
+}
+
+void 
+RemoteParticipant::notifyIncomingParticipant(const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
+{
+   if(mHandle) mConversationManager.onIncomingParticipant(mHandle, msg, autoAnswer, conversationProfile);
 }
 
 void
@@ -1458,7 +1491,17 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
 
       // Create new Participant - but use same participant handle
-      RemoteParticipantDialogSet* participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      RemoteParticipantDialogSet* participantDialogSet;
+      if (dynamic_cast<RemoteIMSessionParticipant*>(this) != nullptr)
+      {
+         // If current participant is an IMSession participant then create new IM Session participant to handle refer
+         participantDialogSet = mConversationManager.createRemoteIMSessionParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      }
+      else
+      {
+         // otherwise, create a normal media based RemoteParticipant
+         participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      }
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
 
@@ -1501,7 +1544,17 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
 
    // Create new Participant - but use same participant handle
-   RemoteParticipantDialogSet* participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+   RemoteParticipantDialogSet* participantDialogSet;
+   if (dynamic_cast<RemoteIMSessionParticipant*>(this) != nullptr)
+   {
+      // If current participant is an IMSession participant then create new IM Session participant to handle refer
+      participantDialogSet = mConversationManager.createRemoteIMSessionParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+   }
+   else
+   {
+      // otherwise, create a normal media based RemoteParticipant
+      participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+   }
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();
 
@@ -1564,9 +1617,36 @@ RemoteParticipant::onReferRejected(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-RemoteParticipant::onMessage(InviteSessionHandle, const SipMessage& msg)
+RemoteParticipant::onMessage(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onMessage: handle=" << mHandle << ", " << msg.brief());
+
+   h->acceptNIT();
+
+   bool relay = false;
+   if (mHandle) relay = mConversationManager.onReceiveIMFromParticipant(mHandle, msg);
+
+   // Don't relay if sending the message to ourselves, this could end up in an infinite loop if both clients are using recon
+   if (h->peerAddr().uri().getAOR(false) == h->myAddr().uri().getAOR(false))
+   {
+      relay = false;
+   }
+
+   // Relay to others in our conversations, if requested to do so
+   if (relay)
+   {
+      Data remoteDisplayName = h->peerAddr().displayName();
+      if (remoteDisplayName.empty())
+      {
+         remoteDisplayName = h->peerAddr().uri().user();
+      }
+
+      ConversationMap::iterator it;
+      for (it = mConversations.begin(); it != mConversations.end(); it++)
+      {
+         it->second->relayInstantMessageToRemoteParticipants(mHandle, remoteDisplayName, msg);
+      }
+   }
 }
 
 void
@@ -1576,9 +1656,14 @@ RemoteParticipant::onMessageSuccess(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-RemoteParticipant::onMessageFailure(InviteSessionHandle, const SipMessage& msg)
+RemoteParticipant::onMessageFailure(InviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onMessageFailure: handle=" << mHandle << ", " << msg.brief());
+   auto failedMessage = h->getLastSentNITRequest();
+   assert(failedMessage->getContents() != nullptr);
+
+   std::unique_ptr<Contents> contents(failedMessage->getContents()->clone());
+   if (mHandle) mConversationManager.onParticipantSendIMFailure(mHandle, msg, std::move(contents));
 }
 
 void
@@ -1681,7 +1766,7 @@ RemoteParticipant::onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, 
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

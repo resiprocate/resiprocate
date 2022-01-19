@@ -62,6 +62,8 @@ Participant::addToConversation(Conversation* conversation, unsigned int inputGai
    resip_assert(conversation);
    if(mConversations.find(conversation->getHandle()) != mConversations.end()) return;  // already present
 
+   InfoLog(<< "Participant handle=" << mHandle << " added to conversation=" << conversation->getHandle() << ", inputGain=" << inputGain << ", outputGain=" << outputGain);
+
    mConversations[conversation->getHandle()] = conversation;
    conversation->registerParticipant(this, inputGain, outputGain);
 }
@@ -70,7 +72,7 @@ void
 Participant::removeFromConversation(Conversation *conversation)
 {
    resip_assert(conversation);
-   //InfoLog(<< "Participant handle=" << mHandle << " removed from conversation=" << conversation->getHandle());
+   InfoLog(<< "Participant handle=" << mHandle << " removed from conversation=" << conversation->getHandle());
    mConversations.erase(conversation->getHandle());  // Note: this must come before next line - since unregisterParticipant may end up destroying conversation
    conversation->unregisterParticipant(this);
 }
@@ -120,25 +122,29 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
 void
 Participant::applyBridgeMixWeights()
 {
-   BridgeMixer* mixer=0;
    return; // FIXME Kurento
-   if(!mConversationManager.supportsMultipleMediaInterfaces())
+   // Only need to do work on the bridge mixer if we are using it (ie: portOnBridge != -1)
+   if (getConnectionPortOnBridge() != -1)
    {
-      resip_assert(mConversationManager.getBridgeMixer() != 0);
-      mixer = mConversationManager.getBridgeMixer().get();
-   }
-   else
-   {
-      // Note:  For this mode, the recon code ensures that all conversations a participant 
-      //        is added to will share the same media interface, so using the first 
-      //        conversation is sufficient.
-      resip_assert(mConversations.begin()->second->getBridgeMixer() != 0);
-      mixer = mConversations.begin()->second->getBridgeMixer();
-   }
-   resip_assert(mixer);
-   if(mixer)
-   {
-      mixer->calculateMixWeightsForParticipant(this);
+      BridgeMixer* mixer = 0;
+      if (!mConversationManager.supportsMultipleMediaInterfaces())
+      {
+         resip_assert(mConversationManager.getBridgeMixer() != 0);
+         mixer = mConversationManager.getBridgeMixer().get();
+      }
+      else
+      {
+         // Note:  For this mode, the recon code ensures that all conversations a participant 
+         //        is added to will share the same media interface, so using the first 
+         //        conversation is sufficient.
+         resip_assert(mConversations.begin()->second->getBridgeMixer() != 0);
+         mixer = mConversations.begin()->second->getBridgeMixer();
+      }
+      resip_assert(mixer);
+      if (mixer)
+      {
+         mixer->calculateMixWeightsForParticipant(this);
+      }
    }
 }
 
@@ -171,7 +177,7 @@ Participant::applyBridgeMixWeights(Conversation* removedConversation)
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
