@@ -410,7 +410,10 @@ ConnectionManager::process(FdSet& fdset)
 
       if (fdset.readyToWrite(currConnection->getSocket()))
       {
-         currConnection->performWrites();
+         if (!currConnection->performWrites())
+         {
+            delete currConnection;
+         }
       }
       else if (fdset.hasException(currConnection->getSocket()))
       {
