@@ -88,18 +88,8 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
          InfoLog(<< "Port allocated: " << mLocalRTPPort);
       }
 
-      // UAS Dialogs should have a user profile at this point - for UAC to get default outgoing
-      ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getUserProfile().get());
-      if(!profile)
-      {
-         DebugLog(<<"no ConversationProfile in DialogSet::mUserProfile");
-         profile = getConversationProfile().get();
-      }
-      if(!profile)
-      {
-         DebugLog(<<"no ConversationProfile in RemoteParticipantDialogSet::mConversationProfile, falling back to default for UAC");
-         profile = mSipXConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
-      }
+      ConversationProfile* profile = getConversationProfile().get();
+      assert(profile);
 
       OsStatus ret;
       Data connectionAddr = profile->sessionCaps().session().connection().getAddress();

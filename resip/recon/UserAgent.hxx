@@ -311,8 +311,6 @@ protected:
    // Returns the ConversationProfile for a specific media address
    std::shared_ptr<ConversationProfile> getConversationProfileByMediaAddress(const resip::Data& mediaAddress);
    virtual std::shared_ptr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
-   // Return the ConversationProfile suitable for creating an INVITE from a REFER
-   virtual std::shared_ptr<ConversationProfile> getConversationProfileForRefer(const resip::SipMessage& msg);
 
 private:
    friend class ConversationManager;

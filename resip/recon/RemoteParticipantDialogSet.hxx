@@ -44,6 +44,7 @@ public:
 
    virtual RemoteParticipant* createUACOriginalRemoteParticipant(ParticipantHandle handle);
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
+   std::shared_ptr<ConversationProfile> getConversationProfile();
 
    virtual void endIncludeRelated(ParticipantHandle requestingParticipant);
    virtual void setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp);
@@ -77,7 +78,6 @@ public:
 protected:
    RemoteParticipant* getUACOriginalRemoteParticipant() { return mUACOriginalRemoteParticipant; }
    virtual std::shared_ptr<resip::UserProfile> selectUASUserProfile(const resip::SipMessage&);
-   std::shared_ptr<ConversationProfile> getConversationProfile() { return mConversationProfile; };
 
    virtual bool isAsyncMediaSetup() = 0;
 

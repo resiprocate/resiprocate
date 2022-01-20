@@ -72,12 +72,8 @@ RemoteIMSessionParticipant::notifyIncomingParticipant(const resip::SipMessage& m
 void
 RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 {
-   ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getDialogSet().getUserProfile().get());
-   if (!profile) // This can happen for UAC calls
-   {
-      DebugLog(<< "buildSdpOffer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
-      profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
-   }
+   ConversationProfile* profile = getDialogSet().getConversationProfile().get();
+   assert(profile);
 
    offer = profile->sessionCaps();
 
@@ -103,12 +99,8 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents
 
    try
    {
-      ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getDialogSet().getUserProfile().get());
-      if (!profile) // This can happen for UAC calls
-      {
-         DebugLog(<< "buildSdpAnswer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
-         profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
-      }
+      ConversationProfile* profile = getDialogSet().getConversationProfile().get();
+      assert(profile);
 
       answer = profile->sessionCaps();
 
