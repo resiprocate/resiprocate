@@ -462,8 +462,24 @@ Proxy::thread()
                }
                else
                {
-                  InfoLog (<< "No matching request context...ignoring " << *app);
-                  delete app;
+                   RequestContextMap::iterator i = mClientRequestContexts.find(tid);
+                   if (i != mServerRequestContexts.end())
+                   {
+                       DebugLog(<< "Sending " << *app << " to " << *(i->second));
+                       try
+                       {
+                           i->second->process(std::unique_ptr<resip::ApplicationMessage>(app));
+                       }
+                       catch (resip::BaseException &e)
+                       {
+                           ErrLog(<< "Uncaught exception in process: " << e);
+                       }
+                   }
+                   else
+                   {
+                       InfoLog(<< "No matching request context...ignoring " << *app);
+                       delete app;
+                   }
                }
             }
             else if (term)
