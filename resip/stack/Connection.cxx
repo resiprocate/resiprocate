@@ -301,7 +301,7 @@ Connection::performWrites(unsigned int max)
 
    if(res<0)
    {
-      delete this;
+      // error writing, caller should ensure this connection is deleted
       return false;
    }
    return true;
@@ -390,6 +390,11 @@ Connection::read()
             if(performWrites())
             {
                mReceivingTransmissionFormat = WebSocketData;
+            }
+            else
+            {
+               // The write failed, returning -1 to the read will cause this connection to get deleted in performReads
+               bytesRead = -1;
             }
          }
          else if(dropConnection)
@@ -532,7 +537,7 @@ Connection::processPollEvent(FdPollEventMask mask)
    {
       if(!performWrites())
       {
-         // Just deleted self
+         delete this;
          return;
       }
    }

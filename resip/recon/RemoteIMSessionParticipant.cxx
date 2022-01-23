@@ -74,12 +74,8 @@ RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 {
    std::unique_ptr<SdpContents> _offer(new SdpContents);
    SdpContents& offer = *_offer;
-   ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getDialogSet().getUserProfile().get());
-   if (!profile) // This can happen for UAC calls
-   {
-      DebugLog(<< "buildSdpOffer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
-      profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
-   }
+   ConversationProfile* profile = getDialogSet().getConversationProfile().get();
+   resip_assert(profile);
 
    offer = profile->sessionCaps();
 
@@ -108,12 +104,8 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, Continuatio
 
    try
    {
-      ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getDialogSet().getUserProfile().get());
-      if (!profile) // This can happen for UAC calls
-      {
-         DebugLog(<< "buildSdpAnswer: no ConversationProfile available, calling getDefaultOutgoingConversationProfile");
-         profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
-      }
+      ConversationProfile* profile = getDialogSet().getConversationProfile().get();
+      assert(profile);
 
       answer = profile->sessionCaps();
 

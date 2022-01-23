@@ -123,8 +123,9 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       auto profile = callingProfile;
       if (!profile)
       {
-         DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling getDefaultOutgoingConversationProfile");
-         profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
+         DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling mDialogSet.getConversationProfile()");
+         profile = mDialogSet.getConversationProfile();
+         resip_assert(profile);
       }
       auto invitemsg = mDum.makeInviteSession(
                destination,
@@ -1487,8 +1488,8 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       // Figure out hold SDP before removing ourselves from the conversation
       bool holdSdp = mLocalHold;  
 
-      // Choose the appropriate ConversationProfile
-      auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+      // Use same ConversationProfile as this participant
+      auto profile = mDialogSet.getConversationProfile();
 
       // Create new Participant - but use same participant handle
       RemoteParticipantDialogSet* participantDialogSet;
@@ -1540,8 +1541,8 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    // Figure out hold SDP before removing ourselves from the conversation
    bool holdSdp = mLocalHold;  
 
-   // Choose the appropriate ConversationProfile
-   auto profile = mConversationManager.getUserAgent()->getConversationProfileForRefer(msg);
+   // Use same ConversationProfile as this participant
+   auto profile = mDialogSet.getConversationProfile();
 
    // Create new Participant - but use same participant handle
    RemoteParticipantDialogSet* participantDialogSet;

@@ -435,16 +435,6 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
    return getDefaultOutgoingConversationProfile();
 }
 
-std::shared_ptr<ConversationProfile>
-UserAgent::getConversationProfileForRefer(const SipMessage& msg)
-{
-   // default behaviour (before this API method was added) was to simply
-   // use the default outgoing conversation profile.  A more precise method
-   // for profile selection may need to developed, it can also be
-   // implemented in a subclass.
-   return getDefaultOutgoingConversationProfile();
-}
-
 std::shared_ptr<UserAgentMasterProfile> 
 UserAgent::getUserAgentMasterProfile() const noexcept
 {

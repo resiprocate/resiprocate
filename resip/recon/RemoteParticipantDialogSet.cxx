@@ -65,6 +65,29 @@ RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
    return mConversationManager.getUserAgent()->getIncomingConversationProfile(msg);
 }
 
+std::shared_ptr<ConversationProfile> 
+RemoteParticipantDialogSet::getConversationProfile()
+{
+   // UAS Dialogs should have a user profile at this point from the stack calling selectUASUserProfile (above)
+   // For UAC dialogs, we may need to use the locally stored ConversationProfile, at least until the resip 
+   // DialogSet is created.  If a ConversationProfile wasn't provided for the UAC call then we need to 
+   // get default outgoing ConversationProfile.
+   if (getUserProfile())
+   {
+      return dynamic_pointer_cast<ConversationProfile>(getUserProfile());
+   }
+   if (mConversationProfile)
+   {
+      DebugLog(<< "RemoteParticipantDialogSet::getConversationProfile: using locally stored ConversationProfile for UAC");
+      return mConversationProfile;
+   }
+   else
+   {
+      DebugLog(<< "RemoteParticipantDialogSet::getConversationProfile: no locally stored ConversationProfile, falling back to default for UAC");
+      return mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
+   }
+}
+
 void 
 RemoteParticipantDialogSet::processMediaStreamReadyEvent(std::shared_ptr<MediaStreamReadyEvent::StreamParams> streamParams)
 {
