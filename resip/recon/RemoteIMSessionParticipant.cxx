@@ -9,6 +9,7 @@
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
 
+#include <rutil/ResipAssert.h>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>

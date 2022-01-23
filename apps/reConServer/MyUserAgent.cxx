@@ -66,6 +66,8 @@ MyUserAgent::getIncomingConversationProfile(const resip::SipMessage& msg)
 std::shared_ptr<ConversationProfile>
 MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
 {
+   // FIXME 2022-01-23 - this isn't called any more since the commit
+   //     a5e1f059f08e47d08efe42dd4bcca64157f5f26d changed the UserAgent API
    // For the moment,
    // - we only handle a REFER from the external zone
    // - we assume the INVITE goes to the internal zone
@@ -89,7 +91,7 @@ MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
    }
 
    // fall through to superclass if not handled by B2BUA
-   return UserAgent::getConversationProfileForRefer(msg);
+   return UserAgent::getDefaultOutgoingConversationProfile();
 }
 
 void
