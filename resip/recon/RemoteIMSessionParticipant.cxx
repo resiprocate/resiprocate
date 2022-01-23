@@ -9,6 +9,7 @@
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
 
+#include <rutil/ResipAssert.h>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -73,7 +74,7 @@ void
 RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 {
    ConversationProfile* profile = getDialogSet().getConversationProfile().get();
-   assert(profile);
+   resip_assert(profile);
 
    offer = profile->sessionCaps();
 

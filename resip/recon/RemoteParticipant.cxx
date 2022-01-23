@@ -10,6 +10,7 @@
 #include "DtmfEvent.hxx"
 #include "ReconSubsystem.hxx"
 
+#include <rutil/ResipAssert.h>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/DnsUtil.hxx>
@@ -118,7 +119,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
    {
       DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling mDialogSet.getConversationProfile()");
       profile = mDialogSet.getConversationProfile();
-      assert(profile);
+      resip_assert(profile);
    }
    buildSdpOffer(mLocalHold, offer);
    auto invitemsg = mDum.makeInviteSession(
