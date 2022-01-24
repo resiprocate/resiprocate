@@ -60,7 +60,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
   KurentoParticipant(partHandle, kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
-  mReuseSdpAnswer(false)
+  mReuseSdpAnswer(false),
+  mWSAcceptsKeyframeRequests(true)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -74,7 +75,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(KurentoConversationManager& k
   KurentoParticipant(kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
-  mReuseSdpAnswer(false)
+  mReuseSdpAnswer(false),
+  mWSAcceptsKeyframeRequests(true)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -487,9 +489,18 @@ KurentoRemoteParticipant::waitingMode()
 bool
 KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& mediaControl)
 {
-   InfoLog(<<"onMediaControlEvent: sending to Kurento");
-   mEndpoint->sendPictureFastUpdate([this](){});   // FIXME uncomment
-   return true;
+   if(mWSAcceptsKeyframeRequests)
+   {
+      InfoLog(<<"onMediaControlEvent: sending to Kurento");
+      // FIXME - check the content of the event
+      mEndpoint->sendPictureFastUpdate([this](){});
+      return true;
+   }
+   else
+   {
+      WarningLog(<<"rejecting MediaControlEvent due to config option mWSAcceptsKeyframeRequests");
+      return false;
+   }
 }
 
 

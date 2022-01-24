@@ -95,6 +95,7 @@ public: // FIXME
    bool mRemoveExtraMediaDescriptors;
    bool mSipRtpEndpoint;
    bool mReuseSdpAnswer;
+   bool mWSAcceptsKeyframeRequests;
 };
 
 }
