@@ -984,7 +984,7 @@ void
 ResponseContext::updateTimerC(const resip::Data &tid)
 {
    InfoLog(<<"Updating timer C for client transaction " << tid);
-   int timerCSerial = 0;
+   int timerCSerial = TimerCSerialInit;
    auto i = mTimerCSerial.find(tid);
    if (i != mTimerCSerial.end())
    {
@@ -1001,28 +1001,35 @@ ResponseContext::updateTimerC(const resip::Data &tid)
 void
 ResponseContext::processTimerC(const resip::Data &tid, int serial)
 {
-   bool isLatestTimer = false;
-   auto i = mTimerCSerial.find(tid);
-   if (i != mTimerCSerial.end())
-   {
+    bool isLatestTimer = false;
+    auto i = mTimerCSerial.find(tid);
+    if (i != mTimerCSerial.end())
+    {
        isLatestTimer = (serial == i->second);
-   }
+    }
 
-   if (!mRequestContext.mHaveSentFinalResponse && isLatestTimer)
-   {
-      InfoLog(<<"Canceling client transaction " << tid << " due to timer C.");
-      cancelClientTransaction(tid);
+    if (!mRequestContext.mHaveSentFinalResponse && isLatestTimer)
+    {
+        InfoLog(<<"Canceling client transaction " << tid << " due to timer C.");
+        cancelClientTransaction(tid);
 
-      // After initiating client TX cancellation trigger next target processing  
-      auto i = mActiveTransactionMap.find(tid);
-      if (i != mActiveTransactionMap.end()) {
-          // Reconstruct original target request to be able to generate the response
-          auto targetRequest = buildTargetRequest(i->second);
-          std::unique_ptr<resip::SipMessage> response(Helper::makeResponse(*targetRequest, 408));
-          // Pretend like 408 response has been received to trigger next target processing
-          mRequestContext.process(std::move(response));
-      }
-   }
+        if (serial == TimerCSerialInit) {
+            // TimerC fired BEFORE receiving provisional response
+            // From RFC3261, 16.8 - 
+            //      the proxy MUST behave as if the transaction received a 408(Request Timeout) response.
+            // Otherwise, relying on the client to correctly handle CANCEL request and generate 487, which will
+            // also trigger next target processing
+            auto i = mActiveTransactionMap.find(tid);
+            if (i != mActiveTransactionMap.end())
+            {
+                // Reconstruct original target request to be able to generate the response
+                auto targetRequest = buildTargetRequest(i->second);
+                std::unique_ptr<resip::SipMessage> response(Helper::makeResponse(*targetRequest, 408));
+                // Pretend like 408 response has been received to trigger next target processing
+                mRequestContext.process(std::move(response));
+            }
+        }
+    }
 }
 
 void
