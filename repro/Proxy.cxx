@@ -463,7 +463,7 @@ Proxy::thread()
                else
                {
                    RequestContextMap::iterator i = mClientRequestContexts.find(tid);
-                   if (i != mServerRequestContexts.end())
+                   if (i != mClientRequestContexts.end())
                    {
                        DebugLog(<< "Sending " << *app << " to " << *(i->second));
                        try
