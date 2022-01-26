@@ -11,7 +11,6 @@ set(INCLUDES
    GeneralCongestionManager.hxx
    HeapInstanceCounter.hxx
    KeyValueStore.hxx
-   SharedCount.hxx
    FdSetIOObserver.hxx
    Fifo.hxx
    CircularBuffer.hxx
@@ -34,7 +33,6 @@ set(INCLUDES
    resipfaststreams.hxx
    Coders.hxx
    Sha1.hxx
-   SharedPtr.hxx
    SelectInterruptor.hxx
    Socket.hxx
    dns/ExternalDnsFactory.hxx

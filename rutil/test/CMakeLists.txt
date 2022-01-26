@@ -38,5 +38,4 @@ test(testXMLCursor testXMLCursor.cxx)
 
 # unreferenced in Makefile.am
 
-extra_test(testSharedPtr testSharedPtr.cxx)
 extra_test(testKeyValueStore testKeyValueStore.cxx)
