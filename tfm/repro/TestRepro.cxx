@@ -48,74 +48,14 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueMsBetweenForkGroups", "5000");
    insertConfigValue("QValueMsBeforeCancel", "5000");
 
+   insertConfigValue("TimerC", "30");
+
    insertConfigValue("ForceRecordRouting", "true");
    //insertConfigValue("RecordRouteUri", "sip:127.0.0.1:5060");  // Set below per transport
 }
 
-static ProcessorChain&  
-makeRequestProcessorChain(ProcessorChain& chain, 
-                          ProxyConfig& config,
-                          Dispatcher* authRequestDispatcher,
-                          RegistrationPersistenceManager& regData,
-                          SipStack* stack)
-{
-   ProcessorChain* locators = new ProcessorChain(Processor::REQUEST_CHAIN);
-   
-   ProcessorChain* authenticators = new ProcessorChain(Processor::REQUEST_CHAIN);
-   
-   IsTrustedNode* isTrusted = new IsTrustedNode(config);
-   authenticators->addProcessor(std::unique_ptr<Processor>(isTrusted));
-
-   DigestAuthenticator* da = new DigestAuthenticator(config, authRequestDispatcher);
-   authenticators->addProcessor(std::unique_ptr<Processor>(da)); 
-
-   StrictRouteFixup* srf = new StrictRouteFixup;
-   locators->addProcessor(std::unique_ptr<Processor>(srf));
-
-   AmIResponsible* isme = new AmIResponsible;
-   locators->addProcessor(std::unique_ptr<Processor>(isme));
-      
-   StaticRoute* sr = new StaticRoute(config);
-   locators->addProcessor(std::unique_ptr<Processor>(sr));
- 
-   LocationServer* ls = new LocationServer(config, regData, authRequestDispatcher);
-   locators->addProcessor(std::unique_ptr<Processor>(ls));
- 
-   chain.addProcessor(std::unique_ptr<Processor>(authenticators));
-   chain.addProcessor(std::unique_ptr<Processor>(locators));
-   return chain;
-}
-
-static ProcessorChain&  
-makeResponseProcessorChain(ProcessorChain& chain,
-                           RegistrationPersistenceManager& regData) 
-{
-   ProcessorChain* lemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
-
-   OutboundTargetHandler* ob = new OutboundTargetHandler(regData);
-   lemurs->addProcessor(std::unique_ptr<Processor>(ob));
-
-   chain.addProcessor(std::unique_ptr<Processor>(lemurs));
-   return chain;
-}
-
-static ProcessorChain&  
-makeTargetProcessorChain(ProcessorChain& chain, ProxyConfig& config) 
-{
-   ProcessorChain* baboons = new ProcessorChain(Processor::TARGET_CHAIN);
-
-   QValueTargetHandler* qval =  new QValueTargetHandler(config);
-   baboons->addProcessor(std::unique_ptr<Processor>(qval));
-   
-   SimpleTargetHandler* smpl = new SimpleTargetHandler;
-   baboons->addProcessor(std::unique_ptr<Processor>(smpl));
-   
-   chain.addProcessor(std::unique_ptr<Processor>(baboons));
-   return chain;
-}
-
-static Uri  
-makeUri(const resip::Data& domain, int port)
+static Uri
+makeUri(const resip::Data &domain, int port)
 {
    Uri uri;
    uri.host() = domain;
@@ -322,6 +262,8 @@ TestRepro::TestRepro(const resip::Data& name,
 
 TestRepro::~TestRepro()
 {
+   mQValueTargetHandler = nullptr;
+
    mDumThread->shutdown();
    mDumThread->join();
    delete mAuthRequestDispatcher;
@@ -339,6 +281,70 @@ TestRepro::~TestRepro()
    // Note:  mStack descructor will delete mSecurity
   
    delete mDb;
+}
+
+ProcessorChain &
+TestRepro::makeRequestProcessorChain(ProcessorChain &chain,
+                                     ProxyConfig &config,
+                                     Dispatcher *authRequestDispatcher,
+                                     RegistrationPersistenceManager &regData,
+                                     SipStack *stack)
+{
+   ProcessorChain *locators = new ProcessorChain(Processor::REQUEST_CHAIN);
+
+   ProcessorChain *authenticators = new ProcessorChain(Processor::REQUEST_CHAIN);
+
+   IsTrustedNode *isTrusted = new IsTrustedNode(config);
+   authenticators->addProcessor(std::unique_ptr<Processor>(isTrusted));
+
+   DigestAuthenticator *da = new DigestAuthenticator(config, authRequestDispatcher);
+   authenticators->addProcessor(std::unique_ptr<Processor>(da));
+
+   StrictRouteFixup *srf = new StrictRouteFixup;
+   locators->addProcessor(std::unique_ptr<Processor>(srf));
+
+   AmIResponsible *isme = new AmIResponsible;
+   locators->addProcessor(std::unique_ptr<Processor>(isme));
+
+   StaticRoute *sr = new StaticRoute(config);
+   locators->addProcessor(std::unique_ptr<Processor>(sr));
+
+   LocationServer *ls = new LocationServer(config, regData, authRequestDispatcher);
+   locators->addProcessor(std::unique_ptr<Processor>(ls));
+
+   chain.addProcessor(std::unique_ptr<Processor>(authenticators));
+   chain.addProcessor(std::unique_ptr<Processor>(locators));
+   return chain;
+}
+
+ProcessorChain &
+TestRepro::makeResponseProcessorChain(ProcessorChain &chain,
+                                      RegistrationPersistenceManager &regData)
+{
+   ProcessorChain *lemurs = new ProcessorChain(Processor::RESPONSE_CHAIN);
+
+   OutboundTargetHandler *ob = new OutboundTargetHandler(regData);
+   lemurs->addProcessor(std::unique_ptr<Processor>(ob));
+
+   chain.addProcessor(std::unique_ptr<Processor>(lemurs));
+   return chain;
+}
+
+ProcessorChain &
+TestRepro::makeTargetProcessorChain(ProcessorChain &chain, ProxyConfig &config)
+{
+   ProcessorChain *baboons = new ProcessorChain(Processor::TARGET_CHAIN);
+
+   QValueTargetHandler *qval = new QValueTargetHandler(config);
+   baboons->addProcessor(std::unique_ptr<Processor>(qval));
+   // Store QValueTargetHandler pointer for dynamic behaviour adjustment from within test cases
+   mQValueTargetHandler = qval;
+
+   SimpleTargetHandler *smpl = new SimpleTargetHandler;
+   baboons->addProcessor(std::unique_ptr<Processor>(smpl));
+
+   chain.addProcessor(std::unique_ptr<Processor>(baboons));
+   return chain;
 }
 
 void
@@ -407,3 +413,15 @@ TestRepro::deleteTrustedHost(const resip::Data& host, resip::TransportType trans
        static_cast<const short&>(transport));
 }
 
+void 
+TestRepro::setQValueTargetHandlerCancelGroups(bool enabled)
+{
+    if (mQValueTargetHandler)
+    {
+        mQValueTargetHandler->setCancelBetweenForkGroups(enabled);
+    }
+    else
+    {
+        ErrLog(<< "Unable to adjust QValueCancelBetweenForkGroups setting: QValueTargetHandler is NULL");
+    }
+}
