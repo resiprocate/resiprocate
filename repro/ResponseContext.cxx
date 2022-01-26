@@ -1013,7 +1013,8 @@ ResponseContext::processTimerC(const resip::Data &tid, int serial)
         InfoLog(<<"Canceling client transaction " << tid << " due to timer C.");
         cancelClientTransaction(tid);
 
-        if (serial == TimerCSerialInit) {
+        if (serial == TimerCSerialInit) 
+        {
             // TimerC fired BEFORE receiving provisional response
             // From RFC3261, 16.8 - 
             //      the proxy MUST behave as if the transaction received a 408(Request Timeout) response.
