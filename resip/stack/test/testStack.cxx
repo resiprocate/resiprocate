@@ -257,6 +257,10 @@ SipStackAndThread::SipStackAndThread(const char *tType,
       mThread = new EventStackThread(*mStack, *mEventIntr, *mPollGrp);
    } 
    else 
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
    if (mSelIntr) 
    {
       mThread = new InterruptableStackThread(*mStack, *mSelIntr);
@@ -265,6 +269,9 @@ SipStackAndThread::SipStackAndThread(const char *tType,
    {
       mThread = new StackThread(*mStack);
    }
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
 }
 
 void
@@ -301,6 +308,13 @@ static void
 waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
                  SelectInterruptor *commonIntr, int& thisseltime, bool& isStrange)
 {
+   /* This method is only used when testing legacy reSIProcate code, so we
+    * can use #pragma to ignore deprecated API calls
+    */
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
    FdSet fdset;
    receiver->buildFdSet(fdset);
    sender->buildFdSet(fdset);
@@ -325,6 +339,9 @@ waitForTwoStacks(SipStackAndThread& receiver, SipStackAndThread& sender,
    }
    receiver->process(fdset);
    sender->process(fdset);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
 }
 
 struct StackThreadPair
@@ -431,7 +448,7 @@ performTest(int verbose, int runs, int window, int invite,
              next->header(h_Vias).front().sentHost() = bindIfAddr;
          }
          next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
-         pair.mSender->send(std::auto_ptr<SipMessage>(next));
+         pair.mSender->send(std::unique_ptr<SipMessage>(next));
          next = 0; // DON'T delete next; consumed by send above
          outstanding++;
          sent++;
@@ -755,8 +772,8 @@ main(int argc, char* argv[])
                              tpFlags));
    }
 
-   std::auto_ptr<CongestionManager> senderCongestionManager;
-   std::auto_ptr<CongestionManager> receiverCongestionManager;
+   std::unique_ptr<CongestionManager> senderCongestionManager;
+   std::unique_ptr<CongestionManager> receiverCongestionManager;
    if(cManager)
    {
       senderCongestionManager.reset(new GeneralCongestionManager(

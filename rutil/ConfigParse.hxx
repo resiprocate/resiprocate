@@ -15,7 +15,7 @@ class ConfigParse
 private:
    class NestedConfigParse;
 public:
-   class Exception : public BaseException
+   class Exception final : public BaseException
    {
       public:
          Exception(const Data& msg,
@@ -23,7 +23,7 @@ public:
                    const int line)
             : BaseException(msg, file, line) {}            
       protected:
-         virtual const char* name() const { return "ConfigParse::Exception"; }
+         const char* name() const noexcept override { return "ConfigParse::Exception"; }
    };
 
    ConfigParse();
@@ -38,30 +38,30 @@ public:
 
    virtual void printHelpText(int argc, char **argv) = 0;
 
-   void getConfigIndexKeys(const resip::Data& indexName, std::set<resip::Data>& keys);
+   void getConfigIndexKeys(const resip::Data& indexName, std::set<resip::Data>& keys) const;
 
    bool getConfigValue(const resip::Data& name, resip::Data &value) const;
    resip::Data getConfigData(const resip::Data& name, const resip::Data& defaultValue, bool useDefaultIfEmpty=false) const;
 
-   bool getConfigValue(const resip::Data& name, bool &value);
-   bool getConfigBool(const resip::Data& name, bool defaultValue);
+   bool getConfigValue(const resip::Data& name, bool &value) const;
+   bool getConfigBool(const resip::Data& name, bool defaultValue) const;
    
-   bool getConfigValue(const resip::Data& name, unsigned long &value);
-   unsigned long getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue);
+   bool getConfigValue(const resip::Data& name, unsigned long &value) const;
+   unsigned long getConfigUnsignedLong(const resip::Data& name, unsigned long defaultValue) const;
 
-   bool getConfigValue(const resip::Data& name, int &value);
-   int getConfigInt(const resip::Data& name, int defaultValue);
+   bool getConfigValue(const resip::Data& name, int &value) const;
+   int getConfigInt(const resip::Data& name, int defaultValue) const;
 
-   bool getConfigValue(const resip::Data& name, unsigned short &value);
-   unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue);
+   bool getConfigValue(const resip::Data& name, unsigned short &value) const;
+   unsigned short getConfigUnsignedShort(const resip::Data& name, int defaultValue) const;
 
-   bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value);
-   bool getConfigValue(const resip::Data& name, std::set<resip::Data> &value);
+   bool getConfigValue(const resip::Data& name, std::vector<resip::Data> &value) const;
+   bool getConfigValue(const resip::Data& name, std::set<resip::Data> &value) const;
 
    typedef HashMap<int, NestedConfigParse> NestedConfigMap;
-   NestedConfigMap getConfigNested(const resip::Data& mapsPrefix);
+   NestedConfigMap getConfigNested(const resip::Data& mapsPrefix) const;
 
-   bool AddBasePathIfRequired(Data& filename);
+   bool AddBasePathIfRequired(Data& filename) const;
 
    void insertConfigValue(const resip::Data& name, const resip::Data& value);
 
@@ -74,7 +74,7 @@ protected:
    ConfigValuesMap mFileConfigValues;
    ConfigValuesMap mConfigValues;
 
-   resip::Data removePath(const resip::Data& fileAndPath);
+   resip::Data removePath(const resip::Data& fileAndPath) const;
 
    // Config filename from command line
    resip::Data mCmdLineConfigFilename;

@@ -1,13 +1,9 @@
 
-AC_INIT(resiprocate,1.12.0~beta9)
+AC_INIT(resiprocate,1.13.0~alpha1)
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
 AC_SUBST(SO_RELEASE)
-
-#LIBTOOL_VERSION_RELEASE="-version-info 0:0:0 -release @SO_RELEASE@"
-LIBTOOL_VERSION_RELEASE="-release $SO_RELEASE"
-AC_SUBST(LIBTOOL_VERSION_RELEASE)
 
 
 ########## End of release/version data ######################
@@ -36,6 +32,8 @@ AM_MISSING_PROG([GPERF], [gperf])
 
 AC_GPERFVER
 
+AX_CXX_COMPILE_STDCXX(11)
+
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
   CXXFLAGS="${CXXFLAGS} -Wall -Wno-deprecated"
@@ -45,75 +43,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-OSVER=`uname -r | tr '()/' " " | cut -f1 -d-`.0.0.0
-OS_MAJOR_VER=`echo $OSVER | cut -f1 -d.`
-OS_MINOR_VER=`echo $OSVER | cut -f2 -d.`
-OS_POINT_VER=`echo $OSVER | cut -f3 -d.`
-OS_PATCH_VER=`echo $OSVER | cut -f4 -d.`
-AC_DEFINE_UNQUOTED(OS_MAJOR_VER, $OS_MAJOR_VER)
-AH_TEMPLATE([OS_MAJOR_VER], [Major OS version])
-AC_DEFINE_UNQUOTED(OS_MINOR_VER, $OS_MINOR_VER)
-AH_TEMPLATE([OS_MINOR_VER], [Minor OS version])
-AC_DEFINE_UNQUOTED(OS_POINT_VER, $OS_POINT_VER)
-AH_TEMPLATE([OS_POINT_VER], [Point OS version])
-AC_DEFINE_UNQUOTED(OS_PATCH_VER, $OS_PATCH_VER)
-AH_TEMPLATE([OS_PATCH_VER], [Patch OS version])
-
-TOOLCHAIN_CPPFLAGS="-DRESIP_TOOLCHAIN_GNU"
-
-case $host_os in
-solaris*)
-#  CXXFLAGS="$CXXFLAGS -library=stlport4"
-#  CFLAGS="-mt"
-#  LDFLAGS="$LDFLAGS -DTHREAD=MULTI -mt -library=stlport4"
-  TOOLCHAIN_CPPFLAGS="-DRESIP_TOOLCHAIN_SUNPRO"
-  ;;
-*)
-  ;;
-esac
-
-OSTYPE=`uname`
-case $OSTYPE in
-solaris*)
-  OSTYPE=SunOS
-  ;;
-freebsd*)
-  OSTYPE=FreeBSD
-  ;;
-linux*)
-  OSTYPE=Linux
-  ;;
-darwin*)
-  OSTYPE=Darwin
-  ;;
-msys*)
-  OSTYPE=MinGW
-  ;;
-MINGW*)
-  OSTYPE=MinGW
-  ;;
-*)
-  echo "Using native OSTYPE value: $OSTYPE"
-  ;;
-esac
-
-ARCH=$host_cpu
-case $host_cpu in
-x86_64)
-#  LARCH=IA64
-  ;;
-i?86)
-  LARCH=IA32
-  ;;
-*)
-  LARCH="$host_cpu"
-  echo "Using native ARCH/LARCH value from \$host_cpu: $host_cpu"
-  ;;
-esac
-OSTYPE_UPPER=`echo $OSTYPE | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-ARCH_UPPER=`echo $host_cpu | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-LARCH_UPPER=`echo $LARCH | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-ARCH_CPPFLAGS="-DRESIP_OSTYPE_${OSTYPE_UPPER} -DRESIP_ARCH_${ARCH_UPPER} -DRESIP_LARCH_${LARCH_UPPER} -D_REENTRANT"
+ARCH_CPPFLAGS="-D_REENTRANT"
 
 AM_CONDITIONAL([MACOSX], [false])
 AS_IF([test "x$host_vendor" = "xapple"], [
@@ -138,7 +68,7 @@ return 0;
 
 AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(RESIP_BIG_ENDIAN, , RESIP_BIG_ENDIAN)])
 
-CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS} ${TOOLCHAIN_CPPFLAGS}"
+CPPFLAGS="${CPPFLAGS} ${ARCH_CPPFLAGS}"
 
 AH_TEMPLATE([HAVE_sockaddr_in_len], [Define if sockaddr_in.sin_len exists])
 AC_CHECK_MEMBER([struct sockaddr_in.sin_len], AC_DEFINE(HAVE_sockaddr_in_len),,
@@ -167,9 +97,9 @@ AC_ARG_WITH(c-ares,
      AC_MSG_ERROR([unable to find ares_init(), install libcares and/or set LDFLAGS, or use contrib/ares])
    ])],
  [ AC_DEFINE_UNQUOTED(USE_ARES, , USE_ARES)
-   CXXFLAGS="$CXXFLAGS -I`pwd`/rutil/dns/ares"
-   LDFLAGS="$LDFLAGS -L`pwd`/rutil/dns/ares"
-   AC_SUBST(LIBARES_LIBADD, "`pwd`/rutil/dns/ares/libresipares.la")
+   CXXFLAGS="$CXXFLAGS -I\$(top_srcdir)/rutil/dns/ares"
+   LDFLAGS="$LDFLAGS -L\$(top_builddir)/rutil/dns/ares"
+   AC_SUBST(LIBARES_LIBADD, "\$(top_builddir)/rutil/dns/ares/libresipares.la")
    # We no longer check for this because it gets built by us:
    #AC_SEARCH_LIBS(ares_init, ares, , [
    #  AC_MSG_ERROR([unable to find ares_init(), must build contrib/ares or specify --with-c-ares])
@@ -196,11 +126,30 @@ AC_ARG_WITH(sigcomp,
 [  --with-sigcomp          Link against Open SigComp libraries for SigComp],
  AC_DEFINE_UNQUOTED(USE_SIGCOMP, , USE_SIGCOMP), )
 
+AM_CONDITIONAL(USE_FMT, false)
+AC_ARG_WITH(fmt,
+[  --with-fmt              Link against fmt library],
+ [AC_DEFINE_UNQUOTED(USE_FMT, , USE_FMT)
+ PKG_CHECK_MODULES([DEPS_FMT], [fmt])
+ AM_CONDITIONAL(USE_FMT, true)])
+
+#LIBTOOL_VERSION_RELEASE="-version-info 0:0:0 -release @SO_RELEASE@"
+LIBTOOL_VERSION_RELEASE="-release $SO_RELEASE"
+AC_SUBST(LIBTOOL_VERSION_RELEASE)
+AC_ARG_ENABLE(versioned-soname,
+[  --enable-versioned-soname Enable version in SONAME],
+   [ if test "$enableval" = no; then
+       LIBTOOL_VERSION_RELEASE=""
+       AC_SUBST(LIBTOOL_VERSION_RELEASE)
+     fi
+   ],
+   [
+   ])
+
 AC_ARG_ENABLE(android,
 [  --enable-android        Enable Android build],
    [AC_SUBST(LIBPTHREAD_LIBADD, "")
-   AC_SUBST(LIBLOG_LIBADD, "-llog")
-   AC_SUBST(LIBSTL_LIBADD, "-lgnustl_shared")],
+   AC_SUBST(LIBLOG_LIBADD, "-llog")],
    [AC_SUBST(LIBPTHREAD_LIBADD, "-lpthread")
    AC_SUBST(LIBLOG_LIBADD, "")
    AC_SUBST(LIBSTL_LIBADD, "")])
@@ -224,6 +173,22 @@ AC_ARG_WITH(mysql,
  AC_SUBST(LIBMYSQL_LIBADD, "-lmysqlclient")
  AM_CONDITIONAL(USE_MYSQL, true)], 
  [ AC_SUBST(LIBMYSQL_LIBADD, "")])
+
+# some systems may have a newer version of libpq that is not
+# compatible with the packaged version of soci_postgresql
+AM_CONDITIONAL(USE_SOCI_POSTGRESQL, false)
+AC_ARG_WITH(soci-postgresql,
+[  --with-soci-postgresql  Build recon with SOCI PostgreSQL support],
+ [AC_DEFINE_UNQUOTED(USE_SOCI_POSTGRESQL, , USE_SOCI_POSTGRESQL)
+ AM_CONDITIONAL(USE_SOCI_POSTGRESQL, true)], )
+
+# can't have both MariaDB C client and SOCI MySQL at the same
+# time in some environments, e.g. CentOS 8.1
+AM_CONDITIONAL(USE_SOCI_MYSQL, false)
+AC_ARG_WITH(soci-mysql,
+[  --with-soci-mysql       Build recon with SOCI MySQL support],
+ [AC_DEFINE_UNQUOTED(USE_SOCI_MYSQL, , USE_SOCI_MYSQL)
+ AM_CONDITIONAL(USE_SOCI_MYSQL, true)], )
 
 AM_CONDITIONAL(USE_POSTGRESQL, false)
 AC_ARG_WITH(postgresql,
@@ -287,6 +252,12 @@ reproplugindir='${pkglibdir}/repro/plugins'
 AC_SUBST([returnpkglibdir])
 returnpkglibdir='${pkglibdir}/reTurnServer'
 
+AM_CONDITIONAL(BUILD_RETURN, false)
+AC_ARG_WITH(return,
+[  --with-return           Build reTurn client and server],
+ [AC_DEFINE_UNQUOTED(BUILD_RETURN, , BUILD_RETURN)
+ AM_CONDITIONAL(BUILD_RETURN, true)], )
+
 AM_CONDITIONAL(BUILD_REND, false)
 AC_ARG_WITH(rend,
 [  --with-rend             Build rend],
@@ -321,9 +292,28 @@ AC_ARG_WITH(telepathy,
 
 AM_CONDITIONAL(BUILD_RECON, false)
 AC_ARG_WITH(recon,
-[  --with-recon            Build recon, links against sipX],
+[  --with-recon            Build recon],
  [AC_DEFINE_UNQUOTED(BUILD_RECON, , BUILD_RECON)
  AM_CONDITIONAL(BUILD_RECON, true)], )
+
+AM_CONDITIONAL(USE_SRTP1, false)
+AC_ARG_WITH(srtp1,
+[  --with-srtp1            Use srtp 1.x instead of current version],
+ [AC_DEFINE_UNQUOTED(USE_SRTP1, , USE_SRTP1)
+ AM_CONDITIONAL(USE_SRTP1, true)], )
+
+AM_CONDITIONAL(USE_SIPXTAPI, false)
+AC_ARG_WITH(sipxtapi,
+[  --with-sipxtapi         Build recon with sipXtapi support],
+ [AC_DEFINE_UNQUOTED(USE_SIPXTAPI, , USE_SIPXTAPI)
+ AM_CONDITIONAL(USE_SIPXTAPI, true)], )
+
+AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, false)
+AC_ARG_ENABLE(recon-local-hw-tests,
+[  --enable-recon-local-hw-tests Attempt to use local audio hardware in unit tests],
+ [AC_DEFINE_UNQUOTED(RECON_LOCAL_HW_TESTS, , RECON_LOCAL_HW_TESTS)
+ AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, true)
+], )
 
 AM_CONDITIONAL(BUILD_P2P, false)
 AC_ARG_WITH(p2p,
@@ -336,7 +326,8 @@ AC_ARG_WITH(python,
 [  --with-python           Build components requiring Python],
  [AC_DEFINE_UNQUOTED(BUILD_PYTHON, , BUILD_PYTHON)
  AM_CONDITIONAL(BUILD_PYTHON, true)
- PKG_CHECK_MODULES([DEPS_PYTHON], [python >= 2.7])
+ PKG_CHECK_MODULES([DEPS_PYTHON], [python3 >= 3.6])
+ AC_SUBST(DEPS_PYTHON_VERSION)
  AC_SUBST(PYCXX_SRCDIR)
  if [ ! test -e "${PYCXX_SRCDIR}/cxx_extensions.cxx" ];
  then
@@ -366,10 +357,18 @@ AC_SEARCH_LIBS(socket, socket)
 CURL_CHECK_LIBS_CLOCK_GETTIME_MONOTONIC
 
 AX_HAVE_EPOLL(
-  [AC_DEFINE_UNQUOTED(HAVE_EPOLL, ,HAVE_EPOLL)],  )
+  [AC_DEFINE_UNQUOTED(HAVE_EPOLL, 1, HAVE_EPOLL)],  )
 
 AC_CHECK_LIB(dl, dlopen)
 AM_CONDITIONAL(HAVE_LIBDL, [test x"$ac_cv_lib_dl_dlopen" = xyes])
+
+AM_CONDITIONAL(BUILD_GSTREAMER, false)
+AC_ARG_WITH(gstreamer,
+[  --with-gstreamer        Build components requiring GStreamer],
+ [AC_DEFINE_UNQUOTED(BUILD_GSTREAMER, , BUILD_GSTREAMER)
+ AM_CONDITIONAL(BUILD_GSTREAMER, true)
+ PKG_CHECK_MODULES([GSTREAMERMM_1_0], [gstreamermm-1.0])
+], )
 
 AM_MAINTAINER_MODE
 
@@ -397,6 +396,7 @@ AC_OUTPUT(Makefile \
 	apps/Makefile \
 	apps/clicktocall/Makefile \
 	apps/clicktocall/test/Makefile \
+	apps/echoTest/Makefile \
 	apps/ichat-gw/Makefile \
 	apps/ichat-gw/jabberconnector/Makefile \
 	apps/sipdial/Makefile \
@@ -410,7 +410,7 @@ AC_OUTPUT(Makefile \
 	reTurn/client/Makefile \
 	reTurn/client/test/Makefile \
 	reflow/Makefile \
-  reflow/dtls_wrapper/test/Makefile \
+	reflow/dtls_wrapper/test/Makefile \
 	resip/recon/Makefile \
 	resip/recon/MOHParkServer/Makefile \
 	resip/recon/test/Makefile \

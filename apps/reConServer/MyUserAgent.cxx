@@ -21,12 +21,16 @@ using namespace reconserver;
 using namespace std;
 
 
-MyUserAgent::MyUserAgent(ConfigParse& configParse, ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-   UserAgent(conversationManager, profile),
+MyUserAgent::MyUserAgent(ReConServerConfig& configParse, ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile) :
+   UserAgent(conversationManager, std::move(profile)),
    mMaxRegLoops(1000)
 {
-   mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
-   mSubscriptionForwarder.reset(new SubscriptionForwarder(configParse, getSipStack()));
+   ReConServerConfig::Application application = configParse.getConfigApplication("Application", ReConServerConfig::None);
+   if(application == ReConServerConfig::B2BUA)
+   {
+      mRegistrationForwarder.reset(new RegistrationForwarder(configParse, getSipStack()));
+      mSubscriptionForwarder.reset(new SubscriptionForwarder(configParse, getSipStack()));
+   }
 }
 
 void
@@ -47,28 +51,30 @@ MyUserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyD
    InfoLog(<< "onSubscriptionNotify: handle=" << handle << " data=" << endl << notifyData);
 }
 
-resip::SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 MyUserAgent::getIncomingConversationProfile(const resip::SipMessage& msg)
 {
    B2BCallManager *b2bcm = getB2BCallManager();
-   SharedPtr<ConversationProfile> defaultProfile = UserAgent::getIncomingConversationProfile(msg);
+   auto defaultProfile = UserAgent::getIncomingConversationProfile(msg);
    if(b2bcm)
    {
-      return b2bcm->getIncomingConversationProfile(msg, defaultProfile);
+      return b2bcm->getIncomingConversationProfile(msg, std::move(defaultProfile));
    }
    return defaultProfile;
 }
 
-resip::SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
 {
+   // FIXME 2022-01-23 - this isn't called any more since the commit
+   //     a5e1f059f08e47d08efe42dd4bcca64157f5f26d changed the UserAgent API
    // For the moment,
    // - we only handle a REFER from the external zone
    // - we assume the INVITE goes to the internal zone
    B2BCallManager *b2bcm = getB2BCallManager();
    if(b2bcm)
    {
-      resip::SharedPtr<ConversationProfile> p(b2bcm->getExternalConversationProfile());
+      auto p = b2bcm->getExternalConversationProfile();
       // The re-INVITE needs to have a Route header to ensure it
       // is sent back to reConServer over the same interface where
       // the REFER was received.
@@ -85,7 +91,7 @@ MyUserAgent::getConversationProfileForRefer(const resip::SipMessage& msg)
    }
 
    // fall through to superclass if not handled by B2BUA
-   return UserAgent::getConversationProfileForRefer(msg);
+   return UserAgent::getDefaultOutgoingConversationProfile();
 }
 
 void
@@ -93,21 +99,25 @@ MyUserAgent::process(int timeoutMs)
 {
    // Keep calling process() as long as there appear to be messages
    // available from the stack
-   for(int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
-   for(int i = 0; i < mMaxRegLoops && mSubscriptionForwarder->process() ; i++);
+   if(mRegistrationForwarder)
+   {
+      for(unsigned int i = 0; i < mMaxRegLoops && mRegistrationForwarder->process() ; i++);
+   }
+   if(mSubscriptionForwarder)
+   {
+      for(unsigned int i = 0; i < mMaxRegLoops && mSubscriptionForwarder->process() ; i++);
+   }
 
    UserAgent::process(timeoutMs);
 }
 
-SharedPtr<Dispatcher>
-MyUserAgent::initDispatcher(std::auto_ptr<Worker> prototype,
+std::shared_ptr<Dispatcher>
+MyUserAgent::initDispatcher(std::unique_ptr<Worker> prototype,
                   int workers,
                   bool startImmediately)
 {
    DebugLog(<< "initializing Dispatcher for " << workers << " worker(s)");
-   SharedPtr<Dispatcher> d(new Dispatcher(prototype, &getSipStack(), workers, startImmediately));
-
-   return d;
+   return std::make_shared<Dispatcher>(std::move(prototype), &getSipStack(), workers, startImmediately);
 }
 
 B2BCallManager*

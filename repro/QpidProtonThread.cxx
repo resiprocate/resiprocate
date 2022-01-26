@@ -126,7 +126,7 @@ QpidProtonThread::doSend()
       while(mFifo.messageAvailable() && mSender.credit() > 0)
       {
          StackLog(<<"doSend trying to send a message");
-         SharedPtr<Data> body(mFifo.getNext());
+         std::shared_ptr<Data> body(mFifo.getNext());
          proton::message msg;
          msg.body(body->c_str());
          mSender.send(msg);

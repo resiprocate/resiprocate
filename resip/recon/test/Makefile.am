@@ -1,6 +1,6 @@
 
 EXTRA_DIST = ca.pem
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += testua_readme.txt
 
 LDADD = ../librecon.la
@@ -18,14 +18,16 @@ LDADD += $(LIBSSL_LIBADD) @LIBPTHREAD_LIBADD@
 
 AM_CPPFLAGS = -I$(top_srcdir)/resip/recon
 
-TESTS = sdpTests
-# disabled - doesn't run without local audio hardware:
-# lt-unitTests: mp/MpOss.cpp:828: static void* MpOss::soundCardIoWrapper(void*): Assertion `res == 0' failed.
-#TESTS += unitTests
+TESTS =
+bin_PROGRAMS =
+check_PROGRAMS =
 
-bin_PROGRAMS = testUA
+if USE_SIPXTAPI
 
-check_PROGRAMS = \
+TESTS += sdpTests
+TESTS += unitTests
+bin_PROGRAMS += testUA
+check_PROGRAMS += \
 	sdpTests \
 	unitTests
 
@@ -34,6 +36,8 @@ sdpTests_SOURCES = sdpTests.cxx
 unitTests_SOURCES = unitTests.cxx
 testUA_LDADD = -lsipXport
 testUA_LDADD += $(LDADD)
+
+endif
 
 
 

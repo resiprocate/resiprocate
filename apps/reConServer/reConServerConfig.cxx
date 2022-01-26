@@ -1,7 +1,9 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef USE_SIPXTAPI
 #include "os/OsIntTypes.h"
+#endif
 
 #include "reConServerConfig.hxx"
 

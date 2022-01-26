@@ -5,6 +5,8 @@
 #include "ReconSubsystem.hxx"
 #include "ConversationProfile.hxx"
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
@@ -29,8 +31,8 @@ ConversationProfile::ConversationProfile() :
 {
 }
 
-ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
-   UserProfile(baseProfile),
+ConversationProfile::ConversationProfile(std::shared_ptr<Profile> baseProfile) :
+   UserProfile(std::move(baseProfile)),
    mHandle(0),
    mAllowAutoAnswer(false),
    mAllowPriorityAutoAnswer(false),
@@ -120,6 +122,7 @@ ConversationProfile::shouldAutoAnswer(const SipMessage& inviteRequest, bool *req
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

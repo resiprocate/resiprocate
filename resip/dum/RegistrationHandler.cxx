@@ -23,7 +23,7 @@ ClientRegistrationHandler::onRefreshRequired(ClientRegistrationHandle h, const S
 }
 
 void
-ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<MasterProfile> masterProfile,
+ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, const std::shared_ptr<MasterProfile>& masterProfile,
       UInt32 &expires, UInt32 &returnCode)
 {
    if (!masterProfile)
@@ -69,7 +69,7 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
 }
 
 void
-ServerRegistrationHandler::getContactExpires(const NameAddr &contact, SharedPtr<MasterProfile> masterProfile,
+ServerRegistrationHandler::getContactExpires(const NameAddr &contact, const std::shared_ptr<MasterProfile>& masterProfile,
       UInt32 &expires, UInt32 &returnCode)
 {
    if (!masterProfile)

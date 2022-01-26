@@ -6,6 +6,8 @@
 #include "UserAccount.hxx"
 #include "UserRegistrationClient.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::REGISTRATIONAGENT
 
 using namespace registrationagent;
@@ -17,26 +19,26 @@ UserAccountFileRowHandler::UserAccountFileRowHandler(DialogUsageManager& dum)
 {
 }
 
-SharedPtr<KeyedFileLine>
-UserAccountFileRowHandler::onNewLine(SharedPtr<KeyedFile> keyedFile, const Data& key, const vector<Data>& columns)
+std::shared_ptr<KeyedFileLine>
+UserAccountFileRowHandler::onNewLine(std::shared_ptr<KeyedFile> keyedFile, const Data& key, const vector<Data>& columns)
 {
    Uri aor(key);
-   SharedPtr<UserAccount> userReg(new UserAccount(keyedFile, aor, columns, mDum, mUserRegistrationClient));
+   const auto userReg = std::make_shared<UserAccount>(keyedFile, aor, columns, mDum, mUserRegistrationClient);
    mUserRegistrationClient->addUserAccount(aor, userReg);
    userReg->activate();
-   return SharedPtr<KeyedFileLine>(userReg, dynamic_cast_tag());
+   return userReg;
 }
 
 void
-UserAccountFileRowHandler::setUserRegistrationClient(SharedPtr<UserRegistrationClient> userRegistrationClient)
+UserAccountFileRowHandler::setUserRegistrationClient(std::shared_ptr<UserRegistrationClient> userRegistrationClient)
 {
-   mUserRegistrationClient = userRegistrationClient;
+   mUserRegistrationClient = std::move(userRegistrationClient);
 }
 
-UserAccount::UserAccount(SharedPtr<KeyedFile> keyedFile, const Uri& aor, const vector<Data>& columns, DialogUsageManager& dum, resip::SharedPtr<UserRegistrationClient> userRegistrationClient) :
-   BasicKeyedFileLine(keyedFile, aor.getAor(), columns),
+UserAccount::UserAccount(std::shared_ptr<KeyedFile> keyedFile, const Uri& aor, const vector<Data>& columns, DialogUsageManager& dum, std::shared_ptr<UserRegistrationClient> userRegistrationClient) :
+   BasicKeyedFileLine(std::move(keyedFile), aor.getAor(), columns),
    mDum(dum),
-   mUserRegistrationClient(userRegistrationClient),
+   mUserRegistrationClient(std::move(userRegistrationClient)),
    mAor(aor),
    mContactOverride(false),
    mExpires(0),
@@ -77,7 +79,7 @@ UserAccount::readColumns()
    mInstanceId = paramCount() > 6 ? getParam(6) : Data::Empty;
 
    // Build a UserProfile for this registration
-   mProfile.reset(new UserProfile(mDum.getMasterUserProfile()));
+   mProfile = std::make_shared<UserProfile>(mDum.getMasterUserProfile());
    mProfile->setDefaultFrom(mAor);
    if(!mSecret.empty())
    {
@@ -153,7 +155,7 @@ UserAccount::unSetContact()
 void
 UserAccount::doRegistration()
 {
-   SharedPtr<SipMessage> regMessage = mDum.makeRegistration(mAor, mProfile);
+   auto regMessage = mDum.makeRegistration(mAor, mProfile);
    NameAddr contact(mContactUri);
    if(!mRegId.empty())
    {
@@ -167,7 +169,7 @@ UserAccount::doRegistration()
    regMessage->header(h_Contacts).push_back(contact);
    regMessage->header(h_Routes) = mRoute;
 
-   mDum.sendCommand(regMessage);
+   mDum.sendCommand(std::move(regMessage));
 }
 
 void
@@ -229,7 +231,7 @@ UserAccount::onRefreshRequired(resip::ClientRegistrationHandle h, const resip::S
    {
       return true;
    }
-   UInt64 now = Timer::getTimeSecs();
+   time_t now = Timer::getTimeSecs();
    if(now > mExpires)
    {
       DebugLog(<<"now = " << now << " and contact expired at " << mExpires);
@@ -253,9 +255,9 @@ UserAccount::removeAllActive()
 }
 
 void
-UserAccount::onLineRemoved(SharedPtr<KeyedFileLine> sp)
+UserAccount::onLineRemoved(std::shared_ptr<KeyedFileLine> sp)
 {
-   BasicKeyedFileLine::onLineRemoved(sp);
+   BasicKeyedFileLine::onLineRemoved(std::move(sp));
    InfoLog( << "Removing registration(s)");
    if(mHandles.size() > 0)
    {

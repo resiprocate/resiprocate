@@ -16,7 +16,7 @@ class RROverlay;
 class DnsSrvRecord : public DnsResourceRecord
 {
    public:
-      class SrvException : public BaseException
+      class SrvException final : public BaseException
       {
          public:
             SrvException(const Data& msg, const Data& file, const int line)
@@ -24,7 +24,7 @@ class DnsSrvRecord : public DnsResourceRecord
             {
             }
             
-            const char* name() const { return "SrvException"; }
+            const char* name() const noexcept override { return "SrvException"; }
       };
 
       DnsSrvRecord(const RROverlay&);

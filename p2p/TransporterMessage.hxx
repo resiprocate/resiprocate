@@ -13,6 +13,9 @@
 #include "p2p/Candidate.hxx"
 #include "p2p/Message.hxx"
 
+#include <memory>
+#include <utility>
+
 namespace p2p
 {
 
@@ -85,15 +88,15 @@ class ConnectionClosed : public Event
 class MessageArrived : public Event
 {
    public:
-      MessageArrived (NodeId nodeId, std::auto_ptr<p2p::Message> message)
-        : mNodeId(nodeId), mMessage(message) {}
+      MessageArrived (NodeId nodeId, std::unique_ptr<p2p::Message> message)
+        : mNodeId(nodeId), mMessage(std::move(message)) {}
       ~MessageArrived();
 
       virtual void dispatch(EventConsumer& consumer);
 
       NodeId getNodeId() const {return mNodeId;}        
-      std::auto_ptr<p2p::Message> getMessage() { resip_assert(mMessage.get());
-         return mMessage; }
+      std::unique_ptr<p2p::Message> getMessage() { resip_assert(mMessage.get());
+         return std::move(mMessage); }
 
       virtual resip::Data brief() const
       {
@@ -104,7 +107,7 @@ class MessageArrived : public Event
    protected:
 
       NodeId mNodeId;
-      std::auto_ptr<p2p::Message> mMessage;
+      std::unique_ptr<p2p::Message> mMessage;
 };
 
 class ApplicationMessageArrived : public Event

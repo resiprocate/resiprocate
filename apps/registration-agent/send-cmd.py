@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 #
 # Send a String message from command line to an AMQP queue or topic
@@ -8,7 +8,7 @@
 
 # To install the dependencies:
 #
-#   apt-get install -t jessie-backports python-qpid-proton
+#   apt-get install -t jessie-backports python3-qpid-proton
 #
 
 from __future__ import print_function, unicode_literals
@@ -17,6 +17,7 @@ import optparse
 from proton import Message
 from proton.handlers import MessagingHandler
 from proton.reactor import Container
+import sys
 
 class Send(MessagingHandler):
     def __init__(self, url, msg_body):
@@ -32,7 +33,10 @@ class Send(MessagingHandler):
             print("on_sendable !")
             print ("sending : %s" % (self.msg_body,))
             #msg = Message(body=self.msg_body, inferred=True)
-            msg = Message(body=unicode(self.msg_body, "utf-8"))
+            if sys.version < '3':
+                msg = Message(body=unicode(self.msg_body, "utf-8"))
+            else:
+                msg = Message(body=self.msg_body)
             event.sender.send(msg)
             self.msg_body = None
 

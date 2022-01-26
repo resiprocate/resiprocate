@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 #ifndef WIN32
 #include <syslog.h>
 #endif
@@ -121,7 +122,8 @@ public:
                            const char* file,
                            int line,
                            const Data& message,
-                           const Data& messageWithHeaders)
+                           const Data& messageWithHeaders,
+                           const Data& instanceName)
    {
       // Log any errors to the screen 
       if(level <= Log::Err)
@@ -321,16 +323,11 @@ ReproRunner::run(int argc, char** argv)
    }
 
    // Initialize resip logger
-   Log::setMaxByteCount(mProxyConfig->getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */));
-   Log::setKeepAllLogFiles(mProxyConfig->getConfigBool("KeepAllLogFiles", false));
    Data loggingType = mProxyConfig->getConfigData("LoggingType", "cout", true);
-   Data syslogFacilityName = mProxyConfig->getConfigData("SyslogFacility", "LOG_DAEMON", true);
-   Log::initialize(loggingType, 
-                   mProxyConfig->getConfigData("LogLevel", "INFO", true), 
-                   mArgv[0], 
-                   mProxyConfig->getConfigData("LogFilename", "repro.log", true).c_str(),
-                   isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0, // if logging to file then write WARNINGS, and Errors to console still
-                   syslogFacilityName);
+   Log::initialize(
+      *mProxyConfig,
+      mArgv[0],
+      isEqualNoCase(loggingType, "file") ? &g_ReproLogger : 0);
 
    InfoLog( << "Starting repro version " << VersionUtils::instance().releaseVersion() << "...");
 
@@ -726,18 +723,21 @@ ReproRunner::createSipStack()
    {
       security = new Security(certPath, cipherList, mProxyConfig->getConfigData("TLSPrivateKeyPassPhrase", Data::Empty), dHParamsFilename);
    }
-   Data caDir;
-   mProxyConfig->getConfigValue("CADirectory", caDir);
-   if(!caDir.empty())
+   std::vector<Data> caDirNames;
+   mProxyConfig->getConfigValue("CADirectory", caDirNames);
+   for(std::vector<Data>::const_iterator caDir = caDirNames.begin();
+      caDir != caDirNames.end(); caDir++)
    {
-      security->addCADirectory(caDir);
+      security->addCADirectory(*caDir);
    }
-   Data caFile;
-   mProxyConfig->getConfigValue("CAFile", caFile);
-   if(!caFile.empty())
+   std::vector<Data> caFileNames;
+   mProxyConfig->getConfigValue("CAFile", caFileNames);
+   for(std::vector<Data>::const_iterator caFile = caFileNames.begin();
+      caFile != caFileNames.end(); caFile++)
    {
-      security->addCAFile(caFile);
+      security->addCAFile(*caFile);
    }
+   BaseSecurity::setAllowWildcardCertificates(mProxyConfig->getConfigBool("AllowWildcardCertificates", false));
 #endif
 
 #ifdef USE_SIGCOMP
@@ -816,12 +816,12 @@ ReproRunner::createSipStack()
    {
       int capturePort = mProxyConfig->getConfigInt("CapturePort", 9060);
       int captureAgentID = mProxyConfig->getConfigInt("CaptureAgentID", 2001);
-      SharedPtr<HepAgent> agent(new HepAgent(captureHost, capturePort, captureAgentID));
-      mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(agent)));
+      auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
+      mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
    }
    else if(mProxyConfig->getConfigBool("EnableSipMessageLogging", false))
    {
-       mSipStack->setTransportSipMessageLoggingHandler(SharedPtr<ReproSipMessageLoggingHandler>(new ReproSipMessageLoggingHandler));
+       mSipStack->setTransportSipMessageLoggingHandler(std::make_shared<ReproSipMessageLoggingHandler>());
    }
 
    // Add stack transports
@@ -1050,7 +1050,7 @@ ReproRunner::createDialogUsageManager()
 {
    // Create Profile settings for DUM Instance that handles ServerRegistration,
    // and potentially certificate subscription server
-   SharedPtr<MasterProfile> profile(new MasterProfile);
+   auto profile = std::make_shared<MasterProfile>();
    profile->setRportEnabled(InteropHelper::getRportEnabled());
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
@@ -1171,8 +1171,8 @@ ReproRunner::createDialogUsageManager()
       Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
       if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
       {
-         SharedPtr<WsCookieAuthManager> cookieAuth(new WsCookieAuthManager(*mDum, mDum->dumIncomingTarget()));
-         mDum->addIncomingFeature(cookieAuth);
+         auto cookieAuth = std::make_shared<WsCookieAuthManager>(*mDum, mDum->dumIncomingTarget());
+         mDum->addIncomingFeature(std::move(cookieAuth));
       }
 
       // If Authentication is enabled, then configure DUM to authenticate requests
@@ -1191,12 +1191,12 @@ bool
 ReproRunner::createProxy()
 {
    // Create AsyncProcessorDispatcher thread pool that is shared by the processsors for
-   // any asyncronous tasks (ie: RequestFilter and MessageSilo processors)
+   // any asynchronous tasks (ie: RequestFilter and MessageSilo processors)
    int numAsyncProcessorWorkerThreads = mProxyConfig->getConfigInt("NumAsyncProcessorWorkerThreads", 2);
    if(numAsyncProcessorWorkerThreads > 0)
    {
       resip_assert(!mAsyncProcessorDispatcher);
-      mAsyncProcessorDispatcher = new Dispatcher(std::auto_ptr<Worker>(new AsyncProcessorWorker), 
+      mAsyncProcessorDispatcher = new Dispatcher(std::unique_ptr<Worker>(new AsyncProcessorWorker),
                                                  mSipStack, 
                                                  numAsyncProcessorWorkerThreads);
    }
@@ -1535,7 +1535,7 @@ ReproRunner::initDomainMatcher()
 {
    resip_assert(mProxyConfig);
    
-   SharedPtr<ExtendedDomainMatcher> matcher(new ExtendedDomainMatcher());
+   auto matcher = std::make_shared<ExtendedDomainMatcher>();
    mDomainMatcher = matcher;
 
    std::vector<Data> configDomains;
@@ -1617,7 +1617,7 @@ ReproRunner::initDomainMatcher()
 void
 ReproRunner::addDomains(TransactionUser& tu)
 {
-   if(mDomainMatcher.get() == 0)
+   if (!mDomainMatcher)
    {
       initDomainMatcher();
    }
@@ -1635,16 +1635,16 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 
    bool useEmailAsSIP = mProxyConfig->getConfigBool("TLSUseEmailAsSIP", false);
    Data wsCookieAuthSharedSecret = mProxyConfig->getConfigData("WSCookieAuthSharedSecret", Data::Empty);
-   SharedPtr<BasicWsConnectionValidator> basicWsConnectionValidator; // NULL
-   SharedPtr<WsCookieContextFactory> wsCookieContextFactory;
+   std::shared_ptr<BasicWsConnectionValidator> basicWsConnectionValidator;
+   std::shared_ptr<WsCookieContextFactory> wsCookieContextFactory;
    if(!wsCookieAuthSharedSecret.empty())
    {
-      basicWsConnectionValidator.reset(new BasicWsConnectionValidator(wsCookieAuthSharedSecret));
+      basicWsConnectionValidator = std::make_shared<BasicWsConnectionValidator>(wsCookieAuthSharedSecret);
       Data infoCookieName = mProxyConfig->getConfigData("WSCookieNameInfo", Data::Empty);
       Data extraCookieName = mProxyConfig->getConfigData("WSCookieNameExtra", Data::Empty);
       Data macCookieName = mProxyConfig->getConfigData("WSCookieNameMac", Data::Empty);
 
-      wsCookieContextFactory.reset(new BasicWsCookieContextFactory(infoCookieName, extraCookieName, macCookieName));
+      wsCookieContextFactory = std::make_shared<BasicWsCookieContextFactory>(infoCookieName, extraCookieName, macCookieName);
    }
 
    try
@@ -1674,7 +1674,7 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
          {
             int idx = it->first;
             SipConfigParse tc(it->second);
-            Data transportPrefix = "Transport" + idx;
+            Data transportPrefix = "Transport" + Data(idx);
             DebugLog(<< "checking values for transport: " << idx);
             Data interfaceSettings = tc.getConfigData("Interface", Data::Empty, true);
 
@@ -1904,9 +1904,9 @@ ReproRunner::addTransports(bool& allTransportsSpecifyRecordRoute)
 }
 
 void 
-ReproRunner::addProcessor(repro::ProcessorChain& chain, std::auto_ptr<Processor> processor)
+ReproRunner::addProcessor(repro::ProcessorChain& chain, std::unique_ptr<Processor> processor)
 {
-   chain.addProcessor(processor);
+   chain.addProcessor(std::move(processor));
 }
 
 void  // Monkeys
@@ -1916,10 +1916,10 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    resip_assert(mRegistrationPersistenceManager);
 
    // Add strict route fixup monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new StrictRouteFixup));
+   addProcessor(chain, std::unique_ptr<Processor>(new StrictRouteFixup));
 
    // Add is trusted node monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
+   addProcessor(chain, std::unique_ptr<Processor>(new IsTrustedNode(*mProxyConfig)));
 
    // Add Certificate Authenticator - if required
    resip_assert(mAuthFactory);
@@ -1937,7 +1937,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    Data wsCookieExtraHeaderName = mProxyConfig->getConfigData("WSCookieExtraHeaderName", "X-WS-Session-Extra");
    if(!mAuthFactory->digestAuthEnabled() && !wsCookieAuthSharedSecret.empty())
    {
-      addProcessor(chain, std::auto_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, wsCookieExtraHeaderName, mSipStack)));
+      addProcessor(chain, std::unique_ptr<Processor>(new CookieAuthenticator(wsCookieAuthSharedSecret, wsCookieExtraHeaderName, mSipStack)));
    }
 
    // Add digest authenticator monkey - if required
@@ -1947,14 +1947,14 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    }
 
    // Add am I responsible monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
+   addProcessor(chain, std::unique_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
 
    // Add RequestFilter monkey
    if(!mProxyConfig->getConfigBool("DisableRequestFilterProcessor", false))
    {
       if(mAsyncProcessorDispatcher)
       {
-         addProcessor(chain, std::auto_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
+         addProcessor(chain, std::unique_ptr<Processor>(new RequestFilter(*mProxyConfig, mAsyncProcessorDispatcher)));
       }
       else
       {
@@ -1972,16 +1972,16 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    if (routeSet.empty())
    {
       // add static route monkey
-      addProcessor(chain, std::auto_ptr<Processor>(new StaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new StaticRoute(*mProxyConfig)));
    }
    else
    {
       // add simple static route monkey
-      addProcessor(chain, std::auto_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new SimpleStaticRoute(*mProxyConfig)));
    }
 
    // Add location server monkey
-   addProcessor(chain, std::auto_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthFactory->getDispatcher())));
+   addProcessor(chain, std::unique_ptr<Processor>(new LocationServer(*mProxyConfig, *mRegistrationPersistenceManager, mAuthFactory->getDispatcher())));
 
    // Add message silo monkey
    if(mProxyConfig->getConfigBool("MessageSiloEnabled", false))
@@ -1990,7 +1990,7 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
       {
          MessageSilo* silo = new MessageSilo(*mProxyConfig, mAsyncProcessorDispatcher);
          mRegistrar->addRegistrarHandler(silo);
-         addProcessor(chain, std::auto_ptr<Processor>(silo));
+         addProcessor(chain, std::unique_ptr<Processor>(silo));
       }
       else
       {
@@ -2006,12 +2006,12 @@ ReproRunner::makeResponseProcessorChain(ProcessorChain& chain)
    resip_assert(mRegistrationPersistenceManager);
 
    // Add outbound target handler lemur
-   addProcessor(chain, std::auto_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager))); 
+   addProcessor(chain, std::unique_ptr<Processor>(new OutboundTargetHandler(*mRegistrationPersistenceManager)));
 
    if (mProxyConfig->getConfigBool("RecursiveRedirect", false))
    {
       // Add recursive redirect lemur
-      addProcessor(chain, std::auto_ptr<Processor>(new RecursiveRedirect)); 
+      addProcessor(chain, std::unique_ptr<Processor>(new RecursiveRedirect));
    }
 }
 
@@ -2023,18 +2023,18 @@ ReproRunner::makeTargetProcessorChain(ProcessorChain& chain)
 #ifndef RESIP_FIXED_POINT
    if(mProxyConfig->getConfigBool("GeoProximityTargetSorting", false))
    {
-      addProcessor(chain, std::auto_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
+      addProcessor(chain, std::unique_ptr<Processor>(new GeoProximityTargetSorter(*mProxyConfig)));
    }
 #endif
 
    if(mProxyConfig->getConfigBool("QValue", true))
    {
       // Add q value target handler baboon
-      addProcessor(chain, std::auto_ptr<Processor>(new QValueTargetHandler(*mProxyConfig))); 
+      addProcessor(chain, std::unique_ptr<Processor>(new QValueTargetHandler(*mProxyConfig)));
    }
    
    // Add simple target handler baboon
-   addProcessor(chain, std::auto_ptr<Processor>(new SimpleTargetHandler)); 
+   addProcessor(chain, std::unique_ptr<Processor>(new SimpleTargetHandler));
 }
 
 bool 

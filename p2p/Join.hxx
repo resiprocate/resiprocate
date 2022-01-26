@@ -20,7 +20,7 @@ public:
     virtual void getEncodedPayload(resip::DataStream &data);
     virtual resip::Data brief() const { return "JoinAns Message"; }
     
-    std::auto_ptr<Event> event() {return wrap(this);}
+    std::unique_ptr<Event> event() { return wrap(this); }
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);
@@ -38,7 +38,7 @@ public:
 	virtual void getEncodedPayload(resip::DataStream &data);
 	virtual resip::Data brief() const { return "JoinReq Message"; }
 
-    std::auto_ptr<Event> event() {return wrap(this);}
+    std::unique_ptr<Event> event() { return wrap(this); }
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);

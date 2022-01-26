@@ -20,9 +20,9 @@ RelatedConversationSet::RelatedConversationSet(ConversationManager& conversation
 : mConversationManager(conversationManager),
   mInitialConversationHandle(initialConversationHandle)
 {
-   mRelatedConversationMap[initialConversationHandle] = initialConversation;
+   mRelatedConversationMap[mInitialConversationHandle] = initialConversation;
 
-   //InfoLog(<< "RelatedConversationSet created, initialConversationHandle=" << mInitialConversationHandle);
+   DebugLog(<< "RelatedConversationSet created, initialConversationHandle=" << mInitialConversationHandle);
 }
 
 RelatedConversationSet::~RelatedConversationSet()
@@ -50,6 +50,7 @@ RelatedConversationSet::removeConversation(ConversationHandle conversationHandle
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

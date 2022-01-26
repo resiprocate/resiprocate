@@ -2,7 +2,6 @@
 #include "config.h"
 #endif
 
-#include <signal.h>
 #ifdef WIN32
 #include <conio.h>
 #else
@@ -41,9 +40,11 @@ int _kbhit() {
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/recon/UserAgent.hxx"
 #include "AppSubsystem.hxx"
-#include <resip/recon/SipXHelper.hxx>
 
+#ifdef USE_SIPXTAPI
+#include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
+#endif
 
 #include "reConServerConfig.hxx"
 #include "reConServer.hxx"
@@ -82,14 +83,7 @@ void sleepSeconds(unsigned int seconds)
 static bool finished = false;
 NameAddr uri("sip:noreg@127.0.0.1");
 bool autoAnswerEnabled = false;  // If enabled then reConServer will automatically answer incoming calls by adding to lowest numbered conversation
-SharedPtr<ConversationProfile> conversationProfile;
-
-static void
-signalHandler(int signo)
-{
-   std::cerr << "Shutting down" << endl;
-   finished = true;
-}
+std::shared_ptr<ConversationProfile> conversationProfile;
 
 int main(int argc, char** argv)
 {
@@ -483,7 +477,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
-      std::list<unsigned int> idList;
+      std::vector<unsigned int> idList;
       ParseBuffer pb(arg[0]);
       pb.skipWhitespace();
       while(!pb.eof())
@@ -497,21 +491,12 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
             pb.skipChar(',');
          }
       }
-      unsigned int numCodecIds = idList.size();
-      if(numCodecIds > 0)
+      if(!idList.empty())
       {
-         unsigned int* codecIdArray = new unsigned int[numCodecIds];
-         unsigned int index = 0;
-         std::list<unsigned int>::iterator it = idList.begin();
-         for(;it != idList.end(); it++)
-         {
-            codecIdArray[index++] = (*it);
-         }
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, numCodecIds, codecIdArray, conversationProfile->sessionCaps());
-         delete [] codecIdArray;
+         myConversationManager.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
       }
       return;
    }
@@ -776,7 +761,7 @@ ReConServerProcess::main (int argc, char** argv)
    catch(std::exception& e)
    {
       ErrLog(<< "Exception parsing configuration: " << e.what());
-      exit(-1);
+      return -1;
    }
 
    Data pidFile = reConServerConfig.getConfigData("PidFile", "", true);
@@ -812,7 +797,9 @@ ReConServerProcess::main (int argc, char** argv)
    unsigned int maxReceiveFifoSize = reConServerConfig.getConfigInt("MaxReceiveFifoSize", 1000);
    unsigned short tcpPort = reConServerConfig.getConfigUnsignedShort("TCPPort", 5062);
    unsigned short udpPort = reConServerConfig.getConfigUnsignedShort("UDPPort", 5062);
+   unsigned short wsPort = reConServerConfig.getConfigUnsignedShort("WSPort", 5064);
    unsigned short tlsPort = reConServerConfig.getConfigUnsignedShort("TLSPort", 5063);
+   unsigned short wssPort = reConServerConfig.getConfigUnsignedShort("WSSPort", 5065);
    unsigned short mediaPortStart = reConServerConfig.getConfigUnsignedShort("MediaPortStart", 17384);
    Data tlsDomain = reConServerConfig.getConfigData("TLSDomain", DnsUtil::getLocalHostName(), true);
    NameAddr outboundProxy = reConServerConfig.getConfigNameAddr("OutboundProxyUri", NameAddr(), true);
@@ -822,10 +809,6 @@ ReConServerProcess::main (int argc, char** argv)
    Data serverText = reConServerConfig.getConfigData("ServerText", "reConServer");
 #endif
    uri = reConServerConfig.getConfigNameAddr("SIPUri", uri, true);
-   Data loggingType = reConServerConfig.getConfigData("LoggingType", "cout", true);
-   Data loggingLevel = reConServerConfig.getConfigData("LoggingLevel", "INFO", true);
-   Data loggingFilename = reConServerConfig.getConfigData("LogFilename", "reConServer.log", true);
-   unsigned int loggingFileMaxLineCount = reConServerConfig.getConfigUnsignedLong("LogFileMaxLines", 50000);
    Data cdrLogFilename = reConServerConfig.getConfigData("CDRLogFile", "", true);
    Data captureHost = reConServerConfig.getConfigData("CaptureHost", "");
    int capturePort = reConServerConfig.getConfigInt("CapturePort", 9060);
@@ -833,8 +816,10 @@ ReConServerProcess::main (int argc, char** argv)
    bool localAudioEnabled = reConServerConfig.getConfigBool("EnableLocalAudio", !daemonize); // Defaults to false for daemon process
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
-   ConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
-      ? ConversationManager::sipXGlobalMediaInterfaceMode : ConversationManager::sipXConversationMediaInterfaceMode;
+#ifdef USE_SIPXTAPI
+   SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
+      ? SipXConversationManager::sipXGlobalMediaInterfaceMode : SipXConversationManager::sipXConversationMediaInterfaceMode;
+#endif
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
    bool enableG722 = reConServerConfig.getConfigBool("EnableG722", false);
@@ -846,6 +831,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Used by ConversationManager::buildSessionCapabilities(...) to create
    // our local SDP
    std::vector<unsigned int> _codecIds;
+#ifdef USE_SIPXTAPI
    if(enableOpus)
    {
       _codecIds.push_back(SdpCodec::SDP_CODEC_OPUS);        // Opus
@@ -866,15 +852,15 @@ ReConServerProcess::main (int argc, char** argv)
    _codecIds.push_back(SdpCodec::SDP_CODEC_PCMA);           // 8 - pcma
    _codecIds.push_back(SdpCodec::SDP_CODEC_G729);           // 18 - G.729
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
-   unsigned int *codecIds = &_codecIds[0];
-   unsigned int numCodecIds = _codecIds.size();
+#endif
 
-   Log::initialize(loggingType, loggingLevel, argv[0], loggingFilename.c_str());
-   Log::setMaxLineCount(loggingFileMaxLineCount);
+   Log::initialize(reConServerConfig, argv[0]);
 
+#ifdef USE_SIPXTAPI
    // Setup logging for the sipX media stack
    // It is bridged to the reSIProcate logger
    SipXHelper::setupLoggingBridge("reConServer");
+#endif
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
 
@@ -896,22 +882,23 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  STUN/TURN password = " << stunPassword);
    InfoLog( << "  TCP Port = " << tcpPort);
    InfoLog( << "  UDP Port = " << udpPort);
+   InfoLog( << "  WS Port = " << wsPort);
    InfoLog( << "  Media Port Range Start = " << mediaPortStart);
 #ifdef USE_SSL
    InfoLog( << "  TLS Port = " << tlsPort);
    InfoLog( << "  TLS Domain = " << tlsDomain);
+   InfoLog( << "  WSS Port = " << wssPort);
 #endif
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
+#ifdef USE_SIPXTAPI
    InfoLog( << "  Global Media Interface = " <<
-      ((mediaInterfaceMode == ConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
+      ((mediaInterfaceMode == SipXConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
+#endif
    InfoLog( << "  Default sample rate = " << defaultSampleRate);
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
    InfoLog( << "  Enable G.722 codec = " << (enableG722 ? "true" : "false"));
    InfoLog( << "  Enable Opus codec = " << (enableOpus ? "true" : "false"));
-   InfoLog( << "  Log Type = " << loggingType);
-   InfoLog( << "  Log Level = " << loggingLevel);
-   InfoLog( << "  Log Filename = " << loggingFilename);
    InfoLog( << "  Daemonize = " << (daemonize ? "true" : "false"));
    InfoLog( << "  KeyboardInput = " << (mKeyboardInput ? "true" : "false"));
    InfoLog( << "  PidFile = " << pidFile);
@@ -923,7 +910,7 @@ ReConServerProcess::main (int argc, char** argv)
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   const auto profile = std::make_shared<UserAgentMasterProfile>();
 
    Data certPath;
    reConServerConfig.getConfigValue("CertificatePath", certPath);
@@ -946,9 +933,9 @@ ReConServerProcess::main (int argc, char** argv)
 
    if(!captureHost.empty())
    {
-      SharedPtr<HepAgent> agent(new HepAgent(captureHost, capturePort, captureAgentID));
-      profile->setTransportSipMessageLoggingHandler(SharedPtr<HEPSipMessageLoggingHandler>(new HEPSipMessageLoggingHandler(agent)));
-      profile->setRTCPEventLoggingHandler(SharedPtr<HEPRTCPEventLoggingHandler>(new HEPRTCPEventLoggingHandler(agent)));
+      const auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
+      profile->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
+      profile->setRTCPEventLoggingHandler(std::make_shared<HEPRTCPEventLoggingHandler>(agent));
    }
 
    // Add transports
@@ -978,7 +965,7 @@ ReConServerProcess::main (int argc, char** argv)
          {
             int idx = it->first;
             SipConfigParse tc(it->second);
-            Data transportPrefix = "Transport" + idx;
+            Data transportPrefix = "Transport" + Data(idx);
             DebugLog(<< "checking values for transport: " << idx);
             Data interfaceSettings = tc.getConfigData("Interface", Data::Empty, true);
 
@@ -1055,10 +1042,18 @@ ReConServerProcess::main (int argc, char** argv)
          {
             profile->addTransport(TCP, tcpPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
          }
+         if(wsPort)
+         {
+            profile->addTransport(WS, wsPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
+         }
 #ifdef USE_SSL
          if(tlsPort)
          {
             profile->addTransport(TLS, tlsPort, V4, StunEnabled, address, tlsDomain, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
+         }
+         if(wssPort)
+         {
+            profile->addTransport(WSS, wssPort, V4, StunEnabled, address, Data::Empty, Data::Empty, SecurityTypes::SSLv23, 0, Data::Empty, Data::Empty, SecurityTypes::None, useEmailAsSIP);
          }
 #endif
       }
@@ -1201,15 +1196,14 @@ ReConServerProcess::main (int argc, char** argv)
    {
       StackLog(<<"NAT traversal features not enabled, "
          "adding message decorator for SDP connection address");
-      SharedPtr<MessageDecorator> md(new MyMessageDecorator());
-      profile->setOutboundDecorator(md);
+      profile->setOutboundDecorator(std::make_shared<MyMessageDecorator>());
    }
 
    //////////////////////////////////////////////////////////////////////////////
    // Setup ConversationProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   conversationProfile = SharedPtr<ConversationProfile>(new ConversationProfile(profile));
+   conversationProfile = std::make_shared<ConversationProfile>(profile);
    if(uri.uri().user() != "noreg" && !registrationDisabled)
    {
       conversationProfile->setDefaultRegistrationTime(3600);
@@ -1293,7 +1287,9 @@ ReConServerProcess::main (int argc, char** argv)
    conversationProfile->secureMediaRequired() = secureMediaRequired;
    conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
+#ifdef USE_SIPXTAPI
    Flow::maxReceiveFifoSize = maxReceiveFifoSize;
+#endif
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
@@ -1303,35 +1299,34 @@ ReConServerProcess::main (int argc, char** argv)
       switch(application)
       {
          case ReConServerConfig::None:
-            mConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
             {
-               SharedPtr<B2BCallLogger> b2bCallLogger;
                if(!cdrLogFilename.empty())
                {
-                  b2bCallLogger.reset(new CDRFile(cdrLogFilename));
+                  mCDRFile = std::make_shared<CDRFile>(cdrLogFilename);
                }
-               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, b2bCallLogger);
+               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
             break;
          default:
             assert(0);
       }
-      mUserAgent.reset(new MyUserAgent(reConServerConfig, mConversationManager.get(), profile));
-      mConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
+      mConversationManager->buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
       {
-         b2BCallManager->init(*mUserAgent.get());
+         b2BCallManager->init(*mUserAgent);
 
          Data internalMediaAddress;
          reConServerConfig.getConfigValue("B2BUAInternalMediaAddress", internalMediaAddress);
          if(!internalMediaAddress.empty())
          {
-            SharedPtr<ConversationProfile> internalProfile(new ConversationProfile(conversationProfile));
+            auto internalProfile = std::make_shared<ConversationProfile>(conversationProfile);
             Data b2BUANextHop = reConServerConfig.getConfigData("B2BUANextHop", "", true);
             if(b2BUANextHop.empty())
             {
@@ -1344,7 +1339,7 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-            mConversationManager->buildSessionCapabilities(internalMediaAddress, numCodecIds, codecIds, internalProfile->sessionCaps());
+            mConversationManager->buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else
@@ -1374,12 +1369,16 @@ ReConServerProcess::main (int argc, char** argv)
       mUserAgent->shutdown();
    }
    InfoLog(<< "reConServer is shutdown.");
+#ifdef USE_SIPXTAPI
    OsSysLog::shutdown();
+#endif
    ::sleepSeconds(2);
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
 } // end FML scope
 #endif
+
+   return 0;
 }
 
 void
@@ -1413,6 +1412,11 @@ void
 ReConServerProcess::onReload()
 {
    StackLog(<<"ReConServerProcess::onReload invoked");
+   if(mCDRFile)
+   {
+      StackLog(<<"ReConServerProcess::onReload: request CDR rotation");
+      mCDRFile->rotateLog();
+   }
 }
 
 

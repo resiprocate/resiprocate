@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "AsyncTcpSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
@@ -19,10 +19,6 @@ AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_service& ioService)
  : AsyncSocketBase(ioService),
    mSocket(ioService), 
    mResolver(ioService)
-{
-}
-
-AsyncTcpSocketBase::~AsyncTcpSocketBase() 
 {
 }
 
@@ -58,9 +54,9 @@ AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
    asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
 #endif
    mResolver.async_resolve(query,
-        boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
-                    asio::placeholders::error,
-                    asio::placeholders::iterator));
+        std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
+                    std::placeholders::_1,
+					std::placeholders::_2));
 }
 
 void 
@@ -73,8 +69,8 @@ AsyncTcpSocketBase::handleTcpResolve(const asio::error_code& ec,
       // will be tried until we successfully establish a connection.
       //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
       mSocket.async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
+                            std::placeholders::_1, endpoint_iterator));
    }
    else
    {
@@ -101,8 +97,8 @@ AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
       asio::error_code ec;
       mSocket.close(ec);
       mSocket.async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            asio::placeholders::error, endpoint_iterator));
+                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
+                            std::placeholders::_1, endpoint_iterator));
    }
    else
    {
@@ -118,7 +114,7 @@ AsyncTcpSocketBase::setConnectedAddressAndPort()
    mConnectedPort = mSocket.remote_endpoint(ec).port();
 }
 
-const asio::ip::address 
+asio::ip::address 
 AsyncTcpSocketBase::getSenderEndpointAddress() 
 { 
    return mConnectedAddress; 
@@ -135,21 +131,21 @@ AsyncTcpSocketBase::transportSend(const StunTuple& destination, std::vector<asio
 {
    // Note: destination is ignored for TCP
    asio::async_write(mSocket, buffers, 
-                     boost::bind(&AsyncTcpSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
+                     std::bind(&AsyncTcpSocketBase::handleSend, shared_from_this(), std::placeholders::_1));
 }
 
 void 
 AsyncTcpSocketBase::transportReceive()
 {
    mSocket.async_read_some(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE),
-                           boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+                           std::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void 
 AsyncTcpSocketBase::transportFramedReceive()
 {
    asio::async_read(mSocket, asio::buffer((void*)mReceiveBuffer->data(), 4),
-                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), asio::placeholders::error));
+                    std::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), std::placeholders::_1));
 }
 
 void 
@@ -175,10 +171,10 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       {
          dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
       }
-      if(dataLen+4 < RECEIVE_BUFFER_SIZE)
+      if (dataLen + 4U < RECEIVE_BUFFER_SIZE)
       {
          asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
-                          boost::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));
+                          std::bind(&AsyncTcpSocketBase::handleReceive, shared_from_this(), std::placeholders::_1, dataLen+4));
       }
       else
       {

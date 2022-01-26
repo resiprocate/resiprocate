@@ -4,7 +4,6 @@
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
 #include "LocalParticipant.hxx"
-#include <CpTopologyGraphInterface.h>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -17,48 +16,14 @@ using namespace std;
 
 LocalParticipant::LocalParticipant(ParticipantHandle partHandle,
                                    ConversationManager& conversationManager)
-: Participant(partHandle, conversationManager),
-  mLocalPortOnBridge(-1)
+: Participant(partHandle, conversationManager)
 {
    InfoLog(<< "LocalParticipant created, handle=" << mHandle);
 }
 
 LocalParticipant::~LocalParticipant()
 {
-   // unregister from Conversations
-   // Note:  ideally this functionality would exist in Participant Base class - but dynamic_cast required in unregisterParticipant will not work
-   ConversationMap::iterator it;
-   for(it = mConversations.begin(); it != mConversations.end(); it++)
-   {
-      it->second->unregisterParticipant(this);
-   }
-   mConversations.clear();
    InfoLog(<< "LocalParticipant destroyed, handle=" << mHandle);
-}
-
-int 
-LocalParticipant::getConnectionPortOnBridge()
-{
-   if(mLocalPortOnBridge == -1)
-   {
-      resip_assert(getMediaInterface() != 0);       
-      ((CpTopologyGraphInterface*)getMediaInterface()->getInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
-      InfoLog(<< "LocalParticipant getConnectionPortOnBridge, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
-   }
-   return mLocalPortOnBridge;
-}
-
-void 
-LocalParticipant::addToConversation(Conversation *conversation, unsigned int inputGain, unsigned int outputGain)
-{
-    Participant::addToConversation(conversation, inputGain, outputGain);
-
-    if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
-    {
-       // The Local participant is in a new Conversation, give that conversation focus
-       resip_assert(getMediaInterface() != 0);       
-       getMediaInterface()->getInterface()->giveFocus();
-    }
 }
 
 void
@@ -70,6 +35,7 @@ LocalParticipant::destroyParticipant()
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

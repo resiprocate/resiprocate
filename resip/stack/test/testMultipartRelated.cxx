@@ -260,7 +260,7 @@ main()
                      "\r\n"
                      "--TfZxoxgAvLqgj4wRWPDL--\r\n");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       MultipartRelatedContents* mpc = dynamic_cast<MultipartRelatedContents*>(msg->getContents());
       assert(mpc);

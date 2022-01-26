@@ -98,7 +98,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
          sipMessage->header(h_From).isAllContacts() )
       {
          InfoLog(<<"Malformed From header: cannot verify against any certificate. Rejecting.");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
          return SkipAllChains;         
       }
@@ -109,7 +109,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
             sipMessage->header(h_ReferredBy).isAllContacts() )
          {
             InfoLog(<<"Malformed Referred-By header: cannot verify against any certificate. Rejecting.");
-            rc.sendResponse(*auto_ptr<SipMessage>
+            rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 400, "Malformed Referred-By header")));
             return SkipAllChains;
          }
@@ -163,7 +163,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
             return WaitingForEvent;
          }
          DebugLog(<<"not authorized");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                          (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
       }
@@ -176,7 +176,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
             if(mThirdPartyRequiresCertificate)
             {
                DebugLog(<<"third party requires certificate");
-               rc.sendResponse(*auto_ptr<SipMessage>
+               rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Mutual TLS required to handle that message")));
                return SkipAllChains;
             }
@@ -199,7 +199,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
             return WaitingForEvent;
          }
          DebugLog(<<"not authorized");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
       }
@@ -216,7 +216,7 @@ CertificateAuthenticator::process(repro::RequestContext &rc)
       else
       {
          DebugLog(<<"not authorized");
-         rc.sendResponse(*auto_ptr<SipMessage>
+         rc.sendResponse(*unique_ptr<SipMessage>
                              (Helper::makeResponse(*sipMessage, 403, "Authentication Failed for peer cert")));
          return SkipAllChains;
       }
@@ -283,7 +283,7 @@ CertificateAuthenticator::authorizedForThisIdentity(RequestContext& context, con
       }
       tpaInfo->identities().insert(aor);
       tpaInfo->identities().insert(domain);
-      std::auto_ptr<ApplicationMessage> app(tpaInfo);
+      std::unique_ptr<ApplicationMessage> app(tpaInfo);
       mAuthRequestDispatcher->post(app);
       return Async;
    }

@@ -113,7 +113,7 @@ static int
 verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 {
    char cBuf1[257];
-   char cBuf2[501];
+   char cBuf2[1024];
    X509 *pErrCert;
    int iErr = 0;
    int iDepth = 0;
@@ -124,7 +124,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   snprintf(cBuf2, 500, ", depth=%d %s\n", iDepth, cBuf1);
+   snprintf(cBuf2, 1023, ", iErr='%s' depth=%d %s\n", X509_verify_cert_error_string(iErr), iDepth, cBuf1);
    if(!iInCode)
    {
       ErrLog(<< "Error when verifying peer's chain of certificates: " << X509_verify_cert_error_string(X509_STORE_CTX_get_error(pInStore)) << cBuf2 );
@@ -1166,7 +1166,14 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite, const Data& defaultPr
    mRootSslCerts = X509_STORE_new();
    resip_assert(mRootTlsCerts && mRootSslCerts);
 
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
    if (!mTlsCtx)
    {
       ErrLog(<< "SSL_CTX_new failed, dumping OpenSSL error stack:");
@@ -1991,7 +1998,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 void
 BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
 {
-   auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
+   unique_ptr<SecurityAttributes> sec(new SecurityAttributes);
    X509* cert=NULL;
    
    try
@@ -2037,7 +2044,7 @@ BaseSecurity::checkAndSetIdentity(SipMessage& msg, const Data& certDer) const
       sec->setIdentity(msg.const_header(h_From).uri().getAor());
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
-   msg.setSecurityAttributes(sec);
+   msg.setSecurityAttributes(std::move(sec));
 }
 
 
@@ -3154,6 +3161,8 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       BIO_free(bio);
    }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
 #ifndef SSL_CTRL_SET_ECDH_AUTO
 #define SSL_CTRL_SET_ECDH_AUTO 94
 #endif
@@ -3189,6 +3198,10 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       WarningLog(<<"unable to initialize ECDH: SSL_CTX_ctrl failed, OPENSSL_NO_ECDH defined or repro was compiled with an old OpenSSL version");
 #endif
    }
+
+#endif
+
+
 }
 
 #endif

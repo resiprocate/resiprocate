@@ -8,7 +8,9 @@
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/Tuple.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
+#include <utility>
 
 namespace resip
 {
@@ -66,7 +68,7 @@ typedef std::list<ContactInstanceRecord> ContactList;
 
 /** Used to reduce copying ContactInstanceRecord objects when processing registration.
 */
-typedef std::list<resip::SharedPtr<ContactInstanceRecord> > ContactPtrList;
+typedef std::list<std::shared_ptr<ContactInstanceRecord>> ContactPtrList;
 	
 /** Records a log of the database transacations that were performed when processing a local registration using the
     ServerRegistration::AsyncLocalStore.
@@ -88,19 +90,19 @@ class ContactRecordTransaction
       :mOp(none)
       {}
 
-   ContactRecordTransaction(Operation op, resip::SharedPtr<ContactInstanceRecord> rec)
-      :mOp(op),mRec(rec)
+   ContactRecordTransaction(Operation op, std::shared_ptr<ContactInstanceRecord> rec)
+      :mOp(op),mRec(std::move(rec))
       {}
 
    Operation mOp;  //!< the operation that was performed in this transaction.
    /** For create & update: the newly modified record; for remove: the removed record; for removeAll: 0.
    */
-   resip::SharedPtr<ContactInstanceRecord> mRec;  
+   std::shared_ptr<ContactInstanceRecord> mRec;
 };
 
 /** Contains a collection of database operations that were performed during REGISTER processing.
 */
-typedef std::deque<resip::SharedPtr<ContactRecordTransaction> > ContactRecordTransactionLog;
+typedef std::deque<std::shared_ptr<ContactRecordTransaction>> ContactRecordTransactionLog;
 
 class RegistrationBinding 
 {

@@ -4,13 +4,12 @@
 
 // !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
-#include <rutil/SharedPtr.hxx>
+#include <memory>
 
 #include <asio.hpp>
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
 #include <map>
 
 #include <rutil/Log.hxx>
@@ -19,11 +18,7 @@
 #include <rutil/Random.hxx>
 #include <rutil/Timer.hxx>
 
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp2/srtp.h>
-#endif
+#include "Srtp2Helper.hxx"
 
 #ifdef USE_SSL  
 #include <openssl/x509.h>
@@ -42,6 +37,8 @@ using namespace dtls;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
+
+#define DTLS_CERT_KEY_LENGTH 4096
 
 namespace flowmanager
 {
@@ -122,10 +119,10 @@ FlowManager::initializeDtlsFactory(const char* certAor)
    }
 
    Data aor(certAor);  
-   if(createCert(aor, 365 /* expireDays */, 1024 /* keyLen */, mClientCert, mClientKey))
+   if(createCert(aor, 365 /* expireDays */, DTLS_CERT_KEY_LENGTH /* keyLen */, mClientCert, mClientKey))
    {
       FlowDtlsTimerContext* timerContext = new FlowDtlsTimerContext(mIOService);
-      mDtlsFactory = new DtlsFactory(std::auto_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
+      mDtlsFactory = new DtlsFactory(std::unique_ptr<DtlsTimerContext>(timerContext), mClientCert, mClientKey);
       resip_assert(mDtlsFactory);
    }
    else
@@ -166,7 +163,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                const char* stunUsername,
                                const char* stunPassword,
                                bool forceCOMedia,
-                               SharedPtr<FlowContext> context)
+                               std::shared_ptr<FlowContext> context)
 {
    MediaStream* newMediaStream = 0;
    if(rtcpEnabled)
@@ -189,7 +186,7 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunPassword,
                                        forceCOMedia,
                                        mRtcpEventLoggingHandler,
-                                       context);
+                                       std::move(context));
    }
    else
    {
@@ -210,8 +207,8 @@ FlowManager::createMediaStream(MediaStreamHandler& mediaStreamHandler,
                                        stunUsername, 
                                        stunPassword,
                                        forceCOMedia,
-                                       SharedPtr<RTCPEventLoggingHandler>(),
-                                       context);
+                                       nullptr,
+                                       std::move(context));
    }
    return newMediaStream;
 }
@@ -227,8 +224,17 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
    // Make sure that necessary algorithms exist:
    resip_assert(EVP_sha1());
 
-   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
-   resip_assert(rsa);    // couldn't make key pair
+   BIGNUM *bn;
+   bn = BN_new();
+   BN_set_word(bn, RSA_F4);
+
+   RSA *rsa;
+   rsa = RSA_new();
+   resip_assert(rsa);
+
+   ret = RSA_generate_key_ex(rsa, keyLen, bn, NULL);
+   BN_free(bn);
+   resip_assert(ret);    // couldn't make key pair
    
    EVP_PKEY* privkey = EVP_PKEY_new();
    resip_assert(privkey);

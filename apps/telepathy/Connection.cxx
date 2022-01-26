@@ -42,10 +42,10 @@ static const QString c_fileWithContacts = QLatin1String("data.txt");
 
 tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString &cmName, const QString &protocolName, const QVariantMap &parameters)
    : Tp::BaseConnection(dbusConnection, cmName, protocolName, parameters),
-     mUAProfile(new TelepathyMasterProfile(parameters)),
-     mConversationProfile(new TelepathyConversationProfile(mUAProfile, parameters)),
-     mInstantMessage(SharedPtr<MyInstantMessage>(new MyInstantMessage())),
      ua(0),
+     mUAProfile(std::make_shared<TelepathyMasterProfile>(parameters)),
+     mConversationProfile(std::make_shared<TelepathyConversationProfile>(mUAProfile, parameters)),
+     mInstantMessage(std::make_shared<MyInstantMessage>()),
      nextHandleId(1)
 {
    std::vector<unsigned int> _codecIds;
@@ -62,20 +62,18 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    _codecIds.push_back(SdpCodec::SDP_CODEC_SPEEX_5);        // 97 - speex NB 5,950bps
    _codecIds.push_back(SdpCodec::SDP_CODEC_GSM);            // 3 - GSM
    _codecIds.push_back(SdpCodec::SDP_CODEC_TONES);          // 110 - telephone-event
-   unsigned int *codecIds = &_codecIds[0];
-   unsigned int numCodecIds = _codecIds.size();
 
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    bool localAudioEnabled = true;
-   ConversationManager::MediaInterfaceMode mediaInterfaceMode = ConversationManager::sipXGlobalMediaInterfaceMode;
+   SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = SipXConversationManager::sipXGlobalMediaInterfaceMode;
    unsigned int defaultSampleRate = 16000;
    unsigned int maximumSampleRate = 16000;
    bool autoAnswerEnabled = false;
-   myConversationManager.reset(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this));
+   myConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled, this));
    ua = new MyUserAgent(myConversationManager.get(), mUAProfile, *this, mInstantMessage);
-   myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), numCodecIds, codecIds, mConversationProfile->sessionCaps());
+   myConversationManager->buildSessionCapabilities(mConversationProfile->getDefaultAddress(), _codecIds, mConversationProfile->sessionCaps());
    ua->addConversationProfile(mConversationProfile);
 
    /* Connection.Interface.Contacts */
@@ -215,7 +213,7 @@ tr::Connection::setContactsInFile()
       {
 	 if ( it.key() != selfHandle() )
 	 {
-	    stream << it.value() << " " << mAliases[it.key()] << endl;
+	    stream << it.value() << " " << mAliases[it.key()] << Qt::endl;
 	 }
       }
       file.close();
@@ -470,8 +468,8 @@ tr::Connection::onMessageReceived(const resip::SipMessage& message)
    uint targetHandle = ensureHandle(targetID);
    uint initiatorHandle = ensureHandle(from.uri().getAorNoPort().c_str());
    
-   qDebug() << "onMessageReceived() initiatorHandle = " << initiatorHandle << " initiatorID = " << mHandles[initiatorHandle] << endl;
-   qDebug() << "onMessageReceived() targetHandle = " << targetHandle << " targetID = " << targetID << endl;
+   qDebug() << "onMessageReceived() initiatorHandle = " << initiatorHandle << " initiatorID = " << mHandles[initiatorHandle] << Qt::endl;
+   qDebug() << "onMessageReceived() targetHandle = " << targetHandle << " targetID = " << targetID << Qt::endl;
    
    QVariantMap request;
    request[TP_QT_IFACE_CHANNEL + QLatin1String(".ChannelType")] = TP_QT_IFACE_CHANNEL_TYPE_TEXT;

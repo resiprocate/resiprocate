@@ -208,21 +208,21 @@ void
 B2BSession::startSIPCall(const Uri& destinationUri, const NameAddr& from, const SdpContents *sdp)
 {
    // Create a UserProfile for new call
-   SharedPtr<UserProfile> userProfile(new UserProfile(mServer.getMasterProfile()));
+   auto userProfile = std::make_shared<UserProfile>(mServer.getMasterProfile());
 
    // Set the From address
    userProfile->setDefaultFrom(from);  
    userProfile->getDefaultFrom().remove(p_tag);  // Remove tag (if it exists)
 
    // Create the invite message
-   SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
+   auto invitemsg = mDum.makeInviteSession(
       NameAddr(destinationUri), 
       userProfile,
       sdp, 
       this);
 
    // Send the invite message
-   mDum.send(invitemsg);
+   mDum.send(std::move(invitemsg));
 }
 
 bool 
@@ -366,7 +366,7 @@ B2BSession::continueIChatCall(const std::string& remoteIPPortListBlob)
    mIChatWaitingToContinue = false;
 
    // Create a UserProfile for new call
-   SharedPtr<UserProfile> userProfile(new UserProfile(mServer.getMasterProfile()));
+   auto userProfile = std::make_shared<UserProfile>(mServer.getMasterProfile());
 
    // Doesn't really matter what's in the SIP message from header that goes to iChat - it's never displayed to the client
    userProfile->setDefaultFrom(mServer.getMasterProfile()->getDefaultFrom()); 
@@ -443,14 +443,14 @@ B2BSession::continueIChatCall(const std::string& remoteIPPortListBlob)
       InfoLog(B2BLOG_PREFIX << "B2BSession::continueIChatCall: to=" << destination << " tuple=" << destinationIPPort);
 
       // Create the invite message
-      SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
+      auto invitemsg = mDum.makeInviteSession(
          destination, 
          userProfile,
          mIChatSdp, 
          this);
 
       // Send the invite message
-      mDum.send(invitemsg);
+      mDum.send(std::move(invitemsg));
 
       // Prime the RTP engine of iChat if using IPv6
       // Note: under IPv6 iChat will not send an initial RTP packet until it receives one
@@ -792,7 +792,7 @@ B2BSession::fixupSdp(const SdpContents& origSdp, SdpContents& fixedSdp)
    }
 }
 
-SharedPtr<UserProfile> 
+std::shared_ptr<UserProfile> 
 B2BSession::selectUASUserProfile(const SipMessage& msg)
 {
    // If this is an iChat endpoint to force all requests in the session to go to the IP address and port
@@ -800,7 +800,7 @@ B2BSession::selectUASUserProfile(const SipMessage& msg)
    if(msg.exists(h_UserAgent) && msg.header(h_UserAgent).value().prefix("Viceroy"))
    {
       // Create a UserProfile for new call
-      SharedPtr<UserProfile> userProfile(new UserProfile(mServer.getMasterProfile()));
+      auto userProfile = std::make_shared<UserProfile>(mServer.getMasterProfile());
 
       // Doesn't really matter what's in the SIP message from header that goes to iChat - it's never displayed to the client
       userProfile->setDefaultFrom(mServer.getMasterProfile()->getDefaultFrom()); 
@@ -1419,8 +1419,8 @@ B2BSession::onRefer(InviteSessionHandle h, ServerSubscriptionHandle ss, const Si
       newPeer->stealPeer(this);
       newPeer->mReferringAppDialogSet = getHandle();
 
-      SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), pOffer, newPeer);
-      mDum.send(invitemsg);
+      auto invitemsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), pOffer, newPeer);
+      mDum.send(std::move(invitemsg));
    }
    catch(BaseException &e)
    {
@@ -1484,8 +1484,8 @@ B2BSession::doReferNoSub(const SipMessage& msg)
    newPeer->mReferringAppDialogSet = getHandle();
 
    // Build the Invite
-   SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(msg, getUserProfile(), pOffer, newPeer);
-   mDum.send(invitemsg);
+   auto invitemsg = mDum.makeInviteSessionFromRefer(msg, getUserProfile(), pOffer, newPeer);
+   mDum.send(std::move(invitemsg));
    return true;
 }
 

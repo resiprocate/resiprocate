@@ -45,7 +45,8 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
    mUseEmailAsSIP(useEmailAsSIP),
    mCertificateFilename(certificateFilename),
    mPrivateKeyFilename(privateKeyFilename),
-   mPrivateKeyPassPhrase(privateKeyPassPhrase)
+   mPrivateKeyPassPhrase(privateKeyPassPhrase),
+   mReloadCertificate(false)
 {
    setTlsDomain(sipDomain);   
    mTuple.setType(transportType);
@@ -64,7 +65,14 @@ TlsBaseTransport::TlsBaseTransport(Fifo<TransactionMessage>& fifo,
          break;
       case SecurityTypes::TLSv1:
          DebugLog(<<"Using TLSv1_method");
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
          mDomainCtx = mSecurity->createDomainCtx(TLSv1_method(), sipDomain, certificateFilename, privateKeyFilename, privateKeyPassPhrase);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
          break;
       default:
          throw invalid_argument("Unrecognised SecurityTypes::SSLType value");
@@ -84,25 +92,49 @@ TlsBaseTransport::~TlsBaseTransport()
 void
 TlsBaseTransport::onReload()
 {
-   DebugLog(<<"TlsBaseTransport::onReload, re-reading certificate and private key for domain " << tlsDomain());
-   mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+   DebugLog(<<"TlsBaseTransport::onReload, setting mReloadCertificate for domain " << tlsDomain());
+   mReloadCertificate = true;
 }
 
 SSL_CTX* 
-TlsBaseTransport::getCtx() const 
+TlsBaseTransport::getCtx()
 { 
+   SSL_CTX *ctx = NULL;
    if(mDomainCtx)
    {
       DebugLog(<<"Using TlsDomain-transport SSL_CTX");
-      return mDomainCtx;
+      ctx = mDomainCtx;
    }
    else if(mSslType == SecurityTypes::SSLv23)
    {
       DebugLog(<<"Using SSLv23_method");
-      return mSecurity->getSslCtx();
+      ctx = mSecurity->getSslCtx();
    }
-   DebugLog(<<"Using TLSv1_method");
-   return mSecurity->getTlsCtx();
+   else
+   {
+      DebugLog(<<"Using TLSv1_method");
+      ctx = mSecurity->getTlsCtx();
+   }
+   // FIXME: would be better to do this in a method called asynchronously after onReload
+   // as doing it here may slow down the connection.
+   // HUP is only likely to happen once per day for log reloads so the impact of doing it
+   // here is negligible
+   if(mReloadCertificate)
+   {
+      DebugLog(<<"TlsBaseTransport::getCtx, re-reading certificate and private key for domain " << tlsDomain());
+      try
+      {
+         mSecurity->updateDomainCtx(mDomainCtx, tlsDomain(), mCertificateFilename, mPrivateKeyFilename, mPrivateKeyPassPhrase);
+      }
+      catch (...)
+      {
+         ErrLog(<<"failed to read the certificate/private key files");
+      }
+      // an extra log entry so we can see how long it took
+      StackLog(<<"TlsBaseTransport::createConnection, updated certificate and private key for domain " << tlsDomain());
+      mReloadCertificate = false;
+   }
+   return ctx;
 }
 
 bool
@@ -127,7 +159,7 @@ TlsBaseTransport::setPeerCertificateVerificationCallback(
 Connection* 
 TlsBaseTransport::createConnection(const Tuple& who, Socket fd, bool server)
 {
-   resip_assert(this);
+   resip_assert_not_null(this);
    Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
    return conn;

@@ -9,23 +9,21 @@
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
 
+#include <utility>
+
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(SharedPtr<HepAgent> agent)
-   : mHepAgent(agent)
+HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(std::shared_ptr<HepAgent> agent)
+   : mHepAgent(std::move(agent))
 {
-   if(!agent.get())
+   if (!mHepAgent)
    {
       ErrLog(<<"agent must not be NULL");
       throw std::runtime_error("agent must not be NULL");
    }
-}
-
-HEPSipMessageLoggingHandler::~HEPSipMessageLoggingHandler()
-{
 }
 
 void

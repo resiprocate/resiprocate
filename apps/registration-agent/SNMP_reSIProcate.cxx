@@ -8,12 +8,12 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "SNMP_reSIProcate.hxx"
 
-volatile std::size_t *registrationsConfigured = NULL;
-volatile std::size_t *registrationsFailed = NULL;
+const std::size_t *registrationsConfigured = NULL;
+const std::size_t *registrationsFailed = NULL;
 
 /** Initializes the reSIProcate module */
 void
-init_reSIProcate(volatile std::size_t *_registrationsConfigured, volatile std::size_t *_registrationsFailed)
+init_reSIProcate(const std::size_t *_registrationsConfigured, const std::size_t *_registrationsFailed)
 {
     const oid registrationsConfigured_oid[] = { 1,3,6,1,4,1,8072,9999,1,1,1 };
     const oid registrationsFailed_oid[] = { 1,3,6,1,4,1,8072,9999,1,1,2 };

@@ -11,6 +11,10 @@
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
+#ifdef USE_SIPXTAPI
+#include "SipXConversationManager.hxx"
+#endif
+
 #include "reflow/FlowManagerSubsystem.hxx"
 
 #include <reTurn/ReTurnSubsystem.hxx>
@@ -37,27 +41,30 @@
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Random.hxx>
 
+#include <utility>
+
 using namespace recon;
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc, SharedPtr<InstantMessage> instantMessage) : 
+UserAgent::UserAgent(ConversationManager* conversationManager, std::shared_ptr<UserAgentMasterProfile> profile, AfterSocketCreationFuncPtr socketFunc) : 
    mCurrentSubscriptionHandle(1),
    mCurrentConversationProfileHandle(1),
    mDefaultOutgoingConversationProfileHandle(0),
    mConversationManager(conversationManager),
-   mProfile(profile),
-   mInstantMessage(instantMessage),
+   mProfile(std::move(profile)),
 #if defined(USE_SSL)
-   mSecurity(new Security(profile->certPath())),
+   mSecurity(new Security(mProfile->certPath())),
 #else
    mSecurity(0),
 #endif
-   mStack(mSecurity, profile->getAdditionalDnsServers(), &mSelectInterruptor, false /* stateless */, socketFunc),
+   mPollGrp(FdPollGrp::create()),
+   mEventInterruptor(new EventThreadInterruptor(*mPollGrp)),
+   mStack(mSecurity, mProfile->getAdditionalDnsServers(), mEventInterruptor, false /* stateless */, socketFunc, 0, mPollGrp),
    mDum(mStack),
-   mStackThread(mStack, mSelectInterruptor),
+   mStackThread(mStack, *mEventInterruptor, *mPollGrp),
    mDumShutdown(false)
 {
 #if defined(USE_SSL)
@@ -77,23 +84,23 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    resip_assert(mConversationManager);
    mConversationManager->setUserAgent(this);
 
-   mStack.setTransportSipMessageLoggingHandler(profile->getTransportSipMessageLoggingHandler());
-   mConversationManager->getFlowManager().setRTCPEventLoggingHandler(profile->getRTCPEventLoggingHandler());
+   mStack.setTransportSipMessageLoggingHandler(mProfile->getTransportSipMessageLoggingHandler());
+   mConversationManager->setRTCPEventLoggingHandler(mProfile->getRTCPEventLoggingHandler());
 
    addTransports();
 
    // Set Enum Suffixes
-   mStack.setEnumSuffixes(profile->getEnumSuffixes());
+   mStack.setEnumSuffixes(mProfile->getEnumSuffixes());
 
    // Enable/Disable Statistics Manager
-   mStack.statisticsManagerEnabled() = profile->statisticsManagerEnabled();
+   mStack.statisticsManagerEnabled() = mProfile->statisticsManagerEnabled();
    
    // Install Handlers
    mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
    mDum.registerForConnectionTermination(this);
-   mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
+   mDum.setClientAuthManager(std::unique_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum.setKeepAliveManager(std::unique_ptr<KeepAliveManager>(new KeepAliveManager));
    mDum.setRedirectHandler(mConversationManager);
    mDum.setInviteSessionHandler(mConversationManager); 
    mDum.setDialogSetHandler(mConversationManager);
@@ -101,14 +108,8 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mDum.addOutOfDialogHandler(REFER, mConversationManager);
    mDum.addClientSubscriptionHandler("refer", mConversationManager);
    mDum.addServerSubscriptionHandler("refer", mConversationManager);
-
-   // If application didn't create an IM object, we use a default one
-   if(!mInstantMessage)
-   {
-      mInstantMessage = SharedPtr<InstantMessage>(new InstantMessage());
-   }
-   mDum.setServerPagerMessageHandler(mInstantMessage.get());
-   mDum.setClientPagerMessageHandler(mInstantMessage.get());
+   mDum.setServerPagerMessageHandler(mConversationManager);
+   mDum.setClientPagerMessageHandler(mConversationManager);
 
    //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    //mDum.addClientPublicationHandler(Symbols::Presence, this);
@@ -116,12 +117,11 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    //mDum.addServerSubscriptionHandler("message-summary", this);
 
    // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
-	mDum.setAppDialogSetFactory(dsf);
+   std::unique_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
+   mDum.setAppDialogSetFactory(std::move(dsf));
 
    // Set UserAgentServerAuthManager
-   SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
-   mDum.setServerAuthManager(uasAuth);
+   mDum.setServerAuthManager(std::make_shared<UserAgentServerAuthManager>(*this));
 }
 
 UserAgent::~UserAgent()
@@ -196,6 +196,7 @@ void
 UserAgent::process(int timeoutMs)
 {
    mDum.process(timeoutMs);
+   mConversationManager->process();
 }
 
 void
@@ -284,10 +285,10 @@ UserAgent::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
 }
 
 ConversationProfileHandle 
-UserAgent::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+UserAgent::addConversationProfile(std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    ConversationProfileHandle handle = getNewConversationProfileHandle();
-   AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, conversationProfile, defaultOutgoing);
+   AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, std::move(conversationProfile), defaultOutgoing);
    mDum.post(cmd);
    return handle;
 }
@@ -339,7 +340,7 @@ UserAgent::destroyPublication(PublicationHandle handle)
    mDum.post(cmd);
 }
 
-SharedPtr<ConversationProfile> 
+std::shared_ptr<ConversationProfile> 
 UserAgent::getDefaultOutgoingConversationProfile()
 {
    if(mDefaultOutgoingConversationProfileHandle != 0)
@@ -350,11 +351,11 @@ UserAgent::getDefaultOutgoingConversationProfile()
    {
       resip_assert(false);
       ErrLog( << "getDefaultOutgoingConversationProfile: something is wrong - no profiles to return");
-      return SharedPtr<ConversationProfile>((ConversationProfile*)0);
+      return nullptr;
    }
 }
 
-SharedPtr<ConversationProfile>
+std::shared_ptr<ConversationProfile>
 UserAgent::getConversationProfileByMediaAddress(const resip::Data& mediaAddress)
 {
    resip_assert(!mediaAddress.empty());
@@ -362,16 +363,16 @@ UserAgent::getConversationProfileByMediaAddress(const resip::Data& mediaAddress)
    ConversationProfileMap::iterator conIt;
    for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
    {
-      SharedPtr<ConversationProfile> cp = conIt->second;
+      auto cp = conIt->second;
       if(cp->sessionCaps().session().origin().getAddress() == mediaAddress)
       {
          return cp;
       }
    }
-   return SharedPtr<ConversationProfile>();
+   return nullptr;
 }
 
-SharedPtr<ConversationProfile> 
+std::shared_ptr<ConversationProfile> 
 UserAgent::getIncomingConversationProfile(const SipMessage& msg)
 {
    resip_assert(msg.isRequest());
@@ -387,7 +388,6 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
       NameAddrs::const_iterator naIt;
       for(naIt = contacts.begin(); naIt != contacts.end(); naIt++)
       {
-         InfoLog( << "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri());
          if ((*naIt).uri() == requestUri &&             // uri's match 
              (!requestUri.exists(p_rinstance) ||        // and request Uri doesn't have rinstance parameter OR 
               ((*naIt).uri().exists(p_rinstance) && requestUri.param(p_rinstance) == (*naIt).uri().param(p_rinstance))))  // rinstance parameter matches
@@ -395,8 +395,17 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
             ConversationProfileMap::iterator conIt = mConversationProfiles.find(regIt->first);
             if(conIt != mConversationProfiles.end())
             {
+               InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - MATCHED!");
                return conIt->second;
             }
+            else
+            {
+               InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - matched, but conversation profile not found");
+            }
+         }
+         else
+         {
+            InfoLog(<< "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri() << " - no match");
          }
       }
    }
@@ -406,10 +415,14 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
    ConversationProfileMap::iterator conIt;
    for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
    {
-      InfoLog( << "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor());
       if(isEqualNoCase(toAor, conIt->second->getDefaultFrom().uri().getAor()))
       {
+         InfoLog(<< "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor() << " - MATCHED!");
          return conIt->second;
+      }
+      else
+      {
+         InfoLog(<< "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor() << " - no match");
       }
    }
 
@@ -418,18 +431,8 @@ UserAgent::getIncomingConversationProfile(const SipMessage& msg)
    return getDefaultOutgoingConversationProfile();
 }
 
-SharedPtr<ConversationProfile>
-UserAgent::getConversationProfileForRefer(const SipMessage& msg)
-{
-   // default behaviour (before this API method was added) was to simply
-   // use the default outgoing conversation profile.  A more precise method
-   // for profile selection may need to developed, it can also be
-   // implemented in a subclass.
-   return getDefaultOutgoingConversationProfile();
-}
-
-SharedPtr<UserAgentMasterProfile> 
-UserAgent::getUserAgentMasterProfile()
+std::shared_ptr<UserAgentMasterProfile> 
+UserAgent::getUserAgentMasterProfile() const noexcept
 {
    return mProfile;
 }
@@ -478,11 +481,12 @@ UserAgent::post(resip::Message* pMsg)
 void
 UserAgent::addTransports()
 {
-   const std::vector<UserAgentMasterProfile::TransportInfo>& transports = mProfile->getTransports();
-   std::vector<UserAgentMasterProfile::TransportInfo>::const_iterator i;
+   std::vector<UserAgentMasterProfile::TransportInfo>& transports = mProfile->getTransports();
+   std::vector<UserAgentMasterProfile::TransportInfo>::iterator i;
+   int lastActualPort = 0;
    for(i = transports.begin(); i != transports.end(); i++)
    {
-      const UserAgentMasterProfile::TransportInfo& ti = *i;
+      UserAgentMasterProfile::TransportInfo& ti = *i;
       try
       {
 #ifdef USE_SSL
@@ -500,8 +504,9 @@ UserAgent::addTransports()
             }
          }
 #endif
+         
          Transport *t = mStack.addTransport(ti.mProtocol,
-                                 ti.mPort,
+                                 ti.mPort == -1 ? lastActualPort : ti.mPort, // Port as -1 is special designation that we should use the actual port from the last transport added
                                  ti.mIPVersion,
                                  StunEnabled,
                                  ti.mIPInterface,       // interface to bind to
@@ -526,6 +531,11 @@ UserAgent::addTransports()
                resip_assert(0);
 #endif
             }
+
+            // Fill in actual port used
+            ti.mActualPort = t->getTuple().getPort();
+            // Store last actual port, incase next transport uses special port of -1 to indicate use of last actual port
+            lastActualPort = ti.mActualPort;
          }
       }
       catch (BaseException& e)
@@ -561,24 +571,6 @@ UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyDat
    // Default implementation is to do nothing - application should override this
 }
 
-const char*
-UserAgent::sendMessage(const NameAddr& destination, const Data& msg, const Mime& mimeType)
-{
-   if(!mDum.getMasterProfile()->isMethodSupported(MESSAGE))
-   {
-      WarningLog (<< "MESSAGE method not detected in list of supported methods, adding it belatedly" );
-      mDum.getMasterProfile()->addSupportedMethod(MESSAGE);
-   }
-   
-   ClientPagerMessageHandle cpmh = mDum.makePagerMessage(destination);
-   auto_ptr<Contents> msgContent(new PlainContents(msg, mimeType));
-   cpmh.get()->page(msgContent);
-   SharedPtr<SipMessage> sipMessage = cpmh.get()->getMessageRequestSharedPtr();
-   mDum.send(sipMessage);
-
-   return sipMessage->header(h_CallId).value().c_str();
-}
-
 void 
 UserAgent::shutdownImpl()
 {
@@ -604,7 +596,7 @@ UserAgent::shutdownImpl()
 }
 
 void 
-UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, std::shared_ptr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    // Store new profile
    mConversationProfiles[handle] = conversationProfile;
@@ -616,7 +608,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPt
    // the cert at runtime to equal the aor in the default conversation profile
    if(!mDefaultOutgoingConversationProfileHandle)
    {
-      mConversationManager->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
+      mConversationManager->initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor());
    }
 #endif
 
@@ -860,6 +852,7 @@ UserAgent::onFailure(ClientPublicationHandle h, const SipMessage& status)
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (c) 2016, SIP Spectrum, Inc.
 

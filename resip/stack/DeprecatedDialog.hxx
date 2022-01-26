@@ -19,13 +19,13 @@ class CallID;
 class DeprecatedDialog
 {
    public:
-      class Exception : public BaseException 
+      class Exception final : public BaseException 
       {
          public:
             Exception( const resip::Data& msg,
                        const resip::Data& file,
                        const int line): BaseException(msg,file,line){}
-            const char* name() const { return "Dialog::Exception"; }
+            const char* name() const noexcept override { return "Dialog::Exception"; }
       };
       
       // pass in a contact for this location e.g. "sip:local@domain:5060"
@@ -131,8 +131,6 @@ class DeprecatedDialog
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
       
-      bool secure; // indicates the messages in this Dialog must use TLS
-
       UInt64 expireyTimeAbsoluteMs;
       
       friend EncodeStream& operator<<(EncodeStream&, const DeprecatedDialog&);

@@ -1,24 +1,18 @@
 #ifndef RESIP_DataException_hxx
 #define RESIP_DataException_hxx
 
-#include <exception>
-#include <iostream>
-
-#include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 
 namespace resip
 {
 
-class DataException : public BaseException
+class DataException final : public BaseException
 {
    public:
-      virtual const char* name() const 
+      const char* name() const noexcept override
       {
          return "DataException";
       }
-
-      const Data& getMessage() const {return message;}
       
       DataException(const Data& msg,
                     const Data& file,

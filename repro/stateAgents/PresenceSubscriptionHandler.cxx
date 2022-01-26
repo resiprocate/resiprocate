@@ -67,12 +67,12 @@ void PresenceSubscriptionHandler::onRefresh(ServerSubscriptionHandle h, const Si
       InfoLog(<< "PresenceSubscriptionHandler::onRefresh: aor=" << aor << ", registered=" << isRegistered << ", maxRegExpires=" << maxExpires);
       if (!checkRegistrationStateChanged(aor, isRegistered, maxExpires))
       {
-         SharedPtr<SipMessage> notify = h->neutralNotify();
+         auto notify = h->neutralNotify();
          if (maxExpires && isRegistered)
          {
             adjustNotifyExpiresTime(*notify.get(), maxExpires);
          }
-         h->send(notify);
+         h->send(std::move(notify));
       }
    }
    else
@@ -149,8 +149,8 @@ PresenceSubscriptionHandler::notifyPresence(resip::ServerSubscriptionHandle h, b
    }
    catch (BaseException& ex)
    {
-      ErrLog(<< "PresenceSubscriptionHandler::notifyPresence: problem creating aor for registration lookup: " << ex);
-      if (sendAcceptReject)
+      ErrLog(<< "PresenceSubscriptionHandler::notifyPresence: problem notifying presence: " << ex);
+      if (sendAcceptReject && h->isResponsePending())
       {
          h->send(h->reject(500));
       }
@@ -177,11 +177,11 @@ PresenceSubscriptionHandler::notifyPresenceNoPublication(resip::ServerSubscripti
    }
    else
    {
-      mOnlineAors.erase(aor);  // remove now, since we might have an immediate unregister coming in before this aysnc finishes and we want to avoid sending 2 closed states
+      mOnlineAors.erase(aor);  // remove now, since we might have an immediate unregister coming in before this async finishes and we want to avoid sending 2 closed states
          
       // Do async lookup of user from User tables
       PresenceUserExists* async = new PresenceUserExists(mDum, this, h, sendAcceptReject, aor);
-      std::auto_ptr<ApplicationMessage> app(async);
+      std::unique_ptr<ApplicationMessage> app(async);
       mUserDispatcher->post(app);
    }
 }
@@ -305,12 +305,12 @@ PresenceSubscriptionHandler::fabricateSimplePresence(ServerSubscriptionHandle h,
       h->setSubscriptionState(Active);
       h->send(h->accept(200));
    }
-   resip::SharedPtr<SipMessage> notify = h->update(&pidf);
+   auto notify = h->update(&pidf);
    if (regMaxExpires && online)
    {
       adjustNotifyExpiresTime(*notify.get(), regMaxExpires);
    }
-   h->send(notify);
+   h->send(std::move(notify));
 }
 
 bool 
@@ -536,7 +536,7 @@ PresenceSubscriptionHandler::onDocumentModified(bool sync, const Data& eventType
          if (expiresSeconds > 0)
          {
             //DebugLog(<< "PresenceSubscriptionHandler::onDocumentModified: starting check expired timer for sync'd publication, docKey=" << documentKey << ", tag=" << eTag << ", lastUpdated=" << lastUpdated << ", timerExpirey=" << expiresSeconds);
-            mDum.getSipStack().post(std::auto_ptr<resip::ApplicationMessage>(new PresenceServerCheckDocExpiredCommand(*this, documentKey, eTag, lastUpdated)), (unsigned int)expiresSeconds, &mDum);
+            mDum.getSipStack().post(std::unique_ptr<resip::ApplicationMessage>(new PresenceServerCheckDocExpiredCommand(*this, documentKey, eTag, lastUpdated)), (unsigned int)expiresSeconds, &mDum);
          }
       }
    }
@@ -555,7 +555,7 @@ PresenceSubscriptionHandler::onDocumentRemoved(bool sync, const Data& eventType,
 
 /* ====================================================================
 *
-* Copyright (c) 2015 SIP Spectrum, Inc.  All rights reserved.
+* Copyright (c) 2015-2021 SIP Spectrum, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

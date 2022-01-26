@@ -70,7 +70,7 @@ SubscriptionForwarder::process(resip::Lockable* mutex)
    if (mFifo.messageAvailable())
    {
       resip::PtrLock lock(mutex);
-      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+      internalProcess(std::unique_ptr<Message>(mFifo.getNext()));
    }
    return mFifo.messageAvailable();
 }
@@ -83,7 +83,7 @@ SubscriptionForwarder::name() const
 }
 
 void
-SubscriptionForwarder::internalProcess(std::auto_ptr<Message> msg)
+SubscriptionForwarder::internalProcess(std::unique_ptr<Message> msg)
 {
    // After a Stack ShutdownMessage has been received, don't do anything else in this TU
    if (mShutdownState == Shutdown)

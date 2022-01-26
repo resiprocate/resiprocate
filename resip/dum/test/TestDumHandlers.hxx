@@ -253,7 +253,7 @@ class TestClientPagerMessageHandler : public ClientPagerMessageHandler
 
       virtual void onFailure(ClientPagerMessageHandle,
                              const SipMessage& status,
-                             std::auto_ptr<Contents> contents)
+                             std::unique_ptr<Contents> contents)
       {
          InfoLog( << "TestClientMessageHandler::onFailure" );
       }
@@ -275,8 +275,8 @@ class TestServerPagerMessageHandler : public ServerPagerMessageHandler
       {
          InfoLog( << "TestServerPagerMessageHandler::onMessageArrived" );
 
-         SharedPtr<SipMessage> ok = handle->accept();
-         handle->send(ok);
+         auto ok = handle->accept();
+         handle->send(std::move(ok));
 
          InfoLog( << "received type " << message.header(h_ContentType) );
 

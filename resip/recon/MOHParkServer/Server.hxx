@@ -8,6 +8,8 @@
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
+#include "../SipXConversationManager.hxx"
+
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
 #else
@@ -21,7 +23,7 @@ namespace mohparkserver
 class WebAdminThread;
 class WebAdmin;
 
-class Server : public recon::ConversationManager
+class Server : public recon::SipXConversationManager
 {
 public:
    Server(ConfigParser& config);  
@@ -89,11 +91,12 @@ protected:
 private:
    friend class MOHManager;
    friend class ParkManager;
-   void buildSessionCapabilities(resip::SdpContents& sessionCaps);
+   using SipXConversationManager::buildSessionCapabilities;
+   virtual void buildSessionCapabilities(resip::SdpContents& sessionCaps);
 
    bool mIsV6Avail;
    recon::UserAgent* mMyUserAgent;
-   resip::SharedPtr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
+   std::shared_ptr<recon::UserAgentMasterProfile> mUserAgentMasterProfile;
 
    typedef std::map<unsigned long, MOHManager*> MOHManagerMap;
    MOHManagerMap mMOHManagerMap;

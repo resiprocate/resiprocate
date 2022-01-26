@@ -4,6 +4,12 @@ EXTRA_DIST += registrationAgent.config
 EXTRA_DIST += registration-agent.service
 EXTRA_DIST += send-cmd.py
 EXTRA_DIST += users.txt
+EXTRA_DIST += mib2c-skeleton
+EXTRA_DIST += README.txt
+EXTRA_DIST += README_SNMP.txt
+
+mibdir = $(datarootdir)/snmp/mibs
+dist_mib_DATA = REG-AGENT-MIB.txt
 
 sbin_PROGRAMS = registrationAgent
 

@@ -111,14 +111,14 @@ class IntrusiveListElement
                return *this;
             }
 
-            bool operator==(const iterator& rhs)
+            friend bool operator==(const iterator& lhs, const iterator& rhs)
             {
-               return mPos == rhs.mPos;
+               return lhs.mPos == rhs.mPos;
             }
 
-            bool operator!=(const iterator& rhs)
+            friend bool operator!=(const iterator& lhs, const iterator& rhs)
             {
-               return mPos != rhs.mPos;
+               return lhs.mPos != rhs.mPos;
             }
 
             P operator*()
@@ -248,14 +248,14 @@ class IntrusiveListElement1
                return *this;
             }
 
-            bool operator==(const iterator& rhs)
+            friend bool operator==(const iterator& lhs, const iterator& rhs)
             {
-               return mPos == rhs.mPos;
+               return lhs.mPos == rhs.mPos;
             }
 
-            bool operator!=(const iterator& rhs)
+            friend bool operator!=(const iterator& lhs, const iterator& rhs)
             {
-               return mPos != rhs.mPos;
+               return lhs.mPos != rhs.mPos;
             }
 
             P operator*()
@@ -385,14 +385,14 @@ class IntrusiveListElement2
                return *this;
             }
 
-            bool operator==(const iterator& rhs)
+            friend bool operator==(const iterator& lhs, const iterator& rhs)
             {
-               return mPos == rhs.mPos;
+               return rhs.mPos == rhs.mPos;
             }
 
-            bool operator!=(const iterator& rhs)
+            friend bool operator!=(const iterator& lhs, const iterator& rhs)
             {
-               return mPos != rhs.mPos;
+               return rhs.mPos != rhs.mPos;
             }
 
             P operator*()
@@ -522,14 +522,14 @@ class IntrusiveListElement3
                return *this;
             }
 
-            bool operator==(const iterator& rhs)
+            friend bool operator==(const iterator& lhs, const iterator& rhs)
             {
-               return mPos == rhs.mPos;
+               return lhs.mPos == rhs.mPos;
             }
 
-            bool operator!=(const iterator& rhs)
+            friend bool operator!=(const iterator& lhs, const iterator& rhs)
             {
-               return mPos != rhs.mPos;
+               return lhs.mPos != rhs.mPos;
             }
 
             P operator*()

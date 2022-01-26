@@ -596,7 +596,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
          return RespondFromReceiving;
       }
    }
-   catch(asio::system_error e)
+   catch (const asio::system_error& e)
    {
       // TODO - handle port in use error better - try to allocate a new port or something?
       ErrLog(<< "Error allocating socket for allocation.  Sending 500. Sender=" << request.mRemoteTuple);
@@ -876,12 +876,12 @@ RequestHandler::processTurnSendIndication(TurnAllocationManager& turnAllocationM
    // Shouldn't have more than one xor-peer-address attribute in this request
    StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress[0]);
 
-   boost::shared_ptr<DataBuffer> data(new DataBuffer(request.mTurnData->data(), request.mTurnData->size()));
+   const auto data = std::make_shared<DataBuffer>(request.mTurnData->data(), request.mTurnData->size());
    allocation->sendDataToPeer(remoteAddress, data, false /* isFramed? */);
 }
 
 void 
-RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data)
+RequestHandler::processTurnData(TurnAllocationManager& turnAllocationManager, unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const std::shared_ptr<DataBuffer>& data)
 {
    TurnAllocation* allocation = turnAllocationManager.findTurnAllocation(TurnAllocationKey(localTuple, remoteTuple));
 

@@ -7,7 +7,7 @@
 #include <cmath>        // for sqrt
 #include <iostream>
 #include <vector>
-#include <memory>	// for auto_ptr
+#include <memory>	// for unique_ptr
 #include <set>
 
 // #include "rutil/Data.hxx"
@@ -279,14 +279,12 @@ doVariationTest(int numCycles, int numThreads, int numPass, int storeBytes)
 
 int main(int argc, char** argv)
 {
-   bool doSweep = true;
    int numCycles = 2;
    int numThreads = 3;
    int numPass = 10;
    int storeBytes = 0;
 
    {
-      doSweep = false;
       if(argc >= 2)
          numCycles = atoi(argv[1]);
       if(argc >= 3)
@@ -319,7 +317,7 @@ int main(int argc, char** argv)
       exit(-1);
    }
 
-   std::auto_ptr<TestDummyThread> dummyThread;
+   std::unique_ptr<TestDummyThread> dummyThread;
    if ( numThreads >= 0 )
    {
        dummyThread.reset(new TestDummyThread);

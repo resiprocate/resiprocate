@@ -14,10 +14,12 @@ endif
 
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
+if BUILD_RETURN
 SUBDIRS += reTurn
 if BUILD_RECON
 SUBDIRS += reflow
 SUBDIRS += resip/recon
+endif
 endif
 if BUILD_P2P
 SUBDIRS += p2p/s2c/s2c p2p
@@ -35,5 +37,8 @@ EXTRA_DIST = *.sln
 EXTRA_DIST += resiprocate.spec
 
 EXTRA_DIST += RELEASE-PROCESS.txt
+EXTRA_DIST += README_RPM-based-Linux.txt
 EXTRA_DIST += build/configure-android.sh
+EXTRA_DIST += build/debian.sh
+EXTRA_DIST += build/fedora.sh
 

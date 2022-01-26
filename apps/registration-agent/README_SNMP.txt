@@ -11,7 +11,7 @@ Dependencies
 
 On a Debian system, ensure that the required packages are installed.
 
-  sudo apt install snmp snmp-mibs-downloader libsnmp-dev libsnmp-perl
+  sudo apt install snmpd snmp snmp-mibs-downloader libsnmp-dev libsnmp-perl
 
 snmpd daemon (master agent) configuration
 -----------------------------------------
@@ -43,6 +43,16 @@ do that with the command:
 
   sudo addgroup $USER Debian-snmp
 
+or if you run the service using the unit file from the package:
+
+  sudo addgroup registration-agent Debian-snmp
+
+Edit registrationAgent.config.  Uncomment SNMPMasterSocket.
+Make sure the value of SNMPMasterSocket matches the agentxsocket
+value in /etc/snmp/snmpd.conf, for example:
+
+  SNMPMasterSocket = /var/run/snmp-agentx-master
+
 When you start the registrationAgent now, it should successfully connect
 to the master agent.
 
@@ -53,6 +63,22 @@ Here are some examples of snmp commands to query the agent:
 
   snmpwalk -c public -v 1  localhost .1.3.6.1.4.1.8072.9999
   snmpget -c public -v 1 -Onv localhost .1.3.6.1.4.1.8072.9999.1.1.2.0
+
+and if the MIB file is installed:
+
+  snmpget -c public -v 1 -Onv localhost \
+     REG-AGENT-MIB::reSIProcate.registrationAgent.registrationsFailed.0
+
+Nagios monitoring
+-----------------
+
+Here is an example Nagios command definition to query the SNMP sub-agent
+and raise a critical error if any registrations are in the failed state.
+
+define command {
+        command_name    check_snmp_sip_registrations_failed
+        command_line    /usr/lib/nagios/plugins/check_snmp -H '$HOSTADDRESS$' -o REG-AGENT-MIB::reSIProcate.registrationAgent.registrationsFailed.0 -c :0
+}
 
 Development process
 -------------------

@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#include <boost/function.hpp>
-
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/Timer.hxx>
@@ -38,8 +36,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                          const char* stunUsername,
                          const char* stunPassword,
                          bool forceCOMedia,
-                         SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
-                         SharedPtr<FlowContext> context) :
+                         std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler,
+                         std::shared_ptr<FlowContext> context) :
 #ifdef USE_SSL
    mDtlsFactory(dtlsFactory),
 #endif  
@@ -66,7 +64,7 @@ MediaStream::MediaStream(asio::io_service& ioService,
                           localRtpBinding, 
                           *this,
                           mForceCOMedia,
-                          SharedPtr<RTCPEventLoggingHandler>(),
+                          nullptr,
                           context);
 
       mRtcpFlow = new Flow(ioService, 
@@ -77,8 +75,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                            localRtcpBinding, 
                            *this,
                            mForceCOMedia,
-                           rtcpEventLoggingHandler,
-                           context);
+                           std::move(rtcpEventLoggingHandler),
+                           std::move(context));
 
       mRtpFlow->activateFlow(StunMessage::PropsPortPair);
 
@@ -98,8 +96,8 @@ MediaStream::MediaStream(asio::io_service& ioService,
                           localRtpBinding, 
                           *this,
                           mForceCOMedia,
-                          SharedPtr<RTCPEventLoggingHandler>(),
-                          context);
+                          nullptr,
+                          std::move(context));
       mRtpFlow->activateFlow(StunMessage::PropsPortEven);
       mRtcpFlow = 0;
    }
@@ -129,7 +127,7 @@ MediaStream::~MediaStream()
 }
 
 bool 
-MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+MediaStream::createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
 {
    if(keyLen != SRTP_MASTER_KEY_LEN)
    {
@@ -163,13 +161,13 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
    mCryptoSuiteOut = cryptoSuite;
    switch(cryptoSuite)
    {
-   case SRTP_AES_CM_128_HMAC_SHA1_80:
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtp);
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtcp);
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80:
+      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtp);
+      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyOut.rtcp);
       break;
-   case SRTP_AES_CM_128_HMAC_SHA1_32:
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtp);
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtcp);
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32:
+      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtp);
+      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyOut.rtcp);
       break;
    default:
       ErrLog(<< "Unable to create outbound SRTP session, invalid crypto suite=" << cryptoSuite);
@@ -194,7 +192,7 @@ MediaStream::createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* 
 }
 
 bool 
-MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
+MediaStream::createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen)
 {
    if(keyLen != SRTP_MASTER_KEY_LEN)
    {
@@ -228,13 +226,13 @@ MediaStream::createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* k
    mCryptoSuiteIn = cryptoSuite;
    switch(cryptoSuite)
    {
-   case SRTP_AES_CM_128_HMAC_SHA1_80:
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtp);
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtcp);
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80:
+      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtp);
+      crypto_policy_set_aes_cm_128_hmac_sha1_80(&mSRTPPolicyIn.rtcp);
       break;
-   case SRTP_AES_CM_128_HMAC_SHA1_32:
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtp);
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtcp);
+   case resip::MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32:
+      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtp);
+      crypto_policy_set_aes_cm_128_hmac_sha1_32(&mSRTPPolicyIn.rtcp);
       break;
    default:
       ErrLog(<< "Unable to create inbound SRTP session, invalid crypto suite=" << cryptoSuite);

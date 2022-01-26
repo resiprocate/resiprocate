@@ -2,11 +2,15 @@
 #include "Participant.hxx"
 #include "LocalParticipant.hxx"
 #include "RemoteParticipant.hxx"
+#include "RemoteIMPagerParticipant.hxx"
+#include "RemoteIMSessionParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
 #include "ReconSubsystem.hxx"
 
+#include <resip/stack/Contents.hxx>
+#include <resip/stack/PlainContents.hxx>
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
@@ -19,15 +23,18 @@ using namespace resip;
 Conversation::Conversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
                            RelatedConversationSet* relatedConversationSet,
-                           bool broadcastOnly)
+                           ConversationHandle sharedMediaInterfaceConvHandle,
+                           ConversationManager::AutoHoldMode autoHoldMode)
 : mHandle(handle),
   mConversationManager(conversationManager),
   mDestroying(false),
   mNumLocalParticipants(0),
   mNumRemoteParticipants(0),
+  mNumRemoteIMParticipants(0),
   mNumMediaParticipants(0),
-  mBroadcastOnly(broadcastOnly),
-  mBridgeMixer(0)
+  mAutoHoldMode(autoHoldMode),
+  mBridgeMixer(0),
+  mSharingMediaInterfaceWithAnotherConversation(false)
 {
    mConversationManager.registerConversation(this);
 
@@ -42,12 +49,19 @@ Conversation::Conversation(ConversationHandle handle,
    }
    InfoLog(<< "Conversation created, handle=" << mHandle);
 
-   if(mConversationManager.getMediaInterfaceMode() == ConversationManager::sipXConversationMediaInterfaceMode)
+   if(mConversationManager.supportsMultipleMediaInterfaces())
    {
-      mConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
-                                                        mHandle,
-                                                        mMediaInterface, 
-                                                        &mBridgeMixer);      
+      // Check if sharedMediaInterfaceConvHandle was passed in, and if so use the same media interface and bridge mixer that, that
+      // conversation is using
+      if (sharedMediaInterfaceConvHandle != 0)
+      {
+         Conversation* sharedFlowConversation = mConversationManager.getConversation(sharedMediaInterfaceConvHandle);
+         if (sharedFlowConversation)
+         {
+            mBridgeMixer = sharedFlowConversation->getBridgeMixerShared();
+            mSharingMediaInterfaceWithAnotherConversation = true;
+         }
+      }
    }
 }
 
@@ -59,7 +73,7 @@ Conversation::~Conversation()
       mRelatedConversationSet->removeConversation(mHandle);
    }
    mConversationManager.onConversationDestroyed(mHandle);
-   delete mBridgeMixer;
+   mBridgeMixer.reset();       // Make sure the mixer is destroyed before the media interface
    InfoLog(<< "Conversation destroyed, handle=" << mHandle);
 }
 
@@ -112,18 +126,24 @@ Conversation::modifyParticipantContribution(Participant* participant, unsigned i
 bool 
 Conversation::shouldHold() 
 { 
-   // We should be offering a hold SDP if there is no LocalParticipant 
-   // in the conversation and there are no other remote participants     or
-   // there are no remote participants at all
-   return mBroadcastOnly ||
-          mNumRemoteParticipants == 0 ||
-          (mNumLocalParticipants == 0 && (mNumRemoteParticipants+mNumMediaParticipants) <= 1); 
+   switch (mAutoHoldMode)
+   {
+   case ConversationManager::AutoHoldDisabled:
+      return false;
+   case ConversationManager::AutoHoldBroadcastOnly:
+      return true;
+   default:  // Enabled
+      // We should be offering a hold SDP if there are no remote participants at all   OR
+      // there is no LocalParticipant in the conversation and there are no other remote or media participants
+      return mNumRemoteParticipants == 0 ||
+             (mNumLocalParticipants == 0 && (mNumRemoteParticipants + mNumMediaParticipants) <= 1);
+   }
 }  
 
 bool 
 Conversation::broadcastOnly() 
 { 
-   return mBroadcastOnly;
+   return mAutoHoldMode == ConversationManager::AutoHoldBroadcastOnly;
 }  
 
 void
@@ -141,11 +161,68 @@ Conversation::notifyRemoteParticipantsOfHoldChange()
 }
 
 void 
+Conversation::relayInstantMessageToRemoteParticipants(ParticipantHandle sourceParticipant, const resip::Data& senderDisplayName, const resip::SipMessage& msg)
+{
+   // First check if sourceParticipant exists in thei conversation and has any Output Gain 
+   // for this conversation.  Only allow relaying if they are allowed output to this conversation.
+   ParticipantMap::iterator it = mParticipants.find(sourceParticipant);
+   if (it == mParticipants.end())
+   {
+      // Source Participant is not part of the conversation, strange, don't continue
+      assert(false);  // shouldn't happen
+      return;
+   }
+   if (it->second.getOutputGain() == 0)
+   {
+      // Source participant doesn't have output permission for this conversation, don't relay
+      return;
+   }
+
+   Data prefixText;
+   if (!senderDisplayName.empty())
+   {
+      DataStream ds(prefixText);
+      ds << "[" << senderDisplayName << "] ";
+   }
+   ParticipantMap::iterator i;
+   for (i = mParticipants.begin(); i != mParticipants.end(); i++)
+   {
+      // Only relay if this participant is not the sourceParticipant (so we don't send back to ourself) 
+      // Skip participants if they don't have any inputGain from this conversation.
+      if (i->second.getParticipant()->getParticipantHandle() != sourceParticipant &&
+          i->second.getInputGain() > 0)
+      {
+         IMParticipantBase* imParticipant = dynamic_cast<IMParticipantBase*>(i->second.getParticipant());
+         if (imParticipant)
+         {
+            Contents* contentsToSend = msg.getContents()->clone();
+            if (!prefixText.empty() && imParticipant->getPrependSenderInfoToIMs())
+            {
+               PlainContents* plainContents = dynamic_cast<PlainContents*>(contentsToSend);
+               if (plainContents)
+               {
+                  // Prepend prefix to Plain text
+                  plainContents->text() = prefixText + plainContents->text();
+               }
+            }
+            std::unique_ptr<Contents> contents(contentsToSend);
+            imParticipant->sendInstantMessage(std::move(contents));
+         }
+      }
+   }
+}
+
+void 
 Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle)
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet, mBroadcastOnly);
+   Conversation* conversation = mConversationManager.createConversationInstance(relatedConvHandle, mRelatedConversationSet,
+                                                 // If this conversation is sharing a media interface, then any related 
+                                                 // conversations will as well (use our handle as the original handle
+                                                 // passed in contructor could be gone)
+                                                 mSharingMediaInterfaceWithAnotherConversation ? mHandle: 0, 
+                                                 mAutoHoldMode);
 
    // Copy all participants to new Conversation, except origParticipant
    ParticipantMap::iterator i;
@@ -205,7 +282,7 @@ Conversation::destroy()
             }
             else
             {
-               removeParticipant(i->second.getParticipant());
+               removeParticipant(i->second.getParticipant());  // Can cause "this" to get deleted
             }
          }
       }
@@ -219,19 +296,26 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
       bool prevShouldHold = shouldHold();
-      RemoteParticipant* remote;
-      MediaResourceParticipant* media;
       if(dynamic_cast<LocalParticipant*>(participant))
       {
          mNumLocalParticipants++;
       }
-      else if((remote = dynamic_cast<RemoteParticipant*>(participant)))
+      else if(dynamic_cast<RemoteParticipant*>(participant))
       {
          mNumRemoteParticipants++;
       }
-      else if((media = dynamic_cast<MediaResourceParticipant*>(participant)))
+      else if(dynamic_cast<MediaResourceParticipant*>(participant))
       {
          mNumMediaParticipants++;
+      }
+      else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
+               dynamic_cast<RemoteIMSessionParticipant*>(participant))
+      {
+         mNumRemoteIMParticipants++;
+      }
+      else
+      {
+         assert(false);
       }
       if(prevShouldHold != shouldHold())
       {
@@ -249,26 +333,35 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
 void 
 Conversation::unregisterParticipant(Participant *participant)
 {
-   // For some reason: Since this is called from the Subclasses Participant Destructor, the dynamic_casts
-   // don't work.
    if(getParticipant(participant->getParticipantHandle()) != 0)
    {
       mParticipants.erase(participant->getParticipantHandle());  // No need to notify this party, remove from map first
 
-      RemoteParticipant* remote;
-      MediaResourceParticipant* media;
       bool prevShouldHold = shouldHold();
       if(dynamic_cast<LocalParticipant*>(participant))
       {
+         assert(mNumLocalParticipants != 0);
          mNumLocalParticipants--;
       }
-      else if((remote = dynamic_cast<RemoteParticipant*>(participant)))
+      else if(dynamic_cast<RemoteParticipant*>(participant))
       {
+         assert(mNumRemoteParticipants != 0);
          mNumRemoteParticipants--;
       }
-      else if((media = dynamic_cast<MediaResourceParticipant*>(participant)))
+      else if(dynamic_cast<MediaResourceParticipant*>(participant))
       {
+         assert(mNumMediaParticipants != 0);
          mNumMediaParticipants--;
+      }
+      else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
+               dynamic_cast<RemoteIMSessionParticipant*>(participant))
+      {
+         assert(mNumRemoteIMParticipants != 0);
+         mNumRemoteIMParticipants--;
+      }
+      else
+      {
+         assert(false);
       }
       if(!mDestroying && prevShouldHold != shouldHold())
       {
@@ -285,53 +378,11 @@ Conversation::unregisterParticipant(Participant *participant)
    }
 }
 
-void 
-Conversation::notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType)
-{
-   resip_assert(eventType == MediaEvent::PLAY_FINISHED);
-
-   if(eventType == MediaEvent::PLAY_FINISHED)
-   {
-      // sipX only allows you to have one active media participant per media interface
-      // actually playing a file (or from cache) at a time, so for now it is sufficient to have
-      // this event indicate that any active media participants (playing a file/cache) should be destroyed.
-      ParticipantMap::iterator it;
-      for(it = mParticipants.begin(); it != mParticipants.end();)
-      {
-         MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(it->second.getParticipant());
-         it++;  // increment iterator here, since destroy may end up calling unregisterParticipant
-         if(mrPart)
-         {
-            if(mrPart->getResourceType() == MediaResourceParticipant::File ||
-               mrPart->getResourceType() == MediaResourceParticipant::Cache)
-            {
-               mrPart->destroyParticipant();
-            }
-         }
-      }
-   }
-}
-
-void 
-Conversation::notifyDtmfEvent(int mediaConnectionId, int dtmf, int duration, bool up)
-{
-   ParticipantMap::iterator i = mParticipants.begin();
-   for(; i != mParticipants.end(); i++)
-   {
-      RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(i->second.getParticipant());
-      if(remoteParticipant)
-      {
-         if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
-         {
-            mConversationManager.onDtmfEvent(remoteParticipant->getParticipantHandle(), dtmf, duration, up);
-         }
-      }
-   }
-}
-
 
 /* ====================================================================
 
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -11,6 +11,7 @@
 
 #include "FlowManagerSubsystem.hxx"
 #include "FakeSelectSocketDescriptor.hxx"
+#include "FlowManagerException.hxx"
 
 using namespace flowmanager;
 using namespace std;
@@ -38,7 +39,10 @@ FakeSelectSocketDescriptor::FakeSelectSocketDescriptor()
    error= connect(mSocket, &socketAddr, sizeof(socketAddr)); 
    resip_assert(error == 0);
 #else
-   pipe(mPipe);
+   if(pipe(mPipe) < 0)
+   {
+      throw FlowManagerException("Failed to create pipe", __FILE__, __LINE__);
+   }
 #endif
 }
 
@@ -83,7 +87,10 @@ FakeSelectSocketDescriptor::receive()
    ::recv(mSocket, rdBuf, 1, 0);
 #else
    char rdBuf[1];
-   ::read(mPipe[0], rdBuf, 1);
+   if(::read(mPipe[0], rdBuf, 1) < 0)
+   {
+      WarningLog(<< "read error: " << strerror(errno));
+   }
 #endif
 }
 

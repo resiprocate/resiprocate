@@ -71,9 +71,13 @@ ServerSubscription::getTimeLeft()
    }
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerSubscription::accept(int statusCode)
 {
+   if (!mLastResponse)
+   {
+      throw UsageUseException("mLastResponse is not set, likely trying to respond a 2nd time", __FILE__, __LINE__);
+   }
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;
    Helper::getResponseCodeReason(statusCode, mLastResponse->header(h_StatusLine).reason());
@@ -81,12 +85,16 @@ ServerSubscription::accept(int statusCode)
    return mLastResponse;
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerSubscription::reject(int statusCode)
 {
    if (statusCode < 300)
    {
       throw UsageUseException("Must reject with a code greater than or equal to 300", __FILE__, __LINE__);
+   }
+   if (!mLastResponse)
+   {
+      throw UsageUseException("mLastResponse is not set, likely trying to respond a 2nd time", __FILE__, __LINE__);
    }
    // Response is built in dispatch when request arrives, just need to adjust the status code here
    mLastResponse->header(h_StatusLine).responseCode() = statusCode;
@@ -102,7 +110,7 @@ void ServerSubscription::terminateSubscription(ServerSubscriptionHandler* handle
 }
 
 void 
-ServerSubscription::send(SharedPtr<SipMessage> msg)
+ServerSubscription::send(std::shared_ptr<SipMessage> msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    resip_assert(handler);   
@@ -225,9 +233,9 @@ ServerSubscription::dispatch(const SipMessage& msg)
       //!dcm! -- need to have a mechanism to retrieve default & acceptable
       //expiration times for an event package--part of handler API?
       //added to handler for now.
-      if (mLastResponse.get() == 0)
+      if (!mLastResponse)
       {
-          mLastResponse.reset(new SipMessage);
+          mLastResponse = std::make_shared<SipMessage>();
       }
       mDialog.makeResponse(*mLastResponse, msg, 200);  // Generate response now and wait for user to accept or reject, then adjust status code
    
@@ -236,13 +244,13 @@ ServerSubscription::dispatch(const SipMessage& msg)
       if (errorResponseCode >= 400)
       {
          handler->onError(getHandle(), msg);
-         SharedPtr<SipMessage> response = reject(errorResponseCode);
+         auto response = reject(errorResponseCode);
 
          if (errorResponseCode == 423 && handler->hasMinExpires())
          {
             response->header(h_MinExpires).value() = handler->getMinExpires();		   
          }
-         send(response);
+         send(std::move(response));
          return;
       }     
 
@@ -368,9 +376,9 @@ ServerSubscription::makeNotifyExpires()
 void
 ServerSubscription::makeNotify()
 {
-   if (mLastRequest.get() == 0)
+   if (!mLastRequest)
    {
-      mLastRequest.reset(new SipMessage);
+      mLastRequest = std::make_shared<SipMessage>();
    }
    mDialog.makeRequest(*mLastRequest, NOTIFY);
    mLastRequest->header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
@@ -431,7 +439,7 @@ ServerSubscription::dispatch(const DumTimeout& timeout)
    }
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerSubscription::update(const Contents* document)
 {
    makeNotify();
@@ -439,7 +447,7 @@ ServerSubscription::update(const Contents* document)
    return mLastRequest;
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerSubscription::neutralNotify()
 {
    makeNotify();

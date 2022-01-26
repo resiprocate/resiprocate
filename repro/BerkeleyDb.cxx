@@ -86,12 +86,16 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
    mEnv = 0;
 #endif
 
+#ifdef USE_DBENV
    bool enableTransactions = false;
+#endif
    bool secondaryIndex = false;
    Data secondaryFileName;
    for (int i=0;i<MaxTable;i++)
    {
+#ifdef USE_DBENV
       enableTransactions = false;
+#endif
       // if the line bellow seems wrong, you need to check which version 
       // of db you have - it is likely an very out of date version 
       // still trying to figure this out so email fluffy if you have 
@@ -115,8 +119,10 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
          case FilterTable:
             fileName += "_filter"; break;
          case SiloTable:
-            fileName += "_silo"; 
+            fileName += "_silo";
+#ifdef USE_DBENV
             enableTransactions = true;
+#endif
             secondaryIndex = true;
             break;
          default:

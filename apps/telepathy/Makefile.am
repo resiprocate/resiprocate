@@ -25,7 +25,10 @@ EXTRA_DIST += resiprocate.service
 #AM_CXXFLAGS = -DUSE_ARES
 AM_CPPFLAGS = -fPIC $(QT5_CFLAGS) $(TP_QT5_CFLAGS)
 
+if USE_SIPXTAPI
 bin_PROGRAMS = telepathy-resiprocate
+endif
+
 telepathy_resiprocate_LDADD = ../../resip/recon/librecon.la
 telepathy_resiprocate_LDADD += ../../reflow/libreflow.la
 telepathy_resiprocate_LDADD += -lsipXsdp -lsipXmediaProcessing -lsipXmedia -lsipXport -lsipXtack

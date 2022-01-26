@@ -8,13 +8,15 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 ServerPublication::ServerPublication(DialogUsageManager& dum,  
                                      const Data& etag,
                                      const SipMessage& msg)
    : BaseUsage(dum),
-     mLastResponse(new SipMessage), 
+     mLastResponse(std::make_shared<SipMessage>()), 
      mEtag(etag),
      mEventType(msg.header(h_Event).value()),
      mDocumentKey(msg.header(h_RequestLine).uri().getAor()),
@@ -71,7 +73,7 @@ ServerPublication::updateMatchingSubscriptions()
 }
 
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerPublication::accept(int statusCode)
 {
    Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
@@ -80,7 +82,7 @@ ServerPublication::accept(int statusCode)
    return mLastResponse;   
 }
 
-SharedPtr<SipMessage>
+std::shared_ptr<SipMessage>
 ServerPublication::reject(int statusCode)
 {
    Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
@@ -184,7 +186,7 @@ ServerPublication::dispatch(const DumTimeout& msg)
 }
 
 void 
-ServerPublication::send(SharedPtr<SipMessage> response)
+ServerPublication::send(std::shared_ptr<SipMessage> response)
 {
    resip_assert(response->isResponse());
    response->header(h_SIPETag).value() = mEtag;
@@ -206,7 +208,7 @@ ServerPublication::send(SharedPtr<SipMessage> response)
       }
 
       // If we don't have a contents then it was a refresh (note:  Unpublishes don't go through here)
-      if (mLastBody.mContents.get())
+      if (mLastBody.mContents)
       {
          // Notify all matching subscriptions of new document
          // Note: we do this after all uses of mLastBody, since calling this will release the contents stored in mLastBody

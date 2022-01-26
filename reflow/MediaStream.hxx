@@ -7,22 +7,27 @@
 
 // !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
-#include <rutil/SharedPtr.hxx>
+#include <memory>
 
-#include <asio.hpp>
+namespace asio
+{
+   class io_context;
+   typedef io_context io_service;
 #ifdef USE_SSL
-#include <asio/ssl.hpp>
+   namespace ssl
+   {
+      class context;
+   }
 #endif
-#ifdef WIN32
-#include <srtp.h>
-#else
-#include <srtp2/srtp.h>
-#endif
+}
+
+#include "Srtp2Helper.hxx"
 
 #include "dtls_wrapper/DtlsFactory.hxx"
 #include "FlowContext.hxx"
 #include "Flow.hxx"
 #include "RTCPEventLoggingHandler.hxx"
+#include "rutil/MediaConstants.hxx"
 
 using namespace reTurn;
 
@@ -59,12 +64,6 @@ public:
       TurnAllocation
    };
 
-   enum SrtpCryptoSuite
-   {
-      SRTP_AES_CM_128_HMAC_SHA1_32,
-      SRTP_AES_CM_128_HMAC_SHA1_80
-   };
-
    MediaStream(asio::io_service& ioService,
                asio::ssl::context& sslContext,
                MediaStreamHandler& mediaStreamHandler,
@@ -77,16 +76,16 @@ public:
                const char* stunUsername = 0,
                const char* stunPassword = 0,
                bool forceCOMedia = false,
-               resip::SharedPtr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = resip::SharedPtr<RTCPEventLoggingHandler>(),
-               resip::SharedPtr<FlowContext> context = resip::SharedPtr<FlowContext>());
+               std::shared_ptr<RTCPEventLoggingHandler> rtcpEventLoggingHandler = nullptr,
+               std::shared_ptr<FlowContext> context = nullptr);
    virtual ~MediaStream();
 
    Flow* getRtpFlow() { return mRtpFlow; }
    Flow* getRtcpFlow() { return mRtcpFlow; }
 
    // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
-   bool createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
-   bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
+   bool createOutboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
+   bool createInboundSRTPSession(resip::MediaConstants::SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
 
 protected:
    friend class Flow;
@@ -96,8 +95,8 @@ protected:
    volatile bool mSRTPSessionInCreated;
    volatile bool mSRTPSessionOutCreated;
    resip::Mutex mMutex;
-   SrtpCryptoSuite mCryptoSuiteIn;
-   SrtpCryptoSuite mCryptoSuiteOut;
+   resip::MediaConstants::SrtpCryptoSuite mCryptoSuiteIn;
+   resip::MediaConstants::SrtpCryptoSuite mCryptoSuiteOut;
    uint8_t mSRTPMasterKeyIn[SRTP_MASTER_KEY_LEN];
    uint8_t mSRTPMasterKeyOut[SRTP_MASTER_KEY_LEN];
    srtp_policy_t mSRTPPolicyIn;

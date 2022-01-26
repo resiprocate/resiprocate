@@ -38,9 +38,9 @@ TelepathyParameters::getParameterList()
    params << Tp::ProtocolParameter(QLatin1String("alias"), QDBusSignature(QLatin1String("s")), Tp::ConnMgrParamFlagRequired)
           << Tp::ProtocolParameter(QLatin1String("account"), QDBusSignature(QLatin1String("s")), Tp::ConnMgrParamFlagRequired)
           << Tp::ProtocolParameter(QLatin1String("password"), QDBusSignature(QLatin1String("s")), Tp::ConnMgrParamFlagSecret | Tp::ConnMgrParamFlagRequired)
-          << Tp::ProtocolParameter(QLatin1String("turn-server"), QDBusSignature(QLatin1String("s")), 0)
-          //<< Tp::ProtocolParameter(QLatin1String("turn-port"), QDBusSignature(QLatin1String("q")), 0)
-          << Tp::ProtocolParameter(QLatin1String("root-cert-path"), QDBusSignature(QLatin1String("s")), 0, "/etc/ssl/certs")  // FIXME - differs on some platforms
+          << Tp::ProtocolParameter(QLatin1String("turn-server"), QDBusSignature(QLatin1String("s")), QFlags<Tp::ConnMgrParamFlag>())
+          //<< Tp::ProtocolParameter(QLatin1String("turn-port"), QDBusSignature(QLatin1String("q")), QFlags<Tp::ConnMgrParamFlag>())
+          << Tp::ProtocolParameter(QLatin1String("root-cert-path"), QDBusSignature(QLatin1String("s")), QFlags<Tp::ConnMgrParamFlag>(), "/etc/ssl/certs")  // FIXME - differs on some platforms
        ;
 
    return params;

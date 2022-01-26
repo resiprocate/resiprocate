@@ -10,15 +10,14 @@ SUBDIRS += . test
 
 EXTRA_DIST = fixupGperf
 EXTRA_DIST += mainpage.doc
-EXTRA_DIST += *.vcxproj *.vcxproj.filters
+EXTRA_DIST += *.vcxproj
 EXTRA_DIST += WinCompat.cxx
 EXTRA_DIST += msvc/*.h
 EXTRA_DIST += dns/LocalDns.cxx
 
-#AM_CXXFLAGS = -I../contrib/ares -DUSE_ARES
-AM_CXXFLAGS = -I $(top_srcdir) 
+librutil_la_CXXFLAGS = -I $(top_srcdir)
 if USE_ARES
-AM_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
+librutil_la_CXXFLAGS += -I $(top_srcdir)/rutil/dns/ares
 endif
 
 lib_LTLIBRARIES = librutil.la
@@ -27,6 +26,7 @@ librutil_la_LIBADD = $(LIBSSL_LIBADD)
 librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
 librutil_la_LIBADD += $(LIBARES_LIBADD)
 librutil_la_LIBADD += @LIBSTL_LIBADD@
+librutil_la_LIBADD += $(DEPS_FMT_LIBS)
 librutil_la_LIBADD += @LIBLOG_LIBADD@
 #librutil_la_LIBADD += -lrt
 librutil_la_LIBADD += @LIBPTHREAD_LIBADD@
@@ -40,6 +40,7 @@ librutil_la_SOURCES = \
 	Condition.cxx \
 	ConfigParse.cxx \
 	CountStream.cxx \
+        Crc32.cxx \
 	ServerProcess.cxx \
 	Data.cxx \
 	DataStream.cxx \
@@ -106,6 +107,14 @@ librutil_la_SOURCES += \
 	ssl/SHA1Stream.cxx
 endif
 
+if BUILD_GSTREAMER
+librutil_la_SOURCES += \
+	GStreamerUtils.cxx
+librutil_la_CXXFLAGS += $(GSTREAMERMM_1_0_CFLAGS)
+librutil_la_LIBADD += $(GSTREAMERMM_1_0_LIBS)
+# $(LDADD)
+endif
+
 rutilincludedir = $(includedir)/rutil
 nobase_rutilinclude_HEADERS = compat.hxx \
 	ResipAssert.h \
@@ -118,9 +127,9 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ConfigParse.hxx \
 	CongestionManager.hxx \
 	GeneralCongestionManager.hxx \
+	GStreamerUtils.hxx \
 	HeapInstanceCounter.hxx \
 	KeyValueStore.hxx \
-	SharedCount.hxx \
 	FdSetIOObserver.hxx \
 	Fifo.hxx \
 	CircularBuffer.hxx \
@@ -136,6 +145,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	RWMutex.hxx \
 	Subsystem.hxx \
 	Logger.hxx \
+	MediaConstants.hxx \
 	MD5Stream.hxx \
 	DnsUtil.hxx \
 	Timer.hxx \
@@ -144,7 +154,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	resipfaststreams.hxx \
 	Coders.hxx \
 	Sha1.hxx \
-	SharedPtr.hxx \
 	SelectInterruptor.hxx \
 	Socket.hxx \
 	dns/ExternalDnsFactory.hxx \
@@ -180,6 +189,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ssl/SHA1Stream.hxx \
 	ssl/OpenSSLInit.hxx \
 	CountStream.hxx \
+        Crc32.hxx \
 	vmd5.hxx \
 	XMLCursor.hxx \
 	PoolBase.hxx \

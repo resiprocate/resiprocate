@@ -77,7 +77,7 @@ bool Tu::process()
         "\r\n");
 
         SipMessage* msg = SipMessage::make(txt, false);
-        msg->setContents(std::auto_ptr<Contents>(contents));
+        msg->setContents(std::unique_ptr<Contents>(contents));
         Helper::ContentsSecAttrs csa(Helper::extractFromPkcs7(msg, *mSecurity));
         InfoLog( << "Body: " << *csa.mContents << "\n" );
         delete msg;
@@ -123,11 +123,11 @@ int main(int argc, char *argv[])
 
    Contents* contents1 = new PlainContents(Data("message signing"));
    // sign the message
-   encrypter.encrypt(std::auto_ptr<Contents>(contents1), senderAor.uri().getAor(), handle);
+   encrypter.encrypt(std::unique_ptr<Contents>(contents1), senderAor.uri().getAor(), handle);
 
    Contents* contents2 = new PlainContents(Data("message signing and encrypting"));
    // sign and encrypt the message
-   encrypter.encrypt(std::auto_ptr<Contents>(contents2), senderAor.uri().getAor(), recipAor.uri().getAor(), handle);
+   encrypter.encrypt(std::unique_ptr<Contents>(contents2), senderAor.uri().getAor(), recipAor.uri().getAor(), handle);
 
    while (tu.process())
    {

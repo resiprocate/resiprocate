@@ -20,7 +20,7 @@ public:
    BasicClientCall(BasicClientUserAgent& userAgent);
    virtual ~BasicClientCall();
    
-   virtual void initiateCall(const Uri& target, SharedPtr<UserProfile> profile);
+   virtual void initiateCall(const Uri& target, std::shared_ptr<UserProfile> profile);
    virtual void terminateCall();
    virtual void timerExpired();
 
@@ -28,7 +28,7 @@ protected:
    friend class BasicClientUserAgent;
 
    // This API must return an appropriate user profile after inspecting the incoming INVITE
-   virtual SharedPtr<UserProfile> selectUASUserProfile(const SipMessage&); 
+   virtual std::shared_ptr<UserProfile> selectUASUserProfile(const SipMessage&);
 
    // Invite Session Handler /////////////////////////////////////////////////////
    virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);

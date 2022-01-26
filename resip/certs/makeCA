@@ -26,6 +26,51 @@ fi
 cp $CONF openssl.cnf
 
 cat >> openssl.cnf  <<EOF
+
+
+[ CA_EC_default ]
+
+dir		= ./demoEllipticCA		# Where everything is kept
+certs		= \$dir/certs		# Where the issued certs are kept
+crl_dir		= \$dir/crl		# Where the issued crl are kept
+database	= \$dir/index.txt	# database index file.
+#unique_subject	= no			# Set to 'no' to allow creation of
+					# several ctificates with same subject.
+new_certs_dir	= \$dir/newcerts		# default place for new certs.
+
+certificate	= \$dir/cacert.pem 	# The CA certificate
+serial		= \$dir/serial 		# The current serial number
+crlnumber	= \$dir/crlnumber	# the current crl number
+					# must be commented out to leave a V1 CRL
+crl		= \$dir/crl.pem 		# The current CRL
+private_key	= \$dir/private/cakey.pem# The private key
+RANDFILE	= \$dir/private/.rand	# private random number file
+
+x509_extensions	= usr_cert		# The extentions to add to the cert
+
+# Comment out the following two lines for the "traditional"
+# (and highly broken) format.
+name_opt 	= ca_default		# Subject Name options
+cert_opt 	= ca_default		# Certificate field options
+
+# Extension copying option: use with caution.
+# copy_extensions = copy
+
+# Extensions to add to a CRL. Note: Netscape communicator chokes on V2 CRLs
+# so this is commented out by default to leave a V1 CRL.
+# crlnumber must also be commented out to leave a V1 CRL.
+# crl_extensions	= crl_ext
+
+default_days	= 365			# how long to certify for
+default_crl_days= 30			# how long before next CRL
+default_md	= default		# use public key default MD
+preserve	= no			# keep passed DN ordering
+
+# A few difference way of specifying how similar the request should look
+# For type CA, the listed attributes must be the same, and the optional
+# and supplied fields are just that :-)
+policy		= policy_match
+
 [ cj_cert ]
 subjectAltName=\${ENV::ALTNAME}
 basicConstraints=CA:FALSE
@@ -43,61 +88,59 @@ EOF
 
 cat > demoCA/private/cakey.pem <<EOF
 -----BEGIN ENCRYPTED PRIVATE KEY-----
-MIIFDjBABgkqhkiG9w0BBQ0wMzAbBgkqhkiG9w0BBQwwDgQIlTXw5DSf1bICAggA
-MBQGCCqGSIb3DQMHBAjbfMU7LoW4gQSCBMg8fVGDGf+GWuPFd0WCX4sQTYa7xr/G
-ZV4s2CPj6KiEYHq36zz3TvkXN67migzz/aVU8yEMlyRG/P8OS8pM94RLJgKBW0hg
-LS6fMjMlzkxVumEasjsor5waJZuwvb7waTBV253XxHHEGZdINedXlkA84iEfYFll
-RUyYFAjXZqx8zChSUhr5wmi4Hx5oA5E1lOFTSskqn1Sp8yzBp0qBqEZ1lOgc4Kb7
-5M+x8IOVwtYr+ga2C4MqHiLqB+4guVWqpN9xG7UkV6XxqXJF/yHiG3xv4nI+O3fL
-PO65i5T/880SHPte3lqFqBm2JoblGREw8Pmv7QPIViQMG7M6eHla6Jlz8HrsGLQ4
-X5f4UnretzGu6/TBTrWqhyU4cpFl3ZSDfWeEHLYeVB2L5mtsaJwAlnKSWmwKWKgI
-xLYBjiW9EhszV+tzwhSRU4htjb2OB46O6bCQJ36fkjV9kfF7hZMNhPLyN3a9ZxIU
-oZNuA7csPJ+irsgsOvw3KufPbjd+86aNnu8cwoCTM/yXHw6LhdYsvU+FuT1BBmOZ
-BcZkDKRmxXHwvPmObXDmzNh58G+SorZ753b2wHY9Vw6pxppmqhlWQqLVHXWtaCGz
-EcnHhBA80Dnzsx+50vYEpK2uLgK7xpXNIrZDPabAaG4LvE3oDBdhLdhCcV3wy4Of
-U84k2voxjL8sf1y7+AdU36W5S1FDEQMBsLqtuDxruK3BS8UDgrBt6H3CuyJmfMkF
-dyBb5K71VKROFLg8ktZh00JB/bXYZm/yi1ENLXkcHxTcC11aLsqqE9q8roeimEz8
-6+ZWDcFbNbsfFyI+Qi9R4FRvgUmxdX/U4UH3lcQbjNBOOPfVm/HVPNvRpPaAbOqu
-KrSkzRcq5ICF0bLA/C13K9AQemTPzyjW+0Dze2es9UZt931AOdD+Pns1Kwe3oBgP
-u2mEAB0SVvmBq3KeXiWBjk+TCHm6sd1lV3v4Ro1HklrlWAeLzicOUxTVyTUjDbLg
-JO9uTFqJCVB6McIlThxBF0dlFzDrw0TeA30dqwDzmwuNbORQA8iIs2bSyqv1VE8N
-WKipdVIrtNjFaa+lVySlKUSftxtW7ogFTxQBVa27rHHc0aTZvz5/5cphw/LXyrjS
-PSegDXar7KenED/bDHFWcartfsFD9rWLYLAtaI+MPeAK0qrU18ccgij6WFKasCCa
-cSyA/ef9E1d5Xy5JQf6KECf6tigDIX6u1tRhFhmK9lY5bcKICealQTxwnBHqN+Nq
-iuo3CcLCVoVROkvLgsKMh97Q+8HUfp+txcj4SwCpr+acc+81PWqOcmDwW2XXsybs
-ZdQtjJiOmVHxVkqsmcksXH/TBsKJ2JVagQ/lLfkaAljWYfaT0HsE+9PTKn4zgQZR
-Jm+tW5CdMjMGwsubP3A71Z13iCUvTQFJxaxsnPOZMOA6b4kqNu6fvG01wZfqtify
-nCHGrfp8SOQX/VG9zDHcziXAzXZ9KFZqud71ewA5MEglFY47iB45hw1wzMg9gAlW
-39qvb+gULVg1/wzn0MNjDYkcirjNSEbFYRWnv2Y8C0Nl5W+DhL+BEy/4QS/Hi3Bx
-dCguxvor7dLogiXLQveTIN4aiaaJJhT6dYo18TONkhFaFvoFoYuclRe7TilvQ6ap
-too=
+MIIFHDBOBgkqhkiG9w0BBQ0wQTApBgkqhkiG9w0BBQwwHAQIOSgKmU5DsbMCAggA
+MAwGCCqGSIb3DQIJBQAwFAYIKoZIhvcNAwcECKdQX8+Tx++xBIIEyJ/bxNWRKO3y
+YcoJsvEEoETi/dS5EqJ0vrx2FYkijTIiZIiZuQPBZrUZdWBViZe764QJnVvhU6ND
+DLfWwjA0S7lJmOYGpd0UkAtK48+fekKFitNrDS8ssxC0eaSMBOTTIMz5e5C3AtpA
+Utn9S6B0G2YLXWCJNCOZMgeed3u95bCdh2LdnraxFjbIsYtFusF8rcYHlR/OycrJ
+8KUZZxDTkCA0OwyvGBtKEVc5qrOlgeDx2JXBwTsWD9Mg6HahnGJoiAM7Ht/L3lHk
+xOcwhObco4RzuSBppyHTYP2jDrCXl8b1Cej0LJzpuK7yhQyAqT807YkzV76Cr5gA
+6YBwcuAwvgakBqnyOAFy6PeKIPwhzn6PFxF2Yqjziz6aue7b1vuUmWqjXu5Mnupc
+P7gJtM/WXIln8JuGY5RhsFVGudlh7wZieMtOKVxHyk2CZFNKED93dDMC2wnB6jQO
+EmSzOeLJxjBkoF8CmqqQRNdD+rwTth5yTlfnBfvihX/oeFLR2W3w8LdO46l8ENQa
+ntqemVqrwnSMwiCCi3DVx3KfBLzkQVgr8PWFkSxfhCmIQ2CRSlKZCwInfgWqlIL5
+AHueb6VT2tr4KqL3hPsytGq0U58BlS2CyPsXDSBbhw0eHhLhJrFYqduv5jkk0rgt
+9a3rMCKyQ6Y501sC3TDlCQ77Y0EO2QRNmZzGLSenHulu2Ffsae/3oKM2ftBakeFv
+0kdczwf5Ib1fAvkUxvi8sqgz3yVsI3n/CYPdSyU4cInqtjbyDsXEmyat0qIbFa8B
+Svjw3qZm24mfeIwdntfjkoz5VjHV+UGA+S/wI/Q/DwmxoJdPhePX/vGPo10ixz+o
+ecW3V2dxzIEGpLueUmnyVqlppT+IJUS6JEogdR9WsisnjWQ2D9UKD0uQ1dUjAZEv
+ImmZJYzG8n8f/JP7Y/TJ9FjJkDK2/+oSR8fR0LApK/4Zc6fCI+bzAPofmGvIPy8h
+S7npr/nV0uDZpy+gHOURhB8xD5xk9zl8jonbyX+jAcFMoXwXDKY30Lb4Gu4Xzw5F
+gOFWcWqtSyOixWK30nDQrUfNYdUtj05UP4mlG+QUTWOS5n1rg+TtEJ6bLQpK8cuB
+lYhPyoUoydVz7DZlSDt/PhLdz9Yman+fLLHBc+PTRkirb293pQnZXJtvwXParocE
+7oXC5tGPO+XwXjmuv+RhUw/jKkNECfEFQh/8OcF7XHRrqg1b3HQczePtH6vFVCOI
+wOBDzIeeDKRA8ZDd3yVPG5OkrDdxNQBMr5ALrM413/0GeUo3EQ3tAYu4YGgMGEwN
+qE4mBRkmQoV8KZp0i8Zt+qJ4kkDe5iTcqUlq7VztsX38dZK6PrE02iqxJCR/ZF8s
+CPcR6vd6aMq6ZGSgG7Gpqd72hVrgwMgxB0UzA6AKjZzXVI55+HVKO4n0g+J1WwRq
+j00DIYKXTv2RuPuNzGlOO2FJmjMEvH3B/7v/odwyhxDJQCOSpASfS1feJcRmw25m
+ihGJw6e6PsuwDpXnuhjdcSgQFFVKpC/U+4inZLUH38sfC3an6YTiWzzRT3Tfr2i7
+xfpDr4PmADr2Ma0yKK6c/hrHBYR6o6er4ZPllWOaSuJ5dd87ehxJ8Joxgp/f6aO5
+ffir0rBiLuqaTDylsRzqqQ==
 -----END ENCRYPTED PRIVATE KEY-----
 EOF
 
 cat > demoCA/cacert.pem <<EOF
 -----BEGIN CERTIFICATE-----
-MIID8TCCAtmgAwIBAgIJAOuARzV9xaAQMA0GCSqGSIb3DQEBBQUAMIGOMQswCQYD
-VQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTERMA8GA1UEBwwIU2FuIEpvc2Ux
-DjAMBgNVBAoMBXNpcGl0MSkwJwYDVQQLDCBTaXBpdCBUZXN0IENlcnRpZmljYXRl
-IEF1dGhvcml0eTEKMAgGA1UEAwwBIDEQMA4GCSqGSIb3DQEJARYBIDAeFw0xMzAy
-MjEyMDIzNTJaFw0yMzAyMTkyMDIzNTJaMIGOMQswCQYDVQQGEwJVUzETMBEGA1UE
-CAwKQ2FsaWZvcm5pYTERMA8GA1UEBwwIU2FuIEpvc2UxDjAMBgNVBAoMBXNpcGl0
-MSkwJwYDVQQLDCBTaXBpdCBUZXN0IENlcnRpZmljYXRlIEF1dGhvcml0eTEKMAgG
-A1UEAwwBIDEQMA4GCSqGSIb3DQEJARYBIDCCASIwDQYJKoZIhvcNAQEBBQADggEP
-ADCCAQoCggEBAMEz80zTY13l3vJdg9AG0i+Y+YITJA9XkebD3CmjrvtrY2S0/OP0
-6KDcG9q7VI9lrR3p6blxvm1GevJVnhNbYp2WFgiN3dwRjbCgdBq6328a5IEAmg/1
-wywDOImL4XhwWSgKpeCanh/UvoKoRt6hj4atugEN+u91eEQqAWXFArGu8NmyBM85
-SvzBYq2FrZqvcTIFGfs9qMyzDjpJXr5c6wISW/OMBBUdKjda5unELU6xwt0qtiRP
-hmJdxYX+2BSL6G651FlRY1wWeHEqGngpWybBvrBnvj3sDM4IWmMWjHJg3MsCwJuc
-670wreraBIK4UVjndfHWhJauRkOAfE+KNGECAwEAAaNQME4wHQYDVR0OBBYEFFLI
-3MNbyVWBJ0do3TrJzoQZb0wFMB8GA1UdIwQYMBaAFFLI3MNbyVWBJ0do3TrJzoQZ
-b0wFMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEFBQADggEBACMlfDQTUH3Wjf8e
-Su3zXZGKpdFlXVqi+ZTSXwfd3u162WmTCykto0mmCjBwpD/eSH49Vgr7UspSNJpb
-rsMMPmiTNQcJAXOcE30oHvkvgGg0OTuL2ea3XyXhtp6jKfZDep5hNmeEeRYKBghx
-jSgkTWbgGAyYQtK2VzmYvqwgBf7XeOk6Pgd+W11ykpKFlhuDXq8ktQAna6DBEWiY
-qAz5EbI+hWBrweqNWZTorSMl2isc97tKXgHrB2Ctc/1vrkDS84NJ//FmbHQPZyUq
-ovMUMUNBGeIO5IS6pcot2g/msystP/R7wbURiOr697OF10H9jKbHgEnsmo4FOxzh
-4z6bG6w=
+MIIDsTCCApmgAwIBAgIUJD0gd2qZjxhRJs63Xze4geZtdkkwDQYJKoZIhvcNAQEL
+BQAwaDELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMREwDwYDVQQHDAhTYW4gSm9z
+ZTEOMAwGA1UECgwFU0lQaXQxKTAnBgNVBAMMIFNJUGl0IFRlc3QgQ2VydGlmaWNh
+dGUgQXV0aG9yaXR5MB4XDTIxMTIxMzE5MTkwNVoXDTMxMTIxMTE5MTkwNVowaDEL
+MAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMREwDwYDVQQHDAhTYW4gSm9zZTEOMAwG
+A1UECgwFU0lQaXQxKTAnBgNVBAMMIFNJUGl0IFRlc3QgQ2VydGlmaWNhdGUgQXV0
+aG9yaXR5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv24mkn4NneLT
+KrX7CSIoa1QEa8br19DDPUkF1vvr3O57d2JpKskqlZR+e4XplCX71/2fdaFKqOxE
+U1ddZuCLw+h9ePQVCWd3AHbznCj7wkLfmPedVHgectZNxcnIU++HbOqmuyl9rX79
+gCqHoA0Dsn29qz2WfekIEEgZt23fjBgiXEqgwkwn3R2ncufZoxFzRZeFELSuU7Sr
+y97DR7hVbsUGSGpO1b9DD/p+7N9QwnDHKPLnKd/1Mt3mSd8QHmLqS6DBn3MXyohd
+3F2sj/gN04oF+8mpuupHsFyB2Op9Ob5ft7EVgQt+DkjL+RML106JI+BXIGsZViuX
+NKAQRRg54wIDAQABo1MwUTAdBgNVHQ4EFgQU4UELkyVdYOqUmVXN8lBKY2dcAhEw
+HwYDVR0jBBgwFoAU4UELkyVdYOqUmVXN8lBKY2dcAhEwDwYDVR0TAQH/BAUwAwEB
+/zANBgkqhkiG9w0BAQsFAAOCAQEAsEKe6cYj3+wPCMD2Qfm9uZIGZoQd7BJ9RVEL
+E6aPrQjkl2THfdA3ubwNeAvxgLZho06/3hvWm88fgOx2OHsMPcfPfuhKxt1Fztis
+DkR8zLoyExrIOIGz0gfEJLiYw2P3Hw3dwi+adOMj9VfG2dPq74AHeKLantlzE8P/
+YTDU22zKEG2R8E5t1nA5VKJtYXxLcCZcm7qFPHPPQb9qfywXuAGeM4SEW9ztIeas
+jyeQafIrdipIexejrcpLTTfxhLDHozqgK5EqfrmIoRPCV4rq+nU1s1zFjAgyRpO1
+dbOOeCNypeS1XWCv2in8tlPDPKJ/JMwJcFYJc2nJyd68OvNRGg==
 -----END CERTIFICATE-----
 EOF
 
@@ -109,12 +152,12 @@ EOF
 #     -sha256 -x509 -keyout demoCA/private/cakey.pem \
 #     -out demoCA/cacert.pem -days 3650 <<EOF
 #US
-#California
+#CA
 #San Jose
-#sipit
-#Sipit Test Certificate Authority
-# 
-# 
+#SIPit
+#
+#SIPit Test Certificate Authority
+#
 #EOF
 # 
 #openssl crl2pkcs7 -nocrl -certfile demoCA/cacert.pem \

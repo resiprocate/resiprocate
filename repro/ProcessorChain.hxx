@@ -14,8 +14,8 @@ class ProcessorChain : public Processor
       ProcessorChain(ChainType type);
       virtual ~ProcessorChain();
 
-      void addProcessor(std::auto_ptr<Processor>);
-      template<class T> void insertProcessor(std::auto_ptr<Processor> rp)
+      void addProcessor(std::unique_ptr<Processor>);
+      template<class T> void insertProcessor(std::unique_ptr<Processor> rp)
       {
          resip_assert(!mChainReady);
          rp->setChainType(mType);

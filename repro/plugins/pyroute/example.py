@@ -1,5 +1,8 @@
 
-import resip
+# This import fails with an error "No module named 'resip'"
+# therefore we have commented it out and we force it to
+# be included from the plugin so it is always available as 'resip'
+#import resip
 
 def on_load():
     '''Do initialisation when module loads'''

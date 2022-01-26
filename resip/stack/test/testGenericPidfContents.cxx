@@ -98,7 +98,7 @@ main(int argc, char** argv)
            );
        try
        {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+           unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
            Contents* body = msg->getContents();
 
            assert(body != 0);
@@ -297,6 +297,59 @@ main(int argc, char** argv)
        assert(pidf.getSimplePresenceContactPriority() == Data::Empty);
        assert(pidf.getSimplePresenceList().size() == 1);
        cout << pidf << endl;
+   }
+
+   {
+      // From MicroSIP
+      const Data txt(
+         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+         "<presence entity=\"sip:5002@test.com\" xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:dm=\"urn:ietf:params:xml:ns:pidf:data-model\" xmlns:rpid=\"urn:ietf:params:xml:ns:pidf:rpid\">" CRLF
+         " <tuple id=\"pjfc724ba49ebd4a9dad7cb24e1deeda45\">" CRLF
+         "  <status>" CRLF
+         "   <basic>open</basic>" CRLF
+         "  </status>" CRLF
+         "  <timestamp>2021-06-07T13:30:35.944Z</timestamp>" CRLF
+         "  <note>Idle</note>" CRLF
+         " </tuple>" CRLF
+         " <dm:person id=\"pj20b505aca98548608040cde036e86ed8\">" CRLF
+         "  <rpid:activities>" CRLF
+         "   <rpid:unknown />" CRLF
+         "  </rpid:activities>" CRLF
+         "  <dm:note>Idle</dm:note>" CRLF
+         " </dm:person>" CRLF
+         "</presence>" CRLF
+      );
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      GenericPidfContents pidf(hfv, GenericPidfContents::getStaticType());
+      assert(pidf.getEntity() == Uri("sip:5002@test.com"));
+      assert(pidf.getNamespaces().size() == 3);
+      assert(pidf.getRootPidfNamespacePrefix().empty());
+      assert(pidf.getRootNodes().size() == 2);
+      assert(pidf.getRootNodes().front()->mTag == "tuple");
+      assert(pidf.getRootNodes().front()->mAttributes.size() == 1);
+      assert(pidf.getRootNodes().front()->mAttributes["id"] == "pjfc724ba49ebd4a9dad7cb24e1deeda45");
+      assert(pidf.getRootNodes().front()->mChildren.size() == 3);
+      assert(pidf.getRootNodes().front()->mChildren.front()->mTag == "status");
+      assert(pidf.getRootNodes().front()->mChildren.front()->mChildren.size() == 1);
+      assert(pidf.getRootNodes().front()->mChildren.front()->mChildren.front()->mTag == "basic");
+      assert(pidf.getRootNodes().front()->mChildren.front()->mChildren.front()->mValue == "open");
+      assert(pidf.getRootNodes().back()->mTag == "person");
+      assert(pidf.getRootNodes().back()->mAttributes.size() == 1);
+      assert(pidf.getRootNodes().back()->mAttributes["id"] == "pj20b505aca98548608040cde036e86ed8");
+      assert(pidf.getRootNodes().back()->mChildren.size() == 2);
+      assert(pidf.getRootNodes().back()->mChildren.front()->mTag == "activities");
+      assert(pidf.getRootNodes().back()->mChildren.front()->mChildren.size() == 1);
+      assert(pidf.getRootNodes().back()->mChildren.front()->mChildren.front()->mTag == "unknown");
+      assert(pidf.getRootNodes().back()->mChildren.front()->mChildren.front()->mValue.empty());
+      assert(pidf.getSimplePresenceTupleId() == "pjfc724ba49ebd4a9dad7cb24e1deeda45");
+      assert(pidf.getSimplePresenceOnline() == true);
+      assert(pidf.getSimplePresenceTimestamp() == "2021-06-07T13:30:35.944Z");
+      assert(pidf.getSimplePresenceNote() == "Idle");
+      assert(pidf.getSimplePresenceContact() == Data::Empty);
+      assert(pidf.getSimplePresenceContactPriority() == Data::Empty);
+      assert(pidf.getSimplePresenceList().size() == 1);
+      cout << pidf << endl;
    }
 
    {

@@ -21,6 +21,7 @@
 #include <rutil/ThreadIf.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include <utility>
 // sipX includes
 #include <os/OsSysLog.h>
 
@@ -58,8 +59,8 @@ public:
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(Server& server, SharedPtr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
-      UserAgent(&server, profile, socketFunc),
+   MyUserAgent(Server& server, std::shared_ptr<UserAgentMasterProfile> profile, resip::AfterSocketCreationFuncPtr socketFunc) :
+      UserAgent(&server, std::move(profile), socketFunc),
       mServer(server) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
@@ -99,7 +100,8 @@ public:
                            const char* file,
                            int line,
                            const Data& message,
-                           const Data& messageWithHeaders)
+                           const Data& messageWithHeaders,
+                           const Data& instanceName)
    {
       // Log any warnings/errors to the screen and all MOHParkServer logging messages
       if(level <= Log::Warning || subsystem.getSubsystem() == AppSubsystem::MOHPARKSERVER.getSubsystem())
@@ -112,7 +114,7 @@ public:
 MOHParkServerLogger g_MOHParkServerLogger;
 
 Server::Server(ConfigParser& config) : 
-   ConversationManager(false /* local audio? */, ConversationManager::sipXConversationMediaInterfaceMode),
+   SipXConversationManager(false /* local audio? */, SipXConversationManager::sipXConversationMediaInterfaceMode),
    mConfig(config),
    mIsV6Avail(false),
    mMyUserAgent(0),
@@ -192,7 +194,7 @@ Server::Server(ConfigParser& config) :
    // Setup UserAgentMasterProfile
    //////////////////////////////////////////////////////////////////////////////
 
-   SharedPtr<UserAgentMasterProfile> profile(new UserAgentMasterProfile);
+   auto profile = std::make_shared<UserAgentMasterProfile>();
 
    // Add transports
    try
@@ -331,8 +333,7 @@ Server::Server(ConfigParser& config) :
    profile->rtpPortRangeMax() = mConfig.mMediaPortRangeStart + mConfig.mMediaPortRangeSize-1; 
 
    // Install Sdp Message Decorator
-   SharedPtr<MessageDecorator> outboundDecorator(new SdpMessageDecorator);
-   profile->setOutboundDecorator(outboundDecorator);
+   profile->setOutboundDecorator(std::make_shared<SdpMessageDecorator>());
 
    mUserAgentMasterProfile = profile;
 
@@ -450,8 +451,10 @@ Server::shutdown()
 void 
 Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
 {
-   unsigned int codecIds[] = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */, 
+   std::vector<unsigned int> codecIds = { SdpCodec::SDP_CODEC_PCMU /* 0 - pcmu */,
                                SdpCodec::SDP_CODEC_PCMA /* 8 - pcma */, 
+                               SdpCodec::SDP_CODEC_G729A /* 18 - g729 */,
+                               SdpCodec::SDP_CODEC_OPUS /* 147 - opus */,
                                SdpCodec::SDP_CODEC_SPEEX /* 96 - speex NB 8,000bps */,
                                SdpCodec::SDP_CODEC_SPEEX_15 /* 98 - speex NB 15,000bps */, 
                                SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
@@ -465,8 +468,7 @@ Server::buildSessionCapabilities(resip::SdpContents& sessionCaps)
                                SdpCodec::SDP_CODEC_SPEEX_5 /* 97 - speex NB 5,950bps */,
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
                                SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
-   unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
-   ConversationManager::buildSessionCapabilities(mConfig.mAddress, numCodecIds, codecIds, sessionCaps);
+   SipXConversationManager::buildSessionCapabilities(mConfig.mAddress, codecIds, sessionCaps);
 }
 
 void 

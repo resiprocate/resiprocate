@@ -163,7 +163,7 @@ DnsUtil::getLocalHostName()
          // !jf! this should really use the Data class 
          if (strchr(result->ai_canonname, '.') != 0) 
          {
-            strncpy(buffer, result->ai_canonname, sizeof(buffer));
+            snprintf(buffer, sizeof(buffer), "%s", result->ai_canonname);
          }
          else 
          {

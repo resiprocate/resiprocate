@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <utility>
 
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
@@ -87,7 +88,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
+RequestContext::process(std::unique_ptr<resip::SipMessage> sipMessage)
 {
    bool original = false;
    InfoLog (<< "RequestContext::process(SipMessage) " << sipMessage->getTransactionId());
@@ -390,7 +391,7 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
          handleSelfAimedStrayAck(msg);
       }
       // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
-      else if(msg->hasForceTarget() || mTopRouteFlowTupleSet || getProxy().isMyUri(msg->header(h_From).uri()))
+      else if(msg->hasForceTarget() || !mTopRoute.uri().host().empty() || getProxy().isMyUri(msg->header(h_From).uri()))
       {
          // Top most route is us, or From header uri is ours.  Note:  The From check is 
          // required to interoperate with endpoints that configure outbound proxy 
@@ -654,7 +655,7 @@ RequestContext::doPostResponseProcessing(SipMessage* msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<ApplicationMessage> app)
+RequestContext::process(std::unique_ptr<ApplicationMessage> app)
 {
    InfoLog (<< "RequestContext::process(ApplicationMessage) " << *app);
 
@@ -894,13 +895,13 @@ RequestContext::updateTimerC()
    InfoLog(<<"Updating timer C.");
    mTCSerial++;
    TimerCMessage* tc = new TimerCMessage(this->getTransactionId(),mTCSerial);
-   mProxy.postTimerC(std::auto_ptr<TimerCMessage>(tc));
+   mProxy.postTimerC(std::unique_ptr<TimerCMessage>(tc));
 }
 
 void
-RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds)
+RequestContext::postTimedMessage(std::unique_ptr<resip::ApplicationMessage> msg,int seconds)
 {
-   mProxy.postMS(msg,seconds);
+   mProxy.postMS(std::move(msg), seconds);
 }
 
 void
@@ -914,7 +915,7 @@ RequestContext::postAck200Done()
    // non-ACK transaction with the same tid during this time, and make
    // sure we don't explode violently when this happens.)
    mProxy.postMS(
-      std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+      std::unique_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
       64*resip::Timer::T1);
 }
 

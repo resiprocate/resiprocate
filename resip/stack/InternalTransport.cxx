@@ -188,7 +188,7 @@ InternalTransport::hasDataToSend() const
 }
 
 void
-InternalTransport::send(std::auto_ptr<SendData> data)
+InternalTransport::send(std::unique_ptr<SendData> data)
 {
    mTxFifo.add(data.release());
 }

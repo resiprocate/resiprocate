@@ -2,6 +2,7 @@
 #include "ReconSubsystem.hxx"
 #include "UserAgentDialogSetFactory.hxx"
 #include "RemoteParticipant.hxx"
+#include "RemoteIMSessionParticipantDialogSet.hxx"
 #include "DefaultDialogSet.hxx"
 
 #include <rutil/Log.hxx>
@@ -29,8 +30,22 @@ UserAgentDialogSetFactory::createAppDialogSet(DialogUsageManager& dum,
    switch(msg.method())
    {
    case INVITE:
-      return new RemoteParticipantDialogSet(mConversationManager);
+   {
+      SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+      if (sdp)
+      {
+         for (auto it = sdp->session().media().begin(); it != sdp->session().media().end(); it++)
+         {
+            if (it->name() == "message")
+            {
+               // If there is a message media line, then we assume no audio/video are present and we create an RemoteIMSessionParticipantDialogSet
+               return mConversationManager.createRemoteIMSessionParticipantDialogSetInstance();
+            }
+         }
+      }
+      return mConversationManager.createRemoteParticipantDialogSetInstance();
       break;
+   }
    default:
       return new DefaultDialogSet(mConversationManager);
       break;
@@ -40,6 +55,7 @@ UserAgentDialogSetFactory::createAppDialogSet(DialogUsageManager& dum,
 
 /* ====================================================================
 
+ Copyright (c) 2021-2022, SIP Spectrum, Inc.  http://www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

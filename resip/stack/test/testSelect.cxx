@@ -130,6 +130,7 @@ main(int argc, char* argv[])
    for ( int i=1; i<NUMCYCLES; i++ )
    {
       cout << time2[i] - time1[i] << " ";
+      cout << time3[i] - time2[i] << " ";
       cout << time1[i] - time1[i-1] << " ";
       
       cout << endl;

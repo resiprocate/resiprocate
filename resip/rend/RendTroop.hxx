@@ -16,7 +16,6 @@
 
 //#include <map>
 
-//#include "rutil/SharedPtr.hxx"
 //#include "resip/stack/SipStack.hxx"
 //#include "resip/stack/TransactionUser.hxx"
 //

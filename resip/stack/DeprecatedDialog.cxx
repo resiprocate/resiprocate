@@ -33,7 +33,7 @@ DeprecatedDialog::DeprecatedDialog(const NameAddr& localContact)
      mRemoteUri(),
      mLocalUri()
 {
-    // .kw. members "secure" and "expireyTimeAbsoluteMs" are not initialized!
+    // .kw. member "expireyTimeAbsoluteMs" not initialized!
 }
 
 SipMessage*

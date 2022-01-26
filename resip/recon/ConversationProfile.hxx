@@ -55,7 +55,7 @@ public:
                         class, then the setting will "fall through" to 
                         the base profile
    */  
-   ConversationProfile(resip::SharedPtr<resip::Profile> baseProfile);  
+   ConversationProfile(std::shared_ptr<resip::Profile> baseProfile);  
 
    /**
      Get the conversation profile handle.  Returns 0 if called before adding
@@ -262,6 +262,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

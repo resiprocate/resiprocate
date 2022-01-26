@@ -237,6 +237,7 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("settings.html")) &&
       ( pageName != Data("restart.html") ) &&  
       ( pageName != Data("logLevel.html") ) &&
+      ( pageName != Data("reloadcerts.html") ) &&
       ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
@@ -426,6 +427,7 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("settings.html"))    buildSettingsSubPage(s);
       if ( pageName == Data("restart.html"))     buildRestartSubPage(s);
       if ( pageName == Data("logLevel.html"))    buildLogLevelSubPage(s);
+      if ( pageName == Data("reloadcerts.html")) buildReloadCertsSubPage(s);
       
       s << mPageOutlinePost;
       s.flush();
@@ -2038,6 +2040,12 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
            << "  <input type=\"submit\" name=\"action\" value=\"Restart Proxy\"/>" << endl
            << "</form>" << endl;
    }
+
+#ifdef USE_SSL
+   s << "<form id=\"reloadCerts\" method=\"get\" action=\"reloadcerts.html\" name=\"reloadcerts\">" << endl
+       << "  <input type=\"submit\" name=\"action\" value=\"Reload Certificates\"/>" << endl
+       << "</form>" << endl;
+#endif
 }
 
 void 
@@ -2136,6 +2144,13 @@ WebAdmin::buildLogLevelSubPage(resip::DataStream& s)
       WarningLog(<<"no log level specified");
       s << "ERROR: No level specified." << endl;
    }
+}
+
+void
+WebAdmin::buildReloadCertsSubPage(resip::DataStream& s)
+{
+    mProxy.getStack().reloadCertificates();
+    s << "Reloaded certificates." << endl;
 }
 
 Data 

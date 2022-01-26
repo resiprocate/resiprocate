@@ -7,7 +7,8 @@
 
 #include "resip/stack/ssl/TlsConnection.hxx"
 #include "resip/stack/WsConnectionBase.hxx"
-#include "rutil/SharedPtr.hxx"
+
+#include <memory>
 
 namespace resip
 {
@@ -15,14 +16,11 @@ namespace resip
 class WssConnection :  public TlsConnection, public WsConnectionBase
 {
    public:
+      WssConnection() = delete;
       WssConnection( Transport* transport, const Tuple& who, Socket fd,
                      Security* security, bool server, Data domain,
                      SecurityTypes::SSLType sslType, Compression &compression,
-                     SharedPtr<WsConnectionValidator> wsConnectionValidator);
-
-   private:
-      /// No default c'tor
-      WssConnection();
+                     std::shared_ptr<WsConnectionValidator> wsConnectionValidator);
 };
 
 }

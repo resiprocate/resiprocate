@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: latin-1 -*-
 
 # Usage:
@@ -56,11 +56,11 @@
 #
 # Debian/Ubuntu requirements:
 #
-#     apt-get install python-psycopg2
+#     apt-get install python3-psycopg2
 #
 # RPM requirements:
 #
-#     yum install python-psycopg2
+#     yum install python3-psycopg2
 #
 
 import hashlib
@@ -88,14 +88,14 @@ if __name__ == '__main__':
     cfg_file = default_cfg_file
     if len(sys.argv) > 1:
         cfg_file = sys.argv[1]
-    execfile(cfg_file)
+    exec(open(cfg_file).read())
 
     ###### startup, connect to Postgres
     conn = psycopg2.connect(psql_conninfo)
     cur = conn.cursor()
 
     work_dir = os.path.dirname(dest_file)
-    t = tempfile.NamedTemporaryFile(dir=work_dir, delete=False)
+    t = tempfile.NamedTemporaryFile(mode='w', dir=work_dir, delete=False)
 
     ###### run the query
     if custom_query:
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     ###### if it has changed, send HUP to the reTurnServer process
     if move_file:
         os.rename(t.name, dest_file)
-        os.chmod(dest_file, 0640)
+        os.chmod(dest_file, 0o640)
         os.system( 'chgrp return %s' % (dest_file,))
         if pid_file:
             reTurnPid = int(open(pid_file, 'rb').read())

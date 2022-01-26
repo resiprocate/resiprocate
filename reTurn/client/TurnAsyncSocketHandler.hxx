@@ -10,6 +10,8 @@
 #include "reTurn/DataBuffer.hxx"
 #include "reTurn/StunTuple.hxx"
 
+#include <memory>
+
 namespace reTurn {
 
 class TurnAsyncSocketHandler
@@ -43,7 +45,7 @@ public:
    virtual void onChannelBindFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    //virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size) = 0;
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data) = 0;
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data) = 0;
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    virtual void onSendSuccess(unsigned int socketDesc) = 0;

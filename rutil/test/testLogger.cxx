@@ -69,7 +69,8 @@ class TestExternalLogger : public ExternalLogger
                               const char* file,
                               int line,
                               const Data& message,
-                              const Data& messageWithHeaders)
+                              const Data& messageWithHeaders,
+                              const Data& instanceName)
       {
          cout << "From TestExternalLogger: " << message << endl;
          return true;         
@@ -216,7 +217,7 @@ main(int argc, char* argv[])
    
    Log::initialize(Log::Cout, Log::Info, argv[0]);
    InfoLog(<<"This should appear-back to Cout");
-   sleep(2);   
+   sleep(2);
 
    Log::setLevel(Log::Info);
 
@@ -247,6 +248,20 @@ main(int argc, char* argv[])
 
    cout << endl;
    testThreadLocalLoggers(argv[0]);
+
+   Log::initialize(Log::Cout, Log::Info, argv[0], 0, 0, "LOG_DAEMON", Log::MessageStructure::Unstructured, "TestDev");
+   InfoLog(<<"This should appear-back to Cout");
+
+   Log::initialize(Log::Cout, Log::Info, argv[0], 0, 0, "LOG_DAEMON", Log::MessageStructure::JSON_CEE);
+   InfoLog(<<"This should appear-back to\tCout as JSON,\n\"Hello World\"");
+
+   Log::initialize(Log::Cout, Log::Info, argv[0], 0, 0, "LOG_DAEMON", Log::MessageStructure::JSON_CEE, "TestDev");
+   ErrLog(<<"This should appear-back to Cout as JSON, \"Hello World\"");
+
+#ifndef WIN32
+   Log::initialize(Log::Syslog, Log::Info, argv[0], 0, 0, "LOG_LOCAL4", Log::MessageStructure::JSON_CEE, "TestDev");
+   ErrLog(<<"This should appear on Syslog as JSON, \"Hello World\" LOG_LOCAL4");
+#endif
 
    return 0;
 }

@@ -21,9 +21,9 @@ EndPoint::clean()
 void
 EndPoint::handleEvent(Event* eventRaw)
 {
-   boost::shared_ptr<Event> event(eventRaw);
+   std::shared_ptr<Event> event(eventRaw);
    DebugLog(<< "EndPoint::handleEvent: " << *eventRaw);
-   boost::shared_ptr<SequenceSet> sset= getSequenceSet().lock();   
+   std::shared_ptr<SequenceSet> sset = getSequenceSet().lock();
    if (sset)
    {
       sset->enqueue(event);

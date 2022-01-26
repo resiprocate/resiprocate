@@ -22,19 +22,22 @@ class BridgeMixer;
   setting to a conversation can change this.
 
   If a remote participant is a sole member in a conversation, 
-  then he/she will be put on hold.
+  then he/she will be put on hold for the default AutoHoldMode
+  of enabled.
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
 class Conversation 
 {
-public:  
+protected:
    Conversation(ConversationHandle handle, 
                 ConversationManager& conversationManager,
-                RelatedConversationSet* relatedConversationSet=0,  // Pass NULL to create new RelatedConversationSet 
-                bool broadcastOnly = false);   
-   ~Conversation();
+                RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
+                ConversationHandle sharedMediaInterfaceConvHandle,
+                ConversationManager::AutoHoldMode autoHoldMode);
+public:
+   virtual ~Conversation();
 
    void addParticipant(Participant* participant, unsigned int inputGain = 100, unsigned int outputGain = 100);
    void removeParticipant(Participant* participant);
@@ -42,9 +45,12 @@ public:
 
    unsigned int getNumLocalParticipants() { return mNumLocalParticipants; }
    unsigned int getNumRemoteParticipants() { return mNumRemoteParticipants; }
+   unsigned int getNumRemoteIMParticipants() { return mNumRemoteIMParticipants; }
+   unsigned int getNumMediaParticipants() { return mNumMediaParticipants; }
    bool shouldHold();
    bool broadcastOnly();
    void notifyRemoteParticipantsOfHoldChange();
+   void relayInstantMessageToRemoteParticipants(ParticipantHandle sourceParticipant, const resip::Data& senderDisplayName, const resip::SipMessage& msg);
 
    void createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle);
    void join(Conversation* conversation);  // move all non-duplicate participants from this conversation to passed in conversation and destroy this one
@@ -53,32 +59,36 @@ public:
 
    ConversationHandle getHandle() { return mHandle; }
 
-   void notifyMediaEvent(int mediaConnectionId, MediaEvent::MediaEventType eventType);
-
-   /**
-     Notifies a Conversation when an RFC2833 DTMF event is received from a
-     particular remote participant.
-
-     @param mediaConnectionId sipX media connectionId for the participant who sent the signal
-     @param dtmf Integer representation of the DTMF tone received (from RFC2833 event codes)
-     @param duration Duration (in milliseconds) of the DTMF tone received
-     @param up Set to true if the DTMF key is up (otherwise down)
-   */
-   void notifyDtmfEvent(int mediaConnectionId, int dtmf, int duration, bool up);
-
 protected:
    friend class Participant;
+   friend class SipXParticipant;
    friend class LocalParticipant;
+   friend class SipXLocalParticipant;
    friend class RemoteParticipant;
+   friend class SipXRemoteParticipant;
    friend class MediaResourceParticipant;
+   friend class SipXMediaResourceParticipant;
    void registerParticipant(Participant *, unsigned int inputGain=100, unsigned int outputGain=100);
    void unregisterParticipant(Participant *);
 
    friend class BridgeMixer;
+   friend class SipXBridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
-   resip::SharedPtr<MediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
+   friend class AddParticipantCmd;
+   friend class JoinConversationCmd;
+   friend class MoveParticipantCmd;
+
+   // sipX Media related members
+   // Note: these are only set here if sipXConversationMediaInterfaceMode is used
+   friend class ConversationManager;
+   friend class SipXConversationManager;
+   BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
+   std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
+   virtual void setBridgeMixer(std::shared_ptr<BridgeMixer> mixer) { mBridgeMixer = mixer; }
+   virtual bool isSharingMediaInterfaceWithAnotherConversation() { return mSharingMediaInterfaceWithAnotherConversation; }
+
 
 private: 
    ConversationHandle mHandle;
@@ -90,13 +100,14 @@ private:
    bool mDestroying;
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;
+   unsigned int mNumRemoteIMParticipants;
    unsigned int mNumMediaParticipants;
-   bool mBroadcastOnly;
+   ConversationManager::AutoHoldMode mAutoHoldMode;
 
    // sipX Media related members
-   BridgeMixer* getBridgeMixer() { return mBridgeMixer; }
-   resip::SharedPtr<MediaInterface> mMediaInterface;  
-   BridgeMixer* mBridgeMixer;
+   // Note: these are only set here if sipXConversationMediaInterfaceMode is used
+   std::shared_ptr<BridgeMixer> mBridgeMixer;
+   bool mSharingMediaInterfaceWithAnotherConversation;
 };
 
 }
@@ -106,6 +117,8 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc.
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

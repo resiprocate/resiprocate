@@ -45,7 +45,7 @@ main(int argc, char** argv)
                      "93%16%f0%cf(%86%d3%10%b6%ff\r\n"
                      "%cf%88G%81W");
 
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      unique_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       Pkcs7Contents* pkc = dynamic_cast<Pkcs7Contents*>(msg->getContents());
       assert(pkc);

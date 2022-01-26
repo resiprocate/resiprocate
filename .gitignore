@@ -1,6 +1,7 @@
 # This file is only looked at when a checked-out SVN
 # repository is used as the source for a git repo.
 
+*.dll
 *.o
 *.lo
 *.la
@@ -8,6 +9,7 @@
 /Makefile.in
 /.deps
 /.libs
+**/.vs
 /aclocal.m4
 /config.h
 /config.h.in
@@ -40,6 +42,10 @@ bin.gopt.*
 obj.gopt.*
 obj.prof.*
 bin.prof.*
+
+**/[Ww]in32
+**/x64
+*.vcxproj.user
 
 /.idea
 /cmake-build-*

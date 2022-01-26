@@ -163,7 +163,7 @@ class SdpContents : public Contents
                   Data mParameters;  // Format parameters
                   Data mEncodingParameters;
 
-                  static std::auto_ptr<CodecMap> sStaticCodecs;
+                  static std::unique_ptr<CodecMap> sStaticCodecs;
                   static bool sStaticCodecsCreated;
                   friend EncodeStream& operator<<(EncodeStream&, const Codec&);
             };

@@ -38,7 +38,7 @@ TurnAsyncTcpSocket::onConnectFailure(const asio::error_code& e)
 }
 
 void 
-TurnAsyncTcpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncTcpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    handleReceivedData(address, port, data);
    turnReceive();

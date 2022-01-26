@@ -1,13 +1,14 @@
 #if !defined(UserAgentMasterProfile_hxx)
 #define UserAgentMasterProfile_hxx
 
-#include <rutil/SharedPtr.hxx>
 #include <rutil/TransportType.hxx>
 #include <rutil/dns/DnsStub.hxx>
 #include <resip/stack/SecurityTypes.hxx> 
 #include <resip/stack/Transport.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <reflow/RTCPEventLoggingHandler.hxx>
+
+#include <memory>
 #include <vector>
 
 namespace recon
@@ -30,6 +31,7 @@ public:
    public:
       resip::TransportType mProtocol;
       int mPort;
+      int mActualPort; // Only set after UserAgent is created and transports are added.  Useful if mPort is specified as ephemeral (0).
       resip::IpVersion mIPVersion;
       resip::StunSetting mStunEnabled;
       resip::Data mIPInterface;
@@ -44,13 +46,22 @@ public:
       unsigned int mRcvBufLen;
    };
 
-   void setTransportSipMessageLoggingHandler(resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> handler);
+   void setTransportSipMessageLoggingHandler(std::shared_ptr<resip::Transport::SipMessageLoggingHandler> handler) noexcept;
 
-   const resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> getTransportSipMessageLoggingHandler() const;
+   std::shared_ptr<resip::Transport::SipMessageLoggingHandler> getTransportSipMessageLoggingHandler() const noexcept;
 
-   void setRTCPEventLoggingHandler(resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> handler);
+   void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> handler) noexcept;
 
-   const resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const;
+   std::shared_ptr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const noexcept;
+
+   /**
+     Get/Set wether recon is allowed to log DTMF digits pressed.  Defaults to enabled. 
+     Disable for applications that accept credit card information for security purposes.
+
+     @return bool Set to false to disable logging DTMF digits
+   */
+   virtual bool& dtmfDigitLoggingEnabled();
+   virtual const bool dtmfDigitLoggingEnabled() const;
 
    /**
      Adds a network transport to use for send/receiving SIP messages.
@@ -84,9 +95,11 @@ public:
    /**
      Gets a vector of the transports previously added.
 
-     @return Reference to a vector of TransportInfo's
+     @return Reference to a vector of TransportInfo's.  Note:  Not returning 
+             as const since we want to set the actual port used if a an 
+             ephemeral port was specified
    */
-   const std::vector<TransportInfo>& getTransports() const;
+   std::vector<TransportInfo>& getTransports();
 
    /**
      Adds a domain suffix used in ENUM DNS queries.  
@@ -203,8 +216,9 @@ private:
    std::vector<resip::Data> mRootCertDirectories;
    std::vector<resip::Data> mRootCertBundles;
    bool mStatisticsManagerEnabled;
-   resip::SharedPtr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
-   resip::SharedPtr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
+   std::shared_ptr<resip::Transport::SipMessageLoggingHandler> mTransportSipMessageLoggingHandler;
+   std::shared_ptr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
+   bool mDTMFDigitLoggingEnabled;
    std::vector<TransportInfo> mTransports;
    std::vector<resip::Data> mEnumSuffixes;
    resip::DnsStub::NameserverList mAdditionalDnsServers;
@@ -220,6 +234,7 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

@@ -20,28 +20,28 @@ DialogEventInfo::DialogEventInfo(const DialogEventInfo& rhs)
   mDialogId(rhs.mDialogId),
   mDirection(rhs.mDirection),
   mInviteSession(rhs.mInviteSession),
-  mReferredBy(rhs.mReferredBy.get() ? new NameAddr(*rhs.mReferredBy) : 0),
+  mReferredBy(rhs.mReferredBy ? new NameAddr(*rhs.mReferredBy) : nullptr),
   mRouteSet(rhs.mRouteSet),
   mLocalIdentity(rhs.mLocalIdentity),
   mRemoteIdentity(rhs.mRemoteIdentity),
   mLocalTarget(rhs.mLocalTarget),
-  mRemoteTarget(rhs.mRemoteTarget.get() ? new Uri(*rhs.mRemoteTarget) : 0),
+  mRemoteTarget(rhs.mRemoteTarget ? new Uri(*rhs.mRemoteTarget) : nullptr),
   mCreationTimeSeconds(rhs.mCreationTimeSeconds),
   mReplaced(rhs.mReplaced)
 {
-   if (rhs.mReplacesId.get())
+   if (rhs.mReplacesId)
    {
-      mReplacesId = std::auto_ptr<DialogId>(new DialogId(rhs.mReplacesId->getCallId(),
+      mReplacesId = std::unique_ptr<DialogId>(new DialogId(rhs.mReplacesId->getCallId(),
                                                          rhs.mReplacesId->getLocalTag(),
                                                          rhs.mReplacesId->getRemoteTag()));
    }
-   if (rhs.mLocalOfferAnswer.get())
+   if (rhs.mLocalOfferAnswer)
    {
-      mLocalOfferAnswer = std::auto_ptr<Contents>(rhs.mLocalOfferAnswer->clone());
+      mLocalOfferAnswer = std::unique_ptr<Contents>(rhs.mLocalOfferAnswer->clone());
    }
-   if (rhs.mRemoteOfferAnswer.get())
+   if (rhs.mRemoteOfferAnswer)
    {
-      mRemoteOfferAnswer = std::auto_ptr<Contents>(rhs.mRemoteOfferAnswer->clone());
+      mRemoteOfferAnswer = std::unique_ptr<Contents>(rhs.mRemoteOfferAnswer->clone());
    }
 }
 
@@ -58,33 +58,33 @@ DialogEventInfo::operator=(const DialogEventInfo& dialogEventInfo)
       mInviteSession = dialogEventInfo.mInviteSession;
       mLocalIdentity = dialogEventInfo.mLocalIdentity;
 
-      mLocalOfferAnswer.reset(0);
-      mReferredBy.reset(0);
-      mRemoteOfferAnswer.reset(0);
-      mRemoteTarget.reset(0);
-      mReplacesId.reset(0);
+      mLocalOfferAnswer.reset();
+      mReferredBy.reset();
+      mRemoteOfferAnswer.reset();
+      mRemoteTarget.reset();
+      mReplacesId.reset();
 
-      if(dialogEventInfo.mLocalOfferAnswer.get())
+      if(dialogEventInfo.mLocalOfferAnswer)
       {
          mLocalOfferAnswer.reset(dialogEventInfo.mLocalOfferAnswer->clone());
       }
 
-      if(dialogEventInfo.mReferredBy.get())
+      if(dialogEventInfo.mReferredBy)
       {
          mReferredBy.reset((NameAddr*)(dialogEventInfo.mReferredBy->clone()));
       }
 
-      if(dialogEventInfo.mRemoteOfferAnswer.get())
+      if(dialogEventInfo.mRemoteOfferAnswer)
       {
          mRemoteOfferAnswer.reset(dialogEventInfo.mRemoteOfferAnswer->clone());
       }
 
-      if(dialogEventInfo.mRemoteTarget.get())
+      if(dialogEventInfo.mRemoteTarget)
       {
          mRemoteTarget.reset((Uri*)dialogEventInfo.mRemoteTarget->clone());
       }
 
-      if(dialogEventInfo.mReplacesId.get())
+      if(dialogEventInfo.mReplacesId)
       {
          mReplacesId.reset(
                   new DialogId(dialogEventInfo.mReplacesId->getDialogSetId(), 
@@ -156,7 +156,7 @@ DialogEventInfo::getRemoteTag() const
 bool 
 DialogEventInfo::hasRefferedBy() const
 {
-   return (mReferredBy.get() != NULL);
+   return mReferredBy != nullptr;
 }
 
 const NameAddr& 
@@ -198,7 +198,7 @@ DialogEventInfo::getRouteSet() const
 bool
 DialogEventInfo::hasRemoteTarget() const
 {
-   return (mRemoteTarget.get() != NULL);
+   return mRemoteTarget != nullptr;
 }
 
 const Uri&
@@ -217,7 +217,7 @@ DialogEventInfo::getLocalOfferAnswer() const
          return mInviteSession->getLocalOfferAnswer();
       }
    }
-   resip_assert(mLocalOfferAnswer.get() != NULL);
+   resip_assert(mLocalOfferAnswer != nullptr);
    return *mLocalOfferAnswer;
 }
 
@@ -231,20 +231,20 @@ DialogEventInfo::getRemoteOfferAnswer() const
          return mInviteSession->getRemoteOfferAnswer();
       }
    }
-   resip_assert(mRemoteOfferAnswer.get() != NULL);
+   resip_assert(mRemoteOfferAnswer != nullptr);
    return *mRemoteOfferAnswer;
 }
 
 bool
 DialogEventInfo::hasLocalOfferAnswer() const
 {
-   return (mInviteSession.isValid() ? mInviteSession->hasLocalOfferAnswer() : mLocalOfferAnswer.get() != 0);
+   return (mInviteSession.isValid() ? mInviteSession->hasLocalOfferAnswer() : mLocalOfferAnswer != nullptr);
 }
 
 bool
 DialogEventInfo::hasRemoteOfferAnswer() const
 {
-   return (mInviteSession.isValid() ? mInviteSession->hasRemoteOfferAnswer() : mRemoteOfferAnswer.get() != 0);
+   return (mInviteSession.isValid() ? mInviteSession->hasRemoteOfferAnswer() : mRemoteOfferAnswer != nullptr);
 }
 
 UInt64
@@ -257,7 +257,7 @@ DialogEventInfo::getDurationSeconds() const
 bool 
 DialogEventInfo::hasReplacesId() const
 {
-   return (mReplacesId.get() != 0);
+   return mReplacesId != nullptr;
 }
 
 const DialogId& 

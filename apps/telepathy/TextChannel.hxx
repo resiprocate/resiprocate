@@ -41,11 +41,11 @@ class TextChannel : public Tp::BaseChannelTextType
 {
    Q_OBJECT
 public:
-   static TextChannelPtr create(tr::MyUserAgent* userAgent, resip::SharedPtr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID);
+   static TextChannelPtr create(tr::MyUserAgent* userAgent, std::shared_ptr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID);
    void processReceivedMessage(const resip::SipMessage &message, uint senderHandle, const QString& senderIdentifier);
    
 protected:
-   TextChannel(tr::MyUserAgent* userAgent, resip::SharedPtr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID);
+   TextChannel(tr::MyUserAgent* userAgent, std::shared_ptr<MyInstantMessage> instantMessage, Tp::BaseChannel *baseChannel, uint selfHandle, QString selfID);
    QString sendMessage(const Tp::MessagePartList &messageParts, uint flags, Tp::DBusError *error);
    void messageAcknowledged(const QString &messageId);
 
@@ -60,7 +60,7 @@ protected:
 
 private:
    tr::MyUserAgent* ua;
-   resip::SharedPtr<MyInstantMessage> mInstantMessage;
+   std::shared_ptr<MyInstantMessage> mInstantMessage;
 };
    
 }

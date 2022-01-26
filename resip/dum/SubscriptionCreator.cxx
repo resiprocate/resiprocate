@@ -1,14 +1,16 @@
 #include "SubscriptionCreator.hxx"
 #include "DialogUsageManager.hxx"
 
+#include <utility>
+
 using namespace resip;
 
 SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
-                                         SharedPtr<UserProfile> userProfile, 
+                                         std::shared_ptr<UserProfile> userProfile, 
                                          const Data& event, 
                                          UInt32 subscriptionTime)
-   : BaseCreator(dum, userProfile),
+   : BaseCreator(dum, std::move(userProfile)),
      mRefreshInterval(-1)
 {
    makeInitialRequest(target, SUBSCRIBE);
@@ -19,11 +21,11 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
 
 SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
-                                         SharedPtr<UserProfile> userProfile, 
+                                         std::shared_ptr<UserProfile> userProfile, 
                                          const Data& event, 
                                          UInt32 subscriptionTime, 
                                          int refreshInterval)
-   : BaseCreator(dum, userProfile),
+   : BaseCreator(dum, std::move(userProfile)),
      mRefreshInterval(refreshInterval)
 {
    makeInitialRequest(target, SUBSCRIBE);
@@ -34,9 +36,9 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
 
 SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
                                          const NameAddr& target,
-                                         SharedPtr<UserProfile> userProfile,
+                                         std::shared_ptr<UserProfile> userProfile,
                                          const H_ReferTo::Type& referTo)
-   : BaseCreator(dum, userProfile),
+   : BaseCreator(dum, std::move(userProfile)),
      mRefreshInterval(-1)
 {
    makeInitialRequest(target, REFER);
@@ -45,13 +47,13 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
 }
 
 bool 
-SubscriptionCreator::hasRefreshInterval() const
+SubscriptionCreator::hasRefreshInterval() const noexcept
 {
    return mRefreshInterval > 0;   
 }
 
 int 
-SubscriptionCreator::getRefreshInterval() const
+SubscriptionCreator::getRefreshInterval() const noexcept
 {
    return mRefreshInterval;
 }

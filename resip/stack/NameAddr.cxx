@@ -84,7 +84,7 @@ NameAddr::operator=(const NameAddr& rhs)
 {
    if (this != &rhs)
    {
-      resip_assert( &rhs != 0 );
+      resip_assert_not_null( &rhs );
       
       ParserCategory::operator=(rhs);
       mAllContacts = rhs.mAllContacts;
@@ -386,6 +386,10 @@ NameAddr::mustQuoteDisplayName() const
       {
          const char* start;
          start = pb.skipWhitespace();
+         if (pb.eof())
+         {
+            return false;
+         }
          pb.skipNonWhitespace();
 		 const char* end = pb.position();
          for (const char* c = start; c < end; c++)

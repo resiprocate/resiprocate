@@ -6,7 +6,6 @@
 #ifdef USE_SSL
 #include <asio/ssl.hpp>
 #endif
-#include <boost/function.hpp>
 #include <rutil/Data.hxx>
 
 // SYSTEM INCLUDES
@@ -165,6 +164,7 @@ int FlowManagerSipXSocket::write(const char* buffer, int bufferLength,
 
 /* ====================================================================
 
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.

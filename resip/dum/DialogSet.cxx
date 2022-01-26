@@ -25,6 +25,8 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -86,7 +88,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
 
 DialogSet::~DialogSet()
 {
-   if (mDum.mClientAuthManager.get())
+   if (mDum.mClientAuthManager)
    {
       mDum.mClientAuthManager->dialogSetDestroyed(getId());
    }
@@ -166,7 +168,7 @@ DialogSet::addDialog(Dialog *dialog)
 }
 
 BaseCreator*
-DialogSet::getCreator()
+DialogSet::getCreator() const noexcept
 {
    return mCreator;
 }
@@ -179,58 +181,10 @@ DialogSet::findDialog(const SipMessage& msg)
       return 0;
    }
    return findDialog(DialogId(msg));
-#if 0   
-   DialogId id(msg);
-   Dialog* dlog = findDialog(id);
-   //vonage/2543 matching here
-   if (dlog)
-   {
-      return dlog;
-   }
-   //match off transaction ID
-   else if (msg.isResponse() && !msg.header(h_To).exists(p_tag))
-   {
-      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
-      {
-         if (it->second->matches(msg))
-         {
-            return it->second;            
-         }
-      }
-   }
-   else if (msg.exists(h_Contacts) && !msg.header(h_Contacts).empty()
-            && msg.isResponse() 
-            && mDum.getProfile()->looseToTagMatching()
-            && msg.header(h_To).exists(p_tag))     
-   {
-      const Uri& contact = msg.header(h_Contacts).front().uri();
-      
-      //match by contact
-      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
-      {
-         if (it->second->mRemoteTarget.uri() == msg.header(h_Contacts).front().uri())
-         {
-            // !dcm! in the vonage case, the to tag should be updated to match the fake
-            //vonage tag introduced in the 200 which is also used for the BYE.
-            //find out how deep this rabbit hole goes, may just have a pugabble
-            //filter api that can be added for dialog matching if things get any
-            //more specific--this is the VonageKludgeFilter
-            Dialog* dialog = it->second;
-            DialogId old = dialog->getId();
-            dialog->mId = DialogId(old.getCallId(), old.getLocalTag(), msg.header(h_To).param(p_tag));
-            dialog->mRemoteNameAddr.param(p_tag) = msg.header(h_To).param(p_tag);
-            mDialogs.erase(it);
-            mDialogs[dialog->getId()] = dialog;
-            return dialog;
-         }
-      }
-   }
-   return 0;
-#endif
 }
 
 bool
-DialogSet::empty() const
+DialogSet::empty() const noexcept
 {
    return mDialogs.empty();
 }
@@ -247,9 +201,9 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
       if (getCreator() &&
           msg.header(h_CSeq) == getCreator()->getLastRequest()->header(h_CSeq))
       {
-         if (mDum.mClientAuthManager.get())
+         if (mDum.mClientAuthManager)
          {
-            if (mDum.mClientAuthManager->handle(*getUserProfile().get(), *getCreator()->getLastRequest(), msg))
+            if (mDum.mClientAuthManager->handle(*getUserProfile(), *getCreator()->getLastRequest(), msg))
             {
                // Note:  ClientAuthManager->handle will end up incrementing the CSeq sequence of getLastRequest
                DebugLog( << "about to re-send request with digest credentials" );
@@ -262,7 +216,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
          // !dcm! -- need to protect against 3xx highjacking a dialogset which
          //has a fully established dialog. also could case strange behaviour
          //by sending 401/407 at the wrong time.
-         if (mDum.mRedirectManager.get() && mState != Established)  // !slg! for now don't handle redirect in established dialogs - alternatively we could treat as a target referesh (using 1st Contact) and reissue request
+         if (mDum.mRedirectManager && mState != Established)  // !slg! for now don't handle redirect in established dialogs - alternatively we could treat as a target refresh (using 1st Contact) and reissue request
          {
             if (mDum.mRedirectManager->handle(*this, *getCreator()->getLastRequest(), msg))
             {
@@ -276,7 +230,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                   (it++)->second->redirected(msg);
                }
 
-               if (mDialogs.size() == 0)
+               if (mDialogs.empty())
                {
                   if (mDum.mDialogEventStateManager)
                   {
@@ -365,13 +319,14 @@ DialogSet::dispatch(const SipMessage& msg)
                {
                   Dialog dialog(mDum, msg, *this);
 
-                  SharedPtr<SipMessage> ack(new SipMessage);
+                  auto ack = std::make_shared<SipMessage>();
                   dialog.makeRequest(*ack, ACK);
                   ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
-                  dialog.send(ack);
+                  dialog.send(std::move(ack));
                   
-                  SharedPtr<SipMessage> bye(new SipMessage);
+                  auto bye = std::make_shared<SipMessage>();
                   dialog.makeRequest(*bye, BYE);
+                  addEndReasonToMessage(*bye);
                   dialog.send(bye);
                   
                   if (mDum.mDialogEventStateManager)
@@ -399,10 +354,10 @@ DialogSet::dispatch(const SipMessage& msg)
                {
                   Dialog dialog(mDum, msg, *this);
 
-                  SharedPtr<SipMessage> unsubscribe(new SipMessage(*mCreator->getLastRequest().get()));  // create message from initial request so we get proper headers
+                  auto unsubscribe = std::make_shared<SipMessage>(*mCreator->getLastRequest());  // create message from initial request so we get proper headers
                   dialog.makeRequest(*unsubscribe, SUBSCRIBE);
                   unsubscribe->header(h_Expires).value() = 0;
-                  dialog.send(unsubscribe);
+                  dialog.send(std::move(unsubscribe));
                   
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
@@ -421,10 +376,10 @@ DialogSet::dispatch(const SipMessage& msg)
                {
                   Dialog dialog(mDum, msg, *this);
 
-                  SharedPtr<SipMessage> unpublish(new SipMessage(*mCreator->getLastRequest().get()));  // create message from initial request so we get proper headers
+                  auto unpublish = std::make_shared<SipMessage>(*mCreator->getLastRequest());  // create message from initial request so we get proper headers
                   dialog.makeRequest(*unpublish, PUBLISH);
                   unpublish->header(h_Expires).value() = 0;
-                  dialog.send(unpublish);
+                  dialog.send(std::move(unpublish));
                   
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
@@ -443,9 +398,9 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         SharedPtr<SipMessage> response(new SipMessage);         
+         auto response = std::make_shared<SipMessage>();         
          mDum.makeResponse(*response, msg, 481);
-         mDum.send(response);
+         mDum.send(std::move(response));
       }
       return;
    }
@@ -466,14 +421,15 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                Dialog dialog(mDum, msg, *this);
 
-               SharedPtr<SipMessage> ack(new SipMessage);
+               auto ack = std::make_shared<SipMessage>();
                dialog.makeRequest(*ack, ACK);
                ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
-               dialog.send(ack);
+               dialog.send(std::move(ack));
                   
-               SharedPtr<SipMessage> bye(new SipMessage);
+               auto bye = std::make_shared<SipMessage>();
                dialog.makeRequest(*bye, BYE);
-               dialog.send(bye);                  
+               addEndReasonToMessage(*bye);
+               dialog.send(std::move(bye));
 
                // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
             }
@@ -486,9 +442,9 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else // is a request
       {
-         SharedPtr<SipMessage> response(new SipMessage);         
+         auto response = std::make_shared<SipMessage>();         
          mDum.makeResponse(*response, msg, 481);
-         mDum.send(response);
+         mDum.send(std::move(response));
       }
       return;
    }
@@ -514,9 +470,9 @@ DialogSet::dispatch(const SipMessage& msg)
          if( msg.isRequest() )
          {
             StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             mDum.makeResponse(*response, msg, 481);
-            mDum.send(response);
+            mDum.send(std::move(response));
          }
          else
          {
@@ -551,25 +507,35 @@ DialogSet::dispatch(const SipMessage& msg)
          case UPDATE:
             if(!dialog)
             {
-               SharedPtr<SipMessage> response(new SipMessage);         
+               auto response = std::make_shared<SipMessage>();         
                mDum.makeResponse(*response, msg, 481);
-               mDum.send(response);
+               mDum.send(std::move(response));
                return;
             }
             break;
             
          case REFER:
-            if (request.header(h_To).exists(p_tag) || findDialog(request))
+            if (dialog)
             {
                DebugLog(<< "in dialog refer request");
                break; // in dialog
             }
+            else if (request.header(h_To).exists(p_tag))
+            {
+                // We have a To tag, but don't have an existing dialog, we shouldn't be creating a new one, reject
+                auto response = std::make_shared<SipMessage>();
+                mDum.makeResponse(*response, msg, 481);
+                mDum.send(std::move(response));
+                return;
+            }
+            // We have an out-of-dialog request, check if it needs an implied subscription dialog
             else if((request.exists(h_ReferSub) && 
                      request.header(h_ReferSub).isWellFormed() &&
                      request.header(h_ReferSub).value()=="false") ||
                      (request.exists(h_Requires) &&
                      request.header(h_Requires).find(Token("norefersub"))))// out of dialog & noReferSub=true
             {
+               // No dialog needed here
                DebugLog(<< "out of dialog refer request with norefersub");
                resip_assert(mServerOutOfDialogRequest == 0);
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
@@ -581,13 +547,20 @@ DialogSet::dispatch(const SipMessage& msg)
                DebugLog(<< "out of dialog refer request with refer sub");
                break; // dialog creating
             }
-            break;            
-         case NOTIFY:
+            break;
 
-            // !jf! there shouldn't be a dialogset for ServerOutOfDialogReq
-            if (request.header(h_To).exists(p_tag) || findDialog(request))
+         case NOTIFY:
+            if (dialog)
             {
                break; //dialog creating/handled by dialog
+            }
+            else if (request.header(h_To).exists(p_tag))
+            {
+                // We have a To tag, but don't have an existing dialog, we shouldn't be creating a new one, reject
+                auto response = std::make_shared<SipMessage>();
+                mDum.makeResponse(*response, msg, 481);
+                mDum.send(std::move(response));
+                return;
             }
             else // no to tag - unsolicited notify
             {
@@ -802,9 +775,9 @@ DialogSet::dispatch(const SipMessage& msg)
             DebugLog ( << "In DialogSet::dispatch, CANCEL received but no dialogs to dispatch to - respond with 481, msg: " << msg );
             // Race condition - Dialogset is still around, but dialog is gone (potentially BYE'd).
             // Need to respond to CANCEL in order for transaction in stack to go away
-            SharedPtr<SipMessage> response(new SipMessage);         
+            auto response = std::make_shared<SipMessage>();         
             mDum.makeResponse(*response, msg, 481);
-            mDum.send(response);
+            mDum.send(std::move(response));
          }
          return;
       }
@@ -813,8 +786,8 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          if( mCreator )
          {
-            SharedPtr<SipMessage> lastRequest(mCreator->getLastRequest());
-            if( 0 != lastRequest.get() && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
+            auto lastRequest = mCreator->getLastRequest();
+            if (lastRequest && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
             {
                InfoLog(<< "Cannot create a dialog, cseq does not match initial dialog request (illegal mid-dialog fork? see 3261 14.1).");
                return;
@@ -881,9 +854,9 @@ DialogSet::dispatch(const SipMessage& msg)
          {
             // !jf! derek thinks we should destroy only on invalid CANCEL or
             // BYE, hmmphh. see draft-sparks-sipping-dialogusage-01.txt
-            SharedPtr<SipMessage> response(new SipMessage);
+            auto response = std::make_shared<SipMessage>();
             mDum.makeResponse(*response, msg, 400);
-            mDum.send(response);
+            mDum.send(std::move(response));
             if(mDialogs.empty())
             {
                if (mDum.mDialogEventStateManager)
@@ -948,6 +921,35 @@ DialogSet::findDialog(const DialogId id)
    }
 }
 
+void 
+DialogSet::end(const Data& endReason)
+{
+   mEndReason = endReason;
+   end();
+}
+
+void 
+DialogSet::end(const ParserContainer<Token>& endReasons)
+{
+   mEndReasons = endReasons;
+   end();
+}
+
+void 
+DialogSet::addEndReasonToMessage(SipMessage& msg)
+{
+   if (mEndReasons.size() > 0)
+   {
+      msg.header(h_Reasons) = mEndReasons;
+   }
+   else if (mEndReason.size() > 0)
+   {
+      Token reason("SIP");
+      reason.param(p_text) = mEndReason;
+      msg.header(h_Reasons).push_back(reason);
+   }
+}
+
 void
 DialogSet::end()
 {
@@ -957,14 +959,15 @@ DialogSet::end()
          mState = WaitingToEnd;
          break;
       case WaitingToEnd:
-         break;         
+         break;
       case ReceivedProvisional:
       {
          if (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE)
          {
             mState = Terminating;
             // !jf! this should be made exception safe
-            SharedPtr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
+            std::shared_ptr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
+            addEndReasonToMessage(*cancel);
             mDum.send(cancel);
 
             if (mDum.mDialogEventStateManager)
@@ -1006,7 +1009,7 @@ DialogSet::end()
                {
                   try
                   {
-                     it->second->end();
+                     it->second->end(mEndReason, mEndReasons);
                   }
                   catch (UsageUseException& e)
                   {
@@ -1024,7 +1027,7 @@ DialogSet::end()
          {
             try
             {
-               it->second->end();
+               it->second->end(mEndReason, mEndReasons);
             }
             catch(UsageUseException& e)
             {
@@ -1148,25 +1151,18 @@ void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
    }
 }
 
-SharedPtr<UserProfile>
+std::shared_ptr<UserProfile>
 DialogSet::getUserProfile() const
 {
-   if(mUserProfile.get())
-   {
-      return mUserProfile;
-   }
-   else
-   {
-      // If no UserProfile set then use UserProfile of the MasterProfile
-      return mDum.getMasterUserProfile();
-   }
+   // If no UserProfile set then use UserProfile of the MasterProfile
+   return mUserProfile ? mUserProfile : mDum.getMasterUserProfile();
 }
 
 void
-DialogSet::setUserProfile(SharedPtr<UserProfile> userProfile)
+DialogSet::setUserProfile(std::shared_ptr<UserProfile> userProfile)
 {
    resip_assert(userProfile.get());
-   mUserProfile = userProfile;
+   mUserProfile = std::move(userProfile);
 }
 
 void 

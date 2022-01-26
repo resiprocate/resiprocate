@@ -13,6 +13,8 @@
 
 #include "reflow/rtcp/re_rtp.h"
 
+#include <utility>
+
 using namespace flowmanager;
 using namespace resip;
 using namespace reTurn;
@@ -20,30 +22,26 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
-HEPRTCPEventLoggingHandler::HEPRTCPEventLoggingHandler(SharedPtr<HepAgent> agent)
-   : mHepAgent(agent)
+HEPRTCPEventLoggingHandler::HEPRTCPEventLoggingHandler(std::shared_ptr<HepAgent> agent)
+   : mHepAgent(std::move(agent))
 {
-   if(!agent.get())
+   if (!mHepAgent)
    {
       ErrLog(<<"agent must not be NULL");
       throw std::runtime_error("agent must not be NULL");
    }
 }
 
-HEPRTCPEventLoggingHandler::~HEPRTCPEventLoggingHandler()
+void
+HEPRTCPEventLoggingHandler::outboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
 {
+   sendToHOMER(std::move(context), source, destination, event);
 }
 
 void
-HEPRTCPEventLoggingHandler::outboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
+HEPRTCPEventLoggingHandler::inboundEvent(std::shared_ptr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
 {
-   sendToHOMER(context, source, destination, event);
-}
-
-void
-HEPRTCPEventLoggingHandler::inboundEvent(resip::SharedPtr<FlowContext> context, const reTurn::StunTuple& source, const reTurn::StunTuple& destination, const resip::Data& event)
-{
-   sendToHOMER(context, source, destination, event);
+   sendToHOMER(std::move(context), source, destination, event);
 }
 
 int32_t
@@ -61,7 +59,7 @@ HEPRTCPEventLoggingHandler::ntoh_cpl(const void *x)
 }
 
 void
-HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, const StunTuple& source, const StunTuple& destination, const Data& event)
+HEPRTCPEventLoggingHandler::sendToHOMER(std::shared_ptr<FlowContext> context, const StunTuple& source, const StunTuple& destination, const Data& event)
 {
    GenericIPAddress _source, _destination;
 
@@ -135,7 +133,7 @@ HEPRTCPEventLoggingHandler::sendToHOMER(resip::SharedPtr<FlowContext> context, c
    StackLog(<<"constructed RTCP JSON: " << json);
 
    Data correlationId;
-   if(context.get())
+   if (context)
    {
       correlationId = context->getSipCallId();
    }

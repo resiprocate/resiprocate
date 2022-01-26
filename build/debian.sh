@@ -24,19 +24,26 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
   ./configure --disable-maintainer-mode --disable-dependency-tracking --with-popt --enable-ipv6 --enable-dtls $RADIUS_LIB --with-ssl \
               --enable-assert-syslog \
               --with-c-ares \
+              --with-fmt \
               --with-mysql \
               --with-postgresql \
               --with-repro \
+              --with-return \
               --enable-repro-plugins \
               --with-python \
-                DEPS_PYTHON_CFLAGS="`/usr/bin/python2.7-config --cflags`" \
-                DEPS_PYTHON_LIBS="`/usr/bin/python2.7-config --ldflags`" \
-                PYCXX_SRCDIR=/usr/share/python2.7/CXX/Python2 \
+                DEPS_PYTHON_VERSION=`python3 -c "import sys; print('%d.%d' % (sys.version_info[0], sys.version_info[1]))"` \
+                DEPS_PYTHON_CFLAGS="`/usr/bin/python3-config --cflags`" \
+                DEPS_PYTHON_LIBS="`/usr/bin/python3-config --ldflags`" \
+                PYCXX_SRCDIR=/usr/src/CXX/Python3 \
               --with-apps \
               --with-telepathy \
               --with-ichat-gw \
               --with-recon \
+              --with-sipxtapi \
+              --with-soci-postgresql \
+              --with-soci-mysql \
               --with-qpid-proton \
-              --with-netsnmp
+              --with-netsnmp \
+              --with-gstreamer
 
 

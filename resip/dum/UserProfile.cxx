@@ -6,6 +6,8 @@
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/MD5Stream.hxx"
 
+#include <utility>
+
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -20,7 +22,7 @@ UserProfile::UserProfile() : Profile(),
     //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
 }
 
-UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), 
+UserProfile::UserProfile(std::shared_ptr<Profile> baseProfile) : Profile(std::move(baseProfile)),
    mGruuEnabled(false),
    mRegId(0),
    mClientOutboundEnabled(false),
@@ -34,10 +36,10 @@ UserProfile::~UserProfile()
     //InfoLog (<< "************ UserProfile destroyed!: " << *this);
 }
 
-SharedPtr<UserProfile> 
+std::shared_ptr<UserProfile>
 UserProfile::getAnonymousUserProfile() const
 {
-   SharedPtr<UserProfile> anon(this->clone());
+   std::shared_ptr<UserProfile> anon(this->clone());
    anon->setDefaultFrom(mAnonymous);
    return anon;
 }
@@ -61,7 +63,7 @@ UserProfile::setDefaultFrom(const NameAddr& from)
 }
 
 NameAddr& 
-UserProfile::getDefaultFrom()
+UserProfile::getDefaultFrom() noexcept
 {
    return mDefaultFrom;
 }
@@ -73,7 +75,7 @@ UserProfile::setServiceRoute(const NameAddrs& sRoute)
 }
 
 NameAddrs& 
-UserProfile::getServiceRoute()
+UserProfile::getServiceRoute() noexcept
 {
    return mServiceRoute;
 }
@@ -91,7 +93,7 @@ UserProfile::setInstanceId(const Data& id)
 }
 
 const Data&
-UserProfile::getInstanceId() const
+UserProfile::getInstanceId() const noexcept
 {
    return mInstanceId;
 }
@@ -130,7 +132,7 @@ UserProfile:: getGruu(const Data& aor, const NameAddr& contact)
 }
 
 void 
-UserProfile::clearDigestCredentials()
+UserProfile::clearDigestCredentials() noexcept
 {
    mDigestCredentials.clear();
 }

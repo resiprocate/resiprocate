@@ -43,7 +43,7 @@ WorkerThread::thread()
                StackLog(<<"async work done, posting to stack");
                // Post to stack instead of directly to TU, since stack does
                // some safety checks to ensure the TU still exists before posting
-               mStack->post(std::auto_ptr<resip::ApplicationMessage>(msg));
+               mStack->post(std::unique_ptr<resip::ApplicationMessage>(msg));
             }
             else
             {

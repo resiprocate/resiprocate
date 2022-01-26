@@ -55,7 +55,7 @@
     <ProjectGuid>{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}</ProjectGuid>
     <RootNamespace>rutil</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'" Label="Configuration">
@@ -430,6 +430,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AbstractFifo.cxx" />
+    <ClCompile Include="Crc32.cxx" />
     <ClCompile Include="dns\AresDns.cxx" />
     <ClCompile Include="BaseException.cxx" />
     <ClCompile Include="Coders.cxx" />
@@ -451,6 +452,7 @@
     <ClCompile Include="FileSystem.cxx" />
     <ClCompile Include="GeneralCongestionManager.cxx" />
     <ClCompile Include="GenericIPAddress.cxx" />
+    <ClCompile Include="GStreamerUtils.cxx" />
     <ClCompile Include="HeapInstanceCounter.cxx" />
     <ClCompile Include="hep\HepAgent.cxx" />
     <ClCompile Include="hep\ResipHep.cxx" />
@@ -506,6 +508,7 @@
     <ClInclude Include="AbstractFifo.hxx" />
     <ClInclude Include="CongestionManager.hxx" />
     <ClInclude Include="ConsumerFifoBuffer.hxx" />
+    <ClInclude Include="Crc32.hxx" />
     <ClInclude Include="DinkyPool.hxx" />
     <ClInclude Include="dns\AresCompat.hxx" />
     <ClInclude Include="dns\AresDns.hxx" />
@@ -539,6 +542,7 @@
     <ClInclude Include="FiniteFifo.hxx" />
     <ClInclude Include="GeneralCongestionManager.hxx" />
     <ClInclude Include="GenericIPAddress.hxx" />
+    <ClInclude Include="GStreamerUtils.hxx" />
     <ClInclude Include="HashMap.hxx" />
     <ClInclude Include="HeapInstanceCounter.hxx" />
     <ClInclude Include="hep\HepAgent.hxx" />
@@ -551,6 +555,7 @@
     <ClInclude Include="Lockable.hxx" />
     <ClInclude Include="Log.hxx" />
     <ClInclude Include="Logger.hxx" />
+    <ClInclude Include="MediaConstants.hxx" />
     <ClInclude Include="MD5Stream.hxx" />
     <ClInclude Include="Mutex.hxx" />
     <ClInclude Include="PoolBase.hxx" />
@@ -574,8 +579,6 @@
     <ClInclude Include="dns\RRVip.hxx" />
     <ClInclude Include="RWMutex.hxx" />
     <ClInclude Include="ssl\SHA1Stream.hxx" />
-    <ClInclude Include="SharedCount.hxx" />
-    <ClInclude Include="SharedPtr.hxx" />
     <ClInclude Include="Socket.hxx" />
     <ClInclude Include="StlPoolAllocator.hxx" />
     <ClInclude Include="stun\Stun.hxx" />

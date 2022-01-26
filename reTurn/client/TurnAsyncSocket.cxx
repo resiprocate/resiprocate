@@ -5,6 +5,8 @@
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
 
+#include <functional>
+
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
@@ -14,13 +16,20 @@ using namespace resip;
 #define TURN_CHANNEL_BINDING_REFRESH_SECONDS 240   // 4 minuntes - this is one minute before the permission will expire, Note:  ChannelBinding refreshes also refresh permissions
 #define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-12   "  // Note padding size to a multiple of 4, to help compatibility with older clients
 
+#ifdef BOOST_ASIO_HAS_STD_CHRONO
+using namespace std::chrono;
+#else
+#include <chrono>
+using namespace std::chrono;
+#endif
+
 namespace reTurn {
 
 // Initialize static members
 unsigned int TurnAsyncSocket::UnspecifiedLifetime = 0xFFFFFFFF;
 unsigned int TurnAsyncSocket::UnspecifiedBandwidth = 0xFFFFFFFF; 
 unsigned short TurnAsyncSocket::UnspecifiedToken = 0;
-asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
+asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress;
 
 TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService, 
                                  AsyncSocketBase& asyncSocketBase,
@@ -57,7 +66,7 @@ TurnAsyncSocket::disableTurnAsyncHandler()
 void
 TurnAsyncSocket::requestSharedSecret()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doRequestSharedSecret, this)));
+    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doRequestSharedSecret(); }));
 }
 
 void
@@ -83,7 +92,7 @@ TurnAsyncSocket::doRequestSharedSecret()
 void
 TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doSetUsernameAndPassword, this, new Data(username), new Data(password), shortTermAuth)));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetUsernameAndPassword(new Data(username), new Data(password), shortTermAuth); }));
 }
 
 void 
@@ -103,7 +112,7 @@ TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool s
 void 
 TurnAsyncSocket::setLocalPassword(const char* password)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doSetLocalPassword, this, new Data(password))));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetLocalPassword(new Data(password)); }));
 }
 
 void 
@@ -116,7 +125,7 @@ TurnAsyncSocket::doSetLocalPassword(Data* password)
 void 
 TurnAsyncSocket::bindRequest()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doBindRequest, this)));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doBindRequest(); }));
 }
 
 void 
@@ -139,7 +148,7 @@ void
 TurnAsyncSocket::connectivityCheck(const StunTuple& targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms)
 {
    resip_assert(setIceControlling || setIceControlled);
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doConnectivityCheck, this, new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms)));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doConnectivityCheck(new StunTuple(targetAddr.getTransportType(), targetAddr.getAddress(), targetAddr.getPort()), peerRflxPriority, setIceControlling, setIceControlled, numRetransmits, retrans_iterval_ms); }));
 }
 
 void
@@ -170,7 +179,7 @@ TurnAsyncSocket::createAllocation(unsigned int lifetime,
                                   UInt64 reservationToken,
                                   StunTuple::TransportType requestedTransportType)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doCreateAllocation, this, lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType )));
+    mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doCreateAllocation(lifetime, bandwidth, requestedProps, reservationToken, requestedTransportType); }));
 }
 
 void
@@ -258,7 +267,7 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
 void 
 TurnAsyncSocket::refreshAllocation(unsigned int lifetime)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doRefreshAllocation, this, lifetime)));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doRefreshAllocation(lifetime); }));
 }
 
 void 
@@ -294,7 +303,7 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
 void 
 TurnAsyncSocket::destroyAllocation()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doDestroyAllocation, this )));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doDestroyAllocation(); }));
 }
 
 void 
@@ -306,7 +315,7 @@ TurnAsyncSocket::doDestroyAllocation()
 void
 TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doSetActiveDestination, this, address, port )));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetActiveDestination(address, port); }));
 }
 
 void
@@ -356,7 +365,7 @@ void TurnAsyncSocket::doChannelBinding(RemotePeer& remotePeer)
 void
 TurnAsyncSocket::clearActiveDestination()
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind( &TurnAsyncSocket::doClearActiveDestination, this )));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doClearActiveDestination(); }));
 }
 
 void
@@ -402,8 +411,8 @@ TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addA
 void
 TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission, unsigned int numRetransmits, unsigned int retrans_iterval_ms, const StunTuple* targetAddress)
 {
-#define REQUEST_BUFFER_SIZE 4096
-   boost::shared_ptr<DataBuffer> buffer = AsyncSocketBase::allocateBuffer(REQUEST_BUFFER_SIZE);
+   constexpr size_t REQUEST_BUFFER_SIZE = 4096;
+   const auto buffer = AsyncSocketBase::allocateBuffer(REQUEST_BUFFER_SIZE);
    unsigned int bufferSize;
    bufferSize = message->stunEncodeMessage((char*)buffer->data(), REQUEST_BUFFER_SIZE);
    buffer->truncate(bufferSize);  // set size to real size
@@ -413,7 +422,7 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission, unsi
       // If message is a request, then start appropriate transaction and retranmission timers
       if(message->mClass == StunMessage::StunClassRequest)
       {
-         boost::shared_ptr<RequestEntry> requestEntry(new RequestEntry(mIOService, this, message, numRetransmits, retrans_iterval_ms, targetAddress));
+         const auto requestEntry = std::make_shared<RequestEntry>(mIOService, this, message, numRetransmits, retrans_iterval_ms, targetAddress);
          mActiveRequestMap[message->mHeader.magicCookieAndTid] = requestEntry;
          requestEntry->startTimer();
       }
@@ -434,7 +443,7 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission, unsi
 }
 
 void 
-TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    Lock lock(mMutex);
    if(data->size() > 4)
@@ -624,7 +633,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
          }
 
          {
-            boost::shared_ptr<RequestEntry> requestEntry = it->second;
+            const auto requestEntry = it->second;
             mActiveRequestMap.erase(it);
             requestEntry->stopTimer();
 
@@ -715,7 +724,7 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
       return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
    }
 
-   boost::shared_ptr<DataBuffer> data(new DataBuffer(stunMessage.mTurnData->data(), stunMessage.mTurnData->size()));
+   const auto data = std::make_shared<DataBuffer>(stunMessage.mTurnData->data(), stunMessage.mTurnData->size());
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(), 
       remoteTuple.getAddress(), 
       remoteTuple.getPort(), 
@@ -1008,47 +1017,45 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage &request, StunMessage &respon
 }
 
 void
-TurnAsyncSocket::send(const char* buffer, unsigned int size)
+TurnAsyncSocket::send(const char* const buffer, const size_t size)
 {
-   boost::shared_ptr<DataBuffer> data(new DataBuffer(buffer, size));
-   sendFramed(data);
+   sendFramed(std::make_shared<DataBuffer>(buffer, size));
 }
 
 void 
-TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
+TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* const buffer, const size_t size)
 {
-   boost::shared_ptr<DataBuffer> data(new DataBuffer(buffer, size));
-   sendToFramed(address, port, data);
+   sendToFramed(address, port, std::make_shared<DataBuffer>(buffer, size));
 }
 
 void 
-TurnAsyncSocket::sendFramed(boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::sendFramed(const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doSendFramed, this, data)));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendFramed(data); }));
 }
 
 void 
-TurnAsyncSocket::sendToFramed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::sendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
-   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doSendToFramed, this, address, port, data)));
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSendToFramed(address, port, data); }));
 }
 
 void 
-TurnAsyncSocket::sendUnframed(boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::sendUnframed(const std::shared_ptr<DataBuffer>& data)
 {
    StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
    mAsyncSocketBase.send(destination, data);
 }
 
 void 
-TurnAsyncSocket::sendToUnframed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::sendToUnframed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    StunTuple destination(mLocalBinding.getTransportType(), address, port);
    mAsyncSocketBase.send(destination, data);
 }
 
 void 
-TurnAsyncSocket::doSendFramed(boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::doSendFramed(const std::shared_ptr<DataBuffer>& data)
 {
    if(mActiveDestination)
    {
@@ -1066,7 +1073,7 @@ TurnAsyncSocket::doSendFramed(boost::shared_ptr<DataBuffer>& data)
 }
 
 void 
-TurnAsyncSocket::doSendToFramed(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::doSendToFramed(const asio::ip::address& address, unsigned short port, const std::shared_ptr<DataBuffer>& data)
 {
    // Setup Remote Peer 
    StunTuple remoteTuple(mRelayTransportType, address, port);
@@ -1082,7 +1089,7 @@ TurnAsyncSocket::doSendToFramed(const asio::ip::address& address, unsigned short
 }
 
 void
-TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<DataBuffer>& data)
 {
    if(remotePeer.isChannelConfirmed())
    {
@@ -1116,7 +1123,7 @@ TurnAsyncSocket::connect(const std::string& address, unsigned short port)
 void
 TurnAsyncSocket::close()
 {
-   mIOService.post(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::doClose, this)));
+   mIOService.post(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [this] { doClose(); }));
 }
 
 void
@@ -1160,7 +1167,7 @@ TurnAsyncSocket::turnReceive()
 }
 
 void 
-TurnAsyncSocket::sendOverChannel(unsigned short channel, boost::shared_ptr<DataBuffer>& data)
+TurnAsyncSocket::sendOverChannel(unsigned short channel, const std::shared_ptr<DataBuffer>& data)
 {
    StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
    mAsyncSocketBase.send(destination, channel, data);
@@ -1192,8 +1199,8 @@ TurnAsyncSocket::RequestEntry::startTimer()
 {
    //std::cout << "RequestEntry::startTimer() " << mTimeout << " " << mRequestMessage->mHeader.magicCookieAndTid << std::endl;
    // start the request timer
-   mRequestTimer.expires_from_now(boost::posix_time::milliseconds(mTimeout));  
-   mRequestTimer.async_wait(weak_bind<RequestEntry, void(const asio::error_code&)>(shared_from_this(), boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, asio::placeholders::error)));
+   mRequestTimer.expires_from_now(milliseconds(mTimeout));  
+   mRequestTimer.async_wait(weak_bind<RequestEntry, void(const asio::error_code&)>(shared_from_this(), std::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, std::placeholders::_1)));
 }
 
 void
@@ -1255,7 +1262,7 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
    RequestMap::iterator it = mActiveRequestMap.find(tid);
    if(it != mActiveRequestMap.end())
    {
-      boost::shared_ptr<RequestEntry> requestEntry = it->second;
+      const auto requestEntry = it->second;
       mActiveRequestMap.erase(tid);
 
       switch(requestEntry->mRequestMessage->mMethod)
@@ -1302,8 +1309,8 @@ TurnAsyncSocket::clearActiveRequestMap()
 void
 TurnAsyncSocket::startAllocationTimer()
 {
-   mAllocationTimer.expires_from_now(boost::posix_time::seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
-   mAllocationTimer.async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>(mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::allocationTimerExpired, this, asio::placeholders::error)));
+   mAllocationTimer.expires_from_now(seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
+   mAllocationTimer.async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>(mAsyncSocketBase.shared_from_this(), std::bind(&TurnAsyncSocket::allocationTimerExpired, this, std::placeholders::_1)));
 }
 
 void
@@ -1326,12 +1333,12 @@ TurnAsyncSocket::startChannelBindingTimer(unsigned short channel)
    if(it==mChannelBindingTimers.end())
    {
       std::pair<ChannelBindingTimerMap::iterator,bool> ret = 
-         mChannelBindingTimers.insert(std::pair<unsigned short, asio::deadline_timer*>(channel, new asio::deadline_timer(mIOService)));
+         mChannelBindingTimers.insert(std::pair<unsigned short, asio::steady_timer*>(channel, new asio::steady_timer(mIOService)));
       resip_assert(ret.second);
       it = ret.first;
    }
-   it->second->expires_from_now(boost::posix_time::seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
-   it->second->async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>( mAsyncSocketBase.shared_from_this(), boost::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, asio::placeholders::error, channel)));
+   it->second->expires_from_now(seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
+   it->second->async_wait(weak_bind<AsyncSocketBase, void(const asio::error_code&)>( mAsyncSocketBase.shared_from_this(), std::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, std::placeholders::_1, channel)));
 }
 
 void
@@ -1361,9 +1368,9 @@ TurnAsyncSocket::channelBindingTimerExpired(const asio::error_code& e, unsigned 
 }
 
 void 
-TurnAsyncSocket::setOnBeforeSocketClosedFp(boost::function<void(unsigned int)> fp)
+TurnAsyncSocket::setOnBeforeSocketClosedFp(AsyncSocketBase::BeforeClosedHandler fp)
 {
-   mAsyncSocketBase.setOnBeforeSocketClosedFp(fp);
+   mAsyncSocketBase.setOnBeforeSocketClosedFp(std::move(fp));
 }
 
 } // namespace

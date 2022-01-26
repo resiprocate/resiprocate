@@ -12,6 +12,8 @@
 #include "p2p/TopologyAPI.hxx"
 #include "p2p/Message.hxx"
 
+#include <memory>
+
 namespace p2p
 {
 class Dispatcher;
@@ -42,10 +44,10 @@ class ForwardingLayer: public EventConsumer
       virtual void consume(LocalCandidatesCollected& m);
 
       // from messages from above or below that need to be forwarded 
-      void forward( std::auto_ptr<Message> m );
+      void forward(std::unique_ptr<Message> m);
 
       //not public api
-      virtual void post(std::auto_ptr<Event> event);
+      virtual void post(std::unique_ptr<Event> event);
       
       virtual resip::Data brief() const
       {

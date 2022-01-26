@@ -28,6 +28,8 @@
 
 #include "DumFixture.hxx"
 
+#include <utility>
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 using namespace CppUnit;
@@ -77,7 +79,7 @@ static DumUserAgent* createDumUserAgent(const Data& user, const Data& host = "lo
    aor.host() = host;
    aor.port() = port;
    aor.user() = user;
-   SharedPtr<MasterProfile> prof = DumUserAgent::makeProfile(aor, user);
+   auto prof = DumUserAgent::makeProfile(aor, user);
    DumUserAgent* ua = new DumUserAgent(prof, DumFixture::proxy);
    ua->init();
    return ua;
@@ -90,11 +92,11 @@ static DumUserAgent* createAnonDumUserAgent(const Data& user, const Data& host =
    aor.host() = host;
    aor.port() = port;
    aor.user() = user;
-   SharedPtr<MasterProfile> prof = DumUserAgent::makeProfile(aor, user);
+   auto prof = DumUserAgent::makeProfile(aor, user);
    //!dcm! -- truly terrible hack. Should be banned by the geneva convention,
    //clean up post-haste.
-   SharedPtr<MasterProfile> anonProf = resip::shared_dynamic_cast<MasterProfile, UserProfile>(DumUserAgent::makeProfile(aor, user)->getAnonymousUserProfile());   
-   DumUserAgent* ua = new DumUserAgent(anonProf, DumFixture::proxy);
+   auto anonProf = std::dynamic_pointer_cast<MasterProfile>(DumUserAgent::makeProfile(aor, user)->getAnonymousUserProfile());
+   DumUserAgent* ua = new DumUserAgent(std::move(anonProf), DumFixture::proxy);
    ua->init();
    return ua;
 }
@@ -111,7 +113,7 @@ DumFixture::~DumFixture()
 void
 DumFixture::initialize(int argc, char** argv)
 {
-   //ExternalDnsFactory::set(auto_ptr<ExternalDns>(createExternalDns()));
+   //ExternalDnsFactory::set(std::unique_ptr<ExternalDns>(createExternalDns()));
 
    InfoLog(<< "Setting up proxy");
 #ifdef USE_SSL
@@ -369,10 +371,10 @@ DumFixture::destroyStatic()
    }
 }
 
-auto_ptr<Pidf>
+std::unique_ptr<Pidf>
 DumFixture::makePidf(const DumUserAgent* dua)
 {
-   std::auto_ptr<Pidf> pidf(new Pidf);
+   std::unique_ptr<Pidf> pidf(new Pidf);
    
    pidf->setSimpleStatus(true, "online", Data::from(dua->getAor().uri()));
    pidf->getTuples().front().id = dua->getProfile()->getDefaultFrom().uri().getAor();
@@ -428,7 +430,7 @@ DumFixture::createUserAgentForFailoverTest(const Data& user, const Data& hostDom
    aor.user() = user;
    aor.host() = hostDomain;
 
-   resip::SharedPtr<MasterProfile> prof = DumUserAgent::makeProfile(aor, user);
+   auto prof = DumUserAgent::makeProfile(aor, user);
    DumUserAgent* agent  = new DumUserAgent(prof);
    agent->init();
 

@@ -5,14 +5,18 @@
 
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
+#include "IMParticipantBase.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 
-#include <rutil/SharedPtr.hxx>
+#include <resip/stack/MediaControlContents.hxx>
+
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
+
+#include <memory>
 
 namespace resip
 {
@@ -20,15 +24,8 @@ class DialogUsageManager;
 class SipMessage;
 }
 
-namespace sdpcontainer
-{
-class Sdp; 
-class SdpMediaLine;
-}
-
 namespace recon
 {
-class ConversationManager;
 
 /**
   This class represent a remote participant.  A remote participant is a 
@@ -38,53 +35,55 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipant : public Participant, public resip::AppDialog
+class RemoteParticipant : public IMParticipantBase, public virtual Participant, public resip::AppDialog
 {
 public:
-   RemoteParticipant(ParticipantHandle partHandle,   // UAC
+   // UAC
+   RemoteParticipant(ParticipantHandle partHandle,
                      ConversationManager& conversationManager, 
                      resip::DialogUsageManager& dum,
-                     RemoteParticipantDialogSet& remoteParticipantDialogSet);  
+                     RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   RemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
+   // UAS or forked leg
+   RemoteParticipant(ConversationManager& conversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual unsigned int getLocalRTPPort();
-   void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
+   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer) = 0;
    virtual bool isHolding() { return mLocalHold; }
+   virtual bool isRemoteHold() { return mRemoteHold; }
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
-   virtual void initiateRemoteCall(const resip::NameAddr& destination, resip::SharedPtr<resip::UserProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
-   virtual int getConnectionPortOnBridge();
-   virtual int getMediaConnectionId();
+   virtual void initiateRemoteCall(const resip::NameAddr& destination, const std::shared_ptr<ConversationProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders);
    virtual void destroyParticipant();
    virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
    virtual void removeFromConversation(Conversation *conversation);
    virtual void accept();
    virtual void alert(bool earlyFlag);
    virtual void reject(unsigned int rejectCode);
-   virtual void redirect(resip::NameAddr& destination);
-   virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle);
+   virtual void redirect(resip::NameAddr& destination, unsigned int redirectCode = 302, ConversationManager::RedirectSuccessCondition successCondition = ConversationManager::RedirectSuccessOnConnected);
+   virtual void redirectToParticipant(resip::InviteSessionHandle& destParticipantInviteSessionHandle, ConversationManager::RedirectSuccessCondition successCondition = ConversationManager::RedirectSuccessOnConnected);
+   virtual void info(const resip::Contents& contents);
    virtual void checkHoldCondition();
    virtual void setLocalHold(bool hold);
+   virtual void sendInstantMessage(std::unique_ptr<resip::Contents> contents) override;
 
    virtual void setPendingOODReferInfo(resip::ServerOutOfDialogReqHandle ood, const resip::SipMessage& referMsg); // OOD-Refer (no Sub)
    virtual void setPendingOODReferInfo(resip::ServerSubscriptionHandle ss, const resip::SipMessage& referMsg); // OOD-Refer (with Sub)
    virtual void acceptPendingOODRefer();
    virtual void rejectPendingOODRefer(unsigned int statusCode);
    virtual void redirectPendingOODRefer(resip::NameAddr& destination);
-   virtual void processReferNotify(const resip::SipMessage& notify);
+   virtual void processReferNotify(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
+
+   virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
-   virtual void adjustRTPStreams(bool sendingOffer=false);
-
-   // DTMF Handler
-   virtual void onDtmfEvent(int dtmf, int duration, bool up);
+   virtual void notifyTerminating();
+   virtual void adjustRTPStreams(bool sendingOffer=false) = 0;
 
    // Invite Session Handler /////////////////////////////////////////////////////
    virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
@@ -125,24 +124,32 @@ public:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
-private:       
-   void hold();
-   void unhold();
+protected:
    void setRemoteHold(bool remoteHold);
-   void provideOffer(bool postOfferAccept);
-   bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
-   bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
-   bool formMidDialogSdpOfferOrAnswer(const resip::SdpContents& localSdp, const resip::SdpContents& remoteSdp, resip::SdpContents& newSdp, bool offer);
    void setProposedSdp(const resip::SdpContents& sdp);
    void setLocalSdp(const resip::SdpContents& sdp);
+   std::shared_ptr<resip::SdpContents> getLocalSdp() { return mLocalSdp; };
    void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
-   void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
-   virtual void replaceWithParticipant(RemoteParticipant* replacingParticipant);
+   std::shared_ptr<resip::SdpContents> getRemoteSdp() { return mRemoteSdp; };
+
+   virtual bool mediaStackPortAvailable() = 0;
+
+   RemoteParticipantDialogSet& getDialogSet() { return mDialogSet; };
+
+   virtual void notifyIncomingParticipant(const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
+   virtual void hold();
+   virtual void unhold();
+
+private:       
+   void provideOffer(bool postOfferAccept);
+   bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
+   virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
+   virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;
-   resip::InviteSessionHandle mInviteSessionHandle; 
-   RemoteParticipantDialogSet& mDialogSet;   
+   resip::InviteSessionHandle mInviteSessionHandle;
+   resip::ClientSubscriptionHandle mReferSubscriptionHandle;
+   RemoteParticipantDialogSet& mDialogSet;
    resip::DialogId mDialogId;
 
    typedef enum
@@ -168,7 +175,8 @@ private:
    resip::SipMessage mPendingOODReferMsg;
    resip::ServerOutOfDialogReqHandle mPendingOODReferNoSubHandle;
    resip::ServerSubscriptionHandle mPendingOODReferSubHandle;
-
+   ConversationManager::RedirectSuccessCondition mRedirectSuccessCondition;
+   
    typedef enum
    {
       None = 0,
@@ -184,14 +192,14 @@ private:
       PendingRequestType mType;
       resip::NameAddr mDestination;
       resip::InviteSessionHandle mDestInviteSessionHandle;
+      unsigned int mRedirectCode;
+      ConversationManager::RedirectSuccessCondition mRedirectSuccessCondition;
    };
    PendingRequest mPendingRequest;
-   std::auto_ptr<resip::SdpContents> mPendingOffer;
+   std::unique_ptr<resip::SdpContents> mPendingOffer;
 
-   sdpcontainer::Sdp* mLocalSdp;
-   sdpcontainer::Sdp* mRemoteSdp;
-
-   ConversationMap mRelatedConversations;
+   std::shared_ptr<resip::SdpContents> mLocalSdp;
+   std::shared_ptr<resip::SdpContents> mRemoteSdp;
 };
 
 }
@@ -201,6 +209,8 @@ private:
 
 /* ====================================================================
 
+ Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
+ Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

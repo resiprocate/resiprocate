@@ -21,7 +21,10 @@ main()
    UInt8 *tmp = (UInt8*)&data;
    tmp[7] = 1;
    assert(ntoh64(data) == 1);
+
+   data = 1;
    UInt64 data2 = hton64(data);
+   tmp = (UInt8*)&data2;
    assert(tmp[7] == 1);
 
    return 0;

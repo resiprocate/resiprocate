@@ -1,11 +1,12 @@
 
-#include "MyConversationManager.hxx"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <rutil/Log.hxx>
+
+#include "MyConversationManager.hxx"
+
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
@@ -19,9 +20,8 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
-      : ConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate),
-        mLocalAudioEnabled(localAudioEnabled),
+MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
+      : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
 }
@@ -29,7 +29,7 @@ MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterf
 void
 MyConversationManager::startup()
 {      
-   if(mLocalAudioEnabled)
+   if(supportsLocalAudio())
    {
       // Create initial local participant and conversation  
       addParticipant(createConversation(), createLocalParticipant());
@@ -58,17 +58,17 @@ MyConversationManager::startup()
 }
 
 ConversationHandle
-MyConversationManager::createConversation()
+MyConversationManager::createConversation(AutoHoldMode autoHoldMode)
 {
-   ConversationHandle convHandle = ConversationManager::createConversation();
+   ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
    mConversationHandles.push_back(convHandle);
    return convHandle;
 }
 
 ParticipantHandle
-MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
+MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<ConversationProfile>& conversationProfile, const std::multimap<resip::Data, resip::Data>& extraHeaders)
 {
-   ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
+   ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode, conversationProfile, extraHeaders);
    mRemoteParticipantHandles.push_back(partHandle);
    return partHandle;
 }
@@ -119,19 +119,27 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
    mRemoteParticipantHandles.push_back(partHandle);
    if(mAutoAnswerEnabled)
    {
-      // If there are no conversations, then create one
-      if(mConversationHandles.empty())
+      const resip::Data& room = msg.header(h_RequestLine).uri().user();
+      RoomMap::const_iterator it = mRooms.find(room);
+      if(it == mRooms.end())
       {
+         InfoLog(<<"creating Conversation for room: " << room);
          ConversationHandle convHandle = createConversation();
+         mRooms[room] = convHandle;
          // ensure a local participant is in the conversation - create one if one doesn't exist
-         if(mLocalAudioEnabled && mLocalParticipantHandles.empty())
+         if(supportsLocalAudio() && mLocalParticipantHandles.empty())
          {
             createLocalParticipant();
          }
-         addParticipant(convHandle, mLocalParticipantHandles.front());
+         addParticipant(convHandle, partHandle);
+         answerParticipant(partHandle);
       }
-      addParticipant(mConversationHandles.front(), partHandle);
-      answerParticipant(partHandle);
+      else
+      {
+         InfoLog(<<"found Conversation for room: " << room);
+         addParticipant(it->second, partHandle);
+         answerParticipant(partHandle);
+      }
    }
 }
 
@@ -179,6 +187,12 @@ void
 MyConversationManager::onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
 {
    InfoLog(<< "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
+}
+
+void
+MyConversationManager::onParticipantConnectedConfirmed(ParticipantHandle partHandle, const SipMessage& msg)
+{
+   InfoLog(<< "onParticipantConnectedConfirmed: handle=" << partHandle << " msg=" << msg.brief());
 }
 
 void

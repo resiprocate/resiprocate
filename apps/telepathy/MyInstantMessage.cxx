@@ -42,8 +42,8 @@ MyInstantMessage::MyInstantMessage()
 void
 MyInstantMessage::onMessageArrived(ServerPagerMessageHandle handle, const SipMessage& message)
 {
-   SharedPtr<SipMessage> ok = handle->accept();
-   handle->send(ok);
+   auto ok = handle->accept();
+   handle->send(std::move(ok));
    InfoLog(<<"MyInstantMessage::onMessageArrived " << message.brief());
    emit onMessageReceived(message);
 }
@@ -55,7 +55,7 @@ MyInstantMessage::onSuccess(ClientPagerMessageHandle handle, const resip::SipMes
 }
 
 void
-MyInstantMessage::onFailure(ClientPagerMessageHandle handle, const SipMessage& status, auto_ptr<Contents> contents)
+MyInstantMessage::onFailure(ClientPagerMessageHandle handle, const SipMessage& status, unique_ptr<Contents> contents)
 {
    ErrLog(<<"ClientMessageHandler::onFailure\n");
    

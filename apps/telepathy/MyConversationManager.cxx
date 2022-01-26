@@ -36,7 +36,7 @@ using namespace resip;
 using namespace recon;
 
 MyConversationManager::MyConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled, Connection *connection)
-      : ConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate),
+      : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
         mLocalAudioEnabled(localAudioEnabled),
         mAutoAnswerEnabled(autoAnswerEnabled),
         mConnection(connection)
@@ -78,15 +78,15 @@ MyConversationManager::startup()
 }
 
 ConversationHandle
-MyConversationManager::createConversation()
+MyConversationManager::createConversation(AutoHoldMode autoHoldMode)
 {
-   ConversationHandle convHandle = ConversationManager::createConversation();
+   ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
    mConversationHandles.push_back(convHandle);
    return convHandle;
 }
 
 ParticipantHandle
-MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
+MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
    ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode);
    mRemoteParticipantHandles.push_back(partHandle);

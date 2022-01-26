@@ -89,10 +89,10 @@ private slots:
    void onMessageReceived(const resip::SipMessage& message);
 
 private:
-   resip::SharedPtr<TelepathyMasterProfile> mUAProfile;
-   resip::SharedPtr<TelepathyConversationProfile> mConversationProfile;
-   resip::SharedPtr<MyInstantMessage> mInstantMessage;
-   std::auto_ptr<MyConversationManager> myConversationManager;
+   std::shared_ptr<TelepathyMasterProfile> mUAProfile;
+   std::shared_ptr<TelepathyConversationProfile> mConversationProfile;
+   std::shared_ptr<MyInstantMessage> mInstantMessage;
+   std::unique_ptr<MyConversationManager> myConversationManager;
 
    Tp::BaseConnectionContactsInterfacePtr mContactsInterface;
    Tp::BaseConnectionAliasingInterfacePtr mAliasingInterface;

@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <utility>
 
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/InteropHelper.hxx"
@@ -62,14 +63,14 @@ resip::Data
 ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately)
 {
    InfoLog (<< "Adding candidate " << addr);
-   std::auto_ptr<Target> target(new Target(addr));
+   std::unique_ptr<Target> target(new Target(addr));
    Data tid=target->tid();
-   addTarget(target, beginImmediately);
+   addTarget(std::move(target), beginImmediately);
    return tid;
 }
 
 bool
-ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
+ResponseContext::addTarget(std::unique_ptr<repro::Target> target, bool beginImmediately, bool checkDuplicates)
 {
    if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
@@ -686,7 +687,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
    // in, we do care though.)
    if(!doPathInstead || recordRouted)
    {
-      std::auto_ptr<resip::MessageDecorator> rrDecorator(
+      std::unique_ptr<resip::MessageDecorator> rrDecorator(
                                  new RRDecorator(mRequestContext.mProxy,
                                                 receivedTransportTuple,
                                                 receivedTransportRecordRoute,
@@ -695,7 +696,7 @@ ResponseContext::insertRecordRoute(SipMessage& outgoing,
                                                 mRequestContext.mProxy.getRecordRouteForced(),
                                                 doPathInstead,
                                                 mIsClientBehindNAT));
-      outgoing.addOutboundDecorator(rrDecorator);
+      outgoing.addOutboundDecorator(std::move(rrDecorator));
    }
 }
 
@@ -950,7 +951,7 @@ ResponseContext::processCancel(const SipMessage& request)
    resip_assert(request.isRequest());
    resip_assert(request.method() == CANCEL);
 
-   std::auto_ptr<SipMessage> ok(Helper::makeResponse(request, 200));   
+   std::unique_ptr<SipMessage> ok(Helper::makeResponse(request, 200));
    mRequestContext.sendResponse(*ok);
 
    if (!mRequestContext.mHaveSentFinalResponse)

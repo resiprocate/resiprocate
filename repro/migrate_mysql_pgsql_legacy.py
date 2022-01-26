@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: latin-1 -*-
 #
 # migrates data from MySQL (legacy schema) to PostgreSQL (legacy schema)
 #
 # Dependencies:
 #
-#    apt install python-mysqldb python-psycopg2
+#    apt install python3-mysqldb python3-psycopg2
 #
 # To use the script:
 #

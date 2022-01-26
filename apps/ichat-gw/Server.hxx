@@ -4,7 +4,7 @@
 #include <map>
 
 #include <resip/stack/TransactionUser.hxx>
-#include <resip/stack/InterruptableStackThread.hxx>
+#include <resip/stack/EventStackThread.hxx>
 #include <rutil/SelectInterruptor.hxx>
 #include <resip/stack/UdpTransport.hxx>
 #include <resip/dum/MasterProfile.hxx>
@@ -17,7 +17,6 @@
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <resip/dum/RegistrationHandler.hxx>
 #include <rutil/Log.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/Mutex.hxx>
 
 #include "ConfigParser.hxx"
@@ -27,6 +26,8 @@
 #include "MediaRelay.hxx"
 #include "IChatIPPortData.hxx"
 #include "IPCThread.hxx"
+
+#include <memory>
 
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
@@ -183,14 +184,14 @@ public:
    B2BSession* findMatchingIChatB2BSession(const resip::SipMessage& msg);
 
 protected:
-   resip::SharedPtr<resip::MasterProfile>& getMasterProfile() { return mProfile; }
+   std::shared_ptr<resip::MasterProfile>& getMasterProfile() noexcept { return mProfile; }
    bool translateAddress(const resip::Data& address, resip::Data& translation, bool failIfNoRule=false);
 
    // IPC Handler
    virtual void onNewIPCMsg(const IPCMsg& msg);
 
    // External Unknown Packet Handler//////////////////////////////////////////////
-   virtual void operator()(resip::UdpTransport* transport, const resip::Tuple& source, std::auto_ptr<resip::Data> unknownPacket);
+   virtual void operator()(resip::UdpTransport* transport, const resip::Tuple& source, std::unique_ptr<resip::Data> unknownPacket);
 
    // Shutdown Handler ////////////////////////////////////////////////////////////
    void onDumCanBeDeleted();
@@ -289,12 +290,13 @@ private:
    friend class SipUnregisterJabberUserCmd;
    void sipUnregisterJabberUserImpl(const std::string& jidToUnregister);
 
-   resip::SharedPtr<resip::MasterProfile> mProfile;
+   std::shared_ptr<resip::MasterProfile> mProfile;
    resip::Security* mSecurity;
-   resip::SelectInterruptor mSelectInterruptor;
+   resip::FdPollGrp *mPollGrp;
+   resip::EventThreadInterruptor *mEventInterruptor;
    resip::SipStack mStack;
    resip::DialogUsageManager mDum;
-   resip::InterruptableStackThread mStackThread;
+   resip::EventStackThread mStackThread;
    volatile bool mDumShutdown;
 
    typedef std::map<B2BSessionHandle, B2BSession*> B2BSessionMap;
