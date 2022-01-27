@@ -53,13 +53,13 @@ endif()
 # ares
 if(WITH_C_ARES)
    # Don't use built-in ares
-   find_package(c-ares REQUIRED)
+   find_package(cares REQUIRED)
 
    set(USE_CARES true)
    add_definitions(-DUSE_CARES)
 
-   set(ARES_LIBRARIES c-ares::cares)
-   include_directories(${c-ares_INCLUDE_DIR})
+   set(ARES_LIBRARIES cares)
+   include_directories(${cares_INCLUDE_DIR})
 else()
    # Use built-in ares
    set(USE_ARES true)
