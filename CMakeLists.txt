@@ -208,6 +208,7 @@ list(APPEND CPACK_SOURCE_IGNORE_FILES "/*\\\\.gz")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/*\\\\.zip")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "*\\\\.o")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "lib*\\\\.so*")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeCache.txt")
 
 include (CPack)
 add_custom_target (dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
