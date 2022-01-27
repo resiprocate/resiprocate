@@ -5,7 +5,7 @@ if(POLICY CMP0042)
   CMAKE_POLICY(SET CMP0042 NEW)
 endif(POLICY CMP0042)
 
-project(reSIProcate VERSION 1.12.0)
+project(reSIProcate VERSION 1.13.0)
 
 include(GNUInstallDirs)
 include(Utilities)
