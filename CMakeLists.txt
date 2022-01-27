@@ -195,6 +195,23 @@ else()
    message(STATUS "Missing libraries, will not build repro")
 endif()
 
+# Add 'make dist' command for creating release tarball
+set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set (CPACK_SOURCE_GENERATOR "TGZ")
+set (CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION}")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/\\\\.git/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeFiles/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/_CPack_Packages/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.deps/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.libs/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/*\\\\.gz")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/*\\\\.zip")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "*\\\\.o")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "lib*\\\\.so*")
+
+include (CPack)
+add_custom_target (dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+
 ###############
 ### Summary ###
 ###############
