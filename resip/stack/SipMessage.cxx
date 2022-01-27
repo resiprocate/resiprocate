@@ -65,6 +65,19 @@ SipMessage::SipMessage(const SipMessage& from)
    init(from);
 }
 
+SipMessage::SipMessage(const SipMessage &from, const SipMessageOptions &opts)
+    : mHeaders(StlPoolAllocator<HeaderFieldValueList *, PoolBase>(&mPool)),
+#ifndef __SUNPRO_CC
+      mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList *>, PoolBase>(&mPool)),
+#else
+      mUnknownHeaders(),
+#endif
+      mCreatedTime(Timer::getTimeMicroSec())
+{
+    init(from);
+    mOpts = opts;
+}
+
 Message*
 SipMessage::clone() const
 {
@@ -218,6 +231,8 @@ SipMessage::init(const SipMessage& rhs)
    {
       mOutboundDecorators.push_back((*i)->clone());
    }
+
+   mOpts = rhs.mOpts;
 }
 
 void
@@ -1800,6 +1815,17 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
         ack.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
+}
+
+int 
+SipMessage::getTimerB() const
+{
+    int timerB = mOpts.mTxOptions.mTimerB;
+    if (timerB <= 0)
+    {
+        timerB = TransactionMessage::getTimerB();
+    }
+    return timerB;
 }
 
 /* ====================================================================

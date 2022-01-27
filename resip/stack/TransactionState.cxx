@@ -1228,7 +1228,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             {
                resetNextTransmission(sip);
                saveOriginalContactAndVia(*sip);
-               mController.mTimers.add(Timer::TimerB, mId, Timer::TB );
+               mController.mTimers.add(Timer::TimerB, mId, msg->getTimerB());
                sendCurrentToWire();
             }
             else
