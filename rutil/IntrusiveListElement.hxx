@@ -387,12 +387,12 @@ class IntrusiveListElement2
 
             friend bool operator==(const iterator& lhs, const iterator& rhs)
             {
-               return rhs.mPos == rhs.mPos;
+               return lhs.mPos == rhs.mPos;
             }
 
             friend bool operator!=(const iterator& lhs, const iterator& rhs)
             {
-               return rhs.mPos != rhs.mPos;
+               return lhs.mPos != rhs.mPos;
             }
 
             P operator*()
