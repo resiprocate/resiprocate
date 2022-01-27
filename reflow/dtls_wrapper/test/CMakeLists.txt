@@ -16,6 +16,11 @@ set(SHARED_SRC
    TestTimerContext.cxx
 )
 
-test(testDtlsWrapper testDtlsWrapper.cxx ${SHARED_SRC})
-manual_test(testDtlsClient testDtlsClient.cxx ${SHARED_SRC})
-manual_test(testDtlsServer testDtlsServer.cxx ${SHARED_SRC})
+if(USE_SRTP1)
+# srtp_priv.h isn't shipped in the packages for srtp2
+# see: https://www.resiprocate.org/bugzilla/show_bug.cgi?id=169
+# Therefore, we don't try to build the test at present.
+   test(testDtlsWrapper testDtlsWrapper.cxx ${SHARED_SRC})
+   manual_test(testDtlsClient testDtlsClient.cxx ${SHARED_SRC})
+   manual_test(testDtlsServer testDtlsServer.cxx ${SHARED_SRC})
+endif()
