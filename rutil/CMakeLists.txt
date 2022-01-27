@@ -68,6 +68,7 @@ set(INCLUDES
    ssl/SHA1Stream.hxx
    ssl/OpenSSLInit.hxx
    CountStream.hxx
+   Crc32.hxx
    vmd5.hxx
    XMLCursor.hxx
    PoolBase.hxx
@@ -102,6 +103,7 @@ add_library(rutil
    Condition.cxx
    ConfigParse.cxx
    CountStream.cxx
+   Crc32.cxx
    ServerProcess.cxx
    Data.cxx
    DataStream.cxx
