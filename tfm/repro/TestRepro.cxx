@@ -48,7 +48,7 @@ TfmProxyConfig::TfmProxyConfig(AbstractDb* db, const CommandLineParser& args)
    insertConfigValue("QValueMsBetweenForkGroups", "5000");
    insertConfigValue("QValueMsBeforeCancel", "5000");
 
-   insertConfigValue("TimerC", "30");
+   insertConfigValue("TimerC", "40");
 
    insertConfigValue("ForceRecordRouting", "true");
    //insertConfigValue("RecordRouteUri", "sip:127.0.0.1:5060");  // Set below per transport

@@ -3494,7 +3494,7 @@ class TestHolder : public ReproFixture
          optional(jason->expect(INVITE/100, from(proxy),WaitFor100,jason->noAction())),
          derek->expect(INVITE,contact(jason),WaitForResponse,derek->ring()),
          jason->expect(INVITE/180,contact(derek),WaitForResponse,jason->noAction()),
-         derek->expect(CANCEL,from(proxy),31000,chain(derek->ok(),derek->send487())),
+         derek->expect(CANCEL,from(proxy),41000,chain(derek->ok(),derek->send487())),
          And
          (
             Sub
@@ -10434,14 +10434,14 @@ class TestHolder : public ReproFixture
             (
                jason2->expect(INVITE, contact(derek), WaitForCommand, jason2->ring()),
                derek->expect(INVITE/180, from(jason2), WaitFor180, derek->noAction()),
-               jason2->expect(CANCEL,from(proxy),31000,chain(jason2->ok(), jason2->send487(),count487.dec())),
+               jason2->expect(CANCEL,from(proxy),41000,chain(jason2->ok(), jason2->send487(),count487.dec())),
                jason2->expect(ACK,from(proxy),WaitForResponse,jason2->noAction())
             ),
             Sub
             (
                jason1->expect(INVITE, contact(derek), WaitForCommand, jason1->ring()),
                derek->expect(INVITE/180, from(jason1), WaitFor180, derek->noAction()),
-               jason1->expect(CANCEL,from(proxy),31000,chain(jason1->ok(), jason1->send487(),count487.dec())),
+               jason1->expect(CANCEL,from(proxy),41000,chain(jason1->ok(), jason1->send487(),count487.dec())),
                jason1->expect(ACK,from(proxy),WaitForResponse,jason1->noAction())
             )
          ),
@@ -10500,7 +10500,7 @@ class TestHolder : public ReproFixture
             (
                jason->expect(INVITE, from(cullen), WaitForCommand, jason->ring()),
                cullen->expect(INVITE/180, from(jason), WaitForResponse, cullen->noAction()),
-               jason->expect(CANCEL, from(proxy), 31000, chain(jason->ok(), jason->send487())),
+               jason->expect(CANCEL, from(proxy), 41000, chain(jason->ok(), jason->send487())),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction()),
 
                derek->expect(INVITE, from(cullen), WaitForCommand, chain(derek->ring(),derek->ok())),
