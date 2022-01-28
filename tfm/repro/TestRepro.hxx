@@ -88,8 +88,8 @@ class TestRepro : public TestProxy
       resip::DialogUsageManager* mDum;
       resip::DumThread* mDumThread;
       std::unique_ptr<resip::CongestionManager> mCongestionManager;
-      
-      repro::QValueTargetHandler *mQValueTargetHandler;
+
+      repro::QValueTargetHandler *mQValueTargetHandler = nullptr;
 };
 
 #endif
