@@ -36,23 +36,23 @@ CXXFLAGS += -fpermissive
 CXXFLAGS += -I/usr/include/postgresql
 LDFLAGS += -lcares
 
-CFG_ARGS := --with-ssl \
-		--with-popt \
-		--with-mysql \
-		--with-postgresql \
-		--with-apps \
+CFG_ARGS := -with-popt \
 		--enable-ipv6 \
 		--enable-dtls \
 		--with-radcli \
+		--with-ssl \
+		--enable-assert-syslog \
+		--with-c-ares \
+		--with-mysql \
+		--with-postgresql \
 		--with-repro \
 	        --with-return \
 		--enable-repro-plugins \
 		--with-python \
-		--with-c-ares \
+		--with-apps \
 		--with-qpid-proton \
 		--with-geoip \
-	        --with-netsnmp \
-		--enable-assert-syslog
+	        --with-netsnmp
 
 # on kfreebsd, sipxtapi is not available and recon can't be built
 # upstream hopes to eliminate the dependency on sipxtapi in a future release
