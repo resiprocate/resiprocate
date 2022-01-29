@@ -50,6 +50,7 @@ CFG_ARGS := --with-ssl \
 		--with-python \
 		--with-c-ares \
 		--with-qpid-proton \
+		--with-geoip \
 	        --with-netsnmp \
 		--enable-assert-syslog
 
