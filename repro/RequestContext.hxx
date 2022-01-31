@@ -67,8 +67,8 @@ class RequestContext
 
       virtual void forwardAck200(const resip::SipMessage& ack);
       void postAck200Done();
-      
-      void updateTimerC();
+
+      void updateTimerC(int customDelayMs = 0);
       bool mInitialTimerCSet;
 
       void setSessionCreatedEventSent() { mSessionCreatedEventSent = true; }

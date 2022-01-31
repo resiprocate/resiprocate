@@ -36,6 +36,7 @@ class SecurityAttributes;
 struct TxOptions
 {
     int mTimerB = 0;
+    int mTimerC = 0;
 };
 
 struct SipMessageOptions

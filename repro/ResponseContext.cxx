@@ -584,7 +584,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       mRequestContext.getOriginalRequest().method()==INVITE)
    {
       mRequestContext.mInitialTimerCSet=true;
-      mRequestContext.updateTimerC();
+      mRequestContext.updateTimerC(target->mSipMessageOptions.mTxOptions.mTimerC);
    }
    
    // the rest of 16.6 is implemented by the transaction layer of resip
@@ -1109,7 +1109,8 @@ ResponseContext::processResponse(SipMessage& response)
       case 1:
          if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            mRequestContext.updateTimerC();
+            auto currentTargetPtr = i->second;
+            mRequestContext.updateTimerC(currentTargetPtr->mSipMessageOptions.mTxOptions.mTimerC);
          }
 
          if  (!mRequestContext.mHaveSentFinalResponse)

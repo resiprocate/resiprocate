@@ -558,12 +558,16 @@ Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 }
 
 void
-Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc)
+Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc, int customDelayMs)
 {
-   if(mTimerC > 0)
+   // Convert ms to seconds
+   int delay = customDelayMs > 0 ? std::round(customDelayMs / 1000) : 0;
+   // Fall back to TimerC value from configuration if no custom delay is supplied
+   delay = delay > 0 ? delay : mTimerC;
+   if (delay > 0)
    {
-      InfoLog(<<"Posting timer C");
-      mStack.post(*tc,mTimerC,this);
+      InfoLog(<<"Posting timer C (" << delay << "sec)");
+      mStack.post(*tc, delay, this);
    }
 }
 
