@@ -492,7 +492,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    resip_assert(target->status() == Target::Candidate);
 
    SipMessage& orig=mRequestContext.getOriginalRequest();
-   SipMessage request(orig);
+   SipMessage request(orig, target->mSipMessageOptions);
 
    // If the target has a ;lr parameter, then perform loose routing
    if(target->uri().exists(p_lr))

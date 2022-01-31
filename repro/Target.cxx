@@ -17,30 +17,33 @@ Target::Target()
    mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
 {}
 
-Target::Target(const resip::Uri& uri)
+Target::Target(const resip::Uri& uri, const resip::SipMessageOptions &sipMessageOpts)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
    mStatus(Candidate),
    mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
 {  
    mRec.mContact.uri()=uri;
+   mSipMessageOptions = sipMessageOpts;
 }
 
-Target::Target(const resip::NameAddr& target)
+Target::Target(const resip::NameAddr& target, const resip::SipMessageOptions &sipMessageOpts)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
    mStatus(Candidate),
    mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
 {
    mRec.mContact=target;
+   mSipMessageOptions = sipMessageOpts;
 }
 
-Target::Target(const resip::ContactInstanceRecord& rec)
+Target::Target(const resip::ContactInstanceRecord& rec, const resip::SipMessageOptions &sipMessageOpts)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
    mStatus(Candidate),
    mRec(rec)
 {
+    mSipMessageOptions = sipMessageOpts;
 }
 
 Target::~Target()
