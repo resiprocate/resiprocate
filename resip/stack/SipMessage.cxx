@@ -65,7 +65,7 @@ SipMessage::SipMessage(const SipMessage& from)
    init(from);
 }
 
-SipMessage::SipMessage(const SipMessage &from, const SipMessageOptions &opts)
+SipMessage::SipMessage(const SipMessage &from, std::unique_ptr<SipMessageOptions> const &opts)
     : mHeaders(StlPoolAllocator<HeaderFieldValueList *, PoolBase>(&mPool)),
 #ifndef __SUNPRO_CC
       mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList *>, PoolBase>(&mPool)),
@@ -75,7 +75,9 @@ SipMessage::SipMessage(const SipMessage &from, const SipMessageOptions &opts)
       mCreatedTime(Timer::getTimeMicroSec())
 {
     init(from);
-    mOpts = opts;
+    if (opts) {
+        mOpts = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*opts));
+    }
 }
 
 Message*
@@ -232,7 +234,11 @@ SipMessage::init(const SipMessage& rhs)
       mOutboundDecorators.push_back((*i)->clone());
    }
 
-   mOpts = rhs.mOpts;
+   mOpts = nullptr;
+   if (rhs.mOpts)
+   {
+       mOpts = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*rhs.mOpts));
+   }
 }
 
 void
@@ -1820,7 +1826,7 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
 int 
 SipMessage::getTimerB() const
 {
-    int timerB = mOpts.mTxOptions.mTimerB;
+    int timerB = mOpts ? mOpts->mTxOptions.mTimerB : 0;
     if (timerB <= 0)
     {
         timerB = TransactionMessage::getTimerB();

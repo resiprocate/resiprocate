@@ -174,7 +174,7 @@ class SipMessage : public TransactionMessage
       explicit SipMessage(const Tuple *receivedTransport = 0);
       /// @todo .dlb. public, allows pass by value to compile.
       SipMessage(const SipMessage& message);
-      SipMessage(const SipMessage &message, const SipMessageOptions &opts);
+      SipMessage(const SipMessage &message, std::unique_ptr<SipMessageOptions> const &opts);
 
       /// @todo .dlb. sure would be nice to have overloaded return value here..
       virtual Message* clone() const;
@@ -751,7 +751,7 @@ class SipMessage : public TransactionMessage
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 
-      SipMessageOptions mOpts;
+      std::unique_ptr<SipMessageOptions> mOpts;
 
       friend class TransportSelector;
 };

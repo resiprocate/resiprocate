@@ -29,9 +29,10 @@ class Target
       } Status;
    
       Target();
-      Target(const resip::Uri &uri, const resip::SipMessageOptions &sipMessageOpts = {});
-      Target(const resip::NameAddr &target, const resip::SipMessageOptions &sipMessageOpts = {});
-      Target(const resip::ContactInstanceRecord &record, const resip::SipMessageOptions &sipMessageOpts = {});
+      Target(const resip::Uri &uri, std::unique_ptr<resip::SipMessageOptions> sipMessageOpts = nullptr);
+      Target(const resip::NameAddr &target, std::unique_ptr<resip::SipMessageOptions> sipMessageOpts = nullptr);
+      Target(const resip::ContactInstanceRecord &record, std::unique_ptr<resip::SipMessageOptions> sipMessageOpts = nullptr);
+      Target(const Target &other);
 
       virtual ~Target();
       
@@ -68,9 +69,9 @@ class Target
       */
       int mPriorityMetric;
       bool mShouldAutoProcess;
-      resip::SipMessageOptions mSipMessageOptions;
-      
-   protected:
+      std::unique_ptr<resip::SipMessageOptions> mSipMessageOptions;
+
+  protected:
       Status mStatus;
       resip::Via mVia;
       resip::ContactInstanceRecord mRec;
