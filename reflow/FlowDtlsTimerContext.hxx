@@ -1,7 +1,7 @@
 #if !defined(FlowDtlsTimerContext_hxx)
 #define FlowDtlsTimerContext_hxx 
 
-// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO and boost includes since inlined shared_from_this has 
+// !slg! At least for builds in Visual Studio on windows this include needs to be above ASIO since inlined shared_from_this has 
 // a different linkage signature if included after - haven't investigated the full details as to exactly why this happens
 #include <memory>
 

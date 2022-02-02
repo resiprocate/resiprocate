@@ -105,22 +105,18 @@ Setting up build environment:
 -----------------------------
 1.  Go to directory where you want to create build env.
 2.  git clone https://github.com/resiprocate/resiprocate.git resip
-3.  svn checkout http://sipxsvn.sipez.com/rep/sipX/main/ sipXtapi
+3.  git clone https://github.com/sipXtapi/sipXtapi.git sipXtapi
 4.  Windows users will need to put OpenSSL binares in resip/contrib/openssl or resip/contrib/opensslx64
 
 
 /resip/                  <- https://github.com/resiprocate/resiprocate.git
 /resip/contrib/openssl   <- OpenSSL 1.0.1 or above (required here for Windows builds only)
-/resip/contrib/boost     <- BOOST 1.34.1 or above (required in this location for Windows builds only)
-                            Note:  VS2019 files will use NuGet to pull down boost headers, so this 
-							       step won't be needed.
-/sipXtapi                <- http://sipxsvn.sipez.com/rep/sipX/main/
-
+/sipXtapi                <- https://github.com/sipXtapi/sipXtapi.git
 
 Building recon on Windows
 -------------------------
 1.  Ensure the build environment is setup as indicated above.
-2.  Use the recon_16_0.sln Visual Studio 2019 or older versions present.
+2.  Use the recon_17_0.sln Visual Studio 2022 or older versions present.
 3.  Build solution.
 
 
