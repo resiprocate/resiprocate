@@ -142,12 +142,66 @@ sed -i \
 
 build/install-build-deps-2.sh
 
+# ensure visibility of the WebRTC API for C++ applications
+sed -i -e 's/[^_]\(configs .*hide_all_but_jni\)/#\1/g' sdk/android/BUILD.gn
+
 # the next command line comes from
 #  https://github.com/dpocock/webrtc-android-build/blob/master/README.md
 
 # if the build fails, it is possible to run this command again
 
 ./tools_webrtc/android/build_aar.py \
-  --extra-gn-args 'is_debug=false is_component_build=false is_clang=true rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false' \
+  --extra-gn-args 'is_debug=false is_component_build=false is_clang=true rtc_include_tests=false rtc_use_h264=true rtc_enable_protobuf=false use_rtti=true use_custom_libcxx=false rtc_enable_symbol_export=true' \
   --build-dir ./out/release-build/
+
+# Convert the AAR into a prefab AAR.
+# In other words, we include copies of header files in the AAR so that other
+# JNI code can be compiled to use the WebRTC API.
+#   https://google.github.io/prefab/
+#   https://android-developers.googleblog.com/2020/02/native-dependencies-in-android-studio-40.html
+#   https://corecppil.github.io/Meetups/2020-03-37_Core_C++_in_Cyberspace_Online/Package_Management_for_Android_C++_Alex.pdf
+
+PREFAB_WORK_DIR=`mktemp -d`
+AAR_FILE=`readlink -f src/libwebrtc.aar`
+cd ${PREFAB_WORK_DIR}
+jar xf ${AAR_FILE}
+PREFAB_PACKAGE_NAME=libwebrtc
+MODULE_NAME=jingle_peerconnection_so
+MODULE_DIR=prefab/modules/${MODULE_NAME}
+
+mkdir -p ${MODULE_DIR}
+echo "{\"name\":\"${PREFAB_PACKAGE_NAME}\",\"schema_version\":1,\"dependencies\":[],\"version\":\"1.0.0\"}" > prefab/prefab.json
+mv jni ${MODULE_DIR}/libs
+
+cd ${MODULE_DIR}
+echo '{"export_libraries":[]}' > module.json
+cd libs
+for CPU_ARCH in `ls` ;
+do
+  ARCH_DIR=android.${CPU_ARCH}
+  mv ${CPU_ARCH} ${ARCH_DIR}
+  echo "{\"abi\":\"${CPU_ARCH}\",\"api\":21,\"ndk\":23,\"stl\":\"c++_shared\"}" > ${ARCH_DIR}/abi.json
+done
+
+# copy the header files into the right places
+cd ..
+mkdir -p include
+# FIXME - should live in a webrtc/ sub-tree
+rsync -r --include='*/' --include='**.h' --exclude='*' ${WORK_DIR}/src/ include/
+cat > include/base/logging_buildflags.h << EOF
+#define BUILDFLAG(x) (x == 0)
+#define ENABLE_LOG_ERROR_NOT_REACHED 0
+EOF
+touch include/base/debug/debugging_buildflags.h
+# FIXME - make this another module, header library?
+rsync -r --include='*/' --include='**.h' --exclude='*' ${WORK_DIR}/src/third_party/abseil-cpp/ include/
+
+cd ${PREFAB_WORK_DIR}
+
+PREFAB_AAR=${WORK_DIR}/src/libwebrtc-prefab.aar
+jar cf ${PREFAB_AAR} .
+
+echo "Created prefab ${PREFAB_AAR}"
+cd ${WORK_DIR}/src
+rm -rf ${PREFAB_WORK_DIR}
 
