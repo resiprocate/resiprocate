@@ -76,7 +76,7 @@ SipMessage::SipMessage(const SipMessage &from, std::unique_ptr<SipMessageOptions
 {
     init(from);
     if (opts) {
-        mOpts = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*opts));
+        mOptions = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*opts));
     }
 }
 
@@ -234,10 +234,10 @@ SipMessage::init(const SipMessage& rhs)
       mOutboundDecorators.push_back((*i)->clone());
    }
 
-   mOpts = nullptr;
-   if (rhs.mOpts)
+   mOptions = nullptr;
+   if (rhs.mOptions)
    {
-       mOpts = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*rhs.mOpts));
+       mOptions = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*rhs.mOptions));
    }
 }
 
@@ -1826,7 +1826,7 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
 int 
 SipMessage::getTimerBMs() const
 {
-    int timerB = mOpts ? mOpts->mTxOptions.mTimerBMs : 0;
+    int timerB = mOptions ? mOptions->mTxOptions.mTimerBMs : 0;
     if (timerB <= 0)
     {
         timerB = TransactionMessage::getTimerBMs();

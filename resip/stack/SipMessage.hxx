@@ -751,7 +751,7 @@ class SipMessage : public TransactionMessage
 
       std::vector<MessageDecorator*> mOutboundDecorators;
 
-      std::unique_ptr<SipMessageOptions> mOpts;
+      std::unique_ptr<SipMessageOptions> mOptions;
 
       friend class TransportSelector;
 };
