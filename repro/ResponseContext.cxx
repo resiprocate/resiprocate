@@ -584,7 +584,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       mRequestContext.getOriginalRequest().method()==INVITE)
    {
       mRequestContext.mInitialTimerCSet=true;
-      int delay = target->mSipMessageOptions ? target->mSipMessageOptions->mTxOptions.mTimerC : 0;
+      int delay = target->mSipMessageOptions ? target->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
       mRequestContext.updateTimerC(delay);
    }
    
@@ -1111,7 +1111,7 @@ ResponseContext::processResponse(SipMessage& response)
          if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
             auto currentTargetPtr = i->second;
-            int delay = currentTargetPtr->mSipMessageOptions ? currentTargetPtr->mSipMessageOptions->mTxOptions.mTimerC : 0;
+            int delay = currentTargetPtr->mSipMessageOptions ? currentTargetPtr->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
             mRequestContext.updateTimerC(delay);
          }
 

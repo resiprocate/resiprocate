@@ -35,8 +35,8 @@ class SecurityAttributes;
 
 struct TxOptions
 {
-    int mTimerB = 0;
-    int mTimerC = 0;
+    int mTimerBMs = 0;
+    int mTimerCMs = 0;
 };
 
 struct SipMessageOptions
@@ -184,7 +184,7 @@ class SipMessage : public TransactionMessage
       /// Returns the transaction id from the branch or if 2543, the computed hash.
       virtual const Data& getTransactionId() const;
 
-      int getTimerB() const override;
+      int getTimerBMs() const override;
 
       /**
          @brief Calculates an MD5 hash over the Request-URI, To tag (for

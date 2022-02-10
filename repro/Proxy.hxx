@@ -123,7 +123,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool mPAssertedIdentityProcessing;
       bool mNeverStripProxyAuthorizationHeaders;
       resip::Data mServerText;
-      int mTimerC;
+      int mTimerCMs;
       resip::KeyValueStore mKeyValueStore;
       
       // needs to be a reference since parent owns it

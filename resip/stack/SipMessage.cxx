@@ -1824,12 +1824,12 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
 }
 
 int 
-SipMessage::getTimerB() const
+SipMessage::getTimerBMs() const
 {
-    int timerB = mOpts ? mOpts->mTxOptions.mTimerB : 0;
+    int timerB = mOpts ? mOpts->mTxOptions.mTimerBMs : 0;
     if (timerB <= 0)
     {
-        timerB = TransactionMessage::getTimerB();
+        timerB = TransactionMessage::getTimerBMs();
     }
     return timerB;
 }

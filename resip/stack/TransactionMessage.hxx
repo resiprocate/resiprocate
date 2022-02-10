@@ -21,7 +21,7 @@ class TransactionMessage : public Message
       virtual bool isClientTransaction() const = 0;
 
       // Allows to customise TimerB value independently for each of the client TXs.
-      virtual int getTimerB() const { return Timer::TB; }
+      virtual int getTimerBMs() const { return Timer::TB; }
 
       virtual Message* clone() const {resip_assert(false); return NULL;}
 };
