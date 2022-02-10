@@ -89,7 +89,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
-      void postTimerC(std::unique_ptr<TimerCMessage> tc);
+      void postTimerC(std::unique_ptr<TimerCMessage> tc, int customDelayMs = 0);
 
       void postMS(std::unique_ptr<resip::ApplicationMessage> msg, int msec);
 
@@ -123,7 +123,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool mPAssertedIdentityProcessing;
       bool mNeverStripProxyAuthorizationHeaders;
       resip::Data mServerText;
-      int mTimerC;
+      int mTimerCMs;
       resip::KeyValueStore mKeyValueStore;
       
       // needs to be a reference since parent owns it

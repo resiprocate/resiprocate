@@ -65,6 +65,22 @@ SipMessage::SipMessage(const SipMessage& from)
    init(from);
 }
 
+SipMessage::SipMessage(const SipMessage &from, std::unique_ptr<SipMessageOptions> const &opts)
+    : mHeaders(StlPoolAllocator<HeaderFieldValueList *, PoolBase>(&mPool)),
+#ifndef __SUNPRO_CC
+      mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList *>, PoolBase>(&mPool)),
+#else
+      mUnknownHeaders(),
+#endif
+      mCreatedTime(Timer::getTimeMicroSec())
+{
+    init(from);
+    if (opts) 
+    {
+        mOptions = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*opts));
+    }
+}
+
 Message*
 SipMessage::clone() const
 {
@@ -217,6 +233,12 @@ SipMessage::init(const SipMessage& rhs)
    for(std::vector<MessageDecorator*>::const_iterator i=rhs.mOutboundDecorators.begin(); i!=rhs.mOutboundDecorators.end();++i)
    {
       mOutboundDecorators.push_back((*i)->clone());
+   }
+
+   mOptions = nullptr;
+   if (rhs.mOptions)
+   {
+       mOptions = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*rhs.mOptions));
    }
 }
 
@@ -1800,6 +1822,17 @@ SipMessage::copyOutboundDecoratorsToStackFailureAck(SipMessage& ack)
         ack.addOutboundDecorator(std::unique_ptr<MessageDecorator>((*i)->clone()));
      }    
   }
+}
+
+int 
+SipMessage::getTimerBMs() const
+{
+    int timerB = mOptions ? mOptions->mTxOptions.mTimerBMs : 0;
+    if (timerB <= 0)
+    {
+        timerB = TransactionMessage::getTimerBMs();
+    }
+    return timerB;
 }
 
 /* ====================================================================

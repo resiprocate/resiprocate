@@ -91,7 +91,7 @@ Proxy::Proxy(SipStack& stack,
 #else
      mServerText(config.getConfigData("ServerText", "")),
 #endif
-     mTimerC(config.getConfigInt("TimerC", 180)),
+     mTimerCMs(config.getConfigInt("TimerC", 180) * 1000),
      mKeyValueStore(*Proxy::getGlobalKeyValueStoreKeyAllocator()),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
@@ -558,12 +558,14 @@ Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 }
 
 void
-Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc)
+Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc, int customDelayMs)
 {
-   if(mTimerC > 0)
+   // Fall back to TimerC value from configuration if no custom delay is supplied
+   int delayMs = customDelayMs > 0 ? customDelayMs : mTimerCMs;
+   if (delayMs > 0)
    {
-      InfoLog(<<"Posting timer C");
-      mStack.post(*tc,mTimerC,this);
+      InfoLog(<<"Posting timer C (" << delayMs << "ms)");
+      mStack.postMS(*tc, delayMs, this);
    }
 }
 

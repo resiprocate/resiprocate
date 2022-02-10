@@ -492,7 +492,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    resip_assert(target->status() == Target::Candidate);
 
    SipMessage& orig=mRequestContext.getOriginalRequest();
-   SipMessage request(orig);
+   SipMessage request(orig, target->mSipMessageOptions);
 
    // If the target has a ;lr parameter, then perform loose routing
    if(target->uri().exists(p_lr))
@@ -584,7 +584,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       mRequestContext.getOriginalRequest().method()==INVITE)
    {
       mRequestContext.mInitialTimerCSet=true;
-      mRequestContext.updateTimerC();
+      int customDelayMs = target->mSipMessageOptions ? target->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
+      mRequestContext.updateTimerC(customDelayMs);
    }
    
    // the rest of 16.6 is implemented by the transaction layer of resip
@@ -1109,7 +1110,9 @@ ResponseContext::processResponse(SipMessage& response)
       case 1:
          if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            mRequestContext.updateTimerC();
+            auto currentTargetPtr = i->second;
+            int customDelayMs = currentTargetPtr->mSipMessageOptions ? currentTargetPtr->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
+            mRequestContext.updateTimerC(customDelayMs);
          }
 
          if  (!mRequestContext.mHaveSentFinalResponse)

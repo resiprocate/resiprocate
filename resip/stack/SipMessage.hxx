@@ -33,6 +33,17 @@ class Contents;
 class ExtensionHeader;
 class SecurityAttributes;
 
+struct TxOptions
+{
+    int mTimerBMs = 0;
+    int mTimerCMs = 0;
+};
+
+struct SipMessageOptions
+{
+    TxOptions mTxOptions;
+};
+
 /**
    @ingroup resip_crit
    @ingroup message_passing_tu
@@ -163,6 +174,7 @@ class SipMessage : public TransactionMessage
       explicit SipMessage(const Tuple *receivedTransport = 0);
       /// @todo .dlb. public, allows pass by value to compile.
       SipMessage(const SipMessage& message);
+      SipMessage(const SipMessage &message, std::unique_ptr<SipMessageOptions> const &opts);
 
       /// @todo .dlb. sure would be nice to have overloaded return value here..
       virtual Message* clone() const;
@@ -171,6 +183,8 @@ class SipMessage : public TransactionMessage
       
       /// Returns the transaction id from the branch or if 2543, the computed hash.
       virtual const Data& getTransactionId() const;
+
+      int getTimerBMs() const override;
 
       /**
          @brief Calculates an MD5 hash over the Request-URI, To tag (for
@@ -736,6 +750,8 @@ class SipMessage : public TransactionMessage
       std::unique_ptr<SecurityAttributes> mSecurityAttributes;
 
       std::vector<MessageDecorator*> mOutboundDecorators;
+
+      std::unique_ptr<SipMessageOptions> mOptions;
 
       friend class TransportSelector;
 };

@@ -17,30 +17,46 @@ Target::Target()
    mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
 {}
 
-Target::Target(const resip::Uri& uri)
+Target::Target(const resip::Uri& uri, std::unique_ptr<resip::SipMessageOptions> sipMessageOpts)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
    mStatus(Candidate),
-   mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
+   mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator()),
+   mSipMessageOptions(std::move(sipMessageOpts))
 {  
    mRec.mContact.uri()=uri;
 }
 
-Target::Target(const resip::NameAddr& target)
+Target::Target(const resip::NameAddr& target, std::unique_ptr<resip::SipMessageOptions> sipMessageOpts)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
    mStatus(Candidate),
-   mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator())
+   mKeyValueStore(*Proxy::getTargetKeyValueStoreKeyAllocator()),
+   mSipMessageOptions(std::move(sipMessageOpts))
 {
    mRec.mContact=target;
 }
 
-Target::Target(const resip::ContactInstanceRecord& rec)
+Target::Target(const resip::ContactInstanceRecord& rec, std::unique_ptr<resip::SipMessageOptions> sipMessageOpts)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
    mStatus(Candidate),
-   mRec(rec)
+   mRec(rec),
+   mSipMessageOptions(std::move(sipMessageOpts))
 {
+}
+
+Target::Target(const Target &other) 
+   :mPriorityMetric(other.mPriorityMetric), 
+   mShouldAutoProcess(other.mShouldAutoProcess), 
+   mStatus(other.mStatus), 
+   mVia(other.mVia), 
+   mRec(other.mRec), 
+   mKeyValueStore(other.mKeyValueStore) 
+{
+    if (other.mSipMessageOptions) {
+        mSipMessageOptions = std::unique_ptr<resip::SipMessageOptions>(new resip::SipMessageOptions(*other.mSipMessageOptions));
+    }
 }
 
 Target::~Target()
