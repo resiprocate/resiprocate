@@ -75,7 +75,8 @@ SipMessage::SipMessage(const SipMessage &from, std::unique_ptr<SipMessageOptions
       mCreatedTime(Timer::getTimeMicroSec())
 {
     init(from);
-    if (opts) {
+    if (opts) 
+    {
         mOptions = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*opts));
     }
 }
