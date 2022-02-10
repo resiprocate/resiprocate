@@ -584,8 +584,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       mRequestContext.getOriginalRequest().method()==INVITE)
    {
       mRequestContext.mInitialTimerCSet=true;
-      int delay = target->mSipMessageOptions ? target->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
-      mRequestContext.updateTimerC(delay);
+      int customDelayMs = target->mSipMessageOptions ? target->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
+      mRequestContext.updateTimerC(customDelayMs);
    }
    
    // the rest of 16.6 is implemented by the transaction layer of resip
@@ -1111,8 +1111,8 @@ ResponseContext::processResponse(SipMessage& response)
          if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
             auto currentTargetPtr = i->second;
-            int delay = currentTargetPtr->mSipMessageOptions ? currentTargetPtr->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
-            mRequestContext.updateTimerC(delay);
+            int customDelayMs = currentTargetPtr->mSipMessageOptions ? currentTargetPtr->mSipMessageOptions->mTxOptions.mTimerCMs : 0;
+            mRequestContext.updateTimerC(customDelayMs);
          }
 
          if  (!mRequestContext.mHaveSentFinalResponse)
