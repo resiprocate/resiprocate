@@ -241,7 +241,8 @@ class ResponseContext
       // call this from RequestContext after the lemur chain for any response 
       void processResponse(resip::SipMessage& response);
 
-      void processTimerC();
+      void updateTimerC(const resip::Data &tid);
+      void processTimerC(const resip::Data &tid, int serial);
 
       void beginClientTransaction(repro::Target* target);
       void cancelClientTransaction(repro::Target* target, const resip::Tokens* reasons = 0);
@@ -263,6 +264,7 @@ class ResponseContext
       bool needsFlowTokenToWork(const resip::NameAddr& contact) const;
       bool sendingToSelf(Target* target);
 
+      std::unique_ptr<resip::SipMessage> buildTargetRequest(Target *target);
       void sendRequest(resip::SipMessage& request);
       
       TransactionMap mCandidateTransactionMap; //Targets with status Candidate.
@@ -279,6 +281,9 @@ class ResponseContext
       int mBestPriority;
       bool mSecure;
       bool mIsClientBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
+      
+      static const int TimerCSerialInit = 0;
+      std::unordered_map<resip::Data, int> mTimerCSerial; // Keeping track of the latest TimerC for each of the client TXs
 
       void forwardBestResponse();
 
