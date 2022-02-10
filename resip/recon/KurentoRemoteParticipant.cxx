@@ -337,9 +337,32 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
          DebugLog(<<"received event: " << *event);
          // send a SIP INFO request to the participant as per RFC 5168 media_control
-         MediaControlContents mcc;
-         mcc.mediaControl() = MediaControlContents::MediaControl({ Data("1") }, true);
-         info(mcc);
+         Data streamId;
+         std::shared_ptr<resip::SdpContents> _sdp = getRemoteSdp();
+         if(!_sdp)
+         {
+            ErrLog(<<"we need to request a keyframe but there is no peer SDP");
+            return;
+         }
+         for (std::list<resip::SdpContents::Session::Medium>::const_iterator i = _sdp->session().media().begin(); i != _sdp->session().media().end(); i++)
+         {
+            const resip::SdpContents::Session::Medium& m = *i;
+            if(m.name().caseInsensitiveTokenCompare("video") && m.exists("label"))
+            {
+               streamId = m.getValues("label").front();
+            }
+         }
+         if(!streamId.empty())
+         {
+            DebugLog(<<"requesting a keyframe for stream ID " << streamId);
+            MediaControlContents mcc;
+            mcc.mediaControl() = MediaControlContents::MediaControl({ Data(streamId) }, true);
+            info(mcc);
+         }
+         else
+         {
+            WarningLog(<<"we need to request a keyframe but the peer SDP does not contain a stream ID (RFC 4574)");
+         }
       });
 
       kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, c](const std::string& answer){
