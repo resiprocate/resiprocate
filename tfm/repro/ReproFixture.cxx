@@ -149,6 +149,8 @@ ReproFixture::tearDown()
       }
    }
 
+   // Restore default QValueTargetHandler config 
+   dynamic_cast<TestRepro *>(proxy)->setQValueTargetHandlerCancelGroups(true);
    jason->clean();
    jason1->clean();
    jason2->clean();

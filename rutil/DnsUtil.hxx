@@ -149,6 +149,9 @@ class DnsUtil
       /// Used to synchronously query A records - only for test code usage
       static std::list<Data> lookupARecords(const Data& host);
 
+   private:
+      /// Used to synchronously query the local hostname
+      static Data lookupLocalHostName();
 };
 
 }

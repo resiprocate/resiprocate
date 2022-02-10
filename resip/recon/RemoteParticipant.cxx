@@ -1465,15 +1465,13 @@ RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
 void
 RemoteParticipant::onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
 {
-   InfoLog(<< "onInfoSuccess: handle=" << mHandle << ", " << msg.brief());
-   resip_assert(0);  // We never send an info request
+   WarningLog(<< "(unhandled) onInfoSuccess: handle=" << mHandle << ", " << msg.brief());
 }
 
 void
 RemoteParticipant::onInfoFailure(InviteSessionHandle, const SipMessage& msg)
 {
-   InfoLog(<< "onInfoFailure: handle=" << mHandle << ", " << msg.brief());
-   resip_assert(0);  // We never send an info request
+   WarningLog(<< "(unhandled) onInfoFailure: handle=" << mHandle << ", " << msg.brief());
 }
 
 void
