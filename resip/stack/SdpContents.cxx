@@ -1212,6 +1212,87 @@ SdpContents::Session::getValues(const Data& key) const
    return mAttributeHelper.getValues(key);
 }
 
+std::set<Data>
+SdpContents::Session::getMediaStreamLabels() const
+{
+   std::set<Data> labels;
+   for (std::list<resip::SdpContents::Session::Medium>::const_iterator it = mMedia.cbegin(); it != mMedia.cend(); it++)
+   {
+      const resip::SdpContents::Session::Medium& m = *it;
+      if(m.name().caseInsensitiveTokenCompare("video") && m.exists("label"))
+      {
+         const std::list<Data>& _labels = m.getValues("label");
+         labels.insert(_labels.begin(), _labels.end());
+      }
+   }
+   return labels;
+}
+
+bool
+SdpContents::Session::isWebRTC() const
+{
+   std::set<resip::Data> mediumTransports;
+   for(SdpContents::Session::MediumContainer::const_iterator it = mMedia.cbegin();
+         it != mMedia.cend();
+         it++)
+   {
+      const SdpContents::Session::Medium& m = *it;
+      mediumTransports.insert(m.protocol());
+   }
+   return std::find(mediumTransports.cbegin(),
+      mediumTransports.end(),
+      "RTP/SAVPF") != mediumTransports.end();
+}
+
+void
+SdpContents::Session::transformCOMedia(const Data& setupDirection, const Data& cOMediaAttribute)
+{
+   for(SdpContents::Session::MediumContainer::iterator it = mMedia.begin();
+         it != mMedia.end();
+         it++)
+   {
+      SdpContents::Session::Medium& m = *it;
+      m.port() = 9;
+      m.addAttribute(cOMediaAttribute, setupDirection);
+   }
+}
+
+void
+SdpContents::Session::transformLocalHold(bool holding)
+{
+   SdpContents::Session::MediumContainer::iterator it = mMedia.begin();
+   for(;it != mMedia.end(); it++)
+   {
+      SdpContents::Session::Medium& m = *it;
+      if(holding)
+      {
+         if(m.exists("sendrecv"))
+         {
+            m.clearAttribute("sendrecv");
+            m.addAttribute("sendonly");
+         }
+         if(m.exists("recvonly"))
+         {
+            m.clearAttribute("recvonly");
+            m.addAttribute("inactive");
+         }
+      }
+      else
+      {
+         if(m.exists("sendonly"))
+         {
+            m.clearAttribute("sendonly");
+            m.addAttribute("sendrecv");
+         }
+         if(m.exists("inactive"))
+         {
+            m.clearAttribute("inactive");
+            m.addAttribute("recvonly");
+         }
+      }
+   }
+}
+
 SdpContents::Session::Medium::Medium(const Data& name,
                                      unsigned long port,
                                      unsigned long multicast,

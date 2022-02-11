@@ -779,6 +779,29 @@ RemoteParticipant::unhold()
 }
 
 void
+RemoteParticipant::requestKeyframeFromPeer()
+{
+   std::shared_ptr<resip::SdpContents> _sdp = getRemoteSdp();
+   if(!_sdp)
+   {
+      ErrLog(<<"we need to request a keyframe but there is no peer SDP");
+      return;
+   }
+   std::set<Data> streamIDs = _sdp->session().getMediaStreamLabels();
+   if(!streamIDs.empty())
+   {
+      DebugLog(<<"requesting a keyframe for stream(s)");
+      MediaControlContents mcc;
+      mcc.mediaControl() = MediaControlContents::MediaControl(streamIDs, true);
+      info(mcc);
+   }
+   else
+   {
+      WarningLog(<<"we need to request a keyframe but the peer SDP does not contain a stream ID (RFC 4574)");
+   }
+}
+
+void
 RemoteParticipant::setRemoteHold(bool remoteHold)
 {
    bool stateChanged = (remoteHold != mRemoteHold);

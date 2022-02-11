@@ -996,6 +996,31 @@ class SdpContents : public Contents
               * @return list of values for given key
               **/
             const std::list<Data>& getValues(const Data& key) const;
+            /** @brief retrieve label (RFC 4574) attributes in a set
+              *
+              * @return set of label attribute values, if any
+              **/
+            std::set<Data> getMediaStreamLabels() const;
+            /** @brief determine if the SDP appears to conform to WebRTC
+              *
+              * @return true if the SDP appears to be WebRTC
+              */
+            bool isWebRTC() const;
+            /** @brief apply RFC 4145 COMEDIA transform
+              *
+              * sets the IP port number of each media to 9 and
+              * adds the setup attribute.  Early versions of the
+              * draft up to draft-ietf-mmusic-sdp-comedia-05.txt
+              * used the attribute name "direction", later versions
+              * and the RFC 4145 use the attribute name "setup"
+              */
+            void transformCOMedia(const Data& setupDirection = "active", const Data& cOMediaAttribute = "setup");
+            /** @brief change the direction attributes as if the
+              *        peer who created the SDP is on hold or not
+              *
+              * @param holding whether to represent hold or normal
+              */
+            void transformLocalHold(bool holding);
 
          private:
             int mVersion;

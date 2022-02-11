@@ -146,6 +146,8 @@ protected:
    virtual void hold();
    virtual void unhold();
 
+   virtual void requestKeyframeFromPeer();
+
 private:       
    void provideOffer(bool postOfferAccept);
    resip::AsyncBool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
