@@ -397,9 +397,10 @@ KurentoRemoteParticipant::mediaStackPortAvailable()
 void
 KurentoRemoteParticipant::waitingMode()
 {
-   mEndpoint->connect([]{
+   mEndpoint->connect([this]{
       // FIXME - do anything else here?
       DebugLog(<<"connected in loopback/video, waiting for peer");
+      requestKeyframeFromPeer();
    }, *mEndpoint);
 }
 
