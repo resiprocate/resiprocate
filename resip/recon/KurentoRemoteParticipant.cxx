@@ -153,43 +153,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          HeaderFieldValue hfv(offer.data(), offer.size());
          Mime type("application", "sdp");
          std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
-         if(holdSdp)
-         {
-            DebugLog(<<"holdSdp is true");
-            SdpContents::Session::MediumContainer::iterator it = _offer->session().media().begin();
-            for(;it != _offer->session().media().end(); it++)
-            {
-               SdpContents::Session::Medium& m = *it;
-               if(m.exists("sendrecv"))
-               {
-                  m.clearAttribute("sendrecv");
-                  m.addAttribute("sendonly");
-               }
-               if(m.exists("recvonly"))
-               {
-                  m.clearAttribute("recvonly");
-                  m.addAttribute("inactive");
-               }
-            }
-         }
-         else
-         {
-            SdpContents::Session::MediumContainer::iterator it = _offer->session().media().begin();
-            for(;it != _offer->session().media().end(); it++)
-            {
-               SdpContents::Session::Medium& m = *it;
-               if(m.exists("sendonly"))
-               {
-                  m.clearAttribute("sendonly");
-                  m.addAttribute("sendrecv");
-               }
-               if(m.exists("inactive"))
-               {
-                  m.clearAttribute("inactive");
-                  m.addAttribute("recvonly");
-               }
-            }
-         }
+         _offer->session().transformLocalHold(holdSdp);
          setProposedSdp(*_offer);
          c(true, std::move(_offer));
       };
@@ -257,45 +221,18 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
    {
       // do some checks on the offer
       // check for video, check for WebRTC
-      typedef std::map<resip::Data, int> MediaSummary;
-      MediaSummary mediaMap;
-      std::set<resip::Data> mediumTransports;
-      for(SdpContents::Session::MediumContainer::const_iterator it = offerMangled->session().media().cbegin();
-               it != offerMangled->session().media().cend();
-               it++)
-      {
-         const SdpContents::Session::Medium& m = *it;
-         if(mediaMap.find(m.name()) != mediaMap.end())
-         {
-            mediaMap[m.name()]++;
-         }
-         else
-         {
-            mediaMap[m.name()] = 1;
-         }
-         mediumTransports.insert(m.protocol());
-      }
-      for(MediaSummary::const_iterator it = mediaMap.begin();
-               it != mediaMap.end();
-               it++)
-      {
-         StackLog(<<"found medium type " << it->first << " "  << it->second << " instance(s)");
-      }
-      bool isWebRTC = std::find(mediumTransports.cbegin(),
-               mediumTransports.end(),
-               "RTP/SAVPF") != mediumTransports.end();
+      bool isWebRTC = offerMangled->session().isWebRTC();
       DebugLog(<<"peer is " << (isWebRTC ? "WebRTC":"not WebRTC"));
 
-      for(SdpContents::Session::MediumContainer::iterator it = offerMangled->session().media().begin();
-                     it != offerMangled->session().media().end();
-                     it++)
+      if(!isWebRTC)
       {
-         SdpContents::Session::Medium& m = *it;
-         if(!isWebRTC)
-         {
-            m.port() = 9;
-            m.addAttribute(Data("direction"), Data("active"));
-         }
+         // RFC 4145 uses the attribute name "setup"
+         // We override the attribute name and use the legacy name "direction"
+         // from the drafts up to draft-ietf-mmusic-sdp-comedia-05.txt
+         // Tested with Kurento and Cisco EX90
+         // https://datatracker.ietf.org/doc/html/draft-ietf-mmusic-sdp-comedia-05
+         // https://datatracker.ietf.org/doc/html/rfc4145
+         offerMangled->session().transformCOMedia("active", "direction");
       }
 
       std::ostringstream offerMangledBuf;
@@ -336,33 +273,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       std::shared_ptr<kurento::EventContinuation> elEventKeyframeRequired =
             std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
          DebugLog(<<"received event: " << *event);
-         // send a SIP INFO request to the participant as per RFC 5168 media_control
-         Data streamId;
-         std::shared_ptr<resip::SdpContents> _sdp = getRemoteSdp();
-         if(!_sdp)
-         {
-            ErrLog(<<"we need to request a keyframe but there is no peer SDP");
-            return;
-         }
-         for (std::list<resip::SdpContents::Session::Medium>::const_iterator i = _sdp->session().media().begin(); i != _sdp->session().media().end(); i++)
-         {
-            const resip::SdpContents::Session::Medium& m = *i;
-            if(m.name().caseInsensitiveTokenCompare("video") && m.exists("label"))
-            {
-               streamId = m.getValues("label").front();
-            }
-         }
-         if(!streamId.empty())
-         {
-            DebugLog(<<"requesting a keyframe for stream ID " << streamId);
-            MediaControlContents mcc;
-            mcc.mediaControl() = MediaControlContents::MediaControl({ Data(streamId) }, true);
-            info(mcc);
-         }
-         else
-         {
-            WarningLog(<<"we need to request a keyframe but the peer SDP does not contain a stream ID (RFC 4574)");
-         }
+         requestKeyframeFromPeer();
       });
 
       kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, c](const std::string& answer){
@@ -370,24 +281,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          HeaderFieldValue hfv(answer.data(), answer.size());
          Mime type("application", "sdp");
          std::unique_ptr<SdpContents> _answer(new SdpContents(hfv, type));
-         if(isHolding())
-         {
-            SdpContents::Session::MediumContainer::iterator it = _answer->session().media().begin();
-            for(;it != _answer->session().media().end(); it++)
-            {
-               SdpContents::Session::Medium& m = *it;
-               if(m.exists("sendrecv"))
-               {
-                  m.clearAttribute("sendrecv");
-                  m.addAttribute("sendonly");
-               }
-               if(m.exists("recvonly"))
-               {
-                  m.clearAttribute("recvonly");
-                  m.addAttribute("inactive");
-               }
-            }
-         }
+         _answer->session().transformLocalHold(isHolding());
          setLocalSdp(*_answer);
          setRemoteSdp(*offerMangled);
          c(true, std::move(_answer));
