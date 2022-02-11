@@ -41,8 +41,10 @@ int Log::mSyslogFacility = LOG_DAEMON;
 #else
 int Log::mSyslogFacility = -1;
 #endif
-unsigned int Log::MaxLineCount = 0; // no limit by default
-unsigned int Log::MaxByteCount = 0; // no limit by default
+#define RESIP_LOG_MAX_LINE_COUNT_DEFAULT 0
+#define RESIP_LOG_MAX_BYTE_COUNT_DEFAULT 0
+unsigned int Log::MaxLineCount = RESIP_LOG_MAX_LINE_COUNT_DEFAULT; // no limit by default
+unsigned int Log::MaxByteCount = RESIP_LOG_MAX_BYTE_COUNT_DEFAULT; // no limit by default
 bool Log::KeepAllLogFiles = false;  // do not keep all log files by default
 
 volatile short Log::touchCount = 0;
@@ -352,7 +354,7 @@ Log::initialize(Type type,
 void
 Log::initialize(const ConfigParse& configParse, const Data& appName, ExternalLogger* externalLogger)
 {
-   Log::setMaxByteCount(configParse.getConfigUnsignedLong("LogFileMaxBytes", 5242880 /*5 Mb */));
+   Log::setMaxByteCount(configParse.getConfigUnsignedLong("LogFileMaxBytes", RESIP_LOG_MAX_BYTE_COUNT_DEFAULT));
 
    Log::setKeepAllLogFiles(configParse.getConfigBool("KeepAllLogFiles", false));
 
@@ -378,7 +380,7 @@ Log::initialize(const ConfigParse& configParse, const Data& appName, ExternalLog
       loggingMessageStructure,
       loggingInstanceName);
 
-   unsigned int loggingFileMaxLineCount = configParse.getConfigUnsignedLong("LogFileMaxLines", 50000);
+   unsigned int loggingFileMaxLineCount = configParse.getConfigUnsignedLong("LogFileMaxLines", RESIP_LOG_MAX_LINE_COUNT_DEFAULT);
    Log::setMaxLineCount(loggingFileMaxLineCount);
 }
 
