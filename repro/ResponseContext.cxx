@@ -492,7 +492,12 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    resip_assert(target->status() == Target::Candidate);
 
    SipMessage& orig=mRequestContext.getOriginalRequest();
-   SipMessage request(orig, target->mSipMessageOptions);
+   std::unique_ptr<resip::SipMessageOptions> targetOptions;
+   if (target->mSipMessageOptions) 
+   {
+      targetOptions = std::unique_ptr<resip::SipMessageOptions>(new resip::SipMessageOptions(*(target->mSipMessageOptions)));
+   }
+   SipMessage request(orig, std::move(targetOptions));
 
    // If the target has a ;lr parameter, then perform loose routing
    if(target->uri().exists(p_lr))

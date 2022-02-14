@@ -65,7 +65,7 @@ SipMessage::SipMessage(const SipMessage& from)
    init(from);
 }
 
-SipMessage::SipMessage(const SipMessage &from, std::unique_ptr<SipMessageOptions> const &opts)
+SipMessage::SipMessage(const SipMessage &from, std::unique_ptr<SipMessageOptions> opts)
     : mHeaders(StlPoolAllocator<HeaderFieldValueList *, PoolBase>(&mPool)),
 #ifndef __SUNPRO_CC
       mUnknownHeaders(StlPoolAllocator<std::pair<Data, HeaderFieldValueList *>, PoolBase>(&mPool)),
@@ -77,7 +77,7 @@ SipMessage::SipMessage(const SipMessage &from, std::unique_ptr<SipMessageOptions
     init(from);
     if (opts) 
     {
-        mOptions = std::unique_ptr<SipMessageOptions>(new SipMessageOptions(*opts));
+        mOptions = std::move(opts);
     }
 }
 
