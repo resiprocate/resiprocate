@@ -130,6 +130,8 @@ public:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
+   virtual void requestKeyframeFromPeer();
+
 protected:
    void setRemoteHold(bool remoteHold);
    void setProposedSdp(const resip::SdpContents& sdp);
@@ -145,8 +147,6 @@ protected:
    virtual void notifyIncomingParticipant(const resip::SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile);
    virtual void hold();
    virtual void unhold();
-
-   virtual void requestKeyframeFromPeer();
 
 private:       
    void provideOffer(bool postOfferAccept);

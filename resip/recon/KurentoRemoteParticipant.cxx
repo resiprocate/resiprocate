@@ -192,7 +192,11 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
       }
       else{
          mEndpoint->create([this, cConnected]{
-            mEndpoint->connect(cConnected, *mEndpoint); // connect
+            // Note: FIXME this will be done later in the call to
+            //       waitingMode() as that method knows whether
+            //       to do loopback, a PlayerEndpoint or something else
+            //mEndpoint->connect(cConnected, *mEndpoint); // connect
+            cConnected();
          }); // create
       }
 
@@ -340,19 +344,23 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             mEndpoint->addMediaTranscodingStateChangeListener(elEventDebug, [this](){});
             mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [this](){});
             mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [this](){});
-            mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [this](){});
-            //mMultiqueue->create([this, cConnected]{
-               // mMultiqueue->connect([this, cConnected]{
-                   mEndpoint->connect([this, cConnected]{
-                     //mPlayer->create([this, cConnected]{
-                        //mPlayer->play([this, cConnected]{
-                           cConnected();
-                           //mPlayer->connect(cConnected, *mEndpoint); // connect
-                        //});
-                     // });
-                   }, *mEndpoint); // mEndpoint->connect
-               // }, *mEndpoint); // mMultiqueue->connect
-            //}); // mMultiqueue->create
+            mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [this, cConnected](){
+               //mMultiqueue->create([this, cConnected]{
+                  // mMultiqueue->connect([this, cConnected]{
+                     // Note: FIXME this will be done later in the call to
+                     //       waitingMode() as that method knows whether
+                     //       to do loopback, a PlayerEndpoint or something else
+                     //mEndpoint->connect([this, cConnected]{
+                        mPlayer->create([this, cConnected]{
+                           //mPlayer->play([this, cConnected]{
+                              cConnected();
+                              //mPlayer->connect(cConnected, *mEndpoint); // connect
+                           //});
+                        });
+                     //}, *mEndpoint); // mEndpoint->connect
+                  // }, *mEndpoint); // mMultiqueue->connect
+               //}); // mMultiqueue->create
+            }); // addKeyframeRequiredListener
          }); // create
       }
 
@@ -397,11 +405,27 @@ KurentoRemoteParticipant::mediaStackPortAvailable()
 void
 KurentoRemoteParticipant::waitingMode()
 {
-   mEndpoint->connect([this]{
-      // FIXME - do anything else here?
-      DebugLog(<<"connected in loopback/video, waiting for peer");
+   getWaitingModeEndpoint()->connect([this]{
+      DebugLog(<<"connected in waiting mode, waiting for peer");
+      if(mWaitingModeVideo)
+      {
+         mPlayer->play([this]{});
+      }
       requestKeyframeFromPeer();
    }, *mEndpoint);
+}
+
+std::shared_ptr<kurento::Endpoint>
+KurentoRemoteParticipant::getWaitingModeEndpoint()
+{
+   if(mWaitingModeVideo)
+   {
+      return dynamic_pointer_cast<kurento::Endpoint>(mPlayer);
+   }
+   else
+   {
+      return getEndpoint();
+   }
 }
 
 bool
