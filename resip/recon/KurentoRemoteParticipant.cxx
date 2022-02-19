@@ -335,7 +335,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       else
       {
          //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoConversationManager.mPipeline, "videoconvert"));
-         //mMultiqueue.reset(new kurento::PassthroughElement(mKurentoConversationManager.mPipeline));
+         //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
          mPlayer.reset(new kurento::PlayerEndpoint(mKurentoConversationManager.mPipeline, "file:///tmp/test.mp4"));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});

@@ -113,11 +113,11 @@ class MediaElement : public Object
       std::string mConnectedTo;
 };
 
-class PassthroughElement : public MediaElement
+class PassThroughElement : public MediaElement
 {
    public:
-      PassthroughElement(std::shared_ptr<MediaPipeline> mediaPipeline);
-      virtual ~PassthroughElement();
+      PassThroughElement(std::shared_ptr<MediaPipeline> mediaPipeline);
+      virtual ~PassThroughElement();
 };
 
 class GStreamerFilter : public MediaElement

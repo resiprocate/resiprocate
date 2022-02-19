@@ -311,12 +311,12 @@ MediaElement::addMediaFlowOutStateChangeListener(std::shared_ptr<EventListener> 
    addListener(OnMediaFlowOutStateChangeEvent::EVENT_NAME, l, c);
 }
 
-PassthroughElement::PassthroughElement(std::shared_ptr<MediaPipeline> mediaPipeline)
-   : MediaElement("Passthrough", mediaPipeline)
+PassThroughElement::PassThroughElement(std::shared_ptr<MediaPipeline> mediaPipeline)
+   : MediaElement("PassThrough", mediaPipeline)
 {
 }
 
-PassthroughElement::~PassthroughElement()
+PassThroughElement::~PassThroughElement()
 {
 }
 
