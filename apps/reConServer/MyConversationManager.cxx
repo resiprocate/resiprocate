@@ -187,7 +187,7 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
       ErrLog(<<"our endpoint is not initialized"); // FIXME
       return;
    }
-   _p->getWaitingModeEndpoint()->disconnect([this, _p, answeredEndpoint, conversation]{
+   _p->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, conversation]{
       // Find the other Participant / endpoint
 
       Conversation::ParticipantMap& m = conversation->getParticipants();
@@ -204,7 +204,7 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
       resip_assert(krp);
       std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
 
-      krp->getWaitingModeEndpoint()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+      krp->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
          otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
             //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
             answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{

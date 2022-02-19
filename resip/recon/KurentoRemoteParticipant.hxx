@@ -77,7 +77,7 @@ public:
    std::shared_ptr<kurento::PlayerEndpoint> mPlayer; // FIXME Kurento
 
    virtual void waitingMode();
-   virtual std::shared_ptr<kurento::Endpoint> getWaitingModeEndpoint();
+   virtual std::shared_ptr<kurento::MediaElement> getWaitingModeElement();
 
    virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
 

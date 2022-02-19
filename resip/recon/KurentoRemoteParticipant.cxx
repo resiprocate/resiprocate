@@ -405,7 +405,7 @@ KurentoRemoteParticipant::mediaStackPortAvailable()
 void
 KurentoRemoteParticipant::waitingMode()
 {
-   getWaitingModeEndpoint()->connect([this]{
+   getWaitingModeElement()->connect([this]{
       DebugLog(<<"connected in waiting mode, waiting for peer");
       if(mWaitingModeVideo)
       {
@@ -415,8 +415,8 @@ KurentoRemoteParticipant::waitingMode()
    }, *mEndpoint);
 }
 
-std::shared_ptr<kurento::Endpoint>
-KurentoRemoteParticipant::getWaitingModeEndpoint()
+std::shared_ptr<kurento::MediaElement>
+KurentoRemoteParticipant::getWaitingModeElement()
 {
    if(mWaitingModeVideo)
    {
