@@ -337,6 +337,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoConversationManager.mPipeline, "videoconvert"));
          //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
          mPlayer.reset(new kurento::PlayerEndpoint(mKurentoConversationManager.mPipeline, "file:///tmp/test.mp4"));
+         mPassThrough.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});
             mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
@@ -352,10 +353,12 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
                      //       to do loopback, a PlayerEndpoint or something else
                      //mEndpoint->connect([this, cConnected]{
                         mPlayer->create([this, cConnected]{
-                           //mPlayer->play([this, cConnected]{
-                              cConnected();
-                              //mPlayer->connect(cConnected, *mEndpoint); // connect
-                           //});
+                           mPassThrough->create([this, cConnected]{
+                              //mPlayer->play([this, cConnected]{
+                                 cConnected();
+                                 //mPlayer->connect(cConnected, *mEndpoint); // connect
+                              //});
+                        });
                         });
                      //}, *mEndpoint); // mEndpoint->connect
                   // }, *mEndpoint); // mMultiqueue->connect
@@ -411,6 +414,10 @@ KurentoRemoteParticipant::waitingMode()
       {
          mPlayer->play([this]{});
       }
+      else
+      {
+         mEndpoint->connect([this]{}, *mPassThrough);
+      }
       requestKeyframeFromPeer();
    }, *mEndpoint);
 }
@@ -424,7 +431,7 @@ KurentoRemoteParticipant::getWaitingModeElement()
    }
    else
    {
-      return getEndpoint();
+      return mPassThrough;
    }
 }
 

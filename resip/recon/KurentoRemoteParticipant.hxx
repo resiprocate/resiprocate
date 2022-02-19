@@ -75,6 +75,7 @@ public:
    std::shared_ptr<kurento::MediaElement> mMultiqueue; // FIXME Kurento
    bool mWaitingModeVideo = false;
    std::shared_ptr<kurento::PlayerEndpoint> mPlayer; // FIXME Kurento
+   std::shared_ptr<kurento::PassThroughElement> mPassThrough; // FIXME Kurento
 
    virtual void waitingMode();
    virtual std::shared_ptr<kurento::MediaElement> getWaitingModeElement();
