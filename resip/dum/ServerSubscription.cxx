@@ -24,7 +24,7 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
    : BaseSubscription(dum, dialog, req),
-     mSubscriber(req.header(h_From).uri().getAor()),
+     mSubscriber(req.header(h_From).uri().getAorNoPort()),
      mExpires(60),
      mAbsoluteExpiry(0)
 {

@@ -11,7 +11,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    mSubDlgState(SubDlgInitial),
    mLastRequest(new SipMessage),
    mLastResponse(new SipMessage),
-   mDocumentKey(request.header(h_RequestLine).uri().getAor()),
+   mDocumentKey(request.header(h_RequestLine).uri().getAorNoPort()),
    mSubscriptionId(Data::Empty),
    mTimerSeq(0),
    mSubscriptionState(Invalid)

@@ -19,7 +19,7 @@ ServerPublication::ServerPublication(DialogUsageManager& dum,
      mLastResponse(std::make_shared<SipMessage>()), 
      mEtag(etag),
      mEventType(msg.header(h_Event).value()),
-     mDocumentKey(msg.header(h_RequestLine).uri().getAor()),
+     mDocumentKey(msg.header(h_RequestLine).uri().getAorNoPort()),
      mTimerSeq(0)
 {
 }
