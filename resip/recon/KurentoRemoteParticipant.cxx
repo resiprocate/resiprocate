@@ -354,11 +354,15 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
                      //mEndpoint->connect([this, cConnected]{
                         mPlayer->create([this, cConnected]{
                            mPassThrough->create([this, cConnected]{
-                              //mPlayer->play([this, cConnected]{
-                                 cConnected();
-                                 //mPlayer->connect(cConnected, *mEndpoint); // connect
-                              //});
-                        });
+                              mEndpoint->connect([this, cConnected]{
+                                 mPassThrough->connect([this, cConnected]{
+                                    //mPlayer->play([this, cConnected]{
+                                       cConnected();
+                                       //mPlayer->connect(cConnected, *mEndpoint); // connect
+                                    //});
+                                 }, *mEndpoint);
+                              }, *mPassThrough);
+                           });
                         });
                      //}, *mEndpoint); // mEndpoint->connect
                   // }, *mEndpoint); // mMultiqueue->connect
