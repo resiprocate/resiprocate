@@ -43,7 +43,7 @@ class KurentoConnection
    public:
       typedef std::shared_ptr<KurentoConnection> ptr;
 
-      KurentoConnection(client& wSClient, websocketpp::connection_hdl hdl, std::string uri, unsigned int timeout);
+      KurentoConnection(client& wSClient, websocketpp::connection_hdl hdl, std::string uri, unsigned int timeout, bool waitForResponse = true);
       virtual ~KurentoConnection();
 
       void onOpen(client* wSClient, websocketpp::connection_hdl h);
@@ -67,7 +67,11 @@ class KurentoConnection
       client& mWSClient;
       websocketpp::connection_hdl mHandle;
       unsigned int mTimeout;
+      bool mWaitForResponse;
       unsigned long mNextId = 1;
+      unsigned long mLastResponse = 0;
+      unsigned long mRequestSentCount = 0;
+      unsigned long mResponseReceivedCount = 0;
       std::string mSessionId;
       std::deque<std::string> mSendQueue;  // FIXME: post events to queue from other threads?
       typedef std::map<std::string, std::shared_ptr<KurentoResponseHandler> > KurentoResponseHandlerMap;

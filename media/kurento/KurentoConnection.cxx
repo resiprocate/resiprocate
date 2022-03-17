@@ -16,10 +16,11 @@ using namespace resip;
 
 
 
-KurentoConnection::KurentoConnection(kurento::client& wSClient, websocketpp::connection_hdl hdl, std::string uri, unsigned int timeout)
+KurentoConnection::KurentoConnection(kurento::client& wSClient, websocketpp::connection_hdl hdl, std::string uri, unsigned int timeout, bool waitForResponse)
    : mWSClient(wSClient),
      mHandle(hdl),
-     mTimeout(timeout)  // FIXME - we don't use mTimeout yet
+     mTimeout(timeout),  // FIXME - we don't use mTimeout yet
+     mWaitForResponse(waitForResponse)
 {
 
 }
@@ -135,8 +136,21 @@ void
 KurentoConnection::onResponse(const std::string& id, std::shared_ptr<KurentoResponseHandler> krh, const json::Object& message)
 {
    DebugLog(<<"id: " << id);
+   unsigned long _id = std::stol(id);
    mResponseHandlers.erase(id);
    krh->processResponse(id, krh, message);
+   if(_id > mLastResponse)
+   {
+      mLastResponse = _id;
+   }
+   else
+   {
+      WarningLog(<<"mLastResponse = " << mLastResponse << " but received response for earlier request: " << _id);
+   }
+   mResponseReceivedCount++;
+   DebugLog(<< "mRequestSentCount = " << mRequestSentCount
+            << " mResponseReceivedCount = " << mResponseReceivedCount);
+   processSendQueue();
 }
 
 void
@@ -167,6 +181,8 @@ void
 KurentoConnection::sendMessage(const std::string& msg)
 {
    mSendQueue.push_back(msg);
+   DebugLog(<< "mRequestSentCount = " << mRequestSentCount
+            << " mResponseReceivedCount = " << mResponseReceivedCount);
    processSendQueue();
 }
 
@@ -175,6 +191,11 @@ KurentoConnection::processSendQueue()
 {
    while(!mSendQueue.empty())
    {
+      if(mWaitForResponse && mRequestSentCount > mResponseReceivedCount)
+      {
+         DebugLog(<<"new request to send but still waiting for response for a previous request");
+         return;
+      }
       if(mWSClient.get_con_from_hdl(mHandle)->get_state() == websocketpp::session::state::value::open)
       {
          std::string& msg = mSendQueue.front();
@@ -189,6 +210,7 @@ KurentoConnection::processSendQueue()
          {
             StackLog(<<"message sent to Kurento, removing from queue: " << msg);
             mSendQueue.pop_front();
+            mRequestSentCount++;
          }
       }
       else
