@@ -314,7 +314,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
                   mEndpoint->getLocalSessionDescriptor(cOnAnswerReady);
                });
                webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
-               //webRtc->addOnIceCandidateFoundListener(elEventDebug, [this](){});
+               webRtc->addOnIceCandidateFoundListener(elEventDebug, [this](){});
 
                webRtc->gatherCandidates([]{
                   // FIXME - handle the case where it fails
@@ -339,12 +339,12 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          mPlayer.reset(new kurento::PlayerEndpoint(mKurentoConversationManager.mPipeline, "file:///tmp/test.mp4"));
          mPassThrough.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
-            //mEndpoint->addErrorListener(elError, [this](){});
-            //mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
-            //mEndpoint->addMediaStateChangedListener(elEventDebug, [this](){});
-            //mEndpoint->addMediaTranscodingStateChangeListener(elEventDebug, [this](){});
-            //mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [this](){});
-            //mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [this](){});
+            mEndpoint->addErrorListener(elError, [this](){});
+            mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
+            mEndpoint->addMediaStateChangedListener(elEventDebug, [this](){});
+            mEndpoint->addMediaTranscodingStateChangeListener(elEventDebug, [this](){});
+            mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [this](){});
+            mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [this](){});
             mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [this, cConnected](){
                //mMultiqueue->create([this, cConnected]{
                   // mMultiqueue->connect([this, cConnected]{
