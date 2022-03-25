@@ -348,8 +348,6 @@ Connection::read()
    {
       return bytesRead;
    }  
-   // mBuffer might have been reallocated inside read()
-   writePair = getCurrentWriteBuffer();
 
    getConnectionManager().touch(this);
 
@@ -358,6 +356,9 @@ Connection::read()
    // connection is compressed.
    if(mReceivingTransmissionFormat == Unknown)
    {
+     // mBuffer might have been reallocated inside read()
+     writePair = getCurrentWriteBuffer();
+
      if (((writePair.first[0] & 0xf8) == 0xf8) && mCompression.isEnabled())
      {
        mReceivingTransmissionFormat = Compressed;
