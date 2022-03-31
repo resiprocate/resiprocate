@@ -141,7 +141,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
    {
       case NewMessage:
       {
-         if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
+         if (bytesRead >= 4 && strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
             DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
             mBufferPos += 4;
@@ -158,7 +158,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                return true;
             }
          }
-         else if (strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
+         else if (bytesRead >= 2 && strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
          {
             //DebugLog(<< "Got incoming CRLF keepalive response (aka pong).");
             mBufferPos += 2;
