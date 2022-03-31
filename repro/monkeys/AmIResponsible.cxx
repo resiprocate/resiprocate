@@ -50,6 +50,11 @@ AmIResponsible::process(RequestContext& context)
       target->rec().mReceivedFrom = context.getTopRouteFlowTuple();
       target->rec().mUseFlowRouting = true;
       context.getResponseContext().addTarget(std::move(target));
+        if (request.method() == resip::BYE || request.method() == resip::CANCEL || request.method() == resip::INVITE)
+        {
+           DebugLog(<< "isTopRouteFlowTupleSet is " << context.isTopRouteFlowTupleSet() << "; Handling case for method: " << request.method());
+           return Processor::Continue;
+        }
       return SkipThisChain;
    }
 
@@ -134,12 +139,20 @@ AmIResponsible::process(RequestContext& context)
             }
          }
          
-         std::unique_ptr<Target> target(new Target(uri));
-         context.getResponseContext().addTarget(std::move(target));
+         if (request.method() == resip::BYE || request.method() == resip::CANCEL || request.method() == resip::INVITE)
+         {
+             return Processor::Continue;
+         }
+         else
+         {
+             std::unique_ptr<Target> target(new Target(uri));
+             context.getResponseContext().addTarget(std::move(target));
 
-         InfoLog (<< "Sending to requri: " << uri);
-         // skip the rest of the monkeys
-         return Processor::SkipThisChain;	
+             InfoLog (<< "Sending to requri: " << uri);
+
+             // skip the rest of the monkeys
+             return Processor::SkipThisChain;
+         }
       }
    }
    return Processor::Continue;

@@ -18,7 +18,9 @@
 #endif
 
 #include "reConServerConfig.hxx"
-
+#include <thread>
+#include <chrono>
+#include <memory>
 namespace reconserver
 {
 
@@ -66,6 +68,55 @@ public:
    virtual void onParticipantRedirectFailure(recon::ParticipantHandle partHandle, unsigned int statusCode) override;
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override;
    virtual void displayInfo();
+   std::shared_ptr<std::thread> FastUpdateRequestThread;
+   struct RemoteParticipantFurTrackerStruct
+   {
+       const std::vector<int> FUR_INTERVALS_SECONDS = { 2, 2, 5, 5, 7, 10, 20, 30 };
+       unsigned int CurrentFURIntervalSeconds;
+       unsigned int FUROccurences = 0;
+       recon::ParticipantHandle Handler;
+       std::chrono::system_clock::time_point Timestamp;
+       RemoteParticipantFurTrackerStruct(recon::ParticipantHandle handler)
+       {
+           this->Handler = handler;
+           this->Reset();
+       }
+
+       bool IsFurDue()
+       {
+           auto check = std::chrono::system_clock::now();
+           if (std::chrono::duration_cast<std::chrono::seconds>(check - this->Timestamp).count() > this->CurrentFURIntervalSeconds)
+           {
+               this->Timestamp = check;
+               this->Touch();
+               return true;
+           }
+           return false;
+       }
+
+       void Reset()
+       {
+           FUROccurences = 0;
+           this->CurrentFURIntervalSeconds = FUR_INTERVALS_SECONDS.front();
+           // set start time 5 sec into the future to lag the due time
+           this->Timestamp = std::chrono::system_clock::now() + std::chrono::seconds(5);
+       }
+       void Touch()
+       {
+           if (FUROccurences <  FUR_INTERVALS_SECONDS.size()-1)
+           {
+               CurrentFURIntervalSeconds = FUR_INTERVALS_SECONDS.at(FUROccurences);
+           }
+           else
+           {
+               CurrentFURIntervalSeconds = FUR_INTERVALS_SECONDS.back();
+           }
+           FUROccurences++;
+       }
+   };
+   std::vector<std::shared_ptr<RemoteParticipantFurTrackerStruct>> RemoteParticipantFURVector;
+   std::mutex RemoteParticipantFURVectorMutex;
+   void FastUpdateRequestWorkerLoop();
 
 protected:
    virtual void configureRemoteParticipant(recon::KurentoRemoteParticipant *rp) override;

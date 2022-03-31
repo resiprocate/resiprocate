@@ -121,6 +121,10 @@ PyRouteWorker::process(resip::ApplicationMessage* msg)
    Py::Dict headers;
    headers["From"] = Py::String(message.header(resip::h_From).uri().toString().c_str());
    headers["To"] = Py::String(message.header(resip::h_To).uri().toString().c_str());
+
+   const resip::HeaderFieldValue cid_hfv = message.header(resip::h_CallID).getHeaderField();
+   headers["Call-ID"] = Py::String(cid_hfv.getBuffer(), cid_hfv.getLength(), "utf8");
+
    if(message.exists(resip::h_ContentType))
    {
       const resip::HeaderFieldValue hfv = message.header(resip::h_ContentType).getHeaderField();

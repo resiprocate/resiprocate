@@ -1852,6 +1852,17 @@ Codec::Codec(const Data& name, int payloadType, int rate)
 {
 }
 
+Codec::Codec(const Data& name, 
+               int payloadType, 
+               int rate, 
+               const Data& parameters)
+   : mName(name),
+   mRate(rate),
+   mPayloadType(payloadType),
+   mParameters(parameters)
+{
+}
+
 Codec&
 Codec::operator=(const Codec& rhs)
 {

@@ -20,6 +20,8 @@
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
+#include <chrono>
+
 using namespace resip;
 using namespace recon;
 using namespace reconserver;
@@ -29,12 +31,36 @@ using namespace reconserver;
 MyConversationManager::MyConversationManager(const ReConServerConfig& config, const Data& kurentoUri, bool autoAnswerEnabled)
       : KurentoConversationManager(kurentoUri),
         mConfig(config),
+
 #else
 MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
       : SipXConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
 #endif
         mAutoAnswerEnabled(autoAnswerEnabled)
-{ 
+{
+     this->FastUpdateRequestThread = std::make_shared<std::thread>([this] {
+         this->FastUpdateRequestWorkerLoop();
+     } );
+}
+
+void
+MyConversationManager::FastUpdateRequestWorkerLoop()
+{
+    // DEBUG; for test we are checking all the time, and pushing FUR aggressively
+    while (!this->isShuttingDown())
+    {
+        this->RemoteParticipantFURVectorMutex.lock();
+        for (auto &n : this->RemoteParticipantFURVector)
+        {
+            if (n->IsFurDue()) // Added true to always trigger to spam
+            {
+                sendFastUpdateRequest(n->Handler);
+                std::cout << "executing sendFastUpdateRequest( " << n->Handler << " );" << std::endl;
+            }
+        }
+        this->RemoteParticipantFURVectorMutex.unlock();
+        std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) ); // WAS 1000
+    }
 }
 
 void
@@ -113,6 +139,21 @@ MyConversationManager::onParticipantDestroyed(ParticipantHandle partHandle)
    InfoLog(<< "onParticipantDestroyed: handle=" << partHandle);
    // FIXME - why is this duplicated here, why not call superclass?
    // Remove from whatever list it is in
+
+   this->RemoteParticipantFURVectorMutex.lock();
+   std::vector<std::shared_ptr<RemoteParticipantFurTrackerStruct>>::iterator it;
+   bool found = false;
+   for(it = RemoteParticipantFURVector.begin(); it != RemoteParticipantFURVector.end(); it++)
+   {
+       if ( (*it)->Handler == partHandle)
+        {
+           found = true;
+           break;
+       }
+   }
+   if (found)
+       RemoteParticipantFURVector.erase(it);
+   this->RemoteParticipantFURVectorMutex.unlock();
    mRemoteParticipantHandles.remove(partHandle);
    mLocalParticipantHandles.remove(partHandle);
    mMediaParticipantHandles.remove(partHandle);
@@ -145,6 +186,7 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
          }
          addParticipant(convHandle, partHandle);
          answerParticipant(partHandle);
+
       }
       else
       {
@@ -153,6 +195,27 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
          answerParticipant(partHandle);
       }
    }
+   std::shared_ptr<RemoteParticipantFurTrackerStruct> newremote = std::make_shared<RemoteParticipantFurTrackerStruct>(partHandle);
+   this->RemoteParticipantFURVectorMutex.lock();
+
+    // Skip WebRTC
+    RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(this->getParticipant(partHandle));
+    if(remoteParticipant)
+    {
+        if (!remoteParticipant->getInviteSessionHandle()->getProposedRemoteSdp().session().isWebRTC())
+        {
+            this->RemoteParticipantFURVector.push_back(newremote);
+        }
+    }
+    else
+    {
+        WarningLog(<<"Problem adding participant handler to RemoteParticipantFURVector: " << newremote);
+    }
+
+    // ignore if webrtc
+
+
+   this->RemoteParticipantFURVectorMutex.unlock();
 }
 
 void
@@ -203,14 +266,17 @@ MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const Sip
       }
       resip_assert(krp);
       std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
-
       krp->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
          otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
             //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
             answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
                //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
+               DebugLog(<<"SynergySKY: Setting Pipeline Setup To Done");
+               otherEndpoint->SetPipelineSetupToDone();
+               answeredEndpoint->SetPipelineSetupToDone();
                _p->requestKeyframeFromPeer();
                krp->requestKeyframeFromPeer();
+
             }, *otherEndpoint);
          }, *answeredEndpoint);
       }); // otherEndpoint->disconnect()

@@ -93,6 +93,7 @@ class SdpContents : public Contents
                     * 
                     **/
                   Codec(const Data& name, int payloadType, int rate=8000);
+                  Codec(const Data& name, int payloadType, int rate, const Data& parameters);
                   Codec(const Codec& rhs);
                   Codec& operator=(const Codec& codec);
 
