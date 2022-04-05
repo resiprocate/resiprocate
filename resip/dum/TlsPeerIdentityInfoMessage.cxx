@@ -23,16 +23,6 @@ TlsPeerIdentityInfoMessage::~TlsPeerIdentityInfoMessage()
 {
 }
 
-Data
-TlsPeerIdentityInfoMessage::brief() const
-{
-   Data buffer;
-   DataStream strm(buffer);
-   strm << "TlsPeerIdentityInfoMessage " << mAuthorized;
-   strm.flush();
-   return buffer;
-}
-
 resip::Message*
 TlsPeerIdentityInfoMessage::clone() const
 {
@@ -42,7 +32,7 @@ TlsPeerIdentityInfoMessage::clone() const
 std::ostream&
 TlsPeerIdentityInfoMessage::encode(std::ostream& strm) const
 {
-   strm << brief();
+   strm << "TlsPeerIdentityInfoMessage " << mAuthorized;
    return strm;
 }
 

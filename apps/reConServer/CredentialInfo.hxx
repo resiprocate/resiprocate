@@ -44,7 +44,6 @@ class CredentialInfo : public resip::DumCommand
 
       virtual void executeCommand();
 
-      virtual resip::Data brief() const;
       virtual resip::Message* clone() const;
 
       virtual EncodeStream& encode(EncodeStream& strm) const;
