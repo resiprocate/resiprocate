@@ -47,7 +47,6 @@ class UserAuthInfo : public resip::DumFeatureMessage
       void setMode(InfoMode mode);
       void setA1(const resip::Data& a1);
 
-      virtual resip::Data brief() const;
       virtual resip::Message* clone() const;
 
       virtual EncodeStream& encode(EncodeStream& strm) const;

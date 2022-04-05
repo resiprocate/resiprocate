@@ -437,15 +437,19 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
       if(msg.isFromWire())
       {
-         resip::TransportType receivedTransport = toTransportType(
-            msg.header(h_Vias).front().transport());
-         if(keepAliveTime == 0)
+         resip::TransportType receivedTransport = toTransportType(msg.header(h_Vias).front().transport());
+         if(isReliable(receivedTransport))
          {
-            if(isReliable(receivedTransport))
+            // Allow FlowTimer keepalive time to be lowered by configured value - this is legal in RFC5626
+            if (keepAliveTime == 0 || mDialogSet.mUserProfile->getKeepAliveTimeForStream() < keepAliveTime)
             {
                keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForStream();
             }
-            else
+         }
+         else
+         {
+            // Allow FlowTimer keepalive time to be lowered by configured value - this is legal in RFC5626
+            if (keepAliveTime == 0 || mDialogSet.mUserProfile->getKeepAliveTimeForDatagram() < keepAliveTime)
             {
                keepAliveTime = mDialogSet.mUserProfile->getKeepAliveTimeForDatagram();
             }
