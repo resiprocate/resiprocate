@@ -1638,7 +1638,7 @@ DialogUsageManager::incomingProcess(std::unique_ptr<Message> msg)
 
       if (sipMsg)
       {
-         //DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
+         DebugLog ( << "DialogUsageManager::process: found SipMessage" );
          if (sipMsg->isRequest())
          {
             // Validate Request URI
