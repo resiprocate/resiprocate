@@ -16,6 +16,7 @@
 
 #define RESIPROCATE_SUBSYSTEM AppSubsystem::RECONSERVER
 
+using namespace std;
 using namespace resip;
 using namespace recon;
 using namespace reconserver;
@@ -32,9 +33,10 @@ MyConversationManager::startup()
    if(supportsLocalAudio())
    {
       // Create initial local participant and conversation  
-      addParticipant(createConversation(), createLocalParticipant());
+      ConversationHandle initialConversation = createConversation();
+      addParticipant(initialConversation, createLocalParticipant());
       resip::Uri uri("tone:dialtone;duration=1000");
-      createMediaResourceParticipant(mConversationHandles.front(), uri);
+      createMediaResourceParticipant(initialConversation, uri);
    }
    else
    {
@@ -55,14 +57,6 @@ MyConversationManager::startup()
       resip::Data name("record");
       addBufferToMediaResourceCache(name, buffer, 0);
    }      
-}
-
-ConversationHandle
-MyConversationManager::createConversation(AutoHoldMode autoHoldMode)
-{
-   ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
-   mConversationHandles.push_back(convHandle);
-   return convHandle;
 }
 
 ParticipantHandle
@@ -93,7 +87,6 @@ void
 MyConversationManager::onConversationDestroyed(ConversationHandle convHandle)
 {
    InfoLog(<< "onConversationDestroyed: handle=" << convHandle);
-   mConversationHandles.remove(convHandle);
 }
 
 void
@@ -173,7 +166,6 @@ MyConversationManager::onRelatedConversation(ConversationHandle relatedConvHandl
 {
    InfoLog(<< "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
            << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
-   mConversationHandles.push_back(relatedConvHandle);
    mRemoteParticipantHandles.push_back(relatedPartHandle);
 }
 
@@ -218,11 +210,12 @@ MyConversationManager::displayInfo()
 {
    Data output;
 
-   if(!mConversationHandles.empty())
+   const set<ConversationHandle> conversations = getConversations();
+   if(!conversations.empty())
    {
       output = "Active conversation handles: ";
-      std::list<ConversationHandle>::iterator it;
-      for(it = mConversationHandles.begin(); it != mConversationHandles.end(); it++)
+      set<ConversationHandle>::const_iterator it;
+      for(it = conversations.begin(); it != conversations.end(); it++)
       {
          output += Data(*it) + " ";
       }

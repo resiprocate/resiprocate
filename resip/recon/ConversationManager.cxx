@@ -375,6 +375,18 @@ ConversationManager::getConversation(ConversationHandle convHandle)
    }
 }
 
+std::set<ConversationHandle>
+ConversationManager::getConversations() const
+{
+   set<ConversationHandle> conversations;
+   ConversationMap::const_iterator it;
+   for(it = mConversations.begin(); it != mConversations.end(); it++)
+   {
+      conversations.insert(it->first);
+   }
+   return conversations;
+}
+
 void 
 ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type)
 {

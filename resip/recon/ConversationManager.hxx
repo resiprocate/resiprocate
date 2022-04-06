@@ -782,6 +782,8 @@ protected:
    ConversationHandle getNewConversationHandle();  // thread safe
    Conversation* getConversation(ConversationHandle convHandle);
 
+   std::set<ConversationHandle> getConversations() const;
+
    bool isShuttingDown() { return mShuttingDown; }
 
 private:

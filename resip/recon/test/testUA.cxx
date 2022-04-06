@@ -122,9 +122,10 @@ public:
       if(mLocalAudioEnabled)
       {
          // Create initial local participant and conversation  
-         addParticipant(createConversation(mDefaultAutoHoldMode), createLocalParticipant());
+         ConversationHandle initialConversation = createConversation(mDefaultAutoHoldMode);
+         addParticipant(initialConversation, createLocalParticipant());
          resip::Uri uri("tone:dialtone;duration=1000");
-         createMediaResourceParticipant(mConversationHandles.front(), uri);
+         createMediaResourceParticipant(initialConversation, uri);
       }
       else
       {
@@ -146,20 +147,6 @@ public:
    }
 
    
-   virtual ConversationHandle createConversation(ConversationManager::AutoHoldMode autoHoldMode) override
-   {
-      ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
-      mConversationHandles.push_back(convHandle);
-      return convHandle;
-   }
-
-   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedFlowConversation, ConversationManager::AutoHoldMode autoHoldMode) override
-   {
-      ConversationHandle convHandle = SipXConversationManager::createSharedMediaInterfaceConversation(sharedFlowConversation, autoHoldMode);
-      mConversationHandles.push_back(convHandle);
-      return convHandle;
-   }
-
    virtual ParticipantHandle createRemoteParticipant(ConversationHandle convHandle,
       const resip::NameAddr& destination,
       ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic,
@@ -205,7 +192,6 @@ public:
    virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(LOG_PREFIX << "onConversationDestroyed: handle=" << convHandle);
-      mConversationHandles.remove(convHandle);
    }
 
    virtual void onParticipantDestroyed(ParticipantHandle partHandle) override
@@ -230,7 +216,8 @@ public:
       if(autoAnswerEnabled)
       {
          // If there are no conversations, then create one
-         if(mConversationHandles.empty())
+         const set<ConversationHandle> conversations = getConversations();
+         if(conversations.empty())
          {
             ConversationHandle convHandle = createConversation(mDefaultAutoHoldMode);
             if (mLocalAudioEnabled)
@@ -243,7 +230,10 @@ public:
                 addParticipant(convHandle, mLocalParticipantHandles.front());
             }
          }
-         addParticipant(mConversationHandles.front(), partHandle);
+         else
+         {
+            addParticipant(*conversations.begin(), partHandle);
+         }
          answerParticipant(partHandle);
       }
    }
@@ -310,7 +300,6 @@ public:
    {
       InfoLog(LOG_PREFIX << "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
               << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
-      mConversationHandles.push_back(relatedConvHandle);
       mRemoteParticipantHandles.push_back(relatedPartHandle);
    }
 
@@ -348,11 +337,12 @@ public:
    {
       Data output;
 
-      if(!mConversationHandles.empty())
+      const set<ConversationHandle> conversations = getConversations();
+      if(!conversations.empty())
       {
          output = "Active conversation handles: ";
-         std::list<ConversationHandle>::iterator it;
-         for(it = mConversationHandles.begin(); it != mConversationHandles.end(); it++)
+         set<ConversationHandle>::const_iterator it;
+         for(it = conversations.begin(); it != conversations.end(); it++)
          {
             output += Data(*it) + " ";
          }
@@ -400,7 +390,6 @@ public:
       }
    }
 
-   std::list<ConversationHandle> mConversationHandles;
    std::list<ParticipantHandle> mLocalParticipantHandles;
    std::list<ParticipantHandle> mRemoteParticipantHandles;
    std::list<ParticipantHandle> mRemoteIMParticipantHandles;
