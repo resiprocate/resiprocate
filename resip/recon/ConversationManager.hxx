@@ -783,6 +783,20 @@ protected:
    Conversation* getConversation(ConversationHandle convHandle);
 
    std::set<ConversationHandle> getConversations() const;
+   template <class T>
+   std::set<ParticipantHandle> getParticipantsByType() const
+   {
+      std::set<ParticipantHandle> participants;
+      ParticipantMap::const_iterator it;
+      for(it = mParticipants.begin(); it != mParticipants.end(); it++)
+      {
+         if(dynamic_cast<T* const>(it->second) != nullptr)
+         {
+            participants.insert(it->first);
+         }
+      }
+      return participants;
+   };
 
    bool isShuttingDown() { return mShuttingDown; }
 

@@ -10,6 +10,9 @@
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
 
+#include <resip/recon/LocalParticipant.hxx>
+#include <resip/recon/RemoteParticipant.hxx>
+
 // Test Prompts for cache testing
 #include "playback_prompt.h"
 #include "record_prompt.h"
@@ -59,30 +62,6 @@ MyConversationManager::startup()
    }      
 }
 
-ParticipantHandle
-MyConversationManager::createRemoteParticipant(ConversationHandle convHandle, const NameAddr& destination, ParticipantForkSelectMode forkSelectMode, const std::shared_ptr<ConversationProfile>& conversationProfile, const std::multimap<resip::Data, resip::Data>& extraHeaders)
-{
-   ParticipantHandle partHandle = ConversationManager::createRemoteParticipant(convHandle, destination, forkSelectMode, conversationProfile, extraHeaders);
-   mRemoteParticipantHandles.push_back(partHandle);
-   return partHandle;
-}
-
-ParticipantHandle
-MyConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, const Uri& mediaUrl)
-{
-   ParticipantHandle partHandle = ConversationManager::createMediaResourceParticipant(convHandle, mediaUrl);
-   mMediaParticipantHandles.push_back(partHandle);
-   return partHandle;
-}
-
-ParticipantHandle
-MyConversationManager::createLocalParticipant()
-{
-   ParticipantHandle partHandle = ConversationManager::createLocalParticipant();
-   mLocalParticipantHandles.push_back(partHandle);
-   return partHandle;
-}
-
 void
 MyConversationManager::onConversationDestroyed(ConversationHandle convHandle)
 {
@@ -93,10 +72,6 @@ void
 MyConversationManager::onParticipantDestroyed(ParticipantHandle partHandle)
 {
    InfoLog(<< "onParticipantDestroyed: handle=" << partHandle);
-   // Remove from whatever list it is in
-   mRemoteParticipantHandles.remove(partHandle);
-   mLocalParticipantHandles.remove(partHandle);
-   mMediaParticipantHandles.remove(partHandle);
 }
 
 void
@@ -109,7 +84,6 @@ void
 MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
-   mRemoteParticipantHandles.push_back(partHandle);
    if(mAutoAnswerEnabled)
    {
       const resip::Data& room = msg.header(h_RequestLine).uri().user();
@@ -120,7 +94,7 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
          ConversationHandle convHandle = createConversation();
          mRooms[room] = convHandle;
          // ensure a local participant is in the conversation - create one if one doesn't exist
-         if(supportsLocalAudio() && mLocalParticipantHandles.empty())
+         if(supportsLocalAudio() && getParticipantsByType<LocalParticipant>().empty())
          {
             createLocalParticipant();
          }
@@ -166,7 +140,6 @@ MyConversationManager::onRelatedConversation(ConversationHandle relatedConvHandl
 {
    InfoLog(<< "onRelatedConversation: relatedConvHandle=" << relatedConvHandle << " relatedPartHandle=" << relatedPartHandle
            << " origConvHandle=" << origConvHandle << " origPartHandle=" << origPartHandle);
-   mRemoteParticipantHandles.push_back(relatedPartHandle);
 }
 
 void
@@ -221,31 +194,34 @@ MyConversationManager::displayInfo()
       }
       InfoLog(<< output);
    }
-   if(!mLocalParticipantHandles.empty())
+   const set<ParticipantHandle> localParticipantHandles = getParticipantsByType<LocalParticipant>();
+   if(!localParticipantHandles.empty())
    {
       output = "Local Participant handles: ";
-      std::list<ParticipantHandle>::iterator it;
-      for(it = mLocalParticipantHandles.begin(); it != mLocalParticipantHandles.end(); it++)
+      std::set<ParticipantHandle>::const_iterator it;
+      for(it = localParticipantHandles.begin(); it != localParticipantHandles.end(); it++)
       {
          output += Data(*it) + " ";
       }
       InfoLog(<< output);
    }
-   if(!mRemoteParticipantHandles.empty())
+   const set<ParticipantHandle> remoteParticipantHandles = getParticipantsByType<RemoteParticipant>();
+   if(!remoteParticipantHandles.empty())
    {
       output = "Remote Participant handles: ";
-      std::list<ParticipantHandle>::iterator it;
-      for(it = mRemoteParticipantHandles.begin(); it != mRemoteParticipantHandles.end(); it++)
+      std::set<ParticipantHandle>::const_iterator it;
+      for(it = remoteParticipantHandles.begin(); it != remoteParticipantHandles.end(); it++)
       {
          output += Data(*it) + " ";
       }
       InfoLog(<< output);
    }
-   if(!mMediaParticipantHandles.empty())
+   const set<ParticipantHandle> mediaParticipantHandles = getParticipantsByType<MediaResourceParticipant>();
+   if(!mediaParticipantHandles.empty())
    {
       output = "Media Participant handles: ";
-      std::list<ParticipantHandle>::iterator it;
-      for(it = mMediaParticipantHandles.begin(); it != mMediaParticipantHandles.end(); it++)
+      std::set<ParticipantHandle>::const_iterator it;
+      for(it = mediaParticipantHandles.begin(); it != mediaParticipantHandles.end(); it++)
       {
          output += Data(*it) + " ";
       }
