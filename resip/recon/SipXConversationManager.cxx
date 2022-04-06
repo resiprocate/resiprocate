@@ -217,13 +217,6 @@ SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHand
    return convHandle;
 }
 
-void 
-SipXConversationManager::outputBridgeMatrix(ConversationHandle convHandle)
-{
-   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this, convHandle);
-   post(cmd);
-}
-
 void
 SipXConversationManager::outputBridgeMatrixImpl(ConversationHandle convHandle)
 {

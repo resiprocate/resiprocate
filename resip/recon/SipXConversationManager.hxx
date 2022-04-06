@@ -167,16 +167,6 @@ public:
    ///////////////////////////////////////////////////////////////////////
 
    /**
-     Logs a multiline representation of the current state
-     of the mixing matrix.
-
-     @param convHandle - if sipXGlobalMediaInterfaceMode is used then 0
-                         is the only valid value.  Otherwise you must
-                         specify a specific conversation to view.
-   */
-   virtual void outputBridgeMatrix(ConversationHandle convHandle = 0) override;
-
-   /**
      Builds a session capabilties SDPContents based on the passed in ipaddress
      and codec ordering.
      Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
