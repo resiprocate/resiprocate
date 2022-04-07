@@ -14,14 +14,16 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXParticipant::SipXParticipant(ParticipantHandle partHandle,
+                         ConversationManager& conversationManager,
                          SipXConversationManager& sipXConversationManager)
-: Participant(partHandle, sipXConversationManager),
+: Participant(partHandle, conversationManager),
   mSipXConversationManager(sipXConversationManager)
 {
 }
 
-SipXParticipant::SipXParticipant(SipXConversationManager& sipXConversationManager)
-: Participant(sipXConversationManager),
+SipXParticipant::SipXParticipant(ConversationManager& conversationManager,
+                         SipXConversationManager& sipXConversationManager)
+: Participant(conversationManager),
   mSipXConversationManager(sipXConversationManager)
 {
 }

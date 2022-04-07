@@ -22,9 +22,11 @@ class SipXParticipant : public virtual Participant
    public:  
 
       SipXParticipant(ParticipantHandle partHandle,
-                  SipXConversationManager& conversationManager);
+                  ConversationManager& conversationManager,
+                  SipXConversationManager& sipXConversationManager);
 
-      SipXParticipant(SipXConversationManager& conversationManager);
+      SipXParticipant(ConversationManager& conversationManager,
+                  SipXConversationManager& sipXConversationManager);
 
       virtual ~SipXParticipant();
 

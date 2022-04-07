@@ -17,7 +17,7 @@
 namespace reconserver
 {
 
-class MyConversationManager : public recon::SipXConversationManager
+class MyConversationManager : public recon::ConversationManager
 {
 public:
 

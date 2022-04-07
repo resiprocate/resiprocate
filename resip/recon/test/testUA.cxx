@@ -110,14 +110,15 @@ public:
    }
 };
 
-class MyConversationManager : public SipXConversationManager
+class MyConversationManager : public ConversationManager
 {
 public:
 
    MyConversationManager(bool localAudioEnabled, bool multipleMediaInterfaces, bool defaultAutoHoldModeToDisabled)
-      : SipXConversationManager(localAudioEnabled, multipleMediaInterfaces ? MediaInterfaceMode::sipXConversationMediaInterfaceMode : MediaInterfaceMode::sipXGlobalMediaInterfaceMode),
+      : ConversationManager(nullptr),
         mLocalAudioEnabled(localAudioEnabled)
    {
+      setMediaStackAdapter(make_shared<SipXConversationManager>(*this, localAudioEnabled, multipleMediaInterfaces ? SipXConversationManager::MediaInterfaceMode::sipXConversationMediaInterfaceMode : SipXConversationManager::MediaInterfaceMode::sipXGlobalMediaInterfaceMode));
       mDefaultAutoHoldMode = defaultAutoHoldModeToDisabled ? ConversationManager::AutoHoldDisabled : ConversationManager::AutoHoldEnabled;
    }
 
@@ -379,6 +380,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
    }
 
+   SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(myConversationManager.getMediaStackAdapter());
+
    // Process commands
    if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit") || isEqualNoCase(command, "x"))
    {
@@ -401,7 +404,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       if (arg[1] == "n") autoHoldMode = ConversationManager::AutoHoldDisabled;
       else if (arg[0] == "y") autoHoldMode = ConversationManager::AutoHoldEnabled;
       else if (arg[1] == "b") autoHoldMode = ConversationManager::AutoHoldBroadcastOnly;
-      myConversationManager.createSharedMediaInterfaceConversation(handle, autoHoldMode);
+      mediaStackAdapter.createSharedMediaInterfaceConversation(handle, autoHoldMode);
       return;
    }
    if(isEqualNoCase(command, "destroyconv") || isEqualNoCase(command, "dc"))
@@ -729,42 +732,42 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "volume") || isEqualNoCase(command, "sv"))
    {
       unsigned long volume = arg[0].convertUnsignedLong();
-      myConversationManager.setSpeakerVolume(volume);
+      mediaStackAdapter.setSpeakerVolume(volume);
       InfoLog( << "Speaker volume set to " << volume);
       return;
    }
    if(isEqualNoCase(command, "gain") || isEqualNoCase(command, "sg"))
    {
       unsigned long gain = arg[0].convertUnsignedLong();
-      myConversationManager.setMicrophoneGain(gain);
+      mediaStackAdapter.setMicrophoneGain(gain);
       InfoLog( << "Microphone gain set to " << gain);
       return;
    }
    if(isEqualNoCase(command, "mute") || isEqualNoCase(command, "mm"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.muteMicrophone(enable);
+      mediaStackAdapter.muteMicrophone(enable);
       InfoLog( << "Microphone mute " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "echocanel") || isEqualNoCase(command, "aec"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableEchoCancel(enable);
+      mediaStackAdapter.enableEchoCancel(enable);
       InfoLog( << "Echo cancellation " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "autogain") || isEqualNoCase(command, "agc"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableAutoGainControl(enable);
+      mediaStackAdapter.enableAutoGainControl(enable);
       InfoLog( << "Automatic gain control " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "noisereduction") || isEqualNoCase(command, "nr"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableNoiseReduction(enable);
+      mediaStackAdapter.enableNoiseReduction(enable);
       return;
    }
    if(isEqualNoCase(command, "subscribe") || isEqualNoCase(command, "cs"))
@@ -836,7 +839,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          Data ipAddress(g_conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, idList, g_conversationProfile->sessionCaps());
+         mediaStackAdapter.buildSessionCapabilities(ipAddress, idList, g_conversationProfile->sessionCaps());
       }
       return;
    }
@@ -1594,7 +1597,8 @@ main (int argc, char** argv)
    {
       MyConversationManager myConversationManager(localAudioEnabled, multipleMediaInterfaceModeEnabled, defaultAutoHoldModeToDisabled);
       MyUserAgent ua(&myConversationManager, profile);
-      myConversationManager.buildSessionCapabilities(address, codecIds, g_conversationProfile->sessionCaps());
+      SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(myConversationManager.getMediaStackAdapter());
+      mediaStackAdapter.buildSessionCapabilities(address, codecIds, g_conversationProfile->sessionCaps());
 
       // Generate InstanceId appropriate for testing only.  Should be UUID that persists 
       // across machine re-starts and is unique to this application instance.  The one used 

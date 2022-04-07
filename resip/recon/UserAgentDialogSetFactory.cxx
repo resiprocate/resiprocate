@@ -4,6 +4,7 @@
 #include "RemoteParticipant.hxx"
 #include "RemoteIMSessionParticipantDialogSet.hxx"
 #include "DefaultDialogSet.hxx"
+#include "MediaStackAdapter.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -43,7 +44,7 @@ UserAgentDialogSetFactory::createAppDialogSet(DialogUsageManager& dum,
             }
          }
       }
-      return mConversationManager.createRemoteParticipantDialogSetInstance();
+      return mConversationManager.getMediaStackAdapter().createRemoteParticipantDialogSetInstance();
       break;
    }
    default:

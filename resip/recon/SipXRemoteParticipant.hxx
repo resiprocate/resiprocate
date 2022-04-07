@@ -53,11 +53,13 @@ class SipXRemoteParticipant : public virtual RemoteParticipant, public virtual S
 {
 public:
    SipXRemoteParticipant(ParticipantHandle partHandle,   // UAC
-                     SipXConversationManager& conversationManager,
+                     ConversationManager& conversationManager,
+                     SipXConversationManager& sipXConversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   SipXRemoteParticipant(SipXConversationManager& conversationManager,            // UAS or forked leg
+   SipXRemoteParticipant(ConversationManager& conversationManager,
+                     SipXConversationManager& sipXConversationManager,            // UAS or forked leg
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
