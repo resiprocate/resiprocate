@@ -20,11 +20,12 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 KurentoConversation::KurentoConversation(ConversationHandle handle,
+                           ConversationManager& conversationManager,
                            KurentoConversationManager& kurentoConversationManager,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)
-: Conversation(handle, kurentoConversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
+: Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
   mKurentoConversationManager(kurentoConversationManager)
 {
    if(mKurentoConversationManager.supportsMultipleMediaInterfaces())

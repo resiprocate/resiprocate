@@ -35,6 +35,7 @@ class UserAgent;
 class ConversationProfile;
 class LocalParticipant;
 class MediaResourceParticipant;
+class MediaStackAdapter;
 class RemoteParticipant;
 class RemoteParticipantDialogSet;
 
@@ -70,7 +71,7 @@ class ConversationManager : public resip::InviteSessionHandler,
 {
 public:
 
-   ConversationManager();
+   ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter);
    virtual ~ConversationManager();
 
    typedef enum
@@ -352,15 +353,6 @@ public:
                          specify a specific conversation to view.
    */
    virtual void outputBridgeMatrix(ConversationHandle convHandle = 0);
-
-   /**
-     Builds a session capabilties SDPContents based on the passed in ipaddress
-     and codec ordering.
-     Note:  Codec ordering is an array of sipX internal codecId's.  Id's for
-            codecs not loaded are ignored.
-   */
-   virtual void buildSessionCapabilities(const resip::Data& ipaddress,
-      const std::vector<unsigned int>& codecIds, resip::SdpContents& sessionCaps) = 0;
 
    /**
      Signal to the participant that it should provide ringback.  Only
@@ -671,26 +663,16 @@ public:
    */
    virtual void onMediaResourceParticipantFailed(ParticipantHandle partHandle) {}
 
-   virtual Conversation* createConversationInstance(ConversationHandle handle,
-      RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet
-      ConversationHandle sharedMediaInterfaceConvHandle,
-      ConversationManager::AutoHoldMode autoHoldMode) = 0;
-   virtual LocalParticipant* createLocalParticipantInstance(ParticipantHandle partHandle) = 0;
-   virtual MediaResourceParticipant* createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl) = 0;
    virtual RemoteParticipant* createAppropriateRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
    virtual RemoteParticipant* createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds);
-   virtual RemoteParticipant* createRemoteParticipantInstance(resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
-   virtual RemoteParticipant* createRemoteParticipantInstance(ParticipantHandle partHandle, resip::DialogUsageManager& dum, RemoteParticipantDialogSet& rpds) = 0;
-   virtual RemoteParticipantDialogSet* createRemoteParticipantDialogSetInstance(
-         ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
-         std::shared_ptr<ConversationProfile> conversationProfile = nullptr) = 0;
    virtual RemoteParticipantDialogSet* createRemoteIMSessionParticipantDialogSetInstance(
       ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
       std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
-   virtual bool supportsMultipleMediaInterfaces() = 0;
-   virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
-   virtual bool supportsLocalAudio() = 0;
+   virtual void setMediaStackAdapter(std::shared_ptr<MediaStackAdapter> mediaStackAdapter);
+   MediaStackAdapter& getMediaStackAdapter() { return *mMediaStackAdapter; };
+
+   virtual void configureRemoteParticipant(RemoteParticipant *rp) = 0;
 
 protected:
 
@@ -777,10 +759,27 @@ protected:
 
    virtual void setUserAgent(UserAgent *userAgent);
 
+   friend class MediaStackAdapter;
    std::shared_ptr<BridgeMixer>& getBridgeMixer() { return mBridgeMixer; }
 
    ConversationHandle getNewConversationHandle();  // thread safe
    Conversation* getConversation(ConversationHandle convHandle);
+
+   std::set<ConversationHandle> getConversations() const;
+   template <class T>
+   std::set<ParticipantHandle> getParticipantsByType() const
+   {
+      std::set<ParticipantHandle> participants;
+      ParticipantMap::const_iterator it;
+      for(it = mParticipants.begin(); it != mParticipants.end(); it++)
+      {
+         if(dynamic_cast<T* const>(it->second) != nullptr)
+         {
+            participants.insert(it->first);
+         }
+      }
+      return participants;
+   };
 
    bool isShuttingDown() { return mShuttingDown; }
 
@@ -796,6 +795,7 @@ private:
    // Note:  In general the following fns are not thread safe and must be called from dum process 
    //        loop only
    friend class Conversation;
+   friend class SipXConversation;
    friend class OutputBridgeMixWeightsCmd;
    void registerConversation(Conversation *);
    void unregisterConversation(Conversation *);
@@ -812,10 +812,7 @@ private:
 
    /* Called periodically in the event loop to give the ConversationManager
       the opportunity to do any pending work */
-   virtual void process() = 0;
-
-   virtual void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h) = 0;
-   virtual void initializeDtlsFactory(const resip::Data& defaultAoR) = 0;
+   virtual void process();
 
    friend class DtmfEvent;
    friend class MediaEvent;
@@ -844,7 +841,6 @@ private:
    virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer);
 
    friend class OutputBridgeMixWeightsCmd;
-   virtual void outputBridgeMatrixImpl(ConversationHandle convHandle = 0) = 0;
 
    friend class MediaResourceParticipantDeleterCmd;
    friend class CreateConversationCmd;
@@ -868,6 +864,7 @@ private:
    friend class SendIMToParticipantCmd;
 
    UserAgent* mUserAgent;
+   std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;
    bool mShuttingDown;
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;

@@ -5,6 +5,7 @@
 #include "RemoteIMPagerParticipant.hxx"
 #include "RemoteIMSessionParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
+#include "MediaStackAdapter.hxx"
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
 #include "ReconSubsystem.hxx"
@@ -49,7 +50,7 @@ Conversation::Conversation(ConversationHandle handle,
    }
    InfoLog(<< "Conversation created, handle=" << mHandle);
 
-   if(mConversationManager.supportsMultipleMediaInterfaces())
+   if(mConversationManager.getMediaStackAdapter().supportsMultipleMediaInterfaces())
    {
       // Check if sharedMediaInterfaceConvHandle was passed in, and if so use the same media interface and bridge mixer that, that
       // conversation is using
@@ -217,7 +218,7 @@ Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant,
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = mConversationManager.createConversationInstance(relatedConvHandle, mRelatedConversationSet,
+   Conversation* conversation = mConversationManager.getMediaStackAdapter().createConversationInstance(relatedConvHandle, mRelatedConversationSet,
                                                  // If this conversation is sharing a media interface, then any related 
                                                  // conversations will as well (use our handle as the original handle
                                                  // passed in contructor could be gone)

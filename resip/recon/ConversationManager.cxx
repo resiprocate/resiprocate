@@ -35,8 +35,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager()
+ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter)
 : mUserAgent(0),
+  mMediaStackAdapter(mediaStackAdapter),
   mShuttingDown(false),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
@@ -55,6 +56,7 @@ void
 ConversationManager::setUserAgent(UserAgent* userAgent)
 {
    mUserAgent = userAgent;
+   mMediaStackAdapter->setUserAgent(userAgent);
 }
 
 void
@@ -80,6 +82,12 @@ ConversationManager::shutdown()
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
    }
+}
+
+void
+ConversationManager::process()
+{
+   mMediaStackAdapter->process();
 }
 
 ConversationHandle 
@@ -160,7 +168,7 @@ ConversationManager::createLocalParticipant()
 {
    if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = 0;
-   if (supportsLocalAudio())
+   if (getMediaStackAdapter().supportsLocalAudio())
    {
       partHandle = getNewParticipantHandle();
 
@@ -377,6 +385,18 @@ ConversationManager::getConversation(ConversationHandle convHandle)
    }
 }
 
+std::set<ConversationHandle>
+ConversationManager::getConversations() const
+{
+   set<ConversationHandle> conversations;
+   ConversationMap::const_iterator it;
+   for(it = mConversations.begin(); it != mConversations.end(); it++)
+   {
+      conversations.insert(it->first);
+   }
+   return conversations;
+}
+
 void 
 ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type)
 {
@@ -430,7 +450,7 @@ ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManag
    }
    else
    {
-      return createRemoteParticipantInstance(dum, rpds);
+      return getMediaStackAdapter().createRemoteParticipantInstance(dum, rpds);
    }
 }
 
@@ -443,7 +463,7 @@ ConversationManager::createAppropriateRemoteParticipantInstance(ParticipantHandl
    }
    else
    {
-      return createRemoteParticipantInstance(partHandle, dum, rpds);
+      return getMediaStackAdapter().createRemoteParticipantInstance(partHandle, dum, rpds);
    }
 }
 
@@ -451,6 +471,16 @@ RemoteParticipantDialogSet*
 ConversationManager::createRemoteIMSessionParticipantDialogSetInstance(ParticipantForkSelectMode forkSelectMode, std::shared_ptr<ConversationProfile> conversationProfile)
 {
    return new RemoteIMSessionParticipantDialogSet(*this, forkSelectMode, conversationProfile);
+}
+
+void
+ConversationManager::setMediaStackAdapter(std::shared_ptr<MediaStackAdapter> mediaStackAdapter)
+{
+   mMediaStackAdapter = mediaStackAdapter;
+   if(mediaStackAdapter)
+   {
+      mediaStackAdapter->conversationManagerReady(this);
+   }
 }
 
 void
@@ -724,7 +754,7 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
          }
 
          // Create new Participant
-         RemoteParticipantDialogSet *participantDialogSet = createRemoteParticipantDialogSetInstance();
+         RemoteParticipantDialogSet *participantDialogSet = getMediaStackAdapter().createRemoteParticipantDialogSetInstance();
          RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
          // Set pending OOD info in Participant - causes accept or reject to be called later
@@ -869,7 +899,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             }
 
             // Create new Participant 
-            RemoteParticipantDialogSet *participantDialogSet = createRemoteParticipantDialogSetInstance();
+            RemoteParticipantDialogSet *participantDialogSet = getMediaStackAdapter().createRemoteParticipantDialogSetInstance();
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
             // Set pending OOD info in Participant - causes accept or reject to be called later

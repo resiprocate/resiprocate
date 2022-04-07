@@ -47,11 +47,13 @@ class KurentoRemoteParticipant : public virtual RemoteParticipant, public virtua
 {
 public:
    KurentoRemoteParticipant(ParticipantHandle partHandle,   // UAC
-                     KurentoConversationManager& conversationManager,
+                     ConversationManager& conversationManager,
+                     KurentoConversationManager& kurentoConversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   KurentoRemoteParticipant(KurentoConversationManager& conversationManager,            // UAS or forked leg
+   KurentoRemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
+                     KurentoConversationManager& kurentoConversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 

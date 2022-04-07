@@ -127,6 +127,8 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
    }
 
+   SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(myConversationManager.getMediaStackAdapter());
+
    // Process commands
    if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit"))
    {
@@ -391,42 +393,42 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
    if(isEqualNoCase(command, "volume") || isEqualNoCase(command, "sv"))
    {
       unsigned long volume = arg[0].convertUnsignedLong();
-      myConversationManager.setSpeakerVolume(volume);
+      mediaStackAdapter.setSpeakerVolume(volume);
       InfoLog( << "Speaker volume set to " << volume);
       return;
    }
    if(isEqualNoCase(command, "gain") || isEqualNoCase(command, "sg"))
    {
       unsigned long gain = arg[0].convertUnsignedLong();
-      myConversationManager.setMicrophoneGain(gain);
+      mediaStackAdapter.setMicrophoneGain(gain);
       InfoLog( << "Microphone gain set to " << gain);
       return;
    }
    if(isEqualNoCase(command, "mute") || isEqualNoCase(command, "mm"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.muteMicrophone(enable);
+      mediaStackAdapter.muteMicrophone(enable);
       InfoLog( << "Microphone mute " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "echocanel") || isEqualNoCase(command, "aec"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableEchoCancel(enable);
+      mediaStackAdapter.enableEchoCancel(enable);
       InfoLog( << "Echo cancellation " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "autogain") || isEqualNoCase(command, "agc"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableAutoGainControl(enable);
+      mediaStackAdapter.enableAutoGainControl(enable);
       InfoLog( << "Automatic gain control " << (enable ? "enabled" : "disabled"));
       return;
    }
    if(isEqualNoCase(command, "noisereduction") || isEqualNoCase(command, "nr"))
    {
       bool enable = arg[0].convertUnsignedLong() != 0;
-      myConversationManager.enableNoiseReduction(enable);
+      mediaStackAdapter.enableNoiseReduction(enable);
       return;
    }
 #endif
@@ -498,7 +500,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
          Data ipAddress(conversationProfile->sessionCaps().session().connection().getAddress());
          // Note:  Technically modifying the conversation profile at runtime like this is not
          //        thread safe.  But it should be fine for this test consoles purposes.
-         myConversationManager.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
+         mediaStackAdapter.buildSessionCapabilities(ipAddress, idList, conversationProfile->sessionCaps());
       }
       return;
    }
@@ -1303,11 +1305,7 @@ ReConServerProcess::main (int argc, char** argv)
       switch(application)
       {
          case ReConServerConfig::None:
-#ifdef PREFER_KURENTO
-            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(reConServerConfig, kurentoUri, autoAnswerEnabled));
-#else
-            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
-#endif
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(reConServerConfig, kurentoUri, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
             {
@@ -1315,11 +1313,7 @@ ReConServerProcess::main (int argc, char** argv)
                {
                   mCDRFile = std::make_shared<CDRFile>(cdrLogFilename);
                }
-#ifdef PREFER_KURENTO
-               b2BCallManager = new B2BCallManager(kurentoUri, reConServerConfig, mCDRFile);
-#else
-               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
-#endif
+               b2BCallManager = new B2BCallManager(kurentoUri, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
             break;
@@ -1327,7 +1321,8 @@ ReConServerProcess::main (int argc, char** argv)
             assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
-      mConversationManager->buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
+      SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(mConversationManager->getMediaStackAdapter());
+      mediaStackAdapter.buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1351,7 +1346,7 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
-            mConversationManager->buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
+            mediaStackAdapter.buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else

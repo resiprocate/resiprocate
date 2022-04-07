@@ -52,12 +52,13 @@ using namespace std;
 
 // UAC
 KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
+                                     ConversationManager& conversationManager,
                                      KurentoConversationManager& kurentoConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, kurentoConversationManager),
-  RemoteParticipant(partHandle, kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(partHandle, kurentoConversationManager),
+: Participant(partHandle, conversationManager),
+  RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
+  KurentoParticipant(partHandle, conversationManager, kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
@@ -67,12 +68,13 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
 }
 
 // UAS - or forked leg
-KurentoRemoteParticipant::KurentoRemoteParticipant(KurentoConversationManager& kurentoConversationManager,
+KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversationManager,
+                                     KurentoConversationManager& kurentoConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(kurentoConversationManager),
-  RemoteParticipant(kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(kurentoConversationManager),
+: Participant(conversationManager),
+  RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
+  KurentoParticipant(conversationManager, kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),

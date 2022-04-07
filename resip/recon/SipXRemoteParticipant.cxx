@@ -56,23 +56,25 @@ using namespace std;
 
 // UAC
 SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
+                                     ConversationManager& conversationManager,
                                      SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, sipXConversationManager),
-  RemoteParticipant(partHandle, sipXConversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(partHandle, sipXConversationManager)
+: Participant(partHandle, conversationManager),
+  RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
+  SipXParticipant(partHandle, conversationManager, sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAC), handle=" << mHandle);
 }
 
 // UAS - or forked leg
-SipXRemoteParticipant::SipXRemoteParticipant(SipXConversationManager& sipXConversationManager,
+SipXRemoteParticipant::SipXRemoteParticipant(ConversationManager& conversationManager,
+                                     SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(sipXConversationManager),
-  RemoteParticipant(sipXConversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(sipXConversationManager)
+: Participant(conversationManager),
+  RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
+  SipXParticipant(conversationManager, sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }

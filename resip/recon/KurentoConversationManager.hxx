@@ -16,6 +16,7 @@
 #include <media/kurento/KurentoManager.hxx>
 #include <media/kurento/Object.hxx>
 
+#include "MediaStackAdapter.hxx"
 #include "HandleTypes.hxx"
 #include "ConversationManager.hxx"
 
@@ -57,7 +58,7 @@ class KurentoRemoteParticipantDialogSet;
   -Managing local audio properties
 */
 
-class KurentoConversationManager : public ConversationManager
+class KurentoConversationManager : public MediaStackAdapter
 {
 public:
 
@@ -114,9 +115,11 @@ public:
                 same media interface.
    */
 
-   KurentoConversationManager(const resip::Data& kurentoUri);
-   KurentoConversationManager(const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate);
+   KurentoConversationManager(ConversationManager& conversationManager, const resip::Data& kurentoUri);
+   KurentoConversationManager(ConversationManager& conversationManager, const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate);
    virtual ~KurentoConversationManager();
+
+   virtual void conversationManagerReady(ConversationManager* conversationManager) override;
 
    ///////////////////////////////////////////////////////////////////////
    // Conversation methods  //////////////////////////////////////////////
@@ -149,21 +152,11 @@ public:
 
      @return A handle to the newly created conversation.
    */
-   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, AutoHoldMode autoHoldMode = AutoHoldEnabled);
+   virtual ConversationHandle createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, ConversationManager::AutoHoldMode autoHoldMode = ConversationManager::AutoHoldEnabled); // FIXME Kurento - only for sipXtapi?
 
    ///////////////////////////////////////////////////////////////////////
    // Participant methods  ///////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////
-
-   /**
-     Logs a multiline representation of the current state
-     of the mixing matrix.
-
-     @param convHandle - if KurentoGlobalMediaInterfaceMode is used then 0
-                         is the only valid value.  Otherwise you must
-                         specify a specific conversation to view.
-   */
-   virtual void outputBridgeMatrix(ConversationHandle convHandle = 0) override;
 
    /**
      Builds a session capabilties SDPContents based on the passed in ipaddress
@@ -269,8 +262,6 @@ private:
    int mKurentoTOSValue;  // FIXME Kurento - need to pass to Kurento, maybe move to superclass too
 
    bool addExtraPlayAndRecordResourcesToTopology();
-
-   virtual void configureRemoteParticipant(KurentoRemoteParticipant *rp) = 0;
 };
 
 }

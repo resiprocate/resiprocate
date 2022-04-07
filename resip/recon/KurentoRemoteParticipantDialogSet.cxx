@@ -39,10 +39,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-KurentoRemoteParticipantDialogSet::KurentoRemoteParticipantDialogSet(KurentoConversationManager& kurentoConversationManager,
+KurentoRemoteParticipantDialogSet::KurentoRemoteParticipantDialogSet(ConversationManager& conversationManager,
+                                                       KurentoConversationManager& kurentoConversationManager,
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode,
                                                        std::shared_ptr<ConversationProfile> conversationProfile) :
-   RemoteParticipantDialogSet(kurentoConversationManager, forkSelectMode, conversationProfile),
+   RemoteParticipantDialogSet(conversationManager, forkSelectMode, conversationProfile),
    mKurentoConversationManager(kurentoConversationManager),
    mLocalRTPPort(0),
    mAllocateLocalRTPPortFailed(false),

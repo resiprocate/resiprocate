@@ -55,13 +55,8 @@ B2BCall::peer(const recon::ParticipantHandle& partHandle)
    return (partHandle == mPartA) ? mPartB : mPartA;
 }
 
-#ifdef PREFER_KURENTO
-B2BCallManager::B2BCallManager(const resip::Data& kurentoUri, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
-   : MyConversationManager(config, kurentoUri, false),
-#else
-B2BCallManager::B2BCallManager(recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
-   : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
-#endif
+B2BCallManager::B2BCallManager(const resip::Data& kurentoUri, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
+   : MyConversationManager(config, kurentoUri, false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
      mB2BCallLogger(std::move(b2bCallLogger))
 { 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);
@@ -214,7 +209,6 @@ void
 B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onIncomingParticipant: handle=" << partHandleA << "auto=" << autoAnswer << " msg=" << msg.brief());
-   mRemoteParticipantHandles.push_back(partHandleA);
    // Create a new conversation for each new participant
    ConversationHandle conv = createConversation();
    addParticipant(conv, partHandleA);

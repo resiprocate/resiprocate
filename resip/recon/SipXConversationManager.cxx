@@ -50,8 +50,8 @@ using namespace std;
 constexpr char SipXConversationManager::DEFAULT_FROM_FILE_2_RESOURCE_NAME[];
 constexpr char SipXConversationManager::DEFAULT_RECORDER_2_RESOURCE_NAME[];
 
-SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, bool enableExtraPlayAndRecordResources)
-: ConversationManager(),
+SipXConversationManager::SipXConversationManager(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, bool enableExtraPlayAndRecordResources)
+: MediaStackAdapter(conversationManager),
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
   mEnableExtraPlayAndRecordResources(enableExtraPlayAndRecordResources),
@@ -61,8 +61,8 @@ SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaIn
    init();
 }
 
-SipXConversationManager::SipXConversationManager(bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources)
-: ConversationManager(),
+SipXConversationManager::SipXConversationManager(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources)
+: MediaStackAdapter(conversationManager),
   mLocalAudioEnabled(localAudioEnabled),
   mMediaInterfaceMode(mediaInterfaceMode),
   mEnableExtraPlayAndRecordResources(enableExtraPlayAndRecordResources),
@@ -161,7 +161,11 @@ SipXConversationManager::init(int defaultSampleRate, int maxSampleRate)
                << " Rate: " << codecInfoArray[i]->sampleRate
                << " Channels: " << codecInfoArray[i]->numChannels);
    }
+}
 
+void
+SipXConversationManager::conversationManagerReady(ConversationManager* conversationManager)
+{
    if(mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
    {
       createMediaInterfaceAndMixer(mLocalAudioEnabled /* giveFocus?*/,    // This is the one and only media interface - give it focus
@@ -180,8 +184,6 @@ SipXConversationManager::~SipXConversationManager()
 void
 SipXConversationManager::setUserAgent(UserAgent* userAgent)
 {
-   ConversationManager::setUserAgent(userAgent);
-
    if (mMediaInterface)
    {
       // Enable/Disable DTMF digit logging according to UserAgentMasterProfile setting
@@ -200,7 +202,7 @@ SipXConversationManager::setUserAgent(UserAgent* userAgent)
 }
 
 ConversationHandle
-SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, AutoHoldMode autoHoldMode)
+SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, ConversationManager::AutoHoldMode autoHoldMode)
 {
    if (isShuttingDown()) return 0;  // Don't allow new things to be created when we are shutting down
    if (mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
@@ -212,16 +214,9 @@ SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHand
 
    ConversationHandle convHandle = getNewConversationHandle();
 
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, autoHoldMode, sharedMediaInterfaceConvHandle);
+   CreateConversationCmd* cmd = new CreateConversationCmd(&getConversationManager(), convHandle, autoHoldMode, sharedMediaInterfaceConvHandle);
    post(cmd);
    return convHandle;
-}
-
-void 
-SipXConversationManager::outputBridgeMatrix(ConversationHandle convHandle)
-{
-   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this, convHandle);
-   post(cmd);
 }
 
 void
@@ -463,7 +458,7 @@ SipXConversationManager::createMediaInterfaceAndMixer(bool giveFocus,
 
    // Note:  STUN and TURN capabilities of the sipX media stack are not used - the FlowManager is responsible for STUN/TURN
    // TODO SLG - if DISABLE_FLOWMANAGER define is on we should consider enabling stun or turn options
-   mediaInterface = std::make_shared<SipXMediaInterface>(*this, (CpTopologyGraphInterface*)mMediaFactory->createMediaInterface(NULL,
+   mediaInterface = std::make_shared<SipXMediaInterface>(getConversationManager(), (CpTopologyGraphInterface*)mMediaFactory->createMediaInterface(NULL,
             localRtpInterfaceAddress, 
             0,     /* numCodecs - not required at this point */
             0,     /* codecArray - not required at this point */ 
@@ -525,31 +520,31 @@ SipXConversationManager::createConversationInstance(ConversationHandle handle,
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode)
 {
-   return new SipXConversation(handle, *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
+   return new SipXConversation(handle, getConversationManager(), *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
 }
 
 LocalParticipant *
 SipXConversationManager::createLocalParticipantInstance(ParticipantHandle partHandle)
 {
-   return new SipXLocalParticipant(partHandle, *this);
+   return new SipXLocalParticipant(partHandle, getConversationManager(), *this);
 }
 
 MediaResourceParticipant *
 SipXConversationManager::createMediaResourceParticipantInstance(ParticipantHandle partHandle, resip::Uri mediaUrl)
 {
-   return new SipXMediaResourceParticipant(partHandle, *this, mediaUrl);
+   return new SipXMediaResourceParticipant(partHandle, getConversationManager(), *this, mediaUrl);
 }
 
 RemoteParticipant *
 SipXConversationManager::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   return new SipXRemoteParticipant(*this, dum, rpds);
+   return new SipXRemoteParticipant(getConversationManager(), *this, dum, rpds);
 }
 
 RemoteParticipant *
 SipXConversationManager::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   return new SipXRemoteParticipant(partHandle, *this, dum, rpds);
+   return new SipXRemoteParticipant(partHandle, getConversationManager(), *this, dum, rpds);
 }
 
 RemoteParticipantDialogSet *
@@ -557,7 +552,7 @@ SipXConversationManager::createRemoteParticipantDialogSetInstance(
       ConversationManager::ParticipantForkSelectMode forkSelectMode,
       std::shared_ptr<ConversationProfile> conversationProfile)
 {
-   return new SipXRemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
+   return new SipXRemoteParticipantDialogSet(getConversationManager(), *this, forkSelectMode, conversationProfile);
 }
 
 bool

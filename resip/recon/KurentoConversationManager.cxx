@@ -39,8 +39,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-KurentoConversationManager::KurentoConversationManager(const Data& kurentoUri)
-: ConversationManager(),
+KurentoConversationManager::KurentoConversationManager(ConversationManager& conversationManager, const Data& kurentoUri)
+: MediaStackAdapter(conversationManager),
   mKurentoUri(kurentoUri),
   mKurentoManager(5000),  // FIXME - make this value configurable
   mKurentoTOSValue(0) // FIXME - make this value configurable
@@ -48,8 +48,8 @@ KurentoConversationManager::KurentoConversationManager(const Data& kurentoUri)
    init();
 }
 
-KurentoConversationManager::KurentoConversationManager(const Data& kurentoUri, int defaultSampleRate, int maxSampleRate)
-: ConversationManager(),
+KurentoConversationManager::KurentoConversationManager(ConversationManager& conversationManager, const Data& kurentoUri, int defaultSampleRate, int maxSampleRate)
+: MediaStackAdapter(conversationManager),
   mKurentoUri(kurentoUri),
   mKurentoManager(5000),  // FIXME - make this value configurable
   mKurentoTOSValue(0) // FIXME - make this value configurable
@@ -75,10 +75,13 @@ KurentoConversationManager::~KurentoConversationManager()
 }
 
 void
+KurentoConversationManager::conversationManagerReady(ConversationManager* conversationManager)
+{
+}
+
+void
 KurentoConversationManager::setUserAgent(UserAgent* userAgent)
 {
-   ConversationManager::setUserAgent(userAgent);
-
    // FIXME for Kurento
 //   if (mMediaInterface)
 //   {
@@ -89,22 +92,15 @@ KurentoConversationManager::setUserAgent(UserAgent* userAgent)
 }
 
 ConversationHandle
-KurentoConversationManager::createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, AutoHoldMode autoHoldMode)
+KurentoConversationManager::createSharedMediaInterfaceConversation(ConversationHandle sharedMediaInterfaceConvHandle, ConversationManager::AutoHoldMode autoHoldMode)
 {
    if (isShuttingDown()) return 0;  // Don't allow new things to be created when we are shutting down
 
    ConversationHandle convHandle = getNewConversationHandle();
 
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, autoHoldMode, sharedMediaInterfaceConvHandle);
+   CreateConversationCmd* cmd = new CreateConversationCmd(&getConversationManager(), convHandle, autoHoldMode, sharedMediaInterfaceConvHandle);
    post(cmd);
    return convHandle;
-}
-
-void 
-KurentoConversationManager::outputBridgeMatrix(ConversationHandle convHandle)
-{
-   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this, convHandle);
-   post(cmd);
 }
 
 void
@@ -197,7 +193,7 @@ KurentoConversationManager::createConversationInstance(ConversationHandle handle
       ConversationHandle sharedMediaInterfaceConvHandle,
       ConversationManager::AutoHoldMode autoHoldMode)
 {
-   return new KurentoConversation(handle, *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
+   return new KurentoConversation(handle, getConversationManager(), *this, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode);
 }
 
 LocalParticipant *
@@ -215,16 +211,16 @@ KurentoConversationManager::createMediaResourceParticipantInstance(ParticipantHa
 RemoteParticipant *
 KurentoConversationManager::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(*this, dum, rpds);
-   configureRemoteParticipant(rp);
+   KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(getConversationManager(), *this, dum, rpds);
+   getConversationManager().configureRemoteParticipant(rp);
    return rp;
 }
 
 RemoteParticipant *
 KurentoConversationManager::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(partHandle, *this, dum, rpds);
-   configureRemoteParticipant(rp);
+   KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(partHandle, getConversationManager(), *this, dum, rpds);
+   getConversationManager().configureRemoteParticipant(rp);
    return rp;
 }
 
@@ -233,7 +229,7 @@ KurentoConversationManager::createRemoteParticipantDialogSetInstance(
       ConversationManager::ParticipantForkSelectMode forkSelectMode,
       std::shared_ptr<ConversationProfile> conversationProfile)
 {
-   return new KurentoRemoteParticipantDialogSet(*this, forkSelectMode, conversationProfile);
+   return new KurentoRemoteParticipantDialogSet(getConversationManager(), *this, forkSelectMode, conversationProfile);
 }
 
 void

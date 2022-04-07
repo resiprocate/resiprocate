@@ -23,7 +23,7 @@ namespace mohparkserver
 class WebAdminThread;
 class WebAdmin;
 
-class Server : public recon::SipXConversationManager
+class Server : public recon::ConversationManager
 {
 public:
    Server(ConfigParser& config);  
@@ -71,6 +71,8 @@ public:
    // Configuration Container
    ConfigParser& mConfig;
 
+   virtual void configureRemoteParticipant(recon::RemoteParticipant *rp) override;
+
 protected:
    // Conversation Manager Handlers
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle);
@@ -91,7 +93,6 @@ protected:
 private:
    friend class MOHManager;
    friend class ParkManager;
-   using SipXConversationManager::buildSessionCapabilities;
    virtual void buildSessionCapabilities(resip::SdpContents& sessionCaps);
 
    bool mIsV6Avail;
