@@ -67,17 +67,27 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
 
 void 
 AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
-                                     asio::ip::udp::resolver::iterator endpoint_iterator)
+                                     asio::ip::udp::resolver::results_type results)
 {
    if (!ec)
    {
-      // Use the first endpoint in the list. 
-      // Nothing to do for UDP except store the connected address/port
+      // Find the first endpoint in the list matching the local endpoint protocol type
+      asio::ip::udp::resolver::results_type::const_iterator       it  = results.begin();
+      const asio::ip::udp::resolver::results_type::const_iterator end = results.end();
+      for (; it != end; ++it)
+      {
+         const asio::ip::udp::resolver::results_type::endpoint_type &ep = it->endpoint();
+         if (ep.protocol() == mSocket.local_endpoint().protocol())
+         {
       mConnected = true;
-      mConnectedAddress = endpoint_iterator->endpoint().address();
-      mConnectedPort = endpoint_iterator->endpoint().port();
-
+            mConnectedAddress = ep.address();
+            mConnectedPort = ep.port();
       onConnectSuccess();
+            return;
+         }
+      }
+
+      onConnectFailure(asio::error::host_unreachable);
    }
    else
    {

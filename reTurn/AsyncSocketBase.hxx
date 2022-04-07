@@ -77,7 +77,7 @@ public:
    virtual void handleReadHeader(const asio::error_code& e) { resip_assert(false); }
    virtual void handleServerHandshake(const asio::error_code& e) { resip_assert(false); }
    virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
-   virtual void handleUdpResolve(const asio::error_code& ec, asio::ip::udp::resolver::iterator endpoint_iterator) { resip_assert(false); }
+   virtual void handleUdpResolve(const asio::error_code& ec, asio::ip::udp::resolver::results_type results) { resip_assert(false); }
    virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
    virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { resip_assert(false); }
 
