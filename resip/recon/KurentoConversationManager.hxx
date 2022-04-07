@@ -189,7 +189,6 @@ public:
    virtual bool supportsMultipleMediaInterfaces() override;
    virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) override;
    virtual bool supportsLocalAudio() override { return false; }
-   virtual bool extraPlayAndRecordResourcesEnabled() { return mEnableExtraPlayAndRecordResources; }
 
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
@@ -252,16 +251,12 @@ private:
    friend class RedirectToParticipantCmd;
    friend class HoldParticipantCmd;
 
-   bool mEnableExtraPlayAndRecordResources;
-
    // Kurento Media related members
    resip::Data mKurentoUri;
    kurento::KurentoManager mKurentoManager;
    kurento::KurentoConnection::ptr mKurentoConnection; // FIXME - make sure it is valid whenever it is used
    std::shared_ptr<kurento::MediaPipeline> mPipeline;
    int mKurentoTOSValue;  // FIXME Kurento - need to pass to Kurento, maybe move to superclass too
-
-   bool addExtraPlayAndRecordResourcesToTopology();
 };
 
 }
