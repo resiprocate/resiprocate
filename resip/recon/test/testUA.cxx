@@ -152,9 +152,8 @@ public:
    }
 
    
-   virtual void configureRemoteParticipant(RemoteParticipant *rp) override
+   virtual void onRemoteParticipantConstructed(RemoteParticipant *rp) override
    {
-      // FIXME Kurento
    }
 
 

@@ -212,7 +212,6 @@ RemoteParticipant *
 KurentoConversationManager::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
    KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(getConversationManager(), *this, dum, rpds);
-   getConversationManager().configureRemoteParticipant(rp);
    return rp;
 }
 
@@ -220,7 +219,6 @@ RemoteParticipant *
 KurentoConversationManager::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
    KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(partHandle, getConversationManager(), *this, dum, rpds);
-   getConversationManager().configureRemoteParticipant(rp);
    return rp;
 }
 

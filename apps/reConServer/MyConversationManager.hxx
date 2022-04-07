@@ -58,7 +58,7 @@ public:
    virtual void displayInfo();
 
 protected:
-   virtual void configureRemoteParticipant(recon::RemoteParticipant *rp) override;
+   virtual void onRemoteParticipantConstructed(recon::RemoteParticipant *rp) override;
    virtual void onIncomingKurento(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    ReConServerConfig mConfig;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;

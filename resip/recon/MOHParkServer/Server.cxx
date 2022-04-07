@@ -494,9 +494,8 @@ Server::getActiveCallsInfo(std::list<ActiveCallInfo>& callInfos)
 }
 
 void
-Server::configureRemoteParticipant(RemoteParticipant *rp)
+Server::onRemoteParticipantConstructed(RemoteParticipant *rp)
 {
-   // FIXME Kurento
 }
 
 void 

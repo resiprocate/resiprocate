@@ -298,7 +298,7 @@ MyConversationManager::onParticipantRequestedHold(ParticipantHandle partHandle, 
 }
 
 void
-MyConversationManager::configureRemoteParticipant(RemoteParticipant *rp)
+MyConversationManager::onRemoteParticipantConstructed(RemoteParticipant *rp)
 {
 #ifdef USE_KURENTO
    KurentoRemoteParticipant* krp = dynamic_cast<KurentoRemoteParticipant*>(rp);

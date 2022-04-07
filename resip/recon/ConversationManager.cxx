@@ -444,27 +444,33 @@ ConversationManager::notifyDtmfEvent(ParticipantHandle partHandle, int dtmf, int
 RemoteParticipant* 
 ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
+   RemoteParticipant* rp;
    if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
    {
-      return new RemoteIMSessionParticipant(*this, dum, rpds);
+      rp = new RemoteIMSessionParticipant(*this, dum, rpds);
    }
    else
    {
-      return getMediaStackAdapter().createRemoteParticipantInstance(dum, rpds);
+      rp = getMediaStackAdapter().createRemoteParticipantInstance(dum, rpds);
    }
+   onRemoteParticipantConstructed(rp);
+   return rp;
 }
 
 RemoteParticipant* 
 ConversationManager::createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
+   RemoteParticipant* rp;
    if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
    {
-      return new RemoteIMSessionParticipant(partHandle, *this, dum, rpds);
+      rp = new RemoteIMSessionParticipant(partHandle, *this, dum, rpds);
    }
    else
    {
-      return getMediaStackAdapter().createRemoteParticipantInstance(partHandle, dum, rpds);
+      rp = getMediaStackAdapter().createRemoteParticipantInstance(partHandle, dum, rpds);
    }
+   onRemoteParticipantConstructed(rp);
+   return rp;
 }
 
 RemoteParticipantDialogSet* 

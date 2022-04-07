@@ -672,7 +672,7 @@ public:
    virtual void setMediaStackAdapter(std::shared_ptr<MediaStackAdapter> mediaStackAdapter);
    MediaStackAdapter& getMediaStackAdapter() { return *mMediaStackAdapter; };
 
-   virtual void configureRemoteParticipant(RemoteParticipant *rp) = 0;
+   virtual void onRemoteParticipantConstructed(RemoteParticipant *rp) = 0;
 
 protected:
 
