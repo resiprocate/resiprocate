@@ -66,6 +66,10 @@ public:
    // Sets the local HmacKey, used to check the integrity of incoming STUN messages
    void setLocalPassword(const char* password);
 
+   // Software attribute
+   void setSoftware(const std::string &software);
+   const char *getSoftware() const;
+
    void connect(const std::string& address, unsigned short port);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
@@ -143,6 +147,8 @@ private:
    AsyncSocketBase& mAsyncSocketBase;
    bool mCloseAfterDestroyAllocationFinishes;
    resip::Mutex mMutex;
+
+   std::string mSoftware;
 
    // Request map (for retransmissions)
    class RequestEntry : public std::enable_shared_from_this<RequestEntry>

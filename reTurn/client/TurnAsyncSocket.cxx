@@ -43,6 +43,7 @@ TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService,
    mActiveDestination(0),
    mAsyncSocketBase(asyncSocketBase),
    mCloseAfterDestroyAllocationFinishes(false),
+   mSoftware(SOFTWARE_STRING),
    mAllocationTimer(ioService)
 {
 }
@@ -389,7 +390,7 @@ TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addA
    msg->createHeader(stunclass, method);
 
    // Add Software Attribute
-   msg->setSoftware(SOFTWARE_STRING);
+   msg->setSoftware(getSoftware());
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {
@@ -563,7 +564,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
                response->mHasUnknownAttributes = true;
                response->mUnknownAttributes = stunMessage.mUnknownRequiredAttributes;
                // Add Software Attribute
-               response->setSoftware(SOFTWARE_STRING);
+               response->setSoftware(getSoftware());
                sendStunMessage(response);
             }
             else
@@ -583,7 +584,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             // Copy over TransactionId
             response->mHeader.magicCookieAndTid = stunMessage.mHeader.magicCookieAndTid;
             // Add Software Attribute
-            response->setSoftware(SOFTWARE_STRING);
+            response->setSoftware(getSoftware());
             sendStunMessage(response);
             break;
          }
@@ -828,7 +829,7 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
    StunMessage::setStunAtrAddressFromTuple(response->mXorMappedAddress, stunMessage.mRemoteTuple);
 
    // Add Software Attribute
-   response->setSoftware(SOFTWARE_STRING);
+   response->setSoftware(getSoftware());
 
    // If the request contained MESSAGE-INTEGRITY, then the response needs to as well
    if (stunMessage.mHasMessageIntegrity)
@@ -1112,6 +1113,33 @@ TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<
       // Send indication to Turn Server
       sendStunMessage(ind);
    }
+}
+
+void
+TurnAsyncSocket::setSoftware(const std::string &software)
+{
+   mSoftware = software;
+
+   const size_t unpadded = mSoftware.size();
+
+   if (unpadded > 0)
+   {
+      // Pad size to a multiple of 4, to help compatibility with older clients
+      const size_t remainder = unpadded % 4,
+                   padded    = remainder ? unpadded + 4 - remainder : unpadded;
+
+      if (padded > unpadded)
+         mSoftware.append(padded - unpadded, ' ');
+   }
+}
+
+const char *
+TurnAsyncSocket::getSoftware() const
+{
+   if (mSoftware.empty())
+      return SOFTWARE_STRING;
+
+   return mSoftware.c_str();
 }
 
 void
