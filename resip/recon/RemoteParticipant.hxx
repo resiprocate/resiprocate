@@ -35,7 +35,7 @@ namespace recon
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipant : public IMParticipantBase, public virtual Participant, public resip::AppDialog
+class RemoteParticipant : public virtual Participant, public resip::AppDialog, public IMParticipantBase
 {
 public:
    // UAC
