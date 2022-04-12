@@ -69,38 +69,45 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
    asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
 #endif
    asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::tcp::resolver::iterator end;
+   const asio::ip::tcp::resolver::iterator end;
 
    // Try each endpoint until we successfully establish a connection.
+   const asio::ip::tcp &localProtocol = mSocket.lowest_layer().local_endpoint().protocol();
    asio::error_code errorCode = asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
-      mSocket.lowest_layer().close();
-      mSocket.lowest_layer().connect(*endpoint_iterator, errorCode);
-      if(!errorCode)
+      const asio::ip::tcp &remoteProtocol = endpoint_iterator->endpoint().protocol();
+      if(remoteProtocol == localProtocol)
       {
-         DebugLog(<< "Connected!");
-         mSocket.handshake(asio::ssl::stream_base::client, errorCode);
-         if(!errorCode)
-         {  
-            DebugLog(<< "Handshake complete!");
+         mSocket.lowest_layer().close();
+         mSocket.lowest_layer().connect(*endpoint_iterator, errorCode);
 
-            // Validate that hostname in cert matches connection hostname
-            if(!mValidateServerCertificateHostname || validateServerCertificateHostname(address))
+         if(!errorCode)
+         {
+            DebugLog(<< "Connected!");
+            mSocket.handshake(asio::ssl::stream_base::client, errorCode);
+            if(!errorCode)
             {
-               mConnected = true;
-               mConnectedTuple.setTransportType(StunTuple::TLS);
-               mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
-               mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
-            }
-            else
-            {
-               WarningLog(<< "Hostname in certificate does not match connection hostname!");
-               mSocket.lowest_layer().close();
-               errorCode = asio::error::operation_aborted;
+               DebugLog(<< "Handshake complete!");
+
+               // Validate that hostname in cert matches connection hostname
+               if(!mValidateServerCertificateHostname || validateServerCertificateHostname(address))
+               {
+                  mConnected = true;
+                  mConnectedTuple.setTransportType(StunTuple::TLS);
+                  mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
+                  mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
+               }
+               else
+               {
+                  WarningLog(<< "Hostname in certificate does not match connection hostname!");
+                  mSocket.lowest_layer().close();
+                  errorCode = asio::error::operation_aborted;
+               }
             }
          }
       }
+
       endpoint_iterator++;
    }
 

@@ -40,22 +40,28 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
    asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
 #endif
    asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-   asio::ip::tcp::resolver::iterator end;
+   const asio::ip::tcp::resolver::iterator end;
 
    // Try each endpoint until we successfully establish a connection.
+   const asio::ip::tcp &localProtocol = mSocket.local_endpoint().protocol();
    asio::error_code errorCode = asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
-      mSocket.close();
-      mSocket.connect(*endpoint_iterator, errorCode);
-
-      if(!errorCode)
+      const asio::ip::tcp &remoteProtocol = endpoint_iterator->endpoint().protocol();
+      if (remoteProtocol == localProtocol)
       {
-         mConnected = true;
-         mConnectedTuple.setTransportType(StunTuple::TCP);
-         mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
-         mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
+         mSocket.close();
+         mSocket.connect(*endpoint_iterator, errorCode);
+
+         if (!errorCode)
+         {
+            mConnected = true;
+            mConnectedTuple.setTransportType(StunTuple::TCP);
+            mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
+            mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
+         }
       }
+
       endpoint_iterator++;
    }
 
