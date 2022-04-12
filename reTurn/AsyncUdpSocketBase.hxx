@@ -36,7 +36,7 @@ protected:
    asio::ip::udp::endpoint mSenderEndpoint;
 
    void handleUdpResolve(const asio::error_code& ec,
-                         asio::ip::udp::resolver::results_type results) override;
+                         asio::ip::udp::resolver::iterator endpoint_iterator) override;
 
 private:
 

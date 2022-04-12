@@ -67,17 +67,17 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
 
 void 
 AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
-                                     asio::ip::udp::resolver::results_type results)
+                                     asio::ip::udp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
    {
-      // Find the first endpoint in the list matching the local endpoint protocol type
-      asio::ip::udp::resolver::results_type::const_iterator       it  = results.begin();
-      const asio::ip::udp::resolver::results_type::const_iterator end = results.end();
-      for (; it != end; ++it)
+      // Find the first remote endpoint matching the local endpoint protocol.
+      const asio::ip::udp& localProtocol = mSocket.local_endpoint().protocol();
+      while (endpoint_iterator != asio::ip::udp::resolver::iterator())
       {
-         const asio::ip::udp::resolver::results_type::endpoint_type &ep = it->endpoint();
-         if (ep.protocol() == mSocket.local_endpoint().protocol())
+         const asio::ip::udp::endpoint& ep = endpoint_iterator->endpoint();
+         const asio::ip::udp& remoteProtocol = ep.protocol();
+         if (remoteProtocol == localProtocol)
          {
             mConnected = true;
             mConnectedAddress = ep.address();
@@ -85,6 +85,8 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
             onConnectSuccess();
             return;
          }
+
+         ++endpoint_iterator;
       }
 
       onConnectFailure(asio::error::host_unreachable);

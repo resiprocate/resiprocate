@@ -83,12 +83,25 @@ AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
 {
    if (!ec)
    {
-      // Attempt a connection to the first endpoint in the list. Each endpoint
-      // will be tried until we successfully establish a connection.
-      //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, endpoint_iterator));
+      // Find the first remote endpoint matching the local endpoint protocol.
+      const asio::ip::tcp &localProtocol = mSocket.lowest_layer().local_endpoint().protocol();
+      while (endpoint_iterator != asio::ip::tcp::resolver::iterator())
+      {
+         const asio::ip::tcp &remoteProtocol = endpoint_iterator->endpoint().protocol();
+         if (remoteProtocol == localProtocol)
+         {
+            // Each matching endpoint will be tried until we successfully establish a
+            // connection.
+            mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
+                                   std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
+                                   std::placeholders::_1, endpoint_iterator));
+            return;
+         }
+
+         ++endpoint_iterator;
+      }
+
+      onConnectFailure(asio::error::host_unreachable);
    }
    else
    {
@@ -107,17 +120,27 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
                               std::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(), 
                                           std::placeholders::_1, endpoint_iterator));
    }
-   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
-   {
-      // The connection failed. Try the next endpoint in the list.
-      asio::error_code ec;
-      mSocket.lowest_layer().close(ec);
-      mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
-                            std::placeholders::_1, endpoint_iterator));
-   }
    else
    {
+      // The connection failed. Try the next endpoint in the list.
+      const asio::ip::tcp &localProtocol = mSocket.lowest_layer().local_endpoint().protocol();
+      while (endpoint_iterator != asio::ip::tcp::resolver::iterator())
+      {
+         const asio::ip::tcp &remoteProtocol = endpoint_iterator->endpoint().protocol();
+         if (remoteProtocol == localProtocol)
+         {
+            asio::error_code ec;
+            mSocket.lowest_layer().close(ec);
+            mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
+                                   std::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
+                                   std::placeholders::_1, endpoint_iterator));
+            return;
+         }
+
+         ++endpoint_iterator;
+      }
+
+
       onConnectFailure(ec);
    }
 }
