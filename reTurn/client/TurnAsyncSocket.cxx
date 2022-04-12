@@ -390,7 +390,10 @@ TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addA
    msg->createHeader(stunclass, method);
 
    // Add Software Attribute
-   msg->setSoftware(getSoftware());
+   if(!mSoftware.empty())
+   {
+      msg->setSoftware(mSoftware.c_str());
+   }
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {
@@ -564,7 +567,10 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
                response->mHasUnknownAttributes = true;
                response->mUnknownAttributes = stunMessage.mUnknownRequiredAttributes;
                // Add Software Attribute
-               response->setSoftware(getSoftware());
+               if(!mSoftware.empty())
+               {
+                  response->setSoftware(mSoftware.c_str());
+               }
                sendStunMessage(response);
             }
             else
@@ -584,7 +590,10 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             // Copy over TransactionId
             response->mHeader.magicCookieAndTid = stunMessage.mHeader.magicCookieAndTid;
             // Add Software Attribute
-            response->setSoftware(getSoftware());
+            if(!mSoftware.empty())
+            {
+               response->setSoftware(mSoftware.c_str());
+            }
             sendStunMessage(response);
             break;
          }
@@ -829,7 +838,10 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
    StunMessage::setStunAtrAddressFromTuple(response->mXorMappedAddress, stunMessage.mRemoteTuple);
 
    // Add Software Attribute
-   response->setSoftware(getSoftware());
+   if(!mSoftware.empty())
+   {
+      response->setSoftware(mSoftware.c_str());
+   }
 
    // If the request contained MESSAGE-INTEGRITY, then the response needs to as well
    if (stunMessage.mHasMessageIntegrity)
@@ -1116,30 +1128,27 @@ TurnAsyncSocket::sendToRemotePeer(RemotePeer& remotePeer, const std::shared_ptr<
 }
 
 void
-TurnAsyncSocket::setSoftware(const std::string &software)
+TurnAsyncSocket::setSoftware(const char* software)
 {
-   mSoftware = software;
-
-   const size_t unpadded = mSoftware.size();
-
-   if (unpadded > 0)
-   {
-      // Pad size to a multiple of 4, to help compatibility with older clients
-      const size_t remainder = unpadded % 4,
-                   padded    = remainder ? unpadded + 4 - remainder : unpadded;
-
-      if (padded > unpadded)
-         mSoftware.append(padded - unpadded, ' ');
-   }
+   mIOService.dispatch(weak_bind<AsyncSocketBase, void()>(mAsyncSocketBase.shared_from_this(), [=] { doSetSoftware(new Data(software)); }));
 }
 
-const char *
-TurnAsyncSocket::getSoftware() const
+void
+TurnAsyncSocket::doSetSoftware(Data* software)
 {
-   if (mSoftware.empty())
-      return SOFTWARE_STRING;
+   mSoftware = *software;
+   delete software;
 
-   return mSoftware.c_str();
+   const UInt32 unpaddedSize = mSoftware.size();
+   if(unpaddedSize > 0)
+   {
+      // Pad size to a multiple of 4, to help compatibility with older clients
+      const UInt32 remainder  = unpaddedSize % 4,
+                   paddedSize = remainder ? unpaddedSize + 4 - remainder : unpaddedSize;
+
+      while(mSoftware.size() < paddedSize)
+         mSoftware.append(" ", 1);
+   }
 }
 
 void

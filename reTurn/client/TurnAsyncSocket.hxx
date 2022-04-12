@@ -67,8 +67,7 @@ public:
    void setLocalPassword(const char* password);
 
    // Software attribute
-   void setSoftware(const std::string &software);
-   const char *getSoftware() const;
+   void setSoftware(const char* software);
 
    void connect(const std::string& address, unsigned short port);
 
@@ -148,7 +147,7 @@ private:
    bool mCloseAfterDestroyAllocationFinishes;
    resip::Mutex mMutex;
 
-   std::string mSoftware;
+   resip::Data mSoftware;
 
    // Request map (for retransmissions)
    class RequestEntry : public std::enable_shared_from_this<RequestEntry>
@@ -229,6 +228,7 @@ private:
    void doRequestSharedSecret();
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
    void doSetLocalPassword(resip::Data* password);
+   void doSetSoftware(resip::Data* software);
    void doBindRequest();
    void doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
