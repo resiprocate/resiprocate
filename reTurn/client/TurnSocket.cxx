@@ -39,6 +39,7 @@ asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::address::from_str
 
 TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) : 
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
+   mSoftware(SOFTWARE_STRING),
    mHaveAllocation(false),
    mActiveDestination(0),
    mReadTimer(mIOService),
@@ -119,6 +120,23 @@ TurnSocket::setUsernameAndPassword(const char* username, const char* password, b
    {
       // If we are using short term auth, then use short term password as HMAC key
       mHmacKey = password;
+   }
+}
+
+void
+TurnSocket::setSoftware(const char* software)
+{
+   mSoftware = software;
+
+   const UInt32 unpaddedSize = mSoftware.size();
+   if(unpaddedSize > 0)
+   {
+      // Pad size to a multiple of 4, to help compatibility with older clients
+      const UInt32 remainder  = unpaddedSize % 4,
+                   paddedSize = remainder ? unpaddedSize + 4 - remainder : unpaddedSize;
+
+      while(mSoftware.size() < paddedSize)
+         mSoftware.append(" ", 1);
    }
 }
 
@@ -821,7 +839,10 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          }
 
          // Add Software Attribute
-         response.setSoftware(SOFTWARE_STRING);
+         if(!mSoftware.empty())
+         {
+            response.setSoftware(mSoftware.c_str());
+         }
 
          // send bind response to local client
          unsigned int bufferSize = 512;  // enough room for Stun Header + XorMapped Address (v6) or Unknown Attributes + Software Attribute;
@@ -929,7 +950,10 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
    unsigned int readsize = 0;
 
    // Add Software Attribute
-   request.setSoftware(SOFTWARE_STRING);
+   if(!mSoftware.empty())
+   {
+      request.setSoftware(mSoftware.c_str());
+   }
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {

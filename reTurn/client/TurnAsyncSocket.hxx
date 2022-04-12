@@ -128,6 +128,9 @@ protected:
    resip::Data mRealm;
    resip::Data mNonce;
 
+   // Attributes
+   resip::Data mSoftware;
+
    // Used to check integrity of incoming STUN messages
    resip::Data mLocalHmacKey;
 
@@ -146,8 +149,6 @@ private:
    AsyncSocketBase& mAsyncSocketBase;
    bool mCloseAfterDestroyAllocationFinishes;
    resip::Mutex mMutex;
-
-   resip::Data mSoftware;
 
    // Request map (for retransmissions)
    class RequestEntry : public std::enable_shared_from_this<RequestEntry>

@@ -39,11 +39,11 @@ TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService,
    mIOService(ioService),
    mTurnAsyncSocketHandler(turnAsyncSocketHandler),
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
+   mSoftware(SOFTWARE_STRING),
    mHaveAllocation(false),
    mActiveDestination(0),
    mAsyncSocketBase(asyncSocketBase),
    mCloseAfterDestroyAllocationFinishes(false),
-   mSoftware(SOFTWARE_STRING),
    mAllocationTimer(ioService)
 {
 }
