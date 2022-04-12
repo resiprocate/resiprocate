@@ -101,7 +101,7 @@ AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
          ++endpoint_iterator;
       }
 
-      onConnectFailure(asio::error::host_unreachable);
+      onConnectFailure(asio::error::host_not_found);
    }
    else
    {
