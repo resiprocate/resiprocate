@@ -79,10 +79,10 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
          const asio::ip::udp::resolver::results_type::endpoint_type &ep = it->endpoint();
          if (ep.protocol() == mSocket.local_endpoint().protocol())
          {
-      mConnected = true;
+            mConnected = true;
             mConnectedAddress = ep.address();
             mConnectedPort = ep.port();
-      onConnectSuccess();
+            onConnectSuccess();
             return;
          }
       }
