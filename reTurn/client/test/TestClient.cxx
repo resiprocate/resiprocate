@@ -133,6 +133,9 @@ int main(int argc, char* argv[])
 #endif
       //port=5349;
 
+      // Set software attributes
+      turnSocket.setSoftware("My Sync Client");
+
       // Connect to Stun/Turn Server
       rc = turnSocket.connect(argv[1], port);
       if(rc)
