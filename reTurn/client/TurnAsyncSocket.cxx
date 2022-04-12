@@ -726,13 +726,8 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
    remoteTuple.setTransportType(mRelayTransportType);
    StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
-   RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
-   if(!remotePeer)
-   {
-      // Remote Peer not found - discard data
-      WarningLog(<< "TurnAsyncSocket::handleDataInd: Data received from unknown RemotePeer " << remoteTuple << " - discarding");
-      return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-   }
+   // Should we record all the remoteTuples we have sent to before, and reject this message if
+   // not from one of the those endpoints?
 
    const auto data = std::make_shared<DataBuffer>(stunMessage.mTurnData->data(), stunMessage.mTurnData->size());
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(), 

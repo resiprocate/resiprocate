@@ -568,21 +568,14 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       unsigned short channelNumber = remotePeer.getChannel();
       channelNumber = htons(channelNumber);
       memcpy(&framing[0], &channelNumber, 2);
-      if(mLocalBinding.getTransportType() == StunTuple::UDP)
-      {
-         // No size in header for UDP
-         framing[2] = 0x00;
-         framing[3] = 0x00;
-      }
-      else
-      {
-         UInt16 turnDataSize = size;
-         turnDataSize = htons(turnDataSize);
-         memcpy((void*)&framing[2], &turnDataSize, 2);
-      }
+
+      UInt16 turnDataSize = size;
+      turnDataSize = htons(turnDataSize);
+      memcpy((void*)&framing[2], &turnDataSize, 2);
+
       std::vector<asio::const_buffer> bufs;
       bufs.push_back(asio::buffer(framing, sizeof(framing)));
-      bufs.push_back(asio::buffer(buffer, size));
+      bufs.push_back(asio::buffer(buffer, size));  // TODO !SLG! - if sending over TCP/TLS then message must be padded to be on a 4 byte boundary
 
       return rawWrite(bufs);
    }
@@ -780,13 +773,8 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
          StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
-         if(!remotePeer)
-         {
-            // Remote Peer not found - discard data
-            WarningLog(<< "Data received from unknown RemotePeer - discarding");
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-         }
+         // Should we record all the remoteTuples we have sent to before, and reject this message if
+         // not from one of the those endpoints?
 
          if(stunMessage.mTurnData->size() > size)
          {
