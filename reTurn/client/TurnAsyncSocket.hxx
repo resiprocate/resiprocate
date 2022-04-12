@@ -66,6 +66,9 @@ public:
    // Sets the local HmacKey, used to check the integrity of incoming STUN messages
    void setLocalPassword(const char* password);
 
+   // Software attribute
+   void setSoftware(const char* software);
+
    void connect(const std::string& address, unsigned short port);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
@@ -124,6 +127,9 @@ protected:
    resip::Data mHmacKey;
    resip::Data mRealm;
    resip::Data mNonce;
+
+   // Attributes
+   resip::Data mSoftware;
 
    // Used to check integrity of incoming STUN messages
    resip::Data mLocalHmacKey;
@@ -223,6 +229,7 @@ private:
    void doRequestSharedSecret();
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
    void doSetLocalPassword(resip::Data* password);
+   void doSetSoftware(resip::Data* software);
    void doBindRequest();
    void doConnectivityCheck(StunTuple* targetAddr, UInt32 peerRflxPriority, bool setIceControlling, bool setIceControlled, unsigned int numRetransmits, unsigned int retrans_iterval_ms);
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
