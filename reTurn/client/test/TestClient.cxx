@@ -126,10 +126,10 @@ int main(int argc, char* argv[])
 #endif
 #endif
 
-      TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
-      //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+      TurnUdpSocket turnSocket(asio::ip::address(), 0);
+      //TurnTcpSocket turnSocket(asio::ip::address(), 0);
 #ifdef USE_SSL
-      //TurnTlsSocket turnSocket(false /* validateServerCertificateHostname */, asio::ip::address::from_string("127.0.0.1"), 0); 
+      //TurnTlsSocket turnSocket(false /* validateServerCertificateHostname */, asio::ip::address(), 0);
 #endif
       //port=5349;
 
