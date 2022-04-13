@@ -71,13 +71,25 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
 {
    if (!ec)
    {
-      // Use the first endpoint in the list. 
-      // Nothing to do for UDP except store the connected address/port
-      mConnected = true;
-      mConnectedAddress = endpoint_iterator->endpoint().address();
-      mConnectedPort = endpoint_iterator->endpoint().port();
+      // Find the first remote endpoint matching the local endpoint protocol.
+      const asio::ip::udp& localProtocol = mSocket.local_endpoint().protocol();
+      while (endpoint_iterator != asio::ip::udp::resolver::iterator())
+      {
+         const asio::ip::udp::endpoint& ep = endpoint_iterator->endpoint();
+         const asio::ip::udp& remoteProtocol = ep.protocol();
+         if (remoteProtocol == localProtocol)
+         {
+            mConnected = true;
+            mConnectedAddress = ep.address();
+            mConnectedPort = ep.port();
+            onConnectSuccess();
+            return;
+         }
 
-      onConnectSuccess();
+         ++endpoint_iterator;
+      }
+
+      onConnectFailure(asio::error::host_not_found);
    }
    else
    {
