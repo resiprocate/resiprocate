@@ -35,7 +35,7 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
 #ifdef USE_IPV6
-   asio::ip::tcp::resolver::query query(address, service.c_str());   
+   asio::ip::tcp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
 #else
    asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
 #endif
@@ -43,25 +43,19 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
    const asio::ip::tcp::resolver::iterator end;
 
    // Try each endpoint until we successfully establish a connection.
-   const asio::ip::tcp &localProtocol = mSocket.local_endpoint().protocol();
    asio::error_code errorCode = asio::error::host_not_found;
    while (errorCode && endpoint_iterator != end)
    {
-      const asio::ip::tcp &remoteProtocol = endpoint_iterator->endpoint().protocol();
-      if (remoteProtocol == localProtocol)
+      mSocket.close();
+      mSocket.connect(*endpoint_iterator, errorCode);
+
+      if(!errorCode)
       {
-         mSocket.close();
-         mSocket.connect(*endpoint_iterator, errorCode);
-
-         if (!errorCode)
-         {
-            mConnected = true;
-            mConnectedTuple.setTransportType(StunTuple::TCP);
-            mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
-            mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
-         }
+         mConnected = true;
+         mConnectedTuple.setTransportType(StunTuple::TCP);
+         mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
+         mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
       }
-
       endpoint_iterator++;
    }
 
