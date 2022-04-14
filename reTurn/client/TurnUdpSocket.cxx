@@ -31,11 +31,7 @@ TurnUdpSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::udp::resolver resolver(mIOService);
    resip::Data service(port);
-#ifdef USE_IPV6
    asio::ip::udp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
-#else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
-#endif
    asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
    const asio::ip::udp::resolver::iterator end;
 

@@ -48,15 +48,11 @@ AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-#ifdef USE_IPV6
    asio::ip::tcp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
    mResolver.async_resolve(query,
         std::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     std::placeholders::_1,
-					std::placeholders::_2));
+                    std::placeholders::_2));
 }
 
 void 

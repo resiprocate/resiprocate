@@ -63,11 +63,7 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::tcp::resolver resolver(mIOService);
    resip::Data service(port);
-#ifdef USE_IPV6
    asio::ip::tcp::resolver::query query(mSocket.lowest_layer().local_endpoint().protocol(), address, service.c_str());
-#else
-   asio::ip::tcp::resolver::query query(asio::ip::tcp::v4(), address, service.c_str());   
-#endif
    asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
    const asio::ip::tcp::resolver::iterator end;
 
