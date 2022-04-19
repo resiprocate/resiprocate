@@ -31,37 +31,25 @@ TurnUdpSocket::connect(const std::string& address, unsigned short port)
    // Get a list of endpoints corresponding to the server name.
    asio::ip::udp::resolver resolver(mIOService);
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::udp::resolver::query query(address, service.c_str());   
-#else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
-#endif
+   asio::ip::udp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
    asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
    const asio::ip::udp::resolver::iterator end;
 
-   // Find the first remote endpoint matching the local endpoint protocol.
-   const asio::ip::udp &localProtocol = mSocket.local_endpoint().protocol();
-   while (endpoint_iterator != end)
+   // Use first endpoint in list
+   if(endpoint_iterator == end)
    {
-      const asio::ip::udp::endpoint &ep = endpoint_iterator->endpoint();
-      const asio::ip::udp &remoteProtocol = ep.protocol();
-      if (remoteProtocol == localProtocol)
-      {
-         // Store the remote endpoint
-         mRemoteEndpoint = ep;
-
-         mConnected = true;
-         mConnectedTuple.setTransportType(StunTuple::UDP);
-         mConnectedTuple.setAddress(mRemoteEndpoint.address());
-         mConnectedTuple.setPort(mRemoteEndpoint.port());
-
-         return asio::error_code();
-      }
-
-      ++endpoint_iterator;
+      return asio::error::host_not_found;
    }
 
-   return asio::error::host_not_found;
+   // Nothing to do for UDP except store the remote endpoint
+   mRemoteEndpoint = endpoint_iterator->endpoint();
+
+   mConnected = true;
+   mConnectedTuple.setTransportType(StunTuple::UDP);
+   mConnectedTuple.setAddress(mRemoteEndpoint.address());
+   mConnectedTuple.setPort(mRemoteEndpoint.port());
+
+   return errorCode;
 }
 
 asio::error_code 

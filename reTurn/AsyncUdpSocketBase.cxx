@@ -54,15 +54,11 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
-#ifdef USE_IPV6
-   asio::ip::udp::resolver::query query(address, service.c_str());
-#else
-   asio::ip::udp::resolver::query query(asio::ip::udp::v4(), address, service.c_str());   
-#endif
+   asio::ip::udp::resolver::query query(mSocket.local_endpoint().protocol(), address, service.c_str());
    mResolver.async_resolve(query,
         std::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
                     std::placeholders::_1,
-					std::placeholders::_2));
+                    std::placeholders::_2));
 }
 
 void 
@@ -71,25 +67,13 @@ AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
 {
    if (!ec)
    {
-      // Find the first remote endpoint matching the local endpoint protocol.
-      const asio::ip::udp& localProtocol = mSocket.local_endpoint().protocol();
-      while (endpoint_iterator != asio::ip::udp::resolver::iterator())
-      {
-         const asio::ip::udp::endpoint& ep = endpoint_iterator->endpoint();
-         const asio::ip::udp& remoteProtocol = ep.protocol();
-         if (remoteProtocol == localProtocol)
-         {
-            mConnected = true;
-            mConnectedAddress = ep.address();
-            mConnectedPort = ep.port();
-            onConnectSuccess();
-            return;
-         }
+      // Use the first endpoint in the list.
+      // Nothing to do for UDP except store the connected address/port
+      mConnected = true;
+      mConnectedAddress = endpoint_iterator->endpoint().address();
+      mConnectedPort = endpoint_iterator->endpoint().port();
 
-         ++endpoint_iterator;
-      }
-
-      onConnectFailure(asio::error::host_not_found);
+      onConnectSuccess();
    }
    else
    {
