@@ -185,10 +185,10 @@ public:
    virtual void setSpeakerVolume(int volume);
    virtual void setMicrophoneGain(int gain);
    virtual void muteMicrophone(bool mute);
-   virtual void enableEchoCancel(bool enable);       
-   virtual void enableAutoGainControl(bool enable);  
-   virtual void enableNoiseReduction(bool enable);   
-   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; } 
+   virtual void enableEchoCancel(bool enable);
+   virtual void enableAutoGainControl(bool enable);
+   virtual void enableNoiseReduction(bool enable);
+   virtual void setSipXTOSValue(int tos) { mSipXTOSValue = tos; }
    virtual std::shared_ptr<RTPPortManager> getRTPPortManager() { return mRTPPortManager; }
 
    virtual Conversation *createConversationInstance(ConversationHandle handle,

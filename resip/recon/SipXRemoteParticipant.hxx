@@ -78,9 +78,10 @@ public:
 protected:
    virtual bool mediaStackPortAvailable();
 
-   virtual SipXRemoteParticipantDialogSet& getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet&>(getDialogSet()); };
+   // Note:  Returns non-null the majority of the time, can return null on object destruction
+   virtual SipXRemoteParticipantDialogSet* getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet*>(&getDialogSet()); }
 
-private:       
+private:
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
    bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
 };
