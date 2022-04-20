@@ -209,7 +209,6 @@ void
 B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onIncomingParticipant: handle=" << partHandleA << "auto=" << autoAnswer << " msg=" << msg.brief());
-   mRemoteParticipantHandles.push_back(partHandleA);
    // Create a new conversation for each new participant
    ConversationHandle conv = createConversation();
    addParticipant(conv, partHandleA);

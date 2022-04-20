@@ -17,7 +17,7 @@
 namespace reconserver
 {
 
-class MyConversationManager : public recon::SipXConversationManager
+class MyConversationManager : public recon::ConversationManager
 {
 public:
 
@@ -26,10 +26,6 @@ public:
 
    virtual void startup();
    
-   virtual recon::ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override;
-   virtual recon::ParticipantHandle createRemoteParticipant(recon::ConversationHandle convHandle, const resip::NameAddr& destination, recon::ConversationManager::ParticipantForkSelectMode forkSelectMode = ForkSelectAutomatic, const std::shared_ptr<recon::ConversationProfile>& conversationProfile = nullptr, const std::multimap<resip::Data, resip::Data>& extraHeaders = std::multimap<resip::Data, resip::Data>()) override;
-   virtual recon::ParticipantHandle createMediaResourceParticipant(recon::ConversationHandle convHandle, const resip::Uri& mediaUrl) override;
-   virtual recon::ParticipantHandle createLocalParticipant() override;
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle) override;
    virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle) override;
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up) override;
@@ -48,10 +44,6 @@ public:
    virtual void displayInfo();
 
 protected:
-   std::list<recon::ConversationHandle> mConversationHandles;
-   std::list<recon::ParticipantHandle> mLocalParticipantHandles;
-   std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
-   std::list<recon::ParticipantHandle> mMediaParticipantHandles;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
    RoomMap mRooms;
    bool mAutoAnswerEnabled;

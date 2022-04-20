@@ -17,18 +17,19 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXConversation::SipXConversation(ConversationHandle handle,
+                           ConversationManager& conversationManager,
                            SipXConversationManager& sipXConversationManager,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)
-: Conversation(handle, sipXConversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
+: Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
   mSipXConversationManager(sipXConversationManager)
 {
    if(mSipXConversationManager.supportsMultipleMediaInterfaces())
    {
       if (isSharingMediaInterfaceWithAnotherConversation())
       {
-         SipXConversation* sharedFlowConversation = dynamic_cast<SipXConversation*>(mSipXConversationManager.getConversation(sharedMediaInterfaceConvHandle));
+         SipXConversation* sharedFlowConversation = dynamic_cast<SipXConversation*>(conversationManager.getConversation(sharedMediaInterfaceConvHandle));
          mMediaInterface = sharedFlowConversation->getMediaInterface();
       }
       else

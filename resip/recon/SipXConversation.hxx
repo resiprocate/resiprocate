@@ -34,6 +34,7 @@ class SipXConversation : public Conversation
 {
 public:  
    SipXConversation(ConversationHandle handle,
+                ConversationManager& conversationManager,
                 SipXConversationManager& sipXConversationManager,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,

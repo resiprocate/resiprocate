@@ -38,7 +38,8 @@ class FlowManagerSipXSocket;
 class SipXRemoteParticipantDialogSet : public RemoteParticipantDialogSet, private flowmanager::MediaStreamHandler
 {
 public:
-   SipXRemoteParticipantDialogSet(SipXConversationManager& sipXConversationManager,
+   SipXRemoteParticipantDialogSet(ConversationManager& conversationManager,
+                              SipXConversationManager& sipXConversationManager,
                               ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
                               std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 

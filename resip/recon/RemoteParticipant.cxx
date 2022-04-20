@@ -9,6 +9,7 @@
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
 #include "ReconSubsystem.hxx"
+#include "MediaStackAdapter.hxx"
 
 #include <rutil/ResipAssert.h>
 #include <rutil/Log.hxx>
@@ -54,9 +55,9 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   IMParticipantBase(true /* prependSenderInfoToIMs? */),
    Participant(partHandle, conversationManager),
    AppDialog(dum),
+   IMParticipantBase(true /* prependSenderInfoToIMs? */),
    mDum(dum),
    mDialogSet(remoteParticipantDialogSet),
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
@@ -75,9 +76,9 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
 RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager, 
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   IMParticipantBase(false /* prependSenderInfoToIMs? */),
    Participant(conversationManager),
    AppDialog(dum),
+   IMParticipantBase(false /* prependSenderInfoToIMs? */),
    mDum(dum),
    mDialogSet(remoteParticipantDialogSet),
    mDialogId(Data::Empty, Data::Empty, Data::Empty),
@@ -1495,7 +1496,7 @@ RemoteParticipant::onRefer(InviteSessionHandle is, ServerSubscriptionHandle ss, 
       else
       {
          // otherwise, create a normal media based RemoteParticipant
-         participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+         participantDialogSet = mConversationManager.getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
       }
       RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
       participant->mReferringAppDialog = getHandle();
@@ -1542,7 +1543,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    else
    {
       // otherwise, create a normal media based RemoteParticipant
-      participantDialogSet = mConversationManager.createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
+      participantDialogSet = mConversationManager.getMediaStackAdapter().createRemoteParticipantDialogSetInstance(mDialogSet.getForkSelectMode(), profile);
    }
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
    participant->mReferringAppDialog = getHandle();

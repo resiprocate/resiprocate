@@ -41,6 +41,7 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         IMParticipantBase.cxx \
         LocalParticipant.cxx \
         MediaEvent.cxx \
+        MediaStackAdapter.cxx \
         MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
@@ -98,6 +99,7 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         UserAgentCmds.hxx \
         UserAgentRegistration.hxx \
         MediaEvent.hxx \
+        MediaStackAdapter.hxx \
         DefaultDialogSet.hxx \
         Participant.hxx \
         UserAgentClientSubscription.hxx \

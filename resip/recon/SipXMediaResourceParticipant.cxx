@@ -35,11 +35,12 @@ static const resip::ExtensionParameter p_format("format");
 
 
 SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle partHandle,
+                                                   ConversationManager& conversationManager,
                                                    SipXConversationManager& sipXConversationManager,
                                                    const Uri& mediaUrl)
-: Participant(partHandle, sipXConversationManager),
-  MediaResourceParticipant(partHandle, sipXConversationManager, mediaUrl),
-  SipXParticipant(partHandle, sipXConversationManager),
+: Participant(partHandle, conversationManager),
+  MediaResourceParticipant(partHandle, conversationManager, mediaUrl),
+  SipXParticipant(partHandle, conversationManager, sipXConversationManager),
   mStreamPlayer(0),
   mPortOnBridge(-1)
 {
