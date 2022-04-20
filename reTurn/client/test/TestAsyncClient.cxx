@@ -302,6 +302,9 @@ int main(int argc, char* argv[])
 
     handler.setTurnAsyncSocket(turnSocket.get());
 
+    // Set software attributes
+    turnSocket->setSoftware("My Async Client");
+
     // Connect to Stun/Turn Server
     turnSocket->connect(argv[1], port);
 

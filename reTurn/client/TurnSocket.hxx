@@ -47,6 +47,9 @@ public:
    // Set the username and password for all future requests
    void setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth=false);
 
+   // Software attribute
+   void setSoftware(const char* software);
+
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    asio::error_code bindRequest();
 
@@ -93,6 +96,9 @@ protected:
    resip::Data mHmacKey;
    resip::Data mRealm;
    resip::Data mNonce;
+
+   // Attributes
+   resip::Data mSoftware;
 
    // Turn Allocation Properties used in request
    unsigned int mRequestedLifetime;
