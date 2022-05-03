@@ -131,15 +131,15 @@ signalHandler(int signo)
 ///////////////////////////////////////////////////////////////////////////////
 //  ALICE
 ///////////////////////////////////////////////////////////////////////////////
-class AliceConversationManager : public SipXConversationManager
+class AliceConversationManager : public ConversationManager
 {
 public:
-   AliceConversationManager(SipXConversationManager::MediaInterfaceMode mode) : SipXConversationManager(true, mode)
+   AliceConversationManager(SipXConversationManager::MediaInterfaceMode mode) : ConversationManager(make_shared<SipXConversationManager>(*this, true, mode))
    { 
       mLogPrefix = "Alice: ";
    };
 
-   virtual ConversationHandle createConversation(AutoHoldMode autoHoldMode = AutoHoldEnabled) override
+   virtual ConversationHandle createConversation(ConversationManager::AutoHoldMode autoHoldMode = AutoHoldEnabled) override
    {
       ConversationHandle convHandle = ConversationManager::createConversation(autoHoldMode);
       mConvHandles.push_back(convHandle);
@@ -361,10 +361,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 //  BOB
 ///////////////////////////////////////////////////////////////////////////////
-class BobConversationManager : public SipXConversationManager
+class BobConversationManager : public ConversationManager
 {
 public:
-   BobConversationManager(SipXConversationManager::MediaInterfaceMode mode) : SipXConversationManager(true, mode)
+   BobConversationManager(SipXConversationManager::MediaInterfaceMode mode) : ConversationManager(make_shared<SipXConversationManager>(*this, true, mode))
    { 
       mLogPrefix = "Bob: ";
    };
