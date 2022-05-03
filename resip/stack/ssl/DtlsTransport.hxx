@@ -157,7 +157,6 @@ class DtlsTransport : public UdpTransport
       SSL_CTX             *mClientCtx ;
       SSL_CTX             *mServerCtx ;
       MsgHeaderScanner    mMsgHeaderScanner;
-      static const int    MaxBufferSize;
       Fifo<DtlsMessage>   mHandshakePending ;
       DtlsTimerQueue      mTimer ;
       Security*           mSecurity ;

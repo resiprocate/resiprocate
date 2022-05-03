@@ -37,10 +37,9 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            Compression &compression,
                            unsigned transportFlags)
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression, transportFlags),  
-     mSigcompStack(0),
-     mRxBuffer(0),
+     mSigcompStack(nullptr),
      mStunSetting(stun),
-     mExternalUnknownDatagramHandler(0),
+     mExternalUnknownDatagramHandler(nullptr),
      mInWritable(false)
 {
    mPollEventCnt = 0;
@@ -89,11 +88,7 @@ UdpTransport::~UdpTransport()
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
-   if ( mRxBuffer )
-   {
-      delete[] mRxBuffer;
-   }
-   setPollGrp(0);
+   setPollGrp(nullptr);
 }
 
 void
@@ -102,7 +97,7 @@ UdpTransport::setPollGrp(FdPollGrp *grp)
    if(mPollGrp)
    {
       mPollGrp->delPollItem(mPollItemHandle);
-      mPollItemHandle=0;
+      mPollItemHandle=nullptr;
    }
 
    if(mFd!=INVALID_SOCKET && grp)
@@ -228,7 +223,7 @@ UdpTransport::processTxAll()
 {
    SendData *msg;
    ++mTxTryCnt;
-   while ( (msg=mTxFifoOutBuffer.getNext(RESIP_FIFO_NOWAIT)) != NULL )
+   while ( (msg=mTxFifoOutBuffer.getNext(RESIP_FIFO_NOWAIT)) != nullptr)
    {
       processTxOne(msg);
       // With UDP we don't need to worry about write blocking (I hope)
@@ -321,72 +316,43 @@ UdpTransport::processTxOne(SendData *data)
 void
 UdpTransport::processRxAll()
 {
-   char *buffer = mRxBuffer;
-   mRxBuffer = NULL;
    ++mRxTryCnt;
    for (;;)
    {
       // TBD: check StateMac capacity
       Tuple sender(mTuple);
-      int len = processRxRecv(buffer, sender);
-      if ( len <= 0 )
+      const int len = processRxRecv(sender);
+      if (len <= 0)
       {
          break;
       }
       ++mRxMsgCnt;
-      if ( processRxParse(buffer, len, sender) )
-      {
-         buffer = NULL;
-      }
+      processRxParse(len, sender);
       if ( (mTransportFlags & RESIP_TRANSPORT_FLAG_RXALL) == 0 )
       {
          break;
       }
    }
-   if ( buffer && (mTransportFlags & RESIP_TRANSPORT_FLAG_KEEP_BUFFER)!=0 )
-   {
-      resip_assert(mRxBuffer==NULL);
-      mRxBuffer = buffer;
-      buffer = NULL;
-   }
-   if ( buffer )
-   {
-      delete[] buffer;
-   }
 }
 
 /*
  * Receive from socket and store results into {buffer}. Updates
- * {buffer} with actual buffer (in case allocation required),
- * {len} with length of receive data, and {sender} with who
- * sent the packet.
+ * {sender} with who sent the packet.
  * Return length of data read:
  *  0 if no data read and no more data to read (EAGAIN)
  *  >0 if data read and may be more data to read
 **/
 int
-UdpTransport::processRxRecv(char*& buffer, Tuple& sender)
+UdpTransport::processRxRecv(Tuple& sender)
 {
-   // !jf! this may have to change - when we read a message that is too big
-   //should this buffer be allocated on the stack and then copied out, as it
-   //needs to be deleted every time EWOULDBLOCK is encountered
-   // .dlb. can we determine the size of the buffer before we allocate?
-   // something about MSG_PEEK|MSG_TRUNC in Stevens..
-   // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
-   // adjust the UDP buffer as well...
-   if (buffer==NULL)
-   {
-      buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
-   }
-
    for (;;) 
    {
       // !jf! how do we tell if it discarded bytes
       // !ah! we use the len-1 trick :-(
       socklen_t slen = sender.length();
       int len = recvfrom( mFd,
-                          buffer,
-                          MaxBufferSize,
+                          mRxBuffer.data(),
+                          MaxMessageSize,
                           0 /*flags */,
                           &sender.getMutableSockaddr(),
                           &slen);
@@ -399,9 +365,9 @@ UdpTransport::processRxRecv(char*& buffer, Tuple& sender)
          }
          len = 0;
       }
-      if (len+1 >= MaxBufferSize)
+      if (len + 1 >= MaxMessageSize)
       {
-         InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+         InfoLog( << "Datagram exceeded max length " << MaxMessageSize);
          continue;
       }
       return len;
@@ -410,28 +376,22 @@ UdpTransport::processRxRecv(char*& buffer, Tuple& sender)
 
 
 /**
- * Parse the contents of {buffer} and do something with it.
- * Return true iff {buffer} was consumed (absorbed into SipMessage
- * to be free'd later). Note return code doesn't indicate
- * "success" in parsing the message; rather, it just indicates
- * who owns buffer.
+ * Parse the contents of {mRxBuffer} and do something with it.
 **/
-bool
-UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
+void
+UdpTransport::processRxParse(int len, Tuple& sender)
 {
-   bool origBufferConsumed = true;
-
    //handle incoming CRLFCRLF keep-alive packets
    if (len == 4 &&
-       strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+       strncmp(mRxBuffer.data(), Symbols::CRLFCRLF, len) == 0)
    {
       StackLog(<<"Throwing away incoming firewall keep-alive");
       ++mRxKeepaliveCnt;
-      return false;
+      return;
    }
 
    // this must be a STUN response (or garbage)
-   if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
+   if (mRxBuffer[0] == 1 && mRxBuffer[1] == 1 && ipVersion() == V4)
    {
       resip::Lock lock(myMutex);
       StunMessage resp;
@@ -440,7 +400,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
       // Once parsing is successful below, the return code will be updated
       mStunResult = StunResultResponseParseFailed;
 
-      if (stunParseMessage(buffer, len, resp, false))
+      if (stunParseMessage(mRxBuffer.data(), len, resp, false))
       {
          in_addr sin_addr;
          // Use XorMappedAddress if present - if not use MappedAddress
@@ -474,15 +434,15 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
             mStunResult = StunResultSuccess;
          }
       }
-      return false;
+      return;
    }
 
    // this must be a STUN request (or garbage)
-   if (buffer[0] == 0 && buffer[1] == 1 && ipVersion() == V4)
+   if (mRxBuffer[0] == 0 && mRxBuffer[1] == 1 && ipVersion() == V4)
    {
       // Drop stun requests unless StunEnabled is set and return false to indicate
       // we did not consume the buffer
-      if (mStunSetting == StunDisabled) return false;
+      if (mStunSetting == StunDisabled) return;
 
       bool changePort = false;
       bool changeIp = false;
@@ -506,7 +466,7 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
       secondary.port = 0;
       secondary.addr = 0;
 
-      bool ok = stunServerProcessMsg( buffer, len, // input buffer
+      bool ok = stunServerProcessMsg( mRxBuffer.data(), len, // input buffer
                                       from,  // packet source
                                       secondary, // not used
                                       myAddr, // address to fill into response
@@ -530,24 +490,26 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
          SendData* stunResponse = new SendData(sender, response, rlen);
          mTxFifo.add(stunResponse);
       }
-      return false;
+      return;
    }
 
 #ifdef USE_SIGCOMP
    osc::StateChanges *sc = 0;
 #endif
 
+   char* buffer = nullptr;
+
    // Attempt to decode SigComp message, if appropriate.
-   if ((buffer[0] & 0xf8) == 0xf8)
+   if ((mRxBuffer[0] & 0xf8) == 0xf8)
    {
       if (!mCompression.isEnabled())
       {
          InfoLog(<< "Discarding unexpected SigComp Message");
-         return false;
+         return;
       }
 #ifdef USE_SIGCOMP
-      char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);
-      size_t uncompressedLength = mSigcompStack->uncompressMessage(buffer, len, newBuffer, MaxBufferSize, sc);
+      char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxMessageSize);
+      size_t uncompressedLength = mSigcompStack->uncompressMessage(mRxBuffer.data(), len, newBuffer, MaxMessageSize, sc);
 
       DebugLog (<< "Uncompressed message from "
                << len << " bytes to "
@@ -572,8 +534,13 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
       len = uncompressedLength;
 #endif
    }
+   else
+   {
+      buffer = MsgHeaderScanner::allocateBuffer(len);
+      memcpy(buffer, mRxBuffer.data(), len);
+   }
 
-   buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
+   buffer[len] = '\0';  // null terminate the buffer string just to make debug easier and reduce errors
 
    //DebugLog ( << "UDP Rcv : " << len << " b" );
    //DebugLog ( << Data(buffer, len).escaped().c_str());
@@ -612,12 +579,12 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
       // Idea: consider backing buffer out of message and letting caller reuse it
       delete message;
-      message=0;
-      return origBufferConsumed;
+      message=nullptr;
+      return;
    }
 
    // no pp error
-   int used = int(unprocessedCharPtr - buffer);
+   int used = static_cast<int>(unprocessedCharPtr - buffer);
 
    if (used < len)
    {
@@ -654,16 +621,16 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
          send(std::move(tryLater));
       }
       delete message; // dropping message due to congestion
-      message = 0;
-      return origBufferConsumed;
+      message = nullptr;
+      return;
    }
 
    if (!basicCheck(*message))
    {
       delete message; // cannot use it, so, punt on it...
       // basicCheck queued any response required
-      message = 0;
-      return origBufferConsumed;
+      message = nullptr;
+      return;
    }
 
    stampReceived(message);
@@ -712,7 +679,6 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
 
    pushRxMsgUp(message);
    ++mRxTransactionCnt;
-   return origBufferConsumed;
 }
 
 

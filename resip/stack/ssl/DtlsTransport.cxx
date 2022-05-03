@@ -131,7 +131,7 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
    mDummyBio = BIO_new( BIO_s_mem() ) ;
    resip_assert( mDummyBio ) ;
 
-   mSendData = NULL ;
+   mSendData = nullptr;
 
    /* DTLS: partial reads end up discarding unread UDP bytes :-(
     * Setting read ahead solves this problem.
@@ -152,8 +152,8 @@ DtlsTransport::~DtlsTransport()
    {
        _cleanupConnectionState(mDtlsConnections.begin()->second, mDtlsConnections.begin()->first);
    }
-   SSL_CTX_free(mClientCtx);mClientCtx=0;
-   SSL_CTX_free(mServerCtx);mServerCtx=0;
+   SSL_CTX_free(mClientCtx);mClientCtx=nullptr;
+   SSL_CTX_free(mServerCtx);mServerCtx=nullptr;
 
    BIO_free( mDummyBio) ;
 }
@@ -167,9 +167,8 @@ DtlsTransport::_read( FdSet& fdset )
    // something about MSG_PEEK|MSG_TRUNC in Stevens..
    // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
    // adjust the UDP buffer as well...
-   unsigned int bufferLen = UdpTransport::MaxBufferSize + 5 ;
-   char* buffer = new char[ bufferLen ] ;
-   unsigned char *pt = new unsigned char[ bufferLen ] ;
+   std::unique_ptr<char[]> buffer(MsgHeaderScanner::allocateBuffer(MaxMessageSize));
+   std::unique_ptr<unsigned char[]> pt(reinterpret_cast<unsigned char*>(MsgHeaderScanner::allocateBuffer(MaxMessageSize)));
 
    SSL *ssl ;
    BIO *rbio ;
@@ -180,8 +179,8 @@ DtlsTransport::_read( FdSet& fdset )
    Tuple tuple(mTuple) ;
    socklen_t slen = tuple.length() ;
    int len = recvfrom( mFd,
-                       buffer,
-                       UdpTransport::MaxBufferSize,
+                       buffer.get(),
+                       MaxMessageSize,
                        0 /*flags */,
                        &tuple.getMutableSockaddr(),
                        &slen ) ;
@@ -196,16 +195,12 @@ DtlsTransport::_read( FdSet& fdset )
 
    if (len == 0 || len == SOCKET_ERROR)
    {
-      delete [] buffer ;
-      delete [] pt;
       return ;
    }
 
-   if ( len + 1 >= UdpTransport::MaxBufferSize )
+   if (len + 1 >= MaxMessageSize)
    {
-      InfoLog (<<"Datagram exceeded max length "<<UdpTransport::MaxBufferSize ) ;
-      delete [] buffer ; 
-      delete [] pt;
+      InfoLog (<< "Datagram exceeded max length " << MaxMessageSize) ;
       return ;
    }
 
@@ -221,13 +216,13 @@ DtlsTransport::_read( FdSet& fdset )
     * If we don't have a binding for this peer,
     * then we're a server.
     */
-   if ( ssl == NULL )
+   if ( ssl == nullptr)
    {
       ssl = SSL_new( mServerCtx ) ;
       resip_assert( ssl ) ;
 
       // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
-      SSL_set_verify(ssl, 0, 0);
+      SSL_set_verify(ssl, 0, nullptr);
 
       InfoLog( << "DTLS handshake starting (Server mode)" );
 
@@ -238,24 +233,23 @@ DtlsTransport::_read( FdSet& fdset )
 
       BIO_dgram_set_peer( wbio, &peer ) ;
 
-      SSL_set_bio( ssl, NULL, wbio ) ;
+      SSL_set_bio( ssl, nullptr, wbio ) ;
 
       /* remember this connection */
       mDtlsConnections[ *((struct sockaddr_in *)&peer) ] = ssl ;
    }
 
-   rbio = BIO_new_mem_buf( buffer, len ) ;
+   rbio = BIO_new_mem_buf(buffer.get(), len);
    BIO_set_mem_eof_return( rbio, -1 ) ;
 
    SSL_set0_rbio( ssl, rbio );
 
-   len = SSL_read( ssl, pt, UdpTransport::MaxBufferSize ) ;
+   len = SSL_read(ssl, pt.get(), MaxMessageSize);
    int err = SSL_get_error( ssl, len ) ;
 
    /* done with the rbio */
    SSL_set0_rbio( ssl, mDummyBio );
-   delete [] buffer ;
-   buffer = 0 ;
+   buffer = nullptr;
 
    if ( len <= 0 )
    {
@@ -327,14 +321,13 @@ DtlsTransport::_read( FdSet& fdset )
       if(!mCompression.isEnabled())
       {
         InfoLog(<< "Discarding unexpected SigComp message");
-        delete [] pt;
         return;
       }
 #ifdef USE_SIGCOMP
-      unsigned char *newPt = new unsigned char[ bufferLen ] ;
+      std::unique_ptr<unsigned char[]> newPt(reinterpret_cast<unsigned char*>(MsgHeaderScanner::allocateBuffer(MaxMessageSize)));
       size_t uncompressedLength =
-        mSigcompStack->uncompressMessage(pt, len,
-                                         newPt, UdpTransport::MaxBufferSize,
+        mSigcompStack->uncompressMessage(pt.get(), len,
+                                         newPt.get(), MaxMessageSize,
                                          sc);
 
       DebugLog (<< "Unompressed message from "
@@ -355,8 +348,7 @@ DtlsTransport::_read( FdSet& fdset )
         delete nack;
       }
 
-      delete[] buffer;
-      buffer = newBuffer;
+      pt = std::move(newPt);
       len = uncompressedLength;
 #endif
    }
@@ -373,27 +365,30 @@ DtlsTransport::_read( FdSet& fdset )
    message->setSource( tuple ) ;
    //DebugLog (<< "Received from: " << tuple);
 
+   auto* const buf = MsgHeaderScanner::allocateBuffer(len);
+   memcpy(buf, pt.get(), len);
+
    // Tell the SipMessage about this datagram buffer.
-   message->addBuffer( (char *)pt ) ;
+   message->addBuffer(buf);
 
    mMsgHeaderScanner.prepareForMessage( message ) ;
 
    char *unprocessedCharPtr ;
-   if (mMsgHeaderScanner.scanChunk( (char *)pt,
+   if (mMsgHeaderScanner.scanChunk( buf,
                                     len,
                                     &unprocessedCharPtr ) !=
        MsgHeaderScanner::scrEnd)
    {
       DebugLog( << "Scanner rejecting datagram as unparsable / fragmented from "
                 << tuple ) ;
-      DebugLog( << Data( pt, len ) ) ;
+      DebugLog( << Data(buf, len));
       delete message ;
-      message = 0 ;
+      message = nullptr ;
       return ;
    }
 
    // no pp error
-   int used = int(unprocessedCharPtr - (char *)pt);
+   const int used = static_cast<int>(unprocessedCharPtr - buf);
 
    if ( used < len )
    {
@@ -404,7 +399,7 @@ DtlsTransport::_read( FdSet& fdset )
       // it doesn't need a new buffer in UDP b/c there
       // will only be one datagram per buffer. (1:1 strict)
 
-      message->setBody( (char *)pt + used, len - used ) ;
+      message->setBody(buf + used, len - used);
       //DebugLog(<<"added " << len-used << " byte body");
    }
 
@@ -412,7 +407,7 @@ DtlsTransport::_read( FdSet& fdset )
    {
       delete message ; // cannot use it, so, punt on it...
       // basicCheck queued any response required
-      message = 0 ;
+      message = nullptr ;
       return ;
    }
 
@@ -464,7 +459,7 @@ void DtlsTransport::_write( FdSet& fdset )
    int retry = 0 ;
 
    SendData *sendData ;
-   if ( mSendData != NULL )
+   if ( mSendData != nullptr)
        sendData = mSendData ;
    else
        sendData = mTxFifo.getNext() ;
@@ -480,7 +475,7 @@ void DtlsTransport::_write( FdSet& fdset )
    ssl = mDtlsConnections[ *((struct sockaddr_in *)&peer) ] ;
 
    /* If we don't have a binding, then we're a client */
-   if ( ssl == NULL )
+   if ( ssl == nullptr)
    {
       ssl = SSL_new( mClientCtx ) ;
       resip_assert( ssl ) ;
@@ -609,7 +604,7 @@ void DtlsTransport::_write( FdSet& fdset )
    }
    else
    {
-      mSendData = NULL ;
+      mSendData = nullptr;
    }
 
    /*
@@ -692,7 +687,7 @@ DtlsTransport::process(FdSet& fdset)
    while ( mHandshakePending.messageAvailable() )
       _doHandshake() ;
 
-   if ( ( mSendData != NULL || mTxFifo.messageAvailable() )
+   if ( ( mSendData != nullptr || mTxFifo.messageAvailable() )
        && fdset.readyToWrite( mFd ) )
       _write( fdset ) ;
 
@@ -707,7 +702,7 @@ DtlsTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
 
-   if ( mSendData != NULL || mTxFifo.messageAvailable() )
+   if ( mSendData != nullptr || mTxFifo.messageAvailable() )
    {
      fdset.setWrite(mFd);
    }

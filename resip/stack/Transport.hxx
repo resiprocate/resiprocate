@@ -126,7 +126,7 @@ class Transport : public FdSetIOObserver
       Transport(Fifo<TransactionMessage>& rxFifo, 
                 const GenericIPAddress& address,
                 const Data& tlsDomain = Data::Empty, // !dcm! where is this used?
-                AfterSocketCreationFuncPtr socketFunc = 0,
+                AfterSocketCreationFuncPtr socketFunc = nullptr,
                 Compression &compression = Compression::Disabled
          );
 
@@ -156,7 +156,7 @@ class Transport : public FdSetIOObserver
                 IpVersion version, 
                 const Data& interfaceObj,
                 const Data& tlsDomain = Data::Empty,
-                AfterSocketCreationFuncPtr socketFunc = 0,
+                AfterSocketCreationFuncPtr socketFunc = nullptr,
                 Compression &compression = Compression::Disabled,
                 unsigned transportFlags = 0,
                 const Data& netNs = Data::Empty);
@@ -298,7 +298,7 @@ class Transport : public FdSetIOObserver
 
       void makeFailedResponse(const SipMessage& msg,
                               int responseCode = 400,
-                              const char * warning = 0);
+                              const char * warning = nullptr);
       std::unique_ptr<SendData> make503(SipMessage& msg,
                                       UInt16 retryAfter);
 
@@ -358,7 +358,7 @@ class Transport : public FdSetIOObserver
       virtual unsigned int getFifoSize() const=0;
 
       void callSocketFunc(Socket sock);
-      virtual void invokeAfterSocketCreationFunc() const = 0;  //used to invoke the after socket creation func immeidately for all existing sockets - can be used to modify QOS settings at runtime
+      virtual void invokeAfterSocketCreationFunc() const = 0;  //used to invoke the after socket creation func immediately for all existing sockets - can be used to modify QOS settings at runtime
 
       virtual void setCongestionManager(CongestionManager* manager)
       {
