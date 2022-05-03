@@ -107,13 +107,14 @@ struct can_submit :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_submit_fn {
 
-using asio::declval;
-using asio::enable_if;
-using asio::execution::is_sender_to;
-using asio::traits::submit_free;
-using asio::traits::submit_member;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::execution::is_sender_to;
+using ::asio::traits::submit_free;
+using ::asio::traits::submit_member;
 
 void submit();
 
@@ -385,20 +386,21 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_submit_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_submit_fn::impl&
-  submit = asio_execution_submit_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_submit_fn::impl&
+  submit = resip::asio_execution_submit_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename S, typename R>
 struct can_submit :
   integral_constant<bool,
-    asio_execution_submit_fn::call_traits<S, void(R)>::overload !=
-      asio_execution_submit_fn::ill_formed>
+    resip::asio_execution_submit_fn::call_traits<S, void(R)>::overload !=
+      resip::asio_execution_submit_fn::ill_formed>
 {
 };
 
@@ -412,7 +414,7 @@ constexpr bool can_submit_v = can_submit<S, R>::value;
 template <typename S, typename R>
 struct is_nothrow_submit :
   integral_constant<bool,
-    asio_execution_submit_fn::call_traits<S, void(R)>::is_noexcept>
+    resip::asio_execution_submit_fn::call_traits<S, void(R)>::is_noexcept>
 {
 };
 
@@ -427,7 +429,7 @@ constexpr bool is_nothrow_submit_v
 template <typename S, typename R>
 struct submit_result
 {
-  typedef typename asio_execution_submit_fn::call_traits<
+  typedef typename resip::asio_execution_submit_fn::call_traits<
       S, void(R)>::result_type type;
 };
 

@@ -130,22 +130,23 @@ using connect_result_t = typename connect_result<S, R>::type;
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_connect_fn {
 
-using asio::conditional;
-using asio::declval;
-using asio::enable_if;
-using asio::execution::detail::as_invocable;
-using asio::execution::detail::as_operation;
-using asio::execution::detail::is_as_receiver;
-using asio::execution::is_executor_of;
-using asio::execution::is_operation_state;
-using asio::execution::is_receiver;
-using asio::execution::is_sender;
-using asio::false_type;
-using asio::remove_cvref;
-using asio::traits::connect_free;
-using asio::traits::connect_member;
+using ::asio::conditional;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::execution::detail::as_invocable;
+using ::asio::execution::detail::as_operation;
+using ::asio::execution::detail::is_as_receiver;
+using ::asio::execution::is_executor_of;
+using ::asio::execution::is_operation_state;
+using ::asio::execution::is_receiver;
+using ::asio::execution::is_sender;
+using ::asio::false_type;
+using ::asio::remove_cvref;
+using ::asio::traits::connect_free;
+using ::asio::traits::connect_member;
 
 void connect();
 
@@ -423,20 +424,21 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_connect_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_connect_fn::impl&
-  connect = asio_execution_connect_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_connect_fn::impl&
+  connect = resip::asio_execution_connect_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename S, typename R>
 struct can_connect :
   integral_constant<bool,
-    asio_execution_connect_fn::call_traits<S, void(R)>::overload !=
-      asio_execution_connect_fn::ill_formed>
+    resip::asio_execution_connect_fn::call_traits<S, void(R)>::overload !=
+      resip::asio_execution_connect_fn::ill_formed>
 {
 };
 
@@ -450,7 +452,7 @@ constexpr bool can_connect_v = can_connect<S, R>::value;
 template <typename S, typename R>
 struct is_nothrow_connect :
   integral_constant<bool,
-    asio_execution_connect_fn::call_traits<S, void(R)>::is_noexcept>
+    resip::asio_execution_connect_fn::call_traits<S, void(R)>::is_noexcept>
 {
 };
 
@@ -465,7 +467,7 @@ constexpr bool is_nothrow_connect_v
 template <typename S, typename R>
 struct connect_result
 {
-  typedef typename asio_execution_connect_fn::call_traits<
+  typedef typename resip::asio_execution_connect_fn::call_traits<
       S, void(R)>::result_type type;
 };
 

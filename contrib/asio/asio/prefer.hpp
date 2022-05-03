@@ -116,17 +116,18 @@ struct prefer_result
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_prefer_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::is_applicable_property;
-using asio::traits::prefer_free;
-using asio::traits::prefer_member;
-using asio::traits::require_free;
-using asio::traits::require_member;
-using asio::traits::static_require;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::is_applicable_property;
+using ::asio::traits::prefer_free;
+using ::asio::traits::prefer_member;
+using ::asio::traits::require_free;
+using ::asio::traits::require_member;
+using ::asio::traits::static_require;
 
 void prefer();
 void require();
@@ -497,11 +498,12 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_prefer_fn
+} // namespace resip
 namespace asio {
 namespace {
 
-static ASIO_CONSTEXPR const asio_prefer_fn::impl&
-  prefer = asio_prefer_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_prefer_fn::impl&
+  prefer = resip::asio_prefer_fn::static_instance<>::instance;
 
 } // namespace
 
@@ -510,8 +512,8 @@ static ASIO_CONSTEXPR const asio_prefer_fn::impl&
 template <typename T, typename... Properties>
 struct can_prefer :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(Properties...)>::overload
-      != asio_prefer_fn::ill_formed>
+    resip::asio_prefer_fn::call_traits<T, void(Properties...)>::overload
+      != resip::asio_prefer_fn::ill_formed>
 {
 };
 
@@ -521,24 +523,24 @@ template <typename T, typename P0 = void,
     typename P1 = void, typename P2 = void>
 struct can_prefer :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(P0, P1, P2)>::overload
-      != asio_prefer_fn::ill_formed>
+    resip::asio_prefer_fn::call_traits<T, void(P0, P1, P2)>::overload
+      != resip::asio_prefer_fn::ill_formed>
 {
 };
 
 template <typename T, typename P0, typename P1>
 struct can_prefer<T, P0, P1> :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(P0, P1)>::overload
-      != asio_prefer_fn::ill_formed>
+    resip::asio_prefer_fn::call_traits<T, void(P0, P1)>::overload
+      != resip::asio_prefer_fn::ill_formed>
 {
 };
 
 template <typename T, typename P0>
 struct can_prefer<T, P0> :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(P0)>::overload
-      != asio_prefer_fn::ill_formed>
+    resip::asio_prefer_fn::call_traits<T, void(P0)>::overload
+      != resip::asio_prefer_fn::ill_formed>
 {
 };
 
@@ -563,7 +565,7 @@ constexpr bool can_prefer_v
 template <typename T, typename... Properties>
 struct is_nothrow_prefer :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(Properties...)>::is_noexcept>
+    resip::asio_prefer_fn::call_traits<T, void(Properties...)>::is_noexcept>
 {
 };
 
@@ -573,21 +575,21 @@ template <typename T, typename P0 = void,
     typename P1 = void, typename P2 = void>
 struct is_nothrow_prefer :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(P0, P1, P2)>::is_noexcept>
+    resip::asio_prefer_fn::call_traits<T, void(P0, P1, P2)>::is_noexcept>
 {
 };
 
 template <typename T, typename P0, typename P1>
 struct is_nothrow_prefer<T, P0, P1> :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(P0, P1)>::is_noexcept>
+    resip::asio_prefer_fn::call_traits<T, void(P0, P1)>::is_noexcept>
 {
 };
 
 template <typename T, typename P0>
 struct is_nothrow_prefer<T, P0> :
   integral_constant<bool,
-    asio_prefer_fn::call_traits<T, void(P0)>::is_noexcept>
+    resip::asio_prefer_fn::call_traits<T, void(P0)>::is_noexcept>
 {
 };
 
@@ -612,7 +614,7 @@ constexpr bool is_nothrow_prefer_v
 template <typename T, typename... Properties>
 struct prefer_result
 {
-  typedef typename asio_prefer_fn::call_traits<
+  typedef typename resip::asio_prefer_fn::call_traits<
       T, void(Properties...)>::result_type type;
 };
 
@@ -622,21 +624,21 @@ template <typename T, typename P0 = void,
     typename P1 = void, typename P2 = void>
 struct prefer_result
 {
-  typedef typename asio_prefer_fn::call_traits<
+  typedef typename resip::asio_prefer_fn::call_traits<
       T, void(P0, P1, P2)>::result_type type;
 };
 
 template <typename T, typename P0, typename P1>
 struct prefer_result<T, P0, P1>
 {
-  typedef typename asio_prefer_fn::call_traits<
+  typedef typename resip::asio_prefer_fn::call_traits<
       T, void(P0, P1)>::result_type type;
 };
 
 template <typename T, typename P0>
 struct prefer_result<T, P0>
 {
-  typedef typename asio_prefer_fn::call_traits<
+  typedef typename resip::asio_prefer_fn::call_traits<
       T, void(P0)>::result_type type;
 };
 

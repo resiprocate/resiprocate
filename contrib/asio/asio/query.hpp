@@ -98,15 +98,16 @@ struct query_result
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_query_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::is_applicable_property;
-using asio::traits::query_free;
-using asio::traits::query_member;
-using asio::traits::static_query;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::is_applicable_property;
+using ::asio::traits::query_free;
+using ::asio::traits::query_member;
+using ::asio::traits::static_query;
 
 void query();
 
@@ -241,19 +242,20 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_query_fn
+} // namespace resip
 namespace asio {
 namespace {
 
-static ASIO_CONSTEXPR const asio_query_fn::impl&
-  query = asio_query_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_query_fn::impl&
+  query = resip::asio_query_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename T, typename Property>
 struct can_query :
   integral_constant<bool,
-    asio_query_fn::call_traits<T, void(Property)>::overload !=
-      asio_query_fn::ill_formed>
+    resip::asio_query_fn::call_traits<T, void(Property)>::overload !=
+      resip::asio_query_fn::ill_formed>
 {
 };
 
@@ -268,7 +270,7 @@ constexpr bool can_query_v
 template <typename T, typename Property>
 struct is_nothrow_query :
   integral_constant<bool,
-    asio_query_fn::call_traits<T, void(Property)>::is_noexcept>
+    resip::asio_query_fn::call_traits<T, void(Property)>::is_noexcept>
 {
 };
 
@@ -283,7 +285,7 @@ constexpr bool is_nothrow_query_v
 template <typename T, typename Property>
 struct query_result
 {
-  typedef typename asio_query_fn::call_traits<
+  typedef typename resip::asio_query_fn::call_traits<
       T, void(Property)>::result_type type;
 };
 

@@ -66,13 +66,14 @@ struct can_set_error :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_set_error_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::traits::set_error_free;
-using asio::traits::set_error_member;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::traits::set_error_free;
+using ::asio::traits::set_error_member;
 
 void set_error();
 
@@ -204,20 +205,21 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_set_error_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_set_error_fn::impl&
-  set_error = asio_execution_set_error_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_set_error_fn::impl&
+  set_error = resip::asio_execution_set_error_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename R, typename E>
 struct can_set_error :
   integral_constant<bool,
-    asio_execution_set_error_fn::call_traits<R, void(E)>::overload !=
-      asio_execution_set_error_fn::ill_formed>
+    resip::asio_execution_set_error_fn::call_traits<R, void(E)>::overload !=
+      resip::asio_execution_set_error_fn::ill_formed>
 {
 };
 
@@ -231,7 +233,7 @@ constexpr bool can_set_error_v = can_set_error<R, E>::value;
 template <typename R, typename E>
 struct is_nothrow_set_error :
   integral_constant<bool,
-    asio_execution_set_error_fn::call_traits<R, void(E)>::is_noexcept>
+    resip::asio_execution_set_error_fn::call_traits<R, void(E)>::is_noexcept>
 {
 };
 

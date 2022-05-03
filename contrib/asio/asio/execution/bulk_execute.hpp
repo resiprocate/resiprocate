@@ -98,21 +98,22 @@ struct can_bulk_execute :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_bulk_execute_fn {
 
-using asio::declval;
-using asio::enable_if;
-using asio::execution::bulk_guarantee_t;
-using asio::execution::detail::bulk_sender;
-using asio::execution::executor_index;
-using asio::execution::is_sender;
-using asio::is_convertible;
-using asio::is_same;
-using asio::remove_cvref;
-using asio::result_of;
-using asio::traits::bulk_execute_free;
-using asio::traits::bulk_execute_member;
-using asio::traits::static_require;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::execution::bulk_guarantee_t;
+using ::asio::execution::detail::bulk_sender;
+using ::asio::execution::executor_index;
+using ::asio::execution::is_sender;
+using ::asio::is_convertible;
+using ::asio::is_same;
+using ::asio::remove_cvref;
+using ::asio::result_of;
+using ::asio::traits::bulk_execute_free;
+using ::asio::traits::bulk_execute_member;
+using ::asio::traits::static_require;
 
 void bulk_execute();
 
@@ -333,21 +334,22 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_bulk_execute_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
 static ASIO_CONSTEXPR
-  const asio_execution_bulk_execute_fn::impl& bulk_execute =
-    asio_execution_bulk_execute_fn::static_instance<>::instance;
+  const resip::asio_execution_bulk_execute_fn::impl& bulk_execute =
+    resip::asio_execution_bulk_execute_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename S, typename F, typename N>
 struct can_bulk_execute :
   integral_constant<bool,
-    asio_execution_bulk_execute_fn::call_traits<S, void(F, N)>::overload !=
-      asio_execution_bulk_execute_fn::ill_formed>
+    resip::asio_execution_bulk_execute_fn::call_traits<S, void(F, N)>::overload !=
+      resip::asio_execution_bulk_execute_fn::ill_formed>
 {
 };
 
@@ -361,7 +363,7 @@ constexpr bool can_bulk_execute_v = can_bulk_execute<S, F, N>::value;
 template <typename S, typename F, typename N>
 struct is_nothrow_bulk_execute :
   integral_constant<bool,
-    asio_execution_bulk_execute_fn::call_traits<S, void(F, N)>::is_noexcept>
+    resip::asio_execution_bulk_execute_fn::call_traits<S, void(F, N)>::is_noexcept>
 {
 };
 
@@ -376,7 +378,7 @@ constexpr bool is_nothrow_bulk_execute_v
 template <typename S, typename F, typename N>
 struct bulk_execute_result
 {
-  typedef typename asio_execution_bulk_execute_fn::call_traits<
+  typedef typename resip::asio_execution_bulk_execute_fn::call_traits<
       S, void(F, N)>::result_type type;
 };
 

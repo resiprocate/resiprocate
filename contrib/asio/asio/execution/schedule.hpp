@@ -67,14 +67,15 @@ struct can_schedule :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_schedule_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::execution::is_executor;
-using asio::traits::schedule_free;
-using asio::traits::schedule_member;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::execution::is_executor;
+using ::asio::traits::schedule_free;
+using ::asio::traits::schedule_member;
 
 void schedule();
 
@@ -241,20 +242,21 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_schedule_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_schedule_fn::impl&
-  schedule = asio_execution_schedule_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_schedule_fn::impl&
+  schedule = resip::asio_execution_schedule_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename S>
 struct can_schedule :
   integral_constant<bool,
-    asio_execution_schedule_fn::call_traits<S>::overload !=
-      asio_execution_schedule_fn::ill_formed>
+    resip::asio_execution_schedule_fn::call_traits<S>::overload !=
+      resip::asio_execution_schedule_fn::ill_formed>
 {
 };
 
@@ -268,7 +270,7 @@ constexpr bool can_schedule_v = can_schedule<S>::value;
 template <typename S>
 struct is_nothrow_schedule :
   integral_constant<bool,
-    asio_execution_schedule_fn::call_traits<S>::is_noexcept>
+    resip::asio_execution_schedule_fn::call_traits<S>::is_noexcept>
 {
 };
 

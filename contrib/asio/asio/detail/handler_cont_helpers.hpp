@@ -32,7 +32,7 @@ inline bool is_continuation(Context& context)
 #if !defined(ASIO_HAS_HANDLER_HOOKS)
   return false;
 #else
-  using asio::asio_handler_is_continuation;
+  using ::asio::asio_handler_is_continuation;
   return asio_handler_is_continuation(
       asio::detail::addressof(context));
 #endif

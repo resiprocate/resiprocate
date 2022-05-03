@@ -66,13 +66,14 @@ struct can_set_done :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_set_done_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::traits::set_done_free;
-using asio::traits::set_done_member;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::traits::set_done_free;
+using ::asio::traits::set_done_member;
 
 void set_done();
 
@@ -204,20 +205,21 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_set_done_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_set_done_fn::impl&
-  set_done = asio_execution_set_done_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_set_done_fn::impl&
+  set_done = resip::asio_execution_set_done_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename R>
 struct can_set_done :
   integral_constant<bool,
-    asio_execution_set_done_fn::call_traits<R>::overload !=
-      asio_execution_set_done_fn::ill_formed>
+    resip::asio_execution_set_done_fn::call_traits<R>::overload !=
+      resip::asio_execution_set_done_fn::ill_formed>
 {
 };
 
@@ -231,7 +233,7 @@ constexpr bool can_set_done_v = can_set_done<R>::value;
 template <typename R>
 struct is_nothrow_set_done :
   integral_constant<bool,
-    asio_execution_set_done_fn::call_traits<R>::is_noexcept>
+    resip::asio_execution_set_done_fn::call_traits<R>::is_noexcept>
 {
 };
 

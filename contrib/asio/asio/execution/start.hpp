@@ -63,13 +63,14 @@ struct can_start :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_start_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::traits::start_free;
-using asio::traits::start_member;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::traits::start_free;
+using ::asio::traits::start_member;
 
 void start();
 
@@ -201,20 +202,21 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_start_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_start_fn::impl&
-  start = asio_execution_start_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_start_fn::impl&
+  start = resip::asio_execution_start_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename R>
 struct can_start :
   integral_constant<bool,
-    asio_execution_start_fn::call_traits<R>::overload !=
-      asio_execution_start_fn::ill_formed>
+    resip::asio_execution_start_fn::call_traits<R>::overload !=
+      resip::asio_execution_start_fn::ill_formed>
 {
 };
 
@@ -228,7 +230,7 @@ constexpr bool can_start_v = can_start<R>::value;
 template <typename R>
 struct is_nothrow_start :
   integral_constant<bool,
-    asio_execution_start_fn::call_traits<R>::is_noexcept>
+    resip::asio_execution_start_fn::call_traits<R>::is_noexcept>
 {
 };
 

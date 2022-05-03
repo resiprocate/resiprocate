@@ -22,7 +22,7 @@
 #include "asio/detail/push_options.hpp"
 
 // Calls to asio_handler_invoke must be made from a namespace that does not
-// contain overloads of this function. The asio_handler_invoke_helpers
+// contain overloads of this function. The resip::asio_handler_invoke_helpers
 // namespace is defined here for that purpose.
 namespace asio_handler_invoke_helpers {
 
@@ -68,7 +68,7 @@ inline void invoke(const Function& function, Context& context)
   Function tmp(function);
   tmp();
 #else
-  using asio::asio_handler_invoke;
+  using ::asio::asio_handler_invoke;
   asio_handler_invoke(function, asio::detail::addressof(context));
 #endif
 }

@@ -84,20 +84,21 @@ void submit_helper(ASIO_MOVE_ARG(S) s, ASIO_MOVE_ARG(R) r);
 } // namespace detail
 } // namespace execution
 } // namespace asio
+namespace resip {
 namespace asio_execution_execute_fn {
 
-using asio::conditional;
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::execution::detail::as_receiver;
-using asio::execution::detail::is_as_invocable;
-using asio::execution::is_sender_to;
-using asio::false_type;
-using asio::result_of;
-using asio::traits::execute_free;
-using asio::traits::execute_member;
-using asio::true_type;
+using ::asio::conditional;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::execution::detail::as_receiver;
+using ::asio::execution::detail::is_as_invocable;
+using ::asio::execution::is_sender_to;
+using ::asio::false_type;
+using ::asio::result_of;
+using ::asio::traits::execute_free;
+using ::asio::traits::execute_member;
+using ::asio::true_type;
 
 void execute();
 
@@ -230,20 +231,21 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_execute_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_execute_fn::impl&
-  execute = asio_execution_execute_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_execute_fn::impl&
+  execute = resip::asio_execution_execute_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename T, typename F>
 struct can_execute :
   integral_constant<bool,
-    asio_execution_execute_fn::call_traits<T, void(F)>::overload !=
-      asio_execution_execute_fn::ill_formed>
+    resip::asio_execution_execute_fn::call_traits<T, void(F)>::overload !=
+      resip::asio_execution_execute_fn::ill_formed>
 {
 };
 

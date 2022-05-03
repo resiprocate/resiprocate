@@ -69,13 +69,14 @@ struct can_set_value :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_execution_set_value_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::traits::set_value_free;
-using asio::traits::set_value_member;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::traits::set_value_free;
+using ::asio::traits::set_value_member;
 
 void set_value();
 
@@ -385,12 +386,13 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_execution_set_value_fn
+} // namespace resip
 namespace asio {
 namespace execution {
 namespace {
 
-static ASIO_CONSTEXPR const asio_execution_set_value_fn::impl&
-  set_value = asio_execution_set_value_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_execution_set_value_fn::impl&
+  set_value = resip::asio_execution_set_value_fn::static_instance<>::instance;
 
 } // namespace
 
@@ -399,8 +401,8 @@ static ASIO_CONSTEXPR const asio_execution_set_value_fn::impl&
 template <typename R, typename... Vs>
 struct can_set_value :
   integral_constant<bool,
-    asio_execution_set_value_fn::call_traits<R, void(Vs...)>::overload !=
-      asio_execution_set_value_fn::ill_formed>
+    resip::asio_execution_set_value_fn::call_traits<R, void(Vs...)>::overload !=
+      resip::asio_execution_set_value_fn::ill_formed>
 {
 };
 
@@ -414,7 +416,7 @@ constexpr bool can_set_value_v = can_set_value<R, Vs...>::value;
 template <typename R, typename... Vs>
 struct is_nothrow_set_value :
   integral_constant<bool,
-    asio_execution_set_value_fn::call_traits<R, void(Vs...)>::is_noexcept>
+    resip::asio_execution_set_value_fn::call_traits<R, void(Vs...)>::is_noexcept>
 {
 };
 
@@ -441,15 +443,15 @@ struct is_nothrow_set_value;
 template <typename R>
 struct can_set_value<R> :
   integral_constant<bool,
-    asio_execution_set_value_fn::call_traits<R, void()>::overload !=
-      asio_execution_set_value_fn::ill_formed>
+    resip::asio_execution_set_value_fn::call_traits<R, void()>::overload !=
+      resip::asio_execution_set_value_fn::ill_formed>
 {
 };
 
 template <typename R>
 struct is_nothrow_set_value<R> :
   integral_constant<bool,
-    asio_execution_set_value_fn::call_traits<R, void()>::is_noexcept>
+    resip::asio_execution_set_value_fn::call_traits<R, void()>::is_noexcept>
 {
 };
 
@@ -457,16 +459,16 @@ struct is_nothrow_set_value<R> :
   template <typename R, ASIO_VARIADIC_TPARAMS(n)> \
   struct can_set_value<R, ASIO_VARIADIC_TARGS(n)> : \
     integral_constant<bool, \
-      asio_execution_set_value_fn::call_traits<R, \
+      resip::asio_execution_set_value_fn::call_traits<R, \
         void(ASIO_VARIADIC_TARGS(n))>::overload != \
-          asio_execution_set_value_fn::ill_formed> \
+          resip::asio_execution_set_value_fn::ill_formed> \
   { \
   }; \
   \
   template <typename R, ASIO_VARIADIC_TPARAMS(n)> \
   struct is_nothrow_set_value<R, ASIO_VARIADIC_TARGS(n)> : \
     integral_constant<bool, \
-      asio_execution_set_value_fn::call_traits<R, \
+      resip::asio_execution_set_value_fn::call_traits<R, \
         void(ASIO_VARIADIC_TARGS(n))>::is_noexcept> \
   { \
   }; \

@@ -105,15 +105,16 @@ struct require_concept_result
 
 #else // defined(GENERATING_DOCUMENTATION)
 
+namespace resip {
 namespace asio_require_concept_fn {
 
-using asio::decay;
-using asio::declval;
-using asio::enable_if;
-using asio::is_applicable_property;
-using asio::traits::require_concept_free;
-using asio::traits::require_concept_member;
-using asio::traits::static_require_concept;
+using ::asio::decay;
+using ::asio::declval;
+using ::asio::enable_if;
+using ::asio::is_applicable_property;
+using ::asio::traits::require_concept_free;
+using ::asio::traits::require_concept_member;
+using ::asio::traits::static_require_concept;
 
 void require_concept();
 
@@ -255,19 +256,20 @@ template <typename T>
 const T static_instance<T>::instance = {};
 
 } // namespace asio_require_concept_fn
+} // namespace resip
 namespace asio {
 namespace {
 
-static ASIO_CONSTEXPR const asio_require_concept_fn::impl&
-  require_concept = asio_require_concept_fn::static_instance<>::instance;
+static ASIO_CONSTEXPR const resip::asio_require_concept_fn::impl&
+  require_concept = resip::asio_require_concept_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename T, typename Property>
 struct can_require_concept :
   integral_constant<bool,
-    asio_require_concept_fn::call_traits<T, void(Property)>::overload !=
-      asio_require_concept_fn::ill_formed>
+    resip::asio_require_concept_fn::call_traits<T, void(Property)>::overload !=
+      resip::asio_require_concept_fn::ill_formed>
 {
 };
 
@@ -282,7 +284,7 @@ constexpr bool can_require_concept_v
 template <typename T, typename Property>
 struct is_nothrow_require_concept :
   integral_constant<bool,
-    asio_require_concept_fn::call_traits<T, void(Property)>::is_noexcept>
+    resip::asio_require_concept_fn::call_traits<T, void(Property)>::is_noexcept>
 {
 };
 
@@ -297,7 +299,7 @@ constexpr bool is_nothrow_require_concept_v
 template <typename T, typename Property>
 struct require_concept_result
 {
-  typedef typename asio_require_concept_fn::call_traits<
+  typedef typename resip::asio_require_concept_fn::call_traits<
       T, void(Property)>::result_type type;
 };
 
