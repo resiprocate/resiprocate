@@ -94,7 +94,12 @@ SipXRemoteParticipant::~SipXRemoteParticipant()
 unsigned int 
 SipXRemoteParticipant::getLocalRTPPort()
 {
-   return getSipXDialogSet().getLocalRTPPort();
+   SipXRemoteParticipantDialogSet* sipXDialogSet = getSipXDialogSet();
+   if (sipXDialogSet)
+   {
+      return sipXDialogSet->getLocalRTPPort();
+   }
+   return 0;
 }
 
 //static const resip::ExtensionHeader h_AlertInfo("Alert-Info");
@@ -105,7 +110,12 @@ SipXRemoteParticipant::getConnectionPortOnBridge()
 {
    if(getDialogSet().getActiveRemoteParticipantHandle() == mHandle)
    {
-      return getSipXDialogSet().getConnectionPortOnBridge();
+      SipXRemoteParticipantDialogSet* sipXDialogSet = getSipXDialogSet();
+      if (sipXDialogSet)
+      {
+         return sipXDialogSet->getConnectionPortOnBridge();
+      }
+      return -1;
    }
    else
    {
@@ -118,7 +128,12 @@ SipXRemoteParticipant::getConnectionPortOnBridge()
 int 
 SipXRemoteParticipant::getMediaConnectionId()
 { 
-   return getSipXDialogSet().getMediaConnectionId();
+   SipXRemoteParticipantDialogSet* sipXDialogSet = getSipXDialogSet();
+   if (sipXDialogSet)
+   {
+      return sipXDialogSet->getMediaConnectionId();
+   }
+   return 0;
 }
 
 void
@@ -215,7 +230,15 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
       resip_assert(audioMedium);
 
       // Set the local RTP Port
-      audioMedium->port() = getSipXDialogSet().getLocalRTPPort();
+      SipXRemoteParticipantDialogSet* sipXDialogSet = getSipXDialogSet();
+      if (sipXDialogSet)
+      {
+         audioMedium->port() = sipXDialogSet->getLocalRTPPort();
+      }
+      else
+      {
+         audioMedium->port() = 0;
+      }
    }
 
    // Add Crypto attributes (if required) - assumes there is only 1 media stream
@@ -234,20 +257,24 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 
       Data crypto;
 
-      switch(getSipXDialogSet().getSrtpCryptoSuite())
+      SipXRemoteParticipantDialogSet* sipXDialogSet = getSipXDialogSet();
+      if (sipXDialogSet)
       {
-      case MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32:
-         crypto = "1 AES_CM_128_HMAC_SHA1_32 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode();
-         audioMedium->addAttribute("crypto", crypto);
-         crypto = "2 AES_CM_128_HMAC_SHA1_80 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode();
-         audioMedium->addAttribute("crypto", crypto);
-         break;
-      default:
-         crypto = "1 AES_CM_128_HMAC_SHA1_80 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode();
-         audioMedium->addAttribute("crypto", crypto);
-         crypto = "2 AES_CM_128_HMAC_SHA1_32 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode();
-         audioMedium->addAttribute("crypto", crypto);
-         break;
+         switch (sipXDialogSet->getSrtpCryptoSuite())
+         {
+         case MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32:
+            crypto = "1 AES_CM_128_HMAC_SHA1_32 inline:" + sipXDialogSet->getLocalSrtpSessionKey().base64encode();
+            audioMedium->addAttribute("crypto", crypto);
+            crypto = "2 AES_CM_128_HMAC_SHA1_80 inline:" + sipXDialogSet->getLocalSrtpSessionKey().base64encode();
+            audioMedium->addAttribute("crypto", crypto);
+            break;
+         default:
+            crypto = "1 AES_CM_128_HMAC_SHA1_80 inline:" + sipXDialogSet->getLocalSrtpSessionKey().base64encode();
+            audioMedium->addAttribute("crypto", crypto);
+            crypto = "2 AES_CM_128_HMAC_SHA1_32 inline:" + sipXDialogSet->getLocalSrtpSessionKey().base64encode();
+            audioMedium->addAttribute("crypto", crypto);
+            break;
+         }
       }
       if(getDialogSet().getSecureMediaRequired())
       {
@@ -362,86 +389,90 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
 
       // Check secure media properties and requirements
       bool secureMediaRequired = getDialogSet().getSecureMediaRequired() || protocolType != sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_AVP;
-      getSipXDialogSet().setPeerExpectsSAVPF(protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF);
-
-      if(getDialogSet().getSecureMediaMode() == ConversationProfile::Srtp ||
-#ifdef RTP_SAVPF_FUDGE
-         protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ||
-#endif
-         protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)  // allow accepting of SAVP profiles, even if SRTP is not enabled as a SecureMedia mode
+      SipXRemoteParticipantDialogSet* sipXDialogSet = getSipXDialogSet();
+      if (sipXDialogSet)
       {
-         bool supportedCryptoSuite = false;
-         sdpcontainer::SdpMediaLine::CryptoList::const_iterator itCrypto = sdpMediaLine.getCryptos().begin();
-         for(; !supportedCryptoSuite && itCrypto!=sdpMediaLine.getCryptos().end(); itCrypto++)
+         sipXDialogSet->setPeerExpectsSAVPF(protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF);
+
+         if (getDialogSet().getSecureMediaMode() == ConversationProfile::Srtp ||
+#ifdef RTP_SAVPF_FUDGE
+            protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVPF ||
+#endif
+            protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_RTP_SAVP)  // allow accepting of SAVP profiles, even if SRTP is not enabled as a SecureMedia mode
          {
-            Data cryptoKeyB64(itCrypto->getCryptoKeyParams().front().getKeyValue());
-            Data cryptoKey = cryptoKeyB64.base64decode();
-                  
-            if(cryptoKey.size() == SRTP_MASTER_KEY_LEN)
+            bool supportedCryptoSuite = false;
+            sdpcontainer::SdpMediaLine::CryptoList::const_iterator itCrypto = sdpMediaLine.getCryptos().begin();
+            for (; !supportedCryptoSuite && itCrypto != sdpMediaLine.getCryptos().end(); itCrypto++)
             {
-               switch(itCrypto->getSuite())
+               Data cryptoKeyB64(itCrypto->getCryptoKeyParams().front().getKeyValue());
+               Data cryptoKey = cryptoKeyB64.base64decode();
+
+               if (cryptoKey.size() == SRTP_MASTER_KEY_LEN)
                {
-               case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
-                  medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_80 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode());
-                  supportedCryptoSuite = true;
-                  break;
-               case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
-                  medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_32 inline:" + getSipXDialogSet().getLocalSrtpSessionKey().base64encode());
-                  supportedCryptoSuite = true;
-                  break;
-               default:
-                  break;
+                  switch (itCrypto->getSuite())
+                  {
+                  case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:
+                     medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_80 inline:" + sipXDialogSet->getLocalSrtpSessionKey().base64encode());
+                     supportedCryptoSuite = true;
+                     break;
+                  case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
+                     medium.addAttribute("crypto", Data(itCrypto->getTag()) + " AES_CM_128_HMAC_SHA1_32 inline:" + sipXDialogSet->getLocalSrtpSessionKey().base64encode());
+                     supportedCryptoSuite = true;
+                     break;
+                  default:
+                     break;
+                  }
+               }
+               else
+               {
+                  InfoLog(<< "SDES crypto key found in SDP, but is not of correct length after base 64 decode: " << cryptoKey.size());
                }
             }
-            else
+            if (!supportedCryptoSuite && secureMediaRequired)
             {
-               InfoLog(<< "SDES crypto key found in SDP, but is not of correct length after base 64 decode: " << cryptoKey.size());
+               InfoLog(<< "Secure media stream is required, but there is no supported crypto attributes in the offer - skipping this stream...");
+               return false;
             }
          }
-         if(!supportedCryptoSuite && secureMediaRequired)
-         {
-            InfoLog(<< "Secure media stream is required, but there is no supported crypto attributes in the offer - skipping this stream...");
-            return false;
-         }
-      }
 #ifdef USE_SSL
-      else if(mSipXConversationManager.getFlowManager().getDtlsFactory() &&
-              (getDialogSet().getSecureMediaMode() == ConversationProfile::SrtpDtls ||
+         else if (mSipXConversationManager.getFlowManager().getDtlsFactory() &&
+            (getDialogSet().getSecureMediaMode() == ConversationProfile::SrtpDtls ||
                protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP))  // allow accepting of DTLS SAVP profiles, even if DTLS-SRTP is not enabled as a SecureMedia mode
-      {
-         bool supportedFingerprint = false;
-
-         // We will only process Dtls-Srtp if fingerprint is in SHA-1 format
-         if(sdpMediaLine.getFingerPrintHashFunction() == sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
          {
-            answer.session().clearAttribute("fingerprint");  // ensure we don't add these twice
-            answer.session().clearAttribute("setup");  // ensure we don't add these twice
+            bool supportedFingerprint = false;
 
-            // Add fingerprint attribute to answer
-            char fingerprint[100];
-            mSipXConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
-            //answer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
-            answer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
-
-            // Add setup attribute
-            if(sdpMediaLine.getTcpSetupAttribute() == sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
+            // We will only process Dtls-Srtp if fingerprint is in SHA-1 format
+            if (sdpMediaLine.getFingerPrintHashFunction() == sdpcontainer::SdpMediaLine::FINGERPRINT_HASH_FUNC_SHA_1)
             {
-               answer.session().addAttribute("setup", "passive");
-            }
-            else
-            {
-               answer.session().addAttribute("setup", "active");
-            }
+               answer.session().clearAttribute("fingerprint");  // ensure we don't add these twice
+               answer.session().clearAttribute("setup");  // ensure we don't add these twice
 
-            supportedFingerprint = true;
-         }         
-         if(!supportedFingerprint && secureMediaRequired)
-         {
-            InfoLog(<< "Secure media stream is required, but there is no supported fingerprint attributes in the offer - skipping this stream...");
-            return false;
+               // Add fingerprint attribute to answer
+               char fingerprint[100];
+               mSipXConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
+               //answer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
+               answer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
+
+               // Add setup attribute
+               if (sdpMediaLine.getTcpSetupAttribute() == sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
+               {
+                  answer.session().addAttribute("setup", "passive");
+               }
+               else
+               {
+                  answer.session().addAttribute("setup", "active");
+               }
+
+               supportedFingerprint = true;
+            }
+            if (!supportedFingerprint && secureMediaRequired)
+            {
+               InfoLog(<< "Secure media stream is required, but there is no supported fingerprint attributes in the offer - skipping this stream...");
+               return false;
+            }
          }
-      }
 #endif
+      }
 
       if(potential && !sdpMediaLine.getPotentialMediaViewString().empty())
       {
@@ -822,6 +853,13 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 
    resip_assert(localSdp);
 
+   SipXRemoteParticipantDialogSet* sipXDialogSet = getSipXDialogSet();
+   if (!sipXDialogSet)
+   {
+      // This would only ever happen on object destruction
+      return;
+   }
+
    /*
    InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", localSdp=" << localSdp);
    if(remoteSdp)
@@ -901,12 +939,12 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
                      switch(itCrypto->getSuite())
                      {
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_80:   
-                        if(!getSipXDialogSet().createSRTPSession(MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
+                        if(!sipXDialogSet->createSRTPSession(MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_80, cryptoKey.data(), cryptoKey.size()))
                            InfoLog(<<"Failed creating SRTP session");
                         supportedCryptoSuite = true;
                         break;
                      case sdpcontainer::SdpMediaLine::CRYPTO_SUITE_TYPE_AES_CM_128_HMAC_SHA1_32:
-                        if(!getSipXDialogSet().createSRTPSession(MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
+                        if(!sipXDialogSet->createSRTPSession(MediaConstants::SRTP_AES_CM_128_HMAC_SHA1_32, cryptoKey.data(), cryptoKey.size()))
                            InfoLog(<<"Failed creating SRTP session");
                         supportedCryptoSuite = true;
                         break;
@@ -935,13 +973,13 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
                   {
                      InfoLog(<< "Fingerprint retrieved from remote SDP: " << (*itRemMediaLine)->getFingerPrint());
                      // ensure we only accept media streams with this fingerprint
-                     getSipXDialogSet().setRemoteSDPFingerprint((*itRemMediaLine)->getFingerPrint());
+                     sipXDialogSet->setRemoteSDPFingerprint((*itRemMediaLine)->getFingerPrint());
 
                      // If remote setup value is not active then we must be the Dtls client  - ensure client DtlsSocket is create
                      if((*itRemMediaLine)->getTcpSetupAttribute() != sdpcontainer::SdpMediaLine::TCP_SETUP_ATTRIBUTE_ACTIVE)
                      {
                         // If we are the active end, then kick start the DTLS handshake
-                        getSipXDialogSet().startDtlsClient(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
+                        sipXDialogSet->startDtlsClient(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
                      }
 
                      supportedFingerprint = true;
@@ -1033,7 +1071,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 
    if(!remoteIPAddress.empty() && remoteRtpPort != 0)
    {
-      getSipXDialogSet().setActiveDestination(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
+      sipXDialogSet->setActiveDestination(remoteIPAddress.c_str(), remoteRtpPort, remoteRtcpPort);
    }
 
    if((mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDRECV ||
@@ -1103,7 +1141,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
       {
          InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", starting to send for " << numCodecs << " codecs to destination address " << remoteIPAddress << ":" <<
             remoteRtpPort << " (RTCP on " << remoteRtcpPort << ")");
-         int ret = getMediaInterface()->getInterface()->startRtpSend(getSipXDialogSet().getMediaConnectionId(), numCodecs, codecs);
+         int ret = getMediaInterface()->getInterface()->startRtpSend(sipXDialogSet->getMediaConnectionId(), numCodecs, codecs);
          if(ret != OS_SUCCESS)
          {
             InfoLog(<<"adjustRTPStreams: handle=" << mHandle << ", failed to start RTP send, ret = " << ret);
@@ -1121,9 +1159,9 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    }
    else
    {
-      if(getMediaInterface()->getInterface()->isSendingRtpAudio(getSipXDialogSet().getMediaConnectionId()))
+      if(getMediaInterface()->getInterface()->isSendingRtpAudio(sipXDialogSet->getMediaConnectionId()))
       {
-         getMediaInterface()->getInterface()->stopRtpSend(getSipXDialogSet().getMediaConnectionId());
+         getMediaInterface()->getInterface()->stopRtpSend(sipXDialogSet->getMediaConnectionId());
       }
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop sending.");
    }
@@ -1132,7 +1170,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
       mediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY)
             && localCodecs)
    {
-      if(!getMediaInterface()->getInterface()->isReceivingRtpAudio(getSipXDialogSet().getMediaConnectionId()))
+      if(!getMediaInterface()->getInterface()->isReceivingRtpAudio(sipXDialogSet->getMediaConnectionId()))
       {
          // !SLG! - we could make this better, no need to recalculate this every time
          // We are always willing to receive any of our locally supported codecs
@@ -1154,7 +1192,7 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
          InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", starting to receive for " << numCodecs << " codecs");
 
-         getMediaInterface()->getInterface()->startRtpReceive(getSipXDialogSet().getMediaConnectionId(), numCodecs, codecs);
+         getMediaInterface()->getInterface()->startRtpReceive(sipXDialogSet->getMediaConnectionId(), numCodecs, codecs);
          for(int i = 0; i < numCodecs; i++)
          {
             delete codecs[i];

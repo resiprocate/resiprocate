@@ -74,7 +74,11 @@ ConversationManager::shutdown()
    }
 
    // End each Participant
-   ParticipantMap tempParts = mParticipants;  
+   ParticipantMap tempParts;
+   {
+      resip::ReadLock r(mParticipantsMutex);
+      tempParts = mParticipants;
+   }
    ParticipantMap::iterator j;
    int j2=0;
    for(j = tempParts.begin(); j != tempParts.end(); j++, j2++)
@@ -310,6 +314,7 @@ ConversationManager::getNewParticipantHandle()
 void 
 ConversationManager::registerParticipant(Participant *participant)
 {
+   resip::WriteLock r(mParticipantsMutex);
    mParticipants[participant->getParticipantHandle()] = participant;
 }
 
@@ -317,6 +322,7 @@ void
 ConversationManager::unregisterParticipant(Participant *participant)
 {
    InfoLog(<< "participant unregistered, handle=" << participant->getParticipantHandle());
+   resip::WriteLock r(mParticipantsMutex);
    mParticipants.erase(participant->getParticipantHandle());
 }
 
@@ -360,6 +366,7 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
 Participant* 
 ConversationManager::getParticipant(ParticipantHandle partHandle)
 {
+   resip::ReadLock r(mParticipantsMutex);
    ParticipantMap::iterator i = mParticipants.find(partHandle);
    if(i != mParticipants.end())
    {
@@ -988,16 +995,19 @@ ConversationManager::onMessageArrived(ServerPagerMessageHandle h, const SipMessa
 {
    RemoteIMPagerParticipant* remoteIMPagerParticipant = nullptr;
 
-   // First see if we already have a RemoteIMPagerParticipant for this CallId yet or not
-   for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
    {
-      remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(i->second);
-      if (remoteIMPagerParticipant != nullptr && remoteIMPagerParticipant->doesMessageMatch(message))
+      resip::ReadLock r(mParticipantsMutex);
+      // First see if we already have a RemoteIMPagerParticipant for this CallId yet or not
+      for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
       {
-         // Found existing remoteIMPagerParticipant, break out
-         break;
+         remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(i->second);
+         if (remoteIMPagerParticipant != nullptr && remoteIMPagerParticipant->doesMessageMatch(message))
+         {
+            // Found existing remoteIMPagerParticipant, break out
+            break;
+         }
+         remoteIMPagerParticipant = nullptr;
       }
-      remoteIMPagerParticipant = nullptr;
    }
 
    if (remoteIMPagerParticipant == nullptr && mUserAgent != nullptr)

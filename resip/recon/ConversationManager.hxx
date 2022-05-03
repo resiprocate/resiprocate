@@ -12,6 +12,7 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/PagerMessageHandler.hxx>
 #include <rutil/Mutex.hxx>
+#include <rutil/RWMutex.hxx>
 
 #include <reflow/RTCPEventLoggingHandler.hxx>
 
@@ -771,6 +772,7 @@ protected:
    {
       std::set<ParticipantHandle> participants;
       ParticipantMap::const_iterator it;
+      resip::ReadLock r(mParticipantsMutex);
       for(it = mParticipants.begin(); it != mParticipants.end(); it++)
       {
          if(dynamic_cast<T* const>(it->second) != nullptr)
@@ -872,6 +874,7 @@ private:
    resip::Mutex mConversationHandleMutex;
    ConversationHandle mCurrentConversationHandle;
 
+   mutable resip::RWMutex mParticipantsMutex;
    typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
    ParticipantMap mParticipants;
    resip::Mutex mParticipantHandleMutex;
