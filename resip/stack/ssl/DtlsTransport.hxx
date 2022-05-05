@@ -33,6 +33,8 @@
 
 #include "resip/stack/Compression.hxx"
 
+#include <array>
+
 namespace resip
 {
 
@@ -169,13 +171,15 @@ class DtlsTransport : public UdpTransport
                                        * was in progress 
                                        */
       
-      void _read( FdSet& fdset ) ;
+      void _read();
       void _write( FdSet& fdset ) ;
       void _doHandshake() ;
       void _cleanupConnectionState( SSL *ssl, struct sockaddr_in peer ) ;
 
       void _mapDebug( const char *where, const char *action, SSL *ssl ) ;
       void _printSock( const struct sockaddr_in *sock ) ;
+
+      std::array<char, MaxMessageSize> mRxSslBuffer{};
 };
 
 }

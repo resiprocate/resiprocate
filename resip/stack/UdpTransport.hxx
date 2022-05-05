@@ -120,8 +120,8 @@ protected:
    unsigned mRxMsgCnt;
    unsigned mRxKeepaliveCnt;
    unsigned mRxTransactionCnt;
-private:
    std::array<char, MaxMessageSize> mRxBuffer{};
+private:
 #ifdef USE_SIGCOMP
    std::array<char, MaxMessageSize> mRxUncompressedBuffer{};
 #endif

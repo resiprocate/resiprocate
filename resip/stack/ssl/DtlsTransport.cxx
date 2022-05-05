@@ -159,56 +159,21 @@ DtlsTransport::~DtlsTransport()
 }
 
 void
-DtlsTransport::_read( FdSet& fdset )
+DtlsTransport::_read()
 {
-   //should this buffer be allocated on the stack and then copied out, as it
-   //needs to be deleted every time EWOULDBLOCK is encountered
-   // .dlb. can we determine the size of the buffer before we allocate?
-   // something about MSG_PEEK|MSG_TRUNC in Stevens..
-   // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
-   // adjust the UDP buffer as well...
-   std::unique_ptr<char[]> buffer(MsgHeaderScanner::allocateBuffer(MaxMessageSize));
-   std::unique_ptr<unsigned char[]> pt(reinterpret_cast<unsigned char*>(MsgHeaderScanner::allocateBuffer(MaxMessageSize)));
+   Tuple sender(mTuple);
+   auto len = processRxRecv(sender);
+   if (len <= 0)
+   {
+      return;
+   }
 
    SSL *ssl ;
    BIO *rbio ;
    BIO *wbio ;
 
-   // !jf! how do we tell if it discarded bytes
-   // !ah! we use the len-1 trick :-(
-   Tuple tuple(mTuple) ;
-   socklen_t slen = tuple.length() ;
-   int len = recvfrom( mFd,
-                       buffer.get(),
-                       MaxMessageSize,
-                       0 /*flags */,
-                       &tuple.getMutableSockaddr(),
-                       &slen ) ;
-   if ( len == SOCKET_ERROR )
-   {
-      int err = getErrno() ;
-      if ( err != EAGAIN && err != EWOULDBLOCK ) // Treat EGAIN and EWOULDBLOCK as the same: http://stackoverflow.com/questions/7003234/which-systems-define-eagain-and-ewouldblock-as-different-values
-      {
-         error( err ) ;
-      }
-   }
-
-   if (len == 0 || len == SOCKET_ERROR)
-   {
-      return ;
-   }
-
-   if (len + 1 >= MaxMessageSize)
-   {
-      InfoLog (<< "Datagram exceeded max length " << MaxMessageSize) ;
-      return ;
-   }
-
-   //DebugLog ( << "UDP Rcv : " << len << " b" );
-   //DebugLog ( << Data(buffer, len).escaped().c_str());
-
    /* begin SSL stuff */
-   struct sockaddr peer = tuple.getMutableSockaddr() ;
+   struct sockaddr peer = sender.getMutableSockaddr();
 
    ssl = mDtlsConnections[ *((struct sockaddr_in *)&peer) ] ;
 
@@ -216,7 +181,7 @@ DtlsTransport::_read( FdSet& fdset )
     * If we don't have a binding for this peer,
     * then we're a server.
     */
-   if ( ssl == nullptr)
+   if (ssl == nullptr)
    {
       ssl = SSL_new( mServerCtx ) ;
       resip_assert( ssl ) ;
@@ -239,17 +204,16 @@ DtlsTransport::_read( FdSet& fdset )
       mDtlsConnections[ *((struct sockaddr_in *)&peer) ] = ssl ;
    }
 
-   rbio = BIO_new_mem_buf(buffer.get(), len);
+   rbio = BIO_new_mem_buf(mRxBuffer.data(), len);
    BIO_set_mem_eof_return( rbio, -1 ) ;
 
    SSL_set0_rbio( ssl, rbio );
 
-   len = SSL_read(ssl, pt.get(), MaxMessageSize);
+   len = SSL_read(ssl, mRxSslBuffer.data(), static_cast<int>(mRxSslBuffer.size()));
    int err = SSL_get_error( ssl, len ) ;
 
    /* done with the rbio */
    SSL_set0_rbio( ssl, mDummyBio );
-   buffer = nullptr;
 
    if ( len <= 0 )
    {
@@ -312,144 +276,7 @@ DtlsTransport::_read( FdSet& fdset )
       mTimer.add( ssl, DtlsReceiveTimeout ) ;
    }
 
-#ifdef USE_SIGCOMP
-   osc::StateChanges *sc = 0;
-#endif
-
-   if ((pt[0] & 0xf8) == 0xf8)
-   {
-      if(!mCompression.isEnabled())
-      {
-        InfoLog(<< "Discarding unexpected SigComp message");
-        return;
-      }
-#ifdef USE_SIGCOMP
-      std::unique_ptr<unsigned char[]> newPt(reinterpret_cast<unsigned char*>(MsgHeaderScanner::allocateBuffer(MaxMessageSize)));
-      size_t uncompressedLength =
-        mSigcompStack->uncompressMessage(pt.get(), len,
-                                         newPt.get(), MaxMessageSize,
-                                         sc);
-
-      DebugLog (<< "Unompressed message from "
-                << len << " bytes to "
-                << uncompressedLength << " bytes");
-
-      osc::SigcompMessage *nack = mSigcompStack->getNack();
-
-      if (nack)
-      {
-        mTxFifo.add(new SendData(tuple,
-                                 Data(nack->getDatagramMessage(),
-                                      nack->getDatagramLength()),
-                                 Data::Empty,
-                                 Data::Empty,
-                                 true)
-                   );
-        delete nack;
-      }
-
-      pt = std::move(newPt);
-      len = uncompressedLength;
-#endif
-   }
-
-   SipMessage* message = new SipMessage(&mTuple);
-
-   // set the received from information into the received= parameter in the
-   // via
-
-   // It is presumed that UDP Datagrams are arriving atomically and that
-   // each one is a unique SIP message
-
-   // Save all the info where this message came from
-   message->setSource( tuple ) ;
-   //DebugLog (<< "Received from: " << tuple);
-
-   auto* const buf = MsgHeaderScanner::allocateBuffer(len);
-   memcpy(buf, pt.get(), len);
-
-   // Tell the SipMessage about this datagram buffer.
-   message->addBuffer(buf);
-
-   mMsgHeaderScanner.prepareForMessage( message ) ;
-
-   char *unprocessedCharPtr ;
-   if (mMsgHeaderScanner.scanChunk( buf,
-                                    len,
-                                    &unprocessedCharPtr ) !=
-       MsgHeaderScanner::scrEnd)
-   {
-      DebugLog( << "Scanner rejecting datagram as unparsable / fragmented from "
-                << tuple ) ;
-      DebugLog( << Data(buf, len));
-      delete message ;
-      message = nullptr ;
-      return ;
-   }
-
-   // no pp error
-   const int used = static_cast<int>(unprocessedCharPtr - buf);
-
-   if ( used < len )
-   {
-      // body is present .. add it up.
-      // NB. The Sip Message uses an overlay (again)
-      // for the body. It ALSO expects that the body
-      // will be contiguous (of course).
-      // it doesn't need a new buffer in UDP b/c there
-      // will only be one datagram per buffer. (1:1 strict)
-
-      message->setBody(buf + used, len - used);
-      //DebugLog(<<"added " << len-used << " byte body");
-   }
-
-   if ( ! basicCheck( *message ) )
-   {
-      delete message ; // cannot use it, so, punt on it...
-      // basicCheck queued any response required
-      message = nullptr ;
-      return ;
-   }
-
-   stampReceived( message) ;
-
-#ifdef USE_SIGCOMP
-      if (mCompression.isEnabled() && sc)
-      {
-        const Via &via = message->header(h_Vias).front();
-        if (message->isRequest())
-        {
-          // For requests, the compartment ID is read out of the
-          // top via header field; if not present, we use the
-          // TCP connection for identification purposes.
-          if (via.exists(p_sigcompId))
-          {
-            Data compId = via.param(p_sigcompId);
-            mSigcompStack->provideCompartmentId(
-                             sc, compId.data(), compId.size());
-          }
-          else
-          {
-            mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
-          }
-        }
-        else
-        {
-          // For responses, the compartment ID is supposed to be
-          // the same as the compartment ID of the request. We
-          // *could* dig down into the transaction layer to try to
-          // figure this out, but that's a royal pain, and a rather
-          // severe layer violation. In practice, we're going to ferret
-          // the ID out of the the Via header field, which is where we
-          // squirreled it away when we sent this request in the first place.
-          Data compId = via.param(p_branch).getSigcompCompartment();
-          mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
-        }
-
-      }
-#endif
-
-   pushRxMsgUp(message);
+   processRxParseSip(mRxSslBuffer.data(), len, sender);
 }
 
 void DtlsTransport::_write( FdSet& fdset )
@@ -693,7 +520,9 @@ DtlsTransport::process(FdSet& fdset)
 
    // !jf! this may have to change - when we read a message that is too big
    if ( fdset.readyToRead(mFd) )
-      _read( fdset ) ;
+   {
+      _read();
+   }
 }
 
 
