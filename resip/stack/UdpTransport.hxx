@@ -103,7 +103,8 @@ protected:
 
    void processRxAll();
    int processRxRecv(Tuple& sender);
-   void processRxParse(int len, Tuple& sender);
+   void processRxParse(int len, const Tuple& sender);
+   void processRxParseSip(char* buffer, int len, const Tuple& sender);
    void processTxAll();
    void processTxOne(SendData *data);
    void updateEvents();
@@ -121,6 +122,9 @@ protected:
    unsigned mRxTransactionCnt;
 private:
    std::array<char, MaxMessageSize> mRxBuffer{};
+#ifdef USE_SIGCOMP
+   std::array<char, MaxMessageSize> mRxUncompressedBuffer{};
+#endif
    MsgHeaderScanner mMsgHeaderScanner;
    mutable resip::Mutex  myMutex;
    Tuple mStunMappedAddress;

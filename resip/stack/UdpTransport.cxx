@@ -379,7 +379,7 @@ UdpTransport::processRxRecv(Tuple& sender)
  * Parse the contents of {mRxBuffer} and do something with it.
 **/
 void
-UdpTransport::processRxParse(int len, Tuple& sender)
+UdpTransport::processRxParse(int len, const Tuple& sender)
 {
    //handle incoming CRLFCRLF keep-alive packets
    if (len == 4 &&
@@ -493,14 +493,18 @@ UdpTransport::processRxParse(int len, Tuple& sender)
       return;
    }
 
+   processRxParseSip(mRxBuffer.data(), len, sender);
+}
+
+void
+UdpTransport::processRxParseSip(char* buffer, int len, const Tuple& sender)
+{
 #ifdef USE_SIGCOMP
    osc::StateChanges *sc = 0;
 #endif
 
-   char* buffer = nullptr;
-
    // Attempt to decode SigComp message, if appropriate.
-   if ((mRxBuffer[0] & 0xf8) == 0xf8)
+   if ((buffer[0] & 0xf8) == 0xf8)
    {
       if (!mCompression.isEnabled())
       {
@@ -508,8 +512,7 @@ UdpTransport::processRxParse(int len, Tuple& sender)
          return;
       }
 #ifdef USE_SIGCOMP
-      char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxMessageSize);
-      size_t uncompressedLength = mSigcompStack->uncompressMessage(mRxBuffer.data(), len, newBuffer, MaxMessageSize, sc);
+      const size_t uncompressedLength = mSigcompStack->uncompressMessage(buffer, len, mRxUncompressedBuffer.data(), mRxUncompressedBuffer.size(), sc);
 
       DebugLog (<< "Uncompressed message from "
                << len << " bytes to "
@@ -528,24 +531,19 @@ UdpTransport::processRxParse(int len, Tuple& sender)
          delete nack;
       }
 
-      // delete[] buffer; NO: let caller do this if needed
-      origBufferConsumed = false;
-      buffer = newBuffer;
+      buffer = mRxUncompressedBuffer.data();
       len = uncompressedLength;
 #endif
    }
-   else
-   {
-      buffer = MsgHeaderScanner::allocateBuffer(len);
-      memcpy(buffer, mRxBuffer.data(), len);
-   }
 
-   buffer[len] = '\0';  // null terminate the buffer string just to make debug easier and reduce errors
+   auto* const msgBuffer = MsgHeaderScanner::allocateBuffer(len);
+   memcpy(msgBuffer, buffer, len);
+   msgBuffer[len] = '\0';  // null terminate the buffer string just to make debug easier and reduce errors
 
    //DebugLog ( << "UDP Rcv : " << len << " b" );
    //DebugLog ( << Data(buffer, len).escaped().c_str());
 
-   SipMessage* message = new SipMessage(&mTuple);
+   std::unique_ptr<SipMessage> message(new SipMessage(&mTuple));
 
    // set the received from information into the received= parameter in the
    // via
@@ -559,32 +557,29 @@ UdpTransport::processRxParse(int len, Tuple& sender)
 
    // Tell the SipMessage about this datagram buffer.
    // WATCHOUT: below here buffer is consumed by message
-   message->addBuffer(buffer);
+   message->addBuffer(msgBuffer);
 
-   mMsgHeaderScanner.prepareForMessage(message);
+   mMsgHeaderScanner.prepareForMessage(message.get());
 
    char *unprocessedCharPtr;
-   if (mMsgHeaderScanner.scanChunk(buffer,
+   if (mMsgHeaderScanner.scanChunk(msgBuffer,
                                    len,
                                    &unprocessedCharPtr) !=
        MsgHeaderScanner::scrEnd)
    {
       StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << sender);
-      StackLog(<< Data(Data::Borrow, buffer, len));
+      StackLog(<< Data(Data::Borrow, msgBuffer, len));
       if(mExternalUnknownDatagramHandler)
       {
-         unique_ptr<Data> datagram(new Data(buffer, len));
+         std::unique_ptr<Data> datagram(new Data(msgBuffer, len));
          (*mExternalUnknownDatagramHandler)(this, sender, std::move(datagram));
       }
 
-      // Idea: consider backing buffer out of message and letting caller reuse it
-      delete message;
-      message=nullptr;
       return;
    }
 
    // no pp error
-   int used = static_cast<int>(unprocessedCharPtr - buffer);
+   const int used = static_cast<int>(unprocessedCharPtr - msgBuffer);
 
    if (used < len)
    {
@@ -595,7 +590,7 @@ UdpTransport::processRxParse(int len, Tuple& sender)
       // it doesn't need a new buffer in UDP b/c there
       // will only be one datagram per buffer. (1:1 strict)
 
-      message->setBody(buffer+used,len-used);
+      message->setBody(msgBuffer + used, len - used);
       //DebugLog(<<"added " << len-used << " byte body");
    }
 
@@ -616,24 +611,22 @@ UdpTransport::processRxParse(int len, Tuple& sender)
       // .bwc. This handles all appropriate checking for whether
       // this is a response or an ACK.
       std::unique_ptr<SendData> tryLater(make503(*message, getExpectedWaitForIncoming()));
-      if(tryLater.get())
+      if (tryLater)
       {
          send(std::move(tryLater));
       }
-      delete message; // dropping message due to congestion
-      message = nullptr;
-      return;
+
+      return;  // dropping message due to congestion
    }
 
    if (!basicCheck(*message))
    {
-      delete message; // cannot use it, so, punt on it...
+      // cannot use it, so, punt on it...
       // basicCheck queued any response required
-      message = nullptr;
       return;
    }
 
-   stampReceived(message);
+   stampReceived(message.get());
 
 #ifdef USE_SIGCOMP
    if (mCompression.isEnabled() && sc)
@@ -677,11 +670,9 @@ UdpTransport::processRxParse(int len, Tuple& sender)
    }
 #endif
 
-   pushRxMsgUp(message);
+   pushRxMsgUp(message.release());
    ++mRxTransactionCnt;
 }
-
-
 
 bool
 UdpTransport::stunSendTest(const Tuple&  dest)
