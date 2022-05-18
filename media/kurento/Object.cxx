@@ -299,6 +299,12 @@ MediaElement::addMediaFlowOutStateChangeListener(std::shared_ptr<EventListener> 
    addListener(OnMediaFlowOutStateChangeEvent::EVENT_NAME, l, c);
 }
 
+void
+WebRtcEndpoint::addDataChannelOpenedListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+    addListener(OnDataChannelOpenEvent::EVENT_NAME, l, c);
+}
+
 PassThroughElement::PassThroughElement(std::shared_ptr<MediaPipeline> mediaPipeline)
    : MediaElement("PassThrough", mediaPipeline)
 {
