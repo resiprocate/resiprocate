@@ -72,11 +72,11 @@ OpenSSLInit::OpenSSLInit()
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
-#else
-	CRYPTO_set_mem_debug(1);
 #endif
 
-	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
+#ifdef CRYPTO_MEM_CHECK_ON
+    CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
+#endif
 
 	SSL_library_init();
 	SSL_load_error_strings();
