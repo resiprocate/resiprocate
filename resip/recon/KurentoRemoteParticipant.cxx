@@ -300,15 +300,13 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          std::unique_ptr<SdpContents> _answer(new SdpContents(hfv, type));
 
          SdpContents::Session::MediumContainer::iterator it = _answer->session().media().begin();
-         _answer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 4096));
+         _answer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
          bool audiobw = false;
          bool videobw = false;
-          std::advance(it, 2);
+
          for(;it != _answer->session().media().end(); it++)
          {
              SdpContents::Session::Medium& m = *it;
-             m.setPort(0);
-             continue;
 
             if (m.name() == Data("video") && !videobw)
             {
@@ -341,7 +339,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             }
             else
             {
-
+                m.setPort(0);
             }
         }
          _answer->session().transformLocalHold(isHolding());
