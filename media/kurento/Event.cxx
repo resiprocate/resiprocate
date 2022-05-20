@@ -13,6 +13,7 @@ const std::string OnMediaFlowInStateChangeEvent::EVENT_NAME = "MediaFlowInStateC
 const std::string OnMediaFlowOutStateChangeEvent::EVENT_NAME = "MediaFlowOutStateChange";
 const std::string OnKeyframeRequiredEvent::EVENT_NAME = "KeyframeRequired";
 const std::string OnErrorEvent::EVENT_NAME = "Error";
+const std::string OnDataChannelOpenEvent::EVENT_NAME = "DataChannelOpen";
 
 Event::Event(const std::string& name)
    : mName(name)
@@ -46,6 +47,8 @@ Event::make_event(const std::string& eventType, const json::Object& message)
       event = new OnKeyframeRequiredEvent(message);
    } else if(eventType == OnErrorEvent::EVENT_NAME) {
       event = new OnErrorEvent(message);
+   } else if(eventType == OnDataChannelOpenEvent::EVENT_NAME) {
+       event = new OnDataChannelOpenEvent(message);
    }
    return std::shared_ptr<Event>(event);
 }
@@ -130,6 +133,13 @@ OnErrorEvent::OnErrorEvent(const json::Object& message)
 OnErrorEvent::~OnErrorEvent()
 {
 }
+
+OnDataChannelOpenEvent::OnDataChannelOpenEvent(const json::Object &message)
+    : Event(EVENT_NAME)
+{}
+
+OnDataChannelOpenEvent::~OnDataChannelOpenEvent()
+{}
 
 /* ====================================================================
 

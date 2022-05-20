@@ -35,6 +35,7 @@ Object::~Object()
 std::string
 Object::makeRpcCallStatic(const std::string& methodName, const json::Object& params, ContinuationInternal c)
 {
+   WarningLog(<<"SynergySKY: makeRpcCallStatic " << methodName );
    std::string reqId = mConnection->sendRequest(
             KurentoResponseHandler::shared_from_this(),
             methodName, params);
@@ -73,7 +74,9 @@ Object::subscribe(const std::string& eventName, ContinuationVoid c)
 void
 Object::release(ContinuationVoid c)
 {
-   invokeVoidMethod("release", c);
+    json::Object params;
+    ContinuationInternal ci = std::bind(&Object::onVoidSuccess, this, c, _1);
+    std::string reqId = makeRpcCall("release", params, ci);
 }
 
 void
@@ -111,6 +114,7 @@ Object::sendNotifications(const std::string& eventType, const json::Object& mess
 void
 Object::addListener(const std::string& eventName, std::shared_ptr<EventListener> l, ContinuationVoid c)
 {
+    DebugLog(<<"addListener requested for: " << eventName);
    //resip_assert(std::is_base_of<Event,T>::value);  // FIXME uncomment
 
    //const std::string& eventName = T::EVENT_NAME;
@@ -309,6 +313,12 @@ void
 MediaElement::addMediaFlowOutStateChangeListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
 {
    addListener(OnMediaFlowOutStateChangeEvent::EVENT_NAME, l, c);
+}
+
+void
+WebRtcEndpoint::addDataChannelOpenedListener(std::shared_ptr<EventListener> l, ContinuationVoid c)
+{
+    addListener(OnDataChannelOpenEvent::EVENT_NAME, l, c);
 }
 
 PassThroughElement::PassThroughElement(std::shared_ptr<MediaPipeline> mediaPipeline)
@@ -554,6 +564,7 @@ WebRtcEndpoint::addOnIceGatheringDoneListener(std::shared_ptr<EventListener> l, 
 {
    addListener(OnIceGatheringDoneEvent::EVENT_NAME, l, c);
 }
+
 
 /* ====================================================================
 

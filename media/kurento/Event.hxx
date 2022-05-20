@@ -114,6 +114,15 @@ class OnErrorEvent : public Event
       virtual ~OnErrorEvent();
 };
 
+class OnDataChannelOpenEvent : public Event
+{
+public:
+    static const std::string EVENT_NAME;
+
+    OnDataChannelOpenEvent(const json::Object& message);
+    virtual ~OnDataChannelOpenEvent();
+};
+
 class EventListener
 {
    public:

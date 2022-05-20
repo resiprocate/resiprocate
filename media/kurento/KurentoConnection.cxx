@@ -200,6 +200,7 @@ KurentoConnection::processSendQueue()
       {
          std::string& msg = mSendQueue.front();
          websocketpp::lib::error_code ec;
+         std::this_thread::sleep_for(std::chrono::milliseconds(250) );
          mWSClient.send(mHandle, msg.c_str(), websocketpp::frame::opcode::text, ec);
          if(ec)
          {
