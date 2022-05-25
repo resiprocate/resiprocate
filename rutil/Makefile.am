@@ -142,6 +142,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	RecursiveMutex.hxx \
 	AsyncProcessHandler.hxx \
 	RADIUSDigestAuthenticator.hxx \
+	Repository.hxx \
 	RWMutex.hxx \
 	Subsystem.hxx \
 	Logger.hxx \
@@ -214,6 +215,13 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ConsumerFifoBuffer.hxx \
 	hep/HepAgent.hxx \
 	hep/ResipHep.hxx
+
+Repository.hxx:	.ALWAYS_REBUILD
+	echo "// Auto generated" > $@
+	echo "#define RESIPROCATE_GIT_ID \"`git describe --match="" --always --abbrev=40 --dirty`\"" >> $@
+	echo "#define RESIPROCATE_BRANCH_NAME \"`git rev-parse --abbrev-ref HEAD`\"" >> $@
+
+.ALWAYS_REBUILD:
 
 
 ##############################################################################

@@ -34,6 +34,8 @@ AC_GPERFVER
 
 AX_CXX_COMPILE_STDCXX(11)
 
+CPPFLAGS="${CPPFLAGS} -DENABLE_LOG_REPOSITORY_DETAILS"
+
 AC_MSG_CHECKING([ for GNU warning flags])
 if test "${GXX}"x = yesx; then
   CXXFLAGS="${CXXFLAGS} -Wall -Wno-deprecated"
