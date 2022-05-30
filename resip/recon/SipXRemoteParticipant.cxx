@@ -60,9 +60,9 @@ SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
                                      SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(partHandle, conversationManager, sipXConversationManager)
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -72,9 +72,9 @@ SipXRemoteParticipant::SipXRemoteParticipant(ConversationManager& conversationMa
                                      SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(conversationManager),
+: Participant(ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(conversationManager, sipXConversationManager)
+  SipXParticipant(ConversationManager::ParticipantType_Remote, conversationManager, sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }

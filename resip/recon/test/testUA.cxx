@@ -172,26 +172,37 @@ public:
       InfoLog(LOG_PREFIX << "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << OUTPUTMSG);
       if(autoAnswerEnabled)
       {
-         // If there are no conversations, then create one
-         const set<ConversationHandle> conversations = getConversations();
-         if(conversations.empty())
+         // If there are no conversations, then create one, otherwise use first in set
+         ConversationHandle convHandle = 0;
+         const set<ConversationHandle> conversationHandles = getConversationHandles();
+         if (getConversationHandles().empty())
          {
-            ConversationHandle convHandle = createConversation(mDefaultAutoHoldMode);
-            if (mLocalAudioEnabled)
-            {
-                // ensure a local participant is in the conversation - create one if one doesn't exist
-                set<ParticipantHandle> localParticipants = getParticipantsByType<LocalParticipant>();
-                if (localParticipants.empty())
-                {
-                    localParticipants.insert(createLocalParticipant());
-                }
-                addParticipant(convHandle, *localParticipants.begin());
-            }
+            convHandle = createConversation(mDefaultAutoHoldMode);
          }
          else
          {
-            addParticipant(*conversations.begin(), partHandle);
+            convHandle = *conversationHandles.begin();
          }
+
+         if (mLocalAudioEnabled)
+         {
+            ParticipantHandle localPartHandle = 0;
+            const set<ParticipantHandle> participantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
+            // If no local participant then create one, otherwise use first in set
+            if (participantHandles.empty())
+            {
+               localPartHandle = createLocalParticipant();
+            }
+            else
+            {
+               localPartHandle = *participantHandles.begin();
+            } 
+            // Add local participant to conversation
+            addParticipant(convHandle, localPartHandle);
+         }
+
+         // Add new incoming participant to conversation, and answer call
+         addParticipant(convHandle, partHandle);
          answerParticipant(partHandle);
       }
    }
@@ -292,7 +303,7 @@ public:
    {
       Data output;
 
-      const set<ConversationHandle> conversations = getConversations();
+      const set<ConversationHandle> conversations = getConversationHandles();
       if(!conversations.empty())
       {
          output = "Active conversation handles: ";
@@ -303,7 +314,7 @@ public:
          }
          InfoLog(LOG_PREFIX << output);
       }
-      const set<ParticipantHandle> localParticipantHandles = getParticipantsByType<LocalParticipant>();
+      const set<ParticipantHandle> localParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
       if(!localParticipantHandles.empty())
       {
          output = "Local Participant handles: ";
@@ -314,7 +325,7 @@ public:
          }
          InfoLog(LOG_PREFIX << output);
       }
-      const set<ParticipantHandle> remoteParticipantHandles = getParticipantsByType<RemoteParticipant>();
+      const set<ParticipantHandle> remoteParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Remote);
       if(!remoteParticipantHandles.empty())
       {
          output = "Remote Participant handles: ";
@@ -325,9 +336,9 @@ public:
          }
          InfoLog(LOG_PREFIX << output);
       }
-      set<ParticipantHandle> remoteIMParticipantHandles = getParticipantsByType<RemoteIMPagerParticipant>();
-      const set<ParticipantHandle> remoteIMSessionParticipantHandles = getParticipantsByType<RemoteIMSessionParticipant>();
-      remoteIMParticipantHandles.insert(remoteIMSessionParticipantHandles.begin(), remoteIMSessionParticipantHandles.end());
+      set<ParticipantHandle> remoteIMParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_RemoteIMPager);
+      const set<ParticipantHandle> remoteIMSessionParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_RemoteIMSession);
+      remoteIMParticipantHandles.insert(remoteIMSessionParticipantHandles.begin(), remoteIMSessionParticipantHandles.end());  // merge the two lists
       if (!remoteIMParticipantHandles.empty())
       {
          output = "Remote IM Participant handles: ";
@@ -338,7 +349,7 @@ public:
          }
          InfoLog(LOG_PREFIX << output);
       }
-      const set<ParticipantHandle> mediaParticipantHandles = getParticipantsByType<MediaResourceParticipant>();
+      const set<ParticipantHandle> mediaParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_MediaResource);
       if(!mediaParticipantHandles.empty())
       {
          output = "Media Participant handles: ";

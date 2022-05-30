@@ -18,9 +18,9 @@ using namespace std;
 SipXLocalParticipant::SipXLocalParticipant(ParticipantHandle partHandle,
                                    ConversationManager& conversationManager,
                                    SipXConversationManager& sipXConversationManager)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_Local, conversationManager),
   LocalParticipant(partHandle, conversationManager),
-  SipXParticipant(partHandle, conversationManager, sipXConversationManager),
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_Local, conversationManager, sipXConversationManager),
   mLocalPortOnBridge(-1)
 {
    InfoLog(<< "SipXLocalParticipant created, handle=" << mHandle);

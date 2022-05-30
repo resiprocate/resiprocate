@@ -30,7 +30,7 @@ using namespace std;
 RemoteIMPagerParticipant::RemoteIMPagerParticipant(ParticipantHandle partHandle,
                                          ConversationManager& conversationManager) : 
    IMParticipantBase(false /* prependSenderInfoToIMs? */),
-   Participant(partHandle, conversationManager),
+   Participant(partHandle, ConversationManager::ParticipantType_RemoteIMPager, conversationManager),
    AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
    mDum(conversationManager.getUserAgent()->getDialogUsageManager()),
    mNumOutstandingSends(0),
@@ -44,7 +44,7 @@ RemoteIMPagerParticipant::RemoteIMPagerParticipant(ParticipantHandle partHandle,
 RemoteIMPagerParticipant::RemoteIMPagerParticipant(ParticipantHandle partHandle, ConversationManager& conversationManager,
                                          const NameAddr& destination, std::shared_ptr<ConversationProfile> conversationProfile) :
    IMParticipantBase(true /* prependSenderInfoToIMs? */),
-   Participant(partHandle, conversationManager),
+   Participant(partHandle, ConversationManager::ParticipantType_RemoteIMPager, conversationManager),
    AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
    mDum(conversationManager.getUserAgent()->getDialogUsageManager())
 {

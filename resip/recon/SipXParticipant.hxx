@@ -3,6 +3,7 @@
 
 #include "Participant.hxx"
 #include "SipXMediaInterface.hxx"
+#include "SipXConversationManager.hxx"
 #include <map>
 
 namespace recon
@@ -22,11 +23,13 @@ class SipXParticipant : public virtual Participant
    public:  
 
       SipXParticipant(ParticipantHandle partHandle,
-                  ConversationManager& conversationManager,
-                  SipXConversationManager& sipXConversationManager);
+                      ConversationManager::ParticipantType partType,
+                      ConversationManager& conversationManager,
+                      SipXConversationManager& sipXConversationManager);
 
-      SipXParticipant(ConversationManager& conversationManager,
-                  SipXConversationManager& sipXConversationManager);
+      SipXParticipant(ConversationManager::ParticipantType partType,
+                      ConversationManager& conversationManager,
+                      SipXConversationManager& sipXConversationManager);
 
       virtual ~SipXParticipant();
 

@@ -65,11 +65,7 @@ ConversationManager::shutdown()
    mShuttingDown = true;
 
    // Destroy each Conversation
-   ConversationMap tempConvs;
-   {
-      resip::ReadLock r(mConversationsMutex);
-      tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
-   }
+   ConversationMap tempConvs = mConversations; // Create copy for safety, since ending conversations can immediately remove themselves from map
    ConversationMap::iterator i;
    for(i = tempConvs.begin(); i != tempConvs.end(); i++)
    {
@@ -78,14 +74,9 @@ ConversationManager::shutdown()
    }
 
    // End each Participant
-   ParticipantMap tempParts;
-   {
-      resip::ReadLock r(mParticipantsMutex);
-      tempParts = mParticipants;
-   }
+   ParticipantMap tempParts = mParticipants; // Create copy for safety, since ending participants can immediately remove themselves from map
    ParticipantMap::iterator j;
-   int j2=0;
-   for(j = tempParts.begin(); j != tempParts.end(); j++, j2++)
+   for(j = tempParts.begin(); j != tempParts.end(); j++)
    {
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
@@ -299,15 +290,19 @@ ConversationManager::getNewConversationHandle()
 void 
 ConversationManager::registerConversation(Conversation *conversation)
 {
-   resip::WriteLock r(mConversationsMutex);
    mConversations[conversation->getHandle()] = conversation;
+
+   Lock lock(mConversationHandleMutex);
+   mConversationHandles.insert(conversation->getHandle());
 }
 
 void 
 ConversationManager::unregisterConversation(Conversation *conversation)
 {
-   resip::WriteLock r(mConversationsMutex);
    mConversations.erase(conversation->getHandle());
+
+   Lock lock(mConversationHandleMutex);
+   mConversationHandles.erase(conversation->getHandle());
 }
 
 ParticipantHandle 
@@ -320,16 +315,20 @@ ConversationManager::getNewParticipantHandle()
 void 
 ConversationManager::registerParticipant(Participant *participant)
 {
-   resip::WriteLock r(mParticipantsMutex);
    mParticipants[participant->getParticipantHandle()] = participant;
+   
+   Lock lock(mParticipantHandleMutex);
+   mParticipantHandlesByType[participant->getParticipantType()].insert(participant->getParticipantHandle());
 }
 
 void 
 ConversationManager::unregisterParticipant(Participant *participant)
 {
    InfoLog(<< "participant unregistered, handle=" << participant->getParticipantHandle());
-   resip::WriteLock r(mParticipantsMutex);
    mParticipants.erase(participant->getParticipantHandle());
+
+   Lock lock(mParticipantHandleMutex);
+   mParticipantHandlesByType[participant->getParticipantType()].erase(participant->getParticipantHandle());
 }
 
 void 
@@ -370,7 +369,6 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
 Participant* 
 ConversationManager::getParticipant(ParticipantHandle partHandle)
 {
-   resip::ReadLock r(mParticipantsMutex);
    ParticipantMap::iterator i = mParticipants.find(partHandle);
    if(i != mParticipants.end())
    {
@@ -385,7 +383,6 @@ ConversationManager::getParticipant(ParticipantHandle partHandle)
 Conversation* 
 ConversationManager::getConversation(ConversationHandle convHandle)
 {
-   resip::ReadLock r(mConversationsMutex);
    ConversationMap::iterator i = mConversations.find(convHandle);
    if(i != mConversations.end())
    {
@@ -398,17 +395,24 @@ ConversationManager::getConversation(ConversationHandle convHandle)
 }
 
 std::set<ConversationHandle>
-ConversationManager::getConversations() const
+ConversationManager::getConversationHandles() const
 {
-   resip::ReadLock r(mConversationsMutex);
-   set<ConversationHandle> conversations;
-   ConversationMap::const_iterator it;
-   for(it = mConversations.begin(); it != mConversations.end(); it++)
-   {
-      conversations.insert(it->first);
-   }
-   return conversations;
+   Lock lock(mConversationHandleMutex);
+   return mConversationHandles;
 }
+
+std::set<ParticipantHandle>
+ConversationManager::getParticipantHandlesByType(ParticipantType participantType) const
+{
+   Lock lock(mParticipantHandleMutex);
+   std::set<ParticipantHandle> participantHandles;
+   auto it = mParticipantHandlesByType.find(participantType);
+   if (it != mParticipantHandlesByType.end())
+   {
+      participantHandles = it->second;
+   }
+   return participantHandles;
+};
 
 void 
 ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type)
@@ -996,7 +1000,6 @@ ConversationManager::onMessageArrived(ServerPagerMessageHandle h, const SipMessa
    RemoteIMPagerParticipant* remoteIMPagerParticipant = nullptr;
 
    {
-      resip::ReadLock r(mParticipantsMutex);
       // First see if we already have a RemoteIMPagerParticipant for this CallId yet or not
       for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
       {
