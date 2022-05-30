@@ -4,6 +4,8 @@
 /.deps
 /.libs
 
+/Repository.hxx
+
 /dns/.deps
 /dns/.dirstamp
 /hep/.deps
