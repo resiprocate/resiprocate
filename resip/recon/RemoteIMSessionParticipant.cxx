@@ -101,7 +101,7 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents
    try
    {
       ConversationProfile* profile = getDialogSet().getConversationProfile().get();
-      assert(profile);
+      resip_assert(profile);
 
       answer = profile->sessionCaps();
 

@@ -55,36 +55,36 @@ class Timestamped
       // };
       //
 
-      assert(tlf.empty());
-      assert(tlf.size() == 0);
-      assert(tlf.timeDepth() == 0);
+      resip_assert(tlf.empty());
+      resip_assert(tlf.size() == 0);
+      resip_assert(tlf.timeDepth() == 0);
 
       c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
-      assert(c);
+      resip_assert(c);
 
       // no longer empty
-      assert(!tlf.empty());
-      assert(tlf.size() == 1);
-      assert(tlf.timeDepth() == 0);
+      resip_assert(!tlf.empty());
+      resip_assert(tlf.size() == 1);
+      resip_assert(tlf.timeDepth() == 0);
 
       sleepMs(2000);
 
       // still not empty
-      assert(!tlf.empty());
-      assert(tlf.size() == 1);
-      assert(tlf.timeDepth() > 1);
+      resip_assert(!tlf.empty());
+      resip_assert(tlf.size() == 1);
+      resip_assert(tlf.timeDepth() > 1);
 
       if (tlf.messageAvailable())
         delete tlf.getNext();
 
       // Foo* fp = tlf.getNext();
-      // assert (fp->mVal == "first")
+      // resip_assert (fp->mVal == "first")
       // delete fp ;
 
       // now its empty
-      assert(tlf.empty());
-      assert(tlf.size() == 0);
-      assert(tlf.timeDepth() == 0);
+      resip_assert(tlf.empty());
+      resip_assert(tlf.size() == 0);
+      resip_assert(tlf.timeDepth() == 0);
    @endcode
 */
 template <class Msg>

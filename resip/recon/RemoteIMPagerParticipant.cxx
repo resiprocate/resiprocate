@@ -161,7 +161,7 @@ RemoteIMPagerParticipant::reject(unsigned int rejectCode)
       if (mServerPagerMessageHandle.isValid())
       {
          mServerPagerMessageHandle->send(mServerPagerMessageHandle->reject(rejectCode));
-         assert(!mClientPagerMessageHandle.isValid());
+         resip_assert(!mClientPagerMessageHandle.isValid());
          delete this;
       }
    }
@@ -271,7 +271,7 @@ RemoteIMPagerParticipant::onMessageArrived(ServerPagerMessageHandle h, const Sip
    {
       // This is the first message
       mConversationProfile = std::dynamic_pointer_cast<ConversationProfile>(h->getUserProfile());
-      assert(mConversationProfile != nullptr);
+      resip_assert(mConversationProfile != nullptr);
       mInitialIncomingMessage = msg;
       mRemoteUri = NameAddr(msg.header(h_From).uri());
       mRemoteAorNoPort = mRemoteUri.uri().getAorNoPort();
