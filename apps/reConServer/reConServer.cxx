@@ -1318,7 +1318,7 @@ ReConServerProcess::main (int argc, char** argv)
             }
             break;
          default:
-            assert(0);
+            resip_assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
       SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(mConversationManager->getMediaStackAdapter());

@@ -60,9 +60,9 @@ SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
                                      SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(partHandle, conversationManager, sipXConversationManager)
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -72,9 +72,9 @@ SipXRemoteParticipant::SipXRemoteParticipant(ConversationManager& conversationMa
                                      SipXConversationManager& sipXConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(conversationManager),
+: Participant(ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(conversationManager, sipXConversationManager)
+  SipXParticipant(ConversationManager::ParticipantType_Remote, conversationManager, sipXConversationManager)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -143,7 +143,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
    SdpContents& offer = *_offer;
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = getDialogSet().getConversationProfile().get();
-   assert(profile);
+   resip_assert(profile);
 
    // We need a copy of the session caps, since we modify them
    SdpContents sessionCaps = profile->sessionCaps();
@@ -589,7 +589,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpR
    {
       // copy over session capabilities
       ConversationProfile *profile = getDialogSet().getConversationProfile().get();
-      assert(profile);
+      resip_assert(profile);
 
       answer = profile->sessionCaps();
 

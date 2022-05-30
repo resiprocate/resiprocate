@@ -38,9 +38,9 @@ SipXMediaResourceParticipant::SipXMediaResourceParticipant(ParticipantHandle par
                                                    ConversationManager& conversationManager,
                                                    SipXConversationManager& sipXConversationManager,
                                                    const Uri& mediaUrl)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager),
   MediaResourceParticipant(partHandle, conversationManager, mediaUrl),
-  SipXParticipant(partHandle, conversationManager, sipXConversationManager),
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager, sipXConversationManager),
   mStreamPlayer(0),
   mPortOnBridge(-1)
 {
@@ -467,7 +467,7 @@ SipXMediaResourceParticipant::getConnectionPortOnBridge()
       }
       InfoLog(<< "SipXMediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mPortOnBridge=" << mPortOnBridge);
    }
-   assert(mPortOnBridge != -1);
+   resip_assert(mPortOnBridge != -1);
    return mPortOnBridge;
 }
 

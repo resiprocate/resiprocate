@@ -33,7 +33,7 @@ static const resip::ExtensionParameter p_prefetch("prefetch");
 MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
                                                    const Uri& mediaUrl)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_MediaResource, conversationManager),
   mMediaUrl(mediaUrl),
   mRepeat(false),
   mPrefetch(false),

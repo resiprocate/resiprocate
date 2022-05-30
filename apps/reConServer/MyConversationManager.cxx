@@ -104,9 +104,21 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
          ConversationHandle convHandle = createConversation();
          mRooms[room] = convHandle;
          // ensure a local participant is in the conversation - create one if one doesn't exist
-         if(getMediaStackAdapter().supportsLocalAudio() && getParticipantsByType<LocalParticipant>().empty())
+         if(getMediaStackAdapter().supportsLocalAudio())
          {
-            createLocalParticipant();
+            ParticipantHandle localPartHandle = 0;
+            const set<ParticipantHandle> participantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
+            // If no local participant then create one, otherwise use first in set
+            if (participantHandles.empty())
+            {
+               localPartHandle = createLocalParticipant();
+            }
+            else
+            {
+               localPartHandle = *participantHandles.begin();
+            }
+            // Add local participant to conversation
+            addParticipant(convHandle, localPartHandle);
          }
          addParticipant(convHandle, partHandle);
          answerParticipant(partHandle);
@@ -317,45 +329,58 @@ MyConversationManager::displayInfo()
 {
    Data output;
 
-   const set<ConversationHandle> conversations = getConversations();
-   if(!conversations.empty())
+   const set<ConversationHandle> conversations = getConversationHandles();
+   if (!conversations.empty())
    {
       output = "Active conversation handles: ";
       set<ConversationHandle>::const_iterator it;
-      for(it = conversations.begin(); it != conversations.end(); it++)
+      for (it = conversations.begin(); it != conversations.end(); it++)
       {
          output += Data(*it) + " ";
       }
       InfoLog(<< output);
    }
-   const set<ParticipantHandle> localParticipantHandles = getParticipantsByType<LocalParticipant>();
-   if(!localParticipantHandles.empty())
+   const set<ParticipantHandle> localParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
+   if (!localParticipantHandles.empty())
    {
       output = "Local Participant handles: ";
       std::set<ParticipantHandle>::const_iterator it;
-      for(it = localParticipantHandles.begin(); it != localParticipantHandles.end(); it++)
+      for (it = localParticipantHandles.begin(); it != localParticipantHandles.end(); it++)
       {
          output += Data(*it) + " ";
       }
       InfoLog(<< output);
    }
-   const set<ParticipantHandle> remoteParticipantHandles = getParticipantsByType<RemoteParticipant>();
-   if(!remoteParticipantHandles.empty())
+   const set<ParticipantHandle> remoteParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Remote);
+   if (!remoteParticipantHandles.empty())
    {
       output = "Remote Participant handles: ";
       std::set<ParticipantHandle>::const_iterator it;
-      for(it = remoteParticipantHandles.begin(); it != remoteParticipantHandles.end(); it++)
+      for (it = remoteParticipantHandles.begin(); it != remoteParticipantHandles.end(); it++)
       {
          output += Data(*it) + " ";
       }
       InfoLog(<< output);
    }
-   const set<ParticipantHandle> mediaParticipantHandles = getParticipantsByType<MediaResourceParticipant>();
-   if(!mediaParticipantHandles.empty())
+   set<ParticipantHandle> remoteIMParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_RemoteIMPager);
+   const set<ParticipantHandle> remoteIMSessionParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_RemoteIMSession);
+   remoteIMParticipantHandles.insert(remoteIMSessionParticipantHandles.begin(), remoteIMSessionParticipantHandles.end());  // merge the two lists
+   if (!remoteIMParticipantHandles.empty())
+   {
+      output = "Remote IM Participant handles: ";
+      std::set<ParticipantHandle>::iterator it;
+      for (it = remoteIMParticipantHandles.begin(); it != remoteIMParticipantHandles.end(); it++)
+      {
+         output += Data(*it) + " ";
+      }
+      InfoLog(<< output);
+   }
+   const set<ParticipantHandle> mediaParticipantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_MediaResource);
+   if (!mediaParticipantHandles.empty())
    {
       output = "Media Participant handles: ";
       std::set<ParticipantHandle>::const_iterator it;
-      for(it = mediaParticipantHandles.begin(); it != mediaParticipantHandles.end(); it++)
+      for (it = mediaParticipantHandles.begin(); it != mediaParticipantHandles.end(); it++)
       {
          output += Data(*it) + " ";
       }

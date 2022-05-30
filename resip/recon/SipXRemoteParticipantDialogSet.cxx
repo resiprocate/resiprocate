@@ -90,7 +90,7 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
       }
 
       ConversationProfile* profile = getConversationProfile().get();
-      assert(profile);
+      resip_assert(profile);
 
       OsStatus ret;
       Data connectionAddr = profile->sessionCaps().session().connection().getAddress();

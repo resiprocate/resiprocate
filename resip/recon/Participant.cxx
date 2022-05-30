@@ -15,16 +15,20 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 Participant::Participant(ParticipantHandle partHandle,
+                         ConversationManager::ParticipantType participantType,
                          ConversationManager& conversationManager)
 : mHandle(partHandle),
+  mType(participantType),
   mConversationManager(conversationManager)
 {
    mConversationManager.registerParticipant(this);
    //InfoLog(<< "Participant created, handle=" << mHandle);
 }
 
-Participant::Participant(ConversationManager& conversationManager)
+Participant::Participant(ConversationManager::ParticipantType participantType,
+                         ConversationManager& conversationManager)
 : mHandle(0),
+  mType(participantType),
   mConversationManager(conversationManager)
 {
    setHandle(mConversationManager.getNewParticipantHandle());

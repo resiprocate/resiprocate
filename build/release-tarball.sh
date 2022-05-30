@@ -21,6 +21,18 @@
 #   those components
 #
 
+if ! git diff --quiet ;
+then
+  echo "Uncommitted changes detected, please resolve"
+  exit 1
+fi
+
+if ! git diff --cached --quiet ;
+then
+  echo "Staged and uncommitted changes detected, please resolve"
+  exit 1
+fi
+
 autoreconf --install && \
   ./configure --with-popt --enable-ipv6 --enable-dtls --with-radcli --with-ssl \
               --enable-assert-syslog \

@@ -12,7 +12,6 @@
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/PagerMessageHandler.hxx>
 #include <rutil/Mutex.hxx>
-#include <rutil/RWMutex.hxx>
 
 #include <reflow/RTCPEventLoggingHandler.hxx>
 
@@ -74,6 +73,15 @@ public:
 
    ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter);
    virtual ~ConversationManager();
+
+   typedef enum
+   {
+      ParticipantType_Local,
+      ParticipantType_Remote,
+      ParticipantType_MediaResource,
+      ParticipantType_RemoteIMPager,
+      ParticipantType_RemoteIMSession
+   } ParticipantType;
 
    typedef enum
    {
@@ -766,22 +774,8 @@ protected:
    ConversationHandle getNewConversationHandle();  // thread safe
    Conversation* getConversation(ConversationHandle convHandle);
 
-   std::set<ConversationHandle> getConversations() const;
-   template <class T>
-   std::set<ParticipantHandle> getParticipantsByType() const
-   {
-      std::set<ParticipantHandle> participants;
-      ParticipantMap::const_iterator it;
-      resip::ReadLock r(mParticipantsMutex);
-      for(it = mParticipants.begin(); it != mParticipants.end(); it++)
-      {
-         if(dynamic_cast<T* const>(it->second) != nullptr)
-         {
-            participants.insert(it->first);
-         }
-      }
-      return participants;
-   };
+   std::set<ConversationHandle> getConversationHandles() const;  // thread safe
+   std::set<ParticipantHandle> getParticipantHandlesByType(ParticipantType participantType) const;  // thread safe
 
    bool isShuttingDown() { return mShuttingDown; }
 
@@ -871,14 +865,15 @@ private:
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;
-   resip::Mutex mConversationHandleMutex;
+   mutable resip::Mutex mConversationHandleMutex;
    ConversationHandle mCurrentConversationHandle;
+   std::set<ConversationHandle> mConversationHandles;
 
-   mutable resip::RWMutex mParticipantsMutex;
    typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
    ParticipantMap mParticipants;
-   resip::Mutex mParticipantHandleMutex;
+   mutable resip::Mutex mParticipantHandleMutex;
    ParticipantHandle mCurrentParticipantHandle;
+   std::map<ParticipantType, std::set<ParticipantHandle>> mParticipantHandlesByType;
 
    MediaResourceCache mMediaResourceCache;
 

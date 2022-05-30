@@ -16,7 +16,7 @@ using namespace std;
 
 LocalParticipant::LocalParticipant(ParticipantHandle partHandle,
                                    ConversationManager& conversationManager)
-: Participant(partHandle, conversationManager)
+: Participant(partHandle, ConversationManager::ParticipantType_Local, conversationManager)
 {
    InfoLog(<< "LocalParticipant created, handle=" << mHandle);
 }

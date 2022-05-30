@@ -55,7 +55,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   Participant(partHandle, conversationManager),
+   Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
    AppDialog(dum),
    IMParticipantBase(true /* prependSenderInfoToIMs? */),
    mDum(dum),
@@ -76,7 +76,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
 RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager, 
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet) :
-   Participant(conversationManager),
+   Participant(ConversationManager::ParticipantType_Remote, conversationManager),
    AppDialog(dum),
    IMParticipantBase(false /* prependSenderInfoToIMs? */),
    mDum(dum),
@@ -1684,7 +1684,7 @@ RemoteParticipant::onMessageFailure(InviteSessionHandle h, const SipMessage& msg
 {
    InfoLog(<< "onMessageFailure: handle=" << mHandle << ", " << msg.brief());
    auto failedMessage = h->getLastSentNITRequest();
-   assert(failedMessage->getContents() != nullptr);
+   resip_assert(failedMessage->getContents() != nullptr);
 
    std::unique_ptr<Contents> contents(failedMessage->getContents()->clone());
    if (mHandle) mConversationManager.onParticipantSendIMFailure(mHandle, msg, std::move(contents));

@@ -1,4 +1,3 @@
-#include "SipXConversationManager.hxx"
 #include "ReconSubsystem.hxx"
 #include "SipXParticipant.hxx"
 #include "SipXConversation.hxx"
@@ -14,16 +13,18 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXParticipant::SipXParticipant(ParticipantHandle partHandle,
+                         ConversationManager::ParticipantType partType,
                          ConversationManager& conversationManager,
                          SipXConversationManager& sipXConversationManager)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, partType, conversationManager),
   mSipXConversationManager(sipXConversationManager)
 {
 }
 
-SipXParticipant::SipXParticipant(ConversationManager& conversationManager,
-                         SipXConversationManager& sipXConversationManager)
-: Participant(conversationManager),
+SipXParticipant::SipXParticipant(ConversationManager::ParticipantType partType,
+                                 ConversationManager& conversationManager,
+                                 SipXConversationManager& sipXConversationManager)
+: Participant(partType, conversationManager),
   mSipXConversationManager(sipXConversationManager)
 {
 }
