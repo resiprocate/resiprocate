@@ -865,6 +865,7 @@ private:
    std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;
    bool mShuttingDown;
 
+   mutable resip::RWMutex mConversationsMutex;
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;
    resip::Mutex mConversationHandleMutex;

@@ -65,7 +65,11 @@ ConversationManager::shutdown()
    mShuttingDown = true;
 
    // Destroy each Conversation
-   ConversationMap tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
+   ConversationMap tempConvs;
+   {
+      resip::ReadLock r(mConversationsMutex);
+      tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
+   }
    ConversationMap::iterator i;
    for(i = tempConvs.begin(); i != tempConvs.end(); i++)
    {
@@ -295,12 +299,14 @@ ConversationManager::getNewConversationHandle()
 void 
 ConversationManager::registerConversation(Conversation *conversation)
 {
+   resip::WriteLock r(mConversationsMutex);
    mConversations[conversation->getHandle()] = conversation;
 }
 
 void 
 ConversationManager::unregisterConversation(Conversation *conversation)
 {
+   resip::WriteLock r(mConversationsMutex);
    mConversations.erase(conversation->getHandle());
 }
 
@@ -379,6 +385,7 @@ ConversationManager::getParticipant(ParticipantHandle partHandle)
 Conversation* 
 ConversationManager::getConversation(ConversationHandle convHandle)
 {
+   resip::ReadLock r(mConversationsMutex);
    ConversationMap::iterator i = mConversations.find(convHandle);
    if(i != mConversations.end())
    {
@@ -393,6 +400,7 @@ ConversationManager::getConversation(ConversationHandle convHandle)
 std::set<ConversationHandle>
 ConversationManager::getConversations() const
 {
+   resip::ReadLock r(mConversationsMutex);
    set<ConversationHandle> conversations;
    ConversationMap::const_iterator it;
    for(it = mConversations.begin(); it != mConversations.end(); it++)
