@@ -14,16 +14,18 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 KurentoParticipant::KurentoParticipant(ParticipantHandle partHandle,
+                         ConversationManager::ParticipantType participantType,
                          ConversationManager& conversationManager,
                          KurentoConversationManager& kurentoConversationManager)
-: Participant(partHandle, conversationManager),
+: Participant(partHandle, participantType, conversationManager),
   mKurentoConversationManager(kurentoConversationManager)
 {
 }
 
-KurentoParticipant::KurentoParticipant(ConversationManager& conversationManager,
+KurentoParticipant::KurentoParticipant(ConversationManager::ParticipantType participantType,
+                         ConversationManager& conversationManager,
                          KurentoConversationManager& kurentoConversationManager)
-: Participant(conversationManager),
+: Participant(participantType, conversationManager),
   mKurentoConversationManager(kurentoConversationManager)
 {
 }

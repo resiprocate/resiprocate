@@ -19,10 +19,12 @@ class KurentoParticipant : public virtual Participant
    public:  
 
       KurentoParticipant(ParticipantHandle partHandle,
+         ConversationManager::ParticipantType participantType,
          ConversationManager& conversationManager,
          KurentoConversationManager& kurentoConversationManager);
 
-      KurentoParticipant(ConversationManager& conversationManager,
+      KurentoParticipant(ConversationManager::ParticipantType participantType,
+         ConversationManager& conversationManager,
          KurentoConversationManager& kurentoConversationManager);
 
       virtual ~KurentoParticipant();
