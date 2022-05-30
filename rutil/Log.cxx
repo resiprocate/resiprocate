@@ -345,6 +345,8 @@ Log::initialize(Type type, Level level, const Data& appName,
    }
 #ifdef ENABLE_LOG_REPOSITORY_DETAILS
    GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git-commit=" << RESIPROCATE_GIT_ID << " git-branch=" << RESIPROCATE_BRANCH_NAME);
+#else
+   GenericLog(resip::Subsystem::NONE, resip::Log::Info, << "logger initialized app=" << appName << " version=" << VERSION << " git repository details unknown");
 #endif
 }
 
