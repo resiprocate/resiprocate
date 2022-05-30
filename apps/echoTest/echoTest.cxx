@@ -518,7 +518,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {         
          registerHandle = h;   
-         assert(registerHandle.isValid());         
+         resip_assert(registerHandle.isValid());         
          InfoLog(<< name << ": ClientRegistration-onSuccess - " << response.brief());
          registered = true;
       }
@@ -583,7 +583,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
          InfoLog(<< name << ": InviteSession-onTerminated - " << msg->brief());
-         assert(0); // This is overriden in UAS and UAC specific handlers
+         resip_assert(0); // This is overriden in UAS and UAC specific handlers
       }
 
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents& sdp)
@@ -836,7 +836,7 @@ class TestUas : public TestInviteSessionHandler
          InfoLog(<< name << ": InviteSession-onConnected - " << msg.brief());
          
          // At this point no NIT should have been sent
-         assert(!is->getLastSentNITRequest());
+         resip_assert(!is->getLastSentNITRequest());
       }
 
       virtual void onInfoSuccess(InviteSessionHandle is, const SipMessage& msg)

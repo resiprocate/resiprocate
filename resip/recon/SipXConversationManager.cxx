@@ -207,7 +207,7 @@ SipXConversationManager::createSharedMediaInterfaceConversation(ConversationHand
    if (isShuttingDown()) return 0;  // Don't allow new things to be created when we are shutting down
    if (mMediaInterfaceMode == sipXGlobalMediaInterfaceMode)
    {
-      assert(false);
+      resip_assert(false);
       WarningLog(<< "Calling createSharedMediaInterfaceConversation is not appropriate when using sipXGlobalMediaInterfaceMode");
       return 0;
    }
@@ -507,8 +507,8 @@ SipXConversationManager::supportsMultipleMediaInterfaces()
 bool
 SipXConversationManager::canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2)
 {
-   assert(conversation1);
-   assert(conversation2);
+   resip_assert(conversation1);
+   resip_assert(conversation2);
 
    // You can only add non-local (excluding RemoteIM) participants to 2 different conversations if they share the same MediaInterface
    return (((SipXConversation*)conversation1)->getMediaInterface().get() == ((SipXConversation*)conversation2)->getMediaInterface().get());

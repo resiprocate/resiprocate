@@ -467,7 +467,7 @@ SipXMediaResourceParticipant::getConnectionPortOnBridge()
       }
       InfoLog(<< "SipXMediaResourceParticipant getConnectionPortOnBridge, handle=" << mHandle << ", mPortOnBridge=" << mPortOnBridge);
    }
-   assert(mPortOnBridge != -1);
+   resip_assert(mPortOnBridge != -1);
    return mPortOnBridge;
 }
 

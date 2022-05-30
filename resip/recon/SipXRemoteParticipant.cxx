@@ -141,7 +141,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
 {
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = getDialogSet().getConversationProfile().get();
-   assert(profile);
+   resip_assert(profile);
 
    // We need a copy of the session caps, since we modify them
    SdpContents sessionCaps = profile->sessionCaps();
@@ -584,7 +584,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& ans
    {
       // copy over session capabilities
       ConversationProfile *profile = getDialogSet().getConversationProfile().get();
-      assert(profile);
+      resip_assert(profile);
 
       answer = profile->sessionCaps();
 

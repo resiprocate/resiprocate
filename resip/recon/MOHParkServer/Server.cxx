@@ -409,7 +409,7 @@ Server::startup()
    }
 
    // Create a ParkManager for each setting in map can call startup
-   assert(mParkManagerMap.empty());
+   resip_assert(mParkManagerMap.empty());
    ConfigParser::ParkSettingsMap::iterator itPark = mConfig.mParkSettingsMap.begin();
    for (; itPark != mConfig.mParkSettingsMap.end(); itPark++)
    {

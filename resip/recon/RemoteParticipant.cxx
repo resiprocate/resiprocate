@@ -1645,7 +1645,7 @@ RemoteParticipant::onMessageFailure(InviteSessionHandle h, const SipMessage& msg
 {
    InfoLog(<< "onMessageFailure: handle=" << mHandle << ", " << msg.brief());
    auto failedMessage = h->getLastSentNITRequest();
-   assert(failedMessage->getContents() != nullptr);
+   resip_assert(failedMessage->getContents() != nullptr);
 
    std::unique_ptr<Contents> contents(failedMessage->getContents()->clone());
    if (mHandle) mConversationManager.onParticipantSendIMFailure(mHandle, msg, std::move(contents));

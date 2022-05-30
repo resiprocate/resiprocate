@@ -170,7 +170,7 @@ Conversation::relayInstantMessageToRemoteParticipants(ParticipantHandle sourcePa
    if (it == mParticipants.end())
    {
       // Source Participant is not part of the conversation, strange, don't continue
-      assert(false);  // shouldn't happen
+      resip_assert(false);  // shouldn't happen
       return;
    }
    if (it->second.getOutputGain() == 0)
@@ -316,7 +316,7 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
       if(prevShouldHold != shouldHold())
       {
@@ -341,28 +341,28 @@ Conversation::unregisterParticipant(Participant *participant)
       bool prevShouldHold = shouldHold();
       if(dynamic_cast<LocalParticipant*>(participant))
       {
-         assert(mNumLocalParticipants != 0);
+         resip_assert(mNumLocalParticipants != 0);
          mNumLocalParticipants--;
       }
       else if(dynamic_cast<RemoteParticipant*>(participant))
       {
-         assert(mNumRemoteParticipants != 0);
+         resip_assert(mNumRemoteParticipants != 0);
          mNumRemoteParticipants--;
       }
       else if(dynamic_cast<MediaResourceParticipant*>(participant))
       {
-         assert(mNumMediaParticipants != 0);
+         resip_assert(mNumMediaParticipants != 0);
          mNumMediaParticipants--;
       }
       else if (dynamic_cast<RemoteIMPagerParticipant*>(participant) ||
                dynamic_cast<RemoteIMSessionParticipant*>(participant))
       {
-         assert(mNumRemoteIMParticipants != 0);
+         resip_assert(mNumRemoteIMParticipants != 0);
          mNumRemoteIMParticipants--;
       }
       else
       {
-         assert(false);
+         resip_assert(false);
       }
       if(!mDestroying && prevShouldHold != shouldHold())
       {
