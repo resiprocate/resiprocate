@@ -486,7 +486,6 @@
     <ClCompile Include="Poll.cxx" />
     <ClCompile Include="dns\QueryTypes.cxx" />
     <ClCompile Include="Random.cxx" />
-    <ClCompile Include="RecursiveMutex.cxx" />
     <ClCompile Include="resipfaststreams.cxx" />
     <ClCompile Include="dns\RRCache.cxx" />
     <ClCompile Include="dns\RRList.cxx" />
@@ -578,7 +577,6 @@
     <ClInclude Include="Poll.hxx" />
     <ClInclude Include="dns\QueryTypes.hxx" />
     <ClInclude Include="Random.hxx" />
-    <ClInclude Include="RecursiveMutex.hxx" />
     <ClInclude Include="ResipAssert.h" />
     <ClInclude Include="resipfaststreams.hxx" />
     <ClInclude Include="dns\RRCache.hxx" />

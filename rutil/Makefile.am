@@ -63,7 +63,6 @@ librutil_la_SOURCES = \
 	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \
 	Random.cxx \
-	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
 	SelectInterruptor.cxx \
 	Sha1.cxx \
@@ -139,7 +138,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ThreadIf.hxx \
 	WinLeakCheck.hxx \
 	Random.hxx \
-	RecursiveMutex.hxx \
 	AsyncProcessHandler.hxx \
 	RADIUSDigestAuthenticator.hxx \
 	Repository.hxx \
