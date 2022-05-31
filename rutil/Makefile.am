@@ -218,8 +218,11 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 
 Repository.hxx:	.ALWAYS_REBUILD
 	echo "// Auto generated" > $@
+	echo "#ifndef __Repository_hxx" >> $@
+	echo "#define __Repository_hxx" >> $@
 	echo "#define RESIPROCATE_GIT_ID \"`git describe --match="" --always --abbrev=40 --dirty`\"" >> $@
 	echo "#define RESIPROCATE_BRANCH_NAME \"`git rev-parse --abbrev-ref HEAD`\"" >> $@
+	echo "#endif" >> $@
 
 .ALWAYS_REBUILD:
 
