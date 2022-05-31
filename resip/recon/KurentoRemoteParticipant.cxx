@@ -63,7 +63,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
   mWSAcceptsKeyframeRequests(true),
-  mLastRemoteSdp(0)
+  mLastRemoteSdp(0),
+  mWaitingAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -80,7 +81,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversa
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
   mWSAcceptsKeyframeRequests(true),
-  mLastRemoteSdp(0)
+  mLastRemoteSdp(0),
+  mWaitingAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -164,6 +166,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 
       kurento::ContinuationVoid cConnected = [this, isWebRTC, c, cOnOfferReady]{
          mEndpoint->generateOffer([this, isWebRTC, c, cOnOfferReady](const std::string& offer){
+            mWaitingAnswer = true;
             if(isWebRTC)
             {
                std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
@@ -397,9 +400,10 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    std::shared_ptr<SdpContents> remoteSdp = getRemoteSdp();
    bool remoteSdpChanged = remoteSdp.get() != mLastRemoteSdp;
    mLastRemoteSdp = remoteSdp.get();
-   if(remoteSdp && remoteSdpChanged)
+   if(remoteSdp && remoteSdpChanged && mWaitingAnswer)
    {
       DebugLog(<<"remoteSdp has changed, sending to Kurento");
+      mWaitingAnswer = false;
       std::ostringstream answerBuf;
       answerBuf << *remoteSdp;
       mEndpoint->processAnswer([this](const std::string updatedOffer){

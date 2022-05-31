@@ -102,6 +102,7 @@ public: // FIXME
    bool mReuseSdpAnswer;
    bool mWSAcceptsKeyframeRequests;
    resip::SdpContents* mLastRemoteSdp;
+   bool mWaitingAnswer;
 };
 
 }
