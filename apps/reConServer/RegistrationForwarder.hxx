@@ -20,7 +20,7 @@ class RegistrationForwarder : public resip::TransactionUser
       RegistrationForwarder(resip::ConfigParse& cp, resip::SipStack& stack);
       virtual ~RegistrationForwarder();
 
-      bool process(resip::Lockable* mutex = 0);
+      bool process(resip::Mutex* mutex = 0);
 
       virtual const resip::Data& name() const;
 

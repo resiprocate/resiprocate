@@ -69,7 +69,7 @@ class HttpGetMessage;
 
 class ConnectionTerminated;
 
-class Lockable;
+class Mutex;
 
 class ExternalMessageBase;
 class ExternalMessageHandler;
@@ -291,8 +291,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process.
       bool hasEvents() const;
-      bool process(Lockable* mutex = NULL);  // non-blocking
-      bool process(int timeoutMs, Lockable* mutex = NULL);   // Specify -1 for infinte timeout
+      bool process(Mutex* mutex = NULL);  // non-blocking
+      bool process(int timeoutMs, Mutex* mutex = NULL);   // Specify -1 for infinte timeout
 
       AppDialogHandle findAppDialog(const DialogId& id);
       AppDialogSetHandle findAppDialogSet(const DialogSetId& id);

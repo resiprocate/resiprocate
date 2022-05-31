@@ -55,11 +55,11 @@ WriteLock::WriteLock(Lockable & lockable)
 }
 
 
-PtrLock::PtrLock(Lockable* lockable)
+PtrLock::PtrLock(Mutex* lockable)
    : myLockable(lockable)
 {
    if (lockable)
-      takeLock(*lockable, VOCAL_LOCK);
+      lockable->lock();
 }
 
 PtrLock::~PtrLock()
