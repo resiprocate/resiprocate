@@ -849,7 +849,7 @@ RemoteParticipant::acceptPendingOODRefer()
                                                                            mPendingOODReferSubHandle,  // Note will be invalid if refer no-sub, which is fine
                                                                            &offer, 
                                                                            DialogUsageManager::None,  //EncryptionLevel 
-                                                                           0,     //Aleternative Contents
+                                                                           0,     // Alternative Contents
                                                                            &mDialogSet);
          mDialogSet.sendInvite(std::move(invitemsg)); 
 
