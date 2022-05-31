@@ -19,13 +19,19 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
+// The Kurento integration is currently only designed to
+// bridge two participants.  Kurento itself can support
+// rooms with more than two participants.
+// FIXME: adapt to support rooms with more than two participants
+#define MAX_PARTICIPANTS 2
+
 KurentoConversation::KurentoConversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
                            KurentoConversationManager& kurentoConversationManager,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)
-: Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
+: Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode, MAX_PARTICIPANTS),
   mKurentoConversationManager(kurentoConversationManager)
 {
    if(mKurentoConversationManager.supportsMultipleMediaInterfaces())
