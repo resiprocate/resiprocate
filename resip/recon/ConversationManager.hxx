@@ -19,6 +19,7 @@
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
 
+#include <atomic>
 #include <memory>
 
 namespace resip
@@ -862,13 +863,13 @@ private:
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;
    mutable resip::Mutex mConversationHandleMutex;
-   ConversationHandle mCurrentConversationHandle;
+   std::atomic<ConversationHandle> mCurrentConversationHandle;
    std::set<ConversationHandle> mConversationHandles;
 
    typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
    ParticipantMap mParticipants;
    mutable resip::Mutex mParticipantHandleMutex;
-   ParticipantHandle mCurrentParticipantHandle;
+   std::atomic<ParticipantHandle> mCurrentParticipantHandle;
    Participant* getParticipant(ParticipantHandle partHandle);
    std::map<ParticipantType, std::set<ParticipantHandle>> mParticipantHandlesByType;
 

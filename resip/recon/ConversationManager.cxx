@@ -283,7 +283,6 @@ ConversationManager::startApplicationTimer(unsigned int timerId, unsigned int ti
 ConversationHandle 
 ConversationManager::getNewConversationHandle()
 {
-   Lock lock(mConversationHandleMutex);
    return mCurrentConversationHandle++; 
 }
 
@@ -308,7 +307,6 @@ ConversationManager::unregisterConversation(Conversation *conversation)
 ParticipantHandle 
 ConversationManager::getNewParticipantHandle()
 {
-   Lock lock(mParticipantHandleMutex);
    return mCurrentParticipantHandle++; 
 }
 
