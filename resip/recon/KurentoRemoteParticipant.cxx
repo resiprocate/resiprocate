@@ -62,7 +62,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
-  mWSAcceptsKeyframeRequests(true)
+  mWSAcceptsKeyframeRequests(true),
+  mLastRemoteSdp(0)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -78,7 +79,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversa
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
-  mWSAcceptsKeyframeRequests(true)
+  mWSAcceptsKeyframeRequests(true),
+  mLastRemoteSdp(0)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -387,6 +389,31 @@ void
 KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 {
    // FIXME Kurento - implement, may need to break up this method into multiple parts
+   StackLog(<<"adjustRTPStreams");
+
+   std::shared_ptr<SdpContents> localSdp = getLocalSdp();
+   resip_assert(localSdp);
+
+   std::shared_ptr<SdpContents> remoteSdp = getRemoteSdp();
+   bool remoteSdpChanged = remoteSdp.get() != mLastRemoteSdp;
+   mLastRemoteSdp = remoteSdp.get();
+   if(remoteSdp && remoteSdpChanged)
+   {
+      DebugLog(<<"remoteSdp has changed, sending to Kurento");
+      std::ostringstream answerBuf;
+      answerBuf << *remoteSdp;
+      mEndpoint->processAnswer([this](const std::string updatedOffer){
+         // FIXME - use updatedOffer
+         WarningLog(<<"Kurento has processed the peer's SDP answer");
+         StackLog(<<"updatedOffer FROM Kurento: " << updatedOffer);
+         HeaderFieldValue hfv(updatedOffer.data(), updatedOffer.size());
+         Mime type("application", "sdp");
+         std::unique_ptr<SdpContents> _updatedOffer(new SdpContents(hfv, type));
+         _updatedOffer->session().transformLocalHold(isHolding());
+         setLocalSdp(*_updatedOffer);
+         //c(true, std::move(_updatedOffer));
+      }, answerBuf.str());
+   }
 
    // FIXME Kurento - sometimes true
    setRemoteHold(false);
