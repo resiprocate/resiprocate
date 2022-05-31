@@ -291,7 +291,7 @@ ConversationManager::registerConversation(Conversation *conversation)
 {
    mConversations[conversation->getHandle()] = conversation;
 
-   Lock lock(mConversationHandleMutex);
+   WriteLock lock(mConversationHandlesMutex);
    mConversationHandles.insert(conversation->getHandle());
 }
 
@@ -300,7 +300,7 @@ ConversationManager::unregisterConversation(Conversation *conversation)
 {
    mConversations.erase(conversation->getHandle());
 
-   Lock lock(mConversationHandleMutex);
+   WriteLock lock(mConversationHandlesMutex);
    mConversationHandles.erase(conversation->getHandle());
 }
 
@@ -315,7 +315,7 @@ ConversationManager::registerParticipant(Participant *participant)
 {
    mParticipants[participant->getParticipantHandle()] = participant;
    
-   Lock lock(mParticipantHandleMutex);
+   WriteLock lock(mParticipantHandlesMutex);
    mParticipantHandlesByType[participant->getParticipantType()].insert(participant->getParticipantHandle());
 }
 
@@ -325,7 +325,7 @@ ConversationManager::unregisterParticipant(Participant *participant)
    InfoLog(<< "participant unregistered, handle=" << participant->getParticipantHandle());
    mParticipants.erase(participant->getParticipantHandle());
 
-   Lock lock(mParticipantHandleMutex);
+   WriteLock lock(mParticipantHandlesMutex);
    mParticipantHandlesByType[participant->getParticipantType()].erase(participant->getParticipantHandle());
 }
 
@@ -395,14 +395,14 @@ ConversationManager::getConversation(ConversationHandle convHandle)
 std::set<ConversationHandle>
 ConversationManager::getConversationHandles() const
 {
-   Lock lock(mConversationHandleMutex);
+   ReadLock lock(mConversationHandlesMutex);
    return mConversationHandles;
 }
 
 std::set<ParticipantHandle>
 ConversationManager::getParticipantHandlesByType(ParticipantType participantType) const
 {
-   Lock lock(mParticipantHandleMutex);
+   ReadLock lock(mParticipantHandlesMutex);
    std::set<ParticipantHandle> participantHandles;
    auto it = mParticipantHandlesByType.find(participantType);
    if (it != mParticipantHandlesByType.end())
