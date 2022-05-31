@@ -55,7 +55,7 @@ class WriteLock : public Lock
 class PtrLock
 {
    public:
-      PtrLock(Lockable*, LockType = VOCAL_LOCK);
+      PtrLock(Lockable*);
       virtual ~PtrLock();
 
    private:
