@@ -216,6 +216,8 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	hep/HepAgent.hxx \
 	hep/ResipHep.hxx
 
+Log.cxx:	Repository.hxx
+
 Repository.hxx:	.ALWAYS_REBUILD
 	echo "// Auto generated" > $@
 	echo "#ifndef __Repository_hxx" >> $@
