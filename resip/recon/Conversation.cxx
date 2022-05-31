@@ -25,7 +25,8 @@ Conversation::Conversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
-                           ConversationManager::AutoHoldMode autoHoldMode)
+                           ConversationManager::AutoHoldMode autoHoldMode,
+                           unsigned int maxParticipants)
 : mHandle(handle),
   mConversationManager(conversationManager),
   mDestroying(false),
@@ -34,6 +35,7 @@ Conversation::Conversation(ConversationHandle handle,
   mNumRemoteIMParticipants(0),
   mNumMediaParticipants(0),
   mAutoHoldMode(autoHoldMode),
+  mMaxParticipants(maxParticipants),
   mBridgeMixer(0),
   mSharingMediaInterfaceWithAnotherConversation(false)
 {
@@ -95,6 +97,12 @@ Conversation::getParticipant(ParticipantHandle partHandle)
 void 
 Conversation::addParticipant(Participant* participant, unsigned int inputGain, unsigned int outputGain)
 {
+   if(mMaxParticipants > 0 && mParticipants.size() >= mMaxParticipants)
+   {
+      WarningLog(<<"Conversation already has " << mMaxParticipants << " participant(s), can't add another");
+      return;
+   }
+
    // If participant doesn't already exist in this conversation - then add them
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
