@@ -11,7 +11,7 @@
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/PagerMessageHandler.hxx>
-#include <rutil/Mutex.hxx>
+#include <rutil/RWMutex.hxx>
 
 #include <reflow/RTCPEventLoggingHandler.hxx>
 
@@ -19,6 +19,7 @@
 #include "MediaEvent.hxx"
 #include "HandleTypes.hxx"
 
+#include <atomic>
 #include <memory>
 
 namespace resip
@@ -865,14 +866,14 @@ private:
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;
-   mutable resip::Mutex mConversationHandleMutex;
-   ConversationHandle mCurrentConversationHandle;
+   mutable resip::RWMutex mConversationHandlesMutex;
+   std::atomic<ConversationHandle> mCurrentConversationHandle;
    std::set<ConversationHandle> mConversationHandles;
 
    typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
    ParticipantMap mParticipants;
-   mutable resip::Mutex mParticipantHandleMutex;
-   ParticipantHandle mCurrentParticipantHandle;
+   mutable resip::RWMutex mParticipantHandlesMutex;
+   std::atomic<ParticipantHandle> mCurrentParticipantHandle;
    std::map<ParticipantType, std::set<ParticipantHandle>> mParticipantHandlesByType;
 
    MediaResourceCache mMediaResourceCache;
