@@ -37,6 +37,8 @@ protected:
                 ConversationHandle sharedMediaInterfaceConvHandle,
                 ConversationManager::AutoHoldMode autoHoldMode,
                 unsigned int maxParticipants = 0);
+   virtual void onParticipantAdded(Participant* participant) = 0;
+   virtual void onParticipantRemoved(Participant* participant) = 0;
 public:
    virtual ~Conversation();
 
