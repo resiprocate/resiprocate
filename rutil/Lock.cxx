@@ -8,6 +8,7 @@ using resip::PtrLock;
 
 using resip::LockType;
 using resip::Lockable;
+using resip::Mutex;
 
 
 static inline void takeLock(Lockable& lockable, LockType lockType) {
