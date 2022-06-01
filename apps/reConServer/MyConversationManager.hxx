@@ -10,12 +10,6 @@
 #endif
 
 #include <rutil/Data.hxx>
-#ifdef USE_SIPXTAPI
-#include <resip/recon/SipXConversationManager.hxx>
-#endif
-#ifdef USE_KURENTO
-#include <resip/recon/KurentoConversationManager.hxx>
-#endif
 
 #include "reConServerConfig.hxx"
 #include <thread>
@@ -36,7 +30,7 @@ class MyConversationManager : public recon::ConversationManager
 {
 public:
 
-   MyConversationManager(const ReConServerConfig& config, const resip::Data& kurentoUri, bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(const ReConServerConfig& config, const resip::Data& kurentoUri, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();

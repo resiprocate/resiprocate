@@ -44,6 +44,7 @@ int _kbhit() {
 #ifdef USE_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
+#include <resip/recon/SipXConversationManager.hxx>
 #endif
 
 #include "reConServerConfig.hxx"
@@ -127,7 +128,9 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
    }
 
+#ifdef PREFER_SIPXTAPI
    SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(myConversationManager.getMediaStackAdapter());
+#endif
 
    // Process commands
    if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit"))
@@ -478,6 +481,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       InfoLog( << "Autoanswer " << (enable ? "enabled" : "disabled"));
       return;
    }
+#ifdef PREFER_SIPXTAPI
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
@@ -504,6 +508,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
       return;
    }
+#endif
    if(isEqualNoCase(command, "securemedia") || isEqualNoCase(command, "sm"))
    {
       ConversationProfile::SecureMediaMode secureMediaMode = ConversationProfile::NoSecureMedia;
@@ -1305,7 +1310,7 @@ ReConServerProcess::main (int argc, char** argv)
       switch(application)
       {
          case ReConServerConfig::None:
-            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(reConServerConfig, kurentoUri, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(reConServerConfig, kurentoUri, localAudioEnabled, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
             {
@@ -1313,7 +1318,7 @@ ReConServerProcess::main (int argc, char** argv)
                {
                   mCDRFile = std::make_shared<CDRFile>(cdrLogFilename);
                }
-               b2BCallManager = new B2BCallManager(kurentoUri, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
+               b2BCallManager = new B2BCallManager(kurentoUri, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
             break;
@@ -1321,8 +1326,10 @@ ReConServerProcess::main (int argc, char** argv)
             resip_assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
+#ifdef PREFER_SIPXTAPI
       SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(mConversationManager->getMediaStackAdapter());
       mediaStackAdapter.buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
+#endif
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1346,7 +1353,9 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
+#ifdef PREFER_SIPXTAPI
             mediaStackAdapter.buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
+#endif
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else
