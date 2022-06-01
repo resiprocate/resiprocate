@@ -59,6 +59,9 @@ protected:
    friend class MoveParticipantCmd;
    std::shared_ptr<SipXMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
 
+   virtual void onParticipantAdded(Participant* participant);
+   virtual void onParticipantRemoved(Participant* participant);
+
 private: 
    SipXConversationManager& mSipXConversationManager;
 

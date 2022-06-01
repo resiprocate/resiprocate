@@ -50,6 +50,16 @@ SipXConversation::~SipXConversation()
    mMediaInterface.reset();
 }
 
+void
+SipXConversation::onParticipantAdded(Participant* participant)
+{
+}
+
+void
+SipXConversation::onParticipantRemoved(Participant* participant)
+{
+}
+
 /* ====================================================================
 
  Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com

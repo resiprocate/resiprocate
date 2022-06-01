@@ -301,9 +301,11 @@ Conversation::destroy()
 void 
 Conversation::registerParticipant(Participant *participant, unsigned int inputGain, unsigned int outputGain)
 {
+   bool added = false;
    // Only increment count if registering new participant
    if(getParticipant(participant->getParticipantHandle()) == 0)
    {
+      added = true;
       bool prevShouldHold = shouldHold();
       if(dynamic_cast<LocalParticipant*>(participant))
       {
@@ -336,6 +338,10 @@ Conversation::registerParticipant(Participant *participant, unsigned int inputGa
 
    InfoLog(<< "Participant handle=" << participant->getParticipantHandle() << " added to conversation handle=" << mHandle << " (BridgePort=" << participant->getConnectionPortOnBridge() << ")");
 
+   if(added)
+   {
+      onParticipantAdded(participant);
+   }
    participant->applyBridgeMixWeights();
 }
 
@@ -344,6 +350,7 @@ Conversation::unregisterParticipant(Participant *participant)
 {
    if(getParticipant(participant->getParticipantHandle()) != 0)
    {
+      onParticipantRemoved(participant);
       mParticipants.erase(participant->getParticipantHandle());  // No need to notify this party, remove from map first
 
       bool prevShouldHold = shouldHold();
