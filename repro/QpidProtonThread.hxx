@@ -39,7 +39,7 @@ public:
 
 private:
    unsigned int mRetryDelay;
-   UInt64 mPending;
+   uint64_t mPending;
    std::string mUrl;
    proton::sender mSender;
    proton::work_queue* mWorkQueue;

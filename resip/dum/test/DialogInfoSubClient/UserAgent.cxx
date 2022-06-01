@@ -1230,7 +1230,7 @@ UserAgent::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 UserAgent::getDefaultExpires() const
 {
    return 60;

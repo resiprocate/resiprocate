@@ -33,9 +33,9 @@ class UInt32Category : public ParserCategory
       virtual ParserCategory* clone(void* location) const;
       virtual ParserCategory* clone(PoolBase* pool) const;
 
-      const UInt32& value() const;
+      const uint32_t& value() const;
       const Data& comment() const;
-      UInt32& value();
+      uint32_t& value();
       Data& comment();
 
       // Inform the compiler that overloads of these may be found in
@@ -59,7 +59,7 @@ defineParam(duration, "duration", UInt32Parameter, "RFC 3261");
 #undef defineParam
 
    private:
-      UInt32 mValue;
+      uint32_t mValue;
       Data mComment;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];

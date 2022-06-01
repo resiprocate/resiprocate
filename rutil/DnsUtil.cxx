@@ -643,7 +643,7 @@ const char *DnsUtil::inet_ntop(int af, const void* src, char* dst,
       // .bwc. inet_ntop4 seems to be implemented with sprintf on OS X.
       // This code is about 5-6 times faster. Linux has a well-optimized 
       // inet_ntop, however.
-      const UInt8* bytes=(const UInt8*)src;
+      const uint8_t* bytes=(const uint8_t*)src;
       Data dest(Data::Borrow, dst, sizeof("xxx.xxx.xxx.xxx."));
       dest.clear();
       dest.append(UInt8ToStr[bytes[0]].data(), UInt8ToStr[bytes[0]].size());

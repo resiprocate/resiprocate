@@ -314,7 +314,7 @@ CREATE VIEW filtersavp AS
 --
 -- see:
 --    repro/SiloStore.cxx buildKey     -> attr
---        (UInt64)originalSendTime ":" + tid
+--        (uint64_t)originalSendTime ":" + tid
 --    repro/AbstractDb.cxx getSecondaryKey               attr2
 --        destUri
 --    repro/AbstractDb.cxx decodeSiloRecord -> value

@@ -74,8 +74,8 @@ class ServerRegistrationHandler
       ///
       virtual void getGlobalExpires(const SipMessage& msg, 
                                     const std::shared_ptr<MasterProfile>& masterProfile, 
-                                    UInt32 &expires, 
-                                    UInt32 &returnCode);
+                                    uint32_t &expires, 
+                                    uint32_t &returnCode);
 
       /// When processing a REGISTER request, return the desired expires value by processing this contact's expires
       /// parameter.  If the expires value is not modified in this function the global expires will be used.
@@ -85,8 +85,8 @@ class ServerRegistrationHandler
       ///
       virtual void getContactExpires(const NameAddr &contact, 
                                      const std::shared_ptr<MasterProfile>& masterProfile, 
-                                     UInt32 &expires, 
-                                     UInt32 &returnCode);
+                                     uint32_t &expires, 
+                                     uint32_t &returnCode);
 
        /** If true, the registration processing will use the async* functions here and will not use the RegistrationPersistenceManager.
         */

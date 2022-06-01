@@ -153,7 +153,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       offer = getInviteSessionHandle()->getLocalSdp();
 
       // Set sessionid and version for this sdp
-      UInt64 currentTime = Timer::getTimeMicroSec();
+      uint64_t currentTime = Timer::getTimeMicroSec();
       offer.session().origin().getSessionId() = currentTime;
       offer.session().origin().getVersion() = currentTime;  
 
@@ -589,7 +589,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& ans
       answer = profile->sessionCaps();
 
       // Set sessionid and version for this answer
-      UInt64 currentTime = Timer::getTimeMicroSec();
+      uint64_t currentTime = Timer::getTimeMicroSec();
       answer.session().origin().getSessionId() = currentTime;
       answer.session().origin().getVersion() = currentTime;  
 
@@ -714,7 +714,7 @@ SipXRemoteParticipant::formMidDialogSdpOfferOrAnswer(const SdpContents& localSdp
       newSdp.session().media().clear();
 
       // Set sessionid and version for this sdp
-      UInt64 currentTime = Timer::getTimeMicroSec();
+      uint64_t currentTime = Timer::getTimeMicroSec();
       newSdp.session().origin().getSessionId() = currentTime;
       newSdp.session().origin().getVersion() = currentTime;  
 

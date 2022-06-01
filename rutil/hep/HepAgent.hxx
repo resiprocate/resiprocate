@@ -156,7 +156,7 @@ class HepAgent
          hg->dst_port.data = htons(destinationPort);
          hg->dst_port.chunk.length = htons(sizeof(hg->dst_port));
 
-         UInt64 now = hepUnixTimestamp();
+         uint64_t now = hepUnixTimestamp();
 
          /* TIMESTAMP SEC */
          hg->time_sec.chunk.vendor_id = htons(0x0000);

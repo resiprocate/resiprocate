@@ -2374,7 +2374,7 @@ main(int arc, char** argv)
    {
       resip::Data test("Raw header-field-value creation/deletion");
       cout << endl << test << endl;
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          HeaderFieldValue hfv(test.data(), test.size());
@@ -2388,7 +2388,7 @@ main(int arc, char** argv)
       resip::Data test("Auth creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Auth auth(hfv, Headers::UNKNOWN);
@@ -2400,7 +2400,7 @@ main(int arc, char** argv)
       resip::Data test("Digest nonce=\"1305231689:fed475e952ee1d3ecaf60b17bce12218\",algorithm=MD5,realm=\"localhost\",qop=\"auth,auth-int\"");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Auth auth(hfv, Headers::UNKNOWN);
@@ -2426,7 +2426,7 @@ main(int arc, char** argv)
       resip::Data test("Digest username=\"derek\",realm=\"localhost\",nonce=\"1305231689:fed475e952ee1d3ecaf60b17bce12218\",uri=\"sip:jason@localhost\",response=\"88f519f04c2a09c500af88ff7bccdf52\",cnonce=\"foo\",nc=0000005D,qop=auth-int,algorithm=MD5");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Auth auth(hfv, Headers::UNKNOWN);
@@ -2453,7 +2453,7 @@ main(int arc, char** argv)
       resip::Data test("CSeq creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          CSeqCategory cseq(hfv, Headers::UNKNOWN);
@@ -2465,7 +2465,7 @@ main(int arc, char** argv)
       resip::Data test("9872643 INVITE");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          CSeqCategory cseq(hfv, Headers::UNKNOWN);
@@ -2491,7 +2491,7 @@ main(int arc, char** argv)
       resip::Data test("1 INVITE");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          CSeqCategory cseq(hfv, Headers::UNKNOWN);
@@ -2519,7 +2519,7 @@ main(int arc, char** argv)
       resip::Data test("CallId creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          CallId callid(hfv, Headers::UNKNOWN);
@@ -2531,7 +2531,7 @@ main(int arc, char** argv)
       resip::Data test("NOIUYCEOGoIUBaocuwyVCopiuVAbcs");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          CallId callid(hfv, Headers::UNKNOWN);
@@ -2559,7 +2559,7 @@ main(int arc, char** argv)
       resip::Data test("Date creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          DateCategory date(hfv, Headers::UNKNOWN);
@@ -2571,7 +2571,7 @@ main(int arc, char** argv)
       resip::Data test("Thu, 21 Feb 2002 13:02:03 GMT");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          DateCategory date(hfv, Headers::UNKNOWN);
@@ -2599,7 +2599,7 @@ main(int arc, char** argv)
       resip::Data test("Expires creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          ExpiresCategory pc(hfv, Headers::UNKNOWN);
@@ -2611,7 +2611,7 @@ main(int arc, char** argv)
       resip::Data test("3600");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          ExpiresCategory pc(hfv, Headers::UNKNOWN);
@@ -2639,7 +2639,7 @@ main(int arc, char** argv)
       resip::Data test("Mime creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Mime pc(hfv, Headers::UNKNOWN);
@@ -2651,7 +2651,7 @@ main(int arc, char** argv)
       resip::Data test("application/rlmi+xml");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Mime pc(hfv, Headers::UNKNOWN);
@@ -2677,7 +2677,7 @@ main(int arc, char** argv)
       resip::Data test("application/sdp");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Mime pc(hfv, Headers::UNKNOWN);
@@ -2705,7 +2705,7 @@ main(int arc, char** argv)
       resip::Data test("NameAddr creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2717,7 +2717,7 @@ main(int arc, char** argv)
       resip::Data test("<sip:rls.example.com>");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2743,7 +2743,7 @@ main(int arc, char** argv)
       resip::Data test("<sip:rls.example.com;lr>");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2769,7 +2769,7 @@ main(int arc, char** argv)
       resip::Data test("<sipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsipsip:rls.example.com;lr>");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2797,7 +2797,7 @@ main(int arc, char** argv)
       resip::Data test("<sip:" + strangeUser+ "@example.com;lr>");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2823,7 +2823,7 @@ main(int arc, char** argv)
       resip::Data test(" \"Derek\" <sip:derek@localhost>;tag=16d1246e");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2849,7 +2849,7 @@ main(int arc, char** argv)
       resip::Data test("<sip:line1@192.0.2.2;transport=tcp>; reg-id=1;+sip.instance=\"<urn:uuid:00000000-0000-1000-8000-000A95A0E128>\"");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2875,7 +2875,7 @@ main(int arc, char** argv)
       resip::Data test("<sip:line1@192.0.2.2:5060;transport=tcp>; reg-id=1;+sip.instance=\"<urn:uuid:00000000-0000-1000-8000-000A95A0E128>\"");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          NameAddr pc(hfv, Headers::UNKNOWN);
@@ -2903,7 +2903,7 @@ main(int arc, char** argv)
       resip::Data test("RequestLine creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          RequestLine pc(hfv);
@@ -2915,7 +2915,7 @@ main(int arc, char** argv)
       resip::Data test("INVITE sip:bob@example.com SIP/2.0");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          RequestLine pc(hfv);
@@ -2941,7 +2941,7 @@ main(int arc, char** argv)
       resip::Data test("UNKNOWN sip:bob@example.com SIP/2.0");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          RequestLine pc(hfv);
@@ -2969,7 +2969,7 @@ main(int arc, char** argv)
       resip::Data test("StatusLine creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
@@ -2981,7 +2981,7 @@ main(int arc, char** argv)
       resip::Data test("SIP/2.0 200 OK");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
@@ -3007,7 +3007,7 @@ main(int arc, char** argv)
       resip::Data test("SIP/2.0 200 OKokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
@@ -3033,7 +3033,7 @@ main(int arc, char** argv)
       resip::Data test("NOTSIP/2.0 200 OK");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          StatusLine pc(hfv);
@@ -3061,7 +3061,7 @@ main(int arc, char** argv)
       resip::Data test("Via creation/deletion");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Via pc(hfv, Headers::UNKNOWN);
@@ -3073,7 +3073,7 @@ main(int arc, char** argv)
       resip::Data test("SIP/2.0/TCP 127.0.0.1:5060;branch=z9hG4bK-524287-1---307cd5596615cb2e;rport");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Via pc(hfv, Headers::UNKNOWN);
@@ -3100,7 +3100,7 @@ main(int arc, char** argv)
       resip::Data test("");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Token pc(hfv, Headers::UNKNOWN);
@@ -3112,7 +3112,7 @@ main(int arc, char** argv)
       resip::Data test("");
       cout << endl << test << endl;
       HeaderFieldValue hfv(test.data(), test.size());
-      UInt64 now(Timer::getTimeMicroSec());
+      uint64_t now(Timer::getTimeMicroSec());
       for(int i=0; i<1000; ++i)
       {
          Token pc(hfv, Headers::UNKNOWN);

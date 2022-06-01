@@ -14,7 +14,7 @@ namespace p2p
 class ArrayValue : public AbstractValue 
 {
    public:
-      static const UInt32 Last = SpecifyArray::Last;
+      static const uint32_t Last = SpecifyArray::Last;
       typedef std::map<int, SingleValue> ArrayMap;
       void sign();
       bool isValid() const;

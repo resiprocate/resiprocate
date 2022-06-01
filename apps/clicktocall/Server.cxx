@@ -969,7 +969,7 @@ Server::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 Server::getDefaultExpires() const
 {
    return 60;

@@ -87,16 +87,16 @@ class ServerSubscriptionHandler
        * not exists, use getDefaultExpires().  If hasDefaultExpires() is false, then reject the message with a 400.
        * Set errorReturnCode to an error code >= 400 to reject this subscription. 
        */  
-      virtual void getExpires(const SipMessage &msg, UInt32 &expires, int &errorResponseCode);//ivr mod
+      virtual void getExpires(const SipMessage &msg, uint32_t &expires, int &errorResponseCode);//ivr mod
 
       virtual bool hasDefaultExpires() const;
-      virtual UInt32 getDefaultExpires() const;
+      virtual uint32_t getDefaultExpires() const;
 
       virtual bool hasMinExpires() const;
-      virtual UInt32 getMinExpires() const;
+      virtual uint32_t getMinExpires() const;
 
       virtual bool hasMaxExpires() const;
-      virtual UInt32 getMaxExpires() const;
+      virtual uint32_t getMaxExpires() const;
 
       const Mimes& getSupportedMimeTypes() const;
 };

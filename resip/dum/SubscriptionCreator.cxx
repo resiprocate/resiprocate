@@ -9,7 +9,7 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
                                          const NameAddr& target, 
                                          std::shared_ptr<UserProfile> userProfile, 
                                          const Data& event, 
-                                         UInt32 subscriptionTime)
+                                         uint32_t subscriptionTime)
    : BaseCreator(dum, std::move(userProfile)),
      mRefreshInterval(-1)
 {
@@ -23,7 +23,7 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
                                          const NameAddr& target, 
                                          std::shared_ptr<UserProfile> userProfile, 
                                          const Data& event, 
-                                         UInt32 subscriptionTime, 
+                                         uint32_t subscriptionTime, 
                                          int refreshInterval)
    : BaseCreator(dum, std::move(userProfile)),
      mRefreshInterval(refreshInterval)

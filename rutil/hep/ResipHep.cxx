@@ -15,11 +15,11 @@
 #define EPOCH_DIFFERENCE 11644473600000000LL
 
 // Returns microseconds since Unix epoch time (UTC)
-UInt64 hepUnixTimestamp()
+uint64_t hepUnixTimestamp()
 {
-   resip_assert(sizeof(UInt64) == 64/8);
+   resip_assert(sizeof(uint64_t) == 64/8);
 
-   UInt64 time = 0;
+   uint64_t time = 0;
 
 #if defined(WIN32) || defined(UNDER_CE)
    FILETIME ft;

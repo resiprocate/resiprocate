@@ -1259,7 +1259,7 @@ Log::ThreadData::set(Type type, Level level,
       mLogFileName = Data(_loggingFilename.data(), _loggingFilename.size());
 #else
       mLogFileName = logFileName;
-      mLogFileName.replace("{timestamp}", Data((UInt64)time(0)));
+      mLogFileName.replace("{timestamp}", Data((uint64_t)time(0)));
 #ifdef WIN32
       mLogFileName.replace("{pid}", Data((int)GetCurrentProcess()));
 #else

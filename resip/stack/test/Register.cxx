@@ -44,7 +44,7 @@ Register::go()
    NameAddr contact;
    contact.uri() = mTransceiver.contactUri();
 
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
    while (numRegistered < mNumRegistrations)
    {
       for (int i=mFirstExtension; i < mLastExtension && numRegistered < mNumRegistrations; i++)
@@ -71,7 +71,7 @@ Register::go()
          }
       }
    }
-   UInt64 elapsed = Timer::getTimeMs() - startTime;
+   uint64_t elapsed = Timer::getTimeMs() - startTime;
    cout << mNumRegistrations << " performed in " << elapsed << " ms, a rate of "
         << mNumRegistrations / ((float) elapsed / 1000.0) << " registrations per second." << endl;
 }

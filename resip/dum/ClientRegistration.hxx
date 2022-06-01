@@ -31,7 +31,7 @@ class ClientRegistration: public NonDialogUsage
       void addBinding(const NameAddr& contact);
 
       /** Adds a registration binding, using the specified registration time */
-      void addBinding(const NameAddr& contact, UInt32 registrationTime);
+      void addBinding(const NameAddr& contact, uint32_t registrationTime);
 
       /** Removes one particular binding */
       void removeBinding(const NameAddr& contact);
@@ -47,7 +47,7 @@ class ClientRegistration: public NonDialogUsage
 
       /** Request a manual refresh of the registration.  If 0 then default to using original 
           expires value (to remove use removeXXX() instead) */
-      void requestRefresh(UInt32 expires = 0);  
+      void requestRefresh(uint32_t expires = 0);  
       
       /** kills the usgage, does not unregister, call removeMyBindings to unregister */
       void stopRegistering(); 
@@ -59,7 +59,7 @@ class ClientRegistration: public NonDialogUsage
       const NameAddrs& allContacts() const noexcept;
 
       /** returns the number of seconds until the registration expires - relative, returns 0 if already expired */
-      UInt32 whenExpires() const; 
+      uint32_t whenExpires() const; 
       
       /** Calls removeMyBindings and ends usage when complete */
       void end() override;
@@ -98,7 +98,7 @@ class ClientRegistration: public NonDialogUsage
       } State;
 
       std::shared_ptr<SipMessage> tryModification(ClientRegistration::State state);
-      void internalRequestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove use removeXXX() instead)
+      void internalRequestRefresh(uint32_t expires = 0);  // 0 defaults to using original expires value (to remove use removeXXX() instead)
       unsigned int checkProfileRetry(const SipMessage& msg);
       void tagContact(NameAddr& contact) const;
       unsigned long calculateExpiry(const SipMessage& reg200) const;
@@ -119,9 +119,9 @@ class ClientRegistration: public NonDialogUsage
       bool mEnding;
       bool mEndWhenDone;
       bool mUserRefresh;
-      UInt32 mRegistrationTime;
-      UInt64 mExpires;
-      UInt64 mRefreshTime;
+      uint32_t mRegistrationTime;
+      uint64_t mExpires;
+      uint64_t mRefreshTime;
       State mQueuedState;
       std::shared_ptr<SipMessage> mQueuedRequest;
 

@@ -96,24 +96,24 @@ public:
          OffsetsList  mOffsetsFromStartTime;
       };
 
-      SdpTime(UInt64 startTime, UInt64 stopTime) : mStartTime(startTime), mStopTime(stopTime) {}
+      SdpTime(uint64_t startTime, uint64_t stopTime) : mStartTime(startTime), mStopTime(stopTime) {}
       SdpTime(const SdpTime& rhs) : mStartTime(rhs.mStartTime), mStopTime(rhs.mStopTime), mRepeats(rhs.mRepeats) {}
 
       typedef std::list<SdpTimeRepeat> RepeatsList;
 
-      void setStartTime(UInt64 startTime) { mStartTime = startTime; }
-      UInt64 getStartTime() const { return mStartTime; }
+      void setStartTime(uint64_t startTime) { mStartTime = startTime; }
+      uint64_t getStartTime() const { return mStartTime; }
 
-      void setStopTime(UInt64 stopTime) { mStopTime = stopTime; }
-      UInt64 getStopTime() const { return mStopTime; }
+      void setStopTime(uint64_t stopTime) { mStopTime = stopTime; }
+      uint64_t getStopTime() const { return mStopTime; }
 
       void addRepeat(const SdpTimeRepeat& sdpTimeRepeat) { mRepeats.push_back(sdpTimeRepeat); }
       void clearRepeats() { mRepeats.clear(); }
       const RepeatsList& getRepeats() const { return mRepeats; }
 
    private:
-      UInt64    mStartTime;
-      UInt64    mStopTime;
+      uint64_t    mStartTime;
+      uint64_t    mStopTime;
       RepeatsList mRepeats;       
    };
 
@@ -201,10 +201,10 @@ public:
 
    void setSdpVersion(unsigned int sdpVersion) { mSdpVersion = sdpVersion; }
 
-   void setOriginatorInfo(const char* userName, UInt64 sessionId, UInt64 sessionVersion, SdpNetType netType, SdpAddressType addressType, const char* unicastAddress);
+   void setOriginatorInfo(const char* userName, uint64_t sessionId, uint64_t sessionVersion, SdpNetType netType, SdpAddressType addressType, const char* unicastAddress);
    void setOriginatorUserName(const char* originatorUserName) { mOriginatorUserName = originatorUserName; }
-   void setOriginatorSessionId(UInt64 originatorSessionId) { mOriginatorSessionId = originatorSessionId; }
-   void setOriginatorSessionVersion(UInt64 originatorSessionVersion) { mOriginatorSessionVersion = originatorSessionVersion; }
+   void setOriginatorSessionId(uint64_t originatorSessionId) { mOriginatorSessionId = originatorSessionId; }
+   void setOriginatorSessionVersion(uint64_t originatorSessionVersion) { mOriginatorSessionVersion = originatorSessionVersion; }
    void setOriginatorNetType(SdpNetType originatorNetType) { mOriginatorNetType = originatorNetType; }
    void setOriginatorAddressType(SdpAddressType originatorAddressType) { mOriginatorAddressType = originatorAddressType; }
    void setOriginatorUnicastAddress(const char* originatorUnicastAddress) { mOriginatorUnicastAddress = originatorUnicastAddress; }
@@ -223,7 +223,7 @@ public:
    void addBandwidth(const SdpBandwidth& sdpBandwidth) { mBandwidths.push_back(sdpBandwidth); }
    void clearBandwidths() { mBandwidths.clear(); }
 
-   void addTime(UInt64 startTime, UInt64 stopTime) { addTime(SdpTime(startTime, stopTime)); }
+   void addTime(uint64_t startTime, uint64_t stopTime) { addTime(SdpTime(startTime, stopTime)); }
    void addTime(const SdpTime& time) { mTimes.push_back(time); }
    void clearTimes() { mTimes.clear(); }
 
@@ -255,8 +255,8 @@ public:
    unsigned int getSdpVersion() const { return mSdpVersion; }
 
    const resip::Data& getOriginatorUserName() const { return mOriginatorUserName; }
-   UInt64 getOriginatorSessionId() const { return mOriginatorSessionId; }
-   UInt64 getOriginatorSessionVersion() const { return mOriginatorSessionVersion; }
+   uint64_t getOriginatorSessionId() const { return mOriginatorSessionId; }
+   uint64_t getOriginatorSessionVersion() const { return mOriginatorSessionVersion; }
    SdpNetType getOriginatorNetType() const { return mOriginatorNetType; }
    SdpAddressType getOriginatorAddressType() const { return mOriginatorAddressType; }
    const resip::Data& getOriginatorUnicastAddress() const { return mOriginatorUnicastAddress; }
@@ -303,8 +303,8 @@ private:
 
    // o=
    resip::Data    mOriginatorUserName;
-   UInt64         mOriginatorSessionId;
-   UInt64         mOriginatorSessionVersion;
+   uint64_t         mOriginatorSessionId;
+   uint64_t         mOriginatorSessionVersion;
    SdpNetType     mOriginatorNetType;
    SdpAddressType mOriginatorAddressType;
    resip::Data    mOriginatorUnicastAddress;

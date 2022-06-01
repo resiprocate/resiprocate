@@ -34,7 +34,7 @@ InMemorySyncPubDb::removeHandler(InMemorySyncPubDbHandler* handler)
 }
 
 bool 
-InMemorySyncPubDb::shouldEraseDocument(PubDocument& document, UInt64 now)
+InMemorySyncPubDb::shouldEraseDocument(PubDocument& document, uint64_t now)
 {
    if (mSyncEnabled)
    {
@@ -68,7 +68,7 @@ void
 InMemorySyncPubDb::initialSync(unsigned int connectionId)
 {
    Lock g(mDatabaseMutex);
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
 
    // Iterate through keys
    KeyToETagMap::iterator keyIt = mPublicationDb.begin();
@@ -119,13 +119,13 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
          // If doc is from sync then ensure it is newer
          if (!document.mSyncPublication || (document.mLastUpdated > eTagIt->second.mLastUpdated))
          {
-            UInt64 now = Timer::getTimeSecs();
+            uint64_t now = Timer::getTimeSecs();
             auto contentsForOnDocumentModified = document.mContents;
             auto securityAttributesForOnDocumentModified = document.mSecurityAttributes;
             // We should only need to linger a document past the latest expiration time we have ever seen, since both sides will
             // treat the publication as gone after this time anyway.  However this is timing sensitive with the sync process.  
             // So we will linger a document for twice this duration.
-            UInt64 lingerDuration = (resipMax(document.mExpirationTime, eTagIt->second.mExpirationTime) - now) * 2;
+            uint64_t lingerDuration = (resipMax(document.mExpirationTime, eTagIt->second.mExpirationTime) - now) * 2;
             if (document.mContents.get() == 0)  // If this is a pub refresh then ensure we don't get rid of existing doc body
             {
                // If previous document was expired then ensure we push out a notify on the refresh to tell everyone it's back
@@ -168,7 +168,7 @@ InMemorySyncPubDb::addUpdateDocument(const PubDocument& document)
 }
 
 bool 
-InMemorySyncPubDb::removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated, bool syncPublication)
+InMemorySyncPubDb::removeDocument(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated, bool syncPublication)
 {
    bool result = false;
    Lock g(mDatabaseMutex);
@@ -220,7 +220,7 @@ InMemorySyncPubDb::getMergedETags(const Data& eventType, const Data& documentKey
    if (keyIt != mPublicationDb.end())
    {
       bool isFirst = true;
-      UInt64 now = Timer::getTimeSecs();
+      uint64_t now = Timer::getTimeSecs();
 
       // Iterate through all Etags
       ETagToDocumentMap::iterator eTagIt = keyIt->second.begin();
@@ -286,7 +286,7 @@ InMemorySyncPubDb::documentExists(const Data& eventType, const Data& documentKey
 // If lastUpdated != 0 then we make sure that passed in lastUpdated matches the document before returning true
 // This method is used in timer expiry and the lastUpdated checks helps us to make sure the timer that just
 // expired hasn't been made obsolete due to a new update.
-bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated)
 {
    Lock g(mDatabaseMutex);
 
@@ -298,7 +298,7 @@ bool InMemorySyncPubDb::checkExpired(const Data& eventType, const Data& document
       ETagToDocumentMap::iterator eTagIt = keyIt->second.find(eTag);
       if (eTagIt != keyIt->second.end())
       {
-         UInt64 now = Timer::getTimeSecs();
+         uint64_t now = Timer::getTimeSecs();
          if (eTagIt->second.mExpirationTime >= now &&
             (lastUpdated == 0 || lastUpdated == eTagIt->second.mLastUpdated))
          {
@@ -348,7 +348,7 @@ InMemorySyncPubDb::unlockDocuments()
 }
 
 void 
-InMemorySyncPubDb::invokeOnDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+InMemorySyncPubDb::invokeOnDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
    Lock lock(mHandlerMutex);
    for (HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)
@@ -363,7 +363,7 @@ InMemorySyncPubDb::invokeOnDocumentModified(bool sync, const Data& eventType, co
 }
 
 void 
-InMemorySyncPubDb::invokeOnDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+InMemorySyncPubDb::invokeOnDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated)
 {
    Lock lock(mHandlerMutex);
    for (HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)
@@ -378,7 +378,7 @@ InMemorySyncPubDb::invokeOnDocumentRemoved(bool sync, const Data& eventType, con
 }
 
 void 
-InMemorySyncPubDb::invokeOnInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+InMemorySyncPubDb::invokeOnInitialSyncDocument(unsigned int connectionId, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
    Lock lock(mHandlerMutex);
    for (HandlerList::iterator it = mHandlers.begin(); it != mHandlers.end(); it++)

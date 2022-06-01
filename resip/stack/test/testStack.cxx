@@ -410,7 +410,7 @@ performTest(int verbose, int runs, int window, int invite,
    NameAddr from = target;
    from.uri().port() = senderPort;
 
-   UInt64 startTime = Timer::getTimeMs();
+   uint64_t startTime = Timer::getTimeMs();
    int outstanding=0;
    int count = 0;
    int sent = 0;
@@ -564,7 +564,7 @@ performTest(int verbose, int runs, int window, int invite,
    }
    InfoLog (<< "Finished " << count << " runs");
 
-   UInt64 elapsed = Timer::getTimeMs() - startTime;
+   uint64_t elapsed = Timer::getTimeMs() - startTime;
    if (!invite)
    {
       cout << runs << " registrations performed in " << elapsed << " ms, a rate of "

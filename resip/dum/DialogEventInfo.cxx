@@ -247,10 +247,10 @@ DialogEventInfo::hasRemoteOfferAnswer() const
    return (mInviteSession.isValid() ? mInviteSession->hasRemoteOfferAnswer() : mRemoteOfferAnswer != nullptr);
 }
 
-UInt64
+uint64_t
 DialogEventInfo::getDurationSeconds() const
 {
-   UInt64 delta = Timer::getTimeSecs() - mCreationTimeSeconds;
+   uint64_t delta = Timer::getTimeSecs() - mCreationTimeSeconds;
    return delta;
 }
 

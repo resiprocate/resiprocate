@@ -147,7 +147,7 @@ CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
             StackLog(<<"adding route element " << element.Value());
             route.push_back(Data(element.Value()));
          }
-         UInt64 now = ResipClock::getTimeSecs();
+         uint64_t now = ResipClock::getTimeSecs();
          if(expires.Value() < now)
          {
             DebugLog(<<"dropping a command because expiry has already passed " << now - expires << " seconds ago");

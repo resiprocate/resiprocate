@@ -353,7 +353,7 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
    offer = profile->sessionCaps();
 
    // Set sessionid and version for this offer
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
    offer.session().origin().getVersion() = currentTime;  
 
@@ -849,7 +849,7 @@ ConversationManager::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 ConversationManager::getDefaultExpires() const
 {
    return 60;

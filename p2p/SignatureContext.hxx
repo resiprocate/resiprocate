@@ -58,7 +58,7 @@ class SignatureContext
       class CachedCertificate 
       {
          public:
-            CachedCertificate(X509 *x, bool isValid, UInt64 expires)
+            CachedCertificate(X509 *x, bool isValid, uint64_t expires)
             {
                mCertificate=x;
                mValid=isValid;
@@ -73,7 +73,7 @@ class SignatureContext
             
             X509        *mCertificate;    // The certificate
             bool        mValid;           // Is this entry valid
-            UInt64      mExpiryTime;      // How long is this entry
+            uint64_t      mExpiryTime;      // How long is this entry
                                           // trustable for
       };
          

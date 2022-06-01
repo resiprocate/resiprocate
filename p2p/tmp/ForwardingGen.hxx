@@ -4,17 +4,17 @@ namespace s2c {
 
 class ForwardingHdrStruct : public PDU {
 public:
-   UInt8                         mReloToken;
-   UInt32                        mOverlay;
-   UInt8                         mTtl;
-   UInt8                         mReserved;
-   UInt16                        mFragment;
-   UInt8                         mVersion;
-   UInt32                        mLength;
-   UInt64                        mTransactionId;
-   UInt16                        mFlags;
-   UInt16                        mViaListLength;
-   UInt16                        mDestinationListLength;
+   uint8_t                         mReloToken;
+   uint32_t                        mOverlay;
+   uint8_t                         mTtl;
+   uint8_t                         mReserved;
+   uint16_t                        mFragment;
+   uint8_t                         mVersion;
+   uint32_t                        mLength;
+   uint64_t                        mTransactionId;
+   uint16_t                        mFlags;
+   uint16_t                        mViaListLength;
+   uint16_t                        mDestinationListLength;
 
 
    ForwardingHdrStruct() {mName = "ForwardingHdr";}

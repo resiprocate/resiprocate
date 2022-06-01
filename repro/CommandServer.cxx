@@ -398,11 +398,11 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
    IpVersion ipVersion=V4;
    Data ipInterface;
    Data recordRouteUri;
-   UInt32 rcvBufLen = 0;
+   uint32_t rcvBufLen = 0;
    bool stunEnabled = false;
    Data sipDomainname;
    SecurityTypes::SSLType sslType = SecurityTypes::SSLv23;
-   UInt32 transportFlags = 0;
+   uint32_t transportFlags = 0;
    Data certificateFilename;
    Data privateKeyFilename;
    SecurityTypes::TlsClientVerificationMode cvm = SecurityTypes::None;
@@ -631,10 +631,10 @@ CommandServer::handleAddTransportRequest(unsigned int connectionId, unsigned int
       transportInfoText += ", rruri=" + Data::from(rr);
    }
    transportInfoText += ", stun=" + Data((stunEnabled ? "YES" : "NO"));
-   transportInfoText += ", flags=" + Data((UInt32)transportFlags);
+   transportInfoText += ", flags=" + Data((uint32_t)transportFlags);
    if(rcvBufLen)
    {
-      transportInfoText += ", udprcvbuflen=" + Data((UInt32)rcvBufLen);
+      transportInfoText += ", udprcvbuflen=" + Data((uint32_t)rcvBufLen);
    }
    if(isSecure(type))
    {

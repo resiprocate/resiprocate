@@ -47,7 +47,7 @@ class ConnectionBase
       virtual Transport* transport() const;
 
       Tuple& who() { return mWho; }
-      const UInt64& whenLastUsed() { return mLastUsed; }
+      const uint64_t& whenLastUsed() { return mLastUsed; }
       void resetLastUsed() { mLastUsed = Timer::getTimeMs(); }
 
       enum { ChunkSize = 8192 }; // !jf! what is the optimal size here?
@@ -124,7 +124,7 @@ class ConnectionBase
       WsFrameExtractor mWsFrameExtractor;
 
       static char connectionStates[MAX][32];
-      UInt64 mLastUsed;
+      uint64_t mLastUsed;
       ConnState mConnState;
       MsgHeaderScanner mMsgHeaderScanner;
 

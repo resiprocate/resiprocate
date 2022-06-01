@@ -66,14 +66,14 @@ class FifoStatsInterface
          several), 3 might indicate a particular TU's fifo, etc.
          These are intended for use by CongestionManager only.
       */
-      inline UInt8 getRole() const {return mRole;}
+      inline uint8_t getRole() const {return mRole;}
 
       /**
          @internal
          Set this fifo's role-number.
          @see getRole()
       */
-      inline void setRole(UInt8 role) {mRole=role;}
+      inline void setRole(uint8_t role) {mRole=role;}
 
       /**
          Sets the description for this fifo. This is used in the logging for
@@ -94,7 +94,7 @@ class FifoStatsInterface
 
    protected:
       Data mDescription;
-      UInt8 mRole;
+      uint8_t mRole;
 };
 
 /**
@@ -261,8 +261,8 @@ class AbstractFifo : public FifoStatsInterface
             return true;
          }
 
-         const UInt64 begin(Timer::getTimeMs());
-         const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         const uint64_t begin(Timer::getTimeMs());
+         const uint64_t end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
          Lock lock(mMutex); (void)lock;
          onFifoPolled();
 
@@ -273,7 +273,7 @@ class AbstractFifo : public FifoStatsInterface
             {
                return false;
             }
-            const UInt64 now(Timer::getTimeMs());
+            const uint64_t now(Timer::getTimeMs());
             if(now >= end)
             {
                 return false;
@@ -335,8 +335,8 @@ class AbstractFifo : public FifoStatsInterface
          }
 
          resip_assert(other.empty());
-         const UInt64 begin(Timer::getTimeMs());
-         const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         const uint64_t begin(Timer::getTimeMs());
+         const uint64_t end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
          Lock lock(mMutex); (void)lock;
          onFifoPolled();
 
@@ -347,7 +347,7 @@ class AbstractFifo : public FifoStatsInterface
             {
                return false;
             }
-            const UInt64 now(Timer::getTimeMs());
+            const uint64_t now(Timer::getTimeMs());
             if(now >= end)
             {
                 return false;
@@ -420,13 +420,13 @@ class AbstractFifo : public FifoStatsInterface
       /** @brief condition for waiting on new queue items */
       Condition mCondition;
 
-      mutable UInt64 mLastSampleTakenMicroSec;
-      mutable UInt32 mCounter;
-      mutable UInt32 mAverageServiceTimeMicroSec;
+      mutable uint64_t mLastSampleTakenMicroSec;
+      mutable uint32_t mCounter;
+      mutable uint32_t mAverageServiceTimeMicroSec;
       // std::deque has to perform some amount of traversal to calculate its 
       // size; we maintain this count so that it can be queried without locking, 
       // in situations where it being off by a small amount is ok.
-      UInt32 mSize;
+      uint32_t mSize;
 
       virtual void onFifoPolled()
       {
@@ -435,18 +435,18 @@ class AbstractFifo : public FifoStatsInterface
             mCounter &&
             (mCounter >= 64 || mFifo.empty()))
          {
-            UInt64 now(Timer::getTimeMicroSec());
-            UInt64 diff = now-mLastSampleTakenMicroSec;
+            uint64_t now(Timer::getTimeMicroSec());
+            uint64_t diff = now-mLastSampleTakenMicroSec;
 
             if(mCounter >= 4096)
             {
-               mAverageServiceTimeMicroSec=(UInt32)resipIntDiv(diff, mCounter);
+               mAverageServiceTimeMicroSec=(uint32_t)resipIntDiv(diff, mCounter);
             }
             else // fifo got emptied; merge into a rolling average
             {
                // .bwc. This is a moving average with period 64, round to 
                // nearest int.
-               mAverageServiceTimeMicroSec=(UInt32)resipIntDiv(
+               mAverageServiceTimeMicroSec=(uint32_t)resipIntDiv(
                      diff+((4096-mCounter)*mAverageServiceTimeMicroSec),
                      4096U);
             }

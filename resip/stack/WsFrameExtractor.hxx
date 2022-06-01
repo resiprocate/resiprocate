@@ -16,7 +16,7 @@ class WsFrameExtractor
 
       WsFrameExtractor(Data::size_type maxMessage);
       ~WsFrameExtractor();
-      std::unique_ptr<Data> processBytes(UInt8 *input, Data::size_type len, bool& dropConnection);
+      std::unique_ptr<Data> processBytes(uint8_t *input, Data::size_type len, bool& dropConnection);
 
    private:
 
@@ -32,14 +32,14 @@ class WsFrameExtractor
 
       bool mHaveHeader;
       int mHeaderLen;
-      UInt8 *mWsHeader;
+      uint8_t *mWsHeader;
 
       bool mFinalFrame;
       bool mMasked;
-      UInt8 mWsMaskKey[4];
+      uint8_t mWsMaskKey[4];
       Data::size_type mPayloadLength;
 
-      UInt8 *mPayload;
+      uint8_t *mPayload;
       Data::size_type mPayloadPos;
 
       int parseHeader();

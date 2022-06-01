@@ -143,7 +143,7 @@ SelectTransporter::sendImpl(FlowId flowId, std::unique_ptr<resip::Data> data)
 }
 
 void
-SelectTransporter::collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned short appId)
+SelectTransporter::collectCandidatesImpl(uint64_t tid, NodeId nodeId, unsigned short appId)
 {
   // For right now, we just return one candidate: a single TCP
   // listener. And we return it right away.
@@ -256,8 +256,8 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
       resip_assert(0);
    }
    s2c::NodeIdStruct nid;
-   nid.mHigh = *((UInt64*)(buffer));
-   nid.mLow = *((UInt64*)(buffer+sizeof(UInt64)));
+   nid.mHigh = *((uint64_t*)(buffer));
+   nid.mLow = *((uint64_t*)(buffer+sizeof(uint64_t)));
 
    NodeId nodeId(nid);
    FlowId flowId(nodeId, application, s, *mRxFifo);
@@ -499,8 +499,8 @@ SelectTransporter::process(int ms)
 
         s2c::NodeIdStruct nids;
 
-        nids.mHigh = *((UInt64*)(buffer));
-        nids.mLow = *((UInt64*)(buffer+sizeof(UInt64)));
+        nids.mHigh = *((uint64_t*)(buffer));
+        nids.mLow = *((uint64_t*)(buffer+sizeof(uint64_t)));
         
         NodeId nodeId2(nids);
         FlowId flowId(nodeId2, application, s, *mRxFifo);
@@ -551,7 +551,7 @@ SelectTransporter::process(int ms)
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             //**************************************************
             char *buffer = new char[16384];
-            UInt32 *int_buffer = reinterpret_cast<UInt32*>(buffer);
+            uint32_t *int_buffer = reinterpret_cast<uint32_t*>(buffer);
             // Suck in the header
             char *ptr;
             size_t bytesRead;

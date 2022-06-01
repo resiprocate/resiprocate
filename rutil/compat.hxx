@@ -135,24 +135,6 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 #  define T_A 1
 #endif
 
-// Mac OS X: UInt32 definition conflicts with the Mac OS or iPhone OS SDK.
-// If you've included either SDK then these will be defined.
-// We could also check that __MACTYPES__ is not defined
-#if !defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
-typedef unsigned char  UInt8;
-typedef unsigned short UInt16;
-typedef unsigned int   UInt32;
-typedef char           Int8;
-typedef short          Int16;
-typedef int            Int32;
-#else
-// On Apple platforms, MacTypes.h should provide the types:
-#include <MacTypes.h>
-typedef SInt8          Int8;
-typedef SInt16         Int16;
-typedef SInt32         Int32;
-#endif
-
 #if defined( TARGET_OS_IPHONE )
 // TARGET_OS_IPHONE can be 0 or 1, so must also check the value
 #if TARGET_OS_IPHONE
@@ -160,13 +142,6 @@ typedef SInt32         Int32;
 #endif
 #endif
 
-#if defined( WIN32 )
-  typedef signed __int64   Int64;
-  typedef unsigned __int64 UInt64;
-#else
-  typedef signed long long   Int64;
-  typedef unsigned long long UInt64;
-#endif
 //typedef struct { unsigned char octet[16]; }  UInt128;
 
 namespace resip
@@ -224,40 +199,40 @@ resipIntDiv(const _Tp1& __a, const _Tp2& __b)
 
 #if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ ) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(RESIP_BIG_ENDIAN)
 
-inline UInt64
-ntoh64(const UInt64 input)
+inline uint64_t
+ntoh64(const uint64_t input)
 {
    return input;
 }
 
-inline UInt64
-hton64(const UInt64 input)
+inline uint64_t
+hton64(const uint64_t input)
 {
    return input;
 }
 
 #else
 
-inline UInt64
-ntoh64(const UInt64 input)
+inline uint64_t
+ntoh64(const uint64_t input)
 {
-   UInt64 rval;
-   UInt8 *data = (UInt8 *)&rval;
+   uint64_t rval;
+   uint8_t *data = (uint8_t *)&rval;
 
-   data[0] = (UInt8)((input >> 56) & 0xFF);
-   data[1] = (UInt8)((input >> 48) & 0xFF);
-   data[2] = (UInt8)((input >> 40) & 0xFF);
-   data[3] = (UInt8)((input >> 32) & 0xFF);
-   data[4] = (UInt8)((input >> 24) & 0xFF);
-   data[5] = (UInt8)((input >> 16) & 0xFF);
-   data[6] = (UInt8)((input >> 8) & 0xFF);
-   data[7] = (UInt8)((input >> 0) & 0xFF);
+   data[0] = (uint8_t)((input >> 56) & 0xFF);
+   data[1] = (uint8_t)((input >> 48) & 0xFF);
+   data[2] = (uint8_t)((input >> 40) & 0xFF);
+   data[3] = (uint8_t)((input >> 32) & 0xFF);
+   data[4] = (uint8_t)((input >> 24) & 0xFF);
+   data[5] = (uint8_t)((input >> 16) & 0xFF);
+   data[6] = (uint8_t)((input >> 8) & 0xFF);
+   data[7] = (uint8_t)((input >> 0) & 0xFF);
 
    return rval;
 }
 
-inline UInt64
-hton64(const UInt64 input)
+inline uint64_t
+hton64(const uint64_t input)
 {
    return (ntoh64(input));
 }

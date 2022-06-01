@@ -446,9 +446,9 @@ UdpTransport::processRxParse(char *buffer, int len, Tuple& sender)
          // Use XorMappedAddress if present - if not use MappedAddress
          if(resp.hasXorMappedAddress)
          {
-            UInt16 id16 = resp.msgHdr.id.octet[0]<<8
+            uint16_t id16 = resp.msgHdr.id.octet[0]<<8
                           | resp.msgHdr.id.octet[1];
-            UInt32 id32 = resp.msgHdr.id.octet[0]<<24
+            uint32_t id32 = resp.msgHdr.id.octet[0]<<24
                           | resp.msgHdr.id.octet[1]<<16
                           | resp.msgHdr.id.octet[2]<<8
                           | resp.msgHdr.id.octet[3];
@@ -733,7 +733,7 @@ UdpTransport::stunSendTest(const Tuple&  dest)
    stunBuildReqSimple(&req, username, changePort , changeIP , 1);
 
    // Replace the first 4 bytes of the header with the correct magic cookie required for RFC5389
-   UInt32* magicCookieField = (UInt32*)req.msgHdr.id.octet;
+   uint32_t* magicCookieField = (uint32_t*)req.msgHdr.id.octet;
    *magicCookieField = htonl(StunMagicCookie);
 
    char* buf = new char[STUN_MAX_MESSAGE_SIZE];

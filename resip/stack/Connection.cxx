@@ -161,9 +161,9 @@ Connection::performWrite()
    {
       SendData *dataWs, *oldSd;
       const Data& dataRaw = mOutstandingSends.front()->data;
-      UInt64 dataSize = 1 + 1 + dataRaw.size();
-      UInt64 lSize = (UInt64)dataRaw.size();
-      UInt8* uBuffer;
+      uint64_t dataSize = 1 + 1 + dataRaw.size();
+      uint64_t lSize = (uint64_t)dataRaw.size();
+      uint8_t* uBuffer;
 
       if(lSize > 0x7D && lSize <= 0xFFFF)
       {
@@ -181,32 +181,32 @@ Connection::performWrite()
             oldSd->sigcompId,
             false);
       resip_assert(dataWs && dataWs->data.data());
-      uBuffer = (UInt8*)dataWs->data.data();
+      uBuffer = (uint8_t*)dataWs->data.data();
 
       uBuffer[0] = 0x82;
       if(lSize <= 0x7D)
       {
-         uBuffer[1] = (UInt8)lSize;
+         uBuffer[1] = (uint8_t)lSize;
          uBuffer = &uBuffer[2];
       }
       else if(lSize <= 0xFFFF)
       {
          uBuffer[1] = 0x7E;
-         uBuffer[2] = (UInt8)((lSize >> 8) & 0xFF);
-         uBuffer[3] = (UInt8)(lSize & 0xFF);
+         uBuffer[2] = (uint8_t)((lSize >> 8) & 0xFF);
+         uBuffer[3] = (uint8_t)(lSize & 0xFF);
          uBuffer = &uBuffer[4];
       }
       else
       {
          uBuffer[1] = 0x7F;
-         uBuffer[2] = (UInt8)((lSize >> 56) & 0xFF);
-         uBuffer[3] = (UInt8)((lSize >> 48) & 0xFF);
-         uBuffer[4] = (UInt8)((lSize >> 40) & 0xFF);
-         uBuffer[5] = (UInt8)((lSize >> 32) & 0xFF);
-         uBuffer[6] = (UInt8)((lSize >> 24) & 0xFF);
-         uBuffer[7] = (UInt8)((lSize >> 16) & 0xFF);
-         uBuffer[8] = (UInt8)((lSize >> 8) & 0xFF);
-         uBuffer[9] = (UInt8)(lSize & 0xFF);
+         uBuffer[2] = (uint8_t)((lSize >> 56) & 0xFF);
+         uBuffer[3] = (uint8_t)((lSize >> 48) & 0xFF);
+         uBuffer[4] = (uint8_t)((lSize >> 40) & 0xFF);
+         uBuffer[5] = (uint8_t)((lSize >> 32) & 0xFF);
+         uBuffer[6] = (uint8_t)((lSize >> 24) & 0xFF);
+         uBuffer[7] = (uint8_t)((lSize >> 16) & 0xFF);
+         uBuffer[8] = (uint8_t)((lSize >> 8) & 0xFF);
+         uBuffer[9] = (uint8_t)(lSize & 0xFF);
          uBuffer = &uBuffer[10];
       }
 

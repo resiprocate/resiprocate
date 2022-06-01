@@ -135,18 +135,18 @@ class MasterProfile : public UserProfile
       /// is less than this time, then dum will reject the message with a 423 and set the
       /// min-expires header to the value specified here.
       ///
-      virtual UInt32& serverRegistrationMinExpiresTime() noexcept;
-      virtual UInt32 serverRegistrationMinExpiresTime() const noexcept;
+      virtual uint32_t& serverRegistrationMinExpiresTime() noexcept;
+      virtual uint32_t serverRegistrationMinExpiresTime() const noexcept;
 
       ///
       /// If an inbound REGISTER has an Expires header or any individual contact bindings with expires greater
       /// than this value, use this Max expires instead of the one given by the client.
-      virtual UInt32& serverRegistrationMaxExpiresTime() noexcept;
-      virtual UInt32 serverRegistrationMaxExpiresTime() const noexcept;
+      virtual uint32_t& serverRegistrationMaxExpiresTime() noexcept;
+      virtual uint32_t serverRegistrationMaxExpiresTime() const noexcept;
 
       /// If no Expires header or individual contact bindings specify an expiration value, use this value.
-      virtual UInt32& serverRegistrationDefaultExpiresTime() noexcept;
-      virtual UInt32 serverRegistrationDefaultExpiresTime() const noexcept;
+      virtual uint32_t& serverRegistrationDefaultExpiresTime() noexcept;
+      virtual uint32_t serverRegistrationDefaultExpiresTime() const noexcept;
 
       ///Set this to include the RequestURI in merge request detection.
       ///*!*!*!*!*!*! RED FLASHING LIGHT *!*!*!*!*!*! 
@@ -203,9 +203,9 @@ class MasterProfile : public UserProfile
       bool mCheckReqUriInMergeDetectionEnabled;
       ReliableProvisionalMode mUacReliableProvisionalMode;
       ReliableProvisionalMode mUasReliableProvisionalMode;
-      UInt32 mServerRegistrationMinExpires;
-      UInt32 mServerRegistrationMaxExpires;
-      UInt32 mServerRegistrationDefaultExpires;
+      uint32_t mServerRegistrationMinExpires;
+      uint32_t mServerRegistrationMaxExpires;
+      uint32_t mServerRegistrationDefaultExpires;
 
       bool mAdditionalTransactionTerminatingResponsesEnabled;
       std::set<int> mAdditionalTransactionTerminatingResponsess;

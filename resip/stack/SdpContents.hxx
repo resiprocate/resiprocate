@@ -183,8 +183,8 @@ class SdpContents : public Contents
                     * 
                     **/
                   Origin(const Data& user,
-                         const UInt64& sessionId,
-                         const UInt64& version,
+                         const uint64_t& sessionId,
+                         const uint64_t& version,
                          AddrType addr,
                          const Data& address);
                   Origin(const Origin& rhs);
@@ -196,20 +196,20 @@ class SdpContents : public Contents
                   /** @brief returns the session ID
                     * @return session ID
                     **/
-                  const UInt64& getSessionId() const {return mSessionId;}
+                  const uint64_t& getSessionId() const {return mSessionId;}
                   /** @brief returns the session ID
                     * @return session ID
                     **/
-                  UInt64& getSessionId() { return mSessionId; }
+                  uint64_t& getSessionId() { return mSessionId; }
                   
                   /** @brief returns the session version
                     * @return session version
                     **/
-                  const UInt64& getVersion() const {return mVersion;}
+                  const uint64_t& getVersion() const {return mVersion;}
                   /** @brief returns the session version
                     * @return session version
                     **/
-                  UInt64& getVersion() { return mVersion; }
+                  uint64_t& getVersion() { return mVersion; }
                   /** @brief returns the user string for the session
                     * @return user string
                     **/
@@ -241,8 +241,8 @@ class SdpContents : public Contents
                   Origin();
 
                   Data mUser;
-                  UInt64 mSessionId;
-                  UInt64 mVersion;
+                  uint64_t mSessionId;
+                  uint64_t mVersion;
                   AddrType mAddrType;
                   Data mAddress;
 

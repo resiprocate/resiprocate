@@ -44,7 +44,7 @@ class TuSelector
       
       void setCongestionManager(CongestionManager* manager);
       CongestionManager::RejectionBehavior getRejectionBehavior(TransactionUser* tu) const;
-      UInt32 getExpectedWait(TransactionUser* tu) const;
+      uint32_t getExpectedWait(TransactionUser* tu) const;
 
    private:
       void remove(TransactionUser* tu);
