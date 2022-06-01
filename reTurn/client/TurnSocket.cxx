@@ -39,6 +39,7 @@ asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::address::from_str
 
 TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) : 
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
+   mSoftware(SOFTWARE_STRING),
    mHaveAllocation(false),
    mActiveDestination(0),
    mReadTimer(mIOService),
@@ -119,6 +120,23 @@ TurnSocket::setUsernameAndPassword(const char* username, const char* password, b
    {
       // If we are using short term auth, then use short term password as HMAC key
       mHmacKey = password;
+   }
+}
+
+void
+TurnSocket::setSoftware(const char* software)
+{
+   mSoftware = software;
+
+   const UInt32 unpaddedSize = mSoftware.size();
+   if(unpaddedSize > 0)
+   {
+      // Pad size to a multiple of 4, to help compatibility with older clients
+      const UInt32 remainder  = unpaddedSize % 4,
+                   paddedSize = remainder ? unpaddedSize + 4 - remainder : unpaddedSize;
+
+      while(mSoftware.size() < paddedSize)
+         mSoftware.append(" ", 1);
    }
 }
 
@@ -550,21 +568,14 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       unsigned short channelNumber = remotePeer.getChannel();
       channelNumber = htons(channelNumber);
       memcpy(&framing[0], &channelNumber, 2);
-      if(mLocalBinding.getTransportType() == StunTuple::UDP)
-      {
-         // No size in header for UDP
-         framing[2] = 0x00;
-         framing[3] = 0x00;
-      }
-      else
-      {
-         UInt16 turnDataSize = size;
-         turnDataSize = htons(turnDataSize);
-         memcpy((void*)&framing[2], &turnDataSize, 2);
-      }
+
+      UInt16 turnDataSize = size;
+      turnDataSize = htons(turnDataSize);
+      memcpy((void*)&framing[2], &turnDataSize, 2);
+
       std::vector<asio::const_buffer> bufs;
       bufs.push_back(asio::buffer(framing, sizeof(framing)));
-      bufs.push_back(asio::buffer(buffer, size));
+      bufs.push_back(asio::buffer(buffer, size));  // TODO !SLG! - if sending over TCP/TLS then message must be padded to be on a 4 byte boundary
 
       return rawWrite(bufs);
    }
@@ -762,13 +773,8 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
          StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress[0]);
 
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
-         if(!remotePeer)
-         {
-            // Remote Peer not found - discard data
-            WarningLog(<< "Data received from unknown RemotePeer - discarding");
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-         }
+         // Should we record all the remoteTuples we have sent to before, and reject this message if
+         // not from one of the those endpoints?
 
          if(stunMessage.mTurnData->size() > size)
          {
@@ -821,7 +827,10 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          }
 
          // Add Software Attribute
-         response.setSoftware(SOFTWARE_STRING);
+         if(!mSoftware.empty())
+         {
+            response.setSoftware(mSoftware.c_str());
+         }
 
          // send bind response to local client
          unsigned int bufferSize = 512;  // enough room for Stun Header + XorMapped Address (v6) or Unknown Attributes + Software Attribute;
@@ -929,7 +938,10 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
    unsigned int readsize = 0;
 
    // Add Software Attribute
-   request.setSoftware(SOFTWARE_STRING);
+   if(!mSoftware.empty())
+   {
+      request.setSoftware(mSoftware.c_str());
+   }
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {

@@ -141,7 +141,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
    {
       case NewMessage:
       {
-         if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
+         if (bytesRead >= 4 && strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
             DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
             mBufferPos += 4;
@@ -158,7 +158,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                return true;
             }
          }
-         else if (strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
+         else if (bytesRead >= 2 && strncmp(mBuffer + mBufferPos, Symbols::CRLF, 2) == 0)
          {
             //DebugLog(<< "Got incoming CRLF keepalive response (aka pong).");
             mBufferPos += 2;
@@ -409,7 +409,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                      || (b==CongestionManager::REJECTING_NEW_WORK
                         && mMessage->isRequest()))
                {
-                  UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+                  const UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
                   // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                   // requests but not responses ( ?bwc? is this right for ACK?). 
                   // If we are REJECTING_NON_ESSENTIAL, 
@@ -419,7 +419,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   
                   // .bwc. This handles all appropriate checking for whether
                   // this is a response or an ACK.
-                  std::unique_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait/1000));
+                  std::unique_ptr<SendData> tryLater(transport()->make503(*mMessage, expectedWait));
                   if(tryLater.get())
                   {
                      transport()->send(std::move(tryLater));
@@ -508,7 +508,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   || (b==CongestionManager::REJECTING_NEW_WORK
                      && mMessage->isRequest()))
             {
-               UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+               const UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
                // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                // requests but not responses ( ?bwc? is this right for ACK?). 
                // If we are REJECTING_NON_ESSENTIAL, 
@@ -518,7 +518,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                
                // .bwc. This handles all appropriate checking for whether
                // this is a response or an ACK.
-               std::unique_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait/1000);
+               std::unique_ptr<SendData> tryLater = transport()->make503(*mMessage, expectedWait);
                if(tryLater.get())
                {
                   transport()->send(std::move(tryLater));

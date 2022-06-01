@@ -60,31 +60,37 @@ using namespace std;
 
 // UAC
 KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
+                                     ConversationManager& conversationManager,
                                      KurentoConversationManager& kurentoConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(partHandle, kurentoConversationManager),
-  RemoteParticipant(partHandle, kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(partHandle, kurentoConversationManager),
+: Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
+  RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
+  KurentoParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
-  mWSAcceptsKeyframeRequests(true)
+  mWSAcceptsKeyframeRequests(true),
+  mLastRemoteSdp(0),
+  mWaitingAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
 }
 
 // UAS - or forked leg
-KurentoRemoteParticipant::KurentoRemoteParticipant(KurentoConversationManager& kurentoConversationManager,
+KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversationManager,
+                                     KurentoConversationManager& kurentoConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
-: Participant(kurentoConversationManager),
-  RemoteParticipant(kurentoConversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(kurentoConversationManager),
+: Participant(ConversationManager::ParticipantType_Remote, conversationManager),
+  RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
+  KurentoParticipant(ConversationManager::ParticipantType_Remote, conversationManager, kurentoConversationManager),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
-  mWSAcceptsKeyframeRequests(true)
+  mWSAcceptsKeyframeRequests(true),
+  mLastRemoteSdp(0),
+  mWaitingAnswer(false)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -168,6 +174,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 
       kurento::ContinuationVoid cConnected = [this, isWebRTC, c, cOnOfferReady]{
          mEndpoint->generateOffer([this, isWebRTC, c, cOnOfferReady](const std::string& offer){
+            mWaitingAnswer = true;
             if(isWebRTC)
             {
                std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
@@ -442,6 +449,32 @@ void
 KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 {
    // FIXME Kurento - implement, may need to break up this method into multiple parts
+   StackLog(<<"adjustRTPStreams");
+
+   std::shared_ptr<SdpContents> localSdp = getLocalSdp();
+   resip_assert(localSdp);
+
+   std::shared_ptr<SdpContents> remoteSdp = getRemoteSdp();
+   bool remoteSdpChanged = remoteSdp.get() != mLastRemoteSdp;
+   mLastRemoteSdp = remoteSdp.get();
+   if(remoteSdp && remoteSdpChanged && mWaitingAnswer)
+   {
+      DebugLog(<<"remoteSdp has changed, sending to Kurento");
+      mWaitingAnswer = false;
+      std::ostringstream answerBuf;
+      answerBuf << *remoteSdp;
+      mEndpoint->processAnswer([this](const std::string updatedOffer){
+         // FIXME - use updatedOffer
+         WarningLog(<<"Kurento has processed the peer's SDP answer");
+         StackLog(<<"updatedOffer FROM Kurento: " << updatedOffer);
+         HeaderFieldValue hfv(updatedOffer.data(), updatedOffer.size());
+         Mime type("application", "sdp");
+         std::unique_ptr<SdpContents> _updatedOffer(new SdpContents(hfv, type));
+         _updatedOffer->session().transformLocalHold(isHolding());
+         setLocalSdp(*_updatedOffer);
+         //c(true, std::move(_updatedOffer));
+      }, answerBuf.str());
+   }
 
    // FIXME Kurento - sometimes true
    setRemoteHold(false);

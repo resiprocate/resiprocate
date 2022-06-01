@@ -15,7 +15,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ServerSubscriptionHandle 
-ServerSubscription::getHandle()
+ServerSubscription::getHandle() const
 {
    return ServerSubscriptionHandle(mDum, getBaseHandle().getId());
 }

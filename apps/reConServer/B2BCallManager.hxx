@@ -94,11 +94,7 @@ class B2BCallManager : public MyConversationManager
 {
 public:
 
-#ifdef PREFER_KURENTO
-   B2BCallManager(const resip::Data& kurentoUri, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
-#else
-   B2BCallManager(recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
-#endif
+   B2BCallManager(const resip::Data& kurentoUri, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
    ~B2BCallManager();
 
    virtual void init(MyUserAgent& ua);

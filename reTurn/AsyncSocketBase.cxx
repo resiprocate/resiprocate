@@ -66,8 +66,8 @@ AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, co
       channel = htons(channel);
       memcpy(&(*frame)[0], &channel, 2);
       unsigned short msgsize = htons((unsigned short)data->size());
-      memcpy(&(*frame)[2], (void*)&msgsize, 2);  // UDP doesn't need size - but shouldn't hurt to send it anyway
-
+      memcpy(&(*frame)[2], (void*)&msgsize, 2);
+      // TODO !SLG! - if sending over TCP/TLS then message must be padded to be on a 4 byte boundary
       mSendDataQueue.push_back(SendData(destination, frame, data, bufferStartPos));
    }
    if (!writeInProgress)

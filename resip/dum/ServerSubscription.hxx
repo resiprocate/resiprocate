@@ -22,7 +22,7 @@ class ServerSubscription : public BaseSubscription
       ServerSubscription& operator=(const ServerSubscription&) = delete;
       ServerSubscription& operator=(ServerSubscription&&) = delete;
 
-      ServerSubscriptionHandle getHandle();
+      ServerSubscriptionHandle getHandle() const;
 
       const Data& getSubscriber() const noexcept { return mSubscriber; }
       UInt32 getTimeLeft();

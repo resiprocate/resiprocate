@@ -18,7 +18,6 @@ class ChallengeInfo : public resip::DumFeatureMessage
       bool isFailed() const;
       bool isChallengeRequired() const;
 
-      virtual resip::Data brief() const;
       virtual resip::Message* clone() const;
 
       virtual std::ostream& encode(std::ostream& strm) const;

@@ -45,10 +45,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-SipXRemoteParticipantDialogSet::SipXRemoteParticipantDialogSet(SipXConversationManager& sipXConversationManager,
+SipXRemoteParticipantDialogSet::SipXRemoteParticipantDialogSet(ConversationManager& conversationManager,
+                                                       SipXConversationManager& sipXConversationManager,
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode,
                                                        std::shared_ptr<ConversationProfile> conversationProfile) :
-   RemoteParticipantDialogSet(sipXConversationManager, forkSelectMode, conversationProfile),
+   RemoteParticipantDialogSet(conversationManager, forkSelectMode, conversationProfile),
    mSipXConversationManager(sipXConversationManager),
    mLocalRTPPort(0),
    mAllocateLocalRTPPortFailed(false),
@@ -89,7 +90,7 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
       }
 
       ConversationProfile* profile = getConversationProfile().get();
-      assert(profile);
+      resip_assert(profile);
 
       OsStatus ret;
       Data connectionAddr = profile->sessionCaps().session().connection().getAddress();

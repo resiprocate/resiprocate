@@ -38,7 +38,7 @@ class BaseUsage : public Handled
       virtual void dispatch(const SipMessage& msg) = 0;
       virtual void dispatch(const DumTimeout& timer) = 0;
             
-      BaseUsageHandle getBaseHandle();
+      BaseUsageHandle getBaseHandle() const;
 
       DialogUsageManager& mDum;
    private:

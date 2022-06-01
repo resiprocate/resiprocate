@@ -255,7 +255,7 @@ DialogUsageManager::onAllHandlesDestroyed()
       {
          case ShutdownRequested:
             InfoLog (<< "DialogUsageManager::onAllHandlesDestroyed: removing TU");
-            //assert(mHandleMap.empty());
+            //resip_assert(mHandleMap.empty());
             mShutdownState = RemovingTransactionUser;
             mStack.unregisterTransactionUser(*this);
             break;
@@ -284,7 +284,7 @@ DialogUsageManager::shutdown(DumShutdownHandler* h)
 // 
 //    mDumShutdownHandler = h;
 //    mShutdownState = ShutdownRequested;
-//    assert(0);
+//    resip_assert(0);
 // }
 
 void
@@ -603,7 +603,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
     const Contents* alternative,
     AppDialogSet* appDs)
 {
-    assert(mDialogSetMap.find(dialogSetId) == mDialogSetMap.end());
+    resip_assert(mDialogSetMap.find(dialogSetId) == mDialogSetMap.end());
     BaseCreator* baseCreator(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative));
     baseCreator->getLastRequest()->header(h_CallID).value() = dialogSetId.getCallId();
     baseCreator->getLastRequest()->header(h_From).param(p_tag) = dialogSetId.getLocalTag();
@@ -1077,7 +1077,7 @@ void DialogUsageManager::outgoingProcess(std::unique_ptr<Message> message)
    }
 
    OutgoingEvent* event = dynamic_cast<OutgoingEvent*>(message.get());
-   //assert(event);
+   //resip_assert(event);
    //.dcm. a TID collision can cause a message to be delivered to a finished
    //chain. This is probably because pseudorandom was being used on Win32.
    if (event)
@@ -1638,7 +1638,7 @@ DialogUsageManager::incomingProcess(std::unique_ptr<Message> msg)
 
       if (sipMsg)
       {
-         //DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
+         DebugLog ( << "DialogUsageManager::process: found SipMessage" );
          if (sipMsg->isRequest())
          {
             // Validate Request URI

@@ -32,6 +32,7 @@ class KurentoConversation : public Conversation
 {
 public:  
    KurentoConversation(ConversationHandle handle,
+                ConversationManager& conversationManager,
                 KurentoConversationManager& kurentoConversationManager,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,

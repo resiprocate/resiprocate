@@ -198,6 +198,7 @@
     <ClCompile Include="SipXMediaInterface.cxx" />
     <ClCompile Include="MediaResourceCache.cxx" />
     <ClCompile Include="MediaResourceParticipant.cxx" />
+    <ClCompile Include="MediaStackAdapter.cxx" />
     <ClCompile Include="MediaStreamEvent.cxx" />
     <ClCompile Include="Participant.cxx" />
     <ClCompile Include="ReconSubsystem.cxx" />
@@ -247,6 +248,7 @@
     <ClInclude Include="SipXMediaInterface.hxx" />
     <ClInclude Include="MediaResourceCache.hxx" />
     <ClInclude Include="MediaResourceParticipant.hxx" />
+    <ClInclude Include="MediaStackAdapter.hxx" />
     <ClInclude Include="MediaStreamEvent.hxx" />
     <ClInclude Include="Participant.hxx" />
     <ClInclude Include="ReconSubsystem.hxx" />

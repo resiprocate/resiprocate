@@ -24,16 +24,6 @@ CredentialInfo::CredentialInfo(std::shared_ptr<B2BCall> call, const resip::Data&
    mB2BCallManager = b;
 }
 
-Data
-CredentialInfo::brief() const
-{
-   Data buffer;
-   DataStream strm(buffer);
-   strm << "CredentialInfo " << mUser << " @ " << mRealm << " mSecret=" << mSecret;
-   strm.flush();
-   return buffer;
-}
-
 void
 CredentialInfo::executeCommand()
 {
@@ -50,7 +40,7 @@ CredentialInfo::clone() const
 EncodeStream&
 CredentialInfo::encode(EncodeStream& strm) const
 {
-   strm << brief();
+   strm << "CredentialInfo " << mUser << " @ " << mRealm << " mSecret=" << mSecret;
    return strm;
 }
 

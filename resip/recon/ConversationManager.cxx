@@ -35,8 +35,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager()
+ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter)
 : mUserAgent(0),
+  mMediaStackAdapter(mediaStackAdapter),
   mShuttingDown(false),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
@@ -55,6 +56,7 @@ void
 ConversationManager::setUserAgent(UserAgent* userAgent)
 {
    mUserAgent = userAgent;
+   mMediaStackAdapter->setUserAgent(userAgent);
 }
 
 void
@@ -63,7 +65,7 @@ ConversationManager::shutdown()
    mShuttingDown = true;
 
    // Destroy each Conversation
-   ConversationMap tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
+   ConversationMap tempConvs = mConversations; // Create copy for safety, since ending conversations can immediately remove themselves from map
    ConversationMap::iterator i;
    for(i = tempConvs.begin(); i != tempConvs.end(); i++)
    {
@@ -72,14 +74,19 @@ ConversationManager::shutdown()
    }
 
    // End each Participant
-   ParticipantMap tempParts = mParticipants;  
+   ParticipantMap tempParts = mParticipants; // Create copy for safety, since ending participants can immediately remove themselves from map
    ParticipantMap::iterator j;
-   int j2=0;
-   for(j = tempParts.begin(); j != tempParts.end(); j++, j2++)
+   for(j = tempParts.begin(); j != tempParts.end(); j++)
    {
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
    }
+}
+
+void
+ConversationManager::process()
+{
+   mMediaStackAdapter->process();
 }
 
 ConversationHandle 
@@ -160,7 +167,7 @@ ConversationManager::createLocalParticipant()
 {
    if (mShuttingDown) return 0;  // Don't allow new things to be created when we are shutting down
    ParticipantHandle partHandle = 0;
-   if (supportsLocalAudio())
+   if (getMediaStackAdapter().supportsLocalAudio())
    {
       partHandle = getNewParticipantHandle();
 
@@ -276,7 +283,6 @@ ConversationManager::startApplicationTimer(unsigned int timerId, unsigned int ti
 ConversationHandle 
 ConversationManager::getNewConversationHandle()
 {
-   Lock lock(mConversationHandleMutex);
    return mCurrentConversationHandle++; 
 }
 
@@ -284,18 +290,23 @@ void
 ConversationManager::registerConversation(Conversation *conversation)
 {
    mConversations[conversation->getHandle()] = conversation;
+
+   WriteLock lock(mConversationHandlesMutex);
+   mConversationHandles.insert(conversation->getHandle());
 }
 
 void 
 ConversationManager::unregisterConversation(Conversation *conversation)
 {
    mConversations.erase(conversation->getHandle());
+
+   WriteLock lock(mConversationHandlesMutex);
+   mConversationHandles.erase(conversation->getHandle());
 }
 
 ParticipantHandle 
 ConversationManager::getNewParticipantHandle()
 {
-   Lock lock(mParticipantHandleMutex);
    return mCurrentParticipantHandle++; 
 }
 
@@ -303,6 +314,9 @@ void
 ConversationManager::registerParticipant(Participant *participant)
 {
    mParticipants[participant->getParticipantHandle()] = participant;
+   
+   WriteLock lock(mParticipantHandlesMutex);
+   mParticipantHandlesByType[participant->getParticipantType()].insert(participant->getParticipantHandle());
 }
 
 void 
@@ -310,6 +324,9 @@ ConversationManager::unregisterParticipant(Participant *participant)
 {
    InfoLog(<< "participant unregistered, handle=" << participant->getParticipantHandle());
    mParticipants.erase(participant->getParticipantHandle());
+
+   WriteLock lock(mParticipantHandlesMutex);
+   mParticipantHandlesByType[participant->getParticipantType()].erase(participant->getParticipantHandle());
 }
 
 void 
@@ -377,6 +394,26 @@ ConversationManager::getConversation(ConversationHandle convHandle)
    }
 }
 
+std::set<ConversationHandle>
+ConversationManager::getConversationHandles() const
+{
+   ReadLock lock(mConversationHandlesMutex);
+   return mConversationHandles;
+}
+
+std::set<ParticipantHandle>
+ConversationManager::getParticipantHandlesByType(ParticipantType participantType) const
+{
+   ReadLock lock(mParticipantHandlesMutex);
+   std::set<ParticipantHandle> participantHandles;
+   auto it = mParticipantHandlesByType.find(participantType);
+   if (it != mParticipantHandlesByType.end())
+   {
+      participantHandles = it->second;
+   }
+   return participantHandles;
+};
+
 void 
 ConversationManager::addBufferToMediaResourceCache(const resip::Data& name, const resip::Data& buffer, int type)
 {
@@ -424,33 +461,49 @@ ConversationManager::notifyDtmfEvent(ParticipantHandle partHandle, int dtmf, int
 RemoteParticipant* 
 ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
+   RemoteParticipant* rp;
    if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
    {
-      return new RemoteIMSessionParticipant(*this, dum, rpds);
+      rp = new RemoteIMSessionParticipant(*this, dum, rpds);
    }
    else
    {
-      return createRemoteParticipantInstance(dum, rpds);
+      rp = getMediaStackAdapter().createRemoteParticipantInstance(dum, rpds);
    }
+   onRemoteParticipantConstructed(rp);
+   return rp;
 }
 
 RemoteParticipant* 
 ConversationManager::createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
+   RemoteParticipant* rp;
    if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
    {
-      return new RemoteIMSessionParticipant(partHandle, *this, dum, rpds);
+      rp = new RemoteIMSessionParticipant(partHandle, *this, dum, rpds);
    }
    else
    {
-      return createRemoteParticipantInstance(partHandle, dum, rpds);
+      rp = getMediaStackAdapter().createRemoteParticipantInstance(partHandle, dum, rpds);
    }
+   onRemoteParticipantConstructed(rp);
+   return rp;
 }
 
 RemoteParticipantDialogSet* 
 ConversationManager::createRemoteIMSessionParticipantDialogSetInstance(ParticipantForkSelectMode forkSelectMode, std::shared_ptr<ConversationProfile> conversationProfile)
 {
    return new RemoteIMSessionParticipantDialogSet(*this, forkSelectMode, conversationProfile);
+}
+
+void
+ConversationManager::setMediaStackAdapter(std::shared_ptr<MediaStackAdapter> mediaStackAdapter)
+{
+   mMediaStackAdapter = mediaStackAdapter;
+   if(mediaStackAdapter)
+   {
+      mediaStackAdapter->conversationManagerReady(this);
+   }
 }
 
 void
@@ -724,7 +777,7 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
          }
 
          // Create new Participant
-         RemoteParticipantDialogSet *participantDialogSet = createRemoteParticipantDialogSetInstance();
+         RemoteParticipantDialogSet *participantDialogSet = getMediaStackAdapter().createRemoteParticipantDialogSetInstance();
          RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
          // Set pending OOD info in Participant - causes accept or reject to be called later
@@ -869,7 +922,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             }
 
             // Create new Participant 
-            RemoteParticipantDialogSet *participantDialogSet = createRemoteParticipantDialogSetInstance();
+            RemoteParticipantDialogSet *participantDialogSet = getMediaStackAdapter().createRemoteParticipantDialogSetInstance();
             RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(getNewParticipantHandle());  
 
             // Set pending OOD info in Participant - causes accept or reject to be called later
@@ -952,16 +1005,18 @@ ConversationManager::onMessageArrived(ServerPagerMessageHandle h, const SipMessa
 {
    RemoteIMPagerParticipant* remoteIMPagerParticipant = nullptr;
 
-   // First see if we already have a RemoteIMPagerParticipant for this CallId yet or not
-   for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
    {
-      remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(i->second);
-      if (remoteIMPagerParticipant != nullptr && remoteIMPagerParticipant->doesMessageMatch(message))
+      // First see if we already have a RemoteIMPagerParticipant for this CallId yet or not
+      for (ParticipantMap::iterator i = mParticipants.begin(); i != mParticipants.end(); i++)
       {
-         // Found existing remoteIMPagerParticipant, break out
-         break;
+         remoteIMPagerParticipant = dynamic_cast<RemoteIMPagerParticipant*>(i->second);
+         if (remoteIMPagerParticipant != nullptr && remoteIMPagerParticipant->doesMessageMatch(message))
+         {
+            // Found existing remoteIMPagerParticipant, break out
+            break;
+         }
+         remoteIMPagerParticipant = nullptr;
       }
-      remoteIMPagerParticipant = nullptr;
    }
 
    if (remoteIMPagerParticipant == nullptr && mUserAgent != nullptr)
