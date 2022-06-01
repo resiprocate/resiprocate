@@ -47,6 +47,7 @@
 #endif
 #  include <windows.h>
 #  include <winsock2.h>
+#  include <stdint.h>
 #undef WIN32_LEAN_AND_MEAN
 #  include <errno.h>
 #  include <io.h>

@@ -149,7 +149,7 @@ public:
    const static uint16_t TurnEvenPort           = 0x0018;
    const static uint16_t TurnRequestedTransport = 0x0019;
    const static uint16_t TurnDontFragment       = 0x001a;
-   //const static UInt16 TurnTimerVal         = 0x0021; // reserved (removed from latest draft)
+   //const static uint16_t TurnTimerVal         = 0x0021; // reserved (removed from latest draft)
    const static uint16_t TurnReservationToken   = 0x0022;
    const static uint16_t TurnConnectStat        = 0x0023; // tcp allocations
    const static uint16_t TurnRequestedAddressFamily = 0x0017; // RFC 6156
