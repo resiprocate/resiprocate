@@ -27,7 +27,7 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-MyConversationManager::MyConversationManager(const ReConServerConfig& config, const Data& kurentoUri, bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
+MyConversationManager::MyConversationManager(const ReConServerConfig& config, const Data& kurentoUri, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
       : ConversationManager(nullptr),
         mConfig(config),
         mAutoAnswerEnabled(autoAnswerEnabled)
@@ -35,7 +35,13 @@ MyConversationManager::MyConversationManager(const ReConServerConfig& config, co
 #ifdef PREFER_KURENTO
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<KurentoConversationManager>(*this, kurentoUri);
 #else
+#ifdef USE_SIPXTAPI
+   SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
+      ? SipXConversationManager::sipXGlobalMediaInterfaceMode : SipXConversationManager::sipXConversationMediaInterfaceMode;
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<SipXConversationManager>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
+#else
+   #error Need Kurento or sipXtapi
+#endif
 #endif
    setMediaStackAdapter(mediaStackAdapter);
 }
