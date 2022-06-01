@@ -39,6 +39,8 @@ public:
                 ConversationManager::AutoHoldMode autoHoldMode);
    virtual ~KurentoConversation();
 
+   virtual void confirmParticipant(Participant* participant);
+
 protected:
    friend class Participant;
    friend class KurentoParticipant;
@@ -56,6 +58,9 @@ protected:
    friend class JoinConversationCmd;
    friend class MoveParticipantCmd;
    //std::shared_ptr<KurentoMediaInterface> getMediaInterface() const { resip_assert(mMediaInterface); return mMediaInterface; }
+
+   virtual void onParticipantAdded(Participant* participant);
+   virtual void onParticipantRemoved(Participant* participant);
 
 private: 
    KurentoConversationManager& mKurentoConversationManager;

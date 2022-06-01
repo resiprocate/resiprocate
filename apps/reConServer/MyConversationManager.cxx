@@ -139,112 +139,6 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
 }
 
 void
-MyConversationManager::onIncomingKurento(ParticipantHandle partHandle, const SipMessage& msg)
-{
-   const resip::Data& room = msg.header(h_RequestLine).uri().user();
-   RoomMap::const_iterator it = mRooms.find(room);
-   if(it == mRooms.end())
-   {
-      ErrLog(<<"invalid room!");
-      resip_assert(0);
-   }
-   Conversation* conversation = getConversation(it->second);
-   unsigned int numRemoteParticipants = conversation->getNumRemoteParticipants();
-   KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(conversation->getParticipant(partHandle));
-   std::shared_ptr<kurento::BaseRtpEndpoint> answeredEndpoint = _p->getEndpoint();
-   if(numRemoteParticipants < 2)
-   {
-      DebugLog(<<"we are first in the conversation");
-      _p->waitingMode();
-      return;
-   }
-   if(numRemoteParticipants > 2)
-   {
-      WarningLog(<<"participants already here, can't join, numRemoteParticipants = " << numRemoteParticipants);
-      return;
-   }
-   DebugLog(<<"joining a Conversation with an existing Participant");
-
-   if(!answeredEndpoint)
-   {
-      ErrLog(<<"our endpoint is not initialized"); // FIXME
-      return;
-   }
-   _p->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, conversation]{
-      // Find the other Participant / endpoint
-
-      Conversation::ParticipantMap& m = conversation->getParticipants();
-      KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
-      Conversation::ParticipantMap::iterator _it = m.begin();
-      for(;_it != m.end() && krp == 0; _it++)
-      {
-         krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
-         if(krp == _p)
-         {
-            krp = 0;
-         }
-      }
-      resip_assert(krp);
-      std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
-
-      krp->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-         otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-            //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
-            answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-               //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
-               _p->requestKeyframeFromPeer();
-               krp->requestKeyframeFromPeer();
-            }, *otherEndpoint);
-         }, *answeredEndpoint);
-      }); // otherEndpoint->disconnect()
-   });  // answeredEndpoint->disconnect()
-}
-
-void
-MyConversationManager::onParticipantDestroyedKurento(ParticipantHandle partHandle)
-{
-   RoomMap::const_iterator it = mRooms.begin();
-   for(;it != mRooms.end();it++)
-   {
-      Conversation* conversation = getConversation(it->second);
-      KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(conversation->getParticipant(partHandle));
-      if(_p)
-      {
-         DebugLog(<<"found participant in room " << it->first);
-         std::shared_ptr<kurento::BaseRtpEndpoint> myEndpoint = _p->getEndpoint();
-         Conversation::ParticipantMap& m = conversation->getParticipants();
-         KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
-         Conversation::ParticipantMap::iterator _it = m.begin();
-         for(;_it != m.end() && krp == 0; _it++)
-         {
-            krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
-            if(krp == _p)
-            {
-               krp = 0;
-            }
-         }
-         if(krp)
-         {
-            std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
-            otherEndpoint->disconnect([this, krp]{
-               krp->waitingMode();
-            });
-         }
-         else
-         {
-            /*myEndpoint->release([this]{
-               DebugLog(<<"release completed");
-            });*/
-         }
-
-         return;
-      }
-
-   }
-
-}
-
-void
 MyConversationManager::onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
@@ -260,7 +154,6 @@ void
 MyConversationManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
-   onParticipantDestroyedKurento(partHandle);
 }
  
 void
@@ -293,8 +186,6 @@ void
 MyConversationManager::onParticipantConnectedConfirmed(ParticipantHandle partHandle, const SipMessage& msg)
 {
    InfoLog(<< "onParticipantConnectedConfirmed: handle=" << partHandle << " msg=" << msg.brief());
-
-   onIncomingKurento(partHandle, msg); // FIXME - Kurento
 }
 
 void

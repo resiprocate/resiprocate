@@ -35,7 +35,6 @@ public:
    
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle) override;
    virtual void onParticipantDestroyed(recon::ParticipantHandle partHandle) override;
-   virtual void onParticipantDestroyedKurento(recon::ParticipantHandle partHandle);
    virtual void onDtmfEvent(recon::ParticipantHandle partHandle, int dtmf, int duration, bool up) override;
    virtual void onIncomingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, bool autoAnswer, recon::ConversationProfile& conversationProfile) override;
    virtual void onRequestOutgoingParticipant(recon::ParticipantHandle partHandle, const resip::SipMessage& msg, recon::ConversationProfile& conversationProfile) override;
@@ -53,7 +52,6 @@ public:
 
 protected:
    virtual void onRemoteParticipantConstructed(recon::RemoteParticipant *rp) override;
-   virtual void onIncomingKurento(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
    ReConServerConfig mConfig;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
    RoomMap mRooms;

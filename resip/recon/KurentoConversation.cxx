@@ -9,6 +9,7 @@
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
 #include "ReconSubsystem.hxx"
+#include "KurentoRemoteParticipant.hxx"
 
 
 #include <rutil/Logger.hxx>
@@ -59,6 +60,93 @@ KurentoConversation::~KurentoConversation()
 {
    getBridgeMixerShared().reset();       // Make sure the mixer is destroyed before the media interface
    //mMediaInterface.reset();
+}
+
+void
+KurentoConversation::onParticipantAdded(Participant* participant)
+{
+}
+
+void
+KurentoConversation::confirmParticipant(Participant* participant)
+{
+   KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(participant);
+   std::shared_ptr<kurento::BaseRtpEndpoint> answeredEndpoint = _p->getEndpoint();
+   if(getNumRemoteParticipants() < 2)
+   {
+      DebugLog(<<"we are first in the conversation");
+      _p->waitingMode();
+      return;
+   }
+   if(getNumRemoteParticipants() > 2)
+   {
+      WarningLog(<<"participants already here, can't join, numRemoteParticipants = " << getNumRemoteParticipants());
+      return;
+   }
+   DebugLog(<<"joining a Conversation with an existing Participant");
+
+   if(!answeredEndpoint)
+   {
+      ErrLog(<<"our endpoint is not initialized"); // FIXME
+      return;
+   }
+   _p->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint]{
+      // Find the other Participant / endpoint
+
+      Conversation::ParticipantMap& m = getParticipants();
+      KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
+      Conversation::ParticipantMap::iterator _it = m.begin();
+      for(;_it != m.end() && krp == 0; _it++)
+      {
+         krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
+         if(krp == _p)
+         {
+            krp = 0;
+         }
+      }
+      resip_assert(krp);
+      std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
+
+      krp->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+         otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+            //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
+            answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+               //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
+               _p->requestKeyframeFromPeer();
+               krp->requestKeyframeFromPeer();
+            }, *otherEndpoint);
+         }, *answeredEndpoint);
+      }); // otherEndpoint->disconnect()
+   });  // answeredEndpoint->disconnect()
+}
+
+void
+KurentoConversation::onParticipantRemoved(Participant* participant)
+{
+   DebugLog(<<"onParticipantRemoved, checking for remaining participants");
+   KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(participant);
+   std::shared_ptr<kurento::BaseRtpEndpoint> myEndpoint = _p->getEndpoint();
+   Conversation::ParticipantMap& m = getParticipants();
+   KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
+   Conversation::ParticipantMap::iterator _it = m.begin();
+   for(;_it != m.end() && krp == 0; _it++)
+   {
+      krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
+      if(krp == _p)
+      {
+         krp = 0;
+      }
+   }
+   if(krp)
+   {
+      DebugLog(<<"remaining participant found");
+      std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
+      otherEndpoint->disconnect([this, krp]{
+         krp->waitingMode();
+      });
+   }
+
+   return;
 }
 
 /* ====================================================================
