@@ -110,6 +110,10 @@ public:
 protected:
    virtual void onRemoteParticipantConstructed(recon::RemoteParticipant *rp) override;
    virtual void onIncomingKurento(recon::ParticipantHandle partHandle, const resip::SipMessage& msg);
+   std::list<recon::ConversationHandle> mConversationHandles;
+   std::list<recon::ParticipantHandle> mLocalParticipantHandles;
+   std::list<recon::ParticipantHandle> mRemoteParticipantHandles;
+   std::list<recon::ParticipantHandle> mMediaParticipantHandles;
    ReConServerConfig mConfig;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
    RoomMap mRooms;
