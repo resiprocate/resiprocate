@@ -17,7 +17,7 @@ namespace resip
 
 class XMLCursor;
 
-static const UInt64 NeverExpire = 0xFFFFFFFFFFFFFFFFULL;
+static const uint64_t NeverExpire = 0xFFFFFFFFFFFFFFFFULL;
 
 /** A single contact record, bound to an Aor during registration.
 */
@@ -31,25 +31,25 @@ class ContactInstanceRecord
 
       static ContactInstanceRecord makeRemoveDelta(const NameAddr& contact);
       static ContactInstanceRecord makeUpdateDelta(const NameAddr& contact, 
-                                                   UInt64 expires,  // absolute time in secs
+                                                   uint64_t expires,  // absolute time in secs
                                                    const SipMessage& msg);
 
       // Stream ContactInstanceRecord in XML format
       void stream(std::iostream& ss) const;
 
       // Deserialize off xml tree
-      bool deserialize(resip::XMLCursor& xml, UInt64 now = 0);
+      bool deserialize(resip::XMLCursor& xml, uint64_t now = 0);
       /* @returns true if successfully deserialized
        */
       
       NameAddr mContact;    // can contain callee caps and q-values
-      UInt64 mRegExpires;   // in seconds
-      UInt64 mLastUpdated;  // in seconds
+      uint64_t mRegExpires;   // in seconds
+      uint64_t mLastUpdated;  // in seconds
       Tuple mReceivedFrom;  // source transport, IP address, and port
       Tuple mPublicAddress; // Public IP address closest to the client (from Via headers): note: Tuple::getType == UNKNOWN_TRANPORT if no public address was found
       NameAddrs mSipPath;   // Value of SIP Path header from the request
       Data mInstance;       // From the instance parameter; usually a UUID URI
-      UInt32 mRegId;        // From regid parameter of Contact header
+      uint32_t mRegId;        // From regid parameter of Contact header
       Data mUserAgent;      // From User-Agent header
       bool mSyncContact;    // This contact came from registration sync process, instead of direct SIP registration
       bool mUseFlowRouting; // Set to true when routing to this contact should use flow routing 

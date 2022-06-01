@@ -155,13 +155,13 @@ CDRFile::logTimestamp(const uint64_t& t, bool last)
 void
 CDRFile::logTimediff(const uint64_t& d, bool last)
 {
-   logString(Data((UInt64)(d / 1000)), last, false);
+   logString(Data((uint64_t)(d / 1000)), last, false);
 }
 
 void
 CDRFile::logNumeric(int s, bool last)
 {
-   logString(Data((Int32)s), last, false);
+   logString(Data((int32_t)s), last, false);
 }
 
 

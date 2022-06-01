@@ -27,7 +27,7 @@ class ClientSubscription: public BaseSubscription
       //.dcm. no adornment for ease of use, can add if there is a use case
       void acceptUpdate(int statusCode = 200, const char* reason = nullptr);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
-      void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
+      void requestRefresh(uint32_t expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       void end() override;
       void end(bool immediate); // If immediate is true then usage is destroyed with no further messaging
       virtual void reSubscribe();  // forms a new Subscription dialog - reusing the same target and AppDialogSet      
@@ -36,7 +36,7 @@ class ClientSubscription: public BaseSubscription
        */
       void acceptUpdateCommand(int statusCode = 200, const char* reason = nullptr);
       void rejectUpdateCommand(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
-      void requestRefreshCommand(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
+      void requestRefreshCommand(uint32_t expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
       virtual void endCommand(bool immediate=false); // If immediate is true then usage is destroyed with no further messaging
 
       EncodeStream& dump(EncodeStream& strm) const override;
@@ -74,8 +74,8 @@ class ClientSubscription: public BaseSubscription
       bool mOnNewSubscriptionCalled;
       bool mEnded;
       // .bwc. This is when our next reSUB is scheduled to happen.
-      UInt64 mNextRefreshSecs;
-      UInt64 mLastSubSecs;
+      uint64_t mNextRefreshSecs;
+      uint64_t mLastSubSecs;
 
       bool mSubscribed;
       bool mRefreshing;

@@ -304,7 +304,7 @@ SipMessage::make(const Data& data, bool isExternal)
       // it doesn't need a new buffer in UDP b/c there
       // will only be one datagram per buffer. (1:1 strict)
 
-      msg->setBody(buffer+used,UInt32(len-used));
+      msg->setBody(buffer+used,uint32_t(len-used));
       //DebugLog(<<"added " << len-used << " byte body");
    }
 
@@ -749,7 +749,7 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 #endif
    }
 
-   for (UInt8 i = 0; i < Headers::MAX_HEADERS; i++)
+   for (uint8_t i = 0; i < Headers::MAX_HEADERS; i++)
    {
       if (i != Headers::ContentLength) // !dlb! hack...
       {
@@ -791,7 +791,7 @@ EncodeStream&
 SipMessage::encodeEmbedded(EncodeStream& str) const
 {
    bool first = true;
-   for (UInt8 i = 0; i < Headers::MAX_HEADERS; i++)
+   for (uint8_t i = 0; i < Headers::MAX_HEADERS; i++)
    {
       if (i != Headers::ContentLength)
       {
@@ -912,7 +912,7 @@ SipMessage::setStartLine(const char* st, int len)
 }
 
 void 
-SipMessage::setBody(const char* start, UInt32 len)
+SipMessage::setBody(const char* start, uint32_t len)
 {
    if(checkContentLength)
    {
@@ -940,7 +940,7 @@ SipMessage::setBody(const char* start, UInt32 len)
             header(h_ContentLength).value()=len;
          }
          
-         UInt32 contentLength=const_header(h_ContentLength).value();
+         uint32_t contentLength=const_header(h_ContentLength).value();
          
          if(len > contentLength)
          {

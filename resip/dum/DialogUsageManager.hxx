@@ -69,7 +69,7 @@ class HttpGetMessage;
 
 class ConnectionTerminated;
 
-class Lockable;
+class Mutex;
 
 class ExternalMessageBase;
 class ExternalMessageHandler;
@@ -222,13 +222,13 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       std::shared_ptr<SipMessage> makeSubscription(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = nullptr);
       std::shared_ptr<SipMessage> makeSubscription(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, const Data& eventType,
-                                             UInt32 subscriptionTime, AppDialogSet* = nullptr);
+                                             uint32_t subscriptionTime, AppDialogSet* = nullptr);
       std::shared_ptr<SipMessage> makeSubscription(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, const Data& eventType,
-                                             UInt32 subscriptionTime, int refreshInterval, AppDialogSet* = nullptr);
+                                             uint32_t subscriptionTime, int refreshInterval, AppDialogSet* = nullptr);
       std::shared_ptr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = nullptr);
-      std::shared_ptr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, UInt32 subscriptionTime, AppDialogSet* = nullptr);
+      std::shared_ptr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, uint32_t subscriptionTime, AppDialogSet* = nullptr);
       std::shared_ptr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType,
-                                             UInt32 subscriptionTime, int refreshInterval, AppDialogSet* = nullptr);
+                                             uint32_t subscriptionTime, int refreshInterval, AppDialogSet* = nullptr);
 
       //unsolicited refer
       std::shared_ptr<SipMessage> makeRefer(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, const H_ReferTo::Type& referTo, AppDialogSet* = nullptr);
@@ -238,18 +238,18 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                             const std::shared_ptr<UserProfile>& userProfile,
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            UInt32 expiresSeconds, 
+                                            uint32_t expiresSeconds, 
                                             AppDialogSet* = nullptr);
       std::shared_ptr<SipMessage> makePublication(const NameAddr& target,
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            UInt32 expiresSeconds, 
+                                            uint32_t expiresSeconds, 
                                             AppDialogSet* = nullptr);
 
       std::shared_ptr<SipMessage> makeRegistration(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, AppDialogSet* = nullptr);
-      std::shared_ptr<SipMessage> makeRegistration(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, UInt32 registrationTime, AppDialogSet* = nullptr);
+      std::shared_ptr<SipMessage> makeRegistration(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, uint32_t registrationTime, AppDialogSet* = nullptr);
       std::shared_ptr<SipMessage> makeRegistration(const NameAddr& target, AppDialogSet* = nullptr);
-      std::shared_ptr<SipMessage> makeRegistration(const NameAddr& target, UInt32 registrationTime, AppDialogSet* = nullptr);
+      std::shared_ptr<SipMessage> makeRegistration(const NameAddr& target, uint32_t registrationTime, AppDialogSet* = nullptr);
 
       std::shared_ptr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, MethodTypes meth, AppDialogSet* = nullptr);
       std::shared_ptr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, MethodTypes meth, AppDialogSet* = nullptr);
@@ -291,8 +291,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process.
       bool hasEvents() const;
-      bool process(Lockable* mutex = NULL);  // non-blocking
-      bool process(int timeoutMs, Lockable* mutex = NULL);   // Specify -1 for infinte timeout
+      bool process(Mutex* mutex = NULL);  // non-blocking
+      bool process(int timeoutMs, Mutex* mutex = NULL);   // Specify -1 for infinte timeout
 
       AppDialogHandle findAppDialog(const DialogId& id);
       AppDialogSetHandle findAppDialogSet(const DialogSetId& id);

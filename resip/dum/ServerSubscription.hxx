@@ -25,7 +25,7 @@ class ServerSubscription : public BaseSubscription
       ServerSubscriptionHandle getHandle() const;
 
       const Data& getSubscriber() const noexcept { return mSubscriber; }
-      UInt32 getTimeLeft();
+      uint32_t getTimeLeft();
      
       //only 200 and 202 are permissible.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
@@ -76,9 +76,9 @@ class ServerSubscription : public BaseSubscription
       void terminateSubscription(ServerSubscriptionHandler* handler);
 
       Data mSubscriber;
-      UInt32 mExpires;
+      uint32_t mExpires;
 
-      UInt64 mAbsoluteExpiry;      
+      uint64_t mAbsoluteExpiry;      
 };
  
 }

@@ -2498,7 +2498,7 @@ TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, std::shared_ptr<resi
 std::shared_ptr<resip::SipMessage>
 TestSipEndPoint::Notify::go(std::shared_ptr<resip::SipMessage> msg)
 {
-   UInt32 expires = msg->header(h_Expires).value();
+   uint32_t expires = msg->header(h_Expires).value();
    if (msg->isRequest() && (expires < mMinExpires))
    {
       std::shared_ptr<resip::SipMessage> response;

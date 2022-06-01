@@ -49,7 +49,7 @@ class SelectTransporter : public Transporter
       void sendImpl(NodeId nodeId, std::unique_ptr<p2p::Message> msg);
       void sendImpl(FlowId flowId, std::unique_ptr<resip::Data> data);
    
-  void collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned short appId);
+  void collectCandidatesImpl(uint64_t tid, NodeId nodeId, unsigned short appId);
 
       virtual void connectImpl(resip::GenericIPAddress &);
    

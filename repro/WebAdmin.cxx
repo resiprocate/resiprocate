@@ -1766,7 +1766,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
   
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    RegistrationPersistenceManager::UriList aors;
    mRegDb.getAors(aors);
    for ( RegistrationPersistenceManager::UriList::const_iterator 
@@ -1782,7 +1782,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       {
          if(i->mRegExpires > now)
          {
-            UInt64 secondsRemaining = i->mRegExpires - now;
+            uint64_t secondsRemaining = i->mRegExpires - now;
 
             s << "<tr>" << endl
               << "  <td>" ;
@@ -1907,7 +1907,7 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl <<
       "</tr>" << endl;
 
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t now = Timer::getTimeSecs();
    mPubDb.lockDocuments();
    PublicationPersistenceManager::KeyToETagMap& publications = mPubDb.getDocuments();
    // Iterate through keys
@@ -1921,7 +1921,7 @@ WebAdmin::buildPublicationsSubPage(DataStream& s)
       {
          if (eTagIt->second.mExpirationTime > now)
          {
-            UInt64 secondsRemaining = eTagIt->second.mExpirationTime - now;
+            uint64_t secondsRemaining = eTagIt->second.mExpirationTime - now;
 
             s << "<tr>" << endl
                << "  <td>";

@@ -252,8 +252,8 @@ SdpContents::Session::Origin::operator=(const Origin& rhs)
 
 
 SdpContents::Session::Origin::Origin(const Data& user,
-                                     const UInt64& sessionId,
-                                     const UInt64& version,
+                                     const uint64_t& sessionId,
+                                     const uint64_t& version,
                                      AddrType addr,
                                      const Data& address)
    : mUser(user),

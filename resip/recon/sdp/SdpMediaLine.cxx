@@ -294,7 +294,7 @@ SdpMediaLine::addCandidate(SdpCandidate& candidate)
 
 void 
 SdpMediaLine::addCandidate(const char * foundation, unsigned int id, SdpCandidate::SdpCandidateTransportType transport, 
-                           UInt64 priority, const char * connectionAddress, unsigned int port, 
+                           uint64_t priority, const char * connectionAddress, unsigned int port, 
                            SdpCandidate::SdpCandidateType candidateType, const char * relatedAddress, 
                            unsigned int relatedPort)
 { 

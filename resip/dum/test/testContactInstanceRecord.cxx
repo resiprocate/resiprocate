@@ -30,7 +30,7 @@ int main(int argc, const char* argv[])
     ContactInstanceRecord rec;
     assert(rec.mUserData == 0);
 
-    UInt64 now = Timer::getTimeSecs();
+    uint64_t now = Timer::getTimeSecs();
     
     rec.mContact = NameAddr("sip:foo@example.com:1234");
     rec.mRegExpires = 3600 + now;

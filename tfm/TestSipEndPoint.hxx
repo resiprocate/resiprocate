@@ -669,7 +669,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             Send423Or200ToPublish(TestSipEndPoint& endPoint, int minExpres);
             virtual std::shared_ptr<resip::SipMessage> go(std::shared_ptr<resip::SipMessage> msg);
             TestSipEndPoint& mEndPoint;
-            UInt32 mMinExpires;
+            uint32_t mMinExpires;
       };
       MessageExpectAction* send423Or200ToPublish(int minExpires);
 
@@ -710,8 +710,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             std::shared_ptr<resip::Contents> mContents;
             resip::Data mEventPackage;
             resip::Data mSubscriptionState;
-            UInt32 mExpires;
-            UInt32 mMinExpires;
+            uint32_t mExpires;
+            uint32_t mMinExpires;
             bool mFirstNotify;
       };
       MessageExpectAction* notify(std::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify=false);

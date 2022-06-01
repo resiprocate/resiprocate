@@ -46,7 +46,7 @@ RegistrationForwarder::~RegistrationForwarder()
 }
 
 bool
-RegistrationForwarder::process(resip::Lockable* mutex)
+RegistrationForwarder::process(resip::Mutex* mutex)
 {
    if (mFifo.messageAvailable())
    {

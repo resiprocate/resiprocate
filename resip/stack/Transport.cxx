@@ -276,7 +276,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
 }
 
 std::unique_ptr<SendData>
-Transport::make503(SipMessage& msg, UInt16 retryAfter)
+Transport::make503(SipMessage& msg, uint16_t retryAfter)
 {
   std::unique_ptr<SendData> result;
   if (msg.isResponse()) return result;

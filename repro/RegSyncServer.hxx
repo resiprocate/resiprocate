@@ -38,8 +38,8 @@ public:
    // Use connectionId == 0 to send to all connections
    virtual void sendRegistrationModifiedEvent(unsigned int connectionId, const resip::Uri& aor);
    virtual void sendRegistrationModifiedEvent(unsigned int connectionId, const resip::Uri& aor, const resip::ContactList& contacts);
-   virtual void sendDocumentModifiedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
-   virtual void sendDocumentRemovedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
+   virtual void sendDocumentModifiedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+   virtual void sendDocumentRemovedEvent(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated);
 
 protected:
    virtual void handleRequest(unsigned int connectionId, unsigned int requestId, const resip::Data& request); 
@@ -49,9 +49,9 @@ protected:
    virtual void onInitialSyncAor(unsigned int connectionId, const resip::Uri& aor, const resip::ContactList& contacts);
 
    // InMemorySyncPubDbHandler methods
-   virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
-   virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
-   virtual void onInitialSyncDocument(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+   virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+   virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated);
+   virtual void onInitialSyncDocument(unsigned int connectionId, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
 
 private: 
    void handleInitialSyncRequest(unsigned int connectionId, unsigned int requestId, resip::XMLCursor& xml);

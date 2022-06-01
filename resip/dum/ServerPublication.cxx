@@ -197,13 +197,13 @@ ServerPublication::send(std::shared_ptr<SipMessage> response)
    }
    else
    {
-      UInt32 expires = response->header(h_Expires).value();  // ServerPublicationHandler may have changed expiration time
+      uint32_t expires = response->header(h_Expires).value();  // ServerPublicationHandler may have changed expiration time
       mDum.addTimer(DumTimeout::Publication, expires, getBaseHandle(), ++mTimerSeq);
 
       if (mDum.mPublicationPersistenceManager)
       {
          // Add document to persistence manager
-         UInt64 now = Timer::getTimeSecs();
+         uint64_t now = Timer::getTimeSecs();
          mDum.mPublicationPersistenceManager->addUpdateDocument(mEventType, mDocumentKey, mEtag, now + expires, mLastBody.mContents.get(), mLastBody.mAttributes.get());
       }
 

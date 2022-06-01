@@ -64,7 +64,7 @@ LocationServer::process(RequestContext& context)
    {
       TargetPtrList batch;
       std::map<resip::Data,resip::ContactList> outboundBatch;
-      UInt64 now = Timer::getTimeSecs();
+      uint64_t now = Timer::getTimeSecs();
       for(resip::ContactList::iterator i  = contacts.begin(); i != contacts.end(); ++i)
       {
          resip::ContactInstanceRecord contact = *i;

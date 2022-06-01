@@ -319,7 +319,7 @@ StunServer::sendTurnSetActiveDestinationResponse(std::shared_ptr<StunRequestCont
 }
 
 void
-StunServer::sendTurnResponse(std::shared_ptr<StunRequestContext> request, UInt16 messageType)
+StunServer::sendTurnResponse(std::shared_ptr<StunRequestContext> request, uint16_t messageType)
 {
    Lock autoLock(mMutexLock);
    auto response = std::make_shared<StunResponseContext>();

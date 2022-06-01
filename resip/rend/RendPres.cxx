@@ -249,9 +249,9 @@ int ffsl(int mask)
  * It is widely published on web. It seems to be the fastest
  * non-lookup table approach.
  */
-static inline unsigned rendPopcount(UInt32 val)
+static inline unsigned rendPopcount(uint32_t val)
 {
-   UInt32 tmp = val - ((val >> 1) & 033333333333) - ((val >> 2) & 011111111111);
+   uint32_t tmp = val - ((val >> 1) & 033333333333) - ((val >> 2) & 011111111111);
    return ((tmp + (tmp >> 3)) & 030707070707) % 63;
 }
 
@@ -262,7 +262,7 @@ struct RendEventPubPosture
       mAbsPubTime(0), mPendCnt(-1) { }
    bool mWatchable;
    unsigned mPidfSn;
-   UInt32 mExpireAbsSecs; // absolute time, 0 if not active
+   uint32_t mExpireAbsSecs; // absolute time, 0 if not active
    unsigned mSessionIdx; // kind of like callback data
    RendTimeUs mAbsPubTime; // Used for timing server latency
    int mPendCnt;
@@ -277,9 +277,9 @@ struct RendTupDetail
    unsigned mPubPidfSn;
    unsigned mSubAcctIdx;
    unsigned mSubRptIdx;
-   UInt32 mWatchMask;
-   UInt32 mReadyMask;
-   UInt32 mPendMask;
+   uint32_t mWatchMask;
+   uint32_t mReadyMask;
+   uint32_t mPendMask;
 
    // Total number of subscriptions (incl repleats) to this presentity
    unsigned mWatchCnt;
@@ -382,7 +382,7 @@ public:
                         unsigned pubPidfSn);
 
    void recordNotifyMask(RendTimeUs now,
-                         unsigned pubAcct, UInt32 pubRptMask,
+                         unsigned pubAcct, uint32_t pubRptMask,
                          unsigned subAcct, unsigned subRpt);
 
    void dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const;
@@ -405,8 +405,8 @@ protected:
    unsigned mNumSubAccts;
    unsigned mNumSubRpts;
    RendEventPubPosture* mPosture;
-   UInt32* mWatching;
-   UInt32* mPidfReady;
+   uint32_t* mWatching;
+   uint32_t* mPidfReady;
 
    RendEventNotifyIf* mNotifyObj;
 
@@ -458,13 +458,13 @@ RendPubSubEvent::setSize(unsigned numAcct, unsigned numPubRpt, unsigned numSubRp
    // watch[pubAcct][subAcct][subRpt] = bool
    v = mNumPubAccts*mNumSubAccts;
 
-   mWatching = new UInt32[v];
-   memset(mWatching, 0, sizeof(UInt32)*v);
+   mWatching = new uint32_t[v];
+   memset(mWatching, 0, sizeof(uint32_t)*v);
    // ready[pubAcct][pubRpt][subAcct][subRpt] = bool
 
    v = mNumPubAccts*mNumPubRpts*mNumSubAccts;
-   mPidfReady = new UInt32[v];
-   memset(mPidfReady, 0, sizeof(UInt32)*v);
+   mPidfReady = new uint32_t[v];
+   memset(mPidfReady, 0, sizeof(uint32_t)*v);
 }
 
 inline RendEventPubPosture*
@@ -526,7 +526,7 @@ RendPubSubEvent::countWatchers(unsigned pubAcctIdx)
    resip_assert( pubAcctIdx < mNumPubAccts );
    unsigned watchCnt = 0;
    unsigned subAcctIdx;
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    for (subAcctIdx=0; subAcctIdx < mNumSubAccts; subAcctIdx++) 
    {
       watchCnt += rendPopcount(watchBase[subAcctIdx]);
@@ -542,7 +542,7 @@ RendPubSubEvent::getWatching(unsigned pubAcctIdx, unsigned subAcctIdx,
    resip_assert( pubAcctIdx < mNumPubAccts );
    resip_assert( subAcctIdx < mNumSubAccts );
    resip_assert( subRptIdx < 32 );
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
    return (*watchBase & (1<<subRptIdx)) ? true : false;
 }
 
@@ -555,8 +555,8 @@ RendPubSubEvent::setWatching(RendTimeUs now,
    resip_assert( pubAcctIdx < mNumPubAccts );
    resip_assert( subAcctIdx < mNumSubAccts );
    resip_assert( subRptIdx < mNumSubRpts );
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
-   UInt32 subMask = 1<<subRptIdx;
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts+subAcctIdx];
+   uint32_t subMask = 1<<subRptIdx;
    if ( ((*watchBase)&subMask) ^ (isWatching?subMask:0) ) 
    {
       // need to make a change
@@ -586,8 +586,8 @@ void
 RendPubSubEvent::recordPublish(unsigned pubAcctIdx, unsigned pubRptIdx) 
 {
    RendEventPubPosture *posture = getPosture(pubAcctIdx, pubRptIdx);
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    unsigned watchCnt = 0;
    unsigned subIdx;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++) {
@@ -604,8 +604,8 @@ RendPubSubEvent::checkPublish(unsigned pubAcctIdx, unsigned pubRptIdx)
    // watch[pubAcct][subAcct][subRpt] = bool
    resip_assert( pubAcctIdx < mNumPubAccts );
    resip_assert( pubRptIdx < mNumPubRpts );
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    unsigned subIdx;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++) 
    {
@@ -656,18 +656,18 @@ RendPubSubEvent::checkPublishDetail(RendTimeUs now,
       ? posture->mExpireAbsSecs - REND_US2S(now) : 0;
    detail.mPubPidfSn = posture->mPidfSn; 
 
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
    unsigned watchCnt = 0;
    unsigned pendCnt = 0;
    unsigned subIdx;
    bool isFirst = true;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++) 
    {
-      UInt32 watchMask = watchBase[subIdx];
+      uint32_t watchMask = watchBase[subIdx];
       watchCnt += rendPopcount(watchMask);
-      UInt32 readyMask = readyBase[subIdx];
-      UInt32 pendMask = watchMask & ~readyMask;
+      uint32_t readyMask = readyBase[subIdx];
+      uint32_t pendMask = watchMask & ~readyMask;
       if ( pendMask ) 
       {
          unsigned pendRpts = rendPopcount(pendMask);
@@ -701,9 +701,9 @@ RendPubSubEvent::recordNotifyTup(RendTimeUs now,
    // TBD: could check to see if expired
    if ( posture->mPidfSn == pubPidfSn && posture->mExpireAbsSecs > 0 ) 
    {
-      UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
-      UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-      UInt32 subMask = 1<<subRptIdx;
+      uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+      uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+      uint32_t subMask = 1<<subRptIdx;
       if ( (readyBase[subAcctIdx] & subMask)==0 ) 
       {
          /* not previously ready */
@@ -726,11 +726,11 @@ RendPubSubEvent::recordNotifyTup(RendTimeUs now,
 **/
 void
 RendPubSubEvent::recordNotifyMask(RendTimeUs now, 
-                                  unsigned pubAcctIdx, UInt32 pubRptMask,
+                                  unsigned pubAcctIdx, uint32_t pubRptMask,
                                   unsigned subAcctIdx, unsigned subRptIdx)
 {
 
-   UInt32 subRptMask = 1 << subRptIdx;
+   uint32_t subRptMask = 1 << subRptIdx;
    unsigned pubRptIdx;
    for ( pubRptIdx=0; pubRptIdx < mNumPubRpts; pubRptIdx++) 
    {
@@ -741,7 +741,7 @@ RendPubSubEvent::recordNotifyMask(RendTimeUs now,
       if ( posture->mExpireAbsSecs > 0 )
          continue; // PUB not expired
 
-      UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+      uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
       if ( (readyBase[subAcctIdx] & subRptMask)!=0 )
          continue; // already ready
 
@@ -758,8 +758,8 @@ RendPubSubEvent::recordNotifyMask(RendTimeUs now,
 void
 RendPubSubEvent::dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const 
 {
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
 
    ErrLog(<<"EventDb: Dump of "<<pubAcctIdx<<"."<<pubRptIdx<<": ");
    unsigned watchCnt = 0;
@@ -769,7 +769,7 @@ RendPubSubEvent::dumpPub(unsigned pubAcctIdx, unsigned pubRptIdx) const
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++)
    {
       unsigned watchX = rendPopcount(watchBase[subIdx]);
-      UInt32 pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
+      uint32_t pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
       unsigned pendX = rendPopcount(pendBits);
       if ( watchBase[subIdx] || readyBase[subIdx] )
       {
@@ -800,13 +800,13 @@ inline unsigned
 RendPubSubEvent::countPendingTuplesCore(unsigned pubAcctIdx, unsigned pubRptIdx) const
 {
    unsigned pendCnt = 0;
-   UInt32 *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
-   UInt32 *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
+   uint32_t *readyBase = &mPidfReady[(pubAcctIdx*mNumPubRpts+pubRptIdx)*mNumSubAccts];
+   uint32_t *watchBase = &mWatching[pubAcctIdx*mNumSubAccts];
 
    unsigned subIdx;
    for (subIdx=0; subIdx < mNumSubAccts; subIdx++)
    {
-      UInt32 pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
+      uint32_t pendBits = (watchBase[subIdx] & ~readyBase[subIdx]);
       unsigned pendX = rendPopcount(pendBits);
       pendCnt += pendX;
    }
@@ -1386,7 +1386,7 @@ RendSubDlg::handleNotifyReq(RendReqCxt& cxt, RendSession& sess)
    const resip::Data& tupPre = mTroop.mEventInfo.getTuplePrefix();
    unsigned ofs = 0;
    const unsigned siglen = 8+1+tupPre.size()+1+10+1+5+1+10+1+8;
-   UInt32 gotPubMask = 0;
+   uint32_t gotPubMask = 0;
    while ( (ofs = body.find(tag, ofs)) != resip::Data::npos )
    {
       // RENDNOTE.tupPrefix.pubAcctIdx.pubRptIdx.pidfSn.rendnote

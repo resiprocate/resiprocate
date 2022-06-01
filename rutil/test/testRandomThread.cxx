@@ -158,12 +158,12 @@ TestRandomThread::thread()
    mBarrier.sync(2);
 }
 
-static UInt64
+static uint64_t
 doSingleTest(int numCycles)
 {
-   UInt64 startUs = ResipClock::getTimeMicroSec();
+   uint64_t startUs = ResipClock::getTimeMicroSec();
    TestRandomThread::makeRandoms(numCycles);
-   UInt64 doneUs = ResipClock::getTimeMicroSec();
+   uint64_t doneUs = ResipClock::getTimeMicroSec();
    return doneUs - startUs;
 }
 
@@ -189,7 +189,7 @@ mergeCheckRandoms(DataSet& all, const DataSet& more)
    return dupCnt;
 }
 
-static UInt64
+static uint64_t
 doThreadedTest(int numCycles, int numThreads, int storeBytes)
 {
    std::vector<TestRandomThread*> threadList;
@@ -206,12 +206,12 @@ doThreadedTest(int numCycles, int numThreads, int storeBytes)
 
    bar.sync(1, true);
 
-   UInt64 startUs = ResipClock::getTimeMicroSec();
+   uint64_t startUs = ResipClock::getTimeMicroSec();
    // TestRandomThread::makeRandoms(numCycles);
 
    bar.sync(2, true);
 
-   UInt64 doneUs = ResipClock::getTimeMicroSec();
+   uint64_t doneUs = ResipClock::getTimeMicroSec();
    // std::cerr << "Threads finished."
    //    << " (barrier pre="<<Barrier::sPreWaitCnt
    //    << " post="<<Barrier::sPostWaitCnt
@@ -242,23 +242,23 @@ doThreadedTest(int numCycles, int numThreads, int storeBytes)
 static void
 doVariationTest(int numCycles, int numThreads, int numPass, int storeBytes)
 {
-   UInt64 msMin = 0, msMax = 0;
-   UInt64 msSum = 0;
-   UInt64 msSumSq = 0;
+   uint64_t msMin = 0, msMax = 0;
+   uint64_t msSum = 0;
+   uint64_t msSumSq = 0;
    int passIdx=0;
    for (passIdx=0; passIdx < numPass; passIdx++)
    {
-      UInt64 usTot = numThreads<=0
+      uint64_t usTot = numThreads<=0
          ?  doSingleTest(numCycles) 
          : doThreadedTest(numCycles, numThreads, storeBytes);
-      UInt64 usPerCycle = usTot/numCycles;
+      uint64_t usPerCycle = usTot/numCycles;
 #if 0
       std::cerr << numCycles << " cycles/thread (1M plain 32-bit ints)"
          << " with " << numThreads << " threads"
           << " took " << usTot<<"us (" << usPerCycle << "us/cycle)"
           << std::endl;
 #endif
-      UInt64 msPerCycle = usPerCycle/1000;
+      uint64_t msPerCycle = usPerCycle/1000;
       msSum += msPerCycle;
       msSumSq += msPerCycle*msPerCycle;
       if ( msPerCycle < msMin || passIdx==0 )

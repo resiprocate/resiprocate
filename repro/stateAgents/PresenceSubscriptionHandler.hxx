@@ -89,22 +89,22 @@ public:
     virtual void onAorModified(const resip::Uri& aor, const resip::ContactList& contacts);
 
     // InMemorySyncPubDb handler interface
-    virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
-    virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
+    virtual void onDocumentModified(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const resip::Contents* contents, const resip::SecurityAttributes* securityAttributes);
+    virtual void onDocumentRemoved(bool sync, const resip::Data& eventType, const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated);
 
 protected:
     resip::DialogUsageManager& mDum;
     resip::InMemorySyncPubDb* mPublicationDb;
     resip::InMemorySyncRegDb* mRegistrationDb;
     void notifyPresence(resip::ServerSubscriptionHandle h, bool sendAcceptReject);
-    void notifyPresenceNoPublication(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool isRegistered, UInt64 regMaxExpires);
+    void notifyPresenceNoPublication(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool isRegistered, uint64_t regMaxExpires);
     bool sendPublishedPresence(resip::ServerSubscriptionHandle h, bool sendAcceptReject);
-    void adjustNotifyExpiresTime(resip::SipMessage& notify, UInt64 regMaxExpires);
-    void fabricateSimplePresence(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool online, UInt64 regMaxExpires);
+    void adjustNotifyExpiresTime(resip::SipMessage& notify, uint64_t regMaxExpires);
+    void fabricateSimplePresence(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool online, uint64_t regMaxExpires);
     void continueNotifyPresenceAfterUserExistsCheck(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool userExists);
-    bool checkRegistrationStateChanged(const resip::Uri& aor, bool registered, UInt64 regMaxExpires);
+    bool checkRegistrationStateChanged(const resip::Uri& aor, bool registered, uint64_t regMaxExpires);
     void notifySubscriptions(const resip::Data& documentKey);
-    void checkExpired(const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated);
+    void checkExpired(const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated);
     friend class PresenceServerSubscriptionRegFunctor;
     friend class PresenceServerSubscriptionFunctor;
     friend class PresenceServerRegStateChangeCommand;

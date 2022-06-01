@@ -36,7 +36,7 @@ class Server : public ThreadIf
       {
          InfoLog(<<"This is the Server");
 
-         UInt64 startTime = Timer::getTimeMs();
+         uint64_t startTime = Timer::getTimeMs();
 
          NameAddr contact;
          contact.uri().scheme() = "sip";
@@ -79,7 +79,7 @@ class Server : public ThreadIf
                }
             }
          }
-         UInt64 endTime = Timer::getTimeMs();
+         uint64_t endTime = Timer::getTimeMs();
 
          CritLog(<< "Completed: " << mNumCalls << " calls in " << endTime - startTime << "ms, " 
                  << mNumCalls*1000 / (float)(endTime - startTime) << " CPS");

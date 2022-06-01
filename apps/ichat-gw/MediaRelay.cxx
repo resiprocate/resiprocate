@@ -284,7 +284,7 @@ MediaRelay::buildFdSet(FdSet& fdset)
 void 
 MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
 {
-   UInt64 now = Timer::getTimeMs();
+   uint64_t now = Timer::getTimeMs();
 
    // See if First Endpoint is stale (ie. hasn't received data in STALEENDPOINTTIMEOUTMS ms)
    if(relayPort->mFirstEndpoint.mTuple.getPort() != 0 &&
@@ -539,7 +539,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
 
       if(buffer.get() != 0)
       {
-         UInt64 now = Timer::getTimeMs();
+         uint64_t now = Timer::getTimeMs();
          RtpHeader* rtpHeader = (RtpHeader*)buffer.get();
          //InfoLog(<< "Received a datagram of size=" << len << " from=" << tuple);
          MediaEndpoint* pReceivingEndpoint = 0;

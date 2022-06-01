@@ -151,7 +151,7 @@ PostgreSqlDb::connectToDatabase() const
    }
    if(mDBPort > 0)
    {
-      connInfo = connInfo + " port=" + Data((UInt32)mDBPort);
+      connInfo = connInfo + " port=" + Data((uint32_t)mDBPort);
    }
    if(!mDBName.empty())
    {

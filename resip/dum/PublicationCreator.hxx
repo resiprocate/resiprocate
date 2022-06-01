@@ -16,7 +16,7 @@ class PublicationCreator: public BaseCreator
                          std::shared_ptr<UserProfile> userProfile,
                          const Contents& body, 
                          const Data& eventType, 
-                         UInt32 expireSeconds );
+                         uint32_t expireSeconds );
 };
  
 }

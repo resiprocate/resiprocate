@@ -11,7 +11,6 @@
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
 #include <resip/dum/PagerMessageHandler.hxx>
-#include <rutil/RWMutex.hxx>
 
 #include <reflow/RTCPEventLoggingHandler.hxx>
 
@@ -21,6 +20,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 
 namespace resip
 {
@@ -741,7 +741,7 @@ protected:
    virtual void onExpiredByClient(resip::ServerSubscriptionHandle, const resip::SipMessage& sub, resip::SipMessage& notify);
    virtual void onExpired(resip::ServerSubscriptionHandle, resip::SipMessage& notify);
    virtual bool hasDefaultExpires() const;
-   virtual UInt32 getDefaultExpires() const;
+   virtual uint32_t getDefaultExpires() const;
 
    // OutOfDialogHandler //////////////////////////////////////////////////////////
    virtual void onSuccess(resip::ClientOutOfDialogReqHandle, const resip::SipMessage& response);
@@ -866,13 +866,13 @@ private:
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;
-   mutable resip::RWMutex mConversationHandlesMutex;
+   mutable std::mutex mConversationHandlesMutex;
    std::atomic<ConversationHandle> mCurrentConversationHandle;
    std::set<ConversationHandle> mConversationHandles;
 
    typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
    ParticipantMap mParticipants;
-   mutable resip::RWMutex mParticipantHandlesMutex;
+   mutable std::mutex mParticipantHandlesMutex;
    std::atomic<ParticipantHandle> mCurrentParticipantHandle;
    std::map<ParticipantType, std::set<ParticipantHandle>> mParticipantHandlesByType;
 

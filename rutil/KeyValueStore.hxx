@@ -57,9 +57,9 @@ public:
    const unsigned int& getUIntValue(Key key) const { return mKeyValueStore[key].uintValue; }
    unsigned int& getUIntValue(Key key) { return mKeyValueStore[key].uintValue; }
 
-   void setUInt64Value(Key key, UInt64 value) { mKeyValueStore[key].uint64Value = value; }
-   const UInt64& getUInt64Value(Key key) const { return mKeyValueStore[key].uint64Value; }
-   UInt64& getUInt64Value(Key key) { return mKeyValueStore[key].uint64Value; }
+   void setUInt64Value(Key key, uint64_t value) { mKeyValueStore[key].uint64Value = value; }
+   const uint64_t& getUInt64Value(Key key) const { return mKeyValueStore[key].uint64Value; }
+   uint64_t& getUInt64Value(Key key) { return mKeyValueStore[key].uint64Value; }
 
 protected:
    struct Value
@@ -73,7 +73,7 @@ protected:
          unsigned short ushortValue;
          int            intValue;
          unsigned int   uintValue;
-         UInt64         uint64Value;
+         uint64_t         uint64Value;
       };
    };
    typedef std::vector<Value> KeyValueStoreContainer;

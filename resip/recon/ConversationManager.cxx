@@ -1,7 +1,6 @@
 // resip includes
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <rutil/Lock.hxx>
 #include <rutil/Random.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/ClientInviteSession.hxx>
@@ -291,7 +290,7 @@ ConversationManager::registerConversation(Conversation *conversation)
 {
    mConversations[conversation->getHandle()] = conversation;
 
-   WriteLock lock(mConversationHandlesMutex);
+   std::lock_guard<std::mutex> lock(mConversationHandlesMutex);
    mConversationHandles.insert(conversation->getHandle());
 }
 
@@ -300,7 +299,7 @@ ConversationManager::unregisterConversation(Conversation *conversation)
 {
    mConversations.erase(conversation->getHandle());
 
-   WriteLock lock(mConversationHandlesMutex);
+   std::lock_guard<std::mutex> lock(mConversationHandlesMutex);
    mConversationHandles.erase(conversation->getHandle());
 }
 
@@ -315,7 +314,7 @@ ConversationManager::registerParticipant(Participant *participant)
 {
    mParticipants[participant->getParticipantHandle()] = participant;
    
-   WriteLock lock(mParticipantHandlesMutex);
+   std::lock_guard<std::mutex> lock(mParticipantHandlesMutex);
    mParticipantHandlesByType[participant->getParticipantType()].insert(participant->getParticipantHandle());
 }
 
@@ -325,7 +324,7 @@ ConversationManager::unregisterParticipant(Participant *participant)
    InfoLog(<< "participant unregistered, handle=" << participant->getParticipantHandle());
    mParticipants.erase(participant->getParticipantHandle());
 
-   WriteLock lock(mParticipantHandlesMutex);
+   std::lock_guard<std::mutex> lock(mParticipantHandlesMutex);
    mParticipantHandlesByType[participant->getParticipantType()].erase(participant->getParticipantHandle());
 }
 
@@ -356,7 +355,7 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
    offer = profile->sessionCaps();
 
    // Set sessionid and version for this offer
-   UInt64 currentTime = Timer::getTimeMicroSec();
+   uint64_t currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
    offer.session().origin().getVersion() = currentTime;  
 
@@ -397,14 +396,14 @@ ConversationManager::getConversation(ConversationHandle convHandle)
 std::set<ConversationHandle>
 ConversationManager::getConversationHandles() const
 {
-   ReadLock lock(mConversationHandlesMutex);
+   std::lock_guard<std::mutex> lock(mConversationHandlesMutex);
    return mConversationHandles;
 }
 
 std::set<ParticipantHandle>
 ConversationManager::getParticipantHandlesByType(ParticipantType participantType) const
 {
-   ReadLock lock(mParticipantHandlesMutex);
+   std::lock_guard<std::mutex> lock(mParticipantHandlesMutex);
    std::set<ParticipantHandle> participantHandles;
    auto it = mParticipantHandlesByType.find(participantType);
    if (it != mParticipantHandlesByType.end())
@@ -858,7 +857,7 @@ ConversationManager::hasDefaultExpires() const
    return true;
 }
 
-UInt32 
+uint32_t 
 ConversationManager::getDefaultExpires() const
 {
    return 60;

@@ -11,20 +11,20 @@ main()
 
    // make sure these are consistent on all platforms
 
-   assert(sizeof(UInt8) == 1);
-   assert(sizeof(UInt16) == 2);
-   assert(sizeof(UInt32) == 4);
-   assert(sizeof(Int32) == 4);
-   assert(sizeof(UInt64) == 8);
+   assert(sizeof(uint8_t) == 1);
+   assert(sizeof(uint16_t) == 2);
+   assert(sizeof(uint32_t) == 4);
+   assert(sizeof(int32_t) == 4);
+   assert(sizeof(uint64_t) == 8);
 
-   UInt64 data = 0;
-   UInt8 *tmp = (UInt8*)&data;
+   uint64_t data = 0;
+   uint8_t *tmp = (uint8_t*)&data;
    tmp[7] = 1;
    assert(ntoh64(data) == 1);
 
    data = 1;
-   UInt64 data2 = hton64(data);
-   tmp = (UInt8*)&data2;
+   uint64_t data2 = hton64(data);
+   tmp = (uint8_t*)&data2;
    assert(tmp[7] == 1);
 
    return 0;

@@ -27,7 +27,7 @@ const char* SdpCandidate::SdpCandidateTypeString[] =
 SdpCandidate::SdpCandidate(const char * foundation,
                            unsigned int id,
                            SdpCandidateTransportType transport,
-                           UInt64 priority,
+                           uint64_t priority,
                            const char * connectionAddress,
                            unsigned int port,
                            SdpCandidateType candidateType,

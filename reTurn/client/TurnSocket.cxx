@@ -128,11 +128,11 @@ TurnSocket::setSoftware(const char* software)
 {
    mSoftware = software;
 
-   const UInt32 unpaddedSize = mSoftware.size();
+   const uint32_t unpaddedSize = mSoftware.size();
    if(unpaddedSize > 0)
    {
       // Pad size to a multiple of 4, to help compatibility with older clients
-      const UInt32 remainder  = unpaddedSize % 4,
+      const uint32_t remainder  = unpaddedSize % 4,
                    paddedSize = remainder ? unpaddedSize + 4 - remainder : unpaddedSize;
 
       while(mSoftware.size() < paddedSize)
@@ -186,7 +186,7 @@ asio::error_code
 TurnSocket::createAllocation(unsigned int lifetime,
                              unsigned int bandwidth,
                              unsigned char requestedProps, 
-                             UInt64 reservationToken,
+                             uint64_t reservationToken,
                              StunTuple::TransportType requestedTransportType)
 {
    asio::error_code errorCode;
@@ -569,7 +569,7 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       channelNumber = htons(channelNumber);
       memcpy(&framing[0], &channelNumber, 2);
 
-      UInt16 turnDataSize = size;
+      uint16_t turnDataSize = size;
       turnDataSize = htons(turnDataSize);
       memcpy((void*)&framing[2], &turnDataSize, 2);
 
@@ -664,7 +664,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
             RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
             if(remotePeer)
             {
-               UInt16 dataLen;
+               uint16_t dataLen;
                memcpy(&dataLen, &mReadBuffer[2], 2);
                dataLen = ntohs(dataLen);
    

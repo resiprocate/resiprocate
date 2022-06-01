@@ -65,7 +65,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
-#include "rutil/Lockable.hxx"
+#include "rutil/Mutex.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -784,14 +784,14 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const std::shared_p
 
 std::shared_ptr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, const Data& eventType,
-                                     UInt32 subscriptionTime, AppDialogSet* appDs)
+                                     uint32_t subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime), appDs);
 }
 
 std::shared_ptr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, const Data& eventType,
-                                     UInt32 subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+                                     uint32_t subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime, refreshInterval), appDs);
 }
@@ -804,14 +804,14 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventTy
 
 std::shared_ptr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
-                                     UInt32 subscriptionTime, AppDialogSet* appDs)
+                                     uint32_t subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime), appDs);
 }
 
 std::shared_ptr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
-                                     UInt32 subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+                                     uint32_t subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime, refreshInterval), appDs);
 }
@@ -824,7 +824,7 @@ DialogUsageManager::makeRegistration(const NameAddr& target, const std::shared_p
 }
 
 std::shared_ptr<SipMessage>
-DialogUsageManager::makeRegistration(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, UInt32 registrationTime, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, const std::shared_ptr<UserProfile>& userProfile, uint32_t registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, userProfile, registrationTime), appDs);
 }
@@ -836,7 +836,7 @@ DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs
 }
 
 std::shared_ptr<SipMessage>
-DialogUsageManager::makeRegistration(const NameAddr& target, UInt32 registrationTime, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, uint32_t registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, getMasterUserProfile(), registrationTime), appDs);
 }
@@ -846,7 +846,7 @@ DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const std::shared_ptr<UserProfile>& userProfile,
                                     const Contents& body,
                                     const Data& eventType,
-                                    UInt32 expiresSeconds,
+                                    uint32_t expiresSeconds,
                                     AppDialogSet* appDs)
 {
    return makeNewSession(new PublicationCreator(*this, targetDocument, userProfile, body, eventType, expiresSeconds), appDs);
@@ -856,7 +856,7 @@ std::shared_ptr<SipMessage>
 DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const Contents& body,
                                     const Data& eventType,
-                                    UInt32 expiresSeconds,
+                                    uint32_t expiresSeconds,
                                     AppDialogSet* appDs)
 {
    return makeNewSession(new PublicationCreator(*this, targetDocument, getMasterUserProfile(), body, eventType, expiresSeconds), appDs);
@@ -1704,7 +1704,7 @@ DialogUsageManager::hasEvents() const
 
 // return true if there is more to do
 bool 
-DialogUsageManager::process(resip::Lockable* mutex)
+DialogUsageManager::process(resip::Mutex* mutex)
 {
    if (mFifo.messageAvailable())
    {
@@ -1728,7 +1728,7 @@ DialogUsageManager::process(resip::Lockable* mutex)
 }
 
 bool 
-DialogUsageManager::process(int timeoutMs, resip::Lockable* mutex)
+DialogUsageManager::process(int timeoutMs, resip::Mutex* mutex)
 {
    std::unique_ptr<Message> message;
 

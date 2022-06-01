@@ -14,7 +14,7 @@ using namespace resip;
 RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
                                          std::shared_ptr<UserProfile> userProfile, 
-                                         UInt32 registrationTime)
+                                         uint32_t registrationTime)
    : BaseCreator(dum, std::move(userProfile))
 {
    makeInitialRequest(target, target, REGISTER);

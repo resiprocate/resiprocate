@@ -9,7 +9,7 @@ class MarkListener
 {
    public:
       virtual ~MarkListener() {}
-      virtual void onMark(const Tuple& target,UInt64& expiry, TupleMarkManager::MarkType& mark)= 0;
+      virtual void onMark(const Tuple& target,uint64_t& expiry, TupleMarkManager::MarkType& mark)= 0;
 };
 }
 

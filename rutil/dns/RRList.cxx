@@ -95,7 +95,7 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
          RecordItem item;
          item.record = factory->create(*it);
          mRecords.push_back(item);
-         if ((UInt64)it->ttl() < mAbsoluteExpiry)
+         if ((uint64_t)it->ttl() < mAbsoluteExpiry)
          {
             mAbsoluteExpiry = it->ttl();
          }
@@ -106,7 +106,7 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
       }
    }
 
-   if (mAbsoluteExpiry < (UInt64)ttl)
+   if (mAbsoluteExpiry < (uint64_t)ttl)
    {
       mAbsoluteExpiry = ttl;
    }

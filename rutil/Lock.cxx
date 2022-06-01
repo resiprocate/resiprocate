@@ -55,11 +55,11 @@ WriteLock::WriteLock(Lockable & lockable)
 }
 
 
-PtrLock::PtrLock(Lockable* lockable, LockType lockType)
+PtrLock::PtrLock(Mutex* lockable)
    : myLockable(lockable)
 {
    if (lockable)
-      takeLock(*lockable, lockType);
+      lockable->lock();
 }
 
 PtrLock::~PtrLock()

@@ -202,9 +202,9 @@ RequestHandler::checkNonce(const Data& nonce)
       DebugLog(<< "Invalid nonce. Expected timestamp terminator.");
       return NotValid;
    }
-   UInt64 now = Timer::getTimeMs()/1000;
+   uint64_t now = Timer::getTimeMs()/1000;
    Data creationTimeData;
-   UInt64 creationTime;
+   uint64_t creationTime;
    pb.data(creationTimeData, anchor);
    creationTime = creationTimeData.convertUInt64();
    if((now-creationTime) <= getConfig().mNonceLifetime)
@@ -357,7 +357,7 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
       changeTuple.setTransportType(request.mLocalTuple.getTransportType());
       changeTuple.setAddress(request.mLocalTuple.getAddress() == mPrim3489Address ? mAlt3489Address : mPrim3489Address);
       changeTuple.setPort(request.mLocalTuple.getPort() == mPrim3489Port ? mAlt3489Port : mPrim3489Port);
-      UInt32 changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
+      uint32_t changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
 
       if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag)
       {
@@ -561,7 +561,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, TurnAllo
 
    allocationTuple.setPort(port);
 
-   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
+   uint32_t lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max
@@ -680,7 +680,7 @@ RequestHandler::processTurnRefreshRequest(TurnAllocationManager& turnAllocationM
       return RespondFromReceiving;
    }
 
-   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
+   uint32_t lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max

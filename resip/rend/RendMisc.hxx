@@ -36,7 +36,7 @@ rendMAX(const _Tp& __a, const _Tp& __b)
 #define sleepMs Sleep
 #endif
 
-typedef UInt64 RendTimeUs; // usec
+typedef uint64_t RendTimeUs; // usec
 #define REND_S2US(secs) (((UInt64)(secs))*1000000)
 #define REND_US2S(usecs) ((usecs)/1000000)
 #define REND_S2MS(secs) ((secs)*1000)

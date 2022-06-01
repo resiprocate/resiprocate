@@ -2,6 +2,7 @@
 #define RESIP_LOCK_HXX  
 
 #include "rutil/Lockable.hxx"
+#include "rutil/Mutex.hxx"
 
 namespace resip
 {
@@ -55,11 +56,11 @@ class WriteLock : public Lock
 class PtrLock
 {
    public:
-      PtrLock(Lockable*, LockType = VOCAL_LOCK);
+      PtrLock(Mutex*);
       virtual ~PtrLock();
 
    private:
-      Lockable*   myLockable;
+      Mutex*   myLockable;
 };
 
 }	// namespace resip

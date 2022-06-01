@@ -403,13 +403,13 @@ ConnectionBase::preparseNewBytes(int bytesRead)
 
                // The message body is complete.
                if (contentLength > 0)
-                        mMessage->setBody(unprocessedCharPtr, (UInt32)contentLength);
+                        mMessage->setBody(unprocessedCharPtr, (uint32_t)contentLength);
                CongestionManager::RejectionBehavior b=mTransport->getRejectionBehaviorForIncoming();
                if (b==CongestionManager::REJECTING_NON_ESSENTIAL
                      || (b==CongestionManager::REJECTING_NEW_WORK
                         && mMessage->isRequest()))
                {
-                  const UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+                  const uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
                   // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                   // requests but not responses ( ?bwc? is this right for ACK?). 
                   // If we are REJECTING_NON_ESSENTIAL, 
@@ -477,7 +477,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
             char *overHangStart = mBuffer + contentLength;
 
             mMessage->addBuffer(mBuffer);
-            mMessage->setBody(mBuffer, (UInt32)contentLength);
+            mMessage->setBody(mBuffer, (uint32_t)contentLength);
             mConnState = NewMessage;
             mBuffer = 0;
 
@@ -508,7 +508,7 @@ ConnectionBase::preparseNewBytes(int bytesRead)
                   || (b==CongestionManager::REJECTING_NEW_WORK
                      && mMessage->isRequest()))
             {
-               const UInt32 expectedWait(mTransport->getExpectedWaitForIncoming());
+               const uint32_t expectedWait(mTransport->getExpectedWaitForIncoming());
                // .bwc. If this fifo is REJECTING_NEW_WORK, we will drop
                // requests but not responses ( ?bwc? is this right for ACK?). 
                // If we are REJECTING_NON_ESSENTIAL, 
@@ -807,7 +807,7 @@ ConnectionBase::wsProcessData(int bytesRead)
 {
    bool dropConnection = false;
    // Always consumes the whole buffer:
-   std::unique_ptr<Data> msg = mWsFrameExtractor.processBytes((UInt8*)mBuffer, bytesRead, dropConnection);
+   std::unique_ptr<Data> msg = mWsFrameExtractor.processBytes((uint8_t*)mBuffer, bytesRead, dropConnection);
 
    while(msg.get())
    {

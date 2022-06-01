@@ -35,8 +35,8 @@ class ExpiresCategory : public ParserCategory
       virtual ParserCategory* clone(void* location) const;
       virtual ParserCategory* clone(PoolBase* pool) const;
 
-      UInt32& value();
-      UInt32 value() const;
+      uint32_t& value();
+      uint32_t value() const;
 
       // Inform the compiler that overloads of these may be found in
       // ParserCategory, too.
@@ -59,7 +59,7 @@ defineParam(refresher, "refresher", DataParameter, "RFC 4028");
 #undef defineParam
 
    private:
-      UInt32 mValue;
+      uint32_t mValue;
 
       static ParameterTypes::Factory ParameterFactories[ParameterTypes::MAX_PARAMETER];
 };

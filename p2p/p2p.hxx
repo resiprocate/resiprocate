@@ -7,10 +7,10 @@ namespace p2p
 {
 
 // Reload types
-typedef ::UInt32 KindId;
-typedef ::UInt32 Generation;
-typedef ::UInt8 ReplicaNumber;
-typedef ::UInt64 TransactionId;
+typedef ::uint32_t KindId;
+typedef ::uint32_t Generation;
+typedef ::uint8_t ReplicaNumber;
+typedef ::uint64_t TransactionId;
 
 } // p2p
 

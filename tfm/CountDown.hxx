@@ -25,7 +25,7 @@ class CountDown : public TestEndPoint::ExpectPreCon
       virtual bool passes(std::shared_ptr<Event>);
    private:
       resip::Data _description;
-      UInt32 _count;
+      uint32_t _count;
 };
 
 #endif

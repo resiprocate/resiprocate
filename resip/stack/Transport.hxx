@@ -300,7 +300,7 @@ class Transport : public FdSetIOObserver
                               int responseCode = 400,
                               const char * warning = 0);
       std::unique_ptr<SendData> make503(SipMessage& msg,
-                                      UInt16 retryAfter);
+                                      uint16_t retryAfter);
 
       std::unique_ptr<SendData> make100(SipMessage& msg);
       void setRemoteSigcompId(SipMessage&msg, Data& id);
@@ -379,9 +379,9 @@ class Transport : public FdSetIOObserver
           mStateMachineFifo.flush();
       }
 
-      UInt32 getExpectedWaitForIncoming() const
+      uint32_t getExpectedWaitForIncoming() const
       {
-         return (UInt32)mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;
+         return (uint32_t)mStateMachineFifo.getFifo().expectedWaitTimeMilliSec()/1000;
       }
 
       // called by Connection to deliver a received message

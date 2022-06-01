@@ -62,7 +62,7 @@ void PresenceSubscriptionHandler::onRefresh(ServerSubscriptionHandle h, const Si
    if (mPresenceUsesRegistrationState)
    {
       Uri aor("sip:" + h->getDocumentKey());
-      UInt64 maxExpires = 0;
+      uint64_t maxExpires = 0;
       bool isRegistered = mRegistrationDb->aorIsRegistered(aor, &maxExpires);
       InfoLog(<< "PresenceSubscriptionHandler::onRefresh: aor=" << aor << ", registered=" << isRegistered << ", maxRegExpires=" << maxExpires);
       if (!checkRegistrationStateChanged(aor, isRegistered, maxExpires))
@@ -129,7 +129,7 @@ PresenceSubscriptionHandler::notifyPresence(resip::ServerSubscriptionHandle h, b
       }
       else
       {
-         UInt64 maxExpires = 0;
+         uint64_t maxExpires = 0;
          bool isRegistered = mRegistrationDb->aorIsRegistered(aor, &maxExpires);
          if (isRegistered) 
          {
@@ -158,7 +158,7 @@ PresenceSubscriptionHandler::notifyPresence(resip::ServerSubscriptionHandle h, b
 }
 
 void 
-PresenceSubscriptionHandler::notifyPresenceNoPublication(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const Uri& aor, bool isRegistered, UInt64 regMaxExpires)
+PresenceSubscriptionHandler::notifyPresenceNoPublication(resip::ServerSubscriptionHandle h, bool sendAcceptReject, const Uri& aor, bool isRegistered, uint64_t regMaxExpires)
 {
    DebugLog(<< "PresenceSubscriptionHandler::notifyPresenceNoPublication: no publication for aor=" << aor << ", registered=" << isRegistered);
    // First we can look in the InMemory Registration database for the user - if they are there, we know they exist
@@ -264,9 +264,9 @@ PresenceSubscriptionHandler::sendPublishedPresence(resip::ServerSubscriptionHand
    return result;
 }
 
-const UInt32 ReSubGraceTime = 32;  // Somewhat arbitrary - using SIP transaction timeout
+const uint32_t ReSubGraceTime = 32;  // Somewhat arbitrary - using SIP transaction timeout
 void
-PresenceSubscriptionHandler::adjustNotifyExpiresTime(SipMessage& notify, UInt64 regMaxExpires)
+PresenceSubscriptionHandler::adjustNotifyExpiresTime(SipMessage& notify, uint64_t regMaxExpires)
 {
    resip_assert(notify.exists(h_SubscriptionState));
    resip_assert(notify.header(h_SubscriptionState).exists(p_expires));
@@ -283,16 +283,16 @@ PresenceSubscriptionHandler::adjustNotifyExpiresTime(SipMessage& notify, UInt64 
    //        as we must also consider sync'd registrations and need a place to start all these
    //        timers.
 
-   UInt32 timeUntillRegExpires = (UInt32)(regMaxExpires - Timer::getTimeSecs());
+   uint32_t timeUntillRegExpires = (uint32_t)(regMaxExpires - Timer::getTimeSecs());
    // Scale up expiration time used in Notify to be the opposite of aBitSmallerThan + some grace time
-   UInt32 scaledUpTimeSoSubRefreshComesAfter = resipMax(timeUntillRegExpires + 5 + ReSubGraceTime, ((timeUntillRegExpires * 10) / 9) + ReSubGraceTime); 
+   uint32_t scaledUpTimeSoSubRefreshComesAfter = resipMax(timeUntillRegExpires + 5 + ReSubGraceTime, ((timeUntillRegExpires * 10) / 9) + ReSubGraceTime); 
 
    // RFC3265 - says we can shorten the expiration but not increase it - so using resipMin
    notify.header(h_SubscriptionState).param(p_expires) = resipMin(scaledUpTimeSoSubRefreshComesAfter, notify.header(h_SubscriptionState).param(p_expires));
 }
 
 void 
-PresenceSubscriptionHandler::fabricateSimplePresence(ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool online, UInt64 regMaxExpires)
+PresenceSubscriptionHandler::fabricateSimplePresence(ServerSubscriptionHandle h, bool sendAcceptReject, const resip::Uri& aor, bool online, uint64_t regMaxExpires)
 {
    InfoLog(<< "PresenceSubscriptionHandler::fabricateSimplePresence: aor=" << aor << ", online=" << online << ", maxRegExpires=" << regMaxExpires);
 
@@ -338,7 +338,7 @@ PresenceSubscriptionHandler::mergeETag(Contents* eTagDest, Contents* eTagSrc, bo
 class repro::PresenceServerRegStateChangeCommand : public DumCommandAdapter
 {
 public:
-   PresenceServerRegStateChangeCommand(PresenceSubscriptionHandler& handler, const resip::Uri& aor, bool registered, UInt64 regMaxExpires)
+   PresenceServerRegStateChangeCommand(PresenceSubscriptionHandler& handler, const resip::Uri& aor, bool registered, uint64_t regMaxExpires)
       : mHandler(handler), mAor(aor), mRegistered(registered), mRegMaxExpires(regMaxExpires) {}
 
    virtual void executeCommand()
@@ -354,14 +354,14 @@ private:
    PresenceSubscriptionHandler& mHandler;
    resip::Uri mAor;
    bool mRegistered;
-   UInt64 mRegMaxExpires;
+   uint64_t mRegMaxExpires;
 };
 
 // Used to fabricate a presence update to all applicable subscriptions
 class repro::PresenceServerSubscriptionRegFunctor
 {
 public:
-   PresenceServerSubscriptionRegFunctor(PresenceSubscriptionHandler& handler, const resip::Uri& aor, bool online, UInt64 regMaxExpires) :
+   PresenceServerSubscriptionRegFunctor(PresenceSubscriptionHandler& handler, const resip::Uri& aor, bool online, uint64_t regMaxExpires) :
       mHandler(handler), mAor(aor), mOnline(online), mRegMaxExpires(regMaxExpires) {}
    virtual ~PresenceServerSubscriptionRegFunctor() { }
 
@@ -384,11 +384,11 @@ private:
    PresenceSubscriptionHandler& mHandler;
    Uri mAor;
    bool mOnline;
-   UInt64 mRegMaxExpires;
+   uint64_t mRegMaxExpires;
 };
 
 bool 
-PresenceSubscriptionHandler::checkRegistrationStateChanged(const resip::Uri& aor, bool registered, UInt64 regMaxExpires)
+PresenceSubscriptionHandler::checkRegistrationStateChanged(const resip::Uri& aor, bool registered, uint64_t regMaxExpires)
 {
    // Last reported online?
    bool online = mOnlineAors.find(aor) != mOnlineAors.end();
@@ -425,8 +425,8 @@ void
 PresenceSubscriptionHandler::onAorModified(const resip::Uri& aor, const ContactList& contacts)
 {
    bool registered = false;
-   UInt64 maxExpirationTime = 0;
-   UInt64 now = Timer::getTimeSecs();
+   uint64_t maxExpirationTime = 0;
+   uint64_t now = Timer::getTimeSecs();
 
    // iterate contacts and see if registered or not
    ContactList::const_iterator it = contacts.begin();
@@ -485,7 +485,7 @@ private:
 class repro::PresenceServerCheckDocExpiredCommand : public DumCommandAdapter
 {
 public:
-   PresenceServerCheckDocExpiredCommand(PresenceSubscriptionHandler& handler, const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated)
+   PresenceServerCheckDocExpiredCommand(PresenceSubscriptionHandler& handler, const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated)
       : mHandler(handler), mDocumentKey(documentKey), mETag(eTag), mLastUpdated(lastUpdated) {}
 
    virtual void executeCommand()
@@ -501,7 +501,7 @@ private:
    PresenceSubscriptionHandler& mHandler;
    resip::Data mDocumentKey;
    resip::Data mETag;
-   UInt64 mLastUpdated;
+   uint64_t mLastUpdated;
 };
 
 void
@@ -511,14 +511,14 @@ PresenceSubscriptionHandler::notifySubscriptions(const Data& documentKey)
    mDum.applyToServerSubscriptions<PresenceServerSubscriptionFunctor>(documentKey, Symbols::Presence, functor);
 }
 
-void PresenceSubscriptionHandler::checkExpired(const resip::Data& documentKey, const resip::Data& eTag, UInt64 lastUpdated)
+void PresenceSubscriptionHandler::checkExpired(const resip::Data& documentKey, const resip::Data& eTag, uint64_t lastUpdated)
 {
     //DebugLog(<< "PresenceSubscriptionHandler::checkExpired: docKey=" << documentKey << ", tag=" << eTag << ", lastUpdated=" << lastUpdated);
     mPublicationDb->checkExpired(Symbols::Presence, documentKey, eTag, lastUpdated);
 }
 
 void 
-PresenceSubscriptionHandler::onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 expirationTime, UInt64 lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
+PresenceSubscriptionHandler::onDocumentModified(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t expirationTime, uint64_t lastUpdated, const Contents* contents, const SecurityAttributes* securityAttributes)
 {
    if (eventType == Symbols::Presence)
    {
@@ -532,7 +532,7 @@ PresenceSubscriptionHandler::onDocumentModified(bool sync, const Data& eventType
       // when timer expires then see if document has expired and if so then generate mHandler.notifySubscriptions(mDocumentKey);
       if (sync)
       {
-         UInt64 expiresSeconds = expirationTime - Timer::getTimeSecs();
+         uint64_t expiresSeconds = expirationTime - Timer::getTimeSecs();
          if (expiresSeconds > 0)
          {
             //DebugLog(<< "PresenceSubscriptionHandler::onDocumentModified: starting check expired timer for sync'd publication, docKey=" << documentKey << ", tag=" << eTag << ", lastUpdated=" << lastUpdated << ", timerExpirey=" << expiresSeconds);
@@ -543,7 +543,7 @@ PresenceSubscriptionHandler::onDocumentModified(bool sync, const Data& eventType
 }
 
 void
-PresenceSubscriptionHandler::onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, UInt64 lastUpdated)
+PresenceSubscriptionHandler::onDocumentRemoved(bool sync, const Data& eventType, const Data& documentKey, const Data& eTag, uint64_t lastUpdated)
 {
    if (eventType == Symbols::Presence)
    {
