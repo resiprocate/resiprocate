@@ -1988,7 +1988,7 @@ WebAdmin::buildSettingsSubPage(DataStream& s)
        mProxy.getStack().getDnsCacheDump(make_pair(0, 0), this);
        // Retrieving DNS cache is asyncronous
        // Use condition variable to wait for DNS results to be returned in onDnsCacheDumpRetrieved
-       mDnsCacheCondition.wait(mDnsCacheMutex);
+       mDnsCacheCondition.wait(lock);
        s << "<pre>" << mDnsCache << "</pre>"
          << endl;
    }

@@ -297,7 +297,7 @@ ThreadIf::waitForShutdown(int ms) const
    Lock lock(mShutdownMutex);
    if(!mShutdown)
    {
-      mShutdownCondition.wait(mShutdownMutex, std::chrono::milliseconds(ms));
+      mShutdownCondition.wait_for(lock, std::chrono::milliseconds(ms));
    }
    return mShutdown;
 }

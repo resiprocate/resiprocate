@@ -56,7 +56,7 @@ Barrier::sync(int id, bool isMaster)
       while ( mCurId != id )
       {
 	 ++sPreWaitCnt;
-         mCond.wait(mMutex);
+         mCond.wait(datalock);
       }
       ++mHaveCnt;
       mCond.notify_all();
@@ -64,7 +64,7 @@ Barrier::sync(int id, bool isMaster)
    while ( mCurId==id && mHaveCnt < mWantCnt )
    {
        ++sPostWaitCnt;
-       mCond.wait(mMutex);
+       mCond.wait(datalock);
    }
 }
 

@@ -37,7 +37,6 @@ librutil_la_SOURCES = \
 	AndroidLogger.cxx \
 	BaseException.cxx \
 	Coders.cxx \
-	Condition.cxx \
 	ConfigParse.cxx \
 	CountStream.cxx \
         Crc32.cxx \
@@ -53,7 +52,6 @@ librutil_la_SOURCES = \
 	Lock.cxx \
 	Log.cxx \
 	MD5Stream.cxx \
-	Mutex.cxx \
 	NetNs.cxx \
 	ParseBuffer.cxx \
 	ParseException.cxx \

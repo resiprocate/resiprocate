@@ -1,25 +1,12 @@
 #include "rutil/Lock.hxx"
 
 
-using resip::Lock;
 using resip::ReadLock;
 using resip::WriteLock;
 using resip::PtrLock;
 
-using resip::Mutex;
 using resip::RWMutex;
 
-
-Lock::Lock(Mutex& lockable)
-   : myLockable(lockable)
-{
-   lockable.lock();
-}
-
-Lock::~Lock()
-{
-    myLockable.unlock();
-}
 
 ReadLock::ReadLock(RWMutex & lockable)
    : mLockable(lockable)

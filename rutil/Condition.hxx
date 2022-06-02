@@ -11,14 +11,8 @@
 #include <chrono>
 #include <condition_variable>
 
-// !kh!
-// Attempt to resolve POSIX behaviour conformance for win32 build.
-#define RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
-
 namespace resip
 {
-
-class Mutex;
 
 /**
   @brief 
@@ -36,7 +30,7 @@ class Mutex;
      if (!mShutdown)
      {
         mShutdown = true;
-        mShutdownCondition.signal();
+        mShutdownCondition.notify_one();
      }
   }
 
@@ -44,76 +38,21 @@ class Mutex;
   ThreadIf::waitForShutdown(int ms) const
   {
      Lock lock(mShutdownMutex);
-     mShutdownCondition.wait(mShutdownMutex, ms);
+     mShutdownCondition.wait(lock, ms);
      return mShutdown;
   }
   @endcode
 
   @see Mutex
 */
-class Condition
-{
-   public:
-      Condition();
-      virtual ~Condition();
 
-      /** wait for the condition to be signaled
-       @param mtx	The mutex associated with the condition variable
-      */
-      void wait (Mutex& mtx);
-      /** wait for the condition to be signaled
-       @param mtx   The mutex associated with the condition variable
-       @retval true The condition was woken up by activity
-       @retval false Timeout or interrupt.
-      */
-      std::cv_status wait (Mutex& mutex, const std::chrono::milliseconds rel_time);
-
-      /** Signal one waiting thread.
-       @return 0 Success
-       @return errorcode The error code of the failure
-       */
-      void notify_one();
-
-      /** Signal all waiting threads.
-       @return 0 Success
-       @return errorcode The error code of the failure
-       */
-      void notify_all();
-
-   private:
-      // !kh!
-      //  no value sematics, therefore private and not implemented.
-      Condition (const Condition&);
-      Condition& operator= (const Condition&);
-
-   private:
-#ifdef WIN32
-#  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
-   // !kh!
-   // boost clone with modification (license text below)
-   void enterWait ();
-   void* m_gate;
-   void* m_queue;
-   void* m_mutex;
-   unsigned m_gone;  // # threads that timed out and never made it to m_queue
-   unsigned long m_blocked; // # threads blocked on the condition
-   unsigned m_waiting; // # threads no longer waiting for the condition but
-                        // still waiting to be removed from m_queue
-#  else
-   HANDLE mId;
-#  endif
-#else
-   mutable  pthread_cond_t mId;
-#endif
-};
+// We removed our local implementation and now we use the
+// C++11 library
+typedef std::condition_variable Condition;
 
 }
 
 #endif
-
-// Note:  Win32 Condition implementation is a modified version of the
-// Boost.org Condition implementation
-//
 
 /* ====================================================================
  *

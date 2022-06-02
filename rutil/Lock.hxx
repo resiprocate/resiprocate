@@ -13,18 +13,19 @@ namespace resip
 
   @see Mutex
 */
-class Lock
-{
-   public:
-     /**
-	  @param	Lockable&	The object to lock
-	*/
-      Lock(Mutex &);
-      virtual ~Lock();
 
-   private:
-      Mutex&   myLockable;
-};
+/*
+ * We removed our local implementation and now we use the
+ * C++11 library
+ *
+ * We could use either std::lock_guard or std::unique_lock here
+ * for similar results.
+ *
+ * To make the resip::Lock useful with std::condition_variable,
+ * we must use std::unique_lock
+ */
+
+typedef std::unique_lock<Mutex> Lock;
 
 class ReadLock
 {

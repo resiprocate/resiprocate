@@ -265,7 +265,7 @@ InMemorySyncRegDb::lockRecord(const Uri& aor)
 
    while (mLockedRecords.count(aor))
    {
-      mRecordUnlocked.wait(mLockedRecordsMutex);
+      mRecordUnlocked.wait(g2);
    }
 
    mLockedRecords.insert(aor);

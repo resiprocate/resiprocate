@@ -221,7 +221,7 @@ class AbstractFifo : public FifoStatsInterface
          // Wait util there are messages available.
          while (mFifo.empty())
          {
-            mCondition.wait(mMutex);
+            mCondition.wait(lock);
          }
 
          // Return the first message on the fifo.
@@ -282,7 +282,7 @@ class AbstractFifo : public FifoStatsInterface
             unsigned int timeout((unsigned int)(end - now));
                     
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait(mMutex, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
+            bool signaled = mCondition.wait_for(lock, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;
@@ -306,7 +306,7 @@ class AbstractFifo : public FifoStatsInterface
          resip_assert(other.empty());
          while (mFifo.empty())
          {
-            mCondition.wait(mMutex);
+            mCondition.wait(lock);
          }
 
          if(mFifo.size() <= max)
@@ -356,7 +356,7 @@ class AbstractFifo : public FifoStatsInterface
             unsigned int timeout((unsigned int)(end - now));
                     
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait(mMutex, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
+            bool signaled = mCondition.wait_for(lock, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;

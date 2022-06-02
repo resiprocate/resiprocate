@@ -141,12 +141,12 @@ SharedAsyncNotify::waitNotify(int ms)
 
    if (ms<0)
    {
-      mCondition.wait(mMutex);
+      mCondition.wait(lock);
       return true;
    }
    else
    {
-      return mCondition.wait(mMutex, std::chrono::milliseconds(ms)) == std::cv_status::no_timeout;
+      return mCondition.wait_for(lock, std::chrono::milliseconds(ms)) == std::cv_status::no_timeout;
    }
 }
 
