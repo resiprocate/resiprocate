@@ -89,7 +89,7 @@ endif
 if USE_KURENTO
 librecon_la_SOURCES += KurentoBridgeMixer.cxx \
         KurentoConversation.cxx \
-        KurentoConversationManager.cxx \
+        KurentoMediaStackAdapter.cxx \
         KurentoParticipant.cxx \
         KurentoRemoteParticipant.cxx \
         KurentoRemoteParticipantDialogSet.cxx
@@ -153,7 +153,7 @@ endif
 if USE_KURENTO
 nobase_reconinclude_HEADERS += KurentoBridgeMixer.hxx \
         KurentoConversation.hxx \
-        KurentoConversationManager.hxx \
+        KurentoMediaStackAdapter.hxx \
         KurentoParticipant.hxx \
         KurentoRemoteParticipantDialogSet.hxx \
         KurentoRemoteParticipant.hxx

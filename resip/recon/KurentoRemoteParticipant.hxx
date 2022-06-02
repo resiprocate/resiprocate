@@ -35,7 +35,7 @@ class SipMessage;
 
 namespace recon
 {
-class KurentoConversationManager;
+class KurentoMediaStackAdapter;
 
 /**
   This class represent a remote participant.  A remote participant is a 
@@ -48,12 +48,12 @@ class KurentoRemoteParticipant : public virtual RemoteParticipant, public virtua
 public:
    KurentoRemoteParticipant(ParticipantHandle partHandle,   // UAC
                      ConversationManager& conversationManager,
-                     KurentoConversationManager& kurentoConversationManager,
+                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
    KurentoRemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
-                     KurentoConversationManager& kurentoConversationManager,
+                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 

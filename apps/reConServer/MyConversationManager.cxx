@@ -33,7 +33,7 @@ MyConversationManager::MyConversationManager(const ReConServerConfig& config, co
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
 #ifdef PREFER_KURENTO
-   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<KurentoConversationManager>(*this, kurentoUri);
+   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<KurentoMediaStackAdapter>(*this, kurentoUri);
 #else
 #ifdef USE_SIPXTAPI
    SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)

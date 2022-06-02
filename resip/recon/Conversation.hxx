@@ -93,7 +93,7 @@ protected:
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
    friend class ConversationManager;
    friend class SipXMediaStackAdapter;
-   friend class KurentoConversationManager;
+   friend class KurentoMediaStackAdapter;
    BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
    std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
    virtual void setBridgeMixer(std::shared_ptr<BridgeMixer> mixer) { mBridgeMixer = mixer; }

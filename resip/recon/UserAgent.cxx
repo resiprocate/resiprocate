@@ -41,7 +41,7 @@
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Random.hxx>
 
-#include <KurentoConversationManager.hxx>
+#include <KurentoMediaStackAdapter.hxx>
 
 #include <utility>
 

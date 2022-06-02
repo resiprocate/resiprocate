@@ -28,26 +28,26 @@ using namespace resip;
 
 KurentoConversation::KurentoConversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
-                           KurentoConversationManager& kurentoConversationManager,
+                           KurentoMediaStackAdapter& kurentoMediaStackAdapter,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)
 : Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode, MAX_PARTICIPANTS),
-  mKurentoConversationManager(kurentoConversationManager)
+  mKurentoMediaStackAdapter(kurentoMediaStackAdapter)
 {
-   if(mKurentoConversationManager.supportsMultipleMediaInterfaces())
+   if(mKurentoMediaStackAdapter.supportsMultipleMediaInterfaces())
    {
 
       // FIXME Kurento
       if (isSharingMediaInterfaceWithAnotherConversation())
       {
-         //KurentoConversation* sharedFlowConversation = dynamic_cast<KurentoConversation*>(mKurentoConversationManager.getConversation(sharedMediaInterfaceConvHandle));
+         //KurentoConversation* sharedFlowConversation = dynamic_cast<KurentoConversation*>(mKurentoMediaStackAdapter.getConversation(sharedMediaInterfaceConvHandle));
          //mMediaInterface = sharedFlowConversation->getMediaInterface();
       }
       else
       {
          //std::shared_ptr<BridgeMixer> mixer;
-         //mKurentoConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
+         //mKurentoMediaStackAdapter.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
          //                                                  mMediaInterface,
          //                                                  mixer);
          //setBridgeMixer(mixer);

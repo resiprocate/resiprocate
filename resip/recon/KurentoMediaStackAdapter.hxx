@@ -1,5 +1,5 @@
-#if !defined(KurentoConversationManager_hxx)
-#define KurentoConversationManager_hxx
+#if !defined(KurentoMediaStackAdapter_hxx)
+#define KurentoMediaStackAdapter_hxx
 
 #include <boost/function.hpp>
 
@@ -58,7 +58,7 @@ class KurentoRemoteParticipantDialogSet;
   -Managing local audio properties
 */
 
-class KurentoConversationManager : public MediaStackAdapter
+class KurentoMediaStackAdapter : public MediaStackAdapter
 {
 public:
 
@@ -115,9 +115,9 @@ public:
                 same media interface.
    */
 
-   KurentoConversationManager(ConversationManager& conversationManager, const resip::Data& kurentoUri);
-   KurentoConversationManager(ConversationManager& conversationManager, const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate);
-   virtual ~KurentoConversationManager();
+   KurentoMediaStackAdapter(ConversationManager& conversationManager, const resip::Data& kurentoUri);
+   KurentoMediaStackAdapter(ConversationManager& conversationManager, const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate);
+   virtual ~KurentoMediaStackAdapter();
 
    virtual void conversationManagerReady(ConversationManager* conversationManager) override;
 

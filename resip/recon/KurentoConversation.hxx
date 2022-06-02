@@ -3,7 +3,7 @@
 
 #include "Conversation.hxx"
 #include "ConversationManager.hxx"
-#include "KurentoConversationManager.hxx"
+#include "KurentoMediaStackAdapter.hxx"
 #include "ConversationParticipantAssignment.hxx"
 
 namespace recon
@@ -33,7 +33,7 @@ class KurentoConversation : public Conversation
 public:  
    KurentoConversation(ConversationHandle handle,
                 ConversationManager& conversationManager,
-                KurentoConversationManager& kurentoConversationManager,
+                KurentoMediaStackAdapter& kurentoMediaStackAdapter,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,
                 ConversationManager::AutoHoldMode autoHoldMode);
@@ -63,11 +63,11 @@ protected:
    virtual void onParticipantRemoved(Participant* participant);
 
 private: 
-   KurentoConversationManager& mKurentoConversationManager;
+   KurentoMediaStackAdapter& mKurentoMediaStackAdapter;
 
    // sipX Media related members
    friend class ConversationManager;
-   friend class KurentoConversationManager;
+   friend class KurentoMediaStackAdapter;
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
    //std::shared_ptr<KurentoMediaInterface> mMediaInterface;
 };

@@ -4,7 +4,7 @@
 
 #include <media/kurento/Object.hxx>
 
-#include "KurentoConversationManager.hxx"
+#include "KurentoMediaStackAdapter.hxx"
 
 #include "KurentoRemoteParticipant.hxx"
 #include "Conversation.hxx"
@@ -53,12 +53,12 @@ using namespace std;
 // UAC
 KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager,
-                                     KurentoConversationManager& kurentoConversationManager,
+                                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, kurentoConversationManager),
+  KurentoParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, kurentoMediaStackAdapter),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
@@ -71,12 +71,12 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
 
 // UAS - or forked leg
 KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversationManager,
-                                     KurentoConversationManager& kurentoConversationManager,
+                                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(ConversationManager::ParticipantType_Remote, conversationManager, kurentoConversationManager),
+  KurentoParticipant(ConversationManager::ParticipantType_Remote, conversationManager, kurentoMediaStackAdapter),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
@@ -124,8 +124,8 @@ kurento::BaseRtpEndpoint*
 KurentoRemoteParticipant::newEndpoint()
 {
    return mSipRtpEndpoint ?
-            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::SipRtpEndpoint(mKurentoConversationManager.mPipeline)) :
-            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::RtpEndpoint(mKurentoConversationManager.mPipeline));
+            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::SipRtpEndpoint(mKurentoMediaStackAdapter.mPipeline)) :
+            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::RtpEndpoint(mKurentoMediaStackAdapter.mPipeline));
 }
 
 void
@@ -144,7 +144,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          {
             // delay while ICE gathers candidates from STUN and TURN
             mIceGatheringDone = false;
-            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoConversationManager.mPipeline));
+            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoMediaStackAdapter.mPipeline));
          }
          else
          {
@@ -261,7 +261,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          {
             // delay while ICE gathers candidates from STUN and TURN
             mIceGatheringDone = false;
-            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoConversationManager.mPipeline));
+            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoMediaStackAdapter.mPipeline));
          }
          else
          {
@@ -341,10 +341,10 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       }
       else
       {
-         //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoConversationManager.mPipeline, "videoconvert"));
-         //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
-         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoConversationManager.mPipeline, "file:///tmp/test.mp4"));
-         mPassThrough.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
+         //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
+         //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, "file:///tmp/test.mp4"));
+         mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});
             mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
