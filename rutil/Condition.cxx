@@ -212,12 +212,6 @@ Condition::wait (Mutex& mutex)
 #endif
 }
 
-void
-Condition::wait (Mutex* mutex)
-{
-   this->wait(*mutex);
-}
-
 bool
 Condition::wait(Mutex& mutex, 
                 unsigned int ms)
@@ -394,12 +388,6 @@ Condition::wait(Mutex& mutex,
       return true;
    }
 #endif	// not WIN32
-}
-
-bool
-Condition::wait (Mutex* mutex, unsigned int ms)
-{
-   return this->wait(*mutex, ms);
 }
 
 void

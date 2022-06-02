@@ -65,11 +65,6 @@ class Condition
       */
       bool wait (Mutex& mutex, unsigned int ms);
 
-      // !kh!
-      //  deprecate these?
-      void wait (Mutex* mutex);
-      bool wait (Mutex* mutex, unsigned int ms);
-
       /** Signal one waiting thread.
        @return 0 Success
        @return errorcode The error code of the failure
