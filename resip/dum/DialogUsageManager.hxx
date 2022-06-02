@@ -69,8 +69,6 @@ class HttpGetMessage;
 
 class ConnectionTerminated;
 
-class Mutex;
-
 class ExternalMessageBase;
 class ExternalMessageHandler;
 

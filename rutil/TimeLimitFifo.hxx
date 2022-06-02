@@ -245,7 +245,7 @@ TimeLimitFifo<Msg>::add(Msg* msg,
       time_t n = time(0);
       mFifo.push_back(Timestamped<Msg*>(msg, n));
       onMessagePushed(1);
-      mCondition.signal();
+      mCondition.notify_one();
       return true;
    }
    else

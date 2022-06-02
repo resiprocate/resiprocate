@@ -221,7 +221,7 @@ class AbstractFifo : public FifoStatsInterface
          // Wait util there are messages available.
          while (mFifo.empty())
          {
-            mCondition.wait(mMutex);
+            mCondition.wait(lock);
          }
 
          // Return the first message on the fifo.
@@ -282,7 +282,7 @@ class AbstractFifo : public FifoStatsInterface
             unsigned int timeout((unsigned int)(end - now));
                     
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait(mMutex, timeout);
+            bool signaled = mCondition.wait_for(lock, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;
@@ -306,7 +306,7 @@ class AbstractFifo : public FifoStatsInterface
          resip_assert(other.empty());
          while (mFifo.empty())
          {
-            mCondition.wait(mMutex);
+            mCondition.wait(lock);
          }
 
          if(mFifo.size() <= max)
@@ -356,7 +356,7 @@ class AbstractFifo : public FifoStatsInterface
             unsigned int timeout((unsigned int)(end - now));
                     
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait(mMutex, timeout);
+            bool signaled = mCondition.wait_for(lock, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;
@@ -385,7 +385,7 @@ class AbstractFifo : public FifoStatsInterface
       {
          Lock lock(mMutex); (void)lock;
          mFifo.push_back(item);
-         mCondition.signal();
+         mCondition.notify_one();
          onMessagePushed(1);
          return mFifo.size();
       }
@@ -408,7 +408,7 @@ class AbstractFifo : public FifoStatsInterface
                items.pop_front();
             }
          }
-         mCondition.signal();
+         mCondition.notify_one();
          onMessagePushed((int)size);
          return mFifo.size();
       }

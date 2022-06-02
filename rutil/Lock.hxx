@@ -1,18 +1,11 @@
 #if !defined(RESIP_LOCK_HXX)
 #define RESIP_LOCK_HXX  
 
-#include "rutil/Lockable.hxx"
 #include "rutil/Mutex.hxx"
+#include "rutil/RWMutex.hxx"
 
 namespace resip
 {
-
-enum LockType
-{
-   VOCAL_LOCK = 0,
-   VOCAL_READLOCK,
-   VOCAL_WRITELOCK
-};
 
 /**
   @brief A convenience class to lock a Lockable (such as a Mutex) on object 
@@ -20,30 +13,36 @@ enum LockType
 
   @see Mutex
 */
-class Lock
+
+/*
+ * We removed our local implementation and now we use the
+ * C++11 library
+ *
+ * We could use either std::lock_guard or std::unique_lock here
+ * for similar results.
+ *
+ * To make the resip::Lock useful with std::condition_variable,
+ * we must use std::unique_lock
+ */
+
+typedef std::unique_lock<Mutex> Lock;
+
+class ReadLock
 {
    public:
-     /**
-	  @param	Lockable&	The object to lock
-	  @param	LockType	one of VOCAL_LOCK, VOCAL_READLOCK, VOCAL_WRITELOCK
-	*/
-      Lock(Lockable &, LockType = VOCAL_LOCK);
-      virtual ~Lock();
-
+      ReadLock(RWMutex &);
+      virtual ~ReadLock();
    private:
-      Lockable&   myLockable;
+      RWMutex& mLockable;
 };
 
-class ReadLock : public Lock
+class WriteLock
 {
    public:
-      ReadLock(Lockable &);
-};
-
-class WriteLock : public Lock
-{
-   public:
-      WriteLock(Lockable &);
+      WriteLock(RWMutex &);
+      virtual ~WriteLock();
+   private:
+      RWMutex& mLockable;
 };
 
 

@@ -170,7 +170,7 @@ class ValueFifo : public resip::FifoStatsInterface
       
       void wakeup()
       {
-         myCondition.signal();
+         myCondition.notify_one();
       }
       
       std::deque<T> myList;

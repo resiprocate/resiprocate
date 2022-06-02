@@ -37,7 +37,6 @@ librutil_la_SOURCES = \
 	AndroidLogger.cxx \
 	BaseException.cxx \
 	Coders.cxx \
-	Condition.cxx \
 	ConfigParse.cxx \
 	CountStream.cxx \
         Crc32.cxx \
@@ -53,7 +52,6 @@ librutil_la_SOURCES = \
 	Lock.cxx \
 	Log.cxx \
 	MD5Stream.cxx \
-	Mutex.cxx \
 	NetNs.cxx \
 	ParseBuffer.cxx \
 	ParseException.cxx \
@@ -194,7 +192,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	PoolBase.hxx \
 	FdPoll.hxx \
 	Time.hxx \
-	Lockable.hxx \
 	stun/Udp.hxx \
 	stun/Stun.hxx \
 	SysLogBuf.hxx \
@@ -217,12 +214,13 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 Log.cxx:	Repository.hxx
 
 Repository.hxx:	.ALWAYS_REBUILD
-	echo "// Auto generated" > $@
-	echo "#ifndef __Repository_hxx" >> $@
-	echo "#define __Repository_hxx" >> $@
-	echo "#define RESIPROCATE_GIT_ID \"`git describe --match="" --always --abbrev=40 --dirty`\"" >> $@
-	echo "#define RESIPROCATE_BRANCH_NAME \"`git rev-parse --abbrev-ref HEAD`\"" >> $@
-	echo "#endif" >> $@
+	echo "// Auto generated" > $@.tmp
+	echo "#ifndef __Repository_hxx" >> $@.tmp
+	echo "#define __Repository_hxx" >> $@.tmp
+	echo "#define RESIPROCATE_GIT_ID \"`git describe --match="" --always --abbrev=40 --dirty`\"" >> $@.tmp
+	echo "#define RESIPROCATE_BRANCH_NAME \"`git rev-parse --abbrev-ref HEAD`\"" >> $@.tmp
+	echo "#endif" >> $@.tmp
+	diff -q $@ $@.tmp || mv $@.tmp $@
 
 .ALWAYS_REBUILD:
 

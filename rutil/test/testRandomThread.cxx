@@ -49,22 +49,22 @@ Barrier::sync(int id, bool isMaster)
    {
       mHaveCnt = 0;
       mCurId = id;
-      mCond.broadcast();
+      mCond.notify_all();
    }
    else
    {
       while ( mCurId != id )
       {
 	 ++sPreWaitCnt;
-         mCond.wait(mMutex);
+         mCond.wait(datalock);
       }
       ++mHaveCnt;
-      mCond.broadcast();
+      mCond.notify_all();
    }
    while ( mCurId==id && mHaveCnt < mWantCnt )
    {
        ++sPostWaitCnt;
-       mCond.wait(mMutex);
+       mCond.wait(datalock);
    }
 }
 
