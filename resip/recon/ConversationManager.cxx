@@ -460,7 +460,7 @@ ConversationManager::notifyDtmfEvent(ParticipantHandle partHandle, int dtmf, int
 RemoteParticipant* 
 ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   RemoteParticipant* rp;
+   RemoteParticipant* rp = nullptr;
    if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
    {
       rp = new RemoteIMSessionParticipant(*this, dum, rpds);
@@ -476,7 +476,7 @@ ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManag
 RemoteParticipant* 
 ConversationManager::createAppropriateRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
-   RemoteParticipant* rp;
+   RemoteParticipant* rp = nullptr;
    if (dynamic_cast<RemoteIMSessionParticipantDialogSet*>(&rpds) != nullptr)
    {
       rp = new RemoteIMSessionParticipant(partHandle, *this, dum, rpds);

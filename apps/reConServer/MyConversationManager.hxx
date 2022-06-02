@@ -25,8 +25,13 @@ namespace reconserver
 // Need to have both USE_KURENTO and USE_SIPXTAPI as we haven't removed
 // some references to sipXtapi in parts of the code
 #else
+#ifdef USE_SIPXTAPI
 #define PREFER_SIPXTAPI
+#else
+#error No media stack enabled
 #endif
+#endif
+
 class MyConversationManager : public recon::ConversationManager
 {
 public:

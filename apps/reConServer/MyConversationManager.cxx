@@ -38,7 +38,7 @@ MyConversationManager::MyConversationManager(const ReConServerConfig& config, co
 #ifdef USE_SIPXTAPI
    SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
       ? SipXConversationManager::sipXGlobalMediaInterfaceMode : SipXConversationManager::sipXConversationMediaInterfaceMode;
-   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<SipXConversationManager>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
+   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
 #else
    #error Need Kurento or sipXtapi
 #endif
