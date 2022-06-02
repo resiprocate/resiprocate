@@ -9,7 +9,7 @@
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
 #include "RemoteParticipantDialogSet.hxx"
@@ -39,7 +39,7 @@ class SipXRemoteParticipantDialogSet : public RemoteParticipantDialogSet, privat
 {
 public:
    SipXRemoteParticipantDialogSet(ConversationManager& conversationManager,
-                              SipXConversationManager& sipXConversationManager,
+                              SipXMediaStackAdapter& sipXConversationManager,
                               ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
                               std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
@@ -76,7 +76,7 @@ protected:
    virtual void fixUpSdp(resip::SdpContents* sdp);
 
 private:
-   SipXConversationManager& mSipXConversationManager;
+   SipXMediaStackAdapter& mSipXConversationManager;
    unsigned int mLocalRTPPort;
    bool mAllocateLocalRTPPortFailed;
    std::shared_ptr<flowmanager::FlowContext> mFlowContext;

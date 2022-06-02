@@ -46,7 +46,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXRemoteParticipantDialogSet::SipXRemoteParticipantDialogSet(ConversationManager& conversationManager,
-                                                       SipXConversationManager& sipXConversationManager,
+                                                       SipXMediaStackAdapter& sipXConversationManager,
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode,
                                                        std::shared_ptr<ConversationProfile> conversationProfile) :
    RemoteParticipantDialogSet(conversationManager, forkSelectMode, conversationProfile),

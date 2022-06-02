@@ -15,7 +15,7 @@ using namespace std;
 SipXParticipant::SipXParticipant(ParticipantHandle partHandle,
                          ConversationManager::ParticipantType partType,
                          ConversationManager& conversationManager,
-                         SipXConversationManager& sipXConversationManager)
+                         SipXMediaStackAdapter& sipXConversationManager)
 : Participant(partHandle, partType, conversationManager),
   mSipXConversationManager(sipXConversationManager)
 {
@@ -23,7 +23,7 @@ SipXParticipant::SipXParticipant(ParticipantHandle partHandle,
 
 SipXParticipant::SipXParticipant(ConversationManager::ParticipantType partType,
                                  ConversationManager& conversationManager,
-                                 SipXConversationManager& sipXConversationManager)
+                                 SipXMediaStackAdapter& sipXConversationManager)
 : Participant(partType, conversationManager),
   mSipXConversationManager(sipXConversationManager)
 {
@@ -38,10 +38,10 @@ SipXParticipant::getMediaInterface()
 {
    switch(mSipXConversationManager.getMediaInterfaceMode())
    {
-   case SipXConversationManager::sipXGlobalMediaInterfaceMode:
+   case SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode:
       resip_assert(mSipXConversationManager.getMediaInterface() != 0);
       return mSipXConversationManager.getMediaInterface();
-   case SipXConversationManager::sipXConversationMediaInterfaceMode:
+   case SipXMediaStackAdapter::sipXConversationMediaInterfaceMode:
    {
       // Note:  For this mode, the recon code ensures that all conversations a participant 
       //        is added to will share the same media interface, so using the first 

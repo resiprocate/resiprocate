@@ -1,5 +1,5 @@
-#if !defined(SipXConversationManager_hxx)
-#define SipXConversationManager_hxx
+#if !defined(SipXMediaStackAdapter_hxx)
+#define SipXMediaStackAdapter_hxx
 
 #include "BridgeMixer.hxx"
 
@@ -61,7 +61,7 @@ class RemoteParticipantDialogSet;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SipXConversationManager : public MediaStackAdapter
+class SipXMediaStackAdapter : public MediaStackAdapter
 {
 public:
 
@@ -126,9 +126,9 @@ public:
       sipXConversationMediaInterfaceMode
    } MediaInterfaceMode;
 
-   SipXConversationManager(ConversationManager& conversationManager, bool localAudioEnabled = true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode, bool enableExtraPlayAndRecordResources = false);
-   SipXConversationManager(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources);
-   virtual ~SipXConversationManager();
+   SipXMediaStackAdapter(ConversationManager& conversationManager, bool localAudioEnabled = true, MediaInterfaceMode mediaInterfaceMode = sipXGlobalMediaInterfaceMode, bool enableExtraPlayAndRecordResources = false);
+   SipXMediaStackAdapter(ConversationManager& conversationManager, bool localAudioEnabled, MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool enableExtraPlayAndRecordResources);
+   virtual ~SipXMediaStackAdapter();
 
    virtual void conversationManagerReady(ConversationManager* conversationManager) override;
 

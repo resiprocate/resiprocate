@@ -12,7 +12,7 @@
 #include "ReconSubsystem.hxx"
 
 #ifdef USE_SIPXTAPI
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 #endif
 
 #include "reflow/FlowManagerSubsystem.hxx"

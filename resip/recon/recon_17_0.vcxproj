@@ -193,7 +193,7 @@
     <ClCompile Include="RTPPortManager.cxx" />
     <ClCompile Include="SipXBridgeMixer.cxx" />
     <ClCompile Include="SipXConversation.cxx" />
-    <ClCompile Include="SipXConversationManager.cxx" />
+    <ClCompile Include="SipXMediaStackAdapter.cxx" />
     <ClCompile Include="SipXHelper.cxx" />
     <ClCompile Include="SipXParticipant.cxx" />
     <ClCompile Include="SipXMediaResourceParticipant.cxx" />
@@ -243,7 +243,7 @@
     <ClInclude Include="RTPPortManager.hxx" />
     <ClInclude Include="SipXBridgeMixer.hxx" />
     <ClInclude Include="SipXConversation.hxx" />
-    <ClInclude Include="SipXConversationManager.hxx" />
+    <ClInclude Include="SipXMediaStackAdapter.hxx" />
     <ClInclude Include="SipXHelper.hxx" />
     <ClInclude Include="SipXParticipant.hxx" />
     <ClInclude Include="SipXMediaResourceParticipant.hxx" />

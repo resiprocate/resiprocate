@@ -10,6 +10,9 @@
 #endif
 
 #include <rutil/Data.hxx>
+#ifdef USE_SIPXTAPI
+#include <resip/recon/SipXMediaStackAdapter.hxx>
+#endif
 
 #include "reConServerConfig.hxx"
 

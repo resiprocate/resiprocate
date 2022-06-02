@@ -27,7 +27,7 @@
 #endif
 
 #include <rutil/Data.hxx>
-#include <resip/recon/SipXConversationManager.hxx>
+#include <resip/recon/SipXMediaStackAdapter.hxx>
 
 #include "Connection.hxx"
 
@@ -36,13 +36,13 @@ namespace tr
 
 class Connection;
 
-class MyConversationManager : public QObject, public recon::SipXConversationManager
+class MyConversationManager : public QObject, public recon::SipXMediaStackAdapter
 {
    Q_OBJECT
 
 public:
 
-   MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled, Connection *connection);
+   MyConversationManager(bool localAudioEnabled, recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled, Connection *connection);
    virtual ~MyConversationManager() {};
 
    virtual void startup();

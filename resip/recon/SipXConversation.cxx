@@ -18,7 +18,7 @@ using namespace resip;
 
 SipXConversation::SipXConversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
-                           SipXConversationManager& sipXConversationManager,
+                           SipXMediaStackAdapter& sipXConversationManager,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)

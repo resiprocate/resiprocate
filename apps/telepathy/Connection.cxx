@@ -67,7 +67,7 @@ tr::Connection::Connection(const QDBusConnection &dbusConnection, const QString 
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    bool localAudioEnabled = true;
-   SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = SipXConversationManager::sipXGlobalMediaInterfaceMode;
+   SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode = SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode;
    unsigned int defaultSampleRate = 16000;
    unsigned int maximumSampleRate = 16000;
    bool autoAnswerEnabled = false;

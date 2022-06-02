@@ -44,7 +44,7 @@ int _kbhit() {
 #ifdef USE_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
-#include <resip/recon/SipXConversationManager.hxx>
+#include <resip/recon/SipXMediaStackAdapter.hxx>
 #endif
 
 #include "reConServerConfig.hxx"
@@ -129,7 +129,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
    }
 
 #ifdef PREFER_SIPXTAPI
-   SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(myConversationManager.getMediaStackAdapter());
+   SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
 #endif
 
    // Process commands
@@ -826,8 +826,8 @@ ReConServerProcess::main (int argc, char** argv)
    Data runAsUser = reConServerConfig.getConfigData("RunAsUser", "", true);
    Data runAsGroup = reConServerConfig.getConfigData("RunAsGroup", "", true);
 #ifdef USE_SIPXTAPI
-   SipXConversationManager::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
-      ? SipXConversationManager::sipXGlobalMediaInterfaceMode : SipXConversationManager::sipXConversationMediaInterfaceMode;
+   SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode = reConServerConfig.getConfigBool("GlobalMediaInterface", false)
+      ? SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode : SipXMediaStackAdapter::sipXConversationMediaInterfaceMode;
 #endif
    unsigned int defaultSampleRate = reConServerConfig.getConfigUnsignedLong("DefaultSampleRate", 8000);
    unsigned int maximumSampleRate = reConServerConfig.getConfigUnsignedLong("MaximumSampleRate", 8000);
@@ -903,7 +903,7 @@ ReConServerProcess::main (int argc, char** argv)
    InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
 #ifdef USE_SIPXTAPI
    InfoLog( << "  Global Media Interface = " <<
-      ((mediaInterfaceMode == SipXConversationManager::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
+      ((mediaInterfaceMode == SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode) ? "true" : "false"));
 #endif
    InfoLog( << "  Default sample rate = " << defaultSampleRate);
    InfoLog( << "  Maximum sample rate = " << maximumSampleRate);
@@ -1327,7 +1327,7 @@ ReConServerProcess::main (int argc, char** argv)
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
 #ifdef PREFER_SIPXTAPI
-      SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(mConversationManager->getMediaStackAdapter());
+      SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(mConversationManager->getMediaStackAdapter());
       mediaStackAdapter.buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
 #endif
       mUserAgent->addConversationProfile(conversationProfile);

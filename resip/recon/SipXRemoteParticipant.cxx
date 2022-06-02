@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 
 #include "sdp/SdpHelperResip.hxx"
 #include "sdp/Sdp.hxx"
@@ -57,7 +57,7 @@ using namespace std;
 // UAC
 SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager,
-                                     SipXConversationManager& sipXConversationManager,
+                                     SipXMediaStackAdapter& sipXConversationManager,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
@@ -69,7 +69,7 @@ SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
 
 // UAS - or forked leg
 SipXRemoteParticipant::SipXRemoteParticipant(ConversationManager& conversationManager,
-                                     SipXConversationManager& sipXConversationManager,
+                                     SipXMediaStackAdapter& sipXConversationManager,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(ConversationManager::ParticipantType_Remote, conversationManager),
