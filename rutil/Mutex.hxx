@@ -2,7 +2,6 @@
 #define RESIP_MUTEX_HXX
 
 #include "rutil/compat.hxx"
-#include "rutil/Lockable.hxx"
 
 
 namespace resip
@@ -31,7 +30,7 @@ class Condition;
    @see Condition
 
 */
-class Mutex : public Lockable
+class Mutex
 {
       friend class Condition;
 

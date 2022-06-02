@@ -194,7 +194,6 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	PoolBase.hxx \
 	FdPoll.hxx \
 	Time.hxx \
-	Lockable.hxx \
 	stun/Udp.hxx \
 	stun/Stun.hxx \
 	SysLogBuf.hxx \

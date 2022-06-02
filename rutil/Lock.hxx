@@ -1,18 +1,11 @@
 #if !defined(RESIP_LOCK_HXX)
 #define RESIP_LOCK_HXX  
 
-#include "rutil/Lockable.hxx"
 #include "rutil/Mutex.hxx"
+#include "rutil/RWMutex.hxx"
 
 namespace resip
 {
-
-enum LockType
-{
-   VOCAL_LOCK = 0,
-   VOCAL_READLOCK,
-   VOCAL_WRITELOCK
-};
 
 /**
   @brief A convenience class to lock a Lockable (such as a Mutex) on object 
@@ -25,25 +18,30 @@ class Lock
    public:
      /**
 	  @param	Lockable&	The object to lock
-	  @param	LockType	one of VOCAL_LOCK, VOCAL_READLOCK, VOCAL_WRITELOCK
 	*/
-      Lock(Lockable &, LockType = VOCAL_LOCK);
+      Lock(Mutex &);
       virtual ~Lock();
 
    private:
-      Lockable&   myLockable;
+      Mutex&   myLockable;
 };
 
-class ReadLock : public Lock
+class ReadLock
 {
    public:
-      ReadLock(Lockable &);
+      ReadLock(RWMutex &);
+      virtual ~ReadLock();
+   private:
+      RWMutex& mLockable;
 };
 
-class WriteLock : public Lock
+class WriteLock
 {
    public:
-      WriteLock(Lockable &);
+      WriteLock(RWMutex &);
+      virtual ~WriteLock();
+   private:
+      RWMutex& mLockable;
 };
 
 

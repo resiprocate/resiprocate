@@ -56,8 +56,7 @@ using resip::RWMutex;
 using resip::Lock;
 
 RWMutex::RWMutex()
-   :   Lockable(),
-       mReaderCount(0),
+   :   mReaderCount(0),
        mWriterHasLock(false),
        mPendingWriterCount(0)
 {

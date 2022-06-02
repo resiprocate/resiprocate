@@ -6,38 +6,14 @@ using resip::ReadLock;
 using resip::WriteLock;
 using resip::PtrLock;
 
-using resip::LockType;
-using resip::Lockable;
 using resip::Mutex;
+using resip::RWMutex;
 
 
-static inline void takeLock(Lockable& lockable, LockType lockType) {
-   switch ( lockType )
-    {
-       case resip::VOCAL_READLOCK:
-       {
-          lockable.readlock();
-          break;
-       }
-	    
-       case resip::VOCAL_WRITELOCK:
-       {
-          lockable.writelock();
-          break;
-       }
-       
-       default:
-       {
-          lockable.lock();
-          break;
-       }
-    }
-}
-
-Lock::Lock(Lockable & lockable, LockType lockType)
+Lock::Lock(Mutex& lockable)
    : myLockable(lockable)
 {
-   takeLock(lockable, lockType);
+   lockable.lock();
 }
 
 Lock::~Lock()
@@ -45,14 +21,26 @@ Lock::~Lock()
     myLockable.unlock();
 }
 
-ReadLock::ReadLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_READLOCK)
+ReadLock::ReadLock(RWMutex & lockable)
+   : mLockable(lockable)
 {
+   lockable.readlock();
 }
 
-WriteLock::WriteLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_WRITELOCK)
+ReadLock::~ReadLock()
 {
+   mLockable.unlock();
+}
+
+WriteLock::WriteLock(RWMutex & lockable)
+   : mLockable(lockable)
+{
+   lockable.writelock();
+}
+
+WriteLock::~WriteLock()
+{
+   mLockable.unlock();
 }
 
 

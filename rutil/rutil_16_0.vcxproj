@@ -560,7 +560,6 @@
     <ClInclude Include="IntrusiveListElement.hxx" />
     <ClInclude Include="dns\LocalDns.hxx" />
     <ClInclude Include="Lock.hxx" />
-    <ClInclude Include="Lockable.hxx" />
     <ClInclude Include="Log.hxx" />
     <ClInclude Include="Logger.hxx" />
     <ClInclude Include="MediaConstants.hxx" />
