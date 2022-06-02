@@ -44,6 +44,7 @@ int _kbhit() {
 #ifdef USE_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
+#include <resip/recon/SipXMediaStackAdapter.hxx>
 #endif
 
 #include "reConServerConfig.hxx"
@@ -127,7 +128,9 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
    }
 
+#ifdef PREFER_SIPXTAPI
    SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
+#endif
 
    // Process commands
    if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit"))
@@ -389,6 +392,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
       return;
    }
+#ifdef PREFER_SIPXTAPI
    if(isEqualNoCase(command, "volume") || isEqualNoCase(command, "sv"))
    {
       unsigned long volume = arg[0].convertUnsignedLong();
@@ -430,6 +434,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       mediaStackAdapter.enableNoiseReduction(enable);
       return;
    }
+#endif
    if(isEqualNoCase(command, "subscribe") || isEqualNoCase(command, "cs"))
    {
       unsigned int subTime = arg[2].convertUnsignedLong();
@@ -476,6 +481,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       InfoLog( << "Autoanswer " << (enable ? "enabled" : "disabled"));
       return;
    }
+#ifdef PREFER_SIPXTAPI
    if(isEqualNoCase(command, "setcodecs") || isEqualNoCase(command, "sc"))
    {
       Data codecId;
@@ -502,6 +508,7 @@ void ReConServerProcess::processCommandLine(Data& commandline, MyConversationMan
       }
       return;
    }
+#endif
    if(isEqualNoCase(command, "securemedia") || isEqualNoCase(command, "sm"))
    {
       ConversationProfile::SecureMediaMode secureMediaMode = ConversationProfile::NoSecureMedia;
@@ -1317,8 +1324,10 @@ ReConServerProcess::main (int argc, char** argv)
             resip_assert(0);
       }
       mUserAgent = std::make_shared<MyUserAgent>(reConServerConfig, mConversationManager.get(), profile);
+#ifdef PREFER_SIPXTAPI
       SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(mConversationManager->getMediaStackAdapter());
       mediaStackAdapter.buildSessionCapabilities(address, _codecIds, conversationProfile->sessionCaps());
+#endif
       mUserAgent->addConversationProfile(conversationProfile);
 
       if(application == ReConServerConfig::B2BUA)
@@ -1342,7 +1351,9 @@ ReConServerProcess::main (int argc, char** argv)
             internalProfile->secureMediaMode() = reConServerConfig.getConfigSecureMediaMode("B2BUAInternalSecureMediaMode", secureMediaMode);
             internalProfile->setDefaultFrom(uri);
             internalProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
+#ifdef PREFER_SIPXTAPI
             mediaStackAdapter.buildSessionCapabilities(internalMediaAddress, _codecIds, internalProfile->sessionCaps());
+#endif
             mUserAgent->addConversationProfile(internalProfile, false);
          }
          else

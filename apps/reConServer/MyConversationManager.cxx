@@ -25,9 +25,15 @@ using namespace recon;
 using namespace reconserver;
 
 MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
-      : ConversationManager(make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false)),
+      : ConversationManager(nullptr),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
+#ifdef USE_SIPXTAPI
+   shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
+#else
+   #error Need Kurento or sipXtapi
+#endif
+   setMediaStackAdapter(mediaStackAdapter);
 }
 
 void

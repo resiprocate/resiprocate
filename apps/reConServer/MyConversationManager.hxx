@@ -17,6 +17,12 @@
 namespace reconserver
 {
 
+#ifdef USE_SIPXTAPI
+#define PREFER_SIPXTAPI
+#else
+#error No media stack enabled
+#endif
+
 class MyConversationManager : public recon::ConversationManager
 {
 public:
