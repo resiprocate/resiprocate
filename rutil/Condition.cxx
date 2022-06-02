@@ -212,14 +212,15 @@ Condition::wait (Mutex& mutex)
 #endif
 }
 
-bool
+std::cv_status
 Condition::wait(Mutex& mutex, 
-                unsigned int ms)
+                const std::chrono::milliseconds rel_time)
 {
+   unsigned int ms = rel_time.count();
    if (ms == 0)
    {
       wait(mutex);
-      return true;
+      return std::cv_status::no_timeout;
    }
 
 #ifdef WIN32
@@ -319,7 +320,7 @@ Condition::wait(Mutex& mutex,
    // Reacquire the mutex
    mutex.lock();
 
-   return ret;
+   return ret ? std::cv_status::no_timeout : std::cv_status::timeout;
 
 #   else
    // FixMe: Race condition between time we get mId and when we
@@ -363,7 +364,7 @@ Condition::wait(Mutex& mutex,
    DWORD ret = WaitForSingleObject(mId, ms);
    mutex.lock();
    resip_assert(ret != WAIT_FAILED);
-   return (ret == WAIT_OBJECT_0);
+   return (ret == WAIT_OBJECT_0 ? std::cv_status::no_timeout : std::cv_status::timeout);
 #   endif
 #else	// WIN32
    uint64_t expires64 = Timer::getTimeMs() + ms;
@@ -378,20 +379,20 @@ Condition::wait(Mutex& mutex,
 
    if (ret == EINTR || ret == ETIMEDOUT)
    {
-      return false;
+      return std::cv_status::timeout;
    }
    else
    {
       //std::cerr << this << " pthread_cond_timedwait failed " << ret << " mutex=" << mutex << std::endl;
       (void)ret;
       resip_assert( ret == 0 );
-      return true;
+      return std::cv_status::no_timeout;
    }
 #endif	// not WIN32
 }
 
 void
-Condition::signal ()
+Condition::notify_one ()
 {
 #ifdef WIN32
 #  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
@@ -458,7 +459,7 @@ Condition::signal ()
 
 
 void
-Condition::broadcast()
+Condition::notify_all()
 {
 #ifdef WIN32
 #  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX

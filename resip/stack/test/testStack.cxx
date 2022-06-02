@@ -124,7 +124,7 @@ void
 SharedAsyncNotify::handleProcessNotification()
 {
    Lock lock(mMutex); (void)lock;
-   mCondition.signal();
+   mCondition.notify_one();
 }
 
 /**
@@ -146,7 +146,7 @@ SharedAsyncNotify::waitNotify(int ms)
    }
    else
    {
-      return mCondition.wait(mMutex, ms);
+      return mCondition.wait(mMutex, std::chrono::milliseconds(ms)) == std::cv_status::no_timeout;
    }
 }
 

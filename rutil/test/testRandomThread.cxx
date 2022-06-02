@@ -49,7 +49,7 @@ Barrier::sync(int id, bool isMaster)
    {
       mHaveCnt = 0;
       mCurId = id;
-      mCond.broadcast();
+      mCond.notify_all();
    }
    else
    {
@@ -59,7 +59,7 @@ Barrier::sync(int id, bool isMaster)
          mCond.wait(mMutex);
       }
       ++mHaveCnt;
-      mCond.broadcast();
+      mCond.notify_all();
    }
    while ( mCurId==id && mHaveCnt < mWantCnt )
    {

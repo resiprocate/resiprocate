@@ -2060,7 +2060,7 @@ WebAdmin::onDnsCacheDumpRetrieved(std::pair<unsigned long, unsigned long> key, c
    {
       mDnsCache = dnsEntryStrings;
    }
-   mDnsCacheCondition.signal();
+   mDnsCacheCondition.notify_one();
 }
 
 void

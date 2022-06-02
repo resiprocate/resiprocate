@@ -293,7 +293,7 @@ InMemorySyncRegDb::unlockRecord(const Uri& aor)
    }
 
    mLockedRecords.erase(aor);
-   mRecordUnlocked.broadcast();
+   mRecordUnlocked.notify_all();
 }
 
 RegistrationPersistenceManager::update_status_t 

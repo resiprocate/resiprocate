@@ -8,6 +8,9 @@
 #  include <pthread.h>
 #endif
 
+#include <chrono>
+#include <condition_variable>
+
 // !kh!
 // Attempt to resolve POSIX behaviour conformance for win32 build.
 #define RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
@@ -63,19 +66,19 @@ class Condition
        @retval true The condition was woken up by activity
        @retval false Timeout or interrupt.
       */
-      bool wait (Mutex& mutex, unsigned int ms);
+      std::cv_status wait (Mutex& mutex, const std::chrono::milliseconds rel_time);
 
       /** Signal one waiting thread.
        @return 0 Success
        @return errorcode The error code of the failure
        */
-      void signal();
+      void notify_one();
 
       /** Signal all waiting threads.
        @return 0 Success
        @return errorcode The error code of the failure
        */
-      void broadcast();
+      void notify_all();
 
    private:
       // !kh!

@@ -124,14 +124,14 @@ RWMutex::unlock()
       //
       if ( mPendingWriterCount > 0 )
       {
-         mPendingWriteCondition.signal();
+         mPendingWriteCondition.notify_one();
       }
 
       // No writer, no pending writers, so all the readers can go.
       //
       else
       {
-         mReadCondition.broadcast();
+         mReadCondition.notify_all();
       }
 
    }
@@ -146,7 +146,7 @@ RWMutex::unlock()
 
       if ( mReaderCount == 0 && mPendingWriterCount > 0 )
       {
-         mPendingWriteCondition.signal();
+         mPendingWriteCondition.notify_one();
       }
    }
 }
