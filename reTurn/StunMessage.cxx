@@ -1701,8 +1701,8 @@ StunMessage::createUsernameAndPassword()
 {
    uint64_t time = resip::Timer::getTimeSecs();
    time -= (time % 20*60);  // rounded time - current time modulo 20 minutes
-   //UInt64 hitime = time >> 32;
-   //UInt64 lotime = time & 0xFFFFFFFF;
+   //uint64_t hitime = time >> 32;
+   //uint64_t lotime = time & 0xFFFFFFFF;
 
    mHasUsername = true;
    if(!mUsername)
