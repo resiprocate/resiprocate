@@ -39,7 +39,7 @@ class SdpMediaLine;
 
 namespace recon
 {
-class SipXConversationManager;
+class SipXMediaStackAdapter;
 
 /**
   This class represent a remote participant.  A remote participant is a 
@@ -54,12 +54,12 @@ class SipXRemoteParticipant : public virtual RemoteParticipant, public virtual S
 public:
    SipXRemoteParticipant(ParticipantHandle partHandle,   // UAC
                      ConversationManager& conversationManager,
-                     SipXConversationManager& sipXConversationManager,
+                     SipXMediaStackAdapter& sipXConversationManager,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
    SipXRemoteParticipant(ConversationManager& conversationManager,
-                     SipXConversationManager& sipXConversationManager,            // UAS or forked leg
+                     SipXMediaStackAdapter& sipXConversationManager,            // UAS or forked leg
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 

@@ -3,12 +3,12 @@
 
 #include "Participant.hxx"
 #include "SipXMediaInterface.hxx"
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 #include <map>
 
 namespace recon
 {
-class SipXConversationManager;
+class SipXMediaStackAdapter;
 
 /**
   This is the base class for a SipXRemoteParticipant, SipXLocalParticipant and a
@@ -25,18 +25,18 @@ class SipXParticipant : public virtual Participant
       SipXParticipant(ParticipantHandle partHandle,
                       ConversationManager::ParticipantType partType,
                       ConversationManager& conversationManager,
-                      SipXConversationManager& sipXConversationManager);
+                      SipXMediaStackAdapter& sipXConversationManager);
 
       SipXParticipant(ConversationManager::ParticipantType partType,
                       ConversationManager& conversationManager,
-                      SipXConversationManager& sipXConversationManager);
+                      SipXMediaStackAdapter& sipXConversationManager);
 
       virtual ~SipXParticipant();
 
       virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();
 
    protected:
-      SipXConversationManager &mSipXConversationManager;
+      SipXMediaStackAdapter &mSipXConversationManager;
 };
 
 }

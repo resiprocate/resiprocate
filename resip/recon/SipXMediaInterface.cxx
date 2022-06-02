@@ -1,5 +1,5 @@
 #include "SipXMediaInterface.hxx"
-#include "SipXConversationManager.hxx"
+#include "SipXMediaStackAdapter.hxx"
 #include "ReconSubsystem.hxx"
 #include "DtmfEvent.hxx"
 #include "FlowManagerSipXSocket.hxx"
@@ -29,11 +29,11 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    mMediaResourceAllocations[MediaResourceParticipant::Tone].push_back(MediaResourceAllocationInfo(DEFAULT_TONE_GEN_RESOURCE_NAME));
    mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_RESOURCE_NAME));  // Note:  File resource also tracks Cache type
    mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));
-   SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(conversationManager.getMediaStackAdapter());
+   SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(conversationManager.getMediaStackAdapter());
    if (mediaStackAdapter.extraPlayAndRecordResourcesEnabled())
    {
-      mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
-      mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXConversationManager::DEFAULT_RECORDER_2_RESOURCE_NAME));
+      mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
+      mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_RECORDER_2_RESOURCE_NAME));
    }
 }
 

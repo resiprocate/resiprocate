@@ -11,7 +11,7 @@
 
 #include <rutil/Data.hxx>
 #ifdef USE_SIPXTAPI
-#include <resip/recon/SipXConversationManager.hxx>
+#include <resip/recon/SipXMediaStackAdapter.hxx>
 #endif
 
 namespace reconserver
@@ -21,7 +21,7 @@ class MyConversationManager : public recon::ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(bool localAudioEnabled, recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();

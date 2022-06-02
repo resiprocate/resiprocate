@@ -38,7 +38,7 @@ int _kbhit() {
 }
 #endif
 
-#include "../SipXConversationManager.hxx"
+#include "../SipXMediaStackAdapter.hxx"
 #include "../UserAgent.hxx"
 #include "../ReconSubsystem.hxx"
 
@@ -118,7 +118,7 @@ public:
       : ConversationManager(nullptr),
         mLocalAudioEnabled(localAudioEnabled)
    {
-      setMediaStackAdapter(make_shared<SipXConversationManager>(*this, localAudioEnabled, multipleMediaInterfaces ? SipXConversationManager::MediaInterfaceMode::sipXConversationMediaInterfaceMode : SipXConversationManager::MediaInterfaceMode::sipXGlobalMediaInterfaceMode));
+      setMediaStackAdapter(make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, multipleMediaInterfaces ? SipXMediaStackAdapter::MediaInterfaceMode::sipXConversationMediaInterfaceMode : SipXMediaStackAdapter::MediaInterfaceMode::sipXGlobalMediaInterfaceMode));
       mDefaultAutoHoldMode = defaultAutoHoldModeToDisabled ? ConversationManager::AutoHoldDisabled : ConversationManager::AutoHoldEnabled;
    }
 
@@ -391,7 +391,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       }
    }
 
-   SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(myConversationManager.getMediaStackAdapter());
+   SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
 
    // Process commands
    if(isEqualNoCase(command, "quit") || isEqualNoCase(command, "q") || isEqualNoCase(command, "exit") || isEqualNoCase(command, "x"))
@@ -1608,7 +1608,7 @@ main (int argc, char** argv)
    {
       MyConversationManager myConversationManager(localAudioEnabled, multipleMediaInterfaceModeEnabled, defaultAutoHoldModeToDisabled);
       MyUserAgent ua(&myConversationManager, profile);
-      SipXConversationManager& mediaStackAdapter = static_cast<SipXConversationManager&>(myConversationManager.getMediaStackAdapter());
+      SipXMediaStackAdapter& mediaStackAdapter = static_cast<SipXMediaStackAdapter&>(myConversationManager.getMediaStackAdapter());
       mediaStackAdapter.buildSessionCapabilities(address, codecIds, g_conversationProfile->sessionCaps());
 
       // Generate InstanceId appropriate for testing only.  Should be UUID that persists 

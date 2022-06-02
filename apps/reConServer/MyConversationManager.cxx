@@ -24,8 +24,8 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXConversationManager::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
-      : ConversationManager(make_shared<SipXConversationManager>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false)),
+MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
+      : ConversationManager(make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false)),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
 }

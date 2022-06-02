@@ -8,7 +8,7 @@
 #include "../UserAgent.hxx"
 #include "../HandleTypes.hxx"
 
-#include "../SipXConversationManager.hxx"
+#include "../SipXMediaStackAdapter.hxx"
 
 #ifdef WIN32
    #define sleepMs(t) Sleep(t)
