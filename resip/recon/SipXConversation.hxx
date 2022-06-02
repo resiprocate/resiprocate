@@ -35,7 +35,7 @@ class SipXConversation : public Conversation
 public:  
    SipXConversation(ConversationHandle handle,
                 ConversationManager& conversationManager,
-                SipXMediaStackAdapter& sipXConversationManager,
+                SipXMediaStackAdapter& sipXMediaStackAdapter,
                 RelatedConversationSet* relatedConversationSet,  // Pass NULL to create new RelatedConversationSet 
                 ConversationHandle sharedMediaInterfaceConvHandle,
                 ConversationManager::AutoHoldMode autoHoldMode);
@@ -63,7 +63,7 @@ protected:
    virtual void onParticipantRemoved(Participant* participant);
 
 private: 
-   SipXMediaStackAdapter& mSipXConversationManager;
+   SipXMediaStackAdapter& mSipXMediaStackAdapter;
 
    // sipX Media related members
    friend class ConversationManager;

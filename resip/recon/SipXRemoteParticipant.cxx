@@ -57,24 +57,24 @@ using namespace std;
 // UAC
 SipXRemoteParticipant::SipXRemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager,
-                                     SipXMediaStackAdapter& sipXConversationManager,
+                                     SipXMediaStackAdapter& sipXMediaStackAdapter,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, sipXConversationManager)
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, sipXMediaStackAdapter)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAC), handle=" << mHandle);
 }
 
 // UAS - or forked leg
 SipXRemoteParticipant::SipXRemoteParticipant(ConversationManager& conversationManager,
-                                     SipXMediaStackAdapter& sipXConversationManager,
+                                     SipXMediaStackAdapter& sipXMediaStackAdapter,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
-  SipXParticipant(ConversationManager::ParticipantType_Remote, conversationManager, sipXConversationManager)
+  SipXParticipant(ConversationManager::ParticipantType_Remote, conversationManager, sipXMediaStackAdapter)
 {
    InfoLog(<< "SipXRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -296,7 +296,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 #ifdef USE_SSL
    else if(getDialogSet().getSecureMediaMode() == ConversationProfile::SrtpDtls)
    {
-      if(mSipXConversationManager.getFlowManager().getDtlsFactory())
+      if(mSipXMediaStackAdapter.getFlowManager().getDtlsFactory())
       {
          // Note:  We could add the fingerprint and setup attributes to the "SDP Capabilties Negotiation" 
          //        potential configuration if secure media is not required - but other implementations 
@@ -305,7 +305,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 
          // Add fingerprint attribute
          char fingerprint[100];
-         mSipXConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
+         mSipXMediaStackAdapter.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
          //offer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
          offer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
          //offer.session().addAttribute("acap", "1 fingerprint:SHA-1 " + Data(fingerprint));
@@ -435,7 +435,7 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
             }
          }
 #ifdef USE_SSL
-         else if (mSipXConversationManager.getFlowManager().getDtlsFactory() &&
+         else if (mSipXMediaStackAdapter.getFlowManager().getDtlsFactory() &&
             (getDialogSet().getSecureMediaMode() == ConversationProfile::SrtpDtls ||
                protocolType == sdpcontainer::SdpMediaLine::PROTOCOL_TYPE_UDP_TLS_RTP_SAVP))  // allow accepting of DTLS SAVP profiles, even if DTLS-SRTP is not enabled as a SecureMedia mode
          {
@@ -449,7 +449,7 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
 
                // Add fingerprint attribute to answer
                char fingerprint[100];
-               mSipXConversationManager.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
+               mSipXMediaStackAdapter.getFlowManager().getDtlsFactory()->getMyCertFingerprint(fingerprint);
                //answer.session().addAttribute("fingerprint", "SHA-1 " + Data(fingerprint));
                answer.session().addAttribute("fingerprint", "SHA-256 " + Data(fingerprint));  // Use SHA-256 for web-rtc compatibility
 

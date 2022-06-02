@@ -25,18 +25,18 @@ class SipXParticipant : public virtual Participant
       SipXParticipant(ParticipantHandle partHandle,
                       ConversationManager::ParticipantType partType,
                       ConversationManager& conversationManager,
-                      SipXMediaStackAdapter& sipXConversationManager);
+                      SipXMediaStackAdapter& sipXMediaStackAdapter);
 
       SipXParticipant(ConversationManager::ParticipantType partType,
                       ConversationManager& conversationManager,
-                      SipXMediaStackAdapter& sipXConversationManager);
+                      SipXMediaStackAdapter& sipXMediaStackAdapter);
 
       virtual ~SipXParticipant();
 
       virtual std::shared_ptr<SipXMediaInterface> getMediaInterface();
 
    protected:
-      SipXMediaStackAdapter &mSipXConversationManager;
+      SipXMediaStackAdapter &mSipXMediaStackAdapter;
 };
 
 }

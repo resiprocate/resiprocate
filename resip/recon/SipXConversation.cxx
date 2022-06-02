@@ -18,14 +18,14 @@ using namespace resip;
 
 SipXConversation::SipXConversation(ConversationHandle handle,
                            ConversationManager& conversationManager,
-                           SipXMediaStackAdapter& sipXConversationManager,
+                           SipXMediaStackAdapter& sipXMediaStackAdapter,
                            RelatedConversationSet* relatedConversationSet,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)
 : Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode),
-  mSipXConversationManager(sipXConversationManager)
+  mSipXMediaStackAdapter(sipXMediaStackAdapter)
 {
-   if(mSipXConversationManager.supportsMultipleMediaInterfaces())
+   if(mSipXMediaStackAdapter.supportsMultipleMediaInterfaces())
    {
       if (isSharingMediaInterfaceWithAnotherConversation())
       {
@@ -35,7 +35,7 @@ SipXConversation::SipXConversation(ConversationHandle handle,
       else
       {
          std::shared_ptr<BridgeMixer> mixer;
-         mSipXConversationManager.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
+         mSipXMediaStackAdapter.createMediaInterfaceAndMixer(false /* giveFocus?*/,    // Focus will be given when local participant is added
                                                            mMediaInterface,
                                                            mixer);
          setBridgeMixer(mixer);
