@@ -17,10 +17,10 @@ using namespace std;
 
 SipXLocalParticipant::SipXLocalParticipant(ParticipantHandle partHandle,
                                    ConversationManager& conversationManager,
-                                   SipXMediaStackAdapter& sipXConversationManager)
+                                   SipXMediaStackAdapter& sipXMediaStackAdapter)
 : Participant(partHandle, ConversationManager::ParticipantType_Local, conversationManager),
   LocalParticipant(partHandle, conversationManager),
-  SipXParticipant(partHandle, ConversationManager::ParticipantType_Local, conversationManager, sipXConversationManager),
+  SipXParticipant(partHandle, ConversationManager::ParticipantType_Local, conversationManager, sipXMediaStackAdapter),
   mLocalPortOnBridge(-1)
 {
    InfoLog(<< "SipXLocalParticipant created, handle=" << mHandle);
@@ -55,7 +55,7 @@ SipXLocalParticipant::addToConversation(Conversation *conversation, unsigned int
 {
     Participant::addToConversation(conversation, inputGain, outputGain);
 
-    if(mSipXConversationManager.getMediaInterfaceMode() == SipXMediaStackAdapter::sipXConversationMediaInterfaceMode)
+    if(mSipXMediaStackAdapter.getMediaInterfaceMode() == SipXMediaStackAdapter::sipXConversationMediaInterfaceMode)
     {
        // The Local participant is in a new Conversation, give that conversation focus
        resip_assert(getMediaInterface() != 0);       

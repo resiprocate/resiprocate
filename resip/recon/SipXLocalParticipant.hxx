@@ -31,7 +31,7 @@ class SipXLocalParticipant : public virtual LocalParticipant, public virtual Sip
    public:  
       SipXLocalParticipant(ParticipantHandle partHandle,
                        ConversationManager& conversationManager,
-                       SipXMediaStackAdapter& sipXConversationManager);
+                       SipXMediaStackAdapter& sipXMediaStackAdapter);
       virtual ~SipXLocalParticipant();
 
       virtual int getConnectionPortOnBridge();

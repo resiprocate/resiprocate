@@ -46,11 +46,11 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 SipXRemoteParticipantDialogSet::SipXRemoteParticipantDialogSet(ConversationManager& conversationManager,
-                                                       SipXMediaStackAdapter& sipXConversationManager,
+                                                       SipXMediaStackAdapter& sipXMediaStackAdapter,
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode,
                                                        std::shared_ptr<ConversationProfile> conversationProfile) :
    RemoteParticipantDialogSet(conversationManager, forkSelectMode, conversationProfile),
-   mSipXConversationManager(sipXConversationManager),
+   mSipXMediaStackAdapter(sipXMediaStackAdapter),
    mLocalRTPPort(0),
    mAllocateLocalRTPPortFailed(false),
    mFlowContext(new FlowContext()),
@@ -77,7 +77,7 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
 {
    if(mLocalRTPPort == 0 && !mAllocateLocalRTPPortFailed)
    {
-      mLocalRTPPort = mSipXConversationManager.getRTPPortManager()->allocateRTPPort();
+      mLocalRTPPort = mSipXMediaStackAdapter.getRTPPortManager()->allocateRTPPort();
       if(mLocalRTPPort == 0)
       {
          WarningLog(<< "Could not allocate a free RTP port for RemoteParticipantDialogSet!");
@@ -159,7 +159,7 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
       if(mNatTraversalMode != MediaStream::NoNatTraversal)
       {
 #endif
-         mMediaStream = mSipXConversationManager.getFlowManager().createMediaStream(
+         mMediaStream = mSipXMediaStackAdapter.getFlowManager().createMediaStream(
                      *this, 
                      localBinding, 
                      true /* rtcp? */, 
@@ -172,8 +172,8 @@ SipXRemoteParticipantDialogSet::getLocalRTPPort()
                      mFlowContext);
 
          // New Remote Participant - create media Interface connection
-         mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow(), mSipXConversationManager.mSipXTOSValue);
-         mRtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow(), mSipXConversationManager.mSipXTOSValue);
+         mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow(), mSipXMediaStackAdapter.mSipXTOSValue);
+         mRtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow(), mSipXMediaStackAdapter.mSipXTOSValue);
 
          ret = getMediaInterface()->createConnection(mMediaConnectionId, getActiveRemoteParticipantHandle(), mRtpSocket, mRtcpSocket);
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
@@ -329,7 +329,7 @@ SipXRemoteParticipantDialogSet::freeMediaResources()
    // Add the RTP port back to the pool
    if(mLocalRTPPort)
    {
-      mSipXConversationManager.getRTPPortManager()->freeRTPPort(mLocalRTPPort);
+      mSipXMediaStackAdapter.getRTPPortManager()->freeRTPPort(mLocalRTPPort);
       mLocalRTPPort = 0;
    }
 }

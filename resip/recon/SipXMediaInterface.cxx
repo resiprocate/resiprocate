@@ -25,7 +25,7 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    mAllowLoggingDTMFDigits(true)
 {
    // Add the available sipX resources.  Note:  This list must match what is provided by the sipX CpTopologyGraphImpl
-   // default initial resources, plus any customizations done in SipXConversationManager::addExtraPlayAndRecordResourcesToTopology
+   // default initial resources, plus any customizations done in SipXMediaStackAdapter::addExtraPlayAndRecordResourcesToTopology
    mMediaResourceAllocations[MediaResourceParticipant::Tone].push_back(MediaResourceAllocationInfo(DEFAULT_TONE_GEN_RESOURCE_NAME));
    mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(DEFAULT_FROM_FILE_RESOURCE_NAME));  // Note:  File resource also tracks Cache type
    mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(DEFAULT_RECORDER_RESOURCE_NAME));

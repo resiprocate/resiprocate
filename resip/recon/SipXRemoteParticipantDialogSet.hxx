@@ -39,7 +39,7 @@ class SipXRemoteParticipantDialogSet : public RemoteParticipantDialogSet, privat
 {
 public:
    SipXRemoteParticipantDialogSet(ConversationManager& conversationManager,
-                              SipXMediaStackAdapter& sipXConversationManager,
+                              SipXMediaStackAdapter& sipXMediaStackAdapter,
                               ConversationManager::ParticipantForkSelectMode forkSelectMode = ConversationManager::ForkSelectAutomatic,
                               std::shared_ptr<ConversationProfile> conversationProfile = nullptr);
 
@@ -76,7 +76,7 @@ protected:
    virtual void fixUpSdp(resip::SdpContents* sdp);
 
 private:
-   SipXMediaStackAdapter& mSipXConversationManager;
+   SipXMediaStackAdapter& mSipXMediaStackAdapter;
    unsigned int mLocalRTPPort;
    bool mAllocateLocalRTPPortFailed;
    std::shared_ptr<flowmanager::FlowContext> mFlowContext;
