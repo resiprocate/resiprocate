@@ -1,6 +1,7 @@
 #include "Event.hxx"
+#include "KurentoSubsystem.hxx"
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::APP  // FIXME: MEDIA or KURENTO?
+#define RESIPROCATE_SUBSYSTEM kurento::KurentoSubsystem::KURENTOCLIENT
 
 using namespace kurento;
 

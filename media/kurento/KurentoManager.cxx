@@ -1,6 +1,7 @@
 
 #include "KurentoManager.hxx"
 #include "KurentoConnection.hxx"
+#include "KurentoSubsystem.hxx"
 
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
@@ -8,6 +9,8 @@
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 
 using namespace kurento;
+
+#define RESIPROCATE_SUBSYSTEM kurento::KurentoSubsystem::KURENTOCLIENT
 
 KurentoManager::KurentoManager(unsigned int timeout)
    : mTimeout(timeout)

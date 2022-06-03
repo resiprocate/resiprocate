@@ -5,12 +5,13 @@
 #include "rutil/Subsystem.hxx"
 
 #include "KurentoConnection.hxx"
+#include "KurentoSubsystem.hxx"
 #include "Object.hxx"
 
 using namespace kurento;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP  // FIXME: MEDIA or KURENTO?
+#define RESIPROCATE_SUBSYSTEM kurento::KurentoSubsystem::KURENTOCLIENT
 
 //#define PING_MSG "{\"id\":\"1\",\"method\":\"ping\",\"params\":{\"interval\":240000},\"jsonrpc\":\"2.0\"}"
 

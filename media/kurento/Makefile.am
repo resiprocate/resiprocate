@@ -15,6 +15,7 @@ libkurentoclient_la_SOURCES = \
 	Event.cxx \
 	KurentoConnection.cxx \
 	KurentoManager.cxx \
+	KurentoSubsystem.cxx \
 	Object.cxx
 
 kurentoclientincludedir = $(includedir)/media/kurento
@@ -24,6 +25,7 @@ nobase_kurentoclientinclude_HEADERS = \
 	KurentoConnection.hxx \
 	KurentoManager.hxx \
 	KurentoResponseHandler.hxx \
+	KurentoSubsystem.hxx \
 	Object.hxx
 
 endif

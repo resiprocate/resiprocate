@@ -7,12 +7,13 @@
 #include "rutil/WinLeakCheck.hxx"
 
 #include "media/kurento/KurentoManager.hxx"
+#include "media/kurento/KurentoSubsystem.hxx"
 #include "media/kurento/Object.hxx"
 
 using namespace kurento;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP   // FIXME
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 #define KURENTO_TIMEOUT 1000
 #define KURENTO_URL "ws://127.0.0.1:8888/kurento"
