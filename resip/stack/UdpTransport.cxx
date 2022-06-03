@@ -306,10 +306,8 @@ UdpTransport::processTxOne(SendData *data)
 }
 
 /**
- * Add options RXALL (to try receive all readable data) and KEEP_BUFFER.
- * While each can be specified independently, generally should do both
- * or neither. This is because with RXALL, every read cycle will have
- * end with an EAGAIN read followed by buffer free (if no KEEP_BUFFER flag).
+ * Add options RXALL (to try receive all readable data).
+ * With RXALL, every read cycle will have end with an EAGAIN read.
  * Testing in very limited cases shows marginal (5%) performance improvements.
  * Probably "real" traffic (that is bursty) would more impact.
  */

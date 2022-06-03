@@ -41,11 +41,6 @@ class FdPollGrp;
  * TXALL:
  *    When transmitting to a socket, write all possible messages before
  *    returning to event loop. This allows higher thruput but burstier.
- * KEEP_BUFFER:
- *    With this flag, Transports will keep receive and transmit buffers
- *    allocated even when not in use. This increases memory utilization
- *    but speeds things up. Without this flag, the buffer is released
- *    when not in used.
  * TXNOW:
  *    When a message to transmit is posted to Transport's transmit queue
  *    immediately try sending it. This should have less latency
@@ -59,7 +54,6 @@ class FdPollGrp;
 #define RESIP_TRANSPORT_FLAG_NOBIND      (1<<0)
 #define RESIP_TRANSPORT_FLAG_RXALL       (1<<1)
 #define RESIP_TRANSPORT_FLAG_TXALL       (1<<2)
-#define RESIP_TRANSPORT_FLAG_KEEP_BUFFER (1<<3)
 #define RESIP_TRANSPORT_FLAG_TXNOW       (1<<4)
 #define RESIP_TRANSPORT_FLAG_OWNTHREAD   (1<<5)
 
