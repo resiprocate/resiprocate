@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ssky_reConServer" type="CLionNativeAppRunConfigurationType" PROGRAM_PARAMS="$ProjectFileDir$/../reConServer.config.debug" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$ProjectFileDir$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="resiprocate" TARGET_NAME="all" CONFIG_NAME="all" version="1" RUN_PATH="$PROJECT_DIR$/apps/reConServer/.libs/lt-reConServer">
+    <envs>
+      <env name="LD_LIBRARY_PATH" value="$PROJECT_DIR$/media/kurento/.libs:$PROJECT_DIR$/resip/recon/.libs:$PROJECT_DIR$/reflow/.libs:$PROJECT_DIR$/resip/dum/.libs:$PROJECT_DIR$/reTurn/client/.libs:$PROJECT_DIR$/reTurn/.libs:$PROJECT_DIR$/resip/stack/.libs:$PROJECT_DIR$/rutil/.libs:$PROJECT_DIR$/rutil/dns/ares/.libs:$LD_LIBRARY_PATH" />
+    </envs>
+    <method v="2">
+      <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_SSKY_link-recon" />
+    </method>
+  </configuration>
+</component>
