@@ -55,6 +55,12 @@ PyRouteProcessor::process(RequestContext &context)
    }
 
    SipMessage& msg = context.getOriginalRequest();
+   if (msg.method() == resip::ACK){
+      DebugLog(<< "SSKY_DEBUG: Recevied ACK message");
+   }
+   else{
+      DebugLog(<< "SSKY_DEBUG: Recevied sip message, was not ACK");
+   }
    if(msg.method() != INVITE && msg.method() != MESSAGE && msg.method() != resip::BYE && msg.method() != resip::CANCEL && msg.method() != resip::ACK)
    {
       // We only route INVITE and MESSAGE, otherwise we ignore
