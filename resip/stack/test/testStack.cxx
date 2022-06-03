@@ -29,6 +29,10 @@
 #include "resip/stack/EventStackThread.hxx"
 #include "resip/stack/Uri.hxx"
 
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
+
 using namespace resip;
 using namespace std;
 
@@ -396,11 +400,14 @@ performTest(int verbose, int runs, int window, int invite,
       int sendSleepMs,
       StackThreadPair& pair)
 {
+   const bool secure = strcasecmp(proto, "tls") == 0 || strcasecmp(proto, "dtls") == 0;
+   const int portOffset = secure ? 1 : 0;
+
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
    target.uri().host() = bindIfAddr;
-   target.uri().port() = registrarPort;
+   target.uri().port() = registrarPort + portOffset;
    target.uri().param(p_transport) = proto;
 
    NameAddr contact;
@@ -408,7 +415,7 @@ performTest(int verbose, int runs, int window, int invite,
    contact.uri().user() = "fluffy";
 
    NameAddr from = target;
-   from.uri().port() = senderPort;
+   from.uri().port() = senderPort + portOffset;
 
    UInt64 startTime = Timer::getTimeMs();
    int outstanding=0;
@@ -426,7 +433,7 @@ performTest(int verbose, int runs, int window, int invite,
       for (int i=0; i<64 && sent < runs && outstanding < window; ++i)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
-         target.uri().port() = registrarPort + (sent%numPorts);
+         target.uri().port() = registrarPort + (sent%numPorts) * 2 + portOffset;
 
          SipMessage* next=0;
          if (invite)
@@ -447,7 +454,7 @@ performTest(int verbose, int runs, int window, int invite,
              // the "numPorts>1" test is for backwards compat
              next->header(h_Vias).front().sentHost() = bindIfAddr;
          }
-         next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts);
+         next->header(h_Vias).front().sentPort() = senderPort + (sent%numPorts) * 2 + portOffset;
          pair.mSender->send(std::unique_ptr<SipMessage>(next));
          next = 0; // DON'T delete next; consumed by send above
          outstanding++;
@@ -596,6 +603,7 @@ main(int argc, char* argv[])
    const char* logLevel = "WARNING";
    const char* proto = "tcp";
    const char* bindAddr = "127.0.0.1";
+   const char* domain = "";
    int doListen = 1;
 
    int verbose = 0;
@@ -624,7 +632,7 @@ main(int argc, char* argv[])
       {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of runs (SIP requests) in test", 0},
       {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of concurrent transactions", 0},
       {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "polling interval (ms) for stack thread", 0},
-      {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
+      {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use", "tcp|udp|tls|dtls"},
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
       {"listen",      0,   POPT_ARG_INT,    &doListen,  0, "do not bind/listen sender ports", 0},
       {"verbose",     0,   POPT_ARG_INT,    &verbose,   0, "verbose", 0},
@@ -637,6 +645,7 @@ main(int argc, char* argv[])
       {"sleep",       0,   POPT_ARG_INT,    &sendSleepMs,0, "time (ms) to sleep after each sent request", 0},
       {"use-congestion-manager",0, POPT_ARG_NONE, &cManager ,   0, "use a CongestionManager", 0},
       {"statistics-interval",       0,   POPT_ARG_INT,    &statisticsInterval,0, "time in seconds between statistics logging", 0},
+      {"domain",      'd', POPT_ARG_STRING, &domain,    0, "the SIP domain to use", nullptr},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -654,15 +663,28 @@ main(int argc, char* argv[])
       bindIfAddr = DnsUtil::getLocalHostName();
    }
 
+   Data sipDomain(domain);
+   if (sipDomain.empty())
+   {
+      sipDomain = DnsUtil::getLocalDomainName();
+   }
+
+   if (numPorts > 1 && (strcasecmp(proto, "tls") == 0 || strcasecmp(proto, "dtls") == 0))
+   {
+      WarningLog(<< "secure transport, forcing numports to 1");
+      numPorts = 1;
+   }
+
    cout << "Performing " << runs << " runs with"
      <<" win="<<window
-     <<" ip"<<(v6?"v4":"v4")
+     <<" ip"<<(v6?"v6":"v4")
      <<" proto="<<proto
      <<" numports="<<numPorts
      <<" thread="<<threadType
      <<" bindIf="<<bindIfAddr
      <<" listen="<<doListen
      <<" tf="<<tpFlags
+     <<" domain="<<sipDomain
      <<"." << endl;
 
    const char *eachThreadType = threadType;
@@ -702,15 +724,22 @@ main(int argc, char* argv[])
 
    IpVersion version = (v6 ? V6 : V4);
 
+#ifdef USE_SSL
+   Security::OpenSSLCTXSetOptions |= SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
+#ifdef USE_DTLS
+   Security::OpenSSLCTXSetOptions |= SSL_OP_NO_DTLSv1;
+#endif /* USE_DTLS */
+#endif /* USE_SSL */
+
    // estimate number of sockets we need:
    // 2x for sender and receiver
    // 3 for UDP (listen + select interruptor) 
    // 4 for TCP (listen + connection + select interruptor)
    // ~30 for misc (DNS, SelectInterruptors)
-   int needFds = numPorts * 14 + 30;
+   int needFds = numPorts * 2 * 14 + 30;
    increaseLimitFds(needFds);
 
-   /* On linux, the client TCP connection port range is controll by
+   /* On linux, the client TCP connection port range is controlled by
     * /proc/sys/net/ipv4/ip_local_port_range, and defaults to [32768,61000].
     * To avoid conflicts when binding, the bound ports below should
     * stay out of the range (e.g., below 32768)
@@ -721,12 +750,13 @@ main(int argc, char* argv[])
    if ( senderPort==0 )
    {
       senderPort = numPorts==1 ? 25060+(rand()&0x0fff) : 11000;
+      senderPort -= senderPort % 2;
    }
-   int registrarPort = senderPort + numPorts;
+   int registrarPort = senderPort + numPorts * 2;
 
    int idx;
    std::vector<Transport*> transports;
-   for (idx=0; idx < numPorts; idx++)
+   for (idx=0; idx < numPorts * 2; idx += 2)
    {
       transports.push_back(sender->addTransport(UDP, 
                            senderPort+idx, 
@@ -735,7 +765,7 @@ main(int argc, char* argv[])
                            bindIfAddr,
                            /*sipDomain*/Data::Empty, 
                            /*keypass*/Data::Empty, 
-                           SecurityTypes::TLSv1,
+                           SecurityTypes::SSLv23,
                            tpFlags));
 
       // NOBIND doesn't make sense for UDP
@@ -746,8 +776,40 @@ main(int argc, char* argv[])
                            bindIfAddr,
                            /*sipDomain*/Data::Empty, 
                            /*keypass*/Data::Empty, 
-                           SecurityTypes::TLSv1,
+                           SecurityTypes::SSLv23,
                            tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND)));
+
+#ifdef USE_SSL
+      if (idx == 0)
+      {
+         if (strcasecmp(proto, "tls") == 0)
+         {
+            transports.push_back(sender->addTransport(TLS,
+                                 senderPort+idx+1,
+                                 version,
+                                 StunDisabled,
+                                 bindIfAddr,
+                                 sipDomain,
+                                 /*keypass*/Data::Empty,
+                                 SecurityTypes::SSLv23,
+                                 tpFlags|(doListen?0:RESIP_TRANSPORT_FLAG_NOBIND)));
+         }
+#ifdef USE_DTLS
+         else if (strcasecmp(proto, "dtls") == 0)
+         {
+            transports.push_back(sender->addTransport(DTLS,
+                                 senderPort+idx+1,
+                                 version,
+                                 StunDisabled,
+                                 bindIfAddr,
+                                 sipDomain,
+                                 /*keypass*/Data::Empty,
+                                 SecurityTypes::SSLv23,
+                                 tpFlags));
+         }
+#endif /* USE_DTLS */
+      }
+#endif /* USE_SSL */
 
       // NOTE: we could also bind receive to bindIfAddr, but existing code
       // doesn't do this. Responses are sent from here, so why don't we?
@@ -758,7 +820,7 @@ main(int argc, char* argv[])
                              /*ipInterface*/Data::Empty,
                              /*sipDomain*/Data::Empty, 
                              /*keypass*/Data::Empty, 
-                             SecurityTypes::TLSv1,
+                             SecurityTypes::SSLv23,
                              tpFlags));
 
       transports.push_back(receiver->addTransport(TCP, 
@@ -768,8 +830,40 @@ main(int argc, char* argv[])
                              /*ipInterface*/Data::Empty,
                              /*sipDomain*/Data::Empty, 
                              /*keypass*/Data::Empty, 
-                             SecurityTypes::TLSv1,
+                             SecurityTypes::SSLv23,
                              tpFlags));
+
+#ifdef USE_SSL
+      if (idx == 0)
+      {
+         if (strcasecmp(proto, "tls") == 0)
+         {
+            transports.push_back(receiver->addTransport(TLS,
+                                 registrarPort+idx+1,
+                                 version,
+                                 StunDisabled,
+                                 /*ipInterface*/Data::Empty,
+                                 sipDomain,
+                                 /*keypass*/Data::Empty,
+                                 SecurityTypes::SSLv23,
+                                 tpFlags));
+         }
+#ifdef USE_DTLS
+         else if (strcasecmp(proto, "dtls") == 0)
+         {
+            transports.push_back(receiver->addTransport(DTLS,
+                                 registrarPort+idx+1,
+                                 version,
+                                 StunDisabled,
+                                 /*ipInterface*/Data::Empty,
+                                 sipDomain,
+                                 /*keypass*/Data::Empty,
+                                 SecurityTypes::SSLv23,
+                                 tpFlags));
+         }
+#endif /* USE_DTLS */
+      }
+#endif /* USE_SSL */
    }
 
    std::unique_ptr<CongestionManager> senderCongestionManager;
