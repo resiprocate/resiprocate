@@ -42,7 +42,7 @@ struct DataLocalSize
 };
 
 // .bwc. Pack class Data; has to come before doxygen block though.
-#pragma pack(4)
+#pragma pack(push, 4)
 
 /**
   @brief An alternative to std::string, encapsulates an arbitrary buffer of 
@@ -1001,8 +1001,8 @@ class Data
       friend class ::TestData;
       friend class MD5Buffer;
 };
-// reset alignment to default
-#pragma pack()
+// reset alignment to previous value
+#pragma pack(pop)
 
 
 class DataHelper {

@@ -261,8 +261,8 @@ class AbstractFifo : public FifoStatsInterface
             return true;
          }
 
-         const uint64_t begin(Timer::getTimeMs());
-         const uint64_t end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         const auto begin = std::chrono::steady_clock::now();
+         const auto end = begin + std::chrono::milliseconds(ms);
          Lock lock(mMutex); (void)lock;
          onFifoPolled();
 
@@ -273,16 +273,14 @@ class AbstractFifo : public FifoStatsInterface
             {
                return false;
             }
-            const uint64_t now(Timer::getTimeMs());
+            auto now = std::chrono::steady_clock::now();
             if(now >= end)
             {
                 return false;
             }
       
-            unsigned int timeout((unsigned int)(end - now));
-                    
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait_for(lock, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
+            bool signaled = mCondition.wait_until(lock, end) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;
@@ -335,8 +333,8 @@ class AbstractFifo : public FifoStatsInterface
          }
 
          resip_assert(other.empty());
-         const uint64_t begin(Timer::getTimeMs());
-         const uint64_t end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
+         const auto begin = std::chrono::steady_clock::now();
+         const auto end = begin + std::chrono::milliseconds(ms); // !kh! ms should've been unsigned :(
          Lock lock(mMutex); (void)lock;
          onFifoPolled();
 
@@ -347,16 +345,14 @@ class AbstractFifo : public FifoStatsInterface
             {
                return false;
             }
-            const uint64_t now(Timer::getTimeMs());
+            const auto now = std::chrono::steady_clock::now();
             if(now >= end)
             {
                 return false;
             }
 
-            unsigned int timeout((unsigned int)(end - now));
-                    
             // bail if total wait time exceeds limit
-            bool signaled = mCondition.wait_for(lock, std::chrono::milliseconds(timeout)) == std::cv_status::no_timeout;
+            bool signaled = mCondition.wait_until(lock, end) == std::cv_status::no_timeout;
             if (!signaled)
             {
                return false;
