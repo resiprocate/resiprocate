@@ -22,6 +22,14 @@ PyRouteProcessor::process(RequestContext &context)
 {
    DebugLog(<< "Monkey handling request: PyRoute");
 
+   SipMessage& msg = context.getOriginalRequest();
+   if (msg.method() == resip::ACK){
+       DebugLog(<< "SSKY_DEBUG: Recevied ACK message");
+   }
+   else{
+       DebugLog(<< "SSKY_DEBUG: Recevied sip message, was not ACK");
+   }
+
    // Has the work been done already?
    PyRouteWork* work = dynamic_cast<PyRouteWork*>(context.getCurrentEvent());
    if(work)
@@ -54,13 +62,6 @@ PyRouteProcessor::process(RequestContext &context)
       return Processor::Continue;
    }
 
-   SipMessage& msg = context.getOriginalRequest();
-   if (msg.method() == resip::ACK){
-      DebugLog(<< "SSKY_DEBUG: Recevied ACK message");
-   }
-   else{
-      DebugLog(<< "SSKY_DEBUG: Recevied sip message, was not ACK");
-   }
    if(msg.method() != INVITE && msg.method() != MESSAGE && msg.method() != resip::BYE && msg.method() != resip::CANCEL && msg.method() != resip::ACK)
    {
       // We only route INVITE and MESSAGE, otherwise we ignore
