@@ -382,6 +382,11 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
            Processor::processor_action_t ret=Processor::Continue;
            ret = mRequestProcessorChain.process(*this);
        }
+       else{
+           DebugLog(<<"SSKY_DEBUG: ProcessingRequestAckTransaction with empty body");
+           Processor::processor_action_t ret=Processor::Continue;
+           ret = mRequestProcessorChain.process(*this);
+       }
 
       // .slg. look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
       if(!mTopRouteFlowTupleSet &&  // If we have a flow token in top route, then we don't need to route with RequestUri (so don't consider self aimed)
