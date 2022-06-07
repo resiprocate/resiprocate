@@ -170,6 +170,7 @@ RequestContext::process(std::unique_ptr<resip::SipMessage> sipMessage)
       {
          case ACK:
             processRequestAckTransaction(sip,original);
+            if(postProcess) doPostRequestProcessing(sip,original);
             break;
          case INVITE:
             postProcess=processRequestInviteTransaction(sip,original);
