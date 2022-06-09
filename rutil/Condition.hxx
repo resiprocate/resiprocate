@@ -48,7 +48,7 @@ namespace resip
 
 // We removed our local implementation and now we use the
 // C++11 library
-typedef std::condition_variable Condition;
+typedef std::condition_variable_any Condition;
 
 }
 
