@@ -35,6 +35,7 @@ namespace resip
 // We removed our local implementation and now we use the
 // C++11 library
 typedef std::mutex Mutex;
+typedef std::recursive_mutex RecursiveMutex;
 
 }
 

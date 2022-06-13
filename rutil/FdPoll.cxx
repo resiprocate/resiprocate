@@ -517,7 +517,7 @@ class FdPollImplPoll : public FdPollGrp
        */
       std::vector<pollfd> mPollFdCache;  // This list is adjustable while we are waiting/processing
       std::vector<pollfd> mPollFds;
-      Mutex mMutex;
+      RecursiveMutex mMutex;
 };
 
 // NOTE: shift by one so that fd=0 doesn't have NULL handle
@@ -570,7 +570,7 @@ FdPollImplPoll::addPollItem(Socket fd, FdPollEventMask newMask, FdPollItemIf *it
    resip_assert(fd>=0);
    //InfoLog(<<"adding poll item fd="<<fd);
    
-   Lock lock(mMutex);
+   RecursiveLock lock(mMutex);
    FdPollItemPollInfo& info = mItems[fd];
    info.mSocketFd = fd;
    info.mItemObj = item;
@@ -589,7 +589,7 @@ FdPollImplPoll::modPollItem(const FdPollItemHandle handle, FdPollEventMask newMa
 {
    int fd = IMPL_POLL_HandleToFd(handle);
 
-   Lock lock(mMutex);
+   RecursiveLock lock(mMutex);
    FdPollItemPollInfoMap::iterator it = mItems.find(fd);
    if(it != mItems.end())
    {
@@ -610,7 +610,7 @@ FdPollImplPoll::delPollItem(FdPollItemHandle handle)
    int fd = IMPL_POLL_HandleToFd(handle);
    //InfoLog(<<"deleting poll item fd="<<fd);
 
-   Lock lock(mMutex);
+   RecursiveLock lock(mMutex);
    FdPollItemPollInfoMap::iterator it = mItems.find(fd);
    if(it != mItems.end())
    {
@@ -670,7 +670,7 @@ FdPollImplPoll::waitAndProcess(int ms)
    // Copy vector - cheaper than rebuilding from scratch each time
    // Need to copy, since vector cannot be changed while Poll is running.
    { // Scope for Lock
-      Lock lock(mMutex);
+      RecursiveLock lock(mMutex);
       mPollFds = mPollFdCache;
       //InfoLog(<<"FdPollImplPoll::waitAndProcess() ms=" << ms << ", numFds " << mPollFds.size());
    }
@@ -755,7 +755,7 @@ FdPollImplPoll::waitAndProcess(int ms)
 
    // Process poll result now
    {  // Scope for Lock
-      Lock lock(mMutex);
+      RecursiveLock lock(mMutex);
       for (unsigned short index = 0; index < mPollFds.size() && numReadyFDs > 0; index++) 
       {
          int revents = pollFDArray[index].revents;
