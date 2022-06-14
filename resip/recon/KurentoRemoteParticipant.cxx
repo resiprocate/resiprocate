@@ -192,9 +192,9 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
                    if (codec.getName() == Data("H264"))
                    {
                       auto codecParameters = codec.parameters();
-                      string fmtpString = string(codecParameters.c_str());
-                      fmtpString = replaceParameter(fmtpString, "profile-level-id=", "420014");
+                      string fmtpString = string(codecParameters.c_str());                      
                       fmtpString += ";max-fs=3600";
+                      fmtpString = replaceParameter(fmtpString, "profile-level-id=", "420014");
                       Codec c = Codec(Data(codec.getName()), codec.payloadType(), codec.getRate(), Data(fmtpString));
                       m.addCodec(c);
                    }
