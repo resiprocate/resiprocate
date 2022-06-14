@@ -174,6 +174,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          Mime type("application", "sdp");
          std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
          _offer->session().transformLocalHold(holdSdp);
+         _offer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
          setProposedSdp(*_offer);
          c(true, std::move(_offer));
       };
