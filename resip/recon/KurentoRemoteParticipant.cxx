@@ -160,6 +160,12 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          }
       }
 
+      std::shared_ptr<kurento::EventContinuation> elEventKeyframeRequired =
+            std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+         DebugLog(<<"received event: " << *event);
+         requestKeyframeFromPeer();
+      });
+
       // FIXME - add listeners for Kurento events
 
       kurento::ContinuationString cOnOfferReady = [this, holdSdp, c](const std::string& offer){
@@ -207,12 +213,16 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          cOnOfferReady(*offerMangledStr);
       }
       else{
-         mEndpoint->create([this, cConnected]{
+         mEndpoint->create([this, cConnected, elEventKeyframeRequired]{
             // Note: FIXME this will be done later in the call to
             //       waitingMode() as that method knows whether
             //       to do loopback, a PlayerEndpoint or something else
             //mEndpoint->connect(cConnected, *mEndpoint); // connect
-            cConnected();
+            
+            
+            mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [this, cConnected](){
+                cConnected();
+            });
          }); // create
       }
 
@@ -405,6 +415,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       }
       else
       {
+         mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});
             mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
