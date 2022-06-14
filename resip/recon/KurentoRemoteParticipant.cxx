@@ -193,7 +193,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
                    {
                       auto codecParameters = codec.parameters();
                       string fmtpString = string(codecParameters.c_str());
-                      fmtpString = replaceParameter(fmtpString, "profile-level-id=", "14", 4);
+                      fmtpString = replaceParameter(fmtpString, "profile-level-id=", "420014");
                       fmtpString += ";max-fs=3600";
                       Codec c = Codec(Data(codec.getName()), codec.payloadType(), codec.getRate(), Data(fmtpString));
                       m.addCodec(c);
