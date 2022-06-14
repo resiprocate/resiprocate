@@ -379,13 +379,7 @@ RequestContext::processRequestAckTransaction(SipMessage* msg, bool original)
    {
        if (msg->getRawBody().getLength() > 0){
            DebugLog(<<"SSKY_DEBUG: ProcessingRequestAckTransaction with non-empty body");
-           Processor::processor_action_t ret=Processor::Continue;
-           ret = mRequestProcessorChain.process(*this);
-       }
-       else{
-           DebugLog(<<"SSKY_DEBUG: ProcessingRequestAckTransaction with empty body");
-           Processor::processor_action_t ret=Processor::Continue;
-           ret = mRequestProcessorChain.process(*this);
+           mRequestProcessorChain.process(*this);
        }
 
       // .slg. look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
