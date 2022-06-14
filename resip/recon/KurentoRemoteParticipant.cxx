@@ -175,6 +175,33 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
          _offer->session().transformLocalHold(holdSdp);
          _offer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
+
+         SdpContents::Session::MediumContainer::iterator it = _offer->session().media().begin();
+         _offer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
+         for(;it != _offer->session().media().end(); it++)
+         {
+             SdpContents::Session::Medium& m = *it;
+
+            if (m.name() == Data("video"))
+            {
+                m.setBandwidth(SdpContents::Session::Bandwidth("TIAS", 1792000));
+                auto codecs = m.codecs();
+                m.clearCodecs();
+                for (auto codec : codecs)
+                {                   
+                   if (codec.getName() == Data("H264"))
+                   {
+                      auto codecParameters = codec.parameters();
+                      string fmtpString = string(codecParameters.c_str());
+                      fmtpString = replaceParameter(fmtpString, "profile-level-id=", "14", 4);
+                      fmtpString += ";max-fs=3600";
+                      Codec c = Codec(Data(codec.getName()), codec.payloadType(), codec.getRate(), Data(fmtpString));
+                      m.addCodec(c);
+                   }
+                }
+            }
+        }
+
          setProposedSdp(*_offer);
          c(true, std::move(_offer));
       };
