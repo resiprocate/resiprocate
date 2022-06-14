@@ -26,6 +26,7 @@ namespace resip
  */
 
 typedef std::unique_lock<Mutex> Lock;
+typedef std::unique_lock<RecursiveMutex> RecursiveLock;
 
 class ReadLock
 {

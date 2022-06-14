@@ -1,27 +1,32 @@
 #!/bin/bash
+
+set +e
+CCACHE=`which ccache`
+if ! [ $? ];
+then
+  echo "ccache not found, continuing without it"
+fi
+
+DISTCC=`which distcc`
+if ! [ $? ];
+then
+  echo "distcc not found"
+  exit 1
+fi
+
 set -e
-
-if ! which ccache ;
-then
-  exit 0
-fi
-
-if ! which distcc ;
-then
-  exit 0
-fi
 
 DISTCC_CC=`readlink -f \`dirname $0\``/distcc-gcc
 cat << EOF > ${DISTCC_CC}
 #!/bin/bash
-ccache distcc "\$@"
+${CCACHE} ${DISTCC} "\$@"
 EOF
 chmod a+x ${DISTCC_CC}
 
 DISTCC_CXX=`readlink -f \`dirname $0\``/distcc-g++
 cat << EOF > ${DISTCC_CXX}
 #!/bin/bash
-ccache distcc g++ "\$@"
+${CCACHE} ${DISTCC} g++ "\$@"
 EOF
 chmod a+x ${DISTCC_CXX}
 
