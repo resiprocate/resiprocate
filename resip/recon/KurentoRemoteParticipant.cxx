@@ -415,7 +415,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       }
       else
       {
-         mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+         mPassThrough.reset(new kurento::PassThroughElement(mKurentoConversationManager.mPipeline));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});
             mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
