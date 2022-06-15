@@ -608,7 +608,7 @@ Log::tags(Log::Level level,
    char buffer[256] = "";
    Data ts(Data::Borrow, buffer, sizeof(buffer));
 #if defined( __APPLE__ )
-   pthread_t threadId = pthread_self();
+   std::make_unsigned<pthread_t>::type threadId = pthread_self();
    const char* file = pfile;
 #elif defined( WIN32 )
    int threadId = (int)GetCurrentThreadId();
@@ -623,7 +623,7 @@ Log::tags(Log::Level level,
       ++file;
    }
 #else // #if defined( WIN32 ) || defined( __APPLE__ )
-   pthread_t threadId = pthread_self();
+   std::make_unsigned<pthread_t>::type threadId = pthread_self();
    const char* file = pfile;
 #endif
 
