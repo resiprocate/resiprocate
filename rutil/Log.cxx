@@ -680,7 +680,7 @@ Log::tags(Log::Level level,
       //        << mHostname << Log::delim
       //        << mAppName << Log::delim
               << subsystem << Log::delim
-              << threadId << Log::delim
+              << "0x" << std::hex << threadId << std::dec << Log::delim
               << file << ":" << line;
       }
       else
@@ -694,7 +694,7 @@ Log::tags(Log::Level level,
          }
          strm << Log::delim
               << subsystem << Log::delim
-              << threadId << Log::delim
+              << "0x" << std::hex << threadId << std::dec << Log::delim
               << file << ":" << line;
       }
    }
