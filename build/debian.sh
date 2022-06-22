@@ -3,6 +3,11 @@
 set -e
 
 # This scripts configures to build in a Debian environment
+#
+# To build with clang instead of gcc, do something like this:
+#
+#   CC=clang CXX=clang++ build/debian.sh
+#
 
 if dpkg-query -s libradcli-dev >/dev/null 2>&1 ;
 then
@@ -18,6 +23,8 @@ fi
 autoreconf --install
 
 source build/distcc-setup
+
+# -Wweak-vtables : use with clang to find classes without a key function
 
 CFLAGS='-g -O0 -fPIC -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security' \
 CPPFLAGS="-D_FORTIFY_SOURCE=2 -I/usr/include/postgresql -I/usr/include/sipxtapi -I/usr/include/gloox -D__pingtel_on_posix__ -D_linux_ -D_REENTRANT -D_FILE_OFFS -DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -DRESIP_DIGEST_LOGGING -DRECON_SDP_ENCODING_NAMES_CASE_HACK -I/usr/include/soci -I/usr/include/mysql `net-snmp-config --base-cflags`" \

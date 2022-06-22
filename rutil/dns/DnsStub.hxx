@@ -14,6 +14,7 @@
 #include "rutil/FdPoll.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/GenericIPAddress.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/SelectInterruptor.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
@@ -27,6 +28,7 @@
 #include "rutil/dns/ExternalDns.hxx"
 #include "rutil/AsyncProcessHandler.hxx"
 
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 namespace resip
 {
@@ -245,7 +247,15 @@ class DnsStub : public ExternalDnsHandler
                DNSResult<typename QueryType::Type>  result;
                for (unsigned int i = 0; i < src.size(); ++i)
                {
-                  result.records.push_back(*(dynamic_cast<typename QueryType::Type*>(src[i])));
+                  typename QueryType::Type* r = dynamic_cast<typename QueryType::Type*>(src[i]);
+                  if(r)
+                  {
+                     result.records.push_back(*r);
+                  }
+                  else
+                  {
+                     ErrLog(<<"unexpected result type: " << typeid(src[i]).name());
+                  }
                }
                result.domain = target;
                result.status = status;
@@ -485,6 +495,8 @@ class DnsStub : public ExternalDnsHandler
 typedef DnsStub::Protocol Protocol;
 
 }
+
+#undef RESIPROCATE_SUBSYSTEM
 
 #endif
  
