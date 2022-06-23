@@ -17,6 +17,7 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Random.hxx>
 #include <resip/stack/DtmfPayloadContents.hxx>
+#include <resip/stack/TrickleIceContents.hxx>
 #include <resip/stack/SipFrag.hxx>
 #include <resip/stack/ExtensionHeader.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
@@ -1450,6 +1451,13 @@ RemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& media
    return false;
 }
 
+bool
+RemoteParticipant::onTrickleIce(TrickleIceContents& trickleIce)
+{
+   InfoLog(<<"onTrickleIce: not implemented by this ConversationManager");
+   return false;
+}
+
 void
 RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
 {
@@ -1472,6 +1480,16 @@ RemoteParticipant::onInfo(InviteSessionHandle session, const SipMessage& msg)
       {
          MediaControlContents::MediaControl& payload = mediaControlContents->mediaControl();
          if(onMediaControlEvent(payload))
+         {
+            session->acceptNIT();
+            accepted = true;
+         }
+      }
+
+      TrickleIceContents* trickleIceContents = dynamic_cast<TrickleIceContents*>(msg.getContents());
+      if(trickleIceContents)
+      {
+         if(onTrickleIce(*trickleIceContents))
          {
             session->acceptNIT();
             accepted = true;
