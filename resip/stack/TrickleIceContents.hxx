@@ -1,4 +1,4 @@
-#if !defined(RESIP_MEDIACONTROLCONTENTS_HXX)
+#if !defined(RESIP_TRICKLEICECONTENTS_HXX)
 #define RESIP_TRICKLEICECONTENTS_HXX
 
 #include "resip/stack/Contents.hxx"
