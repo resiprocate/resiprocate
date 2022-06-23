@@ -442,6 +442,7 @@
     <ClCompile Include="dns\DnsCnameRecord.cxx" />
     <ClCompile Include="dns\DnsHostRecord.cxx" />
     <ClCompile Include="dns\DnsNaptrRecord.cxx" />
+    <ClCompile Include="dns\DnsResourceRecord.cxx" />
     <ClCompile Include="dns\DnsSrvRecord.cxx" />
     <ClCompile Include="dns\DnsStub.cxx" />
     <ClCompile Include="DnsUtil.cxx" />

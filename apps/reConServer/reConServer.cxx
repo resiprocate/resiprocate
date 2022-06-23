@@ -41,7 +41,7 @@ int _kbhit() {
 #include "resip/recon/UserAgent.hxx"
 #include "AppSubsystem.hxx"
 
-#ifdef USE_SIPXTAPI
+#ifdef PREFER_SIPXTAPI
 #include <resip/recon/SipXHelper.hxx>
 #include <os/OsSysLog.h>
 #include <resip/recon/SipXMediaStackAdapter.hxx>
@@ -866,7 +866,7 @@ ReConServerProcess::main (int argc, char** argv)
 
    Log::initialize(reConServerConfig, argv[0]);
 
-#ifdef USE_SIPXTAPI
+#ifdef PREFER_SIPXTAPI
    // Setup logging for the sipX media stack
    // It is bridged to the reSIProcate logger
    SipXHelper::setupLoggingBridge("reConServer");
@@ -1385,7 +1385,7 @@ ReConServerProcess::main (int argc, char** argv)
       mUserAgent->shutdown();
    }
    InfoLog(<< "reConServer is shutdown.");
-#ifdef USE_SIPXTAPI
+#ifdef PREFER_SIPXTAPI
    OsSysLog::shutdown();
 #endif
    ::sleepSeconds(2);
