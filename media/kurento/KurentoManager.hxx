@@ -1,6 +1,7 @@
 #if !defined(KurentoManager_hxx)
 #define KurentoManager_hxx
 
+#include <chrono>
 #include <string>
 #include <map>
 
@@ -15,17 +16,18 @@ namespace kurento
 class KurentoManager
 {
    public:
-      KurentoManager(unsigned int timeout);
+      KurentoManager(std::chrono::milliseconds timeout, std::chrono::milliseconds retryInterval);
       virtual ~KurentoManager();
 
       // call this regularly from the event loop to process
       // incoming network activity and any queued requests
       void process();
 
-      KurentoConnection::ptr getKurentoConnection(const std::string& uri);
+      KurentoConnection::ptr getKurentoConnection(const std::string& uri, KurentoConnectionObserver& observer);
 
    private:
-      unsigned int mTimeout;
+      std::chrono::milliseconds mTimeout;
+      std::chrono::milliseconds mRetryInterval;
       websocketpp::lib::asio::io_service mAsio;
       websocketpp::client<websocketpp::config::asio_client> mWSClient;
 

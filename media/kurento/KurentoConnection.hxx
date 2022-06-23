@@ -1,6 +1,7 @@
 #if !defined(KurentoConnection_hxx)
 #define KurentoConnection_hxx
 
+#include <chrono>
 #include <deque>
 #include <string>
 #include <memory>
@@ -38,13 +39,22 @@ typedef websocketpp::client<websocketpp::config::asio_client> client;
 
 class Object;
 
+class KurentoConnectionObserver
+{
+   public:
+      virtual ~KurentoConnectionObserver();
+      virtual void onConnected() = 0;
+};
+
 class KurentoConnection
 {
    public:
       typedef std::shared_ptr<KurentoConnection> ptr;
 
-      KurentoConnection(client& wSClient, websocketpp::connection_hdl hdl, std::string uri, unsigned int timeout, bool waitForResponse = true);
+      KurentoConnection(KurentoConnectionObserver& observer, std::string uri, client& wSClient, std::chrono::milliseconds timeout, std::chrono::milliseconds retryInterval, bool waitForResponse = true);
       virtual ~KurentoConnection();
+
+      void onRetryRequired();
 
       void onOpen(client* wSClient, websocketpp::connection_hdl h);
       void onFail(client* wSClient, websocketpp::connection_hdl h);
@@ -64,10 +74,14 @@ class KurentoConnection
       void onResponse(const std::string& id, std::shared_ptr<KurentoResponseHandler> krh, const json::Object& message);
       void onEvent(const std::string& eventName, const json::Object& message);
 
+      KurentoConnectionObserver& mObserver;
+      std::string mUri;
       client& mWSClient;
       websocketpp::connection_hdl mHandle;
-      unsigned int mTimeout;
+      std::chrono::milliseconds mTimeout;
+      std::chrono::milliseconds mRetryInterval;
       bool mWaitForResponse;
+      bool mRunning = true;
       unsigned long mNextId = 1;
       unsigned long mLastResponse = 0;
       unsigned long mRequestSentCount = 0;

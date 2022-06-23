@@ -42,7 +42,7 @@ using namespace std;
 KurentoMediaStackAdapter::KurentoMediaStackAdapter(ConversationManager& conversationManager, const Data& kurentoUri)
 : MediaStackAdapter(conversationManager),
   mKurentoUri(kurentoUri),
-  mKurentoManager(5000),  // FIXME - make this value configurable
+  mKurentoManager(std::chrono::seconds(5), std::chrono::seconds(2)),  // FIXME - make this value configurable
   mKurentoTOSValue(0) // FIXME - make this value configurable
 {
    init();
@@ -51,7 +51,7 @@ KurentoMediaStackAdapter::KurentoMediaStackAdapter(ConversationManager& conversa
 KurentoMediaStackAdapter::KurentoMediaStackAdapter(ConversationManager& conversationManager, const Data& kurentoUri, int defaultSampleRate, int maxSampleRate)
 : MediaStackAdapter(conversationManager),
   mKurentoUri(kurentoUri),
-  mKurentoManager(5000),  // FIXME - make this value configurable
+  mKurentoManager(std::chrono::seconds(5000), std::chrono::seconds(2)),  // FIXME - make this value configurable
   mKurentoTOSValue(0) // FIXME - make this value configurable
 {
    init(defaultSampleRate, maxSampleRate);
@@ -62,7 +62,19 @@ KurentoMediaStackAdapter::init(int defaultSampleRate, int maxSampleRate)
 {
    // Connect to the Kurento server
    DebugLog(<<"trying to connect to Kurento host " << mKurentoUri);
-   mKurentoConnection = mKurentoManager.getKurentoConnection(mKurentoUri.c_str()); // FIXME wait for connection
+   mKurentoConnection = mKurentoManager.getKurentoConnection(mKurentoUri.c_str(), *this); // FIXME wait for connection
+
+}
+
+void
+KurentoMediaStackAdapter::onConnected()
+{
+   // FIXME
+   // - if Kurento connection was dropped but the same Kurento instance is still
+   // running then mPipeline remains valid and we don't need to replace it
+   // - if it was a Kurento restart then mPipeline does need to be replaced and all
+   // calls need to be dropped at the SIP level so the clients reconnect
+
    mPipeline = make_shared<kurento::MediaPipeline>(mKurentoConnection);
    mPipeline->create([this]{
       DebugLog(<<"pipeline created with ID " << mPipeline->getId());

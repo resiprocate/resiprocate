@@ -58,7 +58,7 @@ class KurentoRemoteParticipantDialogSet;
   -Managing local audio properties
 */
 
-class KurentoMediaStackAdapter : public MediaStackAdapter
+class KurentoMediaStackAdapter : public MediaStackAdapter, public kurento::KurentoConnectionObserver
 {
 public:
 
@@ -118,6 +118,8 @@ public:
    KurentoMediaStackAdapter(ConversationManager& conversationManager, const resip::Data& kurentoUri);
    KurentoMediaStackAdapter(ConversationManager& conversationManager, const resip::Data& kurentoUri, int defaultSampleRate, int maxSampleRate);
    virtual ~KurentoMediaStackAdapter();
+
+   virtual void onConnected() override;
 
    virtual void conversationManagerReady(ConversationManager* conversationManager) override;
 

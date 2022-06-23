@@ -15,12 +15,16 @@ using namespace resip;
 
 //#define PING_MSG "{\"id\":\"1\",\"method\":\"ping\",\"params\":{\"interval\":240000},\"jsonrpc\":\"2.0\"}"
 
+KurentoConnectionObserver::~KurentoConnectionObserver()
+{
+}
 
-
-KurentoConnection::KurentoConnection(kurento::client& wSClient, websocketpp::connection_hdl hdl, std::string uri, unsigned int timeout, bool waitForResponse)
-   : mWSClient(wSClient),
-     mHandle(hdl),
+KurentoConnection::KurentoConnection(KurentoConnectionObserver& observer, std::string uri, kurento::client& wSClient, std::chrono::milliseconds timeout, std::chrono::milliseconds retryInterval, bool waitForResponse)
+   : mObserver(observer),
+     mUri(uri),
+     mWSClient(wSClient),
      mTimeout(timeout),  // FIXME - we don't use mTimeout yet
+     mRetryInterval(retryInterval),
      mWaitForResponse(waitForResponse)
 {
 
@@ -32,25 +36,73 @@ KurentoConnection::~KurentoConnection()
 }
 
 void
+KurentoConnection::onRetryRequired()
+{
+   InfoLog(<<"trying to open connection to Kurento");
+   websocketpp::lib::error_code ec;
+   client::connection_ptr con = mWSClient.get_connection(mUri, ec);
+   if (ec) {
+      ErrLog(<< "could not create connection because: " << ec.message());
+      resip_assert(0); // FIXME
+   }
+
+   mHandle = con->get_handle();
+
+   con->set_open_handler(websocketpp::lib::bind(
+            &KurentoConnection::onOpen,
+            this,
+            &mWSClient,
+            websocketpp::lib::placeholders::_1
+   ));
+   con->set_fail_handler(websocketpp::lib::bind(
+            &KurentoConnection::onFail,
+            this,
+            &mWSClient,
+            websocketpp::lib::placeholders::_1
+   ));
+   con->set_close_handler(websocketpp::lib::bind(
+            &KurentoConnection::onClose,
+            this,
+            &mWSClient,
+            websocketpp::lib::placeholders::_1
+   ));
+   con->set_message_handler(websocketpp::lib::bind(
+            &KurentoConnection::onMessage,
+            this,
+            &mWSClient,
+            websocketpp::lib::placeholders::_1,
+            websocketpp::lib::placeholders::_2
+   ));
+
+   mWSClient.connect(con);
+}
+
+void
 KurentoConnection::onOpen(client* wSClient, websocketpp::connection_hdl h)
 {
    InfoLog(<<"onOpen");
+   mHandle = h;
+   mObserver.onConnected();
    processSendQueue();
-   // FIXME
 }
 
 void
 KurentoConnection::onFail(client* wSClient, websocketpp::connection_hdl h)
 {
-   ErrLog(<<"onFail");
-   resip_assert(0);  // FIXME - reconnect?
+   ErrLog(<<"connection attempt failed, will retry after " << mRetryInterval.count() << " ms");
+   wSClient->set_timer(mRetryInterval.count(), [this](websocketpp::lib::error_code ec){onRetryRequired();});
 }
 
 void
 KurentoConnection::onClose(client* wSClient, websocketpp::connection_hdl h)
 {
-   ErrLog(<<"onClose");
-   resip_assert(0);  // FIXME - reconnect?
+   InfoLog(<<"onClose");
+   if(!mRunning)
+   {
+      return;
+   }
+   ErrLog(<<"connection closed unexpectedly, will try to reopen it");
+   wSClient->set_timer(mRetryInterval.count(), [this](websocketpp::lib::error_code ec){onRetryRequired();});
 }
 
 void

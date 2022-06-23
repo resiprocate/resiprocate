@@ -6,6 +6,7 @@
 
 #include "rutil/WinLeakCheck.hxx"
 
+#include "media/kurento/KurentoConnection.hxx"
 #include "media/kurento/KurentoManager.hxx"
 #include "media/kurento/KurentoSubsystem.hxx"
 #include "media/kurento/Object.hxx"
@@ -15,7 +16,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-#define KURENTO_TIMEOUT 1000
+#define KURENTO_TIMEOUT std::chrono::milliseconds(1000)
+#define KURENTO_RETRY_INTERVAL std::chrono::milliseconds(3000)
 #define KURENTO_URL "ws://127.0.0.1:8888/kurento"
 
 /* Runs the event loop
@@ -40,6 +42,15 @@ void doProcess(KurentoManager& km, unsigned int duration, std::shared_ptr<Object
    }
 }
 
+class MyKurentoObserver : public KurentoConnectionObserver
+{
+   public:
+      virtual void onConnected() override
+      {
+         InfoLog(<<"onConnected");
+      }
+};
+
 int
 main(int argc, char* argv[])
 {
@@ -49,9 +60,10 @@ main(int argc, char* argv[])
 
    Log::initialize(Log::Cout, Log::Stack, argv[0]);
 
-   KurentoManager mKurentoManager(KURENTO_TIMEOUT);
+   KurentoManager mKurentoManager(KURENTO_TIMEOUT, KURENTO_RETRY_INTERVAL);
    std::string kUrl = KURENTO_URL;
-   KurentoConnection::ptr kurentoConnection_ptr = mKurentoManager.getKurentoConnection(kUrl);
+   MyKurentoObserver observer;
+   KurentoConnection::ptr kurentoConnection_ptr = mKurentoManager.getKurentoConnection(kUrl, observer);
 
    std::shared_ptr<kurento::MediaPipeline> pipeline = std::make_shared<kurento::MediaPipeline>(kurentoConnection_ptr);
    pipeline->create([]{

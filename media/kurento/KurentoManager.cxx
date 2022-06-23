@@ -1,4 +1,6 @@
 
+#include "rutil/Logger.hxx"
+
 #include "KurentoManager.hxx"
 #include "KurentoConnection.hxx"
 #include "KurentoSubsystem.hxx"
@@ -12,8 +14,9 @@ using namespace kurento;
 
 #define RESIPROCATE_SUBSYSTEM kurento::KurentoSubsystem::KURENTOCLIENT
 
-KurentoManager::KurentoManager(unsigned int timeout)
-   : mTimeout(timeout)
+KurentoManager::KurentoManager(std::chrono::milliseconds timeout, std::chrono::milliseconds retryInterval)
+   : mTimeout(timeout),
+     mRetryInterval(retryInterval)
 {
    mWSClient.init_asio(&mAsio);
 }
@@ -30,49 +33,13 @@ KurentoManager::process()
 }
 
 KurentoConnection::ptr
-KurentoManager::getKurentoConnection(const std::string& uri)
+KurentoManager::getKurentoConnection(const std::string& uri, KurentoConnectionObserver& observer)
 {
-   // Register our message handler
-   //mWSClient.set_message_handler(bind(&on_message,&c,::_1,::_2));
-
-   websocketpp::lib::error_code ec;
-   client::connection_ptr con = mWSClient.get_connection(uri, ec);
-   if (ec) {
-       std::cout << "could not create connection because: " << ec.message() << std::endl;
-       throw std::runtime_error(ec.message()); // FIXME
-   }
-
-   KurentoConnection::ptr kConnection = websocketpp::lib::make_shared<KurentoConnection>(mWSClient, con->get_handle(), uri, mTimeout);
-
-   con->set_open_handler(websocketpp::lib::bind(
-            &KurentoConnection::onOpen,
-            kConnection,
-            &mWSClient,
-            websocketpp::lib::placeholders::_1
-   ));
-   con->set_fail_handler(websocketpp::lib::bind(
-            &KurentoConnection::onFail,
-            kConnection,
-            &mWSClient,
-            websocketpp::lib::placeholders::_1
-   ));
-   con->set_close_handler(websocketpp::lib::bind(
-            &KurentoConnection::onClose,
-            kConnection,
-            &mWSClient,
-            websocketpp::lib::placeholders::_1
-   ));
-   con->set_message_handler(websocketpp::lib::bind(
-            &KurentoConnection::onMessage,
-            kConnection,
-            &mWSClient,
-            websocketpp::lib::placeholders::_1,
-            websocketpp::lib::placeholders::_2
-    ));
+   KurentoConnection::ptr kConnection = std::make_shared<KurentoConnection>(observer, uri, mWSClient, mTimeout, mRetryInterval);
 
    // Note that connect here only requests a connection. No network messages are
    // exchanged until the event loop starts running in the next line.
-   mWSClient.connect(con);
+   kConnection->onRetryRequired();
 
    return kConnection;
 
