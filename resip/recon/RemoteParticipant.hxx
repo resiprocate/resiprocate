@@ -9,6 +9,7 @@
 #include "RemoteParticipantDialogSet.hxx"
 
 #include <resip/stack/MediaControlContents.hxx>
+#include <resip/stack/TrickleIceContents.hxx>
 
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
@@ -79,6 +80,7 @@ public:
    virtual void processReferNotify(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
 
    virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
+   virtual bool onTrickleIce(resip::TrickleIceContents& trickleIce);
 
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
