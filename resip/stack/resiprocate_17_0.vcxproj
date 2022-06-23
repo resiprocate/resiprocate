@@ -651,6 +651,7 @@
     <ClCompile Include="TransportFailure.cxx" />
     <ClCompile Include="TransportSelector.cxx" />
     <ClCompile Include="TransportThread.cxx" />
+    <ClCompile Include="TrickleIceContents.cxx" />
     <ClCompile Include="TuIM.cxx" />
     <ClCompile Include="Tuple.cxx" />
     <ClCompile Include="TupleMarkManager.cxx" />
@@ -831,6 +832,7 @@
     <ClInclude Include="TransportSelector.hxx" />
     <ClInclude Include="TransportSelectorThread.hxx" />
     <ClInclude Include="TransportThread.hxx" />
+    <ClInclude Include="TrickleIceContents.hxx" />
     <ClInclude Include="TuIM.hxx" />
     <ClInclude Include="Tuple.hxx" />
     <ClInclude Include="TupleMarkManager.hxx" />

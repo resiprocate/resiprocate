@@ -1,6 +1,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/TrickleIceContents.hxx"
 #include "resip/stack/HeaderFieldValue.hxx"
 #include "rutil/ParseBuffer.hxx"
 
@@ -641,6 +642,38 @@ main(int argc, char* argv[])
 
       assert(sdp.session().origin().user() == "-");
       assert(sdp.session().media().size() == 2);
+   }
+
+   {
+      // Sample SDP trickle ICE fragment from RFC 8840
+      // https://www.ietf.org/rfc/rfc8840.html#INFOexample
+      Data txt("a=ice-pwd:asd88fgpdd777uzjYhagZg\r\n"
+         "a=ice-ufrag:8hhY\r\n"
+         "m=audio 9 RTP/AVP 0\r\n"
+         "a=mid:1\r\n"
+         "a=candidate:1 1 UDP 2130706432 2001:db8:a0b:12f0::1 5000 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706432 2001:db8:a0b:12f0::1 5001 typ host\r\n"
+         "a=candidate:1 1 UDP 2130706431 192.0.2.1 5010 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706431 192.0.2.1 5011 typ host\r\n"
+         "a=candidate:2 1 UDP 1694498815 192.0.2.3 5010 typ srflx raddr 192.0.2.1 rport 8998\r\n"
+         "a=candidate:2 2 UDP 1694498815 192.0.2.3 5011 typ srflx raddr 192.0.2.1 rport 8998\r\n"
+         "a=end-of-candidates\r\n"
+         "m=audio 9 RTP/AVP 0\r\n"
+         "a=mid:2\r\n"
+         "a=candidate:1 1 UDP 2130706432 2001:db8:a0b:12f0::1 6000 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706432 2001:db8:a0b:12f0::1 6001 typ host\r\n"
+         "a=candidate:1 1 UDP 2130706431 192.0.2.1 6010 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706431 192.0.2.1 6011 typ host\r\n"
+         "a=candidate:2 1 UDP 1694498815 192.0.2.3 6010 typ srflx raddr 192.0.2.1 rport 9998\r\n"
+         "a=candidate:2 2 UDP 1694498815 192.0.2.3 6011 typ srflx raddr 192.0.2.1 rport 9998\r\n"
+         "a=end-of-candidates\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "trickle-ice-sdpfrag");
+      TrickleIceContents frag(hfv, type);
+
+      assert(frag.getValues("ice-ufrag").front() == "8hhY");
+      assert(frag.media().size() == 2);
    }
 
    return 0;   
