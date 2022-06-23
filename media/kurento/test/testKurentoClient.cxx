@@ -57,13 +57,13 @@ main(int argc, char* argv[])
    pipeline->create([]{
       DebugLog(<<"pipeline created");
    });
-   doProcess(mKurentoManager, 20, pipeline);
+   doProcess(mKurentoManager, 100, pipeline);
 
    std::shared_ptr<kurento::WebRtcEndpoint> ep = std::make_shared<kurento::WebRtcEndpoint>(pipeline);
    ep->create([]{
       DebugLog(<<"WebRtcEndpoint created");
    });
-   doProcess(mKurentoManager, 20, ep);
+   doProcess(mKurentoManager, 100, ep);
 
    // Need to manually insert the IP address in the code below before
    // uncommenting it
