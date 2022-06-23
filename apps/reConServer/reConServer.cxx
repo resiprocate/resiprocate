@@ -41,12 +41,6 @@ int _kbhit() {
 #include "resip/recon/UserAgent.hxx"
 #include "AppSubsystem.hxx"
 
-#ifdef PREFER_SIPXTAPI
-#include <resip/recon/SipXHelper.hxx>
-#include <os/OsSysLog.h>
-#include <resip/recon/SipXMediaStackAdapter.hxx>
-#endif
-
 #include "reConServerConfig.hxx"
 #include "reConServer.hxx"
 #include "MyMessageDecorator.hxx"
@@ -63,6 +57,12 @@ int _kbhit() {
 
 #include <resip/stack/HEPSipMessageLoggingHandler.hxx>
 #include <reflow/HEPRTCPEventLoggingHandler.hxx>
+
+#ifdef PREFER_SIPXTAPI
+#include <resip/recon/SipXHelper.hxx>
+#include <os/OsSysLog.h>
+#include <resip/recon/SipXMediaStackAdapter.hxx>
+#endif
 
 using namespace reconserver;
 using namespace recon;
