@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/TrickleIceContents.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DataStream.hxx"
@@ -1244,6 +1245,24 @@ SdpContents::Session::isWebRTC() const
       "RTP/SAVPF") != mediumTransports.end();
 }
 
+bool
+SdpContents::Session::isTrickleIceSupported() const
+{
+   if(!exists("ice-options"))
+   {
+      return false;
+   }
+   auto opts = getValues("ice-options");
+   for(auto opt = opts.cbegin(); opt != opts.cend(); opt++)
+   {
+      if(*opt == "trickle")
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
 void
 SdpContents::Session::transformCOMedia(const Data& setupDirection, const Data& cOMediaAttribute)
 {
@@ -1291,6 +1310,37 @@ SdpContents::Session::transformLocalHold(bool holding)
          }
       }
    }
+}
+
+const SdpContents::Session::Medium*
+SdpContents::Session::getMediumByMid(const Data& mid) const
+{
+   for(auto _m = mMedia.cbegin(); _m != mMedia.end(); _m++)
+   {
+      if(_m->exists("mid") && _m->getValues("mid").front() == mid)
+      {
+         return &(*_m);
+      }
+   }
+   return nullptr;
+}
+
+std::shared_ptr<TrickleIceContents>
+SdpContents::Session::makeIceFragment(const Data& fragment,
+               unsigned int lineIndex, const Data& mid)
+{
+   std::shared_ptr<TrickleIceContents> ret;
+   const Medium* m = getMediumByMid(mid);
+   if(m && m->exists("ice-ufrag") && m->exists("ice-pwd"))
+   {
+      ret = std::make_shared<TrickleIceContents>();
+      ret->addAttribute(Data("ice-ufrag"), m->getValues("ice-ufrag").front());
+      ret->addAttribute(Data("ice-pwd"), m->getValues("ice-pwd").front());
+      Medium _m(m->name(), m->port(), m->multicast(), m->protocol());
+      _m.addAttribute("candidate", fragment.substr(strlen("candidate:")));
+      ret->addMedium(_m);
+   }
+   return ret;
 }
 
 SdpContents::Session::Medium::Medium(const Data& name,

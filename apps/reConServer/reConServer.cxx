@@ -1293,6 +1293,14 @@ ReConServerProcess::main (int argc, char** argv)
    InteropHelper::setRportEnabled(addViaRport);
    conversationProfile->setRportEnabled(addViaRport);
 
+   // FIXME - we may need to do more to support this, alternatively, maybe we
+   // just do everything from behind a proxy that does it for us
+   InteropHelper::setOutboundSupported(reConServerConfig.getConfigBool("DisableOutbound", false) ? false : true);
+   InteropHelper::setRRTokenHackEnabled(reConServerConfig.getConfigBool("EnableFlowTokens", false));
+   InteropHelper::setAllowInboundFlowTokensForNonDirectClients(reConServerConfig.getConfigBool("AllowInboundFlowTokensForNonDirectClients", false));
+   InteropHelper::setAssumeFirstHopSupportsOutboundEnabled(reConServerConfig.getConfigBool("AssumeFirstHopSupportsOutbound", false));
+   InteropHelper::setAssumeFirstHopSupportsFlowTokensEnabled(reConServerConfig.getConfigBool("AssumeFirstHopSupportsFlowTokens", false));
+
    // Secure Media Settings
    conversationProfile->secureMediaMode() = secureMediaMode;
    conversationProfile->secureMediaRequired() = secureMediaRequired;

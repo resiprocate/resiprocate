@@ -150,6 +150,9 @@ protected:
    virtual void hold();
    virtual void unhold();
 
+   bool isTrickleIce() { return mTrickleIce; };
+   virtual void enableTrickleIce();
+
 private:       
    void provideOffer(bool postOfferAccept);
    resip::AsyncBool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
@@ -179,6 +182,7 @@ private:
    bool mLocalHold;
    bool mRemoteHold;
    void stateTransition(State state);
+   bool mTrickleIce;
 
    resip::AppDialogHandle mReferringAppDialog; 
 

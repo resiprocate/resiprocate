@@ -66,6 +66,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
    mOfferRequired(false),
    mLocalHold(false),  // FIXME Kurento
    mRemoteHold(false),
+   mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
    mLocalSdp(0),
    mRemoteSdp(0)
@@ -87,6 +88,7 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
    mOfferRequired(false),
    mLocalHold(false),  // FIXME Kurento
    mRemoteHold(false),
+   mTrickleIce(false),
    mRedirectSuccessCondition(ConversationManager::RedirectSuccessOnConnected),
    mLocalSdp(0),
    mRemoteSdp(0)
@@ -375,6 +377,12 @@ RemoteParticipant::stateTransition(State state)
 }
 
 void
+RemoteParticipant::enableTrickleIce()
+{
+   mTrickleIce = true;
+}
+
+void
 RemoteParticipant::accept()
 {
    try
@@ -658,7 +666,14 @@ RemoteParticipant::info(const Contents& contents)
    {
       if(mPendingRequest.mType == None)
       {
-         if(mState == Connected)
+         bool readyForInfo = (mState == Connected);
+         if((mState == Connecting || mState == Accepted) && contents.getType() == TrickleIceContents::getStaticType())
+         {
+            // we can send INFO in the early media stage, subject to
+            // the conditions in RFC 8840 s4.1
+            readyForInfo = isTrickleIce();
+         }
+         if(readyForInfo)
          {
             if(mInviteSessionHandle.isValid())
             {
@@ -1197,6 +1212,10 @@ RemoteParticipant::onEarlyMedia(ClientInviteSessionHandle h, const SipMessage& m
    {
       setRemoteSdp(sdp, true);
       adjustRTPStreams();
+      if(sdp.session().isTrickleIceSupported())
+      {
+         enableTrickleIce();
+      }
    }
 }
 
