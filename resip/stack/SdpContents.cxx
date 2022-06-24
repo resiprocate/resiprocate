@@ -1245,6 +1245,24 @@ SdpContents::Session::isWebRTC() const
       "RTP/SAVPF") != mediumTransports.end();
 }
 
+bool
+SdpContents::Session::isTrickleIceSupported() const
+{
+   if(!exists("ice-options"))
+   {
+      return false;
+   }
+   auto opts = getValues("ice-options");
+   for(auto opt = opts.cbegin(); opt != opts.cend(); opt++)
+   {
+      if(*opt == "trickle")
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
 void
 SdpContents::Session::transformCOMedia(const Data& setupDirection, const Data& cOMediaAttribute)
 {

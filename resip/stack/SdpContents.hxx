@@ -1008,6 +1008,11 @@ class SdpContents : public Contents
               * @return true if the SDP appears to be WebRTC
               */
             bool isWebRTC() const;
+
+            /** @brief determine if ice-options:trickle is present
+              * @return true if ice-options:trickle is present
+              */
+            bool isTrickleIceSupported() const;
             /** @brief apply RFC 4145 COMEDIA transform
               *
               * sets the IP port number of each media to 9 and
