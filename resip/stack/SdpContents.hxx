@@ -17,6 +17,8 @@ namespace resip
 
 class SdpContents;
 
+class TrickleIceContents;
+
 class AttributeHelper
 {
    public:
@@ -1021,6 +1023,19 @@ class SdpContents : public Contents
               * @param holding whether to represent hold or normal
               */
             void transformLocalHold(bool holding);
+            /** @brief find the Medium with given mid value
+              * @param mid the mid value to search for
+              * @return nullptr if no match found
+              */
+            const Medium* getMediumByMid(const Data& mid) const;
+            /** @brief based on the original SDP in this instances of SdpContents,
+             *         find the relevant ICE and m= line(s), copy them into a new
+             *         SDP fragment and add the candidate line provided
+             *  @param fragment the candidate line to include
+              * @return a new TrickleIceContents
+              */
+            std::shared_ptr<TrickleIceContents> makeIceFragment(const Data& fragment,
+               unsigned int lineIndex, const Data& mid);
 
          private:
             int mVersion;
