@@ -83,6 +83,7 @@ public:
    virtual std::shared_ptr<kurento::MediaElement> getWaitingModeElement();
 
    virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
+   virtual bool onTrickleIce(resip::TrickleIceContents& trickleIce) override;
 
 protected:
    virtual bool mediaStackPortAvailable();

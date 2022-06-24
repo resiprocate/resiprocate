@@ -17,6 +17,7 @@
 #include <rutil/DnsUtil.hxx>
 #include <rutil/Random.hxx>
 #include <resip/stack/DtmfPayloadContents.hxx>
+#include <resip/stack/SdpContents.hxx>
 #include <resip/stack/SipFrag.hxx>
 #include <resip/stack/ExtensionHeader.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
@@ -287,6 +288,33 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          requestKeyframeFromPeer();
       });
 
+      bool trickleIcePermitted = false;
+      std::shared_ptr<kurento::EventContinuation> elEventIceCandidateFound =
+            std::make_shared<kurento::EventContinuation>([this, trickleIcePermitted](std::shared_ptr<kurento::Event> event){
+         DebugLog(<<"received event: " << *event);
+         std::shared_ptr<kurento::OnIceCandidateFoundEvent> _event =
+            std::dynamic_pointer_cast<kurento::OnIceCandidateFoundEvent>(event);
+         resip_assert(_event.get());
+
+         if(!trickleIcePermitted)
+         {
+            return;
+         }
+         // FIXME - if we are waiting for a previous INFO to be confirmed,
+         //         aggregate the candidates into a vector and send them in bulk
+         auto ice = getLocalSdp()->session().makeIceFragment(Data(_event->getCandidate()),
+            _event->getLineIndex(), Data(_event->getId()));
+         if(ice.get())
+         {
+            StackLog(<<"about to send " << *ice);
+            info(*ice);
+         }
+         else
+         {
+            WarningLog(<<"failed to create ICE fragment for mid: " << _event->getId());
+         }
+      });
+
       kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, c](const std::string& answer){
          StackLog(<<"answer FROM Kurento: " << answer);
          HeaderFieldValue hfv(answer.data(), answer.size());
@@ -298,7 +326,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          c(true, std::move(_answer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, elEventDebug, endpointExists, c, cOnAnswerReady]{
+      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, endpointExists, c, cOnAnswerReady]{
          if(endpointExists && mReuseSdpAnswer)
          {
             // FIXME - Kurento should handle hold/resume
@@ -310,9 +338,27 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             cOnAnswerReady(*answerStr);
             return;
          }
-         mEndpoint->processOffer([this, offerMangled, isWebRTC, elEventDebug, c, cOnAnswerReady](const std::string& answer){
+         mEndpoint->processOffer([this, offerMangled, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, c, cOnAnswerReady](const std::string& answer){
             if(isWebRTC)
             {
+               if(trickleIcePermitted && offerMangled->session().isTrickleIceSupported())
+               {
+                  HeaderFieldValue hfv(answer.data(), answer.size());
+                  Mime type("application", "sdp");
+                  std::unique_ptr<SdpContents> _local(new SdpContents(hfv, type));
+                  DebugLog(<<"storing incomplete webrtc answer");
+                  setLocalSdp(*_local);
+                  setRemoteSdp(*offerMangled);
+                  ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(getInviteSessionHandle().get());
+                  sis->provideAnswer(*_local);
+                  sis->provisional(183, true);
+                  //getDialogSet().provideAnswer(std::move(_local), getInviteSessionHandle(), false, true);
+                  enableTrickleIce(); // now we are in early media phase, it is safe to send INFO
+
+                  // FIXME - if we sent an SDP answer here,
+                  //         make sure we don't call provideAnswer again on 200 OK
+               }
+
                std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
 
                std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
@@ -321,7 +367,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
                   mEndpoint->getLocalSessionDescriptor(cOnAnswerReady);
                });
                webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
-               webRtc->addOnIceCandidateFoundListener(elEventDebug, [this](){});
+               webRtc->addOnIceCandidateFoundListener(elEventIceCandidateFound, [this](){});
 
                webRtc->gatherCandidates([]{
                   // FIXME - handle the case where it fails
@@ -494,6 +540,41 @@ KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl
    }
 }
 
+bool
+KurentoRemoteParticipant::onTrickleIce(resip::TrickleIceContents& trickleIce)
+{
+   DebugLog(<<"onTrickleIce: sending to Kurento");
+   // FIXME - did we already receive a suitable SDP for trickle ICE and send it to Kurento?
+   //         if not, Kurento is not ready for the candidates
+   // FIXME - do we need to validate the ice-pwd password attribute here?
+   std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+   for(auto m = trickleIce.media().cbegin(); m != trickleIce.media().cend(); m++)
+   {
+      if(m->exists("mid"))
+      {
+         const Data& mid = m->getValues("mid").front();
+         const std::string _mid = mid.c_str();
+         unsigned int mLineIndex = mid.convertInt(); // FIXME - calculate from the full SDP
+         if(m->exists("candidate"))
+         {
+            auto candidates = m->getValues("candidate");
+            for(auto a = candidates.cbegin(); a != candidates.cend(); a++)
+            {
+               webRtc->addIceCandidate([this](){},
+                  a->c_str(),
+                  _mid,
+                  mLineIndex);
+            }
+         }
+      }
+      else
+      {
+         WarningLog(<<"mid is missing for Medium in SDP fragment: " << trickleIce);
+         return false;
+      }
+   }
+   return true;
+}
 
 /* ====================================================================
 

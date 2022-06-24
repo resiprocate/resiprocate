@@ -538,11 +538,16 @@ WebRtcEndpoint::gatherCandidates(ContinuationVoid c)
    invokeVoidMethod("gatherCandidates", c);
 }
 
-/*void
-WebRtcEndpoint::addIceCandidate(ContinuationVoid c, const std::string& candidate)
+void
+WebRtcEndpoint::addIceCandidate(ContinuationVoid c, const std::string& candidate, const std::string& mid, unsigned int lineIndex)
 {
-   invokeVoidMethod("addIceCandidate", c);
-}*/
+   json::Object params;
+   params["candidate"] = json::Object();
+   params["candidate"]["candidate"] = json::String(candidate);
+   params["candidate"]["sdpMid"] = json::String(mid);
+   params["candidate"]["sdpMLineIndex"] = json::Number(lineIndex);
+   invokeVoidMethod("addIceCandidate", c, params);
+}
 
 void
 WebRtcEndpoint::addOnIceCandidateFoundListener(std::shared_ptr<EventListener> l, ContinuationVoid c)

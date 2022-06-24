@@ -216,7 +216,7 @@ class WebRtcEndpoint : public BaseRtpEndpoint
       virtual ~WebRtcEndpoint();
 
       void gatherCandidates(ContinuationVoid c);
-      //void addIceCandidate(ContinuationVoid c, const std::string& candidate);
+      void addIceCandidate(ContinuationVoid c, const std::string& candidate, const std::string& mid, unsigned int lineIndex);
 
       void addOnIceCandidateFoundListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
       void addOnIceGatheringDoneListener(std::shared_ptr<EventListener> l, ContinuationVoid c);
