@@ -40,6 +40,15 @@ class OnIceCandidateFoundEvent : public Event
 
       OnIceCandidateFoundEvent(const json::Object& message);
       virtual ~OnIceCandidateFoundEvent();
+
+      const std::string& getCandidate() const { return mCandidate; };
+      unsigned int getLineIndex() const { return mLineIndex; };
+      const std::string& getId() const { return mId; };
+
+   private:
+      std::string mCandidate;
+      unsigned int mLineIndex;
+      std::string mId;
 };
 
 class OnIceGatheringDoneEvent : public Event
