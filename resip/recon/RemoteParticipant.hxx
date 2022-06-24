@@ -144,6 +144,9 @@ protected:
 
    virtual void requestKeyframeFromPeer();
 
+   bool isTrickleIce() { return mTrickleIce; };
+   virtual void enableTrickleIce();
+
 private:       
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
@@ -173,6 +176,7 @@ private:
    bool mLocalHold;
    bool mRemoteHold;
    void stateTransition(State state);
+   bool mTrickleIce;
 
    resip::AppDialogHandle mReferringAppDialog; 
 
