@@ -1,6 +1,7 @@
 #if !defined(RESIP_SDPCONTENTS_HXX)
 #define RESIP_SDPCONTENTS_HXX
 
+#include <functional>
 #include <vector>
 #include <list>
 #include <iosfwd>
@@ -936,6 +937,11 @@ class SdpContents : public Contents
               * @return Media lines  
               **/
             MediumContainer& media() {return mMedia;}
+            /** @brief return session Media lines filtered by type
+              * @param type the type
+              * @return Media lines
+              */
+            std::list<std::reference_wrapper<const Medium>> getMediaByType(const Data& type) const;
 
             /** @brief add an e= (email) line to session
               * 

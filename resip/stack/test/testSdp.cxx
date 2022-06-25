@@ -136,6 +136,7 @@ main(int argc, char* argv[])
        SdpContents sdp(hfv, type);
        CritLog ( << sdp.session().media().size());       
        assert(sdp.session().media().size() == 2);
+       assert(sdp.session().getMediaByType("video").size() == 1);
        
        CritLog(<< "Marconi Test Ok");
     }
