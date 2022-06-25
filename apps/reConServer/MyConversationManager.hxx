@@ -36,7 +36,7 @@ class MyConversationManager : public recon::ConversationManager
 {
 public:
 
-   MyConversationManager(const ReConServerConfig& config, const resip::Data& kurentoUri, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(const ReConServerConfig& config, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();

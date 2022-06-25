@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/TrickleIceContents.hxx"
 #include "resip/stack/Helper.hxx"
@@ -1138,6 +1140,19 @@ SdpContents::Session::encode(EncodeStream& s) const
    }
 
    return s;
+}
+
+std::list<std::reference_wrapper<const SdpContents::Session::Medium>>
+SdpContents::Session::getMediaByType(const Data& type) const
+{
+   std::list<std::reference_wrapper<const SdpContents::Session::Medium>> r;
+   std::for_each(mMedia.cbegin(), mMedia.cend(), [&r, &type](const SdpContents::Session::Medium& m){
+      if(m.name() == type)
+      {
+         r.push_back(std::ref(m));
+      }
+   });
+   return r;
 }
 
 void
