@@ -780,8 +780,6 @@ protected:
 
    bool isShuttingDown() { return mShuttingDown; }
 
-   Participant* getParticipant(ParticipantHandle partHandle); // FIXME, should be private
-
 private:
    friend class DefaultDialogSet;
    friend class Subscription;
@@ -874,6 +872,7 @@ private:
    ParticipantMap mParticipants;
    mutable std::mutex mParticipantHandlesMutex;
    std::atomic<ParticipantHandle> mCurrentParticipantHandle;
+   Participant* getParticipant(ParticipantHandle partHandle);
    std::map<ParticipantType, std::set<ParticipantHandle>> mParticipantHandlesByType;
 
    MediaResourceCache mMediaResourceCache;
