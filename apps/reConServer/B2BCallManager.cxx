@@ -55,8 +55,8 @@ B2BCall::peer(const recon::ParticipantHandle& partHandle)
    return (partHandle == mPartA) ? mPartB : mPartA;
 }
 
-B2BCallManager::B2BCallManager(recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger)
-   : MyConversationManager(false, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false),
+B2BCallManager::B2BCallManager(const ReConServerConfig& config, int defaultSampleRate, int maxSampleRate, std::shared_ptr<B2BCallLogger> b2bCallLogger)
+   : MyConversationManager(config, false, defaultSampleRate, maxSampleRate, false),
      mB2BCallLogger(std::move(b2bCallLogger))
 { 
    config.getConfigValue("B2BUAInternalHosts", mInternalHosts);

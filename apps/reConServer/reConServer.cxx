@@ -1316,7 +1316,7 @@ ReConServerProcess::main (int argc, char** argv)
       switch(application)
       {
          case ReConServerConfig::None:
-            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
+            mConversationManager = std::unique_ptr<MyConversationManager>(new MyConversationManager(reConServerConfig, localAudioEnabled, defaultSampleRate, maximumSampleRate, autoAnswerEnabled));
             break;
          case ReConServerConfig::B2BUA:
             {
@@ -1324,7 +1324,7 @@ ReConServerProcess::main (int argc, char** argv)
                {
                   mCDRFile = std::make_shared<CDRFile>(cdrLogFilename);
                }
-               b2BCallManager = new B2BCallManager(mediaInterfaceMode, defaultSampleRate, maximumSampleRate, reConServerConfig, mCDRFile);
+               b2BCallManager = new B2BCallManager(reConServerConfig, defaultSampleRate, maximumSampleRate, mCDRFile);
                mConversationManager.reset(b2BCallManager);
             }
             break;

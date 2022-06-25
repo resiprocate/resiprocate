@@ -24,11 +24,14 @@ using namespace resip;
 using namespace recon;
 using namespace reconserver;
 
-MyConversationManager::MyConversationManager(bool localAudioEnabled, recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
+MyConversationManager::MyConversationManager(const ReConServerConfig& config, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
       : ConversationManager(nullptr),
+        mConfig(config),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
 #ifdef USE_SIPXTAPI
+   SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode = config.getConfigBool("GlobalMediaInterface", false)
+      ? SipXMediaStackAdapter::sipXGlobalMediaInterfaceMode : SipXMediaStackAdapter::sipXConversationMediaInterfaceMode;
    shared_ptr<MediaStackAdapter> mediaStackAdapter = make_shared<SipXMediaStackAdapter>(*this, localAudioEnabled, mediaInterfaceMode, defaultSampleRate, maxSampleRate, false);
 #else
    #error Need Kurento or sipXtapi
