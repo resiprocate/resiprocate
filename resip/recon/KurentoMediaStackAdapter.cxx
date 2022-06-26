@@ -81,8 +81,26 @@ KurentoMediaStackAdapter::onConnected()
    });  // FIXME - wait for creation
 }
 
+void
+KurentoMediaStackAdapter::shutdown()
+{
+   InfoLog(<<"KurentoMediaStackAdapter shutdown");
+   if(mPipeline)
+   {
+      mPipeline->release([this](){
+         InfoLog(<<"mPipeline has been released");
+         mKurentoConnection.reset();
+      });
+   }
+   else
+   {
+      mKurentoConnection.reset();
+   }
+}
+
 KurentoMediaStackAdapter::~KurentoMediaStackAdapter()
 {
+   // FIXME - move to ::shutdown() ?
    getBridgeMixer().reset();   // Make sure the mixer is destroyed before the media interface
 }
 
