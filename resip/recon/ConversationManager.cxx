@@ -80,6 +80,12 @@ ConversationManager::shutdown()
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
    }
+
+   if(mMediaStackAdapter.get())
+   {
+      mMediaStackAdapter->shutdown();
+      mMediaStackAdapter.reset();
+   }
 }
 
 void
