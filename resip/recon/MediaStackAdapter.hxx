@@ -45,6 +45,7 @@ public:
    virtual ~MediaStackAdapter();
 
    virtual void conversationManagerReady(ConversationManager* conversationManager) = 0;
+   virtual void shutdown() = 0;
 
    ///////////////////////////////////////////////////////////////////////
    // Participant methods  ///////////////////////////////////////////////

@@ -174,6 +174,12 @@ SipXMediaStackAdapter::conversationManagerReady(ConversationManager* conversatio
    }
 }
 
+void
+SipXMediaStackAdapter::shutdown()
+{
+   InfoLog(<<"SipXMediaStackAdapter shutdown");
+}
+
 SipXMediaStackAdapter::~SipXMediaStackAdapter()
 {
    getBridgeMixer().reset();   // Make sure the mixer is destroyed before the media interface
