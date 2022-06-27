@@ -6,6 +6,9 @@
 
 #include "resip/stack/ssl/Security.hxx"
 
+#include <cstddef>
+#include <new>
+#include <memory>
 #include <ostream>
 #include <fstream>
 #include <stdexcept>
@@ -27,8 +30,6 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/FileSystem.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
-#include "rutil/ssl/SHA1Stream.hxx"
 
 #if !defined(WIN32)
 #include <sys/types.h>
@@ -65,6 +66,22 @@ inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x)
 }
 
 #endif // OPENSSL_VERSION_NUMBER < 0x10100000L
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+namespace {
+
+struct EVP_PKEY_CTX_deleter
+{
+   typedef void result_type;
+
+   result_type operator() (EVP_PKEY_CTX* p) const noexcept
+   {
+      EVP_PKEY_CTX_free(p);
+   }
+};
+
+} // namespace
+#endif // OPENSSL_VERSION_NUMBER >= 0x30000000L
 
 using namespace resip;
 using namespace std;
@@ -1520,6 +1537,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    // Make sure that necessary algorithms exist:
    resip_assert(EVP_sha256());
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
 #if OPENSSL_VERSION_NUMBER < 0x00908000l
    RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
 #else
@@ -1549,6 +1567,10 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    resip_assert(privkey);
    ret = EVP_PKEY_set1_RSA(privkey, rsa);
    resip_assert(ret);
+#else
+   EVP_PKEY* privkey = EVP_RSA_gen(keyLen);
+   resip_assert(privkey);
+#endif
 
    X509* cert = X509_new();
    resip_assert(cert);
@@ -1592,7 +1614,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    X509_add_ext( cert, ext, -1);
    X509_EXTENSION_free(ext);
    
-   static char CA_FALSE[] = "CA:FALSE";
+   static const char CA_FALSE[] = "CA:FALSE";
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
    resip_assert(ret);
@@ -1700,7 +1722,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    resip_assert( size > 0 );
 
    Data outData(outBuf,size);
-   static char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
+   static const char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
    Security::dumpAsn(RESIP_SIGN_OUT_SIG,outData);
 
    Pkcs7SignedContents* sigBody = new Pkcs7SignedContents( outData );
@@ -1811,7 +1833,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    InfoLog( << "Encrypted body size is " << outData.size() );
    InfoLog( << "Encrypted body is <" << outData.escaped() << ">" );
 
-   static char RESIP_ENCRYPT_OUT[] = "resip-encrypt-out";
+   static const char RESIP_ENCRYPT_OUT[] = "resip-encrypt-out";
    Security::dumpAsn(RESIP_ENCRYPT_OUT, outData);
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
@@ -1854,14 +1876,24 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
       throw Exception("Missing private key when computing identity",__FILE__,__LINE__);
    }
 
+   unsigned char digest[EVP_MAX_MD_SIZE];
+   unsigned int digestSize = sizeof(digest);
+
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, EVP_sha256(), NULL))
+   {
+      ErrLog( << "Failed to compute digest of identity" );
+      throw Exception("Failed to compute digest of identity", __FILE__, __LINE__);
+   }
+
    EVP_PKEY* pKey = k->second;
    resip_assert( pKey );
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
    if ( !rsa )
    {
-      ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) <<"for "
+      ErrLog( << "Private key (type=" << EVP_PKEY_id(pKey) << ") for "
               << signerDomain << " is not of type RSA" );
       throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
    }
@@ -1869,18 +1901,11 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    resip_assert( rsa );
 
    unsigned char result[4096];
-   int resultSize = sizeof(result);
-   resip_assert( resultSize >= RSA_size(rsa) );
-
-   SHA1Stream sha;
-   sha << in;
-   Data hashRes =  sha.getBin();
-   DebugLog( << "hash of string is 0x" << hashRes.hex() );
+   unsigned int resultSize = sizeof(result);
+   resip_assert( static_cast< int >(resultSize) >= RSA_size(rsa) );
 
 #if 1
-   int r = RSA_sign(NID_sha256, (unsigned char *)hashRes.data(), (unsigned int)hashRes.size(),
-                    result, (unsigned int*)( &resultSize ),
-            rsa);
+   int r = RSA_sign(NID_sha256, digest, digestSize, result, &resultSize, rsa);
    if( r != 1 )
    {
       ErrLog(<< "RSA_sign failed with return " << r);
@@ -1913,19 +1938,41 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
       return Data::Empty;
    }
 #endif
+#else // OPENSSL_VERSION_NUMBER < 0x30000000L
+   std::unique_ptr<EVP_PKEY_CTX, EVP_PKEY_CTX_deleter> pKeyCtx(EVP_PKEY_CTX_new(pKey, nullptr));
+   if (!pKeyCtx)
+      throw std::bad_alloc();
+
+   if (EVP_PKEY_sign_init(pKeyCtx.get()) <= 0 ||
+      EVP_PKEY_CTX_set_rsa_padding(pKeyCtx.get(), RSA_PKCS1_PADDING) <= 0 ||
+      EVP_PKEY_CTX_set_signature_md(pKeyCtx.get(), EVP_sha256()) <= 0)
+   {
+      ErrLog( << "Failed to initialize identity signing context" );
+      throw Exception("Failed to initialize identity signing context", __FILE__, __LINE__);
+   }
+
+   unsigned char result[4096];
+   std::size_t resultSize = sizeof(result);
+
+   if (EVP_PKEY_sign(pKeyCtx.get(), result, &resultSize, digest, digestSize) <= 0)
+   {
+      ErrLog( << "Failed to generate signature for " << signerDomain );
+      throw Exception("Failed to generate signature", __FILE__, __LINE__);
+   }
+#endif // OPENSSL_VERSION_NUMBER < 0x30000000L
 
    Data res(result,resultSize);
    DebugLog( << "rsa encrypt of hash is 0x"<< res.hex() );
 
    Data enc = res.base64encode();
 
-   static char IDENTITY_IN[] = "identity-in";
-   static char IDENTITY_IN_HASH[] = "identity-in-hash";
-   static char IDENTITY_IN_RSA[] = "identity-in-rsa";
-   static char IDENTITY_IN_BASE64[] = "identity-in-base64";
+   static const char IDENTITY_IN[] = "identity-in";
+   static const char IDENTITY_IN_HASH[] = "identity-in-hash";
+   static const char IDENTITY_IN_RSA[] = "identity-in-rsa";
+   static const char IDENTITY_IN_BASE64[] = "identity-in-base64";
 
    Security::dumpAsn(IDENTITY_IN, in );
-   Security::dumpAsn(IDENTITY_IN_HASH, hashRes );
+   Security::dumpAsn(IDENTITY_IN_HASH, Data(digest, digestSize) );
    Security::dumpAsn(IDENTITY_IN_RSA,res);
    Security::dumpAsn(IDENTITY_IN_BASE64,enc);
 
@@ -1954,20 +2001,25 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    Data sig = sigBase64.base64decode();
    DebugLog( << "decoded sig is 0x"<< sig.hex() );
 
-   SHA1Stream sha;
-   sha << in;
-   Data hashRes =  sha.getBin();
-   DebugLog( << "hash of string is 0x" << hashRes.hex() );
+   unsigned char digest[EVP_MAX_MD_SIZE];
+   unsigned int digestSize = sizeof(digest);
+
+   if (!EVP_Digest(in.data(), in.size(), digest, &digestSize, EVP_sha256(), NULL))
+   {
+      ErrLog( << "Failed to compute digest of identity" );
+      throw Exception("Failed to compute digest of identity", __FILE__, __LINE__);
+   }
 
    EVP_PKEY* pKey = X509_get_pubkey( cert );
    resip_assert( pKey );
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
    resip_assert( rsa );
 
 #if 1
-   int ret = RSA_verify(NID_sha256, (unsigned char *)hashRes.data(),
-                        (unsigned int)hashRes.size(), (unsigned char*)sig.data(), (unsigned int)sig.size(),
+   int ret = RSA_verify(NID_sha256, digest, digestSize,
+                        (unsigned char*)sig.data(), (unsigned int)sig.size(),
                         rsa);
 #else
    unsigned char result[4096];
@@ -1983,18 +2035,34 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
    bool ret =  ( computedHash == recievedHash );
 #endif
+#else // OPENSSL_VERSION_NUMBER < 0x30000000L
+   std::unique_ptr<EVP_PKEY_CTX, EVP_PKEY_CTX_deleter> pKeyCtx(EVP_PKEY_CTX_new(pKey, nullptr));
+   if (!pKeyCtx)
+      throw std::bad_alloc();
+
+   if (EVP_PKEY_verify_init(pKeyCtx.get()) <= 0 ||
+      EVP_PKEY_CTX_set_rsa_padding(pKeyCtx.get(), RSA_PKCS1_PADDING) <= 0 ||
+      EVP_PKEY_CTX_set_signature_md(pKeyCtx.get(), EVP_sha256()) <= 0)
+   {
+      ErrLog( << "Failed to initialize identity signature verification context" );
+      throw Exception("Failed to initialize identity signature verification context", __FILE__, __LINE__);
+   }
+
+   int ret = EVP_PKEY_verify(pKeyCtx.get(),
+      reinterpret_cast<const unsigned char*>(sig.data()), sig.size(), digest, digestSize);
+#endif // OPENSSL_VERSION_NUMBER < 0x30000000L
 
    DebugLog( << "rsa verify result is " << ret  );
 
-   static char IDENTITY_OUT_MSG[] = "identity-out-msg";
-   static char IDENTITY_OUT_BASE64[] = "identity-out-base64";
-   static char IDENTITY_OUT_SIG[] = "identity-out-sig";
-   static char IDENTITY_OUT_HASH[] = "identity-out-hash";
+   static const char IDENTITY_OUT_MSG[] = "identity-out-msg";
+   static const char IDENTITY_OUT_BASE64[] = "identity-out-base64";
+   static const char IDENTITY_OUT_SIG[] = "identity-out-sig";
+   static const char IDENTITY_OUT_HASH[] = "identity-out-hash";
 
    Security::dumpAsn(IDENTITY_OUT_MSG, in );
    Security::dumpAsn(IDENTITY_OUT_BASE64,sigBase64);
    Security::dumpAsn(IDENTITY_OUT_SIG, sig);
-   Security::dumpAsn(IDENTITY_OUT_HASH, hashRes );
+   Security::dumpAsn(IDENTITY_OUT_HASH, Data(digest, digestSize) );
 
    return (ret != 0);
 }
@@ -2069,7 +2137,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    DebugLog( << "uncode body = <" << text.escaped() << ">" );
    DebugLog( << "uncode body size = " << text.size() );
 
-   static char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
+   static const char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
    Security::dumpAsn(RESIP_ASN_DECRYPT, text );
 
    BIO* in = BIO_new_mem_buf( (void*)text.c_str(), (int)text.size());
@@ -2091,7 +2159,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2187,7 +2259,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
@@ -2327,8 +2403,8 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    InfoLog( << "text <"    << textData.escaped() << ">" );
    InfoLog( << "signature <" << sigData.escaped() << ">" );
 
-   static char RESIP_ASN_UNCODE_SIGNED_TEXT[] = "resip-asn-uncode-signed-text";
-   static char RESIP_ASN_UNCODE_SIGNED_SIG[] = "resip-asn-uncode-signed-sig";
+   static const char RESIP_ASN_UNCODE_SIGNED_TEXT[] = "resip-asn-uncode-signed-text";
+   static const char RESIP_ASN_UNCODE_SIGNED_SIG[] = "resip-asn-uncode-signed-sig";
 
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_TEXT, textData );
    Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_SIG, sigData );
@@ -2356,7 +2432,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          const char* file;
          int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
          unsigned long code = ERR_get_error_line(&file,&line);
+#else
+         unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
          if ( code == 0 )
          {
             break;
@@ -2535,7 +2615,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                const char* file;
                int line;
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
                unsigned long code = ERR_get_error_line(&file,&line);
+#else
+               unsigned long code = ERR_get_error_all(&file, &line, NULL, NULL, NULL);
+#endif
                if ( code == 0 )
                {
                   break;
@@ -3078,7 +3162,7 @@ BaseSecurity::isSelfSigned(const X509 *cert)
 }
 
 void
-BaseSecurity::dumpAsn( char* name, Data data)
+BaseSecurity::dumpAsn(const char* name, Data data)
 {
 #if 0 // for debugging
    resip_assert(name);
@@ -3140,6 +3224,7 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
          WarningLog(<< "unable to load DH parameters (required for PFS): BIO_new_file failed to open file " << mDHParamsFilename);
       }
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
       DH* dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
       if(dh == NULL)
       {
@@ -3163,6 +3248,32 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
          }
          DH_free(dh);
       }
+#else // OPENSSL_VERSION_NUMBER < 0x30000000L
+      EVP_PKEY* dh = PEM_read_bio_Parameters(bio, nullptr);
+      if (!dh)
+      {
+         WarningLog(<< "unable to load DH parameters (required for PFS): PEM_read_bio_Parameters failed for file " << mDHParamsFilename);
+      }
+      else
+      {
+         if (!SSL_CTX_set0_tmp_dh_pkey(ctx, dh))
+         {
+            EVP_PKEY_free(dh);
+            WarningLog(<< "unable to load DH parameters (required for PFS): SSL_CTX_set0_tmp_dh_pkey failed for file " << mDHParamsFilename);
+         }
+         else
+         {
+            long options = SSL_OP_CIPHER_SERVER_PREFERENCE |
+#if !defined(OPENSSL_NO_ECDH)
+                           SSL_OP_SINGLE_ECDH_USE |
+#endif
+                           SSL_OP_SINGLE_DH_USE;
+            options = SSL_CTX_set_options(ctx, options);
+            DebugLog(<<"DH parameters loaded, PFS cipher-suites enabled");
+         }
+      }
+#endif // OPENSSL_VERSION_NUMBER < 0x30000000L
+
       BIO_free(bio);
    }
 
@@ -3182,13 +3293,14 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
    else
    {
 #if !defined(OPENSSL_NO_ECDH) && OPENSSL_VERSION_NUMBER >= 0x10000000L
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
       EC_KEY* ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
       if (ecdh != NULL)
       {
          if (SSL_CTX_set_tmp_ecdh(ctx, ecdh))
          {
-	    DebugLog(<<"ECDH initialized");
-	 }
+            DebugLog(<<"ECDH initialized");
+         }
          else
          {
             WarningLog(<<"unable to initialize ECDH: SSL_CTX_set_tmp_ecdh failed");
@@ -3199,6 +3311,17 @@ BaseSecurity::setDHParams(SSL_CTX* ctx)
       {
          WarningLog(<<"unable to initialize ECDH: EC_KEY_new_by_curve_name failed");
       }
+#else // OPENSSL_VERSION_NUMBER < 0x30000000L
+      int group = NID_X9_62_prime256v1;
+      if (SSL_CTX_set1_groups(ctx, &group, 1))
+      {
+         DebugLog(<<"ECDH initialized");
+      }
+      else
+      {
+         WarningLog(<<"unable to initialize ECDH: SSL_CTX_set1_groups failed");
+      }
+#endif // OPENSSL_VERSION_NUMBER < 0x30000000L
 #else
       WarningLog(<<"unable to initialize ECDH: SSL_CTX_ctrl failed, OPENSSL_NO_ECDH defined or repro was compiled with an old OpenSSL version");
 #endif
