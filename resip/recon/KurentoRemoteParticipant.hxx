@@ -92,7 +92,7 @@ protected:
 
 private:
    kurento::BaseRtpEndpoint* newEndpoint();
-   resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
+   virtual void buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
 
    std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
    volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primitive, e.g. condition_variable

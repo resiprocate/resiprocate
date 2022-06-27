@@ -216,10 +216,10 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
    }
 }
 
-AsyncBool
+void
 KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpReady c)
 {
-   AsyncBool valid = False;
+   bool requestSent = false;
 
    std::shared_ptr<SdpContents> offerMangled = std::make_shared<SdpContents>(offer);
    while(mRemoveExtraMediaDescriptors && offerMangled->session().media().size() > 2)
@@ -424,14 +424,18 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          }); // create
       }
 
-      valid = Async;
+      requestSent = true;
    }
    catch(exception& e)
    {
       ErrLog(<<"something went wrong: " << e.what()); // FIXME - add try/catch to Continuation
+      requestSent = false;
    }
 
-   return valid;
+   if(!requestSent)
+   {
+      c(false, nullptr);
+   }
 }
 
 void

@@ -96,10 +96,10 @@ RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
    c(true, std::move(_offer));
 }
 
-AsyncBool
+void
 RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpReady c)
 {
-   AsyncBool valid = False;
+   bool valid = false;
    std::unique_ptr<SdpContents> _answer(new SdpContents);
    SdpContents& answer = *_answer;
 
@@ -135,7 +135,7 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, Continuatio
             medium.addFormat("null");
             answer.session().addMedium(medium);
 
-            valid = True;
+            valid = true;
          }
          else
          {
@@ -152,12 +152,12 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, Continuatio
    catch(BaseException &e)
    {
       WarningLog( << "buildSdpAnswer: exception parsing SDP offer: " << e.getMessage());
-      valid = False;
+      valid = false;
    }
    catch(...)
    {
       WarningLog( << "buildSdpAnswer: unknown exception parsing SDP offer");
-      valid = False;
+      valid = false;
    }
 
    //InfoLog( << "SDPOffer: " << offer);
@@ -167,8 +167,7 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, Continuatio
       setLocalSdp(answer);
       setRemoteSdp(offer);
    }
-   c(valid == True, std::move(_answer));
-   return valid;
+   c(valid, std::move(_answer));
 }
 
 

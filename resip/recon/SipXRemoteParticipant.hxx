@@ -83,7 +83,7 @@ protected:
 
 private:
    bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
-   resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
+   virtual void buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
 };
 
 }

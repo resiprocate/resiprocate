@@ -574,13 +574,13 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
    return valid;
 }
 
-AsyncBool
+void
 SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpReady c)
 {
    // Note: this implementation has minimal support for draft-ietf-mmusic-sdp-capabilities-negotiation
    //       for responding "best-effort" / optional SRTP (Dtls-SRTP) offers
 
-   AsyncBool valid = False;
+   bool valid = false;
    std::shared_ptr<sdpcontainer::Sdp> remoteSdp(SdpHelperResip::createSdpFromResipSdp(offer));
    std::unique_ptr<SdpContents> _answer(new SdpContents);
    SdpContents& answer = *_answer;
@@ -648,7 +648,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpR
                // We have a valid potential media - line - copy over normal media line to make 
                // further processing easier
                *(*itMediaLine) = *itPotentialMediaLine;  
-               valid = True;
+               valid = true;
                break;
             }
          }         
@@ -671,7 +671,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpR
             }
             else
             {
-               valid = True;
+               valid = true;
             }
          }
       }  // end loop through m= offers
@@ -679,23 +679,22 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpR
    catch(BaseException &e)
    {
       WarningLog( << "buildSdpAnswer: exception parsing SDP offer: " << e.getMessage());
-      valid = False;
+      valid = false;
    }
    catch(...)
    {
       WarningLog( << "buildSdpAnswer: unknown exception parsing SDP offer");
-      valid = False;
+      valid = false;
    }
 
    //InfoLog( << "SDPOffer: " << offer);
    //InfoLog( << "SDPAnswer: " << answer);
-   if(valid == True)
+   if(valid)
    {
       setLocalSdp(answer);
       setRemoteSdp(offer);
    }
-   c(valid == True, std::move(_answer));
-   return valid;
+   c(valid, std::move(_answer));
 }
 
 #ifdef OLD_CODE

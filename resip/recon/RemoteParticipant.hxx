@@ -155,8 +155,8 @@ protected:
 
 private:       
    void provideOffer(bool postOfferAccept);
-   resip::AsyncBool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   virtual resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) = 0;
+   void provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
+   virtual void buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) = 0;
    virtual void replaceWithParticipant(Participant* replacingParticipant);
 
    resip::DialogUsageManager &mDum;

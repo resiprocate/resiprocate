@@ -76,7 +76,7 @@ protected:
    virtual bool mediaStackPortAvailable() { return true; } // doesn't use media stack, just return availabiltiy as true
 
 private:
-   virtual resip::AsyncBool buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
+   virtual void buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
 };
 
 }
