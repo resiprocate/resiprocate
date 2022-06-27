@@ -428,8 +428,8 @@ RemoteParticipant::accept()
                // accept.  In this case the answer from the alert will be queued waiting on the flow to be ready, and 
                // we need to ensure the accept call is also delayed until the answer completes.
                mDialogSet.accept(mInviteSessionHandle);
+               stateTransition(Accepted);
             }
-            stateTransition(Accepted);  // FIXME - after Async
          }
       }
       // Accept Pending OOD Refer if required

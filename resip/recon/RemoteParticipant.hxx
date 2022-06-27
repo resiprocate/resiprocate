@@ -165,6 +165,7 @@ private:
    RemoteParticipantDialogSet& mDialogSet;
    resip::DialogId mDialogId;
 
+   friend class RemoteParticipantDialogSet;
    typedef enum
    {
       Connecting=1, 
