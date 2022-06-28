@@ -1030,9 +1030,9 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
       {
          mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
       }
-      else if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+      else if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY)
       {
-         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY;
       }
       else
       {
