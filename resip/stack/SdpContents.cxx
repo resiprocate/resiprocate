@@ -1228,6 +1228,55 @@ SdpContents::Session::getValues(const Data& key) const
    return mAttributeHelper.getValues(key);
 }
 
+const Data
+SdpContents::Session::getDirection(const std::set<Data> types,
+               const std::set<Data> protocolTypes) const
+{
+   const static std::vector<Data> keys = { "inactive", "sendonly", "recvonly", "sendrecv" };
+
+   // Check for one of the keys at the Session level first
+   for(const auto k : keys)
+   {
+      if(exists(k))
+      {
+         return k;
+      }
+   }
+
+   // If no key found at the Session level, iterate over Media
+   std::set<Data> directions;
+   for(const auto m : mMedia)
+   {
+      if((types.empty() || types.find(m.name())!=types.end()) &&
+         (protocolTypes.empty() || protocolTypes.find(m.protocol())!=protocolTypes.end()) &&
+         m.getConnections().size() > 0 &&
+         m.port() != 0)
+      {
+         Data direction = "sendrecv";
+         for(const auto k : keys)
+         {
+            if(m.exists(k))
+            {
+               direction = k;
+               break;
+            }
+         }
+         directions.insert(direction);
+      }
+   }
+
+   // Identify the strongest direction attribute in the result set
+   Data netDirection = keys[0];
+   for(const auto k : keys)
+   {
+      if(directions.find(k) != directions.end())
+      {
+         netDirection = k;
+      }
+   }
+   return netDirection;
+}
+
 std::set<Data>
 SdpContents::Session::getMediaStreamLabels() const
 {

@@ -1004,6 +1004,13 @@ class SdpContents : public Contents
               * @return list of values for given key
               **/
             const std::list<Data>& getValues(const Data& key) const;
+            /** @brief examine direction for streams of given types
+              *
+              * @param types
+              * @params protocolTypes
+              */
+            const Data getDirection(const std::set<Data> types = {},
+               const std::set<Data> protocolTypes = {}) const;
             /** @brief retrieve label (RFC 4574) attributes in a set
               *
               * @return set of label attribute values, if any
