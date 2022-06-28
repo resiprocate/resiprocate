@@ -39,7 +39,9 @@ public:
    {
       NoSecureMedia, // Will accept secure media offers, but will not offer secure media in calls placed
       Srtp,       // SRTP with keying outside of media stream - ie. SDES key negotiation via SDP
-      SrtpDtls    // SRTP with DTLS key negotiation
+      SrtpReq,
+      SrtpDtls,    // SRTP with DTLS key negotiation
+      SrtpDtlsReq
    };
 
    enum SecureMediaCryptoSuite
