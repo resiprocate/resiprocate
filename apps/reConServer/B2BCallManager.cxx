@@ -210,7 +210,7 @@ B2BCallManager::onIncomingParticipant(ParticipantHandle partHandleA, const SipMe
 {
    InfoLog(<< "onIncomingParticipant: handle=" << partHandleA << "auto=" << autoAnswer << " msg=" << msg.brief());
    // Create a new conversation for each new participant
-   ConversationHandle conv = createConversation();
+   ConversationHandle conv = createConversation(getConfig().getConfigAutoHoldMode("AutoHoldMode", ConversationManager::AutoHoldEnabled));
    addParticipant(conv, partHandleA);
 
    bool internalSource = isSourceInternal(msg);

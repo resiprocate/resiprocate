@@ -25,47 +25,53 @@ ReConServerConfig::~ReConServerConfig()
 {
 }
 
+bool
+ReConServerConfig::getConfigValue(const resip::Data& name, recon::ConversationManager::AutoHoldMode& value) const
+{
+   std::map<recon::ConversationManager::AutoHoldMode, Data> dict;
+   dict[recon::ConversationManager::AutoHoldDisabled] = "AutoHoldDisabled";
+   dict[recon::ConversationManager::AutoHoldEnabled] = "AutoHoldEnabled";
+   dict[recon::ConversationManager::AutoHoldBroadcastOnly] = "AutoHoldBroadcastOnly";
+   return translateConfigValue<recon::ConversationManager::AutoHoldMode>(dict, name, value);
+}
 
+recon::ConversationManager::AutoHoldMode
+ReConServerConfig::getConfigAutoHoldMode(const resip::Data& name,
+   const recon::ConversationManager::AutoHoldMode& defaultValue) const
+{
+   recon::ConversationManager::AutoHoldMode ret = defaultValue;
+   getConfigValue(name, ret);
+   return ret;
+}
 
 bool 
 ReConServerConfig::getConfigValue(const resip::Data& name, ConversationProfile::SecureMediaMode &value)
 {
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
+   std::map<ConversationProfile::SecureMediaMode, Data> dict;
+   dict[ConversationProfile::NoSecureMedia] = "None";
+   dict[ConversationProfile::Srtp] = "Srtp";
+   dict[ConversationProfile::SrtpReq] = "SrtpReq";
+#ifdef USE_SSL
+   dict[ConversationProfile::SrtpDtls] = "SrtpDtls";
+   dict[ConversationProfile::SrtpDtlsReq] = "SrtpDtlsReq";
+#endif
+   bool success = translateConfigValue<ConversationProfile::SecureMediaMode>(dict, name, value);
+   if(success)
    {
-      if(isEqualNoCase(it->second, "None"))
-      {
-         value = ConversationProfile::NoSecureMedia;
-      }
-      else if(isEqualNoCase(it->second, "Srtp"))
+      if(value == ConversationProfile::SrtpReq)
       {
          value = ConversationProfile::Srtp;
-      }
-      else if(isEqualNoCase(it->second, "SrtpReq"))
-      {
          mSecureMediaRequired = true;
-         value = ConversationProfile::Srtp;
       }
 #ifdef USE_SSL
-      else if(isEqualNoCase(it->second, "SrtpDtls"))
+      else if(value == ConversationProfile::SrtpDtlsReq)
       {
          value = ConversationProfile::SrtpDtls;
-      }
-      else if(isEqualNoCase(it->second, "SrtpDtlsReq"))
-      {
          mSecureMediaRequired = true;
-         value = ConversationProfile::SrtpDtls;
       }
 #endif
-      else
-      {
-         cerr << "Invalid Secure Media Mode: " << it->second << endl;
-         return false;
-      }
    }
-   // Not found
-   return false;
+   return success;
 }
 
 ConversationProfile::SecureMediaMode
@@ -86,40 +92,15 @@ bool ReConServerConfig::isSecureMediaModeRequired()
 bool 
 ReConServerConfig::getConfigValue(const resip::Data& name, ConversationProfile::NatTraversalMode &value)
 {
-   Data lowerName(name);  lowerName.lowercase();
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      if(isEqualNoCase(it->second, "None"))
-      {
-         value = ConversationProfile::NoNatTraversal;
-      }
-      else if(isEqualNoCase(it->second, "Bind"))
-      {
-         value = ConversationProfile::StunBindDiscovery;
-      }
-      else if(isEqualNoCase(it->second, "UdpAlloc"))
-      {
-         value = ConversationProfile::TurnUdpAllocation;
-      }
-      else if(isEqualNoCase(it->second, "TcpAlloc"))
-      {
-         value = ConversationProfile::TurnTcpAllocation;
-      }
+   std::map<ConversationProfile::NatTraversalMode, Data> dict;
+   dict[ConversationProfile::NoNatTraversal] = "None";
+   dict[ConversationProfile::StunBindDiscovery] = "Bind";
+   dict[ConversationProfile::TurnUdpAllocation] = "UdpAlloc";
+   dict[ConversationProfile::TurnTcpAllocation] = "TcpAlloc";
 #ifdef USE_SSL
-      else if(isEqualNoCase(it->second, "TlsAlloc"))
-      {
-         value = ConversationProfile::TurnTlsAllocation;
-      }
+   dict[ConversationProfile::TurnTlsAllocation] = "TlsAlloc";
 #endif
-      else
-      {
-         cerr << "Invalid NAT Traversal Mode: " << it->second << endl;
-         exit(-1);
-      }
-   }
-   // Not found
-   return false;
+   return translateConfigValue<ConversationProfile::NatTraversalMode>(dict, name, value);
 }
 
 ConversationProfile::NatTraversalMode
@@ -133,28 +114,10 @@ ReConServerConfig::getConfigNatTraversalMode(const resip::Data& name, const Conv
 bool
 ReConServerConfig::getConfigValue(const resip::Data& name, ReConServerConfig::Application& value)
 {
-   Data lowerName(name);
-   lowerName.lowercase();
-
-   ConfigValuesMap::iterator it = mConfigValues.find(lowerName);
-   if(it != mConfigValues.end())
-   {
-      if(isEqualNoCase(it->second, "None"))
-      {
-         value = None;
-      }
-      else if(isEqualNoCase(it->second, "B2BUA"))
-      {
-         value = B2BUA;
-      }
-      else
-      {
-         cerr << "Invalid Application: " << it->second << endl;
-         exit(-1);
-      }
-   }
-   // Not found
-   return false;
+   std::map<ReConServerConfig::Application, Data> dict;
+   dict[None] = "None";
+   dict[B2BUA] = "B2BUA";
+   return translateConfigValue<ReConServerConfig::Application>(dict, name, value);
 }
 
 ReConServerConfig::Application

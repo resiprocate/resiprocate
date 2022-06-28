@@ -53,7 +53,7 @@ MyConversationManager::startup()
    if(getMediaStackAdapter().supportsLocalAudio())
    {
       // Create initial local participant and conversation  
-      ConversationHandle initialConversation = createConversation();
+      ConversationHandle initialConversation = createConversation(getConfig().getConfigAutoHoldMode("AutoHoldMode", ConversationManager::AutoHoldEnabled));
       addParticipant(initialConversation, createLocalParticipant());
       resip::Uri uri("tone:dialtone;duration=1000");
       createMediaResourceParticipant(initialConversation, uri);
@@ -63,7 +63,7 @@ MyConversationManager::startup()
       // If no local audio - just create a starter conversation
       // FIXME - do we really need an empty conversation on startup?
       // If in B2BUA mode, this will never be used
-      createConversation();
+      createConversation(getConfig().getConfigAutoHoldMode("AutoHoldMode", ConversationManager::AutoHoldEnabled));
    }
 
    // Load 2 items into cache for testing
@@ -108,7 +108,7 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
       if(it == mRooms.end())
       {
          InfoLog(<<"creating Conversation for room: " << room);
-         ConversationHandle convHandle = createConversation();
+         ConversationHandle convHandle = createConversation(getConfig().getConfigAutoHoldMode("AutoHoldMode", ConversationManager::AutoHoldEnabled));
          mRooms[room] = convHandle;
          // ensure a local participant is in the conversation - create one if one doesn't exist
          if(getMediaStackAdapter().supportsLocalAudio())
