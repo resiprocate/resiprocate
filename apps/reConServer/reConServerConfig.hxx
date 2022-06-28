@@ -11,6 +11,7 @@
 #include <rutil/BaseException.hxx>
 #include <resip/stack/SipConfigParse.hxx>
 #include <resip/recon/UserAgent.hxx>
+#include <resip/recon/ConversationManager.hxx>
 
 namespace reconserver {
 
@@ -29,6 +30,10 @@ public:
 
    void printHelpText(int argc, char **argv);
    using resip::ConfigParse::getConfigValue;
+
+   bool getConfigValue(const resip::Data& name, recon::ConversationManager::AutoHoldMode& value) const;
+   recon::ConversationManager::AutoHoldMode getConfigAutoHoldMode(const resip::Data& name,
+      const recon::ConversationManager::AutoHoldMode& defaultValue) const;
 
    bool getConfigValue(const resip::Data& name, recon::ConversationProfile::SecureMediaMode &value);
    recon::ConversationProfile::SecureMediaMode getConfigSecureMediaMode(const resip::Data& name, const recon::ConversationProfile::SecureMediaMode defaultValue);

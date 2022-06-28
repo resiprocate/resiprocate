@@ -25,7 +25,24 @@ ReConServerConfig::~ReConServerConfig()
 {
 }
 
+bool
+ReConServerConfig::getConfigValue(const resip::Data& name, recon::ConversationManager::AutoHoldMode& value) const
+{
+   std::map<recon::ConversationManager::AutoHoldMode, Data> dict;
+   dict[recon::ConversationManager::AutoHoldDisabled] = "AutoHoldDisabled";
+   dict[recon::ConversationManager::AutoHoldEnabled] = "AutoHoldEnabled";
+   dict[recon::ConversationManager::AutoHoldBroadcastOnly] = "AutoHoldBroadcastOnly";
+   return translateConfigValue<recon::ConversationManager::AutoHoldMode>(dict, name, value);
+}
 
+recon::ConversationManager::AutoHoldMode
+ReConServerConfig::getConfigAutoHoldMode(const resip::Data& name,
+   const recon::ConversationManager::AutoHoldMode& defaultValue) const
+{
+   recon::ConversationManager::AutoHoldMode ret = defaultValue;
+   getConfigValue(name, ret);
+   return ret;
+}
 
 bool 
 ReConServerConfig::getConfigValue(const resip::Data& name, ConversationProfile::SecureMediaMode &value)
