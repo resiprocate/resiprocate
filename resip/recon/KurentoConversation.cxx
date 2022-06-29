@@ -116,8 +116,8 @@ KurentoConversation::confirmParticipant(Participant* participant)
                krp->requestKeyframeFromPeer();
             }, *otherEndpoint);
          }, *answeredEndpoint);
-      }); // otherEndpoint->disconnect()
-   });  // answeredEndpoint->disconnect()
+      }, *otherEndpoint); // otherEndpoint->disconnect()
+   }, *answeredEndpoint);  // answeredEndpoint->disconnect()
 }
 
 void
@@ -143,7 +143,7 @@ KurentoConversation::onParticipantRemoved(Participant* participant)
       std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
       otherEndpoint->disconnect([this, krp]{
          krp->waitingMode();
-      });
+      }, *myEndpoint);
    }
 
    return;

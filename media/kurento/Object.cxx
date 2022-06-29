@@ -251,8 +251,6 @@ MediaElement::connect(ContinuationVoid c, MediaElement& element)
    json::Object params;
    params[JSON_RPC_SINK] = json::String(peerId);
    invokeVoidMethod("connect", c, params);
-   mConnectedTo = peerId;
-   element.setConnectedTo(getId());
 }
 
 void
@@ -261,19 +259,6 @@ MediaElement::disconnect(ContinuationVoid c, MediaElement& element)
    json::Object params;
    params[JSON_RPC_SINK] = json::String(element.getId());
    invokeVoidMethod("disconnect", c, params);
-   mConnectedTo.clear();
-   element.setConnectedTo("");
-}
-
-void
-MediaElement::disconnect(ContinuationVoid c)
-{
-   if(mConnectedTo.empty()) { c(); return; }; // FIXME
-   json::Object params;
-   params[JSON_RPC_SINK] = json::String(mConnectedTo);
-   invokeVoidMethod("disconnect", c, params);
-   mConnectedTo.clear();
-   //element.setConnectedTo(""); // FIXME
 }
 
 void
