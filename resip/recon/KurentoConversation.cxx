@@ -91,32 +91,36 @@ KurentoConversation::confirmParticipant(Participant* participant)
       return;
    }
    _p->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint]{
-      // Find the other Participant / endpoint
+      answeredEndpoint->disconnect([this, _p, answeredEndpoint]{
+         // Find the other Participant / endpoint
 
-      Conversation::ParticipantMap& m = getParticipants();
-      KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
-      Conversation::ParticipantMap::iterator _it = m.begin();
-      for(;_it != m.end() && krp == 0; _it++)
-      {
-         krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
-         if(krp == _p)
+         Conversation::ParticipantMap& m = getParticipants();
+         KurentoRemoteParticipant* krp = 0; // FIXME - better to use shared_ptr
+         Conversation::ParticipantMap::iterator _it = m.begin();
+         for(;_it != m.end() && krp == 0; _it++)
          {
-            krp = 0;
+            krp = dynamic_cast<KurentoRemoteParticipant*>(_it->second.getParticipant());
+            if(krp == _p)
+            {
+               krp = 0;
+            }
          }
-      }
-      resip_assert(krp);
-      std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
+         resip_assert(krp);
+         std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
 
-      krp->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-         otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-            //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
-            answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-               //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
-               _p->requestKeyframeFromPeer();
-               krp->requestKeyframeFromPeer();
-            }, *otherEndpoint);
-         }, *answeredEndpoint);
-      }, *otherEndpoint); // otherEndpoint->disconnect()
+         krp->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+            otherEndpoint->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+               otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+                  //krp->setLocalHold(false); // FIXME - the Conversation does this automatically
+                  answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
+                     //_p->setLocalHold(false); // FIXME - the Conversation does this automatically
+                     _p->requestKeyframeFromPeer();
+                     krp->requestKeyframeFromPeer();
+                  }, *otherEndpoint);
+               }, *answeredEndpoint);
+            }, *krp->getWaitingModeElement());
+         }, *otherEndpoint); // otherEndpoint->disconnect()
+      }, *_p->getWaitingModeElement());
    }, *answeredEndpoint);  // answeredEndpoint->disconnect()
 }
 
@@ -141,8 +145,10 @@ KurentoConversation::onParticipantRemoved(Participant* participant)
    {
       DebugLog(<<"remaining participant found");
       std::shared_ptr<kurento::BaseRtpEndpoint> otherEndpoint = krp->getEndpoint();
-      otherEndpoint->disconnect([this, krp]{
-         krp->waitingMode();
+      otherEndpoint->disconnect([this, krp, myEndpoint, otherEndpoint](){
+         myEndpoint->disconnect([this, krp](){
+            krp->waitingMode();
+         }, *otherEndpoint);
       }, *myEndpoint);
    }
 
