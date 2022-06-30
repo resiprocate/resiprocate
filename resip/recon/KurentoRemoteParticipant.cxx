@@ -389,7 +389,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
       {
          //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
          //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
-         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, "file:///tmp/test.mp4"));
+         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, "file:///tmp/test.mp4")); // FIXME filename
          mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
          mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
             mEndpoint->addErrorListener(elError, [this](){});
