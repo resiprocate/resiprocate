@@ -114,6 +114,7 @@ KurentoConversation::confirmParticipant(Participant* participant)
                   answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
                      _p->requestKeyframeFromPeer();
                      krp->requestKeyframeFromPeer();
+                     InfoLog(<<"peers connected");
                   }, *otherEndpoint);
                }, *answeredEndpoint);
             }, *krp->getWaitingModeElement());
