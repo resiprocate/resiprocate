@@ -193,10 +193,18 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
 
       if(endpointExists)
       {
-         std::ostringstream offerMangledBuf;
-         offerMangledBuf << *getLocalSdp();
-         std::shared_ptr<std::string> offerMangledStr = std::make_shared<std::string>(offerMangledBuf.str());
-         cOnOfferReady(*offerMangledStr);
+         if(!mReuseSdpAnswer)
+         {
+            cConnected();
+         }
+         else
+         {
+            std::ostringstream offerMangledBuf;
+            getLocalSdp()->session().transformLocalHold(isHolding());
+            offerMangledBuf << *getLocalSdp();
+            std::shared_ptr<std::string> offerMangledStr = std::make_shared<std::string>(offerMangledBuf.str());
+            cOnOfferReady(*offerMangledStr);
+         }
       }
       else{
          mEndpoint->create([this, cConnected]{
@@ -204,6 +212,11 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
             //       waitingMode() as that method knows whether
             //       to do loopback, a PlayerEndpoint or something else
             //mEndpoint->connect(cConnected, *mEndpoint); // connect
+
+            // FIXME event listeners
+            // FIXME mplayer
+            // FIXME passthrough
+
             cConnected();
          }); // create
       }
