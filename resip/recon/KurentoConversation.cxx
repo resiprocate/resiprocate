@@ -75,7 +75,7 @@ KurentoConversation::confirmParticipant(Participant* participant)
    if(getNumRemoteParticipants() < 2)
    {
       DebugLog(<<"we are first in the conversation");
-      _p->waitingMode();
+      //_p->waitingMode(); // FIXME - loopback is setup in buildSdpOffer/buildSdpAnswer logic
       return;
    }
    if(getNumRemoteParticipants() > 2)
