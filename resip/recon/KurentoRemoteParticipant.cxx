@@ -517,7 +517,9 @@ KurentoRemoteParticipant::waitingMode()
       }
       else
       {
-         mEndpoint->connect([this]{}, *mPassThrough); // FIXME Kurento async
+         mEndpoint->connect([this]{
+            requestKeyframeFromPeer();
+         }, *mPassThrough); // FIXME Kurento async
       }
       requestKeyframeFromPeer();
    }, *mEndpoint);
