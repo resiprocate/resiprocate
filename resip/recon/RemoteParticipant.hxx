@@ -8,8 +8,6 @@
 #include "IMParticipantBase.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 
-#include <rutil/AsyncBool.hxx>
-
 #include <resip/stack/MediaControlContents.hxx>
 #include <resip/stack/TrickleIceContents.hxx>
 
