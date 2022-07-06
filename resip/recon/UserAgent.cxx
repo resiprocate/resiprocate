@@ -14,6 +14,9 @@
 #ifdef USE_SIPXTAPI
 #include "SipXMediaStackAdapter.hxx"
 #endif
+#ifdef USE_KURENTO
+#include <KurentoMediaStackAdapter.hxx>
+#endif
 
 #include "reflow/FlowManagerSubsystem.hxx"
 
@@ -40,8 +43,6 @@
 #endif
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Random.hxx>
-
-#include <KurentoMediaStackAdapter.hxx>
 
 #include <utility>
 
