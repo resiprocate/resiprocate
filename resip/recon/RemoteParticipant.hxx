@@ -176,6 +176,7 @@ private:
       PendingOODRefer,
       Terminating
    } State;
+   State getState() { return mState; };
    State mState;
    bool mOfferRequired;
    bool mLocalHold;
