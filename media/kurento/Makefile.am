@@ -1,4 +1,5 @@
 
+EXTRA_DIST = README.txt
 
 if USE_KURENTO
 
