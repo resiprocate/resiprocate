@@ -96,6 +96,7 @@ KurentoMediaStackAdapter::shutdown()
    {
       mKurentoConnection.reset();
    }
+   // FIXME - join / wait for any threads to stop
 }
 
 KurentoMediaStackAdapter::~KurentoMediaStackAdapter()

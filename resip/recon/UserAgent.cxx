@@ -204,8 +204,6 @@ UserAgent::process(int timeoutMs)
 void
 UserAgent::shutdown()
 {
-   // FIXME - Kurento client shutdown and join()
-
    UserAgentShutdownCmd* cmd = new UserAgentShutdownCmd(this);
    mDum.post(cmd);
 
