@@ -165,7 +165,9 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
          c(true, std::move(_offer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, isWebRTC, c, cOnOfferReady]{
+      kurento::ContinuationVoid cConnected = [this, holdSdp, isWebRTC, c, cOnOfferReady]{
+         // FIXME - can we tell Kurento to use holdSdp?
+         // We currently mangle the SDP after-the-fact in cOnOfferReady
          mEndpoint->generateOffer([this, isWebRTC, c, cOnOfferReady](const std::string& offer){
             mWaitingAnswer = true;
             if(isWebRTC)
