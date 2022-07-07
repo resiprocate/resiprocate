@@ -28,7 +28,7 @@ using namespace recon;
 using namespace reconserver;
 
 MyConversationManager::MyConversationManager(const ReConServerConfig& config, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled)
-      : ConversationManager(nullptr),
+      : ConversationManager(nullptr, std::shared_ptr<ConfigParse>(new ReConServerConfig(config))),
         mConfig(config),
         mAutoAnswerEnabled(autoAnswerEnabled)
 { 
