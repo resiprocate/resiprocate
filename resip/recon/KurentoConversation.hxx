@@ -64,6 +64,7 @@ protected:
 
 private: 
    KurentoMediaStackAdapter& mKurentoMediaStackAdapter;
+   bool mKurentoReInviteOnParticipantsPresent;
 
    // sipX Media related members
    friend class ConversationManager;

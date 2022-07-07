@@ -131,6 +131,8 @@ public:
    virtual int onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
    virtual void requestKeyframeFromPeer();
+   // force a SIP re-INVITE to this RemoteParticipant
+   virtual void reInvite();
 
 protected:
    void setRemoteHold(bool remoteHold);

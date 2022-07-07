@@ -823,6 +823,17 @@ RemoteParticipant::requestKeyframeFromPeer()
 }
 
 void
+RemoteParticipant::reInvite()
+{
+   // calling RemoteParticipant::unhold() here forces a reINVITE,
+   // even if not currently on hold.
+   // After experimenting with EX90, discovered that both hold()
+   // and unhold() required to establish video in both directions.
+   hold();
+   unhold();
+}
+
+void
 RemoteParticipant::setRemoteHold(bool remoteHold)
 {
    bool stateChanged = (remoteHold != mRemoteHold);

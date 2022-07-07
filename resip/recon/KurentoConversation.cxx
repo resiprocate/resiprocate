@@ -33,7 +33,8 @@ KurentoConversation::KurentoConversation(ConversationHandle handle,
                            ConversationHandle sharedMediaInterfaceConvHandle,
                            ConversationManager::AutoHoldMode autoHoldMode)
 : Conversation(handle, conversationManager, relatedConversationSet, sharedMediaInterfaceConvHandle, autoHoldMode, MAX_PARTICIPANTS),
-  mKurentoMediaStackAdapter(kurentoMediaStackAdapter)
+  mKurentoMediaStackAdapter(kurentoMediaStackAdapter),
+  mKurentoReInviteOnParticipantsPresent(true)
 {
    if(mKurentoMediaStackAdapter.supportsMultipleMediaInterfaces())
    {
@@ -54,6 +55,13 @@ KurentoConversation::KurentoConversation(ConversationHandle handle,
       }
    }
    //InfoLog(<< "mBridgeMixer " << getBridgeMixerShared().use_count() << " " << getBridgeMixer());
+
+   std::shared_ptr<ConfigParse> cfg = getConfig();
+   if(cfg)
+   {
+      mKurentoReInviteOnParticipantsPresent = cfg->getConfigBool("KurentoReInviteOnParticipantsPresent",
+         mKurentoReInviteOnParticipantsPresent);
+   }
 }
 
 KurentoConversation::~KurentoConversation()
@@ -115,6 +123,10 @@ KurentoConversation::confirmParticipant(Participant* participant)
                      _p->requestKeyframeFromPeer();
                      krp->requestKeyframeFromPeer();
                      InfoLog(<<"peers connected");
+                     if(mKurentoReInviteOnParticipantsPresent)
+                     {
+                        krp->reInvite();
+                     }
                   }, *otherEndpoint);
                }, *answeredEndpoint);
             }, *krp->getWaitingModeElement());

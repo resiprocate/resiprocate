@@ -67,6 +67,8 @@ public:
    virtual void confirmParticipant(Participant* participant) {};
 
 protected:
+   std::shared_ptr<resip::ConfigParse> getConfig() { return mConversationManager.getConfig(); };
+
    friend class Participant;
    friend class SipXParticipant;
    friend class LocalParticipant;
