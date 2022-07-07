@@ -722,7 +722,7 @@ RemoteParticipant::hold()
       {
          if(mState == Connected && mInviteSessionHandle.isValid())
          {
-            provideOffer(false /* postOfferAccept */);
+            provideOffer(false /* postOfferAccept */, true);
             stateTransition(Holding);
          }
          else
@@ -767,7 +767,7 @@ RemoteParticipant::unhold()
       {
          if(mState == Connected && mInviteSessionHandle.isValid())
          {
-            provideOffer(false /* postOfferAccept */);
+            provideOffer(false /* postOfferAccept */, true);
             stateTransition(Unholding);
          }
          else
