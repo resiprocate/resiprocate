@@ -34,9 +34,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter)
+ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter,
+   std::shared_ptr<ConfigParse> configParse)
 : mUserAgent(0),
   mMediaStackAdapter(mediaStackAdapter),
+  mConfigParse(configParse),
   mShuttingDown(false),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
