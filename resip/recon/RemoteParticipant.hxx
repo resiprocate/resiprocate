@@ -53,7 +53,7 @@ public:
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer) = 0;
+   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer, bool preferExistingSdp = false) = 0;
    virtual bool isHolding() { return mLocalHold; }
    virtual bool isRemoteHold() { return mRemoteHold; }
 
@@ -148,7 +148,7 @@ protected:
    virtual void enableTrickleIce();
 
 private:       
-   void provideOffer(bool postOfferAccept);
+   void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
    virtual void replaceWithParticipant(Participant* replacingParticipant);

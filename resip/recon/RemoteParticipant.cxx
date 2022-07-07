@@ -994,12 +994,12 @@ RemoteParticipant::processReferNotify(ClientSubscriptionHandle h, const SipMessa
 }
 
 void 
-RemoteParticipant::provideOffer(bool postOfferAccept)
+RemoteParticipant::provideOffer(bool postOfferAccept, bool preferExistingSdp)
 {
    std::unique_ptr<SdpContents> offer(new SdpContents);
    resip_assert(mInviteSessionHandle.isValid());
    
-   buildSdpOffer(mLocalHold, *offer);
+   buildSdpOffer(mLocalHold, *offer, preferExistingSdp);
 
    mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
    mOfferRequired = false;

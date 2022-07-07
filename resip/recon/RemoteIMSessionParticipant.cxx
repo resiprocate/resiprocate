@@ -71,7 +71,7 @@ RemoteIMSessionParticipant::notifyIncomingParticipant(const resip::SipMessage& m
 }
 
 void
-RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
+RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer, bool preferExistingSdp)
 {
    ConversationProfile* profile = getDialogSet().getConversationProfile().get();
    resip_assert(profile);

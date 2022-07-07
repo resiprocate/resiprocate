@@ -137,7 +137,7 @@ SipXRemoteParticipant::getMediaConnectionId()
 }
 
 void
-SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
+SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer, bool preferExistingSdp)
 {
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = getDialogSet().getConversationProfile().get();

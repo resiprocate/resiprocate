@@ -66,7 +66,7 @@ public:
    virtual ~SipXRemoteParticipant();
 
    virtual unsigned int getLocalRTPPort();
-   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
+   virtual void buildSdpOffer(bool holdSdp, resip::SdpContents& offer, bool preferExistingSdp = false);
 
    virtual int getConnectionPortOnBridge();
    virtual bool hasInput() { return true; }
