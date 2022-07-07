@@ -134,6 +134,12 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bo
 {
    // FIXME Kurento - include video, SRTP, WebRTC?
 
+   bool useExistingSdp = false;
+   if(getLocalSdp())
+   {
+      useExistingSdp = preferExistingSdp || mReuseSdpAnswer;
+   }
+
    try
    {
       bool endpointExists = true;
@@ -195,7 +201,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bo
 
       if(endpointExists)
       {
-         if(!mReuseSdpAnswer)
+         if(!useExistingSdp)
          {
             cConnected();
          }
