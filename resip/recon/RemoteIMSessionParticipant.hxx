@@ -63,7 +63,7 @@ public:
    virtual void hold() override {}
    virtual void unhold() override {}
 
-   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c) override;
+   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp = false) override;
    virtual void adjustRTPStreams(bool sendingOffer = false) override {} // nothing to do, we don't manage RTP streams
 
    virtual int getConnectionPortOnBridge() { return -1; } // doesn't interact with mixing bridge

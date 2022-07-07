@@ -137,7 +137,7 @@ SipXRemoteParticipant::getMediaConnectionId()
 }
 
 void
-SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
+SipXRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp)
 {
    std::unique_ptr<SdpContents> _offer(new SdpContents);
    SdpContents& offer = *_offer;

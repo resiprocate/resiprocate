@@ -56,7 +56,7 @@ public:
 
    typedef std::function<void(bool sdpOk, std::unique_ptr<resip::SdpContents> sdp)>
    ContinuationSdpReady;
-   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c) = 0;
+   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp = false) = 0;
 
    virtual bool isHolding() { return mLocalHold; }
    virtual bool isRemoteHold() { return mRemoteHold; }
@@ -152,7 +152,7 @@ protected:
    virtual void enableTrickleIce();
 
 private:       
-   void provideOffer(bool postOfferAccept);
+   void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
    void provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    virtual void buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) = 0;
    virtual void replaceWithParticipant(Participant* replacingParticipant);

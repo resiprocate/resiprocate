@@ -130,7 +130,7 @@ KurentoRemoteParticipant::newEndpoint()
 }
 
 void
-KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
+KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp)
 {
    // FIXME Kurento - include video, SRTP, WebRTC?
 

@@ -1022,7 +1022,7 @@ RemoteParticipant::processReferNotify(ClientSubscriptionHandle h, const SipMessa
 }
 
 void 
-RemoteParticipant::provideOffer(bool postOfferAccept)
+RemoteParticipant::provideOffer(bool postOfferAccept, bool preferExistingSdp)
 {
    resip_assert(mInviteSessionHandle.isValid());
    
@@ -1042,7 +1042,7 @@ RemoteParticipant::provideOffer(bool postOfferAccept)
       }
       mDialogSet.provideOffer(std::move(offer), mInviteSessionHandle, postOfferAccept);
       mOfferRequired = false;
-   });
+   }, preferExistingSdp);
 }
 
 void

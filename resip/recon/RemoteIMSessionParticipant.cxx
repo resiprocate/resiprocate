@@ -71,7 +71,7 @@ RemoteIMSessionParticipant::notifyIncomingParticipant(const resip::SipMessage& m
 }
 
 void
-RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c)
+RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp)
 {
    std::unique_ptr<SdpContents> _offer(new SdpContents);
    SdpContents& offer = *_offer;
