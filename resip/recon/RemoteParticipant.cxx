@@ -117,9 +117,10 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 void
 RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::shared_ptr<ConversationProfile>& callingProfile, const std::multimap<resip::Data,resip::Data>& extraHeaders)
 {
-   InviteSessionHandle h = getInviteSessionHandle();
-   buildSdpOffer(mLocalHold, [this, h, destination, callingProfile, extraHeaders](bool success, std::unique_ptr<SdpContents> _offer){
-      if(!h.isValid())
+   ParticipantHandle handleId = mHandle;
+   ConversationManager& cm = mConversationManager;
+   buildSdpOffer(mLocalHold, [this, handleId, &cm, destination, callingProfile, extraHeaders](bool success, std::unique_ptr<SdpContents> _offer){
+      if(!cm.getParticipant(handleId))
       {
          WarningLog(<<"handle no longer valid");
          return;
@@ -882,9 +883,10 @@ RemoteParticipant::acceptPendingOODRefer()
       if(accepted)
       {
          // Create offer
-         InviteSessionHandle h = getInviteSessionHandle();
-         buildSdpOffer(mLocalHold, [this, h, profile](bool success, std::unique_ptr<SdpContents> _offer){
-            if(!h.isValid())
+         ParticipantHandle handleId = mHandle;
+         ConversationManager& cm = mConversationManager;
+         buildSdpOffer(mLocalHold, [this, handleId, &cm, profile](bool success, std::unique_ptr<SdpContents> _offer){
+            if(!cm.getParticipant(handleId))
             {
                WarningLog(<<"handle no longer valid");
                return;
@@ -1037,9 +1039,10 @@ RemoteParticipant::provideOffer(bool postOfferAccept, bool preferExistingSdp)
 {
    resip_assert(mInviteSessionHandle.isValid());
    
-   InviteSessionHandle h = getInviteSessionHandle();
-   buildSdpOffer(mLocalHold,[this, h, postOfferAccept](bool success, std::unique_ptr<SdpContents> offer){
-      if(!h.isValid())
+   ParticipantHandle handleId = mHandle;
+   ConversationManager& cm = mConversationManager;
+   buildSdpOffer(mLocalHold,[this, handleId, &cm, postOfferAccept](bool success, std::unique_ptr<SdpContents> offer){
+      if(!cm.getParticipant(handleId))
       {
          WarningLog(<<"handle no longer valid");
          return;
@@ -1662,9 +1665,10 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    replaceWithParticipant(participant);      // adjust conversation mappings
 
    // Create offer
-   InviteSessionHandle h = getInviteSessionHandle();
-   participant->buildSdpOffer(holdSdp, [this, h, msg, profile, participantDialogSet, participant](bool success, unique_ptr<SdpContents> _offer){
-      if(!h.isValid())
+   ParticipantHandle handleId = mHandle;
+   ConversationManager& cm = mConversationManager;
+   participant->buildSdpOffer(holdSdp, [this, handleId, &cm, msg, profile, participantDialogSet, participant](bool success, unique_ptr<SdpContents> _offer){
+      if(!cm.getParticipant(handleId))
       {
          WarningLog(<<"handle no longer valid");
          return;
