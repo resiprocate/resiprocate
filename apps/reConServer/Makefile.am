@@ -6,11 +6,7 @@ EXTRA_DIST += *.wav
 EXTRA_DIST += reconserver.init
 EXTRA_DIST += reconserver.service
 
-if USE_SIPXTAPI
-sbin_PROGRAMS = reConServer
-endif
-
-if USE_KURENTO
+if BUILD_RECONSERVER
 sbin_PROGRAMS = reConServer
 endif
 
