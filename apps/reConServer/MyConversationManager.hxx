@@ -22,8 +22,6 @@ namespace reconserver
 #ifdef USE_KURENTO
 #define PREFER_KURENTO
 // FIXME: hard-coded to use Kurento when selected at compile time
-// Need to have both USE_KURENTO and USE_SIPXTAPI as we haven't removed
-// some references to sipXtapi in parts of the code
 #else
 #ifdef USE_SIPXTAPI
 #define PREFER_SIPXTAPI
