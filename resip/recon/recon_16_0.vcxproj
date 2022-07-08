@@ -175,6 +175,12 @@
     <ClCompile Include="DtmfEvent.cxx" />
     <ClCompile Include="FlowManagerSipXSocket.cxx" />
     <ClCompile Include="IMParticipantBase.cxx" />
+    <ClCompile Include="KurentoBridgeMixer.cxx" />
+    <ClCompile Include="KurentoConversation.cxx" />
+    <ClCompile Include="KurentoMediaStackAdapter.cxx" />
+    <ClCompile Include="KurentoParticipant.cxx" />
+    <ClCompile Include="KurentoRemoteParticipant.cxx" />
+    <ClCompile Include="KurentoRemoteParticipantDialogSet.cxx" />
     <ClCompile Include="RemoteIMSessionParticipant.cxx" />
     <ClCompile Include="RemoteIMSessionParticipantDialogSet.cxx" />
     <ClCompile Include="LocalParticipant.cxx" />
@@ -224,6 +230,12 @@
     <ClInclude Include="DefaultDialogSet.hxx" />
     <ClInclude Include="DtmfEvent.hxx" />
     <ClInclude Include="FlowManagerSipXSocket.hxx" />
+    <ClInclude Include="KurentoBridgeMixer.hxx" />
+    <ClInclude Include="KurentoConversation.hxx" />
+    <ClInclude Include="KurentoMediaStackAdapter.hxx" />
+    <ClInclude Include="KurentoParticipant.hxx" />
+    <ClInclude Include="KurentoRemoteParticipantDialogSet.hxx" />
+    <ClInclude Include="KurentoRemoteParticipant.hxx" />
     <ClInclude Include="IMParticipantBase.hxx" />
     <ClInclude Include="RemoteIMSessionParticipant.hxx" />
     <ClInclude Include="RemoteIMSessionParticipantDialogSet.hxx" />
