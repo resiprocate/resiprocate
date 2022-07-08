@@ -71,8 +71,6 @@ public:
    // Configuration Container
    ConfigParser& mConfig;
 
-   virtual void onRemoteParticipantConstructed(recon::RemoteParticipant *rp) override;
-
 protected:
    // Conversation Manager Handlers
    virtual void onConversationDestroyed(recon::ConversationHandle convHandle);

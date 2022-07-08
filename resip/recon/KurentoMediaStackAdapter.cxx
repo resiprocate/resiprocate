@@ -239,10 +239,24 @@ KurentoMediaStackAdapter::createMediaResourceParticipantInstance(ParticipantHand
    return 0; // FIXME Kurento - implement MediaResourceParticipant in Kurento
 }
 
+void
+KurentoMediaStackAdapter::configureRemoteParticipantInstance(KurentoRemoteParticipant* krp)
+{
+   std::shared_ptr<ConfigParse> cfg = getConfig();
+   if(cfg)
+   {
+      krp->mRemoveExtraMediaDescriptors = cfg->getConfigBool("KurentoRemoveExtraMediaDescriptors", false);
+      krp->mSipRtpEndpoint = cfg->getConfigBool("KurentoSipRtpEndpoint", true);
+      krp->mReuseSdpAnswer = cfg->getConfigBool("KurentoReuseSdpAnswer", false);
+      krp->mWSAcceptsKeyframeRequests = cfg->getConfigBool("KurentoWebSocketAcceptsKeyframeRequests", true);
+   }
+}
+
 RemoteParticipant *
 KurentoMediaStackAdapter::createRemoteParticipantInstance(DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
    KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(getConversationManager(), *this, dum, rpds);
+   configureRemoteParticipantInstance(rp);
    return rp;
 }
 
@@ -250,6 +264,7 @@ RemoteParticipant *
 KurentoMediaStackAdapter::createRemoteParticipantInstance(ParticipantHandle partHandle, DialogUsageManager& dum, RemoteParticipantDialogSet& rpds)
 {
    KurentoRemoteParticipant *rp = new KurentoRemoteParticipant(partHandle, getConversationManager(), *this, dum, rpds);
+   configureRemoteParticipantInstance(rp);
    return rp;
 }
 

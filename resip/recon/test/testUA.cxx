@@ -152,11 +152,6 @@ public:
    }
 
    
-   virtual void onRemoteParticipantConstructed(RemoteParticipant *rp) override
-   {
-   }
-
-
    virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(LOG_PREFIX << "onConversationDestroyed: handle=" << convHandle);

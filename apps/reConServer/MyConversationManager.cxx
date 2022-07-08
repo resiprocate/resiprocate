@@ -210,21 +210,6 @@ MyConversationManager::onParticipantRequestedHold(ParticipantHandle partHandle, 
 }
 
 void
-MyConversationManager::onRemoteParticipantConstructed(RemoteParticipant *rp)
-{
-#ifdef USE_KURENTO
-   KurentoRemoteParticipant* krp = dynamic_cast<KurentoRemoteParticipant*>(rp);
-   if(krp)
-   {
-      krp->mRemoveExtraMediaDescriptors = mConfig.getConfigBool("KurentoRemoveExtraMediaDescriptors", false);
-      krp->mSipRtpEndpoint = mConfig.getConfigBool("KurentoSipRtpEndpoint", true);
-      krp->mReuseSdpAnswer = mConfig.getConfigBool("KurentoReuseSdpAnswer", false);
-      krp->mWSAcceptsKeyframeRequests = mConfig.getConfigBool("KurentoWebSocketAcceptsKeyframeRequests", true);
-   }
-#endif
-}
-
-void
 MyConversationManager::displayInfo()
 {
    Data output;

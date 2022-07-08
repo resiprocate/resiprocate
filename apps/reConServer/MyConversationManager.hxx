@@ -59,7 +59,6 @@ public:
    virtual void displayInfo();
 
 protected:
-   virtual void onRemoteParticipantConstructed(recon::RemoteParticipant *rp) override;
    virtual const ReConServerConfig& getConfig() const { return mConfig; };
    ReConServerConfig mConfig;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;

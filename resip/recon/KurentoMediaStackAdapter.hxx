@@ -196,6 +196,7 @@ public:
 
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
+   virtual void configureRemoteParticipantInstance(KurentoRemoteParticipant* krp);
 
 private:
    void init(int defaultSampleRate = 0, int maxSampleRate = 0);

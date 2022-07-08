@@ -476,7 +476,6 @@ ConversationManager::createAppropriateRemoteParticipantInstance(DialogUsageManag
    {
       rp = getMediaStackAdapter().createRemoteParticipantInstance(dum, rpds);
    }
-   onRemoteParticipantConstructed(rp);
    return rp;
 }
 
@@ -492,7 +491,6 @@ ConversationManager::createAppropriateRemoteParticipantInstance(ParticipantHandl
    {
       rp = getMediaStackAdapter().createRemoteParticipantInstance(partHandle, dum, rpds);
    }
-   onRemoteParticipantConstructed(rp);
    return rp;
 }
 

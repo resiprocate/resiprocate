@@ -493,11 +493,6 @@ Server::getActiveCallsInfo(std::list<ActiveCallInfo>& callInfos)
     }
 }
 
-void
-Server::onRemoteParticipantConstructed(RemoteParticipant *rp)
-{
-}
-
 void 
 Server::onConversationDestroyed(ConversationHandle convHandle)
 {

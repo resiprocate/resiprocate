@@ -91,6 +91,8 @@ protected:
    void post(resip::Message *message) { getConversationManager().post(message); };
    Conversation* getConversation(ConversationHandle convHandle) { return getConversationManager().getConversation(convHandle); };
 
+   std::shared_ptr<resip::ConfigParse> getConfig() { return mConversationManager.getConfig(); };
+
 private:
    ConversationManager& mConversationManager;
 

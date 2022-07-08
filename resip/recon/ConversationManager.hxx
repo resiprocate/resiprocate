@@ -684,8 +684,6 @@ public:
    virtual void setMediaStackAdapter(std::shared_ptr<MediaStackAdapter> mediaStackAdapter);
    MediaStackAdapter& getMediaStackAdapter() { return *mMediaStackAdapter; };
 
-   virtual void onRemoteParticipantConstructed(RemoteParticipant *rp) = 0;
-
 protected:
 
    // Invite Session Handler /////////////////////////////////////////////////////
@@ -796,6 +794,8 @@ private:
    friend class OutputBridgeMixWeightsCmd;
    void registerConversation(Conversation *);
    void unregisterConversation(Conversation *);
+
+   friend class MediaStackAdapter;
    std::shared_ptr<resip::ConfigParse> getConfig() { return mConfigParse; };
 
    friend class Participant;
