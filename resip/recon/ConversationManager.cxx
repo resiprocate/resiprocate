@@ -93,7 +93,10 @@ ConversationManager::shutdown()
 void
 ConversationManager::process()
 {
-   mMediaStackAdapter->process();
+   if(mMediaStackAdapter)
+   {
+      mMediaStackAdapter->process();
+   }
 }
 
 ConversationHandle 
