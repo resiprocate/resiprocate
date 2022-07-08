@@ -159,10 +159,6 @@ public:
       createRemoteParticipant(convHandle, bobUri, ConversationManager::ForkSelectAutomatic);
    }
 
-   virtual void onRemoteParticipantConstructed(RemoteParticipant *rp) override
-   {
-   }
-
    virtual void onConversationDestroyed(ConversationHandle convHandle) override
    {
       InfoLog(<< mLogPrefix << "onConversationDestroyed: handle=" << convHandle);
@@ -381,10 +377,6 @@ public:
    }
 
    virtual void startup()
-   {
-   }
-
-   virtual void onRemoteParticipantConstructed(RemoteParticipant *rp) override
    {
    }
 
