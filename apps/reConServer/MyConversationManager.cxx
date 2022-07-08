@@ -12,9 +12,11 @@
 
 #include <resip/recon/LocalParticipant.hxx>
 #include <resip/recon/RemoteParticipant.hxx>
-#include <media/kurento/Object.hxx>
 #include <resip/recon/Conversation.hxx>
+#ifdef USE_KURENTO
+#include <media/kurento/Object.hxx>
 #include <resip/recon/KurentoRemoteParticipant.hxx>
+#endif
 
 // Test Prompts for cache testing
 #include "playback_prompt.h"
