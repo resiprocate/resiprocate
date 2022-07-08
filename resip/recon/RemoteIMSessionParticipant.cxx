@@ -71,7 +71,7 @@ RemoteIMSessionParticipant::notifyIncomingParticipant(const resip::SipMessage& m
 }
 
 void
-RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp)
+RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp)
 {
    std::unique_ptr<SdpContents> _offer(new SdpContents);
    SdpContents& offer = *_offer;
@@ -93,11 +93,11 @@ RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, 
    offer.session().addMedium(medium);
 
    setProposedSdp(offer);
-   c(true, std::move(_offer));
+   sdpReady(true, std::move(_offer));
 }
 
 void
-RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpReady c)
+RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady sdpReady)
 {
    bool valid = false;
    std::unique_ptr<SdpContents> _answer(new SdpContents);
@@ -167,7 +167,7 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, Continuatio
       setLocalSdp(answer);
       setRemoteSdp(offer);
    }
-   c(valid, std::move(_answer));
+   sdpReady(valid, std::move(_answer));
 }
 
 

@@ -130,7 +130,7 @@ KurentoRemoteParticipant::newEndpoint()
 }
 
 void
-KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp)
+KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp)
 {
    // FIXME Kurento - include video, SRTP, WebRTC?
 
@@ -161,20 +161,20 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bo
 
       // FIXME - add listeners for Kurento events
 
-      kurento::ContinuationString cOnOfferReady = [this, holdSdp, c](const std::string& offer){
+      kurento::ContinuationString cOnOfferReady = [this, holdSdp, sdpReady](const std::string& offer){
          StackLog(<<"offer FROM Kurento: " << offer);
          HeaderFieldValue hfv(offer.data(), offer.size());
          Mime type("application", "sdp");
          std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
          _offer->session().transformLocalHold(holdSdp);
          setProposedSdp(*_offer);
-         c(true, std::move(_offer));
+         sdpReady(true, std::move(_offer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, holdSdp, isWebRTC, c, cOnOfferReady]{
+      kurento::ContinuationVoid cConnected = [this, holdSdp, isWebRTC, sdpReady, cOnOfferReady]{
          // FIXME - can we tell Kurento to use holdSdp?
          // We currently mangle the SDP after-the-fact in cOnOfferReady
-         mEndpoint->generateOffer([this, isWebRTC, c, cOnOfferReady](const std::string& offer){
+         mEndpoint->generateOffer([this, isWebRTC, sdpReady, cOnOfferReady](const std::string& offer){
             mWaitingAnswer = true;
             if(isWebRTC)
             {
@@ -233,12 +233,12 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bo
    catch(exception& e)
    {
       ErrLog(<<"something went wrong: " << e.what());
-      c(false, nullptr);
+      sdpReady(false, nullptr);
    }
 }
 
 void
-KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationSdpReady c)
+KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady sdpReady)
 {
    bool requestSent = false;
 
@@ -336,7 +336,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          }
       });
 
-      kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, c](const std::string& answer){
+      kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, sdpReady](const std::string& answer){
          StackLog(<<"answer FROM Kurento: " << answer);
          HeaderFieldValue hfv(answer.data(), answer.size());
          Mime type("application", "sdp");
@@ -344,10 +344,10 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
          _answer->session().transformLocalHold(isHolding());
          setLocalSdp(*_answer);
          setRemoteSdp(*offerMangled);
-         c(true, std::move(_answer));
+         sdpReady(true, std::move(_answer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, endpointExists, c, cOnAnswerReady]{
+      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, endpointExists, sdpReady, cOnAnswerReady]{
          if(endpointExists && mReuseSdpAnswer)
          {
             // FIXME - Kurento should handle hold/resume
@@ -359,7 +359,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
             cOnAnswerReady(*answerStr);
             return;
          }
-         mEndpoint->processOffer([this, offerMangled, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, c, cOnAnswerReady](const std::string& answer){
+         mEndpoint->processOffer([this, offerMangled, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, sdpReady, cOnAnswerReady](const std::string& answer){
             if(isWebRTC)
             {
                if(trickleIcePermitted && offerMangled->session().isTrickleIceSupported())
@@ -455,7 +455,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, ContinuationS
 
    if(!requestSent)
    {
-      c(false, nullptr);
+      sdpReady(false, nullptr);
    }
 }
 

@@ -59,7 +59,7 @@ public:
 
    virtual ~KurentoRemoteParticipant();
 
-   virtual void buildSdpOffer(bool holdSdp, ContinuationSdpReady c, bool preferExistingSdp = false);
+   virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false);
 
    virtual int getConnectionPortOnBridge();
    virtual bool hasInput() { return true; }
@@ -92,7 +92,7 @@ protected:
 
 private:
    kurento::BaseRtpEndpoint* newEndpoint();
-   virtual void buildSdpAnswer(const resip::SdpContents& offer, ContinuationSdpReady c) override;
+   virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;
 
    std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
    volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primitive, e.g. condition_variable
