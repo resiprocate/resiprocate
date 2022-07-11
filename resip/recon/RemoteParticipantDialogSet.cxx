@@ -243,6 +243,10 @@ RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::unique_ptr<res
          if(postOfferAnswerAccept)
          {
             sis->accept();
+            if(rp->getState() == RemoteParticipant::Connecting)
+            {
+               rp->stateTransition(RemoteParticipant::Accepted);
+            }
          }
       }
    }
