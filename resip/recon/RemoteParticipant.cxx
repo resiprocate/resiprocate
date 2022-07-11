@@ -1072,11 +1072,11 @@ RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept
       }
       if(answerOk)
       {
-         if(mState == Replacing)
+         mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
+         if(postAnswerAccept && mState == Replacing)
          {
             stateTransition(Connecting);
          }
-         mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
       }
       else
       {

@@ -78,7 +78,7 @@ RemoteIMSessionParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpRead
    ConversationProfile* profile = getDialogSet().getConversationProfile().get();
    resip_assert(profile);
 
-   offer = profile->sessionCaps(); // FIXME MediaStackAdapter / Kurento
+   offer = profile->sessionCaps(); // FIXME MediaStackAdapter
 
    // Set sessionid and version for this sdp
    uint64_t currentTime = Timer::getTimeMicroSec();
@@ -108,7 +108,7 @@ RemoteIMSessionParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdp
       ConversationProfile* profile = getDialogSet().getConversationProfile().get();
       resip_assert(profile);
 
-      answer = profile->sessionCaps(); // FIXME MediaStackAdapter / Kurento
+      answer = profile->sessionCaps(); // FIXME MediaStackAdapter
 
       uint64_t currentTime = Timer::getTimeMicroSec();
       answer.session().origin().getSessionId() = currentTime;
