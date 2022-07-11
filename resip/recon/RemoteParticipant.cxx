@@ -1018,6 +1018,7 @@ RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept
    }
    else
    {
+      ErrLog(<<"buildSdpAnswer failed");
       mInviteSessionHandle->reject(488);
    }
 
