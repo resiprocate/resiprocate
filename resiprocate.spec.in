@@ -54,6 +54,7 @@ BuildRequires: net-snmp-devel
 BuildRequires: qpid-proton-cpp-devel
 BuildRequires: soci-devel
 BuildRequires: soci-postgresql-devel
+BuildRequires: websocketpp-devel
 Requires: openssl >= 1.1.0
 %if %use_systemd
 Requires(post): systemd
@@ -434,6 +435,7 @@ fi
 %files libs
 %doc COPYING
 %{_libdir}/libdum-*.so
+%{_libdir}/libkurentoclient-*.so
 %{_libdir}/librecon-*.so
 %{_libdir}/libreflow-*.so
 %{_libdir}/librepro-*.so
@@ -447,6 +449,8 @@ fi
 
 %files devel
 %dir %{_includedir}/clicktocall/
+%dir %{_includedir}/media/
+%dir %{_includedir}/media/kurento/
 %if %build_return
 %dir %{_includedir}/reTurn/
 %dir %{_includedir}/reTurn/client/
@@ -470,6 +474,7 @@ fi
 %dir %{_includedir}/rutil/wince/
 %dir %{_includedir}/sipdial/
 %{_includedir}/clicktocall/*.hxx
+%dir %{_includedir}/media/kurento/*.hxx
 %if %build_return
 %{_includedir}/reTurn/*.hxx
 %{_includedir}/reTurn/client/*.hxx
@@ -489,6 +494,7 @@ fi
 %{_includedir}/rutil/*/*.hxx
 %{_includedir}/sipdial/*.hxx
 %{_libdir}/libdum.so
+%{_libdir}/libkurentoclient.so
 %{_libdir}/librecon.so
 %{_libdir}/libreflow.so
 %{_libdir}/librepro.so
