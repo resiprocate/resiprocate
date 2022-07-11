@@ -1,8 +1,12 @@
 
 The Kurento integration is currently a work in progress
 
-Kurento can be installed using packages or using Docker.
-We have currently tested this using Docker.
+Kurento can be installed using packages or using Docker / podman.
+
+You require patched versions of the packages and you
+required the NaevaTec fork of the SipRtpEndpoint.  All these
+are available pre-compiled as packages in
+the apt.debify.org repository.
 
 To install Docker on RHEL8 or derivative OS such as
 Rocky Linux or Alma Linux (successors to CentOS):
@@ -47,7 +51,8 @@ Install reSIProcate dependencies from RHEL8 and EPEL
                    xerces-c-devel \
                    net-snmp-devel \
                    qpid-proton-cpp-devel \
-                   soci-devel soci-postgresql-devel
+                   soci-devel soci-postgresql-devel \
+                   websocketpp-devel
 
 Install dependencies built manually for RHEL8/EPEL
 
@@ -56,8 +61,8 @@ Install dependencies built manually for RHEL8/EPEL
   sudo rpm -i noarch/cajun-jsonapi-devel-2.0.3-13.el8.noarch.rpm
 
 You can install Kurento using a Docker image or you can setup
-another host running Ubuntu for the Kurento native packages.  Some
-people have had problems with UDP packets and Docker and using
+another host running Debian / Ubuntu for the Kurento native packages.
+Some people have had problems with UDP packets and Docker.  Using
 the packages instead of Docker may resolve this.  We tested
 Ubuntu bionic 18.04 LTS downloaded from here:
 
@@ -78,6 +83,8 @@ valid IP addresses faster and more reliable:
 
     networkInterfaces=ens3
     externalIPv4=1.2.3.4
+
+and do the same for /etc/kurento/modules/kurento/BaseRtpEndpoint.conf.ini
 
 Install Docker (for Podman, alternative to Docker, see below)
 
