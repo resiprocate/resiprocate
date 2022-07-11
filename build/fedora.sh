@@ -50,6 +50,7 @@ LDFLAGS='-fPIC -pie -Wl,-z,relro -Wl,-z,now -lcares' \
                 PYCXX_SRCDIR=/usr/src/CXX/Python3 \
               --with-apps \
               --with-recon \
+              --with-kurento \
               --with-soci-postgresql \
               --with-soci-mysql \
               --with-qpid-proton \
