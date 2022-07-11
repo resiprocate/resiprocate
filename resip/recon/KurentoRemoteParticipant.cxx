@@ -121,6 +121,23 @@ KurentoRemoteParticipant::getMediaConnectionId()
    return getKurentoDialogSet().getMediaConnectionId();
 }
 
+void
+KurentoRemoteParticipant::applyBridgeMixWeights()
+{
+   // FIXME Kurento - do we need to implement this?
+}
+
+// Special version of this call used only when a participant
+// is removed from a conversation.  Required when sipXConversationMediaInterfaceMode
+// is used, in order to get a pointer to the bridge mixer
+// for a participant (ie. LocalParticipant) that has no currently
+// assigned conversations.
+void
+KurentoRemoteParticipant::applyBridgeMixWeights(Conversation* removedConversation)
+{
+   // FIXME Kurento - do we need to implement this?
+}
+
 kurento::BaseRtpEndpoint*
 KurentoRemoteParticipant::newEndpoint()
 {

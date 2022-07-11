@@ -66,6 +66,9 @@ public:
    virtual bool hasOutput() { return true; }
    virtual int getMediaConnectionId();
 
+   virtual void applyBridgeMixWeights() override;
+   virtual void applyBridgeMixWeights(Conversation* removedConversation) override;
+
    virtual void adjustRTPStreams(bool sendingOffer=false);
 
    void onIceGatheringDone() { mIceGatheringDone = true; };

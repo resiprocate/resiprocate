@@ -127,7 +127,6 @@ Participant::replaceWithParticipant(Participant* replacingParticipant)
 void
 Participant::applyBridgeMixWeights()
 {
-   return; // FIXME Kurento
    // Only need to do work on the bridge mixer if we are using it (ie: portOnBridge != -1)
    if (getConnectionPortOnBridge() != -1)
    {
@@ -162,7 +161,6 @@ void
 Participant::applyBridgeMixWeights(Conversation* removedConversation)
 {
    BridgeMixer* mixer=0;
-   return; // FIXME Kurento
    if(!mConversationManager.getMediaStackAdapter().supportsMultipleMediaInterfaces())
    {
       resip_assert(mConversationManager.getBridgeMixer() != 0);
