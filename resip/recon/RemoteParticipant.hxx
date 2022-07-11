@@ -150,6 +150,8 @@ protected:
    virtual void hold();
    virtual void unhold();
 
+   virtual bool holdPreferExistingSdp() { return false; };
+
    bool isTrickleIce() { return mTrickleIce; };
    virtual void enableTrickleIce();
 

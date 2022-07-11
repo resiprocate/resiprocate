@@ -93,6 +93,8 @@ protected:
 
    virtual KurentoRemoteParticipantDialogSet& getKurentoDialogSet() { return dynamic_cast<KurentoRemoteParticipantDialogSet&>(getDialogSet()); };
 
+   virtual bool holdPreferExistingSdp() override { return true; };
+
 private:
    kurento::BaseRtpEndpoint* newEndpoint();
    virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;
