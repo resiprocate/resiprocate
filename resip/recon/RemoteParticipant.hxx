@@ -149,7 +149,7 @@ protected:
 
 private:       
    void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
-   bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
+   void provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
    virtual bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer) = 0;
    virtual void replaceWithParticipant(Participant* replacingParticipant);
 
@@ -159,6 +159,7 @@ private:
    RemoteParticipantDialogSet& mDialogSet;
    resip::DialogId mDialogId;
 
+   friend class RemoteParticipantDialogSet;
    typedef enum
    {
       Connecting=1, 
@@ -171,6 +172,7 @@ private:
       PendingOODRefer,
       Terminating
    } State;
+   State getState() { return mState; };
    State mState;
    bool mOfferRequired;
    bool mLocalHold;

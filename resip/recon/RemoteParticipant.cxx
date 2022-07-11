@@ -400,10 +400,12 @@ RemoteParticipant::accept()
             if(mOfferRequired)
             {
                provideOffer(true /* postOfferAccept */);
+               stateTransition(Accepted);
             }
             else if(mPendingOffer)
             {
                provideAnswer(*mPendingOffer, true /* postAnswerAccept */, false /* postAnswerAlert */);
+               stateTransition(Accepted);
             }
             else  
             {
@@ -412,8 +414,8 @@ RemoteParticipant::accept()
                // accept.  In this case the answer from the alert will be queued waiting on the flow to be ready, and 
                // we need to ensure the accept call is also delayed until the answer completes.
                mDialogSet.accept(mInviteSessionHandle);
+               stateTransition(Accepted);
             }
-            stateTransition(Accepted);
          }
       }
       // Accept Pending OOD Refer if required
@@ -456,7 +458,6 @@ RemoteParticipant::alert(bool earlyFlag)
                }
 
                provideAnswer(*mPendingOffer, false /* postAnswerAccept */, true /* postAnswerAlert */);
-               mPendingOffer.release();               
             }
             else
             {
@@ -1005,7 +1006,7 @@ RemoteParticipant::provideOffer(bool postOfferAccept, bool preferExistingSdp)
    mOfferRequired = false;
 }
 
-bool 
+void
 RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert)
 {
    std::unique_ptr<SdpContents> answer(new SdpContents);
@@ -1015,6 +1016,10 @@ RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept
    if(answerOk)
    {
       mDialogSet.provideAnswer(std::move(answer), mInviteSessionHandle, postAnswerAccept, postAnswerAlert);
+      if(postAnswerAccept && mState == Replacing)
+      {
+         stateTransition(Connecting);
+      }
    }
    else
    {
@@ -1022,7 +1027,7 @@ RemoteParticipant::provideAnswer(const SdpContents& offer, bool postAnswerAccept
       mInviteSessionHandle->reject(488);
    }
 
-   return answerOk;
+   mPendingOffer.release();
 }
 
 void 
@@ -1361,13 +1366,7 @@ RemoteParticipant::onOffer(InviteSessionHandle h, const SipMessage& msg, const S
    }
    else
    {
-      if(provideAnswer(offer, mState==Replacing /* postAnswerAccept */, false /* postAnswerAlert */))
-      {
-         if(mState == Replacing)
-         {
-            stateTransition(Connecting);
-         }
-      }
+      provideAnswer(offer, mState==Replacing /* postAnswerAccept */, false /* postAnswerAlert */);
    }
 }
 
