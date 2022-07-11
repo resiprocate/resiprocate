@@ -1247,6 +1247,11 @@ void
 RemoteParticipant::onConnectedConfirmed(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onConnectedConfirmed: handle=" << mHandle << ", " << msg.brief());
+   ConversationMap::const_iterator it;
+   for (it = mConversations.begin(); it != mConversations.end(); it++)
+   {
+      it->second->confirmParticipant(this);
+   }
    if (mHandle) mConversationManager.onParticipantConnectedConfirmed(mHandle, msg);
    stateTransition(Connected);
 }

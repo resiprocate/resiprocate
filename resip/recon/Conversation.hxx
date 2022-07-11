@@ -64,6 +64,8 @@ public:
    void setMaxParticipants(unsigned int maxParticipants) { mMaxParticipants = maxParticipants; };
    unsigned int getMaxParticipants() const { return mMaxParticipants; };
 
+   virtual void confirmParticipant(Participant* participant) {};
+
 protected:
    std::shared_ptr<resip::ConfigParse> getConfig() { return mConversationManager.getConfig(); };
 
