@@ -57,6 +57,7 @@ public:
    virtual void displayInfo();
 
    recon::ConversationHandle getRoom(const resip::Data& roomName);
+   void inviteToRoom(const resip::Data& roomName, const resip::NameAddr& destination);
 
 protected:
    virtual const ReConServerConfig& getConfig() const { return mConfig; };

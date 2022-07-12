@@ -6,6 +6,7 @@
 #include <rutil/Log.hxx>
 
 #include "MyConversationManager.hxx"
+#include "MyUserAgent.hxx"
 
 #include <rutil/Logger.hxx>
 #include <AppSubsystem.hxx>
@@ -132,6 +133,22 @@ MyConversationManager::getRoom(const resip::Data& roomName)
       InfoLog(<<"found Conversation for room: " << roomName);
       return it->second;
    }
+}
+
+void
+MyConversationManager::inviteToRoom(const Data& roomName, const NameAddr& destination)
+{
+   ConversationHandle convHandle = getRoom(roomName);
+   MyUserAgent *ua = dynamic_cast<MyUserAgent*>(getUserAgent());
+   resip_assert(ua);
+   const auto _profile = ua->getDefaultOutgoingConversationProfile();
+   std::shared_ptr<ConversationProfile> profile = std::make_shared<ConversationProfile>(*_profile);
+   const std::multimap<resip::Data,resip::Data> extraHeaders;
+   createRemoteParticipant(convHandle,
+         destination,
+         ConversationManager::ForkSelectAutomatic,
+         profile,
+         extraHeaders);
 }
 
 void

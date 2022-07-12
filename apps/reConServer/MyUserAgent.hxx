@@ -41,6 +41,9 @@ public:
                   int workers=2,
                   bool startImmediately=true);
 
+protected:
+   friend class MyConversationManager;
+
 private:
    friend class B2BCallManager;
 
