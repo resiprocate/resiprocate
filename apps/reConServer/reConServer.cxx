@@ -1376,6 +1376,15 @@ ReConServerProcess::main (int argc, char** argv)
       // Startup and run...
       //////////////////////////////////////////////////////////////////////////////
 
+#ifdef BUILD_QPID_PROTON
+      const Data& protonCommandQueue = reConServerConfig.getConfigData("BrokerURL", "");
+      if(!protonCommandQueue.empty())
+      {
+         mProtonCommandThread.reset(new ProtonCommandThread(protonCommandQueue));
+         mProtonCommandThread->run();
+      }
+#endif
+
       mUserAgent->startup();
       mConversationManager->startup();
 
@@ -1391,6 +1400,13 @@ ReConServerProcess::main (int argc, char** argv)
       mainLoop();
 
       mUserAgent->shutdown();
+#ifdef BUILD_QPID_PROTON
+      if(mProtonCommandThread)
+      {
+         mProtonCommandThread->shutdown();
+         mProtonCommandThread.release();
+      }
+#endif
    }
    InfoLog(<< "reConServer is shutdown.");
 #ifdef PREFER_SIPXTAPI
@@ -1430,6 +1446,12 @@ ReConServerProcess::onLoop()
 #endif
       }
    }
+#ifdef BUILD_QPID_PROTON
+   if(mProtonCommandThread && mConversationManager)
+   {
+      mProtonCommandThread->processQueue(*mConversationManager);
+   }
+#endif
 }
 
 void

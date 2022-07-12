@@ -1,57 +1,35 @@
-#ifndef RECONSERVER_HXX 
-#define RECONSERVER_HXX 
+#ifndef PROTONCOMMANDTHREAD_HXX
+#define PROTONCOMMANDTHREAD_HXX
 
-#if defined(HAVE_CONFIG_H)
-  #include "config.h"
-#endif
+#include <string>
 
 #include "rutil/Data.hxx"
-#include "resip/recon/UserAgent.hxx"
-#include "rutil/ServerProcess.hxx"
+#include "rutil/ProtonThreadBase.hxx"
 
-#include "CDRFile.hxx"
 #include "MyConversationManager.hxx"
-#include "MyUserAgent.hxx"
-#ifdef BUILD_QPID_PROTON
-#include "ProtonCommandThread.hxx"
-#endif
 
-namespace reconserver
-{
+namespace reconserver {
 
-class ReConServerProcess : public resip::ServerProcess
+class ProtonCommandThread : public resip::ProtonThreadBase
 {
 public:
-   ReConServerProcess();
-   virtual ~ReConServerProcess();
+   ProtonCommandThread(const resip::Data& u);
+   ~ProtonCommandThread();
 
-   virtual int main(int argc, char** argv);
-   virtual void processCommandLine(resip::Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
-   virtual void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent);
-protected:
-   virtual void doWait();
-   virtual void onLoop();
-
-   virtual void onReload();
+   void processQueue(reconserver::MyConversationManager& conversationManager);
 
 private:
-   std::shared_ptr<CDRFile> mCDRFile;
-   bool mKeyboardInput;
-   std::shared_ptr<MyUserAgent> mUserAgent;
-   std::unique_ptr<MyConversationManager> mConversationManager;
-#ifdef BUILD_QPID_PROTON
-   std::unique_ptr<ProtonCommandThread> mProtonCommandThread;
-#endif
+   void doShutdown();
 };
 
-}
+} // namespace
 
 #endif
-
 
 /* ====================================================================
  *
- * Copyright 2013 Catalin Constantin Usurelu.  All rights reserved.
+ * Copyright (C) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -85,4 +63,3 @@ private:
  *
  *
  */
-

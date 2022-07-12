@@ -8,8 +8,13 @@
 
 # To install the dependencies:
 #
-#   apt-get install -t jessie-backports python3-qpid-proton
+#   Debian / Ubuntu:
+#     apt install python3-qpid-proton
 #
+#   RPM:
+#     dnf install qpid-python
+#
+# See README_AMQP_Apache_Qpid_Proton.txt
 
 from __future__ import print_function, unicode_literals
 

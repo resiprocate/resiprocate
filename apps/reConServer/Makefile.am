@@ -38,9 +38,17 @@ reConServer_SOURCES += SubscriptionForwarder.cxx
 reConServer_SOURCES += SubscriptionForwarder.hxx
 reConServer_SOURCES += playback_prompt.h
 reConServer_SOURCES += record_prompt.h
+if BUILD_QPID_PROTON
+reConServer_SOURCES += \
+        ProtonCommandThread.cxx \
+        ProtonCommandThread.hxx
+endif
 
 reConServer_LDADD = ../../resip/recon/librecon.la
 reConServer_LDADD += ../../reflow/libreflow.la
+if BUILD_QPID_PROTON
+reConServer_LDADD += -lqpid-proton-cpp
+endif
 if USE_SIPXTAPI
 reConServer_LDADD += -lsipXsdp
 reConServer_LDADD += -lsipXmediaProcessing
