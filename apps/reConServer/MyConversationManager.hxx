@@ -56,6 +56,8 @@ public:
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override;
    virtual void displayInfo();
 
+   recon::ConversationHandle getRoom(const resip::Data& roomName);
+
 protected:
    virtual const ReConServerConfig& getConfig() const { return mConfig; };
    ReConServerConfig mConfig;

@@ -99,6 +99,41 @@ MyConversationManager::onDtmfEvent(ParticipantHandle partHandle, int dtmf, int d
    InfoLog(<< "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
 }
 
+ConversationHandle
+MyConversationManager::getRoom(const resip::Data& roomName)
+{
+   RoomMap::const_iterator it = mRooms.find(roomName);
+   if(it == mRooms.end())
+   {
+      InfoLog(<<"creating Conversation for room: " << roomName);
+      ConversationHandle convHandle = createConversation(getConfig().getConfigAutoHoldMode("AutoHoldMode", ConversationManager::AutoHoldEnabled));
+      mRooms[roomName] = convHandle;
+      // ensure a local participant is in the conversation - create one if one doesn't exist
+      if(getMediaStackAdapter().supportsLocalAudio())
+      {
+         ParticipantHandle localPartHandle = 0;
+         const set<ParticipantHandle> participantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
+         // If no local participant then create one, otherwise use first in set
+         if (participantHandles.empty())
+         {
+            localPartHandle = createLocalParticipant();
+         }
+         else
+         {
+            localPartHandle = *participantHandles.begin();
+         }
+         // Add local participant to conversation
+         addParticipant(convHandle, localPartHandle);
+      }
+      return convHandle;
+   }
+   else
+   {
+      InfoLog(<<"found Conversation for room: " << roomName);
+      return it->second;
+   }
+}
+
 void
 MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
@@ -106,38 +141,9 @@ MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const
    if(mAutoAnswerEnabled)
    {
       const resip::Data& room = msg.header(h_RequestLine).uri().user();
-      RoomMap::const_iterator it = mRooms.find(room);
-      if(it == mRooms.end())
-      {
-         InfoLog(<<"creating Conversation for room: " << room);
-         ConversationHandle convHandle = createConversation(getConfig().getConfigAutoHoldMode("AutoHoldMode", ConversationManager::AutoHoldEnabled));
-         mRooms[room] = convHandle;
-         // ensure a local participant is in the conversation - create one if one doesn't exist
-         if(getMediaStackAdapter().supportsLocalAudio())
-         {
-            ParticipantHandle localPartHandle = 0;
-            const set<ParticipantHandle> participantHandles = getParticipantHandlesByType(ConversationManager::ParticipantType_Local);
-            // If no local participant then create one, otherwise use first in set
-            if (participantHandles.empty())
-            {
-               localPartHandle = createLocalParticipant();
-            }
-            else
-            {
-               localPartHandle = *participantHandles.begin();
-            }
-            // Add local participant to conversation
-            addParticipant(convHandle, localPartHandle);
-         }
-         addParticipant(convHandle, partHandle);
-         answerParticipant(partHandle);
-      }
-      else
-      {
-         InfoLog(<<"found Conversation for room: " << room);
-         addParticipant(it->second, partHandle);
-         answerParticipant(partHandle);
-      }
+      ConversationHandle convHandle = getRoom(room);
+      addParticipant(convHandle, partHandle);
+      answerParticipant(partHandle);
    }
 }
 
