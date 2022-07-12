@@ -29,10 +29,9 @@ using namespace resip;
 using namespace std;
 
 CommandThread::CommandThread(const std::string &u)
-   : mMaximumAge(60000),
-     mRetryDelay(2000),
-     mUrl(u),
-     mFifo(0, 0)
+   : ProtonThreadBase(u,
+      std::chrono::seconds(60),
+      std::chrono::seconds(2))
 {
 }
 
@@ -41,92 +40,11 @@ CommandThread::~CommandThread()
 }
 
 void
-CommandThread::on_container_start(proton::container &c)
-{
-   mReceiver = c.open_receiver(mUrl);
-}
-
-void
-CommandThread::on_connection_open(proton::connection& conn)
-{
-}
-
-void
-CommandThread::on_receiver_open(proton::receiver &)
-{
-   InfoLog(<<"receiver ready for queue " << mUrl);
-   mWorkQueue = &mReceiver.work_queue();
-}
-
-void
-CommandThread::on_receiver_close(proton::receiver &r)
-{
-   InfoLog(<<"receiver closed");
-}
-
-void
-CommandThread::on_transport_error(proton::transport &t)
-{
-   WarningLog(<<"transport closed unexpectedly, trying to re-establish connection");
-   StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart receiver");
-   sleepMs(mRetryDelay);
-   t.connection().container().open_receiver(mUrl);
-}
-
-void
-CommandThread::on_message(proton::delivery &d, proton::message &m)
-{
-   const proton::timestamp::numeric_type& ct = m.creation_time().milliseconds();
-   StackLog(<<"message creation time (ms): " << ct);
-   if(ct > 0 && mMaximumAge > 0)
-   {
-      const proton::timestamp::numeric_type threshold = ResipClock::getTimeMs() - mMaximumAge;
-      if(ct < threshold)
-      {
-         DebugLog(<<"dropping a message because it is too old: " << threshold - ct << "ms");
-         return;
-      }
-   }
-   // get body as std::stringstream
-   std::string _json;
-   try
-   {
-      _json = proton::get<std::string>(m.body());
-   }
-   catch(proton::conversion_error& ex)
-   {
-      ErrLog(<<"failed to extract message body as string: " << ex.what());
-      return;
-   }
-   StackLog(<<"on_message received: " << _json);
-   std::stringstream stream;
-   stream << _json;
-
-   // extract elements from JSON
-   json::Object *elemRootFile = new json::Object();
-   if(!elemRootFile)
-   {
-      ErrLog(<<"failed to allocate new json::Object()"); // FIXME
-      return;
-   }
-   try
-   {
-      json::Reader::Read(*elemRootFile, stream);
-   }
-   catch(json::Reader::ScanException& ex)
-   {
-      ErrLog(<<"failed to scan JSON message: " << ex.what() << " message body: " << _json);
-      return;
-   }
-   mFifo.add(elemRootFile, TimeLimitFifo<json::Object>::InternalElement);
-}
-
-void
 CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
 {
-   while(mFifo.messageAvailable())
+   while(getFifo().messageAvailable())
    {
-      std::unique_ptr<json::Object> _jObj(mFifo.getNext());
+      std::unique_ptr<json::Object> _jObj(getFifo().getNext());
       json::Object& jObj = *_jObj;
       std::string command = json::String(jObj["command"]).Value();
       json::Object args = jObj["arguments"];
@@ -164,48 +82,6 @@ CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
          userRegistrationClient.unSetContact(Uri(aor));
       }
    }
-}
-
-void
-CommandThread::thread()
-{
-   while(!isShutdown())
-   {
-      try
-      {
-         proton::default_container(*this).run();
-      }
-      catch(exception& e)
-      {
-         WarningLog(<<"CommandThread::thread container threw " << e.what());
-      }
-      if(!isShutdown())
-      {
-         StackLog(<<"sleeping for " << mRetryDelay << "ms before attempting to restart container");
-         sleepMs(mRetryDelay);
-      }
-   }
-   InfoLog(<<"CommandThread::thread container stopped");
-}
-
-void
-CommandThread::shutdown()
-{
-   if(isShutdown())
-   {
-      DebugLog(<<"shutdown already in progress!");
-      return;
-   }
-   DebugLog(<<"trying to shutdown the Qpid Proton container");
-   ThreadIf::shutdown();
-   mWorkQueue->add(make_work(&CommandThread::doShutdown, this));
-}
-
-void
-CommandThread::doShutdown()
-{
-   StackLog(<<"closing sender");
-   mReceiver.container().stop();
 }
 
 /* ====================================================================

@@ -47,6 +47,7 @@ class Subsystem
       static Subsystem TRANSPORT;
       static Subsystem STATS;
       static Subsystem REPRO;
+      static Subsystem QPIDPROTON;
       
       const Data& getSubsystem() const;
       Log::Level getLevel() const { return mLevel; }

@@ -14,6 +14,7 @@ Subsystem Subsystem::TRANSACTION("RESIP:TRANSACTION");
 Subsystem Subsystem::TRANSPORT("RESIP:TRANSPORT");
 Subsystem Subsystem::STATS("RESIP:STATS");
 Subsystem Subsystem::REPRO("REPRO:APP");
+Subsystem Subsystem::QPIDPROTON("QPIDPROTON");
 Subsystem Subsystem::NONE("UNDEFINED");
 
 const Data& Subsystem::getSubsystem() const

@@ -1,24 +1,51 @@
-#ifndef COMMANDTHREAD_HXX
-#define COMMANDTHREAD_HXX
+#ifndef PROTONTHREADBASE_HXX
+#define PROTONTHREADBASE_HXX
 
 #include <sstream>
 #include <string>
 
-#include "rutil/ProtonThreadBase.hxx"
+#include "ThreadIf.hxx"
+#include "TimeLimitFifo.hxx"
 
-#include "UserRegistrationClient.hxx"
+#include <proton/function.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/receiver.hpp>
+#include <proton/transport.hpp>
+#include <proton/work_queue.hpp>
 
-namespace registrationagent {
+#include "cajun/json/elements.h"
 
-class CommandThread : public resip::ProtonThreadBase
+namespace resip {
+
+class ProtonThreadBase : public resip::ThreadIf, proton::messaging_handler
 {
 public:
-   CommandThread(const std::string &u);
-   ~CommandThread();
+   ProtonThreadBase(const std::string &u,
+      std::chrono::duration<long int> maximumAge,
+      std::chrono::duration<long int> retryDelay);
+   ~ProtonThreadBase();
 
-   void processQueue(UserRegistrationClient& userRegistrationClient);
+   void on_container_start(proton::container &c);
+   void on_connection_open(proton::connection &conn);
+   void on_receiver_open(proton::receiver &);
+   void on_receiver_close(proton::receiver &);
+   void on_transport_error(proton::transport &t);
+   void on_message(proton::delivery &d, proton::message &m);
+
+   virtual void thread();
+   virtual void shutdown();
+
+protected:
+   resip::TimeLimitFifo<json::Object>& getFifo() { return mFifo; };
 
 private:
+   std::chrono::duration<long int> mMaximumAge;
+   std::chrono::duration<long int> mRetryDelay;
+   std::string mUrl;
+   proton::receiver mReceiver;
+   proton::work_queue* mWorkQueue;
+   resip::TimeLimitFifo<json::Object> mFifo;
+
    void doShutdown();
 };
 
@@ -28,7 +55,8 @@ private:
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright 2016-2022 Daniel Pocock https://danielpocock.com
+ * Copyright 2022 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -23,6 +23,9 @@ endif
 lib_LTLIBRARIES = librutil.la
 
 librutil_la_LIBADD = $(LIBSSL_LIBADD)
+if BUILD_QPID_PROTON
+librutil_la_LIBADD += -lqpid-proton-cpp
+endif
 librutil_la_LIBADD += $(LIBRADIUS_LIBADD)
 librutil_la_LIBADD += $(LIBARES_LIBADD)
 librutil_la_LIBADD += @LIBSTL_LIBADD@
@@ -110,6 +113,11 @@ librutil_la_SOURCES += \
 librutil_la_CXXFLAGS += $(GSTREAMERMM_1_0_CFLAGS)
 librutil_la_LIBADD += $(GSTREAMERMM_1_0_LIBS)
 # $(LDADD)
+endif
+
+if BUILD_QPID_PROTON
+librutil_la_SOURCES += \
+    ProtonThreadBase.cxx
 endif
 
 rutilincludedir = $(includedir)/rutil
@@ -208,6 +216,7 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ProducerFifoBuffer.hxx \
 	DinkyPool.hxx \
 	ConsumerFifoBuffer.hxx \
+	ProtonThreadBase.hxx \
 	hep/HepAgent.hxx \
 	hep/ResipHep.hxx
 
