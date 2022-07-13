@@ -155,6 +155,8 @@ protected:
    bool isTrickleIce() { return mTrickleIce; };
    virtual void enableTrickleIce();
 
+   virtual void conversationsConfirm();
+
 private:       
    void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
    void provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);

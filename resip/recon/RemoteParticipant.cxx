@@ -1274,6 +1274,16 @@ RemoteParticipant::onProvisional(ClientInviteSessionHandle h, const SipMessage& 
 }
 
 void
+RemoteParticipant::conversationsConfirm()
+{
+   ConversationMap::const_iterator it;
+   for (it = mConversations.begin(); it != mConversations.end(); it++)
+   {
+      it->second->confirmParticipant(this);
+   }
+}
+
+void
 RemoteParticipant::onConnected(ClientInviteSessionHandle h, const SipMessage& msg)
 {
    InfoLog(<< "onConnected(Client): handle=" << mHandle << ", " << msg.brief());
@@ -1285,6 +1295,7 @@ RemoteParticipant::onConnected(ClientInviteSessionHandle h, const SipMessage& ms
 
       mDialogSet.setUACConnected(getDialogId(), mHandle);
       stateTransition(Connected);
+      conversationsConfirm();
    }
    else
    {
@@ -1304,13 +1315,9 @@ void
 RemoteParticipant::onConnectedConfirmed(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onConnectedConfirmed: handle=" << mHandle << ", " << msg.brief());
-   ConversationMap::const_iterator it;
-   for (it = mConversations.begin(); it != mConversations.end(); it++)
-   {
-      it->second->confirmParticipant(this);
-   }
    if (mHandle) mConversationManager.onParticipantConnectedConfirmed(mHandle, msg);
    stateTransition(Connected);
+   conversationsConfirm();
 }
 
 void
