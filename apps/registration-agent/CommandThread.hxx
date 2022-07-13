@@ -28,7 +28,8 @@ private:
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (C) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

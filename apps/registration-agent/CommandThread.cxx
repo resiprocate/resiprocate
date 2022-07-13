@@ -30,7 +30,7 @@ using namespace std;
 
 CommandThread::CommandThread(const std::string &u)
    : ProtonThreadBase(u,
-      std::chrono::seconds(60),
+      std::chrono::seconds(60), // FIXME configurable
       std::chrono::seconds(2))
 {
 }
@@ -42,51 +42,60 @@ CommandThread::~CommandThread()
 void
 CommandThread::processQueue(UserRegistrationClient& userRegistrationClient)
 {
-   while(getFifo().messageAvailable())
+   resip::TimeLimitFifo<json::Object>& fifo = getFifo();
+   while(fifo.messageAvailable())
    {
-      std::unique_ptr<json::Object> _jObj(getFifo().getNext());
-      json::Object& jObj = *_jObj;
-      std::string command = json::String(jObj["command"]).Value();
-      json::Object args = jObj["arguments"];
-      StackLog(<<"received command " << command);
-      if(command == "set_contact")
+      try
       {
-         string _aor = json::String(args["aor"]).Value();
-         Data aor(_aor);
-         string _newContact = json::String(args["contact"]).Value();
-         Data newContact(_newContact);
-         json::Number expires = json::Number(args["expires"]);
-         StackLog(<<"aor = " << aor << " contact = " << newContact << " expires = " << expires.Value());
-         vector<Data> route;
-         json::Array _route = json::Array(args["route"]);
-         for(json::Array::const_iterator it = _route.Begin(); it != _route.End(); it++)
+         std::unique_ptr<json::Object> _jObj(fifo.getNext());
+         json::Object& jObj = *_jObj;
+         std::string command = json::String(jObj["command"]).Value();
+         json::Object args = jObj["arguments"];
+         StackLog(<<"received command " << command);
+         if(command == "set_contact")
          {
-            const json::String& element = json::String(*it);
-            StackLog(<<"adding route element " << element.Value());
-            route.push_back(Data(element.Value()));
+            string _aor = json::String(args["aor"]).Value();
+            Data aor(_aor);
+            string _newContact = json::String(args["contact"]).Value();
+            Data newContact(_newContact);
+            json::Number expires = json::Number(args["expires"]);
+            StackLog(<<"aor = " << aor << " contact = " << newContact << " expires = " << expires.Value());
+            vector<Data> route;
+            json::Array _route = json::Array(args["route"]);
+            for(json::Array::const_iterator it = _route.Begin(); it != _route.End(); it++)
+            {
+               const json::String& element = json::String(*it);
+               StackLog(<<"adding route element " << element.Value());
+               route.push_back(Data(element.Value()));
+            }
+            uint64_t now = ResipClock::getTimeSecs();
+            if(expires.Value() < now)
+            {
+               DebugLog(<<"dropping a command because expiry has already passed " << now - expires << " seconds ago");
+            }
+            else
+            {
+               userRegistrationClient.setContact(Uri(aor), newContact, expires.Value(), route);
+            }
          }
-         uint64_t now = ResipClock::getTimeSecs();
-         if(expires.Value() < now)
+         else if(command == "unset_contact")
          {
-            DebugLog(<<"dropping a command because expiry has already passed " << now - expires << " seconds ago");
-         }
-         else
-         {
-            userRegistrationClient.setContact(Uri(aor), newContact, expires.Value(), route);
+            string _aor = json::String(args["aor"]).Value();
+            Data aor(_aor);
+            userRegistrationClient.unSetContact(Uri(aor));
          }
       }
-      else if(command == "unset_contact")
+      catch(...)
       {
-         string _aor = json::String(args["aor"]).Value();
-         Data aor(_aor);
-         userRegistrationClient.unSetContact(Uri(aor));
+         ErrLog(<<"exception while parsing the JSON");
       }
    }
 }
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (C) 2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
