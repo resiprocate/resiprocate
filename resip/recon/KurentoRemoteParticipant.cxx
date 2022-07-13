@@ -146,11 +146,140 @@ KurentoRemoteParticipant::newEndpoint()
             dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::RtpEndpoint(mKurentoMediaStackAdapter.mPipeline));
 }
 
+bool
+KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
+{
+   if(mEndpoint)
+   {
+      return false;
+   }
+   if(isWebRTC)
+   {
+      // delay while ICE gathers candidates from STUN and TURN
+      mIceGatheringDone = false;
+      mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoMediaStackAdapter.mPipeline));
+   }
+   else
+   {
+      mIceGatheringDone = true;
+      mEndpoint.reset(newEndpoint());
+   }
+
+   //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
+   //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+   mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, "file:///tmp/test.mp4")); // FIXME filename
+   mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+
+   return true;
+}
+
+void
+KurentoRemoteParticipant::doIceGathering(kurento::ContinuationString sdpReady)
+{
+   std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+
+   std::shared_ptr<kurento::EventContinuation> elEventIceCandidateFound =
+         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+      DebugLog(<<"received event: " << *event);
+      std::shared_ptr<kurento::OnIceCandidateFoundEvent> _event =
+         std::dynamic_pointer_cast<kurento::OnIceCandidateFoundEvent>(event);
+      resip_assert(_event.get());
+
+      if(!mTrickleIcePermitted)
+      {
+         return;
+      }
+      // FIXME - if we are waiting for a previous INFO to be confirmed,
+      //         aggregate the candidates into a vector and send them in bulk
+      auto ice = getLocalSdp()->session().makeIceFragment(Data(_event->getCandidate()),
+         _event->getLineIndex(), Data(_event->getId()));
+      if(ice.get())
+      {
+         StackLog(<<"about to send " << *ice);
+         info(*ice);
+      }
+      else
+      {
+         WarningLog(<<"failed to create ICE fragment for mid: " << _event->getId());
+      }
+   });
+
+   std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
+            std::make_shared<kurento::EventContinuation>([this, sdpReady](std::shared_ptr<kurento::Event> event){
+      mIceGatheringDone = true;
+      mEndpoint->getLocalSessionDescriptor(sdpReady);
+   });
+
+   webRtc->addOnIceCandidateFoundListener(elEventIceCandidateFound, [=](){
+      webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [=](){
+         webRtc->gatherCandidates([]{
+                  // FIXME - handle the case where it fails
+                  // on success, we continue from the IceGatheringDone event handler
+         }); // gatherCandidates
+      });
+   });
+}
+
+void
+KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cConnected)
+{
+   // FIXME - implement listeners for some of the events currently using elEventDebug
+
+   std::shared_ptr<kurento::EventContinuation> elError =
+         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+      ErrLog(<<"Error from Kurento MediaObject: " << *event);
+   });
+
+   std::shared_ptr<kurento::EventContinuation> elEventDebug =
+         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+      DebugLog(<<"received event: " << *event);
+   });
+
+   std::shared_ptr<kurento::EventContinuation> elEventKeyframeRequired =
+         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+      DebugLog(<<"received event: " << *event);
+      requestKeyframeFromPeer();
+   });
+
+   mEndpoint->create([=]{
+      mEndpoint->addErrorListener(elError, [=](){
+         mEndpoint->addConnectionStateChangedListener(elEventDebug, [=](){
+            mEndpoint->addMediaStateChangedListener(elEventDebug, [=](){
+               mEndpoint->addMediaTranscodingStateChangeListener(elEventDebug, [=](){
+                  mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [=](){
+                     mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [=](){
+                        mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [=](){
+                           //mMultiqueue->create([this, cConnected]{
+                           // mMultiqueue->connect([this, cConnected]{
+                           mPlayer->create([this, cConnected]{
+                              mPassThrough->create([this, cConnected]{
+                                 mEndpoint->connect([this, cConnected]{
+                                    mPassThrough->connect([this, cConnected]{
+                                       //mPlayer->play([this, cConnected]{
+                                       cConnected();
+                                       //mPlayer->connect(cConnected, *mEndpoint); // connect
+                                       //});
+                                    }, *mEndpoint);
+                                 }, *mPassThrough);
+                              });
+                           });
+                           //}, *mEndpoint); // mEndpoint->connect
+                           // }, *mEndpoint); // mMultiqueue->connect
+                           //}); // mMultiqueue->create
+                        }); // addKeyframeRequiredListener
+
+                     });
+                  });
+               });
+            });
+         });
+      });
+   }); // create
+}
+
 void
 KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp)
 {
-   // FIXME Kurento - include video, SRTP, WebRTC?
-
    bool useExistingSdp = false;
    if(getLocalSdp())
    {
@@ -159,24 +288,8 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady,
 
    try
    {
-      bool endpointExists = true;
-      bool isWebRTC = false; // FIXME - define per RemoteParticipant
-      if(!mEndpoint)
-      {
-         endpointExists = false;
-         if(isWebRTC)
-         {
-            // delay while ICE gathers candidates from STUN and TURN
-            mIceGatheringDone = false;
-            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoMediaStackAdapter.mPipeline));
-         }
-         else
-         {
-            mEndpoint.reset(newEndpoint());
-         }
-      }
-
-      // FIXME - add listeners for Kurento events
+      bool isWebRTC = mWebRTCOutgoing;
+      bool firstUseEndpoint = initEndpointIfRequired(isWebRTC);
 
       kurento::ContinuationString cOnOfferReady = [this, holdSdp, sdpReady](const std::string& offer){
          StackLog(<<"offer FROM Kurento: " << offer);
@@ -195,19 +308,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady,
             mWaitingAnswer = true;
             if(isWebRTC)
             {
-               std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
-
-               std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
-                        std::make_shared<kurento::EventContinuation>([this, cOnOfferReady](std::shared_ptr<kurento::Event> event){
-                  mIceGatheringDone = true;
-                  mEndpoint->getLocalSessionDescriptor(cOnOfferReady);
-               });
-               webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
-
-               webRtc->gatherCandidates([]{
-                        // FIXME - handle the case where it fails
-                        // on success, we continue from the IceGatheringDone event handler
-               }); // gatherCandidates
+               doIceGathering(cOnOfferReady);
             }
             else
             {
@@ -216,7 +317,11 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady,
          }); // generateOffer
       };
 
-      if(endpointExists)
+      if(firstUseEndpoint)
+      {
+         createAndConnectElements(cConnected);
+      }
+      else
       {
          if(!useExistingSdp)
          {
@@ -231,21 +336,6 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady,
             cOnOfferReady(*offerMangledStr);
          }
       }
-      else{
-         mEndpoint->create([this, cConnected]{
-            // Note: FIXME this will be done later in the call to
-            //       waitingMode() as that method knows whether
-            //       to do loopback, a PlayerEndpoint or something else
-            //mEndpoint->connect(cConnected, *mEndpoint); // connect
-
-            // FIXME event listeners
-            // FIXME mplayer
-            // FIXME passthrough
-
-            cConnected();
-         }); // create
-      }
-
    }
    catch(exception& e)
    {
@@ -291,67 +381,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
 
       StackLog(<<"offer TO Kurento: " << *offerMangledStr);
 
-      bool endpointExists = true;
-      mIceGatheringDone = true;
-      if(!mEndpoint)
-      {
-         endpointExists = false;
-         if(isWebRTC)
-         {
-            // delay while ICE gathers candidates from STUN and TURN
-            mIceGatheringDone = false;
-            mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoMediaStackAdapter.mPipeline));
-         }
-         else
-         {
-            mEndpoint.reset(newEndpoint());
-         }
-      }
-
-      // FIXME - add listeners for Kurento events
-
-      std::shared_ptr<kurento::EventContinuation> elError =
-            std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
-         ErrLog(<<"Error from Kurento MediaObject: " << *event);
-      });
-
-      std::shared_ptr<kurento::EventContinuation> elEventDebug =
-            std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
-         DebugLog(<<"received event: " << *event);
-      });
-
-      std::shared_ptr<kurento::EventContinuation> elEventKeyframeRequired =
-            std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
-         DebugLog(<<"received event: " << *event);
-         requestKeyframeFromPeer();
-      });
-
-      bool trickleIcePermitted = false;
-      std::shared_ptr<kurento::EventContinuation> elEventIceCandidateFound =
-            std::make_shared<kurento::EventContinuation>([this, trickleIcePermitted](std::shared_ptr<kurento::Event> event){
-         DebugLog(<<"received event: " << *event);
-         std::shared_ptr<kurento::OnIceCandidateFoundEvent> _event =
-            std::dynamic_pointer_cast<kurento::OnIceCandidateFoundEvent>(event);
-         resip_assert(_event.get());
-
-         if(!trickleIcePermitted)
-         {
-            return;
-         }
-         // FIXME - if we are waiting for a previous INFO to be confirmed,
-         //         aggregate the candidates into a vector and send them in bulk
-         auto ice = getLocalSdp()->session().makeIceFragment(Data(_event->getCandidate()),
-            _event->getLineIndex(), Data(_event->getId()));
-         if(ice.get())
-         {
-            StackLog(<<"about to send " << *ice);
-            info(*ice);
-         }
-         else
-         {
-            WarningLog(<<"failed to create ICE fragment for mid: " << _event->getId());
-         }
-      });
+      bool firstUseEndpoint = initEndpointIfRequired(isWebRTC);
 
       kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, sdpReady](const std::string& answer){
          StackLog(<<"answer FROM Kurento: " << answer);
@@ -364,8 +394,8 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
          sdpReady(true, std::move(_answer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, endpointExists, sdpReady, cOnAnswerReady]{
-         if(endpointExists && mReuseSdpAnswer)
+      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, firstUseEndpoint, sdpReady, cOnAnswerReady]{
+         if(!firstUseEndpoint && mReuseSdpAnswer)
          {
             // FIXME - Kurento should handle hold/resume
             // but it fails with SDP_END_POINT_ALREADY_NEGOTIATED
@@ -376,10 +406,10 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
             cOnAnswerReady(*answerStr);
             return;
          }
-         mEndpoint->processOffer([this, offerMangled, isWebRTC, trickleIcePermitted, elEventDebug, elEventIceCandidateFound, sdpReady, cOnAnswerReady](const std::string& answer){
+         mEndpoint->processOffer([this, offerMangled, isWebRTC, sdpReady, cOnAnswerReady](const std::string& answer){
             if(isWebRTC)
             {
-               if(trickleIcePermitted && offerMangled->session().isTrickleIceSupported())
+               if(mTrickleIcePermitted && offerMangled->session().isTrickleIceSupported())
                {
                   HeaderFieldValue hfv(answer.data(), answer.size());
                   Mime type("application", "sdp");
@@ -397,20 +427,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
                   //         make sure we don't call provideAnswer again on 200 OK
                }
 
-               std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
-
-               std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
-                     std::make_shared<kurento::EventContinuation>([this, cOnAnswerReady](std::shared_ptr<kurento::Event> event){
-                  mIceGatheringDone = true;
-                  mEndpoint->getLocalSessionDescriptor(cOnAnswerReady);
-               });
-               webRtc->addOnIceGatheringDoneListener(elIceGatheringDone, [this](){});
-               webRtc->addOnIceCandidateFoundListener(elEventIceCandidateFound, [this](){});
-
-               webRtc->gatherCandidates([]{
-                  // FIXME - handle the case where it fails
-                  // on success, we continue from the IceGatheringDone event handler
-               }); // gatherCandidates
+               doIceGathering(cOnAnswerReady);
             }
             else
             {
@@ -419,47 +436,13 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
          }, *offerMangledStr); // processOffer
       };
 
-      if(endpointExists)
+      if(firstUseEndpoint)
       {
-         cConnected();
+         createAndConnectElements(cConnected);
       }
       else
       {
-         //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
-         //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
-         mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, "file:///tmp/test.mp4")); // FIXME filename
-         mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
-         mEndpoint->create([this, elError, elEventDebug, elEventKeyframeRequired, cConnected]{
-            mEndpoint->addErrorListener(elError, [this](){});
-            mEndpoint->addConnectionStateChangedListener(elEventDebug, [this](){});
-            mEndpoint->addMediaStateChangedListener(elEventDebug, [this](){});
-            mEndpoint->addMediaTranscodingStateChangeListener(elEventDebug, [this](){});
-            mEndpoint->addMediaFlowInStateChangeListener(elEventDebug, [this](){});
-            mEndpoint->addMediaFlowOutStateChangeListener(elEventDebug, [this](){});
-            mEndpoint->addKeyframeRequiredListener(elEventKeyframeRequired, [this, cConnected](){
-               //mMultiqueue->create([this, cConnected]{
-                  // mMultiqueue->connect([this, cConnected]{
-                     // Note: FIXME this will be done later in the call to
-                     //       waitingMode() as that method knows whether
-                     //       to do loopback, a PlayerEndpoint or something else
-                     //mEndpoint->connect([this, cConnected]{
-                        mPlayer->create([this, cConnected]{
-                           mPassThrough->create([this, cConnected]{
-                              mEndpoint->connect([this, cConnected]{
-                                 mPassThrough->connect([this, cConnected]{
-                                    //mPlayer->play([this, cConnected]{
-                                       cConnected();
-                                       //mPlayer->connect(cConnected, *mEndpoint); // connect
-                                    //});
-                                 }, *mEndpoint);
-                              }, *mPassThrough);
-                           });
-                        });
-                     //}, *mEndpoint); // mEndpoint->connect
-                  // }, *mEndpoint); // mMultiqueue->connect
-               //}); // mMultiqueue->create
-            }); // addKeyframeRequiredListener
-         }); // create
+         cConnected();
       }
 
       requestSent = true;

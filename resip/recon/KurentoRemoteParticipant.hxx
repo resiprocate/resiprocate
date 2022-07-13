@@ -97,6 +97,9 @@ protected:
 
 private:
    kurento::BaseRtpEndpoint* newEndpoint();
+   virtual bool initEndpointIfRequired(bool isWebRTC);
+   virtual void doIceGathering(kurento::ContinuationString sdpReady);
+   virtual void createAndConnectElements(kurento::ContinuationVoid cConnected);
    virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;
 
    std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
@@ -108,7 +111,9 @@ public: // FIXME
    bool mReuseSdpAnswer;
    bool mWSAcceptsKeyframeRequests;
    resip::SdpContents* mLastRemoteSdp;
-   bool mWaitingAnswer;
+   bool mWaitingAnswer;  // have sent an offer, waiting for peer to send answer
+   bool mTrickleIcePermitted = false; // FIXME - complete
+   bool mWebRTCOutgoing = false; // FIXME - use WebRTC for outgoing call
 };
 
 }
