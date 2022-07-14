@@ -238,8 +238,6 @@ librepro_la_LIBADD += @LIBGEOIP_LIBADD@
 endif
 
 if BUILD_QPID_PROTON
-librepro_la_SOURCES += QpidProtonThread.cxx
-nobase_reproinclude_HEADERS += QpidProtonThread.hxx
 librepro_la_LIBADD += -lqpid-proton-cpp
 endif
 

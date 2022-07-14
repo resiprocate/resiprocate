@@ -43,6 +43,7 @@ private:
 #ifdef BUILD_QPID_PROTON
    std::unique_ptr<resip::ProtonThreadBase> mProtonCommandThread;
    std::shared_ptr<ProtonCommandThread> mCommandQueue;
+   std::shared_ptr<resip::ProtonThreadBase::ProtonSenderBase> mEventTopic;
 #endif
 };
 

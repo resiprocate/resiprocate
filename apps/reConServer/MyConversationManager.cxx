@@ -155,6 +155,10 @@ void
 MyConversationManager::onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onIncomingParticipant: handle=" << partHandle << "auto=" << autoAnswer << " msg=" << msg.brief());
+   std::stringstream event;
+   event << "{\"event\":\"incomingParticipant\",\"participant\":" << partHandle <<
+            ",\"brief\":\""<< msg.brief() << "\"}";
+   notifyEvent(event.str().c_str());
    if(mAutoAnswerEnabled)
    {
       const resip::Data& room = msg.header(h_RequestLine).uri().user();
@@ -168,6 +172,10 @@ void
 MyConversationManager::onRequestOutgoingParticipant(ParticipantHandle partHandle, const SipMessage& msg, ConversationProfile& conversationProfile)
 {
    InfoLog(<< "onRequestOutgoingParticipant: handle=" << partHandle << " msg=" << msg.brief());
+   std::stringstream event;
+   event << "{\"event\":\"requestOutgoingParticipant\",\"participant\":" << partHandle <<
+            ",\"brief\":\""<< msg.brief() << "\"}";
+   notifyEvent(event.str().c_str());
    /*
    if(mConvHandles.empty())
    {
@@ -180,6 +188,10 @@ void
 MyConversationManager::onParticipantTerminated(ParticipantHandle partHandle, unsigned int statusCode)
 {
    InfoLog(<< "onParticipantTerminated: handle=" << partHandle);
+   std::stringstream event;
+   event << "{\"event\":\"participantTerminated\",\"participant\":" << partHandle <<
+            ",\"statusCode\":"<< statusCode << "}";
+   notifyEvent(event.str().c_str());
 }
  
 void
@@ -206,12 +218,20 @@ void
 MyConversationManager::onParticipantConnected(ParticipantHandle partHandle, const SipMessage& msg)
 {
    InfoLog(<< "onParticipantConnected: handle=" << partHandle << " msg=" << msg.brief());
+   std::stringstream event;
+   event << "{\"event\":\"participantConnected\",\"participant\":" << partHandle <<
+            ",\"brief\":\""<< msg.brief() << "\"}";
+   notifyEvent(event.str().c_str());
 }
 
 void
 MyConversationManager::onParticipantConnectedConfirmed(ParticipantHandle partHandle, const SipMessage& msg)
 {
    InfoLog(<< "onParticipantConnectedConfirmed: handle=" << partHandle << " msg=" << msg.brief());
+   std::stringstream event;
+   event << "{\"event\":\"participantConnectedConfirmed\",\"participant\":" << partHandle <<
+            ",\"brief\":\""<< msg.brief() << "\"}";
+   notifyEvent(event.str().c_str());
 }
 
 void

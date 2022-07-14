@@ -10,6 +10,7 @@
 #include <proton/function.hpp>
 #include <proton/messaging_handler.hpp>
 #include <proton/receiver.hpp>
+#include <proton/sender.hpp>
 #include <proton/transport.hpp>
 #include <proton/work_queue.hpp>
 
@@ -36,26 +37,50 @@ public:
       resip::TimeLimitFifo<json::Object> mFifo;
    protected:
       resip::TimeLimitFifo<json::Object>& getFifo() { return mFifo; };
+   };
 
+   class ProtonSenderBase
+   {
+   public:
+      ProtonSenderBase(const std::string &u,
+         std::chrono::duration<long int> retryDelay = std::chrono::seconds(2));
+      virtual ~ProtonSenderBase();
+      std::chrono::duration<long int> mRetryDelay;
+      std::string mUrl;
+      proton::sender mSender;
+      proton::work_queue* mWorkQueue;
+      resip::TimeLimitFifo<Data> mFifo;
+      uint64_t mPending;
+
+      void sendMessage(const resip::Data& msg);
+      void doSend();
+   protected:
+      resip::TimeLimitFifo<Data>& getFifo() { return mFifo; };
    };
 
    ProtonThreadBase(std::chrono::duration<long int> mRetryDelay = std::chrono::seconds(2));
    virtual ~ProtonThreadBase();
 
    void addReceiver(std::shared_ptr<ProtonReceiverBase> rx) { mReceivers.push_back(rx); };
+   void addSender(std::shared_ptr<ProtonSenderBase> tx) { mSenders.push_back(tx); };
 
    void on_container_start(proton::container &c);
    void on_connection_open(proton::connection &conn);
    void on_receiver_open(proton::receiver &);
    void on_receiver_close(proton::receiver &);
+   void on_sender_open(proton::sender &);
+   void on_sender_close(proton::sender &);
    void on_transport_error(proton::transport &t);
    void on_message(proton::delivery &d, proton::message &m);
+   void on_sendable(proton::sender &s);
+   void on_tracker_accept(proton::tracker &t);
 
    virtual void thread();
    virtual void shutdown();
 
 
 private:
+   bool checkSenderShutdown();
    void doShutdown();
 
    std::chrono::duration<long int> mRetryDelay;
@@ -63,6 +88,7 @@ private:
    std::shared_ptr<proton::container> mContainer;
 
    std::vector<std::shared_ptr<ProtonReceiverBase>> mReceivers;
+   std::vector<std::shared_ptr<ProtonSenderBase>> mSenders;
 };
 
 } // namespace

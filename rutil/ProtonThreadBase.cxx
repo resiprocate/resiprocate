@@ -46,6 +46,54 @@ ProtonThreadBase::ProtonReceiverBase::~ProtonReceiverBase()
 {
 }
 
+ProtonThreadBase::ProtonSenderBase::ProtonSenderBase(const std::string &u,
+   std::chrono::duration<long int> retryDelay)
+   : mRetryDelay(retryDelay),
+     mUrl(u),
+     mWorkQueue(nullptr),
+     mFifo(0, 0),
+     mPending(0)
+{
+}
+
+ProtonThreadBase::ProtonSenderBase::~ProtonSenderBase()
+{
+}
+
+void
+ProtonThreadBase::ProtonSenderBase::sendMessage(const resip::Data& msg)
+{
+   mFifo.add(new Data(msg), TimeLimitFifo<Data>::InternalElement);
+   mWorkQueue->add(proton::internal::v11::make_work(&ProtonThreadBase::ProtonSenderBase::doSend, this));
+   StackLog(<<"QpidProtonThread::sendMessage added a message to the FIFO");
+}
+
+void
+ProtonThreadBase::ProtonSenderBase::doSend()
+{
+   try {
+      StackLog(<<"checking for a message");
+      while(mFifo.messageAvailable() && mSender.credit() > 0)
+      {
+         StackLog(<<"doSend trying to send a message");
+         std::shared_ptr<Data> body(mFifo.getNext());
+         proton::message msg;
+         msg.body(body->c_str());
+         mSender.send(msg);
+         StackLog(<<"doSend: mPending = " << ++mPending);
+      }
+      if(mFifo.messageAvailable())
+      {
+         StackLog(<<"tick still has messages to send, but no credit remaining");
+      }
+   }
+   catch(const std::exception& e)
+   {
+      ErrLog(<<"failed to send a message: " << e.what());
+      return;
+   }
+}
+
 ProtonThreadBase::ProtonThreadBase(std::chrono::duration<long int> retryDelay)
    : mRetryDelay(retryDelay)
 {
@@ -65,6 +113,14 @@ ProtonThreadBase::on_container_start(proton::container &c)
       proton::connection_options co;
       co.reconnect(rec);
       rb->mReceiver = c.open_receiver(rb->mUrl, co);
+   }
+   for(auto sb : mSenders)
+   {
+      proton::reconnect_options rec;
+      rec.delay(proton::duration(std::chrono::milliseconds(sb->mRetryDelay).count()));
+      proton::connection_options co;
+      co.reconnect(rec);
+      sb->mSender = c.open_sender(sb->mUrl, co);
    }
 }
 
@@ -92,6 +148,27 @@ void
 ProtonThreadBase::on_receiver_close(proton::receiver &r)
 {
    InfoLog(<<"receiver closed");
+}
+
+void
+ProtonThreadBase::on_sender_open(proton::sender &s)
+{
+   for(auto sb : mSenders)
+   {
+      if(sb->mSender == s)
+      {
+         InfoLog(<<"sender ready for queue " << sb->mUrl);
+         sb->mWorkQueue = &s.work_queue();
+         return;
+      }
+   }
+   ErrLog(<<"unexpected sender: " << s);
+}
+
+void
+ProtonThreadBase::on_sender_close(proton::sender &r)
+{
+   DebugLog(<<"sender closed");
 }
 
 void
@@ -159,6 +236,57 @@ ProtonThreadBase::on_message(proton::delivery &d, proton::message &m)
 }
 
 void
+ProtonThreadBase::on_sendable(proton::sender& s)
+{
+   StackLog(<<"on_sendable invoked");
+   for(auto sb : mSenders)
+   {
+      if(sb->mSender == s)
+      {
+         sb->doSend();
+      }
+   }
+}
+
+bool
+ProtonThreadBase::checkSenderShutdown()
+{
+   bool nothingOutstanding = true;
+   for(auto sb : mSenders)
+   {
+      if(sb->mFifo.messageAvailable() || sb->mPending > 0)
+      {
+         nothingOutstanding = false;
+      }
+   }
+
+   if(isShutdown() && nothingOutstanding)
+   {
+      StackLog(<<"no more messages outstanding, shutting down");
+      return true;
+   }
+   return false;
+}
+
+void
+ProtonThreadBase::on_tracker_accept(proton::tracker &t)
+{
+   for(auto sb : mSenders)
+   {
+      if(sb->mSender == t.sender())
+      {
+         StackLog(<<"on_tracker_accept: mPending = " << --sb->mPending);
+      }
+   }
+
+   if(checkSenderShutdown())
+   {
+      StackLog(<<"no more messages outstanding, shutting down");
+      doShutdown();
+   }
+}
+
+void
 ProtonThreadBase::thread()
 {
    while(!isShutdown())
@@ -192,6 +320,10 @@ ProtonThreadBase::shutdown()
    }
    DebugLog(<<"trying to shutdown the Qpid Proton container");
    ThreadIf::shutdown();
+   if(!checkSenderShutdown())
+   {
+      return;
+   }
    if(!mReceivers.empty())
    {
       if(mReceivers.front()->mWorkQueue)

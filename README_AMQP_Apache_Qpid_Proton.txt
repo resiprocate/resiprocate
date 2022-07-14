@@ -57,8 +57,8 @@ RPM:
   sudo rabbitmq-plugins enable rabbitmq_amqp1_0
   sudo systemctl restart rabbitmq-server
 
-Installing and using the Python command line utility
-----------------------------------------------------
+Installing and using the Python command line utilities
+------------------------------------------------------
 
 Debian / Ubuntu:
    sudo apt install python3-qpid-proton
@@ -81,4 +81,16 @@ Example sending a JSON command to reConServer:
      -a localhost:5672/sip.reconserver.cmd \
      -m '{"command":"inviteToRoom","arguments":{"destination":"sip:cisco@10.1.2.3?transport=tcp","room":"room1"}}'
 
+Example receiving messages from the reConServer queue or topic:
 
+   Uncomment the EventTopicURL in reConServer.config or any of the other
+   reSIProcate applications, repro.config, registrationAgent.config, ...
+
+   EventTopicURL = amqp://localhost:5672//queue/sip.reconserver.events
+
+   (re)start the reConServer
+
+   Run the utility in the console, messages appear on stdout:
+
+   ./tools/monitor-amqp-queue-topic.py \
+     -a localhost:5672//queue/sip.reconserver.events

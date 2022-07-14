@@ -1382,11 +1382,23 @@ ReConServerProcess::main (int argc, char** argv)
 
 #ifdef BUILD_QPID_PROTON
       const Data& protonCommandQueue = reConServerConfig.getConfigData("BrokerURL", "");
-      if(!protonCommandQueue.empty())
+      const Data& protonEventTopic = reConServerConfig.getConfigData("EventTopicURL", "");
+      if(!protonCommandQueue.empty() || !protonEventTopic.empty())
       {
          mProtonCommandThread.reset(new ProtonThreadBase());
-         mCommandQueue.reset(new ProtonCommandThread(protonCommandQueue));
-         mProtonCommandThread->addReceiver(mCommandQueue);
+         if(!protonCommandQueue.empty())
+         {
+            mCommandQueue.reset(new ProtonCommandThread(protonCommandQueue));
+            mProtonCommandThread->addReceiver(mCommandQueue);
+         }
+         if(!protonEventTopic.empty())
+         {
+            mEventTopic.reset(new ProtonThreadBase::ProtonSenderBase(protonEventTopic.c_str()));
+            mProtonCommandThread->addSender(mEventTopic);
+            mConversationManager->setEventListener([this](const Data& event){
+               mEventTopic->sendMessage(event);
+            });
+         }
          mProtonCommandThread->run();
       }
 #endif

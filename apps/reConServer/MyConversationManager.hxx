@@ -56,15 +56,20 @@ public:
    virtual void onParticipantRequestedHold(recon::ParticipantHandle partHandle, bool held) override;
    virtual void displayInfo();
 
+   typedef std::function<void(const resip::Data& event)> EventListener;
+   virtual void setEventListener(EventListener eventListener) { mEventListener = eventListener; };
+
    recon::ConversationHandle getRoom(const resip::Data& roomName);
    void inviteToRoom(const resip::Data& roomName, const resip::NameAddr& destination);
 
 protected:
    virtual const ReConServerConfig& getConfig() const { return mConfig; };
+   virtual void notifyEvent(const resip::Data& event) { if(mEventListener) {mEventListener(event);} };
    ReConServerConfig mConfig;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
    RoomMap mRooms;
    bool mAutoAnswerEnabled;
+   EventListener mEventListener;
 };
 
 }
