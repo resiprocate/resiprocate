@@ -14,20 +14,27 @@
 #include <resip/recon/SipXMediaStackAdapter.hxx>
 #endif
 
+#include "reConServerConfig.hxx"
+
 namespace reconserver
 {
 
+#ifdef USE_KURENTO
+#define PREFER_KURENTO
+// FIXME: hard-coded to use Kurento when selected at compile time
+#else
 #ifdef USE_SIPXTAPI
 #define PREFER_SIPXTAPI
 #else
 #error No media stack enabled
+#endif
 #endif
 
 class MyConversationManager : public recon::ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled, recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
+   MyConversationManager(const ReConServerConfig& config, bool localAudioEnabled, int defaultSampleRate, int maxSampleRate, bool autoAnswerEnabled);
    virtual ~MyConversationManager() {};
 
    virtual void startup();
@@ -50,6 +57,8 @@ public:
    virtual void displayInfo();
 
 protected:
+   virtual const ReConServerConfig& getConfig() const { return mConfig; };
+   ReConServerConfig mConfig;
    typedef std::map<resip::Data, recon::ConversationHandle> RoomMap;
    RoomMap mRooms;
    bool mAutoAnswerEnabled;

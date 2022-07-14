@@ -229,7 +229,8 @@ RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::unique_ptr<res
       }
 
       // Adjust RTP Streams
-      dynamic_cast<RemoteParticipant*>(inviteSessionHandle->getAppDialog().get())->adjustRTPStreams(offer);
+      RemoteParticipant* rp = dynamic_cast<RemoteParticipant*>(inviteSessionHandle->getAppDialog().get());
+      rp->adjustRTPStreams(offer);
 
       // Do Post Answer Operations
       ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(inviteSessionHandle.get());
@@ -242,6 +243,10 @@ RemoteParticipantDialogSet::doProvideOfferAnswer(bool offer, std::unique_ptr<res
          if(postOfferAnswerAccept)
          {
             sis->accept();
+            if(rp->getState() == RemoteParticipant::Connecting)
+            {
+               rp->stateTransition(RemoteParticipant::Accepted);
+            }
          }
       }
    }

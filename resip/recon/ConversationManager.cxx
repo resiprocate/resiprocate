@@ -34,9 +34,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter)
+ConversationManager::ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter,
+   std::shared_ptr<ConfigParse> configParse)
 : mUserAgent(0),
   mMediaStackAdapter(mediaStackAdapter),
+  mConfigParse(configParse),
   mShuttingDown(false),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
@@ -80,12 +82,21 @@ ConversationManager::shutdown()
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
    }
+
+   if(mMediaStackAdapter.get())
+   {
+      mMediaStackAdapter->shutdown();
+      mMediaStackAdapter.reset();
+   }
 }
 
 void
 ConversationManager::process()
 {
-   mMediaStackAdapter->process();
+   if(mMediaStackAdapter)
+   {
+      mMediaStackAdapter->process();
+   }
 }
 
 ConversationHandle 
@@ -358,9 +369,10 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
    offer.session().origin().getVersion() = currentTime;  
 
    // Set local port in offer
-   // for now we only allow 1 audio media
-   resip_assert(offer.session().media().size() == 1);
-   resip_assert(offer.session().media().front().name() == "audio");
+   // make sure at least one medium is present
+   resip_assert(offer.session().media().size() > 0);
+   // make sure at least one medium is audio
+   resip_assert(offer.session().getMediaByType("audio").size() > 0);
 }
 
 Participant* 

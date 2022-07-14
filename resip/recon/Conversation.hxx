@@ -64,13 +64,18 @@ public:
    void setMaxParticipants(unsigned int maxParticipants) { mMaxParticipants = maxParticipants; };
    unsigned int getMaxParticipants() const { return mMaxParticipants; };
 
+   virtual void confirmParticipant(Participant* participant) {};
+
 protected:
+   std::shared_ptr<resip::ConfigParse> getConfig() { return mConversationManager.getConfig(); };
+
    friend class Participant;
    friend class SipXParticipant;
    friend class LocalParticipant;
    friend class SipXLocalParticipant;
    friend class RemoteParticipant;
    friend class SipXRemoteParticipant;
+   friend class KurentoRemoteParticipant;
    friend class MediaResourceParticipant;
    friend class SipXMediaResourceParticipant;
    void registerParticipant(Participant *, unsigned int inputGain=100, unsigned int outputGain=100);
@@ -78,6 +83,7 @@ protected:
 
    friend class BridgeMixer;
    friend class SipXBridgeMixer;
+   friend class KurentoBridgeMixer;
    typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
@@ -89,6 +95,7 @@ protected:
    // Note: these are only set here if sipXConversationMediaInterfaceMode is used
    friend class ConversationManager;
    friend class SipXMediaStackAdapter;
+   friend class KurentoMediaStackAdapter;
    BridgeMixer* getBridgeMixer() noexcept { return mBridgeMixer.get(); }
    std::shared_ptr<BridgeMixer> getBridgeMixerShared() { return mBridgeMixer; }
    virtual void setBridgeMixer(std::shared_ptr<BridgeMixer> mixer) { mBridgeMixer = mixer; }

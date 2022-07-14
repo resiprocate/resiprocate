@@ -1,6 +1,7 @@
 #if !defined(RESIP_SDPCONTENTS_HXX)
 #define RESIP_SDPCONTENTS_HXX
 
+#include <functional>
 #include <vector>
 #include <list>
 #include <iosfwd>
@@ -16,6 +17,8 @@ namespace resip
 {
 
 class SdpContents;
+
+class TrickleIceContents;
 
 class AttributeHelper
 {
@@ -934,6 +937,11 @@ class SdpContents : public Contents
               * @return Media lines  
               **/
             MediumContainer& media() {return mMedia;}
+            /** @brief return session Media lines filtered by type
+              * @param type the type
+              * @return Media lines
+              */
+            std::list<std::reference_wrapper<const Medium>> getMediaByType(const Data& type) const;
 
             /** @brief add an e= (email) line to session
               * 
@@ -996,6 +1004,13 @@ class SdpContents : public Contents
               * @return list of values for given key
               **/
             const std::list<Data>& getValues(const Data& key) const;
+            /** @brief examine direction for streams of given types
+              *
+              * @param types
+              * @params protocolTypes
+              */
+            const Data getDirection(const std::set<Data> types = {},
+               const std::set<Data> protocolTypes = {}) const;
             /** @brief retrieve label (RFC 4574) attributes in a set
               *
               * @return set of label attribute values, if any
@@ -1006,6 +1021,11 @@ class SdpContents : public Contents
               * @return true if the SDP appears to be WebRTC
               */
             bool isWebRTC() const;
+
+            /** @brief determine if ice-options:trickle is present
+              * @return true if ice-options:trickle is present
+              */
+            bool isTrickleIceSupported() const;
             /** @brief apply RFC 4145 COMEDIA transform
               *
               * sets the IP port number of each media to 9 and
@@ -1021,6 +1041,19 @@ class SdpContents : public Contents
               * @param holding whether to represent hold or normal
               */
             void transformLocalHold(bool holding);
+            /** @brief find the Medium with given mid value
+              * @param mid the mid value to search for
+              * @return nullptr if no match found
+              */
+            const Medium* getMediumByMid(const Data& mid) const;
+            /** @brief based on the original SDP in this instances of SdpContents,
+             *         find the relevant ICE and m= line(s), copy them into a new
+             *         SDP fragment and add the candidate line provided
+             *  @param fragment the candidate line to include
+              * @return a new TrickleIceContents
+              */
+            std::shared_ptr<TrickleIceContents> makeIceFragment(const Data& fragment,
+               unsigned int lineIndex, const Data& mid);
 
          private:
             int mVersion;

@@ -4,6 +4,9 @@ EXTRA_DIST += *.vcxproj
 EXTRA_DIST += testua_readme.txt
 
 LDADD = ../librecon.la
+if USE_KURENTO
+LDADD += ../../../media/kurento/libkurentoclient.la
+endif
 LDADD += ../../../reflow/libreflow.la
 # These need to be included for static linking, and we need to be able
 # to configure the runtime location to find them for dynamic loading
@@ -35,6 +38,9 @@ testUA_SOURCES = testUA.cxx playback_prompt.h record_prompt.h
 sdpTests_SOURCES = sdpTests.cxx
 unitTests_SOURCES = unitTests.cxx
 testUA_LDADD = -lsipXport
+if USE_KURENTO
+testUA_LDADD += -lboost_system
+endif
 testUA_LDADD += $(LDADD)
 
 endif

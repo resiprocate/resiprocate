@@ -11,9 +11,7 @@
 #include "UserAgentRegistration.hxx"
 #include "ReconSubsystem.hxx"
 
-#ifdef USE_SIPXTAPI
-#include "SipXMediaStackAdapter.hxx"
-#endif
+#include "MediaStackAdapter.hxx"
 
 #include "reflow/FlowManagerSubsystem.hxx"
 

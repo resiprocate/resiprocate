@@ -1,6 +1,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/TrickleIceContents.hxx"
 #include "resip/stack/HeaderFieldValue.hxx"
 #include "rutil/ParseBuffer.hxx"
 
@@ -135,6 +136,7 @@ main(int argc, char* argv[])
        SdpContents sdp(hfv, type);
        CritLog ( << sdp.session().media().size());       
        assert(sdp.session().media().size() == 2);
+       assert(sdp.session().getMediaByType("video").size() == 1);
        
        CritLog(<< "Marconi Test Ok");
     }
@@ -641,6 +643,146 @@ main(int argc, char* argv[])
 
       assert(sdp.session().origin().user() == "-");
       assert(sdp.session().media().size() == 2);
+   }
+
+   {
+      // Sample SDP answer for WebRTC taken from Kurento Media Server
+      Data txt("v=0\r\n"
+         "o=- 3832567727 3832567727 IN IP4 0.0.0.0\r\n"
+         "s=Kurento Media Server\r\n"
+         "c=IN IP4 0.0.0.0\r\n"
+         "t=0 0\r\n"
+         "a=fingerprint:sha-256 3E:93:9D:84:1B:10:BE:34:7F:C5:FC:50:7F:36:C0:EC:36:E8:45:0B:64:B2:C6:E2:DC:E4:00:37:0B:5A:12:FC\r\n"
+         "a=ice-options:trickle\r\n"
+         "a=msid-semantic:WMS *\r\n"
+         "a=group:BUNDLE 0 1\r\n"
+         "m=audio 1 RTP/SAVPF 109 0\r\n"
+         "c=IN IP4 0.0.0.0\r\n"
+         "a=sendonly\r\n"
+         "a=mid:0\r\n"
+         "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+         "a=rtpmap:109 opus/48000/2\r\n"
+         "a=rtpmap:0 PCMU/8000\r\n"
+         "a=fmtp:109 maxplaybackrate=48000;stereo=1;useinbandfec=1\r\n"
+         "a=rtcp-mux\r\n"
+         "a=setup:active\r\n"
+         "a=ssrc:2371389736 cname:user814139671@host-6df4854c\r\n"
+         "a=ice-ufrag:sjCS\r\n"
+         "a=ice-pwd:YYF2lSWFXM9UUC+h7gbxm6\r\n"
+         "a=fingerprint:sha-256 97:D5:4D:97:25:11:95:13:34:03:C8:4B:47:A6:95:50:CF:84:99:49:3B:FF:15:73:50:AE:12:91:EB:1E:E3:29\r\n"
+         "m=video 1 RTP/SAVPF 120\r\n"
+         "c=IN IP4 0.0.0.0\r\n"
+         "a=extmap:4 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n"
+         "a=recvonly\r\n"
+         "a=mid:1\r\n"
+         "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+         "a=rtpmap:120 VP8/90000\r\n"
+         "a=rtcp-fb:120 nack\r\n"
+         "a=rtcp-fb:120 nack pli\r\n"
+         "a=rtcp-fb:120 ccm fir\r\n"
+         "a=rtcp-fb:120 goog-remb\r\n"
+         "a=fmtp:120 max-fs=12288;max-fr=60\r\n"
+         "a=rtcp-mux\r\n"
+         "a=setup:active\r\n"
+         "a=ssrc:2212589920 cname:user814139671@host-6df4854c\r\n"
+         "a=ice-ufrag:sjCS\r\n"
+         "a=ice-pwd:YYF2lSWFXM9UUC+h7gbxm6\r\n"
+         "a=fingerprint:sha-256 97:D5:4D:97:25:11:95:13:34:03:C8:4B:47:A6:95:50:CF:84:99:49:3B:FF:15:73:50:AE:12:91:EB:1E:E3:29\r\n");
+
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents sdp(hfv, type);
+
+      assert(sdp.session().origin().user() == "-");
+      assert(sdp.session().media().size() == 2);
+      assert(sdp.session().getDirection() == "recvonly");
+      assert(sdp.session().getDirection({"audio"}) == "sendonly");
+      assert(sdp.session().getDirection({"video"}) == "recvonly");
+   }
+
+   {
+      // Sample SDP answer for WebRTC taken from Kurento Media Server
+      Data txt("v=0\r\n"
+         "o=- 3832567727 3832567727 IN IP4 0.0.0.0\r\n"
+         "s=Kurento Media Server\r\n"
+         "c=IN IP4 0.0.0.0\r\n"
+         "t=0 0\r\n"
+         "a=fingerprint:sha-256 3E:93:9D:84:1B:10:BE:34:7F:C5:FC:50:7F:36:C0:EC:36:E8:45:0B:64:B2:C6:E2:DC:E4:00:37:0B:5A:12:FC\r\n"
+         "a=ice-options:trickle\r\n"
+         "a=msid-semantic:WMS *\r\n"
+         "a=group:BUNDLE 0 1\r\n"
+         "a=inactive\r\n"
+         "m=audio 1 RTP/SAVPF 109 0\r\n"
+         "a=mid:0\r\n"
+         "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+         "a=rtpmap:109 opus/48000/2\r\n"
+         "a=rtpmap:0 PCMU/8000\r\n"
+         "a=fmtp:109 maxplaybackrate=48000;stereo=1;useinbandfec=1\r\n"
+         "a=rtcp-mux\r\n"
+         "a=setup:active\r\n"
+         "a=ssrc:2371389736 cname:user814139671@host-6df4854c\r\n"
+         "a=ice-ufrag:sjCS\r\n"
+         "a=ice-pwd:YYF2lSWFXM9UUC+h7gbxm6\r\n"
+         "a=fingerprint:sha-256 97:D5:4D:97:25:11:95:13:34:03:C8:4B:47:A6:95:50:CF:84:99:49:3B:FF:15:73:50:AE:12:91:EB:1E:E3:29\r\n"
+         "m=video 1 RTP/SAVPF 120\r\n"
+         "a=extmap:4 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n"
+         "a=mid:1\r\n"
+         "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+         "a=rtpmap:120 VP8/90000\r\n"
+         "a=rtcp-fb:120 nack\r\n"
+         "a=rtcp-fb:120 nack pli\r\n"
+         "a=rtcp-fb:120 ccm fir\r\n"
+         "a=rtcp-fb:120 goog-remb\r\n"
+         "a=fmtp:120 max-fs=12288;max-fr=60\r\n"
+         "a=rtcp-mux\r\n"
+         "a=setup:active\r\n"
+         "a=ssrc:2212589920 cname:user814139671@host-6df4854c\r\n"
+         "a=ice-ufrag:sjCS\r\n"
+         "a=ice-pwd:YYF2lSWFXM9UUC+h7gbxm6\r\n"
+         "a=fingerprint:sha-256 97:D5:4D:97:25:11:95:13:34:03:C8:4B:47:A6:95:50:CF:84:99:49:3B:FF:15:73:50:AE:12:91:EB:1E:E3:29\r\n");
+
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents sdp(hfv, type);
+
+      assert(sdp.session().origin().user() == "-");
+      assert(sdp.session().media().size() == 2);
+      assert(sdp.session().getDirection() == "inactive");
+   }
+
+
+   {
+      // Sample SDP trickle ICE fragment from RFC 8840
+      // https://www.ietf.org/rfc/rfc8840.html#INFOexample
+      Data txt("a=ice-pwd:asd88fgpdd777uzjYhagZg\r\n"
+         "a=ice-ufrag:8hhY\r\n"
+         "m=audio 9 RTP/AVP 0\r\n"
+         "a=mid:1\r\n"
+         "a=candidate:1 1 UDP 2130706432 2001:db8:a0b:12f0::1 5000 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706432 2001:db8:a0b:12f0::1 5001 typ host\r\n"
+         "a=candidate:1 1 UDP 2130706431 192.0.2.1 5010 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706431 192.0.2.1 5011 typ host\r\n"
+         "a=candidate:2 1 UDP 1694498815 192.0.2.3 5010 typ srflx raddr 192.0.2.1 rport 8998\r\n"
+         "a=candidate:2 2 UDP 1694498815 192.0.2.3 5011 typ srflx raddr 192.0.2.1 rport 8998\r\n"
+         "a=end-of-candidates\r\n"
+         "m=audio 9 RTP/AVP 0\r\n"
+         "a=mid:2\r\n"
+         "a=candidate:1 1 UDP 2130706432 2001:db8:a0b:12f0::1 6000 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706432 2001:db8:a0b:12f0::1 6001 typ host\r\n"
+         "a=candidate:1 1 UDP 2130706431 192.0.2.1 6010 typ host\r\n"
+         "a=candidate:1 2 UDP 2130706431 192.0.2.1 6011 typ host\r\n"
+         "a=candidate:2 1 UDP 1694498815 192.0.2.3 6010 typ srflx raddr 192.0.2.1 rport 9998\r\n"
+         "a=candidate:2 2 UDP 1694498815 192.0.2.3 6011 typ srflx raddr 192.0.2.1 rport 9998\r\n"
+         "a=end-of-candidates\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "trickle-ice-sdpfrag");
+      TrickleIceContents frag(hfv, type);
+
+      assert(frag.getValues("ice-ufrag").front() == "8hhY");
+      assert(frag.media().size() == 2);
    }
 
    return 0;   

@@ -1371,7 +1371,7 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          {
             if(preferredNAPTROrder == (*it).order)
             {
-               StackLog (<< "NAPTR record is supported and matches highes priority order. doing SRV query: " << (*it));
+               StackLog (<< "NAPTR record is supported and matches highest priority order. doing SRV query: " << (*it));
                mTopOrderedNAPTRs[(*it).replacement] = (*it);
                mSRVCount++;
                mDnsStub.lookup<RR_SRV>((*it).replacement, Protocol::Sip, this);

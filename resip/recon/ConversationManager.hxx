@@ -3,6 +3,7 @@
 
 #include "BridgeMixer.hxx"
 
+#include <rutil/ConfigParse.hxx>
 #include <resip/stack/Uri.hxx>
 #include <resip/stack/Contents.hxx>
 #include <resip/dum/InviteSessionHandler.hxx>
@@ -72,7 +73,8 @@ class ConversationManager : public resip::InviteSessionHandler,
 {
 public:
 
-   ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter);
+   ConversationManager(std::shared_ptr<MediaStackAdapter> mediaStackAdapter,
+      std::shared_ptr<resip::ConfigParse> configParse = std::shared_ptr<resip::ConfigParse>());
    virtual ~ConversationManager();
 
    typedef enum
@@ -793,6 +795,9 @@ private:
    void registerConversation(Conversation *);
    void unregisterConversation(Conversation *);
 
+   friend class MediaStackAdapter;
+   std::shared_ptr<resip::ConfigParse> getConfig() { return mConfigParse; };
+
    friend class Participant;
    void registerParticipant(Participant *);
    void unregisterParticipant(Participant *);
@@ -858,6 +863,7 @@ private:
 
    UserAgent* mUserAgent;
    std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;
+   std::shared_ptr<resip::ConfigParse> mConfigParse;
    bool mShuttingDown;
 
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;

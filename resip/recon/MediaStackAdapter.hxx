@@ -45,6 +45,7 @@ public:
    virtual ~MediaStackAdapter();
 
    virtual void conversationManagerReady(ConversationManager* conversationManager) = 0;
+   virtual void shutdown() = 0;
 
    ///////////////////////////////////////////////////////////////////////
    // Participant methods  ///////////////////////////////////////////////
@@ -89,6 +90,8 @@ protected:
    ConversationHandle getNewConversationHandle() { return getConversationManager().getNewConversationHandle(); };
    void post(resip::Message *message) { getConversationManager().post(message); };
    Conversation* getConversation(ConversationHandle convHandle) { return getConversationManager().getConversation(convHandle); };
+
+   std::shared_ptr<resip::ConfigParse> getConfig() { return mConversationManager.getConfig(); };
 
 private:
    ConversationManager& mConversationManager;

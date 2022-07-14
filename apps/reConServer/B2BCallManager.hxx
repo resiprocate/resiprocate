@@ -17,9 +17,6 @@
 #include <rutil/Data.hxx>
 #include <rutil/Time.hxx>
 #include <resip/recon/ConversationManager.hxx>
-#ifdef USE_SIPXTAPI
-#include <resip/recon/SipXMediaStackAdapter.hxx>
-#endif
 
 #include "reConServerConfig.hxx"
 #include "MyConversationManager.hxx"
@@ -91,7 +88,7 @@ class B2BCallManager : public MyConversationManager
 {
 public:
 
-   B2BCallManager(recon::SipXMediaStackAdapter::MediaInterfaceMode mediaInterfaceMode, int defaultSampleRate, int maxSampleRate, ReConServerConfig& config, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
+   B2BCallManager(const ReConServerConfig& config, int defaultSampleRate, int maxSampleRate, std::shared_ptr<B2BCallLogger> b2bCallLogger = nullptr);
    ~B2BCallManager();
 
    virtual void init(MyUserAgent& ua);

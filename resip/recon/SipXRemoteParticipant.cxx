@@ -137,8 +137,10 @@ SipXRemoteParticipant::getMediaConnectionId()
 }
 
 void
-SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
+SipXRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp)
 {
+   std::unique_ptr<SdpContents> _offer(new SdpContents);
+   SdpContents& offer = *_offer;
    SdpContents::Session::Medium *audioMedium = 0;
    ConversationProfile *profile = getDialogSet().getConversationProfile().get();
    resip_assert(profile);
@@ -354,6 +356,7 @@ SipXRemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       }
    }
    setProposedSdp(offer);
+   sdpReady(true, std::move(_offer));
 }
 
 bool
@@ -571,14 +574,16 @@ SipXRemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessio
    return valid;
 }
 
-bool
-SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
+void
+SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady sdpReady)
 {
    // Note: this implementation has minimal support for draft-ietf-mmusic-sdp-capabilities-negotiation
    //       for responding "best-effort" / optional SRTP (Dtls-SRTP) offers
 
    bool valid = false;
    std::shared_ptr<sdpcontainer::Sdp> remoteSdp(SdpHelperResip::createSdpFromResipSdp(offer));
+   std::unique_ptr<SdpContents> _answer(new SdpContents);
+   SdpContents& answer = *_answer;
 
    try
    {
@@ -689,7 +694,7 @@ SipXRemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& ans
       setLocalSdp(answer);
       setRemoteSdp(offer);
    }
-   return valid;
+   sdpReady(valid, std::move(_answer));
 }
 
 #ifdef OLD_CODE
@@ -1030,9 +1035,9 @@ SipXRemoteParticipant::adjustRTPStreams(bool sendingOffer)
       {
          mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
       }
-      else if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+      else if(remoteMediaDirection == sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY)
       {
-         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_RECVONLY;
+         mediaDirection = sdpcontainer::SdpMediaLine::DIRECTION_TYPE_SENDONLY;
       }
       else
       {

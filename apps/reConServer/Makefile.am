@@ -6,7 +6,7 @@ EXTRA_DIST += *.wav
 EXTRA_DIST += reconserver.init
 EXTRA_DIST += reconserver.service
 
-if USE_SIPXTAPI
+if BUILD_RECONSERVER
 sbin_PROGRAMS = reConServer
 endif
 
@@ -47,6 +47,10 @@ reConServer_LDADD += -lsipXmediaProcessing
 reConServer_LDADD += -lsipXmedia
 reConServer_LDADD += -lsipXport
 reConServer_LDADD += -lsipXtack
+endif
+if USE_KURENTO
+reConServer_LDADD += -lboost_system
+reConServer_LDADD += ../../media/kurento/libkurentoclient.la
 endif
 reConServer_LDADD += ../../resip/dum/libdum.la
 reConServer_LDADD += ../../resip/stack/libresip.la

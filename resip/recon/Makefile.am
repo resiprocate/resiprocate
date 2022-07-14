@@ -1,6 +1,7 @@
 # $Id$
 
 EXTRA_DIST = readme.txt
+EXTRA_DIST += readme_Kurento.txt
 EXTRA_DIST += *.vcxproj
 EXTRA_DIST += doc
 
@@ -22,6 +23,9 @@ librecon_la_LIBADD += -lsipXmediaProcessing
 librecon_la_LIBADD += -lsipXmedia
 librecon_la_LIBADD += -lsipXsdp
 librecon_la_LIBADD += -lsipXport
+endif
+if USE_KURENTO
+librecon_la_LIBADD += ../../media/kurento/libkurentoclient.la
 endif
 if USE_SRTP1
 librecon_la_LIBADD += @LIBSSL_LIBADD@ -lsrtp
@@ -82,6 +86,15 @@ librecon_la_SOURCES += FlowManagerSipXSocket.cxx \
         sdp/SdpMediaLine.cxx
 endif
 
+if USE_KURENTO
+librecon_la_SOURCES += KurentoBridgeMixer.cxx \
+        KurentoConversation.cxx \
+        KurentoMediaStackAdapter.cxx \
+        KurentoParticipant.cxx \
+        KurentoRemoteParticipant.cxx \
+        KurentoRemoteParticipantDialogSet.cxx
+endif
+
 reconincludedir = $(includedir)/recon
 nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         LocalParticipant.hxx \
@@ -135,6 +148,15 @@ nobase_reconinclude_HEADERS += sdp/SdpMediaLine.hxx \
         SipXRemoteParticipant.hxx \
         SipXRemoteParticipantDialogSet.hxx \
         FlowManagerSipXSocket.hxx
+endif
+
+if USE_KURENTO
+nobase_reconinclude_HEADERS += KurentoBridgeMixer.hxx \
+        KurentoConversation.hxx \
+        KurentoMediaStackAdapter.hxx \
+        KurentoParticipant.hxx \
+        KurentoRemoteParticipantDialogSet.hxx \
+        KurentoRemoteParticipant.hxx
 endif
 
 ##############################################################################

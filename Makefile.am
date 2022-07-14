@@ -14,6 +14,7 @@ endif
 
 # The Makefiles for these don't separate SSL stuff yet...
 if USE_SSL
+SUBDIRS += media
 if BUILD_RETURN
 SUBDIRS += reTurn
 if BUILD_RECON
