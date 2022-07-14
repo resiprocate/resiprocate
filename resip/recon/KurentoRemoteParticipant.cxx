@@ -65,7 +65,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
   mReuseSdpAnswer(false),
   mWSAcceptsKeyframeRequests(true),
   mLastRemoteSdp(0),
-  mWaitingAnswer(false)
+  mWaitingAnswer(false),
+  mWebRTCOutgoing(getDialogSet().getConversationProfile()->mediaEndpointMode() == ConversationProfile::WebRTC)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
 }
@@ -83,7 +84,8 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversa
   mReuseSdpAnswer(false),
   mWSAcceptsKeyframeRequests(true),
   mLastRemoteSdp(0),
-  mWaitingAnswer(false)
+  mWaitingAnswer(false),
+  mWebRTCOutgoing(getDialogSet().getConversationProfile()->mediaEndpointMode() == ConversationProfile::WebRTC)
 {
    InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
@@ -167,7 +169,12 @@ KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
 
    //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
    //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
-   mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, "file:///tmp/test.mp4")); // FIXME filename
+   std::shared_ptr<resip::ConfigParse> cfg = mConversationManager.getConfig();
+   if(cfg)
+   {
+      const Data& holdVideo = mConversationManager.getConfig()->getConfigData("HoldVideo", "file:///tmp/test.mp4", true);
+      mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, holdVideo.c_str()));
+   }
    mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
 
    return true;

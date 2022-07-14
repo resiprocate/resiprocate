@@ -26,6 +26,12 @@ public:
 
    ConversationProfile(); 
 
+   enum MediaEndpointMode
+   {
+      Base,
+      WebRTC
+   };
+
    enum NatTraversalMode
    {
       NoNatTraversal,
@@ -132,6 +138,14 @@ public:
    */
    virtual bool& challengeOODReferRequests() { return mChallengeOODReferRequests; }
    virtual const bool challengeOODReferRequests() const { return mChallengeOODReferRequests; }
+
+   /**
+     Get/Set the type of Media endpoint.
+     Base      - traditional RTP endpoint, relies on other settings in this profile
+     WebRTC    - WebRTC endpoint, ignores many of the profile settings
+   */
+   virtual MediaEndpointMode& mediaEndpointMode() { return mMediaEndpointMode; }
+   virtual const MediaEndpointMode mediaEndpointMode() const { return mMediaEndpointMode; }
 
    /** 
      Get/Set the secure media mode that will be used for sending/receiving media packets.
@@ -246,6 +260,7 @@ private:
    bool mAllowPriorityAutoAnswer;
    bool mChallengeAutoAnswerRequests;
    bool mChallengeOODReferRequests;
+   MediaEndpointMode mMediaEndpointMode;
    SecureMediaMode mSecureMediaMode;
    bool mSecureMediaRequired;
    SecureMediaCryptoSuite mDefaultSecureMediaCryptoSuite;

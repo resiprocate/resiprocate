@@ -35,6 +35,9 @@ public:
    recon::ConversationManager::AutoHoldMode getConfigAutoHoldMode(const resip::Data& name,
       const recon::ConversationManager::AutoHoldMode& defaultValue) const;
 
+   bool getConfigValue(const resip::Data& name, recon::ConversationProfile::MediaEndpointMode &value);
+   recon::ConversationProfile::MediaEndpointMode getConfigMediaEndpointMode(const resip::Data& name, const recon::ConversationProfile::MediaEndpointMode defaultValue);
+
    bool getConfigValue(const resip::Data& name, recon::ConversationProfile::SecureMediaMode &value);
    recon::ConversationProfile::SecureMediaMode getConfigSecureMediaMode(const resip::Data& name, const recon::ConversationProfile::SecureMediaMode defaultValue);
    bool isSecureMediaModeRequired();

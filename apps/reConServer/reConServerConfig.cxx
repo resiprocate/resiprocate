@@ -44,6 +44,23 @@ ReConServerConfig::getConfigAutoHoldMode(const resip::Data& name,
    return ret;
 }
 
+bool
+ReConServerConfig::getConfigValue(const resip::Data& name, recon::ConversationProfile::MediaEndpointMode& value)
+{
+   std::map<recon::ConversationProfile::MediaEndpointMode, Data> dict;
+   dict[ConversationProfile::Base] = "Base";
+   dict[ConversationProfile::WebRTC] = "WebRTC";
+   return translateConfigValue<recon::ConversationProfile::MediaEndpointMode>(dict, name, value);
+}
+
+recon::ConversationProfile::MediaEndpointMode
+ReConServerConfig::getConfigMediaEndpointMode(const resip::Data& name, const recon::ConversationProfile::MediaEndpointMode defaultValue)
+{
+   recon::ConversationProfile::MediaEndpointMode ret = defaultValue;
+   getConfigValue(name, ret);
+   return ret;
+}
+
 bool 
 ReConServerConfig::getConfigValue(const resip::Data& name, ConversationProfile::SecureMediaMode &value)
 {
