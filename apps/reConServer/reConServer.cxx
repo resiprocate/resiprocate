@@ -1384,7 +1384,9 @@ ReConServerProcess::main (int argc, char** argv)
       const Data& protonCommandQueue = reConServerConfig.getConfigData("BrokerURL", "");
       if(!protonCommandQueue.empty())
       {
-         mProtonCommandThread.reset(new ProtonCommandThread(protonCommandQueue));
+         mProtonCommandThread.reset(new ProtonThreadBase());
+         mCommandQueue.reset(new ProtonCommandThread(protonCommandQueue));
+         mProtonCommandThread->addReceiver(mCommandQueue);
          mProtonCommandThread->run();
       }
 #endif
@@ -1453,7 +1455,7 @@ ReConServerProcess::onLoop()
 #ifdef BUILD_QPID_PROTON
    if(mProtonCommandThread && mConversationManager)
    {
-      mProtonCommandThread->processQueue(*mConversationManager);
+      mCommandQueue->processQueue(*mConversationManager);
    }
 #endif
 }
@@ -1472,6 +1474,8 @@ ReConServerProcess::onReload()
 
 /* ====================================================================
 
+ Copyright (C) 2022 Daniel Pocock https://danielpocock.com
+ Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

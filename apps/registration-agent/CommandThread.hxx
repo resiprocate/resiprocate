@@ -10,16 +10,13 @@
 
 namespace registrationagent {
 
-class CommandThread : public resip::ProtonThreadBase
+class CommandThread : public resip::ProtonThreadBase::ProtonReceiverBase
 {
 public:
    CommandThread(const std::string &u);
    ~CommandThread();
 
    void processQueue(UserRegistrationClient& userRegistrationClient);
-
-private:
-   void doShutdown();
 };
 
 } // namespace

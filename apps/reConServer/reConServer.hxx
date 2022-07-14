@@ -13,6 +13,7 @@
 #include "MyConversationManager.hxx"
 #include "MyUserAgent.hxx"
 #ifdef BUILD_QPID_PROTON
+#include "rutil/ProtonThreadBase.hxx"
 #include "ProtonCommandThread.hxx"
 #endif
 
@@ -40,7 +41,8 @@ private:
    std::shared_ptr<MyUserAgent> mUserAgent;
    std::unique_ptr<MyConversationManager> mConversationManager;
 #ifdef BUILD_QPID_PROTON
-   std::unique_ptr<ProtonCommandThread> mProtonCommandThread;
+   std::unique_ptr<resip::ProtonThreadBase> mProtonCommandThread;
+   std::shared_ptr<ProtonCommandThread> mCommandQueue;
 #endif
 };
 
@@ -51,7 +53,9 @@ private:
 
 /* ====================================================================
  *
- * Copyright 2013 Catalin Constantin Usurelu.  All rights reserved.
+ * Copyright (C) 2013-2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
+ * Copyright 2013 Catalin Constantin Usurelu.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

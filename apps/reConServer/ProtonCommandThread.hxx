@@ -10,16 +10,13 @@
 
 namespace reconserver {
 
-class ProtonCommandThread : public resip::ProtonThreadBase
+class ProtonCommandThread : public resip::ProtonThreadBase::ProtonReceiverBase
 {
 public:
    ProtonCommandThread(const resip::Data& u);
    ~ProtonCommandThread();
 
    void processQueue(reconserver::MyConversationManager& conversationManager);
-
-private:
-   void doShutdown();
 };
 
 } // namespace

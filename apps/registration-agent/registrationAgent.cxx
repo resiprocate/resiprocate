@@ -176,8 +176,10 @@ class MyClientRegistrationAgent : public ServerProcess
          Data brokerURL(cfg.getConfigData("BrokerURL", "", true));
          if(!brokerURL.empty())
          {
+            mProton.reset(new ProtonThreadBase());
             mCmd.reset(new CommandThread(brokerURL.c_str()));
-            mCmd->run();
+            mProton->addReceiver(mCmd);
+            mProton->run();
          }
 
          // FIXME - conditional start
@@ -192,8 +194,8 @@ class MyClientRegistrationAgent : public ServerProcess
 
          if(mCmd.get())
          {
-            mCmd->shutdown();
-            mCmd->join();
+            mProton->shutdown();
+            mProton->join();
          }
 
          if(mSnmp.get())
@@ -232,6 +234,7 @@ class MyClientRegistrationAgent : public ServerProcess
       std::shared_ptr<DialogUsageManager> mClientDum;
       std::shared_ptr<KeyedFile> mKeyedFile;
       std::shared_ptr<UserRegistrationClient> mClientHandler;
+      std::shared_ptr<ProtonThreadBase> mProton;
       std::shared_ptr<CommandThread> mCmd;
       std::shared_ptr<SnmpThread> mSnmp;
 
@@ -246,7 +249,8 @@ main(int argc, char** argv)
 
 /* ====================================================================
  *
- * Copyright 2012 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (C) 2012-2022 Daniel Pocock https://danielpocock.com
+ * Copyright (C) 2022 Software Freedom Institute SA https://softwarefreedom.institute
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

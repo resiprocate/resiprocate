@@ -30,7 +30,7 @@ using namespace resip;
 using namespace std;
 
 ProtonCommandThread::ProtonCommandThread(const Data& u)
-   : ProtonThreadBase(u.c_str(),
+   : ProtonThreadBase::ProtonReceiverBase(u.c_str(),
       std::chrono::seconds(60), // FIXME configurable
       std::chrono::seconds(2))
 {

@@ -29,7 +29,7 @@ using namespace resip;
 using namespace std;
 
 CommandThread::CommandThread(const std::string &u)
-   : ProtonThreadBase(u,
+   : ProtonThreadBase::ProtonReceiverBase(u,
       std::chrono::seconds(60), // FIXME configurable
       std::chrono::seconds(2))
 {

@@ -20,10 +20,29 @@ namespace resip {
 class ProtonThreadBase : public resip::ThreadIf, proton::messaging_handler
 {
 public:
-   ProtonThreadBase(const std::string &u,
-      std::chrono::duration<long int> maximumAge,
-      std::chrono::duration<long int> retryDelay);
-   ~ProtonThreadBase();
+
+   class ProtonReceiverBase
+   {
+   public:
+      ProtonReceiverBase(const std::string &u,
+         std::chrono::duration<long int> maximumAge,
+         std::chrono::duration<long int> retryDelay);
+      virtual ~ProtonReceiverBase();
+      std::chrono::duration<long int> mMaximumAge;
+      std::chrono::duration<long int> mRetryDelay;
+      std::string mUrl;
+      proton::receiver mReceiver;
+      proton::work_queue* mWorkQueue;
+      resip::TimeLimitFifo<json::Object> mFifo;
+   protected:
+      resip::TimeLimitFifo<json::Object>& getFifo() { return mFifo; };
+
+   };
+
+   ProtonThreadBase(std::chrono::duration<long int> mRetryDelay = std::chrono::seconds(2));
+   virtual ~ProtonThreadBase();
+
+   void addReceiver(std::shared_ptr<ProtonReceiverBase> rx) { mReceivers.push_back(rx); };
 
    void on_container_start(proton::container &c);
    void on_connection_open(proton::connection &conn);
@@ -35,18 +54,15 @@ public:
    virtual void thread();
    virtual void shutdown();
 
-protected:
-   resip::TimeLimitFifo<json::Object>& getFifo() { return mFifo; };
 
 private:
-   std::chrono::duration<long int> mMaximumAge;
-   std::chrono::duration<long int> mRetryDelay;
-   std::string mUrl;
-   proton::receiver mReceiver;
-   proton::work_queue* mWorkQueue;
-   resip::TimeLimitFifo<json::Object> mFifo;
-
    void doShutdown();
+
+   std::chrono::duration<long int> mRetryDelay;
+
+   std::shared_ptr<proton::container> mContainer;
+
+   std::vector<std::shared_ptr<ProtonReceiverBase>> mReceivers;
 };
 
 } // namespace
