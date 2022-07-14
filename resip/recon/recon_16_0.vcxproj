@@ -175,12 +175,6 @@
     <ClCompile Include="DtmfEvent.cxx" />
     <ClCompile Include="FlowManagerSipXSocket.cxx" />
     <ClCompile Include="IMParticipantBase.cxx" />
-    <ClCompile Include="KurentoBridgeMixer.cxx" />
-    <ClCompile Include="KurentoConversation.cxx" />
-    <ClCompile Include="KurentoMediaStackAdapter.cxx" />
-    <ClCompile Include="KurentoParticipant.cxx" />
-    <ClCompile Include="KurentoRemoteParticipant.cxx" />
-    <ClCompile Include="KurentoRemoteParticipantDialogSet.cxx" />
     <ClCompile Include="RemoteIMSessionParticipant.cxx" />
     <ClCompile Include="RemoteIMSessionParticipantDialogSet.cxx" />
     <ClCompile Include="LocalParticipant.cxx" />
