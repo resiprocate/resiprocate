@@ -228,8 +228,8 @@ SipXMediaResourceParticipant::startResourceImpl()
    }
    break;
  
-   // Warning: The stream player has been deprecated from the SipX CpTopologyGraphInterface - leaving code in place in case it even get's
-   //          implemented.  If someone tries to play from Http or Https with sipX it will fail at the createPlayer call below, and
+   // Warning: The stream player has been deprecated from the SipX CpTopologyGraphInterface - leaving code in place in case it ever get's
+   //          re-implemented.  If someone tries to play from Http or Https with sipX it will fail at the createPlayer call below, and
    //          the MediaResourceParticipant will self destruct.
    case Http:
    case Https:

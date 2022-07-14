@@ -24,6 +24,8 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
    mMediaInterface(mediaInterface),
    mAllowLoggingDTMFDigits(true)
 {
+   InfoLog(<< "SipXMediaInterface: CpTopologyGraphInterface created: 0x" << std::hex << mMediaInterface);
+
    // Add the available sipX resources.  Note:  This list must match what is provided by the sipX CpTopologyGraphImpl
    // default initial resources, plus any customizations done in SipXMediaStackAdapter::addExtraPlayAndRecordResourcesToTopology
    mMediaResourceAllocations[MediaResourceParticipant::Tone].push_back(MediaResourceAllocationInfo(DEFAULT_TONE_GEN_RESOURCE_NAME));
@@ -35,6 +37,12 @@ SipXMediaInterface::SipXMediaInterface(ConversationManager& conversationManager,
       mMediaResourceAllocations[MediaResourceParticipant::File].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_FROM_FILE_2_RESOURCE_NAME));
       mMediaResourceAllocations[MediaResourceParticipant::Record].push_back(MediaResourceAllocationInfo(SipXMediaStackAdapter::DEFAULT_RECORDER_2_RESOURCE_NAME));
    }
+}
+
+SipXMediaInterface::~SipXMediaInterface() 
+{ 
+   InfoLog(<< "~SipXMediaInterface: releasing CpTopologyGraphInterface: 0x" << std::hex << mMediaInterface);
+   mMediaInterface->release(); 
 }
 
 OsStatus 
