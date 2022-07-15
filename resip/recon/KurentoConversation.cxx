@@ -78,6 +78,9 @@ KurentoConversation::onParticipantAdded(Participant* participant)
 void
 KurentoConversation::confirmParticipant(Participant* participant)
 {
+   DebugLog(<<"confirmParticipant handle: " << getHandle()
+            << " numRemote: " << getNumRemoteParticipants()
+            << " participant: " << participant->getParticipantHandle());
    KurentoRemoteParticipant *_p = dynamic_cast<KurentoRemoteParticipant*>(participant);
    std::shared_ptr<kurento::BaseRtpEndpoint> answeredEndpoint = _p->getEndpoint();
    if(getNumRemoteParticipants() < 2)
@@ -98,6 +101,12 @@ KurentoConversation::confirmParticipant(Participant* participant)
       ErrLog(<<"our endpoint is not initialized"); // FIXME
       return;
    }
+   if(!_p->getWaitingModeElement()->valid())
+   {
+      DebugLog(<<"the local endpoint is not yet in a valid state");
+      return;
+   }
+   DebugLog(<<"attempting to join two RemoteParticipants");
    _p->getWaitingModeElement()->disconnect([this, _p, answeredEndpoint]{
       answeredEndpoint->disconnect([this, _p, answeredEndpoint]{
          // Find the other Participant / endpoint
