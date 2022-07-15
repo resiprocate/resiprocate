@@ -1330,6 +1330,10 @@ RemoteParticipant::onConnected(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onConnected: handle=" << mHandle << ", " << msg.brief());
    stateTransition(Connected);
+   if(msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
+   {
+      conversationsConfirm();
+   }
 }
 
 void
