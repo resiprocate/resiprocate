@@ -1287,10 +1287,20 @@ RemoteParticipant::onProvisional(ClientInviteSessionHandle h, const SipMessage& 
 void
 RemoteParticipant::conversationsConfirm()
 {
+   if(getLocalSdp() == 0)
+   {
+      WarningLog(<<"no local SDP yet");
+   }
+   if(getRemoteSdp() == 0)
+   {
+      WarningLog(<<"no remote SDP yet");
+   }
    ConversationMap::const_iterator it;
    for (it = mConversations.begin(); it != mConversations.end(); it++)
    {
-      it->second->confirmParticipant(this);
+      Conversation& conversation = *it->second;
+      conversation.confirmParticipant(this);
+      DebugLog(<<"confirmed participant " << mHandle << " conversation " << conversation.getHandle());
    }
 }
 
