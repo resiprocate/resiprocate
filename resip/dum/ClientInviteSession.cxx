@@ -154,6 +154,8 @@ ClientInviteSession::provideAnswer (const Contents& answer)
 
          mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
+
+         onConnectedAspect(getHandle(), *ack);
          break;
       }
       case UAC_ReceivedUpdateEarly:
@@ -745,7 +747,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
             handler->onOffer(getSessionHandle(), msg, *offerAnswer);
             if(!isTerminated())   //?jf? can this be terminated here but not above? .slg. yes application can call end()
             {
-               onConnectedAspect(getHandle(), msg);  
+               //onConnectedAspect(getHandle(), msg);  // do this when we sendAck with provideAnswer(local SDP)
             }
          }
          break;
