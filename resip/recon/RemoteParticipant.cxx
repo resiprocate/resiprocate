@@ -815,23 +815,23 @@ void
 RemoteParticipant::requestKeyframeFromPeer()
 {
    std::shared_ptr<resip::SdpContents> _sdp = getRemoteSdp();
+   std::set<Data> streamIDs;
    if(!_sdp)
    {
-      ErrLog(<<"we need to request a keyframe but there is no peer SDP");
-      return;
-   }
-   std::set<Data> streamIDs = _sdp->session().getMediaStreamLabels();
-   if(!streamIDs.empty())
-   {
-      DebugLog(<<"requesting a keyframe for stream(s)");
-      MediaControlContents mcc;
-      mcc.mediaControl() = MediaControlContents::MediaControl(streamIDs, true);
-      info(mcc);
+      WarningLog(<<"we need to request a keyframe but there is no peer SDP");
    }
    else
    {
-      WarningLog(<<"we need to request a keyframe but the peer SDP does not contain a stream ID (RFC 4574)");
+      streamIDs = _sdp->session().getMediaStreamLabels();
+      if(streamIDs.empty())
+      {
+         WarningLog(<<"peer SDP does not contain a stream ID (RFC 4574)");
+      }
    }
+   DebugLog(<<"requesting a keyframe for stream(s)");
+   MediaControlContents mcc;
+   mcc.mediaControl() = MediaControlContents::MediaControl(streamIDs, true);
+   info(mcc);
 }
 
 void
