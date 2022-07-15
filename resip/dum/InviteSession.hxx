@@ -348,7 +348,7 @@ class InviteSession : public DialogUsage
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
 
-      void sendAck(const Contents *answer=0);
+      std::shared_ptr<SipMessage> sendAck(const Contents *answer=0);
       std::shared_ptr<SipMessage> sendBye();
 
       const Data& getEndReasonString(InviteSession::EndReason reason);

@@ -3137,7 +3137,7 @@ InviteSession::toEvent(const SipMessage& msg, const Contents* offerAnswer)
    }
 }
 
-void 
+std::shared_ptr<SipMessage>
 InviteSession::sendAck(const Contents *answer)
 {
    auto ack = std::make_shared<SipMessage>();
@@ -3182,6 +3182,7 @@ InviteSession::sendAck(const Contents *answer)
 
    InfoLog (<< "Sending " << ack->brief());
    send(ack);
+   return ack;
 }
 
 std::shared_ptr<SipMessage>

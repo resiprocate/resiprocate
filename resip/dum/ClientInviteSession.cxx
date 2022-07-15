@@ -150,7 +150,7 @@ ClientInviteSession::provideAnswer (const Contents& answer)
       case UAC_Answered:
       {
          transition(Connected);
-         sendAck(&answer);
+         std::shared_ptr<SipMessage> ack = sendAck(&answer);
 
          mCurrentRemoteOfferAnswer = std::move(mProposedRemoteOfferAnswer);
          mCurrentLocalOfferAnswer = InviteSession::makeOfferAnswer(answer);
