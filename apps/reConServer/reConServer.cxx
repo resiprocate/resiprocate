@@ -794,6 +794,7 @@ ReConServerProcess::main (int argc, char** argv)
    Data password = reConServerConfig.getConfigData("Password", "", true);
    Data dnsServers = reConServerConfig.getConfigData("DNSServers", "", true);;
    Data address = reConServerConfig.getConfigData("IPAddress", DnsUtil::getLocalIpAddress(), true);
+   bool delayedMediaOutboundMode = reConServerConfig.getConfigBool("DelayedMediaDialing", false);
    ConversationProfile::MediaEndpointMode mediaEndpointMode = reConServerConfig.getConfigMediaEndpointMode("MediaEndpointMode", ConversationProfile::Base);
    ConversationProfile::SecureMediaMode secureMediaMode = reConServerConfig.getConfigSecureMediaMode("SecureMediaMode", ConversationProfile::NoSecureMedia);
    bool secureMediaRequired = reConServerConfig.isSecureMediaModeRequired();
@@ -1301,6 +1302,9 @@ ReConServerProcess::main (int argc, char** argv)
    InteropHelper::setAllowInboundFlowTokensForNonDirectClients(reConServerConfig.getConfigBool("AllowInboundFlowTokensForNonDirectClients", false));
    InteropHelper::setAssumeFirstHopSupportsOutboundEnabled(reConServerConfig.getConfigBool("AssumeFirstHopSupportsOutbound", false));
    InteropHelper::setAssumeFirstHopSupportsFlowTokensEnabled(reConServerConfig.getConfigBool("AssumeFirstHopSupportsFlowTokens", false));
+
+   // Delayed media settings
+   conversationProfile->delayedMediaOutboundMode() = delayedMediaOutboundMode;
 
    // WebRTC settings.
    conversationProfile->mediaEndpointMode() = mediaEndpointMode;

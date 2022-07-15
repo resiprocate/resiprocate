@@ -140,6 +140,15 @@ public:
    virtual const bool challengeOODReferRequests() const { return mChallengeOODReferRequests; }
 
    /**
+     Get/set whether to use delayed media mode (INVITE without SDP offer)
+     when making an outgoing call.
+
+     @return bool True if delayed media mode is used.
+    */
+   virtual bool& delayedMediaOutboundMode() { return mDelayedMediaOutboundMode; }
+   virtual const bool delayedMediaOutboundMode() const { return mDelayedMediaOutboundMode; }
+
+   /**
      Get/Set the type of Media endpoint.
      Base      - traditional RTP endpoint, relies on other settings in this profile
      WebRTC    - WebRTC endpoint, ignores many of the profile settings
@@ -260,6 +269,7 @@ private:
    bool mAllowPriorityAutoAnswer;
    bool mChallengeAutoAnswerRequests;
    bool mChallengeOODReferRequests;
+   bool mDelayedMediaOutboundMode;
    MediaEndpointMode mMediaEndpointMode;
    SecureMediaMode mSecureMediaMode;
    bool mSecureMediaRequired;

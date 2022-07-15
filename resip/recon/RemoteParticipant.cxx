@@ -119,7 +119,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
 {
    ParticipantHandle handleId = mHandle;
    ConversationManager& cm = mConversationManager;
-   buildSdpOffer(mLocalHold, [this, handleId, &cm, destination, callingProfile, extraHeaders](bool success, std::unique_ptr<SdpContents> _offer){
+   CallbackSdpReady createAndSendInvite = [this, handleId, &cm, destination, callingProfile, extraHeaders](bool success, std::unique_ptr<SdpContents> offer){
       if(!cm.getParticipant(handleId))
       {
          WarningLog(<<"handle no longer valid");
@@ -133,7 +133,6 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
          delete this;
          return;
       }
-      SdpContents& offer = *_offer;
       auto profile = callingProfile;
       if (!profile)
       {
@@ -144,7 +143,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       auto invitemsg = mDum.makeInviteSession(
                destination,
                std::move(profile),
-               &offer,
+               offer.get(),
                &mDialogSet);
 
       std::multimap<resip::Data,resip::Data>::const_iterator it = extraHeaders.begin();
@@ -204,13 +203,25 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
          mPendingRequest.mType = None;
       }
 
-      // Adjust RTP streams
-      adjustRTPStreams(true);
+      // If we are not in delayed media mode, we can start the media setup here
+      if(offer)
+      {
+         // Adjust RTP streams
+         adjustRTPStreams(true);
 
-      // Special case of this call - since call in addToConversation will not work, since we didn't know our bridge port at that time
-      applyBridgeMixWeights();
+         // Special case of this call - since call in addToConversation will not work, since we didn't know our bridge port at that time
+         applyBridgeMixWeights();
+      }
+   };
 
-   });
+   if(!callingProfile->delayedMediaOutboundMode())
+   {
+      buildSdpOffer(mLocalHold, createAndSendInvite);
+   }
+   else
+   {
+      createAndSendInvite(true, std::unique_ptr<SdpContents>(nullptr));
+   }
 }
 
 void 
