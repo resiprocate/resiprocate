@@ -508,6 +508,11 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             //c(true, std::move(_updatedOffer));
          }, answerBuf.str());
       }
+      requestKeyframeFromPeer();
+      if(mEndpoint->valid())
+      {
+         mEndpoint->sendPictureFastUpdate([]{});
+      }
    }
 }
 
