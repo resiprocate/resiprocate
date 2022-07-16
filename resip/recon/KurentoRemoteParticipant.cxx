@@ -576,6 +576,13 @@ KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl
 {
    if(mWSAcceptsKeyframeRequests)
    {
+      auto now = std::chrono::steady_clock::now();
+      if(now < (mLastLocalKeyframeRequest + getKeyframeRequestInterval()))
+      {
+         DebugLog(<<"keyframe request ignored, too soon");
+         return false;
+      }
+      mLastLocalKeyframeRequest = now;
       InfoLog(<<"onMediaControlEvent: sending to Kurento");
       // FIXME - check the content of the event
       mEndpoint->sendPictureFastUpdate([this](){}); // FIXME Kurento async, do we need to wait for Kurento here?

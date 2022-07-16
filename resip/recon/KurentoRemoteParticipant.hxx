@@ -105,6 +105,8 @@ private:
    std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
    volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primitive, e.g. condition_variable
 
+   std::chrono::time_point<std::chrono::steady_clock> mLastLocalKeyframeRequest = std::chrono::steady_clock::now();
+
 public: // FIXME
    bool mRemoveExtraMediaDescriptors;
    bool mSipRtpEndpoint;

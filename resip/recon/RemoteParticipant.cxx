@@ -814,6 +814,13 @@ RemoteParticipant::unhold()
 void
 RemoteParticipant::requestKeyframeFromPeer()
 {
+   auto now = std::chrono::steady_clock::now();
+   if(now < (mLastRemoteKeyframeRequest + mKeyframeRequestInterval))
+   {
+      DebugLog(<<"keyframe request ignored, too soon");
+      return;
+   }
+   mLastRemoteKeyframeRequest = now;
    std::shared_ptr<resip::SdpContents> _sdp = getRemoteSdp();
    std::set<Data> streamIDs;
    if(!_sdp)

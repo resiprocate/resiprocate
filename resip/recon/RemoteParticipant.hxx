@@ -157,6 +157,8 @@ protected:
 
    virtual void conversationsConfirm();
 
+   virtual std::chrono::duration<double> getKeyframeRequestInterval() const { return mKeyframeRequestInterval; }
+
 private:       
    void provideOffer(bool postOfferAccept, bool preferExistingSdp = false);
    void provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
@@ -220,6 +222,9 @@ private:
 
    std::shared_ptr<resip::SdpContents> mLocalSdp;
    std::shared_ptr<resip::SdpContents> mRemoteSdp;
+
+   std::chrono::time_point<std::chrono::steady_clock> mLastRemoteKeyframeRequest = std::chrono::steady_clock::now();
+   std::chrono::duration<double> mKeyframeRequestInterval = std::chrono::milliseconds(1000);
 };
 
 }
