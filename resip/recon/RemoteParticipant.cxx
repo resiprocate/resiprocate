@@ -214,7 +214,7 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       }
    };
 
-   if(!callingProfile->delayedMediaOutboundMode())
+   if(callingProfile && !callingProfile->delayedMediaOutboundMode())
    {
       buildSdpOffer(mLocalHold, createAndSendInvite);
    }
