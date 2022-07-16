@@ -129,13 +129,24 @@ KurentoConversation::confirmParticipant(Participant* participant)
             otherEndpoint->disconnect([this, _p, answeredEndpoint, otherEndpoint, krp]{
                otherEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
                   answeredEndpoint->connect([this, _p, answeredEndpoint, otherEndpoint, krp]{
-                     _p->requestKeyframeFromPeer();
-                     krp->requestKeyframeFromPeer();
                      InfoLog(<<"peers connected");
                      if(mKurentoReInviteOnParticipantsPresent)
                      {
                         krp->reInvite();
                      }
+
+                     ParticipantHandle partHandle1 = _p->getParticipantHandle();
+                     ParticipantHandle partHandle2 = krp->getParticipantHandle();
+                     for(int i = 1000; i <= 5000; i+=1000)
+                     {
+                        std::chrono::milliseconds _i = std::chrono::milliseconds(i);
+                        std::chrono::milliseconds __i = std::chrono::milliseconds(i + 500);
+                        getConversationManager().requestKeyframe(partHandle1, _i);
+                        getConversationManager().requestKeyframe(partHandle2, _i);
+                        getConversationManager().requestKeyframeFromPeer(partHandle1, __i);
+                        getConversationManager().requestKeyframeFromPeer(partHandle2, __i);
+                     }
+
                   }, *otherEndpoint);
                }, *answeredEndpoint);
             }, *krp->getWaitingModeElement());

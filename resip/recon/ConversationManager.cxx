@@ -435,6 +435,20 @@ ConversationManager::getBufferFromMediaResourceCache(const resip::Data& name, re
    return mMediaResourceCache.getFromCache(name, buffer, type);
 }
 
+void
+ConversationManager::requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> duration)
+{
+   RequestKeyframeCmd cmd(this, partHandle);
+   post(cmd, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
+}
+
+void
+ConversationManager::requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> duration)
+{
+   RequestKeyframeFromPeerCmd cmd(this, partHandle);
+   post(cmd, std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
+}
+
 void 
 ConversationManager::notifyMediaEvent(ParticipantHandle partHandle, MediaEvent::MediaEventType eventType, MediaEvent::MediaDirection direction)
 {

@@ -508,10 +508,12 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
             //c(true, std::move(_updatedOffer));
          }, answerBuf.str());
       }
-      requestKeyframeFromPeer();
-      if(mEndpoint->valid())
+      for(int i = 1000; i <= 5000; i+=1000)
       {
-         mEndpoint->sendPictureFastUpdate([]{});
+         std::chrono::milliseconds _i = std::chrono::milliseconds(i);
+         std::chrono::milliseconds __i = std::chrono::milliseconds(i + 500);
+         mConversationManager.requestKeyframe(mHandle, _i);
+         mConversationManager.requestKeyframeFromPeer(mHandle, __i);
       }
    }
 }

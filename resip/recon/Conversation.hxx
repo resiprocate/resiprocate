@@ -101,6 +101,8 @@ protected:
    virtual void setBridgeMixer(std::shared_ptr<BridgeMixer> mixer) { mBridgeMixer = mixer; }
    virtual bool isSharingMediaInterfaceWithAnotherConversation() { return mSharingMediaInterfaceWithAnotherConversation; }
 
+   virtual ConversationManager& getConversationManager() { return mConversationManager; }
+
 
 private: 
    ConversationHandle mHandle;

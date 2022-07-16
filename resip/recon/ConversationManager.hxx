@@ -462,6 +462,8 @@ public:
    */
    virtual bool getBufferFromMediaResourceCache(const resip::Data& name, resip::Data** buffer, int* type);
    
+   virtual void requestKeyframe(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
+   virtual void requestKeyframeFromPeer(ParticipantHandle partHandle, std::chrono::duration<double> durationMs);
    /**
      This function is used to start a timer on behalf of recon based application.
      The onApplicationTimer callback will get called when the timer expires.
@@ -859,6 +861,8 @@ private:
    friend class HoldParticipantCmd;
    friend class CreateRemoteIMPagerParticipantCmd;
    friend class SendIMToParticipantCmd;
+   friend class RequestKeyframeCmd;
+   friend class RequestKeyframeFromPeerCmd;
 
    UserAgent* mUserAgent;
    std::shared_ptr<MediaStackAdapter> mMediaStackAdapter;

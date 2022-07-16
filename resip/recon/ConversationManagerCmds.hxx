@@ -11,6 +11,9 @@
 #include "LocalParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
 #include "MediaStackAdapter.hxx"
+#ifdef USE_KURENTO
+#include "KurentoRemoteParticipant.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
@@ -791,6 +794,66 @@ private:
    ConversationManager* mConversationManager;
    ParticipantHandle mPartHandle;
    std::unique_ptr<resip::Contents> mContents;
+};
+
+class RequestKeyframeCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle) {}
+      virtual Message* clone() const { return new RequestKeyframeCmd(*this); }
+      virtual void executeCommand()
+      {
+#ifdef USE_KURENTO
+         KurentoRemoteParticipant* remoteParticipant = dynamic_cast<KurentoRemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            std::shared_ptr<kurento::BaseRtpEndpoint> endpoint = remoteParticipant->getEndpoint();
+            if(endpoint->valid())
+            {
+               remoteParticipant->getEndpoint()->sendPictureFastUpdate([]{});
+            }
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
+         }
+#else
+         WarningLog(<<"not implemented");
+#endif
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
+};
+
+class RequestKeyframeFromPeerCmd : public resip::DumCommandAdapter
+{
+   public:
+      RequestKeyframeFromPeerCmd(ConversationManager* conversationManager,
+                          ParticipantHandle partHandle)
+         : mConversationManager(conversationManager),
+           mPartHandle(partHandle) {}
+      virtual Message* clone() const { return new RequestKeyframeFromPeerCmd(*this); }
+      virtual void executeCommand()
+      {
+         RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(mConversationManager->getParticipant(mPartHandle));
+         if(remoteParticipant)
+         {
+            remoteParticipant->requestKeyframeFromPeer();
+         }
+         else
+         {
+            WarningLog(<< "RequestKeyframeCmd: invalid remote participant handle.");
+         }
+      }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { strm << " HoldParticipantCmd: "; return strm; }
+   private:
+      ConversationManager* mConversationManager;
+      ParticipantHandle mPartHandle;
 };
 
 class ApplicationTimerCmd : public resip::DumCommand
