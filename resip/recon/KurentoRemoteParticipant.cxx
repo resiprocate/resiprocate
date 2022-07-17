@@ -499,6 +499,7 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
                 Mime type("application", "sdp");
                 std::unique_ptr<SdpContents> _updatedOffer(new SdpContents(hfv, type));
                 _updatedOffer->session().transformLocalHold(isHolding());
+                _updatedOffer->session().addBandwidth(SdpContents::Session::Bandwidth("AS", 2048));
                 setLocalSdp(*_updatedOffer);
                 mInviteSessionHandle->provideOffer(*mLocalSdp);
                 //c(true, std::move(_updatedOffer));
