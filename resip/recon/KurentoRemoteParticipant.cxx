@@ -480,8 +480,8 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
    mLastRemoteSdp = remoteSdp.get();
    if(remoteSdp)
    {
-      Data remoteDirection = remoteSdp->session().getDirection();
-      if(remoteDirection == "inactive" || remoteDirection == "sendonly")
+      const SdpContents::Session::Direction& remoteDirection = remoteSdp->session().getDirection();
+      if(!remoteDirection.recv())
       {
          setRemoteHold(true);
       }

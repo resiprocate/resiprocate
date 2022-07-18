@@ -12,6 +12,10 @@
 using namespace resip;
 using namespace std;
 
+typedef SdpContents::Session::Direction Direction;
+typedef SdpContents::Session::DirectionList DirectionList;
+
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 int
@@ -645,6 +649,12 @@ main(int argc, char* argv[])
       assert(sdp.session().media().size() == 2);
    }
 
+   std::function<bool(const DirectionList& a, const DirectionList& b)> DirectionListEqual = [=](const DirectionList& a, const DirectionList& b){
+      return std::equal(begin(a), end(a), begin(b),
+               [&](const std::reference_wrapper<const Direction>& _a, const std::reference_wrapper<const Direction>& _b)
+               {return _a.get() == _b.get();});
+   };
+
    {
       // Sample SDP answer for WebRTC taken from Kurento Media Server
       Data txt("v=0\r\n"
@@ -696,9 +706,11 @@ main(int argc, char* argv[])
 
       assert(sdp.session().origin().user() == "-");
       assert(sdp.session().media().size() == 2);
-      assert(sdp.session().getDirection() == "recvonly");
-      assert(sdp.session().getDirection({"audio"}) == "sendonly");
-      assert(sdp.session().getDirection({"video"}) == "recvonly");
+      assert(DirectionListEqual(sdp.session().getDirections(), { Direction::SENDONLY, Direction::RECVONLY }));
+      ErrLog(<<sdp.session().getDirection({}, {}).name());
+      assert(sdp.session().getDirection({}, {}) == Direction::RECVONLY);
+      assert(sdp.session().getDirection({"audio"}, {}) == Direction::SENDONLY);
+      assert(sdp.session().getDirection({"video"}, {}) == Direction::RECVONLY);
    }
 
    {
@@ -749,7 +761,9 @@ main(int argc, char* argv[])
 
       assert(sdp.session().origin().user() == "-");
       assert(sdp.session().media().size() == 2);
-      assert(sdp.session().getDirection() == "inactive");
+      assert(DirectionListEqual(sdp.session().getDirections(), { Direction::INACTIVE, Direction::INACTIVE }));
+      ErrLog(<<sdp.session().getDirection({}, {}).name());
+      assert(sdp.session().getDirection({}, {}) == Direction::INACTIVE);
    }
 
 

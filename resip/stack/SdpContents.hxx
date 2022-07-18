@@ -576,6 +576,52 @@ class SdpContents : public Contents
                   Data mKey;
             };
 
+            class Direction;
+            typedef std::vector<std::reference_wrapper<const SdpContents::Session::Direction>> DirectionList;
+
+            class Direction
+            {
+               public:
+                  static const Direction INACTIVE;
+                  static const Direction SENDONLY;
+                  static const Direction RECVONLY;
+                  static const Direction SENDRECV;
+
+                  const std::reference_wrapper<Direction> cref;
+
+                  const Data& name() const { return mName; }
+                  typedef std::pair<Data, std::reference_wrapper<const SdpContents::Session::Direction>> Tuple;
+                  const Tuple tuple() const
+                  {
+                     return Tuple(name(), cref);
+                  }
+
+                  static bool valid(const Data& name) { return directions.find(name) != directions.end(); }
+                  static const Direction& get(const Data& name) { return directions.find(name)->second; }
+
+                  bool send() const { return mSend; }
+                  bool recv() const { return mRecv; }
+
+                  static DirectionList ordered() {
+                     return { Direction::SENDRECV, Direction::RECVONLY, Direction::SENDONLY, Direction::INACTIVE };
+                  }
+
+                  bool operator==(const Direction& d) const { return &d == this || d.mName == mName; }
+                  bool operator<(const Direction& d) const { return mName < d.mName; }
+
+               private:
+                  Direction(const Data& name, bool send, bool recv)
+                    : cref(std::ref(*this)), mName(name), mSend(send), mRecv(recv) {};
+                  Direction(const Direction& d) = delete;
+                  void operator=(const Direction& d) = delete;
+
+                  Data mName;
+                  bool mSend;
+                  bool mRecv;
+
+                  static const std::map<Tuple::first_type, Tuple::second_type> directions;
+            };
+
             /** @brief  process m= (media announcement) blocks
               * 
               **/
@@ -782,6 +828,9 @@ class SdpContents : public Contents
                     * @return payload type of telephone-event "codec"  
                     **/
                   int findTelephoneEventPayloadType() const;
+
+                  const Direction& getDirection() const;
+                  const Direction& getDirection(const Direction& sessionDefault) const;
 
                private:
                   void setSession(Session* session);
@@ -1004,13 +1053,18 @@ class SdpContents : public Contents
               * @return list of values for given key
               **/
             const std::list<Data>& getValues(const Data& key) const;
+
+            const Direction& getDirection() const;
             /** @brief examine direction for streams of given types
               *
               * @param types
               * @params protocolTypes
               */
-            const Data getDirection(const std::set<Data> types = {},
-               const std::set<Data> protocolTypes = {}) const;
+            const Direction& getDirection(const std::set<Data> types,
+               const std::set<Data> protocolTypes) const;
+
+            DirectionList getDirections() const;
+            DirectionList getNetDirections(const SdpContents& remote) const;
             /** @brief retrieve label (RFC 4574) attributes in a set
               *
               * @return set of label attribute values, if any

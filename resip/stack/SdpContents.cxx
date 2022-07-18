@@ -18,6 +18,18 @@
 using namespace resip;
 using namespace std;
 
+const SdpContents::Session::Direction SdpContents::Session::Direction::INACTIVE("inactive", false, false);
+const SdpContents::Session::Direction SdpContents::Session::Direction::SENDONLY("sendonly", true, false);
+const SdpContents::Session::Direction SdpContents::Session::Direction::RECVONLY("recvonly", false, true);
+const SdpContents::Session::Direction SdpContents::Session::Direction::SENDRECV("sendrecv", true, true);
+
+const std::map<Data, std::reference_wrapper<const SdpContents::Session::Direction>> SdpContents::Session::Direction::directions = {
+                           SdpContents::Session::Direction::INACTIVE.tuple(),
+                           SdpContents::Session::Direction::SENDONLY.tuple(),
+                           SdpContents::Session::Direction::RECVONLY.tuple(),
+                           SdpContents::Session::Direction::SENDRECV.tuple()
+                  };
+
 const SdpContents SdpContents::Empty;
 
 bool
@@ -1228,53 +1240,144 @@ SdpContents::Session::getValues(const Data& key) const
    return mAttributeHelper.getValues(key);
 }
 
-const Data
-SdpContents::Session::getDirection(const std::set<Data> types,
-               const std::set<Data> protocolTypes) const
+const SdpContents::Session::Direction&
+SdpContents::Session::getDirection() const
 {
-   const static std::vector<Data> keys = { "inactive", "sendonly", "recvonly", "sendrecv" };
-
-   // Check for one of the keys at the Session level first
-   for(const auto k : keys)
+   for(const Direction& k : Direction::ordered())
    {
-      if(exists(k))
+      if(exists(k.name()))
       {
          return k;
       }
    }
 
-   // If no key found at the Session level, iterate over Media
+   return Direction::SENDRECV;
+}
+
+const SdpContents::Session::Direction&
+SdpContents::Session::Medium::getDirection() const
+{
+   for(const Direction& k : Direction::ordered())
+   {
+      if(exists(k.name()))
+      {
+         return k;
+      }
+   }
+
+   if(mSession)
+   {
+      return mSession->getDirection();
+   }
+   else
+   {
+      return Direction::SENDRECV;
+   }
+}
+
+
+const SdpContents::Session::Direction&
+SdpContents::Session::Medium::getDirection(const Direction& sessionDefault) const
+{
+   for(const Direction& k : Direction::ordered())
+   {
+      if(exists(k.name()))
+      {
+         return k;
+      }
+   }
+
+   return sessionDefault;
+}
+
+SdpContents::Session::DirectionList
+SdpContents::Session::getDirections() const
+{
+   SdpContents::Session::DirectionList directions;
+   const Direction& sessionDefault = getDirection();
+
+   for(auto& m : mMedia)
+   {
+      directions.push_back(m.getDirection(sessionDefault).cref);
+   }
+
+   return directions;
+}
+
+SdpContents::Session::DirectionList
+SdpContents::Session::getNetDirections(const SdpContents& remote) const
+{
+   SdpContents::Session::DirectionList localDirections = getDirections();
+   SdpContents::Session::DirectionList remoteDirections = remote.session().getDirections();
+
+   if(localDirections.size() != remoteDirections.size())
+   {
+      WarningLog(<<"SDP media count mismatch: local = " << localDirections.size()
+               << " and remote = " << remoteDirections.size());
+   }
+
+   SdpContents::Session::DirectionList result;
+   auto iLocal = localDirections.cbegin();
+   auto iRemote = remoteDirections.cbegin();
+   while(iLocal != localDirections.cend() && iRemote != remoteDirections.cend())
+   {
+      const Direction& _iLocal = *iLocal;
+      const Direction& _iRemote = *iRemote;
+      if(_iLocal == Direction::INACTIVE || _iRemote == Direction::INACTIVE)
+      {
+         result.push_back(Direction::INACTIVE.cref);
+      }
+      else if(_iLocal == Direction::SENDONLY)
+      {
+         result.push_back(Direction::SENDONLY.cref);
+      }
+      else if(_iLocal == Direction::RECVONLY || _iRemote == Direction::SENDONLY)
+      {
+         result.push_back(Direction::RECVONLY.cref);
+      }
+      else if(_iRemote == Direction::RECVONLY)
+      {
+         result.push_back(Direction::SENDONLY.cref);
+      }
+      else
+      {
+         result.push_back(Direction::SENDRECV.cref);
+      }
+
+      iLocal++;
+      iRemote++;
+   }
+
+   return result;
+}
+
+const SdpContents::Session::Direction&
+SdpContents::Session::getDirection(const std::set<Data> types,
+               const std::set<Data> protocolTypes) const
+{
+   const Direction& sessionDefault = getDirection();
+
    std::set<Data> directions;
-   for(const auto m : mMedia)
+   for(const auto& m : mMedia)
    {
       if((types.empty() || types.find(m.name())!=types.end()) &&
          (protocolTypes.empty() || protocolTypes.find(m.protocol())!=protocolTypes.end()) &&
          m.getConnections().size() > 0 &&
          m.port() != 0)
       {
-         Data direction = "sendrecv";
-         for(const auto k : keys)
-         {
-            if(m.exists(k))
-            {
-               direction = k;
-               break;
-            }
-         }
-         directions.insert(direction);
+         directions.insert(m.getDirection(sessionDefault).name());
       }
    }
 
    // Identify the strongest direction attribute in the result set
-   Data netDirection = keys[0];
-   for(const auto k : keys)
+   for(const Direction& k : Direction::ordered())
    {
-      if(directions.find(k) != directions.end())
+      if(directions.find(k.name()) != directions.end())
       {
-         netDirection = k;
+         return k;
       }
    }
-   return netDirection;
+   return sessionDefault;
 }
 
 std::set<Data>
