@@ -1329,6 +1329,7 @@ RemoteParticipant::onConnected(ClientInviteSessionHandle h, const SipMessage& ms
    }
    else
    {
+      DebugLog(<<"ending forked call leg, another leg already answered");
       // We already have a 200 response - send a BYE to this leg
       h->end();
    }
