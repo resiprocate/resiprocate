@@ -720,6 +720,9 @@ std::shared_ptr<ConversationProfile> createConversationProfile(std::shared_ptr<U
 	sessionCaps.session() = session;
    conversationProfile->sessionCaps() = sessionCaps;
 
+   conversationProfile->mediaEndpointMode() = ConversationProfile::Base;
+   conversationProfile->delayedMediaOutboundMode() = false;
+
    return conversationProfile;
 }
 
