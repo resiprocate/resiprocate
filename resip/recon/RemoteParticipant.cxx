@@ -119,7 +119,16 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
 {
    ParticipantHandle handleId = mHandle;
    ConversationManager& cm = mConversationManager;
-   CallbackSdpReady createAndSendInvite = [this, handleId, &cm, destination, callingProfile, extraHeaders](bool success, std::unique_ptr<SdpContents> offer){
+
+   auto profile = callingProfile;
+   if (!profile)
+   {
+      DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling mDialogSet.getConversationProfile()");
+      profile = mDialogSet.getConversationProfile();
+      resip_assert(profile);
+   }
+
+   CallbackSdpReady createAndSendInvite = [this, handleId, &cm, destination, profile, extraHeaders](bool success, std::unique_ptr<SdpContents> offer){
       if(!cm.getParticipant(handleId))
       {
          WarningLog(<<"handle no longer valid");
@@ -132,13 +141,6 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
          mConversationManager.onParticipantTerminated(mHandle, 500);
          delete this;
          return;
-      }
-      auto profile = callingProfile;
-      if (!profile)
-      {
-         DebugLog(<<"initiateRemoteCall: no callingProfile supplied, calling mDialogSet.getConversationProfile()");
-         profile = mDialogSet.getConversationProfile();
-         resip_assert(profile);
       }
       auto invitemsg = mDum.makeInviteSession(
                destination,
@@ -214,13 +216,13 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination, const std::sh
       }
    };
 
-   if(callingProfile && !callingProfile->delayedMediaOutboundMode())
+   if(profile && profile->delayedMediaOutboundMode())
    {
-      buildSdpOffer(mLocalHold, createAndSendInvite);
+      createAndSendInvite(true, std::unique_ptr<SdpContents>(nullptr));
    }
    else
    {
-      createAndSendInvite(true, std::unique_ptr<SdpContents>(nullptr));
+      buildSdpOffer(mLocalHold, createAndSendInvite);
    }
 }
 
