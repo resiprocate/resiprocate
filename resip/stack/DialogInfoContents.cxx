@@ -504,7 +504,6 @@ DialogInfoContents::parse(ParseBuffer& pb)
    const XMLCursor::AttributeMap& attr = xml.getAttributes();
    XMLCursor::AttributeMap::const_iterator itAttr = attr.begin();
    bool baseDialogInfoNamespaceUriFound = false;
-   bool sharedAppearanceDialogInfoNamespaceUriFound = false;
    for (; itAttr != attr.end(); itAttr++)
    {
       if (itAttr->first.prefix("xmlns"))
@@ -526,7 +525,6 @@ DialogInfoContents::parse(ParseBuffer& pb)
          }
          else if (isEqualNoCase(itAttr->second, SharedAppearanceDialogInfoNamespaceUri))
          {
-            sharedAppearanceDialogInfoNamespaceUriFound = true;
             mSharedAppearanceDialogInfoNamespacePrefix = prefix;
          }
       }
