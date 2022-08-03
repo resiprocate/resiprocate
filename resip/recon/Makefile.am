@@ -13,6 +13,7 @@ SUBDIRS += MOHParkServer
 AM_CXXFLAGS = -DSIPX_NO_RECORD
 
 lib_LTLIBRARIES = librecon.la
+librecon_la_CXXFLAGS = $(AM_CXXFLAGS)
 librecon_la_LIBADD = ../../reflow/libreflow.la
 librecon_la_LIBADD += ../../reTurn/client/libreTurnClient.la
 librecon_la_LIBADD += ../dum/libdum.la
@@ -95,6 +96,27 @@ librecon_la_SOURCES += KurentoBridgeMixer.cxx \
         KurentoRemoteParticipantDialogSet.cxx
 endif
 
+if USE_GSTREAMER
+librecon_la_CXXFLAGS += $(GSTREAMERMM_1_0_CFLAGS)
+librecon_la_LIBADD += ../../media/gstreamer/libgstreamerutils.la
+librecon_la_LIBADD += $(GSTREAMERMM_1_0_LIBS) -lgstwebrtc-1.0
+librecon_la_SOURCES += GstBridgeMixer.cxx \
+        GstConversation.cxx \
+        GstMediaStackAdapter.cxx \
+        GstParticipant.cxx \
+        GstRemoteParticipant.cxx \
+        GstRemoteParticipantDialogSet.cxx
+endif
+
+if USE_LIBWEBRTC
+librecon_la_SOURCES += LibWebRTCBridgeMixer.cxx \
+        LibWebRTCConversation.cxx \
+        LibWebRTCMediaStackAdapter.cxx \
+        LibWebRTCParticipant.cxx \
+        LibWebRTCRemoteParticipant.cxx \
+        LibWebRTCRemoteParticipantDialogSet.cxx
+endif
+
 reconincludedir = $(includedir)/recon
 nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         LocalParticipant.hxx \
@@ -159,10 +181,29 @@ nobase_reconinclude_HEADERS += KurentoBridgeMixer.hxx \
         KurentoRemoteParticipant.hxx
 endif
 
+if USE_GSTREAMER
+nobase_reconinclude_HEADERS += GstBridgeMixer.hxx \
+        GstConversation.hxx \
+        GstMediaStackAdapter.hxx \
+        GstParticipant.hxx \
+        GstRemoteParticipantDialogSet.hxx \
+        GstRemoteParticipant.hxx
+endif
+
+if USE_LIBWEBRTC
+nobase_reconinclude_HEADERS += LibWebRTCBridgeMixer.hxx \
+        LibWebRTCConversation.hxx \
+        LibWebRTCMediaStackAdapter.hxx \
+        LibWebRTCParticipant.hxx \
+        LibWebRTCRemoteParticipantDialogSet.hxx \
+        LibWebRTCRemoteParticipant.hxx
+endif
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
 # Copyright (c) 2021, Daniel Pocock https://danielpocock.com
+# Copyright (c) 2021, Software Freedom Institute https://softwarefreedom.institute
 # Copyright (c) 2000-2007 Vovida Networks, Inc.  All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without

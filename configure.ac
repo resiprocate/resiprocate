@@ -319,6 +319,22 @@ AC_ARG_WITH(kurento,
  AM_CONDITIONAL(USE_KURENTO, true)
  AM_CONDITIONAL(BUILD_RECONSERVER, true)], )
 
+AM_CONDITIONAL(USE_GSTREAMER, false)
+AC_ARG_WITH(gstreamer,
+[  --with-gstreamer        Build components requiring GStreamer],
+ [AC_DEFINE_UNQUOTED(USE_GSTREAMER, , USE_GSTREAMER)
+ AM_CONDITIONAL(USE_GSTREAMER, true)
+ AM_CONDITIONAL(BUILD_RECONSERVER, true)
+ PKG_CHECK_MODULES([GSTREAMERMM_1_0], [gstreamermm-1.0])
+], )
+
+AM_CONDITIONAL(USE_LIBWEBRTC, false)
+AC_ARG_WITH(libwebrtc,
+[  --with-libwebrtc        Build recon with Google Chromium / libWebRTC support],
+ [AC_DEFINE_UNQUOTED(USE_LIBWEBRTC, , USE_LIBWEBRTC)
+ AM_CONDITIONAL(USE_LIBWEBRTC, true)
+ AM_CONDITIONAL(BUILD_RECONSERVER, true)], )
+
 AM_CONDITIONAL(RECON_LOCAL_HW_TESTS, false)
 AC_ARG_ENABLE(recon-local-hw-tests,
 [  --enable-recon-local-hw-tests Attempt to use local audio hardware in unit tests],
@@ -373,14 +389,6 @@ AX_HAVE_EPOLL(
 AC_CHECK_LIB(dl, dlopen)
 AM_CONDITIONAL(HAVE_LIBDL, [test x"$ac_cv_lib_dl_dlopen" = xyes])
 
-AM_CONDITIONAL(BUILD_GSTREAMER, false)
-AC_ARG_WITH(gstreamer,
-[  --with-gstreamer        Build components requiring GStreamer],
- [AC_DEFINE_UNQUOTED(BUILD_GSTREAMER, , BUILD_GSTREAMER)
- AM_CONDITIONAL(BUILD_GSTREAMER, true)
- PKG_CHECK_MODULES([GSTREAMERMM_1_0], [gstreamermm-1.0])
-], )
-
 AM_MAINTAINER_MODE
 
 AC_OUTPUT(Makefile \
@@ -428,6 +436,7 @@ AC_OUTPUT(Makefile \
 	p2p/s2c/s2c/Makefile \
 	p2p/Makefile \
 	media/Makefile \
+	media/gstreamer/Makefile \
 	media/kurento/Makefile \
 	media/kurento/test/Makefile \
 	)

@@ -70,6 +70,8 @@ public:
    virtual bool hasInput() { return false; }
    virtual bool hasOutput() { return false; }
 
+   virtual void requestKeyframe() override;
+
 protected:
 
    virtual RemoteIMSessionParticipantDialogSet& getIMSessionDialogSet() { return dynamic_cast<RemoteIMSessionParticipantDialogSet&>(getDialogSet()); }

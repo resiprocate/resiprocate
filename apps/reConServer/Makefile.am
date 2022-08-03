@@ -12,6 +12,8 @@ endif
 
 dist_man_MANS = reConServer.8
 
+reConServer_CXXFLAGS =
+
 reConServer_SOURCES = reConServer.cxx
 reConServer_SOURCES += reConServer.hxx
 reConServer_SOURCES += reConServerConfig.cxx
@@ -59,6 +61,11 @@ endif
 if USE_KURENTO
 reConServer_LDADD += -lboost_system
 reConServer_LDADD += ../../media/kurento/libkurentoclient.la
+endif
+if USE_GSTREAMER
+reConServer_CXXFLAGS += $(GSTREAMERMM_1_0_CFLAGS)
+reConServer_LDADD += ../../media/gstreamer/libgstreamerutils.la
+reConServer_LDADD += $(GSTREAMERMM_1_0_LIBS) -lgstwebrtc-1.0
 endif
 reConServer_LDADD += ../../resip/dum/libdum.la
 reConServer_LDADD += ../../resip/stack/libresip.la

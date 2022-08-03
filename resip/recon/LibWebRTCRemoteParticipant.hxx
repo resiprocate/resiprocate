@@ -1,14 +1,14 @@
-#if !defined(SipXRemoteParticipant_hxx)
-#define SipXRemoteParticipant_hxx
+#if !defined(LibWebRTCRemoteParticipant_hxx)
+#define LibWebRTCRemoteParticipant_hxx
 
 #include <map>
 
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 #include "RemoteParticipant.hxx"
-#include "SipXRemoteParticipant.hxx"
-#include "SipXRemoteParticipantDialogSet.hxx"
-#include "SipXParticipant.hxx"
+#include "LibWebRTCRemoteParticipant.hxx"
+#include "LibWebRTCRemoteParticipantDialogSet.hxx"
+#include "LibWebRTCParticipant.hxx"
 
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
@@ -24,48 +24,39 @@ class DialogUsageManager;
 class SipMessage;
 }
 
-namespace sdpcontainer
-{
-class Sdp; 
-class SdpMediaLine;
-}
-
 // Disable warning 4250
 // VS2019 give a 4250 warning:  
-// SipXRemoteParticipant.hxx(80,1): warning C4250: 'recon::SipXRemoteParticipant': inherits 'recon::RemoteParticipant::recon::RemoteParticipant::addToConversation' via dominance
+// LibWebRTCRemoteParticipant.hxx(80,1): warning C4250: 'recon::LibWebRTCRemoteParticipant': inherits 'recon::RemoteParticipant::recon::RemoteParticipant::addToConversation' via dominance
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4250 )
 #endif
 
 namespace recon
 {
-class SipXMediaStackAdapter;
+class LibWebRTCMediaStackAdapter;
 
 /**
   This class represent a remote participant.  A remote participant is a 
   participant with a network connection to a remote entity.  This
   implementation is for a SIP / RTP connections.
-
-  Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class SipXRemoteParticipant : public virtual RemoteParticipant, public virtual SipXParticipant
+class LibWebRTCRemoteParticipant : public virtual RemoteParticipant, public virtual LibWebRTCParticipant
 {
 public:
-   SipXRemoteParticipant(ParticipantHandle partHandle,   // UAC
+   LibWebRTCRemoteParticipant(ParticipantHandle partHandle,   // UAC
                      ConversationManager& conversationManager,
-                     SipXMediaStackAdapter& sipXMediaStackAdapter,
+                     LibWebRTCMediaStackAdapter& libwebrtcMediaStackAdapter,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   SipXRemoteParticipant(ConversationManager& conversationManager,
-                     SipXMediaStackAdapter& sipXMediaStackAdapter,            // UAS or forked leg
+   LibWebRTCRemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
+                     LibWebRTCMediaStackAdapter& libwebrtcMediaStackAdapter,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   virtual ~SipXRemoteParticipant();
+   virtual ~LibWebRTCRemoteParticipant();
 
-   virtual unsigned int getLocalRTPPort();
    virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false);
 
    virtual int getConnectionPortOnBridge();
@@ -73,19 +64,58 @@ public:
    virtual bool hasOutput() { return true; }
    virtual int getMediaConnectionId();
 
+   virtual void applyBridgeMixWeights() override;
+   virtual void applyBridgeMixWeights(Conversation* removedConversation) override;
+
    virtual void adjustRTPStreams(bool sendingOffer=false);
+
+   void onIceGatheringDone() { mIceGatheringDone = true; };
+
+   virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100) override;
+   virtual void removeFromConversation(Conversation *conversation) override;
+
+   virtual std::shared_ptr<libwebrtc::BaseRtpEndpoint> getEndpoint() { return mEndpoint; }; // FIXME LibWebRTC
+   std::shared_ptr<libwebrtc::MediaElement> mMultiqueue; // FIXME LibWebRTC
+   bool mWaitingModeVideo = false;
+   std::shared_ptr<libwebrtc::PlayerEndpoint> mPlayer; // FIXME LibWebRTC
+   std::shared_ptr<libwebrtc::PassThroughElement> mPassThrough; // FIXME LibWebRTC
+
+   virtual void waitingMode();
+   virtual std::shared_ptr<libwebrtc::MediaElement> getWaitingModeElement();
+
+   virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
+   virtual bool onTrickleIce(resip::TrickleIceContents& trickleIce) override;
 
    virtual void requestKeyframe() override;
 
 protected:
    virtual bool mediaStackPortAvailable();
 
-   // Note:  Returns non-null the majority of the time, can return null on object destruction
-   virtual SipXRemoteParticipantDialogSet* getSipXDialogSet() { return dynamic_cast<SipXRemoteParticipantDialogSet*>(&getDialogSet()); }
+   virtual LibWebRTCRemoteParticipantDialogSet& getLibWebRTCDialogSet() { return dynamic_cast<LibWebRTCRemoteParticipantDialogSet&>(getDialogSet()); };
+
+   virtual bool holdPreferExistingSdp() override { return true; };
 
 private:
-   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
+   libwebrtc::BaseRtpEndpoint* newEndpoint();
+   virtual bool initEndpointIfRequired(bool isWebRTC);
+   virtual void doIceGathering(libwebrtc::ContinuationString sdpReady);
+   virtual void createAndConnectElements(libwebrtc::ContinuationVoid cConnected);
    virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;
+
+   std::shared_ptr<libwebrtc::BaseRtpEndpoint> mEndpoint;
+   volatile bool mIceGatheringDone;  // FIXME LibWebRTC use a concurrency primitive, e.g. condition_variable
+
+   std::chrono::time_point<std::chrono::steady_clock> mLastLocalKeyframeRequest = std::chrono::steady_clock::now();
+
+public: // FIXME
+   bool mRemoveExtraMediaDescriptors;
+   bool mSipRtpEndpoint;
+   bool mReuseSdpAnswer;
+   bool mWSAcceptsKeyframeRequests;
+   resip::SdpContents* mLastRemoteSdp;
+   bool mWaitingAnswer;  // have sent an offer, waiting for peer to send answer
+   bool mTrickleIcePermitted = false; // FIXME - complete
+   bool mWebRTCOutgoing = false; // FIXME - use WebRTC for outgoing call
 };
 
 }
@@ -95,9 +125,9 @@ private:
 
 /* ====================================================================
 
- Copyright (c) 2021-2022, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
- Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

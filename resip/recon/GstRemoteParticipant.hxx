@@ -1,14 +1,14 @@
-#if !defined(KurentoRemoteParticipant_hxx)
-#define KurentoRemoteParticipant_hxx
+#if !defined(GstRemoteParticipant_hxx)
+#define GstRemoteParticipant_hxx
 
+#include <functional>
 #include <map>
 
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 #include "RemoteParticipant.hxx"
-#include "KurentoRemoteParticipant.hxx"
-#include "KurentoRemoteParticipantDialogSet.hxx"
-#include "KurentoParticipant.hxx"
+#include "GstRemoteParticipantDialogSet.hxx"
+#include "GstParticipant.hxx"
 
 #include <resip/dum/AppDialogSet.hxx>
 #include <resip/dum/AppDialog.hxx>
@@ -18,7 +18,11 @@
 
 #include <memory>
 
-#include <media/kurento/Object.hxx>
+#include <gst/sdp/gstsdpmessage.h>
+#include <glibmm/object.h>
+
+#define GST_USE_UNSTABLE_API
+#include <gst/webrtc/webrtc.h>
 
 namespace resip
 {
@@ -28,14 +32,14 @@ class SipMessage;
 
 // Disable warning 4250
 // VS2019 give a 4250 warning:  
-// KurentoRemoteParticipant.hxx(80,1): warning C4250: 'recon::KurentoRemoteParticipant': inherits 'recon::RemoteParticipant::recon::RemoteParticipant::addToConversation' via dominance
+// GstRemoteParticipant.hxx(80,1): warning C4250: 'recon::GstRemoteParticipant': inherits 'recon::RemoteParticipant::recon::RemoteParticipant::addToConversation' via dominance
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4250 )
 #endif
 
 namespace recon
 {
-class KurentoMediaStackAdapter;
+class GstMediaStackAdapter;
 
 /**
   This class represent a remote participant.  A remote participant is a 
@@ -43,21 +47,21 @@ class KurentoMediaStackAdapter;
   implementation is for a SIP / RTP connections.
 */
 
-class KurentoRemoteParticipant : public virtual RemoteParticipant, public virtual KurentoParticipant
+class GstRemoteParticipant : public virtual RemoteParticipant, public virtual GstParticipant
 {
 public:
-   KurentoRemoteParticipant(ParticipantHandle partHandle,   // UAC
+   GstRemoteParticipant(ParticipantHandle partHandle,   // UAC
                      ConversationManager& conversationManager,
-                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
+                     GstMediaStackAdapter& gstreamerMediaStackAdapter,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   KurentoRemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
-                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
+   GstRemoteParticipant(ConversationManager& conversationManager,            // UAS or forked leg
+                     GstMediaStackAdapter& gstreamerMediaStackAdapter,
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);
 
-   virtual ~KurentoRemoteParticipant();
+   virtual ~GstRemoteParticipant();
 
    virtual void buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp = false);
 
@@ -76,14 +80,14 @@ public:
    virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100) override;
    virtual void removeFromConversation(Conversation *conversation) override;
 
-   virtual std::shared_ptr<kurento::BaseRtpEndpoint> getEndpoint() { return mEndpoint; }; // FIXME Kurento
-   std::shared_ptr<kurento::MediaElement> mMultiqueue; // FIXME Kurento
+   //virtual std::shared_ptr<gstreamer::BaseRtpEndpoint> getEndpoint() { return mEndpoint; }; // FIXME Gst
+   //std::shared_ptr<gstreamer::MediaElement> mMultiqueue; // FIXME Gst
    bool mWaitingModeVideo = false;
-   std::shared_ptr<kurento::PlayerEndpoint> mPlayer; // FIXME Kurento
-   std::shared_ptr<kurento::PassThroughElement> mPassThrough; // FIXME Kurento
+   //std::shared_ptr<gstreamer::PlayerEndpoint> mPlayer; // FIXME Gst
+   //std::shared_ptr<gstreamer::PassThroughElement> mPassThrough; // FIXME Gst
 
    virtual void waitingMode();
-   virtual std::shared_ptr<kurento::MediaElement> getWaitingModeElement();
+   //virtual std::shared_ptr<gstreamer::MediaElement> getWaitingModeElement();
 
    virtual bool onMediaControlEvent(resip::MediaControlContents::MediaControl& mediaControl);
    virtual bool onTrickleIce(resip::TrickleIceContents& trickleIce) override;
@@ -93,19 +97,33 @@ public:
 protected:
    virtual bool mediaStackPortAvailable();
 
-   virtual KurentoRemoteParticipantDialogSet& getKurentoDialogSet() { return dynamic_cast<KurentoRemoteParticipantDialogSet&>(getDialogSet()); };
+   virtual GstRemoteParticipantDialogSet& getGstDialogSet() { return dynamic_cast<GstRemoteParticipantDialogSet&>(getDialogSet()); };
 
    virtual bool holdPreferExistingSdp() override { return true; };
 
 private:
-   kurento::BaseRtpEndpoint* newEndpoint();
+   //gstreamer::BaseRtpEndpoint* newEndpoint();
    virtual bool initEndpointIfRequired(bool isWebRTC);
-   virtual void doIceGathering(kurento::ContinuationString sdpReady);
-   virtual void createAndConnectElements(kurento::ContinuationVoid cConnected);
+   //virtual void doIceGathering(gstreamer::ContinuationString sdpReady);
+   //typedef Glib::ustring StreamKey;
+   typedef resip::Data StreamKey;
+   virtual StreamKey getKeyForStream(const Glib::RefPtr<Gst::Caps>& caps) const;
+   virtual Glib::RefPtr<Gst::Pad> createIncomingPipeline(Glib::RefPtr<Gst::Pad> pad);
+   //virtual void createOutgoingPipeline(const Glib::RefPtr<Gst::Pad>& pad);
+   //typedef Gst::EncodeBin EncodeEntry;
+   typedef Gst::Queue EncodeEntry;
+   virtual void createOutgoingPipeline(const Glib::RefPtr<Gst::Caps> caps);
+   virtual void debugGraph();
+   virtual void createAndConnectElements(std::function<void()> cConnected, CallbackSdpReady sdpReady);
+   virtual void setLocalDescription(GstWebRTCSessionDescription* gstwebrtcdesc);
+   virtual void setRemoteDescription(GstWebRTCSessionDescription* gstwebrtcdesc);
    virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;
 
-   std::shared_ptr<kurento::BaseRtpEndpoint> mEndpoint;
-   volatile bool mIceGatheringDone;  // FIXME Kurento use a concurrency primitive, e.g. condition_variable
+   bool onGstBusMessage(const Glib::RefPtr<Gst::Bus>&, const Glib::RefPtr<Gst::Message>& message);
+   virtual void onRemoteIceCandidate(const resip::Data& candidate, unsigned int lineIndex, const resip::Data& mid);
+
+   //std::shared_ptr<gstreamer::BaseRtpEndpoint> mEndpoint;
+   volatile bool mIceGatheringDone;  // FIXME Gst use a concurrency primitive, e.g. condition_variable
 
    std::chrono::time_point<std::chrono::steady_clock> mLastLocalKeyframeRequest = std::chrono::steady_clock::now();
 
@@ -118,6 +136,22 @@ public: // FIXME
    bool mWaitingAnswer;  // have sent an offer, waiting for peer to send answer
    bool mTrickleIcePermitted = false; // FIXME - complete
    bool mWebRTCOutgoing = false; // FIXME - use WebRTC for outgoing call
+
+   //GstElement* mPipeline;
+   //GstElement* mWebRTCElement;
+   Glib::RefPtr<Gst::Pipeline> mPipeline;
+   Glib::RefPtr<Gst::Element> mWebRTCElement;
+
+   std::map<StreamKey, Glib::RefPtr<Gst::DecodeBin>> mDecodes;
+   std::map<StreamKey, Glib::RefPtr<EncodeEntry>> mEncodes;
+
+   std::function<void(const Glib::RefPtr<Gst::Pad>& pad)> mPadAdded;
+
+   /*class MyWebRTCElement : public Gst::Element
+         {
+            public:
+               MyWebRTCElement() : Gst::Element(Glib::ConstructParams()) {};
+         };*/
 };
 
 }
@@ -128,7 +162,7 @@ public: // FIXME
 /* ====================================================================
 
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
- Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2021, SIP Spectrum, Inc. www.sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.

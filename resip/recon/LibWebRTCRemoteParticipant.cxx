@@ -2,11 +2,9 @@
 #include "config.h"
 #endif
 
-#include <media/kurento/Object.hxx>
+#include "LibWebRTCMediaStackAdapter.hxx"
 
-#include "KurentoMediaStackAdapter.hxx"
-
-#include "KurentoRemoteParticipant.hxx"
+#include "LibWebRTCRemoteParticipant.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
@@ -52,14 +50,14 @@ using namespace std;
 //#define RTP_SAVPF_FUDGE
 
 // UAC
-KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
+LibWebRTCRemoteParticipant::LibWebRTCRemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager,
-                                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
+                                     LibWebRTCMediaStackAdapter& libwebrtcMediaStackAdapter,
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(partHandle, conversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, kurentoMediaStackAdapter),
+  LibWebRTCParticipant(partHandle, ConversationManager::ParticipantType_Remote, conversationManager, libwebrtcMediaStackAdapter),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
@@ -68,17 +66,17 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ParticipantHandle partHandle,
   mWaitingAnswer(false),
   mWebRTCOutgoing(getDialogSet().getConversationProfile()->mediaEndpointMode() == ConversationProfile::WebRTC)
 {
-   InfoLog(<< "KurentoRemoteParticipant created (UAC), handle=" << mHandle);
+   InfoLog(<< "LibWebRTCRemoteParticipant created (UAC), handle=" << mHandle);
 }
 
 // UAS - or forked leg
-KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversationManager,
-                                     KurentoMediaStackAdapter& kurentoMediaStackAdapter,
+LibWebRTCRemoteParticipant::LibWebRTCRemoteParticipant(ConversationManager& conversationManager,
+                                     LibWebRTCMediaStackAdapter& libwebrtcMediaStackAdapter,
                                      DialogUsageManager& dum, 
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
 : Participant(ConversationManager::ParticipantType_Remote, conversationManager),
   RemoteParticipant(conversationManager, dum, remoteParticipantDialogSet),
-  KurentoParticipant(ConversationManager::ParticipantType_Remote, conversationManager, kurentoMediaStackAdapter),
+  LibWebRTCParticipant(ConversationManager::ParticipantType_Remote, conversationManager, libwebrtcMediaStackAdapter),
   mRemoveExtraMediaDescriptors(false),
   mSipRtpEndpoint(true),
   mReuseSdpAnswer(false),
@@ -87,10 +85,10 @@ KurentoRemoteParticipant::KurentoRemoteParticipant(ConversationManager& conversa
   mWaitingAnswer(false),
   mWebRTCOutgoing(getDialogSet().getConversationProfile()->mediaEndpointMode() == ConversationProfile::WebRTC)
 {
-   InfoLog(<< "KurentoRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
+   InfoLog(<< "LibWebRTCRemoteParticipant created (UAS or forked leg), handle=" << mHandle);
 }
 
-KurentoRemoteParticipant::~KurentoRemoteParticipant()
+LibWebRTCRemoteParticipant::~LibWebRTCRemoteParticipant()
 {
    // Note:  Ideally this call would exist in the Participant Base class - but this call requires 
    //        dynamic_casts and virtual methods to function correctly during destruction.
@@ -99,15 +97,15 @@ KurentoRemoteParticipant::~KurentoRemoteParticipant()
    //        See https://stackoverflow.com/questions/10979250/usage-of-this-in-destructor.
    unregisterFromAllConversations();
 
-   InfoLog(<< "KurentoRemoteParticipant destroyed, handle=" << mHandle);
+   InfoLog(<< "LibWebRTCRemoteParticipant destroyed, handle=" << mHandle);
 }
 
 int 
-KurentoRemoteParticipant::getConnectionPortOnBridge()
+LibWebRTCRemoteParticipant::getConnectionPortOnBridge()
 {
    if(getDialogSet().getActiveRemoteParticipantHandle() == mHandle)
    {
-      return -1;  // FIXME Kurento
+      return -1;  // FIXME LibWebRTC
    }
    else
    {
@@ -118,15 +116,15 @@ KurentoRemoteParticipant::getConnectionPortOnBridge()
 }
 
 int 
-KurentoRemoteParticipant::getMediaConnectionId()
+LibWebRTCRemoteParticipant::getMediaConnectionId()
 { 
-   return getKurentoDialogSet().getMediaConnectionId();
+   return getLibWebRTCDialogSet().getMediaConnectionId();
 }
 
 void
-KurentoRemoteParticipant::applyBridgeMixWeights()
+LibWebRTCRemoteParticipant::applyBridgeMixWeights()
 {
-   // FIXME Kurento - do we need to implement this?
+   // FIXME LibWebRTC - do we need to implement this?
 }
 
 // Special version of this call used only when a participant
@@ -135,21 +133,21 @@ KurentoRemoteParticipant::applyBridgeMixWeights()
 // for a participant (ie. LocalParticipant) that has no currently
 // assigned conversations.
 void
-KurentoRemoteParticipant::applyBridgeMixWeights(Conversation* removedConversation)
+LibWebRTCRemoteParticipant::applyBridgeMixWeights(Conversation* removedConversation)
 {
-   // FIXME Kurento - do we need to implement this?
+   // FIXME LibWebRTC - do we need to implement this?
 }
 
-kurento::BaseRtpEndpoint*
-KurentoRemoteParticipant::newEndpoint()
+libwebrtc::BaseRtpEndpoint*
+LibWebRTCRemoteParticipant::newEndpoint()
 {
    return mSipRtpEndpoint ?
-            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::SipRtpEndpoint(mKurentoMediaStackAdapter.mPipeline)) :
-            dynamic_cast<kurento::BaseRtpEndpoint*>(new kurento::RtpEndpoint(mKurentoMediaStackAdapter.mPipeline));
+            dynamic_cast<libwebrtc::BaseRtpEndpoint*>(new libwebrtc::SipRtpEndpoint(mLibWebRTCMediaStackAdapter.mPipeline)) :
+            dynamic_cast<libwebrtc::BaseRtpEndpoint*>(new libwebrtc::RtpEndpoint(mLibWebRTCMediaStackAdapter.mPipeline));
 }
 
 bool
-KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
+LibWebRTCRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
 {
    if(mEndpoint)
    {
@@ -159,7 +157,7 @@ KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
    {
       // delay while ICE gathers candidates from STUN and TURN
       mIceGatheringDone = false;
-      mEndpoint.reset(new kurento::WebRtcEndpoint(mKurentoMediaStackAdapter.mPipeline));
+      mEndpoint.reset(new libwebrtc::WebRtcEndpoint(mLibWebRTCMediaStackAdapter.mPipeline));
    }
    else
    {
@@ -167,41 +165,52 @@ KurentoRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
       mEndpoint.reset(newEndpoint());
    }
 
-   //mMultiqueue.reset(new kurento::GStreamerFilter(mKurentoMediaStackAdapter.mPipeline, "videoconvert"));
-   //mMultiqueue.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+   //mMultiqueue.reset(new libwebrtc::GStreamerFilter(mLibWebRTCMediaStackAdapter.mPipeline, "videoconvert"));
+   //mMultiqueue.reset(new libwebrtc::PassThroughElement(mLibWebRTCMediaStackAdapter.mPipeline));
    std::shared_ptr<resip::ConfigParse> cfg = mConversationManager.getConfig();
    if(cfg)
    {
       const Data& holdVideo = mConversationManager.getConfig()->getConfigData("HoldVideo", "file:///tmp/test.mp4", true);
-      mPlayer.reset(new kurento::PlayerEndpoint(mKurentoMediaStackAdapter.mPipeline, holdVideo.c_str()));
+      mPlayer.reset(new libwebrtc::PlayerEndpoint(mLibWebRTCMediaStackAdapter.mPipeline, holdVideo.c_str()));
    }
-   mPassThrough.reset(new kurento::PassThroughElement(mKurentoMediaStackAdapter.mPipeline));
+   mPassThrough.reset(new libwebrtc::PassThroughElement(mLibWebRTCMediaStackAdapter.mPipeline));
 
    return true;
 }
 
 void
-KurentoRemoteParticipant::doIceGathering(kurento::ContinuationString sdpReady)
+LibWebRTCRemoteParticipant::doIceGathering(libwebrtc::ContinuationString sdpReady)
 {
-   std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+   std::shared_ptr<libwebrtc::WebRtcEndpoint> webRtc = std::static_pointer_cast<libwebrtc::WebRtcEndpoint>(mEndpoint);
 
-   std::shared_ptr<kurento::EventContinuation> elEventIceCandidateFound =
-         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+   std::shared_ptr<libwebrtc::EventContinuation> elEventIceCandidateFound =
+         std::make_shared<libwebrtc::EventContinuation>([this](std::shared_ptr<libwebrtc::Event> event){
       DebugLog(<<"received event: " << *event);
-      std::shared_ptr<kurento::OnIceCandidateFoundEvent> _event =
-         std::dynamic_pointer_cast<kurento::OnIceCandidateFoundEvent>(event);
+      std::shared_ptr<libwebrtc::OnIceCandidateFoundEvent> _event =
+         std::dynamic_pointer_cast<libwebrtc::OnIceCandidateFoundEvent>(event);
       resip_assert(_event.get());
 
       if(!mTrickleIcePermitted)
       {
          return;
       }
-      onLocalIceCandidate(Data(_event->getCandidate()),
+      // FIXME - if we are waiting for a previous INFO to be confirmed,
+      //         aggregate the candidates into a vector and send them in bulk
+      auto ice = getLocalSdp()->session().makeIceFragment(Data(_event->getCandidate()),
          _event->getLineIndex(), Data(_event->getId()));
+      if(ice.get())
+      {
+         StackLog(<<"about to send " << *ice);
+         info(*ice);
+      }
+      else
+      {
+         WarningLog(<<"failed to create ICE fragment for mid: " << _event->getId());
+      }
    });
 
-   std::shared_ptr<kurento::EventContinuation> elIceGatheringDone =
-            std::make_shared<kurento::EventContinuation>([this, sdpReady](std::shared_ptr<kurento::Event> event){
+   std::shared_ptr<libwebrtc::EventContinuation> elIceGatheringDone =
+            std::make_shared<libwebrtc::EventContinuation>([this, sdpReady](std::shared_ptr<libwebrtc::Event> event){
       mIceGatheringDone = true;
       mEndpoint->getLocalSessionDescriptor(sdpReady);
    });
@@ -217,22 +226,22 @@ KurentoRemoteParticipant::doIceGathering(kurento::ContinuationString sdpReady)
 }
 
 void
-KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cConnected)
+LibWebRTCRemoteParticipant::createAndConnectElements(libwebrtc::ContinuationVoid cConnected)
 {
    // FIXME - implement listeners for some of the events currently using elEventDebug
 
-   std::shared_ptr<kurento::EventContinuation> elError =
-         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
-      ErrLog(<<"Error from Kurento MediaObject: " << *event);
+   std::shared_ptr<libwebrtc::EventContinuation> elError =
+         std::make_shared<libwebrtc::EventContinuation>([this](std::shared_ptr<libwebrtc::Event> event){
+      ErrLog(<<"Error from LibWebRTC MediaObject: " << *event);
    });
 
-   std::shared_ptr<kurento::EventContinuation> elEventDebug =
-         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+   std::shared_ptr<libwebrtc::EventContinuation> elEventDebug =
+         std::make_shared<libwebrtc::EventContinuation>([this](std::shared_ptr<libwebrtc::Event> event){
       DebugLog(<<"received event: " << *event);
    });
 
-   std::shared_ptr<kurento::EventContinuation> elEventKeyframeRequired =
-         std::make_shared<kurento::EventContinuation>([this](std::shared_ptr<kurento::Event> event){
+   std::shared_ptr<libwebrtc::EventContinuation> elEventKeyframeRequired =
+         std::make_shared<libwebrtc::EventContinuation>([this](std::shared_ptr<libwebrtc::Event> event){
       DebugLog(<<"received event: " << *event);
       requestKeyframeFromPeer();
    });
@@ -274,7 +283,7 @@ KurentoRemoteParticipant::createAndConnectElements(kurento::ContinuationVoid cCo
 }
 
 void
-KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp)
+LibWebRTCRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, bool preferExistingSdp)
 {
    bool useExistingSdp = false;
    if(getLocalSdp())
@@ -287,8 +296,8 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady,
       bool isWebRTC = mWebRTCOutgoing;
       bool firstUseEndpoint = initEndpointIfRequired(isWebRTC);
 
-      kurento::ContinuationString cOnOfferReady = [this, holdSdp, sdpReady](const std::string& offer){
-         StackLog(<<"offer FROM Kurento: " << offer);
+      libwebrtc::ContinuationString cOnOfferReady = [this, holdSdp, sdpReady](const std::string& offer){
+         StackLog(<<"offer FROM LibWebRTC: " << offer);
          HeaderFieldValue hfv(offer.data(), offer.size());
          Mime type("application", "sdp");
          std::unique_ptr<SdpContents> _offer(new SdpContents(hfv, type));
@@ -297,8 +306,8 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady,
          sdpReady(true, std::move(_offer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, holdSdp, isWebRTC, sdpReady, cOnOfferReady]{
-         // FIXME - can we tell Kurento to use holdSdp?
+      libwebrtc::ContinuationVoid cConnected = [this, holdSdp, isWebRTC, sdpReady, cOnOfferReady]{
+         // FIXME - can we tell LibWebRTC to use holdSdp?
          // We currently mangle the SDP after-the-fact in cOnOfferReady
          mEndpoint->generateOffer([this, isWebRTC, sdpReady, cOnOfferReady](const std::string& offer){
             mWaitingAnswer = true;
@@ -341,7 +350,7 @@ KurentoRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady,
 }
 
 void
-KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady sdpReady)
+LibWebRTCRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady sdpReady)
 {
    bool requestSent = false;
 
@@ -365,7 +374,7 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
          // RFC 4145 uses the attribute name "setup"
          // We override the attribute name and use the legacy name "direction"
          // from the drafts up to draft-ietf-mmusic-sdp-comedia-05.txt
-         // Tested with Kurento and Cisco EX90
+         // Tested with LibWebRTC and Cisco EX90
          // https://datatracker.ietf.org/doc/html/draft-ietf-mmusic-sdp-comedia-05
          // https://datatracker.ietf.org/doc/html/rfc4145
          offerMangled->session().transformCOMedia("active", "direction");
@@ -375,12 +384,12 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
       offerMangledBuf << *offerMangled;
       std::shared_ptr<std::string> offerMangledStr = std::make_shared<std::string>(offerMangledBuf.str());
 
-      StackLog(<<"offer TO Kurento: " << *offerMangledStr);
+      StackLog(<<"offer TO LibWebRTC: " << *offerMangledStr);
 
       bool firstUseEndpoint = initEndpointIfRequired(isWebRTC);
 
-      kurento::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, sdpReady](const std::string& answer){
-         StackLog(<<"answer FROM Kurento: " << answer);
+      libwebrtc::ContinuationString cOnAnswerReady = [this, offerMangled, isWebRTC, sdpReady](const std::string& answer){
+         StackLog(<<"answer FROM LibWebRTC: " << answer);
          HeaderFieldValue hfv(answer.data(), answer.size());
          Mime type("application", "sdp");
          std::unique_ptr<SdpContents> _answer(new SdpContents(hfv, type));
@@ -390,10 +399,10 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
          sdpReady(true, std::move(_answer));
       };
 
-      kurento::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, firstUseEndpoint, sdpReady, cOnAnswerReady]{
+      libwebrtc::ContinuationVoid cConnected = [this, offerMangled, offerMangledStr, isWebRTC, firstUseEndpoint, sdpReady, cOnAnswerReady]{
          if(!firstUseEndpoint && mReuseSdpAnswer)
          {
-            // FIXME - Kurento should handle hold/resume
+            // FIXME - LibWebRTC should handle hold/resume
             // but it fails with SDP_END_POINT_ALREADY_NEGOTIATED
             // if we call processOffer more than once
             std::ostringstream answerBuf;
@@ -456,9 +465,9 @@ KurentoRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpRe
 }
 
 void
-KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
+LibWebRTCRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 {
-   // FIXME Kurento - implement, may need to break up this method into multiple parts
+   // FIXME LibWebRTC - implement, may need to break up this method into multiple parts
    StackLog(<<"adjustRTPStreams");
 
    std::shared_ptr<SdpContents> localSdp = sendingOffer ? getDialogSet().getProposedSdp() : getLocalSdp();
@@ -481,14 +490,14 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
       if(remoteSdpChanged && mWaitingAnswer)
       {
          // FIXME - maybe this should not be in adjustRTPStreams
-         DebugLog(<<"remoteSdp has changed, sending to Kurento");
+         DebugLog(<<"remoteSdp has changed, sending to LibWebRTC");
          mWaitingAnswer = false;
          std::ostringstream answerBuf;
          answerBuf << *remoteSdp;
          mEndpoint->processAnswer([this](const std::string updatedOffer){
             // FIXME - use updatedOffer
-            WarningLog(<<"Kurento has processed the peer's SDP answer");
-            StackLog(<<"updatedOffer FROM Kurento: " << updatedOffer);
+            WarningLog(<<"LibWebRTC has processed the peer's SDP answer");
+            StackLog(<<"updatedOffer FROM LibWebRTC: " << updatedOffer);
             HeaderFieldValue hfv(updatedOffer.data(), updatedOffer.size());
             Mime type("application", "sdp");
             std::unique_ptr<SdpContents> _updatedOffer(new SdpContents(hfv, type));
@@ -508,27 +517,27 @@ KurentoRemoteParticipant::adjustRTPStreams(bool sendingOffer)
 }
 
 void
-KurentoRemoteParticipant::addToConversation(Conversation *conversation, unsigned int inputGain, unsigned int outputGain)
+LibWebRTCRemoteParticipant::addToConversation(Conversation *conversation, unsigned int inputGain, unsigned int outputGain)
 {
    RemoteParticipant::addToConversation(conversation, inputGain, outputGain);
 }
 
 void
-KurentoRemoteParticipant::removeFromConversation(Conversation *conversation)
+LibWebRTCRemoteParticipant::removeFromConversation(Conversation *conversation)
 {
    RemoteParticipant::removeFromConversation(conversation);
 }
 
 bool
-KurentoRemoteParticipant::mediaStackPortAvailable()
+LibWebRTCRemoteParticipant::mediaStackPortAvailable()
 {
-   return true; // FIXME Kurento - can we check with Kurento somehow?
+   return true; // FIXME LibWebRTC - can we check with LibWebRTC somehow?
 }
 
 void
-KurentoRemoteParticipant::waitingMode()
+LibWebRTCRemoteParticipant::waitingMode()
 {
-   std::shared_ptr<kurento::MediaElement> e = getWaitingModeElement();
+   std::shared_ptr<libwebrtc::MediaElement> e = getWaitingModeElement();
    if(!e)
    {
       return;
@@ -537,24 +546,24 @@ KurentoRemoteParticipant::waitingMode()
       DebugLog(<<"connected in waiting mode, waiting for peer");
       if(mWaitingModeVideo)
       {
-         mPlayer->play([this]{}); // FIXME Kurento async
+         mPlayer->play([this]{}); // FIXME LibWebRTC async
       }
       else
       {
          mEndpoint->connect([this]{
             requestKeyframeFromPeer();
-         }, *mPassThrough); // FIXME Kurento async
+         }, *mPassThrough); // FIXME LibWebRTC async
       }
       requestKeyframeFromPeer();
    }, *mEndpoint);
 }
 
-std::shared_ptr<kurento::MediaElement>
-KurentoRemoteParticipant::getWaitingModeElement()
+std::shared_ptr<libwebrtc::MediaElement>
+LibWebRTCRemoteParticipant::getWaitingModeElement()
 {
    if(mWaitingModeVideo)
    {
-      return dynamic_pointer_cast<kurento::Endpoint>(mPlayer);
+      return dynamic_pointer_cast<libwebrtc::Endpoint>(mPlayer);
    }
    else
    {
@@ -563,7 +572,7 @@ KurentoRemoteParticipant::getWaitingModeElement()
 }
 
 bool
-KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& mediaControl)
+LibWebRTCRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl& mediaControl)
 {
    if(mWSAcceptsKeyframeRequests)
    {
@@ -574,9 +583,9 @@ KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl
          return false;
       }
       mLastLocalKeyframeRequest = now;
-      InfoLog(<<"onMediaControlEvent: sending to Kurento");
+      InfoLog(<<"onMediaControlEvent: sending to LibWebRTC");
       // FIXME - check the content of the event
-      mEndpoint->sendPictureFastUpdate([this](){}); // FIXME Kurento async, do we need to wait for Kurento here?
+      mEndpoint->sendPictureFastUpdate([this](){}); // FIXME LibWebRTC async, do we need to wait for LibWebRTC here?
       return true;
    }
    else
@@ -587,13 +596,13 @@ KurentoRemoteParticipant::onMediaControlEvent(MediaControlContents::MediaControl
 }
 
 bool
-KurentoRemoteParticipant::onTrickleIce(resip::TrickleIceContents& trickleIce)
+LibWebRTCRemoteParticipant::onTrickleIce(resip::TrickleIceContents& trickleIce)
 {
-   DebugLog(<<"onTrickleIce: sending to Kurento");
-   // FIXME - did we already receive a suitable SDP for trickle ICE and send it to Kurento?
-   //         if not, Kurento is not ready for the candidates
+   DebugLog(<<"onTrickleIce: sending to LibWebRTC");
+   // FIXME - did we already receive a suitable SDP for trickle ICE and send it to LibWebRTC?
+   //         if not, LibWebRTC is not ready for the candidates
    // FIXME - do we need to validate the ice-pwd password attribute here?
-   std::shared_ptr<kurento::WebRtcEndpoint> webRtc = std::static_pointer_cast<kurento::WebRtcEndpoint>(mEndpoint);
+   std::shared_ptr<libwebrtc::WebRtcEndpoint> webRtc = std::static_pointer_cast<libwebrtc::WebRtcEndpoint>(mEndpoint);
    for(auto m = trickleIce.media().cbegin(); m != trickleIce.media().cend(); m++)
    {
       if(m->exists("mid"))
@@ -623,23 +632,16 @@ KurentoRemoteParticipant::onTrickleIce(resip::TrickleIceContents& trickleIce)
 }
 
 void
-KurentoRemoteParticipant::requestKeyframe()
+LibWebRTCRemoteParticipant::requestKeyframe()
 {
-   if(mEndpoint->valid())
-   {
-      mEndpoint->sendPictureFastUpdate([]{});
-   }
-   else
-   {
-      WarningLog(<<"can't request keyframe, mEndpoint not valid");
-   }
+   WarningLog(<<"requestKeyframe not implemented for this media stack"); // FIXME
 }
 
 /* ====================================================================
 
- Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
- Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2022, Daniel Pocock https://danielpocock.com
+ Copyright (c) 2021, SIP Spectrum, Inc.
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

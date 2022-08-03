@@ -19,7 +19,11 @@
 namespace reconserver
 {
 
-#ifdef USE_KURENTO
+#ifdef USE_GSTREAMER
+#define PREFER_GSTREAMER
+#elif USE_LIBWEBRTC
+#define PREFER_LIBWEBRTC
+#elif USE_KURENTO
 #define PREFER_KURENTO
 // FIXME: hard-coded to use Kurento when selected at compile time
 #else
@@ -78,6 +82,8 @@ protected:
 
 /* ====================================================================
 
+ Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ Copyright (c) 2013-2022, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 

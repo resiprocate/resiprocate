@@ -1,3 +1,4 @@
 
 SUBDIRS = kurento
+SUBDIRS += gstreamer
 
