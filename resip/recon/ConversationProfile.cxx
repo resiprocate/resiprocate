@@ -22,6 +22,7 @@ ConversationProfile::ConversationProfile() :
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
    mChallengeOODReferRequests(true),
+   mDelayedMediaOutboundMode(false),
    mSecureMediaMode(Srtp),
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
@@ -38,6 +39,7 @@ ConversationProfile::ConversationProfile(std::shared_ptr<Profile> baseProfile) :
    mAllowPriorityAutoAnswer(false),
    mChallengeAutoAnswerRequests(false),
    mChallengeOODReferRequests(true),
+   mDelayedMediaOutboundMode(false),
    mSecureMediaMode(Srtp),
    mSecureMediaRequired(false),
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
@@ -122,6 +124,7 @@ ConversationProfile::shouldAutoAnswer(const SipMessage& inviteRequest, bool *req
 
 /* ====================================================================
 
+ Copyright (c) 2022, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2021, Daniel Pocock https://danielpocock.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
