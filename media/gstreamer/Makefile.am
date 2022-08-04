@@ -1,4 +1,6 @@
 
+EXTRA_DIST = README.txt
+
 if USE_GSTREAMER
 
 lib_LTLIBRARIES = libgstreamerutils.la

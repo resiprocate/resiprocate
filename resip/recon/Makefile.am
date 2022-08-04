@@ -2,6 +2,7 @@
 
 EXTRA_DIST = readme.txt
 EXTRA_DIST += readme_Kurento.txt
+EXTRA_DIST += readme_Gstreamer.md
 EXTRA_DIST += *.vcxproj
 EXTRA_DIST += doc
 
