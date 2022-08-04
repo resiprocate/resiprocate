@@ -209,7 +209,8 @@ nobase_rutilinclude_HEADERS = compat.hxx \
 	ConsumerFifoBuffer.hxx \
 	ProtonThreadBase.hxx \
 	hep/HepAgent.hxx \
-	hep/ResipHep.hxx
+	hep/ResipHep.hxx \
+	rtcp/re_rtp.h
 
 Log.cxx:	Repository.hxx
 
