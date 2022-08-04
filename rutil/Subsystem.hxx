@@ -38,6 +38,7 @@ class Subsystem
       static Subsystem CONTENTS;
       static Subsystem DNS;
       static Subsystem DUM;
+      static Subsystem EEP;
       static Subsystem NONE; // default subsystem
       static Subsystem PRESENCE; 
       static Subsystem SDP;

@@ -3,6 +3,9 @@
 #endif
 
 #include <stdexcept>
+#include <utility>
+
+#include "rutil/rtcp/re_rtp.h"
 
 #include "rutil/hep/ResipHep.hxx"
 #include "rutil/hep/HepAgent.hxx"
@@ -13,7 +16,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM Subsystem::EEP
 
 HepAgent::HepAgent(const Data &captureHost, int capturePort, int captureAgentID)
    : mCaptureHost(captureHost), mCapturePort(capturePort), mCaptureAgentID(captureAgentID)
@@ -115,6 +118,95 @@ HepAgent::HepAgent(const Data &captureHost, int capturePort, int captureAgentID)
 
 HepAgent::~HepAgent()
 {
+}
+
+inline int32_t
+ntoh_cpl(const void *x)
+{
+   unsigned char c[4];
+   uint32_t *v = reinterpret_cast<uint32_t *>(c);
+
+   memcpy(c, x, 4);
+
+   // replace the fraction lost (8 bits) by sign of the 24 bit value
+   c[0] = (c[1] & 0x80) ? 0xff : 0;
+
+   return (int32_t)(ntohl(*v));
+}
+
+void
+HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId)
+{
+   const struct rtcp_msg* msg = reinterpret_cast<const struct rtcp_msg*>(rtcpRaw.data());
+
+   Data json;
+   DataStream stream(json);
+
+   StackLog(<<"RTCP packet type: " << msg->hdr.pt << " len " << (ntohs(msg->hdr.length)*2) << " bytes");
+  
+   stream << "{";
+
+   switch (msg->hdr.pt)
+   {
+      case RTCP_SR:
+         stream << "\"sender_information\":{"
+                << "\"ntp_timestamp_sec\":" << ntohl(msg->r.sr.ntp_sec) << ","
+                << "\"ntp_timestamp_usec\":" << ntohl(msg->r.sr.ntp_frac) << ","
+                << "\"octets\":" << ntohl(msg->r.sr.osent) << ","
+                << "\"rtp_timestamp\":" << ntohl(msg->r.sr.rtp_ts) << ","
+                << "\"packets\":" << ntohl(msg->r.sr.psent)
+                << "},";
+         if(msg->hdr.count > 0)
+         {
+            const struct rtcp_rr *rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.sr.rrv);
+            stream << "\"ssrc\":" << ntohl(msg->r.sr.ssrc) << ","
+                   << "\"type\":" << msg->hdr.pt << ","
+                   << "\"report_blocks\":["
+                   << "{"
+                      << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
+                      << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
+                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << ","  // 8 bits
+                      << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
+                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
+                      << "\"lsr\":" << ntohl(rr->lsr) << ","
+                      << "\"dlsr\":" << ntohl(rr->dlsr)
+                   << "}"
+                   << "],\"report_count\":1";
+         }
+         break;
+
+      case RTCP_RR:
+         if(msg->hdr.count > 0)
+         {
+            const struct rtcp_rr *rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.rr.rrv);
+            stream << "\"ssrc\":" << ntohl(msg->r.rr.ssrc) << ","
+                   << "\"type\":" << msg->hdr.pt << ","
+                   << "\"report_blocks\":["
+                   << "{"
+                      << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
+                      << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
+                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << "," // 8 bits
+                      << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
+                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
+                      << "\"lsr\":" << ntohl(rr->lsr) << ","
+                      << "\"dlsr\":" << ntohl(rr->dlsr)
+                   << "}"
+                   << "],\"report_count\":1";
+         }
+         break;
+
+      default:
+         DebugLog(<<"unhandled RTCP packet type: " << msg->hdr.pt);
+   }
+
+   stream << "}";
+   stream.flush();
+   StackLog(<<"constructed RTCP JSON: " << json);
+
+   sendToHOMER<Data>(resip::UDP,
+      source, destination,
+      HepAgent::RTCP_JSON, json,
+      correlationId);
 }
 
 /* ====================================================================
