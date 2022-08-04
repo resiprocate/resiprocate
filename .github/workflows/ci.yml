@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [gcc]
+        compiler: [gcc-10, clang]
     steps:
       - name: Install Dependencies
         run: |
