@@ -587,7 +587,7 @@ class SdpContents : public Contents
                   static const Direction RECVONLY;
                   static const Direction SENDRECV;
 
-                  const std::reference_wrapper<Direction> cref;
+                  const std::reference_wrapper<const Direction> cref;
 
                   const Data& name() const { return mName; }
                   typedef std::pair<Data, std::reference_wrapper<const SdpContents::Session::Direction>> Tuple;

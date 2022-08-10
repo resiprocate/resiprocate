@@ -25,6 +25,7 @@ class HepAgent
 
       HepAgent(const Data &captureHost, int capturePort, int captureAgentID);
       virtual ~HepAgent();
+      void sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId);
       template <class T>
       void sendToHOMER(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const HEPEventType eventType, const T& msg, const Data& correlationId)
       {

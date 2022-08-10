@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [gcc]
+        compiler: [gcc-10, clang]
     steps:
       - name: Install Dependencies
         run: |
@@ -64,5 +64,5 @@ jobs:
       - name: Build
         run: ./build/travis/build
 
-      #- name: Test
-      #  run: ./build/travis/build check
+      - name: Test
+        run: make -j1 check

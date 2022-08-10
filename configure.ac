@@ -1,5 +1,5 @@
 
-AC_INIT(resiprocate,1.13.0~alpha1)
+AC_INIT([resiprocate],[1.13.0~alpha1])
 AC_CONFIG_SRCDIR(repro/repro.cxx)
 
 SO_RELEASE=`echo $PACKAGE_VERSION | cut -f1,2 -d.`
@@ -14,14 +14,14 @@ AM_INIT_AUTOMAKE([foreign subdir-objects tar-pax])
 m4_pattern_forbid([^PKG_])
 
 AC_CANONICAL_HOST
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
 AC_PROG_CC
 AC_PROG_CXX
 
 AC_PROG_INSTALL
 
-AC_PROG_LIBTOOL
+LT_INIT
 
 AC_PROG_SED
 
@@ -383,7 +383,7 @@ AC_ARG_WITH(gstreamer,
 
 AM_MAINTAINER_MODE
 
-AC_OUTPUT(Makefile \
+AC_CONFIG_FILES([Makefile \
 	rutil/dns/ares/Makefile \
 	rutil/Makefile \
 	rutil/test/Makefile \
@@ -430,6 +430,7 @@ AC_OUTPUT(Makefile \
 	media/Makefile \
 	media/kurento/Makefile \
 	media/kurento/test/Makefile \
-	)
+	])
+AC_OUTPUT
 
 
