@@ -1445,7 +1445,6 @@ RemoteParticipant::onAnswer(InviteSessionHandle h, const SipMessage& msg, const 
       adjustRTPStreams();
    }
    stateTransition(Connected);  // This is valid until PRACK is implemented
-   requestKeyframeFromPeer();
 }
 
 void
