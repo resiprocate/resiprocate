@@ -854,7 +854,15 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
 void 
 Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
 {
-   WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+   if (e.value() == 10061)
+   {
+      // Lower log leve for common error on session termination
+      DebugLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+   }
+   else
+   {
+      WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+   }
 
    // Make sure we keep receiving if we get an ICMP error on a UDP socket
    if(e.value() == asio::error::connection_reset && mLocalBinding.getTransportType() == StunTuple::UDP)
@@ -950,6 +958,7 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
 
 /* ====================================================================
 
+ Copyright (c) 2022, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
  All rights reserved.
 
