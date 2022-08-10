@@ -82,7 +82,7 @@ sipXPreQueueLogHandler(const char* szPriority, const char* szMsg, unsigned int t
    default:
       ErrLog(<< szMsg);
    }
-   return true;  // No furher sipX processing needed
+   return false;  // No furher sipX processing needed
 }
 
 void 
