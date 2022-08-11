@@ -879,6 +879,8 @@ private:
 
 }
 
+#undef RESIPROCATE_SUBSYSTEM
+
 #endif
 
 
