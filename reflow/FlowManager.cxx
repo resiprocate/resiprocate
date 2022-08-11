@@ -80,7 +80,8 @@ FlowManager::FlowManager()
    mSslContext.load_verify_file(VERIFY_FILE, ec);   // TODO make a setting
    if(ec)
    {
-      ErrLog(<< "Unable to load verify file: " << VERIFY_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+      // App may not care about DTLS - log as Info only
+      InfoLog(<< "Unable to load verify file: " << VERIFY_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
    }
 #endif 
 
@@ -302,8 +303,8 @@ FlowManager::createCert(const resip::Data& pAor, int expireDays, int keyLen, X50
 
 /* ====================================================================
 
+ Copyright (c) 2008-2022, SIP Spectrum, Inc. http://sipspectrum.com
  Copyright (c) 2007-2008, Plantronics, Inc.
- Copyright (c) 2008-2018, SIP Spectrum, Inc.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

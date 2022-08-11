@@ -7,9 +7,10 @@
 #include "rutil/TransportType.hxx"
 #include "rutil/hep/ResipHep.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/Subsystem.hxx"
 #include "rutil/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::EEP
 
 namespace resip
 {
@@ -249,7 +250,8 @@ class HepAgent
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

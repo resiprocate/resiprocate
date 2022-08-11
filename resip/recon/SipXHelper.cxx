@@ -48,7 +48,6 @@ sipXlogHandler(const char* szPriority, const char* szSource, const char* szMsg)
    }
 }
 
-
 void
 SipXHelper::setupLoggingBridge(const Data& appName)
 {
@@ -58,9 +57,49 @@ SipXHelper::setupLoggingBridge(const Data& appName)
    OsSysLog::setLoggingPriority(PRI_DEBUG);
 }
 
+//
+// There is one little annoyance with this: in the reSIProcate logs, the source file
+// and line number of the log entry will always be this file rather than the
+// name of the file in the sipXtapi source tree where the log message originated
+//
+bool
+sipXPreQueueLogHandler(const char* szPriority, const char* szMsg, unsigned int taskId)
+{
+   // Note: this executes in the thread that performed the log, so we will let the resip logger
+   //       add the threadId to the log message, so we don't need to do anything with taskId passed in
+   switch (szPriority[0])
+   {
+   case 'D':
+      DebugLog(<< szMsg);
+      break;
+   case 'I':
+   case 'N':
+      InfoLog(<< szMsg);
+      break;
+   case 'W':
+      WarningLog(<< szMsg);
+      break;
+   default:
+      ErrLog(<< szMsg);
+   }
+   return false;  // No furher sipX processing needed
+}
+
+void 
+SipXHelper::setupPreQueueLoggingBridge(const resip::Data& appName)
+{
+   OsSysLog::initialize(0, appName.c_str());
+   OsSysLog::setPreQueueCallbackFunction(sipXPreQueueLogHandler);
+   // Enable all logging types, it will be filtered by the reSIProcate logger,
+   // application can reset to some other level if this is not desired.
+   OsSysLog::setLoggingPriority(PRI_DEBUG);
+}
+
 /* ====================================================================
  *
- * Copyright 2014 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright 2022 SIP Spectrum, Inc. http://sipspectrum.com
+ * Copyright 2014 Daniel Pocock http://danielpocock.com  
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -135,18 +135,49 @@ ntoh_cpl(const void *x)
 }
 
 void
+encodeRRvec(DataStream& stream, const struct rtcp_rr *rr_vec, int rrCount)
+{
+   stream << "\"report_blocks\":[";
+
+   for(int i = 0 ; i < rrCount; i++)
+   {
+      const struct rtcp_rr *rr = &rr_vec[i];
+      stream << ((i>0) ? "," : "")
+             << "{"
+             << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
+             << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
+             << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << ","  // 8 bits
+             << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
+             << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
+             << "\"lsr\":" << ntohl(rr->lsr) << ","
+             << "\"dlsr\":" << ntohl(rr->dlsr)
+             << "}";
+   }
+
+   stream << "],\"report_count\":" << rrCount;
+}
+
+void
 HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId)
 {
    const struct rtcp_msg* msg = reinterpret_cast<const struct rtcp_msg*>(rtcpRaw.data());
 
+   StackLog(<< "buffer size: " << rtcpRaw.size());
+
    Data json;
    DataStream stream(json);
 
-   StackLog(<<"RTCP packet type: " << msg->hdr.pt << " len " << (ntohs(msg->hdr.length)*2) << " bytes");
+   unsigned int rrCount = msg->hdr.count;
+   unsigned int pt = msg->hdr.pt;
+   StackLog(<<"RTCP version: " << msg->hdr.version
+      << " RR count: " << rrCount
+      << " packet type: " << pt
+      << " length: " << (ntohs(msg->hdr.length)*2) << " bytes");
   
-   stream << "{";
+   stream << "{" << "\"type\":" << pt << ",";
 
-   switch (msg->hdr.pt)
+   const struct rtcp_rr *rr;
+   switch (pt)
    {
       case RTCP_SR:
          stream << "\"sender_information\":{"
@@ -155,53 +186,27 @@ HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, con
                 << "\"octets\":" << ntohl(msg->r.sr.osent) << ","
                 << "\"rtp_timestamp\":" << ntohl(msg->r.sr.rtp_ts) << ","
                 << "\"packets\":" << ntohl(msg->r.sr.psent)
-                << "},";
-         if(msg->hdr.count > 0)
-         {
-            const struct rtcp_rr *rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.sr.rrv);
-            stream << "\"ssrc\":" << ntohl(msg->r.sr.ssrc) << ","
-                   << "\"type\":" << msg->hdr.pt << ","
-                   << "\"report_blocks\":["
-                   << "{"
-                      << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
-                      << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
-                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << ","  // 8 bits
-                      << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
-                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
-                      << "\"lsr\":" << ntohl(rr->lsr) << ","
-                      << "\"dlsr\":" << ntohl(rr->dlsr)
-                   << "}"
-                   << "],\"report_count\":1";
-         }
+                << "},"
+                << "\"ssrc\":" << ntohl(msg->r.sr.ssrc) << ",";
+         rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.sr.rrv);
+         encodeRRvec(stream, rr, rrCount);
          break;
 
       case RTCP_RR:
-         if(msg->hdr.count > 0)
-         {
-            const struct rtcp_rr *rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.rr.rrv);
-            stream << "\"ssrc\":" << ntohl(msg->r.rr.ssrc) << ","
-                   << "\"type\":" << msg->hdr.pt << ","
-                   << "\"report_blocks\":["
-                   << "{"
-                      << "\"source_ssrc\":" << ntohl(rr->ssrc) << ","
-                      << "\"highest_seq_no\":" << ntohl(rr->last_seq) << ","
-                      << "\"fraction_lost\":" << +(reinterpret_cast<const uint8_t *>(&rr->fraction_lost_32))[0] << "," // 8 bits
-                      << "\"ia_jitter\":" << ntohl(rr->jitter) << ","
-                      << "\"packets_lost\":" << ntoh_cpl(&rr->fraction_lost_32) << ","
-                      << "\"lsr\":" << ntohl(rr->lsr) << ","
-                      << "\"dlsr\":" << ntohl(rr->dlsr)
-                   << "}"
-                   << "],\"report_count\":1";
-         }
+         stream << "\"ssrc\":" << ntohl(msg->r.rr.ssrc) << ",";
+         rr = reinterpret_cast<const struct rtcp_rr*>(&msg->r.rr.rrv);
+         encodeRRvec(stream, rr, rrCount);
          break;
 
       default:
-         DebugLog(<<"unhandled RTCP packet type: " << msg->hdr.pt);
+         WarningLog(<<"unhandled RTCP packet type: " << pt);
    }
 
    stream << "}";
    stream.flush();
-   StackLog(<<"constructed RTCP JSON: " << json);
+   StackLog(<< "source: " << source
+      << " destination: " << destination
+      << " constructed RTCP JSON: " << json);
 
    sendToHOMER<Data>(resip::UDP,
       source, destination,
@@ -211,7 +216,8 @@ HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, con
 
 /* ====================================================================
  *
- * Copyright 2016 Daniel Pocock http://danielpocock.com  All rights reserved.
+ * Copyright (c) 2022, Software Freedom Institute https://softwarefreedom.institute
+ * Copyright (c) 2021-2022, Daniel Pocock https://danielpocock.com
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
