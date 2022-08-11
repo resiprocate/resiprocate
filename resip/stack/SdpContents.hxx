@@ -703,6 +703,16 @@ class SdpContents : public Contents
                     *  
                     **/
                   void setPort(int port);
+                  /** @brief get the value of the first specified RTCP port
+                   *         or if no rtcp: attribute found, the default port()
+                   *         value.  RFC 3605.
+                   *
+                   *  @return the RTCP port
+                   */
+                  int firstRtcpPort() const
+                  {
+                     return exists("rtcp") ? getValues("rtcp").front().convertInt() : port()+1;
+                  }
                   /** @brief get the number of transport port pairs
                     * 
                     * @return number of transport port pairs  
