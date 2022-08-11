@@ -23,6 +23,7 @@ TESTS = \
 	testDnsUtil \
 	testFifo \
 	testFileSystem \
+	testHepAgent \
 	testInserter \
 	testIntrusiveList \
 	testLogger \
@@ -46,6 +47,7 @@ check_PROGRAMS = \
 	testDnsUtil \
 	testFifo \
 	testFileSystem \
+	testHepAgent \
 	testInserter \
 	testIntrusiveList \
 	testLogger \
@@ -68,6 +70,7 @@ testDataStream_SOURCES = testDataStream.cxx
 testDnsUtil_SOURCES = testDnsUtil.cxx
 testFifo_SOURCES = testFifo.cxx
 testFileSystem_SOURCES = testFileSystem.cxx
+testHepAgent_SOURCES = testHepAgent.cxx
 testInserter_SOURCES = testInserter.cxx
 testIntrusiveList_SOURCES = testIntrusiveList.cxx
 testLogger_SOURCES = testLogger.cxx TestSubsystemLogLevel.cxx
