@@ -19,7 +19,9 @@
 
 #include "rutil/Subsystem.hxx"
 #include "rutil/Log.hxx"
+#include "rutil/hep/HepAgent.hxx"
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Tuple.hxx"
 
 extern "C"
 {
@@ -89,12 +91,42 @@ const Data& lookupGstreamerStateName(std::map<T, const Data> m, T v)
    return it->second;
 };
 
-
+/*
+ * Must set the environment variable GST_DEBUG_DUMP_DOT_DIR
+ * or no Gstreamer graph files will be created.
+ *
+ * In gdb:
+ *       set env GST_DEBUG_DUMP_DOT_DIR=/tmp
+ */
 void storeGstreamerGraph(Glib::RefPtr<Gst::Bin>& bin, const resip::Data& fileNamePrefix);
+
 void gstWebRTCSetDescription(Glib::RefPtr<Gst::Element> element, const gchar* signalName, GstWebRTCSessionDescription* gstwebrtcdesc);
+
 resip::SdpContents* createSdpContentsFromGstreamer(GstWebRTCSessionDescription *gSdp);
+
 std::shared_ptr<GstWebRTCSessionDescription> createGstWebRTCSessionDescriptionFromSdpContents(GstWebRTCSDPType sdpType, const resip::SdpContents& sdp);
+
 void addGstreamerKeyframeProbe(Glib::RefPtr<Gst::Pad>& pad, std::function<void()> onKeyframeRequired);
+
+struct RtcpPeerSpec
+{
+      resip::Tuple local;
+      resip::Tuple remote;
+};
+typedef std::vector<RtcpPeerSpec> RtcpPeerSpecVector;
+
+// call this after all the pads have been created on the rtpbin
+bool addGstreamerRtcpMonitoringPads(Glib::RefPtr<Gst::Bin> bin, std::shared_ptr<HepAgent> hepAgent, const RtcpPeerSpecVector& peerSpecs, const Data& correlationId);
+
+// For scenario's where we obtain access to individual elements
+// in the rtpbin and insert Tee (GstTee) elements to intercept RTCP flows,
+// the pad-added handler must call this to complete the pipeline setup
+// and insert an AppSink to handle the RTCP from our new ghost pads.
+// This does not need to be called at all if using signals from RTPSession
+// to obtain the RTCP.
+void linkGstreamerRtcpHomer(Glib::RefPtr<Gst::Bin> bin, Glib::RefPtr<Gst::Pad> pad, std::shared_ptr<resip::HepAgent> hepAgent, const RtcpPeerSpecVector& peerSpecs, const resip::Data& correlationId);
+
+RtcpPeerSpecVector createRtcpPeerSpecs(const SdpContents& local, const SdpContents& remote);
 
 }
 
