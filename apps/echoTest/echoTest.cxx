@@ -1,3 +1,9 @@
+
+#include <map>
+#include <sstream>
+#include <time.h>
+#include <utility>
+
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -25,11 +31,6 @@
 #include "media/gstreamer/GStreamerUtils.hxx"
 #include "rutil/ServerProcess.hxx"
 #include "rutil/hep/HepAgent.hxx"
-
-#include <sstream>
-#include <time.h>
-#include <utility>
-#include <map>
 
 #include <gstreamermm.h>
 #include <glibmm/main.h>
@@ -129,9 +130,14 @@ class GstThread : public ThreadIf
    private:
 
       RefPtr<Pipeline> pipeline;
+      RefPtr<Bin> rtpbin;
 
       RefPtr<Element> a_rtppcmadepay, v_depay;
       RefPtr<Element> v_queue;
+
+      RtcpPeerSpecVector mPeerSpecs;
+      resip::Data mCorrelationId;
+      std::shared_ptr<HepAgent> mHepAgent;
 
       RefPtr<Glib::MainLoop> main_loop;
 
@@ -173,6 +179,12 @@ class GstThread : public ThreadIf
             DebugLog(<<"video pad");
             sinkPad = v_depay->get_static_pad("sink");
             //sinkPad = v_queue->get_static_pad("sink");
+
+            // Now all audio and video pads, incoming and outgoing,
+            // are present.  We can enable the RTCP signals.  If we
+            // ask for these signals before the pads are ready then
+            // it looks like we don't receive any signals at all.
+            addGstreamerRtcpMonitoringPads(rtpbin, mHepAgent, mPeerSpecs, mCorrelationId);
          }
          else
          {
@@ -233,7 +245,8 @@ class GstThread : public ThreadIf
             video_sink = createElement("multiudpsink"),
             video_sink_rtcp = createElement("multiudpsink");
 
-         RefPtr<Element> rtpbin = createElement("rtpbin");
+         rtpbin = RefPtr<Bin>::cast_static(createElement("rtpbin"));
+
          a_rtppcmadepay = createElement("rtppcmadepay");
          v_depay = createElement(codecConfig->mDepay.c_str());
          RefPtr<Element> v_parse;
@@ -418,6 +431,21 @@ class GstThread : public ThreadIf
       {
          shutdown();
          join();
+      }
+
+      void setPeerSpecs(const RtcpPeerSpecVector& specs)
+      {
+         mPeerSpecs = specs;
+      }
+
+      void setCorrelationId(const Data& correlationId)
+      {
+         mCorrelationId = correlationId;
+      }
+
+      void setHepAgent(std::shared_ptr<HepAgent> agent)
+      {
+         mHepAgent = agent;
       }
 
       void thread()
@@ -706,14 +734,17 @@ class TestUas : public TestInviteSessionHandler
       typedef std::map<DialogId, shared_ptr<GstThread>> MediaThreads;
       MediaThreads mMediaThreads;
 
-      TestUas(const Data& pipelineId, int audioPort, int videoPort)
+      std::shared_ptr<HepAgent> mHepAgent;
+
+      TestUas(const Data& pipelineId, int audioPort, int videoPort, std::shared_ptr<HepAgent> agent)
          : TestInviteSessionHandler("UAS"), 
            done(false),
            requestedOffer(false),
            hfv(0),
            mDefaultCodecConfig(mPipelines[pipelineId]),
            mAudioPort(audioPort),
-           mVideoPort(videoPort)
+           mVideoPort(videoPort),
+           mHepAgent(agent)
       { 
          txt = new Data("v=0\r\n"
                         "o=- 3838180699 3838180699 IN IP4 " + myIP + "\r\n"
@@ -818,6 +849,10 @@ class TestUas : public TestInviteSessionHandler
          const int& peerVideo = (++sdp.session().media().begin())->port();
          // FIXME shared_ptr
          shared_ptr<GstThread> t = make_shared<GstThread>(codecConfig, peerIp, mAudioPort, peerAudio, mVideoPort, peerVideo);
+         RtcpPeerSpecVector specs = resip::createRtcpPeerSpecs(*mSdp, sdp);
+         t->setPeerSpecs(specs);
+         t->setCorrelationId(msg.header(h_CallId).value());
+         t->setHepAgent(mHepAgent);
          mMediaThreads[is->getDialogId()] = t;
          t->run();
          InfoLog(<< name << ": Sending 200 response with SDP answer.");
@@ -952,10 +987,17 @@ class EchoTestServer : public resip::ServerProcess
 
          //set up UAS
          stackUas = new SipStack();
+         std::shared_ptr<HepAgent> agent;
+         if(!captureHost.empty())
+         {
+            agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
+            stackUas->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
+         }
+
          dumUas = new DialogUsageManager(*stackUas);
          stackUas->addTransport(UDP, uasUdpPort);
          stackUas->addTransport(TCP, uasTcpPort);
-         
+
          auto uasMasterProfile = std::make_shared<MasterProfile>();
          std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
          dumUas->setMasterProfile(uasMasterProfile);
@@ -981,7 +1023,7 @@ class EchoTestServer : public resip::ServerProcess
 
          Data pipelineId = echoTestConfig.getConfigData("DefaultPipelineId", "h264avx");
          int mediaPortStart = echoTestConfig.getConfigInt("MediaPortStart", 8002);
-         TestUas uas(pipelineId, mediaPortStart, mediaPortStart+2);
+         TestUas uas(pipelineId, mediaPortStart, mediaPortStart+2, agent);
          dumUas->setClientRegistrationHandler(&uas);
          dumUas->setInviteSessionHandler(&uas);
          dumUas->addOutOfDialogHandler(OPTIONS, &uas);
@@ -992,14 +1034,6 @@ class EchoTestServer : public resip::ServerProcess
          if (!doReg) 
          {
             uas.registered = true;
-         }
-
-         if(!captureHost.empty())
-         {
-            const auto agent = std::make_shared<HepAgent>(captureHost, capturePort, captureAgentID);
-            stackUas->setTransportSipMessageLoggingHandler(std::make_shared<HEPSipMessageLoggingHandler>(agent));
-            // FIXME - need to integrate GStreamer RTCP code with HEP:
-            // setRTCPEventLoggingHandler(std::make_shared<HEPRTCPEventLoggingHandler>(agent));
          }
 
          TestShutdownHandler uasShutdownHandler("UAS");   
