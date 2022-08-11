@@ -157,8 +157,8 @@ encodeRRvec(DataStream& stream, const struct rtcp_rr *rr_vec, int rrCount)
    stream << "],\"report_count\":" << rrCount;
 }
 
-void
-HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId)
+Data
+HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
 {
    const struct rtcp_msg* msg = reinterpret_cast<const struct rtcp_msg*>(rtcpRaw.data());
 
@@ -204,6 +204,15 @@ HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, con
 
    stream << "}";
    stream.flush();
+
+   return json;
+}
+
+void
+HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, const GenericIPAddress& destination, const Data& rtcpRaw, const Data& correlationId)
+{
+   Data json(convertRTCPtoJSON(rtcpRaw));
+
    StackLog(<< "source: " << source
       << " destination: " << destination
       << " constructed RTCP JSON: " << json);
@@ -212,6 +221,12 @@ HepAgent::sendRTCP(const TransportType type, const GenericIPAddress& source, con
       source, destination,
       HepAgent::RTCP_JSON, json,
       correlationId);
+}
+
+bool
+HepAgent::sendToWire(const Data& buf) const
+{
+   return sendto(mSocket, buf.data(), buf.size(), 0, &mDestination.address, mDestination.length()) < 0;
 }
 
 /* ====================================================================
