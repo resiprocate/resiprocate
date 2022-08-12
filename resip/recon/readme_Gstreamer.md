@@ -24,6 +24,22 @@ and any available VP8 video codec.
      or run ./configure ... --with-gstreamer ...
   make clean && make
 
+# Troubleshooting
+
+There is a guide to Gstreamer debugging features here:
+https://gstreamer.freedesktop.org/documentation/gstreamer/running.html?gi-language=c
+
+Set the environment variable GST_DEBUG_DUMP_DOT_DIR and the
+process will automatically store snapshots of the pipeline into
+DOT files.
+
+For example, in gdb:
+      set env GST_DEBUG_DUMP_DOT_DIR=/tmp
+
+Use a command like this to convert the DOT files:
+
+   dot -Tsvg /tmp/reCon-gst-graph.dot > /tmp/reCon-gst-graph.svg
+
 # Dependencies
 
 GStreamer and plugins
