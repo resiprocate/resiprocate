@@ -40,11 +40,17 @@ public:
 int
 main(int argc, char *argv[])
 {
+   Log::initialize(Log::Cout, Log::Stack, argv[0]);
+
    MyHepAgent agent;
 
    sockaddr_in sa;
    sa.sin_addr.s_addr = inet_addr("127.0.0.1");
    GenericIPAddress anon(sa);
+
+   // Values have been extracted using Wireshark
+   // SSRC values presented in both decimal and hex for quick comparison
+   // against other applications and log files.
 
    {
       Data packet1(Data::Borrow, packet1SenderReport, sizeof(packet1SenderReport));
@@ -62,9 +68,30 @@ main(int argc, char *argv[])
          ErrLog(<<"failed to scan JSON message: " << ex.what() << " message body: " << json);
          assert(0);
       }
-      assert(json::Number(j["type"]).Value() == 200);
+
       //assert(json::String(j[""]).Value() == "");
-      //assert(json::Array(j["report_blocks"]).Size() == 1);
+
+      assert(json::Number(j["ssrc"]).Value() == 2711888198);
+      assert(json::Number(j["ssrc"]).Value() == 0xa1a42146);
+      assert(json::Number(j["type"]).Value() == 200);
+
+      json::Object& sender_info = j["sender_information"];
+      assert(json::Number(sender_info["ntp_timestamp_sec"]).Value() == 544219);
+      assert(json::Number(sender_info["ntp_timestamp_usec"]).Value() == 606621180);
+      assert(json::Number(sender_info["octets"]).Value() == 9280);
+      assert(json::Number(sender_info["rtp_timestamp"]).Value() == 3796017644);
+      assert(json::Number(sender_info["packets"]).Value() == 58);
+
+      assert(json::Array(j["report_blocks"]).Size() == 1);
+      json::Object& rr0 = j["report_blocks"][0];
+      assert(json::Number(rr0["source_ssrc"]).Value() == 4039782241);
+      assert(json::Number(rr0["source_ssrc"]).Value() == 0xf0ca2f61);
+      assert(json::Number(rr0["highest_seq_no"]).Value() == 6202);
+      assert(json::Number(rr0["fraction_lost"]).Value() == 0);
+      assert(json::Number(rr0["ia_jitter"]).Value() == 9);
+      assert(json::Number(rr0["packets_lost"]).Value() == 0);
+      assert(json::Number(rr0["lsr"]).Value() == 2851933704);
+      assert(json::Number(rr0["dlsr"]).Value() == 9301);
    }
 
    return 0;
