@@ -80,6 +80,9 @@ public:
    virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) = 0;
    virtual bool supportsLocalAudio() = 0;
 
+   virtual void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h) { mRTCPEventLoggingHandler = h; };
+   virtual std::shared_ptr<flowmanager::RTCPEventLoggingHandler> getRTCPEventLoggingHandler() const { return mRTCPEventLoggingHandler; };
+
 protected:
    friend class ConversationManager;
    virtual void setUserAgent(UserAgent *userAgent) = 0;
@@ -96,13 +99,14 @@ protected:
 private:
    ConversationManager& mConversationManager;
 
+   std::shared_ptr<flowmanager::RTCPEventLoggingHandler> mRTCPEventLoggingHandler;
+
    friend class ConversationManager;
    /* Called periodically in the event loop to give the MediaStackAdapter
       the opportunity to do any pending work */
    virtual void process() = 0;
 
    friend class UserAgent;
-   virtual void setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h) = 0;
    virtual void initializeDtlsFactory(const resip::Data& defaultAoR) = 0;
 
    friend class OutputBridgeMixWeightsCmd;
