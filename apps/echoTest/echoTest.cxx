@@ -937,8 +937,6 @@ class EchoTestServer : public resip::ServerProcess
          {
 #endif
          bool doReg = echoTestConfig.getConfigBool("Register", false);
-         NameAddr uasAor;
-         Uri uasContact;
          Data uasPasswd;
          int uasUdpPort = echoTestConfig.getConfigInt("UDPPort", 12010);
          int uasTcpPort = echoTestConfig.getConfigInt("TCPPort", 12010);
@@ -946,16 +944,34 @@ class EchoTestServer : public resip::ServerProcess
          bool useOutbound = (outboundUri != Uri());
          myIP = echoTestConfig.getConfigData("IPAddress", "127.0.0.1");
 
-         uasAor = echoTestConfig.getConfigNameAddr("SIPUri", NameAddr("sip:UAS@" + myIP + ":" + Data(uasUdpPort)));
-         uasContact = Uri("sip:" + myIP + ":" + Data(uasUdpPort));
          uasPasswd = echoTestConfig.getConfigData("Password", Data::Empty);
 
          //set up UAS
          stackUas = new SipStack();
          dumUas = new DialogUsageManager(*stackUas);
-         stackUas->addTransport(UDP, uasUdpPort);
-         stackUas->addTransport(TCP, uasTcpPort);
-         
+         NameAddr uasAor;
+         Uri uasContact;
+         if(uasUdpPort)
+         {
+            stackUas->addTransport(UDP, uasUdpPort);
+            uasContact = Uri("sip:" + myIP + ":" + Data(uasUdpPort));
+         }
+         if(uasTcpPort)
+         {
+            stackUas->addTransport(TCP, uasTcpPort);
+            if(uasContact.port() == 0)
+            {
+               uasContact = Uri("sip:" + myIP + ":" + Data(uasTcpPort) + ";transport=tcp");
+            }
+         }
+         if(uasContact.port() == 0)
+         {
+            uasContact = Uri("sip:" + myIP);
+            ErrLog(<<"no port for uasContact");
+            resip_assert(0);
+         }
+         uasAor = echoTestConfig.getConfigNameAddr("SIPUri", NameAddr("sip:UAS@" + myIP + ":" + Data(uasContact.port())));
+
          auto uasMasterProfile = std::make_shared<MasterProfile>();
          std::unique_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
          dumUas->setMasterProfile(uasMasterProfile);
