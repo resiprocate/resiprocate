@@ -30,6 +30,8 @@
 #include <rutil/WinLeakCheck.hxx>
 #include <media/gstreamer/GStreamerUtils.hxx>
 
+#include <reflow/HEPRTCPEventLoggingHandler.hxx>
+
 #include <memory>
 #include <utility>
 
@@ -52,6 +54,19 @@ using namespace Gst;
 using Glib::RefPtr;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
+
+/* The demo code for webrtcbin provides a useful example.
+ *
+ * This appears to be the current location of the demos:
+ *
+ * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-examples/webrtc
+ *
+ * Previous locations:
+ *
+ * https://github.com/centricular/gstwebrtc-demos
+ * https://github.com/imdark/gstreamer-webrtc-demo
+ */
+
 
 #define GST_RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS,payload=96"
 #define GST_RTP_CAPS_VP8 "application/x-rtp,media=video,encoding-name=VP8,payload=97"
@@ -265,14 +280,13 @@ GstRemoteParticipant::initEndpointIfRequired(bool isWebRTC)
 
    mPipeline->add(mWebRTCElement);
 
-   // need to create one video sink and one audio sink on the webrtcbin
-   // before it can be used
+   // need to create all sink pads on the webrtcbin before it can be used
 
-   RefPtr<Caps> caps = Gst::Caps::create_from_string(GST_RTP_CAPS_VP8);
-   createOutgoingPipeline(caps);
+   RefPtr<Caps> capsVideo = Gst::Caps::create_from_string(GST_RTP_CAPS_VP8);
+   createOutgoingPipeline(capsVideo);
 
-   caps = Gst::Caps::create_from_string(GST_RTP_CAPS_OPUS);
-   createOutgoingPipeline(caps);
+   RefPtr<Caps> capsAudio = Gst::Caps::create_from_string(GST_RTP_CAPS_OPUS);
+   createOutgoingPipeline(capsAudio);
 
    // FIXME
    RefPtr<Bus> bus = mPipeline->get_bus();
@@ -367,6 +381,10 @@ GstRemoteParticipant::createIncomingPipeline(RefPtr<Pad> pad)
          RefPtr<EncodeEntry> enc = mEncodes[getKeyForStream(caps)];
          pad->link(enc->get_static_pad("sink"));
          //mPipeline->set_state(STATE_PLAYING);
+
+         DebugLog(<<"completed connected from incoming to outgoing stream");
+
+         debugGraph();
       }
    };
 
@@ -384,6 +402,24 @@ GstRemoteParticipant::createIncomingPipeline(RefPtr<Pad> pad)
    }
 
    decodeBin->sync_state_with_parent();
+
+   DebugLog(<<"mDecodes.size() == " << mDecodes.size());
+   shared_ptr<flowmanager::HEPRTCPEventLoggingHandler> handler =
+            std::dynamic_pointer_cast<flowmanager::HEPRTCPEventLoggingHandler>(
+            mConversationManager.getMediaStackAdapter().getRTCPEventLoggingHandler());
+   if(handler && mDecodes.size() == mEncodes.size())
+   {
+      DebugLog(<<"all pads ready, trying to setup HOMER HEP RTCP");
+      //resip::addGstreamerRtcpMonitoringPads(RefPtr<Bin>::cast_dynamic(mWebRTCElement));
+      // Now all audio and video pads, incoming and outgoing,
+      // are present.  We can enable the RTCP signals.  If we
+      // ask for these signals before the pads are ready then
+      // it looks like we don't receive any signals at all.
+      RtcpPeerSpecVector peerSpecs = resip::createRtcpPeerSpecs(*getLocalSdp(), *getRemoteSdp());
+      const Data& correlationId = getDialogSet().getDialogSetId().getCallId();
+      addGstreamerRtcpMonitoringPads(RefPtr<Bin>::cast_dynamic(mWebRTCElement),
+               handler->getHepAgent(), peerSpecs, correlationId);
+   }
 
    return sink;
 }
@@ -480,7 +516,7 @@ GstRemoteParticipant::createAndConnectElements(std::function<void()> cConnected,
    g_signal_connect(mWebRTCElement->gobj(), "on-negotiation-needed",
                  G_CALLBACK (voidStub), &cOnNegotiationNeeded);*/
 
-   static auto s1 = Glib::signal_any<void>(mWebRTCElement, "on-negotiation-needed").connect([this, cConnected]()
+   Glib::signal_any<void>(mWebRTCElement, "on-negotiation-needed").connect([this, cConnected]()
    {
       DebugLog(<<"onNegotiationNeeded invoked");
       // FIXME - do we need to do anything here?
@@ -560,7 +596,19 @@ GstRemoteParticipant::createAndConnectElements(std::function<void()> cConnected,
       DebugLog(<<"WebRTCElement: on-pad-added, stream ID: " << pad->get_stream_id());
       if(pad->get_direction() == PAD_SRC)
       {
-         pad->link(createIncomingPipeline(pad));
+         RefPtr<Caps> rtcpCaps = Gst::Caps::create_from_string("application/x-rtcp");
+         Glib::ustring padName = pad->get_name();
+         if(!regex_search(padName.raw(), regex("^(in|out)bound")))
+         {
+            pad->link(createIncomingPipeline(pad));
+         }
+         else
+         {
+            DebugLog(<<"found RTCP pad: " << pad->get_name());
+            // FIXME - for intercepting RTCP flows in Gstreamer rtpbin
+            //resip::linkGstreamerRtcpHomer(mPipeline, pad, hepAgent, peerSpacs, correlationId);
+            debugGraph();
+         }
       }
    });
 
@@ -709,6 +757,12 @@ GstRemoteParticipant::buildSdpOffer(bool holdSdp, CallbackSdpReady sdpReady, boo
          // FIXME - can we tell Gst to use holdSdp?
          // We currently mangle the SDP after-the-fact in cOnOfferReady
 
+         // From looking at the webrtcbin demo and related discussions in
+         // bug trackers, it appears that all the elements should be added to
+         // the pipeline and joined together before invoking create-offer.
+         // The caps of the sink pads that have already been created and connected
+         // on webrtcbin determine which media descriptors (audio, video)
+         // will be present in the SDP offer.
          GstPromise *promise;
          std::function<void(GstPromise * _promise, gpointer user_data)> *_cOnOfferReady =
                   new std::function<void(GstPromise * _promise, gpointer user_data)>(cOnOfferReady);
@@ -824,7 +878,7 @@ GstRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady 
          sdpReady(false, nullptr);
       }
 
-      bool preExistingEndpoint = initEndpointIfRequired(isWebRTC);
+      bool firstUseEndpoint = initEndpointIfRequired(isWebRTC);
 
       std::function<void(GstPromise* _promise, gpointer user_data)> cAnswerCreated =
                [this, sdpReady](GstPromise * _promise, gpointer user_data)
@@ -901,7 +955,14 @@ GstRemoteParticipant::buildSdpAnswer(const SdpContents& offer, CallbackSdpReady 
          sdpReady(true, std::move(sdp));
       };
 
-      createAndConnectElements(cConnected, _sdpReady);
+      if(firstUseEndpoint)
+      {
+         createAndConnectElements(cConnected, _sdpReady);
+      }
+      else
+      {
+         cConnected();
+      }
 
       /*bool firstUseEndpoint = initEndpointIfRequired(isWebRTC);
 

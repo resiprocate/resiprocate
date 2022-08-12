@@ -279,12 +279,6 @@ LibWebRTCMediaStackAdapter::process()
 }
 
 void
-LibWebRTCMediaStackAdapter::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
-{
-   // FIXME LibWebRTC
-}
-
-void
 LibWebRTCMediaStackAdapter::initializeDtlsFactory(const resip::Data& defaultAoR)
 {
    // FIXME LibWebRTC

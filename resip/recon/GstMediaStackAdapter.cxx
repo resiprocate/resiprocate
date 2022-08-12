@@ -276,12 +276,6 @@ GstMediaStackAdapter::process()
 }
 
 void
-GstMediaStackAdapter::setRTCPEventLoggingHandler(std::shared_ptr<flowmanager::RTCPEventLoggingHandler> h)
-{
-   // FIXME Gst
-}
-
-void
 GstMediaStackAdapter::initializeDtlsFactory(const resip::Data& defaultAoR)
 {
    // FIXME Gst
