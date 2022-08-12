@@ -17,7 +17,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 HEPSipMessageLoggingHandler::HEPSipMessageLoggingHandler(std::shared_ptr<HepAgent> agent)
-   : mHepAgent(std::move(agent))
+   : mHepAgent(agent)
 {
    if (!mHepAgent)
    {
