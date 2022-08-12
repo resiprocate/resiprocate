@@ -247,7 +247,7 @@ void onSenderReport(DataStream& stream, GstRTCPPacket *_packet)
           << ",\"type\":" << 200;
 
    stream << ",";
-   unsigned int reportCount = processReceiverReports(stream, _packet);
+   processReceiverReports(stream, _packet);
 }
 
 void onReceiverReport(DataStream& stream, GstRTCPPacket *_packet)
@@ -260,7 +260,7 @@ void onReceiverReport(DataStream& stream, GstRTCPPacket *_packet)
           << ",\"type\":" << 201;
 
    stream << ",";
-   unsigned int reportCount = processReceiverReports(stream, _packet);
+   processReceiverReports(stream, _packet);
 }
 
 void onBuffer(GstBuffer *__buffer, const GenericIPAddress& source, const GenericIPAddress& destination, std::shared_ptr<HepAgent> hepAgent, const Data& correlationId)
@@ -485,7 +485,8 @@ void resip::linkGstreamerRtcpHomer(Glib::RefPtr<Gst::Bin> bin, Glib::RefPtr<Gst:
    }
    DebugLog(<<"RTCP adding probe for pad " << padName
       << " source " << source
-      << " destination " << destination);
+      << " destination " << destination
+      << " direction " << (inbound ? "inbound" : "outbound"));
 
    RefPtr<AppSink> appSink = AppSink::create();
    bin->add(appSink);
