@@ -160,19 +160,51 @@ encodeRRvec(DataStream& stream, const struct rtcp_rr *rr_vec, int rrCount)
 Data
 HepAgent::convertRTCPtoJSON(const Data& rtcpRaw)
 {
+   const uint8_t* raw = reinterpret_cast<const uint8_t*>(rtcpRaw.data());
    const struct rtcp_msg* msg = reinterpret_cast<const struct rtcp_msg*>(rtcpRaw.data());
 
    StackLog(<< "buffer size: " << rtcpRaw.size());
+   resip_assert(rtcpRaw.size() >= 8);
+
+   if(rtcpRaw.size() < 8)
+   {
+      ErrLog(<<"too small to be a valid RTCP packet");
+      return "";
+   }
+   // FIXME - check size more carefully depending on the type of RTCP packet
+
+   // FIXME - check for multiple RTCP packets in a single UDP datagram
+   //       - does HOMER require these to be submitted as separate HEP messages?
 
    Data json;
    DataStream stream(json);
 
+#ifdef RTCP_TRUST_BIT_FIELD_ORDER
+   unsigned int version = msg->hdr.version;
    unsigned int rrCount = msg->hdr.count;
+   bool p = msg->hdr.p;
+#else
+   // we can't trust the order of bit-fields in a struct
+   // on all compilers and platforms to match the order
+   // on the wire
+   uint8_t byte0 = raw[0];
+   unsigned int version = (byte0 & 0xc0) >> 6;
+   unsigned int rrCount = (byte0 & 0x1f);
+   bool p = (byte0 & 0x20) >> 5;
+#endif
    unsigned int pt = msg->hdr.pt;
-   StackLog(<<"RTCP version: " << msg->hdr.version
+
+   StackLog(<<"RTCP version: " << version << " p " << p
       << " RR count: " << rrCount
       << " packet type: " << pt
       << " length: " << (ntohs(msg->hdr.length)*2) << " bytes");
+
+   resip_assert(version == 2);
+   if(version != 2)
+   {
+      ErrLog(<<"unsupported RTCP version: " << version);
+      return "";
+   }
   
    stream << "{" << "\"type\":" << pt << ",";
 
