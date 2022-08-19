@@ -20,6 +20,7 @@ librecon_la_LIBADD += ../../reTurn/client/libreTurnClient.la
 librecon_la_LIBADD += ../dum/libdum.la
 librecon_la_LIBADD += ../stack/libresip.la
 librecon_la_LIBADD += ../../rutil/librutil.la
+librecon_la_LIBADD += ../../media/libresipmedia.la
 if USE_SIPXTAPI
 librecon_la_LIBADD += -lsipXmediaProcessing
 librecon_la_LIBADD += -lsipXmedia
@@ -59,7 +60,6 @@ librecon_la_SOURCES = BridgeMixer.cxx \
         RemoteIMPagerParticipant.cxx \
         RemoteIMSessionParticipant.cxx \
         RemoteIMSessionParticipantDialogSet.cxx \
-        RTPPortManager.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
         UserAgentClientPublication.cxx \
@@ -128,7 +128,6 @@ nobase_reconinclude_HEADERS = ReconSubsystem.hxx \
         IMParticipantBase.hxx \
         UserAgentMasterProfile.hxx \
         RemoteParticipantDialogSet.hxx \
-        RTPPortManager.hxx \
         SipXHelper.hxx \
         Conversation.hxx \
         UserAgentDialogSetFactory.hxx \

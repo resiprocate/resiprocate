@@ -48,6 +48,7 @@ endif
 
 reConServer_LDADD = ../../resip/recon/librecon.la
 reConServer_LDADD += ../../reflow/libreflow.la
+reConServer_LDADD += ../../media/libresipmedia.la
 if BUILD_QPID_PROTON
 reConServer_LDADD += -lqpid-proton-cpp
 endif

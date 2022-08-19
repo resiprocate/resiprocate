@@ -7,6 +7,7 @@ Subsystem Subsystem::CONTENTS("RESIP:CONTENTS");
 Subsystem Subsystem::DNS("RESIP:DNS");
 Subsystem Subsystem::DUM("RESIP:DUM");
 Subsystem Subsystem::EEP("RESIP:EEP");
+Subsystem Subsystem::MEDIA("RESIP:MEDIA");
 Subsystem Subsystem::PRESENCE("RESIP:PRESENCE");
 Subsystem Subsystem::SDP("RESIP:SDP");
 Subsystem Subsystem::SIP("RESIP");    // SIP Stack / Parser

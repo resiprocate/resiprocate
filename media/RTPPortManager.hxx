@@ -1,43 +1,30 @@
+#if !defined(RTPPortManager_hxx)
+#define RTPPortManager_hxx
 
-#include <rutil/ResipAssert.h>
-#include "RTPPortManager.hxx"
+#include <deque>
 
-using namespace recon;
-using namespace std;
-
-RTPPortManager::RTPPortManager(int portRangeMin, int portRangeMax)
- : mPortRangeMin(portRangeMin),
-   mPortRangeMax(portRangeMax)
+namespace resip
 {
-   mPortRangeMin = portRangeMin;
-   mPortRangeMax = portRangeMax;
-   mRTPPortFreeList.clear();
-   for(unsigned int i = mPortRangeMin; i <= mPortRangeMax;)
-   {
-      mRTPPortFreeList.push_back(i);
-      i=i+2;  // only add even ports - note we are assuming rtpPortRangeMin is even
-   }
+
+// FIXME - consider making this a singleton or detect and warn if the
+//         application attempts to create overlapping instances
+
+class RTPPortManager
+{
+public:
+   RTPPortManager(int portRangeMin = 17000, int portRangeMax = 18000);
+   unsigned int allocateRTPPort();
+   void freeRTPPort(unsigned int port);
+
+private:
+   unsigned int mPortRangeMin;
+   unsigned int mPortRangeMax;
+   std::deque<unsigned int> mRTPPortFreeList;
+};
+
 }
 
-unsigned int
-RTPPortManager::allocateRTPPort()
-{
-   unsigned int port = 0;
-   if(!mRTPPortFreeList.empty())
-   {
-      port = mRTPPortFreeList.front();
-      mRTPPortFreeList.pop_front();
-   }
-   return port;
-}
-
-void
-RTPPortManager::freeRTPPort(unsigned int port)
-{
-   resip_assert(port >= mPortRangeMin && port <= mPortRangeMax);
-   mRTPPortFreeList.push_back(port);
-}
-
+#endif
 
 /* ====================================================================
 
