@@ -4,6 +4,8 @@
 #include <functional>
 #include <map>
 
+#include <media/gstreamer/GstRtpManager.hxx>
+
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 #include "RemoteParticipant.hxx"
@@ -112,9 +114,11 @@ private:
    //virtual void createOutgoingPipeline(const Glib::RefPtr<Gst::Pad>& pad);
    //typedef Gst::EncodeBin EncodeEntry;
    typedef Gst::Queue EncodeEntry;
-   virtual void createOutgoingPipeline(const Glib::RefPtr<Gst::Caps> caps);
+   virtual void createOutgoingPipeline(unsigned int streamId, const Glib::RefPtr<Gst::Caps> caps);
    virtual void debugGraph();
-   virtual void createAndConnectElements(std::function<void()> cConnected, CallbackSdpReady sdpReady);
+   virtual void createAndConnectElements(bool isWebRTC, std::function<void()> cConnected, CallbackSdpReady sdpReady);
+   virtual void createAndConnectElementsWebRTC(std::function<void()> cConnected, CallbackSdpReady sdpReady);
+   virtual void createAndConnectElementsStandard(std::function<void()> cConnected, CallbackSdpReady sdpReady);
    virtual void setLocalDescription(GstWebRTCSessionDescription* gstwebrtcdesc);
    virtual void setRemoteDescription(GstWebRTCSessionDescription* gstwebrtcdesc);
    virtual void buildSdpAnswer(const resip::SdpContents& offer, CallbackSdpReady sdpReady) override;
@@ -126,6 +130,9 @@ private:
    volatile bool mIceGatheringDone;  // FIXME Gst use a concurrency primitive, e.g. condition_variable
 
    std::chrono::time_point<std::chrono::steady_clock> mLastLocalKeyframeRequest = std::chrono::steady_clock::now();
+
+   Glib::RefPtr<Gst::Caps> mCapsVideo;
+   Glib::RefPtr<Gst::Caps> mCapsAudio;
 
 public: // FIXME
    bool mRemoveExtraMediaDescriptors;
@@ -152,6 +159,9 @@ public: // FIXME
             public:
                MyWebRTCElement() : Gst::Element(Glib::ConstructParams()) {};
          };*/
+
+   std::shared_ptr<resipgst::GstRtpManager> mRtpManager = 0;  // FIXME - move to MediaStackAdapter
+   std::shared_ptr<resipgst::GstRtpSession> mRtpSession = 0;
 };
 
 }

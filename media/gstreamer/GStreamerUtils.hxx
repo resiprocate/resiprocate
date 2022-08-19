@@ -2,7 +2,7 @@
 #define RESIP_GSTREAMER_UTILS
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "../../config.h"
 #endif
 
 #ifdef USE_GSTREAMER

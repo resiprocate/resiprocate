@@ -14,11 +14,13 @@ libgstreamerutils_la_LIBADD += @LIBPTHREAD_LIBADD@
 libgstreamerutils_la_LDFLAGS = @LIBTOOL_VERSION_RELEASE@ -export-dynamic
 
 libgstreamerutils_la_SOURCES = \
-	GStreamerUtils.cxx
+	GStreamerUtils.cxx \
+	GstRtpManager.cxx
 
 gstreamerutilsincludedir = $(includedir)/media/gstreamer
 nobase_gstreamerutilsinclude_HEADERS = \
-	GStreamerUtils.hxx
+	GStreamerUtils.hxx \
+	GstRtpManager.hxx
 
 endif
 

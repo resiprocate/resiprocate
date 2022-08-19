@@ -65,7 +65,7 @@ GstMediaStackAdapter::init(int defaultSampleRate, int maxSampleRate)
 {
    DebugLog(<<"Gstreamer media stack initialization");
 
-   const char* _argv[] =  { "reConServer", "--gst-debug", "5", NULL };
+   const char* _argv[] =  { "reConServer", "--gst-debug", "5", NULL }; // FIXME
    int _argc = 3;
    char** __argv = (char**)_argv;
    // FIXME: are there C++ equivalents of these functions?
@@ -75,7 +75,13 @@ GstMediaStackAdapter::init(int defaultSampleRate, int maxSampleRate)
 
    main_loop = Glib::MainLoop::create();
 
-   run();
+   //run();
+}
+
+void
+GstMediaStackAdapter::runMainLoop()
+{
+   run();  // FIXME: run one Gst::main_loop thread per process or per Conversation?
 }
 
 void

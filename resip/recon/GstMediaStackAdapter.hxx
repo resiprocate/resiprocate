@@ -192,6 +192,8 @@ public:
    virtual bool canConversationsShareParticipants(Conversation* conversation1, Conversation* conversation2) override;
    virtual bool supportsLocalAudio() override { return false; }  // FIXME Gstreamer - implement local audio
 
+   virtual void runMainLoop();
+
 protected:
    virtual void setUserAgent(UserAgent *userAgent) override;
    virtual void configureRemoteParticipantInstance(GstRemoteParticipant* krp);
