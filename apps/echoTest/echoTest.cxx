@@ -336,7 +336,7 @@ class GstThread : public ThreadIf
          video_sink_rtcp->set_property("sync", false);
          video_sink_rtcp->set_property("async", false);
 
-         v_pay->set_property<gint32>("pt", 97);
+         v_pay->set_property<gint32>("pt", 97); // FIXME magic number
 
          // the names and values vary depending on which H.264 encoder is selected
 
