@@ -20,7 +20,6 @@ set(INCLUDES
    ThreadIf.hxx
    WinLeakCheck.hxx
    Random.hxx
-   RecursiveMutex.hxx
    AsyncProcessHandler.hxx
    RADIUSDigestAuthenticator.hxx
    RWMutex.hxx
@@ -74,7 +73,6 @@ set(INCLUDES
    PoolBase.hxx
    FdPoll.hxx
    Time.hxx
-   Lockable.hxx
    stun/Udp.hxx
    stun/Stun.hxx
    SysLogBuf.hxx
@@ -100,7 +98,6 @@ add_library(rutil
    AndroidLogger.cxx
    BaseException.cxx
    Coders.cxx
-   Condition.cxx
    ConfigParse.cxx
    CountStream.cxx
    Crc32.cxx
@@ -116,7 +113,6 @@ add_library(rutil
    Lock.cxx
    Log.cxx
    MD5Stream.cxx
-   Mutex.cxx
    NetNs.cxx
    ParseBuffer.cxx
    ParseException.cxx
@@ -126,7 +122,6 @@ add_library(rutil
    RADIUSDigestAuthenticator.cxx
    RWMutex.cxx
    Random.cxx
-   RecursiveMutex.cxx
    resipfaststreams.cxx
    SelectInterruptor.cxx
    Sha1.cxx

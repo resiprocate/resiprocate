@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/build/cmake_modules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
 
 if(POLICY CMP0042)
   CMAKE_POLICY(SET CMP0042 NEW)
 endif(POLICY CMP0042)
+if(POLICY CMP0077)
+   CMAKE_POLICY(SET CMP0077 NEW)
+endif(POLICY CMP0077)
 
 project(resiprocate VERSION 1.13.0)
 
@@ -24,7 +27,7 @@ else()
 endif()
 option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
 
-#set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_STANDARD 11)
 
 ####################
 ### Dependencies ###
@@ -73,11 +76,18 @@ else()
 endif()
 
 # popt
-find_package(popt)
-if(POPT_FOUND)
+if(WIN32)
+   add_subdirectory(contrib/popt)
+   set(POPT_LIBRARIES popt)
    set(HAVE_POPT_H true)
    add_definitions(-DHAVE_POPT_H)
-   include_directories(${POPT_INCLUDE_DIRS})
+else()
+   find_package(popt)
+   if(POPT_FOUND)
+      set(HAVE_POPT_H true)
+      add_definitions(-DHAVE_POPT_H)
+      include_directories(${POPT_INCLUDE_DIRS})
+   endif()
 endif()
 
 # ASIO
@@ -156,7 +166,6 @@ endif()
 
 if(WIN32)
    add_definitions(-DNOMINMAX)
-   add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
 # shared library versioning

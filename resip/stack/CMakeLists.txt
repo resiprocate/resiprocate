@@ -308,6 +308,7 @@ add_library(resip
    TransportThread.cxx
    TransportFailure.cxx
    TransportSelector.cxx
+   TrickleIceContents.cxx
    TuIM.cxx
    TuSelector.cxx
    UdpTransport.cxx
@@ -343,9 +344,11 @@ target_add_conditional_sources(resip APPLE
    ssl/MacSecurity.cxx
 )
 
-target_add_conditional_sources(resip WIN32
-   ssl/WinSecurity.cxx
-)
+if(WIN32)
+   target_add_conditional_sources(resip WITH_SSL
+      ssl/WinSecurity.cxx
+   )
+endif()
 
 target_add_conditional_sources(resip TRUE
    gen/DayOfWeekHash.cxx
@@ -357,6 +360,9 @@ target_add_conditional_sources(resip TRUE
 
 if(WIN32)
    target_link_libraries(resip winmm)
+   if(WITH_SSL)
+      target_link_libraries(resip crypt32 Ncrypt)
+   endif()
    # For whatever historical reason, on Windows the name of the library is not
    # resip but resiprocate.
    set_target_properties(resip PROPERTIES OUTPUT_NAME resiprocate)
